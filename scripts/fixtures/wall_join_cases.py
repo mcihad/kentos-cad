@@ -75,7 +75,7 @@ def length2(v):
 
 class Wall:
     def __init__(self, pts, width, justify="center", offset=0, comps=None, closed=False, joins=("auto", "auto"),
-                 cleanup=True, caps="closed"):
+                 cleanup=True, caps="closed", wraps=None, passes=(None, None), holes=None):
         self.pts = [(F(x), F(y)) for x, y in pts]
         self.width = F(width)
         self.justify = justify
@@ -85,6 +85,11 @@ class Wall:
         self.joins = list(joins)
         self.cleanup = cleanup
         self.caps = caps
+        # ADR 0771: the components that turn at the free ends and the holes' jambs, the ends' node decisions, and the
+        # through holes along the base line (s0, s1).
+        self.wraps = list(wraps) if wraps else [False] * len(self.comps)
+        self.passes = list(passes)
+        self.holes = [(F(a), F(b)) for a, b in (holes or [])]
 
     def json(self):
         out = {"pts": [[float(x), float(y)] for x, y in self.pts], "width": float(self.width), "justify": self.justify}
@@ -95,8 +100,14 @@ class Wall:
         if self.comps:
             out["components"] = [{k: v for k, v in (("thickness", None if t is None else float(t)), ("priority", p),
                                                     ("detail", "standard")) if v is not None} for t, p in self.comps]
-        if self.joins != ["auto", "auto"]:
+            for c, w in zip(out["components"], self.wraps):
+                if w:
+                    c["wrap"] = True
+        if self.joins != ["auto", "auto"] or any(p is not None for p in self.passes):
             out["joins"] = {k: m for k, m in zip(("start", "end"), self.joins) if m != "auto"}
+            for k, p in zip(("startPass", "endPass"), self.passes):
+                if p is not None:
+                    out["joins"][k] = list(p)
         if not self.cleanup:
             out["cleanup"] = False
         if self.caps == "open":
@@ -294,6 +305,7 @@ class Solver:
         self.member_joints = []
         self.issues = []
         self.tees = []
+        self.nodes = []
 
     def joint(self, kind, at, members):
         self.joints.append({"kind": kind, "at": [float(at[0]), float(at[1])]})
@@ -407,6 +419,7 @@ class Solver:
     def host_of(self, end):
         i, e, at, d = end
         best = None
+        parallel = []
         for h, w in enumerate(self.w):
             if h == i:
                 continue
@@ -425,17 +438,22 @@ class Solver:
                 bd = w.boundaries()
                 if not bd[-1] <= across <= bd[0]:
                     continue
-                # Within 3° of the host's direction: the two overlap, said once for the pair; no tee.
+                # Within 3° of the host's direction: the two overlap, said once for the pair; no tee. At a vertex of
+                # the host (ADR 0771 §1) an edge the end runs along does not count when another edge there does not.
                 import math
                 c2 = dot(d, t) ** 2 / (length2(d) * length2(t))
                 if c2 > F(math.cos(math.radians(3.0)) ** 2):
-                    if not any(x["code"] == "wall_join_overlap" and i in x["walls"] and h in x["walls"] for x in self.issues):
-                        self.issue("wall_join_overlap", at, [i, h], {"wall": i, "end": ["start", "end"][e], "mode": "none"})
-                    return None
+                    parallel.append(h)
+                    continue
                 central = abs(across - (bd[0] + bd[-1]) / 2)
                 if best is None or central < best[0]:
                     best = (central, h, t)
-        return None if best is None else best[1]
+        if best is None:
+            for h in parallel[:1]:
+                if not any(x["code"] == "wall_join_overlap" and i in x["walls"] and h in x["walls"] for x in self.issues):
+                    self.issue("wall_join_overlap", at, [i, h], {"wall": i, "end": ["start", "end"][e], "mode": "none"})
+            return None
+        return best[1]
 
     def host_side(self, h, at, d):
         w = self.w[h]
@@ -447,8 +465,10 @@ class Solver:
             u = dot(sub(at, a), tt) / length2(tt)
             if 0 <= u <= 1:
                 foot = add(a, mul(tt, u))
-                if t is None or length2(sub(at, foot)) < t[0]:
-                    t = (length2(sub(at, foot)), tt)
+                # At a vertex (two edges as near), the edge least along the end's direction (ADR 0771 §1).
+                key = (length2(sub(at, foot)), dot(d, tt) ** 2 / length2(tt))
+                if t is None or key < t[0]:
+                    t = (key, tt)
         is_left = dot(d, left(t[1])) > 0
         nh = len(self.lines[h]) - 1
         ranks = self.w[h].ranks()
@@ -463,8 +483,15 @@ class Solver:
         j, e, at, d = end
         h = hosts[0]
         pos, ranks = self.host_side(h, at, d)
-        cleanup = self.w[j].cleanup and self.w[h].cleanup
-        depth = self.depths(j, ranks, cleanup)
+        # ADR 0771 §1: the user's node decision on the joining end wins, each pass at most the host's components; the
+        # host's lines are then interrupted as with cleanup on.
+        user = self.w[j].passes[e]
+        if user is not None and len(user) != len(self.w[j].ranks()):
+            user = None
+        cleanup = user is not None or (self.w[j].cleanup and self.w[h].cleanup)
+        depth = [min(x, len(ranks)) for x in user] if user is not None else self.depths(j, ranks, cleanup)
+        if listed:
+            self.nodes.append({"at": [float(at[0]), float(at[1])], "depth": depth, "user": user is not None})
         nj = len(self.lines[j]) - 1
         out = []
         sides = [(h, pos)] + [(o, self.host_side(o, at, d)[0]) for o in hosts[1:]]
@@ -641,17 +668,130 @@ class Solver:
         out = []
         for i, w in enumerate(self.w):
             ls = self.lines[i]
-            strokes = [kept_strokes(l, w.closed, self.gaps[i][k]) for k, l in enumerate(ls)]
+            n = len(ls) - 1
+            plan = wrap_plan(w)
+            base = w.pts[0], w.pts[-1]
+            length = exact_len(sub(base[1], base[0])) if len(w.pts) == 2 else None
+            o = w.boundaries()
+
+            def beside(sv, dv):
+                # The point `dv` to the left of the (single-edge) base line at arc length `sv`.
+                t = sub(base[1], base[0])
+                u = mul(t, F(1) / exact_len(t))
+                return add(add(base[0], mul(u, sv)), mul(left(u), dv))
+
+            def span(k, s0, s1):
+                return (s_near(ls[k], w.closed, beside(s0, o[k])), s_near(ls[k], w.closed, beside(s1, o[k])),
+                        s_near(ls[k], w.closed, beside((s0 + s1) / 2, o[k])))
+
+            gaps = [list(g) for g in self.gaps[i]]
+            cuts = [list(c) for c in self.cuts[i]]
+            extra = [[] for _ in range(len(self.cuts[i]))]
+            closures = []
             caps = []
             if not w.closed and w.caps != "open":
                 for e in (0, 1):
                     if not self.joined[i][e]:
                         caps.append([pt(end_point(ls[0], e)), pt(end_point(ls[-1], e))])
+            # (end along the base, direction into the wall) of each end the layers turn at.
+            sides = []
+            if plan and length is not None and not w.closed and w.caps != "open" and length > 2 * plan["reach"]:
+                for e, (at, into) in enumerate(((F(0), 1), (length, -1))):
+                    if not self.joined[i][e]:
+                        sides.append((at, into))
+                        for k in range(n + 1):
+                            if plan["pull"][k] > 0:
+                                a, b = sorted((at, at + into * plan["pull"][k]))
+                                gaps[k].append(span(k, a, b))
+                        for c in range(n):
+                            if plan["band"][c] > 0:
+                                a, b = sorted((at, at + into * plan["band"][c]))
+                                cuts[c].append((span(c, a, b), span(c + 1, a, b)))
+            for h, (s0, s1) in enumerate(w.holes):
+                wrapped = plan is not None and s0 - plan["reach"] > 0 and s1 + plan["reach"] < length and all(
+                    t1 + plan["reach"] < s0 - plan["reach"] or t0 - plan["reach"] > s1 + plan["reach"]
+                    for g, (t0, t1) in enumerate(w.holes) if g != h)
+                for k in range(n + 1):
+                    p = plan["pull"][k] if wrapped else 0
+                    gaps[k].append(span(k, s0 - p, s1 + p))
+                for c in range(n):
+                    p = plan["band"][c] if wrapped else 0
+                    cuts[c].append((span(c, s0 - p, s1 + p), span(c + 1, s0 - p, s1 + p)))
+                if wrapped:
+                    sides.append((s0, -1))
+                    sides.append((s1, 1))
+            for at, into in sides:
+                for comp, p0, p1, upper, lower in plan["patches"]:
+                    a, b = sorted((at + into * p0, at + into * p1))
+                    ring = [beside(a, upper), beside(b, upper), beside(b, lower), beside(a, lower)]
+                    extra[comp].append(float(area(ring)))
+                for comp, pull, upper, lower in plan["closures"]:
+                    sv = at + into * pull
+                    closures.append([comp, [pt(beside(sv, upper)), pt(beside(sv, lower))]])
+                if plan["middle"] is not None:
+                    comp, p0, p1 = plan["middle"]
+                    a, b = sorted((at + into * p0, at + into * p1))
+                    closures.append([comp, [pt(beside(a, plan["m"])), pt(beside(b, plan["m"]))]])
+            for s0, s1 in w.holes:
+                caps.append([pt(beside(s0, o[0])), pt(beside(s0, o[-1]))])
+                caps.append([pt(beside(s1, o[0])), pt(beside(s1, o[-1]))])
+            strokes = [kept_strokes(l, w.closed, gaps[k]) for k, l in enumerate(ls)]
             bands = []
-            for c in range(len(self.cuts[i])):
-                bands.append(band_areas(ls[c], ls[c + 1], w.closed, self.cuts[i][c]))
-            out.append({"lines": strokes, "caps": caps, "bands": bands})
+            for c in range(len(cuts)):
+                bands.append(band_areas(ls[c], ls[c + 1], w.closed, cuts[c]) + extra[c])
+            d = {"lines": strokes, "caps": caps, "bands": bands}
+            if plan or w.holes:
+                d["closures"] = closures
+            out.append(d)
         return out
+
+
+def wrap_plan(w):
+    """ADR 0771 §3: how the outermost turning layers of each face turn at an end, or None. Lines and components from
+    the left face; `pull` how far before the end a line stops, `band` a component's band; the turns (comp, from, to,
+    upper, lower) as pulls; the closing lines (comp, pull, upper, lower) across; the line along the middle."""
+    n = len(w.comps)
+    if n < 2 or not any(w.wraps):
+        return None
+    o = w.boundaries()
+    t = [o[k] - o[k + 1] for k in range(n)]
+    L = next((k for k in range(n) if not w.wraps[k]), n)
+    R = next((k for k in range(n) if not w.wraps[n - 1 - k]), n)
+    if L + R >= n:
+        return None
+    a = [F(0)] * (n + 1)
+    for j in range(L):
+        a[j + 1] = a[j] + t[j]
+    b = [F(0)] * (n + 1)
+    for k in range(n - 1, n - R - 1, -1):
+        b[k] = b[k + 1] + t[k]
+    TL, TR = a[L], b[n - R]
+    m = (o[L] + o[n - R]) / 2 if L and R else (o[n] if L else o[0])
+
+    def inner(d):
+        return TL if d > m else TR if d < m else max(TL, TR)
+    pull = [F(0) if k in (0, n) else a[k] if k <= L else b[k] if k >= n - R else inner(o[k]) for k in range(n + 1)]
+    band, patches = [], []
+    for c in range(n):
+        if c < L:
+            band.append(a[c])
+            patches.append((c, a[c], a[c + 1], o[c + 1], m))
+        elif c >= n - R:
+            band.append(b[c + 1])
+            patches.append((c, b[c + 1], b[c], m, o[c]))
+        elif o[c + 1] >= m:
+            band.append(TL)
+        elif o[c] <= m:
+            band.append(TR)
+        else:
+            band.append(max(TL, TR))
+            if TL < TR:
+                patches.append((c, TL, TR, o[c], m))
+            elif TR < TL:
+                patches.append((c, TR, TL, m, o[c + 1]))
+    closures = [(j - 1, a[j], o[j], m) for j in range(1, L + 1)] + [(k, b[k], o[k], m) for k in range(n - R, n)]
+    return {"pull": pull, "band": band, "patches": patches, "closures": closures, "m": m,
+            "middle": (L - 1, F(0), max(TL, TR)) if L and R else None, "reach": max(TL, TR)}
 
 
 # What each issue says, as ADR 0340 §2 words it: what is wrong, and what resolves it.
@@ -673,7 +813,9 @@ def from_json(w):
     joins = w.get("joins", {})
     return Wall([(F(p["x"]), F(p["y"])) for p in w["pts"]], F(w["width"]), w.get("justify", "center"), F(w.get("offset", 0.0)),
                 comps, w.get("closed", False), (joins.get("start", "auto"), joins.get("end", "auto")),
-                w.get("cleanup", True), w.get("caps", "closed"))
+                w.get("cleanup", True), w.get("caps", "closed"),
+                wraps=[c.get("wrap", False) for c in w.get("components", [])],
+                passes=(joins.get("startPass"), joins.get("endPass")))
 
 
 def iter_while(ranks, p):
@@ -820,8 +962,13 @@ def cases():
     def case(name, walls):
         s = Solver(walls)
         drawn = s.solve()
-        c.append({"name": name, "walls": [w.json() for w in walls], "joints": s.joints, "issues": s.issues,
-                  "drawn": drawn})
+        one = {"name": name, "walls": [w.json() for w in walls], "joints": s.joints, "issues": s.issues,
+               "drawn": drawn}
+        if any(w.holes for w in walls):
+            one["openings"] = [[[float(a), float(b)] for a, b in w.holes] for w in walls]
+        if any(p is not None for w in walls for p in w.passes):
+            one["nodes"] = s.nodes
+        c.append(one)
 
     w2 = F(2, 10)
     case("Köşe: eşit iki duvar, gönye", [Wall([(0, 0), (4, 0)], w2), Wall([(4, 0), (4, 3)], w2)])
@@ -860,6 +1007,45 @@ def cases():
     case("Sorun: üç uç bir doğruda değil", [Wall([(0, 0), (4, 0)], w2), Wall([(0, 0), (-3, 4)], w2), Wall([(0, 0), (-3, -4)], w2)])
     case("Sorun: duvar birleşimden kısa", [Wall([(0, 0), (4, 0)], w2), Wall([(4, 0), (4, F(5, 100))], w2)])
     case("Uçları açık duvarlar", [Wall([(0, 0), (4, 0)], w2, caps="open"), Wall([(4, 0), (4, 3)], w2, caps="open")])
+    # ADR 0771 §3: layers that turn at the free ends and the jambs; §1: the user's node decisions.
+    sv, ins, ren = F(2, 100), F(5, 100), F(2, 100)
+    plaster = [(sv, 5), (None, 1), (sv, 5)]
+    insulated = [(ren, 5), (ins, 4), (None, 1), (sv, 5)]
+    case("Uçta döner: iki yüzü sıvalı duvarın serbest uçları", [Wall([(0, 0), (4, 0)], w2, comps=plaster, wraps=[True, False, True])])
+    case("Uçta döner: yalnız dış yüzün yalıtımı", [Wall([(0, 0), (4, 0)], F(25, 100), comps=[(ins, 4), (None, 1), (sv, 5)],
+                                                      wraps=[True, False, False])])
+    case("Uçta döner: dış yüzde iki katman, iç yüzde sıva", [Wall([(0, 0), (5, 0)], F(3, 10), comps=insulated,
+                                                                 wraps=[True, True, False, True])])
+    case("Uçta döner: sağa hizalı, iç yüz yalnız", [Wall([(0, 0), (0, 4)], F(25, 100), "right", comps=insulated,
+                                                         wraps=[False, False, False, True])])
+    case("Pencere sövesi: açıklıkta dönen sıva ve yalıtım", [Wall([(0, 0), (6, 0)], F(3, 10), comps=insulated,
+                                                                 wraps=[True, True, False, True], caps="open",
+                                                                 holes=[(F(3, 2), F(27, 10))])])
+    case("Kapı: iki açıklıkta da dönen sıva", [Wall([(0, 0), (8, 0)], w2, comps=plaster, wraps=[True, False, True],
+                                                    caps="open", holes=[(1, 2), (5, F(59, 10))])])
+    case("Açıklık: dönen katmansız duvarda düz söve", [Wall([(0, 0), (6, 0)], F(3, 10), comps=insulated, caps="open",
+                                                           holes=[(F(3, 2), F(27, 10))])])
+    case("Açıklık duvar ucuna çok yakın: katmanlar dönmez", [Wall([(0, 0), (4, 0)], w2, comps=plaster,
+                                                                   wraps=[True, False, True], caps="open",
+                                                                   holes=[(F(1, 100), 1)])])
+    case("Köşede birleşik uç dönmez, serbest uç döner", [Wall([(0, 0), (4, 0)], w2, comps=plaster, wraps=[True, False, True]),
+                                                           Wall([(4, 0), (4, 3)], w2, comps=plaster)])
+    case("Düğüm kararı: çekirdek konağın yüzünde durur", [Wall([(0, 0), (6, 0)], w2, comps=layered()),
+                                                          Wall([(3, 4), (3, 0)], w2, comps=layered(), passes=(None, [0, 0, 0]))])
+    case("Düğüm kararı: bütün katmanlar konağın çekirdeğine girer", [Wall([(0, 0), (6, 0)], w2, comps=layered()),
+                                                                      Wall([(3, 4), (3, 0)], w2, comps=layered(), passes=(None, [1, 2, 1]))])
+    case("Düğüm kararı: konaktan fazlası konağın bileşen sayısında kalır", [Wall([(0, 0), (6, 0)], w2, comps=layered()),
+                                                                          Wall([(3, 4), (3, 0)], w2, comps=layered(), passes=(None, [9, 9, 9]))])
+    case("Düğüm kararı: temizlik kapalıyken de uygulanır", [Wall([(0, 0), (6, 0)], w2, comps=layered(), cleanup=False),
+                                                            Wall([(3, 4), (3, 0)], w2, comps=layered(), passes=(None, [0, 1, 0]))])
+    case("Düğüm kararı: ters yönlü konağa alttan, başlangıç ucunda", [Wall([(6, 0), (0, 0)], w2, comps=layered()),
+                                                                     Wall([(3, 0), (3, -4)], w2, comps=layered(), passes=([0, 2, 0], None))])
+    case("Odanın köşesinden kenarın doğrultusunda çıkan duvar öbür kenara T birleşir",
+         [Wall([(0, 0), (4, 0), (4, 3), (0, 3)], w2, closed=True), Wall([(4, 0), (7, 0)], w2)])
+    case("U duvarı iki ucuyla odanın iki köşesine birleşir",
+         [Wall([(0, 0), (4, 0), (4, 3), (0, 3)], w2, closed=True), Wall([(4, 0), (7, 0), (7, 3), (4, 3)], w2)])
+    case("Düğüm kararı: yalın duvar konağa tek sayıyla", [Wall([(0, 0), (6, 0)], w2, comps=layered()),
+                                                          Wall([(3, 4), (3, 0)], F(15, 100), passes=(None, [1]))])
     return c
 
 

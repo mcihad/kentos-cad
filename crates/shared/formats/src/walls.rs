@@ -86,6 +86,7 @@ fn component(c: &WallComponent) -> Component {
         }),
         detail: detail(c.detail),
         priority: c.priority,
+        wrap: c.wrap,
     }
 }
 
@@ -107,6 +108,7 @@ fn component_back(c: &Component) -> WallComponent {
         }),
         detail: detail_back(c.detail),
         priority: c.priority,
+        wrap: c.wrap,
     }
 }
 
@@ -127,6 +129,7 @@ pub fn spec(w: &WallFields) -> Spec {
             .flatten()
             .and_then(|t| Json::parse(&t).ok()),
         joins: [join_mode(w.joins.start), join_mode(w.joins.end)],
+        passes: [w.joins.start_pass.clone(), w.joins.end_pass.clone()],
         cleanup: w.cleanup,
     }
 }
@@ -180,6 +183,8 @@ pub fn contract_wall(shape: &Shape) -> Option<WallFields> {
         joins: WallJoins {
             start: join_back(wall.joins[0]),
             end: join_back(wall.joins[1]),
+            start_pass: wall.passes[0].clone(),
+            end_pass: wall.passes[1].clone(),
         },
         cleanup: wall.cleanup,
     })
@@ -359,6 +364,7 @@ mod tests {
             joins: WallJoins {
                 start: WallJoin::Butt,
                 end: WallJoin::Auto,
+                ..WallJoins::default()
             },
             cleanup: false,
         };

@@ -1,7 +1,9 @@
 //! What the slab commands share (docs/adr/0722 §4): the numbers checked, an outline drawn or found from the walls round a
 //! point, moved by an edge offset, and the slab's fields checked.
 
-use kentos_commands::{NewSlabEdge, SlabBoundary, SlabEdge, SlabFields, SpacePart, Vec2};
+use kentos_commands::{
+    Entity, NewSlabEdge, SlabBound, SlabBoundary, SlabEdge, SlabFace, SlabFields, SlabSourceKind, SpacePart, Vec2,
+};
 use kentos_domain::Document;
 use kentos_geometry_core::geom::arrangement::Area;
 
@@ -124,4 +126,49 @@ pub(crate) fn moved(parts: &[SpacePart], d: f64, path: &str) -> Result<Vec<Space
             Err(fail(codes::SLAB_OFFSET_FAILED, format!("{} ({ring}).", f.words.trim_end_matches('.')), path))
         }
     }
+}
+
+/// A space a slab is bound to (docs/adr/0771 §4), by its persistent id: its rings; `invalid_uid`, `entity_not_found`,
+/// `not_a_space` at `path` for one that is none.
+pub(crate) fn space_parts(doc: &Document, uid: &str, path: &str) -> Result<Vec<SpacePart>, Stop> {
+    let bad = |code: &str, words: String| Err(fail(code, words, path));
+    if !checks::is_uid_text(uid) {
+        return bad(
+            codes::INVALID_UID,
+            format!("“{uid}” geçerli bir nesne kimliği değil; mahalin kalıcı kimliğini verin."),
+        );
+    }
+    let found = kentos_domain::Uuid::parse_str(uid).ok().and_then(|u| doc.slot_of(u)).and_then(|s| doc.get(s));
+    match found {
+        Some(Entity::Space(s)) => Ok(s.space.parts.clone()),
+        Some(_) => bad(codes::NOT_A_SPACE, "Döşemenin bağlanacağı nesne mahal değil.".into()),
+        None => bad(
+            codes::ENTITY_NOT_FOUND,
+            format!("“{uid}” kimlikli mahal çizimde yok; var olan bir mahalin kimliğini verin."),
+        ),
+    }
+}
+
+/// The bound a slab takes from walls round `seed` (by `boundary`) or from `space`, moved by `offset`.
+pub(crate) fn bound_of(seed: Option<Vec2>, boundary: Option<SlabBoundary>, space: Option<&String>, offset: f64) -> SlabBound {
+    SlabBound {
+        source: if space.is_some() { SlabSourceKind::Space } else { SlabSourceKind::Walls },
+        seed: if space.is_some() { None } else { seed },
+        face: if boundary.unwrap_or_default() == SlabBoundary::Room { SlabFace::Room } else { SlabFace::Outline },
+        space: space.cloned(),
+        offset,
+        uids: Vec::new(),
+        broken: None,
+    }
+}
+
+/// `s` with the walls that bound it written into its bound (docs/adr/0771 §4); the same when it has none.
+pub(crate) fn with_bound_uids(doc: &Document, mut s: SlabFields) -> SlabFields {
+    if let Some(b) = &s.bound
+        && let Ok((_, uids)) = doc.bound_outline(b, s.arch.level.as_deref())
+        && let Some(b) = &mut s.bound
+    {
+        b.uids = uids;
+    }
+    s
 }

@@ -54,7 +54,7 @@ const CODES: [(ArchAuditCheck, &[&str]); 14] = [
     (ArchAuditCheck::Openings, &[codes::ARCH_OPENING_BROKEN, codes::TAG_MISSING_TYPE]),
     (
         ArchAuditCheck::Spaces,
-        &[codes::ARCH_SPACE_BROKEN, codes::ARCH_SPACE_SMALL, codes::ARCH_SPACE_NARROW],
+        &[codes::ARCH_SPACE_BROKEN, codes::ARCH_SPACE_SMALL, codes::ARCH_SPACE_NARROW, codes::ARCH_SLAB_BROKEN],
     ),
     (ArchAuditCheck::Numbers, &[codes::TAG_DUPLICATE_NUMBER]),
     (ArchAuditCheck::Tags, &[codes::TAG_TARGET_GONE, codes::TAG_EMPTY]),
@@ -161,6 +161,32 @@ fn split(words: &str) -> (String, String) {
 }
 
 /// A fix: its words and its call.
+impl Audit<'_> {
+    /// A slab bound to its walls or its space that its source no longer gives (docs/adr/0771 §4): its last outline
+    /// kept; Düzelt detaches it (Ayır), keeping that outline its own.
+    fn bound_slabs(&self) -> Vec<ArchAuditFinding> {
+        let mut out = Vec::new();
+        for e in self.doc.entities() {
+            let Entity::Slab(s) = e else { continue };
+            let Some(why) = s.slab.bound.as_ref().and_then(|b| b.broken) else { continue };
+            let uid = self.uid_of(e);
+            let fix = (!self.locked(e)).then(|| {
+                fix("Ayır: son sınırı bağımsız kontur yap", "cad.slabs.edit", json!({"uids": [uid], "operation": {"kind": "detach"}}))
+            });
+            out.push(finding(
+                ArchAuditCheck::Spaces,
+                codes::ARCH_SLAB_BROKEN,
+                format!("{}: {}", s.slab.role.label(), why.words()),
+                "Kaynağa bağla ile döşemeyi yeniden bağlayın ya da Ayır ile son sınırını bağımsız kontur yapın.",
+                vec![uid],
+                space_point(&s.slab.parts),
+                fix,
+            ));
+        }
+        out
+    }
+}
+
 fn fix(label: impl Into<String>, command: &str, input: serde_json::Value) -> ArchAuditFix {
     ArchAuditFix {
         label: label.into(),
@@ -859,7 +885,7 @@ impl Audit<'_> {
     }
 
     fn spaces(&self, limits: &Limits) -> Vec<ArchAuditFinding> {
-        let mut out = Vec::new();
+        let mut out = self.bound_slabs();
         for e in self.doc.entities() {
             let Entity::Space(s) = e else { continue };
             let s = &s.space;

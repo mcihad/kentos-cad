@@ -1188,6 +1188,9 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                         "bileşenin önceliği şema 76'dan beri yazılır",
                     ));
                 }
+                if !has.building_parts && l.iter().any(|s| s.components.iter().any(|c| c.wrap)) {
+                    return Err(r.fail_at(Code::UnknownField, at, "uçta dönen bileşen şema 137 ister"));
+                }
                 wall_styles = l;
             }
             "arch" if has.walls => {

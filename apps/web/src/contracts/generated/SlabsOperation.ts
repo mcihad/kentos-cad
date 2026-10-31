@@ -7,4 +7,4 @@ import type { Vec2 } from "./Vec2";
 /**
  * What `cad.slabs.edit` does to the slabs (docs/adr/0722 §4).
  */
-export type SlabsOperation = { "kind": "set" } & SlabChange | { "kind": "offset", distance: number, } | { "kind": "subtract", parts?: Array<SpacePart>, seed?: Vec2, boundary?: SlabBoundary, } | { "kind": "add", parts?: Array<SpacePart>, seed?: Vec2, boundary?: SlabBoundary, };
+export type SlabsOperation = { "kind": "set" } & SlabChange | { "kind": "offset", distance: number, } | { "kind": "subtract", parts?: Array<SpacePart>, seed?: Vec2, boundary?: SlabBoundary, } | { "kind": "bind", seed?: Vec2, boundary?: SlabBoundary, space?: string, offset?: number, } | { "kind": "detach" } | { "kind": "add", parts?: Array<SpacePart>, seed?: Vec2, boundary?: SlabBoundary, };

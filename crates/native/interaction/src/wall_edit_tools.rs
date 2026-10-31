@@ -278,6 +278,8 @@ impl WallEditTool {
                 start,
                 end,
                 cleanup: None,
+                start_pass: None,
+                end_pass: None,
             },
             cx,
         );
@@ -305,6 +307,7 @@ impl WallEditTool {
             WallsOperation::ReplaceStyle {
                 from,
                 to: to.to_owned(),
+                keep: None,
             },
             cx,
         ) {
@@ -605,6 +608,8 @@ impl WallEditTool {
                                 start: None,
                                 end: None,
                                 cleanup: Some(!on),
+                                start_pass: None,
+                                end_pass: None,
                             },
                             cx,
                         );

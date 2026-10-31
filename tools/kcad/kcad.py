@@ -436,6 +436,10 @@ SCHEMA_WITH_CAD_WORK = 135
 # Schema 136 (docs/adr/0758): a layer's indexes (`indexes`: name, fields' keys, `unique`, `nullsEqual`), its keys when
 # unique; written only when a layer has one.
 SCHEMA_WITH_LAYER_INDEXES = 136
+# Schema 137 (docs/adr/0771): a wall component that turns at the wall's ends and its openings' jambs (`wrap`), a wall
+# end's node decision (`joins.startPass`, `joins.endPass`), a slab bound to its walls or its space (`bound`); written
+# only when a wall, a project wall style or a slab has one.
+SCHEMA_WITH_BUILDING_PARTS = 137
 MAX_TABLE_CONSTRAINTS = 256
 MAX_CHECK_SQL = 8000
 MAX_CONSTRAINT_NAME = 256
@@ -739,7 +743,7 @@ def field_records_ok(raw, count):
     return at == len(raw)
 
 
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS, SCHEMA_WITH_JOIN_SOURCES, SCHEMA_WITH_DATASETS, SCHEMA_WITH_WITHHELD_FIELDS, SCHEMA_WITH_SPACE_COLUMNS, SCHEMA_WITH_SPACE_SCOPE, SCHEMA_WITH_SPACE_SOURCES, SCHEMA_WITH_SPACE_SEPARATORS, SCHEMA_WITH_SPACE_CHOICES, SCHEMA_WITH_DIMENSION_SETS, SCHEMA_WITH_DIMENSION_SET_EDGES, SCHEMA_WITH_RAILINGS, SCHEMA_WITH_SPACE_VOIDS, SCHEMA_WITH_STAIR_ARCS, SCHEMA_WITH_DIMENSION_CROSS, SCHEMA_WITH_RECESSES, SCHEMA_WITH_LEVEL_STATE, SCHEMA_WITH_DIMENSION_LEVELS, SCHEMA_WITH_SCHEDULE_COLUMNS, SCHEMA_WITH_SLABS, SCHEMA_WITH_RAMP_LEVELS, SCHEMA_WITH_STAIR_LEVELS, SCHEMA_WITH_GRID_COLUMN_FORMS, SCHEMA_WITH_CASEWORK, SCHEMA_WITH_DIMENSION_SET_SPANS, SCHEMA_WITH_DIMENSION_SET_SCALES, SCHEMA_WITH_AUDIT_EXCEPTIONS, SCHEMA_WITH_FIXTURES, SCHEMA_WITH_PROFILE_FILES, SCHEMA_WITH_FIELD_COLUMNS, SCHEMA_WITH_TABLE_CONSTRAINTS, SCHEMA_WITH_CAD_WORK, SCHEMA_WITH_LAYER_INDEXES)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS, SCHEMA_WITH_JOIN_SOURCES, SCHEMA_WITH_DATASETS, SCHEMA_WITH_WITHHELD_FIELDS, SCHEMA_WITH_SPACE_COLUMNS, SCHEMA_WITH_SPACE_SCOPE, SCHEMA_WITH_SPACE_SOURCES, SCHEMA_WITH_SPACE_SEPARATORS, SCHEMA_WITH_SPACE_CHOICES, SCHEMA_WITH_DIMENSION_SETS, SCHEMA_WITH_DIMENSION_SET_EDGES, SCHEMA_WITH_RAILINGS, SCHEMA_WITH_SPACE_VOIDS, SCHEMA_WITH_STAIR_ARCS, SCHEMA_WITH_DIMENSION_CROSS, SCHEMA_WITH_RECESSES, SCHEMA_WITH_LEVEL_STATE, SCHEMA_WITH_DIMENSION_LEVELS, SCHEMA_WITH_SCHEDULE_COLUMNS, SCHEMA_WITH_SLABS, SCHEMA_WITH_RAMP_LEVELS, SCHEMA_WITH_STAIR_LEVELS, SCHEMA_WITH_GRID_COLUMN_FORMS, SCHEMA_WITH_CASEWORK, SCHEMA_WITH_DIMENSION_SET_SPANS, SCHEMA_WITH_DIMENSION_SET_SCALES, SCHEMA_WITH_AUDIT_EXCEPTIONS, SCHEMA_WITH_FIXTURES, SCHEMA_WITH_PROFILE_FILES, SCHEMA_WITH_FIELD_COLUMNS, SCHEMA_WITH_TABLE_CONSTRAINTS, SCHEMA_WITH_CAD_WORK, SCHEMA_WITH_LAYER_INDEXES, SCHEMA_WITH_BUILDING_PARTS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -3356,6 +3360,7 @@ class _Schema:
         self.table_constraints = version >= SCHEMA_WITH_TABLE_CONSTRAINTS
         self.cad_work = version >= SCHEMA_WITH_CAD_WORK
         self.layer_indexes = version >= SCHEMA_WITH_LAYER_INDEXES
+        self.building_parts = version >= SCHEMA_WITH_BUILDING_PARTS
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -7835,7 +7840,9 @@ class _Schema:
                          "offset": (not_default(self.float, 0.0, "sıfır kot farkı yazılmaz"), False),
                          "arch": (not_default(self.arch_info, {}, "boş mimari bilgi yazılmaz"), False),
                          "material": (self.text, False), "edge": (edge, False),
-                         "excluded": (not_default(self.bool, False, "false yazılmaz; varsayılandır"), False)})(v)
+                         "excluded": (not_default(self.bool, False, "false yazılmaz; varsayılandır"), False),
+                         # Schema 137 (docs/adr/0771 §4): an outline bound to its walls or its space.
+                         **({"bound": (self.slab_bound, False)} if self.building_parts else {})})(v)
         bad = lambda words: self.fail("bad_value", words)  # noqa: E731
         if not f["parts"]:
             bad("Döşemenin sınırı yok: en az bir halka verin.")
@@ -7853,6 +7860,28 @@ class _Schema:
         if e is not None and not (math.isfinite(e["width"]) and 0 < e["width"] <= MAX_SLAB_EDGE):
             bad("Kenarın eni sıfırdan büyük, en çok 2 m olmalı.")
         return f
+
+    def slab_bound(self, v):
+        """A slab's bound (schema 137, docs/adr/0771 §4): walls round a seed or a space; each field only when not its
+        default (outer faces, no offset, no walls, not broken)."""
+        def not_default(read, default, words):
+            def check(x):
+                x = read(x)
+                if x == default:
+                    self.fail("bad_value", words)
+                return x
+            return check
+        b = self.fields({"source": (self.enum(("walls", "space")), True), "seed": (self.jpoint, False),
+                         "face": (not_default(self.enum(("outline", "room")), "outline", "varsayılan yüz ('outline') yazılmaz"), False),
+                         "space": (self.text, False),
+                         "offset": (not_default(self.float, 0.0, "sıfır öteleme yazılmaz"), False),
+                         "uids": (not_default(self.array(self.text), [], "boş duvar listesi yazılmaz"), False),
+                         "broken": (self.enum(("lostEnclosure", "sourceGone")), False)})(v)
+        if (b["source"] == "walls") != ("seed" in b) or (b["source"] == "space") != ("space" in b):
+            self.fail("bad_value", "Duvarlara bağlı döşemenin iç noktası, mahale bağlının mahali verilir; ötekisi verilmez.")
+        if "offset" in b and not (math.isfinite(b["offset"]) and abs(b["offset"]) <= 10):
+            self.fail("bad_value", "Kenar ötelemesi en çok ±10 m olur.")
+        return b
 
     def table_sources(self, t):
         """A table's schedule is its source; a link joins its file source (docs/adr/0327 §4–§5)."""
@@ -8319,9 +8348,15 @@ class _Schema:
             if not 1 <= p <= 9:
                 self.fail("bad_value", f"bileşenin önceliği {p}; 1 ile 9 arasında olmalı")
             return p
+        def wrap(v):
+            if not self.bool(v):
+                self.fail("bad_value", "dönmeyen bileşenin wrap'ı yazılmaz; alan yalnız true iken yazılır")
+            return True
         return self.fields({"name": (self.text, True), "material": (self.text, False), "thickness": (self.float, False),
                             "edge": (edge, False), "hatch": (hatch, False), "detail": (self.enum(WALL_DETAILS), True),
-                            **({"priority": (priority, False)} if self.wall_joins else {})})(v)
+                            **({"priority": (priority, False)} if self.wall_joins else {}),
+                            # Schema 137 (docs/adr/0771 §3): a layer that turns at the wall's ends and jambs.
+                            **({"wrap": (wrap, False)} if self.building_parts else {})})(v)
 
     def wall_components_rules(self, comps, width, owner):
         """A wall's (or a style's, `width` None) components: names, thicknesses above 0, at most one without (it takes
@@ -8755,8 +8790,15 @@ class _Schema:
 
     def wall_joins_(self, v):
         """A wall's joins (schema 76, docs/adr/0340 §1): an automatic end is not written, nor are both."""
-        j = self.fields({"start": (self.enum(WALL_JOINS), False), "end": (self.enum(WALL_JOINS), False)})(v)
-        if any(x == "auto" for x in j.values()) or not j:
+        def passes(v):
+            p = self.array(self.uint(8))(v)
+            if not p or any(x > 16 for x in p):
+                self.fail("bad_value", "düğüm kararı en az bir sayıdır, her biri en çok 16")
+            return p
+        # Schema 137 (docs/adr/0771 §1): the ends' node decisions.
+        extra = {"startPass": (passes, False), "endPass": (passes, False)} if self.building_parts else {}
+        j = self.fields({"start": (self.enum(WALL_JOINS), False), "end": (self.enum(WALL_JOINS), False), **extra})(v)
+        if any(j.get(k) == "auto" for k in ("start", "end")) or not j:
             self.fail("bad_value", "otomatik birleşim yazılmaz; iki ucu da otomatikse alan yazılmaz")
         return j
 

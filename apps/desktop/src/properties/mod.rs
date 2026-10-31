@@ -25,6 +25,7 @@
 //! The rows are data (`rows`), drawn by KentOS UI's `PropertySheet`.
 
 pub(crate) mod rows;
+pub(crate) mod wall_parts;
 
 pub(crate) use crate::annotation_styles::Part;
 pub(crate) use rows::layer_path;
@@ -98,6 +99,8 @@ pub enum Event {
     Wall(Slot, kentos_commands::WallChange),
     /// A wall's joins (docs/adr/0340 §6).
     WallOp(Slot, kentos_commands::WallsOperation),
+    /// Kalınlıkta sabit (docs/adr/0771 §2): the line a wall's width or style change keeps this session.
+    WallKeep(kentos_commands::WallReference),
     /// An opening's own field chosen, its type replaced (docs/adr/0341 §5): written through `cad.openings.edit`.
     Opening(Slot, kentos_commands::OpeningsOperation),
     /// A space's own field chosen (Yöntem, Kat, Evre) or its boundary found again (docs/adr/0342 §5): written through
@@ -853,7 +856,11 @@ impl App {
             },
             Event::EmbedImage(slot) => crate::pictures::embed(model, slot, drawing.as_deref()),
             Event::EmbedRaster(slot) => crate::rasters::embed(model, slot, folder.as_deref()),
-            Event::Wall(slot, change) => properties::edit_wall(model, slot, change),
+            Event::Wall(slot, change) => properties::edit_wall_kept(model, slot, change, wall_parts::keep()),
+            Event::WallKeep(r) => {
+                wall_parts::set_keep(r);
+                Vec::new()
+            }
             Event::WallOp(slot, op) => properties::edit_wall_op(model, slot, op),
             Event::Opening(slot, op) => properties::edit_opening(model, slot, op),
             Event::Space(slot, op) => properties::edit_space(model, slot, op),
@@ -1935,10 +1942,10 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                 return Vec::new();
             }
             let change = match field {
-                Field::WallWidth(_) => kentos_commands::WallChange {
-                    width: Some(n),
-                    ..Default::default()
-                },
+                Field::WallWidth(_) => {
+                    let change = kentos_commands::WallChange { width: Some(n), ..Default::default() };
+                    return properties::edit_wall_kept(model, *slot, change, wall_parts::keep());
+                }
                 Field::WallOffset(_) => kentos_commands::WallChange {
                     offset: Some(n),
                     ..Default::default()

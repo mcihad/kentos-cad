@@ -2077,6 +2077,13 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 137 (docs/adr/0771): a turning wall component, a node decision, a bound slab.
+    if objs.iter().any(building_parts)
+        || doc.blocks.iter().any(|b| Objs::Plain(&b.entities).iter().any(building_parts))
+        || doc.settings.wall_styles.iter().any(|s| s.components.iter().any(|c| c.wrap))
+    {
+        return crate::SCHEMA_WITH_BUILDING_PARTS;
+    }
     // Schema 136 (docs/adr/0758): a layer's indexes.
     fn indexed(nodes: &[LayerNode]) -> bool {
         nodes
@@ -3277,6 +3284,20 @@ pub(crate) fn merge_name(p: kentos_contracts::MergePolicy) -> &'static str {
     }
 }
 
+/// Whether an object needs schema 137 (docs/adr/0771): a wall with a turning component or a node decision, a bound
+/// slab.
+pub(crate) fn building_parts(e: &Entity) -> bool {
+    match e {
+        Entity::Wall(w) => {
+            w.wall.components.iter().any(|c| c.wrap)
+                || w.wall.joins.start_pass.is_some()
+                || w.wall.joins.end_pass.is_some()
+        }
+        Entity::Slab(s) => s.slab.bound.is_some(),
+        _ => false,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -3433,3 +3454,4 @@ mod tests {
         assert!(key_order("pts", "bulges").is_lt());
     }
 }
+

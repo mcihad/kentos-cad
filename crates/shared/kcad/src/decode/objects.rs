@@ -323,6 +323,8 @@ pub(super) struct Features {
     pub(super) cad_work: bool,
     /// Schema 136 (docs/adr/0758): a layer's indexes.
     pub(super) layer_indexes: bool,
+    /// Schema 137 (docs/adr/0771): turning wall components, node decisions, bound slabs.
+    pub(super) building_parts: bool,
     /// Schema 105: a join view's source table and summing columns (docs/adr/0632 §4).
     pub(super) join_sources: bool,
     /// Schema 106: a layer's dataset description and derivation record (docs/adr/0633 §3).
@@ -524,6 +526,7 @@ impl Features {
             table_constraints: schema >= crate::SCHEMA_WITH_TABLE_CONSTRAINTS,
             cad_work: schema >= crate::SCHEMA_WITH_CAD_WORK,
             layer_indexes: schema >= crate::SCHEMA_WITH_LAYER_INDEXES,
+            building_parts: schema >= crate::SCHEMA_WITH_BUILDING_PARTS,
             join_sources: schema >= crate::SCHEMA_WITH_JOIN_SOURCES,
             datasets: schema >= crate::SCHEMA_WITH_DATASETS,
             labels: schema >= SCHEMA_WITH_LABELS,
@@ -2140,6 +2143,10 @@ pub(super) fn object(
         Ok(())
     })?;
     let entity = build(r, kind, index, &mut f)?;
+    // Schema 137 (docs/adr/0771): a turning component, a node decision, a bound slab.
+    if !has.building_parts && crate::encode::building_parts(&entity) {
+        return Err(r.fail(Code::UnknownField, "dönen bileşen, düğüm kararı ya da bağlı döşeme şema 137 ister"));
+    }
     // Schema 115 (docs/adr/0705): a stair's or ramp's railings.
     let railed = match &entity {
         Entity::Stair(s) => s.stair.railings.is_some(),
@@ -2357,7 +2364,7 @@ fn build(
                     fill: f.wall_fill.take(),
                     height: f.height,
                     arch: f.wall_arch.take().unwrap_or_default(),
-                    joins: f.wall_joins.unwrap_or_default(),
+                    joins: f.wall_joins.take().unwrap_or_default(),
                     cleanup: f.wall_cleanup.unwrap_or(true),
                 },
             };

@@ -3503,6 +3503,7 @@ fn a_wall_goes_out_as_its_pieces_at_its_detail() {
         }),
         detail: WallDetail::Standard,
         priority: None,
+        wrap: false,
     };
     let wall = Entity::Wall(WallEntity {
         base: base("yapi"),

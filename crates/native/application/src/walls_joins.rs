@@ -60,6 +60,10 @@ fn answer(doc: &Document, input: &WallsJoins) -> CommandResult<WallsJoined> {
     let (shapes, others) = walls::neighbourhood(doc, &changed, &[]);
     let slots: Vec<Slot> = walls_asked.iter().map(|(s, _)| *s).chain(others).collect();
     let uid = |k: usize| doc.uid(slots[k]).map(|u| u.to_string()).unwrap_or_default();
+    let joins_of = |k: usize| match doc.get(slots[k]) {
+        Some(Entity::Wall(w)) => Some(w.wall.joins.clone()),
+        _ => None,
+    };
     let ins: Vec<WallIn<'_>> = shapes
         .iter()
         .filter_map(|s| match s {
@@ -91,9 +95,23 @@ fn answer(doc: &Document, input: &WallsJoins) -> CommandResult<WallsJoined> {
             walls: j
                 .members
                 .iter()
-                .map(|m| WallJointMember {
-                    uid: uid(m.wall),
-                    end: m.end.map(end_of),
+                .map(|m| {
+                    // With `nodes` (docs/adr/0771 §1): who decided the end, and a tee's joining components' passes.
+                    let user = m.end.is_some_and(|e| {
+                        joins_of(m.wall).is_some_and(|js| js.decided(e == End::Start))
+                    }) || (j.kind == JointKind::Tee && m.end.is_some() && j.node.as_ref().is_some_and(|n| n.user));
+                    WallJointMember {
+                        uid: uid(m.wall),
+                        end: m.end.map(end_of),
+                        decided: (input.nodes && m.end.is_some()).then_some(if user {
+                            kentos_commands::WallNodeDecision::User
+                        } else {
+                            kentos_commands::WallNodeDecision::Auto
+                        }),
+                        passes: (input.nodes && m.end.is_some() && j.kind == JointKind::Tee)
+                            .then(|| j.node.as_ref().map(|n| n.depth.iter().map(|&d| d.min(255) as u8).collect()))
+                            .flatten(),
+                    }
                 })
                 .collect(),
         })
@@ -125,6 +143,8 @@ fn answer(doc: &Document, input: &WallsJoins) -> CommandResult<WallsJoined> {
                             start,
                             end,
                             cleanup: None,
+                            start_pass: None,
+                            end_pass: None,
                         },
                         expected_revision: None,
                     }

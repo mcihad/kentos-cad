@@ -173,6 +173,9 @@ pub(crate) fn changed(
     if let Some(d) = c.discipline {
         f.arch.discipline = d;
     }
+    if let Some(r) = c.keep {
+        crate::wall_reference::kept(&w.wall, &mut out.wall, r);
+    }
     walls::valid(&out.wall, "operation")?;
     walls::drawable(&out.wall, at)?;
     walls::level_known(doc, &out.wall.arch, "operation.level")?;
@@ -206,6 +209,8 @@ fn turned(w: &WallFields) -> WallFields {
     out.joins = WallJoins {
         start: w.joins.end,
         end: w.joins.start,
+        start_pass: w.joins.end_pass.as_ref().map(|p| p.iter().rev().copied().collect()),
+        end_pass: w.joins.start_pass.as_ref().map(|p| p.iter().rev().copied().collect()),
     };
     out
 }
@@ -401,7 +406,13 @@ fn check(doc: &Document, input: &WallsEdit) -> Result<Work, Stop> {
     };
     match &input.operation {
         WallsOperation::Set(c) => {
-            if c == &WallChange::default() {
+            if c == &WallChange::default()
+                || (c.keep.is_some()
+                    && c == &WallChange {
+                        keep: c.keep,
+                        ..WallChange::default()
+                    })
+            {
                 return Err(fail(
                     codes::NOTHING_TO_SET,
                     "Değiştirilecek bir alan verilmedi: genişlik, hiza, öteleme, stil, uçlar, dolgu, yükseklik, kat, evre, durum ya da disiplin verin.".into(),
@@ -422,6 +433,7 @@ fn check(doc: &Document, input: &WallsEdit) -> Result<Work, Stop> {
                     )?;
                 }
             }
+            crate::wall_reference::keep_alone(c)?;
             let style = match &c.style {
                 Some(Some(key)) => {
                     let (s, builtin) = walls::find_style(doc, key)
@@ -589,11 +601,13 @@ fn check(doc: &Document, input: &WallsEdit) -> Result<Work, Stop> {
                 out.wall.joins = WallJoins {
                     start: w.wall.joins.end,
                     end: w.wall.joins.start,
+                    start_pass: w.wall.joins.end_pass.clone(),
+                    end_pass: w.wall.joins.start_pass.clone(),
                 };
                 checked(out, at)
             })?;
         }
-        WallsOperation::ReplaceStyle { from, to } => {
+        WallsOperation::ReplaceStyle { from, to, keep } => {
             let (s, builtin) = walls::find_style(doc, to)
                 .ok_or_else(|| walls::no_style(doc, to, "operation.to"))?;
             let of_style: Vec<&(usize, Slot, &WallEntity)> = walls_found
@@ -612,6 +626,7 @@ fn check(doc: &Document, input: &WallsEdit) -> Result<Work, Stop> {
             }
             let c = WallChange {
                 style: Some(Some(to.clone())),
+                keep: *keep,
                 ..WallChange::default()
             };
             for (at, slot, w) in of_style {
@@ -625,8 +640,15 @@ fn check(doc: &Document, input: &WallsEdit) -> Result<Work, Stop> {
             start,
             end,
             cleanup,
+            start_pass,
+            end_pass,
         } => {
-            if start.is_none() && end.is_none() && cleanup.is_none() {
+            if start.is_none()
+                && end.is_none()
+                && cleanup.is_none()
+                && start_pass.is_none()
+                && end_pass.is_none()
+            {
                 return Err(fail(
                     codes::NOTHING_TO_SET,
                     "Değiştirilecek bir alan verilmedi: başlangıcın ya da sonun birleşimini, ya da temizliği verin.".into(),
@@ -634,7 +656,9 @@ fn check(doc: &Document, input: &WallsEdit) -> Result<Work, Stop> {
                 ));
             }
             each(&mut work, &|at, w| {
-                if w.wall.closed && (start.is_some() || end.is_some()) {
+                if w.wall.closed
+                    && (start.is_some() || end.is_some() || start_pass.is_some() || end_pass.is_some())
+                {
                     return Err(fail(
                         codes::WALL_CLOSED,
                         "Kapalı duvarın ucu yok; uç birleşimi verilmez, yalnız temizlik.".into(),
@@ -651,8 +675,23 @@ fn check(doc: &Document, input: &WallsEdit) -> Result<Work, Stop> {
                 if let Some(c) = cleanup {
                     out.wall.cleanup = *c;
                 }
+                if let Some(p) = start_pass {
+                    out.wall.joins.start_pass = p.clone();
+                }
+                if let Some(p) = end_pass {
+                    out.wall.joins.end_pass = p.clone();
+                }
+                walls::valid(&out.wall, "operation")?;
                 Ok(out)
             })?;
+            // A node decision is kept only where the end tees into a straight wall (docs/adr/0771 §1).
+            for (k, (slot, w)) in work.updates.iter().enumerate() {
+                for (start, given) in [(true, start_pass), (false, end_pass)] {
+                    if matches!(given, Some(Some(_))) {
+                        crate::wall_reference::node_supported(doc, *slot, w, start, &format!("uids[{k}]"))?;
+                    }
+                }
+            }
         }
         WallsOperation::ResetJoins => {
             each(&mut work, &|_, w| {
@@ -921,6 +960,13 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &WallsEdit) -> CommandResult<Walls
                 .collect();
             let adds: Vec<_> = work.added.iter().cloned().map(Entity::Wall).collect();
             let followers = crate::dimension_sets::derived(cx.doc, &updates, &adds, &work.removed);
+            let keep = match &input.operation {
+                WallsOperation::Set(c) => c.keep.is_some(),
+                WallsOperation::ReplaceStyle { keep, .. } => keep.is_some(),
+                _ => false,
+            };
+            let effects =
+                keep.then(|| crate::wall_reference::effects(cx.doc, &work.updates));
             let named = work.named.unwrap_or(work.updates.len());
             CommandResult::Completed {
                 output: WallsEdited {
@@ -936,6 +982,7 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &WallsEdit) -> CommandResult<Walls
                     added: work.added.iter().cloned().map(Entity::Wall).collect(),
                     removed: removed_uids(cx.doc, &work),
                     styles_added: work.styles.iter().map(|s| s.id.clone()).collect(),
+                    effects,
                     revision: cx.doc.revision().to_string(),
                 },
                 warnings,
@@ -1020,6 +1067,7 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: WallsEdit) -> CommandResu
             added,
             removed,
             styles_added: work.styles.into_iter().map(|s| s.id).collect(),
+            effects: None,
             revision: doc.revision().to_string(),
         },
         warnings,

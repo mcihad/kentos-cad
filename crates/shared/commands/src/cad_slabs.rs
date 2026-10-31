@@ -124,12 +124,23 @@ pub struct NewSlab {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub attrs: Option<BTreeMap<String, String>>,
+    /// Kaynağa bağlı (docs/adr/0771 §4): with `seed`, the slab keeps its walls: its outline found again round the
+    /// point, by `boundary` and moved by `edgeOffset`, whenever they change. Absent or false: its outline is its own.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub bound: Option<bool>,
+    /// A space by its persistent id: the slab's outline is the space's rings (moved by `edgeOffset`), bound to it; not
+    /// with `parts` or `seed`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
+    pub space: Option<String>,
 }
 
 /// Input of `cad.slabs.create` v1: slabs on a named layer, written as one undo step “Döşeme”.
 ///
-/// Refusals, in this order: `no_objects`, `not_finite`, `invalid_slab`, `level_not_found`, `slab_not_enclosed`,
-/// `slab_offset_failed`, `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`,
+/// Refusals, in this order: `no_objects`, `not_finite`, `invalid_slab`, `invalid_uid`, `entity_not_found`,
+/// `not_a_space`, `level_not_found`, `slab_not_enclosed`, `slab_offset_failed`, `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`,
 /// `not_a_layer`, `layer_locked`, `invalid_attribute`, `attribute_required`; on the desktop also `slots_exhausted`.
 /// Warning: `layer_hidden`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -247,6 +258,27 @@ pub enum SlabsOperation {
         #[cfg_attr(feature = "ts", ts(optional))]
         boundary: Option<SlabBoundary>,
     },
+    /// Kaynağa bağla (docs/adr/0771 §4): each slab's outline bound to the walls round `seed` (by `boundary`) or to the
+    /// space `space` (its persistent id), moved by `offset`, and found now; a bound slab bound again.
+    Bind {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        seed: Option<Vec2>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        boundary: Option<SlabBoundary>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
+        space: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        offset: Option<f64>,
+    },
+    /// Ayır: each bound slab's outline kept as it is now, its own (Bağımsız kontur).
+    Detach,
     /// Ekle: the area drawn or found added to each slab.
     Add {
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -266,8 +298,9 @@ pub enum SlabsOperation {
 /// or none.
 ///
 /// Refusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_a_slab`, `nothing_to_set`, `not_finite`,
-/// `invalid_slab`, `level_not_found`, `slab_not_enclosed`, `slab_offset_failed`, `slab_cut_missed`,
-/// `invalid_revision`, `revision_conflict`, `layer_locked`.
+/// `invalid_slab`, `level_not_found`, `slab_not_enclosed`, `slab_offset_failed`, `slab_cut_missed`, `slab_bound`
+/// (subtract or add on a bound slab), `slab_not_bound` (detach), `not_a_space`, `invalid_revision`,
+/// `revision_conflict`, `layer_locked`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]

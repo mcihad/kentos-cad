@@ -1585,8 +1585,986 @@
         "caps": "open"
       },
       {
-        "kind": "line",
+        "kind": "wall",
         "id": 65,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 3100.0
+          },
+          {
+            "x": 4.0,
+            "y": 3100.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "components": [
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "wrap": true,
+            "name": "Katman 1"
+          },
+          {
+            "priority": 1,
+            "detail": "standard",
+            "name": "Katman 2"
+          },
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "wrap": true,
+            "name": "Katman 3"
+          }
+        ]
+      },
+      {
+        "kind": "wall",
+        "id": 66,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 3200.0
+          },
+          {
+            "x": 4.0,
+            "y": 3200.0
+          }
+        ],
+        "width": 0.25,
+        "justify": "center",
+        "components": [
+          {
+            "thickness": 0.05,
+            "priority": 4,
+            "detail": "standard",
+            "wrap": true,
+            "name": "Katman 1"
+          },
+          {
+            "priority": 1,
+            "detail": "standard",
+            "name": "Katman 2"
+          },
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 3"
+          }
+        ]
+      },
+      {
+        "kind": "wall",
+        "id": 67,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 3300.0
+          },
+          {
+            "x": 5.0,
+            "y": 3300.0
+          }
+        ],
+        "width": 0.3,
+        "justify": "center",
+        "components": [
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "wrap": true,
+            "name": "Katman 1"
+          },
+          {
+            "thickness": 0.05,
+            "priority": 4,
+            "detail": "standard",
+            "wrap": true,
+            "name": "Katman 2"
+          },
+          {
+            "priority": 1,
+            "detail": "standard",
+            "name": "Katman 3"
+          },
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "wrap": true,
+            "name": "Katman 4"
+          }
+        ]
+      },
+      {
+        "kind": "wall",
+        "id": 68,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 3400.0
+          },
+          {
+            "x": 0.0,
+            "y": 3404.0
+          }
+        ],
+        "width": 0.25,
+        "justify": "right",
+        "components": [
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 1"
+          },
+          {
+            "thickness": 0.05,
+            "priority": 4,
+            "detail": "standard",
+            "name": "Katman 2"
+          },
+          {
+            "priority": 1,
+            "detail": "standard",
+            "name": "Katman 3"
+          },
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "wrap": true,
+            "name": "Katman 4"
+          }
+        ]
+      },
+      {
+        "kind": "wall",
+        "id": 69,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 3500.0
+          },
+          {
+            "x": 6.0,
+            "y": 3500.0
+          }
+        ],
+        "width": 0.3,
+        "justify": "center",
+        "components": [
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "wrap": true,
+            "name": "Katman 1"
+          },
+          {
+            "thickness": 0.05,
+            "priority": 4,
+            "detail": "standard",
+            "wrap": true,
+            "name": "Katman 2"
+          },
+          {
+            "priority": 1,
+            "detail": "standard",
+            "name": "Katman 3"
+          },
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "wrap": true,
+            "name": "Katman 4"
+          }
+        ],
+        "caps": "open"
+      },
+      {
+        "kind": "wall",
+        "id": 70,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 3600.0
+          },
+          {
+            "x": 8.0,
+            "y": 3600.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "components": [
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "wrap": true,
+            "name": "Katman 1"
+          },
+          {
+            "priority": 1,
+            "detail": "standard",
+            "name": "Katman 2"
+          },
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "wrap": true,
+            "name": "Katman 3"
+          }
+        ],
+        "caps": "open"
+      },
+      {
+        "kind": "wall",
+        "id": 71,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 3700.0
+          },
+          {
+            "x": 6.0,
+            "y": 3700.0
+          }
+        ],
+        "width": 0.3,
+        "justify": "center",
+        "components": [
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 1"
+          },
+          {
+            "thickness": 0.05,
+            "priority": 4,
+            "detail": "standard",
+            "name": "Katman 2"
+          },
+          {
+            "priority": 1,
+            "detail": "standard",
+            "name": "Katman 3"
+          },
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 4"
+          }
+        ],
+        "caps": "open"
+      },
+      {
+        "kind": "wall",
+        "id": 72,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 3800.0
+          },
+          {
+            "x": 4.0,
+            "y": 3800.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "components": [
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "wrap": true,
+            "name": "Katman 1"
+          },
+          {
+            "priority": 1,
+            "detail": "standard",
+            "name": "Katman 2"
+          },
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "wrap": true,
+            "name": "Katman 3"
+          }
+        ],
+        "caps": "open"
+      },
+      {
+        "kind": "wall",
+        "id": 73,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 3900.0
+          },
+          {
+            "x": 4.0,
+            "y": 3900.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "components": [
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "wrap": true,
+            "name": "Katman 1"
+          },
+          {
+            "priority": 1,
+            "detail": "standard",
+            "name": "Katman 2"
+          },
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "wrap": true,
+            "name": "Katman 3"
+          }
+        ]
+      },
+      {
+        "kind": "wall",
+        "id": 74,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 4.0,
+            "y": 3900.0
+          },
+          {
+            "x": 4.0,
+            "y": 3903.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "components": [
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 1"
+          },
+          {
+            "priority": 1,
+            "detail": "standard",
+            "name": "Katman 2"
+          },
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 3"
+          }
+        ]
+      },
+      {
+        "kind": "wall",
+        "id": 75,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 4000.0
+          },
+          {
+            "x": 6.0,
+            "y": 4000.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "components": [
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 1"
+          },
+          {
+            "priority": 1,
+            "detail": "standard",
+            "name": "Katman 2"
+          },
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 3"
+          }
+        ]
+      },
+      {
+        "kind": "wall",
+        "id": 76,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 3.0,
+            "y": 4004.0
+          },
+          {
+            "x": 3.0,
+            "y": 4000.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "components": [
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 1"
+          },
+          {
+            "priority": 1,
+            "detail": "standard",
+            "name": "Katman 2"
+          },
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 3"
+          }
+        ],
+        "joins": {
+          "endPass": [
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 77,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 4100.0
+          },
+          {
+            "x": 6.0,
+            "y": 4100.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "components": [
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 1"
+          },
+          {
+            "priority": 1,
+            "detail": "standard",
+            "name": "Katman 2"
+          },
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 3"
+          }
+        ]
+      },
+      {
+        "kind": "wall",
+        "id": 78,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 3.0,
+            "y": 4104.0
+          },
+          {
+            "x": 3.0,
+            "y": 4100.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "components": [
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 1"
+          },
+          {
+            "priority": 1,
+            "detail": "standard",
+            "name": "Katman 2"
+          },
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 3"
+          }
+        ],
+        "joins": {
+          "endPass": [
+            1,
+            2,
+            1
+          ]
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 79,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 4200.0
+          },
+          {
+            "x": 6.0,
+            "y": 4200.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "components": [
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 1"
+          },
+          {
+            "priority": 1,
+            "detail": "standard",
+            "name": "Katman 2"
+          },
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 3"
+          }
+        ]
+      },
+      {
+        "kind": "wall",
+        "id": 80,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 3.0,
+            "y": 4204.0
+          },
+          {
+            "x": 3.0,
+            "y": 4200.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "components": [
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 1"
+          },
+          {
+            "priority": 1,
+            "detail": "standard",
+            "name": "Katman 2"
+          },
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 3"
+          }
+        ],
+        "joins": {
+          "endPass": [
+            9,
+            9,
+            9
+          ]
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 81,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 4300.0
+          },
+          {
+            "x": 6.0,
+            "y": 4300.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "components": [
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 1"
+          },
+          {
+            "priority": 1,
+            "detail": "standard",
+            "name": "Katman 2"
+          },
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 3"
+          }
+        ],
+        "cleanup": false
+      },
+      {
+        "kind": "wall",
+        "id": 82,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 3.0,
+            "y": 4304.0
+          },
+          {
+            "x": 3.0,
+            "y": 4300.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "components": [
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 1"
+          },
+          {
+            "priority": 1,
+            "detail": "standard",
+            "name": "Katman 2"
+          },
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 3"
+          }
+        ],
+        "joins": {
+          "endPass": [
+            0,
+            1,
+            0
+          ]
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 83,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 6.0,
+            "y": 4400.0
+          },
+          {
+            "x": 0.0,
+            "y": 4400.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "components": [
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 1"
+          },
+          {
+            "priority": 1,
+            "detail": "standard",
+            "name": "Katman 2"
+          },
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 3"
+          }
+        ]
+      },
+      {
+        "kind": "wall",
+        "id": 84,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 3.0,
+            "y": 4400.0
+          },
+          {
+            "x": 3.0,
+            "y": 4396.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "components": [
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 1"
+          },
+          {
+            "priority": 1,
+            "detail": "standard",
+            "name": "Katman 2"
+          },
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 3"
+          }
+        ],
+        "joins": {
+          "startPass": [
+            0,
+            2,
+            0
+          ]
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 85,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 4500.0
+          },
+          {
+            "x": 4.0,
+            "y": 4500.0
+          },
+          {
+            "x": 4.0,
+            "y": 4503.0
+          },
+          {
+            "x": 0.0,
+            "y": 4503.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "closed": true
+      },
+      {
+        "kind": "wall",
+        "id": 86,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 4.0,
+            "y": 4500.0
+          },
+          {
+            "x": 7.0,
+            "y": 4500.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 87,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 4600.0
+          },
+          {
+            "x": 4.0,
+            "y": 4600.0
+          },
+          {
+            "x": 4.0,
+            "y": 4603.0
+          },
+          {
+            "x": 0.0,
+            "y": 4603.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "closed": true
+      },
+      {
+        "kind": "wall",
+        "id": 88,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 4.0,
+            "y": 4600.0
+          },
+          {
+            "x": 7.0,
+            "y": 4600.0
+          },
+          {
+            "x": 7.0,
+            "y": 4603.0
+          },
+          {
+            "x": 4.0,
+            "y": 4603.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 89,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 4700.0
+          },
+          {
+            "x": 6.0,
+            "y": 4700.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "components": [
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 1"
+          },
+          {
+            "priority": 1,
+            "detail": "standard",
+            "name": "Katman 2"
+          },
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 3"
+          }
+        ]
+      },
+      {
+        "kind": "wall",
+        "id": 90,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 3.0,
+            "y": 4704.0
+          },
+          {
+            "x": 3.0,
+            "y": 4700.0
+          }
+        ],
+        "width": 0.15,
+        "justify": "center",
+        "joins": {
+          "endPass": [
+            1
+          ]
+        }
+      },
+      {
+        "kind": "line",
+        "id": 91,
         "layerId": "cizim",
         "attrs": {},
         "a": {
@@ -1706,7 +2684,33 @@
               62,
               63,
               64,
-              65
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
             ],
             "canUndo": false,
             "canRedo": false,
@@ -1821,7 +2825,33 @@
               62,
               63,
               64,
-              65
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
             ],
             "canUndo": false,
             "canRedo": false,
@@ -1936,7 +2966,33 @@
               62,
               63,
               64,
-              65
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
             ],
             "canUndo": false,
             "canRedo": false,
@@ -2051,7 +3107,33 @@
               62,
               63,
               64,
-              65
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
             ],
             "canUndo": false,
             "canRedo": false,
@@ -2166,7 +3248,33 @@
               62,
               63,
               64,
-              65
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
             ],
             "canUndo": false,
             "canRedo": false,
@@ -2281,7 +3389,33 @@
               62,
               63,
               64,
-              65
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
             ],
             "canUndo": false,
             "canRedo": false,
@@ -2378,7 +3512,33 @@
               62,
               63,
               64,
-              65
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
             ],
             "canUndo": false,
             "canRedo": false,
@@ -2493,7 +3653,33 @@
               62,
               63,
               64,
-              65
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
             ],
             "canUndo": false,
             "canRedo": false,
@@ -2608,7 +3794,33 @@
               62,
               63,
               64,
-              65
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
             ],
             "canUndo": false,
             "canRedo": false,
@@ -2723,7 +3935,33 @@
               62,
               63,
               64,
-              65
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
             ],
             "canUndo": false,
             "canRedo": false,
@@ -2837,7 +4075,33 @@
               62,
               63,
               64,
-              65
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
             ],
             "canUndo": false,
             "canRedo": false,
@@ -2951,7 +4215,33 @@
               62,
               63,
               64,
-              65
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3065,7 +4355,33 @@
               62,
               63,
               64,
-              65
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3179,7 +4495,33 @@
               62,
               63,
               64,
-              65
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3293,7 +4635,33 @@
               62,
               63,
               64,
-              65
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3407,7 +4775,33 @@
               62,
               63,
               64,
-              65
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3521,7 +4915,33 @@
               62,
               63,
               64,
-              65
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3635,7 +5055,33 @@
               62,
               63,
               64,
-              65
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3749,7 +5195,33 @@
               62,
               63,
               64,
-              65
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3879,7 +5351,33 @@
               62,
               63,
               64,
-              65
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
             ],
             "canUndo": false,
             "canRedo": false,
@@ -4009,7 +5507,33 @@
               62,
               63,
               64,
-              65
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
             ],
             "canUndo": false,
             "canRedo": false,
@@ -4122,7 +5646,33 @@
               62,
               63,
               64,
-              65
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
             ],
             "canUndo": false,
             "canRedo": false,
@@ -4235,7 +5785,33 @@
               62,
               63,
               64,
-              65
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
             ],
             "canUndo": false,
             "canRedo": false,
@@ -4348,7 +5924,33 @@
               62,
               63,
               64,
-              65
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
             ],
             "canUndo": false,
             "canRedo": false,
@@ -4483,7 +6085,33 @@
               62,
               63,
               64,
-              65
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
             ],
             "canUndo": false,
             "canRedo": false,
@@ -4603,7 +6231,33 @@
               62,
               63,
               64,
-              65
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
             ],
             "canUndo": false,
             "canRedo": false,
@@ -4718,7 +6372,33 @@
               62,
               63,
               64,
-              65
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
             ],
             "canUndo": false,
             "canRedo": false,
@@ -4838,7 +6518,33 @@
               62,
               63,
               64,
-              65
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
             ],
             "canUndo": false,
             "canRedo": false,
@@ -4960,7 +6666,33 @@
               62,
               63,
               64,
-              65
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
             ],
             "canUndo": false,
             "canRedo": false,
@@ -5080,7 +6812,33 @@
               62,
               63,
               64,
-              65
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
             ],
             "canUndo": false,
             "canRedo": false,
@@ -5195,7 +6953,2286 @@
               62,
               63,
               64,
-              65
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Uçta döner: iki yüzü sıvalı duvarın serbest uçları: birleşimleri ve birleşmeyenleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:65"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [],
+              "issues": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Uçta döner: yalnız dış yüzün yalıtımı: birleşimleri ve birleşmeyenleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:66"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [],
+              "issues": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Uçta döner: dış yüzde iki katman, iç yüzde sıva: birleşimleri ve birleşmeyenleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:67"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [],
+              "issues": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Uçta döner: sağa hizalı, iç yüz yalnız: birleşimleri ve birleşmeyenleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:68"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [],
+              "issues": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pencere sövesi: açıklıkta dönen sıva ve yalıtım: birleşimleri ve birleşmeyenleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:69"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [],
+              "issues": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kapı: iki açıklıkta da dönen sıva: birleşimleri ve birleşmeyenleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:70"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [],
+              "issues": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Açıklık: dönen katmansız duvarda düz söve: birleşimleri ve birleşmeyenleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:71"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [],
+              "issues": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Açıklık duvar ucuna çok yakın: katmanlar dönmez: birleşimleri ve birleşmeyenleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:72"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [],
+              "issues": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Köşede birleşik uç dönmez, serbest uç döner: birleşimleri ve birleşmeyenleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:73",
+              "$uidOf:74"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [
+                {
+                  "kind": "corner",
+                  "at": {
+                    "x": 4.0,
+                    "y": 3900.0
+                  },
+                  "walls": [
+                    {
+                      "uid": "$uidOf:73",
+                      "end": "end"
+                    },
+                    {
+                      "uid": "$uidOf:74",
+                      "end": "start"
+                    }
+                  ]
+                }
+              ],
+              "issues": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Düğüm kararı: çekirdek konağın yüzünde durur: birleşimleri ve birleşmeyenleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:75",
+              "$uidOf:76"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [
+                {
+                  "kind": "tee",
+                  "at": {
+                    "x": 3.0,
+                    "y": 4000.0
+                  },
+                  "walls": [
+                    {
+                      "uid": "$uidOf:76",
+                      "end": "end"
+                    },
+                    {
+                      "uid": "$uidOf:75"
+                    }
+                  ]
+                }
+              ],
+              "issues": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Düğüm kararı: bütün katmanlar konağın çekirdeğine girer: birleşimleri ve birleşmeyenleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:77",
+              "$uidOf:78"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [
+                {
+                  "kind": "tee",
+                  "at": {
+                    "x": 3.0,
+                    "y": 4100.0
+                  },
+                  "walls": [
+                    {
+                      "uid": "$uidOf:78",
+                      "end": "end"
+                    },
+                    {
+                      "uid": "$uidOf:77"
+                    }
+                  ]
+                }
+              ],
+              "issues": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Düğüm kararı: konaktan fazlası konağın bileşen sayısında kalır: birleşimleri ve birleşmeyenleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:79",
+              "$uidOf:80"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [
+                {
+                  "kind": "tee",
+                  "at": {
+                    "x": 3.0,
+                    "y": 4200.0
+                  },
+                  "walls": [
+                    {
+                      "uid": "$uidOf:80",
+                      "end": "end"
+                    },
+                    {
+                      "uid": "$uidOf:79"
+                    }
+                  ]
+                }
+              ],
+              "issues": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Düğüm kararı: temizlik kapalıyken de uygulanır: birleşimleri ve birleşmeyenleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:81",
+              "$uidOf:82"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [
+                {
+                  "kind": "tee",
+                  "at": {
+                    "x": 3.0,
+                    "y": 4300.0
+                  },
+                  "walls": [
+                    {
+                      "uid": "$uidOf:82",
+                      "end": "end"
+                    },
+                    {
+                      "uid": "$uidOf:81"
+                    }
+                  ]
+                }
+              ],
+              "issues": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Düğüm kararı: ters yönlü konağa alttan, başlangıç ucunda: birleşimleri ve birleşmeyenleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:83",
+              "$uidOf:84"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [
+                {
+                  "kind": "tee",
+                  "at": {
+                    "x": 3.0,
+                    "y": 4400.0
+                  },
+                  "walls": [
+                    {
+                      "uid": "$uidOf:84",
+                      "end": "start"
+                    },
+                    {
+                      "uid": "$uidOf:83"
+                    }
+                  ]
+                }
+              ],
+              "issues": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Odanın köşesinden kenarın doğrultusunda çıkan duvar öbür kenara T birleşir: birleşimleri ve birleşmeyenleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:85",
+              "$uidOf:86"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [
+                {
+                  "kind": "tee",
+                  "at": {
+                    "x": 4.0,
+                    "y": 4500.0
+                  },
+                  "walls": [
+                    {
+                      "uid": "$uidOf:86",
+                      "end": "start"
+                    },
+                    {
+                      "uid": "$uidOf:85"
+                    }
+                  ]
+                }
+              ],
+              "issues": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "U duvarı iki ucuyla odanın iki köşesine birleşir: birleşimleri ve birleşmeyenleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:87",
+              "$uidOf:88"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [
+                {
+                  "kind": "tee",
+                  "at": {
+                    "x": 4.0,
+                    "y": 4600.0
+                  },
+                  "walls": [
+                    {
+                      "uid": "$uidOf:88",
+                      "end": "start"
+                    },
+                    {
+                      "uid": "$uidOf:87"
+                    }
+                  ]
+                },
+                {
+                  "kind": "tee",
+                  "at": {
+                    "x": 4.0,
+                    "y": 4603.0
+                  },
+                  "walls": [
+                    {
+                      "uid": "$uidOf:88",
+                      "end": "end"
+                    },
+                    {
+                      "uid": "$uidOf:87"
+                    }
+                  ]
+                }
+              ],
+              "issues": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Düğüm kararı: yalın duvar konağa tek sayıyla: birleşimleri ve birleşmeyenleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:89",
+              "$uidOf:90"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [
+                {
+                  "kind": "tee",
+                  "at": {
+                    "x": 3.0,
+                    "y": 4700.0
+                  },
+                  "walls": [
+                    {
+                      "uid": "$uidOf:90",
+                      "end": "end"
+                    },
+                    {
+                      "uid": "$uidOf:89"
+                    }
+                  ]
+                }
+              ],
+              "issues": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
             ],
             "canUndo": false,
             "canRedo": false,
@@ -5310,7 +9347,33 @@
               62,
               63,
               64,
-              65
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
             ],
             "canUndo": false,
             "canRedo": false,
@@ -5404,7 +9467,33 @@
               62,
               63,
               64,
-              65
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
             ],
             "canUndo": false,
             "canRedo": false,
@@ -5498,7 +9587,33 @@
               62,
               63,
               64,
-              65
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
             ],
             "canUndo": false,
             "canRedo": false,
@@ -5515,7 +9630,7 @@
           "op": "execute",
           "input": {
             "uids": [
-              "$uidOf:65"
+              "$uidOf:91"
             ]
           },
           "result": {
@@ -5592,7 +9707,33 @@
               62,
               63,
               64,
-              65
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91
             ],
             "canUndo": false,
             "canRedo": false,

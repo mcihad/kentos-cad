@@ -1220,6 +1220,13 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
             };
             let fixed = kentos_commands::fixed_width(&x.components).is_some();
             geo.push(metres("Genişlik", x.width).editor(if fixed { None } else { number(Field::WallWidth(slot)) }));
+            // Kalınlıkta sabit (docs/adr/0771 §2): the line a width or style change keeps, this session's.
+            let keep_now = super::wall_parts::keep();
+            let keeps = kentos_commands::WallReference::ALL
+                .iter()
+                .map(|&r| pick(r.label().to_owned(), r == keep_now, Message::Properties(Event::WallKeep(r)), None))
+                .collect();
+            geo.push(Row::text("Kalınlıkta sabit", keep_now.label()).editor(select(keep_now.label().to_owned(), keeps)));
             let justify = kentos_commands::WallJustify::ALL
                 .iter()
                 .map(|&j| {
@@ -1310,12 +1317,31 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
                             pick(
                                 j.label().to_owned(),
                                 j == now,
-                                op(kentos_commands::WallsOperation::Joins { start, end, cleanup: None }),
+                                op(kentos_commands::WallsOperation::Joins { start, end, cleanup: None, start_pass: None, end_pass: None }),
                                 Some(join_icon(j)),
                             )
                         })
                         .collect();
                     geo.push(Row::text(title, now.label()).editor(select(now.label().to_owned(), items)));
+                }
+                // Its ends' node decisions (docs/adr/0771 §1): the user's, kept on the end, or the priorities'.
+                for (title, pass, at_end) in
+                    [("Baş düğümü", x.joins.start_pass.as_ref(), false), ("Son düğümü", x.joins.end_pass.as_ref(), true)]
+                {
+                    let now = super::wall_parts::node_text(pass);
+                    let items = super::wall_parts::node_choices(x)
+                        .into_iter()
+                        .map(|(label, p)| {
+                            let (start_pass, end_pass) = if at_end { (None, Some(p.clone())) } else { (Some(p.clone()), None) };
+                            pick(
+                                label.to_owned(),
+                                super::wall_parts::node_text(p.as_ref()) == now,
+                                op(kentos_commands::WallsOperation::Joins { start: None, end: None, cleanup: None, start_pass, end_pass }),
+                                Some(if p.is_some() { "wallJoinButt" } else { "wallJoinAuto" }),
+                            )
+                        })
+                        .collect();
+                    geo.push(Row::text(title, now.clone()).editor(select(now, items)));
                 }
             }
             let clean = [(true, "Önceliğe göre"), (false, "Kapalı")]
@@ -1324,7 +1350,7 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
                     pick(
                         l.to_owned(),
                         c == x.cleanup,
-                        op(kentos_commands::WallsOperation::Joins { start: None, end: None, cleanup: Some(c) }),
+                        op(kentos_commands::WallsOperation::Joins { start: None, end: None, cleanup: Some(c), start_pass: None, end_pass: None }),
                         None,
                     )
                 })
@@ -1639,6 +1665,29 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
                 .map(|&r| pick(r.label().into(), r == x.role, set(SlabChange { role: Some(r), ..Default::default() }), Some("slab")))
                 .collect();
             geo.push(Row::text("Döşeme türü", x.role.label()).editor(select(x.role.label().into(), roles)));
+            // Sınır (docs/adr/0771 §4): an outline of its own, or bound to its walls (Ayır, Kaynağa bağla).
+            let bound_now = super::wall_parts::bound_text(x);
+            let bounds = super::wall_parts::bound_choices(x)
+                .into_iter()
+                .map(|(label, chosen, op)| Choice::Pick {
+                    label: label.into(),
+                    swatch: None,
+                    icon: Some("slab"),
+                    wide: false,
+                    chosen,
+                    enabled: op.is_some(),
+                    message: Message::Properties(Event::Slab(slot, op.unwrap_or(SlabsOperation::Detach))),
+                })
+                .collect();
+            geo.push(Row::text("Sınır", bound_now.clone()).editor(select(bound_now, bounds)));
+            if let Some(b) = &x.bound {
+                if let Some(why) = b.broken {
+                    geo.push(Row::text("Kopukluk", why.words()));
+                }
+                if !b.uids.is_empty() {
+                    geo.push(Row::text("Sınırlayan duvar", b.uids.len().to_string()));
+                }
+            }
             geo.push(
                 Row::figure("Kalınlık", f.length_bare(x.thickness))
                     .unit(f.length_unit_label())

@@ -136,6 +136,8 @@ pub struct SlabTool {
     excluded: bool,
     /// Delik: cut out of the slab under the click.
     hole: bool,
+    /// Kaynağa bağlı (docs/adr/0771 §4): a slab found from the walls keeps them, its outline following them.
+    bind: bool,
     level: crate::architecture_level::Choice,
     pts: Vec<Vec2>,
     hover: Option<Vec2>,
@@ -161,6 +163,7 @@ impl Default for SlabTool {
             material: None,
             excluded: false,
             hole: false,
+            bind: false,
             level: Default::default(),
             pts: Vec::new(),
             hover: None,
@@ -206,6 +209,8 @@ impl SlabTool {
             edge: self.edge.map(|kind| NewSlabEdge { kind, width: self.edge_width }),
             excluded: self.excluded.then_some(true),
             attrs: None,
+            bound: (self.bind && seed.is_some()).then_some(true),
+            space: None,
         }
     }
 
@@ -609,6 +614,7 @@ impl Tool for SlabTool {
             "W" if self.edge.is_some() => self.ask = Some(Ask::EdgeWidth),
             "M" => self.ask = Some(Ask::Material),
             "X" => self.excluded = !self.excluded,
+            "B" => self.bind = !self.bind,
             "D" => self.hole = !self.hole,
             "L" => self.level.next(),
             "G" if self.draws() => return self.undo_step(cx),
@@ -652,6 +658,7 @@ impl Tool for SlabTool {
             Setting::text("M", "Malzeme", self.material.clone().unwrap_or_default()),
             self.level.setting(),
             Setting::toggle("X", "Metraj dışı", self.excluded),
+            Setting::toggle("B", "Kaynağa bağlı (duvarlar değişince sınır izler)", self.bind),
             Setting::toggle("D", "Delik (döşemeden kes)", self.hole),
         ]);
         if self.hole {
@@ -682,6 +689,7 @@ impl Tool for SlabTool {
             }
             "M" => self.material = (!value.trim().is_empty()).then(|| value.trim().to_owned()),
             "X" if matches!(value, "yes" | "no") => self.excluded = value == "yes",
+            "B" if matches!(value, "yes" | "no") => self.bind = value == "yes",
             "D" if matches!(value, "yes" | "no") => {
                 self.hole = value == "yes";
                 self.pts.clear();

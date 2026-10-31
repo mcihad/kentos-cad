@@ -336,6 +336,7 @@ pub mod spaces_edit;
 pub mod spaces_quantities;
 pub mod walls_edit;
 pub mod walls_joins;
+pub(crate) mod wall_reference;
 pub mod walls_from_lines;
 pub mod offset;
 pub mod point;

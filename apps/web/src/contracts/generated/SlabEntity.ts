@@ -4,6 +4,7 @@ import type { Attachment } from "./Attachment";
 import type { LabelPin } from "./LabelPin";
 import type { LineType } from "./LineType";
 import type { LookPart } from "./LookPart";
+import type { SlabBound } from "./SlabBound";
 import type { SlabEdge } from "./SlabEdge";
 import type { SlabRole } from "./SlabRole";
 import type { SpacePart } from "./SpacePart";
@@ -94,4 +95,9 @@ material?: string, edge?: SlabEdge,
 /**
  * Left out of the quantities' totals: listed, not summed.
  */
-excluded?: boolean, };
+excluded?: boolean, 
+/**
+ * Kaynağa bağlı sınır (docs/adr/0771 §4): its outline found again from its source whenever that changes; absent:
+ * an outline of its own.
+ */
+bound?: SlabBound, };

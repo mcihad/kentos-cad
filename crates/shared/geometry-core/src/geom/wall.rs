@@ -144,6 +144,8 @@ pub struct Component {
     pub hatch: Option<ComponentFill>,
     pub detail: Detail,
     pub priority: Option<u8>,
+    /// Uçta döner (docs/adr/0771 §3): an outermost layer that turns across the wall's free ends and its openings' jambs.
+    pub wrap: bool,
 }
 
 impl Component {
@@ -199,6 +201,9 @@ impl ToJson for Component {
         field(out, &mut first, "hatch", &self.hatch);
         field(out, &mut first, "detail", self.detail.name());
         field(out, &mut first, "priority", &self.priority.map(f64::from));
+        if self.wrap {
+            field(out, &mut first, "wrap", &true);
+        }
         out.push('}');
     }
 }
@@ -221,6 +226,7 @@ impl FromJson for Component {
                 Some(p) if (1.0..=9.0).contains(&p) && p.fract() == 0.0 => Some(p as u8),
                 Some(p) => return Err(format!("bileşenin önceliği 1 ile 9 arası bir tam sayıdır, {p} değil")),
             },
+            wrap: matches!(v.get("wrap"), Json::Bool(true)),
         })
     }
 }
@@ -243,6 +249,9 @@ pub struct Spec {
     pub arch: Option<Json>,
     /// Its start's and its end's join.
     pub joins: [JoinMode; 2],
+    /// Its start's and its end's node decision (docs/adr/0771 §1): where it tees into a host, how many of the host's
+    /// components each of its own passes; none: by the priorities.
+    pub passes: [Option<Vec<u8>>; 2],
     /// Its components are cleaned up by their priorities where another wall tees into or crosses it.
     pub cleanup: bool,
 }
@@ -261,6 +270,7 @@ impl Default for Spec {
             height: None,
             arch: None,
             joins: [JoinMode::Auto; 2],
+            passes: [None, None],
             cleanup: true,
         }
     }
@@ -309,6 +319,22 @@ impl crate::api::json::Flat for Spec {
                 };
                 [at("start")?, at("end")?]
             },
+            passes: {
+                let at = |name: &str| -> Result<Option<Vec<u8>>, String> {
+                    match v.get("joins").get(name) {
+                        Json::Arr(list) => list
+                            .iter()
+                            .map(|x| match x {
+                                Json::Num(n) if *n >= 0.0 && *n <= 255.0 && n.fract() == 0.0 => Ok(*n as u8),
+                                _ => Err("düğüm kararı negatif olmayan tam sayılardır".to_owned()),
+                            })
+                            .collect::<Result<Vec<u8>, String>>()
+                            .map(Some),
+                        _ => Ok(None),
+                    }
+                };
+                [at("startPass")?, at("endPass")?]
+            },
             cleanup: !matches!(v.get("cleanup"), Json::Bool(false)),
         })
     }
@@ -334,14 +360,18 @@ impl crate::api::json::Flat for Spec {
         if let Some(a) = &self.arch {
             field(out, first, "arch", a);
         }
-        if self.joins != [JoinMode::Auto; 2] {
-            let joins = Json::Obj(
-                [("start", self.joins[0]), ("end", self.joins[1])]
-                    .into_iter()
-                    .filter(|(_, m)| *m != JoinMode::Auto)
-                    .map(|(k, m)| (k.to_owned(), Json::Str(m.name().to_owned())))
-                    .collect(),
-            );
+        if self.joins != [JoinMode::Auto; 2] || self.passes.iter().any(Option::is_some) {
+            let mut joins: Vec<(String, Json)> = [("start", self.joins[0]), ("end", self.joins[1])]
+                .into_iter()
+                .filter(|(_, m)| *m != JoinMode::Auto)
+                .map(|(k, m)| (k.to_owned(), Json::Str(m.name().to_owned())))
+                .collect();
+            for (k, p) in [("startPass", &self.passes[0]), ("endPass", &self.passes[1])] {
+                if let Some(p) = p {
+                    joins.push((k.to_owned(), Json::Arr(p.iter().map(|&x| Json::Num(f64::from(x))).collect())));
+                }
+            }
+            let joins = Json::Obj(joins.into_iter().collect());
             field(out, first, "joins", &joins);
         }
         if !self.cleanup {
@@ -598,11 +628,21 @@ pub struct Drawn {
     /// A niche's back and a flue's sides inside the wall where none of its lines runs (docs/adr/0719 §3), drawn as its
     /// faces are.
     pub recesses: Vec<Stroke>,
+    /// Where its turning layers close across a free end or a jamb (docs/adr/0771 §3): the component each belongs to
+    /// (drawn when that component is) and the line.
+    pub closures: Vec<(usize, Line)>,
 }
 
 /// A wall's drawing on its own, or why it cannot be drawn.
 pub fn drawn(pts: &[Vec2], bulges: Option<&[f64]>, spec: &Spec) -> Result<Drawn, String> {
     let all = lines(pts, bulges, spec)?;
+    // Layers that turn at its free ends (docs/adr/0771 §3) are the solver's: a wall on its own turns as in a drawing.
+    if spec.components.iter().any(|c| c.wrap) {
+        let one = [crate::geom::wall_join::WallIn { pts, bulges, spec }];
+        if let Some(Some(d)) = crate::geom::wall_join::solve(&one, None).drawn.into_iter().next() {
+            return Ok(d);
+        }
+    }
     Ok(drawn_of(&all, spec))
 }
 
@@ -636,6 +676,7 @@ pub fn drawn_of(all: &[Line], spec: &Spec) -> Drawn {
         bands,
         fill: vec![band(left, right, closed)],
         recesses: Vec::new(),
+        closures: Vec::new(),
     }
 }
 
@@ -700,6 +741,11 @@ pub fn pieces_of(d: &Drawn, pts: &[Vec2], spec: &Spec, view: View) -> Vec<Piece>
     }
     for st in &d.recesses {
         out.push(piece(st.line.shape(st.closed), None, None));
+    }
+    for (c, line) in &d.closures {
+        if comps.get(*c).is_some_and(shown) {
+            out.push(piece(line.shape(false), None, comps[*c].edge.as_ref()));
+        }
     }
     for k in 1..comps.len() {
         if shown(&comps[k - 1]) && shown(&comps[k]) {

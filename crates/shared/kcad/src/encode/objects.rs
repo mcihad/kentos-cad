@@ -500,7 +500,7 @@ impl<'d> Encoder<'d> {
                     f.push(("arch", Val::Json(serde_json::to_value(&w.arch).unwrap_or_default())));
                 }
                 if !w.joins.is_auto() {
-                    f.push(("joins", Val::Json(serde_json::to_value(w.joins).unwrap_or_default())));
+                    f.push(("joins", Val::Json(serde_json::to_value(&w.joins).unwrap_or_default())));
                 }
                 if !w.cleanup {
                     f.push(("cleanup", Val::Bool(false)));

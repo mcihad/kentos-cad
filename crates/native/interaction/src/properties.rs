@@ -846,3 +846,52 @@ pub fn edit_dimensions(
         input,
     ))
 }
+
+/// A wall's width or style changed from Öznitelikler with the line `keep` staying where it is (docs/adr/0771 §2):
+/// `cad.walls.edit`'s plan first says what it does round it (the spaces' areas, the openings' depths), then the change
+/// is written; what to say: that, and the command's warnings or refusal. With the path kept, as [`edit_wall`].
+pub fn edit_wall_kept(
+    doc: &mut Document,
+    slot: Slot,
+    mut change: kentos_commands::WallChange,
+    keep: kentos_commands::WallReference,
+) -> Vec<String> {
+    let resized = change.width.is_some() || change.style.is_some();
+    if keep == kentos_commands::WallReference::Path || !resized {
+        return edit_wall(doc, slot, change);
+    }
+    let Some(uid) = doc.uid(slot) else {
+        return Vec::new();
+    };
+    change.keep = Some(keep);
+    let input = kentos_commands::WallsEdit {
+        uids: vec![uid.to_string()],
+        operation: kentos_commands::WallsOperation::Set(change),
+        expected_revision: None,
+    };
+    let mut out = Vec::new();
+    if let CommandResult::Completed { output, .. } =
+        kentos_native_application::walls_edit::plan(&ExecutionContext::new(doc), &input)
+        && let Some(e) = output.effects
+    {
+        out.extend(effects_words(&e, keep));
+    }
+    out.extend(said(kentos_native_application::walls_edit::execute(&mut ExecutionContext::new(doc), input)));
+    out
+}
+
+/// What a wall change kept at `keep` does round it, in words: each space's area and the openings' depth.
+pub fn effects_words(e: &kentos_commands::WallChangeEffects, keep: kentos_commands::WallReference) -> Vec<String> {
+    let mut out = Vec::new();
+    let n = |x: f64| format!("{x:.2}").replace('.', ",");
+    if e.spaces.is_empty() {
+        out.push(format!("{} sabit: hiçbir mahalin alanı değişmedi.", keep.label()));
+    }
+    for s in &e.spaces {
+        out.push(format!("{} sabit: mahalin alanı {} → {} m².", keep.label(), n(s.before), n(s.after)));
+    }
+    if let Some(o) = e.openings.first() {
+        out.push(format!("{} açıklığın kasa derinliği {} → {} m.", e.openings.len(), n(o.before), n(o.after)));
+    }
+    out
+}

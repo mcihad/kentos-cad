@@ -33,6 +33,9 @@ use crate::ops::edges::edge_length;
 use crate::ops::path::{Path, nearest_s, path_of, point_at_s, sub_path, tangent_at_s};
 use crate::vec2::Vec2;
 
+#[path = "wall_wrap.rs"]
+mod wrap;
+
 /// Two path ends this close meet; an end this close to a host's path or faces is in it, metres.
 pub const JOIN_TOLERANCE: f64 = 1e-3;
 /// Two ends this close to one line join inline.
@@ -111,6 +114,16 @@ pub struct Joint {
     pub kind: JointKind,
     pub at: Vec2,
     pub members: Vec<Member>,
+    /// A tee's node (docs/adr/0771 §1): how many of the host's components each joining component passes, and whether
+    /// the user decided it (the joining end's `passes`) or the priorities did.
+    pub node: Option<Node>,
+}
+
+/// What a tee decided at its node: each joining component's passes through the host, the user's or the rule's.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Node {
+    pub depth: Vec<usize>,
+    pub user: bool,
 }
 
 /// Why walls that meet are not joined.
@@ -630,6 +643,21 @@ struct Solver<'a> {
     openings: Vec<Vec<crate::geom::opening::Hole>>,
 }
 
+/// The host's direction where an end meets it: at a vertex of the host's path (within a hair), of the edges there the
+/// one least along the end's direction `dir`, so an end continuing one edge's line out of a corner tees into the other
+/// rather than overlapping it (docs/adr/0771 §1); elsewhere the path's own.
+fn host_tangent(path: &Path, s: f64, dir: Vec2) -> Vec2 {
+    let t = tangent_at_s(path, s);
+    let d = 1e-7 * js_max(1.0, path.length);
+    if !path.closed && (s <= d || s >= path.length - d) {
+        return t;
+    }
+    [t, tangent_at_s(path, s - d), tangent_at_s(path, s + d)]
+        .into_iter()
+        .min_by(|a, b| dot(*a, dir).abs().total_cmp(&dot(*b, dir).abs()))
+        .unwrap_or(t)
+}
+
 /// The wall's base line as a path.
 fn base_path(w: &WallIn<'_>) -> Option<Path> {
     path_of(&wall::path_shape(w.pts, w.bulges, w.spec.closed))
@@ -843,6 +871,7 @@ impl<'a> Solver<'a> {
                     end: Some(b.end),
                 },
             ],
+            node: None,
         });
     }
 
@@ -893,6 +922,7 @@ impl<'a> Solver<'a> {
                     end: Some(b.end),
                 },
             ],
+            node: None,
         });
     }
 
@@ -937,6 +967,7 @@ impl<'a> Solver<'a> {
                     end: Some(through.end),
                 },
             ],
+            node: None,
         });
         tees.push(PendingTee {
             joiner: butting,
@@ -960,7 +991,7 @@ impl<'a> Solver<'a> {
                 continue;
             }
             let q = point_at_s(&path, s);
-            let t = tangent_at_s(&path, s);
+            let t = host_tangent(&path, s, e.dir);
             let off = sub(e.at, q);
             if dot(off, t).abs() > JOIN_TOLERANCE {
                 continue;
@@ -1000,7 +1031,7 @@ impl<'a> Solver<'a> {
     /// the host's priorities from the near face.
     fn host_side(&self, host: usize, at: Vec2, dir: Vec2) -> Option<(Vec<usize>, Vec<u8>)> {
         let path = base_path(&self.walls[host])?;
-        let t = tangent_at_s(&path, nearest_s(&path, at));
+        let t = host_tangent(&path, nearest_s(&path, at), dir);
         let left = dot(dir, left_of(t)) > 0.0;
         let n = self.lines[host].as_ref()?.len() - 1;
         let mut ranks = self.ranks(host);
@@ -1036,8 +1067,14 @@ impl<'a> Solver<'a> {
         let Some((pos, ranks)) = self.host_side(h, e.at, e.dir) else {
             return;
         };
-        let cleanup = self.spec(e.wall).cleanup && self.spec(h).cleanup;
-        let depth = self.depths(e.wall, &ranks, cleanup);
+        // The user's node decision on this end (docs/adr/0771 §1) wins over the priorities; it passes no more than the
+        // host has.
+        let user = self.spec(e.wall).passes[e.end.index()]
+            .as_ref()
+            .filter(|p| p.len() == self.ranks(e.wall).len())
+            .map(|p| p.iter().map(|&x| (x as usize).min(ranks.len())).collect::<Vec<usize>>());
+        let cleanup = user.is_some() || (self.spec(e.wall).cleanup && self.spec(h).cleanup);
+        let depth = user.clone().unwrap_or_else(|| self.depths(e.wall, &ranks, cleanup));
         let nj = lj.len() - 1;
         let line_depth = |k: usize| {
             if depth.len() != nj || k == 0 {
@@ -1093,6 +1130,10 @@ impl<'a> Solver<'a> {
                 kind: JointKind::Tee,
                 at: e.at,
                 members,
+                node: Some(Node {
+                    depth: depth.clone(),
+                    user: user.is_some(),
+                }),
             });
         }
         self.tees.push(Tee {
@@ -1349,7 +1390,13 @@ impl<'a> Solver<'a> {
         let spec = self.spec(i);
         let closed = spec.closed;
         let mut d = wall::drawn_of(lines, spec);
-        let holes = self.opening_cuts(i, lines);
+        let mut holes = self.opening_cuts(i, lines);
+        // The layers that turn at its free ends and its through holes' jambs (docs/adr/0771 §3).
+        let wraps = wrap::plan(spec);
+        let turned = match (&wraps, base_path(&self.walls[i])) {
+            (Some(w), Some(base)) => Some(self.turned(i, lines, &mut holes, w, &base)),
+            _ => None,
+        };
         let offsets = wall::boundaries(spec);
         let (left, right) = (wall::left_face(spec), wall::left_face(spec) - spec.width);
         let eps = CUT_EPS * js_max(1.0, js_max(left.abs(), right.abs()));
@@ -1363,6 +1410,9 @@ impl<'a> Solver<'a> {
         let gaps_of = |k: usize| -> Vec<Span> {
             let mut g = self.gaps[i][k].clone();
             g.extend(holes.iter().filter(|h| takes(h, offsets[k])).map(|h| h.spans[k]));
+            if let Some(t) = &turned {
+                g.extend(t.gaps[k].iter().copied());
+            }
             g
         };
         d.lines = lines
@@ -1391,12 +1441,16 @@ impl<'a> Solver<'a> {
         let band = |a: &Line, b: &Line, ka: usize, kb: usize, upper: f64, lower: f64, extra: &[(Span, Span)]| {
             let mut cuts = extra.to_vec();
             let mut back = Vec::new();
-            for h in &holes {
+            for (x, h) in holes.iter().enumerate() {
                 let (top, bottom) = (js_min(h.hi, upper), js_max(h.lo, lower));
                 if top - bottom <= eps {
                     continue;
                 }
-                cuts.push((h.spans[ka], h.spans[kb]));
+                // A hole the layers turn at: a component's band is cut by its own pull (`turned`'s cuts).
+                let own = kb == ka + 1 && turned.as_ref().is_some_and(|t| t.wrapped.contains(&x));
+                if !own {
+                    cuts.push((h.spans[ka], h.spans[kb]));
+                }
                 let Some(base) = &base else { continue };
                 if upper - top > eps {
                     back.extend(self.between(i, base, h.s0, h.s1, upper, top));
@@ -1412,17 +1466,20 @@ impl<'a> Solver<'a> {
         if !d.bands.is_empty() {
             d.bands = (0..d.bands.len())
                 .map(|c| {
-                    band(
-                        &lines[c],
-                        &lines[c + 1],
-                        c,
-                        c + 1,
-                        offsets[c],
-                        offsets[c + 1],
-                        &self.cuts[i][c],
-                    )
+                    let mut extra = self.cuts[i][c].clone();
+                    if let Some(t) = &turned {
+                        extra.extend(t.cuts[c].iter().copied());
+                    }
+                    let mut out = band(&lines[c], &lines[c + 1], c, c + 1, offsets[c], offsets[c + 1], &extra);
+                    if let Some(t) = &turned {
+                        out.extend(t.bodies[c].iter().cloned());
+                    }
+                    out
                 })
                 .collect();
+        }
+        if let Some(t) = &turned {
+            d.closures = t.closures.clone();
         }
         if holes.is_empty() {
             return Some(d);
@@ -1688,6 +1745,7 @@ pub fn solve_with(walls: &[WallIn<'_>], openings: &[Vec<crate::geom::opening::Ho
                                 end: None,
                             },
                         ],
+                        node: None,
                     });
                 }
             }

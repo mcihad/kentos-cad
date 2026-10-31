@@ -276,6 +276,47 @@ pub struct WallsCreated {
     pub revision: String,
 }
 
+/// A space's area before and after a wall change (docs/adr/0771 §2), square metres.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SpaceAreaChange {
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
+    pub uid: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub before: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub after: f64,
+}
+
+/// An opening's depth (its wall's thickness, what its frame must fill) before and after, metres.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct OpeningDepthChange {
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
+    pub uid: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub before: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub after: f64,
+}
+
+/// What a wall change kept at a reference does round it: the spaces whose area changes, the openings whose depth does.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct WallChangeEffects {
+    pub spaces: Vec<SpaceAreaChange>,
+    pub openings: Vec<OpeningDepthChange>,
+}
+
 /// What `cad.walls.create` would write (plan mode); nothing is written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -445,6 +486,11 @@ pub struct WallChange {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub width: Option<f64>,
+    /// Sabit referans (docs/adr/0771 §2): the line that stays where it is when the width or the style changes (its
+    /// offset moved to keep it); absent: the path, as before. Not with `offset` or `justify`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub keep: Option<crate::WallReference>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub justify: Option<WallJustify>,
@@ -575,7 +621,14 @@ pub enum WallsOperation {
     Flip,
     /// Stili değiştir: the walls of the style `from` (its id or name) given the style `to` (the project's or KentOS's
     /// own, taken in): the named ones, or with no ids every wall of `from` in the drawing.
-    ReplaceStyle { from: String, to: String },
+    ReplaceStyle {
+        from: String,
+        to: String,
+        /// The line that stays where it is (docs/adr/0771 §2); absent: the path.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        keep: Option<crate::WallReference>,
+    },
     /// Birleşim: the ends' joins (a closed wall has none) and the components' cleanup, the ones given.
     Joins {
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -587,6 +640,27 @@ pub enum WallsOperation {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         cleanup: Option<bool>,
+        /// Düğüm kararı (docs/adr/0771 §1): where the start tees into a host, how many of the host's components each
+        /// of the wall's passes (one number per component, a plain wall one); null: by the priorities again.
+        #[serde(
+            rename = "startPass",
+            default,
+            with = "crate::cad_properties::nullable",
+            skip_serializing_if = "Option::is_none"
+        )]
+        #[cfg_attr(feature = "ts", ts(as = "Option<Option<Vec<u8>>>", optional))]
+        #[cfg_attr(feature = "schema", schemars(with = "Option<Vec<u8>>", extend("x-unit" = "count")))]
+        start_pass: Option<Option<Vec<u8>>>,
+        /// The same at its end.
+        #[serde(
+            rename = "endPass",
+            default,
+            with = "crate::cad_properties::nullable",
+            skip_serializing_if = "Option::is_none"
+        )]
+        #[cfg_attr(feature = "ts", ts(as = "Option<Option<Vec<u8>>>", optional))]
+        #[cfg_attr(feature = "schema", schemars(with = "Option<Vec<u8>>", extend("x-unit" = "count")))]
+        end_pass: Option<Option<Vec<u8>>>,
     },
     /// Birleşimleri sıfırla: both ends by the rule, the cleanup on.
     ResetJoins,
@@ -683,6 +757,7 @@ impl WallAnchor {
 /// Refusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_a_wall`, `nothing_to_set`, `not_finite`,
 /// `style_not_found`, `style_not_used`, `invalid_wall`, `wall_collapses`, `level_not_found`, `point_off_wall`,
 /// `split_at_end`, `walls_not_touching`, `walls_differ`, `too_few_objects`, `wall_closed`, `no_crossing`,
+/// `wall_node_unsupported` (a node decision where the end tees into no straight wall, docs/adr/0771 §1),
 /// `invalid_revision`, `revision_conflict`, `layer_locked`; on the desktop also `slots_exhausted`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -731,6 +806,11 @@ pub struct WallsEdited {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub styles_added: Vec<String>,
+    /// What a change kept at a reference does round it (docs/adr/0771 §2), with `keep` given: the spaces' areas and
+    /// the openings' depths before and after.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub effects: Option<WallChangeEffects>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
 }
@@ -747,6 +827,11 @@ pub struct WallsJoins {
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
     pub uids: Vec<String>,
+    /// Düğümler (docs/adr/0771 §1): each joint's ends say whether the user decided them, and a tee's joining end how
+    /// many of the host's components each of its own passes.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub nodes: bool,
 }
 
 /// A joint's kind.
@@ -777,6 +862,28 @@ pub struct WallJointMember {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub end: Option<WallEnd>,
+    /// With `nodes`: who decided this end's joint, the rule or the user (its join mode or its passes).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub decided: Option<WallNodeDecision>,
+    /// With `nodes`, a tee's joining end: how many of the host's components each of its components passes.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub passes: Option<Vec<u8>>,
+}
+
+/// Who decided a joint's end (docs/adr/0771 §1).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum WallNodeDecision {
+    /// Otomatik: the components' priorities and the join rule.
+    Auto,
+    /// Elle: the end's join mode or its passes.
+    User,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

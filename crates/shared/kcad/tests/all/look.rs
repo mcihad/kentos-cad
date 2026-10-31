@@ -163,7 +163,7 @@ fn the_readers_errors_name_their_places() {
             "line/byLayer",
         ),
         ("broken/plot-true.kcad", Code::BadValue, "layers/0/plot"),
-        ("broken/schema-version-137.kcad", Code::SchemaVersion, ""),
+        ("broken/schema-version-138.kcad", Code::SchemaVersion, ""),
     ] {
         let err = kentos_kcad::decode(&read(file)).expect_err(file);
         assert_eq!(err.code, code, "{file}: {err}");

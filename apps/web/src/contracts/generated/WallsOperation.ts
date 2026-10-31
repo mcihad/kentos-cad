@@ -6,8 +6,22 @@ import type { WallAnchor } from "./WallAnchor";
 import type { WallChange } from "./WallChange";
 import type { WallEnd } from "./WallEnd";
 import type { WallJoin } from "./WallJoin";
+import type { WallReference } from "./WallReference";
 
 /**
  * What `cad.walls.edit` does to the walls (docs/adr/0339 §5, 0340 §4).
  */
-export type WallsOperation = { "kind": "set" } & WallChange | { "kind": "split", at: Vec2, } | { "kind": "join" } | { "kind": "extend", to: string, end?: WallEnd, } | { "kind": "trim", to: string, keep?: Vec2, } | { "kind": "flip" } | { "kind": "replaceStyle", from: string, to: string, } | { "kind": "joins", start?: WallJoin, end?: WallJoin, cleanup?: boolean, } | { "kind": "resetJoins" } | { "kind": "shift", edge?: number, by: number, } | { "kind": "distance", edge?: number, side: DimensionSetFace, distance: number, to?: DistanceTo, } | { "kind": "length", edge?: number, length: number, anchor?: WallAnchor, };
+export type WallsOperation = { "kind": "set" } & WallChange | { "kind": "split", at: Vec2, } | { "kind": "join" } | { "kind": "extend", to: string, end?: WallEnd, } | { "kind": "trim", to: string, keep?: Vec2, } | { "kind": "flip" } | { "kind": "replaceStyle", from: string, to: string, 
+/**
+ * The line that stays where it is (docs/adr/0771 §2); absent: the path.
+ */
+keep?: WallReference, } | { "kind": "joins", start?: WallJoin, end?: WallJoin, cleanup?: boolean, 
+/**
+ * Düğüm kararı (docs/adr/0771 §1): where the start tees into a host, how many of the host's components each
+ * of the wall's passes (one number per component, a plain wall one); null: by the priorities again.
+ */
+startPass?: Array<number> | null, 
+/**
+ * The same at its end.
+ */
+endPass?: Array<number> | null, } | { "kind": "resetJoins" } | { "kind": "shift", edge?: number, by: number, } | { "kind": "distance", edge?: number, side: DimensionSetFace, distance: number, to?: DistanceTo, } | { "kind": "length", edge?: number, length: number, anchor?: WallAnchor, };

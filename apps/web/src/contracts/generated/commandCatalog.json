@@ -8611,7 +8611,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.walls.edit` v1: walls named by their persistent ids changed as one undo step “Duvarı düzenle”, all\nor none. A width a style's components do not fit, an arc a new width collapses, a level the project does not have:\nnothing is written. Their joins with the walls round them follow in the same step (they are drawn from the walls);\nwhat then does not join is said (`wall_join_overlap`, `wall_join_crowded`, `wall_join_acute`,\n`wall_join_unresolved`, each with its fix).\n\nRefusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_a_wall`, `nothing_to_set`, `not_finite`,\n`style_not_found`, `style_not_used`, `invalid_wall`, `wall_collapses`, `level_not_found`, `point_off_wall`,\n`split_at_end`, `walls_not_touching`, `walls_differ`, `too_few_objects`, `wall_closed`, `no_crossing`,\n`invalid_revision`, `revision_conflict`, `layer_locked`; on the desktop also `slots_exhausted`.",
+        "description": "Input of `cad.walls.edit` v1: walls named by their persistent ids changed as one undo step “Duvarı düzenle”, all\nor none. A width a style's components do not fit, an arc a new width collapses, a level the project does not have:\nnothing is written. Their joins with the walls round them follow in the same step (they are drawn from the walls);\nwhat then does not join is said (`wall_join_overlap`, `wall_join_crowded`, `wall_join_acute`,\n`wall_join_unresolved`, each with its fix).\n\nRefusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_a_wall`, `nothing_to_set`, `not_finite`,\n`style_not_found`, `style_not_used`, `invalid_wall`, `wall_collapses`, `level_not_found`, `point_off_wall`,\n`split_at_end`, `walls_not_touching`, `walls_differ`, `too_few_objects`, `wall_closed`, `no_crossing`,\n`wall_node_unsupported` (a node decision where the end tees into no straight wall, docs/adr/0771 §1),\n`invalid_revision`, `revision_conflict`, `layer_locked`; on the desktop also `slots_exhausted`.",
         "properties": {
           "expectedRevision": {
             "pattern": "^(0|[1-9][0-9]*)$",
@@ -8648,6 +8648,17 @@
               "$ref": "#/$defs/Entity"
             },
             "type": "array"
+          },
+          "effects": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/WallChangeEffects"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What a change kept at a reference does round it (docs/adr/0771 §2), with `keep` given: the spaces' areas and\nthe openings' depths before and after."
           },
           "followers": {
             "$ref": "#/$defs/DerivedEntitiesPlan",
@@ -8702,6 +8713,17 @@
               "$ref": "#/$defs/Entity"
             },
             "type": "array"
+          },
+          "effects": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/WallChangeEffects"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What a change kept at a reference does round it (docs/adr/0771 §2), with `keep` given: the spaces' areas and\nthe openings' depths before and after."
           },
           "followers": {
             "$ref": "#/$defs/DerivedEntitiesPlan",
@@ -8775,6 +8797,7 @@
           "walls_differ",
           "wall_closed",
           "wall_misses",
+          "wall_node_unsupported",
           "invalid_revision",
           "revision_conflict"
         ],
@@ -8887,6 +8910,10 @@
         "additionalProperties": false,
         "description": "Input of `cad.walls.joins` v1 (read-only, docs/adr/0340 §2): how the walls named (none: every wall) join the walls\nround them, and where walls meet but do not join, each with what resolves it.",
         "properties": {
+          "nodes": {
+            "description": "Düğümler (docs/adr/0771 §1): each joint's ends say whether the user decided them, and a tee's joining end how\nmany of the host's components each of its own passes.",
+            "type": "boolean"
+          },
           "uids": {
             "items": {
               "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
@@ -10132,7 +10159,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.slabs.create` v1: slabs on a named layer, written as one undo step “Döşeme”.\n\nRefusals, in this order: `no_objects`, `not_finite`, `invalid_slab`, `level_not_found`, `slab_not_enclosed`,\n`slab_offset_failed`, `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`,\n`not_a_layer`, `layer_locked`, `invalid_attribute`, `attribute_required`; on the desktop also `slots_exhausted`.\nWarning: `layer_hidden`.",
+        "description": "Input of `cad.slabs.create` v1: slabs on a named layer, written as one undo step “Döşeme”.\n\nRefusals, in this order: `no_objects`, `not_finite`, `invalid_slab`, `invalid_uid`, `entity_not_found`,\n`not_a_space`, `level_not_found`, `slab_not_enclosed`, `slab_offset_failed`, `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`,\n`not_a_layer`, `layer_locked`, `invalid_attribute`, `attribute_required`; on the desktop also `slots_exhausted`.\nWarning: `layer_hidden`.",
         "properties": {
           "color": {
             "type": [
@@ -10233,6 +10260,9 @@
           "no_objects",
           "not_finite",
           "invalid_slab",
+          "invalid_uid",
+          "entity_not_found",
+          "not_a_space",
           "level_not_found",
           "slab_not_enclosed",
           "slab_offset_failed",
@@ -10337,7 +10367,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.slabs.edit` v1: slabs named by their persistent ids changed as one undo step “Döşemeyi düzenle”, all\nor none.\n\nRefusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_a_slab`, `nothing_to_set`, `not_finite`,\n`invalid_slab`, `level_not_found`, `slab_not_enclosed`, `slab_offset_failed`, `slab_cut_missed`,\n`invalid_revision`, `revision_conflict`, `layer_locked`.",
+        "description": "Input of `cad.slabs.edit` v1: slabs named by their persistent ids changed as one undo step “Döşemeyi düzenle”, all\nor none.\n\nRefusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_a_slab`, `nothing_to_set`, `not_finite`,\n`invalid_slab`, `level_not_found`, `slab_not_enclosed`, `slab_offset_failed`, `slab_cut_missed`, `slab_bound`\n(subtract or add on a bound slab), `slab_not_bound` (detach), `not_a_space`, `invalid_revision`,\n`revision_conflict`, `layer_locked`.",
         "properties": {
           "expectedRevision": {
             "pattern": "^(0|[1-9][0-9]*)$",
@@ -10430,6 +10460,9 @@
           "slab_not_enclosed",
           "slab_offset_failed",
           "slab_cut_missed",
+          "slab_bound",
+          "slab_not_bound",
+          "not_a_space",
           "invalid_revision",
           "revision_conflict"
         ]
@@ -68397,6 +68430,24 @@
       "meaning": "Kesilen alan döşemeye değmiyor ya da döşemenin hepsini götürüyor; döşemenin içinde kalan bir alan verin ya da döşemeyi silin."
     },
     {
+      "code": "slab_bound",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Döşemenin sınırı kaynağına bağlı; kesmek ya da alan eklemek için önce Ayır ile bağımsız kontur yapın."
+    },
+    {
+      "code": "slab_not_bound",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Döşeme kaynağa bağlı değil; ayrılacak bağ yok."
+    },
+    {
+      "code": "wall_node_unsupported",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Düğüm kararı yalnız düz bir duvara T birleşen düz bir uçta verilir; köşe, düz devam, serbest uç ve eğrisel birleşim için desteklenmez."
+    },
+    {
       "code": "invalid_grid",
       "kind": "failed",
       "retryable": false,
@@ -68665,6 +68716,12 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Mahalın sınırı kaynaklarından bulunamıyor; son hâliyle kaldı."
+    },
+    {
+      "code": "arch_slab_broken",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Döşemenin sınırı kaynağından bulunamıyor; son hâliyle kaldı."
     },
     {
       "code": "arch_space_small",
@@ -102107,6 +102164,13 @@
             "null"
           ]
         },
+        "bound": {
+          "description": "Kaynağa bağlı (docs/adr/0771 §4): with `seed`, the slab keeps its walls: its outline found again round the\npoint, by `boundary` and moved by `edgeOffset`, whenever they change. Absent or false: its outline is its own.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
         "boundary": {
           "anyOf": [
             {
@@ -102191,6 +102255,14 @@
           ],
           "description": "A point: its outline found from the walls round it, those of its level (every wall when it has none).",
           "x-unit": "length"
+        },
+        "space": {
+          "description": "A space by its persistent id: the slab's outline is the space's rings (moved by `edgeOffset`), bound to it; not\nwith `parts` or `seed`.",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "thickness": {
           "description": "Absent: 15 cm.",
@@ -103633,6 +103705,31 @@
           "type": "string"
         }
       ]
+    },
+    "OpeningDepthChange": {
+      "description": "An opening's depth (its wall's thickness, what its frame must fill) before and after, metres.",
+      "properties": {
+        "after": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "before": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "uid": {
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "before",
+        "after"
+      ],
+      "type": "object"
     },
     "OpeningDistance": {
       "description": "One side's distance: net along the face, from the opening's jamb to the reference's point on the face.",
@@ -121571,6 +121668,64 @@
       ],
       "type": "object"
     },
+    "SlabBound": {
+      "additionalProperties": false,
+      "description": "A slab whose outline follows its source (Kaynağa bağlı sınır, docs/adr/0771 §4): what it comes from, the seed and\nthe face rule (walls) or the space's persistent id, the edge offset, and, the document's, the walls that bound it\nwhen it was last found and why it is broken. Absent on a slab: its outline is its own (Bağımsız kontur).",
+      "properties": {
+        "broken": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SlabBreak"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "face": {
+          "$ref": "#/$defs/SlabFace"
+        },
+        "offset": {
+          "description": "Every edge moved by this much, out when positive; at most 10 m either way. Absent: 0.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "seed": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Vec2"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The point the walls are read round (walls).",
+          "x-unit": "length"
+        },
+        "source": {
+          "$ref": "#/$defs/SlabSourceKind"
+        },
+        "space": {
+          "description": "The space, by its persistent id (space).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "uids": {
+          "description": "The walls whose faces bound it when it was last found, by their persistent ids (the document's).",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "source"
+      ],
+      "type": "object"
+    },
     "SlabBoundary": {
       "description": "Which of the walls' faces a slab found from them runs along.",
       "oneOf": [
@@ -121582,6 +121737,21 @@
         {
           "const": "room",
           "description": "Oda: the room round the point, to the walls' inner faces (a wet room's lowered slab, a balcony between walls).",
+          "type": "string"
+        }
+      ]
+    },
+    "SlabBreak": {
+      "description": "Why a bound slab's outline is not what its source says: the last one kept as it was.",
+      "oneOf": [
+        {
+          "const": "lostEnclosure",
+          "description": "The walls no longer close round its seed (or the outline moved by its offset turns over).",
+          "type": "string"
+        },
+        {
+          "const": "sourceGone",
+          "description": "Its space is gone (deleted, or no longer a space).",
           "type": "string"
         }
       ]
@@ -121646,6 +121816,17 @@
           },
           "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
           "type": "object"
+        },
+        "bound": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SlabBound"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Kaynağa bağlı sınır (docs/adr/0771 §4): its outline found again from its source whenever that changes; absent:\nan outline of its own."
         },
         "byLayer": {
           "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -121812,6 +121993,21 @@
       ],
       "type": "object"
     },
+    "SlabFace": {
+      "description": "Which of the walls' faces a bound slab runs along (the command's `SlabBoundary`, kept with the slab).",
+      "oneOf": [
+        {
+          "const": "outline",
+          "description": "Dış yüzler.",
+          "type": "string"
+        },
+        {
+          "const": "room",
+          "description": "Oda: the room's inner faces.",
+          "type": "string"
+        }
+      ]
+    },
     "SlabRole": {
       "description": "What a slab is.",
       "oneOf": [
@@ -121966,6 +122162,21 @@
       ],
       "type": "object"
     },
+    "SlabSourceKind": {
+      "description": "What a bound slab's outline comes from (docs/adr/0771 §4): the walls round a point (their outer faces, a storey's\nfloor; or a room's inner faces), or a space's rings (a floor finish, a wet room's slab).",
+      "oneOf": [
+        {
+          "const": "walls",
+          "description": "Duvarlar: the walls round the seed.",
+          "type": "string"
+        },
+        {
+          "const": "space",
+          "description": "Mahal: the space's rings.",
+          "type": "string"
+        }
+      ]
+    },
     "SlabsOperation": {
       "description": "What `cad.slabs.edit` does to the slabs (docs/adr/0722 §4).",
       "oneOf": [
@@ -122103,6 +122314,68 @@
                 }
               ],
               "x-unit": "length"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Kaynağa bağla (docs/adr/0771 §4): each slab's outline bound to the walls round `seed` (by `boundary`) or to the\nspace `space` (its persistent id), moved by `offset`, and found now; a bound slab bound again.",
+          "properties": {
+            "boundary": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/SlabBoundary"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "kind": {
+              "const": "bind",
+              "type": "string"
+            },
+            "offset": {
+              "format": "double",
+              "type": [
+                "number",
+                "null"
+              ],
+              "x-unit": "length"
+            },
+            "seed": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Vec2"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "x-unit": "length"
+            },
+            "space": {
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Ayır: each bound slab's outline kept as it is now, its own (Bağımsız kontur).",
+          "properties": {
+            "kind": {
+              "const": "detach",
+              "type": "string"
             }
           },
           "required": [
@@ -122971,6 +123244,31 @@
         "removed",
         "source",
         "revision"
+      ],
+      "type": "object"
+    },
+    "SpaceAreaChange": {
+      "description": "A space's area before and after a wall change (docs/adr/0771 §2), square metres.",
+      "properties": {
+        "after": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "before": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "uid": {
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "before",
+        "after"
       ],
       "type": "object"
     },
@@ -132121,6 +132419,28 @@
       ],
       "type": "string"
     },
+    "WallChangeEffects": {
+      "description": "What a wall change kept at a reference does round it: the spaces whose area changes, the openings whose depth does.",
+      "properties": {
+        "openings": {
+          "items": {
+            "$ref": "#/$defs/OpeningDepthChange"
+          },
+          "type": "array"
+        },
+        "spaces": {
+          "items": {
+            "$ref": "#/$defs/SpaceAreaChange"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "spaces",
+        "openings"
+      ],
+      "type": "object"
+    },
     "WallComponent": {
       "additionalProperties": false,
       "description": "One layer of a wall's body, from its left face towards its right (`CAD-ARCH-04`): plaster, brick, insulation.",
@@ -132179,6 +132499,10 @@
             "null"
           ],
           "x-unit": "length"
+        },
+        "wrap": {
+          "description": "Uçta döner (docs/adr/0771 §3): at the wall's free ends and at a door's or a window's jambs this layer turns\nacross the end (a plaster's or an insulation's return, the end cap and the reveal one meaning), when it is one of\nthe face's outermost turning layers; the layers inside stop short by its thickness. Absent: it stops square.",
+          "type": "boolean"
         }
       },
       "required": [
@@ -132706,8 +133030,36 @@
         "end": {
           "$ref": "#/$defs/WallJoin"
         },
+        "endPass": {
+          "description": "The same at its end.",
+          "items": {
+            "format": "uint8",
+            "maximum": 255,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-unit": "count"
+        },
         "start": {
           "$ref": "#/$defs/WallJoin"
+        },
+        "startPass": {
+          "description": "Düğüm kararı (docs/adr/0771 §1): where this wall's start tees into another, how many of the host's components\n(from its near face) each of this wall's components passes, one number per component (a plain wall one); the\nuser's decision kept on this wall's end, by its persistent id. Absent: by the components' priorities.",
+          "items": {
+            "format": "uint8",
+            "maximum": 255,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-unit": "count"
         }
       },
       "type": "object"
@@ -132763,6 +133115,17 @@
     "WallJointMember": {
       "description": "A wall in a joint: by its end, or along it (a tee's host, a cross's walls).",
       "properties": {
+        "decided": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/WallNodeDecision"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "With `nodes`: who decided this end's joint, the rule or the user (its join mode or its passes)."
+        },
         "end": {
           "anyOf": [
             {
@@ -132772,6 +133135,20 @@
               "type": "null"
             }
           ]
+        },
+        "passes": {
+          "description": "With `nodes`, a tee's joining end: how many of the host's components each of its components passes.",
+          "items": {
+            "format": "uint8",
+            "maximum": 255,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-unit": "count"
         },
         "uid": {
           "type": "string"
@@ -132823,6 +133200,21 @@
       ],
       "type": "object"
     },
+    "WallNodeDecision": {
+      "description": "Who decided a joint's end (docs/adr/0771 §1).",
+      "oneOf": [
+        {
+          "const": "auto",
+          "description": "Otomatik: the components' priorities and the join rule.",
+          "type": "string"
+        },
+        {
+          "const": "user",
+          "description": "Elle: the end's join mode or its passes.",
+          "type": "string"
+        }
+      ]
+    },
     "WallRectangleReference": {
       "description": "What the rectangle's dimensions describe. Only the new rectangular wall normalizes its path\ncounter-clockwise; the existing free wall keeps its own direction and justification.",
       "oneOf": [
@@ -132842,6 +133234,18 @@
           "type": "string"
         }
       ]
+    },
+    "WallReference": {
+      "description": "Which line of a wall stays where it is when its width or its style changes (docs/adr/0771 §2): its path (as\nbefore), its body's centre, a finished face, or a core face (the boundary of its strongest component on that side;\na wall without components its face).",
+      "enum": [
+        "path",
+        "center",
+        "leftFace",
+        "rightFace",
+        "coreLeft",
+        "coreRight"
+      ],
+      "type": "string"
     },
     "WallRow": {
       "description": "A wall measured.",
@@ -133034,7 +133438,7 @@
     },
     "WallsEdit": {
       "additionalProperties": false,
-      "description": "Input of `cad.walls.edit` v1: walls named by their persistent ids changed as one undo step “Duvarı düzenle”, all\nor none. A width a style's components do not fit, an arc a new width collapses, a level the project does not have:\nnothing is written. Their joins with the walls round them follow in the same step (they are drawn from the walls);\nwhat then does not join is said (`wall_join_overlap`, `wall_join_crowded`, `wall_join_acute`,\n`wall_join_unresolved`, each with its fix).\n\nRefusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_a_wall`, `nothing_to_set`, `not_finite`,\n`style_not_found`, `style_not_used`, `invalid_wall`, `wall_collapses`, `level_not_found`, `point_off_wall`,\n`split_at_end`, `walls_not_touching`, `walls_differ`, `too_few_objects`, `wall_closed`, `no_crossing`,\n`invalid_revision`, `revision_conflict`, `layer_locked`; on the desktop also `slots_exhausted`.",
+      "description": "Input of `cad.walls.edit` v1: walls named by their persistent ids changed as one undo step “Duvarı düzenle”, all\nor none. A width a style's components do not fit, an arc a new width collapses, a level the project does not have:\nnothing is written. Their joins with the walls round them follow in the same step (they are drawn from the walls);\nwhat then does not join is said (`wall_join_overlap`, `wall_join_crowded`, `wall_join_acute`,\n`wall_join_unresolved`, each with its fix).\n\nRefusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_a_wall`, `nothing_to_set`, `not_finite`,\n`style_not_found`, `style_not_used`, `invalid_wall`, `wall_collapses`, `level_not_found`, `point_off_wall`,\n`split_at_end`, `walls_not_touching`, `walls_differ`, `too_few_objects`, `wall_closed`, `no_crossing`,\n`wall_node_unsupported` (a node decision where the end tees into no straight wall, docs/adr/0771 §1),\n`invalid_revision`, `revision_conflict`, `layer_locked`; on the desktop also `slots_exhausted`.",
       "properties": {
         "expectedRevision": {
           "pattern": "^(0|[1-9][0-9]*)$",
@@ -133132,6 +133536,17 @@
                   "type": "null"
                 }
               ]
+            },
+            "keep": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/WallReference"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Sabit referans (docs/adr/0771 §2): the line that stays where it is when the width or the style changes (its\noffset moved to keep it); absent: the path, as before. Not with `offset` or `justify`."
             },
             "kind": {
               "const": "set",
@@ -133301,6 +133716,17 @@
             "from": {
               "type": "string"
             },
+            "keep": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/WallReference"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "The line that stays where it is (docs/adr/0771 §2); absent: the path."
+            },
             "kind": {
               "const": "replaceStyle",
               "type": "string"
@@ -133335,6 +133761,20 @@
                 }
               ]
             },
+            "endPass": {
+              "description": "The same at its end.",
+              "items": {
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": "integer"
+              },
+              "type": [
+                "array",
+                "null"
+              ],
+              "x-unit": "count"
+            },
             "kind": {
               "const": "joins",
               "type": "string"
@@ -133348,6 +133788,20 @@
                   "type": "null"
                 }
               ]
+            },
+            "startPass": {
+              "description": "Düğüm kararı (docs/adr/0771 §1): where the start tees into a host, how many of the host's components each\nof the wall's passes (one number per component, a plain wall one); null: by the priorities again.",
+              "items": {
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": "integer"
+              },
+              "type": [
+                "array",
+                "null"
+              ],
+              "x-unit": "count"
             }
           },
           "required": [

@@ -772,6 +772,7 @@ class _WallsJoins(LocalCommand[WallsJoins, WallsJoined, WallsJoined]):
         doc: Document,
         /,
         *,
+        nodes: bool | Unset = UNSET,
         uids: Sequence[str] | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -789,6 +790,8 @@ class _WallsJoins(LocalCommand[WallsJoins, WallsJoined, WallsJoined]):
 
         Args:
             doc: The drawing it works on.
+            nodes: Düğümler (docs/adr/0771 §1): each joint's ends say whether the user decided them, and a tee's joining end how
+                many of the host's components each of its own passes.
             uids:
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -803,6 +806,7 @@ class _WallsJoins(LocalCommand[WallsJoins, WallsJoined, WallsJoined]):
                 nothing was written. Warnings go to :mod:`warnings` as CommandWarning.
         """
         return self.execute_input(doc, WallsJoins(
+            nodes=nodes,
             uids=_opt(uids, lambda x: list(x)),
         ), request_id=request_id, expected=expected)
 
@@ -811,12 +815,14 @@ class _WallsJoins(LocalCommand[WallsJoins, WallsJoined, WallsJoined]):
         doc: Document,
         /,
         *,
+        nodes: bool | Unset = UNSET,
         uids: Sequence[str] | Unset = UNSET,
     ) -> WallsJoined:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
         """
         return self.plan_input(doc, WallsJoins(
+            nodes=nodes,
             uids=_opt(uids, lambda x: list(x)),
         ))
 
@@ -825,12 +831,14 @@ class _WallsJoins(LocalCommand[WallsJoins, WallsJoined, WallsJoined]):
         doc: Document,
         /,
         *,
+        nodes: bool | Unset = UNSET,
         uids: Sequence[str] | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
         """
         return self.validate_input(doc, WallsJoins(
+            nodes=nodes,
             uids=_opt(uids, lambda x: list(x)),
         ))
 
@@ -839,6 +847,7 @@ class _WallsJoins(LocalCommand[WallsJoins, WallsJoined, WallsJoined]):
         doc: Document,
         /,
         *,
+        nodes: bool | Unset = UNSET,
         uids: Sequence[str] | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -850,6 +859,7 @@ class _WallsJoins(LocalCommand[WallsJoins, WallsJoined, WallsJoined]):
         before (``replayed``) and its journal row (``call``).
         """
         return self.answer_input(doc, WallsJoins(
+            nodes=nodes,
             uids=_opt(uids, lambda x: list(x)),
         ), op=op, request_id=request_id, expected=expected)
 

@@ -4,6 +4,7 @@ import type { ArchPhase } from "./ArchPhase";
 import type { ArchStatus } from "./ArchStatus";
 import type { WallCaps } from "./WallCaps";
 import type { WallJustify } from "./WallJustify";
+import type { WallReference } from "./WallReference";
 
 /**
  * A wall's own fields to change; absent ones stay (`cad.walls.edit`'s `set`). A nullable field's null takes it away.
@@ -12,7 +13,12 @@ export type WallChange = {
 /**
  * Metres, above 0, at most 100; the component without a thickness takes the rest.
  */
-width?: number, justify?: WallJustify, offset?: number, 
+width?: number, 
+/**
+ * Sabit referans (docs/adr/0771 §2): the line that stays where it is when the width or the style changes (its
+ * offset moved to keep it); absent: the path, as before. Not with `offset` or `justify`.
+ */
+keep?: WallReference, justify?: WallJustify, offset?: number, 
 /**
  * A wall style by its id or name: its components, ends and fill; null: no style, one plain body.
  */

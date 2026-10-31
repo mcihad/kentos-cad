@@ -2290,6 +2290,17 @@ def document(d):
     if indexed(d.get("layers", [])):
         # A layer's indexes (docs/adr/0758).
         schema = max(schema, 136)
+
+    def built(e):
+        if e["kind"] == "wall":
+            return any(c.get("wrap") for c in e.get("components", [])) or any(
+                k in e.get("joins", {}) for k in ("startPass", "endPass"))
+        return e["kind"] == "slab" and "bound" in e
+
+    if any(built(e) for e in d["entities"]) or any(built(e) for b in d.get("blocks", []) for e in b.get("entities", [])) \
+            or any(c.get("wrap") for st in d["settings"].get("wallStyles", []) for c in st["components"]):
+        # A turning wall component, a node decision, a bound slab (docs/adr/0771).
+        schema = max(schema, 137)
     return root(cmap(body), version=uint(schema))
 
 
@@ -3003,7 +3014,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-137.kcad"] = container(root(cmap(parts), version=uint(137)))
+    files["schema-version-138.kcad"] = container(root(cmap(parts), version=uint(138)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5303,6 +5314,24 @@ def build():
         out["broken/ramp-level-" + name + ".kcad"] = container(document(d))
     ramp_level_bad("without-level", 0, lambda e: e.pop("arch"))
     ramp_level_bad("far-offset", 1, lambda e: e.update(baseOffset=1000.5))
+    # Schema 137 (docs/adr/0771): a wall style's and a wall's plasters that turn at the ends, a wall end's node decision,
+    # a slab bound to its walls, one bound to a space that is gone; schema 136 refuses them, and a turning layer written
+    # false, an empty decision, a default face written, a walls' bound without its seed are refused too.
+    bp_doc = load("building-parts.json")
+    bp = document(bp_doc)
+    assert bp.count(b"\x67version\x18\x89") == 1, "the building parts are schema 137"
+    out["building-parts.kcad"] = container(bp)
+    out["broken/building-parts-in-schema-136.kcad"] = container(bp.replace(b"\x67version\x18\x89", b"\x67version\x18\x88"))
+
+    def parts_bad(name, change):
+        d = copy.deepcopy(bp_doc)
+        change(d)
+        out["broken/building-parts-" + name + ".kcad"] = container(document(d))
+    parts_bad("wrap-false", lambda d: d["entities"][0]["components"][1].update(wrap=False))
+    parts_bad("pass-empty", lambda d: d["entities"][1]["joins"].update(endPass=[]))
+    parts_bad("bound-face-default", lambda d: d["entities"][3]["bound"].update(face="outline"))
+    parts_bad("bound-without-seed", lambda d: d["entities"][3]["bound"].pop("seed"))
+    parts_bad("bound-unknown-field", lambda d: d["entities"][3]["bound"].update(bogus=1.0))
     # Schema 123 (docs/adr/0722): slabs: a floor with a hole, a balcony with its railing's run, a terrace with a parapet
     # all round, left out of the totals, a curved two-part slab.
     sl = document(load("slabs.json"))

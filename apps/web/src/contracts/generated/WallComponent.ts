@@ -23,4 +23,10 @@ detail: WallDetail,
  * Its strength where walls meet (docs/adr/0340 §1), 1 to 9, the smaller the stronger: a joining wall's component
  * passes the host's weaker ones and stops at the first as strong. Absent: 3 (between a core's 1 and a finish's 5).
  */
-priority?: number, };
+priority?: number, 
+/**
+ * Uçta döner (docs/adr/0771 §3): at the wall's free ends and at a door's or a window's jambs this layer turns
+ * across the end (a plaster's or an insulation's return, the end cap and the reveal one meaning), when it is one of
+ * the face's outermost turning layers; the layers inside stop short by its thickness. Absent: it stops square.
+ */
+wrap?: boolean, };
