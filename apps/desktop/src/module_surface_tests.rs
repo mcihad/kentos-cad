@@ -948,6 +948,8 @@ fn the_status_bar_shows_the_lamps_at_1440() {
         (GIS, "gis", Workspace::Gis, None),
     ] {
         let path = saved_as(&dir, &format!("{word}.kcad"), kind, work);
+        // The lamps' widths are measured (and cached) before the first snapshot loads the fonts: load them first.
+        kentos_ui::theme::typography::load();
         let mut app = started(program);
         let _ = app.settings.choose(&[("appearance.textSize", json!(13))]);
         app.apply_settings();
