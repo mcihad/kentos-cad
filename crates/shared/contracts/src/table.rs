@@ -255,6 +255,11 @@ pub enum TableSource {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Vec<String>>>", optional))]
         members: Vec<Vec<String>>,
+        /// A units schedule's (docs/adr/0795): each row's program groups by their ids, beside `members` (a unit without
+        /// spaces is still a data row); a heading's and a subtotal's none. Written by the document; absent elsewhere.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Vec<String>>>", optional))]
+        units: Vec<Vec<String>>,
     },
 }
 
@@ -498,10 +503,24 @@ impl TableShape<'_> {
                 filter,
                 sort,
                 members,
+                units,
                 ..
             }) => {
                 if let Some((_, words)) = crate::schedule::schedule_problem(*of, columns, sort, filter.as_ref()) {
                     return Some(("source", words));
+                }
+                // The rows' units (docs/adr/0795): a units schedule's alone, one list a row, no empty id.
+                if !units.is_empty()
+                    && (*of != crate::ScheduleOf::Units
+                        || units.len() != members.len()
+                        || units.iter().flatten().any(|u| u.trim().is_empty()))
+                {
+                    return Some((
+                        "source",
+                        "Çizelgenin satırlarının bölümleri yalnız bölüm çizelgesinde, satır başına bir liste ve boş \
+                         olmayan kimliklerle yazılır."
+                            .to_owned(),
+                    ));
                 }
                 if members.len() > MAX_TABLE_ROWS || members.iter().flatten().any(|u| u.trim().is_empty()) {
                     return Some((

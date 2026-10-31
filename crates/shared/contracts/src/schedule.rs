@@ -3,12 +3,16 @@
 //! every step. A column reads one field of them; one that is the objects' own field (a number, a type, a sill, a
 //! finish …) is edited in the schedule and written to the objects, one that is worked out (a count, an area, a height
 //! …) is not. A sort key may put a heading before its groups and a subtotal after them (docs/adr/0733 §4).
+//!
+//! A schedule of the building program's units (docs/adr/0795, `of: units`) lists the program's groups, not objects: a
+//! row each in the program's order, its members its spaces; its number, name, recorded area and share weight are the
+//! program's own and written to it, the rest are worked out.
 
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
 use ts_rs::TS;
 
-use crate::{ArchPhase, OpeningForm};
+use crate::{ArchPhase, OpeningForm, UnitKind};
 
 /// The most columns a schedule has.
 pub const MAX_SCHEDULE_COLUMNS: usize = 30;
@@ -27,15 +31,18 @@ pub enum ScheduleOf {
     Walls,
     /// The drawing's block inserts: furniture, sanitary fixtures, kitchen modules (docs/adr/0733 §2).
     Fixtures,
+    /// The building program's groups (docs/adr/0795): independent units, common and outdoor areas, a row each.
+    Units,
 }
 
 impl ScheduleOf {
-    pub const ALL: [ScheduleOf; 5] = [
+    pub const ALL: [ScheduleOf; 6] = [
         ScheduleOf::Openings,
         ScheduleOf::Spaces,
         ScheduleOf::Columns,
         ScheduleOf::Walls,
         ScheduleOf::Fixtures,
+        ScheduleOf::Units,
     ];
 
     pub fn label(self) -> &'static str {
@@ -45,10 +52,12 @@ impl ScheduleOf {
             ScheduleOf::Columns => "Kolon çizelgesi",
             ScheduleOf::Walls => "Duvar çizelgesi",
             ScheduleOf::Fixtures => "Donatı çizelgesi",
+            ScheduleOf::Units => "Bölüm çizelgesi",
         }
     }
 
-    /// The object kind it lists, as the contract names it.
+    /// The object kind it lists, as the contract names it; a units schedule's rows are the program's groups, whose
+    /// members are spaces.
     pub fn kind(self) -> &'static str {
         match self {
             ScheduleOf::Openings => "opening",
@@ -56,6 +65,7 @@ impl ScheduleOf {
             ScheduleOf::Columns => "column",
             ScheduleOf::Walls => "wall",
             ScheduleOf::Fixtures => "insert",
+            ScheduleOf::Units => "space",
         }
     }
 
@@ -68,6 +78,7 @@ impl ScheduleOf {
             ScheduleOf::Columns => &[Tag, Place, Type, Width, Level],
             ScheduleOf::Walls => &[Type, Thickness, Length, Height, Area, Volume],
             ScheduleOf::Fixtures => &[Type, Category, Space, Level, Count],
+            ScheduleOf::Units => &[Number, Name, UnitKind, Building, Level, Area, Share, Gross, RecordedArea],
         };
         fields
             .iter()
@@ -147,10 +158,17 @@ pub enum ScheduleField {
     /// start (docs/adr/0792 §1).
     Tracks,
     Panels,
+    /// A unit's kind (Bağımsız bölüm, Ortak alan, Dış alan), its building's and its wing's names, its recorded area and
+    /// its share weight (docs/adr/0795): a units schedule's.
+    UnitKind,
+    Building,
+    Wing,
+    RecordedArea,
+    ShareWeight,
 }
 
 impl ScheduleField {
-    pub const ALL: [ScheduleField; 43] = [
+    pub const ALL: [ScheduleField; 48] = [
         ScheduleField::Number,
         ScheduleField::Type,
         ScheduleField::Form,
@@ -194,6 +212,11 @@ impl ScheduleField {
         ScheduleField::Gross,
         ScheduleField::Tracks,
         ScheduleField::Panels,
+        ScheduleField::UnitKind,
+        ScheduleField::Building,
+        ScheduleField::Wing,
+        ScheduleField::RecordedArea,
+        ScheduleField::ShareWeight,
     ];
 
     /// Its heading when the column gives none.
@@ -242,6 +265,11 @@ impl ScheduleField {
             ScheduleField::Gross => "Brüt",
             ScheduleField::Tracks => "Ray sayısı",
             ScheduleField::Panels => "Kanat düzeni",
+            ScheduleField::UnitKind => "Bölüm türü",
+            ScheduleField::Building => "Bina",
+            ScheduleField::Wing => "Kanat",
+            ScheduleField::RecordedArea => "Kayıtlı alan",
+            ScheduleField::ShareWeight => "Pay ağırlığı",
         }
     }
 
@@ -290,14 +318,41 @@ impl ScheduleField {
             ScheduleField::Gross => "gross",
             ScheduleField::Tracks => "tracks",
             ScheduleField::Panels => "panels",
+            ScheduleField::UnitKind => "unitKind",
+            ScheduleField::Building => "building",
+            ScheduleField::Wing => "wing",
+            ScheduleField::RecordedArea => "recordedArea",
+            ScheduleField::ShareWeight => "shareWeight",
         }
     }
 
-    /// Whether a schedule of `of` may read it.
+    /// Whether a schedule of `of` may read it. A units schedule (docs/adr/0795) reads its groups' number, name, kind,
+    /// building, wing, levels, net area, recorded area, share weight, share, gross, target, target difference and space
+    /// count.
     pub fn reads(self, of: ScheduleOf) -> bool {
         use ScheduleField::*;
+        if of == ScheduleOf::Units {
+            return matches!(
+                self,
+                Number
+                    | Name
+                    | UnitKind
+                    | Building
+                    | Wing
+                    | Level
+                    | Area
+                    | RecordedArea
+                    | ShareWeight
+                    | Share
+                    | Gross
+                    | Target
+                    | TargetDiff
+                    | Count
+            );
+        }
         match self {
             Count | Level | Phase | Attr => true,
+            UnitKind | Building | Wing | RecordedArea | ShareWeight => false,
             Number => matches!(of, ScheduleOf::Openings | ScheduleOf::Spaces),
             Type => matches!(
                 of,
@@ -346,19 +401,33 @@ impl ScheduleField {
                 | BaseFinish
                 | WallFinish
                 | CeilingFinish
+                | RecordedArea
+                | ShareWeight
         )
     }
 
     /// Whether a schedule of `of` edits it: an editable field, but a fixture's type is its block's name (Bloğu
-    /// değiştir, not a cell, changes it; docs/adr/0733 §2).
+    /// değiştir, not a cell, changes it; docs/adr/0733 §2); a units schedule's number, name, recorded area and share
+    /// weight are the program's, written to it (docs/adr/0795).
     pub fn edits_in(self, of: ScheduleOf) -> bool {
-        self.editable() && !(of == ScheduleOf::Fixtures && self == ScheduleField::Type)
+        use ScheduleField::*;
+        match of {
+            ScheduleOf::Units => matches!(self, Number | Name | RecordedArea | ShareWeight),
+            _ => self.editable() && !(of == ScheduleOf::Fixtures && self == Type),
+        }
     }
 
     /// Whether a grouped row and the total add it up rather than share it.
     pub fn summed(self) -> bool {
         use ScheduleField::*;
         matches!(self, Count | Area | Perimeter | Volume | Length | Baseboard)
+    }
+
+    /// Whether a schedule of `of` adds it up: a units schedule adds its units' shares, gross and recorded areas too,
+    /// each unit's own (a spaces schedule repeats its unit's on each of its spaces, docs/adr/0784 §3).
+    pub fn summed_in(self, of: ScheduleOf) -> bool {
+        use ScheduleField::*;
+        self.summed() || (of == ScheduleOf::Units && matches!(self, Share | Gross | RecordedArea))
     }
 
     /// Whether it is a length the project's unit writes.
@@ -406,6 +475,12 @@ impl ScheduleField {
     /// Whether it is one of the shares' fields (docs/adr/0784, `.kcad` schema 147).
     pub fn is_share(self) -> bool {
         matches!(self, ScheduleField::Share | ScheduleField::Gross)
+    }
+
+    /// Whether it is one of a units schedule's own fields (docs/adr/0795, `.kcad` schema 151).
+    pub fn is_unit_field(self) -> bool {
+        use ScheduleField::*;
+        matches!(self, UnitKind | Building | Wing | RecordedArea | ShareWeight)
     }
 }
 
@@ -465,6 +540,16 @@ pub struct ScheduleFilter {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub types: Option<Vec<String>>,
+    /// A units schedule's groups' buildings, wings and kinds (docs/adr/0795): the buildings' and wings' ids.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub buildings: Option<Vec<String>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub wings: Option<Vec<String>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub kinds: Option<Vec<UnitKind>>,
 }
 
 impl ScheduleFilter {
@@ -474,6 +559,9 @@ impl ScheduleFilter {
             && self.forms.is_none()
             && self.layers.is_none()
             && self.types.is_none()
+            && self.buildings.is_none()
+            && self.wings.is_none()
+            && self.kinds.is_none()
     }
 }
 
@@ -511,6 +599,20 @@ pub fn schedule_extras(
         || columns.iter().any(|c| c.field.is_extra())
         || filter.is_some_and(|f| f.types.is_some())
         || sort.iter().any(|k| k.header || k.footer)
+}
+
+/// Whether a schedule is one docs/adr/0795 added (`.kcad` schema 151): of the program's units, a units field, a
+/// building, wing or kind filter, or the rows' units.
+pub fn schedule_units(
+    of: ScheduleOf,
+    columns: &[ScheduleColumn],
+    filter: Option<&ScheduleFilter>,
+    units: &[Vec<String>],
+) -> bool {
+    of == ScheduleOf::Units
+        || columns.iter().any(|c| c.field.is_unit_field())
+        || filter.is_some_and(|f| f.buildings.is_some() || f.wings.is_some() || f.kinds.is_some())
+        || !units.is_empty()
 }
 
 /// What is wrong with a schedule's spec: the field and the words; none: it holds.
@@ -580,6 +682,40 @@ pub fn schedule_problem(
                     columns.len()
                 ),
             ));
+        }
+    }
+    // A units schedule's filter (docs/adr/0795): its groups' levels, buildings, wings and kinds; another's not those.
+    if let Some(f) = filter {
+        let units_only = [
+            ("buildings", f.buildings.is_some()),
+            ("wings", f.wings.is_some()),
+            ("kinds", f.kinds.is_some()),
+        ];
+        let objects_only = [
+            ("phases", f.phases.is_some()),
+            ("forms", f.forms.is_some()),
+            ("layers", f.layers.is_some()),
+            ("types", f.types.is_some()),
+        ];
+        if of == ScheduleOf::Units {
+            if let Some((k, _)) = objects_only.iter().find(|(_, on)| *on) {
+                return Some((
+                    format!("filter.{k}"),
+                    "Bölüm çizelgesi bölümleri kat, bina, kanat ve türle süzer; evre, biçim, katman ve tür adı süzgeci \
+                     nesne çizelgelerindedir."
+                        .into(),
+                ));
+            }
+        } else if let Some((k, _)) = units_only.iter().find(|(_, on)| *on) {
+            return Some((
+                format!("filter.{k}"),
+                "Bina, kanat ve bölüm türü süzgeci yalnız bölüm çizelgesindedir.".into(),
+            ));
+        }
+        for (k, list) in [("buildings", &f.buildings), ("wings", &f.wings)] {
+            if let Some((i, _)) = list.iter().flatten().enumerate().find(|(_, t)| t.trim().is_empty()) {
+                return Some((format!("filter.{k}[{i}]"), "Süzgecin kimlikleri boş olamaz.".into()));
+            }
         }
     }
     if let Some(f) = filter

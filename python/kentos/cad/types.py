@@ -5285,6 +5285,10 @@ class ScheduleField(_StrEnum):
     - ``drum``
     - ``pocket``
     - ``panels``
+    - ``building``
+    - ``wing``
+    - ``recordedArea``
+    - ``shareWeight``
     - ``attr``: The attribute the column's `attr` names.
     - ``floorFinish``: A space's finishes (docs/adr/0733 §3): its floor's, its base's (the skirting's), its walls' and its ceiling's.
     - ``baseboard``: A space's baseboard: its perimeter less the passages along it (docs/adr/0722 §5).
@@ -5298,6 +5302,7 @@ class ScheduleField(_StrEnum):
     - ``share``: A space's unit's share of the common areas (docs/adr/0784 §3): the unit's, alike on each of its spaces.
     - ``gross``: A space's unit's gross area: its own rooms and its share.
     - ``tracks``: A three- or four-leaf sliding door's or window's tracks and its leaves' layout, fixed O and sliding X from its
+    - ``unitKind``: A unit's kind (Bağımsız bölüm, Ortak alan, Dış alan), its building's and its wing's names, its recorded area and
     """
     NUMBER = "number"
     TYPE = "type"
@@ -5329,6 +5334,10 @@ class ScheduleField(_StrEnum):
     DRUM = "drum"
     POCKET = "pocket"
     PANELS = "panels"
+    BUILDING = "building"
+    WING = "wing"
+    RECORDED_AREA = "recordedArea"
+    SHARE_WEIGHT = "shareWeight"
     ATTR = "attr"
     FLOOR_FINISH = "floorFinish"
     BASEBOARD = "baseboard"
@@ -5342,9 +5351,10 @@ class ScheduleField(_StrEnum):
     SHARE = "share"
     GROSS = "gross"
     TRACKS = "tracks"
+    UNIT_KIND = "unitKind"
 
 
-ScheduleFieldName = Literal["number", "type", "form", "width", "height", "sill", "head", "wall", "level", "phase", "count", "area", "perimeter", "volume", "name", "usage", "tag", "place", "length", "thickness", "baseFinish", "wallFinish", "ceilingFinish", "unitWidth", "leafWidth", "clearWidth", "leaves", "drum", "pocket", "panels", "attr", "floorFinish", "baseboard", "category", "space", "roughWidth", "unit", "target", "targetDiff", "operation", "share", "gross", "tracks"]
+ScheduleFieldName = Literal["number", "type", "form", "width", "height", "sill", "head", "wall", "level", "phase", "count", "area", "perimeter", "volume", "name", "usage", "tag", "place", "length", "thickness", "baseFinish", "wallFinish", "ceilingFinish", "unitWidth", "leafWidth", "clearWidth", "leaves", "drum", "pocket", "panels", "building", "wing", "recordedArea", "shareWeight", "attr", "floorFinish", "baseboard", "category", "space", "roughWidth", "unit", "target", "targetDiff", "operation", "share", "gross", "tracks", "unitKind"]
 """The names of :class:`ScheduleField`, for a plain string."""
 
 
@@ -5356,15 +5366,17 @@ class ScheduleOf(_StrEnum):
     - ``columns``
     - ``walls``
     - ``fixtures``: The drawing's block inserts: furniture, sanitary fixtures, kitchen modules (docs/adr/0733 §2).
+    - ``units``: The building program's groups (docs/adr/0795): independent units, common and outdoor areas, a row each.
     """
     OPENINGS = "openings"
     SPACES = "spaces"
     COLUMNS = "columns"
     WALLS = "walls"
     FIXTURES = "fixtures"
+    UNITS = "units"
 
 
-ScheduleOfName = Literal["openings", "spaces", "columns", "walls", "fixtures"]
+ScheduleOfName = Literal["openings", "spaces", "columns", "walls", "fixtures", "units"]
 """The names of :class:`ScheduleOf`, for a plain string."""
 
 
@@ -56793,22 +56805,30 @@ class ScheduleColumnInfo(_Model):
 class ScheduleFilter(_Model):
     """Which objects a schedule lists: those of every list given.
     Attributes:
+        buildings: A units schedule's groups' buildings, wings and kinds (docs/adr/0795): the buildings' and wings' ids.
         forms: An openings schedule's forms.
         layers: Their layers' ids.
         levels: Their levels' ids (an opening's its wall's).
         types: Their types (docs/adr/0733 §4): an opening's type, a wall's style, a column's kind, a space's usage, a fixture's
             block name.
     """
+    buildings: list[str] | None | Unset = UNSET
     forms: list[OpeningForm | OpeningFormName] | None | Unset = UNSET
+    kinds: list[UnitKind | UnitKindName] | None | Unset = UNSET
     layers: list[str] | None | Unset = UNSET
     levels: list[str] | None | Unset = UNSET
     phases: list[ArchPhase | ArchPhaseName] | None | Unset = UNSET
     types: list[str] | None | Unset = UNSET
+    wings: list[str] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
+        if self.buildings is not UNSET:
+            out["buildings"] = None if self.buildings is None else list(self.buildings)
         if self.forms is not UNSET:
             out["forms"] = None if self.forms is None else [_enum_out(e0) for e0 in self.forms]
+        if self.kinds is not UNSET:
+            out["kinds"] = None if self.kinds is None else [_enum_out(e0) for e0 in self.kinds]
         if self.layers is not UNSET:
             out["layers"] = None if self.layers is None else list(self.layers)
         if self.levels is not UNSET:
@@ -56817,16 +56837,21 @@ class ScheduleFilter(_Model):
             out["phases"] = None if self.phases is None else [_enum_out(e0) for e0 in self.phases]
         if self.types is not UNSET:
             out["types"] = None if self.types is None else list(self.types)
+        if self.wings is not UNSET:
+            out["wings"] = None if self.wings is None else list(self.wings)
         return out
 
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> ScheduleFilter:
         return cls(
+            buildings=UNSET if "buildings" not in data else None if data["buildings"] is None else list(data["buildings"]),
             forms=UNSET if "forms" not in data else None if data["forms"] is None else [_enum_in(OpeningForm, e0) for e0 in data["forms"]],
+            kinds=UNSET if "kinds" not in data else None if data["kinds"] is None else [_enum_in(UnitKind, e0) for e0 in data["kinds"]],
             layers=UNSET if "layers" not in data else None if data["layers"] is None else list(data["layers"]),
             levels=UNSET if "levels" not in data else None if data["levels"] is None else list(data["levels"]),
             phases=UNSET if "phases" not in data else None if data["phases"] is None else [_enum_in(ArchPhase, e0) for e0 in data["phases"]],
             types=UNSET if "types" not in data else None if data["types"] is None else list(data["types"]),
+            wings=UNSET if "wings" not in data else None if data["wings"] is None else list(data["wings"]),
         )
 
 
@@ -56837,11 +56862,13 @@ class ScheduleRowInfo(_Model):
         row: The table's own row index (`cad.schedules.edit`'s `row`). Unit: index.
         members: A data row's objects, by their persistent ids, in the drawing's order: what a cell of an editable column is
             written to; none for the other rows.
+        units: A units schedule's data row's program groups by their ids (docs/adr/0795): what its cells are written to.
     """
     row: int
     role: ScheduleRowRole | ScheduleRowRoleName
     cells: list[str]
     members: list[str]
+    units: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -56849,6 +56876,8 @@ class ScheduleRowInfo(_Model):
         out["role"] = _enum_out(self.role)
         out["cells"] = list(self.cells)
         out["members"] = list(self.members)
+        if self.units is not UNSET:
+            out["units"] = list(self.units)
         return out
 
     @classmethod
@@ -56858,6 +56887,7 @@ class ScheduleRowInfo(_Model):
             role=_enum_in(ScheduleRowRole, data["role"]),
             cells=list(data["cells"]),
             members=list(data["members"]),
+            units=list(data["units"]) if "units" in data else UNSET,
         )
 
 
@@ -56900,9 +56930,9 @@ class SchedulesCreate(_Model):
     """Input of `cad.schedules.create` v1 (“Çizelge”): a schedule of `of` placed with its top left corner at `at`, its
     rows written from the drawing, as one undo step.
 
-    Refusals, in this order: `not_finite`, `invalid_schedule`, `level_not_found`, `invalid_line_weight`,
-    `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`; on the desktop also
-    `slots_exhausted`. Warning: `layer_hidden`.
+    Refusals, in this order: `not_finite`, `invalid_schedule`, `level_not_found`, `building_not_found`,
+    `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`; on
+    the desktop also `slots_exhausted`. Warning: `layer_hidden`.
     Attributes:
         at: Unit: length.
         columns: Absent: the kind's columns.
@@ -57001,7 +57031,7 @@ class SchedulesEdit(_Model):
 
     Refusals, in this order: `invalid_uid`, `entity_not_found`, `not_schedule`, `cell_out_of_range`, `cell_computed`,
     `schedule_summary_row`, `schedule_group_number`, `invalid_cell_value`, `invalid_schedule`, `level_not_found`,
-    `invalid_revision`, `revision_conflict`, `layer_locked`.
+    `building_not_found`, `invalid_revision`, `revision_conflict`, `layer_locked`.
     """
     uid: str
     operation: ScheduleOperation
@@ -57030,16 +57060,20 @@ class SchedulesEdited(_Model):
     Attributes:
         table: The schedule as written again.
         edited: The objects a cell was written to, in the drawing's order.
+        units: The program groups a units schedule's cell was written to, by their ids, in the program's order (docs/adr/0795).
     """
     table: Entity
     edited: list[str]
     revision: str
+    units: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["table"] = self.table.to_json()
         out["edited"] = list(self.edited)
         out["revision"] = self.revision
+        if self.units is not UNSET:
+            out["units"] = list(self.units)
         return out
 
     @classmethod
@@ -57048,6 +57082,7 @@ class SchedulesEdited(_Model):
             table=Entity.from_json(data["table"]),
             edited=list(data["edited"]),
             revision=data["revision"],
+            units=list(data["units"]) if "units" in data else UNSET,
         )
 
 
@@ -84628,7 +84663,8 @@ class MedianRoadWork(RoadWork):
 @dataclass(kw_only=True, slots=True)
 class CellScheduleOperation(ScheduleOperation):
     """The cell of the data row `row` (the table's own row index: 0 is the heading) and the column `column`: `value`
-    written to each of the row's objects. Empty words clear an optional field.
+    written to each of the row's objects (a units schedule's: to the row's program groups, docs/adr/0795). Empty
+    words clear an optional field.
     Attributes:
         row: Unit: index.
         column: Unit: index.
@@ -86856,6 +86892,9 @@ class ScheduleTableSource(TableSource):
     """Kapı ve pencere, mahal, kolon ya da duvar çizelgesi (docs/adr/0344 §3): the objects of `of` that the filter
     takes, a row each (alike ones one row when grouped), in the columns' order, sorted, with a total; written again
     by the document at every step, which writes `members` too: each data row's objects by their persistent ids.
+    Attributes:
+        units: A units schedule's (docs/adr/0795): each row's program groups by their ids, beside `members` (a unit without
+            spaces is still a data row); a heading's and a subtotal's none. Written by the document; absent elsewhere.
     """
     TAG_VALUE: ClassVar[str] = "schedule"
     of: ScheduleOf | ScheduleOfName
@@ -86865,6 +86904,7 @@ class ScheduleTableSource(TableSource):
     members: list[list[str]] | Unset = UNSET
     sort: list[ScheduleSort] | Unset = UNSET
     total: bool | Unset = UNSET
+    units: list[list[str]] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "schedule"}
@@ -86880,6 +86920,8 @@ class ScheduleTableSource(TableSource):
             out["sort"] = [e0.to_json() for e0 in self.sort]
         if self.total is not UNSET:
             out["total"] = self.total
+        if self.units is not UNSET:
+            out["units"] = [list(e0) for e0 in self.units]
         return out
 
     @classmethod
@@ -86892,6 +86934,7 @@ class ScheduleTableSource(TableSource):
             members=[list(e0) for e0 in data["members"]] if "members" in data else UNSET,
             sort=[ScheduleSort.from_json(e0) for e0 in data["sort"]] if "sort" in data else UNSET,
             total=data.get("total", UNSET),
+            units=[list(e0) for e0 in data["units"]] if "units" in data else UNSET,
         )
 
 

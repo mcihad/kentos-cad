@@ -32,6 +32,10 @@ pub fn source_words(t: &TableEntity) -> String {
                 None => format!("Blok çizelgesi: {what} ({})", columns.join(", ")),
             }
         }
+        // A units schedule's rows are the building program's groups (docs/adr/0795).
+        Some(TableSource::Schedule { of: kentos_commands::ScheduleOf::Units, units, .. }) => {
+            format!("Bölüm çizelgesi: {} satır, bina programından", units.len())
+        }
         Some(TableSource::Schedule { of, members, .. }) => {
             format!("{}: {} satır, nesnelerinden", of.label(), members.len())
         }

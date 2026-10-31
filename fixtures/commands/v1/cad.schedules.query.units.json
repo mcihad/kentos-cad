@@ -1,0 +1,10385 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.schedules.query",
+ "commandVersion": 1,
+ "title": "Bölüm çizelgesini oku: sütunlar, satırların rolleri ve bölümleri",
+ "note": "ADR 0795. Beklenenler scripts/fixtures/unit_schedule_cases.py'nin ADR'den yazılmış kurallarından, KentOS kodu olmadan; paylar program_share_cases.py'nin kesirlerinden, plan program_cases.py'den.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Bina programı payları",
+  "settings": {
+   "srid": 0,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "deg",
+   "plotScale": 50,
+   "workspace": "cad",
+   "arch": {
+    "levels": [
+     {
+      "id": "zemin",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "height": 3.0
+     },
+     {
+      "id": "kat-1",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "height": 3.0
+     }
+    ],
+    "program": {
+     "buildings": [
+      {
+       "id": "a",
+       "name": "A Blok",
+       "wings": [
+        {
+         "id": "a-bati",
+         "name": "Batı kanadı"
+        },
+        {
+         "id": "a-dogu",
+         "name": "Doğu kanadı"
+        }
+       ]
+      },
+      {
+       "id": "b",
+       "name": "B Blok"
+      },
+      {
+       "id": "c",
+       "name": "C Blok"
+      }
+     ],
+     "units": [
+      {
+       "id": "d1",
+       "number": "1",
+       "name": "Daire 1",
+       "building": "a",
+       "wing": "a-bati",
+       "recordedArea": 50.0
+      },
+      {
+       "id": "d2",
+       "number": "2",
+       "name": "Daire 2",
+       "building": "a",
+       "wing": "a-dogu"
+      },
+      {
+       "id": "d3",
+       "number": "3",
+       "name": "Daire 3",
+       "building": "a",
+       "wing": "a-dogu"
+      },
+      {
+       "id": "d4",
+       "number": "4",
+       "name": "Daire 4",
+       "building": "b"
+      },
+      {
+       "id": "ortak",
+       "number": "O",
+       "name": "A ortak",
+       "kind": "common",
+       "building": "a"
+      },
+      {
+       "id": "kdogu",
+       "number": "OD",
+       "name": "Doğu merdiveni",
+       "kind": "common",
+       "building": "a",
+       "wing": "a-dogu"
+      },
+      {
+       "id": "bortak",
+       "number": "OB",
+       "name": "B ortak",
+       "kind": "common",
+       "building": "b"
+      },
+      {
+       "id": "genel",
+       "number": "G",
+       "name": "Site ortak",
+       "kind": "common"
+      },
+      {
+       "id": "bahce",
+       "number": "B",
+       "name": "Bahçe",
+       "kind": "outdoor"
+      }
+     ],
+     "briefs": [
+      {
+       "usage": "Balkon",
+       "outdoor": true
+      },
+      {
+       "usage": "Salon",
+       "areaMin": 20.0,
+       "areaMax": 30.0
+      },
+      {
+       "usage": "Yatak odası",
+       "areaMin": 12.0,
+       "areaMax": 16.0
+      },
+      {
+       "usage": "Koridor",
+       "minPassage": 1.2
+      }
+     ],
+     "shareRule": "equal"
+    }
+   }
+  },
+  "origin": {
+   "x": 0,
+   "y": 0
+  },
+  "layers": [
+   {
+    "id": "duvar",
+    "name": "Duvar",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "mahal",
+    "name": "Mahal",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kapi",
+    "name": "Kapı",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "donati",
+    "name": "Donatı",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "etiket",
+    "name": "Etiket",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "mahal",
+  "styles": {
+   "items": [],
+   "categories": []
+  },
+  "entities": [
+   {
+    "kind": "space",
+    "id": 10,
+    "layerId": "mahal",
+    "attrs": {},
+    "parts": [
+     {
+      "outer": {
+       "pts": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 6.0,
+         "y": 0.0
+        },
+        {
+         "x": 6.0,
+         "y": 5.0
+        },
+        {
+         "x": 0.0,
+         "y": 5.0
+        }
+       ]
+      }
+     }
+    ],
+    "number": "101",
+    "name": "Salon",
+    "usage": "Salon",
+    "arch": {
+     "level": "zemin"
+    },
+    "unit": "d1"
+   },
+   {
+    "kind": "space",
+    "id": 11,
+    "layerId": "mahal",
+    "attrs": {},
+    "parts": [
+     {
+      "outer": {
+       "pts": [
+        {
+         "x": 6.0,
+         "y": 0.0
+        },
+        {
+         "x": 9.0,
+         "y": 0.0
+        },
+        {
+         "x": 9.0,
+         "y": 4.0
+        },
+        {
+         "x": 6.0,
+         "y": 4.0
+        }
+       ]
+      }
+     }
+    ],
+    "number": "102",
+    "name": "Yatak odası",
+    "usage": "Yatak odası",
+    "arch": {
+     "level": "zemin"
+    },
+    "unit": "d1"
+   },
+   {
+    "kind": "space",
+    "id": 12,
+    "layerId": "mahal",
+    "attrs": {},
+    "parts": [
+     {
+      "outer": {
+       "pts": [
+        {
+         "x": 0.0,
+         "y": -2.0
+        },
+        {
+         "x": 3.0,
+         "y": -2.0
+        },
+        {
+         "x": 3.0,
+         "y": -0.5
+        },
+        {
+         "x": 0.0,
+         "y": -0.5
+        }
+       ]
+      }
+     }
+    ],
+    "number": "103",
+    "name": "Balkon",
+    "usage": "Balkon",
+    "arch": {
+     "level": "zemin"
+    },
+    "unit": "d1"
+   },
+   {
+    "kind": "space",
+    "id": 13,
+    "layerId": "mahal",
+    "attrs": {},
+    "parts": [
+     {
+      "outer": {
+       "pts": [
+        {
+         "x": 10.0,
+         "y": 0.0
+        },
+        {
+         "x": 15.0,
+         "y": 0.0
+        },
+        {
+         "x": 15.0,
+         "y": 5.0
+        },
+        {
+         "x": 10.0,
+         "y": 5.0
+        }
+       ]
+      }
+     }
+    ],
+    "number": "201",
+    "name": "Salon",
+    "usage": "Salon",
+    "arch": {
+     "level": "zemin"
+    },
+    "unit": "d2"
+   },
+   {
+    "kind": "space",
+    "id": 14,
+    "layerId": "mahal",
+    "attrs": {},
+    "parts": [
+     {
+      "outer": {
+       "pts": [
+        {
+         "x": 10.0,
+         "y": 0.0
+        },
+        {
+         "x": 14.0,
+         "y": 0.0
+        },
+        {
+         "x": 14.0,
+         "y": 4.5
+        },
+        {
+         "x": 10.0,
+         "y": 4.5
+        }
+       ]
+      }
+     }
+    ],
+    "number": "202",
+    "name": "Yatak odası",
+    "usage": "Yatak odası",
+    "arch": {
+     "level": "kat-1"
+    },
+    "unit": "d2"
+   },
+   {
+    "kind": "space",
+    "id": 15,
+    "layerId": "mahal",
+    "attrs": {},
+    "parts": [
+     {
+      "outer": {
+       "pts": [
+        {
+         "x": 16.0,
+         "y": 0.0
+        },
+        {
+         "x": 19.3,
+         "y": 0.0
+        },
+        {
+         "x": 19.3,
+         "y": 5.0
+        },
+        {
+         "x": 16.0,
+         "y": 5.0
+        }
+       ]
+      }
+     }
+    ],
+    "number": "301",
+    "name": "Salon",
+    "usage": "Salon",
+    "arch": {
+     "level": "zemin"
+    },
+    "unit": "d3"
+   },
+   {
+    "kind": "space",
+    "id": 16,
+    "layerId": "mahal",
+    "attrs": {},
+    "parts": [
+     {
+      "outer": {
+       "pts": [
+        {
+         "x": 30.0,
+         "y": 0.0
+        },
+        {
+         "x": 37.0,
+         "y": 0.0
+        },
+        {
+         "x": 37.0,
+         "y": 7.0
+        },
+        {
+         "x": 30.0,
+         "y": 7.0
+        }
+       ]
+      }
+     }
+    ],
+    "number": "401",
+    "name": "Salon",
+    "usage": "Salon",
+    "arch": {
+     "level": "zemin"
+    },
+    "unit": "d4"
+   },
+   {
+    "kind": "space",
+    "id": 17,
+    "layerId": "mahal",
+    "attrs": {},
+    "parts": [
+     {
+      "outer": {
+       "pts": [
+        {
+         "x": 0.0,
+         "y": 6.0
+        },
+        {
+         "x": 15.01,
+         "y": 6.0
+        },
+        {
+         "x": 15.01,
+         "y": 7.3
+        },
+        {
+         "x": 0.0,
+         "y": 7.3
+        }
+       ]
+      }
+     }
+    ],
+    "number": "001",
+    "name": "Koridor",
+    "usage": "Koridor",
+    "arch": {
+     "level": "zemin"
+    },
+    "unit": "ortak"
+   },
+   {
+    "kind": "space",
+    "id": 18,
+    "layerId": "mahal",
+    "attrs": {},
+    "parts": [
+     {
+      "outer": {
+       "pts": [
+        {
+         "x": 15.01,
+         "y": 6.0
+        },
+        {
+         "x": 16.0,
+         "y": 6.0
+        },
+        {
+         "x": 16.0,
+         "y": 7.3
+        },
+        {
+         "x": 15.01,
+         "y": 7.3
+        }
+       ]
+      }
+     }
+    ],
+    "number": "002",
+    "name": "Şaft",
+    "usage": "Şaft",
+    "arch": {
+     "level": "zemin"
+    },
+    "void": true,
+    "unit": "ortak"
+   },
+   {
+    "kind": "space",
+    "id": 19,
+    "layerId": "mahal",
+    "attrs": {},
+    "parts": [
+     {
+      "outer": {
+       "pts": [
+        {
+         "x": 10.0,
+         "y": 8.0
+        },
+        {
+         "x": 13.0,
+         "y": 8.0
+        },
+        {
+         "x": 13.0,
+         "y": 9.1
+        },
+        {
+         "x": 10.0,
+         "y": 9.1
+        }
+       ]
+      }
+     }
+    ],
+    "number": "003",
+    "name": "Merdiven",
+    "usage": "Merdiven",
+    "arch": {
+     "level": "zemin"
+    },
+    "unit": "kdogu"
+   },
+   {
+    "kind": "space",
+    "id": 20,
+    "layerId": "mahal",
+    "attrs": {},
+    "parts": [
+     {
+      "outer": {
+       "pts": [
+        {
+         "x": 30.0,
+         "y": 8.0
+        },
+        {
+         "x": 33.0,
+         "y": 8.0
+        },
+        {
+         "x": 33.0,
+         "y": 10.02
+        },
+        {
+         "x": 30.0,
+         "y": 10.02
+        }
+       ]
+      }
+     }
+    ],
+    "number": "004",
+    "name": "Koridor",
+    "usage": "Koridor",
+    "arch": {
+     "level": "zemin"
+    },
+    "unit": "bortak"
+   },
+   {
+    "kind": "space",
+    "id": 21,
+    "layerId": "mahal",
+    "attrs": {},
+    "parts": [
+     {
+      "outer": {
+       "pts": [
+        {
+         "x": 40.0,
+         "y": 0.0
+        },
+        {
+         "x": 42.14,
+         "y": 0.0
+        },
+        {
+         "x": 42.14,
+         "y": 1.0
+        },
+        {
+         "x": 40.0,
+         "y": 1.0
+        }
+       ]
+      }
+     }
+    ],
+    "number": "005",
+    "name": "Bekçi",
+    "usage": "Bekçi",
+    "arch": {
+     "level": "zemin"
+    },
+    "unit": "genel"
+   },
+   {
+    "kind": "space",
+    "id": 22,
+    "layerId": "mahal",
+    "attrs": {},
+    "parts": [
+     {
+      "outer": {
+       "pts": [
+        {
+         "x": 50.0,
+         "y": 0.0
+        },
+        {
+         "x": 60.0,
+         "y": 0.0
+        },
+        {
+         "x": 60.0,
+         "y": 10.0
+        },
+        {
+         "x": 50.0,
+         "y": 10.0
+        }
+       ]
+      }
+     }
+    ],
+    "number": "B1",
+    "name": "Bahçe",
+    "usage": "Bahçe",
+    "unit": "bahce"
+   },
+   {
+    "kind": "space",
+    "id": 23,
+    "layerId": "mahal",
+    "attrs": {},
+    "parts": [
+     {
+      "outer": {
+       "pts": [
+        {
+         "x": 70.0,
+         "y": 0.0
+        },
+        {
+         "x": 72.0,
+         "y": 0.0
+        },
+        {
+         "x": 72.0,
+         "y": 2.0
+        },
+        {
+         "x": 70.0,
+         "y": 2.0
+        }
+       ]
+      }
+     }
+    ],
+    "number": "D",
+    "name": "Depo",
+    "usage": "Depo"
+   }
+  ]
+ },
+ "cases": [
+  {
+   "name": "Oku: varsayılan sütunlar, satırların bölümleri",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.schedules.create",
+     "input": {
+      "layerId": "etiket",
+      "at": {
+       "x": 0.0,
+       "y": -20.0
+      },
+      "of": "units"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 24,
+       "rows": 9,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "24": {
+        "cells": [
+         [
+          "No",
+          "Ad",
+          "Bölüm türü",
+          "Bina",
+          "Kat",
+          "Alan (m²)",
+          "Pay (m²)",
+          "Brüt (m²)",
+          "Kayıtlı alan (m²)"
+         ],
+         [
+          "1",
+          "Daire 1",
+          "Bağımsız bölüm",
+          "A Blok",
+          "Zemin kat",
+          "42.00",
+          "7.05",
+          "49.05",
+          "50.00"
+         ],
+         [
+          "2",
+          "Daire 2",
+          "Bağımsız bölüm",
+          "A Blok",
+          "Zemin kat, 1. kat",
+          "43.00",
+          "8.69",
+          "51.69",
+          ""
+         ],
+         [
+          "3",
+          "Daire 3",
+          "Bağımsız bölüm",
+          "A Blok",
+          "Zemin kat",
+          "16.50",
+          "8.68",
+          "25.18",
+          ""
+         ],
+         [
+          "4",
+          "Daire 4",
+          "Bağımsız bölüm",
+          "B Blok",
+          "Zemin kat",
+          "49.00",
+          "6.59",
+          "55.59",
+          ""
+         ],
+         [
+          "O",
+          "A ortak",
+          "Ortak alan",
+          "A Blok",
+          "Zemin kat",
+          "19.51",
+          "",
+          "",
+          ""
+         ],
+         [
+          "OD",
+          "Doğu merdiveni",
+          "Ortak alan",
+          "A Blok",
+          "Zemin kat",
+          "3.30",
+          "",
+          "",
+          ""
+         ],
+         [
+          "OB",
+          "B ortak",
+          "Ortak alan",
+          "B Blok",
+          "Zemin kat",
+          "6.06",
+          "",
+          "",
+          ""
+         ],
+         [
+          "G",
+          "Site ortak",
+          "Ortak alan",
+          "",
+          "Zemin kat",
+          "2.14",
+          "",
+          "",
+          ""
+         ],
+         [
+          "B",
+          "Bahçe",
+          "Dış alan",
+          "",
+          "",
+          "100.00",
+          "",
+          "",
+          ""
+         ]
+        ],
+        "source": {
+         "kind": "schedule",
+         "of": "units",
+         "columns": [
+          {
+           "field": "number"
+          },
+          {
+           "field": "name"
+          },
+          {
+           "field": "unitKind"
+          },
+          {
+           "field": "building"
+          },
+          {
+           "field": "level"
+          },
+          {
+           "field": "area"
+          },
+          {
+           "field": "share"
+          },
+          {
+           "field": "gross"
+          },
+          {
+           "field": "recordedArea"
+          }
+         ],
+         "members": [
+          [
+           "$uidOf:10",
+           "$uidOf:11",
+           "$uidOf:12"
+          ],
+          [
+           "$uidOf:13",
+           "$uidOf:14"
+          ],
+          [
+           "$uidOf:15"
+          ],
+          [
+           "$uidOf:16"
+          ],
+          [
+           "$uidOf:17",
+           "$uidOf:18"
+          ],
+          [
+           "$uidOf:19"
+          ],
+          [
+           "$uidOf:20"
+          ],
+          [
+           "$uidOf:21"
+          ],
+          [
+           "$uidOf:22"
+          ]
+         ],
+         "units": [
+          [
+           "d1"
+          ],
+          [
+           "d2"
+          ],
+          [
+           "d3"
+          ],
+          [
+           "d4"
+          ],
+          [
+           "ortak"
+          ],
+          [
+           "kdogu"
+          ],
+          [
+           "bortak"
+          ],
+          [
+           "genel"
+          ],
+          [
+           "bahce"
+          ]
+         ]
+        },
+        "aligns": [
+         "left",
+         "left",
+         "left",
+         "left",
+         "left",
+         "right",
+         "right",
+         "right",
+         "right"
+        ],
+        "header": true,
+        "styles": [
+         {
+          "row": 1,
+          "col": 2,
+          "rows": 9,
+          "cols": 1,
+          "color": "#7f8790"
+         },
+         {
+          "row": 1,
+          "col": 3,
+          "rows": 9,
+          "cols": 1,
+          "color": "#7f8790"
+         },
+         {
+          "row": 1,
+          "col": 4,
+          "rows": 9,
+          "cols": 1,
+          "color": "#7f8790"
+         },
+         {
+          "row": 1,
+          "col": 5,
+          "rows": 9,
+          "cols": 1,
+          "color": "#7f8790"
+         },
+         {
+          "row": 1,
+          "col": 6,
+          "rows": 9,
+          "cols": 1,
+          "color": "#7f8790"
+         },
+         {
+          "row": 1,
+          "col": 7,
+          "rows": 9,
+          "cols": 1,
+          "color": "#7f8790"
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.schedules.query",
+     "input": {
+      "uid": "$uidOf:24"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "of": "units",
+       "columns": [
+        {
+         "heading": "No",
+         "field": "number",
+         "editable": true,
+         "summed": false
+        },
+        {
+         "heading": "Ad",
+         "field": "name",
+         "editable": true,
+         "summed": false
+        },
+        {
+         "heading": "Bölüm türü",
+         "field": "unitKind",
+         "editable": false,
+         "summed": false
+        },
+        {
+         "heading": "Bina",
+         "field": "building",
+         "editable": false,
+         "summed": false
+        },
+        {
+         "heading": "Kat",
+         "field": "level",
+         "editable": false,
+         "summed": false
+        },
+        {
+         "heading": "Alan (m²)",
+         "field": "area",
+         "editable": false,
+         "summed": true
+        },
+        {
+         "heading": "Pay (m²)",
+         "field": "share",
+         "editable": false,
+         "summed": true
+        },
+        {
+         "heading": "Brüt (m²)",
+         "field": "gross",
+         "editable": false,
+         "summed": true
+        },
+        {
+         "heading": "Kayıtlı alan (m²)",
+         "field": "recordedArea",
+         "editable": true,
+         "summed": true
+        }
+       ],
+       "rows": [
+        {
+         "row": 0,
+         "role": "heading",
+         "cells": [
+          "No",
+          "Ad",
+          "Bölüm türü",
+          "Bina",
+          "Kat",
+          "Alan (m²)",
+          "Pay (m²)",
+          "Brüt (m²)",
+          "Kayıtlı alan (m²)"
+         ],
+         "members": []
+        },
+        {
+         "row": 1,
+         "role": "data",
+         "cells": [
+          "1",
+          "Daire 1",
+          "Bağımsız bölüm",
+          "A Blok",
+          "Zemin kat",
+          "42.00",
+          "7.05",
+          "49.05",
+          "50.00"
+         ],
+         "members": [
+          "$uidOf:10",
+          "$uidOf:11",
+          "$uidOf:12"
+         ],
+         "units": [
+          "d1"
+         ]
+        },
+        {
+         "row": 2,
+         "role": "data",
+         "cells": [
+          "2",
+          "Daire 2",
+          "Bağımsız bölüm",
+          "A Blok",
+          "Zemin kat, 1. kat",
+          "43.00",
+          "8.69",
+          "51.69",
+          ""
+         ],
+         "members": [
+          "$uidOf:13",
+          "$uidOf:14"
+         ],
+         "units": [
+          "d2"
+         ]
+        },
+        {
+         "row": 3,
+         "role": "data",
+         "cells": [
+          "3",
+          "Daire 3",
+          "Bağımsız bölüm",
+          "A Blok",
+          "Zemin kat",
+          "16.50",
+          "8.68",
+          "25.18",
+          ""
+         ],
+         "members": [
+          "$uidOf:15"
+         ],
+         "units": [
+          "d3"
+         ]
+        },
+        {
+         "row": 4,
+         "role": "data",
+         "cells": [
+          "4",
+          "Daire 4",
+          "Bağımsız bölüm",
+          "B Blok",
+          "Zemin kat",
+          "49.00",
+          "6.59",
+          "55.59",
+          ""
+         ],
+         "members": [
+          "$uidOf:16"
+         ],
+         "units": [
+          "d4"
+         ]
+        },
+        {
+         "row": 5,
+         "role": "data",
+         "cells": [
+          "O",
+          "A ortak",
+          "Ortak alan",
+          "A Blok",
+          "Zemin kat",
+          "19.51",
+          "",
+          "",
+          ""
+         ],
+         "members": [
+          "$uidOf:17",
+          "$uidOf:18"
+         ],
+         "units": [
+          "ortak"
+         ]
+        },
+        {
+         "row": 6,
+         "role": "data",
+         "cells": [
+          "OD",
+          "Doğu merdiveni",
+          "Ortak alan",
+          "A Blok",
+          "Zemin kat",
+          "3.30",
+          "",
+          "",
+          ""
+         ],
+         "members": [
+          "$uidOf:19"
+         ],
+         "units": [
+          "kdogu"
+         ]
+        },
+        {
+         "row": 7,
+         "role": "data",
+         "cells": [
+          "OB",
+          "B ortak",
+          "Ortak alan",
+          "B Blok",
+          "Zemin kat",
+          "6.06",
+          "",
+          "",
+          ""
+         ],
+         "members": [
+          "$uidOf:20"
+         ],
+         "units": [
+          "bortak"
+         ]
+        },
+        {
+         "row": 8,
+         "role": "data",
+         "cells": [
+          "G",
+          "Site ortak",
+          "Ortak alan",
+          "",
+          "Zemin kat",
+          "2.14",
+          "",
+          "",
+          ""
+         ],
+         "members": [
+          "$uidOf:21"
+         ],
+         "units": [
+          "genel"
+         ]
+        },
+        {
+         "row": 9,
+         "role": "data",
+         "cells": [
+          "B",
+          "Bahçe",
+          "Dış alan",
+          "",
+          "",
+          "100.00",
+          "",
+          "",
+          ""
+         ],
+         "members": [
+          "$uidOf:22"
+         ],
+         "units": [
+          "bahce"
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Oku: toplam satırı",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.schedules.create",
+     "input": {
+      "layerId": "etiket",
+      "at": {
+       "x": 0.0,
+       "y": -20.0
+      },
+      "of": "units",
+      "columns": [
+       {
+        "field": "number"
+       },
+       {
+        "field": "area"
+       },
+       {
+        "field": "count"
+       }
+      ],
+      "total": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 24,
+       "rows": 9,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "24": {
+        "cells": [
+         [
+          "No",
+          "Alan (m²)",
+          "Mahal sayısı"
+         ],
+         [
+          "1",
+          "42.00",
+          "3"
+         ],
+         [
+          "2",
+          "43.00",
+          "2"
+         ],
+         [
+          "3",
+          "16.50",
+          "1"
+         ],
+         [
+          "4",
+          "49.00",
+          "1"
+         ],
+         [
+          "O",
+          "19.51",
+          "2"
+         ],
+         [
+          "OD",
+          "3.30",
+          "1"
+         ],
+         [
+          "OB",
+          "6.06",
+          "1"
+         ],
+         [
+          "G",
+          "2.14",
+          "1"
+         ],
+         [
+          "B",
+          "100.00",
+          "1"
+         ],
+         [
+          "Toplam",
+          "281.51",
+          "13"
+         ]
+        ],
+        "source": {
+         "kind": "schedule",
+         "of": "units",
+         "columns": [
+          {
+           "field": "number"
+          },
+          {
+           "field": "area"
+          },
+          {
+           "field": "count"
+          }
+         ],
+         "total": true,
+         "members": [
+          [
+           "$uidOf:10",
+           "$uidOf:11",
+           "$uidOf:12"
+          ],
+          [
+           "$uidOf:13",
+           "$uidOf:14"
+          ],
+          [
+           "$uidOf:15"
+          ],
+          [
+           "$uidOf:16"
+          ],
+          [
+           "$uidOf:17",
+           "$uidOf:18"
+          ],
+          [
+           "$uidOf:19"
+          ],
+          [
+           "$uidOf:20"
+          ],
+          [
+           "$uidOf:21"
+          ],
+          [
+           "$uidOf:22"
+          ]
+         ],
+         "units": [
+          [
+           "d1"
+          ],
+          [
+           "d2"
+          ],
+          [
+           "d3"
+          ],
+          [
+           "d4"
+          ],
+          [
+           "ortak"
+          ],
+          [
+           "kdogu"
+          ],
+          [
+           "bortak"
+          ],
+          [
+           "genel"
+          ],
+          [
+           "bahce"
+          ]
+         ]
+        },
+        "aligns": [
+         "left",
+         "right",
+         "right"
+        ],
+        "header": true,
+        "styles": [
+         {
+          "row": 1,
+          "col": 1,
+          "rows": 9,
+          "cols": 1,
+          "color": "#7f8790"
+         },
+         {
+          "row": 1,
+          "col": 2,
+          "rows": 9,
+          "cols": 1,
+          "color": "#7f8790"
+         },
+         {
+          "row": 10,
+          "col": 0,
+          "rows": 1,
+          "cols": 3,
+          "bold": true
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.schedules.query",
+     "input": {
+      "uid": "$uidOf:24"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "of": "units",
+       "columns": [
+        {
+         "heading": "No",
+         "field": "number",
+         "editable": true,
+         "summed": false
+        },
+        {
+         "heading": "Alan (m²)",
+         "field": "area",
+         "editable": false,
+         "summed": true
+        },
+        {
+         "heading": "Mahal sayısı",
+         "field": "count",
+         "editable": false,
+         "summed": true
+        }
+       ],
+       "rows": [
+        {
+         "row": 0,
+         "role": "heading",
+         "cells": [
+          "No",
+          "Alan (m²)",
+          "Mahal sayısı"
+         ],
+         "members": []
+        },
+        {
+         "row": 1,
+         "role": "data",
+         "cells": [
+          "1",
+          "42.00",
+          "3"
+         ],
+         "members": [
+          "$uidOf:10",
+          "$uidOf:11",
+          "$uidOf:12"
+         ],
+         "units": [
+          "d1"
+         ]
+        },
+        {
+         "row": 2,
+         "role": "data",
+         "cells": [
+          "2",
+          "43.00",
+          "2"
+         ],
+         "members": [
+          "$uidOf:13",
+          "$uidOf:14"
+         ],
+         "units": [
+          "d2"
+         ]
+        },
+        {
+         "row": 3,
+         "role": "data",
+         "cells": [
+          "3",
+          "16.50",
+          "1"
+         ],
+         "members": [
+          "$uidOf:15"
+         ],
+         "units": [
+          "d3"
+         ]
+        },
+        {
+         "row": 4,
+         "role": "data",
+         "cells": [
+          "4",
+          "49.00",
+          "1"
+         ],
+         "members": [
+          "$uidOf:16"
+         ],
+         "units": [
+          "d4"
+         ]
+        },
+        {
+         "row": 5,
+         "role": "data",
+         "cells": [
+          "O",
+          "19.51",
+          "2"
+         ],
+         "members": [
+          "$uidOf:17",
+          "$uidOf:18"
+         ],
+         "units": [
+          "ortak"
+         ]
+        },
+        {
+         "row": 6,
+         "role": "data",
+         "cells": [
+          "OD",
+          "3.30",
+          "1"
+         ],
+         "members": [
+          "$uidOf:19"
+         ],
+         "units": [
+          "kdogu"
+         ]
+        },
+        {
+         "row": 7,
+         "role": "data",
+         "cells": [
+          "OB",
+          "6.06",
+          "1"
+         ],
+         "members": [
+          "$uidOf:20"
+         ],
+         "units": [
+          "bortak"
+         ]
+        },
+        {
+         "row": 8,
+         "role": "data",
+         "cells": [
+          "G",
+          "2.14",
+          "1"
+         ],
+         "members": [
+          "$uidOf:21"
+         ],
+         "units": [
+          "genel"
+         ]
+        },
+        {
+         "row": 9,
+         "role": "data",
+         "cells": [
+          "B",
+          "100.00",
+          "1"
+         ],
+         "members": [
+          "$uidOf:22"
+         ],
+         "units": [
+          "bahce"
+         ]
+        },
+        {
+         "row": 10,
+         "role": "total",
+         "cells": [
+          "Toplam",
+          "281.51",
+          "13"
+         ],
+         "members": []
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Oku: mahal sayısı başlığı ve toplanan sütunlar",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.schedules.create",
+     "input": {
+      "layerId": "etiket",
+      "at": {
+       "x": 0.0,
+       "y": -20.0
+      },
+      "of": "units",
+      "columns": [
+       {
+        "field": "number"
+       },
+       {
+        "field": "count"
+       },
+       {
+        "field": "share"
+       },
+       {
+        "field": "gross"
+       },
+       {
+        "field": "recordedArea"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 24,
+       "rows": 9,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "24": {
+        "cells": [
+         [
+          "No",
+          "Mahal sayısı",
+          "Pay (m²)",
+          "Brüt (m²)",
+          "Kayıtlı alan (m²)"
+         ],
+         [
+          "1",
+          "3",
+          "7.05",
+          "49.05",
+          "50.00"
+         ],
+         [
+          "2",
+          "2",
+          "8.69",
+          "51.69",
+          ""
+         ],
+         [
+          "3",
+          "1",
+          "8.68",
+          "25.18",
+          ""
+         ],
+         [
+          "4",
+          "1",
+          "6.59",
+          "55.59",
+          ""
+         ],
+         [
+          "O",
+          "2",
+          "",
+          "",
+          ""
+         ],
+         [
+          "OD",
+          "1",
+          "",
+          "",
+          ""
+         ],
+         [
+          "OB",
+          "1",
+          "",
+          "",
+          ""
+         ],
+         [
+          "G",
+          "1",
+          "",
+          "",
+          ""
+         ],
+         [
+          "B",
+          "1",
+          "",
+          "",
+          ""
+         ]
+        ],
+        "source": {
+         "kind": "schedule",
+         "of": "units",
+         "columns": [
+          {
+           "field": "number"
+          },
+          {
+           "field": "count"
+          },
+          {
+           "field": "share"
+          },
+          {
+           "field": "gross"
+          },
+          {
+           "field": "recordedArea"
+          }
+         ],
+         "members": [
+          [
+           "$uidOf:10",
+           "$uidOf:11",
+           "$uidOf:12"
+          ],
+          [
+           "$uidOf:13",
+           "$uidOf:14"
+          ],
+          [
+           "$uidOf:15"
+          ],
+          [
+           "$uidOf:16"
+          ],
+          [
+           "$uidOf:17",
+           "$uidOf:18"
+          ],
+          [
+           "$uidOf:19"
+          ],
+          [
+           "$uidOf:20"
+          ],
+          [
+           "$uidOf:21"
+          ],
+          [
+           "$uidOf:22"
+          ]
+         ],
+         "units": [
+          [
+           "d1"
+          ],
+          [
+           "d2"
+          ],
+          [
+           "d3"
+          ],
+          [
+           "d4"
+          ],
+          [
+           "ortak"
+          ],
+          [
+           "kdogu"
+          ],
+          [
+           "bortak"
+          ],
+          [
+           "genel"
+          ],
+          [
+           "bahce"
+          ]
+         ]
+        },
+        "aligns": [
+         "left",
+         "right",
+         "right",
+         "right",
+         "right"
+        ],
+        "header": true,
+        "styles": [
+         {
+          "row": 1,
+          "col": 1,
+          "rows": 9,
+          "cols": 1,
+          "color": "#7f8790"
+         },
+         {
+          "row": 1,
+          "col": 2,
+          "rows": 9,
+          "cols": 1,
+          "color": "#7f8790"
+         },
+         {
+          "row": 1,
+          "col": 3,
+          "rows": 9,
+          "cols": 1,
+          "color": "#7f8790"
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.schedules.query",
+     "input": {
+      "uid": "$uidOf:24"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "of": "units",
+       "columns": [
+        {
+         "heading": "No",
+         "field": "number",
+         "editable": true,
+         "summed": false
+        },
+        {
+         "heading": "Mahal sayısı",
+         "field": "count",
+         "editable": false,
+         "summed": true
+        },
+        {
+         "heading": "Pay (m²)",
+         "field": "share",
+         "editable": false,
+         "summed": true
+        },
+        {
+         "heading": "Brüt (m²)",
+         "field": "gross",
+         "editable": false,
+         "summed": true
+        },
+        {
+         "heading": "Kayıtlı alan (m²)",
+         "field": "recordedArea",
+         "editable": true,
+         "summed": true
+        }
+       ],
+       "rows": [
+        {
+         "row": 0,
+         "role": "heading",
+         "cells": [
+          "No",
+          "Mahal sayısı",
+          "Pay (m²)",
+          "Brüt (m²)",
+          "Kayıtlı alan (m²)"
+         ],
+         "members": []
+        },
+        {
+         "row": 1,
+         "role": "data",
+         "cells": [
+          "1",
+          "3",
+          "7.05",
+          "49.05",
+          "50.00"
+         ],
+         "members": [
+          "$uidOf:10",
+          "$uidOf:11",
+          "$uidOf:12"
+         ],
+         "units": [
+          "d1"
+         ]
+        },
+        {
+         "row": 2,
+         "role": "data",
+         "cells": [
+          "2",
+          "2",
+          "8.69",
+          "51.69",
+          ""
+         ],
+         "members": [
+          "$uidOf:13",
+          "$uidOf:14"
+         ],
+         "units": [
+          "d2"
+         ]
+        },
+        {
+         "row": 3,
+         "role": "data",
+         "cells": [
+          "3",
+          "1",
+          "8.68",
+          "25.18",
+          ""
+         ],
+         "members": [
+          "$uidOf:15"
+         ],
+         "units": [
+          "d3"
+         ]
+        },
+        {
+         "row": 4,
+         "role": "data",
+         "cells": [
+          "4",
+          "1",
+          "6.59",
+          "55.59",
+          ""
+         ],
+         "members": [
+          "$uidOf:16"
+         ],
+         "units": [
+          "d4"
+         ]
+        },
+        {
+         "row": 5,
+         "role": "data",
+         "cells": [
+          "O",
+          "2",
+          "",
+          "",
+          ""
+         ],
+         "members": [
+          "$uidOf:17",
+          "$uidOf:18"
+         ],
+         "units": [
+          "ortak"
+         ]
+        },
+        {
+         "row": 6,
+         "role": "data",
+         "cells": [
+          "OD",
+          "1",
+          "",
+          "",
+          ""
+         ],
+         "members": [
+          "$uidOf:19"
+         ],
+         "units": [
+          "kdogu"
+         ]
+        },
+        {
+         "row": 7,
+         "role": "data",
+         "cells": [
+          "OB",
+          "1",
+          "",
+          "",
+          ""
+         ],
+         "members": [
+          "$uidOf:20"
+         ],
+         "units": [
+          "bortak"
+         ]
+        },
+        {
+         "row": 8,
+         "role": "data",
+         "cells": [
+          "G",
+          "1",
+          "",
+          "",
+          ""
+         ],
+         "members": [
+          "$uidOf:21"
+         ],
+         "units": [
+          "genel"
+         ]
+        },
+        {
+         "row": 9,
+         "role": "data",
+         "cells": [
+          "B",
+          "1",
+          "",
+          "",
+          ""
+         ],
+         "members": [
+          "$uidOf:22"
+         ],
+         "units": [
+          "bahce"
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Oku: düzenlenen ve hesaplanan sütunlar",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.schedules.create",
+     "input": {
+      "layerId": "etiket",
+      "at": {
+       "x": 0.0,
+       "y": -20.0
+      },
+      "of": "units",
+      "columns": [
+       {
+        "field": "number"
+       },
+       {
+        "field": "name"
+       },
+       {
+        "field": "recordedArea"
+       },
+       {
+        "field": "shareWeight"
+       },
+       {
+        "field": "unitKind"
+       },
+       {
+        "field": "level"
+       },
+       {
+        "field": "target"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 24,
+       "rows": 9,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "24": {
+        "cells": [
+         [
+          "No",
+          "Ad",
+          "Kayıtlı alan (m²)",
+          "Pay ağırlığı",
+          "Bölüm türü",
+          "Kat",
+          "Tasarım hedefi"
+         ],
+         [
+          "1",
+          "Daire 1",
+          "50.00",
+          "",
+          "Bağımsız bölüm",
+          "Zemin kat",
+          "32.00–46.00 m²"
+         ],
+         [
+          "2",
+          "Daire 2",
+          "",
+          "",
+          "Bağımsız bölüm",
+          "Zemin kat, 1. kat",
+          "32.00–46.00 m²"
+         ],
+         [
+          "3",
+          "Daire 3",
+          "",
+          "",
+          "Bağımsız bölüm",
+          "Zemin kat",
+          "20.00–30.00 m²"
+         ],
+         [
+          "4",
+          "Daire 4",
+          "",
+          "",
+          "Bağımsız bölüm",
+          "Zemin kat",
+          "20.00–30.00 m²"
+         ],
+         [
+          "O",
+          "A ortak",
+          "",
+          "",
+          "Ortak alan",
+          "Zemin kat",
+          ""
+         ],
+         [
+          "OD",
+          "Doğu merdiveni",
+          "",
+          "",
+          "Ortak alan",
+          "Zemin kat",
+          ""
+         ],
+         [
+          "OB",
+          "B ortak",
+          "",
+          "",
+          "Ortak alan",
+          "Zemin kat",
+          ""
+         ],
+         [
+          "G",
+          "Site ortak",
+          "",
+          "",
+          "Ortak alan",
+          "Zemin kat",
+          ""
+         ],
+         [
+          "B",
+          "Bahçe",
+          "",
+          "",
+          "Dış alan",
+          "",
+          ""
+         ]
+        ],
+        "source": {
+         "kind": "schedule",
+         "of": "units",
+         "columns": [
+          {
+           "field": "number"
+          },
+          {
+           "field": "name"
+          },
+          {
+           "field": "recordedArea"
+          },
+          {
+           "field": "shareWeight"
+          },
+          {
+           "field": "unitKind"
+          },
+          {
+           "field": "level"
+          },
+          {
+           "field": "target"
+          }
+         ],
+         "members": [
+          [
+           "$uidOf:10",
+           "$uidOf:11",
+           "$uidOf:12"
+          ],
+          [
+           "$uidOf:13",
+           "$uidOf:14"
+          ],
+          [
+           "$uidOf:15"
+          ],
+          [
+           "$uidOf:16"
+          ],
+          [
+           "$uidOf:17",
+           "$uidOf:18"
+          ],
+          [
+           "$uidOf:19"
+          ],
+          [
+           "$uidOf:20"
+          ],
+          [
+           "$uidOf:21"
+          ],
+          [
+           "$uidOf:22"
+          ]
+         ],
+         "units": [
+          [
+           "d1"
+          ],
+          [
+           "d2"
+          ],
+          [
+           "d3"
+          ],
+          [
+           "d4"
+          ],
+          [
+           "ortak"
+          ],
+          [
+           "kdogu"
+          ],
+          [
+           "bortak"
+          ],
+          [
+           "genel"
+          ],
+          [
+           "bahce"
+          ]
+         ]
+        },
+        "aligns": [
+         "left",
+         "left",
+         "right",
+         "left",
+         "left",
+         "left",
+         "left"
+        ],
+        "header": true,
+        "styles": [
+         {
+          "row": 1,
+          "col": 4,
+          "rows": 9,
+          "cols": 1,
+          "color": "#7f8790"
+         },
+         {
+          "row": 1,
+          "col": 5,
+          "rows": 9,
+          "cols": 1,
+          "color": "#7f8790"
+         },
+         {
+          "row": 1,
+          "col": 6,
+          "rows": 9,
+          "cols": 1,
+          "color": "#7f8790"
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.schedules.query",
+     "input": {
+      "uid": "$uidOf:24"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "of": "units",
+       "columns": [
+        {
+         "heading": "No",
+         "field": "number",
+         "editable": true,
+         "summed": false
+        },
+        {
+         "heading": "Ad",
+         "field": "name",
+         "editable": true,
+         "summed": false
+        },
+        {
+         "heading": "Kayıtlı alan (m²)",
+         "field": "recordedArea",
+         "editable": true,
+         "summed": true
+        },
+        {
+         "heading": "Pay ağırlığı",
+         "field": "shareWeight",
+         "editable": true,
+         "summed": false
+        },
+        {
+         "heading": "Bölüm türü",
+         "field": "unitKind",
+         "editable": false,
+         "summed": false
+        },
+        {
+         "heading": "Kat",
+         "field": "level",
+         "editable": false,
+         "summed": false
+        },
+        {
+         "heading": "Tasarım hedefi",
+         "field": "target",
+         "editable": false,
+         "summed": false
+        }
+       ],
+       "rows": [
+        {
+         "row": 0,
+         "role": "heading",
+         "cells": [
+          "No",
+          "Ad",
+          "Kayıtlı alan (m²)",
+          "Pay ağırlığı",
+          "Bölüm türü",
+          "Kat",
+          "Tasarım hedefi"
+         ],
+         "members": []
+        },
+        {
+         "row": 1,
+         "role": "data",
+         "cells": [
+          "1",
+          "Daire 1",
+          "50.00",
+          "",
+          "Bağımsız bölüm",
+          "Zemin kat",
+          "32.00–46.00 m²"
+         ],
+         "members": [
+          "$uidOf:10",
+          "$uidOf:11",
+          "$uidOf:12"
+         ],
+         "units": [
+          "d1"
+         ]
+        },
+        {
+         "row": 2,
+         "role": "data",
+         "cells": [
+          "2",
+          "Daire 2",
+          "",
+          "",
+          "Bağımsız bölüm",
+          "Zemin kat, 1. kat",
+          "32.00–46.00 m²"
+         ],
+         "members": [
+          "$uidOf:13",
+          "$uidOf:14"
+         ],
+         "units": [
+          "d2"
+         ]
+        },
+        {
+         "row": 3,
+         "role": "data",
+         "cells": [
+          "3",
+          "Daire 3",
+          "",
+          "",
+          "Bağımsız bölüm",
+          "Zemin kat",
+          "20.00–30.00 m²"
+         ],
+         "members": [
+          "$uidOf:15"
+         ],
+         "units": [
+          "d3"
+         ]
+        },
+        {
+         "row": 4,
+         "role": "data",
+         "cells": [
+          "4",
+          "Daire 4",
+          "",
+          "",
+          "Bağımsız bölüm",
+          "Zemin kat",
+          "20.00–30.00 m²"
+         ],
+         "members": [
+          "$uidOf:16"
+         ],
+         "units": [
+          "d4"
+         ]
+        },
+        {
+         "row": 5,
+         "role": "data",
+         "cells": [
+          "O",
+          "A ortak",
+          "",
+          "",
+          "Ortak alan",
+          "Zemin kat",
+          ""
+         ],
+         "members": [
+          "$uidOf:17",
+          "$uidOf:18"
+         ],
+         "units": [
+          "ortak"
+         ]
+        },
+        {
+         "row": 6,
+         "role": "data",
+         "cells": [
+          "OD",
+          "Doğu merdiveni",
+          "",
+          "",
+          "Ortak alan",
+          "Zemin kat",
+          ""
+         ],
+         "members": [
+          "$uidOf:19"
+         ],
+         "units": [
+          "kdogu"
+         ]
+        },
+        {
+         "row": 7,
+         "role": "data",
+         "cells": [
+          "OB",
+          "B ortak",
+          "",
+          "",
+          "Ortak alan",
+          "Zemin kat",
+          ""
+         ],
+         "members": [
+          "$uidOf:20"
+         ],
+         "units": [
+          "bortak"
+         ]
+        },
+        {
+         "row": 8,
+         "role": "data",
+         "cells": [
+          "G",
+          "Site ortak",
+          "",
+          "",
+          "Ortak alan",
+          "Zemin kat",
+          ""
+         ],
+         "members": [
+          "$uidOf:21"
+         ],
+         "units": [
+          "genel"
+         ]
+        },
+        {
+         "row": 9,
+         "role": "data",
+         "cells": [
+          "B",
+          "Bahçe",
+          "",
+          "",
+          "Dış alan",
+          "",
+          ""
+         ],
+         "members": [
+          "$uidOf:22"
+         ],
+         "units": [
+          "bahce"
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Oku: kat süzgeci",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.schedules.create",
+     "input": {
+      "layerId": "etiket",
+      "at": {
+       "x": 0.0,
+       "y": -20.0
+      },
+      "of": "units",
+      "columns": [
+       {
+        "field": "number"
+       },
+       {
+        "field": "level"
+       }
+      ],
+      "filter": {
+       "levels": [
+        "kat-1"
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 24,
+       "rows": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "24": {
+        "cells": [
+         [
+          "No",
+          "Kat"
+         ],
+         [
+          "2",
+          "Zemin kat, 1. kat"
+         ]
+        ],
+        "source": {
+         "kind": "schedule",
+         "of": "units",
+         "columns": [
+          {
+           "field": "number"
+          },
+          {
+           "field": "level"
+          }
+         ],
+         "filter": {
+          "levels": [
+           "kat-1"
+          ]
+         },
+         "members": [
+          [
+           "$uidOf:13",
+           "$uidOf:14"
+          ]
+         ],
+         "units": [
+          [
+           "d2"
+          ]
+         ]
+        },
+        "aligns": [
+         "left",
+         "left"
+        ],
+        "header": true,
+        "styles": [
+         {
+          "row": 1,
+          "col": 1,
+          "rows": 1,
+          "cols": 1,
+          "color": "#7f8790"
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.schedules.query",
+     "input": {
+      "uid": "$uidOf:24"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "of": "units",
+       "columns": [
+        {
+         "heading": "No",
+         "field": "number",
+         "editable": true,
+         "summed": false
+        },
+        {
+         "heading": "Kat",
+         "field": "level",
+         "editable": false,
+         "summed": false
+        }
+       ],
+       "rows": [
+        {
+         "row": 0,
+         "role": "heading",
+         "cells": [
+          "No",
+          "Kat"
+         ],
+         "members": []
+        },
+        {
+         "row": 1,
+         "role": "data",
+         "cells": [
+          "2",
+          "Zemin kat, 1. kat"
+         ],
+         "members": [
+          "$uidOf:13",
+          "$uidOf:14"
+         ],
+         "units": [
+          "d2"
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Oku: bina süzgeci",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.schedules.create",
+     "input": {
+      "layerId": "etiket",
+      "at": {
+       "x": 0.0,
+       "y": -20.0
+      },
+      "of": "units",
+      "columns": [
+       {
+        "field": "number"
+       }
+      ],
+      "filter": {
+       "buildings": [
+        "a"
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 24,
+       "rows": 5,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "24": {
+        "cells": [
+         [
+          "No"
+         ],
+         [
+          "1"
+         ],
+         [
+          "2"
+         ],
+         [
+          "3"
+         ],
+         [
+          "O"
+         ],
+         [
+          "OD"
+         ]
+        ],
+        "source": {
+         "kind": "schedule",
+         "of": "units",
+         "columns": [
+          {
+           "field": "number"
+          }
+         ],
+         "filter": {
+          "buildings": [
+           "a"
+          ]
+         },
+         "members": [
+          [
+           "$uidOf:10",
+           "$uidOf:11",
+           "$uidOf:12"
+          ],
+          [
+           "$uidOf:13",
+           "$uidOf:14"
+          ],
+          [
+           "$uidOf:15"
+          ],
+          [
+           "$uidOf:17",
+           "$uidOf:18"
+          ],
+          [
+           "$uidOf:19"
+          ]
+         ],
+         "units": [
+          [
+           "d1"
+          ],
+          [
+           "d2"
+          ],
+          [
+           "d3"
+          ],
+          [
+           "ortak"
+          ],
+          [
+           "kdogu"
+          ]
+         ]
+        },
+        "aligns": [
+         "left"
+        ],
+        "header": true,
+        "styles": null
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.schedules.query",
+     "input": {
+      "uid": "$uidOf:24"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "of": "units",
+       "columns": [
+        {
+         "heading": "No",
+         "field": "number",
+         "editable": true,
+         "summed": false
+        }
+       ],
+       "rows": [
+        {
+         "row": 0,
+         "role": "heading",
+         "cells": [
+          "No"
+         ],
+         "members": []
+        },
+        {
+         "row": 1,
+         "role": "data",
+         "cells": [
+          "1"
+         ],
+         "members": [
+          "$uidOf:10",
+          "$uidOf:11",
+          "$uidOf:12"
+         ],
+         "units": [
+          "d1"
+         ]
+        },
+        {
+         "row": 2,
+         "role": "data",
+         "cells": [
+          "2"
+         ],
+         "members": [
+          "$uidOf:13",
+          "$uidOf:14"
+         ],
+         "units": [
+          "d2"
+         ]
+        },
+        {
+         "row": 3,
+         "role": "data",
+         "cells": [
+          "3"
+         ],
+         "members": [
+          "$uidOf:15"
+         ],
+         "units": [
+          "d3"
+         ]
+        },
+        {
+         "row": 4,
+         "role": "data",
+         "cells": [
+          "O"
+         ],
+         "members": [
+          "$uidOf:17",
+          "$uidOf:18"
+         ],
+         "units": [
+          "ortak"
+         ]
+        },
+        {
+         "row": 5,
+         "role": "data",
+         "cells": [
+          "OD"
+         ],
+         "members": [
+          "$uidOf:19"
+         ],
+         "units": [
+          "kdogu"
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Oku: kanat süzgeci",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.schedules.create",
+     "input": {
+      "layerId": "etiket",
+      "at": {
+       "x": 0.0,
+       "y": -20.0
+      },
+      "of": "units",
+      "columns": [
+       {
+        "field": "number"
+       },
+       {
+        "field": "wing"
+       }
+      ],
+      "filter": {
+       "wings": [
+        "a-bati"
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 24,
+       "rows": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "24": {
+        "cells": [
+         [
+          "No",
+          "Kanat"
+         ],
+         [
+          "1",
+          "Batı kanadı"
+         ]
+        ],
+        "source": {
+         "kind": "schedule",
+         "of": "units",
+         "columns": [
+          {
+           "field": "number"
+          },
+          {
+           "field": "wing"
+          }
+         ],
+         "filter": {
+          "wings": [
+           "a-bati"
+          ]
+         },
+         "members": [
+          [
+           "$uidOf:10",
+           "$uidOf:11",
+           "$uidOf:12"
+          ]
+         ],
+         "units": [
+          [
+           "d1"
+          ]
+         ]
+        },
+        "aligns": [
+         "left",
+         "left"
+        ],
+        "header": true,
+        "styles": [
+         {
+          "row": 1,
+          "col": 1,
+          "rows": 1,
+          "cols": 1,
+          "color": "#7f8790"
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.schedules.query",
+     "input": {
+      "uid": "$uidOf:24"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "of": "units",
+       "columns": [
+        {
+         "heading": "No",
+         "field": "number",
+         "editable": true,
+         "summed": false
+        },
+        {
+         "heading": "Kanat",
+         "field": "wing",
+         "editable": false,
+         "summed": false
+        }
+       ],
+       "rows": [
+        {
+         "row": 0,
+         "role": "heading",
+         "cells": [
+          "No",
+          "Kanat"
+         ],
+         "members": []
+        },
+        {
+         "row": 1,
+         "role": "data",
+         "cells": [
+          "1",
+          "Batı kanadı"
+         ],
+         "members": [
+          "$uidOf:10",
+          "$uidOf:11",
+          "$uidOf:12"
+         ],
+         "units": [
+          "d1"
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Oku: tür süzgeci",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.schedules.create",
+     "input": {
+      "layerId": "etiket",
+      "at": {
+       "x": 0.0,
+       "y": -20.0
+      },
+      "of": "units",
+      "columns": [
+       {
+        "field": "number"
+       },
+       {
+        "field": "unitKind"
+       }
+      ],
+      "filter": {
+       "kinds": [
+        "outdoor"
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 24,
+       "rows": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "24": {
+        "cells": [
+         [
+          "No",
+          "Bölüm türü"
+         ],
+         [
+          "B",
+          "Dış alan"
+         ]
+        ],
+        "source": {
+         "kind": "schedule",
+         "of": "units",
+         "columns": [
+          {
+           "field": "number"
+          },
+          {
+           "field": "unitKind"
+          }
+         ],
+         "filter": {
+          "kinds": [
+           "outdoor"
+          ]
+         },
+         "members": [
+          [
+           "$uidOf:22"
+          ]
+         ],
+         "units": [
+          [
+           "bahce"
+          ]
+         ]
+        },
+        "aligns": [
+         "left",
+         "left"
+        ],
+        "header": true,
+        "styles": [
+         {
+          "row": 1,
+          "col": 1,
+          "rows": 1,
+          "cols": 1,
+          "color": "#7f8790"
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.schedules.query",
+     "input": {
+      "uid": "$uidOf:24"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "of": "units",
+       "columns": [
+        {
+         "heading": "No",
+         "field": "number",
+         "editable": true,
+         "summed": false
+        },
+        {
+         "heading": "Bölüm türü",
+         "field": "unitKind",
+         "editable": false,
+         "summed": false
+        }
+       ],
+       "rows": [
+        {
+         "row": 0,
+         "role": "heading",
+         "cells": [
+          "No",
+          "Bölüm türü"
+         ],
+         "members": []
+        },
+        {
+         "row": 1,
+         "role": "data",
+         "cells": [
+          "B",
+          "Dış alan"
+         ],
+         "members": [
+          "$uidOf:22"
+         ],
+         "units": [
+          "bahce"
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Oku: gruplu satır iki bölümü tutar",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.schedules.create",
+     "input": {
+      "layerId": "etiket",
+      "at": {
+       "x": 0.0,
+       "y": -20.0
+      },
+      "of": "units",
+      "columns": [
+       {
+        "field": "unitKind"
+       },
+       {
+        "field": "building"
+       },
+       {
+        "field": "count"
+       },
+       {
+        "field": "area"
+       }
+      ],
+      "group": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 24,
+       "rows": 6,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "24": {
+        "cells": [
+         [
+          "Bölüm türü",
+          "Bina",
+          "Mahal sayısı",
+          "Alan (m²)"
+         ],
+         [
+          "Bağımsız bölüm",
+          "A Blok",
+          "6",
+          "101.50"
+         ],
+         [
+          "Bağımsız bölüm",
+          "B Blok",
+          "1",
+          "49.00"
+         ],
+         [
+          "Ortak alan",
+          "A Blok",
+          "3",
+          "22.81"
+         ],
+         [
+          "Ortak alan",
+          "B Blok",
+          "1",
+          "6.06"
+         ],
+         [
+          "Ortak alan",
+          "",
+          "1",
+          "2.14"
+         ],
+         [
+          "Dış alan",
+          "",
+          "1",
+          "100.00"
+         ]
+        ],
+        "source": {
+         "kind": "schedule",
+         "of": "units",
+         "columns": [
+          {
+           "field": "unitKind"
+          },
+          {
+           "field": "building"
+          },
+          {
+           "field": "count"
+          },
+          {
+           "field": "area"
+          }
+         ],
+         "group": true,
+         "members": [
+          [
+           "$uidOf:10",
+           "$uidOf:11",
+           "$uidOf:12",
+           "$uidOf:13",
+           "$uidOf:14",
+           "$uidOf:15"
+          ],
+          [
+           "$uidOf:16"
+          ],
+          [
+           "$uidOf:17",
+           "$uidOf:18",
+           "$uidOf:19"
+          ],
+          [
+           "$uidOf:20"
+          ],
+          [
+           "$uidOf:21"
+          ],
+          [
+           "$uidOf:22"
+          ]
+         ],
+         "units": [
+          [
+           "d1",
+           "d2",
+           "d3"
+          ],
+          [
+           "d4"
+          ],
+          [
+           "ortak",
+           "kdogu"
+          ],
+          [
+           "bortak"
+          ],
+          [
+           "genel"
+          ],
+          [
+           "bahce"
+          ]
+         ]
+        },
+        "aligns": [
+         "left",
+         "left",
+         "right",
+         "right"
+        ],
+        "header": true,
+        "styles": [
+         {
+          "row": 1,
+          "col": 0,
+          "rows": 6,
+          "cols": 1,
+          "color": "#7f8790"
+         },
+         {
+          "row": 1,
+          "col": 1,
+          "rows": 6,
+          "cols": 1,
+          "color": "#7f8790"
+         },
+         {
+          "row": 1,
+          "col": 2,
+          "rows": 6,
+          "cols": 1,
+          "color": "#7f8790"
+         },
+         {
+          "row": 1,
+          "col": 3,
+          "rows": 6,
+          "cols": 1,
+          "color": "#7f8790"
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.schedules.query",
+     "input": {
+      "uid": "$uidOf:24"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "of": "units",
+       "columns": [
+        {
+         "heading": "Bölüm türü",
+         "field": "unitKind",
+         "editable": false,
+         "summed": false
+        },
+        {
+         "heading": "Bina",
+         "field": "building",
+         "editable": false,
+         "summed": false
+        },
+        {
+         "heading": "Mahal sayısı",
+         "field": "count",
+         "editable": false,
+         "summed": true
+        },
+        {
+         "heading": "Alan (m²)",
+         "field": "area",
+         "editable": false,
+         "summed": true
+        }
+       ],
+       "rows": [
+        {
+         "row": 0,
+         "role": "heading",
+         "cells": [
+          "Bölüm türü",
+          "Bina",
+          "Mahal sayısı",
+          "Alan (m²)"
+         ],
+         "members": []
+        },
+        {
+         "row": 1,
+         "role": "data",
+         "cells": [
+          "Bağımsız bölüm",
+          "A Blok",
+          "6",
+          "101.50"
+         ],
+         "members": [
+          "$uidOf:10",
+          "$uidOf:11",
+          "$uidOf:12",
+          "$uidOf:13",
+          "$uidOf:14",
+          "$uidOf:15"
+         ],
+         "units": [
+          "d1",
+          "d2",
+          "d3"
+         ]
+        },
+        {
+         "row": 2,
+         "role": "data",
+         "cells": [
+          "Bağımsız bölüm",
+          "B Blok",
+          "1",
+          "49.00"
+         ],
+         "members": [
+          "$uidOf:16"
+         ],
+         "units": [
+          "d4"
+         ]
+        },
+        {
+         "row": 3,
+         "role": "data",
+         "cells": [
+          "Ortak alan",
+          "A Blok",
+          "3",
+          "22.81"
+         ],
+         "members": [
+          "$uidOf:17",
+          "$uidOf:18",
+          "$uidOf:19"
+         ],
+         "units": [
+          "ortak",
+          "kdogu"
+         ]
+        },
+        {
+         "row": 4,
+         "role": "data",
+         "cells": [
+          "Ortak alan",
+          "B Blok",
+          "1",
+          "6.06"
+         ],
+         "members": [
+          "$uidOf:20"
+         ],
+         "units": [
+          "bortak"
+         ]
+        },
+        {
+         "row": 5,
+         "role": "data",
+         "cells": [
+          "Ortak alan",
+          "",
+          "1",
+          "2.14"
+         ],
+         "members": [
+          "$uidOf:21"
+         ],
+         "units": [
+          "genel"
+         ]
+        },
+        {
+         "row": 6,
+         "role": "data",
+         "cells": [
+          "Dış alan",
+          "",
+          "1",
+          "100.00"
+         ],
+         "members": [
+          "$uidOf:22"
+         ],
+         "units": [
+          "bahce"
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Oku: başlık ve ara toplam satırları",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.schedules.create",
+     "input": {
+      "layerId": "etiket",
+      "at": {
+       "x": 0.0,
+       "y": -20.0
+      },
+      "of": "units",
+      "columns": [
+       {
+        "field": "building"
+       },
+       {
+        "field": "number"
+       },
+       {
+        "field": "area"
+       }
+      ],
+      "sort": [
+       {
+        "column": 0,
+        "header": true,
+        "footer": true
+       }
+      ],
+      "total": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 24,
+       "rows": 9,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "24": {
+        "cells": [
+         [
+          "Bina",
+          "No",
+          "Alan (m²)"
+         ],
+         [
+          "A Blok",
+          "",
+          ""
+         ],
+         [
+          "A Blok",
+          "1",
+          "42.00"
+         ],
+         [
+          "A Blok",
+          "2",
+          "43.00"
+         ],
+         [
+          "A Blok",
+          "3",
+          "16.50"
+         ],
+         [
+          "A Blok",
+          "O",
+          "19.51"
+         ],
+         [
+          "A Blok",
+          "OD",
+          "3.30"
+         ],
+         [
+          "A Blok toplamı",
+          "",
+          "124.31"
+         ],
+         [
+          "B Blok",
+          "",
+          ""
+         ],
+         [
+          "B Blok",
+          "4",
+          "49.00"
+         ],
+         [
+          "B Blok",
+          "OB",
+          "6.06"
+         ],
+         [
+          "B Blok toplamı",
+          "",
+          "55.06"
+         ],
+         [
+          "(boş)",
+          "",
+          ""
+         ],
+         [
+          "",
+          "G",
+          "2.14"
+         ],
+         [
+          "",
+          "B",
+          "100.00"
+         ],
+         [
+          "(boş) toplamı",
+          "",
+          "102.14"
+         ],
+         [
+          "Toplam",
+          "",
+          "281.51"
+         ]
+        ],
+        "source": {
+         "kind": "schedule",
+         "of": "units",
+         "columns": [
+          {
+           "field": "building"
+          },
+          {
+           "field": "number"
+          },
+          {
+           "field": "area"
+          }
+         ],
+         "sort": [
+          {
+           "column": 0,
+           "header": true,
+           "footer": true
+          }
+         ],
+         "total": true,
+         "members": [
+          [],
+          [
+           "$uidOf:10",
+           "$uidOf:11",
+           "$uidOf:12"
+          ],
+          [
+           "$uidOf:13",
+           "$uidOf:14"
+          ],
+          [
+           "$uidOf:15"
+          ],
+          [
+           "$uidOf:17",
+           "$uidOf:18"
+          ],
+          [
+           "$uidOf:19"
+          ],
+          [],
+          [],
+          [
+           "$uidOf:16"
+          ],
+          [
+           "$uidOf:20"
+          ],
+          [],
+          [],
+          [
+           "$uidOf:21"
+          ],
+          [
+           "$uidOf:22"
+          ],
+          []
+         ],
+         "units": [
+          [],
+          [
+           "d1"
+          ],
+          [
+           "d2"
+          ],
+          [
+           "d3"
+          ],
+          [
+           "ortak"
+          ],
+          [
+           "kdogu"
+          ],
+          [],
+          [],
+          [
+           "d4"
+          ],
+          [
+           "bortak"
+          ],
+          [],
+          [],
+          [
+           "genel"
+          ],
+          [
+           "bahce"
+          ],
+          []
+         ]
+        },
+        "aligns": [
+         "left",
+         "left",
+         "right"
+        ],
+        "header": true,
+        "styles": [
+         {
+          "row": 1,
+          "col": 0,
+          "rows": 1,
+          "cols": 3,
+          "bold": true
+         },
+         {
+          "row": 7,
+          "col": 0,
+          "rows": 1,
+          "cols": 3,
+          "bold": true
+         },
+         {
+          "row": 8,
+          "col": 0,
+          "rows": 1,
+          "cols": 3,
+          "bold": true
+         },
+         {
+          "row": 11,
+          "col": 0,
+          "rows": 1,
+          "cols": 3,
+          "bold": true
+         },
+         {
+          "row": 12,
+          "col": 0,
+          "rows": 1,
+          "cols": 3,
+          "bold": true
+         },
+         {
+          "row": 15,
+          "col": 0,
+          "rows": 1,
+          "cols": 3,
+          "bold": true
+         },
+         {
+          "row": 2,
+          "col": 0,
+          "rows": 5,
+          "cols": 1,
+          "color": "#7f8790"
+         },
+         {
+          "row": 2,
+          "col": 2,
+          "rows": 5,
+          "cols": 1,
+          "color": "#7f8790"
+         },
+         {
+          "row": 9,
+          "col": 0,
+          "rows": 2,
+          "cols": 1,
+          "color": "#7f8790"
+         },
+         {
+          "row": 9,
+          "col": 2,
+          "rows": 2,
+          "cols": 1,
+          "color": "#7f8790"
+         },
+         {
+          "row": 13,
+          "col": 0,
+          "rows": 2,
+          "cols": 1,
+          "color": "#7f8790"
+         },
+         {
+          "row": 13,
+          "col": 2,
+          "rows": 2,
+          "cols": 1,
+          "color": "#7f8790"
+         },
+         {
+          "row": 16,
+          "col": 0,
+          "rows": 1,
+          "cols": 3,
+          "bold": true
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.schedules.query",
+     "input": {
+      "uid": "$uidOf:24"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "of": "units",
+       "columns": [
+        {
+         "heading": "Bina",
+         "field": "building",
+         "editable": false,
+         "summed": false
+        },
+        {
+         "heading": "No",
+         "field": "number",
+         "editable": true,
+         "summed": false
+        },
+        {
+         "heading": "Alan (m²)",
+         "field": "area",
+         "editable": false,
+         "summed": true
+        }
+       ],
+       "rows": [
+        {
+         "row": 0,
+         "role": "heading",
+         "cells": [
+          "Bina",
+          "No",
+          "Alan (m²)"
+         ],
+         "members": []
+        },
+        {
+         "row": 1,
+         "role": "header",
+         "cells": [
+          "A Blok",
+          "",
+          ""
+         ],
+         "members": []
+        },
+        {
+         "row": 2,
+         "role": "data",
+         "cells": [
+          "A Blok",
+          "1",
+          "42.00"
+         ],
+         "members": [
+          "$uidOf:10",
+          "$uidOf:11",
+          "$uidOf:12"
+         ],
+         "units": [
+          "d1"
+         ]
+        },
+        {
+         "row": 3,
+         "role": "data",
+         "cells": [
+          "A Blok",
+          "2",
+          "43.00"
+         ],
+         "members": [
+          "$uidOf:13",
+          "$uidOf:14"
+         ],
+         "units": [
+          "d2"
+         ]
+        },
+        {
+         "row": 4,
+         "role": "data",
+         "cells": [
+          "A Blok",
+          "3",
+          "16.50"
+         ],
+         "members": [
+          "$uidOf:15"
+         ],
+         "units": [
+          "d3"
+         ]
+        },
+        {
+         "row": 5,
+         "role": "data",
+         "cells": [
+          "A Blok",
+          "O",
+          "19.51"
+         ],
+         "members": [
+          "$uidOf:17",
+          "$uidOf:18"
+         ],
+         "units": [
+          "ortak"
+         ]
+        },
+        {
+         "row": 6,
+         "role": "data",
+         "cells": [
+          "A Blok",
+          "OD",
+          "3.30"
+         ],
+         "members": [
+          "$uidOf:19"
+         ],
+         "units": [
+          "kdogu"
+         ]
+        },
+        {
+         "row": 7,
+         "role": "footer",
+         "cells": [
+          "A Blok toplamı",
+          "",
+          "124.31"
+         ],
+         "members": []
+        },
+        {
+         "row": 8,
+         "role": "header",
+         "cells": [
+          "B Blok",
+          "",
+          ""
+         ],
+         "members": []
+        },
+        {
+         "row": 9,
+         "role": "data",
+         "cells": [
+          "B Blok",
+          "4",
+          "49.00"
+         ],
+         "members": [
+          "$uidOf:16"
+         ],
+         "units": [
+          "d4"
+         ]
+        },
+        {
+         "row": 10,
+         "role": "data",
+         "cells": [
+          "B Blok",
+          "OB",
+          "6.06"
+         ],
+         "members": [
+          "$uidOf:20"
+         ],
+         "units": [
+          "bortak"
+         ]
+        },
+        {
+         "row": 11,
+         "role": "footer",
+         "cells": [
+          "B Blok toplamı",
+          "",
+          "55.06"
+         ],
+         "members": []
+        },
+        {
+         "row": 12,
+         "role": "header",
+         "cells": [
+          "(boş)",
+          "",
+          ""
+         ],
+         "members": []
+        },
+        {
+         "row": 13,
+         "role": "data",
+         "cells": [
+          "",
+          "G",
+          "2.14"
+         ],
+         "members": [
+          "$uidOf:21"
+         ],
+         "units": [
+          "genel"
+         ]
+        },
+        {
+         "row": 14,
+         "role": "data",
+         "cells": [
+          "",
+          "B",
+          "100.00"
+         ],
+         "members": [
+          "$uidOf:22"
+         ],
+         "units": [
+          "bahce"
+         ]
+        },
+        {
+         "row": 15,
+         "role": "footer",
+         "cells": [
+          "(boş) toplamı",
+          "",
+          "102.14"
+         ],
+         "members": []
+        },
+        {
+         "row": 16,
+         "role": "total",
+         "cells": [
+          "Toplam",
+          "",
+          "281.51"
+         ],
+         "members": []
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Oku: ara toplam",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.schedules.create",
+     "input": {
+      "layerId": "etiket",
+      "at": {
+       "x": 0.0,
+       "y": -20.0
+      },
+      "of": "units",
+      "columns": [
+       {
+        "field": "unitKind"
+       },
+       {
+        "field": "number"
+       },
+       {
+        "field": "gross"
+       }
+      ],
+      "sort": [
+       {
+        "column": 0,
+        "footer": true
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 24,
+       "rows": 9,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "24": {
+        "cells": [
+         [
+          "Bölüm türü",
+          "No",
+          "Brüt (m²)"
+         ],
+         [
+          "Bağımsız bölüm",
+          "1",
+          "49.05"
+         ],
+         [
+          "Bağımsız bölüm",
+          "2",
+          "51.69"
+         ],
+         [
+          "Bağımsız bölüm",
+          "3",
+          "25.18"
+         ],
+         [
+          "Bağımsız bölüm",
+          "4",
+          "55.59"
+         ],
+         [
+          "Bağımsız bölüm toplamı",
+          "",
+          "181.51"
+         ],
+         [
+          "Dış alan",
+          "B",
+          ""
+         ],
+         [
+          "Dış alan toplamı",
+          "",
+          ""
+         ],
+         [
+          "Ortak alan",
+          "O",
+          ""
+         ],
+         [
+          "Ortak alan",
+          "OD",
+          ""
+         ],
+         [
+          "Ortak alan",
+          "OB",
+          ""
+         ],
+         [
+          "Ortak alan",
+          "G",
+          ""
+         ],
+         [
+          "Ortak alan toplamı",
+          "",
+          ""
+         ]
+        ],
+        "source": {
+         "kind": "schedule",
+         "of": "units",
+         "columns": [
+          {
+           "field": "unitKind"
+          },
+          {
+           "field": "number"
+          },
+          {
+           "field": "gross"
+          }
+         ],
+         "sort": [
+          {
+           "column": 0,
+           "footer": true
+          }
+         ],
+         "members": [
+          [
+           "$uidOf:10",
+           "$uidOf:11",
+           "$uidOf:12"
+          ],
+          [
+           "$uidOf:13",
+           "$uidOf:14"
+          ],
+          [
+           "$uidOf:15"
+          ],
+          [
+           "$uidOf:16"
+          ],
+          [],
+          [
+           "$uidOf:22"
+          ],
+          [],
+          [
+           "$uidOf:17",
+           "$uidOf:18"
+          ],
+          [
+           "$uidOf:19"
+          ],
+          [
+           "$uidOf:20"
+          ],
+          [
+           "$uidOf:21"
+          ],
+          []
+         ],
+         "units": [
+          [
+           "d1"
+          ],
+          [
+           "d2"
+          ],
+          [
+           "d3"
+          ],
+          [
+           "d4"
+          ],
+          [],
+          [
+           "bahce"
+          ],
+          [],
+          [
+           "ortak"
+          ],
+          [
+           "kdogu"
+          ],
+          [
+           "bortak"
+          ],
+          [
+           "genel"
+          ],
+          []
+         ]
+        },
+        "aligns": [
+         "left",
+         "left",
+         "right"
+        ],
+        "header": true,
+        "styles": [
+         {
+          "row": 5,
+          "col": 0,
+          "rows": 1,
+          "cols": 3,
+          "bold": true
+         },
+         {
+          "row": 7,
+          "col": 0,
+          "rows": 1,
+          "cols": 3,
+          "bold": true
+         },
+         {
+          "row": 12,
+          "col": 0,
+          "rows": 1,
+          "cols": 3,
+          "bold": true
+         },
+         {
+          "row": 1,
+          "col": 0,
+          "rows": 4,
+          "cols": 1,
+          "color": "#7f8790"
+         },
+         {
+          "row": 1,
+          "col": 2,
+          "rows": 4,
+          "cols": 1,
+          "color": "#7f8790"
+         },
+         {
+          "row": 6,
+          "col": 0,
+          "rows": 1,
+          "cols": 1,
+          "color": "#7f8790"
+         },
+         {
+          "row": 6,
+          "col": 2,
+          "rows": 1,
+          "cols": 1,
+          "color": "#7f8790"
+         },
+         {
+          "row": 8,
+          "col": 0,
+          "rows": 4,
+          "cols": 1,
+          "color": "#7f8790"
+         },
+         {
+          "row": 8,
+          "col": 2,
+          "rows": 4,
+          "cols": 1,
+          "color": "#7f8790"
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.schedules.query",
+     "input": {
+      "uid": "$uidOf:24"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "of": "units",
+       "columns": [
+        {
+         "heading": "Bölüm türü",
+         "field": "unitKind",
+         "editable": false,
+         "summed": false
+        },
+        {
+         "heading": "No",
+         "field": "number",
+         "editable": true,
+         "summed": false
+        },
+        {
+         "heading": "Brüt (m²)",
+         "field": "gross",
+         "editable": false,
+         "summed": true
+        }
+       ],
+       "rows": [
+        {
+         "row": 0,
+         "role": "heading",
+         "cells": [
+          "Bölüm türü",
+          "No",
+          "Brüt (m²)"
+         ],
+         "members": []
+        },
+        {
+         "row": 1,
+         "role": "data",
+         "cells": [
+          "Bağımsız bölüm",
+          "1",
+          "49.05"
+         ],
+         "members": [
+          "$uidOf:10",
+          "$uidOf:11",
+          "$uidOf:12"
+         ],
+         "units": [
+          "d1"
+         ]
+        },
+        {
+         "row": 2,
+         "role": "data",
+         "cells": [
+          "Bağımsız bölüm",
+          "2",
+          "51.69"
+         ],
+         "members": [
+          "$uidOf:13",
+          "$uidOf:14"
+         ],
+         "units": [
+          "d2"
+         ]
+        },
+        {
+         "row": 3,
+         "role": "data",
+         "cells": [
+          "Bağımsız bölüm",
+          "3",
+          "25.18"
+         ],
+         "members": [
+          "$uidOf:15"
+         ],
+         "units": [
+          "d3"
+         ]
+        },
+        {
+         "row": 4,
+         "role": "data",
+         "cells": [
+          "Bağımsız bölüm",
+          "4",
+          "55.59"
+         ],
+         "members": [
+          "$uidOf:16"
+         ],
+         "units": [
+          "d4"
+         ]
+        },
+        {
+         "row": 5,
+         "role": "footer",
+         "cells": [
+          "Bağımsız bölüm toplamı",
+          "",
+          "181.51"
+         ],
+         "members": []
+        },
+        {
+         "row": 6,
+         "role": "data",
+         "cells": [
+          "Dış alan",
+          "B",
+          ""
+         ],
+         "members": [
+          "$uidOf:22"
+         ],
+         "units": [
+          "bahce"
+         ]
+        },
+        {
+         "row": 7,
+         "role": "footer",
+         "cells": [
+          "Dış alan toplamı",
+          "",
+          ""
+         ],
+         "members": []
+        },
+        {
+         "row": 8,
+         "role": "data",
+         "cells": [
+          "Ortak alan",
+          "O",
+          ""
+         ],
+         "members": [
+          "$uidOf:17",
+          "$uidOf:18"
+         ],
+         "units": [
+          "ortak"
+         ]
+        },
+        {
+         "row": 9,
+         "role": "data",
+         "cells": [
+          "Ortak alan",
+          "OD",
+          ""
+         ],
+         "members": [
+          "$uidOf:19"
+         ],
+         "units": [
+          "kdogu"
+         ]
+        },
+        {
+         "row": 10,
+         "role": "data",
+         "cells": [
+          "Ortak alan",
+          "OB",
+          ""
+         ],
+         "members": [
+          "$uidOf:20"
+         ],
+         "units": [
+          "bortak"
+         ]
+        },
+        {
+         "row": 11,
+         "role": "data",
+         "cells": [
+          "Ortak alan",
+          "G",
+          ""
+         ],
+         "members": [
+          "$uidOf:21"
+         ],
+         "units": [
+          "genel"
+         ]
+        },
+        {
+         "row": 12,
+         "role": "footer",
+         "cells": [
+          "Ortak alan toplamı",
+          "",
+          ""
+         ],
+         "members": []
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Oku: azalan sıra",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.schedules.create",
+     "input": {
+      "layerId": "etiket",
+      "at": {
+       "x": 0.0,
+       "y": -20.0
+      },
+      "of": "units",
+      "columns": [
+       {
+        "field": "number"
+       },
+       {
+        "field": "gross"
+       }
+      ],
+      "sort": [
+       {
+        "column": 1,
+        "descending": true
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 24,
+       "rows": 9,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "24": {
+        "cells": [
+         [
+          "No",
+          "Brüt (m²)"
+         ],
+         [
+          "4",
+          "55.59"
+         ],
+         [
+          "2",
+          "51.69"
+         ],
+         [
+          "1",
+          "49.05"
+         ],
+         [
+          "3",
+          "25.18"
+         ],
+         [
+          "O",
+          ""
+         ],
+         [
+          "OD",
+          ""
+         ],
+         [
+          "OB",
+          ""
+         ],
+         [
+          "G",
+          ""
+         ],
+         [
+          "B",
+          ""
+         ]
+        ],
+        "source": {
+         "kind": "schedule",
+         "of": "units",
+         "columns": [
+          {
+           "field": "number"
+          },
+          {
+           "field": "gross"
+          }
+         ],
+         "sort": [
+          {
+           "column": 1,
+           "descending": true
+          }
+         ],
+         "members": [
+          [
+           "$uidOf:16"
+          ],
+          [
+           "$uidOf:13",
+           "$uidOf:14"
+          ],
+          [
+           "$uidOf:10",
+           "$uidOf:11",
+           "$uidOf:12"
+          ],
+          [
+           "$uidOf:15"
+          ],
+          [
+           "$uidOf:17",
+           "$uidOf:18"
+          ],
+          [
+           "$uidOf:19"
+          ],
+          [
+           "$uidOf:20"
+          ],
+          [
+           "$uidOf:21"
+          ],
+          [
+           "$uidOf:22"
+          ]
+         ],
+         "units": [
+          [
+           "d4"
+          ],
+          [
+           "d2"
+          ],
+          [
+           "d1"
+          ],
+          [
+           "d3"
+          ],
+          [
+           "ortak"
+          ],
+          [
+           "kdogu"
+          ],
+          [
+           "bortak"
+          ],
+          [
+           "genel"
+          ],
+          [
+           "bahce"
+          ]
+         ]
+        },
+        "aligns": [
+         "left",
+         "right"
+        ],
+        "header": true,
+        "styles": [
+         {
+          "row": 1,
+          "col": 1,
+          "rows": 9,
+          "cols": 1,
+          "color": "#7f8790"
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.schedules.query",
+     "input": {
+      "uid": "$uidOf:24"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "of": "units",
+       "columns": [
+        {
+         "heading": "No",
+         "field": "number",
+         "editable": true,
+         "summed": false
+        },
+        {
+         "heading": "Brüt (m²)",
+         "field": "gross",
+         "editable": false,
+         "summed": true
+        }
+       ],
+       "rows": [
+        {
+         "row": 0,
+         "role": "heading",
+         "cells": [
+          "No",
+          "Brüt (m²)"
+         ],
+         "members": []
+        },
+        {
+         "row": 1,
+         "role": "data",
+         "cells": [
+          "4",
+          "55.59"
+         ],
+         "members": [
+          "$uidOf:16"
+         ],
+         "units": [
+          "d4"
+         ]
+        },
+        {
+         "row": 2,
+         "role": "data",
+         "cells": [
+          "2",
+          "51.69"
+         ],
+         "members": [
+          "$uidOf:13",
+          "$uidOf:14"
+         ],
+         "units": [
+          "d2"
+         ]
+        },
+        {
+         "row": 3,
+         "role": "data",
+         "cells": [
+          "1",
+          "49.05"
+         ],
+         "members": [
+          "$uidOf:10",
+          "$uidOf:11",
+          "$uidOf:12"
+         ],
+         "units": [
+          "d1"
+         ]
+        },
+        {
+         "row": 4,
+         "role": "data",
+         "cells": [
+          "3",
+          "25.18"
+         ],
+         "members": [
+          "$uidOf:15"
+         ],
+         "units": [
+          "d3"
+         ]
+        },
+        {
+         "row": 5,
+         "role": "data",
+         "cells": [
+          "O",
+          ""
+         ],
+         "members": [
+          "$uidOf:17",
+          "$uidOf:18"
+         ],
+         "units": [
+          "ortak"
+         ]
+        },
+        {
+         "row": 6,
+         "role": "data",
+         "cells": [
+          "OD",
+          ""
+         ],
+         "members": [
+          "$uidOf:19"
+         ],
+         "units": [
+          "kdogu"
+         ]
+        },
+        {
+         "row": 7,
+         "role": "data",
+         "cells": [
+          "OB",
+          ""
+         ],
+         "members": [
+          "$uidOf:20"
+         ],
+         "units": [
+          "bortak"
+         ]
+        },
+        {
+         "row": 8,
+         "role": "data",
+         "cells": [
+          "G",
+          ""
+         ],
+         "members": [
+          "$uidOf:21"
+         ],
+         "units": [
+          "genel"
+         ]
+        },
+        {
+         "row": 9,
+         "role": "data",
+         "cells": [
+          "B",
+          ""
+         ],
+         "members": [
+          "$uidOf:22"
+         ],
+         "units": [
+          "bahce"
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Oku: ada göre sıra",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.schedules.create",
+     "input": {
+      "layerId": "etiket",
+      "at": {
+       "x": 0.0,
+       "y": -20.0
+      },
+      "of": "units",
+      "columns": [
+       {
+        "field": "name"
+       },
+       {
+        "field": "number"
+       }
+      ],
+      "sort": [
+       {
+        "column": 0
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 24,
+       "rows": 9,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "24": {
+        "cells": [
+         [
+          "Ad",
+          "No"
+         ],
+         [
+          "A ortak",
+          "O"
+         ],
+         [
+          "B ortak",
+          "OB"
+         ],
+         [
+          "Bahçe",
+          "B"
+         ],
+         [
+          "Daire 1",
+          "1"
+         ],
+         [
+          "Daire 2",
+          "2"
+         ],
+         [
+          "Daire 3",
+          "3"
+         ],
+         [
+          "Daire 4",
+          "4"
+         ],
+         [
+          "Doğu merdiveni",
+          "OD"
+         ],
+         [
+          "Site ortak",
+          "G"
+         ]
+        ],
+        "source": {
+         "kind": "schedule",
+         "of": "units",
+         "columns": [
+          {
+           "field": "name"
+          },
+          {
+           "field": "number"
+          }
+         ],
+         "sort": [
+          {
+           "column": 0
+          }
+         ],
+         "members": [
+          [
+           "$uidOf:17",
+           "$uidOf:18"
+          ],
+          [
+           "$uidOf:20"
+          ],
+          [
+           "$uidOf:22"
+          ],
+          [
+           "$uidOf:10",
+           "$uidOf:11",
+           "$uidOf:12"
+          ],
+          [
+           "$uidOf:13",
+           "$uidOf:14"
+          ],
+          [
+           "$uidOf:15"
+          ],
+          [
+           "$uidOf:16"
+          ],
+          [
+           "$uidOf:19"
+          ],
+          [
+           "$uidOf:21"
+          ]
+         ],
+         "units": [
+          [
+           "ortak"
+          ],
+          [
+           "bortak"
+          ],
+          [
+           "bahce"
+          ],
+          [
+           "d1"
+          ],
+          [
+           "d2"
+          ],
+          [
+           "d3"
+          ],
+          [
+           "d4"
+          ],
+          [
+           "kdogu"
+          ],
+          [
+           "genel"
+          ]
+         ]
+        },
+        "aligns": [
+         "left",
+         "left"
+        ],
+        "header": true,
+        "styles": null
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.schedules.query",
+     "input": {
+      "uid": "$uidOf:24"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "of": "units",
+       "columns": [
+        {
+         "heading": "Ad",
+         "field": "name",
+         "editable": true,
+         "summed": false
+        },
+        {
+         "heading": "No",
+         "field": "number",
+         "editable": true,
+         "summed": false
+        }
+       ],
+       "rows": [
+        {
+         "row": 0,
+         "role": "heading",
+         "cells": [
+          "Ad",
+          "No"
+         ],
+         "members": []
+        },
+        {
+         "row": 1,
+         "role": "data",
+         "cells": [
+          "A ortak",
+          "O"
+         ],
+         "members": [
+          "$uidOf:17",
+          "$uidOf:18"
+         ],
+         "units": [
+          "ortak"
+         ]
+        },
+        {
+         "row": 2,
+         "role": "data",
+         "cells": [
+          "B ortak",
+          "OB"
+         ],
+         "members": [
+          "$uidOf:20"
+         ],
+         "units": [
+          "bortak"
+         ]
+        },
+        {
+         "row": 3,
+         "role": "data",
+         "cells": [
+          "Bahçe",
+          "B"
+         ],
+         "members": [
+          "$uidOf:22"
+         ],
+         "units": [
+          "bahce"
+         ]
+        },
+        {
+         "row": 4,
+         "role": "data",
+         "cells": [
+          "Daire 1",
+          "1"
+         ],
+         "members": [
+          "$uidOf:10",
+          "$uidOf:11",
+          "$uidOf:12"
+         ],
+         "units": [
+          "d1"
+         ]
+        },
+        {
+         "row": 5,
+         "role": "data",
+         "cells": [
+          "Daire 2",
+          "2"
+         ],
+         "members": [
+          "$uidOf:13",
+          "$uidOf:14"
+         ],
+         "units": [
+          "d2"
+         ]
+        },
+        {
+         "row": 6,
+         "role": "data",
+         "cells": [
+          "Daire 3",
+          "3"
+         ],
+         "members": [
+          "$uidOf:15"
+         ],
+         "units": [
+          "d3"
+         ]
+        },
+        {
+         "row": 7,
+         "role": "data",
+         "cells": [
+          "Daire 4",
+          "4"
+         ],
+         "members": [
+          "$uidOf:16"
+         ],
+         "units": [
+          "d4"
+         ]
+        },
+        {
+         "row": 8,
+         "role": "data",
+         "cells": [
+          "Doğu merdiveni",
+          "OD"
+         ],
+         "members": [
+          "$uidOf:19"
+         ],
+         "units": [
+          "kdogu"
+         ]
+        },
+        {
+         "row": 9,
+         "role": "data",
+         "cells": [
+          "Site ortak",
+          "G"
+         ],
+         "members": [
+          "$uidOf:21"
+         ],
+         "units": [
+          "genel"
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Oku: mahali olmayan bölüm veri satırıdır",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.schedules.create",
+     "input": {
+      "layerId": "etiket",
+      "at": {
+       "x": 0.0,
+       "y": -20.0
+      },
+      "of": "units",
+      "columns": [
+       {
+        "field": "number"
+       },
+       {
+        "field": "count"
+       },
+       {
+        "field": "area"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 24,
+       "rows": 10,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "24": {
+        "cells": [
+         [
+          "No",
+          "Mahal sayısı",
+          "Alan (m²)"
+         ],
+         [
+          "1",
+          "3",
+          "42.00"
+         ],
+         [
+          "2",
+          "2",
+          "43.00"
+         ],
+         [
+          "3",
+          "1",
+          "16.50"
+         ],
+         [
+          "4",
+          "1",
+          "49.00"
+         ],
+         [
+          "O",
+          "2",
+          "19.51"
+         ],
+         [
+          "OD",
+          "1",
+          "3.30"
+         ],
+         [
+          "OB",
+          "1",
+          "6.06"
+         ],
+         [
+          "G",
+          "1",
+          "2.14"
+         ],
+         [
+          "B",
+          "1",
+          "100.00"
+         ],
+         [
+          "5",
+          "0",
+          ""
+         ]
+        ],
+        "source": {
+         "kind": "schedule",
+         "of": "units",
+         "columns": [
+          {
+           "field": "number"
+          },
+          {
+           "field": "count"
+          },
+          {
+           "field": "area"
+          }
+         ],
+         "members": [
+          [
+           "$uidOf:10",
+           "$uidOf:11",
+           "$uidOf:12"
+          ],
+          [
+           "$uidOf:13",
+           "$uidOf:14"
+          ],
+          [
+           "$uidOf:15"
+          ],
+          [
+           "$uidOf:16"
+          ],
+          [
+           "$uidOf:17",
+           "$uidOf:18"
+          ],
+          [
+           "$uidOf:19"
+          ],
+          [
+           "$uidOf:20"
+          ],
+          [
+           "$uidOf:21"
+          ],
+          [
+           "$uidOf:22"
+          ],
+          []
+         ],
+         "units": [
+          [
+           "d1"
+          ],
+          [
+           "d2"
+          ],
+          [
+           "d3"
+          ],
+          [
+           "d4"
+          ],
+          [
+           "ortak"
+          ],
+          [
+           "kdogu"
+          ],
+          [
+           "bortak"
+          ],
+          [
+           "genel"
+          ],
+          [
+           "bahce"
+          ],
+          [
+           "d5"
+          ]
+         ]
+        },
+        "aligns": [
+         "left",
+         "right",
+         "right"
+        ],
+        "header": true,
+        "styles": [
+         {
+          "row": 1,
+          "col": 1,
+          "rows": 10,
+          "cols": 1,
+          "color": "#7f8790"
+         },
+         {
+          "row": 1,
+          "col": 2,
+          "rows": 10,
+          "cols": 1,
+          "color": "#7f8790"
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.schedules.query",
+     "input": {
+      "uid": "$uidOf:24"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "of": "units",
+       "columns": [
+        {
+         "heading": "No",
+         "field": "number",
+         "editable": true,
+         "summed": false
+        },
+        {
+         "heading": "Mahal sayısı",
+         "field": "count",
+         "editable": false,
+         "summed": true
+        },
+        {
+         "heading": "Alan (m²)",
+         "field": "area",
+         "editable": false,
+         "summed": true
+        }
+       ],
+       "rows": [
+        {
+         "row": 0,
+         "role": "heading",
+         "cells": [
+          "No",
+          "Mahal sayısı",
+          "Alan (m²)"
+         ],
+         "members": []
+        },
+        {
+         "row": 1,
+         "role": "data",
+         "cells": [
+          "1",
+          "3",
+          "42.00"
+         ],
+         "members": [
+          "$uidOf:10",
+          "$uidOf:11",
+          "$uidOf:12"
+         ],
+         "units": [
+          "d1"
+         ]
+        },
+        {
+         "row": 2,
+         "role": "data",
+         "cells": [
+          "2",
+          "2",
+          "43.00"
+         ],
+         "members": [
+          "$uidOf:13",
+          "$uidOf:14"
+         ],
+         "units": [
+          "d2"
+         ]
+        },
+        {
+         "row": 3,
+         "role": "data",
+         "cells": [
+          "3",
+          "1",
+          "16.50"
+         ],
+         "members": [
+          "$uidOf:15"
+         ],
+         "units": [
+          "d3"
+         ]
+        },
+        {
+         "row": 4,
+         "role": "data",
+         "cells": [
+          "4",
+          "1",
+          "49.00"
+         ],
+         "members": [
+          "$uidOf:16"
+         ],
+         "units": [
+          "d4"
+         ]
+        },
+        {
+         "row": 5,
+         "role": "data",
+         "cells": [
+          "O",
+          "2",
+          "19.51"
+         ],
+         "members": [
+          "$uidOf:17",
+          "$uidOf:18"
+         ],
+         "units": [
+          "ortak"
+         ]
+        },
+        {
+         "row": 6,
+         "role": "data",
+         "cells": [
+          "OD",
+          "1",
+          "3.30"
+         ],
+         "members": [
+          "$uidOf:19"
+         ],
+         "units": [
+          "kdogu"
+         ]
+        },
+        {
+         "row": 7,
+         "role": "data",
+         "cells": [
+          "OB",
+          "1",
+          "6.06"
+         ],
+         "members": [
+          "$uidOf:20"
+         ],
+         "units": [
+          "bortak"
+         ]
+        },
+        {
+         "row": 8,
+         "role": "data",
+         "cells": [
+          "G",
+          "1",
+          "2.14"
+         ],
+         "members": [
+          "$uidOf:21"
+         ],
+         "units": [
+          "genel"
+         ]
+        },
+        {
+         "row": 9,
+         "role": "data",
+         "cells": [
+          "B",
+          "1",
+          "100.00"
+         ],
+         "members": [
+          "$uidOf:22"
+         ],
+         "units": [
+          "bahce"
+         ]
+        },
+        {
+         "row": 10,
+         "role": "data",
+         "cells": [
+          "5",
+          "0",
+          ""
+         ],
+         "members": [],
+         "units": [
+          "d5"
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Bina programı payları",
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 50,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat-1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ],
+      "program": {
+       "buildings": [
+        {
+         "id": "a",
+         "name": "A Blok",
+         "wings": [
+          {
+           "id": "a-bati",
+           "name": "Batı kanadı"
+          },
+          {
+           "id": "a-dogu",
+           "name": "Doğu kanadı"
+          }
+         ]
+        },
+        {
+         "id": "b",
+         "name": "B Blok"
+        },
+        {
+         "id": "c",
+         "name": "C Blok"
+        }
+       ],
+       "units": [
+        {
+         "id": "d1",
+         "number": "1",
+         "name": "Daire 1",
+         "building": "a",
+         "wing": "a-bati",
+         "recordedArea": 50.0
+        },
+        {
+         "id": "d2",
+         "number": "2",
+         "name": "Daire 2",
+         "building": "a",
+         "wing": "a-dogu"
+        },
+        {
+         "id": "d3",
+         "number": "3",
+         "name": "Daire 3",
+         "building": "a",
+         "wing": "a-dogu"
+        },
+        {
+         "id": "d4",
+         "number": "4",
+         "name": "Daire 4",
+         "building": "b"
+        },
+        {
+         "id": "ortak",
+         "number": "O",
+         "name": "A ortak",
+         "kind": "common",
+         "building": "a"
+        },
+        {
+         "id": "kdogu",
+         "number": "OD",
+         "name": "Doğu merdiveni",
+         "kind": "common",
+         "building": "a",
+         "wing": "a-dogu"
+        },
+        {
+         "id": "bortak",
+         "number": "OB",
+         "name": "B ortak",
+         "kind": "common",
+         "building": "b"
+        },
+        {
+         "id": "genel",
+         "number": "G",
+         "name": "Site ortak",
+         "kind": "common"
+        },
+        {
+         "id": "bahce",
+         "number": "B",
+         "name": "Bahçe",
+         "kind": "outdoor"
+        },
+        {
+         "id": "d5",
+         "number": "5"
+        }
+       ],
+       "briefs": [
+        {
+         "usage": "Balkon",
+         "outdoor": true
+        },
+        {
+         "usage": "Salon",
+         "areaMin": 20.0,
+         "areaMax": 30.0
+        },
+        {
+         "usage": "Yatak odası",
+         "areaMin": 12.0,
+         "areaMax": 16.0
+        },
+        {
+         "usage": "Koridor",
+         "minPassage": 1.2
+        }
+       ],
+       "shareRule": "equal"
+      }
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "duvar",
+      "name": "Duvar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "donati",
+      "name": "Donatı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "etiket",
+      "name": "Etiket",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "entities": [
+     {
+      "kind": "space",
+      "id": 10,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 5.0
+          },
+          {
+           "x": 0.0,
+           "y": 5.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "101",
+      "name": "Salon",
+      "usage": "Salon",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1"
+     },
+     {
+      "kind": "space",
+      "id": 11,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 9.0,
+           "y": 0.0
+          },
+          {
+           "x": 9.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "102",
+      "name": "Yatak odası",
+      "usage": "Yatak odası",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1"
+     },
+     {
+      "kind": "space",
+      "id": 12,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": -2.0
+          },
+          {
+           "x": 3.0,
+           "y": -2.0
+          },
+          {
+           "x": 3.0,
+           "y": -0.5
+          },
+          {
+           "x": 0.0,
+           "y": -0.5
+          }
+         ]
+        }
+       }
+      ],
+      "number": "103",
+      "name": "Balkon",
+      "usage": "Balkon",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1"
+     },
+     {
+      "kind": "space",
+      "id": 13,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 10.0,
+           "y": 0.0
+          },
+          {
+           "x": 15.0,
+           "y": 0.0
+          },
+          {
+           "x": 15.0,
+           "y": 5.0
+          },
+          {
+           "x": 10.0,
+           "y": 5.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "201",
+      "name": "Salon",
+      "usage": "Salon",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d2"
+     },
+     {
+      "kind": "space",
+      "id": 14,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 10.0,
+           "y": 0.0
+          },
+          {
+           "x": 14.0,
+           "y": 0.0
+          },
+          {
+           "x": 14.0,
+           "y": 4.5
+          },
+          {
+           "x": 10.0,
+           "y": 4.5
+          }
+         ]
+        }
+       }
+      ],
+      "number": "202",
+      "name": "Yatak odası",
+      "usage": "Yatak odası",
+      "arch": {
+       "level": "kat-1"
+      },
+      "unit": "d2"
+     },
+     {
+      "kind": "space",
+      "id": 15,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 16.0,
+           "y": 0.0
+          },
+          {
+           "x": 19.3,
+           "y": 0.0
+          },
+          {
+           "x": 19.3,
+           "y": 5.0
+          },
+          {
+           "x": 16.0,
+           "y": 5.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "301",
+      "name": "Salon",
+      "usage": "Salon",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d3"
+     },
+     {
+      "kind": "space",
+      "id": 16,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 30.0,
+           "y": 0.0
+          },
+          {
+           "x": 37.0,
+           "y": 0.0
+          },
+          {
+           "x": 37.0,
+           "y": 7.0
+          },
+          {
+           "x": 30.0,
+           "y": 7.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "401",
+      "name": "Salon",
+      "usage": "Salon",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d4"
+     },
+     {
+      "kind": "space",
+      "id": 17,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 6.0
+          },
+          {
+           "x": 15.01,
+           "y": 6.0
+          },
+          {
+           "x": 15.01,
+           "y": 7.3
+          },
+          {
+           "x": 0.0,
+           "y": 7.3
+          }
+         ]
+        }
+       }
+      ],
+      "number": "001",
+      "name": "Koridor",
+      "usage": "Koridor",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "ortak"
+     },
+     {
+      "kind": "space",
+      "id": 18,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 15.01,
+           "y": 6.0
+          },
+          {
+           "x": 16.0,
+           "y": 6.0
+          },
+          {
+           "x": 16.0,
+           "y": 7.3
+          },
+          {
+           "x": 15.01,
+           "y": 7.3
+          }
+         ]
+        }
+       }
+      ],
+      "number": "002",
+      "name": "Şaft",
+      "usage": "Şaft",
+      "arch": {
+       "level": "zemin"
+      },
+      "void": true,
+      "unit": "ortak"
+     },
+     {
+      "kind": "space",
+      "id": 19,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 10.0,
+           "y": 8.0
+          },
+          {
+           "x": 13.0,
+           "y": 8.0
+          },
+          {
+           "x": 13.0,
+           "y": 9.1
+          },
+          {
+           "x": 10.0,
+           "y": 9.1
+          }
+         ]
+        }
+       }
+      ],
+      "number": "003",
+      "name": "Merdiven",
+      "usage": "Merdiven",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "kdogu"
+     },
+     {
+      "kind": "space",
+      "id": 20,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 30.0,
+           "y": 8.0
+          },
+          {
+           "x": 33.0,
+           "y": 8.0
+          },
+          {
+           "x": 33.0,
+           "y": 10.02
+          },
+          {
+           "x": 30.0,
+           "y": 10.02
+          }
+         ]
+        }
+       }
+      ],
+      "number": "004",
+      "name": "Koridor",
+      "usage": "Koridor",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "bortak"
+     },
+     {
+      "kind": "space",
+      "id": 21,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 40.0,
+           "y": 0.0
+          },
+          {
+           "x": 42.14,
+           "y": 0.0
+          },
+          {
+           "x": 42.14,
+           "y": 1.0
+          },
+          {
+           "x": 40.0,
+           "y": 1.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "005",
+      "name": "Bekçi",
+      "usage": "Bekçi",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "genel"
+     },
+     {
+      "kind": "space",
+      "id": 22,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 50.0,
+           "y": 0.0
+          },
+          {
+           "x": 60.0,
+           "y": 0.0
+          },
+          {
+           "x": 60.0,
+           "y": 10.0
+          },
+          {
+           "x": 50.0,
+           "y": 10.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "B1",
+      "name": "Bahçe",
+      "usage": "Bahçe",
+      "unit": "bahce"
+     },
+     {
+      "kind": "space",
+      "id": 23,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 70.0,
+           "y": 0.0
+          },
+          {
+           "x": 72.0,
+           "y": 0.0
+          },
+          {
+           "x": 72.0,
+           "y": 2.0
+          },
+          {
+           "x": 70.0,
+           "y": 2.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "D",
+      "name": "Depo",
+      "usage": "Depo"
+     }
+    ]
+   }
+  },
+  {
+   "name": "Oku: ağırlıkla pay",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.schedules.create",
+     "input": {
+      "layerId": "etiket",
+      "at": {
+       "x": 0.0,
+       "y": -20.0
+      },
+      "of": "units",
+      "columns": [
+       {
+        "field": "number"
+       },
+       {
+        "field": "shareWeight"
+       },
+       {
+        "field": "share"
+       },
+       {
+        "field": "gross"
+       }
+      ],
+      "total": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 24,
+       "rows": 9,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "24": {
+        "cells": [
+         [
+          "No",
+          "Pay ağırlığı",
+          "Pay (m²)",
+          "Brüt (m²)"
+         ],
+         [
+          "1",
+          "2",
+          "10.60",
+          "52.60"
+         ],
+         [
+          "2",
+          "1",
+          "6.96",
+          "49.96"
+         ],
+         [
+          "3",
+          "1",
+          "6.96",
+          "23.46"
+         ],
+         [
+          "4",
+          "1",
+          "6.49",
+          "55.49"
+         ],
+         [
+          "O",
+          "",
+          "",
+          ""
+         ],
+         [
+          "OD",
+          "",
+          "",
+          ""
+         ],
+         [
+          "OB",
+          "",
+          "",
+          ""
+         ],
+         [
+          "G",
+          "",
+          "",
+          ""
+         ],
+         [
+          "B",
+          "",
+          "",
+          ""
+         ],
+         [
+          "Toplam",
+          "",
+          "31.01",
+          "181.51"
+         ]
+        ],
+        "source": {
+         "kind": "schedule",
+         "of": "units",
+         "columns": [
+          {
+           "field": "number"
+          },
+          {
+           "field": "shareWeight"
+          },
+          {
+           "field": "share"
+          },
+          {
+           "field": "gross"
+          }
+         ],
+         "total": true,
+         "members": [
+          [
+           "$uidOf:10",
+           "$uidOf:11",
+           "$uidOf:12"
+          ],
+          [
+           "$uidOf:13",
+           "$uidOf:14"
+          ],
+          [
+           "$uidOf:15"
+          ],
+          [
+           "$uidOf:16"
+          ],
+          [
+           "$uidOf:17",
+           "$uidOf:18"
+          ],
+          [
+           "$uidOf:19"
+          ],
+          [
+           "$uidOf:20"
+          ],
+          [
+           "$uidOf:21"
+          ],
+          [
+           "$uidOf:22"
+          ]
+         ],
+         "units": [
+          [
+           "d1"
+          ],
+          [
+           "d2"
+          ],
+          [
+           "d3"
+          ],
+          [
+           "d4"
+          ],
+          [
+           "ortak"
+          ],
+          [
+           "kdogu"
+          ],
+          [
+           "bortak"
+          ],
+          [
+           "genel"
+          ],
+          [
+           "bahce"
+          ]
+         ]
+        },
+        "aligns": [
+         "left",
+         "left",
+         "right",
+         "right"
+        ],
+        "header": true,
+        "styles": [
+         {
+          "row": 1,
+          "col": 2,
+          "rows": 9,
+          "cols": 1,
+          "color": "#7f8790"
+         },
+         {
+          "row": 1,
+          "col": 3,
+          "rows": 9,
+          "cols": 1,
+          "color": "#7f8790"
+         },
+         {
+          "row": 10,
+          "col": 0,
+          "rows": 1,
+          "cols": 4,
+          "bold": true
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.schedules.query",
+     "input": {
+      "uid": "$uidOf:24"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "of": "units",
+       "columns": [
+        {
+         "heading": "No",
+         "field": "number",
+         "editable": true,
+         "summed": false
+        },
+        {
+         "heading": "Pay ağırlığı",
+         "field": "shareWeight",
+         "editable": true,
+         "summed": false
+        },
+        {
+         "heading": "Pay (m²)",
+         "field": "share",
+         "editable": false,
+         "summed": true
+        },
+        {
+         "heading": "Brüt (m²)",
+         "field": "gross",
+         "editable": false,
+         "summed": true
+        }
+       ],
+       "rows": [
+        {
+         "row": 0,
+         "role": "heading",
+         "cells": [
+          "No",
+          "Pay ağırlığı",
+          "Pay (m²)",
+          "Brüt (m²)"
+         ],
+         "members": []
+        },
+        {
+         "row": 1,
+         "role": "data",
+         "cells": [
+          "1",
+          "2",
+          "10.60",
+          "52.60"
+         ],
+         "members": [
+          "$uidOf:10",
+          "$uidOf:11",
+          "$uidOf:12"
+         ],
+         "units": [
+          "d1"
+         ]
+        },
+        {
+         "row": 2,
+         "role": "data",
+         "cells": [
+          "2",
+          "1",
+          "6.96",
+          "49.96"
+         ],
+         "members": [
+          "$uidOf:13",
+          "$uidOf:14"
+         ],
+         "units": [
+          "d2"
+         ]
+        },
+        {
+         "row": 3,
+         "role": "data",
+         "cells": [
+          "3",
+          "1",
+          "6.96",
+          "23.46"
+         ],
+         "members": [
+          "$uidOf:15"
+         ],
+         "units": [
+          "d3"
+         ]
+        },
+        {
+         "row": 4,
+         "role": "data",
+         "cells": [
+          "4",
+          "1",
+          "6.49",
+          "55.49"
+         ],
+         "members": [
+          "$uidOf:16"
+         ],
+         "units": [
+          "d4"
+         ]
+        },
+        {
+         "row": 5,
+         "role": "data",
+         "cells": [
+          "O",
+          "",
+          "",
+          ""
+         ],
+         "members": [
+          "$uidOf:17",
+          "$uidOf:18"
+         ],
+         "units": [
+          "ortak"
+         ]
+        },
+        {
+         "row": 6,
+         "role": "data",
+         "cells": [
+          "OD",
+          "",
+          "",
+          ""
+         ],
+         "members": [
+          "$uidOf:19"
+         ],
+         "units": [
+          "kdogu"
+         ]
+        },
+        {
+         "row": 7,
+         "role": "data",
+         "cells": [
+          "OB",
+          "",
+          "",
+          ""
+         ],
+         "members": [
+          "$uidOf:20"
+         ],
+         "units": [
+          "bortak"
+         ]
+        },
+        {
+         "row": 8,
+         "role": "data",
+         "cells": [
+          "G",
+          "",
+          "",
+          ""
+         ],
+         "members": [
+          "$uidOf:21"
+         ],
+         "units": [
+          "genel"
+         ]
+        },
+        {
+         "row": 9,
+         "role": "data",
+         "cells": [
+          "B",
+          "",
+          "",
+          ""
+         ],
+         "members": [
+          "$uidOf:22"
+         ],
+         "units": [
+          "bahce"
+         ]
+        },
+        {
+         "row": 10,
+         "role": "total",
+         "cells": [
+          "Toplam",
+          "",
+          "31.01",
+          "181.51"
+         ],
+         "members": []
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Bina programı payları",
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 50,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat-1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ],
+      "program": {
+       "buildings": [
+        {
+         "id": "a",
+         "name": "A Blok",
+         "wings": [
+          {
+           "id": "a-bati",
+           "name": "Batı kanadı"
+          },
+          {
+           "id": "a-dogu",
+           "name": "Doğu kanadı"
+          }
+         ]
+        },
+        {
+         "id": "b",
+         "name": "B Blok"
+        },
+        {
+         "id": "c",
+         "name": "C Blok"
+        }
+       ],
+       "units": [
+        {
+         "id": "d1",
+         "number": "1",
+         "name": "Daire 1",
+         "building": "a",
+         "wing": "a-bati",
+         "recordedArea": 50.0,
+         "shareWeight": "2"
+        },
+        {
+         "id": "d2",
+         "number": "2",
+         "name": "Daire 2",
+         "building": "a",
+         "wing": "a-dogu",
+         "shareWeight": "1"
+        },
+        {
+         "id": "d3",
+         "number": "3",
+         "name": "Daire 3",
+         "building": "a",
+         "wing": "a-dogu",
+         "shareWeight": "1"
+        },
+        {
+         "id": "d4",
+         "number": "4",
+         "name": "Daire 4",
+         "building": "b",
+         "shareWeight": "1"
+        },
+        {
+         "id": "ortak",
+         "number": "O",
+         "name": "A ortak",
+         "kind": "common",
+         "building": "a"
+        },
+        {
+         "id": "kdogu",
+         "number": "OD",
+         "name": "Doğu merdiveni",
+         "kind": "common",
+         "building": "a",
+         "wing": "a-dogu"
+        },
+        {
+         "id": "bortak",
+         "number": "OB",
+         "name": "B ortak",
+         "kind": "common",
+         "building": "b"
+        },
+        {
+         "id": "genel",
+         "number": "G",
+         "name": "Site ortak",
+         "kind": "common"
+        },
+        {
+         "id": "bahce",
+         "number": "B",
+         "name": "Bahçe",
+         "kind": "outdoor"
+        }
+       ],
+       "briefs": [
+        {
+         "usage": "Balkon",
+         "outdoor": true
+        },
+        {
+         "usage": "Salon",
+         "areaMin": 20.0,
+         "areaMax": 30.0
+        },
+        {
+         "usage": "Yatak odası",
+         "areaMin": 12.0,
+         "areaMax": 16.0
+        },
+        {
+         "usage": "Koridor",
+         "minPassage": 1.2
+        }
+       ],
+       "shareRule": "weight"
+      }
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "duvar",
+      "name": "Duvar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "donati",
+      "name": "Donatı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "etiket",
+      "name": "Etiket",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "entities": [
+     {
+      "kind": "space",
+      "id": 10,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 5.0
+          },
+          {
+           "x": 0.0,
+           "y": 5.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "101",
+      "name": "Salon",
+      "usage": "Salon",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1"
+     },
+     {
+      "kind": "space",
+      "id": 11,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 9.0,
+           "y": 0.0
+          },
+          {
+           "x": 9.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "102",
+      "name": "Yatak odası",
+      "usage": "Yatak odası",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1"
+     },
+     {
+      "kind": "space",
+      "id": 12,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": -2.0
+          },
+          {
+           "x": 3.0,
+           "y": -2.0
+          },
+          {
+           "x": 3.0,
+           "y": -0.5
+          },
+          {
+           "x": 0.0,
+           "y": -0.5
+          }
+         ]
+        }
+       }
+      ],
+      "number": "103",
+      "name": "Balkon",
+      "usage": "Balkon",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1"
+     },
+     {
+      "kind": "space",
+      "id": 13,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 10.0,
+           "y": 0.0
+          },
+          {
+           "x": 15.0,
+           "y": 0.0
+          },
+          {
+           "x": 15.0,
+           "y": 5.0
+          },
+          {
+           "x": 10.0,
+           "y": 5.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "201",
+      "name": "Salon",
+      "usage": "Salon",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d2"
+     },
+     {
+      "kind": "space",
+      "id": 14,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 10.0,
+           "y": 0.0
+          },
+          {
+           "x": 14.0,
+           "y": 0.0
+          },
+          {
+           "x": 14.0,
+           "y": 4.5
+          },
+          {
+           "x": 10.0,
+           "y": 4.5
+          }
+         ]
+        }
+       }
+      ],
+      "number": "202",
+      "name": "Yatak odası",
+      "usage": "Yatak odası",
+      "arch": {
+       "level": "kat-1"
+      },
+      "unit": "d2"
+     },
+     {
+      "kind": "space",
+      "id": 15,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 16.0,
+           "y": 0.0
+          },
+          {
+           "x": 19.3,
+           "y": 0.0
+          },
+          {
+           "x": 19.3,
+           "y": 5.0
+          },
+          {
+           "x": 16.0,
+           "y": 5.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "301",
+      "name": "Salon",
+      "usage": "Salon",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d3"
+     },
+     {
+      "kind": "space",
+      "id": 16,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 30.0,
+           "y": 0.0
+          },
+          {
+           "x": 37.0,
+           "y": 0.0
+          },
+          {
+           "x": 37.0,
+           "y": 7.0
+          },
+          {
+           "x": 30.0,
+           "y": 7.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "401",
+      "name": "Salon",
+      "usage": "Salon",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d4"
+     },
+     {
+      "kind": "space",
+      "id": 17,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 6.0
+          },
+          {
+           "x": 15.01,
+           "y": 6.0
+          },
+          {
+           "x": 15.01,
+           "y": 7.3
+          },
+          {
+           "x": 0.0,
+           "y": 7.3
+          }
+         ]
+        }
+       }
+      ],
+      "number": "001",
+      "name": "Koridor",
+      "usage": "Koridor",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "ortak"
+     },
+     {
+      "kind": "space",
+      "id": 18,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 15.01,
+           "y": 6.0
+          },
+          {
+           "x": 16.0,
+           "y": 6.0
+          },
+          {
+           "x": 16.0,
+           "y": 7.3
+          },
+          {
+           "x": 15.01,
+           "y": 7.3
+          }
+         ]
+        }
+       }
+      ],
+      "number": "002",
+      "name": "Şaft",
+      "usage": "Şaft",
+      "arch": {
+       "level": "zemin"
+      },
+      "void": true,
+      "unit": "ortak"
+     },
+     {
+      "kind": "space",
+      "id": 19,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 10.0,
+           "y": 8.0
+          },
+          {
+           "x": 13.0,
+           "y": 8.0
+          },
+          {
+           "x": 13.0,
+           "y": 9.1
+          },
+          {
+           "x": 10.0,
+           "y": 9.1
+          }
+         ]
+        }
+       }
+      ],
+      "number": "003",
+      "name": "Merdiven",
+      "usage": "Merdiven",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "kdogu"
+     },
+     {
+      "kind": "space",
+      "id": 20,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 30.0,
+           "y": 8.0
+          },
+          {
+           "x": 33.0,
+           "y": 8.0
+          },
+          {
+           "x": 33.0,
+           "y": 10.02
+          },
+          {
+           "x": 30.0,
+           "y": 10.02
+          }
+         ]
+        }
+       }
+      ],
+      "number": "004",
+      "name": "Koridor",
+      "usage": "Koridor",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "bortak"
+     },
+     {
+      "kind": "space",
+      "id": 21,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 40.0,
+           "y": 0.0
+          },
+          {
+           "x": 42.14,
+           "y": 0.0
+          },
+          {
+           "x": 42.14,
+           "y": 1.0
+          },
+          {
+           "x": 40.0,
+           "y": 1.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "005",
+      "name": "Bekçi",
+      "usage": "Bekçi",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "genel"
+     },
+     {
+      "kind": "space",
+      "id": 22,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 50.0,
+           "y": 0.0
+          },
+          {
+           "x": 60.0,
+           "y": 0.0
+          },
+          {
+           "x": 60.0,
+           "y": 10.0
+          },
+          {
+           "x": 50.0,
+           "y": 10.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "B1",
+      "name": "Bahçe",
+      "usage": "Bahçe",
+      "unit": "bahce"
+     },
+     {
+      "kind": "space",
+      "id": 23,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 70.0,
+           "y": 0.0
+          },
+          {
+           "x": 72.0,
+           "y": 0.0
+          },
+          {
+           "x": 72.0,
+           "y": 2.0
+          },
+          {
+           "x": 70.0,
+           "y": 2.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "D",
+      "name": "Depo",
+      "usage": "Depo"
+     }
+    ]
+   }
+  },
+  {
+   "name": "Oku: net alana göre pay",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.schedules.create",
+     "input": {
+      "layerId": "etiket",
+      "at": {
+       "x": 0.0,
+       "y": -20.0
+      },
+      "of": "units",
+      "columns": [
+       {
+        "field": "number"
+       },
+       {
+        "field": "area"
+       },
+       {
+        "field": "share"
+       },
+       {
+        "field": "gross"
+       }
+      ],
+      "total": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 24,
+       "rows": 9,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "24": {
+        "cells": [
+         [
+          "No",
+          "Alan (m²)",
+          "Pay (m²)",
+          "Brüt (m²)"
+         ],
+         [
+          "1",
+          "42.00",
+          "8.67",
+          "50.67"
+         ],
+         [
+          "2",
+          "43.00",
+          "11.26",
+          "54.26"
+         ],
+         [
+          "3",
+          "16.50",
+          "4.32",
+          "20.82"
+         ],
+         [
+          "4",
+          "49.00",
+          "6.76",
+          "55.76"
+         ],
+         [
+          "O",
+          "19.51",
+          "",
+          ""
+         ],
+         [
+          "OD",
+          "3.30",
+          "",
+          ""
+         ],
+         [
+          "OB",
+          "6.06",
+          "",
+          ""
+         ],
+         [
+          "G",
+          "2.14",
+          "",
+          ""
+         ],
+         [
+          "B",
+          "100.00",
+          "",
+          ""
+         ],
+         [
+          "Toplam",
+          "281.51",
+          "31.01",
+          "181.51"
+         ]
+        ],
+        "source": {
+         "kind": "schedule",
+         "of": "units",
+         "columns": [
+          {
+           "field": "number"
+          },
+          {
+           "field": "area"
+          },
+          {
+           "field": "share"
+          },
+          {
+           "field": "gross"
+          }
+         ],
+         "total": true,
+         "members": [
+          [
+           "$uidOf:10",
+           "$uidOf:11",
+           "$uidOf:12"
+          ],
+          [
+           "$uidOf:13",
+           "$uidOf:14"
+          ],
+          [
+           "$uidOf:15"
+          ],
+          [
+           "$uidOf:16"
+          ],
+          [
+           "$uidOf:17",
+           "$uidOf:18"
+          ],
+          [
+           "$uidOf:19"
+          ],
+          [
+           "$uidOf:20"
+          ],
+          [
+           "$uidOf:21"
+          ],
+          [
+           "$uidOf:22"
+          ]
+         ],
+         "units": [
+          [
+           "d1"
+          ],
+          [
+           "d2"
+          ],
+          [
+           "d3"
+          ],
+          [
+           "d4"
+          ],
+          [
+           "ortak"
+          ],
+          [
+           "kdogu"
+          ],
+          [
+           "bortak"
+          ],
+          [
+           "genel"
+          ],
+          [
+           "bahce"
+          ]
+         ]
+        },
+        "aligns": [
+         "left",
+         "right",
+         "right",
+         "right"
+        ],
+        "header": true,
+        "styles": [
+         {
+          "row": 1,
+          "col": 1,
+          "rows": 9,
+          "cols": 1,
+          "color": "#7f8790"
+         },
+         {
+          "row": 1,
+          "col": 2,
+          "rows": 9,
+          "cols": 1,
+          "color": "#7f8790"
+         },
+         {
+          "row": 1,
+          "col": 3,
+          "rows": 9,
+          "cols": 1,
+          "color": "#7f8790"
+         },
+         {
+          "row": 10,
+          "col": 0,
+          "rows": 1,
+          "cols": 4,
+          "bold": true
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.schedules.query",
+     "input": {
+      "uid": "$uidOf:24"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "of": "units",
+       "columns": [
+        {
+         "heading": "No",
+         "field": "number",
+         "editable": true,
+         "summed": false
+        },
+        {
+         "heading": "Alan (m²)",
+         "field": "area",
+         "editable": false,
+         "summed": true
+        },
+        {
+         "heading": "Pay (m²)",
+         "field": "share",
+         "editable": false,
+         "summed": true
+        },
+        {
+         "heading": "Brüt (m²)",
+         "field": "gross",
+         "editable": false,
+         "summed": true
+        }
+       ],
+       "rows": [
+        {
+         "row": 0,
+         "role": "heading",
+         "cells": [
+          "No",
+          "Alan (m²)",
+          "Pay (m²)",
+          "Brüt (m²)"
+         ],
+         "members": []
+        },
+        {
+         "row": 1,
+         "role": "data",
+         "cells": [
+          "1",
+          "42.00",
+          "8.67",
+          "50.67"
+         ],
+         "members": [
+          "$uidOf:10",
+          "$uidOf:11",
+          "$uidOf:12"
+         ],
+         "units": [
+          "d1"
+         ]
+        },
+        {
+         "row": 2,
+         "role": "data",
+         "cells": [
+          "2",
+          "43.00",
+          "11.26",
+          "54.26"
+         ],
+         "members": [
+          "$uidOf:13",
+          "$uidOf:14"
+         ],
+         "units": [
+          "d2"
+         ]
+        },
+        {
+         "row": 3,
+         "role": "data",
+         "cells": [
+          "3",
+          "16.50",
+          "4.32",
+          "20.82"
+         ],
+         "members": [
+          "$uidOf:15"
+         ],
+         "units": [
+          "d3"
+         ]
+        },
+        {
+         "row": 4,
+         "role": "data",
+         "cells": [
+          "4",
+          "49.00",
+          "6.76",
+          "55.76"
+         ],
+         "members": [
+          "$uidOf:16"
+         ],
+         "units": [
+          "d4"
+         ]
+        },
+        {
+         "row": 5,
+         "role": "data",
+         "cells": [
+          "O",
+          "19.51",
+          "",
+          ""
+         ],
+         "members": [
+          "$uidOf:17",
+          "$uidOf:18"
+         ],
+         "units": [
+          "ortak"
+         ]
+        },
+        {
+         "row": 6,
+         "role": "data",
+         "cells": [
+          "OD",
+          "3.30",
+          "",
+          ""
+         ],
+         "members": [
+          "$uidOf:19"
+         ],
+         "units": [
+          "kdogu"
+         ]
+        },
+        {
+         "row": 7,
+         "role": "data",
+         "cells": [
+          "OB",
+          "6.06",
+          "",
+          ""
+         ],
+         "members": [
+          "$uidOf:20"
+         ],
+         "units": [
+          "bortak"
+         ]
+        },
+        {
+         "row": 8,
+         "role": "data",
+         "cells": [
+          "G",
+          "2.14",
+          "",
+          ""
+         ],
+         "members": [
+          "$uidOf:21"
+         ],
+         "units": [
+          "genel"
+         ]
+        },
+        {
+         "row": 9,
+         "role": "data",
+         "cells": [
+          "B",
+          "100.00",
+          "",
+          ""
+         ],
+         "members": [
+          "$uidOf:22"
+         ],
+         "units": [
+          "bahce"
+         ]
+        },
+        {
+         "row": 10,
+         "role": "total",
+         "cells": [
+          "Toplam",
+          "281.51",
+          "31.01",
+          "181.51"
+         ],
+         "members": []
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Bina programı payları",
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 50,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat-1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ],
+      "program": {
+       "buildings": [
+        {
+         "id": "a",
+         "name": "A Blok",
+         "wings": [
+          {
+           "id": "a-bati",
+           "name": "Batı kanadı"
+          },
+          {
+           "id": "a-dogu",
+           "name": "Doğu kanadı"
+          }
+         ]
+        },
+        {
+         "id": "b",
+         "name": "B Blok"
+        },
+        {
+         "id": "c",
+         "name": "C Blok"
+        }
+       ],
+       "units": [
+        {
+         "id": "d1",
+         "number": "1",
+         "name": "Daire 1",
+         "building": "a",
+         "wing": "a-bati",
+         "recordedArea": 50.0
+        },
+        {
+         "id": "d2",
+         "number": "2",
+         "name": "Daire 2",
+         "building": "a",
+         "wing": "a-dogu"
+        },
+        {
+         "id": "d3",
+         "number": "3",
+         "name": "Daire 3",
+         "building": "a",
+         "wing": "a-dogu"
+        },
+        {
+         "id": "d4",
+         "number": "4",
+         "name": "Daire 4",
+         "building": "b"
+        },
+        {
+         "id": "ortak",
+         "number": "O",
+         "name": "A ortak",
+         "kind": "common",
+         "building": "a"
+        },
+        {
+         "id": "kdogu",
+         "number": "OD",
+         "name": "Doğu merdiveni",
+         "kind": "common",
+         "building": "a",
+         "wing": "a-dogu"
+        },
+        {
+         "id": "bortak",
+         "number": "OB",
+         "name": "B ortak",
+         "kind": "common",
+         "building": "b"
+        },
+        {
+         "id": "genel",
+         "number": "G",
+         "name": "Site ortak",
+         "kind": "common"
+        },
+        {
+         "id": "bahce",
+         "number": "B",
+         "name": "Bahçe",
+         "kind": "outdoor"
+        }
+       ],
+       "briefs": [
+        {
+         "usage": "Balkon",
+         "outdoor": true
+        },
+        {
+         "usage": "Salon",
+         "areaMin": 20.0,
+         "areaMax": 30.0
+        },
+        {
+         "usage": "Yatak odası",
+         "areaMin": 12.0,
+         "areaMax": 16.0
+        },
+        {
+         "usage": "Koridor",
+         "minPassage": 1.2
+        }
+       ],
+       "shareRule": "net"
+      }
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "duvar",
+      "name": "Duvar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "donati",
+      "name": "Donatı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "etiket",
+      "name": "Etiket",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "entities": [
+     {
+      "kind": "space",
+      "id": 10,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 5.0
+          },
+          {
+           "x": 0.0,
+           "y": 5.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "101",
+      "name": "Salon",
+      "usage": "Salon",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1"
+     },
+     {
+      "kind": "space",
+      "id": 11,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 9.0,
+           "y": 0.0
+          },
+          {
+           "x": 9.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "102",
+      "name": "Yatak odası",
+      "usage": "Yatak odası",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1"
+     },
+     {
+      "kind": "space",
+      "id": 12,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": -2.0
+          },
+          {
+           "x": 3.0,
+           "y": -2.0
+          },
+          {
+           "x": 3.0,
+           "y": -0.5
+          },
+          {
+           "x": 0.0,
+           "y": -0.5
+          }
+         ]
+        }
+       }
+      ],
+      "number": "103",
+      "name": "Balkon",
+      "usage": "Balkon",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1"
+     },
+     {
+      "kind": "space",
+      "id": 13,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 10.0,
+           "y": 0.0
+          },
+          {
+           "x": 15.0,
+           "y": 0.0
+          },
+          {
+           "x": 15.0,
+           "y": 5.0
+          },
+          {
+           "x": 10.0,
+           "y": 5.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "201",
+      "name": "Salon",
+      "usage": "Salon",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d2"
+     },
+     {
+      "kind": "space",
+      "id": 14,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 10.0,
+           "y": 0.0
+          },
+          {
+           "x": 14.0,
+           "y": 0.0
+          },
+          {
+           "x": 14.0,
+           "y": 4.5
+          },
+          {
+           "x": 10.0,
+           "y": 4.5
+          }
+         ]
+        }
+       }
+      ],
+      "number": "202",
+      "name": "Yatak odası",
+      "usage": "Yatak odası",
+      "arch": {
+       "level": "kat-1"
+      },
+      "unit": "d2"
+     },
+     {
+      "kind": "space",
+      "id": 15,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 16.0,
+           "y": 0.0
+          },
+          {
+           "x": 19.3,
+           "y": 0.0
+          },
+          {
+           "x": 19.3,
+           "y": 5.0
+          },
+          {
+           "x": 16.0,
+           "y": 5.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "301",
+      "name": "Salon",
+      "usage": "Salon",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d3"
+     },
+     {
+      "kind": "space",
+      "id": 16,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 30.0,
+           "y": 0.0
+          },
+          {
+           "x": 37.0,
+           "y": 0.0
+          },
+          {
+           "x": 37.0,
+           "y": 7.0
+          },
+          {
+           "x": 30.0,
+           "y": 7.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "401",
+      "name": "Salon",
+      "usage": "Salon",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d4"
+     },
+     {
+      "kind": "space",
+      "id": 17,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 6.0
+          },
+          {
+           "x": 15.01,
+           "y": 6.0
+          },
+          {
+           "x": 15.01,
+           "y": 7.3
+          },
+          {
+           "x": 0.0,
+           "y": 7.3
+          }
+         ]
+        }
+       }
+      ],
+      "number": "001",
+      "name": "Koridor",
+      "usage": "Koridor",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "ortak"
+     },
+     {
+      "kind": "space",
+      "id": 18,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 15.01,
+           "y": 6.0
+          },
+          {
+           "x": 16.0,
+           "y": 6.0
+          },
+          {
+           "x": 16.0,
+           "y": 7.3
+          },
+          {
+           "x": 15.01,
+           "y": 7.3
+          }
+         ]
+        }
+       }
+      ],
+      "number": "002",
+      "name": "Şaft",
+      "usage": "Şaft",
+      "arch": {
+       "level": "zemin"
+      },
+      "void": true,
+      "unit": "ortak"
+     },
+     {
+      "kind": "space",
+      "id": 19,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 10.0,
+           "y": 8.0
+          },
+          {
+           "x": 13.0,
+           "y": 8.0
+          },
+          {
+           "x": 13.0,
+           "y": 9.1
+          },
+          {
+           "x": 10.0,
+           "y": 9.1
+          }
+         ]
+        }
+       }
+      ],
+      "number": "003",
+      "name": "Merdiven",
+      "usage": "Merdiven",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "kdogu"
+     },
+     {
+      "kind": "space",
+      "id": 20,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 30.0,
+           "y": 8.0
+          },
+          {
+           "x": 33.0,
+           "y": 8.0
+          },
+          {
+           "x": 33.0,
+           "y": 10.02
+          },
+          {
+           "x": 30.0,
+           "y": 10.02
+          }
+         ]
+        }
+       }
+      ],
+      "number": "004",
+      "name": "Koridor",
+      "usage": "Koridor",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "bortak"
+     },
+     {
+      "kind": "space",
+      "id": 21,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 40.0,
+           "y": 0.0
+          },
+          {
+           "x": 42.14,
+           "y": 0.0
+          },
+          {
+           "x": 42.14,
+           "y": 1.0
+          },
+          {
+           "x": 40.0,
+           "y": 1.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "005",
+      "name": "Bekçi",
+      "usage": "Bekçi",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "genel"
+     },
+     {
+      "kind": "space",
+      "id": 22,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 50.0,
+           "y": 0.0
+          },
+          {
+           "x": 60.0,
+           "y": 0.0
+          },
+          {
+           "x": 60.0,
+           "y": 10.0
+          },
+          {
+           "x": 50.0,
+           "y": 10.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "B1",
+      "name": "Bahçe",
+      "usage": "Bahçe",
+      "unit": "bahce"
+     },
+     {
+      "kind": "space",
+      "id": 23,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 70.0,
+           "y": 0.0
+          },
+          {
+           "x": 72.0,
+           "y": 0.0
+          },
+          {
+           "x": 72.0,
+           "y": 2.0
+          },
+          {
+           "x": 70.0,
+           "y": 2.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "D",
+      "name": "Depo",
+      "usage": "Depo"
+     }
+    ]
+   }
+  },
+  {
+   "name": "Oku: hedef ve fark",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.schedules.create",
+     "input": {
+      "layerId": "etiket",
+      "at": {
+       "x": 0.0,
+       "y": -20.0
+      },
+      "of": "units",
+      "columns": [
+       {
+        "field": "number"
+       },
+       {
+        "field": "target"
+       },
+       {
+        "field": "targetDiff"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 24,
+       "rows": 9,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "24": {
+        "cells": [
+         [
+          "No",
+          "Tasarım hedefi",
+          "Hedef farkı"
+         ],
+         [
+          "1",
+          "32.00–46.00 m²",
+          "0.00"
+         ],
+         [
+          "2",
+          "32.00–46.00 m²",
+          "0.00"
+         ],
+         [
+          "3",
+          "20.00–30.00 m²",
+          "-3.50"
+         ],
+         [
+          "4",
+          "20.00–30.00 m²",
+          "19.00"
+         ],
+         [
+          "O",
+          "",
+          ""
+         ],
+         [
+          "OD",
+          "",
+          ""
+         ],
+         [
+          "OB",
+          "",
+          ""
+         ],
+         [
+          "G",
+          "",
+          ""
+         ],
+         [
+          "B",
+          "",
+          ""
+         ]
+        ],
+        "source": {
+         "kind": "schedule",
+         "of": "units",
+         "columns": [
+          {
+           "field": "number"
+          },
+          {
+           "field": "target"
+          },
+          {
+           "field": "targetDiff"
+          }
+         ],
+         "members": [
+          [
+           "$uidOf:10",
+           "$uidOf:11",
+           "$uidOf:12"
+          ],
+          [
+           "$uidOf:13",
+           "$uidOf:14"
+          ],
+          [
+           "$uidOf:15"
+          ],
+          [
+           "$uidOf:16"
+          ],
+          [
+           "$uidOf:17",
+           "$uidOf:18"
+          ],
+          [
+           "$uidOf:19"
+          ],
+          [
+           "$uidOf:20"
+          ],
+          [
+           "$uidOf:21"
+          ],
+          [
+           "$uidOf:22"
+          ]
+         ],
+         "units": [
+          [
+           "d1"
+          ],
+          [
+           "d2"
+          ],
+          [
+           "d3"
+          ],
+          [
+           "d4"
+          ],
+          [
+           "ortak"
+          ],
+          [
+           "kdogu"
+          ],
+          [
+           "bortak"
+          ],
+          [
+           "genel"
+          ],
+          [
+           "bahce"
+          ]
+         ]
+        },
+        "aligns": [
+         "left",
+         "left",
+         "left"
+        ],
+        "header": true,
+        "styles": [
+         {
+          "row": 1,
+          "col": 1,
+          "rows": 9,
+          "cols": 1,
+          "color": "#7f8790"
+         },
+         {
+          "row": 1,
+          "col": 2,
+          "rows": 9,
+          "cols": 1,
+          "color": "#7f8790"
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.schedules.query",
+     "input": {
+      "uid": "$uidOf:24"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "of": "units",
+       "columns": [
+        {
+         "heading": "No",
+         "field": "number",
+         "editable": true,
+         "summed": false
+        },
+        {
+         "heading": "Tasarım hedefi",
+         "field": "target",
+         "editable": false,
+         "summed": false
+        },
+        {
+         "heading": "Hedef farkı",
+         "field": "targetDiff",
+         "editable": false,
+         "summed": false
+        }
+       ],
+       "rows": [
+        {
+         "row": 0,
+         "role": "heading",
+         "cells": [
+          "No",
+          "Tasarım hedefi",
+          "Hedef farkı"
+         ],
+         "members": []
+        },
+        {
+         "row": 1,
+         "role": "data",
+         "cells": [
+          "1",
+          "32.00–46.00 m²",
+          "0.00"
+         ],
+         "members": [
+          "$uidOf:10",
+          "$uidOf:11",
+          "$uidOf:12"
+         ],
+         "units": [
+          "d1"
+         ]
+        },
+        {
+         "row": 2,
+         "role": "data",
+         "cells": [
+          "2",
+          "32.00–46.00 m²",
+          "0.00"
+         ],
+         "members": [
+          "$uidOf:13",
+          "$uidOf:14"
+         ],
+         "units": [
+          "d2"
+         ]
+        },
+        {
+         "row": 3,
+         "role": "data",
+         "cells": [
+          "3",
+          "20.00–30.00 m²",
+          "-3.50"
+         ],
+         "members": [
+          "$uidOf:15"
+         ],
+         "units": [
+          "d3"
+         ]
+        },
+        {
+         "row": 4,
+         "role": "data",
+         "cells": [
+          "4",
+          "20.00–30.00 m²",
+          "19.00"
+         ],
+         "members": [
+          "$uidOf:16"
+         ],
+         "units": [
+          "d4"
+         ]
+        },
+        {
+         "row": 5,
+         "role": "data",
+         "cells": [
+          "O",
+          "",
+          ""
+         ],
+         "members": [
+          "$uidOf:17",
+          "$uidOf:18"
+         ],
+         "units": [
+          "ortak"
+         ]
+        },
+        {
+         "row": 6,
+         "role": "data",
+         "cells": [
+          "OD",
+          "",
+          ""
+         ],
+         "members": [
+          "$uidOf:19"
+         ],
+         "units": [
+          "kdogu"
+         ]
+        },
+        {
+         "row": 7,
+         "role": "data",
+         "cells": [
+          "OB",
+          "",
+          ""
+         ],
+         "members": [
+          "$uidOf:20"
+         ],
+         "units": [
+          "bortak"
+         ]
+        },
+        {
+         "row": 8,
+         "role": "data",
+         "cells": [
+          "G",
+          "",
+          ""
+         ],
+         "members": [
+          "$uidOf:21"
+         ],
+         "units": [
+          "genel"
+         ]
+        },
+        {
+         "row": 9,
+         "role": "data",
+         "cells": [
+          "B",
+          "",
+          ""
+         ],
+         "members": [
+          "$uidOf:22"
+         ],
+         "units": [
+          "bahce"
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Oku: süzgeç sonuçsuz",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.schedules.create",
+     "input": {
+      "layerId": "etiket",
+      "at": {
+       "x": 0.0,
+       "y": -20.0
+      },
+      "of": "units",
+      "columns": [
+       {
+        "field": "number"
+       }
+      ],
+      "filter": {
+       "kinds": [
+        "unit"
+       ],
+       "buildings": [
+        "c"
+       ]
+      },
+      "total": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 24,
+       "rows": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "24": {
+        "cells": [
+         [
+          "No"
+         ],
+         [
+          "Toplam"
+         ]
+        ],
+        "source": {
+         "kind": "schedule",
+         "of": "units",
+         "columns": [
+          {
+           "field": "number"
+          }
+         ],
+         "filter": {
+          "kinds": [
+           "unit"
+          ],
+          "buildings": [
+           "c"
+          ]
+         },
+         "total": true
+        },
+        "aligns": [
+         "left"
+        ],
+        "header": true,
+        "styles": [
+         {
+          "row": 1,
+          "col": 0,
+          "rows": 1,
+          "cols": 1,
+          "bold": true
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.schedules.query",
+     "input": {
+      "uid": "$uidOf:24"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "of": "units",
+       "columns": [
+        {
+         "heading": "No",
+         "field": "number",
+         "editable": true,
+         "summed": false
+        }
+       ],
+       "rows": [
+        {
+         "row": 0,
+         "role": "heading",
+         "cells": [
+          "No"
+         ],
+         "members": []
+        },
+        {
+         "row": 1,
+         "role": "total",
+         "cells": [
+          "Toplam"
+         ],
+         "members": []
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Oku: bütün katlar ve kayıtlı alan",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.schedules.create",
+     "input": {
+      "layerId": "etiket",
+      "at": {
+       "x": 0.0,
+       "y": -20.0
+      },
+      "of": "units",
+      "columns": [
+       {
+        "field": "number"
+       },
+       {
+        "field": "level"
+       },
+       {
+        "field": "recordedArea"
+       }
+      ],
+      "total": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 24,
+       "rows": 9,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "24": {
+        "cells": [
+         [
+          "No",
+          "Kat",
+          "Kayıtlı alan (m²)"
+         ],
+         [
+          "1",
+          "Zemin kat",
+          "50.00"
+         ],
+         [
+          "2",
+          "Zemin kat, 1. kat",
+          ""
+         ],
+         [
+          "3",
+          "Zemin kat",
+          ""
+         ],
+         [
+          "4",
+          "Zemin kat",
+          ""
+         ],
+         [
+          "O",
+          "Zemin kat",
+          ""
+         ],
+         [
+          "OD",
+          "Zemin kat",
+          ""
+         ],
+         [
+          "OB",
+          "Zemin kat",
+          ""
+         ],
+         [
+          "G",
+          "Zemin kat",
+          ""
+         ],
+         [
+          "B",
+          "",
+          ""
+         ],
+         [
+          "Toplam",
+          "",
+          "50.00"
+         ]
+        ],
+        "source": {
+         "kind": "schedule",
+         "of": "units",
+         "columns": [
+          {
+           "field": "number"
+          },
+          {
+           "field": "level"
+          },
+          {
+           "field": "recordedArea"
+          }
+         ],
+         "total": true,
+         "members": [
+          [
+           "$uidOf:10",
+           "$uidOf:11",
+           "$uidOf:12"
+          ],
+          [
+           "$uidOf:13",
+           "$uidOf:14"
+          ],
+          [
+           "$uidOf:15"
+          ],
+          [
+           "$uidOf:16"
+          ],
+          [
+           "$uidOf:17",
+           "$uidOf:18"
+          ],
+          [
+           "$uidOf:19"
+          ],
+          [
+           "$uidOf:20"
+          ],
+          [
+           "$uidOf:21"
+          ],
+          [
+           "$uidOf:22"
+          ]
+         ],
+         "units": [
+          [
+           "d1"
+          ],
+          [
+           "d2"
+          ],
+          [
+           "d3"
+          ],
+          [
+           "d4"
+          ],
+          [
+           "ortak"
+          ],
+          [
+           "kdogu"
+          ],
+          [
+           "bortak"
+          ],
+          [
+           "genel"
+          ],
+          [
+           "bahce"
+          ]
+         ]
+        },
+        "aligns": [
+         "left",
+         "left",
+         "right"
+        ],
+        "header": true,
+        "styles": [
+         {
+          "row": 1,
+          "col": 1,
+          "rows": 9,
+          "cols": 1,
+          "color": "#7f8790"
+         },
+         {
+          "row": 10,
+          "col": 0,
+          "rows": 1,
+          "cols": 3,
+          "bold": true
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.schedules.query",
+     "input": {
+      "uid": "$uidOf:24"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "of": "units",
+       "columns": [
+        {
+         "heading": "No",
+         "field": "number",
+         "editable": true,
+         "summed": false
+        },
+        {
+         "heading": "Kat",
+         "field": "level",
+         "editable": false,
+         "summed": false
+        },
+        {
+         "heading": "Kayıtlı alan (m²)",
+         "field": "recordedArea",
+         "editable": true,
+         "summed": true
+        }
+       ],
+       "rows": [
+        {
+         "row": 0,
+         "role": "heading",
+         "cells": [
+          "No",
+          "Kat",
+          "Kayıtlı alan (m²)"
+         ],
+         "members": []
+        },
+        {
+         "row": 1,
+         "role": "data",
+         "cells": [
+          "1",
+          "Zemin kat",
+          "50.00"
+         ],
+         "members": [
+          "$uidOf:10",
+          "$uidOf:11",
+          "$uidOf:12"
+         ],
+         "units": [
+          "d1"
+         ]
+        },
+        {
+         "row": 2,
+         "role": "data",
+         "cells": [
+          "2",
+          "Zemin kat, 1. kat",
+          ""
+         ],
+         "members": [
+          "$uidOf:13",
+          "$uidOf:14"
+         ],
+         "units": [
+          "d2"
+         ]
+        },
+        {
+         "row": 3,
+         "role": "data",
+         "cells": [
+          "3",
+          "Zemin kat",
+          ""
+         ],
+         "members": [
+          "$uidOf:15"
+         ],
+         "units": [
+          "d3"
+         ]
+        },
+        {
+         "row": 4,
+         "role": "data",
+         "cells": [
+          "4",
+          "Zemin kat",
+          ""
+         ],
+         "members": [
+          "$uidOf:16"
+         ],
+         "units": [
+          "d4"
+         ]
+        },
+        {
+         "row": 5,
+         "role": "data",
+         "cells": [
+          "O",
+          "Zemin kat",
+          ""
+         ],
+         "members": [
+          "$uidOf:17",
+          "$uidOf:18"
+         ],
+         "units": [
+          "ortak"
+         ]
+        },
+        {
+         "row": 6,
+         "role": "data",
+         "cells": [
+          "OD",
+          "Zemin kat",
+          ""
+         ],
+         "members": [
+          "$uidOf:19"
+         ],
+         "units": [
+          "kdogu"
+         ]
+        },
+        {
+         "row": 7,
+         "role": "data",
+         "cells": [
+          "OB",
+          "Zemin kat",
+          ""
+         ],
+         "members": [
+          "$uidOf:20"
+         ],
+         "units": [
+          "bortak"
+         ]
+        },
+        {
+         "row": 8,
+         "role": "data",
+         "cells": [
+          "G",
+          "Zemin kat",
+          ""
+         ],
+         "members": [
+          "$uidOf:21"
+         ],
+         "units": [
+          "genel"
+         ]
+        },
+        {
+         "row": 9,
+         "role": "data",
+         "cells": [
+          "B",
+          "",
+          ""
+         ],
+         "members": [
+          "$uidOf:22"
+         ],
+         "units": [
+          "bahce"
+         ]
+        },
+        {
+         "row": 10,
+         "role": "total",
+         "cells": [
+          "Toplam",
+          "",
+          "50.00"
+         ],
+         "members": []
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Oku: dış alan ve ortak alan payı yok",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.schedules.create",
+     "input": {
+      "layerId": "etiket",
+      "at": {
+       "x": 0.0,
+       "y": -20.0
+      },
+      "of": "units",
+      "columns": [
+       {
+        "field": "number"
+       },
+       {
+        "field": "unitKind"
+       },
+       {
+        "field": "share"
+       },
+       {
+        "field": "gross"
+       }
+      ],
+      "filter": {
+       "kinds": [
+        "common",
+        "outdoor"
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 24,
+       "rows": 5,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "24": {
+        "cells": [
+         [
+          "No",
+          "Bölüm türü",
+          "Pay (m²)",
+          "Brüt (m²)"
+         ],
+         [
+          "O",
+          "Ortak alan",
+          "",
+          ""
+         ],
+         [
+          "OD",
+          "Ortak alan",
+          "",
+          ""
+         ],
+         [
+          "OB",
+          "Ortak alan",
+          "",
+          ""
+         ],
+         [
+          "G",
+          "Ortak alan",
+          "",
+          ""
+         ],
+         [
+          "B",
+          "Dış alan",
+          "",
+          ""
+         ]
+        ],
+        "source": {
+         "kind": "schedule",
+         "of": "units",
+         "columns": [
+          {
+           "field": "number"
+          },
+          {
+           "field": "unitKind"
+          },
+          {
+           "field": "share"
+          },
+          {
+           "field": "gross"
+          }
+         ],
+         "filter": {
+          "kinds": [
+           "common",
+           "outdoor"
+          ]
+         },
+         "members": [
+          [
+           "$uidOf:17",
+           "$uidOf:18"
+          ],
+          [
+           "$uidOf:19"
+          ],
+          [
+           "$uidOf:20"
+          ],
+          [
+           "$uidOf:21"
+          ],
+          [
+           "$uidOf:22"
+          ]
+         ],
+         "units": [
+          [
+           "ortak"
+          ],
+          [
+           "kdogu"
+          ],
+          [
+           "bortak"
+          ],
+          [
+           "genel"
+          ],
+          [
+           "bahce"
+          ]
+         ]
+        },
+        "aligns": [
+         "left",
+         "left",
+         "right",
+         "right"
+        ],
+        "header": true,
+        "styles": [
+         {
+          "row": 1,
+          "col": 1,
+          "rows": 5,
+          "cols": 1,
+          "color": "#7f8790"
+         },
+         {
+          "row": 1,
+          "col": 2,
+          "rows": 5,
+          "cols": 1,
+          "color": "#7f8790"
+         },
+         {
+          "row": 1,
+          "col": 3,
+          "rows": 5,
+          "cols": 1,
+          "color": "#7f8790"
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.schedules.query",
+     "input": {
+      "uid": "$uidOf:24"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "of": "units",
+       "columns": [
+        {
+         "heading": "No",
+         "field": "number",
+         "editable": true,
+         "summed": false
+        },
+        {
+         "heading": "Bölüm türü",
+         "field": "unitKind",
+         "editable": false,
+         "summed": false
+        },
+        {
+         "heading": "Pay (m²)",
+         "field": "share",
+         "editable": false,
+         "summed": true
+        },
+        {
+         "heading": "Brüt (m²)",
+         "field": "gross",
+         "editable": false,
+         "summed": true
+        }
+       ],
+       "rows": [
+        {
+         "row": 0,
+         "role": "heading",
+         "cells": [
+          "No",
+          "Bölüm türü",
+          "Pay (m²)",
+          "Brüt (m²)"
+         ],
+         "members": []
+        },
+        {
+         "row": 1,
+         "role": "data",
+         "cells": [
+          "O",
+          "Ortak alan",
+          "",
+          ""
+         ],
+         "members": [
+          "$uidOf:17",
+          "$uidOf:18"
+         ],
+         "units": [
+          "ortak"
+         ]
+        },
+        {
+         "row": 2,
+         "role": "data",
+         "cells": [
+          "OD",
+          "Ortak alan",
+          "",
+          ""
+         ],
+         "members": [
+          "$uidOf:19"
+         ],
+         "units": [
+          "kdogu"
+         ]
+        },
+        {
+         "row": 3,
+         "role": "data",
+         "cells": [
+          "OB",
+          "Ortak alan",
+          "",
+          ""
+         ],
+         "members": [
+          "$uidOf:20"
+         ],
+         "units": [
+          "bortak"
+         ]
+        },
+        {
+         "row": 4,
+         "role": "data",
+         "cells": [
+          "G",
+          "Ortak alan",
+          "",
+          ""
+         ],
+         "members": [
+          "$uidOf:21"
+         ],
+         "units": [
+          "genel"
+         ]
+        },
+        {
+         "row": 5,
+         "role": "data",
+         "cells": [
+          "B",
+          "Dış alan",
+          "",
+          ""
+         ],
+         "members": [
+          "$uidOf:22"
+         ],
+         "units": [
+          "bahce"
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

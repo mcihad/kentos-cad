@@ -210,7 +210,7 @@ _Durum (31 Ekim 2026, [ADR 0773](../docs/adr/0773-building-program-units-and-des
 hedefi ve gerçek/hedef/fark, net geçiş ve kapı/komşu/donatı denetimleri istisnalarıyla, böl/birleştir kararı ve
 durdurulabilir denetim; bina/kanat penceresi ve katları, ortak alanların bağımsız bölümlere tam payı (`kentos.share/1`:
 eşit, net alana, ağırlığa göre; kanat/bina/program kapsamı, en büyük kalan, paylar havuza tam eşit) yapıldı. Açık:
-resmî alan profili ve arsa payı, bölüm çizelgesi türü, gerçek pencerede elle kabul.
+bölüm çizelgesi ([ADR 0795](../docs/adr/0795-unit-schedule.md)). Açık: resmî alan profili ve arsa payı, gerçek pencerede elle kabul.
 
 **Kullanıcı sonucu:** Tasarımcı yalnız oluşan alanı okumakla kalmasın;
 hangi odanın hangi daireye ait olduğunu ve tasarım hedefini karşılayıp

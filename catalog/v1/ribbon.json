@@ -1659,6 +1659,11 @@
           "label": "Donatı çizelgesi"
          },
          {
+          "command": "tool.scheduleUnits",
+          "title": "Çizelge",
+          "label": "Bölüm çizelgesi"
+         },
+         {
           "command": "tool.materialLegend",
           "title": "Çizelge",
           "label": "Malzeme lejandı"

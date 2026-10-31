@@ -31,6 +31,23 @@ fn schedule_kinds(of: kentos_contracts::ScheduleOf) -> &'static [&'static str] {
         ScheduleOf::Walls => &["wall", "opening"],
         // A fixture's space (docs/adr/0733 §2).
         ScheduleOf::Fixtures => &["insert", "space"],
+        // The program's groups (docs/adr/0795): their spaces; the program itself and the levels are settings.
+        ScheduleOf::Units => &["space"],
+    }
+}
+
+/// Whether a schedule reads the project's settings a step's `ops` change (docs/adr/0795): a units schedule the
+/// program and the levels, a spaces schedule with a program field the program.
+fn reads_settings(t: &TableEntity, ops: &[Op]) -> bool {
+    let Some(TableSource::Schedule { of, columns, .. }) = &t.source else {
+        return false;
+    };
+    let program = ops.iter().any(|op| matches!(op, Op::BuildingProgram { .. }));
+    let settings = ops.iter().any(|op| matches!(op, Op::TemplateSettings { .. }));
+    match of {
+        kentos_contracts::ScheduleOf::Units => program || settings,
+        kentos_contracts::ScheduleOf::Spaces => program && columns.iter().any(|c| c.field.is_program()),
+        _ => false,
     }
 }
 
@@ -245,8 +262,9 @@ impl Document {
             out.merges = written.merges;
             out.formulas.clear();
             out.fields.clear();
-            if let Some(TableSource::Schedule { members, .. }) = &mut out.source {
+            if let Some(TableSource::Schedule { members, units, .. }) = &mut out.source {
                 *members = written.members;
+                *units = written.units;
             }
         }
         for i in 0..out.fields.len() {
@@ -341,7 +359,8 @@ impl Document {
             // the drawing's objects only the objects of its kinds (docs/adr/0344 §3).
             let reads_drawing = !t.fields.is_empty()
                 || matches!(t.source, Some(TableSource::Blocks { .. }))
-                || matches!(&t.source, Some(TableSource::Schedule { of, .. }) if options_changed || schedule_kinds(*of).iter().any(|k| kinds.contains(k)));
+                || matches!(&t.source, Some(TableSource::Schedule { of, .. }) if options_changed || schedule_kinds(*of).iter().any(|k| kinds.contains(k)))
+                || reads_settings(t, ops);
             if !reads_drawing && !touched.contains(&current.uid) {
                 continue;
             }

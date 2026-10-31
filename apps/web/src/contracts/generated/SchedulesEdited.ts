@@ -12,4 +12,8 @@ table: Entity,
 /**
  * The objects a cell was written to, in the drawing's order.
  */
-edited: Array<string>, revision: string, };
+edited: Array<string>, 
+/**
+ * The program groups a units schedule's cell was written to, by their ids, in the program's order (docs/adr/0795).
+ */
+units?: Array<string>, revision: string, };

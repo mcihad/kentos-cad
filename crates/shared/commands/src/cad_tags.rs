@@ -347,9 +347,9 @@ pub struct TagsChecked {
 /// Input of `cad.schedules.create` v1 (“Çizelge”): a schedule of `of` placed with its top left corner at `at`, its
 /// rows written from the drawing, as one undo step.
 ///
-/// Refusals, in this order: `not_finite`, `invalid_schedule`, `level_not_found`, `invalid_line_weight`,
-/// `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`; on the desktop also
-/// `slots_exhausted`. Warning: `layer_hidden`.
+/// Refusals, in this order: `not_finite`, `invalid_schedule`, `level_not_found`, `building_not_found`,
+/// `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`; on
+/// the desktop also `slots_exhausted`. Warning: `layer_hidden`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -461,7 +461,8 @@ pub struct ScheduleChange {
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum ScheduleOperation {
     /// The cell of the data row `row` (the table's own row index: 0 is the heading) and the column `column`: `value`
-    /// written to each of the row's objects. Empty words clear an optional field.
+    /// written to each of the row's objects (a units schedule's: to the row's program groups, docs/adr/0795). Empty
+    /// words clear an optional field.
     Cell {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
         row: u32,
@@ -477,7 +478,7 @@ pub enum ScheduleOperation {
 ///
 /// Refusals, in this order: `invalid_uid`, `entity_not_found`, `not_schedule`, `cell_out_of_range`, `cell_computed`,
 /// `schedule_summary_row`, `schedule_group_number`, `invalid_cell_value`, `invalid_schedule`, `level_not_found`,
-/// `invalid_revision`, `revision_conflict`, `layer_locked`.
+/// `building_not_found`, `invalid_revision`, `revision_conflict`, `layer_locked`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -504,6 +505,10 @@ pub struct SchedulesEdited {
     pub table: Entity,
     /// The objects a cell was written to, in the drawing's order.
     pub edited: Vec<String>,
+    /// The program groups a units schedule's cell was written to, by their ids, in the program's order (docs/adr/0795).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub units: Vec<String>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
 }
@@ -573,6 +578,10 @@ pub struct ScheduleRowInfo {
     /// A data row's objects, by their persistent ids, in the drawing's order: what a cell of an editable column is
     /// written to; none for the other rows.
     pub members: Vec<String>,
+    /// A units schedule's data row's program groups by their ids (docs/adr/0795): what its cells are written to.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub units: Vec<String>,
 }
 
 /// Output of `cad.schedules.query` v1.

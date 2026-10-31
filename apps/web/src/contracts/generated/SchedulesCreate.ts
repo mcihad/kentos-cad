@@ -9,9 +9,9 @@ import type { Vec2 } from "./Vec2";
  * Input of `cad.schedules.create` v1 (“Çizelge”): a schedule of `of` placed with its top left corner at `at`, its
  * rows written from the drawing, as one undo step.
  *
- * Refusals, in this order: `not_finite`, `invalid_schedule`, `level_not_found`, `invalid_line_weight`,
- * `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`; on the desktop also
- * `slots_exhausted`. Warning: `layer_hidden`.
+ * Refusals, in this order: `not_finite`, `invalid_schedule`, `level_not_found`, `building_not_found`,
+ * `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`; on
+ * the desktop also `slots_exhausted`. Warning: `layer_hidden`.
  */
 export type SchedulesCreate = { layerId: string, at: Vec2, of: ScheduleOf, 
 /**

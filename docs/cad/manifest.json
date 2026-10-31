@@ -12359,6 +12359,22 @@
    "tests": 0
   },
   {
+   "id": "tool.scheduleUnits",
+   "kind": "command",
+   "title": "Bölüm çizelgesi",
+   "level": "semantic",
+   "via": [
+    "cad.schedules.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.schedules.create",
+   "mcp": "cad.schedules.create",
+   "note": "Bölüm çizelgesi: bina programının bölümleri, kat, grup, toplam, ara toplam, sıra ve köşe komuta verilir; hücresi cad.schedules.edit ile programa yazılır (ADR 0795).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.sector",
    "kind": "tool",
    "title": "Daire dilimi",

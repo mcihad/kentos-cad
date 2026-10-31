@@ -3,4 +3,4 @@
 /**
  * What a schedule lists.
  */
-export type ScheduleOf = "openings" | "spaces" | "columns" | "walls" | "fixtures";
+export type ScheduleOf = "openings" | "spaces" | "columns" | "walls" | "fixtures" | "units";

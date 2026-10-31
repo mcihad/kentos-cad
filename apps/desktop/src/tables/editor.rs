@@ -1344,6 +1344,7 @@ impl App {
                     kentos_commands::TableSource::Blocks { .. } => "tableBlocks",
                     kentos_commands::TableSource::Schedule { of, .. } => match of {
                         kentos_commands::ScheduleOf::Spaces => "scheduleSpaces",
+                        kentos_commands::ScheduleOf::Units => "scheduleUnits",
                         _ => "scheduleOpenings",
                     },
                 };
@@ -1517,12 +1518,16 @@ pub(crate) fn schedule_cell(
         columns,
         total,
         members,
+        units,
         ..
     }) = &t.source
     else {
         return None;
     };
     let (r, c) = at;
+    // A units schedule's row is its program groups (docs/adr/0795).
+    let groups = (*of == kentos_commands::ScheduleOf::Units)
+        .then(|| units.get(r.wrapping_sub(1)).filter(|g| !g.is_empty()));
     let column = columns.get(c)?;
     if r == 0 {
         return Some(Err(
@@ -1530,7 +1535,28 @@ pub(crate) fn schedule_cell(
         ));
     }
     let objects = members.get(r - 1).filter(|m| !m.is_empty());
-    let Some(objects) = objects else {
+    if let Some(Some(groups)) = groups {
+        if !kentos_native_application::schedules::editable(*of, column.field) {
+            return Some(Err(format!(
+                "Hesaplanır: “{}” bina programından ve mahallerden okunur; düzenlenmez.",
+                doc.schedule_heading_in(*of, column)
+            )));
+        }
+        let program = doc.program();
+        let names: Vec<String> = groups
+            .iter()
+            .filter_map(|g| program.unit(g))
+            .map(|u| match &u.name {
+                Some(n) => format!("{} {n}", u.number),
+                None => u.number.clone(),
+            })
+            .collect();
+        return Some(Ok(format!(
+            "Bina programına yazılır: {}. Kaydet tek adımda yazar; çizelge ve etiketler izler.",
+            names.join(", ")
+        )));
+    }
+    let Some(objects) = objects.filter(|_| groups.is_none()) else {
         let what = if *total && r + 1 == t.cells.len() {
             "Genel toplam"
         } else {

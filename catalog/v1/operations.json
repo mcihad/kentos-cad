@@ -2046,6 +2046,13 @@
       ],
       "note": "Donatı çizelgesi: blok yerleştirmeleri, kat, grup, toplam, ara toplam ve köşe komuta verilir (ADR 0733 §2, §5)."
     },
+    "tool.scheduleUnits": {
+      "level": "semantic",
+      "via": [
+        "cad.schedules.create"
+      ],
+      "note": "Bölüm çizelgesi: bina programının bölümleri, kat, grup, toplam, ara toplam, sıra ve köşe komuta verilir; hücresi cad.schedules.edit ile programa yazılır (ADR 0795)."
+    },
     "tool.scheduleSpaces": {
       "level": "semantic",
       "via": [

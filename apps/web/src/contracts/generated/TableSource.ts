@@ -9,4 +9,9 @@ import type { SourceOverrides } from "./SourceOverrides";
 /**
  * Where a table's rows came from (docs/adr/0184 §5).
  */
-export type TableSource = { "kind": "coordinates", objects: Array<EntityId>, } | { "kind": "areas", objects: Array<EntityId>, } | { "kind": "attributes", objects: Array<EntityId>, } | { "kind": "file", name: string, sheet?: string, path?: string, digest?: string, copy?: Array<Array<string>>, overrides?: SourceOverrides, } | { "kind": "blocks", names?: Array<string>, by?: string, columns?: Array<string>, } | { "kind": "schedule", of: ScheduleOf, columns: Array<ScheduleColumn>, filter?: ScheduleFilter, sort?: Array<ScheduleSort>, group?: boolean, total?: boolean, members?: Array<Array<string>>, };
+export type TableSource = { "kind": "coordinates", objects: Array<EntityId>, } | { "kind": "areas", objects: Array<EntityId>, } | { "kind": "attributes", objects: Array<EntityId>, } | { "kind": "file", name: string, sheet?: string, path?: string, digest?: string, copy?: Array<Array<string>>, overrides?: SourceOverrides, } | { "kind": "blocks", names?: Array<string>, by?: string, columns?: Array<string>, } | { "kind": "schedule", of: ScheduleOf, columns: Array<ScheduleColumn>, filter?: ScheduleFilter, sort?: Array<ScheduleSort>, group?: boolean, total?: boolean, members?: Array<Array<string>>, 
+/**
+ * A units schedule's (docs/adr/0795): each row's program groups by their ids, beside `members` (a unit without
+ * spaces is still a data row); a heading's and a subtotal's none. Written by the document; absent elsewhere.
+ */
+units?: Array<Array<string>>, };

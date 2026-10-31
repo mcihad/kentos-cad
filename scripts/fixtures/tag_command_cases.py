@@ -354,7 +354,7 @@ def number_of(v):
 PLACES = ["number", "type", "form", "width", "height", "sill", "head", "name", "usage", "area", "perimeter", "level",
           "phase", "tag", "place", "label", "style", "risers", "slope", "floorElevation", "ceilingElevation", "netArea",
           "roughWidth", "unitWidth", "leafWidth", "clearWidth", "typeVersion",
-          "unit", "target", "targetDiff", "operation", "leaves", "drum", "pocket", "share", "gross"]
+          "unit", "target", "targetDiff", "operation", "leaves", "drum", "pocket", "tracks", "panels", "share", "gross"]
 TEMPLATES = {"opening": "{number}", "space": "{number}\n{name}\n{area}", "column": "{tag}", "grid": "{label}",
              "wall": "{style}", "stair": "{risers}", "ramp": "{slope}", "insert": "{attr:NO}"}
 SHAPES = {"opening": "hexagon", "space": "rectangle"}
