@@ -17,6 +17,11 @@ grossArea?: number,
  */
 openingsArea: number, netArea?: number, volume?: number, 
 /**
+ * Its pocket doors' cavities, m³ (docs/adr/0787 §3): each pocket's length × width along the wall's middle × its
+ * door's height (head − sill), taken off its volume; its faces keep them. None without a pocket door with a head.
+ */
+pocketsVolume?: number, 
+/**
  * Its openings' ids.
  */
 openings?: Array<string>, rule: string, };

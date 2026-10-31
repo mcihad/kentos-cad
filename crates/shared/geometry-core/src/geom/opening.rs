@@ -1053,6 +1053,9 @@ fn pocket_leaves(p: &Parts, spec: &Spec) -> Vec<Shape> {
     let t = spec.build.leaf_thickness.filter(|t| *t > 0.0).unwrap_or(LEAF_THICKNESS);
     let (lo, hi) = (p.middle() - t / 2.0, p.middle() + t / 2.0);
     let start = p.fit + p.fr;
+    if let Some(c) = jambs_centre(p.place) {
+        return arc_pocket_leaves(p, spec, c, t);
+    }
     let band = |s0: f64, s1: f64| {
         closed_ring(vec![
             p.along_start(s0, lo),
@@ -1066,6 +1069,45 @@ fn pocket_leaves(p: &Parts, spec: &Spec) -> Vec<Shape> {
         vec![band(start, mid), band(mid, start + p.clear)]
     } else {
         vec![band(start, start + p.clear)]
+    }
+}
+
+/// A pocket door's leaves shut in an arc wall (docs/adr/0787 §2): curved bands about the wall's centre `c`, the leaf's
+/// thickness `t` wide about the band's middle radius (its distance from `c` at the start jamb), from the radial line
+/// through the light's start to the one through its end (the light's ends on the band's middle line, as the frame
+/// stands); two split by angle as given. Each a closed ring: inner arc, end radial, outer arc back, start radial.
+fn arc_pocket_leaves(p: &Parts, spec: &Spec, c: Vec2, t: f64) -> Vec<Shape> {
+    let m = p.across(p.place[0], p.place[1], p.middle());
+    let r = js_hypot(m.x - c.x, m.y - c.y);
+    let start = p.fit + p.fr;
+    let (e0, e1) = (p.along_start(start, p.middle()), p.along_start(start + p.clear, p.middle()));
+    let th0 = atan2(e0.y - c.y, e0.x - c.x);
+    let pi = crate::jsmath::PI;
+    let mut d = atan2(e1.y - c.y, e1.x - c.x) - th0;
+    if d > pi {
+        d -= 2.0 * pi;
+    } else if d <= -pi {
+        d += 2.0 * pi;
+    }
+    let (r1, r2) = (r - t / 2.0, r + t / 2.0);
+    let at = |rr: f64, th: f64| Vec2::new(c.x + rr * cos(th), c.y + rr * sin(th));
+    let band = |a: f64, z: f64| {
+        let q = crate::jsmath::tan((z - a) / 4.0);
+        Shape::Polyline {
+            pts: vec![at(r1, a), at(r1, z), at(r2, z), at(r2, a)],
+            bulges: Some(vec![q, 0.0, -q, 0.0]),
+            holes: None,
+            parts: None,
+            closed: true,
+            widths: None,
+        }
+    };
+    if spec.leaves == 2 {
+        let share = spec.build.split.filter(|s| *s > 0.0 && *s < 1.0).unwrap_or(0.5);
+        let mid = th0 + d * share;
+        vec![band(th0, mid), band(mid, th0 + d)]
+    } else {
+        vec![band(th0, th0 + d)]
     }
 }
 
@@ -1187,6 +1229,33 @@ pub fn swing_zones(place: &[Vec2], spec: &Spec) -> Vec<Vec<Vec2>> {
             ring
         })
         .collect()
+}
+
+/// Every zone a door takes as it opens (docs/adr/0787 §1): [`swing_zones`] (a swinging door's leaves, a revolving
+/// door's drum, a folding door's panels) and a one-leaf sliding door's travel on its track: the leaf's band beside the
+/// face it opens to, from the light's far side to a light past the jamb at its `hand` (where it slides to), a quarter of
+/// the wall's thickness out and the leaf's thickness deep (docs/adr/0777 §4). None for a window.
+pub fn door_zones(place: &[Vec2], spec: &Spec) -> Vec<Vec<Vec2>> {
+    let mut out = swing_zones(place, spec);
+    if spec.form == Form::Door && spec.operation == Operation::Slide && spec.leaves == 1 && spec.build.track
+        && let Some(p) = Parts::new(place, spec)
+        && p.clear > 0.0
+    {
+        let t = spec.build.leaf_thickness.filter(|t| *t > 0.0).unwrap_or(LEAF_THICKNESS);
+        let left = !spec.side_right;
+        let d = if left { 0.0 } else { p.f.thickness };
+        let o = p.out(left);
+        let k = p.f.thickness / 4.0;
+        let start = p.fit + p.fr;
+        let on = |s: f64, off: f64| add(p.along_start(s, d), mul(o, off));
+        let (a, z) = if spec.hand_end {
+            (start, start + 2.0 * p.clear)
+        } else {
+            (start - p.clear, start + p.clear)
+        };
+        out.push(vec![on(a, k), on(z, k), on(z, k + t), on(a, k + t)]);
+    }
+    out
 }
 
 /// A door's or window's use zone (docs/adr/0772 §5): the light's width, `useZone` deep, out of its wall on the side it

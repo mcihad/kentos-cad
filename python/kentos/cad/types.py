@@ -68224,6 +68224,8 @@ class WallRow(_Model):
         height: Unit: elevation.
         net_area: Unit: area.
         openings: Its openings' ids.
+        pockets_volume: Its pocket doors' cavities, m³ (docs/adr/0787 §3): each pocket's length × width along the wall's middle × its
+            door's height (head − sill), taken off its volume; its faces keep them. None without a pocket door with a head. Unit: volume.
         volume: Unit: volume.
     """
     uid: str
@@ -68236,6 +68238,7 @@ class WallRow(_Model):
     level: str | None | Unset = UNSET
     net_area: float | None | Unset = UNSET
     openings: list[str] | Unset = UNSET
+    pockets_volume: float | None | Unset = UNSET
     style: str | None | Unset = UNSET
     volume: float | None | Unset = UNSET
 
@@ -68256,6 +68259,8 @@ class WallRow(_Model):
             out["netArea"] = None if self.net_area is None else float(self.net_area)
         if self.openings is not UNSET:
             out["openings"] = list(self.openings)
+        if self.pockets_volume is not UNSET:
+            out["pocketsVolume"] = None if self.pockets_volume is None else float(self.pockets_volume)
         if self.style is not UNSET:
             out["style"] = self.style
         if self.volume is not UNSET:
@@ -68275,6 +68280,7 @@ class WallRow(_Model):
             level=data.get("level", UNSET),
             net_area=UNSET if "netArea" not in data else None if data["netArea"] is None else float(data["netArea"]),
             openings=list(data["openings"]) if "openings" in data else UNSET,
+            pockets_volume=UNSET if "pocketsVolume" not in data else None if data["pocketsVolume"] is None else float(data["pocketsVolume"]),
             style=data.get("style", UNSET),
             volume=UNSET if "volume" not in data else None if data["volume"] is None else float(data["volume"]),
         )

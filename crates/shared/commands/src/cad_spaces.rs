@@ -627,6 +627,12 @@ pub struct WallRow {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub volume: Option<f64>,
+    /// Its pocket doors' cavities, m³ (docs/adr/0787 §3): each pocket's length × width along the wall's middle × its
+    /// door's height (head − sill), taken off its volume; its faces keep them. None without a pocket door with a head.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub pockets_volume: Option<f64>,
     /// Its openings' ids.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]

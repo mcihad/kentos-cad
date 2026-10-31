@@ -1421,9 +1421,40 @@ def obstacles(removed=()):
 DATIVE = {"duvar": "duvara", "kolon": "kolona", "donatı": "donatıya"}
 
 
-def door_finding(code, message, repair, uids, at, nature):
-    return {"key": f"{code}:" + ",".join(f"$uidOf:{u}" for u in uids), "check": "doors", "code": code, "message": message,
-            "repair": repair, "uids": [f"$uidOf:{u}" for u in uids], "at": P(*at), "nature": nature}
+def door_finding(code, message, repair, uids, at, nature, fix=None):
+    out = {"key": f"{code}:" + ",".join(f"$uidOf:{u}" for u in uids), "check": "doors", "code": code, "message": message,
+           "repair": repair, "uids": [f"$uidOf:{u}" for u in uids], "at": P(*at)}
+    if fix:
+        out["fix"] = fix
+    out["nature"] = nature
+    return out
+
+
+# A clash's fix (docs/adr/0787 §1): the door turned to the other face, its other hinge side, or both, the first that
+# leaves its sweep clear of every obstacle off its wall and every other door's sweep.
+TURNS = [("Açılışı öbür yüze çevir", "side"), ("Menteşe yanını çevir", "hand"), ("Açılışı ve menteşe yanını çevir", "both")]
+
+
+def turned(spec, what):
+    w, at, width, side, hand, number, build = spec
+    if what != "hand":
+        side = "right" if side == "left" else "left"
+    if what != "side":
+        hand = "end" if hand == "start" else "start"
+    return (w, at, width, side, hand, number, build)
+
+
+def door_fix(i, doors, removed):
+    spec = doors[i]
+    for label, what in TURNS:
+        ring = sweep(turned(spec, what))
+        if any(oid != spec[0] and convex_overlap(ring, poly) for oid, _, poly in obstacles(removed)):
+            continue
+        if any(j != i and convex_overlap(ring, sweep(doors[j])) for j in doors):
+            continue
+        return {"label": label, "step": {"command": "cad.openings.edit",
+                                         "input": {"uids": [f"$uidOf:{i}"], "operation": {"kind": "flip", "what": what}}}}
+    return None
 
 
 def door_findings(doors, min_clear=None, removed=()):
@@ -1439,13 +1470,13 @@ def door_findings(doors, min_clear=None, removed=()):
             out.append(door_finding("arch_door_swing_clash",
                                     f"{mark} kapısının kanadı açılırken bir {DATIVE[what]} çarpıyor (fiziksel çarpışma).",
                                     "Kapının açılış yönünü ya da menteşesini çevirin, kanadı daraltın ya da engeli taşıyın.",
-                                    [i, oid], middle(ring), "physical"))
+                                    [i, oid], middle(ring), "physical", door_fix(i, doors, removed)))
         for j in ids[n + 1:]:
             if convex_overlap(ring, sweep(doors[j])):
                 out.append(door_finding("arch_door_swing_clash",
                                         f"{mark} ve {doors[j][5]} kapılarının kanatları açılırken birbirine çarpıyor (fiziksel çarpışma).",
                                         "Kapılardan birinin açılış yönünü ya da menteşesini çevirin ya da kapıyı kaydırın.",
-                                        [i, j], middle(ring), "physical"))
+                                        [i, j], middle(ring), "physical", door_fix(i, doors, removed)))
         zone = door_frame(spec)[3]
         if zone:
             for oid, what, poly in obstacles(removed):
