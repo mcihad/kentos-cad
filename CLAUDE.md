@@ -119,6 +119,11 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   `.kcad` şema 137 (opt-in), `FORMATS_VERSION` 100. 31 ortak bağ durumu (`arch_bond_cases.py`), 26 benimseme. Gerçek
   pencerede elle denenmedi; çelişen bağın çizimde vurgusu ve 20 ms bütçesi açık.
 
+- **Rollerin sunucuda yapabildikleri matrisle (31 Ekim 2026; [ADR 0765](docs/adr/0765-role-matrix-on-the-server.md), dal `formlar-surer`).**
+  Beş rol × on işlem (ekle, gösterilen ve gizli alanı yaz, şekil, sil, form taslağı, yayın, katman ağacı, indir, paylaş)
+  sunucunun kendi komutlarıyla (`tests/project_roles.rs`), beklentiler bağımsız başvurudan (`role_routes_cases.py`, 50 durum);
+  reddedilen her işlem 403 ve meta sürümü ile veri revizyonu değişmez. Kod değişmedi.
+
 - **Üst kaydın formu alt kayda izin vermez (31 Ekim 2026; [ADR 0764](docs/adr/0764-child-records-are-judged-apart.md), dal `formlar-surer`).**
   Veri girişinin yazma kuralı tek yerde: `kentos_forms::entry_write_refusal` (canlı formun gösterdiği alan okunur, yokluğu
   silinmesidir; göstermediği gizli, yokluğu onu korur, farklı değeri yazmadır; canlı formsuz katman `NoForm`), `Reach::through_live_form`.

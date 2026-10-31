@@ -1,0 +1,348 @@
+{
+ "format": "kentos.role-routes",
+ "version": 1,
+ "note": "ADR 0765: her proje rolünün sunucunun kendi komutlarıyla neyi yapabildiği, ADR 0015 ve 0411'in izin tablosundan ve ADR 0764'ün Veri girişi kuralından, KentOS kodu olmadan (scripts/fixtures/role_routes_cases.py). Reddedilen her işlem 403'tür ve hiçbir şey yazmaz.",
+ "roles": {
+  "viewer": [
+   "download",
+   "history",
+   "read"
+  ],
+  "commenter": [
+   "comment",
+   "download",
+   "history",
+   "read"
+  ],
+  "entry": [
+   "comment",
+   "forms.use",
+   "history",
+   "read"
+  ],
+  "editor": [
+   "comment",
+   "download",
+   "feature.write",
+   "forms.use",
+   "history",
+   "jobs.run",
+   "read"
+  ],
+  "manager": [
+   "comment",
+   "download",
+   "edit",
+   "feature.write",
+   "forms.design",
+   "forms.publish",
+   "forms.use",
+   "history",
+   "jobs.run",
+   "read",
+   "share"
+  ]
+ },
+ "cases": [
+  {
+   "name": "viewer: Bir bina ekler",
+   "role": "viewer",
+   "operation": "create",
+   "allowed": false
+  },
+  {
+   "name": "viewer: Formun gösterdiği Durum alanını değiştirir",
+   "role": "viewer",
+   "operation": "editShown",
+   "allowed": false
+  },
+  {
+   "name": "viewer: Formun göstermediği Not alanını değiştirir",
+   "role": "viewer",
+   "operation": "editHidden",
+   "allowed": false
+  },
+  {
+   "name": "viewer: Binanın şeklini değiştirir",
+   "role": "viewer",
+   "operation": "editShape",
+   "allowed": false
+  },
+  {
+   "name": "viewer: Binayı siler",
+   "role": "viewer",
+   "operation": "delete",
+   "allowed": false
+  },
+  {
+   "name": "viewer: Formun taslağını değiştirir",
+   "role": "viewer",
+   "operation": "designForm",
+   "allowed": false
+  },
+  {
+   "name": "viewer: Formun yeni sürümünü yayımlar",
+   "role": "viewer",
+   "operation": "publishForm",
+   "allowed": false
+  },
+  {
+   "name": "viewer: Katmanın adını değiştirir",
+   "role": "viewer",
+   "operation": "layers",
+   "allowed": false
+  },
+  {
+   "name": "viewer: Projeyi .kcad olarak indirir",
+   "role": "viewer",
+   "operation": "download",
+   "allowed": true
+  },
+  {
+   "name": "viewer: Projeyi başka birine izleyici olarak açar",
+   "role": "viewer",
+   "operation": "share",
+   "allowed": false
+  },
+  {
+   "name": "commenter: Bir bina ekler",
+   "role": "commenter",
+   "operation": "create",
+   "allowed": false
+  },
+  {
+   "name": "commenter: Formun gösterdiği Durum alanını değiştirir",
+   "role": "commenter",
+   "operation": "editShown",
+   "allowed": false
+  },
+  {
+   "name": "commenter: Formun göstermediği Not alanını değiştirir",
+   "role": "commenter",
+   "operation": "editHidden",
+   "allowed": false
+  },
+  {
+   "name": "commenter: Binanın şeklini değiştirir",
+   "role": "commenter",
+   "operation": "editShape",
+   "allowed": false
+  },
+  {
+   "name": "commenter: Binayı siler",
+   "role": "commenter",
+   "operation": "delete",
+   "allowed": false
+  },
+  {
+   "name": "commenter: Formun taslağını değiştirir",
+   "role": "commenter",
+   "operation": "designForm",
+   "allowed": false
+  },
+  {
+   "name": "commenter: Formun yeni sürümünü yayımlar",
+   "role": "commenter",
+   "operation": "publishForm",
+   "allowed": false
+  },
+  {
+   "name": "commenter: Katmanın adını değiştirir",
+   "role": "commenter",
+   "operation": "layers",
+   "allowed": false
+  },
+  {
+   "name": "commenter: Projeyi .kcad olarak indirir",
+   "role": "commenter",
+   "operation": "download",
+   "allowed": true
+  },
+  {
+   "name": "commenter: Projeyi başka birine izleyici olarak açar",
+   "role": "commenter",
+   "operation": "share",
+   "allowed": false
+  },
+  {
+   "name": "entry: Bir bina ekler",
+   "role": "entry",
+   "operation": "create",
+   "allowed": false
+  },
+  {
+   "name": "entry: Formun gösterdiği Durum alanını değiştirir",
+   "role": "entry",
+   "operation": "editShown",
+   "allowed": true
+  },
+  {
+   "name": "entry: Formun göstermediği Not alanını değiştirir",
+   "role": "entry",
+   "operation": "editHidden",
+   "allowed": false
+  },
+  {
+   "name": "entry: Binanın şeklini değiştirir",
+   "role": "entry",
+   "operation": "editShape",
+   "allowed": false
+  },
+  {
+   "name": "entry: Binayı siler",
+   "role": "entry",
+   "operation": "delete",
+   "allowed": false
+  },
+  {
+   "name": "entry: Formun taslağını değiştirir",
+   "role": "entry",
+   "operation": "designForm",
+   "allowed": false
+  },
+  {
+   "name": "entry: Formun yeni sürümünü yayımlar",
+   "role": "entry",
+   "operation": "publishForm",
+   "allowed": false
+  },
+  {
+   "name": "entry: Katmanın adını değiştirir",
+   "role": "entry",
+   "operation": "layers",
+   "allowed": false
+  },
+  {
+   "name": "entry: Projeyi .kcad olarak indirir",
+   "role": "entry",
+   "operation": "download",
+   "allowed": false
+  },
+  {
+   "name": "entry: Projeyi başka birine izleyici olarak açar",
+   "role": "entry",
+   "operation": "share",
+   "allowed": false
+  },
+  {
+   "name": "editor: Bir bina ekler",
+   "role": "editor",
+   "operation": "create",
+   "allowed": true
+  },
+  {
+   "name": "editor: Formun gösterdiği Durum alanını değiştirir",
+   "role": "editor",
+   "operation": "editShown",
+   "allowed": true
+  },
+  {
+   "name": "editor: Formun göstermediği Not alanını değiştirir",
+   "role": "editor",
+   "operation": "editHidden",
+   "allowed": true
+  },
+  {
+   "name": "editor: Binanın şeklini değiştirir",
+   "role": "editor",
+   "operation": "editShape",
+   "allowed": true
+  },
+  {
+   "name": "editor: Binayı siler",
+   "role": "editor",
+   "operation": "delete",
+   "allowed": true
+  },
+  {
+   "name": "editor: Formun taslağını değiştirir",
+   "role": "editor",
+   "operation": "designForm",
+   "allowed": false
+  },
+  {
+   "name": "editor: Formun yeni sürümünü yayımlar",
+   "role": "editor",
+   "operation": "publishForm",
+   "allowed": false
+  },
+  {
+   "name": "editor: Katmanın adını değiştirir",
+   "role": "editor",
+   "operation": "layers",
+   "allowed": false
+  },
+  {
+   "name": "editor: Projeyi .kcad olarak indirir",
+   "role": "editor",
+   "operation": "download",
+   "allowed": true
+  },
+  {
+   "name": "editor: Projeyi başka birine izleyici olarak açar",
+   "role": "editor",
+   "operation": "share",
+   "allowed": false
+  },
+  {
+   "name": "manager: Bir bina ekler",
+   "role": "manager",
+   "operation": "create",
+   "allowed": true
+  },
+  {
+   "name": "manager: Formun gösterdiği Durum alanını değiştirir",
+   "role": "manager",
+   "operation": "editShown",
+   "allowed": true
+  },
+  {
+   "name": "manager: Formun göstermediği Not alanını değiştirir",
+   "role": "manager",
+   "operation": "editHidden",
+   "allowed": true
+  },
+  {
+   "name": "manager: Binanın şeklini değiştirir",
+   "role": "manager",
+   "operation": "editShape",
+   "allowed": true
+  },
+  {
+   "name": "manager: Binayı siler",
+   "role": "manager",
+   "operation": "delete",
+   "allowed": true
+  },
+  {
+   "name": "manager: Formun taslağını değiştirir",
+   "role": "manager",
+   "operation": "designForm",
+   "allowed": true
+  },
+  {
+   "name": "manager: Formun yeni sürümünü yayımlar",
+   "role": "manager",
+   "operation": "publishForm",
+   "allowed": true
+  },
+  {
+   "name": "manager: Katmanın adını değiştirir",
+   "role": "manager",
+   "operation": "layers",
+   "allowed": true
+  },
+  {
+   "name": "manager: Projeyi .kcad olarak indirir",
+   "role": "manager",
+   "operation": "download",
+   "allowed": true
+  },
+  {
+   "name": "manager: Projeyi başka birine izleyici olarak açar",
+   "role": "manager",
+   "operation": "share",
+   "allowed": true
+  }
+ ]
+}
