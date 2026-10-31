@@ -50,14 +50,19 @@ fn request(
 }
 
 /// The opening as the grip would leave it (its copies too), and what follows it: the dimensions it adds, changes and
-/// removes (docs/adr/0695: a set's members, docs/adr/0729).
+/// removes (docs/adr/0695: a set's members, docs/adr/0729); the bonds' refusal instead, marked in place
+/// (docs/adr/0790 §1).
 pub(super) fn preview(
     grips: &[HotGrip],
     dx: f64,
     dy: f64,
     copy: bool,
     cx: &Context<'_>,
-) -> Option<(Vec<Shape>, kentos_commands::DerivedEntitiesPlan)> {
+) -> Option<(
+    Vec<Shape>,
+    kentos_commands::DerivedEntitiesPlan,
+    Option<crate::bond_refusal::Refused>,
+)> {
     let input = request(grips, dx, dy, copy, cx)?;
     let result = match input {
         Ok(input) => openings_edit::plan_in(cx.doc, &input),
@@ -72,8 +77,13 @@ pub(super) fn preview(
                 .map(shape)
                 .collect(),
             output.followers,
+            None,
         ),
-        _ => (Vec::new(), Default::default()),
+        other => (
+            Vec::new(),
+            Default::default(),
+            crate::bond_refusal::Refused::of_result(&other, cx),
+        ),
     })
 }
 

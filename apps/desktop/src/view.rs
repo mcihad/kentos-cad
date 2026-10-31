@@ -760,7 +760,7 @@ impl App {
                 let over = preview::layer(
                     &self.viewport.camera,
                     marks,
-                    self.session.preview(&format).or_else(|| self.arch_audit_preview()),
+                    self.drawing_preview(&format),
                     self.field.as_ref().map(|f| preview::FieldView {
                         text: f.text.as_str(),
                         at: f.at,
@@ -860,6 +860,8 @@ impl App {
                         .extend(self.info_card_view())
                         // A changed external reference's card (xrefs_watch.rs, docs/adr/0349 §3).
                         .extend(self.xref_notice_view())
+                        // A write the bonds refused, with its way through (bond_notice.rs, docs/adr/0790 §2).
+                        .extend(self.bond_notice_view())
                         // Sıradakini seç's chip beside the click (selection_chip.rs, docs/adr/0187 §1).
                         .extend(self.selection_chip())
                         .extend(typing)

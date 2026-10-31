@@ -26,7 +26,7 @@ const COMMAND_CLICK: &str = if cfg!(target_os = "macos") {
 };
 
 /// What each mouse action does (the web's `MOUSE_ACTIONS`): its meaning, then the action.
-pub const MOUSE_ACTIONS: [(&str, &str); 22] = [
+pub const MOUSE_ACTIONS: [(&str, &str); 24] = [
     ("Seç, nokta koy, adımı onayla", "Sol tık"),
     ("Komutu onayla ya da bitir (Enter gibi)", "Sağ tık"),
     (
@@ -82,10 +82,18 @@ pub const MOUSE_ACTIONS: [(&str, &str); 22] = [
         "Köşeyi taşı; kenar ortasındaki baklava köşe ekler",
         "Tutamacı sürükle",
     ),
+    (
+        "Bağlı duvar ya da açıklık sürüklenirken yoldaki bağlar yerinde işaretlenir; bırakınca kart bağı kaldırmayı önerir",
+        "Tutamacı sürükle",
+    ),
+    (
+        "Duvarı kaydır: kenar imleçle kendine dik kayar, ikinci tık yazar",
+        "Kenara tık, imleci taşı",
+    ),
 ];
 
 /// Keys a running tool reads that no command is bound to (docs/adr/0268, 0271): their meaning, then the keys.
-pub const DRAWING_KEYS: [(&str, &str); 7] = [
+pub const DRAWING_KEYS: [(&str, &str); 8] = [
     (
         "Kenet adayları arasında ileri ve geri (imleç dururken)",
         "Tab / Shift+Tab",
@@ -113,6 +121,10 @@ pub const DRAWING_KEYS: [(&str, &str); 7] = [
     (
         "Komutu bitirmeden kaydır, yakınlaştır, ölç; Esc ya da Enter komuta döner",
         "Kaydır / Pencere / Ölç",
+    ),
+    (
+        "Duvarı kaydır'da kaydırma uzaklığı (kenarın soluna artı, sağına eksi)",
+        "Sayı yazıp Enter",
     ),
 ];
 

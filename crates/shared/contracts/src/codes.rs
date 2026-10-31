@@ -1641,7 +1641,7 @@ codes! {
     /// A constraint added that repeats what the others already say.
     CONSTRAINT_REDUNDANT = "constraint_redundant", Failed, false, "Eklenen kısıt ötekilerin zaten söylediğini tekrarlıyor; ölçü kısıtı başvuru olarak eklenebilir.";
     /// Constraints that cannot hold together: nothing is written.
-    CONSTRAINT_CONFLICT = "constraint_conflict", Failed, false, "Kısıtlar birlikte tutamıyor; hiçbir şey yazılmadı (çelişenler uids'te; mimari bağlar parçaları, değerleri ve hangisinin kaldırılınca yazmayı geçireceğiyle bonds'ta).";
+    CONSTRAINT_CONFLICT = "constraint_conflict", Failed, false, "Kısıtlar birlikte tutamıyor; hiçbir şey yazılmadı (çelişenler uids'te; mimari bağlar parçaları, değerleri ve hangisinin kaldırılınca yazmayı geçireceğiyle bonds'ta; hiçbiri tek başına geçirmezse birlikte kaldırılınca geçirenler freesWith'te).";
     /// A constraint that lost its meaning (a segment of no length …).
     CONSTRAINT_SINGULAR = "constraint_singular", Failed, false, "Bir kısıt anlamını yitirdi (boysuz kenar, yarıçapsız daire …); hiçbir şey yazılmadı.";
     /// The solver did not reach a solution.

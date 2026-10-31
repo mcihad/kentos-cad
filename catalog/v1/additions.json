@@ -1826,6 +1826,20 @@
       "status": "implemented"
     },
     {
+      "id": "tool.wallShift",
+      "title": "Duvarı kaydır",
+      "short": "Kaydır",
+      "icon": "edgeShift",
+      "description": "Duvarın tıklanan düz kenarını imleçle kendine dik kaydırır: önizleme iki yanın net mesafesini, mahallerin alanını ve izleyen duvarları söyler. Mimari bağlar düzenlemeyi izleyemezse yoldaki bağlar imleç hareket ederken yerinde işaretlenir ve hangisinin (ya da hangi iki bağın birlikte) kaldırılınca geçeceği yazılır. Tıklama ya da yazılan uzaklık tek adımda yazar.",
+      "aliases": [
+        "DUVARKAYDIR",
+        "WALLSHIFT"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
       "id": "tool.wallDimensions",
       "title": "Duvar ölçüleri",
       "icon": "dimension",

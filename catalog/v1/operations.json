@@ -1747,6 +1747,13 @@
       ],
       "note": "Duvar, kenar (edge) ya da Bütün kenarlar (around), yüz, sıralar, açıklık uç/merkez seçimi, katman, stil ve kağıt mm aralığı komuta gider; ölçüleri ve üyeliği komut üretir, önizleme aynı planı okur (ADR 0695, 0700)."
     },
+    "tool.wallShift": {
+      "level": "semantic",
+      "via": [
+        "cad.walls.edit"
+      ],
+      "note": "Duvar, kenarı ve imleçten ya da yazılan uzaklık shift olarak komuta gider; önizleme komutun planıdır (etkisi ya da bağların reddi, yoldaki bağlar yerinde; ADR 0770, 0790)."
+    },
     "tool.wallPartition": {
       "level": "semantic",
       "via": [

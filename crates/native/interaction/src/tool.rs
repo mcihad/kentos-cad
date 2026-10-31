@@ -1414,6 +1414,9 @@ pub struct Context<'a> {
     /// Etkin kat (docs/adr/0713): the level new walls, columns, stairs and ramps go on, one of the drawing's; none: no
     /// level (a project without levels, or Katsız chosen).
     pub level: Option<&'a str>,
+    /// The last write the architectural bonds refused (docs/adr/0790 §2), with its bonds in the way: the host shows it
+    /// with its way through (Bağı kaldır, Bu iki bağı kaldır) until a write goes through or it is closed.
+    pub refused: &'a mut Option<kentos_commands::CommandError>,
 }
 
 impl Context<'_> {

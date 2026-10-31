@@ -1593,6 +1593,7 @@
        }
       ],
       "overflow": [
+       "tool.wallShift",
        "tool.spaceNumber",
        "tool.wallJoin",
        "tool.wallExtend",

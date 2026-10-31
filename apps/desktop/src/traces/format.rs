@@ -159,6 +159,9 @@ pub struct Step {
     /// Zaman sürgüsü's bar (docs/adr/0210 §10): a button by its words (`Başa`, `Geri`, `Oynat`, `İleri`,
     /// `Sona`, `Kapat`) or the window's (`Anlık`, `Aralık`).
     pub(super) timebar: Option<String>,
+    /// The bonds' refusal card over the drawing (docs/adr/0790 §2): its button by its words (“Bu iki bağı kaldır”,
+    /// “Bağı kaldır: d1”) or `Kapat`.
+    pub(super) bond_notice: Option<String>,
     /// The paragraph editor (docs/adr/0182 §4): its text typed, letters
     /// chosen and formatted, then kept or dropped.
     pub(super) paragraph: Option<ParagraphStep>,
@@ -311,6 +314,13 @@ pub struct Expect {
     /// absent differ.
     #[serde(default, deserialize_with = "present")]
     pub(super) info_card: Option<Option<InfoCardExpect>>,
+    /// The bonds in the way marked on the drawing now, their words in order (“× d1 — kaldırılınca geçer”;
+    /// docs/adr/0790 §1): while a drag or a typed value is refused, or the refusal's card is open; `[]` none.
+    pub(super) bonds_in_way: Option<Vec<String>>,
+    /// The refusal's card over the drawing (docs/adr/0790 §2): its way through (“Bu iki bağı kaldır”), `""` when it
+    /// offers none, `null` when no card is open.
+    #[serde(default, deserialize_with = "present")]
+    pub(super) bond_notice: Option<Option<String>>,
 }
 
 /// Bilgi's card as a step expects it: the object, its title, its rows (“ad: değer”), its text (`null`

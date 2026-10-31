@@ -48,6 +48,9 @@ class BondInTheWay:
     leaves before the bonds follow (metres; ``None`` for a bond without a
     value), ``frees`` whether taking it away alone lets the write through:
     ``cad.constraints.edit(doc, edit=ConstraintEditRemove(ids=[bond.id]))``.
+    When none does alone, ``frees_with`` names the other bonds (their ids) of
+    the smallest set whose taking away together does (docs/adr/0790 §2):
+    ``ConstraintEditRemove(ids=[bond.id, *bond.frees_with])``.
     """
 
     id: str
@@ -57,6 +60,7 @@ class BondInTheWay:
     parameter: str | None = None
     kept: float | None = None
     measured: float | None = None
+    frees_with: tuple[str, ...] = ()
 
     @classmethod
     def from_json(cls, raw: dict[str, Any]) -> BondInTheWay:
@@ -68,6 +72,7 @@ class BondInTheWay:
             parameter=raw.get("parameter"),
             kept=raw.get("kept"),
             measured=raw.get("measured"),
+            frees_with=tuple(str(i) for i in raw.get("freesWith") or ()),
         )
 
     def to_json(self) -> dict[str, Any]:
@@ -81,6 +86,8 @@ class BondInTheWay:
         if self.measured is not None:
             out["measured"] = self.measured
         out["frees"] = self.frees
+        if self.frees_with:
+            out["freesWith"] = list(self.frees_with)
         return out
 
 

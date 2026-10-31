@@ -33,4 +33,10 @@ measured?: number,
 /**
  * Taking this bond away alone lets the write through.
  */
-frees: boolean, };
+frees: boolean, 
+/**
+ * When no bond alone lets the write through: the other bonds (their ids) of the smallest set whose taking away
+ * together does, this one in it (docs/adr/0790 §2): two, else three. Empty when a single bond frees it, when no
+ * set within the search's bound does, and on the bonds outside the set.
+ */
+freesWith?: Array<ConstraintId>, };

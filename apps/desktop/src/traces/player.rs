@@ -479,6 +479,10 @@ pub struct Observation {
     pub current_weight: Option<f64>,
     /// Bilgi's card while it shows (docs/adr/0225 §5).
     pub info_card: Option<InfoCardSeen>,
+    /// The bonds in the way marked now, their words (docs/adr/0790 §1).
+    pub bonds_in_way: Vec<String>,
+    /// The refusal's card: its way through, `""` with none (docs/adr/0790 §2).
+    pub bond_notice: Option<String>,
 }
 
 /// Bilgi's card as a step sees it: the object's id, the title, the rows (“ad: değer”), the text, the
@@ -539,12 +543,19 @@ impl<'a> Player<'a> {
         file: PathBuf,
     ) -> Result<Self, String> {
         let d = &trace.draft;
-        let text = std::fs::read_to_string(folder().join(&trace.document))
+        let bytes = std::fs::read(folder().join(&trace.document))
             .map_err(|e| format!("{}: {e}", trace.document))?;
-        let snapshot =
-            DocumentSnapshotV1::from_json(&text).map_err(|e| format!("{}: {e}", trace.document))?;
-        // Opened as a new drawing: no path, so a save goes to the picker's file.
-        let doc = Document::new(snapshot, None)?;
+        // Opened as a new drawing: no path, so a save goes to the picker's file. A KCAD v2 file (its constraints, a
+        // drawing's bonds: docs/adr/0790) or the v1 JSON.
+        let doc = if bytes.starts_with(b"\x89KCAD") {
+            let snapshot = kentos_kcad::decode(&bytes).map_err(|e| format!("{}: {e}", trace.document))?;
+            Document::from_v2(snapshot, None)?
+        } else {
+            let text = String::from_utf8(bytes).map_err(|e| format!("{}: {e}", trace.document))?;
+            let snapshot = DocumentSnapshotV1::from_json(&text)
+                .map_err(|e| format!("{}: {e}", trace.document))?;
+            Document::new(snapshot, None)?
+        };
         let mut player = Self {
             app,
             trace,
@@ -780,6 +791,18 @@ impl<'a> Player<'a> {
                 other => return Err(format!("Zaman sürgüsünde “{other}” düğmesi yok")),
             };
             return self.apply(Message::Time(event));
+        }
+        // The bonds' refusal card, a button by its words (docs/adr/0790 §2).
+        if let Some(words) = &step.bond_notice {
+            let Some(error) = &self.app.bonds_refused else {
+                return Err("yoldaki bağların kartı açık değil".to_owned());
+            };
+            let event = match kentos_interaction::bond_refusal::way_through(&error.bonds) {
+                _ if words == "Kapat" => crate::bond_notice::Event::Close,
+                Some((_, said)) if said == *words => crate::bond_notice::Event::Remove,
+                _ => return Err(format!("yoldaki bağların kartında “{words}” düğmesi yok")),
+            };
+            return self.apply(Message::BondNotice(event));
         }
         if let Some(key) = &step.key {
             // Yazı's field over the drawing: Enter keeps what is typed (its text box's submit).
@@ -1483,6 +1506,21 @@ impl<'a> Player<'a> {
                         .collect(),
                     attachments: e.base().attachments.len(),
                 })
+            }),
+            bonds_in_way: app
+                .drawing_preview(&app.format())
+                .map(|p| {
+                    p.labels
+                        .into_iter()
+                        .filter(|l| l.text.starts_with('×'))
+                        .map(|l| l.text)
+                        .collect()
+                })
+                .unwrap_or_default(),
+            bond_notice: app.bonds_refused.as_ref().map(|e| {
+                kentos_interaction::bond_refusal::way_through(&e.bonds)
+                    .map(|(_, said)| said)
+                    .unwrap_or_default()
             }),
         }
     }

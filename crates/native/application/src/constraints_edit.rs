@@ -849,7 +849,7 @@ pub(crate) fn settle(
         }
         SolveStatus::Inconsistent => {
             // The architectural bonds in the way, with the one whose taking away lets it through (docs/adr/0780 §1).
-            let words = if solved.arch_bonds.iter().any(|b| b.frees) {
+            let words = if crate::constraint_solve::bonds_free(&solved.arch_bonds) {
                 format!(
                     "Kısıtlar birlikte tutamıyor; hiçbir şey yazılmadı. {}",
                     crate::constraint_solve::bonds_words(&solved.arch_bonds)

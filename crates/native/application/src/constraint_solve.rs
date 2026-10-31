@@ -219,16 +219,26 @@ pub struct Solved {
 }
 
 /// The bonds in the way of a write, in Turkish for a refusal's message (docs/adr/0780 §1): the ones that let it
-/// through when taken away alone, or that none does.
+/// through when taken away alone, the set that does together (docs/adr/0790 §2), or that none does.
 pub fn bonds_words(bonds: &[BondInTheWay]) -> String {
     let name = |b: &BondInTheWay| match &b.parameter {
         Some(p) => format!("{p} ({})", b.label),
         None => b.label.clone(),
     };
     let frees: Vec<String> = bonds.iter().filter(|b| b.frees).map(name).collect();
-    match frees.len() {
-        0 => "Tek başına kaldırılınca düzenlemeyi geçiren bağ yok; çelişen bağları kaldırın ya da kısıtları gevşeterek düzenleyin.".to_owned(),
-        1 => format!(
+    let together: Vec<String> = bonds
+        .iter()
+        .filter(|b| !b.frees_with.is_empty())
+        .map(name)
+        .collect();
+    match (frees.len(), together.len()) {
+        (0, 0) => "Tek başına kaldırılınca düzenlemeyi geçiren bağ yok; çelişen bağları kaldırın ya da kısıtları gevşeterek düzenleyin.".to_owned(),
+        (0, n) => format!(
+            "Tek başına kaldırılınca düzenlemeyi geçiren bağ yok; şu {} bağ birlikte kaldırılınca geçer: {}. Ya da kısıtları gevşeterek düzenleyin.",
+            if n == 2 { "iki" } else { "üç" },
+            together.join(", ")
+        ),
+        (1, _) => format!(
             "Şu bağ kaldırılınca düzenleme geçer: {}. Ya da kısıtları gevşeterek düzenleyin.",
             frees[0]
         ),
@@ -237,6 +247,11 @@ pub fn bonds_words(bonds: &[BondInTheWay]) -> String {
             frees.join(", ")
         ),
     }
+}
+
+/// Whether the words of [`bonds_words`] name a way through: a bond alone or a set together (docs/adr/0790 §2).
+pub fn bonds_free(bonds: &[BondInTheWay]) -> bool {
+    bonds.iter().any(|b| b.frees || !b.frees_with.is_empty())
 }
 
 /// The constraints of `set` (those at `only`, or all) the drawing as it is does not meet (docs/adr/0337): every
@@ -437,11 +452,14 @@ pub fn solve_set(
         }
     }
     let kept = metres(doc, set);
-    let arch_bonds = arch
-        .conflicting
+    // The conflicting bonds, then those of the smallest freeing set outside them (docs/adr/0790 §2).
+    let mut named = arch.conflicting.clone();
+    named.extend(arch.frees_with.iter().filter(|k| !arch.conflicting.contains(k)));
+    let id_of = |k: &usize| set.constraints.get(*k).map(|c| c.id);
+    let arch_bonds = named
         .iter()
-        .filter_map(|&k| set.constraints.get(k))
-        .map(|c| BondInTheWay {
+        .filter_map(|&k| set.constraints.get(k).map(|c| (k, c)))
+        .map(|(k, c)| BondInTheWay {
             id: c.id,
             label: rule_label(&c.rule).into(),
             parameter: c.rule.parameter().map(str::to_owned),
@@ -452,10 +470,16 @@ pub fn solve_set(
                 .filter(|_| !c.reference)
                 .and_then(|p| kept.get(p).copied()),
             measured: crate::arch_bonds::measured(doc, &c.rule),
-            frees: arch
-                .frees
-                .iter()
-                .any(|&f| set.constraints.get(f).is_some_and(|x| x.id == c.id)),
+            frees: arch.frees.contains(&k),
+            frees_with: if arch.frees_with.contains(&k) {
+                arch.frees_with
+                    .iter()
+                    .filter(|&&o| o != k)
+                    .filter_map(id_of)
+                    .collect()
+            } else {
+                Vec::new()
+            },
         })
         .collect();
     if arch.conflicting.is_empty() {
