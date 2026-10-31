@@ -73,6 +73,7 @@ pub fn build(b: Option<&kentos_contracts::OpeningBuild>) -> opening::Build {
         track: b.track.unwrap_or(false),
         both_sides: b.both_sides.unwrap_or(false),
         lip: b.lip,
+        tracks: b.tracks.unwrap_or(0),
     }
 }
 

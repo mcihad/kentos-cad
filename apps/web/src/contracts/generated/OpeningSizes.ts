@@ -41,6 +41,14 @@ drum?: number,
  */
 pockets?: Array<OpeningPocket>, 
 /**
+ * A three- or four-leaf sliding door's or window's tracks (docs/adr/0792 §1).
+ */
+tracks?: number, 
+/**
+ * Its leaves from its start, `O` one that stays, `X` one that slides (docs/adr/0792 §1): “OXXO”.
+ */
+panels?: string, 
+/**
  * Which width its nominal size names.
  */
 sizeBy: OpeningSizeBy, 

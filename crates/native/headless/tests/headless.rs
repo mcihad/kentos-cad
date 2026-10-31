@@ -31,6 +31,8 @@ mod design_options;
 mod special_doors;
 #[path = "headless/arc_pockets.rs"]
 mod arc_pockets;
+#[path = "headless/multi_slide.rs"]
+mod multi_slide;
 
 #[path = "headless/atlas_cases.rs"]
 mod atlas_cases;

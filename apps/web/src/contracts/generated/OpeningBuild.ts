@@ -76,4 +76,9 @@ bothSides?: boolean,
 /**
  * How much of an open pocket door's leaf stays out of its pocket, metres (docs/adr/0777 §2); absent: 0.05.
  */
-lip?: number, };
+lip?: number, 
+/**
+ * A three- or four-leaf sliding door's or window's tracks, 2 or 3 (docs/adr/0792 §1): the leaves from the jamb
+ * they stack at, one per track, slide over the first; those past the tracks stay. Absent: 2.
+ */
+tracks?: number, };

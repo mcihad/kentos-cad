@@ -29,6 +29,10 @@ c = L − 2·fit − 2·f from `fit + f`):
   middle; with its track a line along the middle across the light; one leaf on its track hangs outside the face it
   opens to, t/4 out, tl thick, over the light, its track t/8 out from the light's far side to a light past the jamb
   at its `hand`. A sliding window the same lap and track.
+
+ADR 0792's three- and four-leaf sliding doors and windows are written to fixtures/walls/v1/multi-slide.json (the same
+core test): their leaves bands on their tracks, the arrows toward the jamb they stack at and the rails (`slide_leaves`,
+`multi_slide`).
 """
 
 import argparse
@@ -44,6 +48,8 @@ from opening_cases import Opening, beside, jambs, symbol as swing_symbol  # noqa
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "fixtures/walls/v1/special-doors.json"
+# Three- and four-leaf sliding doors and windows (docs/adr/0792 §1), the same rules' cases in their own file.
+MULTI = ROOT / "fixtures/walls/v1/multi-slide.json"
 
 PLAY = F(1, 100)
 LIP = F(5, 100)
@@ -57,8 +63,9 @@ class Door(Opening):
     sides and lip."""
 
     def __init__(self, wall, at, width, fit=None, leaf=None, split=None, drum=None, overlap=None, track=False,
-                 both=False, lip=None, **kw):
+                 both=False, lip=None, tracks=None, **kw):
         super().__init__(wall, at, width, **kw)
+        self.tracks = tracks
         self.fit = None if fit is None else F(fit)
         self.leaf = None if leaf is None else F(leaf)
         self.split = None if split is None else F(split)
@@ -82,6 +89,8 @@ class Door(Opening):
             b["track"] = True
         if self.both:
             b["bothSides"] = True
+        if self.tracks is not None:
+            b["tracks"] = self.tracks
         if b:
             out["build"] = b
         return out
@@ -164,14 +173,18 @@ def symbol(place, o):
     if o.form == "window":
         out.append(line(along_start(start, 0), along_end(start, 0)))
         out.append(line(along_start(start, t), along_end(start, t)))
-        if o.operation == "slide":
+        if o.operation == "slide" and o.leaves > 2:
+            out += multi_slide(o, along_start, along_end, u, n, c, start, t, True)
+        elif o.operation == "slide":
             lapped(t / 12)
         else:
             out.append(line(m0, ad(m0, u, c)))
         return out
     tl = float(o.leaf) if o.leaf is not None and o.leaf > 0 else float(LEAF)
     if o.operation == "slide":
-        if o.leaves == 1 and o.track:
+        if o.leaves > 2:
+            out += multi_slide(o, along_start, along_end, u, n, c, start, t, False)
+        elif o.leaves == 1 and o.track:
             left_side = o.side != "right"
             d = 0 if left_side else t
             out_dir = n if left_side else (-n[0], -n[1])
@@ -226,6 +239,72 @@ def symbol(place, o):
                 at = nxt
         return out
     raise ValueError(o.operation)
+
+
+def slide_leaves(o, c):
+    """ADR 0792 §1: the leaves counted from the jamb they stack at (both sides: two from each jamb), the k-th on track
+    k and sliding while k < the tracks (none: 2), the rest staying on track 0; neighbours on different tracks overlap
+    by the overlap (none: 5 % of the light over the n − 1 meetings), on one track they butt; each leaf
+    (light + laps · overlap) / n wide. Returns the tracks, the width and (start, track, slides, toward the end)."""
+    n = min(max(o.leaves, 3), 4)
+    tr = 2 if o.tracks is None else min(max(o.tracks, 2), 3)
+    both = o.both and n == 4
+    lap = c * 0.05 / (n - 1) if o.overlap is None else float(o.overlap)
+
+    def group(count, to_end):
+        return [(k, k > 0, to_end) if k < tr else (0, False, to_end) for k in range(count)]
+    if both:
+        order = group(2, False) + list(reversed(group(2, True)))
+    else:
+        order = group(n, o.hand == "end")
+        if o.hand == "end":
+            order.reverse()
+    laps = sum(1 for a, b in zip(order, order[1:]) if a[0] != b[0])
+    w = (c + laps * lap) / n
+    out, s = [], 0.0
+    for i, (track, slides, to_end) in enumerate(order):
+        if i > 0:
+            s += w - lap if order[i - 1][0] != track else w
+        out.append((s, track, slides, to_end))
+    return tr, w, out
+
+
+def multi_slide(o, along_start, along_end, u, n, c, start, t, window):
+    """ADR 0792 §1's plan: each leaf a band min(its thickness (none: 0.04), 4/5 of the spacing) wide about its track across
+    its share; tracks evenly across the wall, depth/(2·tracks)
+    apart for a door, depth/(3·tracks) for a window, track 0 on the face away from the side it opens to; beside each
+    sliding leaf, half a spacing toward the side it opens to, an arrow toward its jamb: a shaft a = min(w/3, 0.3) long
+    about the leaf's middle, its head two strokes back h = a/3 along and h/2 across; with its track the rails."""
+    tr, w, leaves = slide_leaves(o, c)
+    sp = t / ((3.0 if window else 2.0) * tr)
+    sign = 1.0 if o.side == "right" else -1.0
+    half = (tr - 1) / 2.0
+
+    def d_of(track):
+        return t / 2 + sign * (track - half) * sp
+    tl = float(o.leaf) if o.leaf is not None and o.leaf > 0 else float(LEAF)
+    hb = min(tl, 0.8 * sp) / 2
+    out = []
+    for s, track, slides, to_end in leaves:
+        d = d_of(track)
+        a, z = start + s, start + s + w
+        out.append(ring([along_start(a, d - hb), along_start(z, d - hb), along_start(z, d + hb), along_start(a, d + hb)]))
+        if slides:
+            dirv = u if to_end else (-u[0], -u[1])
+            cpt = along_start(start + s + w / 2, d + sign * sp / 2)
+            a = min(w / 3, 0.3)
+            h = a / 3
+            tip = ad(cpt, dirv, a / 2)
+            tail = ad(cpt, dirv, -(a / 2))
+            back = ad(tip, dirv, -h)
+            out.append(line(tail, tip))
+            out.append(line(tip, ad(back, n, h / 2)))
+            out.append(line(tip, ad(back, n, -(h / 2))))
+    if o.track:
+        for k in range(tr):
+            d = d_of(k)
+            out.append(line(along_start(start, d), along_end(start, d)))
+    return out
 
 
 def fold_groups(o, along_start, along_end, u, n, c, start, t):
@@ -377,7 +456,7 @@ class PocketSolver(Solver):
         return out
 
 
-def cases():
+def cases(multi=False):
     c = []
 
     def case(name, walls, openings):
@@ -398,6 +477,9 @@ def cases():
     w2, w3 = F(2, 10), F(3, 10)
     layered = [(F(2, 100), 5), (None, 1), (F(2, 100), 5)]
     straight = lambda t, **kw: [Wall([(0, 0), (8, 0)], t, **kw)]  # noqa: E731
+    if multi:
+        multi_cases(case, straight, layered)
+        return c
     # Döner (§1).
     case("Döner: dört kanat, tambur ışık kadar", straight(w3),
          [Door(0, 4, F(24, 10), leaves=4, operation="revolving", frame=F(1, 10))])
@@ -447,20 +529,65 @@ def cases():
     return c
 
 
+def multi_cases(case, straight, layered):
+    """ADR 0792 §1: three and four sliding leaves on two or three tracks, stacking at a jamb or parting to both."""
+    w2, w3 = F(2, 10), F(3, 10)
+    S = lambda **kw: Door(0, 4, F(24, 10), operation="slide", **kw)  # noqa: E731
+    case("Üç kanat iki rayda, başa toplanır (OXO)", straight(w2), [S(leaves=3)])
+    case("Üç kanat iki rayda, sona toplanır (OXO)", straight(w2), [S(leaves=3, hand="end")])
+    case("Üç kanat üç rayda, teleskop (OXX)", straight(w2), [S(leaves=3, tracks=3)])
+    case("Üç kanat üç rayda, sona (XXO)", straight(w2), [S(leaves=3, tracks=3, hand="end")])
+    case("Dört kanat iki rayda, başa (OXOO)", straight(w2), [Door(0, 4, F(32, 10), operation="slide", leaves=4)])
+    case("Dört kanat üç rayda, başa (OXXO)", straight(w2),
+         [Door(0, 4, F(32, 10), operation="slide", leaves=4, tracks=3)])
+    case("Dört kanat üç rayda, sona", straight(w2),
+         [Door(0, 4, F(32, 10), operation="slide", leaves=4, tracks=3, hand="end")])
+    case("Dört kanat iki yana (OXXO)", straight(w2),
+         [Door(0, 4, F(32, 10), operation="slide", leaves=4, both=True)])
+    case("Dört kanat iki yana, kasalı, raylı", straight(w2),
+         [Door(0, 4, F(32, 10), operation="slide", leaves=4, both=True, frame=F(5, 100), track=True)])
+    case("Üç kanat, 8 cm bindirme, raylı", straight(w2), [S(leaves=3, overlap=F(8, 100), track=True)])
+    case("Üç kanat üç rayda, raylı, sağa açılır", straight(w2), [S(leaves=3, tracks=3, track=True, side="right")])
+    case("Dört kanat iki yana, sağa açılır", straight(w2),
+         [Door(0, 4, F(32, 10), operation="slide", leaves=4, both=True, side="right")])
+    case("Üç kanat, montaj boşluklu, kasalı", straight(w3),
+         [S(leaves=3, fit=F(1, 100), frame=F(4, 100), overlap=F(5, 100))])
+    case("Dört kanat, bindirmesiz", straight(w2),
+         [Door(0, 4, F(32, 10), operation="slide", leaves=4, tracks=3, overlap=0)])
+    case("Üç kanat, dar açıklık, ok kısa", straight(w2), [Door(0, 4, F(9, 10), operation="slide", leaves=3)])
+    case("Üç kanat eğik duvarda", [Wall([(0, 0), (6, 8)], w3)],
+         [Door(0, 5, F(24, 10), operation="slide", leaves=3, tracks=3)])
+    case("Dört kanat katmanlı duvarda", [Wall([(0, 0), (8, 0)], F(25, 100), comps=layered)],
+         [Door(0, 4, F(32, 10), operation="slide", leaves=4, both=True, track=True)])
+    case("Üç kanatlı sürme pencere, iki ray", straight(w3),
+         [Door(0, 4, F(24, 10), form="window", operation="slide", leaves=3, frame=F(6, 100))])
+    case("Dört kanatlı sürme pencere, iki yana, raylı", straight(w3),
+         [Door(0, 4, F(32, 10), form="window", operation="slide", leaves=4, both=True, track=True)])
+    case("Üç kanatlı pencere üç rayda, sağa, sona", straight(w3),
+         [Door(0, 4, F(24, 10), form="window", operation="slide", leaves=3, tracks=3, side="right", hand="end")])
+    case("Odanın duvarında dört kanat", [Wall([(0, 0), (6, 0), (6, 4), (0, 4)], w3, closed=True)],
+         [Door(0, 3, F(32, 10), operation="slide", leaves=4, tracks=3)])
+    case("Yanında kapı, üç kanat", straight(w2),
+         [Door(0, F(25, 10), F(24, 10), operation="slide", leaves=3), Door(0, 6, F(9, 10))])
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--check", action="store_true")
     args = ap.parse_args()
-    text = json.dumps({"cases": cases()}, ensure_ascii=False, indent=1) + "\n"
-    if args.check:
-        if not OUT.exists() or OUT.read_text() != text:
-            print(f"{OUT.relative_to(ROOT)} güncel değil: betiği --check olmadan çalıştırın", file=sys.stderr)
-            return 1
-        print(f"{OUT.relative_to(ROOT)}: güncel")
-        return 0
-    OUT.write_text(text)
-    print(f"{OUT.relative_to(ROOT)}: {len(json.loads(text)['cases'])} durum")
-    return 0
+    bad = 0
+    for out, multi in ((OUT, False), (MULTI, True)):
+        text = json.dumps({"cases": cases(multi)}, ensure_ascii=False, indent=1) + "\n"
+        if args.check:
+            if not out.exists() or out.read_text() != text:
+                print(f"{out.relative_to(ROOT)} güncel değil: betiği --check olmadan çalıştırın", file=sys.stderr)
+                bad = 1
+            else:
+                print(f"{out.relative_to(ROOT)}: güncel")
+            continue
+        out.write_text(text)
+        print(f"{out.relative_to(ROOT)}: {len(json.loads(text)['cases'])} durum")
+    return bad
 
 
 if __name__ == "__main__":

@@ -239,6 +239,9 @@ impl Document {
                         .map(|p| p.length)
                         .reduce(f64::max)
                         .map(Length),
+                    // A three- or four-leaf sliding door's tracks and leaves (docs/adr/0792 §1).
+                    "tracks" => x.sizes().tracks.map(|t| Count(u64::from(t))),
+                    "panels" => x.sizes().panels.map(Text),
                     "typeVersion" => x.type_version.map(|v| Text(format!("s{v}"))),
                     "height" => height.map(Length),
                     "sill" => Some(Length(x.sill.unwrap_or(0.0))),

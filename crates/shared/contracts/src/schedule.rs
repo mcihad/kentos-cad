@@ -143,10 +143,14 @@ pub enum ScheduleField {
     Share,
     /// A space's unit's gross area: its own rooms and its share.
     Gross,
+    /// A three- or four-leaf sliding door's or window's tracks and its leaves' layout, fixed O and sliding X from its
+    /// start (docs/adr/0792 §1).
+    Tracks,
+    Panels,
 }
 
 impl ScheduleField {
-    pub const ALL: [ScheduleField; 41] = [
+    pub const ALL: [ScheduleField; 43] = [
         ScheduleField::Number,
         ScheduleField::Type,
         ScheduleField::Form,
@@ -188,6 +192,8 @@ impl ScheduleField {
         ScheduleField::Pocket,
         ScheduleField::Share,
         ScheduleField::Gross,
+        ScheduleField::Tracks,
+        ScheduleField::Panels,
     ];
 
     /// Its heading when the column gives none.
@@ -234,6 +240,8 @@ impl ScheduleField {
             ScheduleField::Pocket => "Cep boyu",
             ScheduleField::Share => "Pay",
             ScheduleField::Gross => "Brüt",
+            ScheduleField::Tracks => "Ray sayısı",
+            ScheduleField::Panels => "Kanat düzeni",
         }
     }
 
@@ -280,6 +288,8 @@ impl ScheduleField {
             ScheduleField::Pocket => "pocket",
             ScheduleField::Share => "share",
             ScheduleField::Gross => "gross",
+            ScheduleField::Tracks => "tracks",
+            ScheduleField::Panels => "panels",
         }
     }
 
@@ -313,7 +323,7 @@ impl ScheduleField {
             Length | Thickness => of == ScheduleOf::Walls,
             Category | Space => of == ScheduleOf::Fixtures,
             RoughWidth | UnitWidth | LeafWidth | ClearWidth => of == ScheduleOf::Openings,
-            Operation | Leaves | Drum | Pocket => of == ScheduleOf::Openings,
+            Operation | Leaves | Drum | Pocket | Tracks | Panels => of == ScheduleOf::Openings,
         }
     }
 
@@ -365,6 +375,11 @@ impl ScheduleField {
     pub fn is_special(self) -> bool {
         use ScheduleField::*;
         matches!(self, Operation | Leaves | Drum | Pocket)
+    }
+
+    /// Whether it is one of the fields docs/adr/0792 added (`.kcad` schema 157).
+    pub fn is_multi_slide(self) -> bool {
+        matches!(self, ScheduleField::Tracks | ScheduleField::Panels)
     }
 
     /// Whether it is one of an opening's widths docs/adr/0772 added (`.kcad` schema 137).

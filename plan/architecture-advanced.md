@@ -174,7 +174,7 @@ _Durum (31 Ekim 2026, [ADR 0772](../docs/adr/0772-door-window-types-instances-cl
 dört en, yapı, takip raporu ve Kapılar denetimi yapıldı. Döner, cebe giren ve katlanır kapı, kayar kapının rayı ve bindirmesi
 ([ADR 0777](../docs/adr/0777-revolving-pocket-folding-doors.md)). Döner/katlanır/raylı sürme kapının çarpışma denetimi düzeltmesiyle,
 yaylı duvarda cep ve cebin metrajdan düşülmesi ([ADR 0787](../docs/adr/0787-special-door-clashes-arc-pockets-pocket-quantities.md)).
-Açık: bağımsız bölüm kapsamı (ADV-04), üç-dört kanatlı sürme, PDF metninin okunması, gerçek pencerede elle kabul.
+Üç ve dört kanatlı sürme ve paftanın PDF metninin okunması ([ADR 0792](../docs/adr/0792-multi-leaf-sliding-doors-and-pdf-text.md)). Açık: bağımsız bölüm kapsamı (ADV-04), XOX ve eşit olmayan sürme kanatları, gerçek pencerede elle kabul.
 
 **Kullanıcı sonucu:** Ofisin K01 kapısı tek yerde tanımlansın; kullanıcı hangi
 özelliğin tipe, hangisinin bu kapıya ait olduğunu bilsin. Dayanak A3.

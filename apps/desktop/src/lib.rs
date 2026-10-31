@@ -542,6 +542,8 @@ mod module_scenes;
 #[cfg(test)]
 mod special_door_scenes;
 #[cfg(test)]
+mod multi_slide_scenes;
+#[cfg(test)]
 mod module_flat_scenes;
 #[cfg(test)]
 mod door_clash_scenes;

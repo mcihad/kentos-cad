@@ -1452,7 +1452,7 @@
       "status": "failed",
       "error": {
        "code": "invalid_opening_type",
-       "message": "Kanat bindirmesi iki kanatlı sürmenindir; tek kanatlıda kaldırın.",
+       "message": "Kanat bindirmesi çok kanatlı sürmenindir; tek kanatlıda kaldırın.",
        "path": "operation.change.build.overlap"
       }
      },
@@ -2127,7 +2127,7 @@
    ]
   },
   {
-   "name": "KT1 sürme olunca dört kanadı reddedilir",
+   "name": "KT1 sabit olunca dört kanadı reddedilir",
    "steps": [
     {
      "op": "execute",
@@ -2136,7 +2136,7 @@
        "kind": "update",
        "type": "KT1",
        "change": {
-        "operation": "slide"
+        "operation": "fixed"
        }
       }
      },

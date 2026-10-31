@@ -2485,6 +2485,22 @@ def document(d):
             or any("materialId" in c for s in d["settings"].get("wallStyles", []) for c in s.get("components", []))):
         # The project's building materials and the bindings to them (docs/adr/0785).
         schema = max(schema, 148)
+
+    def multi(o):
+        return ((o.get("operation") == "slide" and o.get("leaves", 1) > 2) or "tracks" in (o.get("build") or {})
+                or "tracks" in (o.get("overrides") or []))
+
+    def multi_entity(e):
+        if e["kind"] == "opening":
+            return multi(e)
+        src = e.get("source") or {}
+        return e["kind"] == "table" and isinstance(src, dict) and src.get("kind") == "schedule" and any(
+            c.get("field") in ("tracks", "panels") for c in src.get("columns", []))
+    if (any(multi(t) for t in (d["settings"].get("arch") or {}).get("openingTypes") or [])
+            or any(multi_entity(e) for e in d["entities"])
+            or any(multi_entity(e) for b in d.get("blocks") or [] for e in b.get("entities", []))):
+        # Three- and four-leaf sliding doors and windows, their tracks, a schedule of them (docs/adr/0792).
+        schema = max(schema, 150)
     return root(cmap(body), version=uint(schema))
 
 
@@ -3198,7 +3214,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-150.kcad"] = container(root(cmap(parts), version=uint(150)))
+    files["schema-version-151.kcad"] = container(root(cmap(parts), version=uint(151)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5700,6 +5716,27 @@ def build():
     door_bad("drum-on-swing", lambda d: (d["entities"][1].pop("operation"), d["entities"][1].pop("leaves")))
     door_bad("track-false", lambda d: d["entities"][4]["build"].update(track=False))
     door_bad("both-sides-odd", lambda d: d["entities"][3].update(leaves=3))
+    # Schema 150 (docs/adr/0792): a three-leaf sliding door on three tracks following its type, a four-leaf one parting
+    # to both jambs on its rails with its overlap, a three-leaf sliding window on two tracks; schema 148 and 144 refuse
+    # them, and five leaves, tracks on two leaves, four tracks, three tracks parting both ways and three leaves parting
+    # both ways are refused too.
+    ms_doc = load("multi-slide.json")
+    ms = document(ms_doc)
+    assert ms.count(b"\x67version\x18\x96") == 1, "the multi-leaf sliding doors are schema 150"
+    out["multi-slide.kcad"] = container(ms)
+    out["broken/multi-slide-in-schema-149.kcad"] = container(ms.replace(b"\x67version\x18\x96", b"\x67version\x18\x95"))
+    out["broken/multi-slide-in-schema-148.kcad"] = container(ms.replace(b"\x67version\x18\x96", b"\x67version\x18\x94"))
+    out["broken/multi-slide-in-schema-144.kcad"] = container(ms.replace(b"\x67version\x18\x96", b"\x67version\x18\x90"))
+
+    def slide_bad(name, change):
+        d = copy.deepcopy(ms_doc)
+        change(d)
+        out["broken/multi-slide-" + name + ".kcad"] = container(document(d))
+    slide_bad("five-leaves", lambda d: d["entities"][2].update(leaves=5))
+    slide_bad("tracks-on-two", lambda d: d["entities"][2].update(leaves=2, build={"tracks": 2}))
+    slide_bad("four-tracks", lambda d: d["entities"][3]["build"].update(tracks=4))
+    slide_bad("both-ways-three-tracks", lambda d: d["entities"][2]["build"].update(tracks=3))
+    slide_bad("both-ways-three-leaves", lambda d: d["entities"][2].update(leaves=3))
     # Schema 148 (docs/adr/0785): three materials, a style's and a wall's core and insulation bound, a slab
     # bound; the schema before refuses them, as does schema 143, a material without a name, two of
     # one id, an id with capitals, a default category written.

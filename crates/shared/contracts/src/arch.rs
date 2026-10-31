@@ -1380,6 +1380,15 @@ impl ArchSettings {
             .any(|t| t.operation.is_special() || t.build.as_ref().is_some_and(crate::OpeningBuild::is_special))
     }
 
+    /// Whether a type of the project is a three- or four-leaf sliding door or window or has its tracks (docs/adr/0792):
+    /// only schema 157 knows it.
+    pub fn has_multi_slide(&self) -> bool {
+        self.opening_types.iter().any(|t| {
+            (t.operation == crate::OpeningOperation::Slide && t.leaves > 2)
+                || t.build.as_ref().is_some_and(crate::OpeningBuild::is_multi_slide)
+        })
+    }
+
     /// The project's type of this id, or else of this name (case aside).
     pub fn opening_type(&self, key: &str) -> Option<&crate::OpeningType> {
         let folded = key.trim().to_lowercase();

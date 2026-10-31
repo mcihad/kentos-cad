@@ -1989,7 +1989,7 @@
       "status": "failed",
       "error": {
        "code": "invalid_opening",
-       "message": "Kanat bindirmesi iki kanatlı sürmenindir; tek kanatlıda kaldırın.",
+       "message": "Kanat bindirmesi çok kanatlı sürmenindir; tek kanatlıda kaldırın.",
        "path": "openings[0].build.overlap"
       }
      },

@@ -108574,6 +108574,17 @@
             "null"
           ]
         },
+        "tracks": {
+          "description": "A three- or four-leaf sliding door's or window's tracks, 2 or 3 (docs/adr/0792 §1): the leaves from the jamb\nthey stack at, one per track, slide over the first; those past the tracks stay. Absent: 2.",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "count"
+        },
         "transoms": {
           "description": "A window's transoms (yatay kayıt); plan does not show them, schedules and tags do.",
           "format": "uint8",
@@ -109552,6 +109563,13 @@
           "type": "number",
           "x-unit": "length"
         },
+        "panels": {
+          "description": "Its leaves from its start, `O` one that stays, `X` one that slides (docs/adr/0792 §1): “OXXO”.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "pockets": {
           "description": "A pocket door's pockets, each how far it runs into the wall past its jamb (docs/adr/0777 §2): the one at its\nstart first.",
           "items": {
@@ -109568,6 +109586,17 @@
         "sizeBy": {
           "$ref": "#/$defs/OpeningSizeBy",
           "description": "Which width its nominal size names."
+        },
+        "tracks": {
+          "description": "A three- or four-leaf sliding door's or window's tracks (docs/adr/0792 §1).",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "count"
         },
         "unit": {
           "description": "Kasa dış eni: the rough opening less the fitting gap each side.",
@@ -109834,35 +109863,44 @@
     },
     "OpeningTypeField": {
       "description": "A field a type governs: an opening following the type takes it, unless the opening keeps its own (docs/adr/0772 §1).\nThe form is the type's own and never an exception; an opening's place, wall, hand, side and number are its own.",
-      "enum": [
-        "width",
-        "leaves",
-        "operation",
-        "swing",
-        "showSwing",
-        "frame",
-        "sill",
-        "head",
-        "depth",
-        "sizeBy",
-        "fit",
-        "leafThickness",
-        "split",
-        "frameDepth",
-        "frameOffset",
-        "threshold",
-        "casing",
-        "sillBoard",
-        "mullions",
-        "transoms",
-        "useZone",
-        "drum",
-        "overlap",
-        "track",
-        "bothSides",
-        "lip"
-      ],
-      "type": "string"
+      "oneOf": [
+        {
+          "enum": [
+            "width",
+            "leaves",
+            "operation",
+            "swing",
+            "showSwing",
+            "frame",
+            "sill",
+            "head",
+            "depth",
+            "sizeBy",
+            "fit",
+            "leafThickness",
+            "split",
+            "frameDepth",
+            "frameOffset",
+            "threshold",
+            "casing",
+            "sillBoard",
+            "mullions",
+            "transoms",
+            "useZone",
+            "drum",
+            "overlap",
+            "track",
+            "bothSides",
+            "lip"
+          ],
+          "type": "string"
+        },
+        {
+          "const": "tracks",
+          "description": "A three- or four-leaf sliding door's tracks (docs/adr/0792).",
+          "type": "string"
+        }
+      ]
     },
     "OpeningTypeRefused": {
       "description": "When a type's change does not fit an opening following it (its wall gone, off its wall, into another).",
@@ -126701,7 +126739,8 @@
             "clearWidth",
             "leaves",
             "drum",
-            "pocket"
+            "pocket",
+            "panels"
           ],
           "type": "string"
         },
@@ -126763,6 +126802,11 @@
         {
           "const": "gross",
           "description": "A space's unit's gross area: its own rooms and its share.",
+          "type": "string"
+        },
+        {
+          "const": "tracks",
+          "description": "A three- or four-leaf sliding door's or window's tracks and its leaves' layout, fixed O and sliding X from its\nstart (docs/adr/0792 §1).",
           "type": "string"
         }
       ]
