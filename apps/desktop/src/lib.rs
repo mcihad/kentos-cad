@@ -51,6 +51,7 @@ mod viewmark_refs;
 mod sheet_set;
 mod xrefs_window;
 mod xrefs_watch;
+mod bond_notice;
 mod arch_project;
 mod architecture_settings;
 mod architecture_ribbon;
@@ -515,6 +516,8 @@ mod window_layers_tests;
 mod wipeout_scenes;
 #[cfg(test)]
 mod wall_scenes;
+#[cfg(test)]
+mod bond_drag_scenes;
 #[cfg(test)]
 mod interior_scenes;
 mod active_level;

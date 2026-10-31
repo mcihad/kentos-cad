@@ -493,6 +493,12 @@ pub struct BondInTheWay {
     pub measured: Option<f64>,
     /// Taking this bond away alone lets the write through.
     pub frees: bool,
+    /// When no bond alone lets the write through: the other bonds (their ids) of the smallest set whose taking away
+    /// together does, this one in it (docs/adr/0790 §2): two, else three. Empty when a single bond frees it, when no
+    /// set within the search's bound does, and on the bonds outside the set.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ConstraintId>>", optional))]
+    pub frees_with: Vec<ConstraintId>,
 }
 
 // Its numbers are finite lengths: a refusal compares whole (`CommandError: Eq`).

@@ -93,6 +93,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   kavisli cep kanadı, Metraj'da Cep hacmi sütunu.
 - ADR 0789: `cad.views.edit`'in `area`'sı ve geri alma adımı web belgesinde; Kırpma
   çerçevesi aracı ve Görünümler'in Alanı düzenle'si; izlerin `namedViews` beklentisi web oynatıcısında.
+- ADR 0790: web'in sonucu `BondInTheWay.freesWith`'i okumuyor; sürüklemede ve kaydırmada yoldaki bağların vurgusu, reddin
+  kartı (“Bu iki bağı kaldır”) ve Duvarı kaydır aracı yok.
 - ADR 0781 (ADV-06): web'de tarifin Duvar ayrıntısı ve Alanına kırp seçimleri, web'in pafta haritasının `wallDetail`'i ve kırpması.
 - ADR 0778 (ADV-06): web'de `cad.navigator.read`'in işleyicisi ve Gezgin paneli (katlar, görünümler, paftalar, çizelgeler, seçili nesnenin yerleri; satırların eylemleri).
 - ADR 0774 (ADV-06): web'de adlı görünümün `recipe`'i (`.kcad` şema 141, `FORMATS_VERSION` 101), `cad.views.edit`'in `recipe`

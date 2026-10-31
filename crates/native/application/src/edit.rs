@@ -64,7 +64,20 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &EntitiesEdit) -> CommandResult<En
 /// [`plan`] over the document alone: a tool's preview reads it without a
 /// context to write through (`cad.entities.offset`, docs/adr/0246).
 pub fn plan_in(doc: &Document, input: &EntitiesEdit) -> CommandResult<EntitiesEditPlan> {
-    match check(doc, input) {
+    let checked = check(doc, input);
+    // The bonds refuse the plan as they refuse execute (docs/adr/0790 §1): a grip's drag shows them.
+    if checked.is_ok() {
+        let edited = input.changes.iter().filter_map(|c| match c {
+            EntityEdit::Update { uid, .. } | EntityEdit::Replace { uid, .. } => Some(uid.as_str()),
+            _ => None,
+        });
+        if let Some(error) =
+            crate::constraint_follow::bonds_refusal(doc, edited, |cx| execute(cx, input.clone()))
+        {
+            return CommandResult::Failed { error };
+        }
+    }
+    match checked {
         Ok(checked) => CommandResult::Completed {
             output: EntitiesEditPlan {
                 changed: checked.changed.into_iter().map(|c| c.entity).collect(),

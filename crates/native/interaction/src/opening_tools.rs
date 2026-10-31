@@ -1069,11 +1069,16 @@ impl OpeningEditTool {
                 CommandResult::Failed { error }
                 | CommandResult::Conflict { error }
                 | CommandResult::NeedsInput { error } => {
-                    out.tag = Some(Tag {
-                        at,
-                        lines: crate::wall_dimensions::wrapped(&error.message),
-                    });
-                    out.tag_tone = Tone::Danger;
+                    // The bonds in the way marked where they stand (docs/adr/0790 §1).
+                    if let Some(refused) = crate::bond_refusal::Refused::of(&error, cx) {
+                        out = refused.over(out, at);
+                    } else {
+                        out.tag = Some(Tag {
+                            at,
+                            lines: crate::wall_dimensions::wrapped(&error.message),
+                        });
+                        out.tag_tone = Tone::Danger;
+                    }
                 }
                 _ => {}
             }

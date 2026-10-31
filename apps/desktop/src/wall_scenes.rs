@@ -574,7 +574,7 @@ fn type_west(app: &mut App, text: &str) {
 }
 
 /// The inner wall's east distance bonded (d1) and the outer east wall fixed; the inner wall selected.
-fn bonded_and_fixed(app: &mut App) {
+pub(crate) fn bonded_and_fixed(app: &mut App) {
     wall_distance_bonded(app);
     let edge = outer_east_edge(app);
     let doc = &mut app.document.as_mut().expect("a drawing").model;

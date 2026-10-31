@@ -69720,7 +69720,7 @@
       "code": "constraint_conflict",
       "kind": "failed",
       "retryable": false,
-      "meaning": "Kısıtlar birlikte tutamıyor; hiçbir şey yazılmadı (çelişenler uids'te; mimari bağlar parçaları, değerleri ve hangisinin kaldırılınca yazmayı geçireceğiyle bonds'ta)."
+      "meaning": "Kısıtlar birlikte tutamıyor; hiçbir şey yazılmadı (çelişenler uids'te; mimari bağlar parçaları, değerleri ve hangisinin kaldırılınca yazmayı geçireceğiyle bonds'ta; hiçbiri tek başına geçirmezse birlikte kaldırılınca geçirenler freesWith'te)."
     },
     {
       "code": "constraint_singular",

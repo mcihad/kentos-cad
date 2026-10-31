@@ -55,6 +55,8 @@ DOOR_WEST = dist(J(7, "start"), W(4, "leftFace"))
 FIX_DOOR = {"kind": "fix", "a": J(7, "start")}
 DOORS = dist(J(7, "end"), J(8, "start"))
 PARALLEL = {"kind": "parallel", "a": W(1, "axis"), "b": W(3, "axis")}
+FIX_S3 = {"kind": "fix", "a": W(1, "rightFace")}
+FIX_DOOR2 = {"kind": "fix", "a": J(8, "end")}
 LEVEL = {"kind": "horizontal", "a": {"uid": u(13), "element": {"kind": "segment", "part": 0, "ring": 0, "index": 0}}}
 
 
@@ -149,7 +151,8 @@ class Scene:
         err = {"code": "constraint_conflict", "message": words(bonds)}
         if path:
             err["path"] = path
-        err["uids"] = [b["id"] for b in bonds]
+        # The conflicting ones; a freeing set's members outside them follow in `bonds` only (docs/adr/0790 §2).
+        err["uids"] = [b["id"] for b in bonds[:len(conflicting)]]
         err["bonds"] = bonds
         return {"status": "failed", "error": err}
 
@@ -208,7 +211,7 @@ class Scene:
         result, changed = ws.edit(state, inp)
         return result if changed is None else changed
 
-    def move_opening(self, i, by):
+    def move_opening(self, i, by, op="execute"):
         inp = {"uids": [ws.u(i)], "operation": {"kind": "move", "by": by}}
 
         def write(state):
@@ -216,7 +219,18 @@ class Scene:
             o["at"] = o["at"] + by
             o["place"] = [ab.P(*p) for p in ws.jambs(state[ab.host_of(state, o)], o["at"], o["width"])]
             return {i: o}
-        self.edit("cad.openings.edit", inp, write)
+        self.edit("cad.openings.edit", inp, write, op)
+
+    def grip(self, i, moves, op="execute"):
+        """cad.entities.edit grip of wall `i`: its path's vertices moved by `moves` (index → (dx, dy)), the wall
+        written whole as the select tool's Esnet writes it (docs/adr/0790 §1)."""
+        w = copy.deepcopy(self.state[i])
+        for k, (dx, dy) in moves.items():
+            p = w["pts"][k]
+            w["pts"][k] = ab.P(p["x"] + dx, p["y"] + dy)
+        geometry = {k: v for k, v in w.items() if k not in ("id", "layerId", "attrs")}
+        inp = {"operation": "grip", "changes": [{"kind": "update", "uid": ws.u(i), "geometry": geometry}]}
+        self.edit("cad.entities.edit", inp, lambda s: {i: w}, op)
 
     def set_parameter(self, name, expression):
         """cad.parameters.edit: the set solved with the new value, each distance not holding keeping its `a`."""
@@ -243,7 +257,7 @@ class Scene:
     @staticmethod
     def solve_words(bonds):
         """cad.constraints.edit's and cad.parameters.edit's conflict: the bonds that free it, when one does."""
-        if any(b["frees"] for b in bonds):
+        if any(b["frees"] or b.get("freesWith") for b in bonds):
             return f"Kısıtlar birlikte tutamıyor; hiçbir şey yazılmadı. {ab.bonds_words(bonds)}"
         return ("Kısıtlar birlikte tutamıyor; hiçbir şey yazılmadı. Çelişen kısıtı kaldırın, değerini değiştirin ya "
                 "da başvuru yapın.")
@@ -404,6 +418,74 @@ def conflict_cases():
     return [x.done() for x in out]
 
 
+def set_cases():
+    """When no bond alone lets the write through, the smallest set that does together (docs/adr/0790 §2), and the
+    plans of a grip's drag and an opening's move refused as execute is (§1)."""
+    out = []
+    s = scene(out, "Aynı duvara iki sabit bağ: ikisi birlikte kaldırılınca geçer (freesWith)", [FIX_S, FIX_S2])
+    s.shift(1, -0.5)
+    s = scene(out, "İki sabit bağ birlikte kaldırılınca dış duvar kayar", [FIX_S, FIX_S2])
+    s.shift(1, -0.5)
+    s.remove(1, 2)
+    s.shift(1, -0.5)
+    s = scene(out, "Aynı duvara üç sabit bağ: üçü birlikte kaldırılınca geçer", [FIX_S, FIX_S2, FIX_S3])
+    s.shift(1, -0.5)
+    s = scene(out, "Üç sabit bağ birlikte kaldırılınca dış duvar kayar", [FIX_S, FIX_S2, FIX_S3])
+    s.shift(1, -0.5)
+    s.remove(1, 2, 3)
+    s.shift(1, -0.5)
+    s = scene(out, "Sabit koridor duvarı, koridor bağı ve sabit dış duvar: sabit ile koridor bağı birlikte (biri çelişkinin dışında)",
+              [CORRIDOR, FIX_S, FIX_C])
+    s.shift(6, 0.3)
+    s = scene(out, "Önizleme (plan) aynı birlikte kaldırılacak bağları verir", [CORRIDOR, FIX_S, FIX_C])
+    s.shift(6, 0.3, op="plan")
+    s = scene(out, "Önerilen iki bağ birlikte kaldırılınca koridor duvarı kayar", [CORRIDOR, FIX_S, FIX_C])
+    s.shift(6, 0.3)
+    s.remove(1, 3)
+    s.shift(6, 0.3)
+    s = scene(out, "Mesafe ile koridoru 1,50 m yapmak, koridor duvarı sabit: iki bağ birlikte", [CORRIDOR, FIX_S, FIX_C])
+    s.distance(6, "right", 1.5)
+    s = scene(out, "Sabit ikinci kapı, iki kapı arası bağ ve sabit ilk kapı: ikinci kapıyı taşımak iki bağ ister",
+              [DOORS, FIX_DOOR, FIX_DOOR2])
+    s.move_opening(8, 0.4)
+    s = scene(out, "Açıklığı taşımanın önizlemesi (plan) bağlarla reddedilir", [DOORS, FIX_DOOR])
+    s.move_opening(8, 0.4, op="plan")
+    s = scene(out, "Açıklığı taşımanın önizlemesi birlikte kaldırılacak iki bağı verir", [DOORS, FIX_DOOR, FIX_DOOR2])
+    s.move_opening(8, 0.4, op="plan")
+    s = scene(out, "Tutamaçla koridor duvarını kaydırmak (iki uç birlikte): koridor bağı ve sabit dış duvar yolda",
+              [CORRIDOR, FIX_S])
+    s.grip(6, {0: (0, 0.3), 1: (0, 0.3)})
+    s = scene(out, "Tutamaç sürüklenirken önizleme (plan) aynı reddi bağlarıyla verir", [CORRIDOR, FIX_S])
+    s.grip(6, {0: (0, 0.3), 1: (0, 0.3)}, op="plan")
+    s = scene(out, "Tutamaçla bağlı duvarın bir ucunu çekmek duvarı döndürür: koridor bağı paralel kalamaz",
+              [CORRIDOR, FIX_S])
+    s.grip(6, {1: (0, 0.3)}, op="plan")
+    s = scene(out, "Tutamaçla sabit koridor duvarını kaydırmak: sabit ve koridor bağı birlikte", [CORRIDOR, FIX_S, FIX_C])
+    s.grip(6, {0: (0, 0.3), 1: (0, 0.3)}, op="plan")
+    s = scene(out, "Tutamaçla sürükleme bağı olmayan duvarda planı reddetmez", [CORRIDOR, FIX_S])
+    s.grip(3, {0: (0, 0.3), 1: (0, 0.3)}, op="plan")
+    s = scene(out, "Tutamaçla duvar boyunca uzatmak bağları bozmaz", [CORRIDOR, FIX_S])
+    s.grip(6, {1: (0.5, 0)}, op="plan")
+    s = scene(out, "Koridor bağı kaldırılınca tutamaçla kaydırma geçer", [CORRIDOR, FIX_S])
+    s.grip(6, {0: (0, 0.3), 1: (0, 0.3)}, op="plan")
+    s.remove(1)
+    s.grip(6, {0: (0, 0.3), 1: (0, 0.3)}, op="plan")
+    s = scene(out, "Bağ zinciri, sabit kuzey ve sabit güney: zincirin ortasını kaydırmak iki uzaklık bağını birlikte ister", [CORRIDOR, DEPTH, FIX_N, FIX_S])
+    s.shift(6, 0.3)
+    s = scene(out, "Parametrenin yeni değeri sabit iki duvara: bağı tek başına kaldırmak geçirir (birlikte önerilmez)",
+              [CORRIDOR, FIX_S, FIX_C])
+    s.set_parameter("d1", "1.5")
+    s = scene(out, "Yeni bağ iki sabit duvarın arasına başka değerle, bir sabit daha: sabit ya da yeni bağ tek başına geçirir",
+              [FIX_S, FIX_C, FIX_S2])
+    s.add(CORRIDOR, "1.5")
+    s = scene(out, "Kilitli katmandaki duvara bağ ve başvuru: başvuru yolda değil, bağ kaldırılınca geçer", [LOCKED, (LOCKED, None, True)])
+    s.shift(12, 0.4)
+    s = scene(out, "Eşit aralık, sabit bölme ve sabit doğu duvarı: doğuyu kaydırmak iki bağ ister",
+              [SPACING, FIX_P, {"kind": "fix", "a": W(2, "axis")}])
+    s.shift(2, -1.0)
+    return [x.done() for x in out]
+
+
 def query_cases():
     out = []
     s = scene(out, "Bütün kısıtlar: mimari bağlar ve genel kısıt, tuttukları ve tutulan değerleri",
@@ -479,6 +561,9 @@ def documents():
         ("cad.walls.edit.bonds.json", document(
             "cad.walls.edit", "Yoldaki bağlar: çelişkide bağların parçaları, değerleri ve kaldırılınca geçiren (ADR 0780)",
             NOTE, conflict_cases())),
+        ("cad.walls.edit.bondsets.json", document(
+            "cad.walls.edit", "Birlikte kaldırılınca geçiren bağlar ve sürüklemenin önizlemesinde yoldaki bağlar (ADR 0790)",
+            NOTE, set_cases())),
         ("cad.constraints.query.arch.json", document(
             "cad.constraints.query", "Bağı göster ve kaldır: mimari bağlar, kimlikleri, tuttukları ve ölçülenleri (ADR 0780)",
             NOTE, query_cases())),

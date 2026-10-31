@@ -717,7 +717,18 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &OpeningsEdit) -> CommandResult<Op
 
 /// [`plan`] on a document: what the opening tools draw as their preview.
 pub fn plan_in(doc: &Document, input: &OpeningsEdit) -> CommandResult<OpeningsEdited> {
-    match check(doc, input) {
+    let checked = check(doc, input);
+    // The bonds refuse the plan as they refuse execute (docs/adr/0790 §1): a move's preview shows them.
+    if checked.is_ok()
+        && let Some(error) = crate::constraint_follow::bonds_refusal(
+            doc,
+            input.uids.iter().map(String::as_str),
+            |cx| execute(cx, input.clone()),
+        )
+    {
+        return CommandResult::Failed { error };
+    }
+    match checked {
         Ok(work) => {
             let updates: Vec<_> = work
                 .updates

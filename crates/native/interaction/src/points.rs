@@ -189,6 +189,8 @@ pub(crate) fn echo(p: Vec2, cx: &mut Context<'_>) {
 pub(crate) fn written<T>(result: CommandResult<T>, cx: &mut Context<'_>) -> Option<T> {
     match result {
         CommandResult::Completed { output, warnings } => {
+            // A write went through: the refusal told before is done with (docs/adr/0790 §2).
+            *cx.refused = None;
             for warning in warnings {
                 // What Çakışma and Topoloji did is news, not a warning (docs/adr/0162).
                 let level = match warning.code.as_str() {
@@ -207,6 +209,10 @@ pub(crate) fn written<T>(result: CommandResult<T>, cx: &mut Context<'_>) -> Opti
             } else {
                 Level::Warn
             };
+            // The bonds in the way stay for the host to offer their removal (docs/adr/0790 §2).
+            if !error.bonds.is_empty() {
+                *cx.refused = Some(error.clone());
+            }
             cx.say(level, error.message);
             None
         }

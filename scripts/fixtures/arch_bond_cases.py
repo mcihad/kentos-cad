@@ -397,18 +397,71 @@ def measured_or_none(state, rule):
     return measured(state, rule)[0]
 
 
+SET_TRIES = 48   # sets of two or three bonds tried at most (docs/adr/0790 §2)
+
+
+def without(state, rules, values, edited, gone, late):
+    """The rules without those at `gone` solved again (whole when the conflict came late, else its equations): None
+    when the write goes through, else the indices (into `rules`) that still conflict."""
+    kept = [i for i in range(len(rules)) if i not in gone]
+    _, why = (follow if late else equations)(state, [rules[i] for i in kept], values, edited=edited)
+    return None if why is None else [kept[k] for k in why[0]]
+
+
+def smallest(alone, attempt_without):
+    """The smallest set of bonds whose taking away together lets the write through, when none alone does
+    (docs/adr/0790 §2): each bond with what still conflicts without it, grown to pairs, then the pairs to triples, in
+    the order the conflicts name them; the set in the drawing's order, or [] past SET_TRIES sets tried."""
+    tried, pairs = [], []
+
+    def attempt(members):
+        key = sorted(members)
+        if key in tried or len(tried) >= SET_TRIES:
+            return None
+        tried.append(key)
+        still = attempt_without(key)
+        return ("frees", key) if still is None else ("still", still)
+
+    for a, still in alone:
+        for b in still:
+            if b == a:
+                continue
+            got = attempt([a, b])
+            if got is None:
+                continue
+            if got[0] == "frees":
+                return got[1]
+            pairs.append(([a, b], got[1]))
+    for pair, still in pairs:
+        for c in still:
+            if c in pair:
+                continue
+            got = attempt(pair + [c])
+            if got is not None and got[0] == "frees":
+                return got[1]
+    return []
+
+
 def in_the_way(state, rules, values, conflicting, edited, ids=None):
     """Each conflicting rule as a refusal's bond: its parts, its value, what the drawing measures as the write leaves
-    it, and whether the bonds solve without it alone (`frees`). `ids`: the rules' constraint ids (else `$any`)."""
-    out = []
+    it, and whether the bonds solve without it alone (`frees`); when none does, the smallest set that does together
+    (`freesWith`, docs/adr/0790 §2), its members outside the conflict after them. `ids`: the rules' constraint ids
+    (else `$any`)."""
     # A conflict of the equations is tried again as far as the equations; one that came while the shifts were
     # written, whole (docs/adr/0780 §1).
     late = []
     follow(state, rules, values, edited=edited, late=late)
+    frees, alone = [], []
     for k in conflicting:
+        still = without(state, rules, values, edited, [k], bool(late))
+        if still is None:
+            frees.append(k)
+        else:
+            alone.append((k, still))
+    together = [] if frees else smallest(alone, lambda gone: without(state, rules, values, edited, gone, bool(late)))
+    out = []
+    for k in conflicting + [k for k in together if k not in conflicting]:
         r = rules[k]
-        rest = [x for i, x in enumerate(rules) if i != k]
-        _, why = (follow if late else equations)(state, rest, values, edited=edited)
         b = {"id": ids[k] if ids else "$any", "label": LABELS[r["kind"]]}
         if r["kind"] == "distance":
             b["parameter"] = r["parameter"]
@@ -418,14 +471,24 @@ def in_the_way(state, rules, values, conflicting, edited, ids=None):
         m = measured_or_none(state, r)
         if m is not None:
             b["measured"] = m
-        b["frees"] = why is None
+        b["frees"] = k in frees
+        if k in together:
+            b["freesWith"] = [ids[o] if ids else "$any" for o in together if o != k]
         out.append(b)
     return out
 
 
 def bonds_words(bonds):
-    """The refusal's last words: the bond (or bonds) whose taking away alone lets the write through, or none."""
-    frees = [f"{b['parameter']} ({b['label']})" if "parameter" in b else b["label"] for b in bonds if b["frees"]]
+    """The refusal's last words: the bond (or bonds) whose taking away alone lets the write through, the set that does
+    together, or none."""
+    def name(b):
+        return f"{b['parameter']} ({b['label']})" if "parameter" in b else b["label"]
+    frees = [name(b) for b in bonds if b["frees"]]
+    together = [name(b) for b in bonds if b.get("freesWith")]
+    if not frees and together:
+        n = "iki" if len(together) == 2 else "üç"
+        return (f"Tek başına kaldırılınca düzenlemeyi geçiren bağ yok; şu {n} bağ birlikte kaldırılınca geçer: "
+                f"{', '.join(together)}. Ya da kısıtları gevşeterek düzenleyin.")
     if not frees:
         return "Tek başına kaldırılınca düzenlemeyi geçiren bağ yok; çelişen bağları kaldırın ya da kısıtları gevşeterek düzenleyin."
     if len(frees) == 1:

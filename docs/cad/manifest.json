@@ -13518,6 +13518,22 @@
    "tests": 0
   },
   {
+   "id": "tool.wallShift",
+   "kind": "command",
+   "title": "Duvarı kaydır",
+   "level": "semantic",
+   "via": [
+    "cad.walls.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.walls.edit",
+   "mcp": "cad.walls.edit",
+   "note": "Duvar, kenarı ve imleçten ya da yazılan uzaklık shift olarak komuta gider; önizleme komutun planıdır (etkisi ya da bağların reddi, yoldaki bağlar yerinde; ADR 0770, 0790).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.wallSplit",
    "kind": "command",
    "title": "Duvarı böl",

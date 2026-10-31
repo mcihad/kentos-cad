@@ -186,3 +186,38 @@ pub(crate) fn follow(
     }
     Ok(out)
 }
+
+/// What execute would be refused with by the architectural bonds (docs/adr/0790 §1): the command run whole on a
+/// reading copy of the drawing (its step, the constraints following in it), so that a plan says the refusal execute
+/// would give, with its bonds in the way. Asked only when an architectural bond names one of `uids` (the objects the
+/// write changes; the bonds follow only those); none when the copy takes the write, or refuses it for another reason
+/// (execute says that one).
+pub(crate) fn bonds_refusal<'u, T>(
+    doc: &Document,
+    uids: impl IntoIterator<Item = &'u str>,
+    run: impl FnOnce(&mut crate::ExecutionContext<'_>) -> kentos_commands::CommandResult<T>,
+) -> Option<kentos_commands::CommandError> {
+    let named: HashSet<EntityId> = doc
+        .constraints()
+        .constraints
+        .iter()
+        .filter(|c| kentos_commands::rule_is_architectural(&c.rule))
+        .flat_map(|c| c.rule.elements().into_iter().map(|e| e.uid))
+        .collect();
+    if named.is_empty()
+        || !uids.into_iter().any(|u| {
+            kentos_domain::Uuid::parse_str(u).is_ok_and(|u| named.contains(&EntityId(u.into_bytes())))
+        })
+    {
+        return None;
+    }
+    let mut copy = doc.reading_copy();
+    match run(&mut crate::ExecutionContext::new(&mut copy)) {
+        kentos_commands::CommandResult::Failed { error }
+            if error.code == codes::CONSTRAINT_CONFLICT && !error.bonds.is_empty() =>
+        {
+            Some(error)
+        }
+        _ => None,
+    }
+}

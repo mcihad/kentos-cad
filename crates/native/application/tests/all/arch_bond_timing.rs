@@ -1,5 +1,7 @@
 //! docs/adr/0780 §3's budget in release: a shift's preview (`cad.walls.edit`'s plan) on a plan of 200 walls and 50
-//! architectural bonds, the bonds following, refused with its bonds in the way, and written.
+//! architectural bonds, the bonds following, refused with its bonds in the way, and written. docs/adr/0790's: a grip's
+//! drag (`cad.entities.edit`'s plan, the select tool's preview on every move) taken and refused, and a refusal no bond
+//! alone frees (the lowest floor fixed twice and shifted: the pairs tried).
 //!
 //! The plan: 50 floors' walls (`H`, 20 m, 3 m apart) with their two ends' walls (`V`) and a partition in each room
 //! (`P`); 49 distance bonds chain each `H`'s upper face to the next one's lower face (a corridor kept as each wall
@@ -14,7 +16,7 @@ use std::time::Instant;
 
 use kentos_commands::*;
 use kentos_domain::Document;
-use kentos_native_application::{ExecutionContext, constraints_edit, walls_create, walls_edit};
+use kentos_native_application::{ExecutionContext, constraints_edit, edit, walls_create, walls_edit};
 use serde_json::{Value, json};
 
 const CASES: &str = include_str!("../../../../../fixtures/commands/v1/cad.walls.edit.bonds.json");
@@ -30,8 +32,13 @@ fn line(uid: &str, line: &str) -> Value {
     json!({"uid": uid, "element": {"kind": "wall", "edge": 0, "line": line}})
 }
 
-/// The plan of the module's comment; `fixed`: the last floor's wall fixed too (the shift then refused).
+/// The plan of the module's comment; `fixed`: the last floor's wall fixed too (the shift then refused); `twice`: the
+/// lowest floor's wall fixed by its axis and its left face (its shift frees with neither alone).
 fn drawing(floors: usize, total: usize, fixed: bool) -> (Document, Vec<String>) {
+    drawing_with(floors, total, fixed, false)
+}
+
+fn drawing_with(floors: usize, total: usize, fixed: bool, twice: bool) -> (Document, Vec<String>) {
     let file: Value = serde_json::from_str(CASES).unwrap();
     let mut setup = file["setup"].clone();
     setup["entities"] = json!([]);
@@ -75,6 +82,10 @@ fn drawing(floors: usize, total: usize, fixed: bool) -> (Document, Vec<String>) 
                                "b": line(first_partition, "rightFace"), "parameter": ""}}));
     if fixed {
         bonds.push(json!({"rule": {"kind": "fix", "a": line(&uids[floors - 1], "axis")}}));
+    }
+    if twice {
+        bonds.push(json!({"rule": {"kind": "fix", "a": line(&uids[0], "axis")}}));
+        bonds.push(json!({"rule": {"kind": "fix", "a": line(&uids[0], "leftFace")}}));
     }
     done(constraints_edit::execute(
         &mut ExecutionContext::new(&mut doc),
@@ -149,8 +160,52 @@ fn measure(floors: usize, total: usize) {
     let refused = median(11, || {
         std::hint::black_box(walls_edit::plan(&ExecutionContext::new(&mut fixed), &refused_input));
     });
+    // A grip's drag: the lowest wall's two ends moved together, as Esnet writes it (docs/adr/0790 §1).
+    let grip = |doc: &Document, uid: &str| -> EntitiesEdit {
+        let Some(Entity::Wall(w)) = doc.slot_of(uid.parse().unwrap()).and_then(|s| doc.get(s)) else {
+            panic!("no wall {uid}")
+        };
+        let mut fields = w.wall.clone();
+        for p in &mut fields.pts {
+            p.y -= 0.2;
+        }
+        EntitiesEdit {
+            operation: EditOperation::Grip,
+            changes: vec![EntityEdit::Update {
+                uid: uid.to_owned(),
+                geometry: EntityGeometry::Wall(fields),
+            }],
+            expected_revision: None,
+        }
+    };
+    let dragged = grip(&doc, &uids[0]);
+    assert!(matches!(edit::plan_in(&doc, &dragged), CommandResult::Completed { .. }));
+    let drag = median(21, || {
+        std::hint::black_box(edit::plan_in(&doc, &dragged));
+    });
+    let dragged_fixed = grip(&fixed, &fixed_uids[0]);
+    assert!(matches!(edit::plan_in(&fixed, &dragged_fixed), CommandResult::Failed { .. }));
+    let drag_refused = median(21, || {
+        std::hint::black_box(edit::plan_in(&fixed, &dragged_fixed));
+    });
+    // No bond alone frees it: the pairs are tried (docs/adr/0790 §2).
+    let (twice, twice_uids) = drawing_with(floors, total, false, true);
+    let twice_input = shift(&twice_uids[0], -0.2);
+    let together = match walls_edit::plan(&ExecutionContext::new(&mut twice.clone()), &twice_input) {
+        CommandResult::Failed { error } => {
+            assert!(error.bonds.iter().all(|b| !b.frees));
+            error.bonds.iter().filter(|b| !b.frees_with.is_empty()).count()
+        }
+        other => panic!("{other:?}"),
+    };
+    let mut twice = twice;
+    let pairs = median(11, || {
+        std::hint::black_box(walls_edit::plan(&ExecutionContext::new(&mut twice), &twice_input));
+    });
     println!(
         "{total} duvar, {floors} bağ: kaydırmanın önizlemesi {plan:.2} ms ({followed} duvar bağla izler), yazma {write:.2} ms; \
-         tek bağlı bölmenin önizlemesi {near:.2} ms; reddedilen önizleme {refused:.2} ms ({bonds} bağ yolda)"
+         tek bağlı bölmenin önizlemesi {near:.2} ms; reddedilen önizleme {refused:.2} ms ({bonds} bağ yolda); \
+         tutamaçla sürüklemenin önizlemesi {drag:.2} ms, reddedileni {drag_refused:.2} ms; \
+         hiçbiri tek başına geçirmeyen ret {pairs:.2} ms ({together} bağ birlikte)"
     );
 }

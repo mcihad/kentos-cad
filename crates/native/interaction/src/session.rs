@@ -81,6 +81,8 @@ pub const TOOLS: &[&str] = &[
     wall_from_lines::ID,
     wall_rectangle::ID,
     crate::wall_partition::ID,
+    // Duvarı kaydır (docs/adr/0790 §1).
+    crate::wall_shift::ID,
     crate::wall_dimensions::ID,
     // İç ölçü zinciri (docs/adr/0711 §5).
     crate::interior_dims::ID,
@@ -481,6 +483,7 @@ impl Session {
             wall::ID => Box::new(Path::wall()),
             wall_rectangle::ID => Box::new(wall_rectangle::WallRectangle::new()),
             crate::wall_partition::ID => Box::new(crate::wall_partition::Partition::new()),
+            crate::wall_shift::ID => Box::new(crate::wall_shift::WallShift::new()),
             crate::interior_dims::ID => {
                 Box::new(crate::interior_dims::InteriorDimensions::default())
             }

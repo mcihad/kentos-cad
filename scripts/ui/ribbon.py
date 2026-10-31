@@ -330,7 +330,7 @@ CAD = [
             ]}, S("tool.ramp"), S("tool.casework")]),
         P("Düzenle", "wall", [S("tool.wallJoins"), S("tool.wallSplit"), S("tool.openingMove"),
             S("tool.spaceSplit"), S("tool.spaceRebound"), S("tool.spaceSources"), S("tool.gridNumber"), S("tool.openingNumber"), S("tool.openingArray")],
-          overflow=["tool.spaceNumber", "tool.wallJoin", "tool.wallExtend", "tool.wallTrim", "tool.wallFlip", "tool.wallRestyle",
+          overflow=["tool.wallShift", "tool.spaceNumber", "tool.wallJoin", "tool.wallExtend", "tool.wallTrim", "tool.wallFlip", "tool.wallRestyle",
             "tool.openingFlip", "arch.spaceMerge", "tool.spaceFloor", "tool.spaceCeiling"]),
         # Duvar ölçüleri and İç ölçü zinciri (docs/adr/0711) share one large split: the tab keeps its words at 1440 px.
         # İşaret ▾ and Revizyon ▾ (docs/adr/0721) are small splits, Malzeme lejandı with the schedules: the tab keeps

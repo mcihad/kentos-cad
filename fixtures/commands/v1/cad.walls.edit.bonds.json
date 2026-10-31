@@ -3903,7 +3903,7 @@
             "status": "failed",
             "error": {
               "code": "constraint_conflict",
-              "message": "Sabit bağlı bir duvar ya da açıklık oynatılamaz; hiçbir şey yazılmadı. Tek başına kaldırılınca düzenlemeyi geçiren bağ yok; çelişen bağları kaldırın ya da kısıtları gevşeterek düzenleyin.",
+              "message": "Sabit bağlı bir duvar ya da açıklık oynatılamaz; hiçbir şey yazılmadı. Tek başına kaldırılınca düzenlemeyi geçiren bağ yok; şu iki bağ birlikte kaldırılınca geçer: Sabit, Sabit. Ya da kısıtları gevşeterek düzenleyin.",
               "uids": [
                 "0192f5a1-7c00-7000-8000-000000000001",
                 "0192f5a1-7c00-7000-8000-000000000002"
@@ -3922,7 +3922,10 @@
                       }
                     }
                   ],
-                  "frees": false
+                  "frees": false,
+                  "freesWith": [
+                    "0192f5a1-7c00-7000-8000-000000000002"
+                  ]
                 },
                 {
                   "id": "0192f5a1-7c00-7000-8000-000000000002",
@@ -3937,7 +3940,10 @@
                       }
                     }
                   ],
-                  "frees": false
+                  "frees": false,
+                  "freesWith": [
+                    "0192f5a1-7c00-7000-8000-000000000001"
+                  ]
                 }
               ]
             }

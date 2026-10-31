@@ -231,6 +231,7 @@ mod tests {
             overview: None,
             magnifier: None,
             timebar: None,
+            bond_notice: None,
             paragraph: None,
             chart_press: None,
             expect: None,

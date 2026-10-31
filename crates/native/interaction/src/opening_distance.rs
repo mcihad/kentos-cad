@@ -310,6 +310,7 @@ impl Overlay {
             to: side.to,
             at: side.text_at,
             value: side.value,
+            refused: None,
             done: false,
         })
     }
@@ -324,10 +325,26 @@ pub struct OpeningDistance {
     to: DistanceTo,
     at: Vec2,
     value: f64,
+    /// The bonds' refusal of the distance typed (`cad.openings.edit`'s plan), shown under the field with the bonds
+    /// marked in place (docs/adr/0790 §1).
+    refused: Option<(crate::bond_refusal::Refused, Vec2)>,
     done: bool,
 }
 
 impl OpeningDistance {
+    fn request(&self, distance: f64) -> OpeningsEdit {
+        OpeningsEdit {
+            uids: vec![self.uid.to_string()],
+            expected_revision: None,
+            operation: OpeningsOperation::Distance {
+                side: self.side,
+                face: self.face,
+                distance,
+                to: self.to,
+            },
+        }
+    }
+
     fn field(&self, initial: String, cx: &mut Context<'_>) {
         cx.view_changes.push(ViewChange::Text(TextField {
             at: self.at,
@@ -396,17 +413,7 @@ impl Tool for OpeningDistance {
             self.field(text.to_owned(), cx);
             return;
         };
-        let input = OpeningsEdit {
-            uids: vec![self.uid.to_string()],
-            expected_revision: None,
-            operation: OpeningsOperation::Distance {
-                side: self.side,
-                face: self.face,
-                distance,
-                to: self.to,
-            },
-        };
-        let result = openings_edit::execute(&mut ExecutionContext::new(cx.doc), input);
+        let result = openings_edit::execute(&mut ExecutionContext::new(cx.doc), self.request(distance));
         if crate::points::written(result, cx).is_some() {
             let side = if matches!(self.side, WallEnd::Start) {
                 "baştaki"
@@ -429,7 +436,19 @@ impl Tool for OpeningDistance {
     fn finished(&self) -> bool {
         self.done
     }
+    /// The bonds' refusal of the distance typed, planned as it is typed (docs/adr/0790 §1).
+    fn text_draft(&mut self, text: &str, cx: &mut Context<'_>) {
+        // Under the field's hint, as Duvarın mesafesi's card.
+        let below = Vec2::new(self.at.x, self.at.y - cx.view.world_length(40.0));
+        self.refused = cx.typed_length(text).filter(|d| d.is_finite()).and_then(|distance| {
+            let result = openings_edit::plan_in(cx.doc, &self.request(distance));
+            crate::bond_refusal::Refused::of_result(&result, cx).map(|r| (r, below))
+        });
+    }
     fn preview(&self, _: &Format) -> Preview {
-        Preview::default()
+        match &self.refused {
+            Some((r, at)) => r.over(Preview::default(), *at),
+            None => Preview::default(),
+        }
     }
 }

@@ -308,16 +308,24 @@ pub(crate) struct Solved {
     pub any: bool,
     /// Of `conflicting`, those whose taking away alone lets the write through (docs/adr/0780 §1).
     pub frees: Vec<usize>,
+    /// When none of them does: the smallest set whose taking away together does, in the set's order; it may name
+    /// constraints outside `conflicting` (docs/adr/0790 §2).
+    pub frees_with: Vec<usize>,
     /// The conflict came while the shifts were written (Kaydır refused one, a bond did not settle), not from the
     /// bonds' equations.
     pub late: bool,
 }
 
+/// How many sets of two or three bonds a refusal tries at most before it says none frees the write (docs/adr/0790 §2).
+pub const SET_TRIES: usize = 48;
+
 /// Solves the architectural constraints of `set` (docs/adr/0770 §4) over the document as it is, with `values` its
 /// parameters in metres; `before`: the shapes an edit's objects had before it (by id), whose moved parts are held.
 /// On a conflict, each conflicting constraint is taken away alone and the set solved again: those that let the write
-/// through are `frees` (docs/adr/0780 §1). A conflict of the bonds' equations is solved again as far as its equations
-/// (the shifts not written: the budget, §4); one that came while the shifts were written, whole.
+/// through are `frees` (docs/adr/0780 §1). When none does, the smallest set does (docs/adr/0790 §2): pairs, then
+/// triples, each grown from what the set without its members still conflicts on, at most [`SET_TRIES`] of them. A
+/// conflict of the bonds' equations is solved again as far as its equations (the shifts not written: the budget,
+/// §4); one that came while the shifts were written, whole.
 pub(crate) fn solve(
     doc: &Document,
     set: &ConstraintSet,
@@ -329,39 +337,89 @@ pub(crate) fn solve(
     if out.conflicting.is_empty() {
         return out;
     }
-    if out.late {
-        for &k in &out.conflicting {
-            let mut without = set.clone();
-            without.constraints.remove(k);
-            if solve_once(doc, &without, values, holds, before)
-                .conflicting
-                .is_empty()
-            {
-                out.frees.push(k);
+    let view = View::new(doc);
+    let read = (!out.late).then(|| read(&view, set, values));
+    // The set without the constraints at `gone` (indices in `set`): none when it goes through, else what still
+    // conflicts (indices in `set`).
+    let without = |gone: &[usize]| -> Option<Vec<usize>> {
+        match &read {
+            None => {
+                let kept: Vec<usize> = (0..set.constraints.len())
+                    .filter(|k| !gone.contains(k))
+                    .collect();
+                let less = ConstraintSet {
+                    constraints: kept.iter().map(|&k| set.constraints[k].clone()).collect(),
+                    ..set.clone()
+                };
+                let again = solve_once(doc, &less, values, holds, before);
+                (!again.conflicting.is_empty())
+                    .then(|| again.conflicting.iter().map(|&k| kept[k]).collect())
+            }
+            // The equations' conflict: the set read once, the bonds left out of its problem.
+            Some(read) => {
+                let kept: Vec<usize> = (0..read.bonds.len())
+                    .filter(|&b| !gone.contains(&read.rules[b]))
+                    .collect();
+                let less = Read {
+                    vars: read.vars.clone(),
+                    rules: kept.iter().map(|&b| read.rules[b]).collect(),
+                    bonds: kept.iter().map(|&b| read.bonds[b]).collect(),
+                    broken: Vec::new(),
+                };
+                match equations(doc, &less, &view, holds, before, false) {
+                    Ok(_) => None,
+                    Err((bonds, _)) => Some(bonds.into_iter().map(|b| less.rules[b]).collect()),
+                }
             }
         }
-        return out;
-    }
-    // The equations' conflict: the set read once, each bond left out of its problem in turn.
-    let view = View::new(doc);
-    let read = read(&view, set, values);
-    for &k in &out.conflicting {
-        let Some(b) = read.rules.iter().position(|&r| r == k) else {
-            continue;
-        };
-        let mut without = Read {
-            vars: read.vars.clone(),
-            rules: read.rules.clone(),
-            bonds: read.bonds.clone(),
-            broken: Vec::new(),
-        };
-        without.rules.remove(b);
-        without.bonds.remove(b);
-        if equations(doc, &without, &view, holds, before, false).is_ok() {
-            out.frees.push(k);
+    };
+    let first = out.conflicting.clone();
+    let mut alone: Vec<(usize, Vec<usize>)> = Vec::new();
+    for &k in &first {
+        match without(&[k]) {
+            None => out.frees.push(k),
+            Some(still) => alone.push((k, still)),
         }
     }
+    if out.frees.is_empty() {
+        out.frees_with = smallest(&alone, &without);
+    }
     out
+}
+
+/// The smallest set of bonds whose taking away lets a write through when none alone does (docs/adr/0790 §2): each
+/// bond with what still conflicts without it (`alone`, in the refusal's order), grown to pairs, then the pairs to
+/// triples, in the order the conflicts name them; the set in the drawing's order, or empty past [`SET_TRIES`].
+fn smallest(alone: &[(usize, Vec<usize>)], without: &dyn Fn(&[usize]) -> Option<Vec<usize>>) -> Vec<usize> {
+    let mut tried: Vec<Vec<usize>> = Vec::new();
+    let mut pairs: Vec<(Vec<usize>, Vec<usize>)> = Vec::new();
+    // Each set tried once: Ok(the set) when it frees, Err(what still conflicts) when not, None when tried already
+    // or the tries are spent (`tried` full).
+    let mut attempt = |mut key: Vec<usize>| -> Option<Result<Vec<usize>, Vec<usize>>> {
+        key.sort_unstable();
+        if tried.contains(&key) || tried.len() >= SET_TRIES {
+            return None;
+        }
+        tried.push(key.clone());
+        Some(without(&key).map_or(Ok(key), Err))
+    };
+    for (a, still) in alone {
+        for &b in still.iter().filter(|&&b| b != *a) {
+            match attempt(vec![*a, b]) {
+                Some(Ok(set)) => return set,
+                Some(Err(left)) => pairs.push((vec![*a, b], left)),
+                None => {}
+            }
+        }
+    }
+    for (pair, still) in &pairs {
+        for &c in still.iter().filter(|c| !pair.contains(c)) {
+            if let Some(Ok(set)) = attempt(vec![pair[0], pair[1], c]) {
+                return set;
+            }
+        }
+    }
+    Vec::new()
 }
 
 /// The bonds' equations over a read set solved, nothing written (docs/adr/0770 §4): the shifts and the freedom (none

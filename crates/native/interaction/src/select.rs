@@ -150,6 +150,8 @@ pub struct Select {
     marks: Vec<Vec2>,
     /// A transform mode's tag: the angle, the factor, the distance.
     mode_tag: Option<String>,
+    /// The bonds' refusal of the drag where the grip is now, marked in place (docs/adr/0790 §1).
+    refused: Option<crate::bond_refusal::Refused>,
     /// The one selected opening's temporary dimensions (docs/adr/0701), and where the pointer last rested.
     temporary: crate::opening_distance::Overlay,
     /// The one selected wall's temporary distances (docs/adr/0710).
@@ -702,45 +704,16 @@ impl Select {
             );
             return;
         }
-        let mut changes = Vec::with_capacity(moved.len());
-        for (slot, _, after) in &moved {
-            let (Some(uid), Some(geometry)) = (cx.doc.uid(*slot), edit_geometry(shape(after)))
-            else {
-                continue;
-            };
-            changes.push(if copy {
-                EntityEdit::add(uid.to_string(), geometry, Some(true))
-            } else {
-                EntityEdit::Update {
-                    uid: uid.to_string(),
-                    geometry,
+        if let Some((input, follow)) = grip_input(&moved, copy, cx) {
+            let result = edit::execute(&mut ExecutionContext::new(cx.doc), input);
+            if points::written(result, cx).is_some() {
+                neighbours::say(follow.as_ref(), cx);
+                if copy {
+                    cx.say(
+                        Level::Success,
+                        format!("{} nesne kopyalandı (Esnet).", moved.len()),
+                    );
                 }
-            });
-        }
-        // The neighbours sharing what moved go in the same step (docs/adr/0160 §6); a copy has none.
-        let edits: Vec<(Slot, Shape, Shape)> = moved
-            .iter()
-            .map(|(slot, before, after)| (*slot, shape(before), shape(after)))
-            .collect();
-        let follow = if copy {
-            None
-        } else {
-            neighbours::neighbours_of(cx, &edits)
-        };
-        changes.extend(follow.iter().flat_map(|n| n.changes.iter().cloned()));
-        let input = EntitiesEdit {
-            operation: EditOperation::Grip,
-            changes,
-            expected_revision: None,
-        };
-        let result = edit::execute(&mut ExecutionContext::new(cx.doc), input);
-        if points::written(result, cx).is_some() {
-            neighbours::say(follow.as_ref(), cx);
-            if copy {
-                cx.say(
-                    Level::Success,
-                    format!("{} nesne kopyalandı (Esnet).", moved.len()),
-                );
             }
         }
         if let Some(mut g) = keep {
@@ -777,6 +750,7 @@ impl Select {
             return;
         };
         self.moved = None;
+        self.refused = None;
         self.follow.clear();
         self.ghosts.clear();
         self.marks.clear();
@@ -798,12 +772,24 @@ impl Select {
             if tag::mixed(&grips, cx) {
                 return;
             }
-            if let Some((planned, followers)) = opening::preview(&grips, dx, dy, g.modes.copy, cx) {
+            if let Some((planned, followers, refused)) =
+                opening::preview(&grips, dx, dy, g.modes.copy, cx)
+            {
                 self.moved = planned.into_iter().next();
+                self.refused = refused;
                 crate::wall_dimensions::append_followers(&mut self.followers, &followers, cx);
                 return;
             }
             let moved = stretched(cx.doc, &grips, dx, dy);
+            // The bonds refuse a drag as they refuse its write: they are marked as the grip moves (docs/adr/0790 §1).
+            if !g.modes.copy
+                && let Some((input, _)) = grip_input(&moved, false, cx)
+            {
+                self.refused = crate::bond_refusal::Refused::of_result(
+                    &kentos_native_application::edit::plan_in(cx.doc, &input),
+                    cx,
+                );
+            }
             let edits: Vec<(Slot, Shape, Shape)> = moved
                 .iter()
                 .map(|(slot, before, after)| (*slot, shape(before), shape(after)))
@@ -930,13 +916,18 @@ impl Select {
         } else {
             self.mode_tag.iter().cloned().collect()
         };
-        Some(Preview {
+        let preview = Preview {
             strokes,
             texts: self.followers.texts.clone(),
             marks: self.marks.clone(),
             tag: (!lines.is_empty()).then_some(Tag { at, lines }),
             tracking: self.tracking,
             ..Preview::default()
+        };
+        // The bonds the drag runs into, where they stand, and the refusal's card (docs/adr/0790 §1).
+        Some(match &self.refused {
+            Some(refused) => refused.over(preview, at),
+            None => preview,
         })
     }
 }
@@ -1066,5 +1057,50 @@ pub fn sub_line(doc: &kentos_domain::Document, selection: &crate::Selection) -> 
         "Alt nesne: {} {} · {place}",
         crate::data_search::kind_name(e),
         uid.get(..8).unwrap_or(&uid)
+    ))
+}
+
+/// Esnet's write of the objects a grip moved (`stretched`): each one's new geometry (a copy with Kopya), and the
+/// neighbours sharing what moved in the same step (docs/adr/0160 §6); a copy has none. What the commit writes and the
+/// drag plans (docs/adr/0790 §1).
+fn grip_input(
+    moved: &[(Slot, kentos_commands::Entity, kentos_commands::Entity)],
+    copy: bool,
+    cx: &Context<'_>,
+) -> Option<(EntitiesEdit, Option<neighbours::Neighbours>)> {
+    let mut changes = Vec::with_capacity(moved.len());
+    for (slot, _, after) in moved {
+        let (Some(uid), Some(geometry)) = (cx.doc.uid(*slot), edit_geometry(shape(after))) else {
+            continue;
+        };
+        changes.push(if copy {
+            EntityEdit::add(uid.to_string(), geometry, Some(true))
+        } else {
+            EntityEdit::Update {
+                uid: uid.to_string(),
+                geometry,
+            }
+        });
+    }
+    if changes.is_empty() {
+        return None;
+    }
+    let edits: Vec<(Slot, Shape, Shape)> = moved
+        .iter()
+        .map(|(slot, before, after)| (*slot, shape(before), shape(after)))
+        .collect();
+    let follow = if copy {
+        None
+    } else {
+        neighbours::neighbours_of(cx, &edits)
+    };
+    changes.extend(follow.iter().flat_map(|n| n.changes.iter().cloned()));
+    Some((
+        EntitiesEdit {
+            operation: EditOperation::Grip,
+            changes,
+            expected_revision: None,
+        },
+        follow,
     ))
 }

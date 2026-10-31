@@ -92,12 +92,14 @@ kaynak kodu biliniyormuş gibi bir öneri yapılmamaktadır.
 
 ### ADV-01 — Bağlantılı odaları net ölçüyle kur ve güvenle değiştir [~]
 
-_Durum (31 Ekim 2026, [ADR 0770](../docs/adr/0770-linked-rooms-and-architectural-bonds.md)), [ADR 0780](../docs/adr/0780-bonds-in-the-way.md)):_ ortak duvarı benimseyen
+_Durum (31 Ekim 2026, [ADR 0770](../docs/adr/0770-linked-rooms-and-architectural-bonds.md), [ADR 0780](../docs/adr/0780-bonds-in-the-way.md), [ADR 0790](../docs/adr/0790-bonds-while-dragging-and-together.md)):_ ortak duvarı benimseyen
 Dikdörtgen duvar, kaydırmanın etkisi (önizleme kartı), Bu ölçüyü koru (kilit karesi), duvar çizgisi ve pervaz bağları
 (mesafe, paralel, eşit aralık, sabit) ve şema 137 yapıldı. Çelişen bağ reddin `bonds`'unda (parçalar, değerler,
 `frees`) ve Duvarın mesafesi'nde yerinde vurgulu; Bağı göster/kaldır Python ve MCP'de; 20 ms bütçesi ölçüldü (200/50: 2,4 ms,
-400/100: 6,9 ms). Açık: tutamaçla sürüklemede ve Kaydır aracında yerinde vurgu, iki bağın birlikte kaldırılmasının önerisi,
-gerçek pencerede elle kabul.
+400/100: 6,9 ms). Tutamaçla
+sürüklemede, Duvarı kaydır'da, Boy'da ve açıklığın taşınmasında yoldaki bağlar yerinde işaretli; hiçbir bağ tek başına
+geçirmiyorsa birlikte kaldırılınca geçen en küçük küme (`freesWith`) önerilir ve kartın düğmesiyle tek adımda kaldırılır.
+Açık: gerçek pencerede elle kabul, geç çelişkide 48 denemenin en kötü süresi, özellikler panelinden yazılan değerin kartı.
 
 **Kullanıcı sonucu:** “Bu odanın iç eni 3,20 m olsun; koridor 1,20 m kalsın”
 işi, çok sayıda taşı/uzat/buda işlemine dönüşmeden yapılabilsin. Önce basit ve

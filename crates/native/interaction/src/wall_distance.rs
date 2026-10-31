@@ -462,6 +462,7 @@ impl Overlay {
                 anchor: l.anchor,
                 at: l.text_at,
                 value: l.value,
+                card: None,
                 done: false,
             }),
         })
@@ -687,7 +688,7 @@ impl WallDistance {
                 kentos_commands::CommandResult::Failed { error }
                 | kentos_commands::CommandResult::Conflict { error }
                 | kentos_commands::CommandResult::NeedsInput { error } => {
-                    self.in_way = bonds_in_way(&error.bonds, cx);
+                    self.in_way = bonds_in_way(&error.bonds, cx.doc);
                     (refusal_lines(&error, &f), Tone::Danger)
                 }
                 _ => (
@@ -729,7 +730,7 @@ impl WallDistance {
             kentos_commands::CommandResult::Failed { error }
             | kentos_commands::CommandResult::Conflict { error }
             | kentos_commands::CommandResult::NeedsInput { error } => {
-                self.in_way = bonds_in_way(&error.bonds, cx);
+                self.in_way = bonds_in_way(&error.bonds, cx.doc);
                 (refusal_lines(&error, &f), Tone::Danger)
             }
             _ => (Vec::new(), Tone::Accent),
@@ -737,34 +738,58 @@ impl WallDistance {
     }
 }
 
-/// A refusal's card (docs/adr/0780 §1): its message, then each bond in the way, the one to remove first.
+/// A refusal's card (docs/adr/0780 §1): its message, then each bond in the way, the one to remove first; a bond of
+/// the set that frees the write together names the others (docs/adr/0790 §2).
 pub fn refusal_lines(error: &kentos_commands::CommandError, f: &Format) -> Vec<String> {
     let mut lines = vec![error.message.clone()];
     let mut bonds: Vec<&kentos_commands::BondInTheWay> = error.bonds.iter().collect();
-    bonds.sort_by_key(|b| !b.frees);
+    bonds.sort_by_key(|b| (!b.frees, b.frees_with.is_empty()));
     for b in bonds {
-        let name = b.parameter.as_deref().unwrap_or(b.label.as_str());
+        // A bond without a parameter is named by its label alone (“Sabit”, not “Sabit (Sabit)”).
+        let name = match &b.parameter {
+            Some(p) => format!("{p} ({})", b.label),
+            None => b.label.clone(),
+        };
         let value = match (b.kept, b.measured) {
             (Some(k), Some(m)) => format!(": {} tutuyor, düzenleme {} yapar", f.length(k), f.length(m)),
             (Some(k), None) => format!(": {} tutuyor", f.length(k)),
             _ => String::new(),
         };
-        let way = if b.frees { " — kaldırılınca geçer" } else { "" };
-        lines.push(format!("• {name} ({}){value}{way}", b.label));
+        lines.push(format!("• {name}{value}{}", way(b, &error.bonds)));
     }
     lines
 }
 
+/// How taking `b` away helps (docs/adr/0780 §1, 0790 §2): alone, together with the others named, or not.
+fn way(b: &kentos_commands::BondInTheWay, all: &[kentos_commands::BondInTheWay]) -> String {
+    if b.frees {
+        return " — kaldırılınca geçer".to_owned();
+    }
+    if b.frees_with.is_empty() {
+        return String::new();
+    }
+    let others: Vec<&str> = b
+        .frees_with
+        .iter()
+        .map(|id| {
+            all.iter()
+                .find(|o| o.id == *id)
+                .map_or("?", |o| o.parameter.as_deref().unwrap_or(o.label.as_str()))
+        })
+        .collect();
+    format!(" — {} ile birlikte kaldırılınca geçer", others.join(" ve "))
+}
+
 /// The bonds in the way marked where they stand (docs/adr/0780 §1): each wall line they hold drawn thick, each jamb
 /// ringed, a dashed line between a bond's parts and its name at the middle, in the danger colour.
-pub fn bonds_in_way(bonds: &[kentos_commands::BondInTheWay], cx: &Context<'_>) -> Preview {
+pub fn bonds_in_way(bonds: &[kentos_commands::BondInTheWay], doc: &kentos_domain::Document) -> Preview {
     let mut out = Preview::default();
     for (i, b) in bonds.iter().enumerate() {
         let places: Vec<Vec2> = b
             .parts
             .iter()
             .filter_map(|p| {
-                let (at, line) = arch_bonds::part_place(cx.doc, p.uid, &p.element)?;
+                let (at, line) = arch_bonds::part_place(doc, p.uid, &p.element)?;
                 let at = Vec2::new(at.x, at.y);
                 match line {
                     Some((a, q)) => out.strokes.push(
@@ -791,14 +816,9 @@ pub fn bonds_in_way(bonds: &[kentos_commands::BondInTheWay], cx: &Context<'_>) -
             Vec2::new(s.x + p.x / places.len() as f64, s.y + p.y / places.len() as f64)
         });
         let name = b.parameter.as_deref().unwrap_or(b.label.as_str());
-        let text = if b.frees {
-            format!("× {name} — kaldırılınca geçer")
-        } else {
-            format!("× {name}")
-        };
         out.labels.push(Label {
             at: if places.len() > 1 { mid } else { first },
-            text,
+            text: format!("× {name}{}", way(b, bonds)),
             // Above the temporary dimension's number at the gap's middle, each bond a line higher.
             offset: [6.0, -24.0 - 18.0 * i as f32],
             tone: Tone::Danger,
@@ -943,6 +963,9 @@ pub struct WallLength {
     anchor: WallAnchor,
     at: Vec2,
     value: f64,
+    /// What the length typed would do (`cad.walls.edit`'s plan): the effects, or the bonds' refusal marked in place
+    /// (docs/adr/0790 §1); where the card stands.
+    card: Option<(Vec<String>, Vec2, Tone, Preview)>,
     done: bool,
 }
 
@@ -957,6 +980,20 @@ impl WallLength {
             }
         };
         field(self.at, initial, "Boy", hint, cx);
+    }
+}
+
+impl WallLength {
+    fn request(&self, length: f64) -> WallsEdit {
+        WallsEdit {
+            uids: vec![self.uid.to_string()],
+            expected_revision: None,
+            operation: WallsOperation::Length {
+                edge: Some(self.edge),
+                length,
+                anchor: self.anchor,
+            },
+        }
     }
 }
 
@@ -1010,15 +1047,7 @@ impl Tool for WallLength {
             self.field(text.to_owned(), cx);
             return;
         };
-        let input = WallsEdit {
-            uids: vec![self.uid.to_string()],
-            expected_revision: None,
-            operation: WallsOperation::Length {
-                edge: Some(self.edge),
-                length,
-                anchor: self.anchor,
-            },
-        };
+        let input = self.request(length);
         let result = walls_edit::execute(&mut ExecutionContext::new(cx.doc), input);
         if let Some(done) = crate::points::written(result, cx) {
             let shown = cx.format().length(length);
@@ -1041,8 +1070,43 @@ impl Tool for WallLength {
     fn finished(&self) -> bool {
         self.done
     }
+    /// The card under the field: what the length typed does (`cad.walls.edit`'s plan, docs/adr/0770 §3), or the
+    /// bonds' refusal with the bonds marked in place (docs/adr/0790 §1).
+    fn text_draft(&mut self, text: &str, cx: &mut Context<'_>) {
+        let below = Vec2::new(self.at.x, self.at.y - cx.view.world_length(CARD_PX));
+        let f = cx.format();
+        self.card = cx.typed_length(text).filter(|d| d.is_finite()).map(|length| {
+            let result = walls_edit::plan(&ExecutionContext::new(cx.doc), &self.request(length));
+            if let Some(refused) = crate::bond_refusal::Refused::of_result(&result, cx) {
+                return (refused.lines, below, Tone::Danger, refused.marks);
+            }
+            let lines = match result {
+                kentos_commands::CommandResult::Completed { output, .. } => output
+                    .effects
+                    .as_ref()
+                    .map_or_else(Vec::new, |e| effect_lines(e, output.joined.len(), None, &f)),
+                kentos_commands::CommandResult::Failed { error }
+                | kentos_commands::CommandResult::Conflict { error }
+                | kentos_commands::CommandResult::NeedsInput { error } => {
+                    return (vec![error.message], below, Tone::Danger, Preview::default());
+                }
+                _ => Vec::new(),
+            };
+            (lines, below, Tone::Accent, Preview::default())
+        });
+    }
     fn preview(&self, _: &Format) -> Preview {
-        Preview::default()
+        let Some((lines, at, tone, marks)) = &self.card else {
+            return Preview::default();
+        };
+        Preview {
+            tag: Some(Tag {
+                at: *at,
+                lines: lines.clone(),
+            }),
+            tag_tone: *tone,
+            ..marks.clone()
+        }
     }
 }
 

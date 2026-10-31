@@ -416,6 +416,23 @@ pub fn compare(expect: &Expect, got: &Observation, trace: &Trace) -> Vec<String>
             format!("{want:?}"),
         );
     }
+    // The bonds in the way and the refusal's card (docs/adr/0790), exact.
+    if let Some(want) = &expect.bonds_in_way {
+        check(
+            "bondsInWay",
+            got.bonds_in_way == *want,
+            format!("{:?}", got.bonds_in_way),
+            format!("{want:?}"),
+        );
+    }
+    if let Some(want) = &expect.bond_notice {
+        check(
+            "bondNotice",
+            got.bond_notice == *want,
+            format!("{:?}", got.bond_notice),
+            format!("{want:?}"),
+        );
+    }
     // The active layer and the current colour and weight (docs/adr/0176 §3), exact.
     if let Some(want) = &expect.active_layer {
         check(

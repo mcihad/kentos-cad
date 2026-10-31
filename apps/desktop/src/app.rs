@@ -628,6 +628,8 @@ pub enum Message {
     SheetSet(crate::sheet_set::Event),
     Xrefs(crate::xrefs_window::Event),
     XrefWatch(crate::xrefs_watch::Event),
+    /// The card of a write the bonds refused (bond_notice.rs, docs/adr/0790 §2).
+    BondNotice(crate::bond_notice::Event),
     Quantities(crate::quantities::Event),
     LayerPurge(crate::layer_purge::Event),
     LayerList(crate::layer_list::Event),
@@ -1043,6 +1045,8 @@ pub struct App {
     /// Seçili katmanlarda önle's layers, by id (docs/adr/0162 §1): the
     /// session's, not a setting; the tools see them in their context.
     pub(crate) overlap_layers: Vec<String>,
+    /// The last write the bonds refused (docs/adr/0790 §2): its card over the drawing offers the way through.
+    pub(crate) bonds_refused: Option<kentos_commands::CommandError>,
     /// Seçim süzgeci's kinds, as `kentos_interaction::selectable::bit`s: the
     /// session's, every kind at first (docs/adr/0187 §5).
     pub(crate) select_kinds: u32,
@@ -1502,6 +1506,7 @@ impl App {
             calc: crate::calc::Calc::default(),
             tracking: kentos_interaction::object_tracking::ObjectTracking::new(),
             overlap_layers: Vec::new(),
+            bonds_refused: None,
             select_kinds: kentos_interaction::selectable::ALL,
             locks: kentos_interaction::LockState::default(),
             ucs_history: crate::ucs::UcsHistory::default(),
@@ -2226,6 +2231,7 @@ impl App {
             Message::SheetSet(event) => return self.sheet_set_event(event),
             Message::Xrefs(event) => return self.xrefs_event(event),
             Message::XrefWatch(event) => return self.xref_watch_event(event),
+            Message::BondNotice(event) => return self.bond_notice_event(event),
             Message::Quantities(event) => return self.quantities_event(event),
             Message::LayerPurge(event) => return self.layer_purge_event(event),
             Message::DrawingExchange(event) => return self.drawing_exchange_event(event),

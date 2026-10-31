@@ -57,6 +57,8 @@ pub struct Bench {
     pub tracking: ObjectTracking,
     /// Seçili katmanlarda önle's layers (docs/adr/0162 §1).
     pub overlap_layers: Vec<String>,
+    /// The last write the bonds refused (docs/adr/0790 §2).
+    pub refused: Option<kentos_commands::CommandError>,
     /// The digitizing locks (docs/adr/0166).
     pub locks: LockState,
     /// The object template drawn with (docs/adr/0176 §3): what new objects take.
@@ -88,6 +90,7 @@ impl Bench {
             memory: Memory::default(),
             shift: false,
             overlap_layers: Vec::new(),
+            refused: None,
             views: Vec::new(),
             tracking: ObjectTracking::new(),
             locks: LockState::default(),
@@ -119,6 +122,7 @@ impl Bench {
             locks: &mut self.locks,
             template: self.template.as_ref(),
             level: self.level.as_deref(),
+            refused: &mut self.refused,
         };
         act(&mut self.session, &mut cx)
     }
