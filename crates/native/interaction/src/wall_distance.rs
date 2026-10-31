@@ -453,6 +453,7 @@ impl Overlay {
                 value: side.value,
                 bond: side.bond.clone(),
                 card: None,
+                in_way: Preview::default(),
                 done: false,
             }),
             Number::Length(l) => Box::new(WallLength {
@@ -503,6 +504,8 @@ pub struct WallDistance {
     /// What the value typed would do, where it stands (under the field's hint) and its tone (the danger colour:
     /// refused).
     card: Option<(Vec<String>, Vec2, Tone)>,
+    /// The bonds in the way of the value typed, marked in place in the danger colour (docs/adr/0780 §1).
+    in_way: Preview,
     done: bool,
 }
 
@@ -639,6 +642,7 @@ impl Tool for WallDistance {
     }
     fn text_draft(&mut self, text: &str, cx: &mut Context<'_>) {
         let below = Vec2::new(self.at.x, self.at.y - cx.view.world_length(CARD_PX));
+        self.in_way = Preview::default();
         self.card = cx
             .typed_length(text)
             .filter(|d| d.is_finite())
@@ -657,27 +661,47 @@ impl Tool for WallDistance {
                 lines: lines.clone(),
             }),
             tag_tone: *tone,
-            ..Preview::default()
+            ..self.in_way.clone()
         }
     }
 }
 
 impl WallDistance {
-    /// What `distance` would do, planned and not written: the card's lines (docs/adr/0770 §3).
-    fn effects_card(&self, distance: f64, cx: &mut Context<'_>) -> (Vec<String>, Tone) {
+    /// What `distance` would do, planned and not written: the card's lines (docs/adr/0770 §3); a refusal's bonds in the
+    /// way marked in place (docs/adr/0780 §1).
+    fn effects_card(&mut self, distance: f64, cx: &mut Context<'_>) -> (Vec<String>, Tone) {
         let f = cx.format();
         if let Some(name) = &self.bond {
-            return (
-                vec![
-                    format!(
-                        "Bağ {name}: {} → {}",
-                        f.length(self.value),
-                        f.length(distance)
-                    ),
-                    "Bağlı duvarlar yeni değere göre kayar.".to_owned(),
-                ],
-                Tone::Accent,
-            );
+            let input = kentos_commands::ParametersEdit {
+                edits: vec![kentos_commands::ParameterEdit::Set {
+                    name: name.clone(),
+                    expression: Some(f.from_metres(distance).to_string()),
+                    min: None,
+                    max: None,
+                    description: None,
+                }],
+                allow_flip: false,
+                expected_revision: None,
+            };
+            return match parameters_edit::plan_in(cx.doc, &input) {
+                kentos_commands::CommandResult::Failed { error }
+                | kentos_commands::CommandResult::Conflict { error }
+                | kentos_commands::CommandResult::NeedsInput { error } => {
+                    self.in_way = bonds_in_way(&error.bonds, cx);
+                    (refusal_lines(&error, &f), Tone::Danger)
+                }
+                _ => (
+                    vec![
+                        format!(
+                            "Bağ {name}: {} → {}",
+                            f.length(self.value),
+                            f.length(distance)
+                        ),
+                        "Bağlı duvarlar yeni değere göre kayar.".to_owned(),
+                    ],
+                    Tone::Accent,
+                ),
+            };
         }
         let input = WallsEdit {
             uids: vec![self.uid.to_string()],
@@ -705,11 +729,82 @@ impl WallDistance {
             kentos_commands::CommandResult::Failed { error }
             | kentos_commands::CommandResult::Conflict { error }
             | kentos_commands::CommandResult::NeedsInput { error } => {
-                (vec![error.message], Tone::Danger)
+                self.in_way = bonds_in_way(&error.bonds, cx);
+                (refusal_lines(&error, &f), Tone::Danger)
             }
             _ => (Vec::new(), Tone::Accent),
         }
     }
+}
+
+/// A refusal's card (docs/adr/0780 §1): its message, then each bond in the way, the one to remove first.
+pub fn refusal_lines(error: &kentos_commands::CommandError, f: &Format) -> Vec<String> {
+    let mut lines = vec![error.message.clone()];
+    let mut bonds: Vec<&kentos_commands::BondInTheWay> = error.bonds.iter().collect();
+    bonds.sort_by_key(|b| !b.frees);
+    for b in bonds {
+        let name = b.parameter.as_deref().unwrap_or(b.label.as_str());
+        let value = match (b.kept, b.measured) {
+            (Some(k), Some(m)) => format!(": {} tutuyor, düzenleme {} yapar", f.length(k), f.length(m)),
+            (Some(k), None) => format!(": {} tutuyor", f.length(k)),
+            _ => String::new(),
+        };
+        let way = if b.frees { " — kaldırılınca geçer" } else { "" };
+        lines.push(format!("• {name} ({}){value}{way}", b.label));
+    }
+    lines
+}
+
+/// The bonds in the way marked where they stand (docs/adr/0780 §1): each wall line they hold drawn thick, each jamb
+/// ringed, a dashed line between a bond's parts and its name at the middle, in the danger colour.
+pub fn bonds_in_way(bonds: &[kentos_commands::BondInTheWay], cx: &Context<'_>) -> Preview {
+    let mut out = Preview::default();
+    for (i, b) in bonds.iter().enumerate() {
+        let places: Vec<Vec2> = b
+            .parts
+            .iter()
+            .filter_map(|p| {
+                let (at, line) = arch_bonds::part_place(cx.doc, p.uid, &p.element)?;
+                let at = Vec2::new(at.x, at.y);
+                match line {
+                    Some((a, q)) => out.strokes.push(
+                        Stroke::solid(vec![Vec2::new(a.x, a.y), Vec2::new(q.x, q.y)], false)
+                            .width(3.0)
+                            .tone(Tone::Danger),
+                    ),
+                    None => out.markers.push(Marker {
+                        at,
+                        shape: MarkerShape::Ring(6.0),
+                        tone: Tone::Danger,
+                    }),
+                }
+                Some(at)
+            })
+            .collect();
+        let Some(first) = places.first().copied() else {
+            continue;
+        };
+        for w in places.windows(2) {
+            out.strokes.push(Stroke::dashed(vec![w[0], w[1]], false, [5.0, 3.0]).tone(Tone::Danger));
+        }
+        let mid = places.iter().fold(Vec2::new(0.0, 0.0), |s, p| {
+            Vec2::new(s.x + p.x / places.len() as f64, s.y + p.y / places.len() as f64)
+        });
+        let name = b.parameter.as_deref().unwrap_or(b.label.as_str());
+        let text = if b.frees {
+            format!("× {name} — kaldırılınca geçer")
+        } else {
+            format!("× {name}")
+        };
+        out.labels.push(Label {
+            at: if places.len() > 1 { mid } else { first },
+            text,
+            // Above the temporary dimension's number at the gap's middle, each bond a line higher.
+            offset: [6.0, -24.0 - 18.0 * i as f32],
+            tone: Tone::Danger,
+        });
+    }
+    out
 }
 
 /// The lines of what a move does round it (docs/adr/0770 §3): the clear distances before and after, the rooms' areas,

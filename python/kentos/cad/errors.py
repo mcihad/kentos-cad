@@ -19,6 +19,7 @@ message.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any, ClassVar
 
 
@@ -37,6 +38,52 @@ class KentosError(Exception):
 # ---------------------------------------------------------------- a command's refusal
 
 
+@dataclass(frozen=True)
+class BondInTheWay:
+    """An architectural bond in the way of a write (``constraint_conflict``, docs/adr/0780 §1).
+
+    ``parts`` are the wall lines and jambs it names as the wire gives them
+    (``{"uid": …, "element": {"kind": "wall", "edge": 0, "line": "leftFace"}}``),
+    ``kept`` the value it keeps and ``measured`` the clear distance the write
+    leaves before the bonds follow (metres; ``None`` for a bond without a
+    value), ``frees`` whether taking it away alone lets the write through:
+    ``cad.constraints.edit(doc, edit=ConstraintEditRemove(ids=[bond.id]))``.
+    """
+
+    id: str
+    label: str
+    parts: tuple[dict[str, Any], ...]
+    frees: bool
+    parameter: str | None = None
+    kept: float | None = None
+    measured: float | None = None
+
+    @classmethod
+    def from_json(cls, raw: dict[str, Any]) -> BondInTheWay:
+        return cls(
+            id=str(raw["id"]),
+            label=str(raw.get("label", "")),
+            parts=tuple(raw.get("parts") or ()),
+            frees=bool(raw.get("frees", False)),
+            parameter=raw.get("parameter"),
+            kept=raw.get("kept"),
+            measured=raw.get("measured"),
+        )
+
+    def to_json(self) -> dict[str, Any]:
+        """The wire's form: the fields without a value left out."""
+        out: dict[str, Any] = {"id": self.id, "label": self.label}
+        if self.parameter is not None:
+            out["parameter"] = self.parameter
+        out["parts"] = list(self.parts)
+        if self.kept is not None:
+            out["kept"] = self.kept
+        if self.measured is not None:
+            out["measured"] = self.measured
+        out["frees"] = self.frees
+        return out
+
+
 class CommandError(KentosError):
     """A command refused; nothing was written."""
 
@@ -51,6 +98,7 @@ class CommandError(KentosError):
         revision: str | None = None,
         uids: tuple[str, ...] = (),
         retryable: bool = False,
+        bonds: tuple[BondInTheWay, ...] = (),
     ) -> None:
         super().__init__(code, message)
         self.command = command
@@ -60,6 +108,8 @@ class CommandError(KentosError):
         """The objects it is about, by persistent id (docs/adr/0253 §7)."""
         self.retryable = retryable
         """Whether calling again may succeed: a conflict's (prepare the input again, or send it again)."""
+        self.bonds = bonds
+        """A ``constraint_conflict``'s architectural bonds in the way (docs/adr/0780 §1); empty otherwise."""
 
     def __str__(self) -> str:
         where = f", {self.path}" if self.path else ""
@@ -276,6 +326,7 @@ for _error in (
     _error.__module__ = "kentos.cad"
 
 __all__ = [
+    "BondInTheWay",
     "Busy",
     "CommandCancelled",
     "CommandError",

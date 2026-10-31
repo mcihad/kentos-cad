@@ -12,9 +12,9 @@
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 use kentos_commands::{
-    CadElement, CadParameter, ConstraintDiagnosis, ConstraintId, ConstraintRule, ConstraintSet,
+    BondInTheWay, CadElement, CadParameter, ConstraintDiagnosis, ConstraintId, ConstraintRule, ConstraintSet,
     Entity, EntityId, ParamUnits, ParameterKind, SolveStatus, eval_param_expr, param_expr_names,
-    param_order, parse_param_expr,
+    param_order, parse_param_expr, rule_label,
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::entity::Shape;
@@ -214,6 +214,29 @@ pub struct Solved {
     pub flipped: Vec<Slot>,
     /// Why the architectural bonds do not hold (docs/adr/0770 §4), in Turkish.
     pub arch_why: Option<String>,
+    /// The architectural bonds in the way (docs/adr/0780 §1), for the refusal's `bonds`.
+    pub arch_bonds: Vec<BondInTheWay>,
+}
+
+/// The bonds in the way of a write, in Turkish for a refusal's message (docs/adr/0780 §1): the ones that let it
+/// through when taken away alone, or that none does.
+pub fn bonds_words(bonds: &[BondInTheWay]) -> String {
+    let name = |b: &BondInTheWay| match &b.parameter {
+        Some(p) => format!("{p} ({})", b.label),
+        None => b.label.clone(),
+    };
+    let frees: Vec<String> = bonds.iter().filter(|b| b.frees).map(name).collect();
+    match frees.len() {
+        0 => "Tek başına kaldırılınca düzenlemeyi geçiren bağ yok; çelişen bağları kaldırın ya da kısıtları gevşeterek düzenleyin.".to_owned(),
+        1 => format!(
+            "Şu bağ kaldırılınca düzenleme geçer: {}. Ya da kısıtları gevşeterek düzenleyin.",
+            frees[0]
+        ),
+        _ => format!(
+            "Şu bağlardan biri kaldırılınca düzenleme geçer: {}. Ya da kısıtları gevşeterek düzenleyin.",
+            frees.join(", ")
+        ),
+    }
 }
 
 /// The constraints of `set` (those at `only`, or all) the drawing as it is does not meet (docs/adr/0337): every
@@ -413,6 +436,28 @@ pub fn solve_set(
             changed.push((slot, next));
         }
     }
+    let kept = metres(doc, set);
+    let arch_bonds = arch
+        .conflicting
+        .iter()
+        .filter_map(|&k| set.constraints.get(k))
+        .map(|c| BondInTheWay {
+            id: c.id,
+            label: rule_label(&c.rule).into(),
+            parameter: c.rule.parameter().map(str::to_owned),
+            parts: c.rule.elements().into_iter().copied().collect(),
+            kept: c
+                .rule
+                .parameter()
+                .filter(|_| !c.reference)
+                .and_then(|p| kept.get(p).copied()),
+            measured: crate::arch_bonds::measured(doc, &c.rule),
+            frees: arch
+                .frees
+                .iter()
+                .any(|&f| set.constraints.get(f).is_some_and(|x| x.id == c.id)),
+        })
+        .collect();
     if arch.conflicting.is_empty() {
         changed.extend(arch.changed);
     }
@@ -423,6 +468,7 @@ pub fn solve_set(
         changed,
         flipped,
         arch_why: arch.why,
+        arch_bonds,
     })
 }
 

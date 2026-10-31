@@ -909,6 +909,7 @@ fn expectation_fault(doc: &Document, e: &CallExpectations) -> Option<CallAnswer>
             revision: Some(now),
             uids: stale,
             retryable: true,
+            ..CommandError::default()
         },
     }))
 }

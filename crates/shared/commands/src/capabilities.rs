@@ -1163,7 +1163,7 @@ const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "cad.constraints.query",
-        refusals: &[&["invalid_uid"]],
+        refusals: &[&["invalid_uid", "constraint_not_found"]],
         warnings: &[],
         targets: none,
     },

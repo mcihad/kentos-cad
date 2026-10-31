@@ -36,7 +36,7 @@ pub(crate) enum Call {
     /// A journal row: a command's write, or an edit made without one.
     Row(Box<CallRecord>),
     /// A command's call that wrote nothing.
-    Refused(RefusedCall),
+    Refused(Box<RefusedCall>),
 }
 
 /// A call in Komut geçmişi.
@@ -141,7 +141,7 @@ impl App {
         }
         for r in refused {
             refused_seen = r.seq;
-            self.history.push(after, at, session, Call::Refused(r));
+            self.history.push(after, at, session, Call::Refused(Box::new(r)));
         }
         self.history.seen = Some((session, row_seen, refused_seen));
     }

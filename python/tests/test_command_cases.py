@@ -531,6 +531,9 @@ def wire(outcome: cad.Outcome[Any]) -> dict[str, Any]:
             error["uids"] = list(e.uids)
         if e.retryable:
             error["retryable"] = True
+        # A constraint_conflict's bonds in the way (docs/adr/0780 §1).
+        if e.bonds:
+            error["bonds"] = [b.to_json() for b in e.bonds]
         return {"status": outcome.status, "error": error}
     notes = []
     for n in outcome.warnings:

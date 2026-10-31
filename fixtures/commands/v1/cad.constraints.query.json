@@ -837,7 +837,8 @@
          },
          "label": "Uzaklık",
          "holds": true,
-         "measured": 8.0
+         "measured": 8.0,
+         "kept": 8.0
         },
         {
          "constraint": {
@@ -867,7 +868,8 @@
          },
          "label": "Uzaklık",
          "holds": true,
-         "measured": 4.0
+         "measured": 4.0,
+         "kept": 4.0
         }
        ],
        "parameters": [
@@ -1397,7 +1399,8 @@
          },
          "label": "Uzaklık",
          "holds": true,
-         "measured": 4.0
+         "measured": 4.0,
+         "kept": 4.0
         }
        ],
        "parameters": [
@@ -3059,7 +3062,8 @@
          },
          "label": "Uzaklık",
          "holds": true,
-         "measured": 8.0
+         "measured": 8.0,
+         "kept": 8.0
         },
         {
          "constraint": {
@@ -3089,7 +3093,8 @@
          },
          "label": "Uzaklık",
          "holds": true,
-         "measured": 4.0
+         "measured": 4.0,
+         "kept": 4.0
         },
         {
          "constraint": {
@@ -4305,7 +4310,8 @@
          },
          "label": "Uzaklık",
          "holds": true,
-         "measured": 8.0
+         "measured": 8.0,
+         "kept": 8.0
         },
         {
          "constraint": {
@@ -4335,7 +4341,8 @@
          },
          "label": "Uzaklık",
          "holds": true,
-         "measured": 4.0
+         "measured": 4.0,
+         "kept": 4.0
         }
        ],
        "parameters": [
@@ -4903,7 +4910,8 @@
          },
          "label": "Uzaklık",
          "holds": true,
-         "measured": 8.0
+         "measured": 8.0,
+         "kept": 8.0
         }
        ],
        "parameters": [
@@ -5771,7 +5779,8 @@
          },
          "label": "Uzaklık",
          "holds": true,
-         "measured": 4.0
+         "measured": 4.0,
+         "kept": 4.0
         },
         {
          "constraint": {
@@ -5802,7 +5811,8 @@
          },
          "label": "Açı",
          "holds": true,
-         "measured": 1.0471975511965976
+         "measured": 1.0471975511965976,
+         "kept": 1.0471975511965976
         }
        ],
        "parameters": [
@@ -6044,7 +6054,8 @@
          },
          "label": "Uzaklık",
          "holds": true,
-         "measured": 4.0
+         "measured": 4.0,
+         "kept": 4.0
         },
         {
          "constraint": {
@@ -6075,7 +6086,8 @@
          },
          "label": "Açı",
          "holds": true,
-         "measured": 1.0471975511965976
+         "measured": 1.0471975511965976,
+         "kept": 1.0471975511965976
         }
        ],
        "parameters": [
@@ -6803,7 +6815,8 @@
          },
          "label": "Yarıçap",
          "holds": true,
-         "measured": 2.0
+         "measured": 2.0,
+         "kept": 2.0
         }
        ],
        "parameters": [
@@ -6954,7 +6967,8 @@
          },
          "label": "Yarıçap",
          "holds": true,
-         "measured": 2.0
+         "measured": 2.0,
+         "kept": 2.0
         }
        ],
        "parameters": [

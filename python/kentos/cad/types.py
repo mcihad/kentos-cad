@@ -17389,14 +17389,26 @@ class ConstraintsListed(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class ConstraintsQuery(_Model):
-    """Input of `cad.constraints.query` v1: the constraints of the drawing, or those naming these objects.
+    """Input of `cad.constraints.query` v1: the constraints of the drawing, or those naming these objects, or these
+    constraints (a refusal's `bonds`, docs/adr/0780 §2), or only the architectural bonds (Bağı göster).
+
+    Refusals: `invalid_uid` (`uids[i]` or `ids[i]` not a persistent id), `constraint_not_found` (`ids[i]` no
+    constraint of the drawing).
     Attributes:
+        architectural: Only the architectural bonds: the constraints naming a wall's line or an opening's jamb (docs/adr/0770 §4).
+        ids: Only these constraints (their ids); none: all of them. With `uids` too, those of these naming one of them.
         uids: Only the constraints naming one of these objects (persistent ids); none: all of them.
     """
+    architectural: bool | Unset = UNSET
+    ids: list[str] | Unset = UNSET
     uids: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
+        if self.architectural is not UNSET:
+            out["architectural"] = self.architectural
+        if self.ids is not UNSET:
+            out["ids"] = list(self.ids)
         if self.uids is not UNSET:
             out["uids"] = list(self.uids)
         return out
@@ -17404,6 +17416,8 @@ class ConstraintsQuery(_Model):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> ConstraintsQuery:
         return cls(
+            architectural=data.get("architectural", UNSET),
+            ids=list(data["ids"]) if "ids" in data else UNSET,
             uids=list(data["uids"]) if "uids" in data else UNSET,
         )
 
@@ -37304,11 +37318,14 @@ class ListedConstraint(_Model):
     Attributes:
         label: Its Turkish name (`Paralel`).
         holds: Whether it holds now.
+        kept: A driving dimension's value: what its parameter keeps, metres or radians (docs/adr/0780 §2); none for a
+            reference dimension and the geometric rules. Unit: constraint.
         measured: A dimension's value now: metres or radians, as the drawing measures it. Unit: constraint.
     """
     constraint: Constraint
     label: str
     holds: bool
+    kept: float | None | Unset = UNSET
     measured: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -37316,6 +37333,8 @@ class ListedConstraint(_Model):
         out["constraint"] = self.constraint.to_json()
         out["label"] = self.label
         out["holds"] = self.holds
+        if self.kept is not UNSET:
+            out["kept"] = None if self.kept is None else float(self.kept)
         if self.measured is not UNSET:
             out["measured"] = None if self.measured is None else float(self.measured)
         return out
@@ -37326,6 +37345,7 @@ class ListedConstraint(_Model):
             constraint=Constraint.from_json(data["constraint"]),
             label=data["label"],
             holds=data["holds"],
+            kept=UNSET if "kept" not in data else None if data["kept"] is None else float(data["kept"]),
             measured=UNSET if "measured" not in data else None if data["measured"] is None else float(data["measured"]),
         )
 

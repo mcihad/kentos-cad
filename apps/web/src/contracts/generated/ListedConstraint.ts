@@ -14,6 +14,11 @@ label: string,
  */
 measured?: number, 
 /**
+ * A driving dimension's value: what its parameter keeps, metres or radians (docs/adr/0780 §2); none for a
+ * reference dimension and the geometric rules.
+ */
+kept?: number, 
+/**
  * Whether it holds now.
  */
 holds: boolean, };

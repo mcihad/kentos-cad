@@ -461,6 +461,43 @@ pub struct ConstraintDiagnosis {
     pub iterations: u32,
 }
 
+/// An architectural bond in the way of a write (docs/adr/0780 §1): one of a `constraint_conflict`'s constraints with
+/// the wall lines and jambs it holds, the value it keeps and what the drawing measures as the write leaves it, and
+/// whether taking it away alone lets the write through. A refusal (`CommandError.bonds`) carries them so that a
+/// program removes the right one (`cad.constraints.edit` `remove`) and the desktop marks them in place.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct BondInTheWay {
+    pub id: ConstraintId,
+    /// Its Turkish name (`Mesafe`, `Sabit`).
+    pub label: String,
+    /// A distance's parameter (`d1`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub parameter: Option<String>,
+    /// The wall lines and jambs it names, in the rule's order (`a`, `b`, `axis`).
+    pub parts: Vec<ElementRef>,
+    /// A distance's value, metres: what it keeps.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub kept: Option<f64>,
+    /// A distance's clear distance as the write leaves the drawing before the bonds follow, metres (along the wall
+    /// for two jambs); none when its parts no longer fit it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub measured: Option<f64>,
+    /// Taking this bond away alone lets the write through.
+    pub frees: bool,
+}
+
+// Its numbers are finite lengths: a refusal compares whole (`CommandError: Eq`).
+impl Eq for BondInTheWay {}
+
 /// What kind of part an element is, for a rule's checks.
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Shape {

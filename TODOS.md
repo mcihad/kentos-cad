@@ -77,6 +77,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   KCAD şema 145'ün okunması ve yazılması (`module-units.kcad`).
 - ADV-07b (ADR 0782): web'in belgesinde bağlı döşemenin parça okuması ve aynı çizelgelerin bir kez çıkarılması
   (`slab_follow`, `table_cells`'in karşılıkları).
+- ADR 0780: web'in komut sonucu `CommandError.bonds`'u okumuyor; mesafe düzenlemesinde yoldaki bağların vurgusu ve ret
+  kartının bağ satırları yok; `cad.constraints.query`'nin `ids`, `architectural`, `kept`'i web'in arayüzünde kullanılmıyor.
 - ADR 0781 (ADV-06): web'de tarifin Duvar ayrıntısı ve Alanına kırp seçimleri, web'in pafta haritasının `wallDetail`'i ve kırpması.
 - ADR 0778 (ADV-06): web'de `cad.navigator.read`'in işleyicisi ve Gezgin paneli (katlar, görünümler, paftalar, çizelgeler, seçili nesnenin yerleri; satırların eylemleri).
 - ADR 0774 (ADV-06): web'de adlı görünümün `recipe`'i (`.kcad` şema 141, `FORMATS_VERSION` 101), `cad.views.edit`'in `recipe`

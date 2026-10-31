@@ -1268,7 +1268,9 @@ fn effects(doc: &Document, work: &Work) -> Result<Option<kentos_commands::WallEf
     };
     let before = gaps(doc);
     let mut copy = doc.reading_copy();
-    let written: Result<(), Stop> = copy.transact(STEP, |d| {
+    // A command's step, as execute writes it (`call::run`): the constraints follow inside it and see what it changed
+    // (`step_befores`), so a plan is refused as execute is, with the bonds in the way (docs/adr/0780 §1).
+    let step = |d: &mut Document| -> Result<(), Stop> {
         d.update_many(
             work.updates
                 .iter()
@@ -1282,8 +1284,8 @@ fn effects(doc: &Document, work: &Work) -> Result<Option<kentos_commands::WallEf
         );
         crate::constraint_follow::follow(d, kentos_commands::CAD_WALLS_EDIT, false, &|| false)
             .map(|_| ())
-    });
-    written?;
+    };
+    copy.run_step(step, |_, _, _| Ok(None))?;
     let after = gaps(&copy);
     let mut out = WallEffects {
         left: before[0].zip(after[0]).map(|(b, a)| GapChange {
