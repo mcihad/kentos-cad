@@ -13,4 +13,20 @@ updated?: Array<string>, skipped?: Array<ModuleSkipped>, conflicts?: Array<Modul
 /**
  * The definition's members whose values change, by key.
  */
-changedKeys?: Array<string>, };
+changedKeys?: Array<string>, 
+/**
+ * The keys joining the definition (Modüle ekle) or taken by an instance that lacked them (a source update).
+ */
+addedKeys?: Array<string>, 
+/**
+ * The keys leaving the definition (Modülden çıkar).
+ */
+removedKeys?: Array<string>, 
+/**
+ * The objects that leave the module and stay as ordinary objects (Modülden çıkar).
+ */
+released?: Array<string>, 
+/**
+ * The objects deleted with their keys (Modülden çıkar).
+ */
+deleted?: Array<string>, };

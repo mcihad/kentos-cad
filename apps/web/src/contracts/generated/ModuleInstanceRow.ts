@@ -16,4 +16,12 @@ exceptions?: Array<string>,
 /**
  * The keys whose objects are gone from the drawing.
  */
-missing?: Array<string>, broken?: ModuleBreak, level?: string, mirror: boolean, };
+missing?: Array<string>, 
+/**
+ * The objects changed by hand away from the source, not local exceptions (docs/adr/0779 §3).
+ */
+drifted?: Array<string>, broken?: ModuleBreak, 
+/**
+ * The building program's group of the instance's spaces.
+ */
+unit?: string, level?: string, mirror: boolean, };

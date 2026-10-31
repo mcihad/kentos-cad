@@ -10,4 +10,9 @@ import type { Vec2 } from "./Vec2";
  * its own y axis, before the turn), its level and phase, its numbering, the definition's version it took, its
  * objects and the keys it keeps as its own.
  */
-export type ModuleInstance = { id: string, at: Vec2, rotation?: number, mirror?: boolean, level?: string, phase?: ArchPhase, numbering?: ModuleNumbering, version: number, members: Array<ModuleObject>, exceptions?: Array<string>, broken?: ModuleBreak, };
+export type ModuleInstance = { id: string, at: Vec2, rotation?: number, mirror?: boolean, level?: string, phase?: ArchPhase, numbering?: ModuleNumbering, 
+/**
+ * The building program's group (docs/adr/0773) this instance's spaces are in (docs/adr/0779 §4): a flat module
+ * placed again is another flat. None: its spaces keep the definition's group.
+ */
+unit?: string, version: number, members: Array<ModuleObject>, exceptions?: Array<string>, broken?: ModuleBreak, };

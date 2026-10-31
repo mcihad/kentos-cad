@@ -525,6 +525,8 @@ mod opening_type_scenes;
 #[cfg(test)]
 mod module_scenes;
 #[cfg(test)]
+mod module_flat_scenes;
+#[cfg(test)]
 mod recess_scenes;
 #[cfg(test)]
 mod level_state_scenes;

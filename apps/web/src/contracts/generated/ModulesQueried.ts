@@ -4,4 +4,8 @@ import type { ModuleRow } from "./ModuleRow";
 /**
  * Output of `cad.modules.query`: the modules; with `uid`, the instance it is in.
  */
-export type ModulesQueried = { modules: Array<ModuleRow>, instance?: string, key?: string, revision: string, };
+export type ModulesQueried = { modules: Array<ModuleRow>, instance?: string, key?: string, 
+/**
+ * With `uid`: its object was changed by hand away from the source (docs/adr/0779 §3).
+ */
+drifted?: boolean, revision: string, };

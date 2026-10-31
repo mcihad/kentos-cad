@@ -38,9 +38,21 @@ class _ModulesEdit(LocalCommand[ModulesEdit, ModulesEdited, ModulesEdited]):
     module_instance_skipped), except ve restore (uids: örneğin nesneleri; yerel istisna
     yap, kaynağa döndür), detach (module, instance: örnek modülden ayrılır, nesneler
     kalır), rename, remove (tanım silinir; örneklerin nesneleri son hâliyle kalır,
-    bağları kopuk: sourceGone). Plan yazmadan yapılacakları (created, changed,
-    report.updated, skipped, conflicts, changedKeys) gösterir. Tekrar kat, bütün daire
-    ve tasarım alternatifi kapsam dışıdır.
+    bağları kopuk: sourceGone). addMembers (module, instance, uids: örnekte çizilen yeni
+    nesneler tanıma katılır; öbür bağlı örneklere kendi matrisleriyle yerleşir;
+    docs/adr/0779), removeMembers (uids: örneğin nesneleri anahtarlarıyla tanımdan
+    çıkar; kendisi sıradan nesne olarak kalır, öbür örneklerdeki karşılıkları silinir,
+    istisna ya da kilitli olanlar serbest kalır: module_member_released; kalan bir üye
+    ona bağlıysa module_member_needed), repeat (from: kaynak kat, modules: süzgeç, to:
+    hedef katlar, her birinde numbering, unit ve örneğe özel satırlar instances: module,
+    instance, numbering, unit; kattaki bağlı örnekler aynı yer, dönüş ve aynayla her
+    hedef kata yerleşir; boş kat module_repeat_empty, zaten yerleşmiş
+    module_repeat_taken). place ve repeat'in unit'i bina programının bölümü: örneğin
+    mahalleri o bölümde olur (daire modülü). Elle değişmiş (istisna yapılmamış) örnek
+    nesnesi güncellemede kaynağın değeriyle yazılır ve söylenir:
+    module_drift_overwritten. Plan yazmadan yapılacakları (created, changed, placed,
+    report.updated, skipped, conflicts, changedKeys, addedKeys, removedKeys, released,
+    deleted) gösterir. Tasarım alternatifi kapsam dışıdır.
     """
     __slots__ = ()
     id = "cad.modules.edit"
@@ -76,9 +88,20 @@ class _ModulesEdit(LocalCommand[ModulesEdit, ModulesEdited, ModulesEdited]):
         except ve restore (uids: örneğin nesneleri; yerel istisna yap, kaynağa döndür),
         detach (module, instance: örnek modülden ayrılır, nesneler kalır), rename, remove
         (tanım silinir; örneklerin nesneleri son hâliyle kalır, bağları kopuk: sourceGone).
-        Plan yazmadan yapılacakları (created, changed, report.updated, skipped, conflicts,
-        changedKeys) gösterir. Tekrar kat, bütün daire ve tasarım alternatifi kapsam
-        dışıdır.
+        addMembers (module, instance, uids: örnekte çizilen yeni nesneler tanıma katılır;
+        öbür bağlı örneklere kendi matrisleriyle yerleşir; docs/adr/0779), removeMembers
+        (uids: örneğin nesneleri anahtarlarıyla tanımdan çıkar; kendisi sıradan nesne olarak
+        kalır, öbür örneklerdeki karşılıkları silinir, istisna ya da kilitli olanlar serbest
+        kalır: module_member_released; kalan bir üye ona bağlıysa module_member_needed),
+        repeat (from: kaynak kat, modules: süzgeç, to: hedef katlar, her birinde numbering,
+        unit ve örneğe özel satırlar instances: module, instance, numbering, unit; kattaki
+        bağlı örnekler aynı yer, dönüş ve aynayla her hedef kata yerleşir; boş kat
+        module_repeat_empty, zaten yerleşmiş module_repeat_taken). place ve repeat'in unit'i
+        bina programının bölümü: örneğin mahalleri o bölümde olur (daire modülü). Elle
+        değişmiş (istisna yapılmamış) örnek nesnesi güncellemede kaynağın değeriyle yazılır
+        ve söylenir: module_drift_overwritten. Plan yazmadan yapılacakları (created,
+        changed, placed, report.updated, skipped, conflicts, changedKeys, addedKeys,
+        removedKeys, released, deleted) gösterir. Tasarım alternatifi kapsam dışıdır.
 
         Args:
             doc: The drawing it works on.
@@ -164,7 +187,9 @@ class _ModulesQuery(LocalCommand[ModulesQuery, ModulesQueried, ModulesQueried]):
     okur (docs/adr/0775); çizimi değiştirmez. module ile tek modül, uid ile nesnenin
     hangi modülün hangi örneğinde ve hangi anahtarla olduğu. Her örnek: sürümü, stale
     (tanımdan eski), nesne sayısı, yerel istisnaları, missing (nesnesi silinmiş
-    anahtarlar), broken (sourceGone), katı, aynalı olup olmadığı.
+    anahtarlar), drifted (elle değişmiş, istisna olmayan nesneler; docs/adr/0779),
+    broken (sourceGone), unit (bina programının bölümü), katı, aynalı olup olmadığı; uid
+    ile drifted o nesnenin elle değişip değişmediği.
     """
     __slots__ = ()
     id = "cad.modules.query"
@@ -188,8 +213,10 @@ class _ModulesQuery(LocalCommand[ModulesQuery, ModulesQueried, ModulesQueried]):
         """Oda modüllerini oku: Projenin oda modüllerini örnekleriyle okur (docs/adr/0775);
         çizimi değiştirmez. module ile tek modül, uid ile nesnenin hangi modülün hangi
         örneğinde ve hangi anahtarla olduğu. Her örnek: sürümü, stale (tanımdan eski), nesne
-        sayısı, yerel istisnaları, missing (nesnesi silinmiş anahtarlar), broken
-        (sourceGone), katı, aynalı olup olmadığı.
+        sayısı, yerel istisnaları, missing (nesnesi silinmiş anahtarlar), drifted (elle
+        değişmiş, istisna olmayan nesneler; docs/adr/0779), broken (sourceGone), unit (bina
+        programının bölümü), katı, aynalı olup olmadığı; uid ile drifted o nesnenin elle
+        değişip değişmediği.
 
         Args:
             doc: The drawing it works on.

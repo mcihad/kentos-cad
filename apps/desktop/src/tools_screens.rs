@@ -555,6 +555,7 @@ fn scenes() -> Vec<Scene> {
     all.extend(crate::opening_scenes::scenes());
     all.extend(crate::opening_type_scenes::scenes());
     all.extend(crate::module_scenes::scenes());
+    all.extend(crate::module_flat_scenes::scenes());
     all.extend(crate::recess_scenes::scenes());
     all.extend(crate::level_state_scenes::scenes());
     all.extend(crate::symbols_scenes::scenes());

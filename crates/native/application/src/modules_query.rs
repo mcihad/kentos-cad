@@ -1,6 +1,6 @@
 //! `cad.modules.query` v1 (docs/adr/0775): the project's room modules with each instance's state (its version against
 //! the module's, its objects, its local exceptions, the keys whose objects are gone, a broken link), or the module and
-//! instance an object belongs to. Read-only. The shared cases are `fixtures/commands/v1/cad.modules.query.json`.
+//! instance an object belongs to, and the objects changed by hand away from the source (docs/adr/0779 §3). Read-only. The shared cases are `fixtures/commands/v1/cad.modules.query.json`.
 
 use kentos_commands::{CommandResult, ModuleInstanceRow, ModuleRow, ModulesQueried, ModulesQuery};
 use kentos_domain::{Document, Uuid};
@@ -55,6 +55,7 @@ fn answer(doc: &Document, input: &ModulesQuery) -> Result<ModulesQueried, Stop> 
     };
     let mut instance = None;
     let mut key = None;
+    let mut drifted = false;
     if let Some(uid) = &input.uid {
         checks::uids(std::slice::from_ref(uid), "")
             .and_then(|()| checks::named(doc, std::slice::from_ref(uid)).map(|_| ()))
@@ -79,6 +80,9 @@ fn answer(doc: &Document, input: &ModulesQuery) -> Result<ModulesQueried, Stop> 
             ));
         };
         chosen.retain(|m| m.id == mid);
+        if let Some(i) = chosen.first().and_then(|m| m.instance(&iid)) {
+            drifted = crate::modules_edit::drifted_keys(doc, chosen[0], i).contains(&k);
+        }
         instance = Some(iid);
         key = Some(k);
     }
@@ -113,7 +117,9 @@ fn answer(doc: &Document, input: &ModulesQuery) -> Result<ModulesQueried, Stop> 
                         .filter(|o| !present(doc, &o.uid))
                         .map(|o| o.key.clone())
                         .collect(),
+                    drifted: crate::modules_edit::drifted_uids(doc, m, i),
                     broken: i.broken,
+                    unit: i.unit.clone(),
                     level: i.level.clone(),
                     mirror: i.mirror,
                 })
@@ -124,6 +130,7 @@ fn answer(doc: &Document, input: &ModulesQuery) -> Result<ModulesQueried, Stop> 
         modules,
         instance,
         key,
+        drifted,
         revision: doc.revision().to_string(),
     })
 }

@@ -3,6 +3,10 @@
 //! as local exceptions or given back, an instance detached, a module renamed or removed (`cad.modules.edit`); and the
 //! modules read with their instances' state (`cad.modules.query`, read-only). Every write is one undo step “Oda
 //! modülü”; its plan is the preview: what is made and changed, which instances update, which are skipped and why.
+//!
+//! After the first slice (docs/adr/0779): members added to and taken out of a definition (`addMembers`,
+//! `removeMembers`), an instance's objects changed by hand marked as drifted from the source, a flat's instance in its
+//! own building-program group (`unit`), and the modules of one level repeated on others in one step (`repeat`).
 
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
@@ -64,6 +68,38 @@ pub enum ModulesOperation {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         numbering: Option<ModuleNumbering>,
+        /// The building program's group the instance's spaces are in (a flat placed again, docs/adr/0779 §4).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        unit: Option<String>,
+    },
+    /// Modüle ekle (docs/adr/0779 §1): the objects `uids`, drawn in the instance `instance` (on its level, in no
+    /// module, leaning on nothing outside it and them), join the definition; its version goes one up and the other
+    /// linked instances get them placed by their own matrices. An instance with an object on a locked layer stays at
+    /// its version and takes them on the next source update.
+    AddMembers {
+        module: String,
+        instance: String,
+        #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
+        uids: Vec<String>,
+    },
+    /// Modülden çıkar (docs/adr/0779 §2): the objects `uids` (an instance's) leave the definition with their keys; they
+    /// stay in the drawing as ordinary objects, and the other linked instances' objects of the same keys are deleted
+    /// (a local exception's or a locked layer's object stays, released). A member that leans on one of them refuses it.
+    RemoveMembers {
+        module: String,
+        #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
+        uids: Vec<String>,
+    },
+    /// Katları tekrarla (docs/adr/0779 §5): every linked instance on the level `from` (of `modules`, none: of every
+    /// module) placed again on each level of `to` at the same point, turn and mirror, on that level; its numbering and
+    /// group the target's (or the instance's own line in it), else the source instance's.
+    Repeat {
+        from: String,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+        modules: Vec<String>,
+        to: Vec<ModuleLevelTarget>,
     },
     /// Kaynağı güncelle: the instance `from`'s objects (its local exceptions aside) become the definition, its version
     /// one up; the other linked instances (`instances`, none: all) take it, each keeping its exceptions and its
@@ -96,13 +132,65 @@ pub enum ModulesOperation {
     Remove { module: String },
 }
 
+/// One level a repeat places the source level's instances on (docs/adr/0779 §5): its numbering and group for them all,
+/// and lines of their own for some.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ModuleLevelTarget {
+    pub level: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub numbering: Option<ModuleNumbering>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub unit: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ModuleRepeatOne>>", optional))]
+    pub instances: Vec<ModuleRepeatOne>,
+}
+
+/// One source instance's numbering and group on a repeat's target level.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ModuleRepeatOne {
+    pub module: String,
+    pub instance: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub numbering: Option<ModuleNumbering>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub unit: Option<String>,
+}
+
+/// An instance a write made: its module and id, its level.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ModulePlaced {
+    pub module: String,
+    pub instance: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub level: Option<String>,
+}
+
 /// Input of `cad.modules.edit` v1.
 ///
 /// Refusals: `invalid_input`, `invalid_uid`, `entity_not_found`, `layer_locked`, `level_not_found`, `module_exists`,
 /// `module_not_found`, `module_removed`, `module_kind`, `module_outside`, `module_levels`, `module_member_taken`,
-/// `module_instance_not_found`, `module_member_missing`, `not_in_module`, `not_finite`, `nothing_to_set`,
-/// `invalid_revision`, `revision_conflict`. Warnings: `module_instance_skipped`, `module_exception_kept`,
-/// `module_member_gone`.
+/// `module_instance_not_found`, `module_member_missing`, `module_member_needed`, `module_repeat_empty`,
+/// `module_repeat_taken`, `unit_not_found`, `not_in_module`, `not_finite`, `nothing_to_set`, `invalid_revision`,
+/// `revision_conflict`. Warnings: `module_instance_skipped`, `module_exception_kept`, `module_member_gone`,
+/// `module_drift_overwritten`, `module_member_released`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -164,6 +252,11 @@ pub enum ModuleConflictWhy {
     Exception,
     /// Its object was deleted from the drawing.
     Gone,
+    /// Its object was changed by hand, away from the source, without being made a local exception; the source update
+    /// writes it back (docs/adr/0779 §3).
+    Drifted,
+    /// Its object is on a locked layer: a member taken out of the definition stays there, released (docs/adr/0779 §2).
+    Locked,
 }
 
 /// What a write did, or would do.
@@ -187,6 +280,22 @@ pub struct ModuleReport {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub changed_keys: Vec<String>,
+    /// The keys joining the definition (Modüle ekle) or taken by an instance that lacked them (a source update).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub added_keys: Vec<String>,
+    /// The keys leaving the definition (Modülden çıkar).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub removed_keys: Vec<String>,
+    /// The objects that leave the module and stay as ordinary objects (Modülden çıkar).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub released: Vec<String>,
+    /// The objects deleted with their keys (Modülden çıkar).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub deleted: Vec<String>,
 }
 
 /// Output of `cad.modules.edit` (and its plan): the module as it is after, the objects made and changed, the report.
@@ -210,6 +319,10 @@ pub struct ModulesEdited {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub changed: Vec<String>,
+    /// The instances a repeat made, in order (docs/adr/0779 §5).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ModulePlaced>>", optional))]
+    pub placed: Vec<ModulePlaced>,
     #[serde(default)]
     pub report: ModuleReport,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
@@ -257,9 +370,17 @@ pub struct ModuleInstanceRow {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub missing: Vec<String>,
+    /// The objects changed by hand away from the source, not local exceptions (docs/adr/0779 §3).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub drifted: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub broken: Option<crate::ModuleBreak>,
+    /// The building program's group of the instance's spaces.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub unit: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub level: Option<String>,
@@ -297,6 +418,10 @@ pub struct ModulesQueried {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub key: Option<String>,
+    /// With `uid`: its object was changed by hand away from the source (docs/adr/0779 §3).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub drifted: bool,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
 }

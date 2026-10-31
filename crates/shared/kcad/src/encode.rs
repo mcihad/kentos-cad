@@ -2077,6 +2077,15 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 144 (docs/adr/0779): a module instance's building-program group.
+    if doc
+        .settings
+        .arch
+        .as_ref()
+        .is_some_and(|a| kentos_contracts::modules_have_units(&a.modules))
+    {
+        return crate::SCHEMA_WITH_MODULE_UNITS;
+    }
     // Schema 142 (docs/adr/0775): room modules and their instances.
     if doc.settings.arch.as_ref().is_some_and(kentos_contracts::ArchSettings::has_modules) {
         return crate::SCHEMA_WITH_MODULES;

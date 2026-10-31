@@ -4109,7 +4109,7 @@ pub fn catalog() -> CommandCatalog {
             id: crate::CAD_MODULES_EDIT.into(),
             version: crate::CAD_MODULES_EDIT_VERSION,
             title: "Oda modülü".into(),
-            summary: "Bir banyoyu ya da odayı bir kez çizip bağlı örnekler olarak yeniden kullanır (docs/adr/0775); her yazma tek geri alma adımı “Oda modülü”. operation: define (name, id isteğe bağlı, uids: tek kattaki düz duvarlar, açıklıklar, mahaller, donatılar, ölçüler, etiketler ve yazılar; base taban noktası; nesneler yerinde kalır ve ilk örnek olur; açıklığın duvarı, mahalin kaynakları, ölçünün noktaları ya da etiketin nesnesi seçimin dışındaysa module_outside), place (module, at, rotation radyan, mirror kendi y ekseninde aynalı, level hedef kat, phase evre, numbering: prefix ve suffix mahal, açıklık numaralarına; örnek içi duvar, mahal kaynağı, ölçü ve etiket bağları örneğin kendi nesnelerine bağlanır), update (module, from: kaynağı veren örnek, instances: güncellenecekler, boş: hepsi; tanımın sürümü bir artar, bağlı örnekler yeni tanımı alır, yerel istisna ve açıklamaların görünüşteki yeri korunur, kilitli katmandaki örnek eski sürümde kalır: module_instance_skipped), except ve restore (uids: örneğin nesneleri; yerel istisna yap, kaynağa döndür), detach (module, instance: örnek modülden ayrılır, nesneler kalır), rename, remove (tanım silinir; örneklerin nesneleri son hâliyle kalır, bağları kopuk: sourceGone). Plan yazmadan yapılacakları (created, changed, report.updated, skipped, conflicts, changedKeys) gösterir. Tekrar kat, bütün daire ve tasarım alternatifi kapsam dışıdır."
+            summary: "Bir banyoyu ya da odayı bir kez çizip bağlı örnekler olarak yeniden kullanır (docs/adr/0775); her yazma tek geri alma adımı “Oda modülü”. operation: define (name, id isteğe bağlı, uids: tek kattaki düz duvarlar, açıklıklar, mahaller, donatılar, ölçüler, etiketler ve yazılar; base taban noktası; nesneler yerinde kalır ve ilk örnek olur; açıklığın duvarı, mahalin kaynakları, ölçünün noktaları ya da etiketin nesnesi seçimin dışındaysa module_outside), place (module, at, rotation radyan, mirror kendi y ekseninde aynalı, level hedef kat, phase evre, numbering: prefix ve suffix mahal, açıklık numaralarına; örnek içi duvar, mahal kaynağı, ölçü ve etiket bağları örneğin kendi nesnelerine bağlanır), update (module, from: kaynağı veren örnek, instances: güncellenecekler, boş: hepsi; tanımın sürümü bir artar, bağlı örnekler yeni tanımı alır, yerel istisna ve açıklamaların görünüşteki yeri korunur, kilitli katmandaki örnek eski sürümde kalır: module_instance_skipped), except ve restore (uids: örneğin nesneleri; yerel istisna yap, kaynağa döndür), detach (module, instance: örnek modülden ayrılır, nesneler kalır), rename, remove (tanım silinir; örneklerin nesneleri son hâliyle kalır, bağları kopuk: sourceGone). addMembers (module, instance, uids: örnekte çizilen yeni nesneler tanıma katılır; öbür bağlı örneklere kendi matrisleriyle yerleşir; docs/adr/0779), removeMembers (uids: örneğin nesneleri anahtarlarıyla tanımdan çıkar; kendisi sıradan nesne olarak kalır, öbür örneklerdeki karşılıkları silinir, istisna ya da kilitli olanlar serbest kalır: module_member_released; kalan bir üye ona bağlıysa module_member_needed), repeat (from: kaynak kat, modules: süzgeç, to: hedef katlar, her birinde numbering, unit ve örneğe özel satırlar instances: module, instance, numbering, unit; kattaki bağlı örnekler aynı yer, dönüş ve aynayla her hedef kata yerleşir; boş kat module_repeat_empty, zaten yerleşmiş module_repeat_taken). place ve repeat'in unit'i bina programının bölümü: örneğin mahalleri o bölümde olur (daire modülü). Elle değişmiş (istisna yapılmamış) örnek nesnesi güncellemede kaynağın değeriyle yazılır ve söylenir: module_drift_overwritten. Plan yazmadan yapılacakları (created, changed, placed, report.updated, skipped, conflicts, changedKeys, addedKeys, removedKeys, released, deleted) gösterir. Tasarım alternatifi kapsam dışıdır."
                 .into(),
             aliases: vec!["MODUL".into()],
             effect: CommandEffect::Document,
@@ -4131,6 +4131,13 @@ pub fn catalog() -> CommandCatalog {
                     output: None,
                 },
                 CommandExample {
+                    title: "Zemin kattaki daireleri 1. ve 2. kata tekrarla".into(),
+                    input: json!({"operation": {"kind": "repeat", "from": "zemin", "to": [
+                        {"level": "kat1", "numbering": {"prefix": "1-"}},
+                        {"level": "kat2", "numbering": {"prefix": "2-"}}]}}),
+                    output: None,
+                },
+                CommandExample {
                     title: "Birinci örnekten kaynağı güncelle".into(),
                     input: json!({"operation": {"kind": "update", "module": "banyo", "from": "banyo-1"}}),
                     output: None,
@@ -4141,7 +4148,7 @@ pub fn catalog() -> CommandCatalog {
             id: crate::CAD_MODULES_QUERY.into(),
             version: crate::CAD_MODULES_QUERY_VERSION,
             title: "Oda modüllerini oku".into(),
-            summary: "Projenin oda modüllerini örnekleriyle okur (docs/adr/0775); çizimi değiştirmez. module ile tek modül, uid ile nesnenin hangi modülün hangi örneğinde ve hangi anahtarla olduğu. Her örnek: sürümü, stale (tanımdan eski), nesne sayısı, yerel istisnaları, missing (nesnesi silinmiş anahtarlar), broken (sourceGone), katı, aynalı olup olmadığı."
+            summary: "Projenin oda modüllerini örnekleriyle okur (docs/adr/0775); çizimi değiştirmez. module ile tek modül, uid ile nesnenin hangi modülün hangi örneğinde ve hangi anahtarla olduğu. Her örnek: sürümü, stale (tanımdan eski), nesne sayısı, yerel istisnaları, missing (nesnesi silinmiş anahtarlar), drifted (elle değişmiş, istisna olmayan nesneler; docs/adr/0779), broken (sourceGone), unit (bina programının bölümü), katı, aynalı olup olmadığı; uid ile drifted o nesnenin elle değişip değişmediği."
                 .into(),
             aliases: vec![],
             effect: CommandEffect::Query,

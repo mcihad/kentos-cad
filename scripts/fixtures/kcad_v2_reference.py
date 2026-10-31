@@ -2367,6 +2367,9 @@ def document(d):
     if (d["settings"].get("arch") or {}).get("modules"):
         # Room modules and their instances (docs/adr/0775).
         schema = max(schema, 142)
+    if any("unit" in i for m in (d["settings"].get("arch") or {}).get("modules", []) for i in m.get("instances", [])):
+        # A module instance's building-program group (docs/adr/0779; 143 is another branch's).
+        schema = max(schema, 144)
     return root(cmap(body), version=uint(schema))
 
 
@@ -3080,7 +3083,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-143.kcad"] = container(root(cmap(parts), version=uint(143)))
+    files["schema-version-145.kcad"] = container(root(cmap(parts), version=uint(145)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5384,6 +5387,15 @@ def build():
         uid="0192f5a1-7750-7000-8000-000000000001"))
     module_bad("removed-members", lambda d: d["settings"]["arch"]["modules"][1].update(
         members=d["settings"]["arch"]["modules"][0]["members"][:1]))
+    # Schema 144 (docs/adr/0779): the flat as a module, its first instance in the program's flat d1; schema 143 refuses
+    # the instance's group, and an empty group is a bad value.
+    mu = document(load("module-units.json"))
+    assert mu.count(b"\x67version\x18\x90") == 1, "the module's group is schema 144"
+    out["module-units.kcad"] = container(mu)
+    out["broken/module-units-in-schema-143.kcad"] = container(mu.replace(b"\x67version\x18\x90", b"\x67version\x18\x8f"))
+    bad_unit = load("module-units.json")
+    bad_unit["settings"]["arch"]["modules"][0]["instances"][0]["unit"] = " "
+    out["broken/module-units-empty.kcad"] = container(document(bad_unit))
     # Schema 126 (docs/adr/0725): a gapped grid, a gapped arc, a column anchored at its lower left on two grids, an L
     # column anchored at its top, beside a plain grid and a plain column.
     gc = document(load("grid-column-forms.json"))
