@@ -126,7 +126,11 @@ kapılar, etiketler ve ölçüler izlesin. Çelişkili iki bağ atomik reddedils
 Undo/Redo ve kaydet–yeniden aç aynı modeli versin. İlk teslim bu örnekle
 sınırlıdır; genel otomatik ev tasarımcısı değildir.
 
-### ADV-02 — Yapı bileşenlerini ve bağlı sınırları uygulama kalitesine getir [ ]
+### ADV-02 — Yapı bileşenlerini ve bağlı sınırları uygulama kalitesine getir [~]
+
+_Durum (31 Ekim 2026, [ADR 0771](../docs/adr/0771-building-parts-and-bound-boundaries.md)):_ düğüm kararı, sabit referans
+ve etkisi, uçta ve sövede dönen katmanlar, kaynağa bağlı döşeme ve kopukluk yapıldı. Açık: malzeme kimliği, doğramaya kadar
+dönüş, mahale bağlamanın Öznitelikler satırı, gerçek pencerede elle kabul.
 
 **Kullanıcı sonucu:** Duvar tipi veya dış kontur değiştiğinde çekirdek,
 kaplamalar, açıklık çevresi ve bağlı döşeme birbirinden kopmasın. Dayanak A4–A5.

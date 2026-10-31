@@ -677,11 +677,15 @@ pub const SCHEMA_WITH_LAYER_INDEXES: u32 = 136;
 /// Schema 137 (docs/adr/0770): constraints that name a wall's line or an opening's jamb (`wall`, `jamb` parts, the
 /// architectural bonds); written only when one does.
 pub const SCHEMA_WITH_ARCH_BONDS: u32 = 137;
+/// Schema 138 (docs/adr/0771): a wall component that turns at the wall's ends and its openings' jambs (`wrap`), a wall
+/// end's node decision (`joins.startPass`, `joins.endPass`), a slab bound to its walls or its space (`bound`); written
+/// only when a wall, a project wall style or a slab has one.
+pub const SCHEMA_WITH_BUILDING_PARTS: u32 = 138;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 136] = [
+pub const SCHEMAS: [u32; 137] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -818,6 +822,7 @@ pub const SCHEMAS: [u32; 136] = [
     SCHEMA_WITH_CAD_WORK,
     SCHEMA_WITH_LAYER_INDEXES,
     SCHEMA_WITH_ARCH_BONDS,
+    SCHEMA_WITH_BUILDING_PARTS,
 ];
 
 /// The file a drawing is saved as.

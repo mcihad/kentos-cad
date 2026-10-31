@@ -1030,6 +1030,9 @@ impl Document {
         ops.extend(columns);
         let spaces = self.follow_spaces(ops);
         ops.extend(spaces);
+        // Then: the bound slabs' outlines with their walls and spaces (docs/adr/0771 §4), before their edges.
+        let bound = self.follow_bound_slabs(ops);
+        ops.extend(bound);
         // Then: the slabs' edges with their walls (docs/adr/0722 §3).
         let slabs = self.follow_slabs(ops);
         ops.extend(slabs);

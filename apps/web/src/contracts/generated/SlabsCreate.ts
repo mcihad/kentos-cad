@@ -4,8 +4,8 @@ import type { NewSlab } from "./NewSlab";
 /**
  * Input of `cad.slabs.create` v1: slabs on a named layer, written as one undo step “Döşeme”.
  *
- * Refusals, in this order: `no_objects`, `not_finite`, `invalid_slab`, `level_not_found`, `slab_not_enclosed`,
- * `slab_offset_failed`, `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`,
+ * Refusals, in this order: `no_objects`, `not_finite`, `invalid_slab`, `invalid_uid`, `entity_not_found`,
+ * `not_a_space`, `level_not_found`, `slab_not_enclosed`, `slab_offset_failed`, `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`,
  * `not_a_layer`, `layer_locked`, `invalid_attribute`, `attribute_required`; on the desktop also `slots_exhausted`.
  * Warning: `layer_hidden`.
  */

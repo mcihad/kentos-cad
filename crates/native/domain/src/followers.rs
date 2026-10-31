@@ -81,6 +81,15 @@ impl Document {
         self.reading_copy().followers_here(updates, adds, removes)
     }
 
+    /// [`preview_followers`] even where no tie asks it: what a change does to everything that follows it (the spaces,
+    /// the bound slabs; docs/adr/0771 §2's effects).
+    pub fn preview_all_followers(&self, updates: &[(Slot, Entity)]) -> FollowerDelta {
+        if !self.can_follow() {
+            return FollowerDelta::default();
+        }
+        self.reading_copy().followers_here(updates, &[], &[])
+    }
+
     pub fn preview_followers_with(
         &self,
         scratch: &mut Option<Document>,

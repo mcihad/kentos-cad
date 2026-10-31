@@ -4,4 +4,9 @@
  * Input of `cad.walls.joins` v1 (read-only, docs/adr/0340 §2): how the walls named (none: every wall) join the walls
  * round them, and where walls meet but do not join, each with what resolves it.
  */
-export type WallsJoins = { uids?: Array<string>, };
+export type WallsJoins = { uids?: Array<string>, 
+/**
+ * Düğümler (docs/adr/0771 §1): each joint's ends say whether the user decided them, and a tee's joining end how
+ * many of the host's components each of its own passes.
+ */
+nodes?: boolean, };

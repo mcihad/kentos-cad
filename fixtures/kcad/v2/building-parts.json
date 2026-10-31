@@ -1,0 +1,397 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Yapı bileşenleri",
+  "settings": {
+    "srid": 0,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "deg",
+    "plotScale": 50.0,
+    "workspace": "cad",
+    "wallStyles": [
+      {
+        "id": "kentos-dis-duvar-25",
+        "name": "Dış duvar 25",
+        "components": [
+          {
+            "name": "İç sıva",
+            "material": "İç sıva",
+            "thickness": 0.02,
+            "detail": "detailed",
+            "wrap": true
+          },
+          {
+            "name": "Tuğla",
+            "material": "Tuğla",
+            "hatch": {
+              "pattern": "ANSI31",
+              "scale": 1.0,
+              "angle": 0.0
+            },
+            "detail": "standard"
+          },
+          {
+            "name": "Isı yalıtımı",
+            "material": "Isı yalıtımı",
+            "thickness": 0.05,
+            "hatch": {
+              "pattern": "ANSI37",
+              "scale": 0.5,
+              "angle": 0.0
+            },
+            "detail": "standard"
+          },
+          {
+            "name": "Dış sıva",
+            "material": "Dış sıva",
+            "thickness": 0.03,
+            "detail": "detailed",
+            "wrap": true
+          }
+        ],
+        "fill": "#5A5A5A",
+        "width": 0.25
+      }
+    ],
+    "arch": {
+      "levels": [
+        {
+          "id": "zemin",
+          "name": "Zemin kat",
+          "elevation": 0.0,
+          "height": 3.0
+        },
+        {
+          "id": "kat-1",
+          "name": "1. kat",
+          "elevation": 3.0,
+          "height": 3.0
+        }
+      ],
+      "detail": "standard"
+    }
+  },
+  "origin": {
+    "x": 0.0,
+    "y": 0.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "duvar",
+      "name": "Duvar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#404040",
+        "lineType": "continuous",
+        "lineWeight": 0.5
+      },
+      "children": []
+    },
+    {
+      "id": "doseme",
+      "name": "Döşeme",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "duvar",
+  "uids": [
+    "0192f5a1-2590-7000-8000-000000000031",
+    "0192f5a1-2590-7000-8000-000000000032",
+    "0192f5a1-2590-7000-8000-000000000033",
+    "0192f5a1-7230-7000-8000-000000000001",
+    "0192f5a1-7230-7000-8000-000000000002"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  },
+  "entities": [
+    {
+      "kind": "wall",
+      "id": 1,
+      "layerId": "duvar",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "x": 8.0,
+          "y": 0.0
+        },
+        {
+          "x": 8.0,
+          "y": 6.0
+        }
+      ],
+      "width": 0.3,
+      "justify": "left",
+      "style": "kentos-dis-duvar-25",
+      "components": [
+        {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed",
+          "wrap": true
+        },
+        {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "hatch": {
+            "pattern": "ANSI31",
+            "scale": 1.0,
+            "angle": 0.0
+          },
+          "detail": "standard"
+        },
+        {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+            "pattern": "ANSI37",
+            "scale": 0.5,
+            "angle": 0.0
+          },
+          "detail": "standard"
+        },
+        {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed",
+          "wrap": true
+        }
+      ],
+      "fill": "#5A5A5A",
+      "height": 3.0,
+      "arch": {
+        "level": "zemin",
+        "phase": "new",
+        "status": "proposed",
+        "discipline": "architecture"
+      }
+    },
+    {
+      "kind": "wall",
+      "id": 2,
+      "layerId": "duvar",
+      "attrs": {
+        "kod": "B-1"
+      },
+      "pts": [
+        {
+          "x": 4.0,
+          "y": 0.3
+        },
+        {
+          "x": 4.0,
+          "y": 6.0
+        }
+      ],
+      "width": 0.1,
+      "justify": "center",
+      "offset": 0.05,
+      "caps": "open",
+      "arch": {
+        "level": "zemin",
+        "phase": "existing"
+      },
+      "joins": {
+        "endPass": [
+          0
+        ]
+      }
+    },
+    {
+      "kind": "wall",
+      "id": 3,
+      "layerId": "duvar",
+      "attrs": {},
+      "color": "#7F7F7F",
+      "pts": [
+        {
+          "x": 12.0,
+          "y": 3.0
+        },
+        {
+          "x": 16.0,
+          "y": 3.0
+        }
+      ],
+      "bulges": [
+        1.0,
+        1.0
+      ],
+      "closed": true,
+      "width": 0.2,
+      "justify": "right",
+      "fill": "#3C3C3C"
+    },
+    {
+      "kind": "slab",
+      "id": 4,
+      "layerId": "doseme",
+      "attrs": {},
+      "parts": [
+        {
+          "outer": {
+            "pts": [
+              {
+                "x": -0.1,
+                "y": -0.1
+              },
+              {
+                "x": 8.1,
+                "y": -0.1
+              },
+              {
+                "x": 8.1,
+                "y": 5.1
+              },
+              {
+                "x": -0.1,
+                "y": 5.1
+              }
+            ]
+          },
+          "holes": [
+            {
+              "pts": [
+                {
+                  "x": 5.075,
+                  "y": 0.1
+                },
+                {
+                  "x": 5.075,
+                  "y": 4.9
+                },
+                {
+                  "x": 7.9,
+                  "y": 4.9
+                },
+                {
+                  "x": 7.9,
+                  "y": 0.1
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "thickness": 0.2,
+      "arch": {
+        "level": "zemin",
+        "phase": "new"
+      },
+      "material": "Betonarme",
+      "bound": {
+        "source": "walls",
+        "seed": {
+          "x": 2.0,
+          "y": 2.0
+        },
+        "offset": 0.1,
+        "uids": [
+          "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
+        ]
+      }
+    },
+    {
+      "kind": "slab",
+      "id": 5,
+      "layerId": "doseme",
+      "attrs": {},
+      "parts": [
+        {
+          "outer": {
+            "pts": [
+              {
+                "x": 2.0,
+                "y": 5.1
+              },
+              {
+                "x": 6.0,
+                "y": 5.1
+              },
+              {
+                "x": 6.0,
+                "y": 6.6
+              },
+              {
+                "x": 2.0,
+                "y": 6.6
+              }
+            ]
+          }
+        }
+      ],
+      "role": "balcony",
+      "thickness": 0.15,
+      "arch": {
+        "level": "zemin"
+      },
+      "edge": {
+        "kind": "railing",
+        "width": 0.05,
+        "runs": [
+          {
+            "pts": [
+              {
+                "x": 6.0,
+                "y": 5.1
+              },
+              {
+                "x": 6.0,
+                "y": 6.6
+              },
+              {
+                "x": 2.0,
+                "y": 6.6
+              },
+              {
+                "x": 2.0,
+                "y": 5.1
+              }
+            ]
+          }
+        ]
+      },
+      "bound": {
+        "source": "space",
+        "space": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e60",
+        "broken": "sourceGone"
+      }
+    }
+  ]
+}

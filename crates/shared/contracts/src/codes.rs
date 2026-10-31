@@ -1748,6 +1748,12 @@ codes! {
     SLAB_OFFSET_FAILED = "slab_offset_failed", Failed, false, "Kenar ötelemesi döşemenin sınırını bozuyor: halka ters dönüyor, kendini ya da başka bir halkayı kesiyor. Ötelemeyi küçültün ya da sınırı düzeltin.";
     /// An area cut out of a slab that misses it, or one that would take all of it.
     SLAB_CUT_MISSED = "slab_cut_missed", Failed, false, "Kesilen alan döşemeye değmiyor ya da döşemenin hepsini götürüyor; döşemenin içinde kalan bir alan verin ya da döşemeyi silin.";
+    /// A slab whose outline is bound to its source cut or added to (docs/adr/0771 §4).
+    SLAB_BOUND = "slab_bound", Failed, false, "Döşemenin sınırı kaynağına bağlı; kesmek ya da alan eklemek için önce Ayır ile bağımsız kontur yapın.";
+    /// A slab detached that is not bound (docs/adr/0771 §4).
+    SLAB_NOT_BOUND = "slab_not_bound", Failed, false, "Döşeme kaynağa bağlı değil; ayrılacak bağ yok.";
+    /// A node decision on a wall end that tees into nothing it can be kept at (docs/adr/0771 §1).
+    WALL_NODE_UNSUPPORTED = "wall_node_unsupported", Failed, false, "Düğüm kararı yalnız düz bir duvara T birleşen düz bir uçta verilir; köşe, düz devam, serbest uç ve eğrisel birleşim için desteklenmez.";
 
     // ── Grids, columns, stairs and ramps (docs/adr/0343) ────────────────
     /// A grid's fields that make none.
@@ -1844,6 +1850,8 @@ codes! {
     ARCH_OPENING_BROKEN = "arch_opening_broken", Warning, false, "Açıklığın duvarla bağı kopuk: duvarı yok, duvarından taşıyor ya da başka açıklığa biniyor.";
     /// A space whose boundary its sources no longer give.
     ARCH_SPACE_BROKEN = "arch_space_broken", Warning, false, "Mahalın sınırı kaynaklarından bulunamıyor; son hâliyle kaldı.";
+    /// Mimari denetim (docs/adr/0771 §4): a bound slab whose source no longer gives its outline.
+    ARCH_SLAB_BROKEN = "arch_slab_broken", Warning, false, "Döşemenin sınırı kaynağından bulunamıyor; son hâliyle kaldı.";
     /// A space smaller than the audit's threshold.
     ARCH_SPACE_SMALL = "arch_space_small", Warning, false, "Mahalın alanı denetim eşiğinden küçük; artık bir parça olabilir.";
     /// A space whose mean width is less than the audit's threshold.

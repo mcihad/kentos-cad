@@ -177,6 +177,8 @@ fn has_lost(stored: &Stored) -> bool {
         Entity::Column(c) => c.column.broken.is_some(),
         Entity::Tag(t) => t.tag.broken.is_some(),
         Entity::ViewMark(m) => m.mark.broken.is_some(),
+        // A slab whose bound source no longer gives its outline (docs/adr/0771 §4).
+        Entity::Slab(s) => s.slab.bound.as_ref().is_some_and(|b| b.broken.is_some()),
         _ => false,
     }
 }

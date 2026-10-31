@@ -57,7 +57,53 @@ fn walls_join_as_the_reference_says() {
                 spec,
             })
             .collect();
-        let got = solve(&ins, None);
+        // ADR 0771: the through holes along each wall's base line, when the case has them.
+        let holes: Vec<Vec<kentos_geometry_core::geom::opening::Hole>> = c["openings"]
+            .as_array()
+            .map(|ws| {
+                ws.iter()
+                    .map(|h| {
+                        h.as_array()
+                            .unwrap()
+                            .iter()
+                            .map(|x| {
+                                kentos_geometry_core::geom::opening::Hole::through(
+                                    x[0].as_f64().unwrap(),
+                                    x[1].as_f64().unwrap(),
+                                )
+                            })
+                            .collect()
+                    })
+                    .collect()
+            })
+            .unwrap_or_default();
+        let got = kentos_geometry_core::geom::wall_join::solve_with(&ins, &holes, None);
+        // ADR 0771 §1: each tee's node, the user's decision or the priorities'.
+        if let Some(nodes) = c["nodes"].as_array() {
+            let mut got_nodes: Vec<(i64, i64, Vec<usize>, bool)> = got
+                .joints
+                .iter()
+                .filter_map(|j| {
+                    j.node.as_ref().map(|n| {
+                        (js_round(j.at.x * 1e6) as i64, js_round(j.at.y * 1e6) as i64, n.depth.clone(), n.user)
+                    })
+                })
+                .collect();
+            let mut want: Vec<(i64, i64, Vec<usize>, bool)> = nodes
+                .iter()
+                .map(|n| {
+                    (
+                        js_round(n["at"][0].as_f64().unwrap() * 1e6) as i64,
+                        js_round(n["at"][1].as_f64().unwrap() * 1e6) as i64,
+                        n["depth"].as_array().unwrap().iter().map(|x| x.as_u64().unwrap() as usize).collect(),
+                        n["user"].as_bool().unwrap(),
+                    )
+                })
+                .collect();
+            got_nodes.sort();
+            want.sort();
+            assert_eq!(got_nodes, want, "{name}: düğümler");
+        }
 
         let mut joints: Vec<(String, i64, i64)> = got
             .joints
@@ -174,6 +220,19 @@ fn walls_join_as_the_reference_says() {
                     close(g.0, pt(&want[0])) && close(g.1, pt(&want[1])),
                     "{name}: uç çizgisi {g:?}, başvuru {want}"
                 );
+            }
+            if let Some(closures) = w["closures"].as_array() {
+                assert_eq!(d.closures.len(), closures.len(), "{name}: {k}. duvarın kapama çizgileri");
+                for ((comp, line), want) in d.closures.iter().zip(closures) {
+                    assert_eq!(*comp as u64, want[0].as_u64().unwrap(), "{name}: kapamanın bileşeni");
+                    let wp: Vec<Vec2> = want[1].as_array().unwrap().iter().map(pt).collect();
+                    assert_eq!(line.pts.len(), wp.len(), "{name}: kapama {:?}, başvuru {wp:?}", line.pts);
+                    for (a, b) in line.pts.iter().zip(&wp) {
+                        assert!(close(*a, *b), "{name}: kapama köşesi {a:?}, başvuru {b:?}");
+                    }
+                }
+            } else {
+                assert!(d.closures.is_empty(), "{name}: beklenmeyen kapama çizgileri");
             }
             let bands = w["bands"].as_array().unwrap();
             assert_eq!(d.bands.len(), bands.len(), "{name}: {k}. duvarın bantları");

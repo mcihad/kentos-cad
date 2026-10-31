@@ -870,10 +870,6 @@ def edit_cases():
         ("eksende bitişik oda: ortak kenar 40 cm batıya, komşu duvar uzar", shift_in(55, 0.4, edge=1)),
     ]:
         s, _ = step("execute", inp)
-        if name.startswith("eksende bitişik oda"):
-            # A path end at a closed wall's corner, in line with its edge: what the joins say there is ADR 0340's
-            # (wall_join_cases.py and the core differ on it); the move is what this case holds.
-            s["result"]["warnings"] = "$any"
         add(name, [s])
     s, _ = step("plan", shift_in(2, -0.2))
     add("plan duvarı ve izleyenleri yazmadan gösterir", [s])

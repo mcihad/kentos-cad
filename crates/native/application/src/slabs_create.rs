@@ -126,11 +126,32 @@ fn check(doc: &Document, input: &SlabsCreate) -> Result<Checked, Stop> {
             slabs::edge_finite(e, &format!("{at}.edge"))?;
         }
         let arch = n.arch.clone().unwrap_or_default();
+        // Kaynağa bağlı (docs/adr/0771 §4): with a seed, or to a space alone.
+        if n.bound == Some(true) && n.seed.is_none() && n.space.is_none() {
+            return Err(fail(
+                codes::INVALID_SLAB,
+                "Kaynağa bağlı döşemenin sınırı duvarlardan (seed) ya da bir mahalden (space) bulunur; çizilmiş sınır bağlanmaz.".into(),
+                &format!("{at}.bound"),
+            ));
+        }
+        if n.space.is_some() && (n.parts.is_some() || n.seed.is_some()) {
+            return Err(fail(
+                codes::INVALID_SLAB,
+                "Mahale bağlı döşemenin sınırı mahalin halkalarıdır; sınır (parts) ya da iç nokta (seed) ayrıca verilmez.".into(),
+                &format!("{at}.space"),
+            ));
+        }
         if n.parts.is_none() != n.seed.is_none() {
             spaces::level_known(doc, &arch, &format!("{at}.arch.level"))?;
         }
-        let parts = slabs::outline(doc, n.parts.as_ref(), n.seed, n.boundary, arch.level.as_deref(), &at)?;
+        let parts = match &n.space {
+            Some(uid) => slabs::space_parts(doc, uid, &format!("{at}.space"))?,
+            None => slabs::outline(doc, n.parts.as_ref(), n.seed, n.boundary, arch.level.as_deref(), &at)?,
+        };
         let parts = slabs::moved(&parts, n.edge_offset.unwrap_or(0.0), &format!("{at}.edgeOffset"))?;
+        let bound = (n.space.is_some() || (n.bound == Some(true) && n.seed.is_some())).then(|| {
+            slabs::bound_of(n.seed, n.boundary, n.space.as_ref(), n.edge_offset.unwrap_or(0.0))
+        });
         let s = SlabFields {
             parts,
             role: n.role.unwrap_or_default(),
@@ -140,8 +161,10 @@ fn check(doc: &Document, input: &SlabsCreate) -> Result<Checked, Stop> {
             material: n.material.clone(),
             edge: n.edge.as_ref().map(slabs::edge_of),
             excluded: n.excluded.unwrap_or(false),
+            bound,
         };
         slabs::valid(&s, &at)?;
+        let s = slabs::with_bound_uids(doc, s);
         // Its edge's runs as the document writes them, so the plan draws them (docs/adr/0722 §3).
         made.push(doc.slab_with_runs(&s));
     }

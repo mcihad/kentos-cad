@@ -1,0 +1,5947 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.slabs.edit",
+  "commandVersion": 1,
+  "title": "Kaynağa bağlı döşeme: duvarlara ve mahale bağlama, izleme, kopukluk, ayırma; retler",
+  "note": "ADR 0771 §4. Beklenenler scripts/fixtures/bound_slab_cases.py'nin ADR'den yazılmış kurallarından, KentOS kodu olmadan; duvarlardan bulunan sınır, kenar ötelemesi ve Metraj slab_cases.py ile space_command_cases.py'nin kesirli kurallarından. Kurulumdaki çizimde 7 nesne var; yeni nesne 8'den başlar.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Döşemeler",
+    "settings": {
+      "srid": 0,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 50,
+      "workspace": "cad",
+      "arch": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.0
+          },
+          {
+            "id": "kat-1",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "height": 3.0
+          }
+        ]
+      }
+    },
+    "origin": {
+      "x": 0,
+      "y": 0
+    },
+    "layers": [
+      {
+        "id": "duvar",
+        "name": "Duvar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "mahal",
+        "name": "Mahal",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "doseme",
+        "name": "Döşeme",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kapi",
+        "name": "Kapı",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "cizim",
+        "name": "Çizim",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli katman",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "gizli",
+        "name": "Gizli katman",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "pafta",
+        "name": "Pafta",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "sinir",
+            "name": "Sınır",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      }
+    ],
+    "activeLayer": "duvar",
+    "styles": {
+      "items": [],
+      "categories": []
+    },
+    "entities": [
+      {
+        "kind": "wall",
+        "id": 1,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 0.0
+          },
+          {
+            "x": 8.0,
+            "y": 0.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 2,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 8.0,
+            "y": 0.0
+          },
+          {
+            "x": 8.0,
+            "y": 5.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 3,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 8.0,
+            "y": 5.0
+          },
+          {
+            "x": 0.0,
+            "y": 5.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 4,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 5.0
+          },
+          {
+            "x": 0.0,
+            "y": 0.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 5,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 5.0,
+            "y": 0.0
+          },
+          {
+            "x": 5.0,
+            "y": 5.0
+          }
+        ],
+        "width": 0.15,
+        "justify": "center",
+        "arch": {
+          "level": "zemin",
+          "phase": "new"
+        }
+      },
+      {
+        "kind": "line",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+          "x": 0.0,
+          "y": 20.0
+        },
+        "b": {
+          "x": 5.0,
+          "y": 20.0
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 7,
+        "layerId": "kilitli",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 30.0,
+            "y": 0.0
+          },
+          {
+            "x": 34.0,
+            "y": 0.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "duvarların dış yüzlerine bağlı döşeme: kaynağı, iç noktası ve sınırlayan duvarlarıyla",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.slabs.create",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "bound": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "slab",
+                "id": 8,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": "$any",
+                "thickness": 0.15,
+                "bound": {
+                  "source": "walls",
+                  "seed": {
+                    "x": 2.0,
+                    "y": 2.0
+                  },
+                  "uids": [
+                    "$uidOf:1",
+                    "$uidOf:2",
+                    "$uidOf:3",
+                    "$uidOf:4",
+                    "$uidOf:5"
+                  ]
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.15,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 2.25,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "length": 4.0,
+                  "width": 0.2,
+                  "openingsArea": 0.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 35.0,
+                "wallNetArea": 93.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "slabArea": 42.64,
+                "slabVolume": 6.396
+              },
+              "slabs": [
+                {
+                  "uid": "$uidOf:8",
+                  "role": "floor",
+                  "thickness": 0.15,
+                  "area": 42.64,
+                  "netArea": 42.64,
+                  "perimeter": 26.8,
+                  "volume": 6.396,
+                  "rule": "alan: halkaların alanı, delikler düşülür; boşluk: aynı kattaki boşluk mahallerinin örttüğü alan düşülür; hacim: net alan × kalınlık"
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "odanın iç yüzlerine bağlı döşeme: aynı kattaki dört duvarı",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.slabs.create",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "boundary": "room",
+                "bound": true,
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "slab",
+                "id": 8,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": "$any",
+                "thickness": 0.15,
+                "arch": {
+                  "level": "zemin"
+                },
+                "bound": {
+                  "source": "walls",
+                  "seed": {
+                    "x": 7.0,
+                    "y": 2.0
+                  },
+                  "face": "room",
+                  "uids": [
+                    "$uidOf:1",
+                    "$uidOf:2",
+                    "$uidOf:3",
+                    "$uidOf:5"
+                  ]
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.15,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 2.25,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "length": 4.0,
+                  "width": 0.2,
+                  "openingsArea": 0.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 35.0,
+                "wallNetArea": 93.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "slabArea": 13.56,
+                "slabVolume": 2.034
+              },
+              "slabs": [
+                {
+                  "uid": "$uidOf:8",
+                  "role": "floor",
+                  "level": "zemin",
+                  "thickness": 0.15,
+                  "top": 0.0,
+                  "area": 13.56,
+                  "netArea": 13.56,
+                  "perimeter": 15.25,
+                  "volume": 2.034,
+                  "rule": "alan: halkaların alanı, delikler düşülür; boşluk: aynı kattaki boşluk mahallerinin örttüğü alan düşülür; hacim: net alan × kalınlık"
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "mahale bağlı döşeme: sınırı mahalin halkaları",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.slabs.create",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "space": "$uidOf:8"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                9
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "9": {
+                "kind": "slab",
+                "id": 9,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": "$any",
+                "thickness": 0.15,
+                "bound": {
+                  "source": "space",
+                  "space": "$uidOf:8"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "uid": "$uidOf:8",
+                  "method": "net",
+                  "area": 13.56,
+                  "perimeter": 15.25,
+                  "byMethod": {
+                    "net": 13.56,
+                    "centerline": 15.0,
+                    "gross": 16.51
+                  },
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "baseboard": 15.25
+                }
+              ],
+              "walls": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.15,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 2.25,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "length": 4.0,
+                  "width": 0.2,
+                  "openingsArea": 0.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [],
+              "totals": {
+                "spaceArea": 13.56,
+                "wallLength": 35.0,
+                "wallNetArea": 93.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "baseboardLength": 15.25,
+                "slabArea": 13.56,
+                "slabVolume": 2.034
+              },
+              "slabs": [
+                {
+                  "uid": "$uidOf:9",
+                  "role": "floor",
+                  "thickness": 0.15,
+                  "area": 13.56,
+                  "netArea": 13.56,
+                  "perimeter": 15.25,
+                  "volume": 2.034,
+                  "rule": "alan: halkaların alanı, delikler düşülür; boşluk: aynı kattaki boşluk mahallerinin örttüğü alan düşülür; hacim: net alan × kalınlık"
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kenarı 10 cm dışa ötelenmiş bağlı döşeme ötelemeyi saklar",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.slabs.create",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "bound": true,
+                "edgeOffset": 0.1
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "slab",
+                "id": 8,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": "$any",
+                "thickness": 0.15,
+                "bound": {
+                  "source": "walls",
+                  "seed": {
+                    "x": 2.0,
+                    "y": 2.0
+                  },
+                  "offset": 0.1,
+                  "uids": [
+                    "$uidOf:1",
+                    "$uidOf:2",
+                    "$uidOf:3",
+                    "$uidOf:4",
+                    "$uidOf:5"
+                  ]
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.15,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 2.25,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "length": 4.0,
+                  "width": 0.2,
+                  "openingsArea": 0.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 35.0,
+                "wallNetArea": 93.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "slabArea": 45.36,
+                "slabVolume": 6.803999999999999
+              },
+              "slabs": [
+                {
+                  "uid": "$uidOf:8",
+                  "role": "floor",
+                  "thickness": 0.15,
+                  "area": 45.36,
+                  "netArea": 45.36,
+                  "perimeter": 27.6,
+                  "volume": 6.803999999999999,
+                  "rule": "alan: halkaların alanı, delikler düşülür; boşluk: aynı kattaki boşluk mahallerinin örttüğü alan düşülür; hacim: net alan × kalınlık"
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "bağlı döşemenin planı yazmadan gösterir",
+      "steps": [
+        {
+          "op": "plan",
+          "command": "cad.slabs.create",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "bound": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "slabs": [
+                {
+                  "kind": "slab",
+                  "id": 0,
+                  "layerId": "doseme",
+                  "attrs": {},
+                  "parts": "$any",
+                  "thickness": 0.15,
+                  "bound": {
+                    "source": "walls",
+                    "seed": {
+                      "x": 2.0,
+                      "y": 2.0
+                    },
+                    "uids": [
+                      "$uidOf:1",
+                      "$uidOf:2",
+                      "$uidOf:3",
+                      "$uidOf:4",
+                      "$uidOf:5"
+                    ]
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "bağlı döşemenin doğrulaması çizimi değiştirmez",
+      "steps": [
+        {
+          "op": "validate",
+          "command": "cad.slabs.create",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "bound": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "çizilmiş sınır bağlanmaz: iç nokta ya da mahal ister",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.slabs.create",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "bound": true
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_slab",
+              "message": "Kaynağa bağlı döşemenin sınırı duvarlardan (seed) ya da bir mahalden (space) bulunur; çizilmiş sınır bağlanmaz.",
+              "path": "slabs[0].bound"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "mahale bağlı döşemeye sınır verilmez",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.slabs.create",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "space": "$uidOf:8",
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_slab",
+              "message": "Mahale bağlı döşemenin sınırı mahalin halkalarıdır; sınır (parts) ya da iç nokta (seed) ayrıca verilmez.",
+              "path": "slabs[0].space"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "mahalin geçersiz kimliği reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.slabs.create",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "space": "mahal-1"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_uid",
+              "message": "“mahal-1” geçerli bir nesne kimliği değil; mahalin kalıcı kimliğini verin.",
+              "path": "slabs[0].space"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "çizimde olmayan mahal reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.slabs.create",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "space": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "entity_not_found",
+              "message": "“01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f” kimlikli mahal çizimde yok; var olan bir mahalin kimliğini verin.",
+              "path": "slabs[0].space"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "mahal olmayan nesneye bağlanmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.slabs.create",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "space": "$uidOf:1"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_space",
+              "message": "Döşemenin bağlanacağı nesne mahal değil.",
+              "path": "slabs[0].space"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "dış duvar 50 cm kayınca bağlı döşeme büyür, bağımsız balkon ve korkuluğu yerinde; tek adımda",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.slabs.create",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "bound": true
+              },
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 2.0,
+                          "y": 5.1
+                        },
+                        {
+                          "x": 6.0,
+                          "y": 5.1
+                        },
+                        {
+                          "x": 6.0,
+                          "y": 6.6
+                        },
+                        {
+                          "x": 2.0,
+                          "y": 6.6
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "role": "balcony",
+                "edge": {
+                  "kind": "railing"
+                },
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                8,
+                9
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "8": {
+                "kind": "slab",
+                "id": 8,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": "$any",
+                "thickness": 0.15,
+                "bound": {
+                  "source": "walls",
+                  "seed": {
+                    "x": 2.0,
+                    "y": 2.0
+                  },
+                  "uids": [
+                    "$uidOf:1",
+                    "$uidOf:2",
+                    "$uidOf:3",
+                    "$uidOf:4",
+                    "$uidOf:5"
+                  ]
+                }
+              },
+              "9": {
+                "kind": "slab",
+                "id": 9,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 2.0,
+                          "y": 5.1
+                        },
+                        {
+                          "x": 6.0,
+                          "y": 5.1
+                        },
+                        {
+                          "x": 6.0,
+                          "y": 6.6
+                        },
+                        {
+                          "x": 2.0,
+                          "y": 6.6
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "role": "balcony",
+                "thickness": 0.15,
+                "arch": {
+                  "level": "zemin"
+                },
+                "edge": {
+                  "kind": "railing",
+                  "width": 0.05,
+                  "runs": "$any"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.walls.edit",
+          "input": {
+            "uids": [
+              "$uidOf:2"
+            ],
+            "operation": {
+              "kind": "shift",
+              "by": -0.5
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "length": 8.5,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 25.5,
+                  "openingsArea": 0.0,
+                  "netArea": 25.5,
+                  "volume": 5.1000000000000005,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "length": 8.5,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 25.5,
+                  "openingsArea": 0.0,
+                  "netArea": 25.5,
+                  "volume": 5.1000000000000005,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.15,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 2.25,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "length": 4.0,
+                  "width": 0.2,
+                  "openingsArea": 0.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 36.0,
+                "wallNetArea": 96.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "slabArea": 51.24,
+                "slabVolume": 7.686,
+                "railingLength": 7.0
+              },
+              "slabs": [
+                {
+                  "uid": "$uidOf:8",
+                  "role": "floor",
+                  "thickness": 0.15,
+                  "area": 45.24,
+                  "netArea": 45.24,
+                  "perimeter": 27.8,
+                  "volume": 6.786,
+                  "rule": "alan: halkaların alanı, delikler düşülür; boşluk: aynı kattaki boşluk mahallerinin örttüğü alan düşülür; hacim: net alan × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:9",
+                  "role": "balcony",
+                  "level": "zemin",
+                  "thickness": 0.15,
+                  "top": 0.0,
+                  "area": 6.0,
+                  "netArea": 6.0,
+                  "perimeter": 11.0,
+                  "volume": 0.8999999999999999,
+                  "edge": "railing",
+                  "edgeLength": 7.0,
+                  "rule": "alan: halkaların alanı, delikler düşülür; boşluk: aynı kattaki boşluk mahallerinin örttüğü alan düşülür; hacim: net alan × kalınlık; kenar: serbest kenarlar boyunca"
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "duvar kaydırması geri alınınca bağlı döşeme eski sınırına döner",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.slabs.create",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "bound": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "slab",
+                "id": 8,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": "$any",
+                "thickness": 0.15,
+                "bound": {
+                  "source": "walls",
+                  "seed": {
+                    "x": 2.0,
+                    "y": 2.0
+                  },
+                  "uids": [
+                    "$uidOf:1",
+                    "$uidOf:2",
+                    "$uidOf:3",
+                    "$uidOf:4",
+                    "$uidOf:5"
+                  ]
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.15,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 2.25,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "length": 4.0,
+                  "width": 0.2,
+                  "openingsArea": 0.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 35.0,
+                "wallNetArea": 93.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "slabArea": 42.64,
+                "slabVolume": 6.396
+              },
+              "slabs": [
+                {
+                  "uid": "$uidOf:8",
+                  "role": "floor",
+                  "thickness": 0.15,
+                  "area": 42.64,
+                  "netArea": 42.64,
+                  "perimeter": 26.8,
+                  "volume": 6.396,
+                  "rule": "alan: halkaların alanı, delikler düşülür; boşluk: aynı kattaki boşluk mahallerinin örttüğü alan düşülür; hacim: net alan × kalınlık"
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.walls.edit",
+          "input": {
+            "uids": [
+              "$uidOf:2"
+            ],
+            "operation": {
+              "kind": "shift",
+              "by": -0.5
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "length": 8.5,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 25.5,
+                  "openingsArea": 0.0,
+                  "netArea": 25.5,
+                  "volume": 5.1000000000000005,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "length": 8.5,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 25.5,
+                  "openingsArea": 0.0,
+                  "netArea": 25.5,
+                  "volume": 5.1000000000000005,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.15,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 2.25,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "length": 4.0,
+                  "width": 0.2,
+                  "openingsArea": 0.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 36.0,
+                "wallNetArea": 96.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "slabArea": 45.24,
+                "slabVolume": 6.786
+              },
+              "slabs": [
+                {
+                  "uid": "$uidOf:8",
+                  "role": "floor",
+                  "thickness": 0.15,
+                  "area": 45.24,
+                  "netArea": 45.24,
+                  "perimeter": 27.8,
+                  "volume": 6.786,
+                  "rule": "alan: halkaların alanı, delikler düşülür; boşluk: aynı kattaki boşluk mahallerinin örttüğü alan düşülür; hacim: net alan × kalınlık"
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Duvarı düzenle",
+          "expect": {
+            "canRedo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.15,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 2.25,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "length": 4.0,
+                  "width": 0.2,
+                  "openingsArea": 0.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 35.0,
+                "wallNetArea": 93.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "slabArea": 42.64,
+                "slabVolume": 6.396
+              },
+              "slabs": [
+                {
+                  "uid": "$uidOf:8",
+                  "role": "floor",
+                  "thickness": 0.15,
+                  "area": 42.64,
+                  "netArea": 42.64,
+                  "perimeter": 26.8,
+                  "volume": 6.396,
+                  "rule": "alan: halkaların alanı, delikler düşülür; boşluk: aynı kattaki boşluk mahallerinin örttüğü alan düşülür; hacim: net alan × kalınlık"
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ara duvar kayınca odaya bağlı döşeme odayla daralır",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.slabs.create",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "boundary": "room",
+                "bound": true,
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "slab",
+                "id": 8,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": "$any",
+                "thickness": 0.15,
+                "arch": {
+                  "level": "zemin"
+                },
+                "bound": {
+                  "source": "walls",
+                  "seed": {
+                    "x": 7.0,
+                    "y": 2.0
+                  },
+                  "face": "room",
+                  "uids": [
+                    "$uidOf:1",
+                    "$uidOf:2",
+                    "$uidOf:3",
+                    "$uidOf:5"
+                  ]
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.entities.transform",
+          "input": {
+            "uids": [
+              "$uidOf:5"
+            ],
+            "transform": {
+              "kind": "move",
+              "dx": 0.5,
+              "dy": 0.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.15,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 2.25,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "length": 4.0,
+                  "width": 0.2,
+                  "openingsArea": 0.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 35.0,
+                "wallNetArea": 93.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "slabArea": 11.16,
+                "slabVolume": 1.674
+              },
+              "slabs": [
+                {
+                  "uid": "$uidOf:8",
+                  "role": "floor",
+                  "level": "zemin",
+                  "thickness": 0.15,
+                  "top": 0.0,
+                  "area": 11.16,
+                  "netArea": 11.16,
+                  "perimeter": 14.25,
+                  "volume": 1.674,
+                  "rule": "alan: halkaların alanı, delikler düşülür; boşluk: aynı kattaki boşluk mahallerinin örttüğü alan düşülür; hacim: net alan × kalınlık"
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ara duvar kayınca mahale bağlı döşeme mahalle aynı adımda büyür",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.slabs.create",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "space": "$uidOf:8"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                9
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "9": {
+                "kind": "slab",
+                "id": 9,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": "$any",
+                "thickness": 0.15,
+                "bound": {
+                  "source": "space",
+                  "space": "$uidOf:8"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.entities.transform",
+          "input": {
+            "uids": [
+              "$uidOf:5"
+            ],
+            "transform": {
+              "kind": "move",
+              "dx": -0.5,
+              "dy": 0.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "uid": "$uidOf:8",
+                  "method": "net",
+                  "area": 15.959999999999999,
+                  "perimeter": 16.25,
+                  "byMethod": {
+                    "net": 15.959999999999999,
+                    "centerline": 17.5,
+                    "gross": 19.11
+                  },
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "baseboard": 16.25
+                }
+              ],
+              "walls": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.15,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 2.25,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "length": 4.0,
+                  "width": 0.2,
+                  "openingsArea": 0.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [],
+              "totals": {
+                "spaceArea": 15.959999999999999,
+                "wallLength": 35.0,
+                "wallNetArea": 93.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "baseboardLength": 16.25,
+                "slabArea": 15.959999999999999,
+                "slabVolume": 2.3939999999999997
+              },
+              "slabs": [
+                {
+                  "uid": "$uidOf:9",
+                  "role": "floor",
+                  "thickness": 0.15,
+                  "area": 15.959999999999999,
+                  "netArea": 15.959999999999999,
+                  "perimeter": 16.25,
+                  "volume": 2.3939999999999997,
+                  "rule": "alan: halkaların alanı, delikler düşülür; boşluk: aynı kattaki boşluk mahallerinin örttüğü alan düşülür; hacim: net alan × kalınlık"
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "çıkma döşemenin serbest kenarlarındaki korkuluk duvarla büyüyen sınırı izler",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.slabs.create",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "bound": true,
+                "edgeOffset": 1.0,
+                "role": "balcony",
+                "edge": {
+                  "kind": "railing"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "slab",
+                "id": 8,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": "$any",
+                "role": "balcony",
+                "thickness": 0.15,
+                "edge": {
+                  "kind": "railing",
+                  "width": 0.05,
+                  "runs": "$any"
+                },
+                "bound": {
+                  "source": "walls",
+                  "seed": {
+                    "x": 2.0,
+                    "y": 2.0
+                  },
+                  "offset": 1.0,
+                  "uids": [
+                    "$uidOf:1",
+                    "$uidOf:2",
+                    "$uidOf:3",
+                    "$uidOf:4",
+                    "$uidOf:5"
+                  ]
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.walls.edit",
+          "input": {
+            "uids": [
+              "$uidOf:2"
+            ],
+            "operation": {
+              "kind": "shift",
+              "by": -0.5
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "length": 8.5,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 25.5,
+                  "openingsArea": 0.0,
+                  "netArea": 25.5,
+                  "volume": 5.1000000000000005,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "length": 8.5,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 25.5,
+                  "openingsArea": 0.0,
+                  "netArea": 25.5,
+                  "volume": 5.1000000000000005,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.15,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 2.25,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "length": 4.0,
+                  "width": 0.2,
+                  "openingsArea": 0.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 36.0,
+                "wallNetArea": 96.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "slabArea": 77.04,
+                "slabVolume": 11.556,
+                "railingLength": 35.8
+              },
+              "slabs": [
+                {
+                  "uid": "$uidOf:8",
+                  "role": "balcony",
+                  "thickness": 0.15,
+                  "area": 77.04,
+                  "netArea": 77.04,
+                  "perimeter": 35.8,
+                  "volume": 11.556,
+                  "edge": "railing",
+                  "edgeLength": 35.8,
+                  "rule": "alan: halkaların alanı, delikler düşülür; boşluk: aynı kattaki boşluk mahallerinin örttüğü alan düşülür; hacim: net alan × kalınlık; kenar: serbest kenarlar boyunca"
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "dış duvar silinince bağlı döşeme son sınırıyla kalır, kopuk: lostEnclosure",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.slabs.create",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "bound": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "slab",
+                "id": 8,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": "$any",
+                "thickness": 0.15,
+                "bound": {
+                  "source": "walls",
+                  "seed": {
+                    "x": 2.0,
+                    "y": 2.0
+                  },
+                  "uids": [
+                    "$uidOf:1",
+                    "$uidOf:2",
+                    "$uidOf:3",
+                    "$uidOf:4",
+                    "$uidOf:5"
+                  ]
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "captureUid",
+          "id": 1,
+          "as": "gone1"
+        },
+        {
+          "op": "execute",
+          "command": "cad.entities.delete",
+          "input": {
+            "uids": [
+              "$uidOf:1"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "fields": {
+              "8": {
+                "bound": {
+                  "source": "walls",
+                  "seed": {
+                    "x": 2.0,
+                    "y": 2.0
+                  },
+                  "uids": [
+                    "$uid:gone1",
+                    "$uidOf:2",
+                    "$uidOf:3",
+                    "$uidOf:4",
+                    "$uidOf:5"
+                  ],
+                  "broken": "lostEnclosure"
+                }
+              }
+            },
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [
+                {
+                  "uid": "$uidOf:2",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.15,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 2.25,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "length": 4.0,
+                  "width": 0.2,
+                  "openingsArea": 0.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 27.0,
+                "wallNetArea": 69.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "slabArea": 42.64,
+                "slabVolume": 6.396
+              },
+              "slabs": [
+                {
+                  "uid": "$uidOf:8",
+                  "role": "floor",
+                  "thickness": 0.15,
+                  "area": 42.64,
+                  "netArea": 42.64,
+                  "perimeter": 26.8,
+                  "volume": 6.396,
+                  "rule": "alan: halkaların alanı, delikler düşülür; boşluk: aynı kattaki boşluk mahallerinin örttüğü alan düşülür; hacim: net alan × kalınlık"
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "mahali silinen döşeme son sınırıyla kalır, kopuk: sourceGone",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.slabs.create",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "space": "$uidOf:8"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                9
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "9": {
+                "kind": "slab",
+                "id": 9,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": "$any",
+                "thickness": 0.15,
+                "bound": {
+                  "source": "space",
+                  "space": "$uidOf:8"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "captureUid",
+          "id": 8,
+          "as": "gone8"
+        },
+        {
+          "op": "execute",
+          "command": "cad.entities.delete",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "fields": {
+              "9": {
+                "bound": {
+                  "source": "space",
+                  "space": "$uid:gone8",
+                  "broken": "sourceGone"
+                }
+              }
+            },
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "silme geri alınınca kopukluk kalkar",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.slabs.create",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "bound": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "slab",
+                "id": 8,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": "$any",
+                "thickness": 0.15,
+                "bound": {
+                  "source": "walls",
+                  "seed": {
+                    "x": 2.0,
+                    "y": 2.0
+                  },
+                  "uids": [
+                    "$uidOf:1",
+                    "$uidOf:2",
+                    "$uidOf:3",
+                    "$uidOf:4",
+                    "$uidOf:5"
+                  ]
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "captureUid",
+          "id": 1,
+          "as": "gone1"
+        },
+        {
+          "op": "execute",
+          "command": "cad.entities.delete",
+          "input": {
+            "uids": [
+              "$uidOf:1"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "fields": {
+              "8": {
+                "bound": {
+                  "source": "walls",
+                  "seed": {
+                    "x": 2.0,
+                    "y": 2.0
+                  },
+                  "uids": [
+                    "$uid:gone1",
+                    "$uidOf:2",
+                    "$uidOf:3",
+                    "$uidOf:4",
+                    "$uidOf:5"
+                  ],
+                  "broken": "lostEnclosure"
+                }
+              }
+            },
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Sil",
+          "expect": {
+            "fields": {
+              "8": {
+                "bound": {
+                  "source": "walls",
+                  "seed": {
+                    "x": 2.0,
+                    "y": 2.0
+                  },
+                  "uids": [
+                    "$uidOf:1",
+                    "$uidOf:2",
+                    "$uidOf:3",
+                    "$uidOf:4",
+                    "$uidOf:5"
+                  ]
+                }
+              }
+            },
+            "canRedo": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "çizilmiş döşeme duvarlara bağlanır: sınırı duvarlardan bulunur",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.slabs.create",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 1.0,
+                          "y": 1.0
+                        },
+                        {
+                          "x": 3.0,
+                          "y": 1.0
+                        },
+                        {
+                          "x": 3.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 1.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "slab",
+                "id": 8,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 1.0,
+                          "y": 1.0
+                        },
+                        {
+                          "x": 3.0,
+                          "y": 1.0
+                        },
+                        {
+                          "x": 3.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 1.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "thickness": 0.15
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.slabs.edit",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "bind",
+              "seed": {
+                "x": 2.0,
+                "y": 2.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "slabs": [
+                {
+                  "kind": "slab",
+                  "id": 8,
+                  "layerId": "doseme",
+                  "attrs": {},
+                  "parts": "$any",
+                  "thickness": 0.15,
+                  "bound": {
+                    "source": "walls",
+                    "seed": {
+                      "x": 2.0,
+                      "y": 2.0
+                    },
+                    "uids": [
+                      "$uidOf:1",
+                      "$uidOf:2",
+                      "$uidOf:3",
+                      "$uidOf:4",
+                      "$uidOf:5"
+                    ]
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "slab",
+                "id": 8,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": "$any",
+                "thickness": 0.15,
+                "bound": {
+                  "source": "walls",
+                  "seed": {
+                    "x": 2.0,
+                    "y": 2.0
+                  },
+                  "uids": [
+                    "$uidOf:1",
+                    "$uidOf:2",
+                    "$uidOf:3",
+                    "$uidOf:4",
+                    "$uidOf:5"
+                  ]
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.15,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 2.25,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "length": 4.0,
+                  "width": 0.2,
+                  "openingsArea": 0.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 35.0,
+                "wallNetArea": 93.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "slabArea": 42.64,
+                "slabVolume": 6.396
+              },
+              "slabs": [
+                {
+                  "uid": "$uidOf:8",
+                  "role": "floor",
+                  "thickness": 0.15,
+                  "area": 42.64,
+                  "netArea": 42.64,
+                  "perimeter": 26.8,
+                  "volume": 6.396,
+                  "rule": "alan: halkaların alanı, delikler düşülür; boşluk: aynı kattaki boşluk mahallerinin örttüğü alan düşülür; hacim: net alan × kalınlık"
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "çizilmiş döşeme odanın iç yüzlerine 5 cm içe ötelenerek bağlanır",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.slabs.create",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 6.0,
+                          "y": 1.0
+                        },
+                        {
+                          "x": 7.0,
+                          "y": 1.0
+                        },
+                        {
+                          "x": 7.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 6.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "slab",
+                "id": 8,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 6.0,
+                          "y": 1.0
+                        },
+                        {
+                          "x": 7.0,
+                          "y": 1.0
+                        },
+                        {
+                          "x": 7.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 6.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "thickness": 0.15,
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.slabs.edit",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "bind",
+              "seed": {
+                "x": 7.0,
+                "y": 2.0
+              },
+              "boundary": "room",
+              "offset": -0.05
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "slabs": [
+                {
+                  "kind": "slab",
+                  "id": 8,
+                  "layerId": "doseme",
+                  "attrs": {},
+                  "parts": "$any",
+                  "thickness": 0.15,
+                  "arch": {
+                    "level": "zemin"
+                  },
+                  "bound": {
+                    "source": "walls",
+                    "seed": {
+                      "x": 7.0,
+                      "y": 2.0
+                    },
+                    "face": "room",
+                    "offset": -0.05,
+                    "uids": [
+                      "$uidOf:1",
+                      "$uidOf:2",
+                      "$uidOf:3",
+                      "$uidOf:5"
+                    ]
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "slab",
+                "id": 8,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": "$any",
+                "thickness": 0.15,
+                "arch": {
+                  "level": "zemin"
+                },
+                "bound": {
+                  "source": "walls",
+                  "seed": {
+                    "x": 7.0,
+                    "y": 2.0
+                  },
+                  "face": "room",
+                  "offset": -0.05,
+                  "uids": [
+                    "$uidOf:1",
+                    "$uidOf:2",
+                    "$uidOf:3",
+                    "$uidOf:5"
+                  ]
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.15,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 2.25,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "length": 4.0,
+                  "width": 0.2,
+                  "openingsArea": 0.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 35.0,
+                "wallNetArea": 93.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "slabArea": 12.8075,
+                "slabVolume": 1.921125
+              },
+              "slabs": [
+                {
+                  "uid": "$uidOf:8",
+                  "role": "floor",
+                  "level": "zemin",
+                  "thickness": 0.15,
+                  "top": 0.0,
+                  "area": 12.8075,
+                  "netArea": 12.8075,
+                  "perimeter": 14.85,
+                  "volume": 1.921125,
+                  "rule": "alan: halkaların alanı, delikler düşülür; boşluk: aynı kattaki boşluk mahallerinin örttüğü alan düşülür; hacim: net alan × kalınlık"
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "bağlı döşeme ayrılır: sınırı kendisinin olur",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.slabs.create",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "bound": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "slab",
+                "id": 8,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": "$any",
+                "thickness": 0.15,
+                "bound": {
+                  "source": "walls",
+                  "seed": {
+                    "x": 2.0,
+                    "y": 2.0
+                  },
+                  "uids": [
+                    "$uidOf:1",
+                    "$uidOf:2",
+                    "$uidOf:3",
+                    "$uidOf:4",
+                    "$uidOf:5"
+                  ]
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.slabs.edit",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "detach"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "slabs": [
+                {
+                  "kind": "slab",
+                  "id": 8,
+                  "layerId": "doseme",
+                  "attrs": {},
+                  "parts": "$any",
+                  "thickness": 0.15
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "slab",
+                "id": 8,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": "$any",
+                "thickness": 0.15
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.15,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 2.25,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "length": 4.0,
+                  "width": 0.2,
+                  "openingsArea": 0.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 35.0,
+                "wallNetArea": 93.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "slabArea": 42.64,
+                "slabVolume": 6.396
+              },
+              "slabs": [
+                {
+                  "uid": "$uidOf:8",
+                  "role": "floor",
+                  "thickness": 0.15,
+                  "area": 42.64,
+                  "netArea": 42.64,
+                  "perimeter": 26.8,
+                  "volume": 6.396,
+                  "rule": "alan: halkaların alanı, delikler düşülür; boşluk: aynı kattaki boşluk mahallerinin örttüğü alan düşülür; hacim: net alan × kalınlık"
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "bağlı döşemenin kenarı ötelenince bağın ötelemesi de değişir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.slabs.create",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "bound": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "slab",
+                "id": 8,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": "$any",
+                "thickness": 0.15,
+                "bound": {
+                  "source": "walls",
+                  "seed": {
+                    "x": 2.0,
+                    "y": 2.0
+                  },
+                  "uids": [
+                    "$uidOf:1",
+                    "$uidOf:2",
+                    "$uidOf:3",
+                    "$uidOf:4",
+                    "$uidOf:5"
+                  ]
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.slabs.edit",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "offset",
+              "distance": 0.25
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "slabs": [
+                {
+                  "kind": "slab",
+                  "id": 8,
+                  "layerId": "doseme",
+                  "attrs": {},
+                  "parts": "$any",
+                  "thickness": 0.15,
+                  "bound": {
+                    "source": "walls",
+                    "seed": {
+                      "x": 2.0,
+                      "y": 2.0
+                    },
+                    "offset": 0.25,
+                    "uids": [
+                      "$uidOf:1",
+                      "$uidOf:2",
+                      "$uidOf:3",
+                      "$uidOf:4",
+                      "$uidOf:5"
+                    ]
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "slab",
+                "id": 8,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": "$any",
+                "thickness": 0.15,
+                "bound": {
+                  "source": "walls",
+                  "seed": {
+                    "x": 2.0,
+                    "y": 2.0
+                  },
+                  "offset": 0.25,
+                  "uids": [
+                    "$uidOf:1",
+                    "$uidOf:2",
+                    "$uidOf:3",
+                    "$uidOf:4",
+                    "$uidOf:5"
+                  ]
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.15,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 2.25,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "length": 4.0,
+                  "width": 0.2,
+                  "openingsArea": 0.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 35.0,
+                "wallNetArea": 93.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "slabArea": 49.59,
+                "slabVolume": 7.4384999999999994
+              },
+              "slabs": [
+                {
+                  "uid": "$uidOf:8",
+                  "role": "floor",
+                  "thickness": 0.15,
+                  "area": 49.59,
+                  "netArea": 49.59,
+                  "perimeter": 28.8,
+                  "volume": 7.4384999999999994,
+                  "rule": "alan: halkaların alanı, delikler düşülür; boşluk: aynı kattaki boşluk mahallerinin örttüğü alan düşülür; hacim: net alan × kalınlık"
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "çizilmiş döşeme mahale bağlanır",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.slabs.create",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 6.0,
+                          "y": 1.0
+                        },
+                        {
+                          "x": 7.0,
+                          "y": 1.0
+                        },
+                        {
+                          "x": 7.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 6.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                9
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "9": {
+                "kind": "slab",
+                "id": 9,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 6.0,
+                          "y": 1.0
+                        },
+                        {
+                          "x": 7.0,
+                          "y": 1.0
+                        },
+                        {
+                          "x": 7.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 6.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "thickness": 0.15
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.slabs.edit",
+          "input": {
+            "uids": [
+              "$uidOf:9"
+            ],
+            "operation": {
+              "kind": "bind",
+              "space": "$uidOf:8"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "slabs": [
+                {
+                  "kind": "slab",
+                  "id": 9,
+                  "layerId": "doseme",
+                  "attrs": {},
+                  "parts": "$any",
+                  "thickness": 0.15,
+                  "bound": {
+                    "source": "space",
+                    "space": "$uidOf:8"
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "9": {
+                "kind": "slab",
+                "id": 9,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": "$any",
+                "thickness": 0.15,
+                "bound": {
+                  "source": "space",
+                  "space": "$uidOf:8"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "uid": "$uidOf:8",
+                  "method": "net",
+                  "area": 13.56,
+                  "perimeter": 15.25,
+                  "byMethod": {
+                    "net": 13.56,
+                    "centerline": 15.0,
+                    "gross": 16.51
+                  },
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "baseboard": 15.25
+                }
+              ],
+              "walls": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.15,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 2.25,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "length": 4.0,
+                  "width": 0.2,
+                  "openingsArea": 0.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [],
+              "totals": {
+                "spaceArea": 13.56,
+                "wallLength": 35.0,
+                "wallNetArea": 93.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "baseboardLength": 15.25,
+                "slabArea": 13.56,
+                "slabVolume": 2.034
+              },
+              "slabs": [
+                {
+                  "uid": "$uidOf:9",
+                  "role": "floor",
+                  "thickness": 0.15,
+                  "area": 13.56,
+                  "netArea": 13.56,
+                  "perimeter": 15.25,
+                  "volume": 2.034,
+                  "rule": "alan: halkaların alanı, delikler düşülür; boşluk: aynı kattaki boşluk mahallerinin örttüğü alan düşülür; hacim: net alan × kalınlık"
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "bağlamanın planı yazmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.slabs.create",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 1.0,
+                          "y": 1.0
+                        },
+                        {
+                          "x": 3.0,
+                          "y": 1.0
+                        },
+                        {
+                          "x": 3.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 1.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "slab",
+                "id": 8,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 1.0,
+                          "y": 1.0
+                        },
+                        {
+                          "x": 3.0,
+                          "y": 1.0
+                        },
+                        {
+                          "x": 3.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 1.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "thickness": 0.15
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "plan",
+          "command": "cad.slabs.edit",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "bind",
+              "seed": {
+                "x": 2.0,
+                "y": 2.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "slabs": [
+                {
+                  "kind": "slab",
+                  "id": 8,
+                  "layerId": "doseme",
+                  "attrs": {},
+                  "parts": "$any",
+                  "thickness": 0.15,
+                  "bound": {
+                    "source": "walls",
+                    "seed": {
+                      "x": 2.0,
+                      "y": 2.0
+                    },
+                    "uids": [
+                      "$uidOf:1",
+                      "$uidOf:2",
+                      "$uidOf:3",
+                      "$uidOf:4",
+                      "$uidOf:5"
+                    ]
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "bağlı olmayan döşeme ayrılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.slabs.create",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 1.0,
+                          "y": 1.0
+                        },
+                        {
+                          "x": 3.0,
+                          "y": 1.0
+                        },
+                        {
+                          "x": 3.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 1.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "slab",
+                "id": 8,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 1.0,
+                          "y": 1.0
+                        },
+                        {
+                          "x": 3.0,
+                          "y": 1.0
+                        },
+                        {
+                          "x": 3.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 1.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "thickness": 0.15
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.slabs.edit",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "detach"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "slab_not_bound",
+              "message": "Döşeme kaynağa bağlı değil; ayrılacak bağ yok.",
+              "path": "uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "bağlı döşemeden alan kesilmez",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.slabs.create",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "bound": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "slab",
+                "id": 8,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": "$any",
+                "thickness": 0.15,
+                "bound": {
+                  "source": "walls",
+                  "seed": {
+                    "x": 2.0,
+                    "y": 2.0
+                  },
+                  "uids": [
+                    "$uidOf:1",
+                    "$uidOf:2",
+                    "$uidOf:3",
+                    "$uidOf:4",
+                    "$uidOf:5"
+                  ]
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.slabs.edit",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "subtract",
+              "parts": [
+                {
+                  "outer": {
+                    "pts": [
+                      {
+                        "x": 1.0,
+                        "y": 1.0
+                      },
+                      {
+                        "x": 2.0,
+                        "y": 1.0
+                      },
+                      {
+                        "x": 2.0,
+                        "y": 2.0
+                      },
+                      {
+                        "x": 1.0,
+                        "y": 2.0
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "slab_bound",
+              "message": "Döşemenin sınırı kaynağına bağlı; kesmek ya da alan eklemek için önce Ayır ile bağımsız kontur yapın.",
+              "path": "uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "bağlı döşemeye alan eklenmez",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.slabs.create",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "bound": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "slab",
+                "id": 8,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": "$any",
+                "thickness": 0.15,
+                "bound": {
+                  "source": "walls",
+                  "seed": {
+                    "x": 2.0,
+                    "y": 2.0
+                  },
+                  "uids": [
+                    "$uidOf:1",
+                    "$uidOf:2",
+                    "$uidOf:3",
+                    "$uidOf:4",
+                    "$uidOf:5"
+                  ]
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.slabs.edit",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "add",
+              "parts": [
+                {
+                  "outer": {
+                    "pts": [
+                      {
+                        "x": 8.0,
+                        "y": 1.0
+                      },
+                      {
+                        "x": 9.0,
+                        "y": 1.0
+                      },
+                      {
+                        "x": 9.0,
+                        "y": 2.0
+                      },
+                      {
+                        "x": 8.0,
+                        "y": 2.0
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "slab_bound",
+              "message": "Döşemenin sınırı kaynağına bağlı; kesmek ya da alan eklemek için önce Ayır ile bağımsız kontur yapın.",
+              "path": "uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "hem iç nokta hem mahal verilmez",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.slabs.create",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 1.0,
+                          "y": 1.0
+                        },
+                        {
+                          "x": 3.0,
+                          "y": 1.0
+                        },
+                        {
+                          "x": 3.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 1.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "slab",
+                "id": 8,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 1.0,
+                          "y": 1.0
+                        },
+                        {
+                          "x": 3.0,
+                          "y": 1.0
+                        },
+                        {
+                          "x": 3.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 1.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "thickness": 0.15
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.slabs.edit",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "bind",
+              "seed": {
+                "x": 2.0,
+                "y": 2.0
+              },
+              "space": "$uidOf:1"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_slab",
+              "message": "Döşeme ya duvarlara (seed: duvarlarla çevrili bir iç nokta) ya da bir mahale (space) bağlanır; birini verin.",
+              "path": "operation"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ne iç nokta ne mahal: bağlanmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.slabs.create",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 1.0,
+                          "y": 1.0
+                        },
+                        {
+                          "x": 3.0,
+                          "y": 1.0
+                        },
+                        {
+                          "x": 3.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 1.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "slab",
+                "id": 8,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 1.0,
+                          "y": 1.0
+                        },
+                        {
+                          "x": 3.0,
+                          "y": 1.0
+                        },
+                        {
+                          "x": 3.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 1.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "thickness": 0.15
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.slabs.edit",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "bind"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_slab",
+              "message": "Döşeme ya duvarlara (seed: duvarlarla çevrili bir iç nokta) ya da bir mahale (space) bağlanır; birini verin.",
+              "path": "operation"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "duvarların dışındaki noktaya bağlanmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.slabs.create",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 1.0,
+                          "y": 1.0
+                        },
+                        {
+                          "x": 3.0,
+                          "y": 1.0
+                        },
+                        {
+                          "x": 3.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 1.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "slab",
+                "id": 8,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 1.0,
+                          "y": 1.0
+                        },
+                        {
+                          "x": 3.0,
+                          "y": 1.0
+                        },
+                        {
+                          "x": 3.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 1.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "thickness": 0.15
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.slabs.edit",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "bind",
+              "seed": {
+                "x": 40.0,
+                "y": 40.0
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "slab_not_enclosed",
+              "message": "Nokta hiçbir duvar konturunun içinde değil; döşemenin sınırı bulunamadı. Noktayı yapının içine verin ya da sınırı çizin.",
+              "path": "operation.seed"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "mahal olmayan nesneye bağlanmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.slabs.create",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 1.0,
+                          "y": 1.0
+                        },
+                        {
+                          "x": 3.0,
+                          "y": 1.0
+                        },
+                        {
+                          "x": 3.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 1.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "slab",
+                "id": 8,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 1.0,
+                          "y": 1.0
+                        },
+                        {
+                          "x": 3.0,
+                          "y": 1.0
+                        },
+                        {
+                          "x": 3.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 1.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "thickness": 0.15
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.slabs.edit",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "bind",
+              "space": "$uidOf:1"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_space",
+              "message": "Döşemenin bağlanacağı nesne mahal değil.",
+              "path": "operation.space"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -42,4 +42,14 @@ edge?: NewSlabEdge,
 /**
  * Left out of the quantities' totals.
  */
-excluded?: boolean, attrs?: { [key in string]: string }, };
+excluded?: boolean, attrs?: { [key in string]: string }, 
+/**
+ * Kaynağa bağlı (docs/adr/0771 §4): with `seed`, the slab keeps its walls: its outline found again round the
+ * point, by `boundary` and moved by `edgeOffset`, whenever they change. Absent or false: its outline is its own.
+ */
+bound?: boolean, 
+/**
+ * A space by its persistent id: the slab's outline is the space's rings (moved by `edgeOffset`), bound to it; not
+ * with `parts` or `seed`.
+ */
+space?: string, };

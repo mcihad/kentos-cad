@@ -84,6 +84,8 @@ pub enum Event {
     Detail(usize, WallDetail),
     /// A component's priority at a join (docs/adr/0340 §1), 1 to 9; none: the rule's 3.
     Priority(usize, Option<u8>),
+    /// A component turning at the wall's ends and its openings' jambs (docs/adr/0771 §3).
+    Wrap(usize, bool),
     Add,
     Drop(usize),
     Up(usize),
@@ -474,6 +476,11 @@ impl App {
                     c.priority = p;
                 }
             }
+            Event::Wrap(i, on) => {
+                if let Some(c) = w.own().and_then(|s| s.components.get_mut(i)) {
+                    c.wrap = on;
+                }
+            }
             Event::Add => {
                 if let Some(s) = w.own() {
                     let n = s.components.len() + 1;
@@ -485,6 +492,7 @@ impl App {
                         hatch: None,
                         detail: WallDetail::Standard,
                         priority: None,
+                        wrap: false,
                     });
                 }
                 w.fill();
@@ -706,6 +714,7 @@ impl App {
                     head("Ölçek", 2),
                     head("Gösterim", 4),
                     head("Öncelik", 3),
+                    head("Döner", 2),
                     iced::widget::space().width(iced::Length::Fixed(2.0 * 26.0 + 6.0)),
                 ]
                 .spacing(6),
@@ -791,6 +800,8 @@ impl App {
                     scale,
                     container(detail).width(iced::Length::FillPortion(4)),
                     container(priority).width(iced::Length::FillPortion(3)),
+                    container(words::check(c.wrap, "", Some(msg(Event::Wrap(i, !c.wrap)))))
+                        .width(iced::Length::FillPortion(2)),
                     small("chevronUp", i > 0, msg(Event::Up(i))),
                     small("trash", true, msg(Event::Drop(i))),
                 ]
@@ -810,7 +821,7 @@ impl App {
                 "Bileşenler (duvarın sol yüzünden)",
                 table,
                 Some(
-                    "Kalınlığı boş bırakılan tek bileşen duvarın genişliğinden kalanı alır. Öncelik birleşimde: 1 en güçlü (çekirdek), 5 sıva; Kural 3'tür."
+                    "Kalınlığı boş bırakılan tek bileşen duvarın genişliğinden kalanı alır. Öncelik birleşimde: 1 en güçlü (çekirdek), 5 sıva; Kural 3'tür. Döner: yüzün dış katmanları duvar ucunda ve kapı ile pencere sövesinde döner."
                         .to_owned(),
                 ),
             ))

@@ -6,7 +6,8 @@ import type { SlabsOperation } from "./SlabsOperation";
  * or none.
  *
  * Refusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_a_slab`, `nothing_to_set`, `not_finite`,
- * `invalid_slab`, `level_not_found`, `slab_not_enclosed`, `slab_offset_failed`, `slab_cut_missed`,
- * `invalid_revision`, `revision_conflict`, `layer_locked`.
+ * `invalid_slab`, `level_not_found`, `slab_not_enclosed`, `slab_offset_failed`, `slab_cut_missed`, `slab_bound`
+ * (subtract or add on a bound slab), `slab_not_bound` (detach), `not_a_space`, `invalid_revision`,
+ * `revision_conflict`, `layer_locked`.
  */
 export type SlabsEdit = { uids: Array<string>, operation: SlabsOperation, expectedRevision?: string, };

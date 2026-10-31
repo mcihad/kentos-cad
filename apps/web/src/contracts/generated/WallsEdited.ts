@@ -28,7 +28,8 @@ joined?: Array<Entity>,
  */
 removed?: Array<string>, stylesAdded?: Array<string>, 
 /**
- * Kaydır, Mesafe and Boy: what the move does round it (docs/adr/0770 §3).
+ * Kaydır, Mesafe and Boy: what the move does round it (docs/adr/0770 §3); a width or style change kept at a
+ * reference (`keep`, docs/adr/0771 §2): the spaces' areas and the openings' depths, in the plan.
  */
 effects?: WallEffects, 
 /**

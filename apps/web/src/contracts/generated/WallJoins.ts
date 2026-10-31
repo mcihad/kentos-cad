@@ -4,4 +4,14 @@ import type { WallJoin } from "./WallJoin";
 /**
  * A wall's start's and end's join.
  */
-export type WallJoins = { start?: WallJoin, end?: WallJoin, };
+export type WallJoins = { start?: WallJoin, end?: WallJoin, 
+/**
+ * Düğüm kararı (docs/adr/0771 §1): where this wall's start tees into another, how many of the host's components
+ * (from its near face) each of this wall's components passes, one number per component (a plain wall one); the
+ * user's decision kept on this wall's end, by its persistent id. Absent: by the components' priorities.
+ */
+startPass?: Array<number>, 
+/**
+ * The same at its end.
+ */
+endPass?: Array<number>, };

@@ -119,12 +119,65 @@ fn check(doc: &Document, input: &SlabsEdit) -> Result<Vec<(Slot, SlabEntity)>, S
             for (at, slot, s) in &list {
                 let mut f = s.slab.clone();
                 f.parts = slabs::moved(&f.parts, *distance, &format!("uids[{at}]"))?;
+                // A bound slab keeps its offset with its source (docs/adr/0771 §4).
+                if let Some(b) = &mut f.bound {
+                    b.offset += *distance;
+                }
                 slabs::valid(&f, &format!("uids[{at}]"))?;
+                out.push((*slot, *at, f));
+            }
+        }
+        SlabsOperation::Bind { seed, boundary, space, offset } => {
+            if let Some(p) = seed {
+                checks::point(*p, "Döşemenin iç noktasının", "operation.seed")?;
+            }
+            if let Some(o) = offset {
+                checks::finite(*o, "Kenar ötelemesi", "Sonlu bir sayı verin.", "operation.offset")?;
+            }
+            if seed.is_some() == space.is_some() {
+                return Err(fail(
+                    codes::INVALID_SLAB,
+                    "Döşeme ya duvarlara (seed: duvarlarla çevrili bir iç nokta) ya da bir mahale (space) bağlanır; birini verin.".into(),
+                    "operation",
+                ));
+            }
+            for (at, slot, s) in &list {
+                let level = s.slab.arch.level.as_deref();
+                let parts = match space {
+                    Some(uid) => slabs::space_parts(doc, uid, "operation.space")?,
+                    None => slabs::outline(doc, None, *seed, *boundary, level, "operation")?,
+                };
+                let d = offset.unwrap_or(0.0);
+                let mut f = s.slab.clone();
+                f.parts = slabs::moved(&parts, d, "operation.offset")?;
+                f.bound = Some(slabs::bound_of(*seed, *boundary, space.as_ref(), d));
+                slabs::valid(&f, &format!("uids[{at}]"))?;
+                out.push((*slot, *at, slabs::with_bound_uids(doc, f)));
+            }
+        }
+        SlabsOperation::Detach => {
+            for (at, slot, s) in &list {
+                if s.slab.bound.is_none() {
+                    return Err(fail(
+                        codes::SLAB_NOT_BOUND,
+                        "Döşeme kaynağa bağlı değil; ayrılacak bağ yok.".into(),
+                        &format!("uids[{at}]"),
+                    ));
+                }
+                let mut f = s.slab.clone();
+                f.bound = None;
                 out.push((*slot, *at, f));
             }
         }
         SlabsOperation::Subtract { parts, seed, boundary } | SlabsOperation::Add { parts, seed, boundary } => {
             let cut = matches!(input.operation, SlabsOperation::Subtract { .. });
+            if let Some((at, ..)) = list.iter().find(|(_, _, s)| s.slab.bound.is_some()) {
+                return Err(fail(
+                    codes::SLAB_BOUND,
+                    "Döşemenin sınırı kaynağına bağlı; kesmek ya da alan eklemek için önce Ayır ile bağımsız kontur yapın.".into(),
+                    &format!("uids[{at}]"),
+                ));
+            }
             if let Some(p) = seed {
                 checks::point(*p, "Alanın iç noktasının", "operation.seed")?;
             }
@@ -175,7 +228,13 @@ fn check(doc: &Document, input: &SlabsEdit) -> Result<Vec<(Slot, SlabEntity)>, S
         .map(|(slot, at, f)| {
             let (_, _, s) = list.iter().find(|(a, ..)| *a == at).copied().unwrap_or(list[0]);
             let mut e = s.clone();
-            // Its edge's runs as the document writes them (docs/adr/0722 §3).
+            // A bound slab as its source gives it (docs/adr/0771 §4), then its edge's runs as the document writes them
+            // (docs/adr/0722 §3).
+            let f = if f.bound.is_some() && f.bound != s.slab.bound || f.arch.level != s.slab.arch.level {
+                doc.slab_bound_again(&f)
+            } else {
+                f
+            };
             e.slab = doc.slab_with_runs(&f);
             (slot, e)
         })

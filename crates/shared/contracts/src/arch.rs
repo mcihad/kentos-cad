@@ -196,6 +196,12 @@ pub struct WallComponent {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(range(min = 1, max = 9), extend("x-unit" = "1")))]
     pub priority: Option<u8>,
+    /// Uçta döner (docs/adr/0771 §3): at the wall's free ends and at a door's or a window's jambs this layer turns
+    /// across the end (a plaster's or an insulation's return, the end cap and the reveal one meaning), when it is one of
+    /// the face's outermost turning layers; the layers inside stop short by its thickness. Absent: it stops square.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub wrap: bool,
 }
 
 /// A component's priority when it has none.
@@ -238,7 +244,7 @@ impl WallJoin {
 }
 
 /// A wall's start's and end's join.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -250,11 +256,115 @@ pub struct WallJoins {
     #[serde(default, skip_serializing_if = "is_auto")]
     #[cfg_attr(feature = "ts", ts(as = "Option<WallJoin>", optional))]
     pub end: WallJoin,
+    /// Düğüm kararı (docs/adr/0771 §1): where this wall's start tees into another, how many of the host's components
+    /// (from its near face) each of this wall's components passes, one number per component (a plain wall one); the
+    /// user's decision kept on this wall's end, by its persistent id. Absent: by the components' priorities.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub start_pass: Option<Vec<u8>>,
+    /// The same at its end.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub end_pass: Option<Vec<u8>>,
 }
+
+/// The most host components a node decision passes (a wall has at most [`MAX_WALL_COMPONENTS`]).
+pub const MAX_NODE_PASS: u8 = MAX_WALL_COMPONENTS as u8;
 
 impl WallJoins {
     pub fn is_auto(&self) -> bool {
         *self == WallJoins::default()
+    }
+
+    /// Whether an end has the user's node decision (its join mode or its components' passes).
+    pub fn decided(&self, end_is_start: bool) -> bool {
+        if end_is_start {
+            self.start != WallJoin::Auto || self.start_pass.is_some()
+        } else {
+            self.end != WallJoin::Auto || self.end_pass.is_some()
+        }
+    }
+}
+
+/// Which line of a wall stays where it is when its width or its style changes (docs/adr/0771 §2): its path (as
+/// before), its body's centre, a finished face, or a core face (the boundary of its strongest component on that side;
+/// a wall without components its face).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum WallReference {
+    #[default]
+    Path,
+    Center,
+    LeftFace,
+    RightFace,
+    CoreLeft,
+    CoreRight,
+}
+
+impl WallReference {
+    pub const ALL: [WallReference; 6] = [
+        WallReference::Path,
+        WallReference::Center,
+        WallReference::LeftFace,
+        WallReference::RightFace,
+        WallReference::CoreLeft,
+        WallReference::CoreRight,
+    ];
+
+    pub fn label(self) -> &'static str {
+        match self {
+            WallReference::Path => "Yol",
+            WallReference::Center => "Eksen",
+            WallReference::LeftFace => "Sol bitmiş yüz",
+            WallReference::RightFace => "Sağ bitmiş yüz",
+            WallReference::CoreLeft => "Sol çekirdek yüzü",
+            WallReference::CoreRight => "Sağ çekirdek yüzü",
+        }
+    }
+
+    pub fn name(self) -> &'static str {
+        match self {
+            WallReference::Path => "path",
+            WallReference::Center => "center",
+            WallReference::LeftFace => "leftFace",
+            WallReference::RightFace => "rightFace",
+            WallReference::CoreLeft => "coreLeft",
+            WallReference::CoreRight => "coreRight",
+        }
+    }
+}
+
+/// The strongest component of a wall's components (the smallest priority, the first of equals): its core; none for a
+/// wall without components.
+pub fn core_component(components: &[WallComponent]) -> Option<usize> {
+    (0..components.len()).min_by_key(|&k| (components[k].priority.unwrap_or(DEFAULT_COMPONENT_PRIORITY), k))
+}
+
+impl WallFields {
+    /// The distance of the line `r` to the left of the wall's path (positive: left), metres; none when its components do
+    /// not fit its width.
+    pub fn reference_at(&self, r: WallReference) -> Option<f64> {
+        let left = self.justify.left_face(self.width) + self.offset;
+        let right = left - self.width;
+        Some(match r {
+            WallReference::Path => 0.0,
+            WallReference::Center => (left + right) / 2.0,
+            WallReference::LeftFace => left,
+            WallReference::RightFace => right,
+            WallReference::CoreLeft | WallReference::CoreRight => {
+                let Some(core) = core_component(&self.components) else {
+                    return Some(if r == WallReference::CoreLeft { left } else { right });
+                };
+                let t = self.thicknesses()?;
+                let before: f64 = t[..core].iter().sum();
+                if r == WallReference::CoreLeft { left - before } else { left - before - t[core] }
+            }
+        })
     }
 }
 
@@ -706,6 +816,9 @@ pub fn components_problem(
             }
         }
     }
+    if let Some(problem) = wrap_problem(components) {
+        return Some(problem);
+    }
     if let Some(w) = width
         && !components.is_empty()
         && component_thicknesses(w, components).is_none()
@@ -726,6 +839,62 @@ pub fn components_problem(
         return Some(("width".into(), words));
     }
     None
+}
+
+/// What is wrong with the components' turning layers (docs/adr/0771 §3): they run unbroken from a face, and at least one
+/// component between them does not turn.
+fn wrap_problem(components: &[WallComponent]) -> Option<(String, String)> {
+    let n = components.len();
+    let from_left = components.iter().take_while(|c| c.wrap).count();
+    let from_right = components.iter().rev().take_while(|c| c.wrap).count();
+    if from_left + from_right >= n && components.iter().any(|c| c.wrap) {
+        return Some((
+            "components".into(),
+            "Bütün bileşenler uçta dönemez: dönen katmanların arasında dönmeyen en az bir bileşen (çekirdek) kalmalı."
+                .into(),
+        ));
+    }
+    let i = (from_left..n - from_right).find(|&i| components[i].wrap)?;
+    Some((
+        format!("components[{i}].wrap"),
+        format!(
+            "“{}” bileşeni uçta dönemez: dönen katmanlar bir yüzden başlayıp kesintisiz sıralanır, aralarında dönmeyen bileşen olmaz.",
+            components[i].name
+        ),
+    ))
+}
+
+impl WallJoins {
+    /// What is wrong with the ends' node decisions for a wall of `count` components (a plain wall one) that is
+    /// `closed`: the field and the words.
+    pub fn problem(&self, count: usize, closed: bool) -> Option<(String, String)> {
+        for (name, pass) in [("startPass", &self.start_pass), ("endPass", &self.end_pass)] {
+            let Some(p) = pass else { continue };
+            if closed {
+                return Some((
+                    format!("joins.{name}"),
+                    "Kapalı duvarın ucu yok; düğüm kararı verilmez.".into(),
+                ));
+            }
+            if p.len() != count.max(1) {
+                return Some((
+                    format!("joins.{name}"),
+                    format!(
+                        "Düğüm kararı duvarın her bileşeni için bir sayıdır: {} bileşen, {} sayı verildi.",
+                        count.max(1),
+                        p.len()
+                    ),
+                ));
+            }
+            if let Some(i) = p.iter().position(|&x| x > MAX_NODE_PASS) {
+                return Some((
+                    format!("joins.{name}[{i}]"),
+                    format!("Bir bileşen konağın en çok {MAX_NODE_PASS} bileşeninden geçer; {} verildi.", p[i]),
+                ));
+            }
+        }
+        None
+    }
 }
 
 impl WallFields {
@@ -817,6 +986,9 @@ impl WallFields {
             ));
         }
         if let Some(problem) = components_problem(&self.components, Some(self.width)) {
+            return Some(problem);
+        }
+        if let Some(problem) = self.joins.problem(self.components.len(), self.closed) {
             return Some(problem);
         }
         if !colour_holds(&self.fill) {
@@ -1285,6 +1457,7 @@ fn component(
             color: color.map(str::to_owned),
         }),
         detail,
+        wrap: false,
     }
 }
 

@@ -533,6 +533,8 @@ mod block_library_scenes;
 #[cfg(test)]
 mod slab_scenes;
 #[cfg(test)]
+mod building_parts_scenes;
+#[cfg(test)]
 mod space_scenes;
 #[cfg(test)]
 mod arch_scenes;

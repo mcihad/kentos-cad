@@ -1445,6 +1445,12 @@ impl crate::app::App {
                         out.push(Vec2::new(p.x, p.y + above));
                     }
                 }
+                // A bound slab whose source is gone (docs/adr/0771 §4), above its label point.
+                Some(kentos_commands::Entity::Slab(s)) => {
+                    if let Some(p) = kentos_native_application::spaces::label_point(&s.slab.parts) {
+                        out.push(Vec2::new(p.x, p.y + above));
+                    }
+                }
                 // A column whose grid is gone (docs/adr/0343 §3), at its centre.
                 Some(kentos_commands::Entity::Column(c)) => out.push(Vec2::new(c.column.at.x, c.column.at.y)),
                 // A tag whose object is gone (docs/adr/0344 §1), above its middle.

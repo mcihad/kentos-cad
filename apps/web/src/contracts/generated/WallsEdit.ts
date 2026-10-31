@@ -11,6 +11,7 @@ import type { WallsOperation } from "./WallsOperation";
  * Refusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_a_wall`, `nothing_to_set`, `not_finite`,
  * `style_not_found`, `style_not_used`, `invalid_wall`, `wall_collapses`, `level_not_found`, `point_off_wall`,
  * `split_at_end`, `walls_not_touching`, `walls_differ`, `too_few_objects`, `wall_closed`, `no_crossing`,
+ * `wall_node_unsupported` (a node decision where the end tees into no straight wall, docs/adr/0771 §1),
  * `invalid_revision`, `revision_conflict`, `layer_locked`; on the desktop also `slots_exhausted`.
  */
 export type WallsEdit = { uids: Array<string>, operation: WallsOperation, expectedRevision?: string, };

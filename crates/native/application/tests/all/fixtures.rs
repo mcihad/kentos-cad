@@ -988,6 +988,14 @@ impl Input for kentos_commands::SlabsEdit {
                 "operation.seed.y" => seed.as_mut().map(|p| &mut p.y),
                 _ => None,
             },
+            // Kaynağa bağla (docs/adr/0771 §4).
+            Op::Bind { seed, offset, .. } => match path {
+                "operation.seed.x" => seed.as_mut().map(|p| &mut p.x),
+                "operation.seed.y" => seed.as_mut().map(|p| &mut p.y),
+                "operation.offset" => offset.as_mut(),
+                _ => None,
+            },
+            Op::Detach => None,
         }
     }
 }
