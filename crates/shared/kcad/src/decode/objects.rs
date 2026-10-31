@@ -329,6 +329,8 @@ pub(super) struct Features {
     pub(super) building_parts: bool,
     /// Schema 148 (docs/adr/0785): the project's materials, a component's or a slab's binding.
     pub(super) materials: bool,
+    /// Schema 157 (docs/adr/0792): three- and four-leaf sliding doors, their tracks, a schedule of them.
+    pub(super) multi_slide: bool,
     pub(super) opening_types: bool,
     pub(super) special_doors: bool,
     /// Schema 140 (docs/adr/0773): the building program, a space's group, a schedule's program fields.
@@ -550,6 +552,7 @@ impl Features {
             arch_bonds: schema >= crate::SCHEMA_WITH_ARCH_BONDS,
             building_parts: schema >= crate::SCHEMA_WITH_BUILDING_PARTS,
             materials: schema >= crate::SCHEMA_WITH_MATERIALS,
+            multi_slide: schema >= crate::SCHEMA_WITH_MULTI_SLIDE,
             opening_types: schema >= crate::SCHEMA_WITH_OPENING_TYPES,
             special_doors: schema >= crate::SCHEMA_WITH_SPECIAL_DOORS,
             building_program: schema >= crate::SCHEMA_WITH_BUILDING_PROGRAM,
@@ -2280,6 +2283,13 @@ pub(super) fn object(
         return Err(r.fail(
             Code::BadValue,
             "döner merdivenin bükümü (bulges) şema 117 ister",
+        ));
+    }
+    // Schema 157 (docs/adr/0792): a three- or four-leaf sliding door or window, its tracks, a schedule of them.
+    if kentos_contracts::needs_multi_slide(&entity) && !has.multi_slide {
+        return Err(r.fail(
+            Code::UnknownField,
+            "üç ve dört kanatlı sürme, ray sayısı (tracks) ve çizelgenin ray ve kanat düzeni sütunları şema 157 ister",
         ));
     }
     // Schema 144 (docs/adr/0777): a revolving, pocket or folding door, a sliding door's track, a schedule of them.

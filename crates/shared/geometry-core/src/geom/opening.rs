@@ -129,6 +129,8 @@ pub struct Build {
     pub both_sides: bool,
     /// How much of an open pocket leaf stays out of its pocket; none: [`POCKET_LIP`].
     pub lip: Option<f64>,
+    /// A three- or four-leaf sliding door's or window's tracks (docs/adr/0792 §1); 0: none given (two).
+    pub tracks: u8,
 }
 
 /// How far a casing stands off its wall's face, metres (docs/adr/0772 §3).
@@ -156,6 +158,7 @@ impl Build {
             track: matches!(v.get("track"), Json::Bool(true)),
             both_sides: matches!(v.get("bothSides"), Json::Bool(true)),
             lip: n("lip")?,
+            tracks: n("tracks")?.unwrap_or(0.0).clamp(0.0, 3.0) as u8,
         })
     }
 }
@@ -199,6 +202,9 @@ impl ToJson for Build {
         }
         if let Some(v) = self.lip {
             field(out, &mut first, "lip", &v);
+        }
+        if self.tracks != 0 {
+            field(out, &mut first, "tracks", &f64::from(self.tracks));
         }
         out.push('}');
     }
@@ -943,7 +949,9 @@ pub fn symbol(place: &[Vec2], spec: &Spec) -> Vec<Shape> {
         Form::Window => {
             out.push(line(p.along_start(fit + fr, dl), p.along_end(fit + fr, dl)));
             out.push(line(p.along_start(fit + fr, dr), p.along_end(fit + fr, dr)));
-            if spec.operation == Operation::Slide {
+            if spec.operation == Operation::Slide && spec.leaves > 2 {
+                out.extend(multi_slide(&p, spec, true));
+            } else if spec.operation == Operation::Slide {
                 let k = depth / 12.0;
                 let lap = b.overlap.map_or(clear * 0.05, |o| o / 2.0);
                 let half = clear / 2.0;
@@ -976,7 +984,9 @@ pub fn symbol(place: &[Vec2], spec: &Spec) -> Vec<Shape> {
             match spec.operation {
                 Operation::Slide => {
                     let k = depth / 8.0;
-                    if spec.leaves == 1 && b.track {
+                    if spec.leaves > 2 {
+                        out.extend(multi_slide(&p, spec, false));
+                    } else if spec.leaves == 1 && b.track {
                         out.extend(surface_slide(&p, spec));
                     } else if spec.leaves == 1 {
                         out.push(line(add(m0, mul(p.f.left, k)), add(m0, add(mul(u, clear), mul(p.f.left, k)))));
@@ -1054,6 +1064,106 @@ pub fn symbol(place: &[Vec2], spec: &Spec) -> Vec<Shape> {
                 let (a, c) = (at(s0), at(s1));
                 out.push(closed_ring(vec![a, c, add(c, o), add(a, o)]));
             }
+        }
+    }
+    out
+}
+
+/// How much sliding leaves overlap when they give none, a share of the light (the contract's `SLIDE_LAP`).
+pub const SLIDE_LAP: f64 = 0.05;
+
+/// A leaf of a three- or four-leaf sliding door or window (docs/adr/0792 §1): where it starts along the light, its
+/// track, whether it slides, and toward which jamb it stacks (the end's, else the start's).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct SlideLeaf {
+    pub s: f64,
+    pub track: u8,
+    pub slides: bool,
+    pub to_end: bool,
+}
+
+/// Its tracks, each leaf's width and its leaves from its start (the contract's `slide_panels`): counted from the jamb
+/// they stack at (both sides: two from each), the k-th on track k sliding while k < the tracks, the rest staying on
+/// track 0; neighbours on different tracks overlap by `overlap` (none: 5 % of the light over the n − 1 meetings).
+pub fn slide_leaves(spec: &Spec, light: f64) -> (u8, f64, Vec<SlideLeaf>) {
+    let b = &spec.build;
+    let n = spec.leaves.clamp(3, 4);
+    let t = if b.tracks == 0 { 2 } else { b.tracks.clamp(2, 3) };
+    let both = b.both_sides && n == 4;
+    let o = b.overlap.unwrap_or(light * SLIDE_LAP / f64::from(n - 1));
+    let group = |count: u8, to_end: bool| -> Vec<(u8, bool, bool)> {
+        (0..count)
+            .map(|k| if k < t { (k, k > 0, to_end) } else { (0, false, to_end) })
+            .collect()
+    };
+    let order: Vec<(u8, bool, bool)> = if both {
+        let mut a = group(2, false);
+        let mut z = group(2, true);
+        z.reverse();
+        a.append(&mut z);
+        a
+    } else {
+        let mut a = group(n, spec.hand_end);
+        if spec.hand_end {
+            a.reverse();
+        }
+        a
+    };
+    let laps = order.windows(2).filter(|w| w[0].0 != w[1].0).count();
+    let w = (light + laps as f64 * o) / f64::from(n);
+    let mut out = Vec::with_capacity(order.len());
+    let mut s = 0.0;
+    for (i, &(track, slides, to_end)) in order.iter().enumerate() {
+        if i > 0 {
+            s += if order[i - 1].0 != track { w - o } else { w };
+        }
+        out.push(SlideLeaf { s, track, slides, to_end });
+    }
+    (t, w, out)
+}
+
+/// A three- or four-leaf sliding door or window (docs/adr/0792 §1): its leaves shut on their tracks, each a band its
+/// thickness wide across its share of the light, the tracks evenly across the frame's band (a door's a quarter of its depth apart for two, a
+/// window's a sixth; track 0 on the face away from the side it opens to); an arrow beside each sliding leaf toward the
+/// jamb it stacks at; with its track the rails along the light.
+fn multi_slide(p: &Parts, spec: &Spec, window: bool) -> Vec<Shape> {
+    let (t, w, leaves) = slide_leaves(spec, p.clear);
+    let depth = p.dr - p.dl;
+    let sp = depth / (if window { 3.0 } else { 2.0 } * f64::from(t));
+    let sign = if spec.side_right { 1.0 } else { -1.0 };
+    let half = f64::from(t - 1) / 2.0;
+    let d_of = |track: u8| p.middle() + sign * (f64::from(track) - half) * sp;
+    let s0 = p.fit + p.fr;
+    let u = p.f.along;
+    let mut out = Vec::new();
+    // A leaf a band its thickness wide (none: [`LEAF_THICKNESS`]) about its track, at most four fifths of the spacing.
+    let h = js_min(spec.build.leaf_thickness.filter(|t| *t > 0.0).unwrap_or(LEAF_THICKNESS), 0.8 * sp) / 2.0;
+    for l in &leaves {
+        let d = d_of(l.track);
+        let (a, z) = (s0 + l.s, s0 + l.s + w);
+        out.push(closed_ring(vec![
+            p.along_start(a, d - h),
+            p.along_start(z, d - h),
+            p.along_start(z, d + h),
+            p.along_start(a, d + h),
+        ]));
+        if l.slides {
+            let dir = if l.to_end { u } else { mul(u, -1.0) };
+            let c = p.along_start(s0 + l.s + w / 2.0, d + sign * sp / 2.0);
+            let a = js_min(w / 3.0, 0.3);
+            let h = a / 3.0;
+            let tip = add(c, mul(dir, a / 2.0));
+            let tail = sub(c, mul(dir, a / 2.0));
+            let back = sub(tip, mul(dir, h));
+            out.push(line(tail, tip));
+            out.push(line(tip, add(back, mul(p.f.left, h / 2.0))));
+            out.push(line(tip, sub(back, mul(p.f.left, h / 2.0))));
+        }
+    }
+    if spec.build.track {
+        for k in 0..t {
+            let d = d_of(k);
+            out.push(line(p.along_start(s0, d), p.along_end(s0, d)));
         }
     }
     out

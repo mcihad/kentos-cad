@@ -153,6 +153,8 @@ impl OpeningOperation {
         match self {
             OpeningOperation::Revolving => (3, 4),
             OpeningOperation::Folding => (2, 6),
+            // Three and four leaves on two or three tracks (docs/adr/0792 §1).
+            OpeningOperation::Slide => (1, 4),
             _ => (1, 2),
         }
     }
@@ -454,6 +456,26 @@ pub fn needs_special_doors(e: &crate::Entity) -> bool {
     }
 }
 
+/// Whether an opening's fields are a three- or four-leaf sliding door or window, or carry its tracks (docs/adr/0792):
+/// what only schema 157 says.
+pub fn is_multi_slide(f: &OpeningFields) -> bool {
+    (f.operation == OpeningOperation::Slide && f.leaves > 2)
+        || f.build.as_ref().is_some_and(crate::OpeningBuild::is_multi_slide)
+        || f.overrides.iter().any(|o| o.is_multi_slide())
+}
+
+/// Whether `e` says what only schema 157 can (docs/adr/0792): a three- or four-leaf sliding door or window, its tracks,
+/// or a schedule reading an opening's tracks or leaf layout.
+pub fn needs_multi_slide(e: &crate::Entity) -> bool {
+    match e {
+        crate::Entity::Opening(o) => is_multi_slide(&o.opening),
+        crate::Entity::Table(t) => matches!(&t.source,
+            Some(crate::TableSource::Schedule { columns, .. })
+                if columns.iter().any(|c| c.field.is_multi_slide())),
+        _ => false,
+    }
+}
+
 /// Whether `e` says what only schema 119 can (docs/adr/0719): a niche or flue, a depth or inset, the break
 /// `tooDeep`, or a schedule whose filter names a niche or flue.
 pub fn needs_recesses(e: &crate::Entity) -> bool {
@@ -620,7 +642,9 @@ impl OpeningFields {
             let word = self.operation.leaf_word();
             return Some((
                 "leaves".into(),
-                if !self.operation.is_special() {
+                if self.operation == OpeningOperation::Slide {
+                    format!("Sürme açıklığın kanat sayısı {}; 1 ile 4 arasında olmalı.", self.leaves)
+                } else if !self.operation.is_special() {
                     format!("Açıklığın kanat sayısı {}; 1 ya da 2 olmalı.", self.leaves)
                 } else if least + 1 == most {
                     format!(

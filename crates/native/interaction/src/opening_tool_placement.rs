@@ -229,6 +229,18 @@ impl OpeningTool {
                 }
                 self.placement.info.push(format!("{}: {}", o.operation.label(), parts.join(" · ")));
             }
+            // A three- or four-leaf sliding door's layout, tracks and clear width (docs/adr/0792 §1).
+            if self.form == OpeningForm::Door && o.operation == kentos_commands::OpeningOperation::Slide && o.leaves > 2 {
+                let s = o.sizes();
+                let mut parts = Vec::new();
+                if let (Some(p), Some(t)) = (&s.panels, s.tracks) {
+                    parts.push(format!("{p} · {t} ray"));
+                }
+                if let Some(c) = s.clear {
+                    parts.push(format!("Net geçiş {}", f.length(c)));
+                }
+                self.placement.info.push(format!("{} {} kanat: {}", o.operation.label(), o.leaves, parts.join(" · ")));
+            }
             // A niche's or flue's place across its wall (docs/adr/0719).
             if let Some((near, far)) = o.recess_in(m.thickness) {
                 let face = match o.side {

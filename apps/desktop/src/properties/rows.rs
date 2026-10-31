@@ -2004,6 +2004,29 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
                                 let lap = format!("{} · %5", f.length(sizes.leaf * 0.05));
                                 geo.push(length("Kanat bindirmesi", OpeningTypeField::Overlap, b.overlap, lap));
                             }
+                            // Three and four leaves (docs/adr/0792 §1): the tracks, both jambs with four, the overlap
+                            // at each meeting and the layout they make.
+                            if x.leaves > 2 {
+                                let tracks = b.tracks.unwrap_or(2);
+                                let picks = [2u8, 3]
+                                    .into_iter()
+                                    .map(|n| {
+                                        let nb = OpeningBuild { tracks: Some(n), ..Default::default() };
+                                        let change = OpeningChange { build: Some(Box::new(nb)), ..Default::default() };
+                                        pick(n.to_string(), n == tracks, set(change), None)
+                                    })
+                                    .collect();
+                                geo.push(Row::figure("Ray sayısı", tracks.to_string()).editor(select(tracks.to_string(), picks)));
+                                if x.leaves == 4 {
+                                    geo.push(switch("İki yana açılır", OpeningTypeField::BothSides, b.both_sides == Some(true)));
+                                }
+                                let share = sizes.leaf * kentos_commands::SLIDE_LAP / f64::from(x.leaves - 1);
+                                let lap = format!("{} · öntanımlı", f.length(share));
+                                geo.push(length("Kanat bindirmesi", OpeningTypeField::Overlap, b.overlap, lap));
+                                if let Some(panels) = &sizes.panels {
+                                    geo.push(Row::text("Kanat düzeni", panels.clone()));
+                                }
+                            }
                             geo.push(switch("Ray çizilir", OpeningTypeField::Track, b.track == Some(true)));
                         }
                         _ => {}

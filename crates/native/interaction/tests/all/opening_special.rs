@@ -93,8 +93,8 @@ fn a_folding_door_folds_to_both_jambs_and_a_sliding_one_runs_on_its_track() {
     assert!(set(&mut b, "Ç", "slide"));
     assert_eq!(
         row(&b, "K").as_deref(),
-        Some("1"),
-        "four panels are no sliding door's: back to its least"
+        Some("4"),
+        "four panels stay four sliding leaves (docs/adr/0792)"
     );
     assert!(set(&mut b, "K", "2"));
     assert!(set(&mut b, "S", "10cm"));
@@ -116,4 +116,42 @@ fn the_c_key_turns_the_operation_and_the_type_s_comes_back() {
     let o = newest(&b);
     assert_eq!(o.operation, OpeningOperation::Swing);
     assert_eq!(o.build, None);
+}
+
+/// A three- or four-leaf sliding door (docs/adr/0792 §1): Kanat takes 3 and 4 for Sürme, Ray sayısı (V) and, with four,
+/// İki yana (İ) show and are the command's input; back to two leaves they go.
+#[test]
+fn a_multi_leaf_sliding_door_takes_its_tracks_and_parts_both_ways() {
+    let mut b = wall();
+    assert!(set(&mut b, "Ç", "slide"));
+    assert_eq!(row(&b, "V"), None, "no tracks for one leaf");
+    assert!(set(&mut b, "E", "3.2"));
+    assert!(set(&mut b, "K", "3"));
+    assert_eq!(row(&b, "V").as_deref(), Some("2"), "two tracks unless given");
+    assert_eq!(row(&b, "İ"), None, "three leaves part to one jamb");
+    assert!(set(&mut b, "V", "3"));
+    assert!(!set(&mut b, "V", "4"), "two or three tracks");
+    b.click(3., 0.3);
+    let o = newest(&b);
+    assert_eq!((o.operation, o.leaves), (OpeningOperation::Slide, 3));
+    assert_eq!(o.build.as_ref().and_then(|x| x.tracks), Some(3));
+    assert_eq!(o.sizes().panels.as_deref(), Some("OXX"));
+    assert!(set(&mut b, "K", "4"));
+    assert!(set(&mut b, "V", "2"));
+    assert_eq!(row(&b, "İ").as_deref(), Some("Hayır"));
+    assert!(set(&mut b, "İ", "on"));
+    b.click(8., 0.3);
+    let o = newest(&b);
+    assert_eq!(o.leaves, 4);
+    assert_eq!(o.build.as_ref().and_then(|x| x.both_sides), Some(true));
+    assert_eq!(o.sizes().panels.as_deref(), Some("OXXO"));
+    // Two leaves: neither the tracks nor both jambs go to the command.
+    assert!(set(&mut b, "K", "2"));
+    assert_eq!(row(&b, "V"), None);
+    assert!(set(&mut b, "E", "1.2"));
+    b.click(11.0, 0.3);
+    let o = newest(&b);
+    assert_eq!(o.leaves, 2);
+    let built = o.build.unwrap_or_default();
+    assert_eq!((built.tracks, built.both_sides), (None, None));
 }

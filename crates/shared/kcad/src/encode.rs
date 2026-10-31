@@ -2089,6 +2089,14 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 157 (docs/adr/0792): a three- or four-leaf sliding door or window, its tracks, a schedule of them.
+    let multi = |list: Objs<'_>| list.iter().any(kentos_contracts::needs_multi_slide);
+    if doc.settings.arch.as_ref().is_some_and(kentos_contracts::ArchSettings::has_multi_slide)
+        || multi(objs)
+        || doc.blocks.iter().any(|b| multi(Objs::Plain(&b.entities)))
+    {
+        return crate::SCHEMA_WITH_MULTI_SLIDE;
+    }
     // Schema 149 (docs/adr/0788): design option sets, a view recipe's options.
     if doc.settings.arch.as_ref().is_some_and(kentos_contracts::ArchSettings::has_options)
         || doc

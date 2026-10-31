@@ -169,6 +169,12 @@ pub struct OpeningBuild {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub lip: Option<f64>,
+    /// A three- or four-leaf sliding door's or window's tracks, 2 or 3 (docs/adr/0792 §1): the leaves from the jamb
+    /// they stack at, one per track, slide over the first; those past the tracks stay. Absent: 2.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub tracks: Option<u8>,
 }
 
 impl OpeningBuild {
@@ -183,6 +189,11 @@ impl OpeningBuild {
             || self.track.is_some()
             || self.both_sides.is_some()
             || self.lip.is_some()
+    }
+
+    /// Whether it has a field docs/adr/0792 added (`.kcad` schema 157): a multi-leaf sliding door's tracks.
+    pub fn is_multi_slide(&self) -> bool {
+        self.tracks.is_some()
     }
 
     /// What is wrong with it for an opening `width` wide whose frame is `frame` wide: the field (under `build.`) and
@@ -296,6 +307,8 @@ pub enum OpeningTypeField {
     Track,
     BothSides,
     Lip,
+    /// A three- or four-leaf sliding door's tracks (docs/adr/0792).
+    Tracks,
 }
 
 impl OpeningTypeField {
@@ -311,7 +324,12 @@ impl OpeningTypeField {
         )
     }
 
-    pub const ALL: [OpeningTypeField; 26] = [
+    /// Whether only schema 157 knows it (docs/adr/0792): a multi-leaf sliding door's tracks.
+    pub fn is_multi_slide(self) -> bool {
+        self == OpeningTypeField::Tracks
+    }
+
+    pub const ALL: [OpeningTypeField; 27] = [
         OpeningTypeField::Width,
         OpeningTypeField::Leaves,
         OpeningTypeField::Operation,
@@ -338,6 +356,7 @@ impl OpeningTypeField {
         OpeningTypeField::Track,
         OpeningTypeField::BothSides,
         OpeningTypeField::Lip,
+        OpeningTypeField::Tracks,
     ];
 
     pub fn name(self) -> &'static str {
@@ -369,6 +388,7 @@ impl OpeningTypeField {
             Track => "track",
             BothSides => "bothSides",
             Lip => "lip",
+            Tracks => "tracks",
         }
     }
 
@@ -401,6 +421,7 @@ impl OpeningTypeField {
             Track => "Ray çizilir",
             BothSides => "İki yana toplanır",
             Lip => "Cepten kalan pay",
+            Tracks => "Ray sayısı",
         }
     }
 
@@ -667,6 +688,7 @@ impl OpeningFields {
             Track => json!(b.track),
             BothSides => json!(b.both_sides),
             Lip => json!(b.lip),
+            Tracks => json!(b.tracks),
         }
     }
 
@@ -713,6 +735,7 @@ impl OpeningFields {
             Track => b.track = read::<Option<bool>>(v, field)?.filter(|t| *t),
             BothSides => b.both_sides = read::<Option<bool>>(v, field)?.filter(|t| *t),
             Lip => b.lip = read(v, field)?,
+            Tracks => b.tracks = read(v, field)?,
         }
         self.build = (!b.is_empty()).then_some(b);
         Ok(())
@@ -785,6 +808,15 @@ pub struct OpeningSizes {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<OpeningPocket>>", optional))]
     pub pockets: Vec<OpeningPocket>,
+    /// A three- or four-leaf sliding door's or window's tracks (docs/adr/0792 §1).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub tracks: Option<u8>,
+    /// Its leaves from its start, `O` one that stays, `X` one that slides (docs/adr/0792 §1): “OXXO”.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub panels: Option<String>,
     /// Which width its nominal size names.
     pub size_by: OpeningSizeBy,
     /// That width.
@@ -816,6 +848,98 @@ fn leaf_takes(l: f64, t: f64, angle: f64) -> f64 {
     (l * libm::cos(r)).max(0.0) + t * libm::sin(r).max(0.0)
 }
 
+/// A three- or four-leaf sliding door's or window's leaves (docs/adr/0792 §1), worked out from its leaves `n`, its
+/// tracks, whether it parts to both jambs and its stacking jamb (`hand`): each leaf from its start, its track (0 the
+/// back one, on the face away from the side it opens to) and whether it slides.
+///
+/// The leaves are counted from the jamb they stack at (both: from each jamb, two each); the k-th sits on track k and
+/// slides over the first while k < the tracks, the rest stay on track 0. Two neighbours on different tracks overlap
+/// by `overlap`, on one track they butt; so each leaf is (light + laps · overlap) / n wide.
+#[derive(Clone, Debug, PartialEq)]
+pub struct SlidePanels {
+    pub tracks: u8,
+    pub overlap: f64,
+    pub width: f64,
+    /// From its start: (where it starts along the light, its track, it slides).
+    pub leaves: Vec<(f64, u8, bool)>,
+    /// What it leaves free with its sliding leaves stacked.
+    pub clear: f64,
+}
+
+impl SlidePanels {
+    /// Its leaves as `O` (stays) and `X` (slides) from its start.
+    pub fn letters(&self) -> String {
+        self.leaves.iter().map(|l| if l.2 { 'X' } else { 'O' }).collect()
+    }
+}
+
+/// The layout of `n` (3 or 4) sliding leaves in a light `light` wide: [`SlidePanels`]. None for fewer or more.
+pub fn slide_panels(
+    n: u8,
+    tracks: Option<u8>,
+    both: bool,
+    hand_end: bool,
+    light: f64,
+    overlap: Option<f64>,
+) -> Option<SlidePanels> {
+    if !(3..=4).contains(&n) {
+        return None;
+    }
+    let t = tracks.unwrap_or(2).clamp(2, 3);
+    let o = overlap.unwrap_or(light * SLIDE_LAP / f64::from(n - 1));
+    let from_jamb = |count: u8| -> Vec<(u8, bool)> {
+        (0..count).map(|k| if k < t { (k, k > 0) } else { (0, false) }).collect()
+    };
+    let order: Vec<(u8, bool)> = if both && n == 4 {
+        let mut a = from_jamb(2);
+        let mut z = from_jamb(2);
+        z.reverse();
+        a.append(&mut z);
+        a
+    } else {
+        let mut a = from_jamb(n);
+        if hand_end {
+            a.reverse();
+        }
+        a
+    };
+    let laps = order.windows(2).filter(|w| w[0].0 != w[1].0).count();
+    let w = (light + laps as f64 * o) / f64::from(n);
+    let mut leaves = Vec::with_capacity(order.len());
+    let mut s = 0.0;
+    for (i, (track, slides)) in order.iter().enumerate() {
+        if i > 0 {
+            s += if order[i - 1].0 != *track { w - o } else { w };
+        }
+        leaves.push((s, *track, *slides));
+    }
+    // Stacked: each jamb's stack a leaf wide, the leaves that stay where they are; the widest gap between.
+    let mut taken: Vec<(f64, f64)> = Vec::new();
+    if both && n == 4 {
+        taken.push((0.0, w));
+        taken.push((light - w, light));
+    } else if hand_end {
+        taken.push((light - w, light));
+    } else {
+        taken.push((0.0, w));
+    }
+    for (i, (s0, _, slides)) in leaves.iter().enumerate() {
+        let at_jamb = if both && n == 4 { i == 0 || i == 3 } else if hand_end { i + 1 == leaves.len() } else { i == 0 };
+        if !slides && !at_jamb {
+            taken.push((*s0, s0 + w));
+        }
+    }
+    taken.sort_by(|a, b| a.0.total_cmp(&b.0));
+    let mut clear: f64 = 0.0;
+    let mut reach = 0.0_f64;
+    for (a, z) in &taken {
+        clear = clear.max(a - reach);
+        reach = reach.max(*z);
+    }
+    clear = clear.max(light - reach);
+    Some(SlidePanels { tracks: t, overlap: o, width: w, leaves, clear })
+}
+
 /// [`OpeningFields::sizes`].
 pub fn opening_sizes(f: &OpeningFields) -> OpeningSizes {
     let b = f.build.clone().unwrap_or_default();
@@ -830,6 +954,18 @@ pub fn opening_sizes(f: &OpeningFields) -> OpeningSizes {
     let door_like = matches!(f.form, OpeningForm::Door | OpeningForm::Window);
     let drum = (f.operation == OpeningOperation::Revolving).then(|| b.drum.unwrap_or(leaf));
     let lip = b.lip.unwrap_or(POCKET_LIP);
+    let multi = (door_like && f.operation == OpeningOperation::Slide)
+        .then(|| {
+            slide_panels(
+                f.leaves,
+                b.tracks,
+                b.both_sides == Some(true),
+                f.hand == crate::OpeningHand::End,
+                leaf,
+                b.overlap,
+            )
+        })
+        .flatten();
     let leaves: Vec<f64> = if !door_like {
         Vec::new()
     } else {
@@ -840,6 +976,9 @@ pub fn opening_sizes(f: &OpeningFields) -> OpeningSizes {
                     None => leaf * (1.0 + SLIDE_LAP) / 2.0,
                 };
                 vec![w, w]
+            }
+            (OpeningOperation::Slide, n) if multi.is_some() => {
+                vec![multi.as_ref().map_or(leaf, |m| m.width); usize::from(n)]
             }
             (OpeningOperation::Revolving, n) => vec![drum.unwrap_or(leaf) / 2.0; usize::from(n)],
             (OpeningOperation::Folding, n) => vec![leaf / f64::from(n.max(1)); usize::from(n)],
@@ -866,6 +1005,7 @@ pub fn opening_sizes(f: &OpeningFields) -> OpeningSizes {
         OpeningForm::Door => match (f.operation, leaves.as_slice()) {
             (OpeningOperation::Fixed, _) => (Some(0.0), None),
             (OpeningOperation::Slide, [_]) => (Some(leaf), None),
+            (OpeningOperation::Slide, _) if multi.is_some() => (multi.as_ref().map(|m| m.clear), None),
             (OpeningOperation::Slide, [w, _]) => (Some(leaf - w), None),
             // The throat between the drum's walls: the chord of its opening, 180° − 360°/n (docs/adr/0777 §1).
             (OpeningOperation::Revolving, ws) => {
@@ -901,6 +1041,8 @@ pub fn opening_sizes(f: &OpeningFields) -> OpeningSizes {
         clear_first: clear_first.map(|c| c.max(0.0)),
         drum,
         pockets,
+        tracks: multi.as_ref().map(|m| m.tracks),
+        panels: multi.as_ref().map(SlidePanels::letters),
         size_by,
         nominal,
     }
@@ -945,10 +1087,20 @@ pub fn special_door_problem(f: &OpeningFields) -> Option<(String, String)> {
         return Some(why);
     }
     if let Some(both) = b.both_sides {
-        if let Some(why) = only("bothSides", "İki yana toplanma", OpeningOperation::Folding) {
+        if op == OpeningOperation::Slide {
+            // A four-leaf sliding door parts to both jambs (docs/adr/0792 §1).
+            if f.leaves != 4 {
+                return Some((
+                    "build.bothSides".into(),
+                    format!(
+                        "İki yana açılma dört kanatlı sürmenindir ({} kanat); kanat sayısını 4 yapın ya da tek yana açın.",
+                        f.leaves
+                    ),
+                ));
+            }
+        } else if let Some(why) = only("bothSides", "İki yana toplanma", OpeningOperation::Folding) {
             return Some(why);
-        }
-        if both && f.leaves % 2 == 1 {
+        } else if both && f.leaves % 2 == 1 {
             return Some((
                 "build.bothSides".into(),
                 format!(
@@ -967,16 +1119,48 @@ pub fn special_door_problem(f: &OpeningFields) -> Option<(String, String)> {
         if let Some(why) = only("overlap", "Kanat bindirmesi", OpeningOperation::Slide) {
             return Some(why);
         }
-        if f.leaves != 2 {
+        if f.leaves < 2 {
             return Some((
                 "build.overlap".into(),
-                "Kanat bindirmesi iki kanatlı sürmenindir; tek kanatlıda kaldırın.".into(),
+                "Kanat bindirmesi çok kanatlı sürmenindir; tek kanatlıda kaldırın.".into(),
             ));
         }
-        if lap >= s.leaf {
+        if f.leaves == 2 && lap >= s.leaf {
             return Some((
                 "build.overlap".into(),
                 format!("Kanat bindirmesi ({lap} m) ışıktan ({:.3} m) küçük olmalı.", s.leaf),
+            ));
+        }
+        // Three or four leaves (docs/adr/0792 §1): each overlap under a leaf's share of the light.
+        let n = f64::from(f.leaves);
+        if f.leaves > 2 && lap >= s.leaf / n {
+            return Some((
+                "build.overlap".into(),
+                format!(
+                    "Kanat bindirmesi ({lap} m) ışığın {} birinden ({:.3} m) küçük olmalı.",
+                    if f.leaves == 3 { "üçte" } else { "dörtte" },
+                    s.leaf / n
+                ),
+            ));
+        }
+    }
+    if let Some(t) = b.tracks {
+        if let Some(why) = only("tracks", "Ray sayısı", OpeningOperation::Slide) {
+            return Some(why);
+        }
+        if f.leaves < 3 {
+            return Some((
+                "build.tracks".into(),
+                "Ray sayısı üç ya da dört kanatlı sürmenindir; kaldırın ya da kanat sayısını artırın.".into(),
+            ));
+        }
+        if !(2..=3).contains(&t) {
+            return Some(("build.tracks".into(), format!("Ray sayısı {t}; 2 ya da 3 olmalı.")));
+        }
+        if t == 3 && b.both_sides == Some(true) {
+            return Some((
+                "build.tracks".into(),
+                "İki yana açılan dört kanat iki raydadır; ray sayısını 2 yapın ya da tek yana açın.".into(),
             ));
         }
     }

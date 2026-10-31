@@ -3788,6 +3788,34 @@ OpeningTypeConflictName = Literal["refuse", "skip", "replace", "rename"]
 class OpeningTypeField(_StrEnum):
     """A field a type governs: an opening following the type takes it, unless the opening keeps its own (docs/adr/0772 §1).
     The form is the type's own and never an exception; an opening's place, wall, hand, side and number are its own.
+
+    - ``width``
+    - ``leaves``
+    - ``operation``
+    - ``swing``
+    - ``showSwing``
+    - ``frame``
+    - ``sill``
+    - ``head``
+    - ``depth``
+    - ``sizeBy``
+    - ``fit``
+    - ``leafThickness``
+    - ``split``
+    - ``frameDepth``
+    - ``frameOffset``
+    - ``threshold``
+    - ``casing``
+    - ``sillBoard``
+    - ``mullions``
+    - ``transoms``
+    - ``useZone``
+    - ``drum``
+    - ``overlap``
+    - ``track``
+    - ``bothSides``
+    - ``lip``
+    - ``tracks``: A three- or four-leaf sliding door's tracks (docs/adr/0792).
     """
     WIDTH = "width"
     LEAVES = "leaves"
@@ -3815,9 +3843,10 @@ class OpeningTypeField(_StrEnum):
     TRACK = "track"
     BOTH_SIDES = "bothSides"
     LIP = "lip"
+    TRACKS = "tracks"
 
 
-OpeningTypeFieldName = Literal["width", "leaves", "operation", "swing", "showSwing", "frame", "sill", "head", "depth", "sizeBy", "fit", "leafThickness", "split", "frameDepth", "frameOffset", "threshold", "casing", "sillBoard", "mullions", "transoms", "useZone", "drum", "overlap", "track", "bothSides", "lip"]
+OpeningTypeFieldName = Literal["width", "leaves", "operation", "swing", "showSwing", "frame", "sill", "head", "depth", "sizeBy", "fit", "leafThickness", "split", "frameDepth", "frameOffset", "threshold", "casing", "sillBoard", "mullions", "transoms", "useZone", "drum", "overlap", "track", "bothSides", "lip", "tracks"]
 """The names of :class:`OpeningTypeField`, for a plain string."""
 
 
@@ -5255,6 +5284,7 @@ class ScheduleField(_StrEnum):
     - ``leaves``
     - ``drum``
     - ``pocket``
+    - ``panels``
     - ``attr``: The attribute the column's `attr` names.
     - ``floorFinish``: A space's finishes (docs/adr/0733 §3): its floor's, its base's (the skirting's), its walls' and its ceiling's.
     - ``baseboard``: A space's baseboard: its perimeter less the passages along it (docs/adr/0722 §5).
@@ -5267,6 +5297,7 @@ class ScheduleField(_StrEnum):
     - ``operation``: An opening's operation (Kanatlı, Sürme, Döner, Cebe giren, Katlanır …), its leaves (a revolving door's wings, a
     - ``share``: A space's unit's share of the common areas (docs/adr/0784 §3): the unit's, alike on each of its spaces.
     - ``gross``: A space's unit's gross area: its own rooms and its share.
+    - ``tracks``: A three- or four-leaf sliding door's or window's tracks and its leaves' layout, fixed O and sliding X from its
     """
     NUMBER = "number"
     TYPE = "type"
@@ -5297,6 +5328,7 @@ class ScheduleField(_StrEnum):
     LEAVES = "leaves"
     DRUM = "drum"
     POCKET = "pocket"
+    PANELS = "panels"
     ATTR = "attr"
     FLOOR_FINISH = "floorFinish"
     BASEBOARD = "baseboard"
@@ -5309,9 +5341,10 @@ class ScheduleField(_StrEnum):
     OPERATION = "operation"
     SHARE = "share"
     GROSS = "gross"
+    TRACKS = "tracks"
 
 
-ScheduleFieldName = Literal["number", "type", "form", "width", "height", "sill", "head", "wall", "level", "phase", "count", "area", "perimeter", "volume", "name", "usage", "tag", "place", "length", "thickness", "baseFinish", "wallFinish", "ceilingFinish", "unitWidth", "leafWidth", "clearWidth", "leaves", "drum", "pocket", "attr", "floorFinish", "baseboard", "category", "space", "roughWidth", "unit", "target", "targetDiff", "operation", "share", "gross"]
+ScheduleFieldName = Literal["number", "type", "form", "width", "height", "sill", "head", "wall", "level", "phase", "count", "area", "perimeter", "volume", "name", "usage", "tag", "place", "length", "thickness", "baseFinish", "wallFinish", "ceilingFinish", "unitWidth", "leafWidth", "clearWidth", "leaves", "drum", "pocket", "panels", "attr", "floorFinish", "baseboard", "category", "space", "roughWidth", "unit", "target", "targetDiff", "operation", "share", "gross", "tracks"]
 """The names of :class:`ScheduleField`, for a plain string."""
 
 
@@ -42648,6 +42681,8 @@ class OpeningBuild(_Model):
         threshold: A door's threshold (eşik), its depth across the wall, metres; absent: none. Unit: length.
         track: A sliding door's or window's track drawn in plan: the rail its leaves run on, and a one-leaf door's leaf beside
             the wall face, over the stretch it slides to (docs/adr/0777 §4). Absent: not drawn.
+        tracks: A three- or four-leaf sliding door's or window's tracks, 2 or 3 (docs/adr/0792 §1): the leaves from the jamb
+            they stack at, one per track, slide over the first; those past the tracks stay. Absent: 2. Unit: count.
         transoms: A window's transoms (yatay kayıt); plan does not show them, schedules and tags do. Unit: count.
         use_zone: The use zone in front of it on the side it opens to (kullanım alanı), its depth, metres; absent: none. Unit: length.
     """
@@ -42666,6 +42701,7 @@ class OpeningBuild(_Model):
     split: float | None | Unset = UNSET
     threshold: float | None | Unset = UNSET
     track: bool | None | Unset = UNSET
+    tracks: int | None | Unset = UNSET
     transoms: int | None | Unset = UNSET
     use_zone: float | None | Unset = UNSET
 
@@ -42701,6 +42737,8 @@ class OpeningBuild(_Model):
             out["threshold"] = None if self.threshold is None else float(self.threshold)
         if self.track is not UNSET:
             out["track"] = self.track
+        if self.tracks is not UNSET:
+            out["tracks"] = self.tracks
         if self.transoms is not UNSET:
             out["transoms"] = self.transoms
         if self.use_zone is not UNSET:
@@ -42725,6 +42763,7 @@ class OpeningBuild(_Model):
             split=UNSET if "split" not in data else None if data["split"] is None else float(data["split"]),
             threshold=UNSET if "threshold" not in data else None if data["threshold"] is None else float(data["threshold"]),
             track=data.get("track", UNSET),
+            tracks=data.get("tracks", UNSET),
             transoms=data.get("transoms", UNSET),
             use_zone=UNSET if "useZone" not in data else None if data["useZone"] is None else float(data["useZone"]),
         )
@@ -43269,8 +43308,10 @@ class OpeningSizes(_Model):
             bare opening its light; none for a window, a niche or a flue. Unit: length.
         clear_first: A two-leaf door's net clear width with only its first leaf open. Unit: length.
         drum: A revolving door's drum, its inside diameter (docs/adr/0777 §1). Unit: length.
+        panels: Its leaves from its start, `O` one that stays, `X` one that slides (docs/adr/0792 §1): “OXXO”.
         pockets: A pocket door's pockets, each how far it runs into the wall past its jamb (docs/adr/0777 §2): the one at its
             start first.
+        tracks: A three- or four-leaf sliding door's or window's tracks (docs/adr/0792 §1). Unit: count.
     """
     rough: float
     unit: float
@@ -43281,7 +43322,9 @@ class OpeningSizes(_Model):
     clear: float | None | Unset = UNSET
     clear_first: float | None | Unset = UNSET
     drum: float | None | Unset = UNSET
+    panels: str | None | Unset = UNSET
     pockets: list[OpeningPocket] | Unset = UNSET
+    tracks: int | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -43297,8 +43340,12 @@ class OpeningSizes(_Model):
             out["clearFirst"] = None if self.clear_first is None else float(self.clear_first)
         if self.drum is not UNSET:
             out["drum"] = None if self.drum is None else float(self.drum)
+        if self.panels is not UNSET:
+            out["panels"] = self.panels
         if self.pockets is not UNSET:
             out["pockets"] = [e0.to_json() for e0 in self.pockets]
+        if self.tracks is not UNSET:
+            out["tracks"] = self.tracks
         return out
 
     @classmethod
@@ -43313,7 +43360,9 @@ class OpeningSizes(_Model):
             clear=UNSET if "clear" not in data else None if data["clear"] is None else float(data["clear"]),
             clear_first=UNSET if "clearFirst" not in data else None if data["clearFirst"] is None else float(data["clearFirst"]),
             drum=UNSET if "drum" not in data else None if data["drum"] is None else float(data["drum"]),
+            panels=data.get("panels", UNSET),
             pockets=[OpeningPocket.from_json(e0) for e0 in data["pockets"]] if "pockets" in data else UNSET,
+            tracks=data.get("tracks", UNSET),
         )
 
 

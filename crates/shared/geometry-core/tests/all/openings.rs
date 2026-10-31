@@ -15,6 +15,7 @@ use serde_json::Value;
 const CASES: &str = include_str!("../../../../../fixtures/walls/v1/openings.json");
 /// Revolving, pocket and folding doors and the sliding door's track (docs/adr/0777; scripts/fixtures/special_doors_cases.py).
 const SPECIAL: &str = include_str!("../../../../../fixtures/walls/v1/special-doors.json");
+const MULTI: &str = include_str!("../../../../../fixtures/walls/v1/multi-slide.json");
 const TOL: f64 = 1e-9;
 
 fn pt(v: &Value) -> Vec2 {
@@ -88,6 +89,35 @@ fn openings_cut_their_walls_as_the_reference_says() {
 #[test]
 fn special_doors_cut_their_walls_as_the_reference_says() {
     cut_as_the_reference_says(SPECIAL);
+}
+
+/// Three- and four-leaf sliding doors and windows: their leaves on their tracks, the arrows toward the jamb they stack
+/// at and their rails (docs/adr/0792 §1).
+#[test]
+fn multi_leaf_sliding_doors_draw_as_the_reference_says() {
+    cut_as_the_reference_says(MULTI);
+}
+
+/// A three- or four-leaf sliding door slides inside its frame: it takes no room in front of its wall (docs/adr/0792 §1,
+/// ADR 0787's `door_zones`), where a one-leaf door hung on its track does.
+#[test]
+fn a_multi_leaf_sliding_door_takes_no_room_in_front_of_its_wall() {
+    let place = [
+        Vec2::new(2.8, 0.1),
+        Vec2::new(2.8, -0.1),
+        Vec2::new(5.2, 0.1),
+        Vec2::new(5.2, -0.1),
+    ];
+    for json in [
+        r#"{"form":"door","leaves":3,"operation":"slide","build":{"tracks":3,"track":true}}"#,
+        r#"{"form":"door","leaves":4,"operation":"slide","build":{"bothSides":true,"track":true}}"#,
+    ] {
+        let spec = OpeningSpec::read_flat(&Json::parse(json).unwrap()).unwrap();
+        assert!(opening::door_zones(&place, &spec).is_empty(), "{json}");
+    }
+    let hung = OpeningSpec::read_flat(&Json::parse(r#"{"form":"door","operation":"slide","build":{"track":true}}"#).unwrap())
+        .unwrap();
+    assert_eq!(opening::door_zones(&place, &hung).len(), 1, "a one-leaf door on its track");
 }
 
 fn cut_as_the_reference_says(text: &str) {

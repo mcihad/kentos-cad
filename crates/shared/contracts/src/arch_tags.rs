@@ -12,7 +12,7 @@ use ts_rs::TS;
 use crate::entity::{EntityBase, Vec2};
 
 /// The places a template may name, besides `attr:Name`.
-pub const TAG_PLACES: [&str; 36] = [
+pub const TAG_PLACES: [&str; 38] = [
     "number",
     "type",
     "form",
@@ -49,6 +49,9 @@ pub const TAG_PLACES: [&str; 36] = [
     "leaves",
     "drum",
     "pocket",
+    // Three- and four-leaf sliding doors (docs/adr/0792 §1): its tracks and its leaves' layout (O fixed, X sliding).
+    "tracks",
+    "panels",
     // The shares (docs/adr/0784 §3): a space's unit's share of the common areas and its gross.
     "share",
     "gross",

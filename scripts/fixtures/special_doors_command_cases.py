@@ -19,6 +19,11 @@ are straight and run along x, so an opening's jambs are `(x0 + s, y ± t/2)`. Th
   into the wall, tl + 2 cm across, centred; its wall must be that and 2,5 cm each side thick (else
   `opening_pocket_thin`) and its pocket on the door's edge of the wall (else `opening_pocket_short`); no other opening
   may stand in it (`opening_pocket_short`).
+
+ADR 0792 (three- and four-leaf sliding doors and windows) is written to the `.multislide.json` files of the same four
+commands: a sliding door or window of 1–4 leaves; `tracks` 2 or 3 only on three or four; `bothSides` on a sliding one
+only with four leaves and two tracks; an overlap under the light's n-th part; the leaves, clear width, tracks and layout
+(`slide_multi`).
 """
 
 import argparse
@@ -34,7 +39,7 @@ OUT = ROOT / "fixtures/commands/v1"
 PLAY, LIP, LEAF, SKIN, SLIDE_LAP = 0.01, 0.05, 0.04, 0.025, 0.05
 FIELDS = ["width", "leaves", "operation", "swing", "showSwing", "frame", "sill", "head", "depth", "sizeBy", "fit",
           "leafThickness", "split", "frameDepth", "frameOffset", "threshold", "casing", "sillBoard", "mullions", "transoms",
-          "useZone", "drum", "overlap", "track", "bothSides", "lip"]
+          "useZone", "drum", "overlap", "track", "bothSides", "lip", "tracks"]
 BUILD = FIELDS[9:]
 LABEL = {"swing": "Kanatlı", "slide": "Sürme", "fixed": "Sabit", "revolving": "Döner", "pocket": "Cebe giren",
          "folding": "Katlanır"}
@@ -218,9 +223,12 @@ def sizes(o):
     angle = o.get("swing") if o.get("swing") is not None else 90.0
     lip = b.get("lip") if b.get("lip") is not None else LIP
     drum = (b.get("drum") if b.get("drum") is not None else leaf) if op == "revolving" else None
+    multi = slide_multi(o, leaf) if op == "slide" and o["form"] in ("door", "window") and n in (3, 4) else None
     if op == "slide" and n == 2:
         w = (leaf + b["overlap"]) / 2.0 if b.get("overlap") is not None else leaf * (1.0 + SLIDE_LAP) / 2.0
         leaves = [w, w]
+    elif multi:
+        leaves = [multi["width"]] * n
     elif op == "revolving":
         leaves = [drum / 2.0] * n
     elif op == "folding":
@@ -239,6 +247,8 @@ def sizes(o):
     r = math.radians(angle)
     if op == "fixed":
         clear = 0.0
+    elif multi:
+        clear = multi["clear"]
     elif op == "slide":
         clear = leaf if n == 1 else leaf - leaves[0]
     elif op == "revolving":
@@ -256,9 +266,40 @@ def sizes(o):
         out["drum"] = drum
     if pockets:
         out["pockets"] = pockets
+    if multi:
+        out["tracks"] = multi["tracks"]
+        out["panels"] = multi["panels"]
     out["sizeBy"] = b.get("sizeBy") or "rough"
-    out["nominal"] = rough
+    out["nominal"] = {"rough": rough, "unit": unit, "leaf": leaf}[out["sizeBy"]]
     return out
+
+
+def slide_multi(o, leaf):
+    """ADR 0792 §1, from its words: n = 3 or 4 leaves, t tracks (none: 2), both jambs only with four (two from each);
+    from the jamb they stack at the k-th leaf on track k slides while k < t, the rest stay on track 0; neighbours on
+    different tracks overlap by o (none: 5 % of the light over the n − 1 meetings), on one track they butt; each leaf
+    (light + laps · o)/n wide. Open, the sliding leaves lie over the first: a single jamb's stack frees the light less a
+    leaf, or up to the first leaf that stays, t·(w − o) from the jamb, less a leaf; both jambs free the light less two."""
+    b = o.get("build") or {}
+    n = o["leaves"]
+    t = b.get("tracks") or 2
+    both = bool(b.get("bothSides")) and n == 4
+    lap = b["overlap"] if b.get("overlap") is not None else leaf * SLIDE_LAP / (n - 1)
+    if both:
+        order = [0, 1, 1, 0]
+    else:
+        order = [k if k < t else 0 for k in range(n)]
+    laps = sum(1 for a, z in zip(order, order[1:]) if a != z)
+    w = (leaf + laps * lap) / n
+    if both:
+        clear = leaf - 2 * w
+        letters = "OXXO"
+    else:
+        clear = t * (w - lap) - w if t < n else leaf - w
+        letters = "".join("X" if 0 < k < t else "O" for k in range(n))
+        if o.get("hand") == "end":
+            letters = letters[::-1]
+    return {"tracks": t, "width": w, "clear": clear, "panels": letters}
 
 
 def reach(o):
@@ -313,10 +354,12 @@ def problem(o, path):
         form = {"window": "pencere", "opening": "boşluk"}[o["form"]]
         return failed("invalid_opening", f"{LABEL[op]} açılış yalnız kapınındır; {form} için Kanatlı, Sürme ya da Sabit seçin.",
                       f"{path}.operation")
-    lo, hi = {"revolving": (3, 4), "folding": (2, 6)}.get(op, (1, 2))
+    lo, hi = {"revolving": (3, 4), "folding": (2, 6), "slide": (1, 4)}.get(op, (1, 2))
     if not lo <= n <= hi:
         word = "panel" if op == "folding" else "kanat"
-        if not special:
+        if op == "slide":
+            words = f"Sürme açıklığın kanat sayısı {n}; 1 ile 4 arasında olmalı."
+        elif not special:
             words = f"Açıklığın kanat sayısı {n}; 1 ya da 2 olmalı."
         elif lo + 1 == hi:
             words = f"{LABEL[op]} kapının {word} sayısı {n}; {lo} ya da {hi} olmalı."
@@ -343,10 +386,14 @@ def problem(o, path):
         if why:
             return why
     if b.get("bothSides"):
-        why = only("bothSides", "İki yana toplanma", "folding")
-        if why:
-            return why
-        if n % 2:
+        if op == "slide":
+            if n != 4:
+                return failed("invalid_opening",
+                              f"İki yana açılma dört kanatlı sürmenindir ({n} kanat); kanat sayısını 4 yapın ya da tek yana açın.",
+                              f"{path}.build.bothSides")
+        elif only("bothSides", "İki yana toplanma", "folding"):
+            return only("bothSides", "İki yana toplanma", "folding")
+        elif n % 2:
             return failed("invalid_opening", f"{n} panel iki yana eşit toplanmaz; panel sayısını çift yapın ya da tek yana toplayın.",
                           f"{path}.build.bothSides")
     if b.get("track"):
@@ -357,13 +404,32 @@ def problem(o, path):
         why = only("overlap", "Kanat bindirmesi", "slide")
         if why:
             return why
-        if n != 2:
-            return failed("invalid_opening", "Kanat bindirmesi iki kanatlı sürmenindir; tek kanatlıda kaldırın.",
+        if n < 2:
+            return failed("invalid_opening", "Kanat bindirmesi çok kanatlı sürmenindir; tek kanatlıda kaldırın.",
                           f"{path}.build.overlap")
-        if b["overlap"] >= s["leaf"]:
+        if n == 2 and b["overlap"] >= s["leaf"]:
             return failed("invalid_opening",
                           f"Kanat bindirmesi ({num(b['overlap'])} m) ışıktan ({s['leaf']:.3f} m) küçük olmalı.",
                           f"{path}.build.overlap")
+        if n > 2 and b["overlap"] >= s["leaf"] / n:
+            part = "üçte" if n == 3 else "dörtte"
+            return failed("invalid_opening",
+                          f"Kanat bindirmesi ({num(b['overlap'])} m) ışığın {part} birinden ({s['leaf'] / n:.3f} m) küçük olmalı.",
+                          f"{path}.build.overlap")
+    if b.get("tracks") is not None:
+        why = only("tracks", "Ray sayısı", "slide")
+        if why:
+            return why
+        if n < 3:
+            return failed("invalid_opening",
+                          "Ray sayısı üç ya da dört kanatlı sürmenindir; kaldırın ya da kanat sayısını artırın.",
+                          f"{path}.build.tracks")
+        if b["tracks"] not in (2, 3):
+            return failed("invalid_opening", f"Ray sayısı {b['tracks']}; 2 ya da 3 olmalı.", f"{path}.build.tracks")
+        if b["tracks"] == 3 and b.get("bothSides"):
+            return failed("invalid_opening",
+                          "İki yana açılan dört kanat iki raydadır; ray sayısını 2 yapın ya da tek yana açın.",
+                          f"{path}.build.tracks")
     return None
 
 
@@ -795,7 +861,7 @@ def types_cases():
             "Tambur çapı yalnız döner açıklığındır; kaldırın ya da açılışı Döner yapın.", "build.drum")
     refused("Yeni tip: tek kanatlı sürmeye bindirme verilmez",
             {"kind": "define", "name": "S09", "copyOf": "Kapı 90", "change": {"operation": "slide", "build": {"overlap": 0.05}}},
-            "Kanat bindirmesi iki kanatlı sürmenindir; tek kanatlıda kaldırın.", "build.overlap")
+            "Kanat bindirmesi çok kanatlı sürmenindir; tek kanatlıda kaldırın.", "build.overlap")
     refused("Yeni tip: döner pencere olmaz",
             {"kind": "define", "name": "P09", "copyOf": "Pencere 120", "change": {"operation": "revolving", "leaves": 4}},
             "Döner açılış yalnız kapınındır; pencere için Kanatlı, Sürme ya da Sabit seçin.", "operation")
@@ -836,9 +902,299 @@ def types_cases():
     door["leaves"], door["typeVersion"] = 6, 2
     r, e = done([D01, CG1, k], report([8], ["leaves"]), entities={"8": stored(door, 8)})
     case("KT1 altı panelli olur: kapısı izler", {"kind": "update", "type": "KT1", "change": {"leaves": 6}}, r, e)
-    refused("KT1 sürme olunca dört kanadı reddedilir",
-            {"kind": "update", "type": "KT1", "change": {"operation": "slide"}},
+    refused("KT1 sabit olunca dört kanadı reddedilir",
+            {"kind": "update", "type": "KT1", "change": {"operation": "fixed"}},
             "Açıklığın kanat sayısı 4; 1 ya da 2 olmalı.", "leaves")
+    return out
+
+
+# ── Three- and four-leaf sliding doors and windows (docs/adr/0792 §1) ────────────────────────────────────────────
+
+NOTE_MULTI = ("ADR 0792. Beklenenler scripts/fixtures/special_doors_command_cases.py'nin ADR'den yazılmış kurallarından, "
+              "KentOS kodu olmadan: üç ve dört kanatlı sürmenin rayları, sabit ve sürme kanatları, toplandığı yan, "
+              "bindirmesi, net geçişi ve kanat düzeni. Kurulum ADR 0777'nin çizimi; yeni nesne 11'den başlar.")
+PENCERE120 = {"form": "window", "width": 1.2, "leaves": 2, "frame": 0.06, "sill": 0.9, "head": 2.2}
+
+
+def window(host, at, **own):
+    """A window made without a type: KentOS's first window (Pencere 120), the values given over it."""
+    o = opening(host, at, 1.2, form="window", leaves=2, frame=0.06, sill=0.9, head=2.2)
+    o["style"] = "kentos-pencere-120"
+    for k, v in own.items():
+        o[k] = {x: y for x, y in v.items() if y is not False} or None if k == "build" else v
+    return o
+
+
+def multi_create_cases():
+    out = []
+
+    def add(name, given, made):
+        why = problem(made, "openings[0]")
+        step = {"op": "execute", "input": {"layerId": "kapi", "openings": [given]}, "within": 1e-9}
+        if why:
+            step["result"] = why
+            step["expect"] = {"ids": IDS, "revision": "same"}
+        else:
+            step["result"] = {"status": "completed", "output": {"uids": ["$any"], "ids": [NEW], "revision": "$current"},
+                              "warnings": []}
+            step["expect"] = {"ids": IDS + [NEW], "entities": {str(NEW): stored(made, NEW)}, "canUndo": True,
+                              "dirty": True, "revision": "changed"}
+        out.append({"name": name, "steps": [step]})
+    H = "$uidOf:1"
+
+    def door(width, leaves, build=None, **own):
+        given = {"host": H, "at": 5.0, "width": width, "operation": "slide", "leaves": leaves, **own}
+        if build:
+            given["build"] = build
+        return given, from_kapi(1, 5.0, width=width, operation="slide", leaves=leaves, **own,
+                                **({"build": build} if build else {}))
+    add("Üç kanat iki rayda: ortadaki başa kayar (OXO)", *door(2.4, 3))
+    add("Üç kanat üç rayda: teleskop başa (OXX)", *door(2.4, 3, {"tracks": 3}))
+    add("Üç kanat üç rayda sona toplanır (XXO)", *door(2.4, 3, {"tracks": 3}, hand="end"))
+    add("Dört kanat iki yana açılır (OXXO)", *door(3.2, 4, {"bothSides": True}))
+    add("Dört kanat üç rayda tek yana (OXXO), sonuncusu sabit", *door(3.2, 4, {"tracks": 3}))
+    add("Dört kanat iki rayda tek yana (OXOO)", *door(3.2, 4))
+    add("Üç kanat, 6 cm bindirme, raylı", *door(2.4, 3, {"overlap": 0.06, "track": True}))
+    add("Dört kanat iki yana, raylı, 5 cm bindirme", *door(3.2, 4, {"bothSides": True, "track": True, "overlap": 0.05}))
+    add("Dört kanat bindirmesiz", *door(3.2, 4, {"overlap": 0.0, "tracks": 3}))
+    add("Beş kanatlı sürme reddedilir", *door(3.2, 5))
+    add("Ray sayısı 4 reddedilir", *door(3.2, 4, {"tracks": 4}))
+    add("İki kanatlı sürmede ray sayısı reddedilir", *door(1.6, 2, {"tracks": 2}))
+    add("Tek kanatlı sürmede ray sayısı reddedilir", *door(0.9, 1, {"tracks": 3}))
+    add("Kanatlı kapıya ray sayısı verilmez", {"host": H, "at": 5.0, "build": {"tracks": 2}},
+        from_kapi(1, 5.0, build={"tracks": 2}))
+    add("Üç kanat iki yana açılmaz", *door(2.4, 3, {"bothSides": True}))
+    add("İki yana açılan dört kanat üç rayda olmaz", *door(3.2, 4, {"bothSides": True, "tracks": 3}))
+    add("Dört kanadın bindirmesi ışığın dörtte birini aşamaz", *door(2.0, 4, {"overlap": 0.5}))
+    add("Üç kanadın bindirmesi ışığın üçte birini aşamaz", *door(2.4, 3, {"overlap": 0.8}))
+    add("Kanatlı kapıya iki yana açılma verilmez", {"host": H, "at": 5.0, "build": {"bothSides": True}},
+        from_kapi(1, 5.0, build={"bothSides": True}))
+    add("Sabit kapıya üç kanat verilmez", {"host": H, "at": 5.0, "operation": "fixed", "leaves": 3},
+        from_kapi(1, 5.0, operation="fixed", leaves=3))
+    add("Üç kanatlı sürme pencere, iki ray",
+        {"host": H, "at": 5.0, "form": "window", "width": 2.4, "operation": "slide", "leaves": 3},
+        window(1, 5.0, width=2.4, operation="slide", leaves=3))
+    add("Dört kanatlı sürme pencere iki yana, raylı",
+        {"host": H, "at": 5.0, "form": "window", "width": 3.2, "operation": "slide", "leaves": 4,
+         "build": {"bothSides": True, "track": True}},
+        window(1, 5.0, width=3.2, operation="slide", leaves=4, build={"bothSides": True, "track": True}))
+    add("Üç kanatlı pencere üç rayda, sona",
+        {"host": H, "at": 5.0, "form": "window", "width": 2.4, "operation": "slide", "leaves": 3, "hand": "end",
+         "build": {"tracks": 3}},
+        window(1, 5.0, width=2.4, operation="slide", leaves=3, hand="end", build={"tracks": 3}))
+    return out
+
+
+def multi_query_cases():
+    out = []
+
+    def made(name, given, o):
+        r = {"uid": f"$uidOf:{NEW}", "form": o["form"], "type": o["style"],
+             "typeName": {"kentos-kapi-90": "Kapı 90", "kentos-pencere-120": "Pencere 120"}[o["style"]],
+             "host": f"$uidOf:{o['host']}", "sizes": sizes(o)}
+        out.append({"name": name, "steps": [
+            {"op": "execute", "command": "cad.openings.create", "input": {"layerId": "kapi", "openings": [given]},
+             "within": 1e-9, "result": {"status": "completed", "output": {"uids": ["$any"], "ids": [NEW], "revision": "$current"},
+                                        "warnings": []}},
+            {"op": "plan", "input": {"uids": [f"$uidOf:{NEW}"]}, "within": 1e-9,
+             "result": {"status": "completed", "output": {"openings": [r], "types": uses(list(BASE.values()) + [o]),
+                                                          "revision": "$current"}, "warnings": []}}]})
+    H = "$uidOf:1"
+
+    def door(name, width, leaves, build=None, **own):
+        given = {"host": H, "at": 5.0, "width": width, "operation": "slide", "leaves": leaves, **own}
+        if build:
+            given["build"] = build
+        made(name, given, from_kapi(1, 5.0, width=width, operation="slide", leaves=leaves, **own,
+                                    **({"build": build} if build else {})))
+    door("OXO: ortadaki kanat açılır, net geçiş bir kanat eksi iki bindirme", 2.4, 3)
+    door("OXX: teleskop, net geçiş ışık eksi bir kanat", 2.4, 3, {"tracks": 3})
+    door("XXO: sona toplanır, aynı net geçiş", 2.4, 3, {"tracks": 3}, hand="end")
+    door("OXO sona: düzen aynı", 2.4, 3, hand="end")
+    door("OXXO iki yana: ışık eksi iki kanat", 3.2, 4, {"bothSides": True})
+    door("OXXO tek yana üç rayda: sonuncu sabit", 3.2, 4, {"tracks": 3})
+    door("OXXO tek yana sona", 3.2, 4, {"tracks": 3}, hand="end")
+    door("OXOO: iki rayda dört kanat", 3.2, 4)
+    door("OOXO: sona iki rayda", 3.2, 4, hand="end")
+    door("Üç kanat, 8 cm bindirme", 2.4, 3, {"overlap": 0.08})
+    door("Dört kanat iki yana, bindirmesiz", 3.2, 4, {"bothSides": True, "overlap": 0.0})
+    door("Üç kanat, montaj boşluğu 1 cm, üç ray", 2.4, 3, {"fit": 0.01, "tracks": 3})
+    door("Dört kanat, kanat eni ölçü referansı", 3.2, 4, {"sizeBy": "leaf", "bothSides": True})
+    door("Üç kanat dar açıklıkta", 1.2, 3)
+    door("Dört kanat geniş açıklıkta, üç ray", 4.8, 4, {"tracks": 3, "overlap": 0.1})
+    door("Üç kanat, kalın kanat net geçişi değiştirmez", 2.4, 3, {"leafThickness": 0.06, "tracks": 3})
+    door("Raylı üç kanat aynı ölçülerle", 2.4, 3, {"track": True, "tracks": 2})
+    made("Üç kanatlı pencere: net geçişi yok, düzeni var",
+         {"host": H, "at": 5.0, "form": "window", "width": 2.4, "operation": "slide", "leaves": 3},
+         window(1, 5.0, width=2.4, operation="slide", leaves=3))
+    made("Dört kanatlı pencere iki yana",
+         {"host": H, "at": 5.0, "form": "window", "width": 3.2, "operation": "slide", "leaves": 4,
+          "build": {"bothSides": True}},
+         window(1, 5.0, width=3.2, operation="slide", leaves=4, build={"bothSides": True}))
+    made("Üç kanatlı pencere üç rayda",
+         {"host": H, "at": 5.0, "form": "window", "width": 2.4, "operation": "slide", "leaves": 3,
+          "build": {"tracks": 3}},
+         window(1, 5.0, width=2.4, operation="slide", leaves=3, build={"tracks": 3}))
+    return out
+
+
+def multi_edit_cases():
+    out = []
+
+    def case(name, id, op, change=None, unset=()):
+        o = copy.deepcopy(BASE[id])
+        for k, v in (change or {}).items():
+            if k == "build":
+                b = dict(o.get("build") or {})
+                b.update(v)
+                o["build"] = b or None
+            else:
+                o[k] = v
+        b = dict(o.get("build") or {})
+        for k in unset:
+            b.pop(k, None)
+        o["build"] = b or None
+        operation = {"kind": "set", **op}
+        if unset:
+            operation["unset"] = list(unset)
+        others = [x for i, x in BASE.items() if i != id]
+        why = problem(o, "uids[0]") or on_wall(o, "uids[0]") or into_others(o, others, "uids[0]")
+        step = {"op": "execute", "input": {"uids": [f"$uidOf:{id}"], "operation": operation}, "within": 1e-9}
+        if why:
+            step["result"] = why
+            step["expect"] = {"ids": IDS, "revision": "same"}
+        else:
+            step["result"] = {"status": "completed", "output": {"openings": [stored(o, id)], "revision": "$current"},
+                              "warnings": []}
+            step["expect"] = {"ids": IDS, "entities": {str(id): stored(o, id)}, "revision": "changed"}
+        out.append({"name": name, "steps": [step]})
+    same = lambda c: (c, c)  # noqa: E731
+    case("S1 üç kanatlı olur, bindirmesi kalır", 9, *same({"leaves": 3}))
+    case("S1 dört kanatlı, iki yana", 9, *same({"leaves": 4, "build": {"bothSides": True}}))
+    case("S1 üç kanat üç rayda", 9, *same({"leaves": 3, "build": {"tracks": 3}}))
+    case("S1 dört kanat üç rayda, sona", 9, *same({"leaves": 4, "hand": "end", "build": {"tracks": 3}}))
+    case("S1 iki kanatken ray sayısı reddedilir", 9, *same({"build": {"tracks": 2}}))
+    case("S1 beş kanatlı olmaz", 9, *same({"leaves": 5}))
+    case("S1 dört kanatta 30 cm bindirme ışığın dörtte birini aşar", 9, *same({"leaves": 4, "build": {"overlap": 0.3}}))
+    case("S1 üç kanatta iki yana açılmaz", 9, *same({"leaves": 3, "build": {"bothSides": True}}))
+    case("S1 dört kanat iki yana üç rayda olmaz", 9, *same({"leaves": 4, "build": {"bothSides": True, "tracks": 3}}))
+    case("S1 üç kanat, bindirmesi ve rayı kaldırılır", 9, {"leaves": 3}, {"leaves": 3}, unset=("overlap", "track"))
+    case("S1 üç kanatlı pencere olur", 9, *same({"form": "window", "leaves": 3}))
+    case("S1 dört kanatlı sağa açılan pencere", 9, *same({"form": "window", "leaves": 4, "side": "right"}))
+    case("S1 dört kanat, 4 cm bindirme", 9, *same({"leaves": 4, "build": {"overlap": 0.04}}))
+    case("S1 katlanır olunca ray sayısı reddedilir", 9,
+         *same({"operation": "folding", "leaves": 4, "build": {"tracks": 2}}))
+    case("Kapı üç kanatlı sürme olur, 2,4 m", 10, *same({"operation": "slide", "leaves": 3, "width": 2.4}))
+    case("Kapı dört kanatlı sürme iki yana, 2,8 m", 10,
+         *same({"operation": "slide", "leaves": 4, "width": 2.8, "build": {"bothSides": True}}))
+    case("Kapı üç rayda teleskop, raylı", 10,
+         *same({"operation": "slide", "leaves": 3, "width": 2.4, "build": {"tracks": 3, "track": True}}))
+    case("Kanatlı kapıya üç kanat verilmez", 10, *same({"leaves": 3}))
+    case("Kanatlı kapıya ray sayısı verilmez", 10, *same({"build": {"tracks": 3}}))
+    case("D01 sürme olunca tamburu reddedilir", 6, *same({"operation": "slide"}))
+    case("S1 iki kanatta iki yana açılmaz", 9, *same({"build": {"bothSides": True}}))
+    case("Sabit kapı üç kanatlı olmaz", 10, *same({"operation": "fixed", "leaves": 3}))
+    return out
+
+
+def multi_types_cases():
+    out = []
+    same = {"ids": IDS, "revision": "same"}
+
+    def done(types, report, entities=None):
+        r = {"status": "completed", "output": {"types": [type_json(t) for t in types], "report": report,
+                                                "revision": "$current"}, "warnings": []}
+        e = {"ids": IDS, "revision": "changed"}
+        if entities:
+            e["entities"] = entities
+        return r, e
+
+    def report(applied=(), fields=()):
+        return {"applied": [f"$uidOf:{i}" for i in applied], "kept": [], "skipped": [], "refused": [],
+                "fields": list(fields)}
+
+    def case(name, op, result, expect):
+        out.append({"name": name, "steps": [{"op": "execute", "input": {"operation": op}, "within": 1e-9,
+                                              "result": result, "expect": expect}]})
+
+    def refused(name, op, why):
+        case(name, op, failed("invalid_opening_type", why["error"]["message"],
+                              why["error"]["path"].replace("x.", "operation.change.", 1)), same)
+
+    def define(name, label, copy_of, base, change):
+        t = {"id": label.lower(), "name": label, "version": 1, **copy.deepcopy(base)}
+        for k, v in change.items():
+            if k == "build":
+                t["build"] = {**(t.get("build") or {}), **v}
+            else:
+                t[k] = v
+        o = {**t, "host": 1, "at": 5.0, "hand": "start"}
+        o.setdefault("leaves", 1)
+        o.setdefault("operation", "swing")
+        why = problem(o, "x")
+        op = {"kind": "define", "name": label, "copyOf": copy_of, "change": change}
+        if why:
+            refused(name, op, why)
+        else:
+            case(name, op, *done(TYPES + [t], report()))
+    K90 = {"form": "door", "width": 0.9, "frame": 0.05, "head": 2.1}
+    define("Yeni tip: üç kanatlı sürme, iki ray", "S3", "Kapı 90", K90,
+           {"width": 2.4, "operation": "slide", "leaves": 3})
+    define("Yeni tip: üç kanat üç rayda", "S3T", "Kapı 90", K90,
+           {"width": 2.4, "operation": "slide", "leaves": 3, "build": {"tracks": 3}})
+    define("Yeni tip: dört kanat iki yana", "S4", "Kapı 90", K90,
+           {"width": 3.2, "operation": "slide", "leaves": 4, "build": {"bothSides": True}})
+    define("Yeni tip: dört kanat iki yana, raylı, bindirmeli", "S4R", "Kapı 90", K90,
+           {"width": 3.2, "operation": "slide", "leaves": 4, "build": {"bothSides": True, "track": True, "overlap": 0.06}})
+    define("Yeni tip: dört kanat üç rayda tek yana", "S4T", "Kapı 90", K90,
+           {"width": 3.2, "operation": "slide", "leaves": 4, "build": {"tracks": 3}})
+    define("Yeni tip: üç kanatlı sürme pencere", "W3", "Pencere 120", PENCERE120,
+           {"width": 2.4, "operation": "slide", "leaves": 3})
+    define("Yeni tip: beş kanatlı sürme reddedilir", "S5", "Kapı 90", K90,
+           {"width": 3.2, "operation": "slide", "leaves": 5})
+    define("Yeni tip: iki kanatta ray sayısı reddedilir", "S2T", "Kapı 90", K90,
+           {"width": 1.6, "operation": "slide", "leaves": 2, "build": {"tracks": 2}})
+    define("Yeni tip: tek ray reddedilir", "S3R", "Kapı 90", K90,
+           {"width": 2.4, "operation": "slide", "leaves": 3, "build": {"tracks": 1}})
+    define("Yeni tip: iki yana dört kanat üç rayda olmaz", "S4X", "Kapı 90", K90,
+           {"width": 3.2, "operation": "slide", "leaves": 4, "build": {"bothSides": True, "tracks": 3}})
+    define("Yeni tip: üç kanat iki yana açılmaz", "S3B", "Kapı 90", K90,
+           {"width": 2.4, "operation": "slide", "leaves": 3, "build": {"bothSides": True}})
+    define("Yeni tip: katlanır kapıya ray sayısı verilmez", "KT9", "KT1",
+           {k: v for k, v in KT1.items() if k not in ("id", "name", "version")}, {"build": {"tracks": 2}})
+    define("Yeni tip: üç kanadın bindirmesi ışığın üçte birinden büyük", "S3L", "Kapı 90", K90,
+           {"width": 2.4, "operation": "slide", "leaves": 3, "build": {"overlap": 0.8}})
+
+    def follows(name, change, fields):
+        k = copy.deepcopy(KT1)
+        k["version"] = 2
+        door = copy.deepcopy(BASE[8])
+        door["typeVersion"] = 2
+        for key, v in change.items():
+            if key == "build":
+                k["build"] = {**(k.get("build") or {}), **v}
+                door["build"] = {**(door.get("build") or {}), **v}
+            else:
+                k[key] = v
+                door[key] = v
+        why = problem(door, "x")
+        op = {"kind": "update", "type": "KT1", "change": change}
+        if why:
+            refused(name, op, why)
+        else:
+            case(name, op, *done([D01, CG1, k], report([8], fields), entities={"8": stored(door, 8)}))
+    follows("KT1 dört kanatlı sürme olur: kapısı izler", {"operation": "slide"}, ["operation"])
+    follows("KT1 iki yana açılan sürme olur", {"operation": "slide", "build": {"bothSides": True}},
+            ["operation", "bothSides"])
+    follows("KT1 sürme, üç rayda", {"operation": "slide", "build": {"tracks": 3}}, ["operation", "tracks"])
+    follows("KT1 sürme, üç kanat üç rayda", {"operation": "slide", "leaves": 3, "build": {"tracks": 3}},
+            ["leaves", "operation", "tracks"])
+    follows("KT1 sürme, 10 cm bindirme", {"operation": "slide", "build": {"overlap": 0.1}}, ["operation", "overlap"])
+    follows("KT1 sürme, iki yana ve üç ray reddedilir",
+            {"operation": "slide", "build": {"bothSides": True, "tracks": 3}}, [])
+    follows("KT1 sürme, beş kanat reddedilir", {"operation": "slide", "leaves": 5}, [])
+    refused("D01 sürme olunca tamburu reddedilir", {"kind": "update", "type": "D01", "change": {"operation": "slide"}},
+            problem({**BASE[6], "operation": "slide"}, "x"))
     return out
 
 
@@ -859,6 +1215,18 @@ def main():
         "cad.openingtypes.edit.special.json": doc(
             "cad.openingtypes.edit", "Kapı tipleri: döner, cebe giren ve katlanır tipler, izleyen kapılar, cebe sığmayan",
             NOTE, types_cases()),
+        "cad.openings.create.multislide.json": doc(
+            "cad.openings.create", "Açıklık ekle: üç ve dört kanatlı sürme, raylar, iki yana açılma, bindirme; retler",
+            NOTE_MULTI, multi_create_cases()),
+        "cad.openings.query.multislide.json": doc(
+            "cad.openings.query", "Açıklıkları oku: üç ve dört kanatlı sürmenin kanatları, net geçişi, rayları ve düzeni",
+            NOTE_MULTI, multi_query_cases()),
+        "cad.openings.edit.multislide.json": doc(
+            "cad.openings.edit", "Açıklığı değiştir: sürme üç ve dört kanatlı olur, raylar, iki yana; retler",
+            NOTE_MULTI, multi_edit_cases()),
+        "cad.openingtypes.edit.multislide.json": doc(
+            "cad.openingtypes.edit", "Kapı tipleri: üç ve dört kanatlı sürme tipleri, izleyen kapı, retler",
+            NOTE_MULTI, multi_types_cases()),
     }
     bad = 0
     for name, d in files.items():

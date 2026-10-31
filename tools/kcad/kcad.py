@@ -492,6 +492,12 @@ SCHEMA_WITH_SPECIAL_DOORS = 144
 SPECIAL_OPERATIONS = ("revolving", "pocket", "folding")
 SPECIAL_TYPE_FIELDS = ("drum", "overlap", "track", "bothSides", "lip")
 SCHEDULE_SPECIAL_FIELDS = ("operation", "leaves", "drum", "pocket")
+# Schema 157 (docs/adr/0792): three- and four-leaf sliding doors and windows (`leaves` 3–4 on `slide`), their tracks
+# (`build.tracks`, 2 or 3), a four-leaf one parting to both jambs (`build.bothSides`) and a schedule's `tracks` and
+# `panels` columns; written only when one is. Provisional: 150–156 are other slices' numbers.
+SCHEMA_WITH_MULTI_SLIDE = 157
+MULTI_SLIDE_TYPE_FIELDS = ("tracks",)
+SCHEDULE_MULTI_SLIDE_FIELDS = ("tracks", "panels")
 MAX_TABLE_CONSTRAINTS = 256
 MAX_CHECK_SQL = 8000
 MAX_CONSTRAINT_NAME = 256
@@ -795,7 +801,7 @@ def field_records_ok(raw, count):
     return at == len(raw)
 
 
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS, SCHEMA_WITH_JOIN_SOURCES, SCHEMA_WITH_DATASETS, SCHEMA_WITH_WITHHELD_FIELDS, SCHEMA_WITH_SPACE_COLUMNS, SCHEMA_WITH_SPACE_SCOPE, SCHEMA_WITH_SPACE_SOURCES, SCHEMA_WITH_SPACE_SEPARATORS, SCHEMA_WITH_SPACE_CHOICES, SCHEMA_WITH_DIMENSION_SETS, SCHEMA_WITH_DIMENSION_SET_EDGES, SCHEMA_WITH_RAILINGS, SCHEMA_WITH_SPACE_VOIDS, SCHEMA_WITH_STAIR_ARCS, SCHEMA_WITH_DIMENSION_CROSS, SCHEMA_WITH_RECESSES, SCHEMA_WITH_LEVEL_STATE, SCHEMA_WITH_DIMENSION_LEVELS, SCHEMA_WITH_SCHEDULE_COLUMNS, SCHEMA_WITH_SLABS, SCHEMA_WITH_RAMP_LEVELS, SCHEMA_WITH_STAIR_LEVELS, SCHEMA_WITH_GRID_COLUMN_FORMS, SCHEMA_WITH_CASEWORK, SCHEMA_WITH_DIMENSION_SET_SPANS, SCHEMA_WITH_DIMENSION_SET_SCALES, SCHEMA_WITH_AUDIT_EXCEPTIONS, SCHEMA_WITH_FIXTURES, SCHEMA_WITH_PROFILE_FILES, SCHEMA_WITH_FIELD_COLUMNS, SCHEMA_WITH_TABLE_CONSTRAINTS, SCHEMA_WITH_CAD_WORK, SCHEMA_WITH_LAYER_INDEXES, SCHEMA_WITH_ARCH_BONDS, SCHEMA_WITH_BUILDING_PARTS, SCHEMA_WITH_OPENING_TYPES, SCHEMA_WITH_BUILDING_PROGRAM, SCHEMA_WITH_VIEW_RECIPES, SCHEMA_WITH_MODULES, SCHEMA_WITH_RECIPE_DETAIL, SCHEMA_WITH_SPECIAL_DOORS, SCHEMA_WITH_MODULE_UNITS, SCHEMA_WITH_VIEW_TEMPLATES, SCHEMA_WITH_PROGRAM_SHARES, SCHEMA_WITH_MATERIALS, SCHEMA_WITH_OPTIONS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS, SCHEMA_WITH_JOIN_SOURCES, SCHEMA_WITH_DATASETS, SCHEMA_WITH_WITHHELD_FIELDS, SCHEMA_WITH_SPACE_COLUMNS, SCHEMA_WITH_SPACE_SCOPE, SCHEMA_WITH_SPACE_SOURCES, SCHEMA_WITH_SPACE_SEPARATORS, SCHEMA_WITH_SPACE_CHOICES, SCHEMA_WITH_DIMENSION_SETS, SCHEMA_WITH_DIMENSION_SET_EDGES, SCHEMA_WITH_RAILINGS, SCHEMA_WITH_SPACE_VOIDS, SCHEMA_WITH_STAIR_ARCS, SCHEMA_WITH_DIMENSION_CROSS, SCHEMA_WITH_RECESSES, SCHEMA_WITH_LEVEL_STATE, SCHEMA_WITH_DIMENSION_LEVELS, SCHEMA_WITH_SCHEDULE_COLUMNS, SCHEMA_WITH_SLABS, SCHEMA_WITH_RAMP_LEVELS, SCHEMA_WITH_STAIR_LEVELS, SCHEMA_WITH_GRID_COLUMN_FORMS, SCHEMA_WITH_CASEWORK, SCHEMA_WITH_DIMENSION_SET_SPANS, SCHEMA_WITH_DIMENSION_SET_SCALES, SCHEMA_WITH_AUDIT_EXCEPTIONS, SCHEMA_WITH_FIXTURES, SCHEMA_WITH_PROFILE_FILES, SCHEMA_WITH_FIELD_COLUMNS, SCHEMA_WITH_TABLE_CONSTRAINTS, SCHEMA_WITH_CAD_WORK, SCHEMA_WITH_LAYER_INDEXES, SCHEMA_WITH_ARCH_BONDS, SCHEMA_WITH_BUILDING_PARTS, SCHEMA_WITH_OPENING_TYPES, SCHEMA_WITH_BUILDING_PROGRAM, SCHEMA_WITH_VIEW_RECIPES, SCHEMA_WITH_MODULES, SCHEMA_WITH_RECIPE_DETAIL, SCHEMA_WITH_SPECIAL_DOORS, SCHEMA_WITH_MODULE_UNITS, SCHEMA_WITH_VIEW_TEMPLATES, SCHEMA_WITH_PROGRAM_SHARES, SCHEMA_WITH_MATERIALS, SCHEMA_WITH_OPTIONS, SCHEMA_WITH_MULTI_SLIDE)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -3428,6 +3434,7 @@ class _Schema:
         self.program_shares = version >= SCHEMA_WITH_PROGRAM_SHARES
         self.materials = version >= SCHEMA_WITH_MATERIALS
         self.options = version >= SCHEMA_WITH_OPTIONS
+        self.multi_slide = version >= SCHEMA_WITH_MULTI_SLIDE
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -7908,7 +7915,8 @@ class _Schema:
                                                   + (SCHEDULE_SIZED_FIELDS if self.opening_types else ())
                                                   + (SCHEDULE_PROGRAM_FIELDS if self.building_program else ())
                                                   + (SCHEDULE_SPECIAL_FIELDS if self.special_doors else ())
-                                                  + (SCHEDULE_SHARE_FIELDS if self.program_shares else ())), True),
+                                                  + (SCHEDULE_SHARE_FIELDS if self.program_shares else ())
+                                                  + (SCHEDULE_MULTI_SLIDE_FIELDS if self.multi_slide else ())), True),
                               "title": (self.text, False), "attr": (self.text, False)})
         flt = self.fields({"levels": (self.array(self.text), False), "phases": (self.array(self.enum(("existing", "demolish", "new", "temporary"))), False),
                            "forms": (self.array(self.opening_form), False), "layers": (self.array(self.text), False),
@@ -8806,7 +8814,8 @@ class _Schema:
             "broken": (broken, False),
             # Schema 139 (docs/adr/0772): the type it follows, its exceptions, its construction.
             **({"typeVersion": (self.uint(32), False),
-                "overrides": (self.array(self.enum(OPENING_TYPE_FIELDS + (SPECIAL_TYPE_FIELDS if self.special_doors else ()))), False),
+                "overrides": (self.array(self.enum(OPENING_TYPE_FIELDS + (SPECIAL_TYPE_FIELDS if self.special_doors else ())
+                                                   + (MULTI_SLIDE_TYPE_FIELDS if self.multi_slide else ()))), False),
                 "build": (self.opening_build, False)} if self.opening_types else {}),
         })(v)
 
@@ -8822,20 +8831,34 @@ class _Schema:
         op = f.get("operation", "swing")
         leaves = f.get("leaves", 1)
         lo, hi = {"revolving": (3, 4), "folding": (2, 6)}.get(op, (1, 2))
+        # Schema 157 (docs/adr/0792): a sliding door or window of up to four leaves.
+        if op == "slide" and self.multi_slide:
+            hi = 4
         if op in SPECIAL_OPERATIONS and form != "door":
             self.fail("bad_value", f"{words}: döner, cebe giren ve katlanır yalnız kapıdır")
         if not lo <= leaves <= hi:
+            if op == "slide" and leaves in (3, 4):
+                self.fail("unknown_field", f"{words}: üç ve dört kanatlı sürme şema 157 ister")
             self.fail("bad_value", f"{words}: kanat sayısı {leaves}; {lo}–{hi} olmalı")
         b = f.get("build") or {}
-        allowed = {"drum": ("revolving",), "overlap": ("slide",), "track": ("slide",), "bothSides": ("folding",),
-                   "lip": ("pocket",)}
+        allowed = {"drum": ("revolving",), "overlap": ("slide",), "track": ("slide",), "bothSides": ("folding", "slide"),
+                   "lip": ("pocket",), "tracks": ("slide",)}
         for k, ops in allowed.items():
             if k in b and op not in ops:
                 self.fail("bad_value", f"{words}: yapının {k} alanı bu açılışın değil")
-        if "overlap" in b and leaves != 2:
-            self.fail("bad_value", f"{words}: kanat bindirmesi iki kanadındır")
-        if "bothSides" in b and leaves % 2:
+        if "overlap" in b and leaves < 2:
+            self.fail("bad_value", f"{words}: kanat bindirmesi çok kanatlı sürmenindir")
+        if "bothSides" in b and op == "folding" and leaves % 2:
             self.fail("bad_value", f"{words}: iki yana toplanan katlanır kapının kanat sayısı çift olmalı")
+        if "bothSides" in b and op == "slide" and leaves != 4:
+            self.fail("bad_value", f"{words}: iki yana açılma dört kanatlı sürmenindir")
+        if "tracks" in b:
+            if leaves < 3:
+                self.fail("bad_value", f"{words}: ray sayısı üç ya da dört kanatlı sürmenindir")
+            if b["tracks"] not in (2, 3):
+                self.fail("bad_value", f"{words}: ray sayısı 2 ya da 3 olmalı")
+            if b["tracks"] == 3 and b.get("bothSides"):
+                self.fail("bad_value", f"{words}: iki yana açılan dört kanat iki raydadır")
 
     def opening_build(self, v):
         """An opening's or a type's construction (docs/adr/0772 §3): each field only when given, none empty."""
@@ -8859,10 +8882,17 @@ class _Schema:
                          "drum": (special(self.float, "drum"), False), "overlap": (special(self.float, "overlap"), False),
                          "track": (special(self.bool, "track"), False),
                          "bothSides": (special(self.bool, "bothSides"), False),
-                         "lip": (special(self.float, "lip"), False)})(v)
+                         "lip": (special(self.float, "lip"), False),
+                         "tracks": (self.multi_slide_tracks, False)})(v)
         if not b:
             self.fail("bad_value", "boş yapı (build) yazılmaz")
         return b
+
+    def multi_slide_tracks(self, x):
+        """A three- or four-leaf sliding door's tracks (schema 157, docs/adr/0792)."""
+        if not self.multi_slide:
+            self.fail("unknown_field", "yapının tracks alanı şema 157 ister")
+        return self.uint(8)(x)
 
     def opening_form(self, x):
         """An opening's form: a door, a window, a bare opening, and from schema 119 a niche and a flue."""
@@ -8916,7 +8946,7 @@ class _Schema:
         if f.get("overrides") is not None:
             if "typeVersion" not in f:
                 bad("Örnek istisnası yalnız bir tipi izleyen açıklığındır.")
-            order = [(OPENING_TYPE_FIELDS + SPECIAL_TYPE_FIELDS).index(k) for k in f["overrides"]]
+            order = [(OPENING_TYPE_FIELDS + SPECIAL_TYPE_FIELDS + MULTI_SLIDE_TYPE_FIELDS).index(k) for k in f["overrides"]]
             if not f["overrides"] or order != sorted(set(order)):
                 bad("Örnek istisnaları alanların sırasıyla ve birer kez yazılır.")
         if len(o["place"]) != 4:

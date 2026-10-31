@@ -1,0 +1,2195 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.openings.edit",
+ "commandVersion": 1,
+ "title": "Açıklığı değiştir: sürme üç ve dört kanatlı olur, raylar, iki yana; retler",
+ "note": "ADR 0792. Beklenenler scripts/fixtures/special_doors_command_cases.py'nin ADR'den yazılmış kurallarından, KentOS kodu olmadan: üç ve dört kanatlı sürmenin rayları, sabit ve sürme kanatları, toplandığı yan, bindirmesi, net geçişi ve kanat düzeni. Kurulum ADR 0777'nin çizimi; yeni nesne 11'den başlar.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Özel kapılar",
+  "uids": [
+   "0192f5a1-7770-7000-8000-000000000001",
+   "0192f5a1-7770-7000-8000-000000000002",
+   "0192f5a1-7770-7000-8000-000000000003",
+   "0192f5a1-7770-7000-8000-000000000004",
+   "0192f5a1-7770-7000-8000-000000000005",
+   "0192f5a1-7770-7000-8000-000000000006",
+   "0192f5a1-7770-7000-8000-000000000007",
+   "0192f5a1-7770-7000-8000-000000000008",
+   "0192f5a1-7770-7000-8000-000000000009",
+   "0192f5a1-7770-7000-8000-00000000000a"
+  ],
+  "settings": {
+   "srid": 0,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "deg",
+   "plotScale": 50,
+   "workspace": "cad",
+   "arch": {
+    "openingTypes": [
+     {
+      "id": "d01",
+      "name": "D01",
+      "version": 1,
+      "form": "door",
+      "width": 2.4,
+      "leaves": 4,
+      "operation": "revolving",
+      "frame": 0.1,
+      "head": 2.4,
+      "build": {
+       "drum": 2.0
+      }
+     },
+     {
+      "id": "cg1",
+      "name": "CG1",
+      "version": 1,
+      "form": "door",
+      "width": 0.9,
+      "operation": "pocket",
+      "frame": 0.03,
+      "head": 2.1,
+      "build": {
+       "leafThickness": 0.04,
+       "lip": 0.06
+      }
+     },
+     {
+      "id": "kt1",
+      "name": "KT1",
+      "version": 1,
+      "form": "door",
+      "width": 1.6,
+      "leaves": 4,
+      "operation": "folding",
+      "frame": 0.04,
+      "head": 2.1
+     }
+    ]
+   }
+  },
+  "origin": {
+   "x": 0,
+   "y": 0
+  },
+  "layers": [
+   {
+    "id": "duvar",
+    "name": "Duvar",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kapi",
+    "name": "Kapı",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "kapi",
+  "styles": {
+   "items": [],
+   "categories": []
+  },
+  "entities": [
+   {
+    "kind": "wall",
+    "id": 1,
+    "layerId": "duvar",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 12.0,
+      "y": 0.0
+     }
+    ],
+    "width": 0.3,
+    "justify": "center"
+   },
+   {
+    "kind": "wall",
+    "id": 2,
+    "layerId": "duvar",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 5.0
+     },
+     {
+      "x": 6.0,
+      "y": 5.0
+     }
+    ],
+    "width": 0.1,
+    "justify": "center"
+   },
+   {
+    "kind": "wall",
+    "id": 3,
+    "layerId": "duvar",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 10.0
+     },
+     {
+      "x": 4.0,
+      "y": 10.0
+     }
+    ],
+    "width": 0.3,
+    "justify": "center"
+   },
+   {
+    "kind": "wall",
+    "id": 4,
+    "layerId": "duvar",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 15.0
+     },
+     {
+      "x": 5.0,
+      "y": 15.0
+     },
+     {
+      "x": 5.0,
+      "y": 19.0
+     }
+    ],
+    "width": 0.3,
+    "justify": "center"
+   },
+   {
+    "kind": "wall",
+    "id": 5,
+    "layerId": "duvar",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 20.0,
+      "y": 0.0
+     },
+     {
+      "x": 32.0,
+      "y": 0.0
+     }
+    ],
+    "width": 0.3,
+    "justify": "center"
+   },
+   {
+    "kind": "opening",
+    "id": 6,
+    "layerId": "kapi",
+    "attrs": {},
+    "host": "0192f5a1-7770-7000-8000-000000000005",
+    "at": 2.0,
+    "width": 2.4,
+    "form": "door",
+    "leaves": 4,
+    "operation": "revolving",
+    "frame": 0.1,
+    "head": 2.4,
+    "style": "d01",
+    "number": "D1",
+    "typeVersion": 1,
+    "build": {
+     "drum": 2.0
+    },
+    "place": [
+     {
+      "x": 20.8,
+      "y": 0.15
+     },
+     {
+      "x": 20.8,
+      "y": -0.15
+     },
+     {
+      "x": 23.2,
+      "y": 0.15
+     },
+     {
+      "x": 23.2,
+      "y": -0.15
+     }
+    ]
+   },
+   {
+    "kind": "opening",
+    "id": 7,
+    "layerId": "kapi",
+    "attrs": {},
+    "host": "0192f5a1-7770-7000-8000-000000000005",
+    "at": 6.0,
+    "width": 0.9,
+    "form": "door",
+    "operation": "pocket",
+    "frame": 0.03,
+    "head": 2.1,
+    "style": "cg1",
+    "number": "CG1",
+    "typeVersion": 1,
+    "build": {
+     "leafThickness": 0.04,
+     "lip": 0.06
+    },
+    "place": [
+     {
+      "x": 25.55,
+      "y": 0.15
+     },
+     {
+      "x": 25.55,
+      "y": -0.15
+     },
+     {
+      "x": 26.45,
+      "y": 0.15
+     },
+     {
+      "x": 26.45,
+      "y": -0.15
+     }
+    ]
+   },
+   {
+    "kind": "opening",
+    "id": 8,
+    "layerId": "kapi",
+    "attrs": {},
+    "host": "0192f5a1-7770-7000-8000-000000000005",
+    "at": 9.0,
+    "width": 1.6,
+    "form": "door",
+    "leaves": 4,
+    "operation": "folding",
+    "frame": 0.04,
+    "head": 2.1,
+    "style": "kt1",
+    "number": "KT1",
+    "typeVersion": 1,
+    "place": [
+     {
+      "x": 28.2,
+      "y": 0.15
+     },
+     {
+      "x": 28.2,
+      "y": -0.15
+     },
+     {
+      "x": 29.8,
+      "y": 0.15
+     },
+     {
+      "x": 29.8,
+      "y": -0.15
+     }
+    ]
+   },
+   {
+    "kind": "opening",
+    "id": 9,
+    "layerId": "kapi",
+    "attrs": {},
+    "host": "0192f5a1-7770-7000-8000-000000000005",
+    "at": 11.2,
+    "width": 1.2,
+    "form": "door",
+    "leaves": 2,
+    "operation": "slide",
+    "frame": 0.04,
+    "head": 2.1,
+    "number": "S1",
+    "build": {
+     "overlap": 0.1,
+     "track": true
+    },
+    "place": [
+     {
+      "x": 30.6,
+      "y": 0.15
+     },
+     {
+      "x": 30.6,
+      "y": -0.15
+     },
+     {
+      "x": 31.799999999999997,
+      "y": 0.15
+     },
+     {
+      "x": 31.799999999999997,
+      "y": -0.15
+     }
+    ]
+   },
+   {
+    "kind": "opening",
+    "id": 10,
+    "layerId": "kapi",
+    "attrs": {},
+    "host": "0192f5a1-7770-7000-8000-000000000001",
+    "at": 10.5,
+    "width": 0.9,
+    "form": "door",
+    "frame": 0.05,
+    "head": 2.1,
+    "style": "kentos-kapi-90",
+    "number": "K1",
+    "place": [
+     {
+      "x": 10.05,
+      "y": 0.15
+     },
+     {
+      "x": 10.05,
+      "y": -0.15
+     },
+     {
+      "x": 10.95,
+      "y": 0.15
+     },
+     {
+      "x": 10.95,
+      "y": -0.15
+     }
+    ]
+   }
+  ]
+ },
+ "cases": [
+  {
+   "name": "S1 üç kanatlı olur, bindirmesi kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:9"
+      ],
+      "operation": {
+       "kind": "set",
+       "leaves": 3
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "openings": [
+        {
+         "kind": "opening",
+         "id": 9,
+         "layerId": "kapi",
+         "attrs": {},
+         "host": "$uidOf:5",
+         "at": 11.2,
+         "width": 1.2,
+         "form": "door",
+         "leaves": 3,
+         "operation": "slide",
+         "frame": 0.04,
+         "head": 2.1,
+         "number": "S1",
+         "build": {
+          "overlap": 0.1,
+          "track": true
+         },
+         "place": [
+          {
+           "x": 30.6,
+           "y": 0.15
+          },
+          {
+           "x": 30.6,
+           "y": -0.15
+          },
+          {
+           "x": 31.799999999999997,
+           "y": 0.15
+          },
+          {
+           "x": 31.799999999999997,
+           "y": -0.15
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "entities": {
+       "9": {
+        "kind": "opening",
+        "id": 9,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "$uidOf:5",
+        "at": 11.2,
+        "width": 1.2,
+        "form": "door",
+        "leaves": 3,
+        "operation": "slide",
+        "frame": 0.04,
+        "head": 2.1,
+        "number": "S1",
+        "build": {
+         "overlap": 0.1,
+         "track": true
+        },
+        "place": [
+         {
+          "x": 30.6,
+          "y": 0.15
+         },
+         {
+          "x": 30.6,
+          "y": -0.15
+         },
+         {
+          "x": 31.799999999999997,
+          "y": 0.15
+         },
+         {
+          "x": 31.799999999999997,
+          "y": -0.15
+         }
+        ]
+       }
+      },
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "S1 dört kanatlı, iki yana",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:9"
+      ],
+      "operation": {
+       "kind": "set",
+       "leaves": 4,
+       "build": {
+        "bothSides": true
+       }
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "openings": [
+        {
+         "kind": "opening",
+         "id": 9,
+         "layerId": "kapi",
+         "attrs": {},
+         "host": "$uidOf:5",
+         "at": 11.2,
+         "width": 1.2,
+         "form": "door",
+         "leaves": 4,
+         "operation": "slide",
+         "frame": 0.04,
+         "head": 2.1,
+         "number": "S1",
+         "build": {
+          "overlap": 0.1,
+          "track": true,
+          "bothSides": true
+         },
+         "place": [
+          {
+           "x": 30.6,
+           "y": 0.15
+          },
+          {
+           "x": 30.6,
+           "y": -0.15
+          },
+          {
+           "x": 31.799999999999997,
+           "y": 0.15
+          },
+          {
+           "x": 31.799999999999997,
+           "y": -0.15
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "entities": {
+       "9": {
+        "kind": "opening",
+        "id": 9,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "$uidOf:5",
+        "at": 11.2,
+        "width": 1.2,
+        "form": "door",
+        "leaves": 4,
+        "operation": "slide",
+        "frame": 0.04,
+        "head": 2.1,
+        "number": "S1",
+        "build": {
+         "overlap": 0.1,
+         "track": true,
+         "bothSides": true
+        },
+        "place": [
+         {
+          "x": 30.6,
+          "y": 0.15
+         },
+         {
+          "x": 30.6,
+          "y": -0.15
+         },
+         {
+          "x": 31.799999999999997,
+          "y": 0.15
+         },
+         {
+          "x": 31.799999999999997,
+          "y": -0.15
+         }
+        ]
+       }
+      },
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "S1 üç kanat üç rayda",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:9"
+      ],
+      "operation": {
+       "kind": "set",
+       "leaves": 3,
+       "build": {
+        "tracks": 3
+       }
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "openings": [
+        {
+         "kind": "opening",
+         "id": 9,
+         "layerId": "kapi",
+         "attrs": {},
+         "host": "$uidOf:5",
+         "at": 11.2,
+         "width": 1.2,
+         "form": "door",
+         "leaves": 3,
+         "operation": "slide",
+         "frame": 0.04,
+         "head": 2.1,
+         "number": "S1",
+         "build": {
+          "overlap": 0.1,
+          "track": true,
+          "tracks": 3
+         },
+         "place": [
+          {
+           "x": 30.6,
+           "y": 0.15
+          },
+          {
+           "x": 30.6,
+           "y": -0.15
+          },
+          {
+           "x": 31.799999999999997,
+           "y": 0.15
+          },
+          {
+           "x": 31.799999999999997,
+           "y": -0.15
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "entities": {
+       "9": {
+        "kind": "opening",
+        "id": 9,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "$uidOf:5",
+        "at": 11.2,
+        "width": 1.2,
+        "form": "door",
+        "leaves": 3,
+        "operation": "slide",
+        "frame": 0.04,
+        "head": 2.1,
+        "number": "S1",
+        "build": {
+         "overlap": 0.1,
+         "track": true,
+         "tracks": 3
+        },
+        "place": [
+         {
+          "x": 30.6,
+          "y": 0.15
+         },
+         {
+          "x": 30.6,
+          "y": -0.15
+         },
+         {
+          "x": 31.799999999999997,
+          "y": 0.15
+         },
+         {
+          "x": 31.799999999999997,
+          "y": -0.15
+         }
+        ]
+       }
+      },
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "S1 dört kanat üç rayda, sona",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:9"
+      ],
+      "operation": {
+       "kind": "set",
+       "leaves": 4,
+       "hand": "end",
+       "build": {
+        "tracks": 3
+       }
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "openings": [
+        {
+         "kind": "opening",
+         "id": 9,
+         "layerId": "kapi",
+         "attrs": {},
+         "host": "$uidOf:5",
+         "at": 11.2,
+         "width": 1.2,
+         "form": "door",
+         "leaves": 4,
+         "operation": "slide",
+         "hand": "end",
+         "frame": 0.04,
+         "head": 2.1,
+         "number": "S1",
+         "build": {
+          "overlap": 0.1,
+          "track": true,
+          "tracks": 3
+         },
+         "place": [
+          {
+           "x": 30.6,
+           "y": 0.15
+          },
+          {
+           "x": 30.6,
+           "y": -0.15
+          },
+          {
+           "x": 31.799999999999997,
+           "y": 0.15
+          },
+          {
+           "x": 31.799999999999997,
+           "y": -0.15
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "entities": {
+       "9": {
+        "kind": "opening",
+        "id": 9,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "$uidOf:5",
+        "at": 11.2,
+        "width": 1.2,
+        "form": "door",
+        "leaves": 4,
+        "operation": "slide",
+        "hand": "end",
+        "frame": 0.04,
+        "head": 2.1,
+        "number": "S1",
+        "build": {
+         "overlap": 0.1,
+         "track": true,
+         "tracks": 3
+        },
+        "place": [
+         {
+          "x": 30.6,
+          "y": 0.15
+         },
+         {
+          "x": 30.6,
+          "y": -0.15
+         },
+         {
+          "x": 31.799999999999997,
+          "y": 0.15
+         },
+         {
+          "x": 31.799999999999997,
+          "y": -0.15
+         }
+        ]
+       }
+      },
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "S1 iki kanatken ray sayısı reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:9"
+      ],
+      "operation": {
+       "kind": "set",
+       "build": {
+        "tracks": 2
+       }
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_opening",
+       "message": "Ray sayısı üç ya da dört kanatlı sürmenindir; kaldırın ya da kanat sayısını artırın.",
+       "path": "uids[0].build.tracks"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "S1 beş kanatlı olmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:9"
+      ],
+      "operation": {
+       "kind": "set",
+       "leaves": 5
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_opening",
+       "message": "Sürme açıklığın kanat sayısı 5; 1 ile 4 arasında olmalı.",
+       "path": "uids[0].leaves"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "S1 dört kanatta 30 cm bindirme ışığın dörtte birini aşar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:9"
+      ],
+      "operation": {
+       "kind": "set",
+       "leaves": 4,
+       "build": {
+        "overlap": 0.3
+       }
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_opening",
+       "message": "Kanat bindirmesi (0.3 m) ışığın dörtte birinden (0.280 m) küçük olmalı.",
+       "path": "uids[0].build.overlap"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "S1 üç kanatta iki yana açılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:9"
+      ],
+      "operation": {
+       "kind": "set",
+       "leaves": 3,
+       "build": {
+        "bothSides": true
+       }
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_opening",
+       "message": "İki yana açılma dört kanatlı sürmenindir (3 kanat); kanat sayısını 4 yapın ya da tek yana açın.",
+       "path": "uids[0].build.bothSides"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "S1 dört kanat iki yana üç rayda olmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:9"
+      ],
+      "operation": {
+       "kind": "set",
+       "leaves": 4,
+       "build": {
+        "bothSides": true,
+        "tracks": 3
+       }
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_opening",
+       "message": "İki yana açılan dört kanat iki raydadır; ray sayısını 2 yapın ya da tek yana açın.",
+       "path": "uids[0].build.tracks"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "S1 üç kanat, bindirmesi ve rayı kaldırılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:9"
+      ],
+      "operation": {
+       "kind": "set",
+       "leaves": 3,
+       "unset": [
+        "overlap",
+        "track"
+       ]
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "openings": [
+        {
+         "kind": "opening",
+         "id": 9,
+         "layerId": "kapi",
+         "attrs": {},
+         "host": "$uidOf:5",
+         "at": 11.2,
+         "width": 1.2,
+         "form": "door",
+         "leaves": 3,
+         "operation": "slide",
+         "frame": 0.04,
+         "head": 2.1,
+         "number": "S1",
+         "place": [
+          {
+           "x": 30.6,
+           "y": 0.15
+          },
+          {
+           "x": 30.6,
+           "y": -0.15
+          },
+          {
+           "x": 31.799999999999997,
+           "y": 0.15
+          },
+          {
+           "x": 31.799999999999997,
+           "y": -0.15
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "entities": {
+       "9": {
+        "kind": "opening",
+        "id": 9,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "$uidOf:5",
+        "at": 11.2,
+        "width": 1.2,
+        "form": "door",
+        "leaves": 3,
+        "operation": "slide",
+        "frame": 0.04,
+        "head": 2.1,
+        "number": "S1",
+        "place": [
+         {
+          "x": 30.6,
+          "y": 0.15
+         },
+         {
+          "x": 30.6,
+          "y": -0.15
+         },
+         {
+          "x": 31.799999999999997,
+          "y": 0.15
+         },
+         {
+          "x": 31.799999999999997,
+          "y": -0.15
+         }
+        ]
+       }
+      },
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "S1 üç kanatlı pencere olur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:9"
+      ],
+      "operation": {
+       "kind": "set",
+       "form": "window",
+       "leaves": 3
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "openings": [
+        {
+         "kind": "opening",
+         "id": 9,
+         "layerId": "kapi",
+         "attrs": {},
+         "host": "$uidOf:5",
+         "at": 11.2,
+         "width": 1.2,
+         "form": "window",
+         "leaves": 3,
+         "operation": "slide",
+         "frame": 0.04,
+         "head": 2.1,
+         "number": "S1",
+         "build": {
+          "overlap": 0.1,
+          "track": true
+         },
+         "place": [
+          {
+           "x": 30.6,
+           "y": 0.15
+          },
+          {
+           "x": 30.6,
+           "y": -0.15
+          },
+          {
+           "x": 31.799999999999997,
+           "y": 0.15
+          },
+          {
+           "x": 31.799999999999997,
+           "y": -0.15
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "entities": {
+       "9": {
+        "kind": "opening",
+        "id": 9,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "$uidOf:5",
+        "at": 11.2,
+        "width": 1.2,
+        "form": "window",
+        "leaves": 3,
+        "operation": "slide",
+        "frame": 0.04,
+        "head": 2.1,
+        "number": "S1",
+        "build": {
+         "overlap": 0.1,
+         "track": true
+        },
+        "place": [
+         {
+          "x": 30.6,
+          "y": 0.15
+         },
+         {
+          "x": 30.6,
+          "y": -0.15
+         },
+         {
+          "x": 31.799999999999997,
+          "y": 0.15
+         },
+         {
+          "x": 31.799999999999997,
+          "y": -0.15
+         }
+        ]
+       }
+      },
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "S1 dört kanatlı sağa açılan pencere",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:9"
+      ],
+      "operation": {
+       "kind": "set",
+       "form": "window",
+       "leaves": 4,
+       "side": "right"
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "openings": [
+        {
+         "kind": "opening",
+         "id": 9,
+         "layerId": "kapi",
+         "attrs": {},
+         "host": "$uidOf:5",
+         "at": 11.2,
+         "width": 1.2,
+         "form": "window",
+         "leaves": 4,
+         "operation": "slide",
+         "side": "right",
+         "frame": 0.04,
+         "head": 2.1,
+         "number": "S1",
+         "build": {
+          "overlap": 0.1,
+          "track": true
+         },
+         "place": [
+          {
+           "x": 30.6,
+           "y": 0.15
+          },
+          {
+           "x": 30.6,
+           "y": -0.15
+          },
+          {
+           "x": 31.799999999999997,
+           "y": 0.15
+          },
+          {
+           "x": 31.799999999999997,
+           "y": -0.15
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "entities": {
+       "9": {
+        "kind": "opening",
+        "id": 9,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "$uidOf:5",
+        "at": 11.2,
+        "width": 1.2,
+        "form": "window",
+        "leaves": 4,
+        "operation": "slide",
+        "side": "right",
+        "frame": 0.04,
+        "head": 2.1,
+        "number": "S1",
+        "build": {
+         "overlap": 0.1,
+         "track": true
+        },
+        "place": [
+         {
+          "x": 30.6,
+          "y": 0.15
+         },
+         {
+          "x": 30.6,
+          "y": -0.15
+         },
+         {
+          "x": 31.799999999999997,
+          "y": 0.15
+         },
+         {
+          "x": 31.799999999999997,
+          "y": -0.15
+         }
+        ]
+       }
+      },
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "S1 dört kanat, 4 cm bindirme",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:9"
+      ],
+      "operation": {
+       "kind": "set",
+       "leaves": 4,
+       "build": {
+        "overlap": 0.04
+       }
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "openings": [
+        {
+         "kind": "opening",
+         "id": 9,
+         "layerId": "kapi",
+         "attrs": {},
+         "host": "$uidOf:5",
+         "at": 11.2,
+         "width": 1.2,
+         "form": "door",
+         "leaves": 4,
+         "operation": "slide",
+         "frame": 0.04,
+         "head": 2.1,
+         "number": "S1",
+         "build": {
+          "overlap": 0.04,
+          "track": true
+         },
+         "place": [
+          {
+           "x": 30.6,
+           "y": 0.15
+          },
+          {
+           "x": 30.6,
+           "y": -0.15
+          },
+          {
+           "x": 31.799999999999997,
+           "y": 0.15
+          },
+          {
+           "x": 31.799999999999997,
+           "y": -0.15
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "entities": {
+       "9": {
+        "kind": "opening",
+        "id": 9,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "$uidOf:5",
+        "at": 11.2,
+        "width": 1.2,
+        "form": "door",
+        "leaves": 4,
+        "operation": "slide",
+        "frame": 0.04,
+        "head": 2.1,
+        "number": "S1",
+        "build": {
+         "overlap": 0.04,
+         "track": true
+        },
+        "place": [
+         {
+          "x": 30.6,
+          "y": 0.15
+         },
+         {
+          "x": 30.6,
+          "y": -0.15
+         },
+         {
+          "x": 31.799999999999997,
+          "y": 0.15
+         },
+         {
+          "x": 31.799999999999997,
+          "y": -0.15
+         }
+        ]
+       }
+      },
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "S1 katlanır olunca ray sayısı reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:9"
+      ],
+      "operation": {
+       "kind": "set",
+       "operation": "folding",
+       "leaves": 4,
+       "build": {
+        "tracks": 2
+       }
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_opening",
+       "message": "Ray yalnız sürme açıklığındır; kaldırın ya da açılışı Sürme yapın.",
+       "path": "uids[0].build.track"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kapı üç kanatlı sürme olur, 2,4 m",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:10"
+      ],
+      "operation": {
+       "kind": "set",
+       "operation": "slide",
+       "leaves": 3,
+       "width": 2.4
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "openings": [
+        {
+         "kind": "opening",
+         "id": 10,
+         "layerId": "kapi",
+         "attrs": {},
+         "host": "$uidOf:1",
+         "at": 10.5,
+         "width": 2.4,
+         "form": "door",
+         "leaves": 3,
+         "operation": "slide",
+         "frame": 0.05,
+         "head": 2.1,
+         "style": "kentos-kapi-90",
+         "number": "K1",
+         "place": [
+          {
+           "x": 9.3,
+           "y": 0.15
+          },
+          {
+           "x": 9.3,
+           "y": -0.15
+          },
+          {
+           "x": 11.7,
+           "y": 0.15
+          },
+          {
+           "x": 11.7,
+           "y": -0.15
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "entities": {
+       "10": {
+        "kind": "opening",
+        "id": 10,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "$uidOf:1",
+        "at": 10.5,
+        "width": 2.4,
+        "form": "door",
+        "leaves": 3,
+        "operation": "slide",
+        "frame": 0.05,
+        "head": 2.1,
+        "style": "kentos-kapi-90",
+        "number": "K1",
+        "place": [
+         {
+          "x": 9.3,
+          "y": 0.15
+         },
+         {
+          "x": 9.3,
+          "y": -0.15
+         },
+         {
+          "x": 11.7,
+          "y": 0.15
+         },
+         {
+          "x": 11.7,
+          "y": -0.15
+         }
+        ]
+       }
+      },
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kapı dört kanatlı sürme iki yana, 2,8 m",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:10"
+      ],
+      "operation": {
+       "kind": "set",
+       "operation": "slide",
+       "leaves": 4,
+       "width": 2.8,
+       "build": {
+        "bothSides": true
+       }
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "openings": [
+        {
+         "kind": "opening",
+         "id": 10,
+         "layerId": "kapi",
+         "attrs": {},
+         "host": "$uidOf:1",
+         "at": 10.5,
+         "width": 2.8,
+         "form": "door",
+         "leaves": 4,
+         "operation": "slide",
+         "frame": 0.05,
+         "head": 2.1,
+         "style": "kentos-kapi-90",
+         "number": "K1",
+         "build": {
+          "bothSides": true
+         },
+         "place": [
+          {
+           "x": 9.1,
+           "y": 0.15
+          },
+          {
+           "x": 9.1,
+           "y": -0.15
+          },
+          {
+           "x": 11.9,
+           "y": 0.15
+          },
+          {
+           "x": 11.9,
+           "y": -0.15
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "entities": {
+       "10": {
+        "kind": "opening",
+        "id": 10,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "$uidOf:1",
+        "at": 10.5,
+        "width": 2.8,
+        "form": "door",
+        "leaves": 4,
+        "operation": "slide",
+        "frame": 0.05,
+        "head": 2.1,
+        "style": "kentos-kapi-90",
+        "number": "K1",
+        "build": {
+         "bothSides": true
+        },
+        "place": [
+         {
+          "x": 9.1,
+          "y": 0.15
+         },
+         {
+          "x": 9.1,
+          "y": -0.15
+         },
+         {
+          "x": 11.9,
+          "y": 0.15
+         },
+         {
+          "x": 11.9,
+          "y": -0.15
+         }
+        ]
+       }
+      },
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kapı üç rayda teleskop, raylı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:10"
+      ],
+      "operation": {
+       "kind": "set",
+       "operation": "slide",
+       "leaves": 3,
+       "width": 2.4,
+       "build": {
+        "tracks": 3,
+        "track": true
+       }
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "openings": [
+        {
+         "kind": "opening",
+         "id": 10,
+         "layerId": "kapi",
+         "attrs": {},
+         "host": "$uidOf:1",
+         "at": 10.5,
+         "width": 2.4,
+         "form": "door",
+         "leaves": 3,
+         "operation": "slide",
+         "frame": 0.05,
+         "head": 2.1,
+         "style": "kentos-kapi-90",
+         "number": "K1",
+         "build": {
+          "track": true,
+          "tracks": 3
+         },
+         "place": [
+          {
+           "x": 9.3,
+           "y": 0.15
+          },
+          {
+           "x": 9.3,
+           "y": -0.15
+          },
+          {
+           "x": 11.7,
+           "y": 0.15
+          },
+          {
+           "x": 11.7,
+           "y": -0.15
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "entities": {
+       "10": {
+        "kind": "opening",
+        "id": 10,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "$uidOf:1",
+        "at": 10.5,
+        "width": 2.4,
+        "form": "door",
+        "leaves": 3,
+        "operation": "slide",
+        "frame": 0.05,
+        "head": 2.1,
+        "style": "kentos-kapi-90",
+        "number": "K1",
+        "build": {
+         "track": true,
+         "tracks": 3
+        },
+        "place": [
+         {
+          "x": 9.3,
+          "y": 0.15
+         },
+         {
+          "x": 9.3,
+          "y": -0.15
+         },
+         {
+          "x": 11.7,
+          "y": 0.15
+         },
+         {
+          "x": 11.7,
+          "y": -0.15
+         }
+        ]
+       }
+      },
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kanatlı kapıya üç kanat verilmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:10"
+      ],
+      "operation": {
+       "kind": "set",
+       "leaves": 3
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_opening",
+       "message": "Açıklığın kanat sayısı 3; 1 ya da 2 olmalı.",
+       "path": "uids[0].leaves"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kanatlı kapıya ray sayısı verilmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:10"
+      ],
+      "operation": {
+       "kind": "set",
+       "build": {
+        "tracks": 3
+       }
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_opening",
+       "message": "Ray sayısı yalnız sürme açıklığındır; kaldırın ya da açılışı Sürme yapın.",
+       "path": "uids[0].build.tracks"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "D01 sürme olunca tamburu reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:6"
+      ],
+      "operation": {
+       "kind": "set",
+       "operation": "slide"
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_opening",
+       "message": "Tambur çapı yalnız döner açıklığındır; kaldırın ya da açılışı Döner yapın.",
+       "path": "uids[0].build.drum"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "S1 iki kanatta iki yana açılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:9"
+      ],
+      "operation": {
+       "kind": "set",
+       "build": {
+        "bothSides": true
+       }
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_opening",
+       "message": "İki yana açılma dört kanatlı sürmenindir (2 kanat); kanat sayısını 4 yapın ya da tek yana açın.",
+       "path": "uids[0].build.bothSides"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sabit kapı üç kanatlı olmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:10"
+      ],
+      "operation": {
+       "kind": "set",
+       "operation": "fixed",
+       "leaves": 3
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_opening",
+       "message": "Açıklığın kanat sayısı 3; 1 ya da 2 olmalı.",
+       "path": "uids[0].leaves"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

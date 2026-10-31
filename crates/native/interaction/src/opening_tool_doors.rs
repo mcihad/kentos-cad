@@ -1,8 +1,9 @@
 //! Kapı's operation and its special doors' settings (docs/adr/0777 §5): Açılış (Ç) the operation over the type's
 //! (Kanatlı, Sürme, Sabit, Döner, Cebe giren, Katlanır), Kanat (K) the leaves (a revolving door's wings, a folding
 //! door's panels), Tambur (J) a revolving door's drum, Cep payı (P) a pocket door's lip, İki yana (İ) a folding door's
-//! panels to both jambs, Bindirme (S) two sliding leaves' overlap and Ray (H) a sliding door's track. They are the
-//! command's input (CMD-07): `cad.openings.create` writes them, and its plan is the preview.
+//! panels to both jambs, Bindirme (S) two sliding leaves' overlap and Ray (H) a sliding door's track. A three- or
+//! four-leaf sliding door (docs/adr/0792 §1) takes Ray sayısı (V, 2 or 3) and, with four leaves, İki yana (İ). They are
+//! the command's input (CMD-07): `cad.openings.create` writes them, and its plan is the preview.
 
 use kentos_commands::{OpeningBuild, OpeningForm, OpeningOperation};
 
@@ -22,6 +23,8 @@ pub(super) struct Moves {
     pub both_sides: bool,
     pub track: bool,
     pub overlap: Option<f64>,
+    /// A three- or four-leaf sliding door's tracks (docs/adr/0792 §1); none: two.
+    pub tracks: Option<u8>,
 }
 
 /// The operations' names as the settings write them.
@@ -71,8 +74,11 @@ impl OpeningTool {
             OpeningOperation::Pocket => b.lip = self.moves.lip,
             OpeningOperation::Folding => b.both_sides = self.moves.both_sides.then_some(true),
             OpeningOperation::Slide => {
+                let n = self.leaves_now();
                 b.track = self.moves.track.then_some(true);
-                b.overlap = self.moves.overlap.filter(|_| self.leaves_now() == 2);
+                b.overlap = self.moves.overlap.filter(|_| n >= 2);
+                b.tracks = self.moves.tracks.filter(|_| n >= 3);
+                b.both_sides = (self.moves.both_sides && n == 4).then_some(true);
             }
             _ => {}
         }
@@ -150,7 +156,25 @@ impl OpeningTool {
                 choices(&on_off, if self.moves.both_sides { "on" } else { "off" }),
             )),
             OpeningOperation::Slide => {
-                if self.leaves_now() == 2 {
+                let n = self.leaves_now();
+                if n >= 3 {
+                    rows.push(Setting::choice(
+                        "V",
+                        "Ray sayısı",
+                        choices(
+                            &[("2", "2"), ("3", "3")],
+                            &self.moves.tracks.unwrap_or(2).to_string(),
+                        ),
+                    ));
+                }
+                if n == 4 {
+                    rows.push(Setting::choice(
+                        "İ",
+                        "İki yana açılır",
+                        choices(&on_off, if self.moves.both_sides { "on" } else { "off" }),
+                    ));
+                }
+                if n >= 2 {
                     rows.push(Setting::text(
                         "S",
                         "Kanat bindirmesi",
@@ -206,6 +230,13 @@ impl OpeningTool {
                 }
             },
             "İ" => self.moves.both_sides = value == "on",
+            "V" => match value.trim().parse::<u8>() {
+                Ok(n) if (2..=3).contains(&n) => self.moves.tracks = Some(n),
+                _ => {
+                    cx.say(Level::Warn, "Ray sayısı 2 ya da 3 olmalı.");
+                    return Some(false);
+                }
+            },
             "H" => self.moves.track = value == "on",
             "J" | "P" | "S" => {
                 let t = value.trim();
@@ -257,8 +288,13 @@ impl OpeningTool {
             }
             "P" if self.operation_now() == OpeningOperation::Pocket => self.ask = Some(Ask::Lip),
             "S" if self.operation_now() == OpeningOperation::Slide => self.ask = Some(Ask::Overlap),
-            "İ" if self.operation_now() == OpeningOperation::Folding => {
+            "İ" if self.operation_now() == OpeningOperation::Folding
+                || (self.operation_now() == OpeningOperation::Slide && self.leaves_now() == 4) =>
+            {
                 self.moves.both_sides = !self.moves.both_sides;
+            }
+            "V" if self.operation_now() == OpeningOperation::Slide && self.leaves_now() >= 3 => {
+                self.moves.tracks = Some(if self.moves.tracks == Some(3) { 2 } else { 3 });
             }
             "H" if self.operation_now() == OpeningOperation::Slide => {
                 self.moves.track = !self.moves.track
@@ -324,7 +360,14 @@ impl OpeningTool {
             ),
             OpeningOperation::Folding => p.toggle("İki yana", "İ", self.moves.both_sides),
             OpeningOperation::Slide => {
-                if self.leaves_now() == 2 {
+                let n = self.leaves_now();
+                if n >= 3 {
+                    p = p.option_with("Ray sayısı", "V", self.moves.tracks.unwrap_or(2).to_string());
+                }
+                if n == 4 {
+                    p = p.toggle("İki yana", "İ", self.moves.both_sides);
+                }
+                if n >= 2 {
                     p = p.option_with(
                         "Bindirme",
                         "S",

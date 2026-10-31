@@ -58,11 +58,13 @@ const LENGTHS: [OpeningTypeField; 14] = [
 /// The switches typed Evet (on) or left empty (off): a sliding door's track, a folding door's both sides.
 const SWITCHES: [OpeningTypeField; 2] = [OpeningTypeField::Track, OpeningTypeField::BothSides];
 /// The values typed as whole numbers or plain values.
-const COUNTS: [OpeningTypeField; 4] = [
+const COUNTS: [OpeningTypeField; 5] = [
     OpeningTypeField::Leaves,
     OpeningTypeField::Split,
     OpeningTypeField::Mullions,
     OpeningTypeField::Transoms,
+    // A three- or four-leaf sliding door's tracks (docs/adr/0792).
+    OpeningTypeField::Tracks,
 ];
 
 /// Whether a type of `form` moving as `op` takes `field` in this window (a special door's only its own, docs/adr/0777).
@@ -72,8 +74,11 @@ fn shown(form: OpeningForm, op: OpeningOperation, field: OpeningTypeField) -> bo
     match field {
         Drum => door && op == OpeningOperation::Revolving,
         Lip => door && op == OpeningOperation::Pocket,
-        BothSides => door && op == OpeningOperation::Folding,
-        Track | Overlap => matches!(form, OpeningForm::Door | OpeningForm::Window) && op == OpeningOperation::Slide,
+        BothSides => {
+            (door && op == OpeningOperation::Folding)
+                || (matches!(form, OpeningForm::Door | OpeningForm::Window) && op == OpeningOperation::Slide)
+        }
+        Track | Overlap | Tracks => matches!(form, OpeningForm::Door | OpeningForm::Window) && op == OpeningOperation::Slide,
         Sill | SillBoard | Mullions | Transoms => form == OpeningForm::Window,
         Threshold | LeafThickness | UseZone => form == OpeningForm::Door,
         Depth => false,
@@ -401,6 +406,7 @@ impl App {
             OpeningTypeField::Track,
             OpeningTypeField::BothSides,
             OpeningTypeField::Lip,
+            OpeningTypeField::Tracks,
         ] {
             if !shown(t.form, w.operation, k) && !t.value(k).is_null() && !unset.contains(&k) {
                 unset.push(k);

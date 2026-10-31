@@ -720,11 +720,15 @@ pub const SCHEMA_WITH_MATERIALS: u32 = 148;
 /// Schema 149 (docs/adr/0788): a project's design option sets
 /// (`settings.arch.options`) and a view recipe's chosen options (`options`); written only when the project has one.
 pub const SCHEMA_WITH_OPTIONS: u32 = 149;
+/// Schema 157 (docs/adr/0792): three- and four-leaf sliding doors and windows (an opening's or a type's `leaves` 3–4 on
+/// `slide`, `build.tracks`, `build.bothSides` on a four-leaf slide), a schedule's `tracks` and `panels`; written only
+/// when one is. Provisional: 150–156 are other slices' numbers, not read by this code base.
+pub const SCHEMA_WITH_MULTI_SLIDE: u32 = 157;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 148] = [
+pub const SCHEMAS: [u32; 149] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -873,6 +877,7 @@ pub const SCHEMAS: [u32; 148] = [
     SCHEMA_WITH_PROGRAM_SHARES,
     SCHEMA_WITH_MATERIALS,
     SCHEMA_WITH_OPTIONS,
+    SCHEMA_WITH_MULTI_SLIDE,
 ];
 
 /// The file a drawing is saved as.
