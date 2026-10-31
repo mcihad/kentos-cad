@@ -168,7 +168,7 @@ fn build(app: &mut App) -> Plan {
     Plan { walls: w, spaces: numbers.into_iter().zip(ids).collect() }
 }
 
-fn fit(app: &mut App, x0: f64, y0: f64, x1: f64, y1: f64) {
+pub(crate) fn fit(app: &mut App, x0: f64, y0: f64, x1: f64, y1: f64) {
     app.viewport.camera.fit(
         &kentos_render_wgpu::Bounds { min_x: E + x0, min_y: N + y0, max_x: E + x1, max_y: N + y1 },
         24.0,

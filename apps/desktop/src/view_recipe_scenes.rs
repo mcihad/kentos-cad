@@ -80,7 +80,7 @@ fn linked_sheet(app: &mut App, name: &str) {
     }
 }
 
-fn both_sheets(app: &mut App) {
+pub(crate) fn both_sheets(app: &mut App) {
     house(app);
     views(app);
     linked_sheet(app, "Zemin uygulama");

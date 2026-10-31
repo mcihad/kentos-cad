@@ -14532,6 +14532,193 @@
       ]
     },
     {
+      "id": "cad.navigator.read",
+      "version": 1,
+      "title": "Proje gezgini",
+      "summary": "Projenin katlarını, adlı görünümlerini, paftalarını ve çizelgelerini aralarındaki bağlarla listeler; çizimi ve kitabı değiştirmez. Her kat: kimliği, adı, kotu, üzerindeki nesnelerin sayısı (açıklık duvarının, etiket nesnesinin katında), tarifi o katı çizen görünümler ve o katı çizen pafta haritaları. Her görünüm: tarifinin katı, sürümü ve ölçeği, ona bağlı haritalar. Her pafta: serisi ve haritaları (bağlı görünüm, kayıp görünüm, kat, ölçek; cad.sheets.set'inkiler). Her çizelge: tablonun kimliği, neyi listelediği, başlığı ve listelediği nesne sayısı. unleveled katsız nesnelerin sayısıdır. uid verilince nesnenin nerede göründüğü: katı, onu çizen görünümler (alanının kutusu nesnenin kutusuyla kesişen, tarifi katını, evresini ve türünü dışarıda bırakmayan), onu çizen haritalar (cad.sheets.set'in shows'u), onu listeleyen çizelgeler ve onu adlandıran etiketler. Kutu kesişimidir: fazladan listelenebilir, eksik listelenmez.",
+      "aliases": [],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.navigator.read` v1 (“Proje gezgini”): the tree; with `uid`, where that object shows.\n\nRefusals, in this order: `entity_not_found` (at `uid`), `book_unreadable`.",
+        "properties": {
+          "uid": {
+            "description": "An object's persistent id; absent: no `object`.",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "title": "NavigatorRead",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.navigator.read` v1 (its plan's too).",
+        "properties": {
+          "levels": {
+            "description": "The project's levels, in their order.",
+            "items": {
+              "$ref": "#/$defs/NavLevel"
+            },
+            "type": "array"
+          },
+          "object": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/NavObject"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "With `uid`: where it shows."
+          },
+          "revision": {
+            "description": "The drawing's revision it was read at.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "schedules": {
+            "description": "The schedules, in the drawing's order.",
+            "items": {
+              "$ref": "#/$defs/NavSchedule"
+            },
+            "type": "array"
+          },
+          "sheets": {
+            "description": "The sheets, in the book's order.",
+            "items": {
+              "$ref": "#/$defs/NavSheet"
+            },
+            "type": "array"
+          },
+          "unleveled": {
+            "description": "The objects on no level.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "views": {
+            "description": "The named views, in their order.",
+            "items": {
+              "$ref": "#/$defs/NavView"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "levels",
+          "unleveled",
+          "views",
+          "sheets",
+          "schedules",
+          "revision"
+        ],
+        "title": "NavigatorReadResult",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.navigator.read` v1 (its plan's too).",
+        "properties": {
+          "levels": {
+            "description": "The project's levels, in their order.",
+            "items": {
+              "$ref": "#/$defs/NavLevel"
+            },
+            "type": "array"
+          },
+          "object": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/NavObject"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "With `uid`: where it shows."
+          },
+          "revision": {
+            "description": "The drawing's revision it was read at.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "schedules": {
+            "description": "The schedules, in the drawing's order.",
+            "items": {
+              "$ref": "#/$defs/NavSchedule"
+            },
+            "type": "array"
+          },
+          "sheets": {
+            "description": "The sheets, in the book's order.",
+            "items": {
+              "$ref": "#/$defs/NavSheet"
+            },
+            "type": "array"
+          },
+          "unleveled": {
+            "description": "The objects on no level.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "views": {
+            "description": "The named views, in their order.",
+            "items": {
+              "$ref": "#/$defs/NavView"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "levels",
+          "unleveled",
+          "views",
+          "sheets",
+          "schedules",
+          "revision"
+        ],
+        "title": "NavigatorReadResult",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "entity_not_found",
+          "book_unreadable"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Proje gezgini",
+          "input": {}
+        },
+        {
+          "title": "Bir kapının göründüğü yerler",
+          "input": {
+            "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e81"
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.xrefs.edit",
       "version": 1,
       "title": "Dış başvuru",
@@ -103109,6 +103296,273 @@
         "width",
         "height",
         "twist"
+      ],
+      "type": "object"
+    },
+    "NavLevel": {
+      "description": "A level of the project.",
+      "properties": {
+        "elevation": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "elevation"
+        },
+        "id": {
+          "type": "string"
+        },
+        "maps": {
+          "description": "The maps that draw it (their view's recipe's level, else their own), in the book's order.",
+          "items": {
+            "$ref": "#/$defs/NavMap"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        },
+        "objects": {
+          "description": "The objects on it (an opening on its wall's, a tag on its object's).",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "views": {
+          "description": "The named views whose recipe draws it, by stable id, in the views' order.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "elevation",
+        "objects",
+        "views",
+        "maps"
+      ],
+      "type": "object"
+    },
+    "NavMap": {
+      "description": "A sheet's map, by the sheet's and the item's ids.",
+      "properties": {
+        "item": {
+          "type": "string"
+        },
+        "sheet": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "sheet",
+        "item"
+      ],
+      "type": "object"
+    },
+    "NavObject": {
+      "description": "Where one object shows.",
+      "properties": {
+        "kind": {
+          "description": "Its kind (`wall`, `opening` …).",
+          "type": "string"
+        },
+        "level": {
+          "description": "Its level, by id; none: on no level.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "maps": {
+          "description": "The maps that draw it (`cad.sheets.set`'s `shows`), in the book's order.",
+          "items": {
+            "$ref": "#/$defs/NavMap"
+          },
+          "type": "array"
+        },
+        "schedules": {
+          "description": "The schedules that list it, by persistent id, in the drawing's order.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "tags": {
+          "description": "The tags that name it, by persistent id, in the drawing's order.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "uid": {
+          "type": "string"
+        },
+        "views": {
+          "description": "The named views that draw it (inside their box, on their recipe's level or every level, its category and phase\nnot left out), in the views' order.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "uid",
+        "kind",
+        "views",
+        "maps",
+        "schedules",
+        "tags"
+      ],
+      "type": "object"
+    },
+    "NavSchedule": {
+      "description": "A schedule (a table reading the model) of the project.",
+      "properties": {
+        "objects": {
+          "description": "The objects it lists.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "of": {
+          "$ref": "#/$defs/ScheduleOf",
+          "description": "What it lists (`openings`, `spaces`, `columns`, `walls`, `fixtures`)."
+        },
+        "uid": {
+          "description": "The table's persistent id.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "of",
+        "objects"
+      ],
+      "type": "object"
+    },
+    "NavSheet": {
+      "description": "A sheet of the project.",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "maps": {
+          "items": {
+            "$ref": "#/$defs/NavSheetMap"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        },
+        "series": {
+          "description": "`A-1` … or `Diğer` (`cad.sheets.set`'s rule).",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "series",
+        "maps"
+      ],
+      "type": "object"
+    },
+    "NavSheetMap": {
+      "description": "A map of a sheet.",
+      "properties": {
+        "item": {
+          "type": "string"
+        },
+        "level": {
+          "description": "The level it draws, by id; none: every level.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "missing": {
+          "description": "Its linked view is gone.",
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        },
+        "scale": {
+          "description": "Its scale (1:N); none for a map without a fixed view.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "scale"
+        },
+        "view": {
+          "description": "Its linked view, by stable id; none: its own camera.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "item",
+        "name"
+      ],
+      "type": "object"
+    },
+    "NavView": {
+      "description": "A named view of the project.",
+      "properties": {
+        "id": {
+          "description": "Its stable id (docs/adr/0345 §2).",
+          "type": "string"
+        },
+        "level": {
+          "description": "Its recipe's level, by id; none: every level.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "maps": {
+          "description": "The maps linked to it, in the book's order.",
+          "items": {
+            "$ref": "#/$defs/NavMap"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        },
+        "recipe": {
+          "description": "Its recipe's version; none without a recipe.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "version"
+        },
+        "scale": {
+          "description": "Its recipe's scale (1:N); none: the view's box fitted.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "scale"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "maps"
       ],
       "type": "object"
     },

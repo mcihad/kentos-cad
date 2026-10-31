@@ -316,6 +316,7 @@ pub use tags::{check_tags as tags_check, create as tags_create, edit as tags_edi
 pub use schedules::{create as schedules_create, edit as schedules_edit, query as schedules_query};
 pub mod viewmarks;
 pub mod spaces_finish;
+pub mod navigator;
 pub mod sheets_set;
 pub mod pdf_underlay;
 pub mod xrefs;
@@ -715,6 +716,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_SHEETS_SET,
         kentos_commands::CAD_SHEETS_SET_VERSION,
+    ),
+    // Proje gezgini ([`navigator`], docs/adr/0778).
+    (
+        kentos_commands::CAD_NAVIGATOR_READ,
+        kentos_commands::CAD_NAVIGATOR_READ_VERSION,
     ),
     // Dış başvurular ([`xrefs`], docs/adr/0348).
     (

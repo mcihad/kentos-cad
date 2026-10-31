@@ -261,8 +261,9 @@ aktarmadaki kayıp raporu doğrulansın.
 
 _Durum (31 Ekim 2026, [ADR 0774](../docs/adr/0774-architectural-view-recipes.md)):_ adlı görünüm üstünde sürümlü görünüş tarifi
 (kat, alt kat, evre, katman durumu, gizlenen türler, ölçek), bağlı paftanın tarifle çizmesi ve pafta setinin tarife göre etkisi
-yapıldı. Açık: proje gezgini, kalem seti ve duvar ayrıntısı, kırpma, görünüş şablonu, türetilmiş çizim, yayın/revizyon
-birlikteliği, 1:20 PDF incelemesi, gerçek pencerede elle kabul.
+yapıldı. Proje gezgini ([ADR 0778](../docs/adr/0778-project-navigator.md)): `cad.navigator.read` ve Gezgin paneli; katlar,
+görünümler, paftalar, çizelgeler ve seçili nesnenin göründüğü yerler. Açık: kalem seti ve duvar ayrıntısı, kırpma, görünüş
+şablonu, türetilmiş çizim, yayın/revizyon birlikteliği, 1:20 PDF incelemesi, gerçek pencerede elle kabul.
 
 **Kullanıcı sonucu:** Uygulama planı, mobilya planı ve tadilat planı aynı
 modelden tekrar kurulabilsin; pafta için her defasında görünürlük ayarlamak

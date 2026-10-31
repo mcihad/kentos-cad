@@ -238,6 +238,22 @@
    "tests": 0
   },
   {
+   "id": "arch.navigator",
+   "kind": "command",
+   "title": "Gezgin",
+   "level": "query",
+   "via": [
+    "cad.navigator.read"
+   ],
+   "operation": null,
+   "python": "kentos.cad.navigator.read",
+   "mcp": "cad.navigator.read",
+   "note": "Gezgin paneli cad.navigator.read'in cevabını gösterir; tek seçili nesnenin yerleri onun uid'iyle (ADR 0778).",
+   "scope": "none",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "arch.openingDetach",
    "kind": "command",
    "title": "Tipten ayır",

@@ -38,13 +38,21 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   bölümü; DXF raporu “Oda modülü örneği”. Tekrarlayan kat, daire modülü, tasarım seçeneği, tanımdan sonra üye ekleme açık.
   43 + 22 ortak durum (`module_cases.py`).
 
+- **Proje gezgini (31 Ekim 2026; [ADR 0778](docs/adr/0778-project-navigator.md), ADV-06 [~]).**
+  Salt okunur `cad.navigator.read`: katlar (nesne sayısı, tarifi o katı çizen görünümler, o katı çizen haritalar), `unleveled`,
+  adlı görünümler (tarifin katı, sürümü, ölçeği, bağlı haritalar), paftalar (`cad.sheets.set`'in çerçeveleri), çizelgeler
+  (üye sayısı); `uid` ile nesnenin göründüğü yerler: katı, onu çizen görünümler (alanın dönük kutusu ve tarif), haritalar
+  (`shows`), onu listeleyen çizelgeler, etiketleri. Kural tek yerde (`sheets_set::recipe_draws`). Masaüstünde Gezgin paneli
+  (`Panel::Navigator`, kentos-cad ve Mimari; `arch.navigator`): satır kata etkin kat, görünüme göster, paftaya aç, çizelgeye
+  seç ve göster; seçili nesne bölümü üstte. Şema değişmez. Elle gerçek pencerede denenmedi.
+
 - **Görünüş tarifi (31 Ekim 2026; [ADR 0774](docs/adr/0774-architectural-view-recipes.md), ADV-06 [~]).**
   Adlı görünümün `recipe`'i (`.kcad` şema 141 opt-in): kat (alt kat soluk), evre, katman durumu, gizlenen türler (ölçü, etiket,
   yazı, tarama, blok, mahal, aks, görünüm işareti) ve ölçek; sürümlü, `cad.views.edit`'in `recipe`'i yazar ya da kaldırır
   (`invalid_recipe`, `level_not_found`, `state_not_found`). Görünüme bağlı paftanın haritası (ADR 0599) tarifle çizer: ölçeği,
   katı, katman durumu, evresi ve gizlenenleri (ekran, başsız kitap, PDF; `linked_recipe`, `map_phasing_of`); model ve ekranın kat
   görünümü değişmez. `cad.sheets.set`'in çerçevesi `view`, `missing`, `level`, `recipe` söyler, `shows` haritanın çizdiğini sayar.
-  Görünümler penceresinde Görünüş tarifi ve beş hazır tarif. Proje gezgini, kalem seti, türetilmiş çizim açık. 25 + 22 ortak durum
+  Görünümler penceresinde Görünüş tarifi ve beş hazır tarif. Proje gezgini ADR 0778; kalem seti, türetilmiş çizim açık. 25 + 22 ortak durum
   (`view_recipe_cases.py`, `view_recipe_sheet_cases.py`).
 
 - **Bina programı: bağımsız bölümler, tasarım hedefi ve geometriyi izleyen denetimler (31 Ekim 2026; [ADR 0773](docs/adr/0773-building-program-units-and-design-brief.md), ADV-04 [~]).**

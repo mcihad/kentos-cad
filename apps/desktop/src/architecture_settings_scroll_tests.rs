@@ -73,6 +73,7 @@ fn a_new_tool_reveals_defaults_without_resetting_scroll_on_setting_edits() {
         Panel::Blocks,
         Panel::Templates,
         Panel::Sources,
+        Panel::Navigator,
     ] {
         app.docks.close(panel);
     }

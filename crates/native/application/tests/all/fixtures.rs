@@ -111,7 +111,7 @@ use kentos_native_application::{
 };
 use kentos_native_application::{
     assets_check, images_edit, inserts_clip, rasters_georef, rasters_mosaic, rasters_reproject,
-    sheets_set, spaces_finish, templates_apply, viewmarks_create, viewmarks_edit,
+    sheets_set, navigator, spaces_finish, templates_apply, viewmarks_create, viewmarks_edit,
     viewmarks_references, xrefs_edit, xrefs_list,
 };
 use kentos_native_application::{
@@ -1356,6 +1356,12 @@ impl Input for kentos_commands::RastersGeoref {
 }
 
 impl Input for kentos_commands::SheetsSet {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::NavigatorRead {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
@@ -4377,6 +4383,9 @@ fn run_op(
         }
         kentos_commands::CAD_SHEETS_SET => {
             run!(sheets_set, kentos_commands::SheetsSet)
+        }
+        kentos_commands::CAD_NAVIGATOR_READ => {
+            run!(navigator, kentos_commands::NavigatorRead)
         }
         kentos_commands::CAD_XREFS_EDIT => {
             run!(xrefs_edit, kentos_commands::XrefsEdit)

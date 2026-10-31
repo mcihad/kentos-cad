@@ -118,6 +118,8 @@ impl App {
                     (Panel::Templates, _) => pane.actions(self.templates_panel_actions()),
                     // Kaynaklar's list scrolls itself (sources/view.rs).
                     (Panel::Sources, _) => pane,
+                    // Gezgin's sections scroll with the pane (navigator.rs).
+                    (Panel::Navigator, _) => pane.scrollable(),
                     (Panel::Properties, Some(doc)) => match self.properties_meta(doc) {
                         Some(meta) => pane.meta(label::caption(meta)),
                         None => pane,
@@ -1025,6 +1027,8 @@ impl App {
             Panel::Templates => self.templates_panel_view(),
             // Kaynaklar: folders and KentOS projects to add layers from (sources/, docs/adr/0199 §7).
             Panel::Sources => self.sources_view(),
+            // Gezgin: the project's tree (navigator.rs, docs/adr/0778).
+            Panel::Navigator => self.navigator_view(),
             // Öznitelikler, editable as the web's (properties/, docs/adr/0063).
             Panel::Properties => self.architecture_properties_view(doc),
         }

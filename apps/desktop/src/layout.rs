@@ -231,6 +231,7 @@ fn panel_of_key(key: &str) -> Panel {
         "blocks" => Panel::Blocks,
         "templates" => Panel::Templates,
         "sources" => Panel::Sources,
+        "navigator" => Panel::Navigator,
         _ => Panel::Layers,
     }
 }
@@ -387,6 +388,7 @@ impl App {
             Some(Panel::Blocks) => "blocks",
             Some(Panel::Templates) => "templates",
             Some(Panel::Sources) => "sources",
+            Some(Panel::Navigator) => "navigator",
             _ => "layers",
         };
         if !(others_panel && front == "layers") {

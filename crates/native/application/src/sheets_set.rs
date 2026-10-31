@@ -58,26 +58,39 @@ fn drawn_by<'a>(
         .as_ref()
         .and_then(|r| r.level.as_ref().map(|l| l.id.clone()))
         .or_else(|| map.as_ref().and_then(|m| m.level.as_ref().map(|l| l.id.clone())));
+    let phase = recipe.as_ref().and_then(|r| r.phase);
+    let hidden = recipe.map(|r| r.hidden).unwrap_or_default();
+    let draws = recipe_draws(doc, level, phase, hidden);
+    move |uid: &String| {
+        let Some(slot) = kentos_domain::Uuid::parse_str(uid).ok().and_then(|u| doc.slot_of(u)) else {
+            return true;
+        };
+        doc.get(slot).is_none_or(&draws)
+    }
+}
+
+/// Whether a view drawing `level` (none: every level), `phase` and leaving out `hidden` draws an object (docs/adr/0774
+/// §4): on that level or on none or on an unknown one (Kat görünümü's rule, docs/adr/0715), its phase not hidden, its
+/// category not left out.
+pub(crate) fn recipe_draws<'a>(
+    doc: &'a Document,
+    level: Option<String>,
+    phase: Option<kentos_commands::PhaseView>,
+    hidden: Vec<kentos_commands::ViewCategory>,
+) -> impl Fn(&Entity) -> bool + 'a {
     let known = |id: &str| {
         doc.settings()
             .arch
             .as_ref()
             .is_some_and(|a| a.levels.iter().any(|l| l.id == id))
     };
-    let phase = recipe.as_ref().and_then(|r| r.phase);
-    let hidden = recipe.map(|r| r.hidden).unwrap_or_default();
-    move |uid: &String| {
-        let Some(slot) = kentos_domain::Uuid::parse_str(uid).ok().and_then(|u| doc.slot_of(u)) else {
-            return true;
-        };
-        let Some(e) = doc.get(slot) else { return true };
+    move |e: &Entity| {
         let by_uid = |u: &str| {
             kentos_domain::Uuid::parse_str(u)
                 .ok()
                 .and_then(|u| doc.slot_of(u))
                 .and_then(|s| doc.get(s))
         };
-        // Kat görünümü's rule (docs/adr/0715): an object of another known level is not this map's.
         let on_level = match (&level, e.level(by_uid)) {
             (Some(map), Some(own)) => own == map.as_str() || !known(own),
             _ => true,

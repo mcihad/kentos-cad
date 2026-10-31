@@ -108,6 +108,7 @@ mod blocks;
 mod blocks_files;
 mod blocks_library;
 mod blocks_panel;
+mod navigator;
 mod bottom;
 mod calc;
 mod catalog;
@@ -546,6 +547,8 @@ mod building_parts_scenes;
 mod program_scenes;
 #[cfg(test)]
 mod view_recipe_scenes;
+#[cfg(test)]
+mod navigator_scenes;
 #[cfg(test)]
 mod space_scenes;
 #[cfg(test)]

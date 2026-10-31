@@ -23,7 +23,7 @@ pub const COMMANDS: [&str; 5] = [
 
 /// The side panels F4 hides and shows together (the web's right panel): the program's own of them
 /// (module_surfaces.rs). Kaynaklar shares Katmanlar' slot and goes with them too.
-const SIDE_PANELS: [Panel; 6] = Panel::ALL;
+const SIDE_PANELS: [Panel; 7] = Panel::ALL;
 
 impl App {
     pub(crate) fn view_command(&mut self, id: &'static str) -> Task<Message> {

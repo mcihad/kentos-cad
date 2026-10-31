@@ -52,17 +52,20 @@ pub enum Panel {
     Templates,
     /// Kaynaklar: folders and KentOS projects to add layers from, a tab beside Şablonlar (sources/, docs/adr/0199 §7).
     Sources,
+    /// Gezgin: levels, views, sheets and schedules, and where the selected object shows (navigator.rs, docs/adr/0778).
+    Navigator,
     Properties,
 }
 
 impl Panel {
     /// Every panel, in the dock's order at start (a module's program docks its own, module_surfaces.rs).
-    pub(crate) const ALL: [Panel; 6] = [
+    pub(crate) const ALL: [Panel; 7] = [
         Panel::Layers,
         Panel::Processing,
         Panel::Blocks,
         Panel::Templates,
         Panel::Sources,
+        Panel::Navigator,
         Panel::Properties,
     ];
 
@@ -73,6 +76,7 @@ impl Panel {
             Panel::Blocks => "Bloklar",
             Panel::Templates => "Şablonlar",
             Panel::Sources => "Kaynaklar",
+            Panel::Navigator => "Gezgin",
             Panel::Properties => "Öznitelikler",
         }
     }
@@ -84,6 +88,7 @@ impl Panel {
             Panel::Blocks => crate::icons::from_web(Some("blocks")),
             Panel::Templates => crate::icons::from_web(Some("templates")),
             Panel::Sources => crate::icons::from_web(Some("dataSources")),
+            Panel::Navigator => crate::icons::from_web(Some("navigator")),
             Panel::Properties => Icon::Properties,
         }
     }
@@ -98,6 +103,7 @@ impl Panel {
             Panel::Blocks,
             Panel::Templates,
             Panel::Sources,
+            Panel::Navigator,
         ] {
             if crate::module_surfaces::shows_panel_in(program, panel) {
                 docks.dock(panel, Side::Right);
@@ -532,6 +538,7 @@ pub enum Message {
     Blocks(crate::blocks::Event),
     /// Bloklar panel (blocks_panel.rs).
     BlocksPanel(crate::blocks_panel::Event),
+    Navigator(crate::navigator::Event),
     /// Şablonlar panel (templates_panel.rs).
     TemplatesPanel(crate::templates_panel::Event),
     /// Kaynaklar panel (sources/, docs/adr/0199 §7).
@@ -834,6 +841,7 @@ pub struct App {
     pub(crate) blocks: crate::blocks::Blocks,
     /// The Bloklar panel (blocks_panel.rs).
     pub(crate) blocks_panel: crate::blocks_panel::PanelState,
+    pub(crate) navigator: crate::navigator::PanelState,
     /// The Şablonlar panel (templates_panel.rs), and the templates drawn with
     /// in this session, the newest first (templates.rs).
     pub(crate) templates_panel: crate::templates_panel::PanelState,
@@ -1368,6 +1376,7 @@ impl App {
             paragraph_focus: false,
             blocks: crate::blocks::Blocks::default(),
             blocks_panel: crate::blocks_panel::PanelState::default(),
+            navigator: crate::navigator::PanelState::default(),
             templates_panel: crate::templates_panel::PanelState::default(),
             sources: crate::sources::SourcesPanel::default(),
             db_editor: None,
@@ -2155,6 +2164,7 @@ impl App {
             Message::ToolSetting(event) => return self.tool_setting(event),
             Message::Blocks(event) => self.blocks_event(event),
             Message::BlocksPanel(event) => return self.blocks_panel_event(event),
+            Message::Navigator(event) => return self.navigator_event(event),
             Message::TemplatesPanel(event) => return self.templates_panel_event(event),
             Message::Sources(event) => return self.sources_event(event),
             Message::Db(event) => return self.db_event(event),
@@ -2925,6 +2935,7 @@ impl App {
             "arch.tagsCheck" => self.open_tags_check(),
             "arch.viewRefs" => self.open_view_refs(),
             "arch.sheetSet" => self.open_sheet_set(),
+            "arch.navigator" => return self.show_navigator(),
             "xref.manager" => self.open_xrefs(),
             "xref.attach" => return self.start_xref_attach(),
             "arch.template" => self.apply_arch_template(),

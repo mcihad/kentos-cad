@@ -3042,6 +3042,38 @@ pub fn catalog() -> CommandCatalog {
             ],
         },
         CommandDescriptor {
+            id: crate::CAD_NAVIGATOR_READ.into(),
+            version: crate::CAD_NAVIGATOR_READ_VERSION,
+            title: "Proje gezgini".into(),
+            summary: "Projenin katlarını, adlı görünümlerini, paftalarını ve çizelgelerini aralarındaki bağlarla listeler; çizimi ve kitabı değiştirmez. Her kat: kimliği, adı, kotu, üzerindeki nesnelerin sayısı (açıklık duvarının, etiket nesnesinin katında), tarifi o katı çizen görünümler ve o katı çizen pafta haritaları. Her görünüm: tarifinin katı, sürümü ve ölçeği, ona bağlı haritalar. Her pafta: serisi ve haritaları (bağlı görünüm, kayıp görünüm, kat, ölçek; cad.sheets.set'inkiler). Her çizelge: tablonun kimliği, neyi listelediği, başlığı ve listelediği nesne sayısı. unleveled katsız nesnelerin sayısıdır. \
+                      uid verilince nesnenin nerede göründüğü: katı, onu çizen görünümler (alanının kutusu nesnenin kutusuyla kesişen, tarifi katını, evresini ve türünü dışarıda bırakmayan), onu çizen haritalar (cad.sheets.set'in shows'u), onu listeleyen çizelgeler ve onu adlandıran etiketler. Kutu kesişimidir: fazladan listelenebilir, eksik listelenmez."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::NavigatorRead>(),
+            output: schema::<crate::NavigatorReadResult>(),
+            plan: Some(schema::<crate::NavigatorReadResult>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Proje gezgini".into(),
+                    input: json!({}),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Bir kapının göründüğü yerler".into(),
+                    input: json!({ "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e81" }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
             id: crate::CAD_XREFS_EDIT.into(),
             version: crate::CAD_XREFS_EDIT_VERSION,
             title: "Dış başvuru".into(),
@@ -11531,6 +11563,9 @@ mod tests {
                     }
                     crate::CAD_SHEETS_SET => {
                         serde_json::from_value::<crate::SheetsSet>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_NAVIGATOR_READ => {
+                        serde_json::from_value::<crate::NavigatorRead>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_XREFS_EDIT => {
                         serde_json::from_value::<crate::XrefsEdit>(e.input.clone()).map(|_| ())

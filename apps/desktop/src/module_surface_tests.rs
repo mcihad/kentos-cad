@@ -249,7 +249,7 @@ fn each_program_docks_its_own_panels() {
     use Panel::*;
     let expected: [(Option<Module>, &[Panel]); 4] = [
         (None, &Panel::ALL),
-        (MIMARI, &[Layers, Blocks, Templates, Properties]),
+        (MIMARI, &[Layers, Blocks, Templates, Navigator, Properties]),
         (
             HARITA,
             &[Layers, Processing, Blocks, Templates, Sources, Properties],
@@ -874,6 +874,7 @@ fn a_program_offers_no_opener_of_what_it_does_not_show() {
         ("block.panel", Panel::Blocks),
         ("data.sources", Panel::Sources),
         ("template.panel", Panel::Templates),
+        ("arch.navigator", Panel::Navigator),
     ];
     let mut wrong = Vec::new();
     for program in [MIMARI, HARITA, GIS] {

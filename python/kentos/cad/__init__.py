@@ -31,7 +31,7 @@ from .protocol import *  # noqa: F403
 from .types import *  # noqa: F403
 from .versions import *  # noqa: F403
 
-from . import addresses, annotations, arc, arch, areas, arrays, assets, attachments, blocks, casework, changeset, circle, columns, constraints, constructions, crs, curves, datasets, dimensions, dimensionsets, domains, donut, drawing, entities, fields, file, fonts, forms, gis, grids, hatches, hatchpatterns, images, inserts, joins, labels, layers, leaders, legends, levels, library, line, linearref, linetypes, meshes, modules, network, north, nurbs, objects, openings, openingtypes, parameters, parcels, point, pointclouds, points, polygon, polyline, processing, profiles, program, project, ramps, rasters, records, rectangle, relations, revcloud, revisions, roads, scenarios, schedules, schema, sector, sensors, settings, shapes, sheets, slabs, snap, sources, spaces, stac, stairs, standards, styles, subnetworks, survey, tables, tags, templates, texts, time, topology, ucs, units, viewmarks, views, walls, xrefs  # noqa: E402  isort: skip
+from . import addresses, annotations, arc, arch, areas, arrays, assets, attachments, blocks, casework, changeset, circle, columns, constraints, constructions, crs, curves, datasets, dimensions, dimensionsets, domains, donut, drawing, entities, fields, file, fonts, forms, gis, grids, hatches, hatchpatterns, images, inserts, joins, labels, layers, leaders, legends, levels, library, line, linearref, linetypes, meshes, modules, navigator, network, north, nurbs, objects, openings, openingtypes, parameters, parcels, point, pointclouds, points, polygon, polyline, processing, profiles, program, project, ramps, rasters, records, rectangle, relations, revcloud, revisions, roads, scenarios, schedules, schema, sector, sensors, settings, shapes, sheets, slabs, snap, sources, spaces, stac, stairs, standards, styles, subnetworks, survey, tables, tags, templates, texts, time, topology, ucs, units, viewmarks, views, walls, xrefs  # noqa: E402  isort: skip
 
 __all__ = [
     "AccessSource",
@@ -1519,7 +1519,16 @@ __all__ = [
     "NamedUcs",
     "NamedUcsTo",
     "NamedView",
+    "NavLevel",
+    "NavMap",
+    "NavObject",
+    "NavSchedule",
+    "NavSheet",
+    "NavSheetMap",
+    "NavView",
     "NavigateViewportPaperOp",
+    "NavigatorRead",
+    "NavigatorReadResult",
     "NeedsInput",
     "NetworkClosures",
     "NetworkConnect",
@@ -3050,6 +3059,7 @@ __all__ = [
     "linetypes",
     "meshes",
     "modules",
+    "navigator",
     "network",
     "north",
     "nurbs",

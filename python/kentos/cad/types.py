@@ -39333,6 +39333,318 @@ class NamedView(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class NavLevel(_Model):
+    """A level of the project.
+    Attributes:
+        elevation: Unit: elevation.
+        objects: The objects on it (an opening on its wall's, a tag on its object's). Unit: count.
+        views: The named views whose recipe draws it, by stable id, in the views' order.
+        maps: The maps that draw it (their view's recipe's level, else their own), in the book's order.
+    """
+    id: str
+    name: str
+    elevation: float
+    objects: int
+    views: list[str]
+    maps: list[NavMap]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["elevation"] = float(self.elevation)
+        out["objects"] = self.objects
+        out["views"] = list(self.views)
+        out["maps"] = [e0.to_json() for e0 in self.maps]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NavLevel:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            elevation=float(data["elevation"]),
+            objects=data["objects"],
+            views=list(data["views"]),
+            maps=[NavMap.from_json(e0) for e0 in data["maps"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NavMap(_Model):
+    """A sheet's map, by the sheet's and the item's ids."""
+    sheet: str
+    item: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["sheet"] = self.sheet
+        out["item"] = self.item
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NavMap:
+        return cls(
+            sheet=data["sheet"],
+            item=data["item"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NavObject(_Model):
+    """Where one object shows.
+    Attributes:
+        kind: Its kind (`wall`, `opening` …).
+        views: The named views that draw it (inside their box, on their recipe's level or every level, its category and phase
+            not left out), in the views' order.
+        maps: The maps that draw it (`cad.sheets.set`'s `shows`), in the book's order.
+        schedules: The schedules that list it, by persistent id, in the drawing's order.
+        tags: The tags that name it, by persistent id, in the drawing's order.
+        level: Its level, by id; none: on no level.
+    """
+    uid: str
+    kind: str
+    views: list[str]
+    maps: list[NavMap]
+    schedules: list[str]
+    tags: list[str]
+    level: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["kind"] = self.kind
+        out["views"] = list(self.views)
+        out["maps"] = [e0.to_json() for e0 in self.maps]
+        out["schedules"] = list(self.schedules)
+        out["tags"] = list(self.tags)
+        if self.level is not UNSET:
+            out["level"] = self.level
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NavObject:
+        return cls(
+            uid=data["uid"],
+            kind=data["kind"],
+            views=list(data["views"]),
+            maps=[NavMap.from_json(e0) for e0 in data["maps"]],
+            schedules=list(data["schedules"]),
+            tags=list(data["tags"]),
+            level=data.get("level", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NavSchedule(_Model):
+    """A schedule (a table reading the model) of the project.
+    Attributes:
+        uid: The table's persistent id.
+        of: What it lists (`openings`, `spaces`, `columns`, `walls`, `fixtures`).
+        objects: The objects it lists. Unit: count.
+    """
+    uid: str
+    of: ScheduleOf | ScheduleOfName
+    objects: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["of"] = _enum_out(self.of)
+        out["objects"] = self.objects
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NavSchedule:
+        return cls(
+            uid=data["uid"],
+            of=_enum_in(ScheduleOf, data["of"]),
+            objects=data["objects"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NavSheet(_Model):
+    """A sheet of the project.
+    Attributes:
+        series: `A-1` … or `Diğer` (`cad.sheets.set`'s rule).
+    """
+    id: str
+    name: str
+    series: str
+    maps: list[NavSheetMap]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["series"] = self.series
+        out["maps"] = [e0.to_json() for e0 in self.maps]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NavSheet:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            series=data["series"],
+            maps=[NavSheetMap.from_json(e0) for e0 in data["maps"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NavSheetMap(_Model):
+    """A map of a sheet.
+    Attributes:
+        level: The level it draws, by id; none: every level.
+        missing: Its linked view is gone.
+        scale: Its scale (1:N); none for a map without a fixed view. Unit: scale.
+        view: Its linked view, by stable id; none: its own camera.
+    """
+    item: str
+    name: str
+    level: str | None | Unset = UNSET
+    missing: bool | Unset = UNSET
+    scale: float | None | Unset = UNSET
+    view: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["item"] = self.item
+        out["name"] = self.name
+        if self.level is not UNSET:
+            out["level"] = self.level
+        if self.missing is not UNSET:
+            out["missing"] = self.missing
+        if self.scale is not UNSET:
+            out["scale"] = None if self.scale is None else float(self.scale)
+        if self.view is not UNSET:
+            out["view"] = self.view
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NavSheetMap:
+        return cls(
+            item=data["item"],
+            name=data["name"],
+            level=data.get("level", UNSET),
+            missing=data.get("missing", UNSET),
+            scale=UNSET if "scale" not in data else None if data["scale"] is None else float(data["scale"]),
+            view=data.get("view", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NavView(_Model):
+    """A named view of the project.
+    Attributes:
+        id: Its stable id (docs/adr/0345 §2).
+        maps: The maps linked to it, in the book's order.
+        level: Its recipe's level, by id; none: every level.
+        recipe: Its recipe's version; none without a recipe. Unit: version.
+        scale: Its recipe's scale (1:N); none: the view's box fitted. Unit: scale.
+    """
+    id: str
+    name: str
+    maps: list[NavMap]
+    level: str | None | Unset = UNSET
+    recipe: int | None | Unset = UNSET
+    scale: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["maps"] = [e0.to_json() for e0 in self.maps]
+        if self.level is not UNSET:
+            out["level"] = self.level
+        if self.recipe is not UNSET:
+            out["recipe"] = self.recipe
+        if self.scale is not UNSET:
+            out["scale"] = self.scale
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NavView:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            maps=[NavMap.from_json(e0) for e0 in data["maps"]],
+            level=data.get("level", UNSET),
+            recipe=data.get("recipe", UNSET),
+            scale=data.get("scale", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NavigatorRead(_Model):
+    """Input of `cad.navigator.read` v1 (“Proje gezgini”): the tree; with `uid`, where that object shows.
+
+    Refusals, in this order: `entity_not_found` (at `uid`), `book_unreadable`.
+    Attributes:
+        uid: An object's persistent id; absent: no `object`.
+    """
+    uid: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.uid is not UNSET:
+            out["uid"] = self.uid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NavigatorRead:
+        return cls(
+            uid=data.get("uid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NavigatorReadResult(_Model):
+    """Output of `cad.navigator.read` v1 (its plan's too).
+    Attributes:
+        levels: The project's levels, in their order.
+        unleveled: The objects on no level. Unit: count.
+        views: The named views, in their order.
+        sheets: The sheets, in the book's order.
+        schedules: The schedules, in the drawing's order.
+        revision: The drawing's revision it was read at.
+        object: With `uid`: where it shows.
+    """
+    levels: list[NavLevel]
+    unleveled: int
+    views: list[NavView]
+    sheets: list[NavSheet]
+    schedules: list[NavSchedule]
+    revision: str
+    object: NavObject | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["levels"] = [e0.to_json() for e0 in self.levels]
+        out["unleveled"] = self.unleveled
+        out["views"] = [e0.to_json() for e0 in self.views]
+        out["sheets"] = [e0.to_json() for e0 in self.sheets]
+        out["schedules"] = [e0.to_json() for e0 in self.schedules]
+        out["revision"] = self.revision
+        if self.object is not UNSET:
+            out["object"] = None if self.object is None else self.object.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NavigatorReadResult:
+        return cls(
+            levels=[NavLevel.from_json(e0) for e0 in data["levels"]],
+            unleveled=data["unleveled"],
+            views=[NavView.from_json(e0) for e0 in data["views"]],
+            sheets=[NavSheet.from_json(e0) for e0 in data["sheets"]],
+            schedules=[NavSchedule.from_json(e0) for e0 in data["schedules"]],
+            revision=data["revision"],
+            object=UNSET if "object" not in data else None if data["object"] is None else NavObject.from_json(data["object"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class NetworkClosures(_Model):
     """The edge fields of a closure's first and last day (docs/adr/0567 §2): `YYYY-MM-DD`, both days in; an empty first
     day closes from always, an empty last day until ever. Its weekdays and hours (docs/adr/0568): an edge closed on
@@ -87762,7 +88074,16 @@ __all__ = [
     "NamedUcs",
     "NamedUcsTo",
     "NamedView",
+    "NavLevel",
+    "NavMap",
+    "NavObject",
+    "NavSchedule",
+    "NavSheet",
+    "NavSheetMap",
+    "NavView",
     "NavigateViewportPaperOp",
+    "NavigatorRead",
+    "NavigatorReadResult",
     "NetworkClosures",
     "NetworkConnect",
     "NetworkConnectName",

@@ -2983,6 +2983,13 @@ const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: none,
     },
+    // Proje gezgini (docs/adr/0778).
+    Entry {
+        id: "cad.navigator.read",
+        refusals: &[&["entity_not_found", "book_unreadable"]],
+        warnings: &[],
+        targets: none,
+    },
     // Work templates (docs/adr/0346 §1).
     Entry {
         id: "cad.templates.apply",

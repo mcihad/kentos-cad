@@ -69,6 +69,7 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - ADR 0773 (ADV-04): web'de bina programı (`arch.program`, `.kcad` şema 140, mahalin `unit`'i), Bina programı penceresi ve
   Denetle (iş, Durdur), Öznitelikler'in Bölüm/Tasarım hedefi satırları, etiketin `{unit}`/`{target}`/`{targetDiff}`'i, çizelgenin
   program alanları, Mahali böl ve Mahalleri birleştir kararları, denetimin `program` grubu.
+- ADR 0778 (ADV-06): web'de `cad.navigator.read`'in işleyicisi ve Gezgin paneli (katlar, görünümler, paftalar, çizelgeler, seçili nesnenin yerleri; satırların eylemleri).
 - ADR 0774 (ADV-06): web'de adlı görünümün `recipe`'i (`.kcad` şema 141, `FORMATS_VERSION` 101), `cad.views.edit`'in `recipe`
   işlemi, Görünümler penceresinin Görünüş tarifi bölümü, bağlı paftanın haritasının tarifle çizilmesi (ölçek, kat, katman durumu,
   evre, gizlenen türler) ve `cad.sheets.set`'in yeni alanları.

@@ -181,6 +181,7 @@ const ARCHITECTURE: Surfaces = Surfaces {
         Panel::Layers,
         Panel::Blocks,
         Panel::Templates,
+        Panel::Navigator,
         Panel::Properties,
     ],
     cells: &[Cell::Level],
