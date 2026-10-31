@@ -182,6 +182,15 @@ pub struct ViewRecipe {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
     pub scale: Option<u32>,
+    /// The walls' detail the map draws (docs/adr/0781 §1; Revit's Detail Level, Archicad's Partial Structure Display);
+    /// none: its scale's, or the project's when it fixes one.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub detail: Option<crate::arch::WallDetail>,
+    /// The map draws only the view's area, its frame's paper outside it empty (docs/adr/0781 §2; Revit's Crop Region).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub crop: bool,
 }
 
 fn is_zero(v: &u32) -> bool {
@@ -196,6 +205,8 @@ impl ViewRecipe {
             && self.layer_state.is_none()
             && self.hidden.is_empty()
             && self.scale.is_none()
+            && self.detail.is_none()
+            && !self.crop
     }
 }
 
@@ -206,7 +217,7 @@ pub fn recipe_problem(r: &ViewRecipe) -> Option<String> {
         return Some("Görünüş tarifinin sürümü en az 1 olur.".into());
     }
     if r.is_empty() {
-        return Some("Görünüş tarifi boş: kat, evre, katman durumu, gizli tür ya da ölçekten birini verin.".into());
+        return Some("Görünüş tarifi boş: kat, evre, katman durumu, gizli tür, ölçek, duvar ayrıntısı ya da kırpmadan birini verin.".into());
     }
     if let Some(l) = &r.level
         && (l.id.trim().is_empty() || l.id.chars().count() > MOST_VIEW_NAME || l.id.chars().any(char::is_control))

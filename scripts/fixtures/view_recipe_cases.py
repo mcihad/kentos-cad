@@ -9,7 +9,8 @@ Writes fixtures/commands/v1/cad.views.edit.recipe.json. The rule is written here
 
 - `recipe` sets the view's recipe (its version the old one's plus one, 1 for a first; the input's version is ignored) or,
   absent, takes it away; the same recipe again changes nothing (its version stays);
-- a recipe holds: not empty (a level, phase, layer state, category or scale), a level id and a state name not blank, a
+- a recipe holds: not empty (a level, phase, layer state, category, scale, wall detail (docs/adr/0781) or crop; `crop`
+  false is no crop), a level id and a state name not blank, a
   category once, a scale in 1–100 000 (`invalid_recipe`, path `edit.recipe`, before the name is checked); then the view
   must exist (`unknown_view`), its level be one of the project's (`level_not_found`, `edit.recipe.level.id`) and its
   state one of the project's layer states by name (`state_not_found`, `edit.recipe.layerState`);
@@ -70,8 +71,8 @@ def failed(code, message, path):
 
 def problem(r):
     """The recipe's own rule (no project): the words of the first thing wrong, or none."""
-    if not any(k in r for k in ("level", "phase", "layerState", "scale")) and not r.get("hidden"):
-        return "Görünüş tarifi boş: kat, evre, katman durumu, gizli tür ya da ölçekten birini verin."
+    if not any(k in r for k in ("level", "phase", "layerState", "scale", "detail")) and not r.get("hidden") and not r.get("crop"):
+        return "Görünüş tarifi boş: kat, evre, katman durumu, gizli tür, ölçek, duvar ayrıntısı ya da kırpmadan birini verin."
     lvl = r.get("level")
     if lvl is not None and not lvl["id"].strip():
         return "Görünüş tarifinin katı bir kat kimliği olmalı."
@@ -92,8 +93,10 @@ def problem(r):
 def stored(r, version):
     """The recipe as the view keeps it: its version first, no field at its default."""
     out = {"version": version}
-    for k in ("level", "phase", "layerState", "hidden", "scale"):
+    for k in ("level", "phase", "layerState", "hidden", "scale", "detail", "crop"):
         if k == "hidden" and not r.get("hidden"):
+            continue
+        if k == "crop" and not r.get("crop"):
             continue
         if k == "level" and "level" in r:
             out["level"] = {"id": r["level"]["id"], **({"below": True} if r["level"].get("below") else {})}
@@ -237,13 +240,24 @@ case("Projede olmayan kat reddedilir", [save("A"), recipe("A", {"level": {"id": 
 case("Projede olmayan katman durumu reddedilir", [save("A"), recipe("A", {"layerState": "Yok"})])
 case("Olmayan görünüme tarif reddedilir", [recipe("Yok", APP)])
 case("Bozuk tarif, olmayan görünümden önce söylenir", [recipe("Yok", {})])
+# docs/adr/0781: the walls' detail and the crop.
+case("Yalnız duvar ayrıntısı: ayrıntılı", [save("Detay"), recipe("Detay", {"detail": "detailed"})])
+case("Yalnız kırpma", [save("Kırpık"), recipe("Kırpık", {"crop": True})])
+case("Kırpma yok (false) tek başına boş tariftir", [save("A"), recipe("A", {"crop": False})])
+case("Ölçek, şematik duvar ve kırpma birlikte", [save("A"), recipe("A", {**APP, "detail": "schematic", "crop": True})])
+case("Ayrıntı değişir: sürüm 2", [save("A"), recipe("A", {**APP, "detail": "standard"}), recipe("A", {**APP, "detail": "detailed"})])
+case("Kırpma kalkar, ayrıntı kalır: sürüm 2", [save("A"), recipe("A", {"detail": "detailed", "crop": True}),
+                                                 recipe("A", {"detail": "detailed"})])
+case("Kırpma false yazılmaz: aynı tarif, sürüm kalır", [save("A"), recipe("A", APP), recipe("A", {**APP, "crop": False})])
+case("Ayrıntılı ve kırpık tarif yeniden adlandırmada kalır",
+     [save("A"), recipe("A", {"detail": "detailed", "crop": True}), {"kind": "rename", "name": "A", "to": "B"}])
 
 
 def write():
     doc = {
         "format": "kentos.command-cases", "version": 1, "command": "cad.views.edit", "commandVersion": 1,
-        "title": "Görünüş tarifi: adlı görünümün kat, evre, katman durumu, gizlenen türler ve ölçeği (ADR 0774)",
-        "note": "Kural ve beklenenler scripts/fixtures/view_recipe_cases.py'de ADR 0774'ten, KentOS kodu olmadan yazılmıştır.",
+        "title": "Görünüş tarifi: adlı görünümün kat, evre, katman durumu, gizlenen türler, ölçeği, duvar ayrıntısı ve kırpması (ADR 0774, 0781)",
+        "note": "Kural ve beklenenler scripts/fixtures/view_recipe_cases.py'de ADR 0774 ve 0781'dan, KentOS kodu olmadan yazılmıştır.",
         "setup": SETUP, "cases": cases,
     }
     text = json.dumps(doc, ensure_ascii=False, indent=2) + "\n"

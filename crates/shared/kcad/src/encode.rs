@@ -2077,6 +2077,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 143 (docs/adr/0781): a view recipe's walls' detail or crop.
+    if doc.settings.named_views.iter().any(|v| v.recipe.as_ref().is_some_and(|r| r.detail.is_some() || r.crop)) {
+        return crate::SCHEMA_WITH_RECIPE_DETAIL;
+    }
     // Schema 142 (docs/adr/0775): room modules and their instances.
     if doc.settings.arch.as_ref().is_some_and(kentos_contracts::ArchSettings::has_modules) {
         return crate::SCHEMA_WITH_MODULES;

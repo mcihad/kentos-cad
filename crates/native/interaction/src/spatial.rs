@@ -70,6 +70,8 @@ pub struct Spatial {
     store: Store,
     /// The scale a sheet's map draws the walls at, none: the drawing's (docs/adr/0339 §4).
     wall_scale: Option<f64>,
+    /// The detail a sheet's map draws the walls at whatever its scale (docs/adr/0781 §1): its view's recipe's.
+    wall_detail: Option<kentos_commands::WallDetail>,
     /// Ephemeral model view denominator; never changes the project's paper scale.
     screen_wall_scale: Option<f64>,
     sheet_view:Option<kentos_native_application::viewport_scope::Viewport>,
@@ -153,6 +155,12 @@ impl Spatial {
         self.wall_scale = scale;
     }
 
+    /// Draws the walls at `detail` whatever the scale (docs/adr/0781 §1: a sheet's map linked to a view whose recipe
+    /// says so); with [`Spatial::set_wall_scale`], before [`Spatial::reload`].
+    pub fn set_wall_detail(&mut self, detail: Option<kentos_commands::WallDetail>) {
+        self.wall_detail = detail;
+    }
+
     pub fn has_screen_wall_scale(&self) -> bool {
         self.screen_wall_scale.is_some()
     }
@@ -176,7 +184,9 @@ impl Spatial {
     ) {
         self.screen_wall_scale = scale.filter(|scale| scale.is_finite() && *scale > 0.0);
         let view = match (self.wall_scale, self.screen_wall_scale) {
-            (Some(scale), _) => kentos_native_application::walls::view_at(doc.settings(), scale),
+            (Some(scale), _) => {
+                kentos_native_application::walls::view_with(doc.settings(), scale, self.wall_detail)
+            }
             (None, Some(scale)) => {
                 kentos_native_application::walls::screen_view(doc.settings(), scale, previous)
             }
@@ -265,14 +275,19 @@ impl Spatial {
     /// Whether a sheet's map at 1:`scale` draws `doc`'s walls otherwise than the drawing does (docs/adr/0339 §4):
     /// then the map wants a store of its own.
     pub fn walls_differ_at(doc: &Document, scale: f64) -> bool {
+        Self::walls_differ_with(doc, scale, None)
+    }
+
+    /// [`Spatial::walls_differ_at`] with a view's own detail (docs/adr/0781 §1).
+    pub fn walls_differ_with(doc: &Document, scale: f64, detail: Option<kentos_commands::WallDetail>) -> bool {
         doc.has_scale_dependent_geometry()
-            && kentos_native_application::walls::view_at(doc.settings(), scale)
+            && kentos_native_application::walls::view_with(doc.settings(), scale, detail)
                 != kentos_native_application::walls::view_of(doc.settings())
     }
 
     fn wall_view_of(&self, doc: &Document) -> kentos_geometry_core::geom::wall::View {
         match self.wall_scale {
-            Some(scale) => kentos_native_application::walls::view_at(doc.settings(), scale),
+            Some(scale) => kentos_native_application::walls::view_with(doc.settings(), scale, self.wall_detail),
             None => match self.screen_wall_scale {
                 Some(scale) => kentos_native_application::walls::screen_view(
                     doc.settings(),

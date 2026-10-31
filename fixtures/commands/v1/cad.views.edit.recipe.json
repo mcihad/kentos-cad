@@ -3,8 +3,8 @@
   "version": 1,
   "command": "cad.views.edit",
   "commandVersion": 1,
-  "title": "Görünüş tarifi: adlı görünümün kat, evre, katman durumu, gizlenen türler ve ölçeği (ADR 0774)",
-  "note": "Kural ve beklenenler scripts/fixtures/view_recipe_cases.py'de ADR 0774'ten, KentOS kodu olmadan yazılmıştır.",
+  "title": "Görünüş tarifi: adlı görünümün kat, evre, katman durumu, gizlenen türler, ölçeği, duvar ayrıntısı ve kırpması (ADR 0774, 0781)",
+  "note": "Kural ve beklenenler scripts/fixtures/view_recipe_cases.py'de ADR 0774 ve 0781'dan, KentOS kodu olmadan yazılmıştır.",
   "setup": {
     "format": "kentos.document",
     "version": 1,
@@ -3172,7 +3172,7 @@
             "status": "failed",
             "error": {
               "code": "invalid_recipe",
-              "message": "Görünüş tarifi boş: kat, evre, katman durumu, gizli tür ya da ölçekten birini verin. Tarifi düzeltip yeniden verin.",
+              "message": "Görünüş tarifi boş: kat, evre, katman durumu, gizli tür, ölçek, duvar ayrıntısı ya da kırpmadan birini verin. Tarifi düzeltip yeniden verin.",
               "path": "edit.recipe"
             }
           },
@@ -4206,7 +4206,7 @@
             "status": "failed",
             "error": {
               "code": "invalid_recipe",
-              "message": "Görünüş tarifi boş: kat, evre, katman durumu, gizli tür ya da ölçekten birini verin. Tarifi düzeltip yeniden verin.",
+              "message": "Görünüş tarifi boş: kat, evre, katman durumu, gizli tür, ölçek, duvar ayrıntısı ya da kırpmadan birini verin. Tarifi düzeltip yeniden verin.",
               "path": "edit.recipe"
             }
           },
@@ -4218,6 +4218,1603 @@
             "canUndo": false,
             "canRedo": false,
             "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yalnız duvar ayrıntısı: ayrıntılı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "save",
+              "name": "Detay",
+              "center": {
+                "x": 487004,
+                "y": 4420003
+              },
+              "width": 10.0,
+              "height": 8.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "changed": true,
+              "revision": "$current",
+              "view": {
+                "name": "Detay",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "recipe",
+              "name": "Detay",
+              "recipe": {
+                "detail": "detailed"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "id": "v-89ddc460",
+                  "name": "Detay",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "detail": "detailed"
+                  }
+                }
+              ],
+              "changed": true,
+              "revision": "$current",
+              "view": {
+                "id": "v-89ddc460",
+                "name": "Detay",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0,
+                "recipe": {
+                  "version": 1,
+                  "detail": "detailed"
+                }
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-89ddc460",
+                  "name": "Detay",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "detail": "detailed"
+                  }
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yalnız kırpma",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "save",
+              "name": "Kırpık",
+              "center": {
+                "x": 487004,
+                "y": 4420003
+              },
+              "width": 10.0,
+              "height": 8.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "name": "Kırpık",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "changed": true,
+              "revision": "$current",
+              "view": {
+                "name": "Kırpık",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "name": "Kırpık",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "recipe",
+              "name": "Kırpık",
+              "recipe": {
+                "crop": true
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "id": "v-0db6f54d",
+                  "name": "Kırpık",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "crop": true
+                  }
+                }
+              ],
+              "changed": true,
+              "revision": "$current",
+              "view": {
+                "id": "v-0db6f54d",
+                "name": "Kırpık",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0,
+                "recipe": {
+                  "version": 1,
+                  "crop": true
+                }
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-0db6f54d",
+                  "name": "Kırpık",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "crop": true
+                  }
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kırpma yok (false) tek başına boş tariftir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "save",
+              "name": "A",
+              "center": {
+                "x": 487004,
+                "y": 4420003
+              },
+              "width": 10.0,
+              "height": 8.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "changed": true,
+              "revision": "$current",
+              "view": {
+                "name": "A",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "recipe",
+              "name": "A",
+              "recipe": {
+                "crop": false
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_recipe",
+              "message": "Görünüş tarifi boş: kat, evre, katman durumu, gizli tür, ölçek, duvar ayrıntısı ya da kırpmadan birini verin. Tarifi düzeltip yeniden verin.",
+              "path": "edit.recipe"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ölçek, şematik duvar ve kırpma birlikte",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "save",
+              "name": "A",
+              "center": {
+                "x": 487004,
+                "y": 4420003
+              },
+              "width": 10.0,
+              "height": 8.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "changed": true,
+              "revision": "$current",
+              "view": {
+                "name": "A",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "recipe",
+              "name": "A",
+              "recipe": {
+                "level": {
+                  "id": "zemin"
+                },
+                "scale": 50,
+                "detail": "schematic",
+                "crop": true
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "id": "v-c40bf6cc",
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "detail": "schematic",
+                    "crop": true
+                  }
+                }
+              ],
+              "changed": true,
+              "revision": "$current",
+              "view": {
+                "id": "v-c40bf6cc",
+                "name": "A",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0,
+                "recipe": {
+                  "version": 1,
+                  "level": {
+                    "id": "zemin"
+                  },
+                  "scale": 50,
+                  "detail": "schematic",
+                  "crop": true
+                }
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-c40bf6cc",
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "detail": "schematic",
+                    "crop": true
+                  }
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ayrıntı değişir: sürüm 2",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "save",
+              "name": "A",
+              "center": {
+                "x": 487004,
+                "y": 4420003
+              },
+              "width": 10.0,
+              "height": 8.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "changed": true,
+              "revision": "$current",
+              "view": {
+                "name": "A",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "recipe",
+              "name": "A",
+              "recipe": {
+                "level": {
+                  "id": "zemin"
+                },
+                "scale": 50,
+                "detail": "standard"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "id": "v-c40bf6cc",
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "detail": "standard"
+                  }
+                }
+              ],
+              "changed": true,
+              "revision": "$current",
+              "view": {
+                "id": "v-c40bf6cc",
+                "name": "A",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0,
+                "recipe": {
+                  "version": 1,
+                  "level": {
+                    "id": "zemin"
+                  },
+                  "scale": 50,
+                  "detail": "standard"
+                }
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-c40bf6cc",
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "detail": "standard"
+                  }
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "recipe",
+              "name": "A",
+              "recipe": {
+                "level": {
+                  "id": "zemin"
+                },
+                "scale": 50,
+                "detail": "detailed"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "id": "v-c40bf6cc",
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "detail": "detailed"
+                  }
+                }
+              ],
+              "changed": true,
+              "revision": "$current",
+              "view": {
+                "id": "v-c40bf6cc",
+                "name": "A",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0,
+                "recipe": {
+                  "version": 2,
+                  "level": {
+                    "id": "zemin"
+                  },
+                  "scale": 50,
+                  "detail": "detailed"
+                }
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-c40bf6cc",
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "detail": "detailed"
+                  }
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kırpma kalkar, ayrıntı kalır: sürüm 2",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "save",
+              "name": "A",
+              "center": {
+                "x": 487004,
+                "y": 4420003
+              },
+              "width": 10.0,
+              "height": 8.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "changed": true,
+              "revision": "$current",
+              "view": {
+                "name": "A",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "recipe",
+              "name": "A",
+              "recipe": {
+                "detail": "detailed",
+                "crop": true
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "id": "v-c40bf6cc",
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "detail": "detailed",
+                    "crop": true
+                  }
+                }
+              ],
+              "changed": true,
+              "revision": "$current",
+              "view": {
+                "id": "v-c40bf6cc",
+                "name": "A",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0,
+                "recipe": {
+                  "version": 1,
+                  "detail": "detailed",
+                  "crop": true
+                }
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-c40bf6cc",
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "detail": "detailed",
+                    "crop": true
+                  }
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "recipe",
+              "name": "A",
+              "recipe": {
+                "detail": "detailed"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "id": "v-c40bf6cc",
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "detail": "detailed"
+                  }
+                }
+              ],
+              "changed": true,
+              "revision": "$current",
+              "view": {
+                "id": "v-c40bf6cc",
+                "name": "A",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0,
+                "recipe": {
+                  "version": 2,
+                  "detail": "detailed"
+                }
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-c40bf6cc",
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "detail": "detailed"
+                  }
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kırpma false yazılmaz: aynı tarif, sürüm kalır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "save",
+              "name": "A",
+              "center": {
+                "x": 487004,
+                "y": 4420003
+              },
+              "width": 10.0,
+              "height": 8.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "changed": true,
+              "revision": "$current",
+              "view": {
+                "name": "A",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "recipe",
+              "name": "A",
+              "recipe": {
+                "level": {
+                  "id": "zemin"
+                },
+                "scale": 50
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "id": "v-c40bf6cc",
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50
+                  }
+                }
+              ],
+              "changed": true,
+              "revision": "$current",
+              "view": {
+                "id": "v-c40bf6cc",
+                "name": "A",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0,
+                "recipe": {
+                  "version": 1,
+                  "level": {
+                    "id": "zemin"
+                  },
+                  "scale": 50
+                }
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-c40bf6cc",
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50
+                  }
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "recipe",
+              "name": "A",
+              "recipe": {
+                "level": {
+                  "id": "zemin"
+                },
+                "scale": 50,
+                "crop": false
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "id": "v-c40bf6cc",
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50
+                  }
+                }
+              ],
+              "changed": false,
+              "revision": "$current",
+              "view": {
+                "id": "v-c40bf6cc",
+                "name": "A",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0,
+                "recipe": {
+                  "version": 1,
+                  "level": {
+                    "id": "zemin"
+                  },
+                  "scale": 50
+                }
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-c40bf6cc",
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50
+                  }
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ayrıntılı ve kırpık tarif yeniden adlandırmada kalır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "save",
+              "name": "A",
+              "center": {
+                "x": 487004,
+                "y": 4420003
+              },
+              "width": 10.0,
+              "height": 8.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "changed": true,
+              "revision": "$current",
+              "view": {
+                "name": "A",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "recipe",
+              "name": "A",
+              "recipe": {
+                "detail": "detailed",
+                "crop": true
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "id": "v-c40bf6cc",
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "detail": "detailed",
+                    "crop": true
+                  }
+                }
+              ],
+              "changed": true,
+              "revision": "$current",
+              "view": {
+                "id": "v-c40bf6cc",
+                "name": "A",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0,
+                "recipe": {
+                  "version": 1,
+                  "detail": "detailed",
+                  "crop": true
+                }
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-c40bf6cc",
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "detail": "detailed",
+                    "crop": true
+                  }
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "rename",
+              "name": "A",
+              "to": "B"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "id": "v-c40bf6cc",
+                  "name": "B",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "detail": "detailed",
+                    "crop": true
+                  }
+                }
+              ],
+              "changed": true,
+              "revision": "$current",
+              "view": {
+                "id": "v-c40bf6cc",
+                "name": "B",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0,
+                "recipe": {
+                  "version": 1,
+                  "detail": "detailed",
+                  "crop": true
+                }
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-c40bf6cc",
+                  "name": "B",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "detail": "detailed",
+                    "crop": true
+                  }
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
           }
         }
       ]

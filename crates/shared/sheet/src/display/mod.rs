@@ -192,6 +192,11 @@ pub struct MapPrim {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<kentos_contracts::ViewCategory>>", optional))]
     pub hidden: Vec<kentos_contracts::ViewCategory>,
+    /// The detail it draws the walls at whatever its scale (docs/adr/0781 §1: its linked view's recipe); none: the
+    /// scale's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub wall_detail: Option<kentos_contracts::WallDetail>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub crs: Option<String>,

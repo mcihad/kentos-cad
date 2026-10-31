@@ -2,6 +2,7 @@
 import type { PhaseView } from "./PhaseView";
 import type { RecipeLevel } from "./RecipeLevel";
 import type { ViewCategory } from "./ViewCategory";
+import type { WallDetail } from "./WallDetail";
 
 /**
  * A named view's architectural recipe (docs/adr/0774 §1; Revit's view properties, Archicad's view settings): what a
@@ -32,4 +33,13 @@ hidden?: Array<ViewCategory>,
 /**
  * The scale's denominator a linked map draws at (1:N), the view's middle kept; none: the view's box fitted.
  */
-scale?: number, };
+scale?: number, 
+/**
+ * The walls' detail the map draws (docs/adr/0781 §1; Revit's Detail Level, Archicad's Partial Structure Display);
+ * none: its scale's, or the project's when it fixes one.
+ */
+detail?: WallDetail, 
+/**
+ * The map draws only the view's area, its frame's paper outside it empty (docs/adr/0781 §2; Revit's Crop Region).
+ */
+crop?: boolean, };

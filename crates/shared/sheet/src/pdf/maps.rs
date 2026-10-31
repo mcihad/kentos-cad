@@ -352,6 +352,7 @@ mod tests {
             layer_overrides: Vec::new(),
             phase: None,
             hidden: Vec::new(),
+            wall_detail: None,
             item: "m".into(),
             clip: RectUm::new(20_000, 10_000, 200_000, 100_000),
             rotation,

@@ -536,13 +536,26 @@ pub fn effective_fixed_view(
 /// The recipe of the named view a map is linked to (docs/adr/0774 §3): the current view's, found by its stable key;
 /// none for a map of its own camera, a snapshot, or a link whose view is gone (that one is refused elsewhere).
 pub fn linked_recipe<'a>(map: &crate::kinds::MapItem, views: &'a [NamedModelView]) -> Option<&'a kentos_contracts::ViewRecipe> {
+    linked_view(map, views).and_then(|v| v.recipe.as_ref())
+}
+
+/// The current named view a map is linked to, found by its stable key; none for a map of its own camera, a snapshot,
+/// or a link whose view is gone.
+pub fn linked_view<'a>(map: &crate::kinds::MapItem, views: &'a [NamedModelView]) -> Option<&'a NamedModelView> {
     let Source::ViewLink { view: link } = &map.source else {
         return None;
     };
-    views
+    views.iter().find(|v| view_key(v) == view_key(link))
+}
+
+/// A named view's area on the ground: its four corners counter-clockwise, turned by its twist (docs/adr/0781 §2).
+pub fn view_ring(v: &NamedModelView) -> Vec<[f64; 2]> {
+    let (s, c) = v.twist.sin_cos();
+    let (hw, hh) = (v.width / 2.0, v.height / 2.0);
+    [(-hw, -hh), (hw, -hh), (hw, hh), (-hw, hh)]
         .iter()
-        .find(|v| view_key(v) == view_key(link))
-        .and_then(|v| v.recipe.as_ref())
+        .map(|&(x, y)| [v.center.x + x * c - y * s, v.center.y + x * s + y * c])
+        .collect()
 }
 
 /// Detaching a live source retains its current effective camera when the registry is available.

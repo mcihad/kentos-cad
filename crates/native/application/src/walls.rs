@@ -297,6 +297,20 @@ pub fn view_at(
     }
 }
 
+/// [`view_at`] with a view's own detail when its recipe gives one (docs/adr/0781 §1): that detail outranks the
+/// project's and the scale's, as a view's Detail Level does in Revit.
+pub fn view_with(
+    settings: &kentos_commands::ProjectSettings,
+    scale: f64,
+    detail: Option<kentos_commands::WallDetail>,
+) -> kentos_geometry_core::geom::wall::View {
+    let mut view = view_at(settings, scale);
+    if let Some(d) = detail {
+        view.detail = kentos_formats::walls::detail(d);
+    }
+    view
+}
+
 /// Model-space navigation changes only detail. Patterns retain their project paper scale;
 /// sheet maps and exports continue to use `view_at` (ADR 0696).
 /// `previous` gives automatic detail a 10% dead band at its two existing thresholds.

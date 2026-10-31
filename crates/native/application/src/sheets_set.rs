@@ -35,13 +35,14 @@ fn meets(a: &Bounds, b: &[f64; 4]) -> bool {
 
 /// Whether the map `item` of sheet `sheet` draws the object of persistent id `uid` (docs/adr/0774 §4): on the map's
 /// level or on none (an opening on its wall's, a tag on its object's: Kat görünümü's rule), its category and phase not
-/// left out by its linked view's recipe. The box test is the caller's.
+/// left out by its linked view's recipe; when that recipe crops (docs/adr/0781 §2), its box also meets the view's
+/// area's. The map frame's box test is the caller's.
 fn drawn_by<'a>(
     doc: &'a Document,
     sheet: &str,
     item: &str,
     book: Option<&'a kentos_sheet::model::SheetBook>,
-) -> impl Fn(&String) -> bool + 'a {
+) -> impl Fn(&String, &Bounds) -> bool + 'a {
     let map = book
         .and_then(|b| b.sheets.iter().find(|s| s.id == sheet))
         .and_then(|s| s.items.iter().find(|i| i.id == item))
@@ -59,9 +60,24 @@ fn drawn_by<'a>(
         .and_then(|r| r.level.as_ref().map(|l| l.id.clone()))
         .or_else(|| map.as_ref().and_then(|m| m.level.as_ref().map(|l| l.id.clone())));
     let phase = recipe.as_ref().and_then(|r| r.phase);
+    // The cropping view's area as a box: a turned view's is wider, so more may be listed, never fewer.
+    let crop = recipe
+        .as_ref()
+        .filter(|r| r.crop)
+        .and(map.as_ref())
+        .and_then(|m| kentos_sheet::viewport::linked_view(m, views))
+        .map(|v| {
+            kentos_sheet::viewport::view_ring(v).iter().fold(
+                [f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY],
+                |b, p| [b[0].min(p[0]), b[1].min(p[1]), b[2].max(p[0]), b[3].max(p[1])],
+            )
+        });
     let hidden = recipe.map(|r| r.hidden).unwrap_or_default();
     let draws = recipe_draws(doc, level, phase, hidden);
-    move |uid: &String| {
+    move |uid: &String, bounds: &Bounds| {
+        if crop.is_some_and(|c| !meets(bounds, &c)) {
+            return false;
+        }
         let Some(slot) = kentos_domain::Uuid::parse_str(uid).ok().and_then(|u| doc.slot_of(u)) else {
             return true;
         };
@@ -250,7 +266,7 @@ pub(crate) fn set_of(doc: &Document, input: &SheetsSet) -> Result<SheetsSetResul
                     let draws = drawn_by(doc, s.id.as_str(), &f.item, book.as_ref());
                     let showing: Vec<&String> = boxes
                         .iter()
-                        .filter(|(u, x)| meets(x, b) && draws(u))
+                        .filter(|(u, x)| meets(x, b) && draws(u, x))
                         .map(|(u, _)| *u)
                         .collect();
                     if !showing.is_empty() {

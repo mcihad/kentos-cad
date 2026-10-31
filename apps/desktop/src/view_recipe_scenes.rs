@@ -46,7 +46,7 @@ fn views(app: &mut App) {
 }
 
 /// A new sheet whose map is linked to the view named `name` (the inspector's Kaynak: canlı bağlantı).
-fn linked_sheet(app: &mut App, name: &str) {
+pub(crate) fn linked_sheet(app: &mut App, name: &str) {
     use kentos_sheet_ui::Message as Sheet;
     sheet(app, Sheet::NewSheet);
     if app.sheets.questions().is_some() {
@@ -80,11 +80,12 @@ fn linked_sheet(app: &mut App, name: &str) {
     }
 }
 
-pub(crate) fn both_sheets(app: &mut App) {
-    house(app);
+pub(crate) fn both_sheets(app: &mut App) -> crate::program_scenes::Plan {
+    let plan = house(app);
     views(app);
     linked_sheet(app, "Zemin uygulama");
     linked_sheet(app, "Zemin mobilya");
+    plan
 }
 
 /// Görünümler open, Zemin mobilya chosen: its recipe.

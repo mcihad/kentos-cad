@@ -131,7 +131,7 @@ pub fn today() -> String {
 
 /// Which copy of the drawing a map draws: its scale's and its annotation scale's bits, and the level whose plan shows
 /// the stairs under it from above with whether it shows the level below too.
-type ScaledKey = (u64, u64, Option<(String, bool)>);
+type ScaledKey = (u64, u64, Option<(String, bool)>, Option<kentos_commands::WallDetail>);
 
 /// Draws the maps of a book's pages as vectors (the book PDF's and the atlas's): each map of a display
 /// list its content at its scale, what could not be said told in `finish`.
@@ -221,9 +221,11 @@ impl<'a> MapDrawer<'a> {
             at.to_bits(),
             annotation.to_bits(),
             upper.map(|l| (l.id.clone(), l.below)),
+            // A linked view's own wall detail (docs/adr/0781 §1).
+            m.wall_detail,
         );
         // Walls at a detail other than the drawing's (docs/adr/0339 §4) want a copy of their own too.
-        let walls = Spatial::walls_differ_at(doc, at);
+        let walls = Spatial::walls_differ_with(doc, at, m.wall_detail);
         if (self.annotative || walls || upper.is_some()) && !self.scaled.contains_key(&key) {
             let copy = self
                 .annotative
@@ -235,6 +237,7 @@ impl<'a> MapDrawer<'a> {
             let copy = copy.map(|copy| {
                 let mut spatial = Spatial::new();
                 spatial.set_wall_scale(Some(at));
+                spatial.set_wall_detail(m.wall_detail);
                 spatial.reload(&copy);
                 if let Some(l) = upper {
                     spatial.set_level_view(&copy, crate::layers::level_view(l), Some(l.id.clone()));

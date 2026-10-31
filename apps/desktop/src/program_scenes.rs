@@ -55,7 +55,7 @@ fn slot(app: &App, uid: &str) -> Slot {
 
 /// The plan's ids: its walls (by name), its spaces (by number).
 pub(crate) struct Plan {
-    walls: Vec<String>,
+    pub(crate) walls: Vec<String>,
     spaces: Vec<(String, String)>,
 }
 

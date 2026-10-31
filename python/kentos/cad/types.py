@@ -67129,6 +67129,9 @@ class ViewRecipe(_Model):
     sheet's map linked to the view draws. It is the view's, not the model's (no object changes) nor the person's (the
     screen's level view, theme and layer panel stay theirs). `version` counts its changes: written by `cad.views.edit`.
     Attributes:
+        crop: The map draws only the view's area, its frame's paper outside it empty (docs/adr/0781 §2; Revit's Crop Region).
+        detail: The walls' detail the map draws (docs/adr/0781 §1; Revit's Detail Level, Archicad's Partial Structure Display);
+            none: its scale's, or the project's when it fixes one.
         hidden: The categories left out, in their order.
         layer_state: A layer state of the project by its name, in this view only (docs/adr/0314 §1); none: the map's layers.
         level: The level the map draws; none: the map's own.
@@ -67136,6 +67139,8 @@ class ViewRecipe(_Model):
         scale: The scale's denominator a linked map draws at (1:N), the view's middle kept; none: the view's box fitted. Unit: scale.
         version: 1 for a new recipe, one more at each change; given in an input, it is ignored. Unit: version.
     """
+    crop: bool | Unset = UNSET
+    detail: WallDetail | WallDetailName | None | Unset = UNSET
     hidden: list[ViewCategory | ViewCategoryName] | Unset = UNSET
     layer_state: str | None | Unset = UNSET
     level: RecipeLevel | None | Unset = UNSET
@@ -67145,6 +67150,10 @@ class ViewRecipe(_Model):
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
+        if self.crop is not UNSET:
+            out["crop"] = self.crop
+        if self.detail is not UNSET:
+            out["detail"] = None if self.detail is None else _enum_out(self.detail)
         if self.hidden is not UNSET:
             out["hidden"] = [_enum_out(e0) for e0 in self.hidden]
         if self.layer_state is not UNSET:
@@ -67162,6 +67171,8 @@ class ViewRecipe(_Model):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> ViewRecipe:
         return cls(
+            crop=data.get("crop", UNSET),
+            detail=UNSET if "detail" not in data else None if data["detail"] is None else _enum_in(WallDetail, data["detail"]),
             hidden=[_enum_in(ViewCategory, e0) for e0 in data["hidden"]] if "hidden" in data else UNSET,
             layer_state=data.get("layerState", UNSET),
             level=UNSET if "level" not in data else None if data["level"] is None else RecipeLevel.from_json(data["level"]),

@@ -136777,6 +136777,21 @@
       "additionalProperties": false,
       "description": "A named view's architectural recipe (docs/adr/0774 §1; Revit's view properties, Archicad's view settings): what a\nsheet's map linked to the view draws. It is the view's, not the model's (no object changes) nor the person's (the\nscreen's level view, theme and layer panel stay theirs). `version` counts its changes: written by `cad.views.edit`.",
       "properties": {
+        "crop": {
+          "description": "The map draws only the view's area, its frame's paper outside it empty (docs/adr/0781 §2; Revit's Crop Region).",
+          "type": "boolean"
+        },
+        "detail": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/WallDetail"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The walls' detail the map draws (docs/adr/0781 §1; Revit's Detail Level, Archicad's Partial Structure Display);\nnone: its scale's, or the project's when it fixes one."
+        },
         "hidden": {
           "description": "The categories left out, in their order.",
           "items": {

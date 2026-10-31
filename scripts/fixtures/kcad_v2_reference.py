@@ -1234,6 +1234,7 @@ VIEW_SIZE = 2.0e7
 # their order) and a scale's denominator from 1 to 100 000; no field at its default.
 RECIPE_CATEGORIES = ("dimensions", "tags", "texts", "hatches", "blocks", "spaces", "grids", "viewmarks")
 RECIPE_PHASES = ("all", "existing", "demolition", "proposed")
+RECIPE_DETAILS = ("schematic", "standard", "detailed")
 
 
 def view_recipe(r):
@@ -1251,10 +1252,15 @@ def view_recipe(r):
         assert all(c in RECIPE_CATEGORIES for c in r["hidden"]), r
     if "scale" in r:
         assert type(r["scale"]) is int and 1 <= r["scale"] <= 100_000, r
+    # Schema 143 (docs/adr/0781): the walls' detail, the crop (written only true).
+    if "detail" in r:
+        assert r["detail"] in RECIPE_DETAILS, r
+    if "crop" in r:
+        assert r["crop"] is True, r
     level = lambda lv: cmap(fields(lv, {"id": (text, True), "below": (lambda b: b"\xf5", False)}, "recipe.level"))  # noqa: E731
     return cmap(fields(r, {"version": (uint, True), "level": (level, False), "phase": (text, False),
                            "layerState": (text, False), "hidden": (lambda xs: array([text(x) for x in xs]), False),
-                           "scale": (uint, False)}, "recipe"))
+                           "scale": (uint, False), "detail": (text, False), "crop": (lambda b: b"\xf5", False)}, "recipe"))
 
 
 def named_views(list_):
@@ -2367,6 +2373,9 @@ def document(d):
     if (d["settings"].get("arch") or {}).get("modules"):
         # Room modules and their instances (docs/adr/0775).
         schema = max(schema, 142)
+    if any("detail" in v.get("recipe", {}) or "crop" in v.get("recipe", {}) for v in d["settings"].get("namedViews", [])):
+        # A view recipe's walls' detail or crop (docs/adr/0781).
+        schema = max(schema, 143)
     return root(cmap(body), version=uint(schema))
 
 
@@ -3080,7 +3089,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-143.kcad"] = container(root(cmap(parts), version=uint(143)))
+    files["schema-version-144.kcad"] = container(root(cmap(parts), version=uint(144)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5492,6 +5501,19 @@ def build():
     recipe_bad("scale-too-large", lambda r: r.update(scale=100_001))
     recipe_bad("below-false", lambda r: r.update(level={"id": "zemin", "below": False}))
     recipe_bad("unknown-field", lambda r: r.update(note="x"))
+    # Schema 143 (docs/adr/0781): recipes with the walls' detail and the crop; schema 142 refuses them, an unknown
+    # detail is an unknown field, a crop written false is refused.
+    vd_doc = load("view-recipe-details.json")
+    vd = document(vd_doc)
+    assert vd.count(b"\x67version\x18\x8f") == 1, "the recipes' detail and crop are schema 143"
+    out["view-recipe-details.kcad"] = container(vd)
+    out["broken/view-recipe-details-in-schema-142.kcad"] = container(vd.replace(b"\x67version\x18\x8f", b"\x67version\x18\x8e"))
+    good = cmap({"version": uint(2), "detail": text("detailed"), "crop": b"\xf5"})
+    assert vd.count(good) == 1, "the detailed, cropped recipe"
+    out["broken/view-recipe-detail-unknown.kcad"] = container(
+        vd.replace(good, cmap({"version": uint(2), "detail": text("fine"), "crop": b"\xf5"})))
+    out["broken/view-recipe-crop-false.kcad"] = container(
+        vd.replace(good, cmap({"version": uint(2), "detail": text("detailed"), "crop": b"\xf4"})))
     # Schema 123 (docs/adr/0722): slabs: a floor with a hole, a balcony with its railing's run, a terrace with a parapet
     # all round, left out of the totals, a curved two-part slab.
     sl = document(load("slabs.json"))

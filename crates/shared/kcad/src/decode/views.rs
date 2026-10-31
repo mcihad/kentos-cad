@@ -11,8 +11,14 @@ use crate::error::{Code, KcadError};
 
 /// The named views: not empty, then checked whole.
 /// Schema 81 (docs/adr/0345 §2) adds a view's `id`; schema 141 (docs/adr/0774 §1) its `recipe`, read whole as the
-/// contract's JSON and written as the writer writes it (no field at its default).
-pub(super) fn named_views(r: &mut Reader<'_>, ids: bool, recipes: bool) -> Result<Vec<NamedView>, KcadError> {
+/// contract's JSON and written as the writer writes it (no field at its default); schema 143 (docs/adr/0781) its `detail`
+/// and `crop`.
+pub(super) fn named_views(
+    r: &mut Reader<'_>,
+    ids: bool,
+    recipes: bool,
+    detail: bool,
+) -> Result<Vec<NamedView>, KcadError> {
     let at = r.position();
     let all = list(r, |r, _| {
         let (mut id, mut name, mut center, mut width, mut height, mut twist) =
@@ -50,6 +56,13 @@ pub(super) fn named_views(r: &mut Reader<'_>, ids: bool, recipes: bool) -> Resul
                             Code::BadValue,
                             at,
                             "görünüş tarifi yazıcının biçiminde değil (varsayılan değerinde bir alan yazılmış)",
+                        ));
+                    }
+                    if !detail && (read.detail.is_some() || read.crop) {
+                        return Err(r.fail_at(
+                            Code::UnknownField,
+                            at,
+                            "görünüş tarifinin duvar ayrıntısı ve kırpması şema 143'ten beri yazılır",
                         ));
                     }
                     recipe = Some(read);

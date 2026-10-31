@@ -80,6 +80,10 @@ pub enum Event {
     RecipeState(Option<usize>),
     RecipeScale(usize),
     RecipeHide(kentos_commands::ViewCategory, bool),
+    /// The walls' detail (docs/adr/0781 §1): the index in `views_recipe::DETAILS`.
+    RecipeDetail(usize),
+    /// Cut the linked maps to the view's area (docs/adr/0781 §2).
+    RecipeCrop(bool),
     RecipeApply,
     RecipeClear,
 }

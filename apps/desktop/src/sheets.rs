@@ -80,8 +80,8 @@ const STYLED_KEPT: usize = 4;
 
 /// The drawing (its session and state), the scale and annotation scale, whether the screen's store draws otherwise
 /// than paper, the bands' rows it took (docs/adr/0636 §2) and the level whose plan it is when that shows stairs from
-/// above.
-type ScaledKey = (u64, u64, u64, u64, bool, usize, Option<(String, bool)>);
+/// above, and the wall detail its linked view asks for (docs/adr/0781 §1).
+type ScaledKey = (u64, u64, u64, u64, bool, usize, Option<(String, bool)>, Option<kentos_commands::WallDetail>);
 
 /// The drawing as the maps at one scale draw it (docs/adr/0323 §2): a reading copy with the annotative
 /// texts, dimensions and leaders as that scale says, and its geometry store; none when that is the drawing. A level's
@@ -142,6 +142,7 @@ impl SheetMaps {
         drawing: &Document,
         view: &kentos_sheet::display::MapViewPrim,
         level: Option<&kentos_sheet::kinds::MapLevel>,
+        detail: Option<kentos_commands::WallDetail>,
         main: &Spatial,
     ) -> Option<Rc<Scaled>> {
         // A model camera can draw more detail than this paper map, even at the same plot scale.
@@ -150,9 +151,10 @@ impl SheetMaps {
         let unscoped = main.draws_otherwise()
             || (drawing.model.has_scale_dependent_geometry()
                 && main.store().wall_view()
-                    != kentos_native_application::walls::view_at(
+                    != kentos_native_application::walls::view_with(
                         drawing.model.settings(),
                         view.scale,
+                        detail,
                     ));
         let scale = view.scale;
         let annotation = view.annotation_denominator();
@@ -167,13 +169,15 @@ impl SheetMaps {
             level
                 .filter(|l| kentos_plot::layers::shows_from_above(&drawing.model, l))
                 .map(|l| (l.id.clone(), l.below)),
+            // A linked view's own wall detail (docs/adr/0781 §1).
+            detail,
         );
         let upper = key.6.is_some().then_some(level).flatten();
         let kept = self.scaled.borrow().iter().find(|s| s.key == key).cloned();
         let at = kept.unwrap_or_else(|| {
             let at = scale.max(1e-6);
             // Walls at a detail other than the drawing's (docs/adr/0339 §4) want a copy of their own too.
-            let walls = Spatial::walls_differ_at(&drawing.model, at);
+            let walls = Spatial::walls_differ_with(&drawing.model, at, detail);
             let view = drawing
                 .model
                 .has_annotative()
@@ -185,6 +189,7 @@ impl SheetMaps {
                 .map(|model| {
                     let mut spatial = Spatial::new();
                     spatial.set_wall_scale(Some(at));
+                    spatial.set_wall_detail(detail);
                     spatial.reload(&model);
                     if let Some(l) = upper {
                         spatial.set_level_view(
@@ -264,13 +269,22 @@ impl SheetMaps {
             }
             _ => 0,
         };
+        // The walls' detail the store draws (a linked view's own, docs/adr/0781 §1): two maps at one scale may differ.
+        let walls = {
+            use kentos_geometry_core::geom::wall::Detail;
+            match store.wall_view().detail {
+                Detail::Schematic => 1,
+                Detail::Standard => 2,
+                Detail::Detailed => 3,
+            }
+        };
         let key = (
             doc.session,
             doc.model.generation(),
             library.version(),
             scale.to_bits(),
             view.annotation_denominator().to_bits(),
-            own_key,
+            own_key.wrapping_mul(4).wrapping_add(walls),
             origin.x.to_bits(),
             origin.y.to_bits(),
         );
@@ -747,9 +761,10 @@ impl SheetPainter<'_> {
     /// when an annotative object draws otherwise there; `keep` holds the copy while it is used.
     fn source<'s>(&'s self, r: &MapRequest<'_>, keep: &'s mut Option<Rc<Scaled>>) -> Source<'s> {
         let level = r.primitive.and_then(|m| m.level.as_ref());
+        let detail = r.primitive.and_then(|m| m.wall_detail);
         *keep = self
             .drawing
-            .and_then(|d| self.maps.scaled(d, r.view, level, self.spatial));
+            .and_then(|d| self.maps.scaled(d, r.view, level, detail, self.spatial));
         match keep.as_ref().and_then(|s| s.view.as_ref()) {
             Some((d, sp)) => (Some(d), sp),
             None => (self.drawing, self.spatial),
@@ -1997,13 +2012,13 @@ mod tests {
             serde_json::from_value(serde_json::json!({"scale":100.,"rotation":0})).unwrap();
         let maps = SheetMaps::default();
         let copied = maps
-            .scaled(doc, &view, None, &main)
+            .scaled(doc, &view, None, None, &main)
             .expect("separate paper index despite equal project scale");
         let (_, paper) = copied.view.as_ref().unwrap();
         assert_eq!(paper.store().wall_view().detail, Detail::Schematic);
         assert_eq!(paper.store().wall_view().scale, 100.);
         main.set_screen_wall_scale(&doc.model, Some(10.));
-        let again = maps.scaled(doc, &view, None, &main).unwrap();
+        let again = maps.scaled(doc, &view, None, None, &main).unwrap();
         assert!(
             Rc::ptr_eq(&copied, &again),
             "camera motion does not rebuild the paper cache"
@@ -2011,7 +2026,7 @@ mod tests {
         assert_eq!(doc.model.to_snapshot_v2(), before);
         main.set_screen_wall_scale(&doc.model, None);
         assert!(
-            maps.scaled(doc, &view, None, &main).is_none(),
+            maps.scaled(doc, &view, None, None, &main).is_none(),
             "matching ordinary paper index may still be shared"
         );
     }
@@ -2057,7 +2072,7 @@ mod tests {
                 .expect("a view");
         let maps = SheetMaps::default();
         let copy = maps
-            .scaled(&doc, &view, None, &main)
+            .scaled(&doc, &view, None, None, &main)
             .expect("a copy at 1:200");
         let (_, spatial) = copy.view.as_ref().expect("its drawing");
         assert_eq!(spatial.ghost_total(), 1);

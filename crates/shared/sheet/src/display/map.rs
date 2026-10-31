@@ -447,13 +447,21 @@ pub(crate) fn draw(ctx: &Ctx, it: &Item, m: &MapItem, pen: &mut Pen, notes: &mut
     let clip_feature = (m.clip_to_atlas_feature)
         .then(|| ctx.inputs.atlas.as_ref().map(|a| a.feature.id.clone()))
         .flatten();
-    // Cut to the atlas object (docs/adr/0638 §2): its outline in place of the map's own shape.
+    let recipe = crate::viewport::linked_recipe(m, &ctx.inputs.named_views);
+    // Cut to the atlas object (docs/adr/0638 §2): its outline in place of the map's own shape; else to its linked
+    // view's area when the recipe crops (docs/adr/0781 §2).
     let clip_shape = m
         .clip_to_atlas_feature
         .then_some(ctx.inputs.atlas.as_ref())
         .flatten()
         .and_then(|a| a.feature.outline.as_deref())
         .and_then(|ring| feature_clip(mf, ring))
+        .or_else(|| {
+            recipe
+                .filter(|r| r.crop)
+                .and_then(|_| crate::viewport::linked_view(m, &ctx.inputs.named_views))
+                .and_then(|v| feature_clip(mf, &crate::viewport::view_ring(v)))
+        })
         .unwrap_or_else(|| m.clip.clone());
     let clip = {
         let c = rotate(r.center(), pen.center, pen.rot);
@@ -468,7 +476,6 @@ pub(crate) fn draw(ctx: &Ctx, it: &Item, m: &MapItem, pen: &mut Pen, notes: &mut
             )
         }
     };
-    let recipe = crate::viewport::linked_recipe(m, &ctx.inputs.named_views);
     pen.prims.push(Prim::Map(MapPrim {
         item: it.id.clone(),
         clip_shape,
@@ -494,6 +501,7 @@ pub(crate) fn draw(ctx: &Ctx, it: &Item, m: &MapItem, pen: &mut Pen, notes: &mut
         },
         phase: recipe.and_then(|r| r.phase),
         hidden: recipe.map(|r| r.hidden.clone()).unwrap_or_default(),
+        wall_detail: recipe.and_then(|r| r.detail),
         crs: m.crs.clone(),
         extent: mf.extent(),
         clip_feature,

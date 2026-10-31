@@ -101,8 +101,8 @@ PRELUDE = [{"op": "execute", "command": "cad.sheets.edit", "note": "pafta kitab�
 
 
 class Book:
-    def __init__(self, views=None):
-        self.sheets = copy.deepcopy(BOOK)
+    def __init__(self, views=None, sheets=None):
+        self.sheets = copy.deepcopy(BOOK if sheets is None else sheets)
         self.views = copy.deepcopy(VIEWS if views is None else views)
 
     def camera(self, item):
@@ -145,7 +145,8 @@ class Book:
                 if recipe:
                     f["recipe"] = recipe["version"]
                 frames.append(f)
-                drawn.append((s, item, f, level, (recipe or {}).get("hidden", []), (recipe or {}).get("phase")))
+                crop = view_box(view) if (recipe or {}).get("crop") else None
+                drawn.append((s, item, f, level, (recipe or {}).get("hidden", []), (recipe or {}).get("phase"), crop))
             sheets.append({"id": s["id"], "name": s["name"], "series": ssc.series_of(s["name"]), "frames": frames})
         series = []
         for s in sheets:
@@ -163,14 +164,16 @@ class Book:
         if uids is not None:
             known = {l["id"] for l in LEVELS}
             affected = []
-            for s, item, fr, level, hidden, phase in drawn:
+            for s, item, fr, level, hidden, phase, crop in drawn:
                 reasons, objs = [], []
                 if "bounds" in fr:
                     def draws(i):
                         _, _, _, b, own, cat = SEED[i]
                         on = level is None or own is None or own == level or own not in known
                         kept = PHASES.get(i) not in HIDDEN[phase or "all"]
-                        return ssc.meets(b, fr["bounds"]) and on and cat not in hidden and kept
+                        # A cropping recipe (docs/adr/0781 §2): the object's box meets the view's area's box too.
+                        inside = crop is None or ssc.meets(b, crop)
+                        return ssc.meets(b, fr["bounds"]) and on and cat not in hidden and kept and inside
                     hit = [i for i in uids if draws(i)]
                     if hit:
                         reasons.append("shows")
@@ -183,6 +186,16 @@ class Book:
             out["affected"] = affected
         out["revision"] = "$current"
         return out
+
+
+def view_box(view):
+    """A named view's area as a box: its four corners turned by its twist (docs/adr/0781 §2)."""
+    import math
+    c, s = math.cos(view["twist"]), math.sin(view["twist"])
+    hw, hh = view["width"] / 2, view["height"] / 2
+    pts = [(view["center"]["x"] + x * c - y * s, view["center"]["y"] + x * s + y * c)
+           for x, y in [(-hw, -hh), (hw, -hh), (hw, hh), (-hw, hh)]]
+    return [min(p[0] for p in pts), min(p[1] for p in pts), max(p[0] for p in pts), max(p[1] for p in pts)]
 
 
 def step(book, uids=None):

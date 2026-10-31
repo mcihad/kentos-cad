@@ -1,12 +1,13 @@
 //! Görünüş tarifi (docs/adr/0774 §2): the chosen named view's recipe in the Görünümler window: its level (and the one
-//! under it faint), phase, layer state, scale and the categories it leaves out. A sheet's map linked to the view draws
+//! under it faint), phase, layer state, scale, the categories it leaves out, the walls' detail and the crop to the
+//! view's area (docs/adr/0781). A sheet's map linked to the view draws
 //! with it; the model and the screen stay as they are. Hazır ▾ fills the draft from a preset (Uygulama planı 1:50, Mobilya
 //! planı 1:100 …), the level kept; Tarifi uygula writes it with `cad.views.edit`'s `recipe` (its version one more),
 //! Tarifi kaldır takes it away.
 
 use iced::widget::{Column, container, row};
 use iced::{Element, Fill};
-use kentos_commands::{PhaseView, RecipeLevel, ViewCategory, ViewRecipe, ViewsOp};
+use kentos_commands::{PhaseView, RecipeLevel, ViewCategory, ViewRecipe, ViewsOp, WallDetail};
 use kentos_interaction::Level;
 use kentos_ui::widget::{Choice, Select};
 
@@ -20,6 +21,7 @@ pub struct Preset {
     pub scale: u32,
     pub phase: Option<PhaseView>,
     pub hidden: &'static [ViewCategory],
+    pub detail: Option<WallDetail>,
 }
 
 /// The ready recipes (docs/adr/0774 §2): a few useful ones, no more.
@@ -29,30 +31,35 @@ pub const PRESETS: [Preset; 5] = [
         scale: 50,
         phase: None,
         hidden: &[],
+        detail: Some(WallDetail::Detailed),
     },
     Preset {
         name: "Mobilya planı 1:100",
         scale: 100,
         phase: None,
         hidden: &[ViewCategory::Dimensions, ViewCategory::Grids],
+        detail: None,
     },
     Preset {
         name: "Mahal planı 1:100",
         scale: 100,
         phase: None,
         hidden: &[ViewCategory::Dimensions, ViewCategory::Blocks],
+        detail: None,
     },
     Preset {
         name: "Yıkım planı 1:100",
         scale: 100,
         phase: Some(PhaseView::Demolition),
         hidden: &[ViewCategory::Blocks],
+        detail: None,
     },
     Preset {
         name: "Yeni durum 1:100",
         scale: 100,
         phase: Some(PhaseView::Proposed),
         hidden: &[],
+        detail: None,
     },
 ];
 
@@ -66,6 +73,23 @@ const SCALES: [Option<u32>; 7] = [
     Some(500),
     Some(1000),
 ];
+
+/// The walls' details the window offers (docs/adr/0781 §1); none: the scale's.
+pub(crate) const DETAILS: [Option<WallDetail>; 4] = [
+    None,
+    Some(WallDetail::Schematic),
+    Some(WallDetail::Standard),
+    Some(WallDetail::Detailed),
+];
+
+fn detail_label(d: Option<WallDetail>) -> &'static str {
+    match d {
+        None => "Ölçeğe göre",
+        Some(WallDetail::Schematic) => "Şematik",
+        Some(WallDetail::Standard) => "Uygulama",
+        Some(WallDetail::Detailed) => "Ayrıntılı",
+    }
+}
 
 const PHASES: [Option<PhaseView>; 5] = [
     None,
@@ -102,6 +126,12 @@ pub fn recipe_caption(app: &App, r: &ViewRecipe) -> String {
     }
     if !r.hidden.is_empty() {
         parts.push(format!("{} tür gizli", r.hidden.len()));
+    }
+    if let Some(d) = r.detail {
+        parts.push(format!("duvar {}", detail_label(Some(d)).to_lowercase()));
+    }
+    if r.crop {
+        parts.push("kırpılmış".to_owned());
     }
     parts.push(format!("sürüm {}", r.version));
     parts.join(" · ")
@@ -206,6 +236,7 @@ impl App {
                     r.scale = Some(p.scale);
                     r.phase = p.phase;
                     r.hidden = p.hidden.to_vec();
+                    r.detail = p.detail;
                 }
             }
             Event::RecipeLevel(i) => {
@@ -223,6 +254,8 @@ impl App {
             Event::RecipePhase(i) => r.phase = PHASES.get(i).copied().flatten(),
             Event::RecipeState(i) => r.layer_state = i.and_then(|i| states.get(i)).cloned(),
             Event::RecipeScale(i) => r.scale = SCALES.get(i).copied().flatten(),
+            Event::RecipeDetail(i) => r.detail = DETAILS.get(i).copied().flatten(),
+            Event::RecipeCrop(on) => r.crop = on,
             Event::RecipeHide(c, on) => {
                 r.hidden.retain(|h| *h != c);
                 if on {
@@ -305,6 +338,17 @@ impl App {
             move |i| m(Event::RecipeScale(i)),
         )
         .searchable(false);
+        let detail = Select::new(
+            DETAILS.iter().map(|d| Choice::new(detail_label(*d))),
+            DETAILS.iter().position(|d| *d == r.detail),
+            move |i| m(Event::RecipeDetail(i)),
+        )
+        .searchable(false);
+        let crop = words::check(
+            r.crop,
+            "Bağlı haritaları görünümün alanına kırp",
+            Some(m(Event::RecipeCrop(!r.crop))),
+        );
         let hide = ViewCategory::ALL
             .iter()
             .fold(iced::widget::Row::new().spacing(10), |acc, c| {
@@ -348,6 +392,13 @@ impl App {
                 row![
                     cell("Katman durumu", state.into()),
                     cell("Ölçek", scale.into())
+                ]
+                .spacing(12),
+            )
+            .push(
+                row![
+                    cell("Duvar ayrıntısı", detail.into()),
+                    container(crop).width(Fill).padding([22, 0])
                 ]
                 .spacing(12),
             )
