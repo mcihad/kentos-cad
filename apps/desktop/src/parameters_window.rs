@@ -603,6 +603,11 @@ impl App {
             .spacing(8)
             .align_y(Center),
         );
+        if readout.nurbs_endpoints {
+            body = body.push(label::caption(
+                "NURBS için yalnız uç kısıtları hesaplanır. İç kontrol noktaları bu serbestlik sayısına dahil değildir; düzenlenebilir kalır.",
+            ));
+        }
         if let Some((kind, said)) = &w.said {
             body = body.push(words::summary(vec![words::text_line(*kind, said.clone())]));
         }

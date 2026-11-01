@@ -326,6 +326,7 @@ pub struct ConstraintTool {
     drawn: Preview,
     /// A successful click is not a request to preview adding the same constraint again.
     completed_at: Option<(Vec2, u64)>,
+    nurbs_endpoints: bool,
 }
 
 impl ConstraintTool {
@@ -463,6 +464,7 @@ impl ConstraintTool {
         self.hover = None;
         self.drawn = Preview::default();
         self.completed_at = None;
+        self.nurbs_endpoints = false;
     }
 
     /// Writes the constraint; the solver's word or its refusal said.
@@ -602,6 +604,9 @@ impl Tool for ConstraintTool {
                 prompt = prompt.option(n, letters);
             }
         }
+        if self.nurbs_endpoints {
+            prompt = prompt.note("NURBS: yalnız uçlar değişir; iç noktalar korunur");
+        }
         prompt
     }
 
@@ -654,6 +659,13 @@ impl Tool for ConstraintTool {
             return;
         };
         let Some(part) = part_at(p, cx, want) else {
+            if edge::pick(p, cx, |e, _| matches!(e, Entity::Nurbs(_))).is_some() {
+                cx.say(
+                    Level::Warn,
+                    "NURBS kısıtları uygun açık eğrilerin yalnız başlangıç ve bitiş uçlarını destekler; bu parça destek dışında. Çizim değiştirilmedi.",
+                );
+                return;
+            }
             cx.say(
                 Level::Warn,
                 format!(
@@ -665,6 +677,7 @@ impl Tool for ConstraintTool {
             );
             return;
         };
+        self.nurbs_endpoints |= matches!(cx.doc.get(part.slot), Some(Entity::Nurbs(_)));
         self.picked.push(part);
         if !self.complete_with(0) {
             return;
@@ -712,12 +725,16 @@ impl Tool for ConstraintTool {
     }
 
     /// Ctrl+Z: the last part picked goes back.
-    fn undo_step(&mut self, _cx: &mut Context<'_>) -> bool {
+    fn undo_step(&mut self, cx: &mut Context<'_>) -> bool {
         if self.asking {
             self.asking = false;
         }
         if self.picked.pop().is_some() {
             self.drawn = Preview::default();
+            self.nurbs_endpoints = self
+                .picked
+                .iter()
+                .any(|p| matches!(cx.doc.get(p.slot), Some(Entity::Nurbs(_))));
             return true;
         }
         false

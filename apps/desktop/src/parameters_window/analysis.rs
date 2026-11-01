@@ -12,6 +12,7 @@ pub(super) struct Analysis {
     pub listed: Option<ConstraintsListed>,
     pub error: Option<String>,
     pub dependencies: Dependencies,
+    pub nurbs_endpoints: bool,
 }
 impl Analysis {
     pub fn read(doc: &kentos_domain::Document) -> Self {
@@ -24,6 +25,13 @@ impl Analysis {
             _ => (None, Some("Kısıt teşhisi alınamadı.".into())),
         };
         Self {
+            nurbs_endpoints: doc.constraints().constraints.iter().any(|c| {
+                c.rule.elements().iter().any(|e| {
+                    doc.slot_of(kentos_domain::Uuid::from_bytes(e.uid.0))
+                        .and_then(|slot| doc.get(slot))
+                        .is_some_and(|entity| matches!(entity, kentos_commands::Entity::Nurbs(_)))
+                })
+            }),
             dependencies: Dependencies::of(doc.constraints()),
             error: error.or_else(|| values.as_ref().err().map(|e| e.words.clone())),
             values: values.unwrap_or_default(),
@@ -131,5 +139,35 @@ mod tests {
             Dependencies::of(&s).affected("d"),
             BTreeSet::from(["d".into()])
         );
+    }
+    #[test]
+    fn nurbs_scope_is_only_shown_for_constrained_nurbs_and_tracks_undo() {
+        use kentos_commands::{ConstraintsEdit, DocumentSnapshotV1};
+        use kentos_domain::{Document, Slot};
+        use kentos_native_application::{ExecutionContext, constraints_edit};
+        use serde_json::{Value, json};
+        let mut raw: Value = serde_json::from_str(include_str!(
+            "../../../../fixtures/interaction/v1/objects.kcad"
+        ))
+        .unwrap();
+        raw["settings"]["workspace"] = json!("cad");
+        raw["origin"] = json!({"x":0,"y":0});
+        raw["entities"] = json!([{"kind":"nurbs","id":1,"layerId":"cizim","attrs":{},"degree":3,"ctrl":[{"x":0,"y":0},{"x":1,"y":3},{"x":4,"y":3},{"x":6,"y":0}],"knots":[0,0,0,0,1,1,1,1]}]);
+        let mut d =
+            Document::from_snapshot(DocumentSnapshotV1::from_json(&raw.to_string()).unwrap())
+                .unwrap();
+        assert!(!Analysis::read(&d).nurbs_endpoints);
+        let uid = d.uid(Slot(1)).unwrap().to_string();
+        let input: ConstraintsEdit = serde_json::from_value(json!({"edit":{"kind":"add","constraints":[{"rule":{"kind":"fix","a":{"uid":uid,"element":{"kind":"point","place":{"kind":"start"}}}}}]}})).unwrap();
+        let result = constraints_edit::execute(&mut ExecutionContext::new(&mut d), input);
+        assert!(
+            matches!(result, CommandResult::Completed { .. }),
+            "{result:?}"
+        );
+        let a = Analysis::read(&d);
+        assert!(a.nurbs_endpoints);
+        assert_eq!(a.listed.unwrap().diagnosis.dof, 2);
+        d.undo().unwrap();
+        assert!(!Analysis::read(&d).nurbs_endpoints);
     }
 }

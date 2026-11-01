@@ -461,6 +461,11 @@ pencerede doğrulandı. [ADR 0830](../docs/adr/0830-constraint-success-feedback-
 Elips merkez–uç yönünde simetrik 90° başlangıcın yanlış çelişki/tekillik
 üretmesi düzeltildi. Gerçek arayüzde 4/2 m eksenler, bağlı çizgi,
 query/Python eşitliği ve tek Undo doğrulandı. [ADR 0831](../docs/adr/0831-ellipse-ray-direction-without-axis-collapse.md).
+Sınırlı açık NURBS Start/End adaptörü eklendi: dört uç bilinmeyeni;
+iç kontrol noktaları, derece, düğüm ve ağırlıklar korunur. Gerçek GUI’de
+dört bağ, 6→8 m ve izleyen çizgi, kapsam notu dar/geniş pencere, açıklamalı
+destek dışı ret, dosya/Python eşitliği ve tek Undo doğrulandı.
+[ADR 0832](../docs/adr/0832-bounded-nurbs-endpoint-constraints.md).
 Yaylı kenar adaptörü, boyut cebiri, elips grip hedefi ve aynalı
 blok/sürükleme/dal birleşik kabulü bitmeden bu madde kapatılmaz.
 

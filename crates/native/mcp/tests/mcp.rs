@@ -2534,3 +2534,86 @@ fn ellipse_axis_constraints_use_the_same_mcp_diagnosis_and_keep_analytic_geometr
     );
     std::fs::remove_dir_all(dir).unwrap();
 }
+
+#[test]
+fn bounded_nurbs_end_constraints_share_mcp_plan_diagnosis_and_undo() {
+    let mut raw: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/interaction/v1/objects.kcad"
+    ))
+    .unwrap();
+    raw["settings"]["workspace"] = json!("cad");
+    raw["settings"]["drawingUnit"] = json!("mm");
+    raw["origin"] = json!({"x":0,"y":0});
+    raw["entities"] = json!([
+        {"kind":"nurbs","id":1,"layerId":"cizim","attrs":{},"degree":3,"ctrl":[{"x":0,"y":0},{"x":1,"y":3},{"x":3,"y":3},{"x":4,"y":3},{"x":6,"y":0}],"knots":[2,2,2,2,3,8,8,8,8],"weights":[1,2,0.7,3,1]},
+        {"kind":"line","id":2,"layerId":"cizim","attrs":{},"a":{"x":6,"y":0},"b":{"x":10,"y":0}}
+    ]);
+    let dir = std::env::temp_dir().join(format!(
+        "kentos-mcp-nurbs-constraints-{}",
+        std::process::id()
+    ));
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join("nurbs.json");
+    std::fs::write(&path, raw.to_string()).unwrap();
+    let mut server = Server::new();
+    let drawing =
+        call(&mut server, "drawing.open", json!({"path":path}))["structuredContent"]["drawing"]
+            .clone();
+    let items=call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"].clone();
+    let part = |i: usize, p: &str| json!({"uid":items[i]["uid"],"element":{"kind":"point","place":{"kind":p}}});
+    let (a, b, l) = (part(0, "start"), part(0, "end"), part(1, "start"));
+    let added = call(
+        &mut server,
+        "cad.constraints.edit",
+        json!({"drawing":drawing,"edit":{"kind":"add","constraints":[
+            {"rule":{"kind":"fix","a":a}},{"rule":{"kind":"horizontal","a":a,"b":b}},
+            {"rule":{"kind":"distance","a":a,"b":b,"parameter":"aciklik"},"value":"6m"},
+            {"rule":{"kind":"coincident","a":b,"b":l}}
+        ]}}),
+    );
+    assert_eq!(added["structuredContent"]["status"], "completed", "{added}");
+    let before=call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"].clone();
+    let input =
+        json!({"drawing":drawing,"edits":[{"kind":"set","name":"aciklik","expression":"8m"}]});
+    let mut plan_input = input.clone();
+    plan_input["op"] = json!("plan");
+    let plan = call(&mut server, "cad.parameters.edit", plan_input);
+    assert_eq!(plan["structuredContent"]["status"], "completed", "{plan}");
+    assert_eq!(
+        call(&mut server, "drawing.entities", json!({"drawing":drawing}))["structuredContent"]["items"],
+        before
+    );
+    let written = call(&mut server, "cad.parameters.edit", input);
+    assert_eq!(
+        written["structuredContent"]["status"], "completed",
+        "{written}"
+    );
+    let after=call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"].clone();
+    let n = &after[0]["entity"];
+    assert_eq!(n["kind"], "nurbs");
+    assert!((n["ctrl"][4]["x"].as_f64().unwrap() - 8.).abs() < 1e-8);
+    assert_eq!(
+        &n["ctrl"].as_array().unwrap()[..4],
+        &before[0]["entity"]["ctrl"].as_array().unwrap()[..4]
+    );
+    for key in ["degree", "knots", "weights"] {
+        assert_eq!(n[key], before[0]["entity"][key]);
+    }
+    assert!((after[1]["entity"]["a"]["x"].as_f64().unwrap() - 8.).abs() < 1e-8);
+    let query = call(
+        &mut server,
+        "cad.constraints.query",
+        json!({"drawing":drawing}),
+    );
+    let mut q = query["structuredContent"]["output"]["diagnosis"].clone();
+    let mut w = written["structuredContent"]["output"]["diagnosis"].clone();
+    q.as_object_mut().unwrap().remove("iterations");
+    w.as_object_mut().unwrap().remove("iterations");
+    assert_eq!(q, w);
+    call(&mut server, "drawing.undo", json!({"drawing":drawing}));
+    assert_eq!(
+        call(&mut server, "drawing.entities", json!({"drawing":drawing}))["structuredContent"]["items"],
+        before
+    );
+    std::fs::remove_dir_all(dir).unwrap();
+}

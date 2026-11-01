@@ -288,7 +288,7 @@ pub fn moved_parts(before: &Shape, after: &Shape) -> Option<Vec<Element>> {
             .collect();
     let mut parts = Vec::new();
     match after {
-        Shape::Line { .. } => {
+        Shape::Line { .. } | Shape::Nurbs { .. } => {
             parts.extend([Element::Point(PointAt::Start), Element::Point(PointAt::End)])
         }
         Shape::Circle { .. } => parts.push(Element::Circle),
@@ -335,5 +335,7 @@ pub fn measure(shapes: &[Shape], rule: &Rule) -> Option<f64> {
 
 #[cfg(test)]
 mod ellipse_tests;
+#[cfg(test)]
+mod nurbs_tests;
 #[cfg(test)]
 mod tests;

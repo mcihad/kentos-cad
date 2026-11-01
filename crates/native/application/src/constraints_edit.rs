@@ -532,11 +532,18 @@ fn check_parts(doc: &Document, rule: &ConstraintRule, at: &str) -> Result<(), St
         }
         let has = core_shape(entity).is_some_and(|s| has_part(&s, &core_element(&e.element)));
         if !has {
-            return Err(refuse_ids(
-                codes::ELEMENT_NOT_FOUND,
+            let words = if matches!(entity, kentos_commands::Entity::Nurbs(_)) {
+                format!(
+                    "{uid} kimlikli NURBS'te bu kısıt parçası desteklenmiyor: yalnız uygun uç yapısına sahip açık, periyodik olmayan eğrilerin başlangıç/bitiş uçları kısıtlanabilir; iç noktalar korunur."
+                )
+            } else {
                 format!(
                     "{uid} kimlikli nesnede kısıtın andığı parça yok: köşe numarası, düz kenar (yaylı kenar kısıt almaz) ya da daire olarak yeniden seçin."
-                ),
+                )
+            };
+            return Err(refuse_ids(
+                codes::ELEMENT_NOT_FOUND,
+                words,
                 at,
                 vec![uid.to_string()],
             ));

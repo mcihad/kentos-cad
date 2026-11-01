@@ -3,6 +3,8 @@
 //! circle its centre and radius; an arc its centre, radius and two angles; a path every vertex of every ring of every
 //! part (a bulged edge keeps its bulge, so it is not a segment). An ellipse has centre, two positive
 //! semi-axis lengths and orientation; an elliptical arc also has two unwrapped end parameters.
+//! The bounded NURBS adapter varies only the two endpoint poles of an open, nonperiodic, doubly clamped curve.
+//! Its interior poles, degree, knots and weights remain source constants.
 
 use crate::entity::Shape;
 use crate::geom::arc::sweep;
@@ -104,6 +106,32 @@ fn rings_of(shape: &Shape) -> Option<Vec<RingOf>> {
     Some(out)
 }
 
+fn nurbs_ends(shape: &Shape) -> Option<(&Vec2, &Vec2)> {
+    let Shape::Nurbs {
+        ctrl,
+        closed: false,
+        periodic: false,
+        ..
+    } = shape
+    else {
+        return None;
+    };
+    let n = crate::geom::nurbs::of(shape)?;
+    if !n.valid() || ctrl.iter().any(|p| !p.x.is_finite() || !p.y.is_finite()) {
+        return None;
+    }
+    let (lo, hi) = n.domain();
+    // Exact clamping, including multiplicity: arbitrary NURBS endpoints need not be their first/last poles.
+    if !n.knots[..=n.degree].iter().all(|k| *k == lo)
+        || n.knots[n.degree + 1] <= lo
+        || !n.knots[ctrl.len()..].iter().all(|k| *k == hi)
+        || n.knots[ctrl.len() - 1] >= hi
+    {
+        return None;
+    }
+    Some((ctrl.first()?, ctrl.last()?))
+}
+
 impl Model {
     /// The unknowns of the objects `used` names (others keep no slot).
     pub fn new(shapes: &[Shape], used: &[bool]) -> Model {
@@ -170,6 +198,15 @@ impl Model {
                     if sweep(*t0, *t1) < TAU - 1e-12 {
                         push(&mut m, *t0, VarKind::Angle);
                         push(&mut m, t0 + sweep(*t0, *t1), VarKind::Angle);
+                    }
+                }
+                Shape::Nurbs { .. } => {
+                    let Some((a, b)) = nurbs_ends(shape) else {
+                        continue;
+                    };
+                    for p in [a, b] {
+                        push(&mut m, p.x, VarKind::East);
+                        push(&mut m, p.y, VarKind::North);
                     }
                 }
                 other => {
@@ -257,8 +294,8 @@ impl Model {
                 let count = 1 + parts.as_ref().map_or(0, Vec::len);
                 ((k as usize) < count).then(|| vec![s + 2 * k as usize, s + 2 * k as usize + 1])
             }
-            (PointAt::Start, Shape::Line { .. }) => Some(vec![s, s + 1]),
-            (PointAt::End, Shape::Line { .. }) => Some(vec![s + 2, s + 3]),
+            (PointAt::Start, Shape::Line { .. } | Shape::Nurbs { .. }) => Some(vec![s, s + 1]),
+            (PointAt::End, Shape::Line { .. } | Shape::Nurbs { .. }) => Some(vec![s + 2, s + 3]),
             (PointAt::Center, Shape::Circle { .. } | Shape::Arc { .. } | Shape::Ellipse { .. }) => {
                 Some(vec![s, s + 1])
             }
@@ -359,6 +396,21 @@ pub(super) fn write_back(shape: &mut Shape, slot: &Slot, x: &[f64]) {
         Shape::Line { a, b } => {
             *a = Vec2::new(x[s], x[s + 1]);
             *b = Vec2::new(x[s + 2], x[s + 3]);
+        }
+        Shape::Nurbs {
+            ctrl,
+            fit,
+            fit_tolerance,
+            tangents,
+            ..
+        } => {
+            let last = ctrl.len() - 1;
+            ctrl[0] = Vec2::new(x[s], x[s + 1]);
+            ctrl[last] = Vec2::new(x[s + 2], x[s + 3]);
+            // The source fit describes the old shape; interior poles and the actual NURBS source remain exact.
+            *fit = None;
+            *fit_tolerance = None;
+            *tangents = None;
         }
         Shape::Circle { c, r } => {
             *c = Vec2::new(x[s], x[s + 1]);

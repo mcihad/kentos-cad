@@ -157,3 +157,5 @@ fn every_builtin_tool_can_leave_its_initial_stage_without_writing_a_draft() {
 }
 
 mod ellipse_constraints;
+
+mod nurbs_constraints;

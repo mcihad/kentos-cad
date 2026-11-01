@@ -108,3 +108,5 @@ mod curve_ties;
 mod area_curve_ties;
 
 mod ellipse_constraints;
+
+mod nurbs_constraints;
