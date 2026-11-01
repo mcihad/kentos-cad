@@ -4656,7 +4656,7 @@
       "status": "failed",
       "error": {
        "code": "trim_failed",
-       "message": "Adalı alanda budama yapılamaz; iç halkalar kaybolurdu. Önce Patlat ile halkalarına ayırın ya da Alan böl kullanın.",
+       "message": "Adalı alanda Buda iç halkaları koruyamaz. Halkaları ve alan yapısını korumak için Alan böl aracını kullanın; kaynak alan değiştirilmedi.",
        "path": "crossing"
       }
      },

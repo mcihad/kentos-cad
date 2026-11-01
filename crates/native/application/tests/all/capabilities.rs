@@ -87,6 +87,10 @@ fn reached() -> BTreeMap<String, BTreeSet<String>> {
 
 /// The listed codes no shared case reaches, and why.
 const UNREACHED: &[(&str, &str, &str)] = &[
+    (
+        "cad.entities.isolate", "invalid_input",
+        "MAX_SELECT_ITEMS sınırından bir fazla UID, entities_select/isolation.rs içindeki isolation_limit_is_atomic testinde; büyük tekrarlı liste ortak JSON durumuna yazılmaz (ADR 0820).",
+    ),
     ("cad.walls.edit", "constraint_conflict", "Bağların çelişkisi cad.constraints.edit.arch.json'un cad.walls.edit adımlarında (sabit duvarı kaydırmak, kilitli katmandaki bağlı duvar) verilir; o dosyanın komutu cad.constraints.edit olduğundan sayım onu orada bulur (ADR 0770 §4)."),
     ("cad.walls.edit", "constraints_relaxed", "Gevşeterek düzenleme cad.constraints.edit.arch.json'un cad.walls.edit adımında (relaxConstraints) verilir, uyarıları \"$any\" ile karşılaştırılır (ADR 0770 §4)."),
     ("cad.walls.edit", "constraints_removed", "Kenar sayısı değişen duvarın bağları ADR 0337'deki gibi gider; uyarı kentos-domain'in constraints testlerinde sınanır (ADR 0770 §4)."),

@@ -3297,7 +3297,7 @@ const ENTRIES: &[Entry] = &[
             REVISION,
         ],
         warnings: &["fillet_failed"],
-        targets: corner_targets,
+        targets: fillet_targets,
     },
     Entry {
         id: "cad.entities.chamfer",
@@ -5284,6 +5284,12 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.entities.isolate",
+        refusals: &[&["invalid_input", "no_entities", "invalid_uid", "entity_not_found"]],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
         id: "cad.entities.select",
         refusals: &[&[
             "not_finite",
@@ -5868,6 +5874,13 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
 ];
+
+fn fillet_targets() -> Vec<CommandTarget> {
+    let mut targets = corner_targets();
+    targets[1] = target(Some("lines"), &["line", "polyline", "arc", "circle"], &[], Some("not_a_corner"),
+        Some("Bağımsız çizgi/yay/daire çiftleri analitik teğet çözüm kullanır; daireler bütün kalır, yaylar sonlu açı aralığında kırpılır. Açık çoklu çizginin yalnız düz uç kenarları, başka bir düz uç kenarla birleşebilir; yaylı yol, elips ve NURBS desteklenmez."));
+    targets
+}
 
 fn corner_targets() -> Vec<CommandTarget> {
     vec![

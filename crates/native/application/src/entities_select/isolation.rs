@@ -128,6 +128,16 @@ mod tests {
     }
 
     #[test]
+    fn isolation_limit_is_atomic() {
+        let mut doc=drawing();let before=doc.to_snapshot_v2();let generation=doc.generation();
+        let uid=doc.uid(Slot(1)).unwrap().to_string();
+        let result=call(&mut doc,CallOp::Execute,json!({"kind":"isolate","uids":vec![uid;MAX_SELECT_ITEMS+1]}));
+        assert_eq!(result["error"]["code"],"invalid_input");
+        assert_eq!(doc.to_snapshot_v2(),before);assert_eq!(doc.generation(),generation);
+        assert!(!doc.objects_isolated());
+    }
+
+    #[test]
     fn temporary_isolation_is_readonly_in_plan_unsaved_and_separate_from_geometry_undo() {
         let mut doc = drawing();
         let slot = doc.add(serde_json::from_value(json!({"kind":"line","id":0,"layerId":"cizim","attrs":{},"a":{"x":0,"y":0},"b":{"x":2,"y":0}})).unwrap()).unwrap();

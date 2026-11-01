@@ -482,7 +482,7 @@ def break_cases():
         refused("Nokta kırılmaz", {"uid": UID(16), "first": P(X + 50, Y)}, "not_breakable",
                 "Bu türdeki nesne kırılmaz: çizgi, çoklu çizgi, alan, yay, daire, elips, NURBS eğrisi, yardımcı çizgi ya da ışın olmalı.", "uid"),
         refused("Adalı alan kırılmaz", {"uid": UID(25), "first": P(X + 75, Y), "second": P(X + 80, Y + 5)}, "not_breakable",
-                "Adalı alanda kırma yapılamaz; iç halkalar kaybolurdu. Önce Patlat ile halkalarına ayırın ya da Alan böl kullanın.", "uid"),
+                "Adalı alanda Kır iç halkaları koruyamaz. Halkaları ve alan yapısını korumak için Alan böl aracını kullanın; kaynak alan değiştirilmedi.", "uid"),
         refused("Kilitli katmandaki çizgi", {"uid": UID(14), "first": P(X + 4, Y + 40)}, "layer_locked", LOCKED, "uid"),
         refused("Uçtan kırılmaz: çekirdeğin sözü", {"uid": UID(10), "first": P(X, Y)}, "break_failed",
                 "Nesne ucundan kırılamaz; iç kısmında bir nokta gösterin.", "first"),

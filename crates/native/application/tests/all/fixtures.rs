@@ -9,6 +9,7 @@
 
 use std::collections::HashMap;
 use std::path::PathBuf;
+use kentos_native_application::entities_select::isolation;
 
 use kentos_commands::ChangesetApply;
 use kentos_commands::{
@@ -2343,6 +2344,10 @@ impl Input for kentos_commands::EntitiesRelate {
     }
 }
 
+impl Input for kentos_commands::EntitiesIsolate {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> { None }
+}
+
 impl Input for kentos_commands::EntitiesSelect {
     /// The region's `region.a.x` … `region.radius`, `region.tolerance`, `region.points[i].x`.
     fn number(&mut self, path: &str) -> Option<&mut f64> {
@@ -4221,6 +4226,7 @@ fn run_op(
         kentos_commands::CAD_ENTITIES_SELECT => {
             run!(entities_select, kentos_commands::EntitiesSelect)
         }
+        kentos_commands::CAD_ENTITIES_ISOLATE => run!(isolation, kentos_commands::EntitiesIsolate),
         kentos_commands::CAD_ENTITIES_TRIM => run!(entities_trim, EntitiesTrim),
         kentos_commands::CAD_ENTITIES_EXTEND => run!(entities_extend, EntitiesTrim),
         kentos_commands::CAD_ENTITIES_FILLET => run!(entities_fillet, EntitiesFillet),

@@ -335,7 +335,7 @@ menü ve tekrar eden özet kaldırıldı. Gerçek arayüzde karma tür seçimi, 
 kapsamı, minimum 240 mantıksal piksel panelde taşmama ve seçim boşken yalıtımı
 tek tıkla bitirme sınandı. Günlükler ve ekran görüntüleri repo dışındadır.
 
-### CAD-ADV-04 — Eğrisel çizim ve düzenlemenin gerçek geometrik sınırlarını kapat [ ]
+### CAD-ADV-04 — Eğrisel çizim ve düzenlemenin gerçek geometrik sınırlarını kapat [~]
 
 **Öncelik:** P1. **Kod:** [C06], [C07], [C08].
 **Dayanak:** QCAD Trim'in destek denetimi/işlem ayrımı ve hızlı budama
@@ -361,6 +361,22 @@ tek tıkla bitirme sınandı. Günlükler ve ekran görüntüleri repo dışınd
 üzerinde aynı düzenlemeleri yap. Teğetlik, uç sürekliliği, alan/uzunluk ve
 hata bütçesi bağımsız başvuruyla doğrulansın; bağlı ölçü/tarama ve Undo
 korunsun. Destek genişlemeden mevcut retler kaldırılmasın.
+
+**İlerleme — 2026-11-01, henüz tamamlanmadı:** Bağımsız çizgi/yay/daire
+çiftleri için analitik dairesel yuvarlama, tıklanan taraf, yönlü G1,
+uç dışına tıklama, sıfır yarıçap ve büyük koordinat kontrolleri eklendi.
+İlişkili taramanın yeni bağlayıcıyı sınırına katması ve tek Undo doğrulandı.
+İki köşeli değişken genişlikli yolun Buda/Uzat genişlik kaybı giderildi.
+Delikli alan retleri korunarak Alan böl öneriliyor. Native/Python/MCP
+aynı komutu kullanıyor. Gerçek arayüzde kaydedilen geometri ve Undo
+bağımsız dosya karşılaştırmasıyla kontrol edildi; görseller repo dışındadır.
+[Destek matrisi ve açık kabul işleri](../docs/cad/curve-editing-support.md),
+[ADR 0821](../docs/adr/0821-analytic-circular-fillets.md).
+Pahın iki kenar mesafesi ayrı olmalı; sahnede kenar sırası açık gösterilir.
+Dairesel yuvarlama tek yarıçaptır; farklı kenar mesafeli eliptik/geçiş
+eğrisi ayrı sözleşmeyle araştırılacak, mevcut daire hesabı bozulmayacak.
+Elips/NURBS ötelemesinde açık yaklaşım/tolerans ve gerçek hata üst sınırı,
+süreklilik arayüzü ile birleşik ölçü/alt nesne kabulü halen açıktır.
 
 ### CAD-ADV-05 — Parametrik 2B tasarımı açıklanabilir ve kapsamlı hale getir [ ]
 

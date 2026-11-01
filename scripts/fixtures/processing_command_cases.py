@@ -1112,6 +1112,15 @@ KINDS = {"enum": "choice", "string": "text"}
 ADDED_SINCE = {
     # Yinelenen anahtar (docs/adr/0439 §4).
     "attributes.joinByField": [{"name": "duplicates", "type": "enum", "label": "Yinelenen anahtar"}],
+    # CAD-ADV-03: native CAD filters are optional and do not change expression-only runs.
+    "selection.byExpression": [
+        {"name": "cadFilter", "type": "boolean", "label": "CAD özellik süzgeci"},
+        {"name": "textHeightMin", "type": "number", "label": "En küçük yazı yüksekliği", "optional": True},
+        {"name": "textHeightMax", "type": "number", "label": "En büyük yazı yüksekliği", "optional": True},
+        {"name": "assignedColor", "type": "string", "label": "Atanan CAD rengi", "optional": True},
+        {"name": "displayedColor", "type": "string", "label": "Görünür CAD rengi", "optional": True},
+        {"name": "blockPath", "type": "string", "label": "Blok parçası yolu", "optional": True},
+    ],
 }
 
 

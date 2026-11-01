@@ -652,6 +652,66 @@
            "advanced": "$any",
            "default": "$any",
            "options": "$any"
+          },
+          {
+           "name": "cadFilter",
+           "label": "CAD özellik süzgeci",
+           "kind": "boolean",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "textHeightMin",
+           "label": "En küçük yazı yüksekliği",
+           "kind": "number",
+           "description": "$any",
+           "optional": true,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "textHeightMax",
+           "label": "En büyük yazı yüksekliği",
+           "kind": "number",
+           "description": "$any",
+           "optional": true,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "assignedColor",
+           "label": "Atanan CAD rengi",
+           "kind": "text",
+           "description": "$any",
+           "optional": true,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "displayedColor",
+           "label": "Görünür CAD rengi",
+           "kind": "text",
+           "description": "$any",
+           "optional": true,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "blockPath",
+           "label": "Blok parçası yolu",
+           "kind": "text",
+           "description": "$any",
+           "optional": true,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
           }
          ]
         }
@@ -1235,6 +1295,66 @@
            "kind": "choice",
            "description": "$any",
            "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "cadFilter",
+           "label": "CAD özellik süzgeci",
+           "kind": "boolean",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "textHeightMin",
+           "label": "En küçük yazı yüksekliği",
+           "kind": "number",
+           "description": "$any",
+           "optional": true,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "textHeightMax",
+           "label": "En büyük yazı yüksekliği",
+           "kind": "number",
+           "description": "$any",
+           "optional": true,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "assignedColor",
+           "label": "Atanan CAD rengi",
+           "kind": "text",
+           "description": "$any",
+           "optional": true,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "displayedColor",
+           "label": "Görünür CAD rengi",
+           "kind": "text",
+           "description": "$any",
+           "optional": true,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "blockPath",
+           "label": "Blok parçası yolu",
+           "kind": "text",
+           "description": "$any",
+           "optional": true,
            "advanced": "$any",
            "default": "$any",
            "options": "$any"

@@ -233,7 +233,7 @@ fn check_break(doc: &Document, input: &EntitiesBreak) -> Result<Checked, Stop> {
     if matches!(e, Entity::Polygon(p) if p.holes.as_ref().is_some_and(|h| !h.is_empty())) {
         return Err(refuse(
             codes::NOT_BREAKABLE,
-            "Adalı alanda kırma yapılamaz; iç halkalar kaybolurdu. Önce Patlat ile halkalarına ayırın ya da Alan böl kullanın.".into(),
+            "Adalı alanda Kır iç halkaları koruyamaz. Halkaları ve alan yapısını korumak için Alan böl aracını kullanın; kaynak alan değiştirilmedi.".into(),
             "uid",
         ));
     }

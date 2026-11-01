@@ -527,7 +527,7 @@ fn check(
 }
 
 /// The words of an area with holes Buda refuses.
-const HOLES: &str = "Adalı alanda budama yapılamaz; iç halkalar kaybolurdu. Önce Patlat ile halkalarına ayırın ya da Alan böl kullanın.";
+const HOLES: &str = "Adalı alanda Buda iç halkaları koruyamaz. Halkaları ve alan yapısını korumak için Alan böl aracını kullanın; kaynak alan değiştirilmedi.";
 
 /// Whether `e` is an area with holes (Buda would lose them).
 fn holed(e: &Entity) -> bool {

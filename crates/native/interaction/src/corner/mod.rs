@@ -25,7 +25,9 @@
 mod plan;
 mod site;
 
-use kentos_commands::{CommandResult, CornerPick, EntitiesChamfer, EntitiesFillet, TrimPick};
+use kentos_commands::{
+    CommandResult, CornerPick, EntitiesChamfer, EntitiesFillet, Entity, TrimPick,
+};
 use kentos_domain::Slot;
 use kentos_geometry_core::tools::drawing::offset_along;
 use kentos_geometry_core::tools::editing::{fillet_radius_for, pulled_distance};
@@ -39,7 +41,7 @@ use crate::log::Level;
 use crate::points::{self, plain_number};
 use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{
-    Context, Cursor, Flow, Marker, MarkerShape, Memory, Pointer, Preview, Stroke, Tag, Tone, Tool,
+    Context, Cursor, Flow, Label, Marker, MarkerShape, Memory, Pointer, Preview, Stroke, Tag, Tone, Tool,
 };
 use crate::{Vec2, js_trim};
 use plan::Op;
@@ -182,6 +184,9 @@ impl CornerTool {
     /// The size a pull gives: a fillet's radius meets the side where the
     /// cursor is (tangent length), a chamfer cuts there.
     fn op_for_pull(&self, t: f64, c: &Corner) -> Op {
+        if matches!(c.site, Site::Curves { .. }) {
+            return Op::Radius(t);
+        }
         match self.kind {
             Kind::Fillet => Op::Radius(fillet_radius_for(t, c.geom.phi)),
             Kind::Chamfer => Op::Cut(t, t),
@@ -228,6 +233,11 @@ impl CornerTool {
     /// How far the cursor has been pulled along the nearer side, in steps
     /// that suit the zoom (four pixels), from the core.
     fn pulled_distance(&self, c: &Corner, cx: &Context<'_>) -> f64 {
+        if matches!(c.site, Site::Curves { .. }) {
+            return self.mouse.map_or(0., |p| {
+                kentos_geometry_core::jsmath::js_hypot(p.x - c.geom.at.x, p.y - c.geom.at.y)
+            });
+        }
         pulled_distance(&c.geom, self.mouse, cx.view.world_length(4.0))
     }
 
@@ -252,6 +262,12 @@ impl CornerTool {
                 index: u32::try_from(vertex).unwrap_or(u32::MAX),
             },
             Site::Lines {
+                first,
+                pick1,
+                second,
+                pick2,
+            }
+            | Site::Curves {
                 first,
                 pick1,
                 second,
@@ -323,6 +339,9 @@ impl CornerTool {
                 let out = Outline::of(&shape(e), None, 2.0, Tone::Accent);
                 self.drawn.strokes = out.strokes;
             }
+            if self.kind == Kind::Chamfer && let Some((_, at)) = self.first {
+                self.drawn.labels.push(Label { at, text:"1. kenar".into(), offset:[10.,-18.], tone:Tone::Accent });
+            }
             return;
         }
         let Some(c) = self.corner else { return };
@@ -347,8 +366,19 @@ impl CornerTool {
         }
         let t = self.pulled_distance(&c, cx);
         let op = self.op_for_pull(t, &c);
+        if self.kind == Kind::Chamfer {
+            for (i,u) in [c.geom.u1,c.geom.u2].into_iter().enumerate() {
+                self.drawn.labels.push(Label {
+                    at:offset_along(c.geom.at,u,cx.view.world_length(60.)),
+                    text:format!("{}. kenar",i+1),offset:[10.,-18.],tone:Tone::Accent,
+                });
+            }
+        }
         // Where the rounding or the cut starts on each side.
-        for u in [c.geom.u1, c.geom.u2] {
+        for u in [c.geom.u1, c.geom.u2]
+            .into_iter()
+            .filter(|_| !matches!(c.site, Site::Curves { .. }))
+        {
             out.strokes.push(
                 Stroke::solid(vec![c.geom.at, offset_along(c.geom.at, u, t)], false)
                     .width(2.0)
@@ -362,7 +392,8 @@ impl CornerTool {
             trim: self.memory().corner_trim,
             expected_revision: None,
         };
-        if let CommandResult::Completed { output, .. } = corner_plan(doc, request) {
+        let planned = corner_plan(doc, request);
+        if let CommandResult::Completed { output, .. } = &planned {
             for e in &output.changed {
                 out = out.and(Outline::of(&shape(e), Some([5.0, 3.0]), 2.0, Tone::Accent));
             }
@@ -382,6 +413,23 @@ impl CornerTool {
                     },
                 });
             }
+        } else if let CommandResult::Failed { error } = planned
+            && let Some(mouse) = self.mouse
+        {
+            let mut lines = vec![self.describe(op)];
+            let mut line = String::new();
+            for word in error.message.split_whitespace() {
+                if !line.is_empty() && line.chars().count() + word.chars().count() + 1 > 44 {
+                    lines.push(std::mem::take(&mut line));
+                }
+                if !line.is_empty() { line.push(' '); }
+                line.push_str(word);
+            }
+            if !line.is_empty() { lines.push(line); }
+            self.drawn.tag = Some(Tag {
+                at: mouse,
+                lines,
+            });
         }
         self.drawn.strokes = out.strokes;
         self.drawn.marks = out.marks;
@@ -411,6 +459,10 @@ impl Tool for CornerTool {
         let trim = if m.corner_trim { "evet" } else { "hayır" };
         let title = self.title();
         match (self.stage, self.kind) {
+            (Stage::Second, Kind::Fillet) => Prompt::new(
+                title,
+                "ikinci çizgiyi, yayı veya daireyi birleşecek tarafa yakın seçin",
+            ),
             (Stage::Second, _) => Prompt::new(
                 title,
                 "ikinci çizgiyi ya da aynı çoklu çizginin komşu kenarını seçin",
@@ -418,7 +470,7 @@ impl Tool for CornerTool {
             (Stage::Find, Kind::Fillet) => {
                 let p = Prompt::new(
                     title,
-                    "yuvarlanacak köşeye tıklayın ya da sırayla iki çizgi seçin",
+                    "köşeyi ya da sırayla iki çizgi, yay veya daire seçin",
                 );
                 let p = match m.fillet_radius {
                     Some(r) => p.note(format!("son yarıçap {}", f.length(r))),
@@ -440,7 +492,14 @@ impl Tool for CornerTool {
             (Stage::Size, Kind::Fillet) => {
                 let p = Prompt::new(
                     title,
-                    "fareyi kenar boyunca kaydırıp tıklayın ya da yarıçap yazın",
+                    if self
+                        .corner
+                        .is_some_and(|c| matches!(c.site, Site::Curves { .. }))
+                    {
+                        "fareyle yarıçapı belirleyin veya birimli yarıçap yazın"
+                    } else {
+                        "fareyi kenar boyunca kaydırıp tıklayın ya da yarıçap yazın"
+                    },
                 );
                 let p = match m.fillet_radius {
                     Some(r) => p.option_with("Son yarıçap", "Enter", f.length(r)),
@@ -451,7 +510,7 @@ impl Tool for CornerTool {
             (Stage::Size, Kind::Chamfer) => {
                 let p = Prompt::new(
                     title,
-                    "fareyi kenar boyunca kaydırıp tıklayın ya da mesafe yazın (d ya da d1,d2)",
+                    "ilk ve ikinci kenar mesafesini yazın (10cm;20cm) veya fareyle eşit pah belirleyin",
                 );
                 let p = match m.chamfer {
                     Some((d1, d2)) => p.option_with("Son mesafe", "Enter", self.cut_text(d1, d2)),
@@ -486,7 +545,10 @@ impl Tool for CornerTool {
             }
         }
         if self.stage != Stage::Size {
-            edge::hover(p, cx, editable);
+            let fillet = self.kind == Kind::Fillet;
+            edge::hover(p, cx, |e, d| {
+                editable(e, d) && (fillet || !matches!(e, Entity::Arc(_) | Entity::Circle(_)))
+            });
         }
         self.redraw(cx);
     }
@@ -509,12 +571,17 @@ impl Tool for CornerTool {
             return self.redraw(cx);
         }
         let said = cx.log.len();
-        let Some(slot) = edge::pick_said(p, cx, editable) else {
+        let fillet = self.kind == Kind::Fillet;
+        let Some(slot) = edge::pick_said(p, cx, |e, d| {
+            editable(e, d) && (fillet || !matches!(e, Entity::Arc(_) | Entity::Circle(_)))
+        }) else {
             // Keep the actionable locked-layer/filter reason; do not hide it
             // behind a second generic warning in the status bar.
             if cx.log.len() == said {
                 let under = cx.spatial.pick_edge(p.raw, cx.pick_tolerance(), |_| true);
-                cx.say(Level::Warn, if under.is_some() {
+                cx.say(Level::Warn, if under.is_some() && fillet {
+                    "Yuvarlama için çizgi, yay veya daire seçin. Elips/NURBS ve yaylı çoklu çizgi henüz desteklenmiyor."
+                } else if under.is_some() {
                     "Bu araç düz çizgi veya çoklu çizginin düz kenarları arasındaki köşeyi işler. Yay, daire, elips ya da eğri yerine iki düz kenar seçin."
                 } else {
                     "Bir köşeye ya da düzenlenebilir bir çizgi veya çoklu çizgi kenarına tıklayın."
@@ -529,7 +596,7 @@ impl Tool for CornerTool {
             return self.redraw(cx);
         }
         let Some(first) = self.first else { return };
-        match site::corner_of_picks(first, (slot, p.raw), cx) {
+        match site::corner_of_picks(first, (slot, p.raw), cx, fillet) {
             Err(error) => cx.say(Level::Warn, error),
             Ok(c) => {
                 self.lock(c, cx);
@@ -554,7 +621,7 @@ impl Tool for CornerTool {
         let Some(op) = self.op_for_text(text) else {
             cx.say(Level::Warn, match self.kind {
                 Kind::Fillet => "Sıfır veya pozitif bir yarıçap yazın (örnek: 2 ya da 25cm). Enter son yarıçapı uygular; Esc köşe seçimine döner.",
-                Kind::Chamfer => "Sıfır veya pozitif bir mesafe yazın (örnek: 2 ya da 1,2). Enter son mesafeyi uygular; Esc köşe seçimine döner.",
+                Kind::Chamfer => "Bir mesafe veya sırasıyla iki kenar mesafesi yazın (örnek: 10cm;20cm). Enter son mesafeleri uygular; Esc köşe seçimine döner.",
             });
             return true;
         };

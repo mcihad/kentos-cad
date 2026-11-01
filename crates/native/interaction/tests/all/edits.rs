@@ -37,9 +37,14 @@ fn corner_refusals_keep_the_specific_locked_layer_or_curve_reason_without_writin
     let mut b = Bench::on(include_str!("../../../../../fixtures/interaction/v1/tools.kcad"));
     b.draft.snap = false;
     b.start("fillet");
+    // Circles now participate in fillets; a legacy fit spline still refuses
+    // explicitly instead of turning into a sampled polyline.
+    let slot=b.doc.add(serde_json::from_value(serde_json::json!({"kind":"spline","id":0,"layerId":"cizim","attrs":{},"pts":[{"x":487030.,"y":4420020.},{"x":487035.,"y":4420020.},{"x":487040.,"y":4420020.}],"closed":false})).unwrap()).unwrap();
+    b.spatial.sync(&b.doc);
     let before = b.doc.to_snapshot_v2();
-    b.click(20., -8.);
-    assert!(b.last_text().unwrap().contains("iki düz kenar seçin"));
+    b.click(35., 20.);
+    assert!(b.last_text().unwrap().contains("henüz desteklenmiyor"));
+    assert!(b.doc.get(slot).is_some());
     assert_eq!(b.doc.to_snapshot_v2(), before);
 }
 
@@ -367,7 +372,7 @@ fn a_fillet_rounds_a_polyline_corner_by_a_typed_radius() {
     b.start("fillet");
     assert_eq!(
         b.session.prompt().text(),
-        "Köşe yuvarla: yuvarlanacak köşeye tıklayın ya da sırayla iki çizgi seçin [Kırp (K): evet]"
+        "Köşe yuvarla: köşeyi ya da sırayla iki çizgi, yay veya daire seçin [Kırp (K): evet]"
     );
     // The corner under the cursor is ringed.
     b.move_to(0.2, 4.2);
@@ -416,13 +421,32 @@ fn a_fillet_rounds_a_polyline_corner_by_a_typed_radius() {
 }
 
 #[test]
+fn asymmetric_chamfer_distances_follow_the_numbered_picked_edges_and_undo_together() {
+    for reverse in [false,true] {
+        let mut b=bench(&[]);let before=b.doc.to_snapshot_v2();
+        b.start("chamfer");
+        let (a,c)=if reverse {((14.,10.),(20.,4.))} else {((20.,4.),(14.,10.))};
+        b.click(a.0,a.1);b.click(c.0,c.1);
+        let preview=b.session.preview(&Default::default()).unwrap();
+        assert_eq!(preview.labels.iter().map(|l|l.text.as_str()).collect::<Vec<_>>(),["1. kenar","2. kenar"]);
+        assert!(b.type_text("10cm;20cm"));
+        let (dx,dy)=if reverse {(0.2,0.1)} else {(0.1,0.2)};
+        assert!(near(&line(&b,5),&[[14.+dx,4.],[26.,4.]]));
+        assert!(near(&line(&b,6),&[[14.,16.],[14.,4.+dy]]));
+        assert!(near(&line(&b,14),&if reverse {[[14.,4.+dy],[14.+dx,4.]]} else {[[14.+dx,4.],[14.,4.+dy]]}));
+        assert_eq!(b.memory.chamfer,Some((0.1,0.2)));
+        assert_eq!(b.doc.undo().as_deref(),Some("Pah"));assert_eq!(b.doc.to_snapshot_v2(),before);
+    }
+}
+
+#[test]
 fn a_chamfer_cuts_where_two_lines_meet() {
     let mut b = bench(&[]);
     b.start("chamfer");
     b.click(14.2, 4.2);
     assert_eq!(
         b.session.prompt().text(),
-        "Pah: fareyi kenar boyunca kaydırıp tıklayın ya da mesafe yazın (d ya da d1,d2) [Kırp (K): evet]"
+        "Pah: ilk ve ikinci kenar mesafesini yazın (10cm;20cm) veya fareyle eşit pah belirleyin [Kırp (K): evet]"
     );
     assert!(b.type_text("2"));
     assert_eq!(b.last_text(), Some("Pah kırıldı: 2.000 m."));
@@ -868,4 +892,46 @@ fn an_associative_array_is_edited_through_one_of_its_items() {
     );
     assert_eq!(b.doc.undo().as_deref(), Some("Diziyi düzenle"));
     assert_eq!(rows_and_items(&b), (3, 5));
+}
+
+#[test]
+fn circular_fillet_uses_two_picks_readonly_preview_and_one_undo_and_keeps_chamfer_straight_only() {
+    use serde_json::json;
+    let mut raw: serde_json::Value = serde_json::from_str(EDITS).unwrap();
+    raw["entities"] = json!([
+        {"kind":"line","id":1,"layerId":"cizim","attrs":{},"a":{"x":486995.,"y":4420000.},"b":{"x":487010.,"y":4420000.}},
+        {"kind":"arc","id":2,"layerId":"cizim","attrs":{"QA":"arc"},"c":{"x":487004.,"y":4420003.},"r":2.,"a0":std::f64::consts::PI,"a1":0.}
+    ]);
+    let mut b = Bench::on(&raw.to_string());
+    b.draft.snap = false;
+    b.start("fillet");
+    let before = b.doc.to_snapshot_v2();
+    b.click(0., 0.);
+    b.click(2., 3.);
+    assert!(b.session.prompt().text().contains("birimli yarıçap"));
+    b.move_to(2., 2.);
+    assert!(b.session.preview(&Default::default()).is_some());
+    assert_eq!(b.doc.to_snapshot_v2(), before, "hover must never mutate");
+    assert!(b.type_text("100cm"));
+    assert!(
+        b.last_text().unwrap().contains("yuvarlandı"),
+        "{:?}",
+        b.last_text()
+    );
+    assert_eq!(b.doc.len(), 3);
+    let Some(Entity::Arc(join)) = b.doc.entities().find(|e| e.base().id > 2) else {
+        panic!("fillet");
+    };
+    assert!((join.c.x - (487004. - 5_f64.sqrt())).abs() < 1e-8);
+    assert!((join.c.y - 4420001.).abs() < 1e-8);
+    assert_eq!(
+        b.doc.journal().last().unwrap().command.as_deref(),
+        Some("cad.entities.fillet")
+    );
+    assert_eq!(b.doc.undo().as_deref(), Some("Köşe yuvarla"));
+    assert_eq!(b.doc.to_snapshot_v2(), before);
+    b.start("chamfer");
+    b.click(2., 3.);
+    assert!(b.last_text().unwrap().contains("iki düz kenar"));
+    assert_eq!(b.doc.to_snapshot_v2(), before);
 }

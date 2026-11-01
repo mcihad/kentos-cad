@@ -191,7 +191,11 @@ pub fn sub_path(path: &Path, s0: f64, s1: f64, source: &Shape) -> Entity {
         }
     }
     bulges.push(0.0);
-    if matches!(source, Shape::Line { .. }) || (pts.len() == 2 && bulges[0] == 0.0) {
+    // A straight two-vertex piece still needs a polyline when its source has
+    // edge widths: converting it to LINE would discard the tapered stroke.
+    let wide =
+        matches!(source,Shape::Polyline {widths:Some(w),..} if w.iter().flatten().any(|v|*v!=0.));
+    if matches!(source, Shape::Line { .. }) || (pts.len() == 2 && bulges[0] == 0.0 && !wide) {
         return Entity::new(Shape::Line {
             a: pts[0],
             b: pts[pts.len() - 1],

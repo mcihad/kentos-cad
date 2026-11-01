@@ -31,6 +31,7 @@ pub mod elevation;
 pub mod explode;
 pub mod feature_table;
 pub mod fillet;
+pub mod fillet_curves;
 pub mod fit;
 pub mod generalize;
 pub mod generate;

@@ -421,7 +421,7 @@ TWO_CUTS = "Kapalı nesneyi budamak için en az iki kesişim gerekir."
 NO_REACH = "Bu doğrultuda ulaşılacak bir sınır yok."
 NO_REACH_ARC = "Bu yönde ulaşılacak bir sınır yok."
 LOCKED_SKIP = "{n} nesne kilitli katmanda olduğu için atlandı. Değiştirmek için katmanın kilidini Katmanlar panelinden açın."
-HOLES = "Adalı alanda budama yapılamaz; iç halkalar kaybolurdu. Önce Patlat ile halkalarına ayırın ya da Alan böl kullanın."
+HOLES = "Adalı alanda Buda iç halkaları koruyamaz. Halkaları ve alan yapısını korumak için Alan böl aracını kullanın; kaynak alan değiştirilmedi."
 
 
 class TrimWork:

@@ -508,7 +508,13 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
         // Widths written with the geometry are written as they are (Öznitelikler, a script).
         if !written_w(geometry) && !wide.is_empty() && !edge_width {
             let before = widths::source(from);
-            let same = if by_place { before.as_ref() } else { None };
+            // Extend keeps the edge's stored start/end widths, including at
+            // its new endpoint. An endpoint past the source is not width zero.
+            let same = if by_place || input.operation == EditOperation::Extend {
+                before.as_ref()
+            } else {
+                None
+            };
             if !widths::carry(&mut entity, &wide, same, how) && before.is_some() {
                 lost_w.insert(from.base().id);
             }

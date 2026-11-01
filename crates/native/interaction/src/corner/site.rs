@@ -23,7 +23,11 @@ pub(super) use kentos_native_application::corner::{Corner, Site, lines_corner, p
 pub(super) fn editable(e: &Entity, doc: &Document) -> bool {
     matches!(
         e,
-        Entity::Line(_) | Entity::Polyline(_) | Entity::Polygon(_)
+        Entity::Line(_)
+            | Entity::Polyline(_)
+            | Entity::Polygon(_)
+            | Entity::Arc(_)
+            | Entity::Circle(_)
     ) && edge::unlocked(e, doc)
 }
 
@@ -75,10 +79,18 @@ pub(super) fn corner_of_picks(
     a: (Slot, Vec2),
     b: (Slot, Vec2),
     cx: &Context<'_>,
+    fillet: bool,
 ) -> Result<Corner, &'static str> {
     let (Some(ea), Some(_)) = (cx.doc.get(a.0), cx.doc.get(b.0)) else {
         return Err("Çizgiler paralel ya da seçilen tarafta çizgi yok.");
     };
+    if fillet
+        && [a.0, b.0]
+            .iter()
+            .any(|s| matches!(cx.doc.get(*s), Some(Entity::Arc(_) | Entity::Circle(_))))
+    {
+        return kentos_native_application::corner::curves_corner(cx.doc, a, b);
+    }
     // Two neighbouring edges of one path name its vertex; otherwise two straight sides: lines, open polylines' end
     // edges, or one open polyline's first and last (docs/adr/0295).
     if a.0 == b.0

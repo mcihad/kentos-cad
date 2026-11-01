@@ -1,0 +1,1237 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.entities.isolate",
+  "commandVersion": 1,
+  "title": "Geçici nesne yalıtımı",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Etkileşim izi: nesneler",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 1000,
+      "workspace": "hybrid",
+      "drawingFont": "barlow"
+    },
+    "origin": {
+      "x": 487000,
+      "y": 4420000
+    },
+    "layers": [
+      {
+        "id": "cizim",
+        "name": "Çizim",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "parsel",
+        "name": "Parsel",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "#E5484D",
+          "lineType": "continuous",
+          "lineWeight": 0.35,
+          "fill": "#E5484D1F"
+        },
+        "children": []
+      },
+      {
+        "id": "nokta",
+        "name": "Nokta",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "#3E9BF0",
+          "lineType": "continuous",
+          "lineWeight": 0.25,
+          "point": {
+            "symbol": "ring",
+            "size": 9
+          }
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli katman",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "fg-dim",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "gizli",
+        "name": "Gizli katman",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+      {
+        "kind": "line",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+          "x": 486976,
+          "y": 4419988
+        },
+        "b": {
+          "x": 486992,
+          "y": 4419988
+        }
+      },
+      {
+        "kind": "line",
+        "id": 2,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+          "x": 487000,
+          "y": 4420004
+        },
+        "b": {
+          "x": 487024,
+          "y": 4420016
+        }
+      },
+      {
+        "kind": "line",
+        "id": 3,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+          "x": 487000,
+          "y": 4420016
+        },
+        "b": {
+          "x": 487016,
+          "y": 4420004
+        }
+      },
+      {
+        "kind": "polygon",
+        "id": 4,
+        "layerId": "parsel",
+        "attrs": {
+          "Ada": "104",
+          "Parsel": "7"
+        },
+        "pts": [
+          {
+            "x": 486976,
+            "y": 4420004
+          },
+          {
+            "x": 486988,
+            "y": 4420004
+          },
+          {
+            "x": 486988,
+            "y": 4420014
+          },
+          {
+            "x": 486976,
+            "y": 4420014
+          }
+        ]
+      },
+      {
+        "kind": "point",
+        "id": 5,
+        "layerId": "nokta",
+        "attrs": {
+          "Ad": "P5"
+        },
+        "p": {
+          "x": 487020,
+          "y": 4419992
+        }
+      },
+      {
+        "kind": "line",
+        "id": 6,
+        "layerId": "kilitli",
+        "attrs": {},
+        "a": {
+          "x": 487004,
+          "y": 4419984
+        },
+        "b": {
+          "x": 487016,
+          "y": 4419984
+        }
+      },
+      {
+        "kind": "line",
+        "id": 7,
+        "layerId": "gizli",
+        "attrs": {},
+        "a": {
+          "x": 486996,
+          "y": 4419996
+        },
+        "b": {
+          "x": 487004,
+          "y": 4419996
+        }
+      }
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "cases": [
+    {
+      "name": "Salt okunur sorgu",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "action": {
+              "kind": "query"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "active": false,
+              "hidden": 0,
+              "retained": 7
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan maske uygulamaz",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "action": {
+              "kind": "isolate",
+              "uids": [
+                "$uidOf:1"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "active": true,
+              "hidden": 6,
+              "retained": 1
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": {
+              "kind": "query"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "active": false,
+              "hidden": 0,
+              "retained": 7
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yalıt, sorgula ve bitir: geometri geçmişi ve revizyon değişmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "action": {
+              "kind": "isolate",
+              "uids": [
+                "$uidOf:1"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "active": true,
+              "hidden": 6,
+              "retained": 1
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": {
+              "kind": "query"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "active": true,
+              "hidden": 6,
+              "retained": 1
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": {
+              "kind": "end"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "active": false,
+              "hidden": 0,
+              "retained": 7
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": {
+              "kind": "query"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "active": false,
+              "hidden": 0,
+              "retained": 7
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Boş hedef atomik reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "action": {
+              "kind": "isolate",
+              "uids": []
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_entities",
+              "message": "$any",
+              "path": "uids"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Geçersiz kimlik atomik reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "action": {
+              "kind": "isolate",
+              "uids": [
+                "bad"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_uid",
+              "message": "$any",
+              "path": "uids[0]"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Olmayan nesne atomik reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "action": {
+              "kind": "isolate",
+              "uids": [
+                "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6dffff"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "entity_not_found",
+              "message": "$any",
+              "path": "uids[0]"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pasif maskeyi bitir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "action": {
+              "kind": "end"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "active": false,
+              "hidden": 0,
+              "retained": 7
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Doğrulama maske kurmaz",
+      "steps": [
+        {
+          "op": "validate",
+          "input": {
+            "action": {
+              "kind": "isolate",
+              "uids": [
+                "$uidOf:1"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": {
+              "kind": "query"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "active": false,
+              "hidden": 0,
+              "retained": 7
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bitirme doğrulaması",
+      "steps": [
+        {
+          "op": "validate",
+          "input": {
+            "action": {
+              "kind": "end"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sorgu doğrulaması",
+      "steps": [
+        {
+          "op": "validate",
+          "input": {
+            "action": {
+              "kind": "query"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tekrarlı hedef yalnız bir kez sayılır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "action": {
+              "kind": "isolate",
+              "uids": [
+                "$uidOf:1",
+                "$uidOf:1"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "active": true,
+              "hidden": 6,
+              "retained": 1
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kilitli katman nesnesi yalıtılabilir; kilidi değişmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "action": {
+              "kind": "isolate",
+              "uids": [
+                "$uidOf:6"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "active": true,
+              "hidden": 6,
+              "retained": 1
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Gizli katman kuralı bağımsızdır; maske sayacı onu zorla açmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "action": {
+              "kind": "isolate",
+              "uids": [
+                "$uidOf:7"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "active": true,
+              "hidden": 6,
+              "retained": 1
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yeni hedefler mevcut maskeyi değiştirir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "action": {
+              "kind": "isolate",
+              "uids": [
+                "$uidOf:1"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "active": true,
+              "hidden": 6,
+              "retained": 1
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": {
+              "kind": "isolate",
+              "uids": [
+                "$uidOf:2",
+                "$uidOf:3"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "active": true,
+              "hidden": 5,
+              "retained": 2
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": {
+              "kind": "query"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "active": true,
+              "hidden": 5,
+              "retained": 2
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bitirme planı etkin maskeyi değiştirmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "action": {
+              "kind": "isolate",
+              "uids": [
+                "$uidOf:1"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "active": true,
+              "hidden": 6,
+              "retained": 1
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "plan",
+          "input": {
+            "action": {
+              "kind": "end"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "active": false,
+              "hidden": 0,
+              "retained": 7
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": {
+              "kind": "query"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "active": true,
+              "hidden": 6,
+              "retained": 1
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Geçersiz kimlik önceki maskeyi korur",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "action": {
+              "kind": "isolate",
+              "uids": [
+                "$uidOf:1"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "active": true,
+              "hidden": 6,
+              "retained": 1
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": {
+              "kind": "isolate",
+              "uids": [
+                "$uidOf:2",
+                "bad"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_uid",
+              "message": "$any",
+              "path": "uids[1]"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": {
+              "kind": "query"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "active": true,
+              "hidden": 6,
+              "retained": 1
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Olmayan nesne önceki maskeyi korur",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "action": {
+              "kind": "isolate",
+              "uids": [
+                "$uidOf:1"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "active": true,
+              "hidden": 6,
+              "retained": 1
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": {
+              "kind": "isolate",
+              "uids": [
+                "$uidOf:2",
+                "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6dffff"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "entity_not_found",
+              "message": "$any",
+              "path": "uids[1]"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": {
+              "kind": "query"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "active": true,
+              "hidden": 6,
+              "retained": 1
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Boş hedef önceki maskeyi korur",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "action": {
+              "kind": "isolate",
+              "uids": [
+                "$uidOf:1"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "active": true,
+              "hidden": 6,
+              "retained": 1
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": {
+              "kind": "isolate",
+              "uids": []
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_entities",
+              "message": "$any",
+              "path": "uids"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": {
+              "kind": "query"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "active": true,
+              "hidden": 6,
+              "retained": 1
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bütün nesneleri yalıtma etkin fakat boş gizli küme verir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "action": {
+              "kind": "isolate",
+              "uids": [
+                "$uidOf:1",
+                "$uidOf:2",
+                "$uidOf:3",
+                "$uidOf:4",
+                "$uidOf:5",
+                "$uidOf:6",
+                "$uidOf:7"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "active": true,
+              "hidden": 0,
+              "retained": 7
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tekrarlı bitirme geometri geçmişini değiştirmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "action": {
+              "kind": "end"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "active": false,
+              "hidden": 0,
+              "retained": 7
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": {
+              "kind": "end"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "active": false,
+              "hidden": 0,
+              "retained": 7
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yeni maske planı önceki hedefleri korur",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "action": {
+              "kind": "isolate",
+              "uids": [
+                "$uidOf:1"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "active": true,
+              "hidden": 6,
+              "retained": 1
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "plan",
+          "input": {
+            "action": {
+              "kind": "isolate",
+              "uids": [
+                "$uidOf:2",
+                "$uidOf:3"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "active": true,
+              "hidden": 5,
+              "retained": 2
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": {
+              "kind": "query"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "active": true,
+              "hidden": 6,
+              "retained": 1
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ],
+  "note": "scripts/fixtures/isolation_cases.py; yalnız oturum maskesi, nesneler ve dosya değişmez."
+}

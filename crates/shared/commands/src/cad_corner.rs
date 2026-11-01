@@ -44,6 +44,8 @@ pub enum CornerPick {
     /// Two straight sides, each keeping the side of its pick (docs/adr/0295): a line, or an open polyline's first or
     /// last straight edge (the edge nearest the pick), whose free end moves to the arc or the cut. The first and last
     /// edges of one open polyline close it, the arc or the cut its closing edge.
+    /// Fillet also accepts independent line/arc/circle pairs: picks choose the closest tangent solution.
+    /// Circles remain whole; finite arcs are trimmed within their existing spans. Chamfer remains straight-only.
     Lines { first: TrimPick, second: TrimPick },
     /// Every corner between straight edges of these polylines and areas;
     /// at least one. Kırp is always on.

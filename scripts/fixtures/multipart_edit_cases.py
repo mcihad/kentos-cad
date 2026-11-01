@@ -368,10 +368,10 @@ def undo(label):
 
 
 LOCKED_MSG = "“Kilitli” katmanı kilitli; üzerindeki nesne değiştirilemez. Kilidi Katmanlar panelinden açın."
-HOLES_TRIM = ("Adalı alanda budama yapılamaz; iç halkalar kaybolurdu. Önce Patlat ile halkalarına ayırın ya da Alan böl "
-              "kullanın.")
-HOLES_BREAK = ("Adalı alanda kırma yapılamaz; iç halkalar kaybolurdu. Önce Patlat ile halkalarına ayırın ya da Alan böl "
-               "kullanın.")
+HOLES_TRIM = ("Adalı alanda Buda iç halkaları koruyamaz. Halkaları ve alan yapısını korumak için "
+              "Alan böl aracını kullanın; kaynak alan değiştirilmedi.")
+HOLES_BREAK = ("Adalı alanda Kır iç halkaları koruyamaz. Halkaları ve alan yapısını korumak için "
+               "Alan böl aracını kullanın; kaynak alan değiştirilmedi.")
 MULTI = "Bu işlem çok parçalı nesnede çalışmaz; önce Parçalara ayır ile parçalarına ayırın."
 
 

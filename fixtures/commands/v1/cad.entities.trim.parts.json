@@ -1516,7 +1516,7 @@
       "status": "failed",
       "error": {
        "code": "not_trimmable",
-       "message": "Adalı alanda budama yapılamaz; iç halkalar kaybolurdu. Önce Patlat ile halkalarına ayırın ya da Alan böl kullanın.",
+       "message": "Adalı alanda Buda iç halkaları koruyamaz. Halkaları ve alan yapısını korumak için Alan böl aracını kullanın; kaynak alan değiştirilmedi.",
        "path": "picks[0]"
       }
      },

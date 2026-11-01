@@ -337,7 +337,7 @@ def trim_cases():
     out += shared_refusals("trim", one)
     out += [
         refused("Adalı alan budanmaz", {"picks": [{"uid": UID(18), "at": P(X + 65, Y)}]}, "not_trimmable",
-                "Adalı alanda budama yapılamaz; iç halkalar kaybolurdu. Önce Patlat ile halkalarına ayırın ya da Alan böl kullanın.", "picks[0]"),
+                "Adalı alanda Buda iç halkaları koruyamaz. Halkaları ve alan yapısını korumak için Alan böl aracını kullanın; kaynak alan değiştirilmedi.", "picks[0]"),
         refused("Hiçbir seçim bir şey yapamıyor: ilkinin nedeniyle", {"picks": [{"uid": UID(14), "at": P(X + 32, Y + 20)}]}, "trim_failed", NO_EDGE, "picks"),
     ]
     first_cut = trimmed(10, [(X + 12, Y + 10)], boundaries("all", 10))[0][0]

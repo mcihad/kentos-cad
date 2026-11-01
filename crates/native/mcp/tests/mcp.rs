@@ -47,6 +47,68 @@ fn square() -> Value {
 }
 
 #[test]
+fn analytic_line_arc_fillet_uses_the_same_endpoint_pick_and_plan_through_mcp() {
+    let mut raw: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/interaction/v1/objects.kcad"
+    ))
+    .unwrap();
+    raw["settings"]["workspace"] = json!("cad");
+    raw["settings"]["srid"] = json!(0);
+    raw["settings"]["drawingUnit"] = json!("m");
+    raw["entities"] = json!([
+        {"kind":"line","id":1,"layerId":"cizim","attrs":{},"a":{"x":-5.,"y":0.},"b":{"x":10.,"y":0.}},
+        {"kind":"arc","id":2,"layerId":"cizim","attrs":{},"c":{"x":4.,"y":3.},"r":2.,"a0":std::f64::consts::PI,"a1":0.}
+    ]);
+    let dir = std::env::temp_dir().join(format!("kentos-mcp-curved-fillet-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join("fillet.json");
+    std::fs::write(&path, raw.to_string()).unwrap();
+    let mut server = Server::new();
+    let drawing =
+        call(&mut server, "drawing.open", json!({"path":path}))["structuredContent"]["drawing"]
+            .clone();
+    let before=call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"].clone();
+    let uids = call(
+        &mut server,
+        "cad.entities.select",
+        json!({"drawing":drawing,"region":{"kind":"all"}}),
+    )["structuredContent"]["output"]["uids"]
+        .clone();
+    let corner = json!({"kind":"lines","first":{"uid":uids[0],"at":{"x":0.,"y":0.}},"second":{"uid":uids[1],"at":{"x":2.049,"y":3.007}}});
+    let plan = call(
+        &mut server,
+        "cad.entities.fillet",
+        json!({"drawing":drawing,"op":"plan","corner":corner,"radius":1.}),
+    );
+    assert_eq!(plan["structuredContent"]["status"], "completed", "{plan}");
+    assert_eq!(
+        call(&mut server, "drawing.entities", json!({"drawing":drawing}))["structuredContent"]["items"],
+        before
+    );
+    let made = call(
+        &mut server,
+        "cad.entities.fillet",
+        json!({"drawing":drawing,"corner":corner,"radius":1.}),
+    );
+    assert_eq!(made["structuredContent"]["status"], "completed", "{made}");
+    assert_eq!(
+        made["structuredContent"]["output"]["created"]
+            .as_array()
+            .unwrap()
+            .len(),
+        1
+    );
+    let entities=call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"].clone();
+    assert_eq!(entities.as_array().unwrap().len(), 3);
+    call(&mut server, "drawing.undo", json!({"drawing":drawing}));
+    assert_eq!(
+        call(&mut server, "drawing.entities", json!({"drawing":drawing}))["structuredContent"]["items"],
+        before
+    );
+    std::fs::remove_dir_all(dir).unwrap();
+}
+
+#[test]
 fn property_selection_and_bulk_text_height_use_the_same_command_through_mcp() {
     let mut raw: Value=serde_json::from_str(include_str!("../../../../fixtures/interaction/v1/objects.kcad")).unwrap();
     raw["settings"]["workspace"]=json!("cad");

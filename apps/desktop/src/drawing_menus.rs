@@ -769,7 +769,7 @@ mod tests {
             app.document.as_ref().unwrap().model.get(parcel),
             before.as_ref()
         );
-        assert!(app.session.prompt().step.starts_with("yuvarlanacak köşeye"));
+        assert!(app.session.prompt().step.starts_with("köşeyi ya da sırayla"));
         let _ = app.update(Message::Run("tool.cancel"));
         let _ = app.update(Message::Run("edit.undo"));
         assert_eq!(

@@ -130,6 +130,13 @@ pub enum Site {
         second: Slot,
         pick2: Vec2,
     },
+    /// Independent analytic curves; `geom.at` is only the radius-drag anchor.
+    Curves {
+        first: Slot,
+        pick1: Vec2,
+        second: Slot,
+        pick2: Vec2,
+    },
 }
 
 /// A corner: where it is and its geometry.
@@ -143,7 +150,9 @@ impl Corner {
     pub fn slots(&self) -> Vec<Slot> {
         match self.site {
             Site::Vertex { slot, .. } => vec![slot],
-            Site::Lines { first, second, .. } => vec![first, second],
+            Site::Lines { first, second, .. } | Site::Curves { first, second, .. } => {
+                vec![first, second]
+            }
         }
     }
 }
@@ -157,6 +166,42 @@ pub fn line_of(e: &Entity) -> Option<Seg> {
         }),
         _ => None,
     }
+}
+
+/// A circular fillet's two independent curves. Radius is supplied later; no
+/// imaginary straight corner is used to compute the actual tangent geometry.
+pub fn curves_corner(
+    doc: &Document,
+    a: (Slot, Vec2),
+    b: (Slot, Vec2),
+) -> Result<Corner, &'static str> {
+    use kentos_geometry_core::ops::fillet_curves::KINDS;
+    if a.0 == b.0 {
+        return Err("Yuvarlama için iki farklı nesne seçin.");
+    }
+    for slot in [a.0, b.0] {
+        if !matches!(
+            doc.get(slot),
+            Some(Entity::Line(_) | Entity::Arc(_) | Entity::Circle(_))
+        ) {
+            return Err(KINDS);
+        }
+    }
+    Ok(Corner {
+        site: Site::Curves {
+            first: a.0,
+            pick1: a.1,
+            second: b.0,
+            pick2: b.1,
+        },
+        geom: CornerGeom {
+            at: Vec2::new(a.1.x + (b.1.x - a.1.x) / 2., a.1.y + (b.1.y - a.1.y) / 2.),
+            u1: Vec2::new(1., 0.),
+            u2: Vec2::new(0., 1.),
+            reach: f64::INFINITY,
+            phi: PI / 2.,
+        },
+    })
 }
 
 /// A path's corner at vertex `i`, an area's vertices counted part after
@@ -321,6 +366,38 @@ pub struct Done {
 /// What `size` does to the corner with Kırp, or why it cannot.
 pub fn done(c: &Corner, size: Size, doc: &Document) -> Result<Done, String> {
     match c.site {
+        Site::Curves {
+            first,
+            pick1,
+            second,
+            pick2,
+        } => {
+            let Size::Radius(radius) = size else {
+                return Err(NOT_STRAIGHT.into());
+            };
+            let (a, b) = (
+                doc.get(first).ok_or("İlk nesne yok.")?,
+                doc.get(second).ok_or("İkinci nesne yok.")?,
+            );
+            let result = kentos_geometry_core::ops::fillet_curves::fillet(
+                &shape(a),
+                pick1,
+                &shape(b),
+                pick2,
+                radius,
+            )?;
+            let mut updates = Vec::new();
+            if result.first != shape(a) {
+                updates.push((first, result.first));
+            }
+            if result.second != shape(b) {
+                updates.push((second, result.second));
+            }
+            Ok(Done {
+                updates,
+                add: result.arc.map(|s| (first, s)),
+            })
+        }
         Site::Vertex { slot, vertex } => {
             let e = doc.get(slot).ok_or_else(String::new)?;
             // The whole geometry is written (docs/adr/0047): the corner's part keeps its
@@ -665,6 +742,78 @@ pub fn plan(cx: &ExecutionContext<'_>, request: Request<'_>) -> CommandResult<En
 
 /// [`plan`] over the document alone (the tools' preview).
 pub fn plan_in(doc: &Document, request: Request<'_>) -> CommandResult<EntitiesCornerPlan> {
+    // A two-object connector becomes part of an associative hatch boundary.
+    // Plan the same recorded command on a reading copy so its followers are
+    // visible too; no independently reconstructed preview of those ties.
+    if doc.can_follow() && matches!(request.corner, CornerPick::Lines { .. }) {
+        let mut copy = doc.reading_copy();
+        let mut cx = ExecutionContext::new(&mut copy);
+        let result = match request.size {
+            Size::Radius(radius) => crate::entities_fillet::execute(
+                &mut cx,
+                EntitiesFillet {
+                    corner: request.corner.clone(),
+                    radius,
+                    trim: Some(request.trim),
+                    expected_revision: request.expected_revision.map(str::to_owned),
+                },
+            ),
+            Size::Cut(distance, second) => crate::entities_chamfer::execute(
+                &mut cx,
+                EntitiesChamfer {
+                    corner: request.corner.clone(),
+                    distance,
+                    second: Some(second),
+                    trim: Some(request.trim),
+                    expected_revision: request.expected_revision.map(str::to_owned),
+                },
+            ),
+        };
+        return match result {
+            CommandResult::Completed { output, warnings } => {
+                let mut changed: Vec<_> = output
+                    .changed
+                    .iter()
+                    .filter_map(|u| {
+                        u.parse()
+                            .ok()
+                            .and_then(|uid| copy.slot_of(uid))
+                            .and_then(|s| copy.get(s).cloned())
+                    })
+                    .collect();
+                for (uid, e) in copy.entities_with_uids() {
+                    if let Some(old) = doc.slot_of(uid).and_then(|s| doc.get(s))
+                        && old != e
+                        && !changed.iter().any(|old| old.base().id == e.base().id)
+                    {
+                        changed.push(e.clone());
+                    }
+                }
+                let created = output
+                    .created
+                    .iter()
+                    .filter_map(|u| {
+                        u.parse()
+                            .ok()
+                            .and_then(|uid| copy.slot_of(uid))
+                            .and_then(|s| copy.get(s).cloned())
+                            .map(|mut e| { e.base_mut().id = 0; e })
+                    })
+                    .collect();
+                CommandResult::Completed {
+                    output: EntitiesCornerPlan {
+                        changed,
+                        created,
+                        done: output.done,
+                        skipped: output.skipped,
+                        revision: doc.revision().to_string(),
+                    },
+                    warnings,
+                }
+            }
+            other => relay(other),
+        };
+    }
     let checked = match check(doc, &request) {
         Ok(checked) => checked,
         Err(stop) => return stop.into(),
@@ -693,17 +842,67 @@ pub fn execute(
         Ok(checked) => checked,
         Err(stop) => return stop.into(),
     };
+    let hatches = match request.corner {
+        CornerPick::Lines { first, second } if request.trim && cx.doc.can_follow() => {
+            let pair = [
+                first.uid.parse::<Uuid>().ok(),
+                second.uid.parse::<Uuid>().ok(),
+            ];
+            cx.doc
+                .entities()
+                .filter_map(|e| {
+                    let Entity::Hatch(h) = e else {
+                        return None;
+                    };
+                    let assoc = h.assoc.as_ref()?;
+                    pair.iter()
+                        .all(|uid| {
+                            uid.is_some_and(|u| assoc.bounds.iter().any(|id| id.0 == *u.as_bytes()))
+                        })
+                        .then(|| (Slot(h.base.id), assoc.clone()))
+                })
+                .collect::<Vec<_>>()
+        }
+        _ => Vec::new(),
+    };
     match edit::execute(cx, checked.edit) {
-        CommandResult::Completed { output, warnings } => CommandResult::Completed {
-            output: EntitiesCornered {
-                changed: output.changed,
-                created: output.created,
-                done: checked.done,
-                skipped: checked.skipped,
-                revision: output.revision,
-            },
-            warnings: [checked.warnings, warnings].concat(),
-        },
+        CommandResult::Completed { output, warnings } => {
+            if !output.created.is_empty() {
+                let connectors: Vec<kentos_commands::EntityId> = output
+                    .created
+                    .iter()
+                    .filter_map(|u| kentos_commands::EntityId::parse(u))
+                    .collect();
+                let changes = hatches
+                    .into_iter()
+                    .filter_map(|(slot, mut assoc)| {
+                        let Some(Entity::Hatch(h)) = cx.doc.get(slot) else {
+                            return None;
+                        };
+                        for id in &connectors {
+                            if !assoc.bounds.contains(id) {
+                                assoc.bounds.push(*id);
+                            }
+                        }
+                        let mut next = h.clone();
+                        next.assoc = Some(assoc);
+                        Some((slot, Entity::Hatch(next)))
+                    })
+                    .collect();
+                cx.doc
+                    .update_many(changes, edit::label(request.size.operation()));
+            }
+            CommandResult::Completed {
+                output: EntitiesCornered {
+                    changed: output.changed,
+                    created: output.created,
+                    done: checked.done,
+                    skipped: checked.skipped,
+                    revision: output.revision,
+                },
+                warnings: [checked.warnings, warnings].concat(),
+            }
+        }
         other => relay(other),
     }
 }
@@ -953,8 +1152,16 @@ fn check(doc: &Document, r: &Request<'_>) -> Result<Checked, Stop> {
         CornerPick::Lines { first, second } => {
             let a = (slots[0], Vec2::new(first.at.x, first.at.y));
             let b = (slots[1], Vec2::new(second.at.x, second.at.y));
-            let corner = lines_corner(doc, a, b)
-                .map_err(|why| refuse(codes::NOT_A_CORNER, why.into(), "corner"))?;
+            let curved = matches!(size, Size::Radius(_))
+                && [a.0, b.0]
+                    .iter()
+                    .any(|s| matches!(doc.get(*s), Some(Entity::Arc(_) | Entity::Circle(_))));
+            let corner = (if curved {
+                curves_corner(doc, a, b)
+            } else {
+                lines_corner(doc, a, b)
+            })
+            .map_err(|why| refuse(codes::NOT_A_CORNER, why.into(), "corner"))?;
             add_corner(doc, &corner, size, r.trim, &mut changes)
                 .map_err(|why| refuse(failed, why, "corner"))?;
             done_n = 1;
@@ -982,7 +1189,12 @@ fn add_corner(
 ) -> Result<(), String> {
     let done = done(c, size, doc)?;
     if !trim {
-        let Some(piece) = piece(c, size) else {
+        let piece = if matches!(c.site, Site::Curves { .. }) {
+            done.add.map(|(_, s)| s)
+        } else {
+            piece(c, size)
+        };
+        let Some(piece) = piece else {
             return Err("Ölçü köşeye sığmıyor; daha küçük bir değer verin.".into());
         };
         let from = uid_of(doc, c.slots()[0]);
@@ -1013,5 +1225,193 @@ fn norm_angle(a: f64) -> f64 {
         r + core::f64::consts::TAU
     } else {
         r
+    }
+}
+
+#[cfg(test)]
+mod curved_tests {
+    use super::*;
+    use kentos_commands::{CallOp, DocumentSnapshotV1};
+    use serde_json::{Value, json};
+    fn doc() -> Document {
+        let mut raw: Value = serde_json::from_str(include_str!(
+            "../../../../fixtures/interaction/v1/objects.kcad"
+        ))
+        .unwrap();
+        raw["entities"] = json!([
+            {"kind":"line","id":1,"layerId":"cizim","attrs":{"QA":"line"},"label":"keep line","a":{"x":-5.,"y":0.},"b":{"x":10.,"y":0.}},
+            {"kind":"arc","id":2,"layerId":"cizim","attrs":{"QA":"arc"},"label":"keep arc","c":{"x":4.,"y":3.},"r":2.,"a0":std::f64::consts::PI,"a1":0.}
+        ]);
+        Document::from_snapshot(DocumentSnapshotV1::from_json(&raw.to_string()).unwrap()).unwrap()
+    }
+    fn input(doc: &Document, trim: bool) -> Value {
+        json!({"corner":{"kind":"lines","first":{"uid":doc.uid(Slot(1)).unwrap().to_string(),"at":{"x":0.,"y":0.}},"second":{"uid":doc.uid(Slot(2)).unwrap().to_string(),"at":{"x":2.,"y":3.}}},"radius":1.,"trim":trim})
+    }
+    fn call(doc: &mut Document, op: CallOp, input: Value) -> Value {
+        crate::registry::run(
+            &mut ExecutionContext::new(doc),
+            "cad.entities.fillet",
+            op,
+            input,
+        )
+        .unwrap()
+    }
+    #[test]
+    fn curved_fillet_plan_execution_metadata_and_single_undo_agree() {
+        let mut doc = doc();
+        let before = doc.to_snapshot_v2();
+        let revision = doc.revision();
+        let input = input(&doc, true);
+        let plan = call(&mut doc, CallOp::Plan, input.clone());
+        assert_eq!(plan["status"], "completed", "{plan}");
+        assert_eq!(doc.to_snapshot_v2(), before);
+        assert_eq!(doc.revision(), revision);
+        let done = call(&mut doc, CallOp::Execute, input);
+        assert_eq!(done["status"], "completed", "{done}");
+        assert_eq!(done["output"]["created"].as_array().unwrap().len(), 1);
+        assert_eq!(
+            doc.get(Slot(1)).unwrap().base().label.as_deref(),
+            Some("keep line")
+        );
+        assert_eq!(
+            doc.get(Slot(2))
+                .unwrap()
+                .base()
+                .attrs
+                .get("QA")
+                .map(String::as_str),
+            Some("arc")
+        );
+        assert_eq!(doc.undo().as_deref(), Some("Köşe yuvarla"));
+        assert_eq!(doc.to_snapshot_v2(), before);
+        doc.redo().unwrap();
+        let after = doc.to_snapshot_v2();
+        assert_eq!(
+            Document::from_snapshot_v2(after.clone())
+                .unwrap()
+                .to_snapshot_v2(),
+            after
+        );
+    }
+    #[test]
+    fn no_trim_keeps_both_sources_and_invalid_radius_has_no_partial_write() {
+        let mut doc = doc();
+        let before = [
+            doc.get(Slot(1)).unwrap().clone(),
+            doc.get(Slot(2)).unwrap().clone(),
+        ];
+        let input = input(&doc, false);
+        let done = call(&mut doc, CallOp::Execute, input.clone());
+        assert_eq!(done["status"], "completed", "{done}");
+        assert_eq!(doc.get(Slot(1)), Some(&before[0]));
+        assert_eq!(doc.get(Slot(2)), Some(&before[1]));
+        let snapshot = doc.to_snapshot_v2();
+        let mut invalid = input;
+        invalid["radius"] = json!(-1.);
+        assert_eq!(call(&mut doc, CallOp::Execute, invalid)["status"], "failed");
+        assert_eq!(doc.to_snapshot_v2(), snapshot);
+    }
+    #[test]
+    fn trim_and_extend_keep_two_vertex_tapered_polylines_and_their_data() {
+        for extend in [false, true] {
+            let mut doc = doc();
+            let wide=doc.add(serde_json::from_value(json!({"kind":"polyline","id":0,"layerId":"cizim","attrs":{"QA":"width"},"pts":[{"x":0.,"y":-10.},{"x":10.,"y":-10.}],"closed":false,"widths":[[1.,3.],[0.,0.]]})).unwrap()).unwrap();
+            let x = if extend { 14. } else { 4. };
+            let boundary=doc.add(serde_json::from_value(json!({"kind":"line","id":0,"layerId":"cizim","attrs":{},"a":{"x":x,"y":-12.},"b":{"x":x,"y":-8.}})).unwrap()).unwrap();
+            let before = doc.to_snapshot_v2();
+            let input = json!({"picks":[{"uid":doc.uid(wide).unwrap().to_string(),"at":{"x":8.,"y":-10.}}],"boundaries":{"kind":"objects","uids":[doc.uid(boundary).unwrap().to_string()]}});
+            let command = if extend {
+                "cad.entities.extend"
+            } else {
+                "cad.entities.trim"
+            };
+            let result = crate::registry::run(
+                &mut ExecutionContext::new(&mut doc),
+                command,
+                CallOp::Execute,
+                input,
+            )
+            .unwrap();
+            assert_eq!(result["status"], "completed", "{result}");
+            let Some(Entity::Polyline(p)) = doc.get(wide) else {
+                panic!("wide piece must remain polyline");
+            };
+            assert!((p.pts[1].x - x).abs() < 1e-8);
+            let w = p.widths.as_ref().unwrap();
+            assert_eq!(w[0][0], 1.);
+            let end = if extend { 3. } else { 1.8 };
+            assert!((w[0][1] - end).abs() < 1e-8, "{w:?}");
+            assert_eq!(p.base.attrs.get("QA").map(String::as_str), Some("width"));
+            doc.undo().unwrap();
+            assert_eq!(doc.to_snapshot_v2(), before);
+        }
+    }
+
+    #[test]
+    fn curved_connector_stays_in_the_associative_hatch_boundary_in_plan_and_one_undo() {
+        let mut doc = doc();
+        for (slot, value) in [
+            (
+                Slot(1),
+                json!({"kind":"line","id":1,"layerId":"cizim","attrs":{},"a":{"x":-5.,"y":3.},"b":{"x":2.,"y":3.}}),
+            ),
+            (
+                Slot(2),
+                json!({"kind":"arc","id":2,"layerId":"cizim","attrs":{},"c":{"x":4.,"y":3.},"r":2.,"a0":PI,"a1":1.5*PI}),
+            ),
+        ] {
+            doc.update_many(
+                vec![(slot, serde_json::from_value(value).unwrap())],
+                "Fixture",
+            );
+        }
+        for (a, b) in [((4., 1.), (-5., 1.)), ((-5., 1.), (-5., 3.))] {
+            doc.add(serde_json::from_value(json!({"kind":"line","id":0,"layerId":"cizim","attrs":{},"a":{"x":a.0,"y":a.1},"b":{"x":b.0,"y":b.1}})).unwrap()).unwrap();
+        }
+        let hatch = crate::registry::run(&mut ExecutionContext::new(&mut doc), "cad.entities.hatch", CallOp::Execute,
+            json!({"region":{"kind":"point","at":{"x":0.,"y":2.},"way":"lines","associative":true},"pattern":{"name":"Dolu"},"layerId":"cizim"})).unwrap();
+        assert_eq!(hatch["status"], "completed", "{hatch}");
+        let hatch_slot = doc
+            .entities()
+            .find_map(|e| matches!(e, Entity::Hatch(_)).then_some(Slot(e.base().id)))
+            .unwrap();
+        let before = doc.to_snapshot_v2();
+        let input = json!({"corner":{"kind":"lines","first":{"uid":doc.uid(Slot(1)).unwrap().to_string(),"at":{"x":0.,"y":3.}},"second":{"uid":doc.uid(Slot(2)).unwrap().to_string(),"at":{"x":2.1,"y":2.4}}},"radius":0.5});
+        let plan = call(&mut doc, CallOp::Plan, input.clone());
+        assert_eq!(plan["status"], "completed", "{plan}");
+        assert_eq!(doc.to_snapshot_v2(), before);
+        assert!(
+            plan["output"]["changed"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|e| e["kind"] == "hatch"),
+            "{plan}"
+        );
+        let done = call(&mut doc, CallOp::Execute, input);
+        assert_eq!(done["status"], "completed", "{done}");
+        let connector =
+            kentos_commands::EntityId::parse(done["output"]["created"][0].as_str().unwrap())
+                .unwrap();
+        let Some(Entity::Hatch(h)) = doc.get(hatch_slot) else {
+            panic!("hatch removed");
+        };
+        let assoc = h
+            .assoc
+            .as_ref()
+            .expect("associativity must survive the new connector");
+        assert_eq!(assoc.bounds.len(), 5);
+        assert!(assoc.bounds.contains(&connector));
+        let after = doc.to_snapshot_v2();
+        assert_eq!(
+            Document::from_snapshot_v2(after.clone())
+                .unwrap()
+                .to_snapshot_v2(),
+            after
+        );
+        assert_eq!(doc.undo().as_deref(), Some("Köşe yuvarla"));
+        assert_eq!(doc.to_snapshot_v2(), before);
+        doc.redo().unwrap();
+        assert_eq!(doc.to_snapshot_v2(), after);
     }
 }

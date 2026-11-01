@@ -1,0 +1,138 @@
+# 2B eğri düzenleme: destek ve sınırlar
+
+2026-11-01 — CAD-ADV-04 çalışma kaydı. Bu matris tamamlanmış bir
+CAD-ADV-04 kabulü değildir. Masaüstünün native anlamsal komutlarını,
+aynı komutları çağıran Python ve MCP'yi tarif eder. Web araçlarının
+TypeScript etkileşimleri ayrıca doğrulanmadan eşdeğer sayılmaz.
+
+## Hedef geometriler
+
+| İşlem | Çizgi / düz yol | Yay / daire / yaylı yol | Elips | NURBS | Delik / çoklu parça |
+|---|---|---|---|---|---|
+| Buda | Var | Analitik yay/bulge korunur | Elips yayı olarak kalır | Knot ekleyerek NURBS parçaları | Delikli alan reddedilir; Alan böl önerilir. Multipart native katmanı seçilen parçayı işler. |
+| Uzat | Açık uçlar | Açık yay ve açık yolun uç kenarı | Genel destek yok | Genel destek yok | Kapalı hedef uzamaz; multipart için uygun açık parça gerekir. |
+| Kır | Var | Yay/bulge korunur | Elips yayı olarak kalır | NURBS parçaları | Delikli alan reddedilir. Multipart seçilen parçada kırılır, kalan parçalar korunur. |
+| Birleştir | Çizgi/açık çoklu çizgi | Bağımsız yay, yaylı yol | Genel destek yok | Genel komutta destek yok | Her ada otomatik tek kontur sayılmaz; bağlantı ve görünüş kuralları denetlenir. |
+| Köşe yuvarla | Mevcut düz kenar/yol köşeleri | Bağımsız çizgi–yay, çizgi–daire, yay–yay, yay–daire ve daire–daire için yeni analitik çözüm | Yok | Yok | Yeni dairesel çözüm, yolun yaylı alt kenarını bağımsız yay gibi değiştirmez. |
+| Pah | İki düz kenar ve düz yol köşesi | Yay/daire çiftleri reddedilir | Yok | Yok | Mevcut yol köşesi sınırları geçerlidir. |
+| Ötele | Var | Daire/yay ve uygun bulge analitik | Yaklaşık örneklenmiş sonuç | Yaklaşık örneklenmiş sonuç | Alanın delikleri karşı yönde ötelenir; çökme reddedilir. Yaklaşım hatası aşağıdaki açık iştir. |
+
+`Spline` etiketli eski fit eğrisi ile `Nurbs` aynı tür değildir.
+Eski spline'ın Buda desteği yoktur. `cad.curves.edit`, NURBS'in fit ve
+kontrol verilerini ayrı işlemlerle düzenler. Bir tablo hücresinde “var”
+yazması her tür çiftinin ve her topolojinin desteklendiği anlamına gelmez.
+
+### Sınırlar, kimlikler ve görünüş
+
+- Buda/Uzat sınırları çekirdeğin `Edge` temsiline gider. Çizgi ve daire
+  yayları analitiktir; eğri sınırların aday kesişimleri örneklenebilir.
+  NURBS hedefin kesişim adayları 1 mm kirişlerden başlatılıp eğri/sınır
+  üzerinde iyileştirilir. Bu, tüm eğri çiftlerinde sertifikalı kök
+  izolasyonu vaadi değildir.
+- NURBS bölünmesinde knot ekleme kaynak eğriyi korur. Kaynak kontrol
+  noktalarını körlemesine kesmek veya NURBS'i habersiz polyline yapmak yoktur.
+- Yerinde düzenlenen nesne UID'sini ve verisini korur. Ayrı parçaların yeni
+  UID alması normaldir; bunlar aynı alt nesnenin değişmeyen kenar indeksi
+  olarak sunulmaz. Split/merge soy kaydı ve ilgili ölçü/tarama politikası
+  ayrıca denetlenir. Her eğri işlemi için kalıcı alt kenar kimliği
+  korunuyor iddiası henüz doğrulanmamıştır.
+- Değişken genişlikli, iki köşeli çoklu çizginin budanan parçası LINE'a
+  düşürülmez. Yeni uç genişliği kaynak boyunca enterpole edilir. Uzatmada
+  mevcut kenarın başlangıç/bitiş genişlikleri korunur; kaynak dışındaki
+  yeni uç yanlışlıkla sıfır genişlik almaz.
+- Bağımsız iki sınır nesnesi yuvarlandığında/pahlandığında ve ikisi de
+  aynı ilişkili taramanın sınırıysa yeni bağlayıcı sınır listesine katılır.
+  Tarama takipçisi dış komut adımı kapanırken çalışır. `trim=false`
+  bu ilişkiyi değiştirmez. Tüm köşeler/toplu bağlantı değişikliklerinin
+  aynı kapsamda sınandığı varsayılmaz.
+
+## Yuvarlama ile iki mesafeli pah
+
+Pahın `distance` değeri birinci, `second` değeri ikinci kenardır.
+`second` verilmezse eşit mesafe kullanılır. Arayüzde `10cm;20cm`
+girilebilir; kenar sırası sahnede **1. kenar / 2. kenar** diye gösterilir.
+Tek değer eşit pah oluşturur. Noktalı ondalık ve açık birim, iki sayının
+ayıracıyla ondalık virgülün karışmasını önler.
+
+Dairesel yuvarlamada `radius` tektir. Dik köşede iki teğet uzaklığının
+eşit olması bu dairenin geometrisinden gelir. Kenarlara farklı
+uzaklıklarda oturan eğrisel geçiş, ayrı bir **eliptik/geçiş eğrisi**
+işlemidir; iki farklı “daire yarıçapı” diye adlandırılmaz. Bu özellik
+henüz yoktur. Eklenmeden önce uç mesafeleri, teğet yönleri, G1/G2
+seçeneği ve birden fazla çözümün önizlemesi tanımlanmalıdır.
+
+Yeni dairesel çözüm bütün merkez adaylarını offset doğruları/dairelerinin
+kesişiminden bulur; tıklamalara en yakın geçerli teğet çiftini seçer.
+Hesap yerel başlangıca taşınmış f64 koordinatlarla yapılır. Kaynak yay
+sonlu aralığında kırpılır; daire bütün kalır. Uç noktanın birkaç piksel
+dışına tıklama, yanlışlıkla yayın öbür ucunu seçmez. G1 kontrolü yalnız
+teğet doğruların paralelliğine bakmaz: kalan parça ve yeni yayın temas
+noktasından ayrılan yönleri karşıt olmalıdır; sivri dönüş reddedilir.
+Sıfır yarıçap gerçek kesişimde açık hedefi kırpar, yeni yay üretmez.
+Hiçbir şeyi değiştirmeyen/çöken/eş merkezli çözüm güvenle reddedilir.
+
+```python
+from kentos import cad
+
+corner = cad.LinesCornerPick(
+    first=cad.TrimPick(uid=first_uid, at=(x1, y1)),
+    second=cad.TrimPick(uid=second_uid, at=(x2, y2)),
+)
+cad.entities.fillet.plan(doc, corner=corner, radius=.5)
+cad.entities.fillet(doc, corner=corner, radius=.5, trim=True)
+# Pah: birinci kenar 10 cm, ikinci kenar 20 cm; wire birimi metredir.
+cad.entities.chamfer(doc, corner=straight_corner, distance=.1, second=.2)
+```
+
+## CAD-ADV-04'ün açık kabul işleri
+
+- [ ] Elips/NURBS ötelemesinde kullanıcı tarafından açıkça seçilen
+  yaklaşım ve tolerans, paralel eğrinin doğrulanmış hata üst sınırı,
+  kaynak/sonuç bağlantısı ve tekillik raporu. Mevcut kaynak kiriş
+  toleransı, öteleme sonucunun hata üst sınırı sayılamaz. Mevcut elips
+  notundaki `a*h²/8` de offset normalinin değişimini içermez.
+- [ ] Fit/kontrol noktaları, uç teğetleri ve açık/kapalı geçişler için
+  gerçek arayüz kabulü; G1/G2'nin hangi işlemde korunduğunu açık gösterme.
+  Mevcut knot/weight/fit komutları tekrar yazılmadan kullanılmalı.
+- [ ] Delikli ve yaylı kapalı alan, ağırlıklı NURBS, bağlı ölçü,
+  multipart ve kalıcı alt nesne referansları için birleşik alan/uzunluk/
+  süreklilik/hata bütçesi kabulü. Güvenli ret tamamlanmış destek değildir.
+- [ ] Yeni bağımsız yay/daire yuvarlamasının web araç yüzeyine alınması.
+- [ ] Asimetrik eliptik/geçiş eğrisi ayrı geometrik sözleşmeyle araştırılmalı;
+  mevcut dairesel `radius` alanına ikinci yarıçap ekleyerek taklit edilmemeli.
+- [ ] İmleç yanındaki çizilmiş sayısal kutu gerçek metin alanı gibi
+  tıklanıp seçilemiyor; tıklama sahnede işlemi uygulayabiliyor. İki mesafeyi
+  yazma/Enter yolu doğrulandı, fakat bu kutunun düzenleme, yapıştırma ve
+  yazarken canlı önizlemesi ayrı arayüz kabulüyle iyileştirilmeli.
+
+## Kod dayanakları
+
+- `crates/shared/geometry-core/src/ops/fillet_curves.rs`: analitik merkezler,
+  seçim, sonlu yaylar, yönlü G1 ve bağımsız matematik testleri.
+- `crates/native/application/src/corner.rs`: doğrulama, salt okunur tam
+  takipçi önizlemesi, tarama sınırı, tek Undo ve metadata testleri.
+- `crates/native/interaction/src/corner/`: sahne seçimleri ve aynı anlamsal
+  komut. `cad_corner.rs` ve `capabilities.rs`: AI/Python/MCP açıklaması.
+- `ops/path.rs`, native `edit.rs`, `widths.rs`: genişlik taşıma.
+- `ops/trim.rs`, `ops/nurbs_cuts.rs`, native `trim.rs`, `break_join.rs`:
+  parçalar, sınır hesabı ve delik retleri. `interaction/src/area.rs`:
+  mevcut Alan böl alternatifi.
+- `ops/offset.rs`, `ops/curve_cuts.rs`: açık yaklaşım hatası işi.
+- `application/src/curves_edit_cmd.rs`, `interaction/src/curve_edit.rs`:
+  mevcut kontrol/fit/knot/ağırlık/teğet/aç/kapat araçları.
+
+## İncelenen birincil kaynaklar
+
+- [AutoCAD FILLET](https://help.autodesk.com/cloudhelp/ENU/AutoCAD-Web-Help/files/List-Commands/AutoCAD_Web_Help_List_Commands_FILLET_html.html):
+  yarıçap, kenar seçimi ve kırpma davranışı.
+- [AutoCAD CHAMFER](https://help.autodesk.com/cloudhelp/2024/ENU/AutoCAD-Core/files/GUID-B1DCF991-90A7-4DB0-96FC-BDA3FB76337C.htm):
+  birinci ve ikinci nesnenin ayrı mesafeleri ile mesafe/açı yönteminin ayrımı.
+- [QCAD Offset](https://www.qcad.org/en/tutorials/offsetting/):
+  paralel oluşturma ve eğrisel sonuçların uygulama davranışı.
+- [QCAD RSpline arayüzü](https://qcad.org/doc/qcad/latest/developer/_r_spline_8h_source.html):
+  toleranslı `approximateWithArcs`, kesişim ve spline düzenleme API ayrımı.
+- [Open CASCADE Geom2d_OffsetCurve](https://www.occt3d.com/dev/doc/refman/html/class_geom2d___offset_curve.html):
+  offsette kaynak sürekliliği, teğet ve tanımlılık sınırları.
+
+Bu kaynaklar KentOS'un hata garantisi için kanıt değildir. Sayısal
+garanti kendi algoritması ve bağımsız kabul verisiyle doğrulanmalıdır.

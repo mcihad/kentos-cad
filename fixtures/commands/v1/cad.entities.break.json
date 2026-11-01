@@ -1641,7 +1641,7 @@
             "status": "failed",
             "error": {
               "code": "not_breakable",
-              "message": "Adalı alanda kırma yapılamaz; iç halkalar kaybolurdu. Önce Patlat ile halkalarına ayırın ya da Alan böl kullanın.",
+              "message": "Adalı alanda Kır iç halkaları koruyamaz. Halkaları ve alan yapısını korumak için Alan böl aracını kullanın; kaynak alan değiştirilmedi.",
               "path": "uid"
             }
           },
