@@ -759,9 +759,9 @@ fn sub_pixel_pans_at_tm_coordinates_move_the_line_by_exactly_the_pan(gpu: &mut G
                 if let Some(last) = last {
                     let step = centre - last;
                     assert!(
-                        (step + direction * 0.05).abs() < 0.02,
+                        (step + direction * 0.000_01 * MAX_SCALE).abs() < 0.02,
                         "origin {origin:?}, vertical={vertical}, pan {i}: {step} px instead of {}",
-                        -direction * 0.05
+                        -direction * 0.000_01 * MAX_SCALE
                     );
                 }
                 last = Some(centre);

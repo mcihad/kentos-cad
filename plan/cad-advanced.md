@@ -221,7 +221,7 @@ yazım, tek mantıksal Undo ve önizleme/sonuç eşitliği gerçek pencerede do�
   iki bağ kontrolü ayrıştırılarak doğrulandı; renderer değişmedi. Son dilimin
   49 ekran görüntüsü ve günlükleri Git dışında tutuldu.
 
-### CAD-ADV-02 — Birim, 2B UCS ve hassasiyeti kullanıcının öğrenmek zorunda kalmadığı bir sisteme dönüştür [~]
+### CAD-ADV-02 — Birim, 2B UCS ve hassasiyeti kullanıcının öğrenmek zorunda kalmadığı bir sisteme dönüştür [x]
 
 **Öncelik:** P0. **Kod:** [C01], [C27], [C31].
 **Dayanak:** model/kâğıt ayrımı ve kaynak yerleştirme davranışları. [R22], [R23]
@@ -261,12 +261,27 @@ aynı sonucu versin; yeni bir ölçek seçici eklemek çözüm sayılmasın.
   ve 7 sayısal hassasiyet testi geçti; gerçek Apple M5/Metal GPU kontrolü
   çalıştırıldı. 293 isteğe bağlı test atlandı. Python dokümanı/katalog ve
   üretim kontrolü güncel; görüntüler repo dışında.
-- [ ] Aynı 1m eleman ve 4×3m örneği için mm/m/inç girdileri, farklı kaynak
-  blok birimleri, açma/ekleme/pano/yerleştirme, büyük koordinat/dönük
-  kamera/UCS ve kaydet–aç birleşik GUI kabulünü tamamla.
-- [ ] Birimsiz/çelişkili dosya kararını önizlemeyle birlikte doğrula;
-  dinamik blok, ilişkili dizi/ölçü tarifleri ve paftanın birim düzeltmesi
-  sonrası bütünlüğünü birlikte sınayıp bulunan sorunları gider.
+- [x] Aynı 1m eleman ve 4×3m örneği için mm/m/inç, karma kaynak blok
+  birimleri, açma/ekleme/pano/yerleştirme kabulü tamamlandı. Gerçek GUI'de
+  mm→m import 12m², inç→mm pano ve 1000mm blok, tek Undo, kaydet–aç,
+  (500000,4400000) koordinatında 30° UCS/kamera ve 2mm ayrıntı doğrulandı.
+  3×3 kaynak/hedef matrislerinin tamamı Python komut hostunda sınandı;
+  her matris hücresi için ayrı GUI testi yapıldığı iddia edilmez.
+- [x] Birimsiz açmada seçimsiz onay kapalı, açık birimle fiziksel boyut
+  önizlemesi var; Python/MCP aynı kararı zorunlu tutuyor. Çelişkili kaynak
+  birimi içe aktarma önizlemesinde açık. İlişkili dizi/ölçü tarifi ve
+  dinamik blok kuralları, ifadeler, anotasyon konumları birlikte düzeltildi.
+  Tarama model aralıkları dönüşür; pafta kâğıt geometrisi korunur ve
+  model boyu değiştirilince görünüşleri ayarlama uyarısı verilir.
+
+**Kapanış — [ADR 0818](../docs/adr/0818-unit-source-decisions-and-live-recipes.md):**
+9 yeni bütünlük kabul testi; mevcut Python birim/UCS/açma 15, MCP 33,
+native uygulama 270, masaüstü 1561; gerçek Metal GPU ve hassasiyet
+kontrolleri geçti. Native/web ayrıntı zoom sınırı 10000px/m; mevcut GPU
+hata eşikleri korundu. Derleme, Clippy ve SDK kontrolü geçti. Görüntüler
+repo dışında. Web'in eski koordinat okuyucusunda başlangıçta da bulunan
+32 UCS/birimli ifade/ayak-inç test hatası ADR'de ayrı kayıtlıdır; masaüstü
+kabulü bunları tamamlanmış web eşliği olarak saymaz.
 
 ### CAD-ADV-03 — Kalabalık çizimde seçimden toplu özellik düzenlemeye güvenli geçiş sağla [ ]
 

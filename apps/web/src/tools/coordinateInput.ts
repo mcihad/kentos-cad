@@ -32,7 +32,9 @@ export function parsePointInput(
   metres: (typed: number) => number = (v) => v,
   angles: PolarAngles = { fromNorth: false, grads: false },
 ): Vec2 | null {
-  const t = text.trim();
+  const trimmed = text.trim();
+  // Keep ',' as X,Y unless an explicit separator makes decimal commas unambiguous.
+  const t = trimmed.includes(';') || trimmed.includes('<') ? trimmed.replaceAll(',', '.') : trimmed;
   let m = t.match(REL);
   if (m) return last ? relativePoint(last, metres(+m[1]), metres(+m[2])) : null;
   m = t.match(POLAR);

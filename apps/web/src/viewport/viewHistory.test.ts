@@ -270,7 +270,21 @@ describe('view navigation', () => {
     const nav = new ViewNavigation(c);
     nav.history.record({ center: { x: 0, y: 0 }, scale: 1e12 });
     nav.back();
-    expect(c.scale).toBe(5e3);
+    expect(c.scale).toBe(1e4);
+  });
+
+  it('can inspect a 2 mm detail at survey coordinates and return through view history', () => {
+    const c = camera();
+    c.setView({ x: 500000, y: 4400000 }, 100);
+    const nav = new ViewNavigation(c);
+    nav.navigate(() => c.zoomAt(1e9, { x: c.width / 2, y: c.height / 2 }));
+    const a = c.worldToScreen({ x: 500000, y: 4400000 });
+    const b = c.worldToScreen({ x: 500000.002, y: 4400000 });
+    expect(b.x - a.x).toBeCloseTo(20, 5);
+    expect(nav.back()).toBe(true);
+    expect(c.scale).toBe(100);
+    expect(nav.forward()).toBe(true);
+    expect(c.screenToWorld({ x: c.width / 2, y: c.height / 2 })).toEqual({ x: 500000, y: 4400000 });
   });
 
   it('goes nowhere when there is nowhere to go', () => {

@@ -13,8 +13,9 @@ use kentos_geometry_core::crs::map::MapProjection;
 
 /// Farthest zoom out: logical pixels per metre (about a whole country on screen).
 pub const MIN_SCALE: f64 = 1e-4;
-/// Deepest zoom in: about 0.2 mm per logical pixel.
-pub const MAX_SCALE: f64 = 5e3;
+/// Deepest zoom in: 0.1 mm per logical pixel, so a 2 mm CAD detail spans 20 pixels.
+/// Float64 source coordinates and hi/lo GPU positions remain independent of this display limit.
+pub const MAX_SCALE: f64 = 1e4;
 /// Margin a fit leaves around the box, logical pixels.
 pub const FIT_PADDING: f64 = 48.0;
 /// One CSS pixel at 96 dpi in metres: the screen scale 1:N the status bar shows.

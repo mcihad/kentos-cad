@@ -53,6 +53,12 @@ impl Session {
 
     /// A `.kcad` file (v2/v1), or a DWG/DXF/NCZ opened as a new CAD drawing.
     pub fn open(path: &Path) -> Result<Self, HeadlessError> {
+        Self::open_in(path, None)
+    }
+
+    /// Open with an explicit source unit. Unitless external sources require a decision,
+    /// as in the desktop's opening preview; native KCAD already has physical model lengths.
+    pub fn open_in(path: &Path, file_unit: Option<kentos_commands::FileUnit>) -> Result<Self, HeadlessError> {
         let native_content = (|| {
             use std::io::Read;
             let mut prefix = [0u8; 64];
@@ -62,12 +68,18 @@ impl Session {
         if let Some(format) = kentos_native_application::cad_open::Format::of(path).filter(|_| !native_content) {
             let bytes = kentos_native_application::file_import::read_cad_bytes(path)
                 .map_err(|e| HeadlessError::new("file_unreadable", e.message))?;
-            let opened = kentos_native_application::cad_open::read(path, &bytes, format, &mut kentos_formats::watch::Quiet)
-                .map_err(|e| HeadlessError::new("file_unreadable", e))?;
+            let opened = kentos_native_application::cad_open::read_in(path, &bytes, format, file_unit, &mut kentos_formats::watch::Quiet)
+                .map_err(|e| HeadlessError::new(e.code, e.message))?;
+            if opened.unit.as_ref().is_some_and(|u| u.assumed) {
+                return Err(HeadlessError::new("source_unit_required", "Dosya güvenilir bir birim bildirmiyor. file_unit ile kaynak birimini açıkça seçin veya bilinen bir ölçüyle içe aktarın."));
+            }
             let source = json!({"path":path.display().to_string(), "unit":opened.unit, "report":opened.report});
             let mut session = Self::of(opened.document, None, false);
             session.opened_cad = Some(source);
             return Ok(session);
+        }
+        if file_unit.is_some() {
+            return Err(HeadlessError::new("invalid_input", "KCAD dosyasının kaynak birimi değiştirilemez; kayıtlı model uzunlukları metredir. cad.units.change kullanın."));
         }
         let (mut doc, legacy) = files::read(path)?;
         // Bound GeoPackages moved with the project are found again (docs/adr/0506).

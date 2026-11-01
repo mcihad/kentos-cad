@@ -32,6 +32,8 @@ from .types import (
     DrawingFontName,
     DrawingUnit,
     DrawingUnitName,
+    FileUnit,
+    FileUnitName,
     Entity,
     LayerNode,
     LayerNodeType,
@@ -536,10 +538,18 @@ class Document:
         return cls(_host(_native.Session.new_project, json.dumps(choices)))
 
     @classmethod
-    def open(cls, path: str | os.PathLike[str]) -> Document:
+    def open(cls, path: str | os.PathLike[str], *, file_unit: FileUnit | FileUnitName | None = None) -> Document:
         """Open KCAD (v2/v1), DWG, DXF or NCZ. External CAD opens as its own
-        drawing; save to a new ``.kcad`` path to preserve the source file."""
-        return cls(_host(_native.Session.open, os.fspath(path)))
+        drawing; save to a new ``.kcad`` path to preserve the source file.
+
+        ``file_unit`` explicitly interprets the external source's numbers, overriding
+        its declaration once. Unitless sources raise ``HostError`` with code
+        ``source_unit_required`` until a unit is supplied; no size is guessed.
+        Native KCAD has metre-based geometry and refuses a source-unit override.
+        To preview a source or calibrate a known length, use ``file.import_.dxf.plan``.
+        """
+        return cls(_host(_native.Session.open, os.fspath(path),
+                         None if file_unit is None else _enum_out(file_unit)))
 
     @classmethod
     def from_bytes(cls, data: bytes | bytearray | memoryview) -> Document:

@@ -80,8 +80,11 @@ impl PySession {
 
     /// A `.kcad` file (v2, or v1 JSON).
     #[staticmethod]
-    fn open(py: Python<'_>, path: PathBuf) -> PyResult<Self> {
-        py.detach(|| Session::open(&path))
+    #[pyo3(signature = (path, file_unit=None))]
+    fn open(py: Python<'_>, path: PathBuf, file_unit: Option<String>) -> PyResult<Self> {
+        let unit = file_unit.map(|u| serde_json::from_value::<kentos_commands::FileUnit>(serde_json::Value::String(u)))
+            .transpose().map_err(|e| host(HeadlessError::new("invalid_input", e.to_string())))?;
+        py.detach(|| Session::open_in(&path, unit))
             .map(|inner| Self { inner })
             .map_err(host)
     }

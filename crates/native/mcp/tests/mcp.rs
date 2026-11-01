@@ -1353,6 +1353,24 @@ fn external_cad_opens_through_mcp_without_creating_a_project_first() {
     assert_eq!(made["structuredContent"]["summary"]["settings"]["plotScale"], 100.0);
 }
 
+#[test]
+fn ambiguous_cad_open_exposes_the_same_explicit_source_unit_decision_to_ai() {
+    let mut server = Server::new();
+    let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../fixtures/formats/v1/dxf-units/unitless.dxf");
+    let rejected = call(&mut server, "drawing.open", json!({"path":path}));
+    assert_eq!(rejected["isError"], true);
+    assert_eq!(rejected["structuredContent"]["error"]["code"], "source_unit_required");
+    let opened = call(&mut server, "drawing.open", json!({"path":path,"fileUnit":"cm"}));
+    assert_eq!(opened["isError"], false, "{opened}");
+    assert_eq!(opened["structuredContent"]["summary"]["units"]["drawing"], "cm");
+    assert_eq!(opened["structuredContent"]["summary"]["openedCad"]["unit"]["factor"], 0.01);
+    let listed = ask(&mut server, 1, "tools/list", json!({}));
+    let open = listed["result"]["tools"].as_array().unwrap().iter()
+        .find(|t| t["name"] == "drawing.open").unwrap();
+    assert!(open["inputSchema"]["properties"]["fileUnit"]["enum"].as_array().unwrap().contains(&json!("in")));
+}
+
 /// The protocol through MCP (docs/adr/0253): a command's summary and its
 /// stamps, a request sent again, what a call expects, a job, the journal.
 #[test]

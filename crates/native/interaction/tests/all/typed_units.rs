@@ -24,6 +24,21 @@ fn near(a: f64, b: f64) -> bool {
 }
 
 #[test]
+fn decimal_comma_coordinates_and_polar_lengths_keep_explicit_units() {
+    let mut b = millimetres("line");
+    for text in ["-1,25m;8m", "-0,25m;8m", "@1,25m<0"] {
+        assert!(b.type_text(text), "{text}");
+    }
+    let mut lines: Vec<_> = b.doc.entities().filter_map(|e| match e {
+        Entity::Line(l) => Some((l.base.id, l.a, l.b)), _ => None,
+    }).collect();
+    lines.sort_by_key(|l| l.0);
+    assert_eq!((lines[0].1.x, lines[0].1.y, lines[0].2.x, lines[0].2.y), (-1.25, 8., -0.25, 8.));
+    assert!(near(lines[1].2.x, 1.));
+    assert!(near(lines[1].2.y, 8.));
+}
+
+#[test]
 fn a_line_takes_metres_centimetres_and_sums() {
     let mut b = millimetres("line");
     for text in ["0,0", "@2.5m<0", "@(1.2+0.3)m<90", "@-50cm,(100*2)"] {

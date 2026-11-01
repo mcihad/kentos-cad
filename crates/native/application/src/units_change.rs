@@ -11,7 +11,10 @@
 //! written by the step's own op (`Document::set_unit_state`), so undo gives
 //! them back with the objects.
 
-use kentos_commands::units::{Scale, scale_block, scale_bounds, scale_entity};
+use kentos_commands::units::{
+    Scale, scale_block, scale_bounds, scale_dynamic_block, scale_insert_details,
+    scale_insert_parameters,
+};
 use kentos_commands::{
     CommandError, CommandResult, CommandWarning, DrawingUnit, Entity, UnitGeometry, UnitsChange,
     UnitsChanged, Vec2,
@@ -191,7 +194,9 @@ fn check(doc: &Document, input: &UnitsChange) -> Result<Checked, Stop> {
     if let Some(why) = kentos_commands::ucs_problem(next.ucs.as_ref(), &next.named_ucs) {
         return Err(refuse(
             codes::FAR_POINT,
-            format!("Birim düzeltmesi yerel koordinat başlangıcını izin verilen alanın dışına taşıyor: {why} Boyları koruyun veya önce UCS başlangıcını düzenleyin; hiçbir şey yazılmadı."),
+            format!(
+                "Birim düzeltmesi yerel koordinat başlangıcını izin verilen alanın dışına taşıyor: {why} Boyları koruyun veya önce UCS başlangıcını düzenleyin; hiçbir şey yazılmadı."
+            ),
             "geometry",
         ));
     }
@@ -272,22 +277,23 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: UnitsChange) -> CommandRe
     // The unit first: it names the step.
     doc.set_unit_state(next, STEP);
     if let Some(s) = checked.scale {
-        let changes: Vec<(Slot, Entity)> = doc
-            .entities()
-            .filter(|e| !matches!(e, Entity::PointCloud(_)))
-            .map(|e| {
-                let mut e = e.clone();
-                scale_entity(&mut e, s);
-                (Slot(e.base().id), e)
-            })
-            .collect();
-        doc.update_many(changes, STEP);
+        doc.scale_unit_objects(s, STEP);
         let blocks: Vec<_> = doc
             .blocks()
             .iter()
             .map(|b| {
                 let mut b = (**b).clone();
                 scale_block(&mut b, s);
+                scale_dynamic_block(&mut b, s);
+                for e in &mut b.entities {
+                    if let Entity::Insert(i) = e {
+                        scale_insert_details(i, s);
+                        if let Some(d) = doc.block(i.block).and_then(|b| b.dynamic.as_ref()) {
+                            scale_insert_parameters(i, d, s);
+                        }
+                    }
+                }
+                scale_expressions(&mut b, s);
                 b
             })
             .collect();
@@ -302,5 +308,55 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: UnitsChange) -> CommandRe
     CommandResult::Completed {
         output: output(&input, &checked, doc.revision().to_string()),
         warnings: checked.warnings,
+    }
+}
+
+/// Conjugate a parameter expression through the unit conversion: s*f(length/s, angle).
+/// Use the real lexer so quoted text, Unicode names and longer parameter names are not rewritten accidentally.
+fn scale_expressions(block: &mut kentos_commands::BlockDefinition, s: Scale) {
+    use kentos_commands::BlockParameter as P;
+    use kentos_expression::lexer::{Tok, tokenize};
+    let Some(dynamic) = &mut block.dynamic else {
+        return;
+    };
+    let lengths: Vec<String> = dynamic
+        .parameters
+        .iter()
+        .filter_map(|p| match p {
+            P::Linear { name, .. } => Some(name.clone()),
+            _ => None,
+        })
+        .collect();
+    for p in &mut dynamic.parameters {
+        let (rule, length) = match p {
+            P::Linear { rule, .. } | P::Polar { rule, .. } => (rule, true),
+            P::Angle { rule, .. } => (rule, false),
+            _ => continue,
+        };
+        let Some(source) = &rule.expression else {
+            continue;
+        };
+        let Ok(tokens) = tokenize(source) else {
+            continue;
+        }; // Existing valid definition; validation remains at commit.
+        let mut units: Vec<u16> = source.encode_utf16().collect();
+        for token in tokens.iter().rev() {
+            if let Tok::At(name) = &token.t
+                && lengths.contains(name)
+            {
+                let start = token.at - 1;
+                let end = start + 1 + name.encode_utf16().count();
+                let replacement = format!("(@{name}*{}/{})", s.div, s.mul);
+                units.splice(start..end, replacement.encode_utf16());
+            }
+        }
+        let Ok(mapped) = String::from_utf16(&units) else {
+            continue;
+        };
+        rule.expression = Some(if length {
+            format!("({mapped})*{}/{}", s.mul, s.div)
+        } else {
+            mapped
+        });
     }
 }

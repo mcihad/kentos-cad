@@ -11,7 +11,7 @@ export interface ViewTransform {
 }
 
 const MIN_SCALE = 1e-4; // px per metre (≈ whole country)
-const MAX_SCALE = 5e3; // ≈ 0.2 mm per pixel
+const MAX_SCALE = 1e4; // 0.1 mm per pixel; same CAD detail limit as the native camera
 
 /** 2D orthographic camera. Centre is absolute (float64), y axis points north. */
 export class Camera implements ViewTransform {

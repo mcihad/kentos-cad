@@ -75,6 +75,15 @@ pub enum PointText {
 /// in the web's order: relative, polar, absolute, distance.
 pub fn parse_point_text(text: &str) -> Option<PointText> {
     let t = js_trim(text);
+    // A semicolon separates the two coordinates, or '<' separates distance and angle:
+    // commas can then unambiguously be decimal marks. Ordinary '10,20' remains X,Y.
+    let localized;
+    let t = if t.contains(';') || t.contains('<') {
+        localized = t.replace(',', ".");
+        localized.as_str()
+    } else {
+        t
+    };
     if let Some(rest) = t.strip_prefix('@')
         && let Some((dx, dy)) = pair(rest)
     {
@@ -155,9 +164,9 @@ pub fn parse_length(text: &str) -> Option<Len> {
     match unit {
         "in" => Some(Len::Inches(value)),
         "ft" => Some(Len::Inches(value * crate::tools::imperial::INCHES_PER_FOOT)),
-        _ => METRIC.iter().find_map(|(mark, metres)| {
-            (unit == *mark).then(|| Len::Metres(metres(value)))
-        }),
+        _ => METRIC
+            .iter()
+            .find_map(|(mark, metres)| (unit == *mark).then(|| Len::Metres(metres(value)))),
     }
 }
 

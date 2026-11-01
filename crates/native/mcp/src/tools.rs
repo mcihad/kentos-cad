@@ -65,7 +65,9 @@ pub fn list(catalog: &Value) -> Vec<Value> {
             "Çizim aç",
             "KCAD (v2/v1), DWG, DXF veya NCZ çizimini açar; tutamacını ve özetini verir. Dış CAD dosyası yeni bir CAD çizimidir; kaynak üzerine yazılmaz, kaydetmek için .kcad yolu gerekir.",
             object(
-                json!({ "path": { "type": "string", "description": "Dosyanın yolu." } }),
+                json!({ "path": { "type": "string", "description": "Dosyanın yolu." },
+                    "fileUnit": { "type": "string", "enum": kentos_commands::FileUnit::ALL,
+                        "description": "DWG/DXF kaynak sayılarının birimi; bildirilen birimi açıkça geçersiz kılar. Birimsiz dosyada zorunlu; KCAD için verilmez. Model uzunlukları metre, pafta ve zoom değişmez." } }),
                 &["path"],
             ),
             annotations(false, false),
@@ -1203,7 +1205,9 @@ fn run(server: &mut Server, name: &str, args: &Value) -> Result<Value, Value> {
         "drawing.open" => {
             let path =
                 text(args, "path").ok_or_else(|| refused("invalid_input", "path gerekli."))?;
-            let session = Session::open(Path::new(path)).map_err(host)?;
+            let file_unit = args.get("fileUnit").map(|u| serde_json::from_value(u.clone()))
+                .transpose().map_err(|e| refused("invalid_input", format!("fileUnit: {e}")))?;
+            let session = Session::open_in(Path::new(path), file_unit).map_err(host)?;
             opened(server, session)
         }
         "drawing.new" => {

@@ -126,7 +126,7 @@ fn the_gpu_places_points_where_the_cpu_does_at_every_zoom_and_origin() {
 
 #[test]
 fn panning_by_hundredths_of_a_millimetre_does_not_jitter_at_the_deepest_zoom() {
-    // 0.2 mm per pixel; the view moves 0.01 mm (0.05 px) at a time.
+    // The view moves 0.01 mm at a time, including at the CAD detail zoom limit.
     let scale = MAX_SCALE;
     let step = 0.000_01;
     let fixed = Vec2::new(E + 0.0371, N - 0.0213);
@@ -170,10 +170,11 @@ fn screen_and_world_round_trip_in_float64() {
         ] {
             let w = cam.screen_to_world(x, y);
             let s = cam.world_to_screen(w);
-            // Bounded by float64 itself: a northing near 4.4e6 m is kept to 9.3e-10 m,
-            // 4.7e-6 px at 5000 px/m.
+            // One float64 rounding at a 4.4e6 m northing; the pixel bound grows with
+            // zoom, while the permitted source-coordinate error stays unchanged.
+            let pixel_bound = (f64::EPSILON * N.abs() * scale).max(1e-5);
             assert!(
-                (s[0] - x).abs() < 1e-5 && (s[1] - y).abs() < 1e-5,
+                (s[0] - x).abs() < pixel_bound && (s[1] - y).abs() < pixel_bound,
                 "{scale}: {s:?}"
             );
         }
@@ -185,6 +186,22 @@ fn screen_and_world_round_trip_in_float64() {
             (back.x - p.x).abs() < 1e-8 && (back.y - p.y).abs() < 1e-8,
             "{scale}: {back:?}"
         );
+    }
+}
+
+#[test]
+fn a_two_millimetre_detail_is_inspectable_without_changing_its_source() {
+    let a = Vec2::new(E, N);
+    let b = Vec2::new(E + 0.002, N);
+    let mut cam = camera(a, 1.0);
+    cam.zoom_at(1e9, 800., 500.);
+    let span = cam.world_to_screen(b)[0] - cam.world_to_screen(a)[0];
+    assert!(
+        (span - 20.).abs() < 1e-4,
+        "2 mm must span 20 logical pixels, got {span}"
+    );
+    for origin in origins() {
+        assert!(error(gpu_px(&cam, b, origin, 2.), exact_px(&cam, b, 2.)) < 1e-3);
     }
 }
 

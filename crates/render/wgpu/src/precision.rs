@@ -23,8 +23,8 @@ use crate::layout::FrameUniform;
 /// longer segment is cut into collinear pieces (display only, the document
 /// is untouched). The piece under the camera then has both ends near it, so
 /// its position on screen does not depend on how far away the segment's own
-/// ends lie: at the deepest zoom (5000 px/m) an end 128 m away is still placed
-/// to about 0.04 px.
+/// ends lie: at the deepest zoom (10000 px/m) its nearby piece stays at subpixel
+/// accuracy; precision tests retain the 0.05 px line-offset threshold.
 pub const MAX_SEGMENT_LENGTH: f64 = 128.0;
 
 /// Most pieces one segment is cut into: a segment kilometres long in absurd

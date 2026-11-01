@@ -54,9 +54,15 @@ pub const UNITS: &[(&str, &str)] = &[
         "Kâğıtta milimetre: kalınlık, kâğıttaki yazı yüksekliği, pafta boyları.",
     ),
     ("paper-um", "Kâğıtta mikrometre; 1000 µm = 1 mm."),
-    ("mdeg", "Derecenin binde biri; kâğıtta saat yönünde pozitif."),
+    (
+        "mdeg",
+        "Derecenin binde biri; kâğıtta saat yönünde pozitif.",
+    ),
     ("dpi", "Bir inçteki piksel sayısı."),
-    ("frame-millionths", "Öğe çerçevesinin milyonda biri; çerçeve boyuyla ölçeklenir."),
+    (
+        "frame-millionths",
+        "Öğe çerçevesinin milyonda biri; çerçeve boyuyla ölçeklenir.",
+    ),
     ("px", "Ekranda mantıksal piksel."),
     (
         "deg",
@@ -108,7 +114,10 @@ pub const UNITS: &[(&str, &str)] = &[
     ),
     ("system", "Adı verilen koordinat sisteminin kendi birimi."),
     ("arcsec", "Yay saniyesi (″)."),
-    ("year", "Ondalık yıl: koordinat epoku (2023.5 yılın ortası)."),
+    (
+        "year",
+        "Ondalık yıl: koordinat epoku (2023.5 yılın ortası).",
+    ),
     (
         "size-unit",
         "Birimi yanındaki sizeUnit alanının söylediği: piksel ya da projenin uzunluğu.",
@@ -322,6 +331,11 @@ pub fn scale_entity(e: &mut Entity, s: Scale) {
             if let Some(w) = &mut t.paragraph.box_width {
                 *w = s.apply(*w);
             }
+            if let Some(layout) = &mut t.paragraph.layout
+                && let Some(columns) = &mut layout.columns
+            {
+                columns.height = s.apply(columns.height);
+            }
             // The curve is in the text's own frame, metres (docs/adr/0196 §1).
             if let Some(path) = &mut t.path {
                 s.points(&mut path.pts);
@@ -337,6 +351,11 @@ pub fn scale_entity(e: &mut Entity, s: Scale) {
             d.height = s.apply(d.height);
             s.height(&mut d.za);
             s.height(&mut d.zb);
+            if let Some(shift) = &mut d.text_shift {
+                shift.along = s.apply(shift.along);
+                shift.across = s.apply(shift.across);
+            }
+            scale_dimension_look(&mut d.look, s);
         }
         Entity::Hatch(h) => {
             s.points(&mut h.ring);
@@ -376,6 +395,9 @@ pub fn scale_entity(e: &mut Entity, s: Scale) {
         Entity::Insert(i) => s.point(&mut i.p),
         Entity::Leader(l) => {
             s.points(&mut l.pts);
+            for arm in &mut l.arms {
+                s.points(&mut arm.pts);
+            }
             l.height = s.apply(l.height);
         }
         Entity::Table(t) => {
@@ -509,6 +531,58 @@ pub fn scale_entity(e: &mut Entity, s: Scale) {
         // A cloud's points are in its files, which no unit scales (docs/adr/0207 §11).
         Entity::PointCloud(_) | Entity::Record(_) => {}
     }
+    if let Some(Some(a)) = crate::annotative_field(e) {
+        for entry in &mut a.scales {
+            if let Some(p) = &mut entry.point {
+                s.point(p);
+            }
+            s.height(&mut entry.offset);
+            if let Some(shift) = &mut entry.text_shift {
+                shift.along = s.apply(shift.along);
+                shift.across = s.apply(shift.across);
+            }
+        }
+    }
+}
+
+/// Model lengths in the value's formatting; arrow and gap ratios stay unchanged.
+pub fn scale_dimension_look(look: &mut crate::DimensionLook, s: Scale) {
+    if let Some(options) = &mut look.options {
+        s.height(&mut options.round);
+        if let Some(tolerance) = &mut options.tolerance {
+            tolerance.upper = s.apply(tolerance.upper);
+            s.height(&mut tolerance.lower);
+        }
+    }
+}
+
+/// Details in the referenced definition's coordinates, when that definition is scaled too.
+/// Kept separate from `scale_entity`: scaling an individual parent block leaves its
+/// referenced definitions unchanged, and must keep these coordinates unchanged as well.
+pub fn scale_insert_details(i: &mut crate::InsertEntity, s: Scale) {
+    for p in i.attribute_places.values_mut() {
+        s.point(p);
+    }
+    if let Some(clip) = &mut i.clipping {
+        s.points(&mut clip.boundary);
+    }
+}
+
+/// A dynamic insert's stored values are in its definition's coordinates. Angles, flags and names stay.
+pub fn scale_insert_parameters(i: &mut crate::InsertEntity, d: &crate::DynamicBlock, s: Scale) {
+    for p in &d.parameters {
+        if let Some(value) = i.parameters.get_mut(p.name()) {
+            scale_parameter_value(value, p, s);
+        }
+    }
+}
+
+fn scale_parameter_value(value: &mut crate::ParamValue, p: &crate::BlockParameter, s: Scale) {
+    match (p, value) {
+        (crate::BlockParameter::Linear { .. }, crate::ParamValue::Number(v)) => *v = s.apply(*v),
+        (_, crate::ParamValue::Point(p)) => s.point(p),
+        _ => {}
+    }
 }
 
 /// A block definition in the scale's unit: its base point, its objects and
@@ -521,6 +595,55 @@ pub fn scale_block(b: &mut BlockDefinition, s: Scale) {
     }
     for a in &mut b.attributes {
         scale_attribute(a, s);
+    }
+}
+
+/// Whole-drawing unit correction also scales dynamic definition coordinates and rules.
+/// Expressions are conjugated by the application using its expression lexer.
+pub fn scale_dynamic_block(b: &mut BlockDefinition, s: Scale) {
+    if let Some(d) = &mut b.dynamic {
+        use crate::{BlockAction as A, BlockParameter as P};
+        let parameters = d.parameters.clone();
+        for p in &mut d.parameters {
+            match p {
+                P::Linear { from, to, rule, .. } | P::Polar { from, to, rule, .. } => {
+                    s.point(from);
+                    s.point(to);
+                    s.height(&mut rule.min);
+                    s.height(&mut rule.max);
+                    s.height(&mut rule.step);
+                    for value in &mut rule.list {
+                        *value = s.apply(*value);
+                    }
+                }
+                P::Angle { center, .. } => s.point(center),
+                P::Point { at, .. } => s.point(at),
+                P::Flip { a, b, .. } => {
+                    s.point(a);
+                    s.point(b);
+                }
+                P::Lookup { rows, .. } => {
+                    for row in rows {
+                        for (name, value) in &mut row.values {
+                            if let Some(p) = parameters.iter().find(|p| p.name() == name) {
+                                scale_parameter_value(value, p, s);
+                            }
+                        }
+                    }
+                }
+                P::Visibility { .. } => {}
+            }
+        }
+        for action in &mut d.actions {
+            match action {
+                A::Stretch { min, max, .. } => {
+                    s.point(min);
+                    s.point(max);
+                }
+                A::Array { spacing, .. } => *spacing = s.apply(*spacing),
+                _ => {}
+            }
+        }
     }
 }
 

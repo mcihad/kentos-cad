@@ -22,6 +22,106 @@ pub struct UnitState {
 }
 
 impl Document {
+    /// Correct the model's unit as one batch, including the recipes owning its objects.
+    /// Their exact child writes are authorized together; a correction is never a manual
+    /// array-item move or an illegal edit of an automatically generated dimension.
+    pub fn scale_unit_objects(&mut self, scale: kentos_contracts::units::Scale, label: &str) {
+        use crate::store::Stored;
+        use kentos_contracts::units::{
+            scale_dimension_look, scale_entity, scale_insert_details, scale_insert_parameters,
+        };
+        use kentos_contracts::{ArrayLayout, Entity};
+        use std::sync::Arc;
+        let mut ops = Vec::new();
+        for stored in self
+            .store
+            .iter()
+            .filter(|stored| !matches!(&*stored.entity, Entity::PointCloud(_)))
+        {
+            let e = &*stored.entity;
+            let before = stored.clone();
+            let mut entity = e.clone();
+            scale_entity(&mut entity, scale);
+            if let Entity::Insert(i) = &mut entity {
+                scale_insert_details(i, scale);
+                if let Some(d) = self.block(i.block).and_then(|b| b.dynamic.as_ref()) {
+                    scale_insert_parameters(i, d, scale);
+                }
+            }
+            if entity != *e {
+                ops.push(Op::Update {
+                    before: before.clone(),
+                    after: Stored {
+                        uid: before.uid,
+                        entity: Arc::new(entity),
+                    },
+                });
+            }
+        }
+        let point = |p: &mut Vec2| {
+            p.x = scale.apply(p.x);
+            p.y = scale.apply(p.y);
+        };
+        for before in &self.arrays {
+            let mut after = (**before).clone();
+            point(&mut after.p);
+            match &mut after.layout {
+                ArrayLayout::Grid { dx, dy, .. } | ArrayLayout::Line { dx, dy, .. } => {
+                    *dx = scale.apply(*dx);
+                    *dy = scale.apply(*dy);
+                }
+                ArrayLayout::Polar { center, .. } => point(center),
+                ArrayLayout::Path { spacing, .. } => *spacing = spacing.map(|v| scale.apply(v)),
+            }
+            // Also record an origin-centred polar or fitted path recipe whose numbers
+            // did not change: it owns this batch's item changes all the same.
+            ops.push(Op::ArrayUpdate {
+                before: before.clone(),
+                after: Arc::new(after),
+            });
+        }
+        let writes: std::collections::HashMap<_, _> = ops
+            .iter()
+            .filter_map(|op| match op {
+                Op::Update { before, after } => {
+                    Some((after.uid, (before.entity.clone(), after.entity.clone())))
+                }
+                _ => None,
+            })
+            .collect();
+        for before in &self.dimension_sets {
+            let mut after = (**before).clone();
+            point(&mut after.at);
+            after.height = scale.apply(after.height);
+            scale_dimension_look(&mut after.look, scale);
+            for row in &mut after.row_places {
+                point(&mut row.at);
+            }
+            for member in &mut after.members {
+                if let Some(shift) = &mut member.shift {
+                    shift.along = scale.apply(shift.along);
+                    shift.across = scale.apply(shift.across);
+                }
+            }
+            // Only this method's exact member updates confer permission, never another
+            // operation in a script's enclosing transaction (ADR 0730).
+            let owned = before
+                .members
+                .iter()
+                .filter_map(|member| {
+                    let uid = crate::Uuid::from_bytes(member.uid.0);
+                    writes.get(&uid).map(|(b, a)| (uid, b.clone(), a.clone()))
+                })
+                .collect();
+            ops.push(Op::DimensionSetUpdate {
+                before: before.clone(),
+                after: Arc::new(after),
+                writes: owned,
+            });
+        }
+        self.record(ops, label);
+    }
+
     /// The drawing unit, the home view and the anchor as they are.
     pub fn unit_state(&self) -> UnitState {
         UnitState {

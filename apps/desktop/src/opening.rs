@@ -23,7 +23,9 @@ use iced::futures::channel::mpsc;
 use iced::widget::{button, column};
 use iced::{Element, Task};
 use kentos_commands::DocumentSnapshotV1;
+use kentos_commands::{FileUnit, UnitDecision};
 use kentos_kcad::{Code, Sniff, Step};
+use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::{Dialog, progress};
 use kentos_ui::{label, style};
 
@@ -36,9 +38,15 @@ use kentos_interaction::Level;
 #[derive(Debug, Clone, PartialEq)]
 pub enum Stage {
     /// The file's bytes so far.
-    File { done: u64, total: u64 },
+    File {
+        done: u64,
+        total: u64,
+    },
     /// The integrity check (SHA-256): bytes so far.
-    Checking { done: u64, total: u64 },
+    Checking {
+        done: u64,
+        total: u64,
+    },
     /// The project, known before its objects.
     Project {
         name: String,
@@ -46,11 +54,15 @@ pub enum Stage {
         objects: usize,
     },
     /// Objects read so far.
-    Reading { done: usize, total: usize },
+    Reading {
+        done: usize,
+        total: usize,
+    },
     /// The document is being built and checked.
     Building,
     /// External CAD source: units and conversion/loss report, shown after opening.
     Source(Vec<String>),
+    SourceUnit(UnitDecision, Option<[f64; 4]>),
 }
 
 /// The largest file an open reads (a KCAD v2 payload is at most 2³⁰ bytes):
@@ -109,6 +121,15 @@ pub fn read(
     path: &Path,
     stop: &AtomicBool,
     tell: &mut dyn FnMut(Stage),
+) -> Result<Option<Document>, String> {
+    read_source(path, stop, tell, None)
+}
+
+fn read_source(
+    path: &Path,
+    stop: &AtomicBool,
+    tell: &mut dyn FnMut(Stage),
+    file_unit: Option<FileUnit>,
 ) -> Result<Option<Document>, String> {
     let at = |e: String| format!("{}: {e}", path.display());
     let Some(data) = read_bytes(path, stop, tell)? else {
@@ -174,12 +195,13 @@ pub fn read(
                 });
                 !stop.load(Ordering::Relaxed)
             });
-            let opened =
-                match kentos_native_application::cad_open::read(path, &data, format, &mut watch) {
-                    Ok(opened) => opened,
-                    Err(_) if stop.load(Ordering::Relaxed) => return Ok(None),
-                    Err(e) => return Err(at(e)),
-                };
+            let opened = match kentos_native_application::cad_open::read_in(
+                path, &data, format, file_unit, &mut watch,
+            ) {
+                Ok(opened) => opened,
+                Err(_) if stop.load(Ordering::Relaxed) => return Ok(None),
+                Err(e) => return Err(at(e.message)),
+            };
             if stop.load(Ordering::Relaxed) {
                 return Ok(None);
             }
@@ -188,6 +210,16 @@ pub fn read(
                 path.display()
             )];
             if let Some(unit) = &opened.unit {
+                let bounds = unit
+                    .assumed
+                    .then(|| {
+                        kentos_native_application::sheets_fit::extent_of(
+                            &opened.document,
+                            opened.document.entities(),
+                        )
+                    })
+                    .flatten();
+                tell(Stage::SourceUnit(unit.clone(), bounds));
                 notes.push(crate::exchange::drawing_import::unit_said(
                     unit,
                     opened.document.settings().unit(),
@@ -217,7 +249,10 @@ pub enum Event {
     /// Yeni sekmede aç's dialog answered (doc_tabs.rs).
     PickedTab(Option<PathBuf>),
     /// How far the open `id` is.
-    Progress { id: u64, stage: Stage },
+    Progress {
+        id: u64,
+        stage: Stage,
+    },
     /// The open `id` ended: the drawing, the reason it could not be read, or
     /// nothing (it was stopped).
     Done {
@@ -226,6 +261,8 @@ pub enum Event {
     },
     /// Vazgeç, Esc, or a click beside the window.
     Cancel,
+    SourceUnit(Option<FileUnit>),
+    ConfirmUnit,
 }
 
 /// What an open puts on screen once it has read the file.
@@ -280,6 +317,10 @@ pub struct Opening {
     stop: Arc<AtomicBool>,
     notes: Vec<String>,
     source_path: PathBuf,
+    unit: Option<UnitDecision>,
+    unit_bounds: Option<[f64; 4]>,
+    selected_unit: Option<FileUnit>,
+    ready: Option<Box<Document>>,
 }
 
 /// How long an open runs before its window shows (a quick open does not flash one).
@@ -321,7 +362,7 @@ fn describe(stage: &Stage) -> (String, f32) {
             0.3 + 0.55 * part(*done as f64, *total as f64),
         ),
         Stage::Building => ("Çizim kuruluyor ve denetleniyor".to_owned(), 0.9),
-        Stage::Source(_) => ("CAD çizimi hazır".into(), 1.0),
+        Stage::Source(_) | Stage::SourceUnit(..) => ("CAD çizimi hazır".into(), 1.0),
     }
 }
 
@@ -329,6 +370,15 @@ impl App {
     /// Starts opening `path` on a thread of its own; the window shows if it
     /// takes a moment. An open still running gives way to this one.
     pub(crate) fn start_opening(&mut self, path: PathBuf, purpose: Purpose) -> Task<Message> {
+        self.start_opening_unit(path, purpose, None)
+    }
+
+    fn start_opening_unit(
+        &mut self,
+        path: PathBuf,
+        purpose: Purpose,
+        file_unit: Option<FileUnit>,
+    ) -> Task<Message> {
         if let Some(earlier) = self.opening.take() {
             earlier.stop.store(true, Ordering::Relaxed);
         }
@@ -356,11 +406,18 @@ impl App {
             stop: stop.clone(),
             notes: Vec::new(),
             source_path: path.clone(),
+            unit: None,
+            unit_bounds: None,
+            selected_unit: None,
+            ready: None,
         });
         iced_runtime::task::blocking(move |mut out: mpsc::Sender<Message>| {
             let mut last = Instant::now();
             let mut tell = |stage: Stage| {
-                let project = matches!(stage, Stage::Project { .. } | Stage::Source(_));
+                let project = matches!(
+                    stage,
+                    Stage::Project { .. } | Stage::Source(_) | Stage::SourceUnit(..)
+                );
                 let message = Message::Opening(Event::Progress { id, stage });
                 if project {
                     // The project is told once: it waits for its turn.
@@ -373,7 +430,7 @@ impl App {
                     let _ = out.try_send(message);
                 }
             };
-            let result = match read(&path, &stop, &mut tell) {
+            let result = match read_source(&path, &stop, &mut tell, file_unit) {
                 Ok(Some(doc)) => Some(Ok(Box::new(doc))),
                 Ok(None) => None,
                 Err(e) => Some(Err(e)),
@@ -388,11 +445,44 @@ impl App {
     /// An open's messages.
     pub(crate) fn opening_event(&mut self, event: Event) -> Task<Message> {
         match event {
+            Event::SourceUnit(unit) => {
+                if let Some(o) = self.opening.as_mut().filter(|o| o.ready.is_some()) {
+                    o.selected_unit = unit;
+                }
+            }
+            Event::ConfirmUnit => {
+                let Some(o) = self
+                    .opening
+                    .as_ref()
+                    .filter(|o| o.ready.is_some() && o.selected_unit.is_some())
+                else {
+                    return Task::none();
+                };
+                if self
+                    .document
+                    .as_ref()
+                    .map(|d| (d.session, d.model.revision()))
+                    != o.was
+                {
+                    self.opening = None;
+                    self.warn("Birim seçimi sırasında açık çizim değişti; dosyayı yeniden açın.");
+                    return Task::none();
+                }
+                return self.start_opening_unit(
+                    o.source_path.clone(),
+                    o.purpose.clone(),
+                    o.selected_unit,
+                );
+            }
             Event::Picked(Some(path)) => return self.start_opening(path, Purpose::File),
             Event::PickedTab(Some(path)) => return self.start_opening(path, Purpose::Tab),
             Event::Picked(None) | Event::PickedTab(None) => {}
             Event::Progress { id, stage } => {
                 if let Some(o) = self.opening.as_mut().filter(|o| o.id == id) {
+                    if let Stage::SourceUnit(unit, bounds) = &stage {
+                        o.unit_bounds = *bounds;
+                        o.unit = Some(unit.clone());
+                    }
                     if let Stage::Source(notes) = &stage {
                         o.notes = notes.clone();
                     }
@@ -418,7 +508,7 @@ impl App {
             }
             Event::Done { id, result } => {
                 // A stopped or overtaken open: whatever it read is dropped here.
-                let Some(o) = self.opening.take_if(|o| o.id == id) else {
+                let Some(mut o) = self.opening.take_if(|o| o.id == id) else {
                     return Task::none();
                 };
                 match result {
@@ -434,6 +524,11 @@ impl App {
                                 "{} açılmadı: açılış sürerken ekrandaki çizim değişti ya da başka bir çizim açıldı; o çizim olduğu gibi duruyor. Dosyayı yeniden açın.",
                                 quoted(&o.name)
                             ));
+                            return Task::none();
+                        }
+                        if o.unit.as_ref().is_some_and(|u| u.assumed) {
+                            o.ready = Some(doc);
+                            self.opening = Some(o);
                             return Task::none();
                         }
                         let opened = Opened {
@@ -545,6 +640,46 @@ impl App {
     /// The open's window, once the open takes a moment.
     pub(crate) fn opening_view(&self) -> Option<Element<'_, Message>> {
         let o = self.opening.as_ref()?;
+        if let Some(doc) = &o.ready {
+            let choices = std::iter::once(Choice::new("Dosyanın birimini seçin"))
+                .chain(FileUnit::ALL.iter().map(|u| Choice::new(u.mark())));
+            let selected = o
+                .selected_unit
+                .and_then(|u| FileUnit::ALL.iter().position(|x| *x == u))
+                .map_or(0, |i| i + 1);
+            let select = Select::new(choices, Some(selected), |i| {
+                Message::Opening(Event::SourceUnit(
+                    i.checked_sub(1).and_then(|k| FileUnit::ALL.get(k).copied()),
+                ))
+            })
+            .searchable(false);
+            let factor = o
+                .selected_unit
+                .and_then(|u| kentos_commands::units::insunits(u.code()))
+                .map(|(s, _)| s.factor());
+            let preview = match (factor, o.unit_bounds, o.unit.as_ref()) {
+                (Some(f), Some(b), Some(unit)) => format!(
+                    "Bu seçimle yaklaşık model boyutu: {:.4} × {:.4} m. 1 dosya birimi = {:.8} m. {} nesne, {} blok.",
+                    (b[2] - b[0]) * f / unit.factor,
+                    (b[3] - b[1]) * f / unit.factor,
+                    f,
+                    doc.model.len(),
+                    doc.model.blocks().len()
+                ),
+                _ => "Model boyutunu görmek için kaynak dosyanın birimini seçin.".into(),
+            };
+            let mut confirm = button(label::body("Bu birimle aç"))
+                .padding(kentos_ui::theme::metrics::action())
+                .style(style::button::primary);
+            if factor.is_some() {
+                confirm = confirm.on_press(Message::Opening(Event::ConfirmUnit));
+            }
+            return Some(Dialog::new("Çizimin birimini doğrula")
+                .push(column![label::body(o.name.clone()), label::body("Dosya güvenilir bir uzunluk birimi bildirmiyor. Gerçek ölçüyü bilmeden birim tahmini yapılmaz."), select,
+                    label::body(preview), label::muted("Seçim kaynak sayılarını yorumlar; pafta ölçeği ve yakınlaştırma değildir. Açık çizim ve kaynak dosya değişmez. Birimi bilmiyorsanız Vazgeç ile çıkıp bilinen bir ölçüyle İçe aktar kullanın.")].spacing(12))
+                .action(button(label::body("Vazgeç")).on_press(Message::Opening(Event::Cancel)).padding(kentos_ui::theme::metrics::action()).style(style::button::secondary))
+                .action(confirm).width(540.0).modal(Message::Opening(Event::Cancel)));
+        }
         if o.started.elapsed() < QUIET {
             return None;
         }
@@ -585,6 +720,51 @@ fn quoted(name: &str) -> String {
 mod tests {
     use super::*;
     use crate::files_testing::{app_with_drawing, drive, last_said, saved, scratch};
+
+    #[test]
+    fn a_unitless_source_waits_for_an_explicit_unit_and_cancel_keeps_the_open_drawing() {
+        let mut app = app_with_drawing();
+        let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/formats/v1/dxf-units/unitless.dxf");
+        let task = app.start_opening(path.clone(), Purpose::File);
+        drive(&mut app, task);
+        let open = app.opening.as_ref().expect("held for source unit");
+        assert!(open.ready.is_some());
+        assert!(open.selected_unit.is_none());
+        assert!(
+            app.opening_view().is_some(),
+            "decision and dimensions preview are visible"
+        );
+        let task = app.opening_event(Event::ConfirmUnit);
+        drive(&mut app, task);
+        assert_eq!(
+            app.document.as_ref().unwrap().model.to_snapshot_v2(),
+            before
+        );
+        let task = app.opening_event(Event::Cancel);
+        drive(&mut app, task);
+        assert!(app.opening.is_none());
+        assert_eq!(
+            app.document.as_ref().unwrap().model.to_snapshot_v2(),
+            before
+        );
+        let task = app.start_opening(path, Purpose::File);
+        drive(&mut app, task);
+        let task = app.opening_event(Event::SourceUnit(Some(FileUnit::Cm)));
+        drive(&mut app, task);
+        let task = app.opening_event(Event::ConfirmUnit);
+        drive(&mut app, task);
+        assert!(app.opening.is_none());
+        let doc = app.document.as_ref().unwrap();
+        assert_eq!(doc.settings().unit(), kentos_commands::DrawingUnit::Cm);
+        assert!(
+            doc.model
+                .entities()
+                .any(|e| matches!(e, kentos_commands::Entity::Line(l) if l.b.x-l.a.x == 40.))
+        );
+        assert!(doc.path.is_none());
+    }
 
     #[test]
     fn external_cad_opens_from_the_open_command_without_a_project() {
@@ -659,7 +839,7 @@ mod tests {
             Stage::Project { .. } => "project",
             Stage::Reading { .. } => "reading",
             Stage::Building => "building",
-            Stage::Source(_) => "source",
+            Stage::Source(_) | Stage::SourceUnit(..) => "source",
         }
     }
 

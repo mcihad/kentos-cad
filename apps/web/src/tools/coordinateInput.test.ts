@@ -14,6 +14,12 @@ describe('parsePointInput', () => {
     expect(parsePointInput('@5,-3', last, null)).toEqual({ x: 105, y: 197 });
     expect(parsePointInput('@5,-3', null, null)).toBeNull();
   });
+  it('accepts decimal commas with semicolon coordinates and polar input without changing comma X,Y', () => {
+    expect(parsePointInput('-1,25;8', null, null)).toEqual({ x: -1.25, y: 8 });
+    expect(parsePointInput('10,20', null, null)).toEqual({ x: 10, y: 20 });
+    expect(parsePointInput('@1,25<0', { x: 0, y: 0 }, null)).toEqual({ x: 1.25, y: 0 });
+    expect(parsePointInput('1,2,3;4', null, null)).toBeNull();
+  });
   it('parses polar @distance<angle', () => {
     const p = parsePointInput('@10<90', last, null)!;
     expect(p.x).toBeCloseTo(100);
