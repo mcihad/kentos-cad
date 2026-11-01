@@ -36,6 +36,27 @@ fn format(b: &Bench) -> Format {
     Format::of(b.doc.settings())
 }
 
+#[test]
+fn finishing_a_block_preview_does_not_place_another_copy() {
+    let mut b = bench("m");
+    b.click(0.0, 0.0);
+    b.move_to(4.0, 3.0);
+    let revision = b.doc.revision();
+    assert!(
+        b.session
+            .prompt()
+            .options
+            .iter()
+            .any(|o| o.key == "Enter" && o.label == "Yerleştirmeden bitir")
+    );
+    b.confirm();
+    assert!(!b.session.is_running());
+    assert_eq!(b.doc.revision(), revision);
+    assert_eq!(b.doc.len(), 1);
+    assert_eq!(b.doc.undo().as_deref(), Some("Ekle"));
+    assert_eq!(b.doc.len(), 0);
+}
+
 fn tag(b: &Bench) -> Vec<String> {
     b.session
         .preview(&format(b))

@@ -173,9 +173,22 @@ yazım, tek mantıksal Undo ve önizleme/sonuç eşitliği gerçek pencerede do�
   Uzat'ta seçilen sınırı tek menü tıklamasıyla kullanma, çizgiyi uzatma,
   tek Undo ve sınır seçimini Esc ile yazmadan iptal etme doğrulandı.
   Bu dilimde 321 UI ve 8 masaüstü menü testi geçti; derleme başarılı.
+- [x] Üçüncü dilim, [ADR 0814](../docs/adr/0814-hatch-values-and-placement-confirmation.md):
+  Tarama sayı/renk beklerken sahneye tıklamak artık eski değerle tarama
+  üretmez; aşama korunur ve ne girileceği açıklanır. Bu aşamada bölge
+  önizlemesi gösterilmez; başlangıç noktası ve özellik alma tıklamaları korunur.
+  Değerden dönme, nokta seçmeden dönme ve özellik almadan dönme ayrı açıklanır.
+- [x] Ölçü yerleşiminde Enter **Ölçü çizmeden başa dön**, Blok ekle'de
+  **Yerleştirmeden bitir** olarak komut satırı ve sağ tuşta görünür.
+  Mevcut yerleştirme matematiği ve Enter davranışı korundu. Gerçek pencerede
+  tarama önizlemesi/uygulaması/tek Undo, sıfır ölçek reddi ve Esc;
+  hizalı ölçü yerleştirme, klavyeden uzaklık ve yazmadan başa dönme;
+  blok ekleme, fazladan kopyasız tek bitirme, tek Undo ve Esc doğrulandı.
+  830 etkileşim, 8 menü ve 5 anlamsal komut testi geçti; 5 isteğe bağlı test atlandı.
 - [ ] Bütün araç aşamalarında geçersiz/onaysız girdinin gösterimi, odak/belge
   değişimi, kilitli/bağlı nesne etkisi ve önizleme/sonuç eşitliği kabulünü tamamla.
-  Tarama, Blok ekle ve Ölçü için gerçek pencere kabulü açık.
+  Temel Tarama/Blok ekle/Hizalı ölçü akışları denendi; karmaşık tarama sınırları,
+  öznitelik soran/dinamik bloklar ve diğer ölçü kiplerinin birleşik kabulü açık.
   Köşe yuvarla son yarıçap kısayolu faredeki farklı yarıçap önizlemesi yerine
   menüde yazan son değeri uygular; bu ayrım genel önizleme kabulünde ayrıca incelenmeli.
 

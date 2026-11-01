@@ -24,6 +24,108 @@ fn bench() -> Bench {
     b
 }
 
+#[test]
+fn a_value_prompt_never_turns_a_canvas_click_into_a_hatch() {
+    for key in ["Ö", "Ç", "M", "G", "R"] {
+        let mut b = bench();
+        if key == "G" {
+            assert!(b.type_text("B"));
+        }
+        if key == "R" {
+            assert!(b.type_text("degrade küre"));
+        }
+        assert!(b.type_text(key), "{key}");
+        let step = b.session.prompt().step.clone().into_owned();
+        let revision = b.doc.revision();
+        let count = b.doc.len();
+        let values = (
+            b.memory.hatch_scale,
+            b.memory.hatch_angle,
+            b.memory.hatch_gap,
+            b.memory.hatch_color2,
+            b.memory.hatch_transparency,
+        );
+        assert!(
+            b.session
+                .prompt()
+                .options
+                .iter()
+                .any(|o| o.key == "Enter" && o.label == "Değiştirmeden dön")
+        );
+        assert!(b.type_text("geçersiz değer"));
+        b.move_to(-20.0, 1.0);
+        let preview = b.session.preview(&Default::default()).unwrap();
+        assert!(
+            preview.areas.is_empty() && preview.hatch.is_empty(),
+            "{key}"
+        );
+        b.click(-20.0, 1.0);
+        assert_eq!(b.doc.revision(), revision, "{key}: a value is not a region");
+        assert_eq!(b.doc.len(), count);
+        assert_eq!(b.session.prompt().step.as_ref(), step);
+        assert_eq!(b.last_level(), Some(Level::Warn));
+        b.confirm();
+        assert!(
+            b.session.is_running(),
+            "one confirm returns to region picking"
+        );
+        assert_eq!(
+            (
+                b.memory.hatch_scale,
+                b.memory.hatch_angle,
+                b.memory.hatch_gap,
+                b.memory.hatch_color2,
+                b.memory.hatch_transparency,
+            ),
+            values
+        );
+        assert_eq!(b.doc.revision(), revision);
+        b.click(-20.0, 1.0);
+        assert_eq!(b.doc.len(), count + 1);
+        assert!(!b.undo_step());
+        assert_eq!(b.doc.undo().as_deref(), Some("Tarama"));
+        assert_eq!(b.doc.len(), count);
+    }
+}
+
+#[test]
+fn cancelling_a_hatch_value_returns_without_a_write_or_an_undo_step() {
+    let mut b = bench();
+    let revision = b.doc.revision();
+    assert!(b.type_text("Ö"));
+    assert!(b.type_text("0"));
+    b.click(-20.0, 1.0);
+    assert_eq!(b.doc.revision(), revision);
+    assert!(b.run(|s, cx| s.cancel(cx)));
+    assert!(b.session.is_running());
+    assert_eq!(b.doc.revision(), revision);
+    assert!(!b.undo_step());
+    assert!(b.doc.undo().is_none());
+    // A valid value resumes the ordinary one-click / one-undo flow.
+    assert!(b.type_text("Ö"));
+    assert!(b.type_text("2"));
+    b.click(-20.0, 1.0);
+    assert_eq!(b.memory.hatch_scale, 2.0);
+    assert_eq!(b.doc.undo().as_deref(), Some("Tarama"));
+}
+
+#[test]
+fn an_origin_click_still_answers_the_point_without_filling_the_region() {
+    let mut b = bench();
+    assert!(b.run(|s, cx| s.choose_option("S", "nokta", cx)));
+    let revision = b.doc.revision();
+    b.click(-20.0, 1.0);
+    assert_eq!(b.doc.revision(), revision);
+    let point = b.memory.hatch_origin_at.expect("the chosen origin");
+    assert!(near(point.x, E - 20.0) && near(point.y, N + 1.0));
+    assert_eq!(
+        b.session.prompt().text(),
+        PROMPT.replace("Başlangıç (S): dünya", "Başlangıç (S): nokta")
+    );
+    b.click(-20.0, 1.0);
+    assert_eq!(b.doc.undo().as_deref(), Some("Tarama"));
+}
+
 /// The newest object's ring's box, relative, its hole count, pattern and area.
 fn newest(b: &Bench) -> ([f64; 4], usize, (HatchPatternType, f64, f64), f64) {
     let Entity::Hatch(h) = b.newest() else {

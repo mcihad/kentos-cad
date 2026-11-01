@@ -622,6 +622,7 @@ impl Tool for BlockInsert {
                 "A",
                 if m.block_mirror { "açık" } else { "kapalı" },
             )
+            .option("Yerleştirmeden bitir", "Enter")
     }
 
     fn point_count(&self) -> usize {

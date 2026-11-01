@@ -1055,7 +1055,13 @@ impl Tool for Dimension {
                 }
             }
         }
-        prompt
+        // Confirm resets a pending placement; it does not place the preview
+        // at the menu's pointer. Keep the command line and menu explicit.
+        if self.placing() {
+            prompt.option("Ölçü çizmeden başa dön", "Enter")
+        } else {
+            prompt
+        }
     }
 
     fn point_count(&self) -> usize {

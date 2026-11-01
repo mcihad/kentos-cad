@@ -262,7 +262,12 @@ impl Tool for Hatch {
                 .option("Tüm katmanlar", "K");
         }
         if let Some(a) = self.asking {
-            return options::asking_prompt(LABEL, a);
+            let back = match a {
+                Asking::Origin => "Nokta seçmeden dön",
+                Asking::Inherit => "Özellik almadan dön",
+                _ => "Değiştirmeden dön",
+            };
+            return options::asking_prompt(LABEL, a).option(back, "Enter");
         }
         let m = self.memory;
         let prompt =
@@ -310,6 +315,11 @@ impl Tool for Hatch {
             cx.selection.set_hover(hit);
             return;
         }
+        // An option's value (or its source point/hatch) is not a region to
+        // fill. Do not promise a hatch while the next click answers an option.
+        if self.asking.is_some() {
+            return;
+        }
         self.hover_at(p.raw, cx);
     }
 
@@ -339,7 +349,16 @@ impl Tool for Hatch {
             self.changed();
             return;
         }
-        self.asking = None;
+        // Only Origin and Inherit accept a canvas click, above. A click
+        // must never silently discard a numeric/colour prompt and write a
+        // hatch with the old value (CAD-ADV-01).
+        if self.asking.is_some() {
+            cx.say(
+                Level::Warn,
+                "Değeri komut satırına yazın; Enter ya da Esc ile değiştirmeden dönün.",
+            );
+            return;
+        }
         self.fill(p.raw, cx);
     }
 
