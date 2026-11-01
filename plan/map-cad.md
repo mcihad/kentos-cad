@@ -1,0 +1,1023 @@
+# KentOS Harita CAD — modern harita mühendisliği ve üretim planı
+
+İnceleme tarihi: **31 Ekim 2026**. İncelenen kod tabanı:
+`5cabec02be37cd9b175f0764e3aafcfc8d89f90e` (`main`).
+
+Bu belge **tam olarak 20 ana geliştirme maddesi** içerir. Kapsam yalnız imar
+değildir: güncel ölçüm verisinin yönetilmesi, hassas harita çizimi, sayısal
+kadastro, planlama, ortofoto/LiDAR, mühendislik yüzeyleri, saha tasarımı,
+altyapı, uygulama kontrolü ve kurumsal teslim birlikte ele alınır.
+
+**Sahibin 31 Ekim kararı:** yeni hedefler modern veri toplama ve sayısal üretim
+üzerine kurulacaktır. Eski haritacılık teknikleri, elle yürütülen tarihsel
+hesap iş akışları ve eski cihazlara özel yeni araçlar bu yol haritasına
+alınmaz. Mevcut dosyaların okunabilmesi ve verinin korunması uyumluluk işidir;
+eski yöntemi yeniden geliştirme hedefi değildir. GNSS/RTK/PPK/PPP, LiDAR,
+fotogrametri, sensör kalite bilgisi, ilişkili tasarım ve açık veri standartları
+esas alınır. Bir algoritmanın yaşından çok bugün gerekli olup olmadığı ve
+doğrulanabilirliği önemlidir; sağlam geometri ve belirsizlik hesabı korunur.
+
+Bu teslim araştırma ve plandır. Ürün kodu, `CLAUDE.md`, diğer planların
+tamamlanma işaretleri ve başka ajanın çalışma alanındaki değişiklikleri
+değiştirilmemiştir. Aşağıdaki maddelerin tamamı **açıktır**; mevcut temellerin
+listelenmesi bu yeni kabul kapsamlarının tamamlandığı anlamına gelmez.
+
+## İnceleme yöntemi ve bulguların sınırı
+
+- Aşağıdaki kaynakçada **35 ayrı birincil web kaynağının içeriği** incelendi:
+  üretici belgeleri, açık standartlar ve açık kaynak depoları. Arama sonuçları,
+  açılamayan sayfalar ve aynı sayfanın tekrar açılması bu sayıya katılmadı.
+- Netcad için GIS, NetSurf, Netmap, Planet, Netpro, Netkamu ve Nettop birlikte
+  değerlendirildi. Dünyadaki karşılıklar için Civil 3D, Bentley OpenCities Map
+  ve OpenSite, Trimble Business Center, 12d, ArcGIS Pro/Urban, QGIS ve GRASS
+  incelendi. Ticari ürünler burada kurularak veya lisanslı uygulamalarında
+  denenerek karşılaştırılmış sayılmaz.
+- Kod incelemesinde sözleşme, hesap çekirdeği, komut işleyicisi, kalıcılık,
+  masaüstü yüzeyi ve otomasyon yolları ayrıldı. Önemli bulgular aşağıda
+  **K01–K45** ile dosya/işlev ve sabit commit bağlantısına bağlandı. Bir
+  menünün veya eski planın işaretli olması tek başına uygulama kanıtı sayılmadı.
+- QGIS'in gelişmiş çizim arayüzündeki gerçek kısıt/kenetleme çağrısı ve GRASS'ın
+  temizleme araçlarını hangi sırada yürüttüğü de kaynak kodundan okundu.
+  Böylece piyasa incelemesi yalnız ürün özellik listelerine dayanmadı.
+- Bu oturumda derleme, hesap testi, saha testi veya güncel GUI kabulü
+  çalıştırılmadı. Kodun bulunması kalite kabulü değildir. Her maddenin kendi
+  kabul senaryosu ve belgenin sonundaki ortak teslim koşulları uygulanacaktır.
+- Kapalı kaynak ürünlerin veri yapısı, GPU çekirdeği veya sayısal yöntemi
+  açıklanmadığında bunlar hakkında çıkarım yapılmadı. Aşağıdaki mimari
+  tercihler **KentOS için öneridir**; rakiplerin iç uygulamasının tarifi değildir.
+
+## Korunacak kararlar ve diğer planlarla sınır
+
+- KentOS Harita, KentOS GIS ve KentOS Mimari ayrımı korunur. CAD projesi ile
+  CBS projesi görünüm düğmesiyle birbirine dönüştürülmez. Ortak hesap ve veri
+  yetenekleri paylaşılır; veri devri açık dönüşüm/türetme işlemiyle yapılır.
+- [ADR 0626](../docs/adr/0626-units-scale-and-true-size-texts.md) ve mevcut
+  modül davranışı korunur: yeni Harita projesi metre ve gerçek koordinatla
+  başlar. Model birimi, giriş birimi, yer/projeksiyon oranı, çizim/pafta
+  ölçeği ve kamera yakınlaştırması birbirine karıştırılmaz.
+- [ADR 0228](../docs/adr/0228-web-pause-desktop-and-cloud-first.md) gereği
+  teslim masaüstü, ortak Rust, gereken bulut yolları, Python ve MCP içindir.
+  Paylaşılan sözleşmeler gelecekte web/mobilce kullanılabilir; bu belge web
+  geliştirmesini yeniden başlatmaz.
+- [TODOS.md](../TODOS.md) içindeki `HYB-24` ertelenmiştir: gerçek GNSS alıcısı
+  olmadan canlı cihaz entegrasyonu yapılmış veya doğrulanmış sayılmaz.
+  Dosya/replay, veri sözleşmesi ve çevrimdışı kalite çalışmaları ayrı teslimdir.
+- Aynı dosyadaki `GIS-06` ve `GIS-07` sahibiyle ayrı çalışılacak ve yol
+  haritasının sonuna bırakılacaktır. Bu rapor resmî ifraz, tevhit, dağıtım,
+  kamulaştırma veya kurum kabulünü erkene almaz. Araştırma ve teknik taslak
+  üretimi, resmî sonuç üretme yetkisi anlamına gelmez.
+- `NCZ-01` dağıtım kapısı korunur. İlgili kaynak için lisans/izin çözülmeden
+  NCZ okuyucusunu içeren derleme dağıtılmaz. Yeni format araştırması bu kararı
+  kendiliğinden kaldırmaz.
+- [cad.md](cad.md) genel çizim/dosya/pafta yeteneklerinin;
+  [gis.md](gis.md) ortak CBS verisinin; [road.md](road.md) yol geometrisi,
+  koridor ve yol metrajının; [3d.md](3d.md) 3B sahne ve Digital Twin'in
+  ayrıntılı planıdır. Burada aynı motorlar için ikinci uygulama oluşturulmaz.
+  [form.md](form.md), [python.md](python.md) ve [plugins.md](plugins.md) form,
+  Python ve `.kek` eklenti sözleşmelerinin sahipliğini korur.
+
+## Piyasa karşılaştırmasından çıkan ürün yönü
+
+| İncelenen ürün / teknoloji | Belgede gözlenen yaklaşım | KentOS için sonuç |
+| --- | --- | --- |
+| Netcad GIS, NetSurf, Netpro | CAD/CBS verisi, arazi ve yol üretimi ayrı uzmanlık akışlarıyla ele alınıyor. [S01], [S02], [S05] | Her şeyi şeride eklemek yerine kaynak, tasarım, denetim ve teslim arasında izlenebilir iş akışı kur. |
+| Netmap, Planet, Netkamu, Nettop | Parsel, plan, kamulaştırma ve toplulaştırma yalnız çizimden oluşmuyor; ilişkili tablolar ve denetimler var. [S03], [S04], [S06], [S07] | Geometriye renk ve serbest metin eklemek alan modeli kurmakla aynı değildir. Hukuki kurallar ayrı sürümlensin. |
+| Civil 3D | Ölçüm veritabanı çizimden ayrılıyor; yüzey sınırlarının türü ve işlem sırası sonuç için önemli. [S08], [S09] | Ham ölçümden türetilmiş noktayı ve yüzeyin kaynak tarifini sakla; sadece son üçgenleri kaydetme. |
+| Bentley OpenCities Map / OpenSite | Şema ve kurallı harita verisi ile ilişkili saha tasarımı öne çıkıyor. [S10], [S11] | MicroStation tabanlı ekosistemi yalnız genel CAD komutlarıyla kıyaslama; harita nesnesinin anlamını ve tasarım etkisini incele. |
+| Trimble Business Center / 12d | GNSS işleme, ağ kalitesi, bulut kaydı, nesne çıkarımı ve tasarımla gerçekleşenin karşılaştırılması bir üretim zinciri oluşturuyor. [S12]–[S16] | Sadece nokta dosyası açmak modern ölçüm sistemi sayılmaz; kalite, zaman, sensör ve kaynak bağı gereklidir. |
+| ArcGIS Pro / Urban | Parsel ağı dengelemesinde analiz ile uygulama ayrılıyor; plan alternatifleri mevcut durumdan ayrılabiliyor. [S17]–[S19] | Önce farkı ve belirsizliği göster, sonra kontrollü uygula. Senaryo ana veriyi sessiz değiştirmesin. |
+| QGIS / GRASS gerçek kodu | Çizim kısıtları ortak hizalama çağrısına taşınıyor; temizlik işlemleri açık sıra ve parametreyle uygulanıyor. [S21], [S23] | UI'da ayrı matematik yazma; onarım tarifini, sırasını, etkisini ve geri almasını görünür kıl. |
+| PROJ, COPC, STAC, GeoParquet, OGC standartları | Datum/zaman, seçmeli büyük veri erişimi ve makinece okunabilir veri anlamı birbirinden farklı sözleşmeler. [S25], [S26], [S28], [S31]–[S34] | Tek bir dosyayı veya güzel 3B görünümü bütün mühendislik verisinin yerine koyma. |
+
+Ürün sayfalarında belirtilen hızlar, doğruluklar ve mevzuat uyumu KentOS için
+kanıt değildir. Açık kaynak incelemek de doğrudan kod kopyalama veya yeni
+bağımlılık ekleme kararı değildir; lisans ve bakım değerlendirmesi uygulama
+tasarımında yapılır.
+
+## Koddan doğrulanan mevcut temel
+
+Bağlantılar yukarıdaki sabit commit'e gider. Satır, işlevin veya ilgili veri
+modelinin başlangıcını gösterir; çalışma alanında başka ajanın değişmekte olan
+satırları bu kanıta karıştırılmamıştır. “Sınır”, belirtilen yolun sınırıdır;
+bütün depoda benzer hiçbir iş bulunmadığı iddiası değildir.
+
+| Kanıt | Okunan kaynak ve gözlenen davranış / sınır |
+| --- | --- |
+| K01 | [module_surfaces.rs][K01]: Harita yüzeyi metre, gerçek koordinat, kaynaklar, ölçme ve topoloji sunuyor; GIS'in zaman/senaryo/tematik yüzeyinden farklı. Yeni araçların nereye geleceği bu ayrımdan tasarlanmalı. |
+| K02 | [document.rs — CadWork][K02] ve [DocumentSnapshotV2][K03]: Mimari/Harita işi ve proje ayarları kalıcı. Snapshot içinde ayrı bir ölçüm kampanyası veya düzenlenebilir mühendislik yüzeyi koleksiyonu tanımlı değil. |
+| K04 | [crs/operation.rs][K04], `operation_with`: geoit ve hız ızgarası adımlarını da içeren işlem açıklaması mevcut. “Düşey dönüşüm hiç yok” diye yeniden iş açılmamalı. |
+| K05 | [crs/geoid.rs][K05], `NodeGrid`, `read_gtx`, `transform_point`: geoit N, ENU hız, epok ve kapsam dışı retleri var. Resmî bir ızgaranın temini/kullanım hakkı bundan farklı bir konu. |
+| K06 | [crs/ground.rs][K06], `grid_factor`, `point_scale`, `line_factors`, `ground_measures`: projeksiyon ve yer indirgemesi mevcut. Ortak kalite/sonuç kaydına bağlanması ve UX tutarlılığı incelenecek. |
+| K07 | [wgpu/lib.rs][K07] ve [styled/gpu.rs][K08]: CPU f64; GPU'da yerel orijin ve yüksek/düşük f32 parçaları mevcut. Hassasiyet çözümü sıfırdan eklenmeyecek; yeni 3B/veri yolları bu değişmezi koruyacak. |
+| K09 | [formats.rs — GnssPoint][K09] ve [gnss/nmea.rs][K10]: zaman, fix, uydu, HDOP, geoit ve yükseklikler okunabiliyor; RTK sabit/kayan ayrımı var. Bu sözleşme ham GNSS gözlemi, baz vektörü ve tam kovaryans modeli değil. |
+| K11 | [fieldbook/mod.rs][K11]: editör durumu uygulama açıkken tutuluyor. [survey_points.rs][K12], `new_objects`: hesap sonucu genel Point ve Ad/Tür/Z özniteliklerine yazılıyor; bunlar kalıcı ölçüm kampanyasının yerine geçmiyor. |
+| K13 | [adjust/horizontal.rs][K13], `KnownPoint`, `NetRow`, `NetworkInput`: mevcut yatay ağ doğrultu/mesafe modeli. [adjust/mod.rs][K14] 1.500 bilinmeyen sınırı koyuyor; [linalg.rs][K15] yoğun normal matris/Cholesky kullanıyor. Artık, doğruluk ve elips temeli zaten var. |
+| K16 | [edge_shift.rs][K16]: hedef alanla kenar kaydırma var; yaylı kenar/komşu ve çok parçalı nesne açık ret kapsamı. Genel eğrisel/ilişkili harita tasarımı bu sınırlı işlemle tamamlanmış sayılmaz. |
+| K17 | [topology_rules/mod.rs][K17]: 13 kural ve uzamsal dizin var. [incremental.rs][K18], `recheck_watched`: etkilenen kapsamı yeniden denetleme ve durdurma desteği de var. Yeni iş “topoloji ekle” değildir. |
+| K19 | [parcels.rs][K19], `base`, `number_of`: parsel genel polygon ve altı öznitelikle üretiliyor; verilen yinelenen numara uyarıyla kabul edilebiliyor. Kalıcı hukuki kayıt, ortak sınır ve hak modeli bu yoldan çıkarılamaz. |
+| K20 | [native/style/system.rs][K20]: masaüstü MPYY'yi içeren gömülü stil kitaplığını okuyor. Bu, tipli plan kararları ve PlanGML profil doğrulayıcısının bulunduğunu göstermez. |
+| K21 | [scenarios_edit.rs][K21]: kaynak katmanlara `replaces` bağıyla senaryo kopyası ve tek adımda uygulama var. Mevcut Harita yüzeyi senaryo hücresini göstermiyor; GIS senaryo altyapısı tekrar yazılmayacak. |
+| K22 | [rasters_georef.rs][K22], `fit`, `prepare`, `validate/plan/execute`: oturtma ve hazırlama mevcut. [STAC modülü][K23] katalog, tarih, erişim ve hazırlama; [COG yazımı][K24] karoları seçmeli erişime uygun yerleştirme sağlıyor. |
+| K25 | [pointcloud/ops/mod.rs][K25], [ground.rs][K26] ve [query.rs][K27]: akan kayıt işlemleri, SMRF zemin sınıflama ve kaynak kayıt bilgisini sorgulama var. Bunlar kayıt/şerit dengelemesi veya semantik nesne çıkarımı paketi değil. |
+| K28 | [delaunay.rs][K28]: exact yön/incircle predicate ve half-edge temeli var. [raster/contours.rs][K29] DEM'den marching squares eğrisi üretiyor. Kırık hatlı, tariften yeniden kurulan mühendislik TIN'i ayrı iş. |
+| K30 | [cad_meshes.rs][K30]: UGRID/NetCDF mesh sorgusu, alan istatistiği ve profil var; komutlar salt okunur. Okunabilir mesh ile düzenlenebilir tasarım yüzeyi aynı yetenek değil. |
+| K31 | [network.rs][K31]: çizimden türetilen analiz ağı tasarım güzergâhından açıkça ayrılıyor. [LRS çekirdeği][K32] M değerli/yaylı güzergâh sunuyor; bu da düşey kurp ve koridor tasarımı değildir. |
+| K33 | [gis_derive.rs][K33] ve [gis_takeback.rs][K34]: kimlik/özetle izlenebilir CAD→GIS türetme ve kontrollü geri alma var. İki tarafta değişmiş kaynak reddediliyor; eğrinin kirişlere dönüşmesinin kaybı bildiriliyor. |
+| K35 | [xref.rs][K35]: kaynak özeti ve yüklenmiş içerik korunuyor; kaynak değişikliği sessiz alınmıyor. Dosya bağı yönetimi zaten var. |
+| K36 | [atlas.rs][K36], `atlas_plan`, [display/map.rs][K37] ve [pdf/geo.rs][K38]: atlas, koordinat çerçevesi ve coğrafi PDF temeli mevcut. [preflight.rs][K39] bulguları kod, önem ve düzeltmeyle taşıyor. |
+| K40 | [processing/lib.rs][K40]: salt okunur girdi → ChangeSet → tek Undo; model birden çok aracı bağlayabiliyor. [server/jobs.rs][K41] lease, fence, iptal, kota ve revizyon korumalı sonuç yazımı içeriyor. |
+| K42 | [job_cache.rs][K42]: çıktı önbelleği revizyon, erişim, kullanıcı/gün ve yazılım damgasına bağlı. Genel yeniden üretilebilir mühendislik bağımlılık grafiğinin var olduğu sonucu buradan çıkarılamaz. |
+| K43 | [headless/dispatch.rs][K43], [python/lib.rs][K44] ve [mcp/tools.rs][K45]: ortak katalog/işleyici, Python ve MCP temeli mevcut. Her yeni Harita işinin bütün yüzeylerde eksiksiz olması ayrıca doğrulanmalı. |
+
+## 20 ana geliştirme maddesi
+
+### MAP-01 — Harita işini kaynak, tasarım, denetim ve teslim etrafında düzenle [ ]
+
+**Öncelik:** P0. **Kod dayanağı:** [K01], [K02], [K03].
+**Araştırma:** Netcad'in uzmanlık modülleri ve OpenCities'in şema yaklaşımı,
+tek bir kalabalık CAD şeridinin bütün iş akışını anlatmaya yetmediğini
+gösteriyor. [Netcad GIS][S01], [OpenCities Map][S10]
+
+- Harita projesine anlaşılır bir iş yapısı getir: ölçüm kampanyaları,
+  referans kaynaklar, çalışma verisi, tasarımlar, kontrol sonuçları ve teslim
+  paketleri. Bunlar dosya uzantısına göre dağılmış pencerelerden erişilebilir
+  proje öğelerine dönüşsün; mevcut Katmanlar/Kaynaklar/İşlemler korunarak bağlansın.
+- Kaynağı, kaynaktan türetilmiş nesneyi ve kullanıcının bağımsız çizimini
+  özelliklerde ayır. Nesne kimliği, kaynak revizyonu, üretim işlemi ve güncellik
+  bilgisi birlikte erişilsin. Her geometriyi yeni özel entity türüne çevirmek
+  yerine hangi anlamın sözleşme/ilişki/katman profilinde tutulacağı tasarlansın.
+- Nokta, yüzey, plan alanı veya altyapı öğesi seçildiğinde yalnız ilgili
+  bağlamsal araçlar gelsin. Ağır toplu araçlar İşlemler'de kalsın; şeritte işe
+  giriş ve sık kullanılan düzenlemeler yer alsın. Araç arama aynı kayıtları kullansın.
+- Tipli ölçüm/plan/varlık katmanları tür ve alan kurallarını uygulasın; serbest
+  CAD çalışma katmanları korunabilsin. Bilinmeyen kaynak veya eksik CRS için
+  kullanıcıyı her adımda tekrar sorgulayan bir proje akışı tasarlanmasın.
+- İşin durumu “taslak / denetlenecek / onaylı teslim revizyonu” gibi açık
+  kapsamla tutulabilsin. Teknik kontrolü geçen sonuç otomatik kurum onayı almasın.
+
+**CBS ortaklığı:** kaynak kimliği, tipli veri profili, güncellik ve kontrol
+sonucu ortak sözleşmedir. Harita'nın CAD çizim araçları ve GIS'in tematik/
+senaryo yüzeyi kendi programında kalır; ortaklık proje türünü değiştirmez.
+
+**Kabul:** aynı projede GNSS kaydı, ortofoto, CAD referansı ve tasarım yüzeyi
+eklendiğinde her nesnenin kaynağı bulunabilsin. Kaynak taşınınca tek yerden
+yeniden bağlansın; güncel olmayan türevler gösterilsin. Kaydet–aç ve salt
+okunur kullanıcı aynı ilişkiyi korusun; mevcut Mimari/GIS yüzeyleri değişmesin.
+
+### MAP-02 — Hassasiyet, koordinat, epok ve ölçeği tek güvenilir zincire bağla [ ]
+
+**Öncelik:** P0. **Kod dayanağı:** [K04]–[K08], [K09].
+**Araştırma:** PROJ düşey ızgara ve zamana bağlı deformasyonu ayrı işlemler
+olarak tanımlar; bunlar ekran ölçeği değildir. [PROJ vgridshift][S25],
+[PROJ deformation][S26]
+
+- Mevcut geoit/hız ızgarası ve yer–projeksiyon hesabını genişletirken
+  işlem kaydına yatay/düşey CRS, eksen/birim, koordinat epoğu, kullanılan
+  ızgara özeti/sürümü, kapsam ve doğruluk dayanağını bağla. Uygulamanın
+  desteklediği CRS ailesi açık olsun; kayıtlı her EPSG kodu çözülebiliyor varsayılmasın.
+- UI, Python, MCP, sorgu, düzenleme ve dışa aktarma aynı koordinat
+  sözleşmesini kullansın. Birime çevrilmiş ekran metni yeniden hesap kaynağı
+  olmasın. Alan/uzunluk için düzlem, elipsoit veya yer hesabı açıkça seçilsin.
+- Model f64, sağlam geometrik predicate ve gerektiğinde kesin kayıtlı sayı
+  politikası korunsun. GPU'ya mevcut yerel orijin + hi/lo f32 yolu üzerinden
+  gidilsin. Yeni 3B karo, bulut veya seçim yolu büyük koordinatı doğrudan tek
+  f32'ye indirip sonra ölçüm sonucu üretmesin.
+- Ölçek anlatımını sadeleştir: çizim/pafta ölçeği anotasyonu etkiler; kamera
+  zoom'u geometriyi etkilemez; projeksiyon/yer faktörü yalnız tanımlı ölçme
+  hesabını etkiler. İçe aktarmadaki birim kararı bir kez uygulansın; ikinci
+  kez blok, yazı veya kot ölçeklenmesin. Ayrıntı özelliklerde, günlük kullanımda
+  tek anlaşılır özet olsun.
+- Izgara bulunamadığında, kapsam dışına çıkıldığında veya epok belirsizken
+  “başarılı hassas dönüşüm” sonucu üretilmesin. Önizleme farkları ve nedenleri
+  göstersin; kaynak veri üzerine sessiz CRS ataması yapılmasın.
+
+**CBS ortaklığı:** CRS işlemi, ölçüm semantiği, hata/uyarı ve kaynak kaydı
+Harita ve GIS'te aynı çekirdekten gelir. GIS ekran etiketi ile CAD gerçek
+boylu metin render davranışı birleştirilmez.
+
+**Kabul:** yaklaşık E=500.000/N=4.400.000 m çevresinde milimetrelik fark,
+uzak iki bölge, yerel→gerçek koordinat ve epok/geoit örnekleri bağımsız
+başvuruyla sınansın. Zoom/pan, render orijini değişimi ve save–reopen ölçüm
+sonucunu değiştirmesin. Sayısal bütçe her işlem için tanımlansın; sadece f64
+kullanılmış olması doğruluk kanıtı sayılmasın.
+
+### MAP-03 — Modern ölçüm kampanyası ve GNSS veri arşivi kur [ ]
+
+**Öncelik:** P0 veri modeli; P1 çevrimdışı işleme. **Kod:** [K09]–[K12], [K03].
+**Araştırma:** Civil 3D gözlem/kontrol/ekipman verisini çizimden ayırır;
+TBC baz işleme öncesinde oturum, anten ve yörünge seçimlerini ele alır.
+[Survey Databases][S08], [GNSS baseline processing][S12]
+
+- Kampanya, oturum, sensör/anten, operatör, zaman aralığı, orijinal veri
+  dosyası, koordinat/epok ve kalite kaydını kalıcı modelde tasarla. Ham
+  gözlem, sağlayıcının çözümü ve projeye kabul edilen nokta ayrı kimlikler taşısın.
+- Mevcut GPX/NMEA okuyucusunu yeniden yazma. Fix/float, uydu/HDOP ve
+  yükseklik bilgisini koruyan içe aktarmayı kampanyaya bağla. HDOP'u metre
+  cinsinden doğruluk veya “RTK sabit” bilgisini tek başına doğruluk garantisi sayma.
+- Modern GNSS için RINEX ve çözüm/baz vektörü değişim profilleri belirle;
+  anten yüksekliği/referansı, düzeltme kaynağı, yaş/gecikme, zaman sistemi,
+  tam kovaryans ve işleme raporunu taşı. Önce denetlenebilir sonuç alışverişi
+  teslim edilsin; PPK/PPP çözücüsü adaptörü ayrı doğruluk/lisans değerlendirmesiyle gelsin.
+- Aynı işaretin farklı günlerdeki ölçülerini üstüne yazma. “Son ölçülen”,
+  “kabul edilen” ve “dengelemeye giren” çözümler anlaşılır olsun; veri dışlama
+  nedeni ve yeniden işleme tarifi saklansın. Kalitesiz ölçüyü kayıttan silmeden dışlayabilsin.
+- Canlı RTK/NTRIP ve sensör bağlantısı opsiyonel adaptördür. Önce kayıtlı
+  oturum replay'i, kesilen veri, float'a düşüş ve zaman atlaması sınansın;
+  gerçek alıcı kapısı açılmadan canlı ürün özelliği teslim edildiği yazılmasın.
+
+**CBS ortaklığı:** kabul edilmiş ölçü noktaları, kalite ve kaynak ilişkileri
+GIS'te okunup yetkili formdan incelenebilmeli. GNSS arşivi ve dönüşüm aynı
+çekirdektir; GIS'e çizim karnesi penceresi taşımak zorunlu değildir.
+
+**Kabul:** bir noktaya iki oturum ve iki çözüm bağla; anten/epok kararını
+değiştirip yeniden üret. Eski rapor korunurken hangi nokta ve yüzeyin
+güncelliğini yitirdiği görülsün. Kapat–aç, eksik kaynak ve iptal hiçbir ham
+veriyi kaybetmesin. Gerçek donanım kabulü ayrıca beklesin.
+
+### MAP-04 — Semantik nesne kataloğu ve kontrollü otomatik harita üretimi sağla [ ]
+
+**Öncelik:** P1. **Kod dayanağı:** [K12], [K20], [K25]–[K27].
+**Araştırma:** TBC nokta bulutundan çıkarılan öğeyi kod ve özniteliği olan
+nesneye dönüştürüyor; yalnız renklendirme ayrı bir yetenek.
+[Point feature extraction][S15], [Scanning and point clouds][S14]
+
+- Yol kenarı, bordür, bina izi, kapı/adres, direk, rögar, vana, ağaç ve
+  kontrol noktası gibi belediye varlıkları için sürümlü katalog tanımla:
+  kalıcı tür kodu, geometri/Z gereksinimi, zorunlu alan, domain, ilişki,
+  sembol ve kalite kuralları. Katalog proje/kurum dosyasında taşınabilsin.
+- Mevcut domain/form/profil altyapısını kullan. Katman adı, nesne etiketi ve
+  sembol kimliği nesnenin gerçek türünün yerine geçmesin. Aynı varlık birden
+  çok kaynakta görüldüğünde eşleme kimliği ve uyuşmazlık kaydı olsun.
+- LiDAR/ortofoto destekli yarı otomatik çıkarımı önce aday olarak üret:
+  kaynak bölge/kayıt, yöntem/model sürümü, güven/kalite bilgisi, gözden
+  geçiren kişi ve düzeltme saklansın. Belirsiz aday sessiz kesin varlığa dönüşmesin.
+- Çizgi/alan çıkarımında devamlılık, kesişim, yükseklik sıçraması ve
+  örtülmüş bölüm ayrı işaretlensin. “Görüntüde görünmüyor” durumunda varsayılan
+  kesin geometri uydurulmasın. Toplu kabul/ret ve kaynağa gitme mümkün olsun.
+- Kurum katalog düzenleyicisi örnek nesneyle sonucu önizletsin; katalog
+  değişikliği mevcut veri için geçiş raporu üretsin. AI modeli indirme/çalıştırma
+  isteğe bağlı, iptal edilebilir ve verinin nereye gittiği anlaşılır olsun.
+
+**CBS ortaklığı:** tür, domain, form, ilişki, varlık kimliği ve çıkarım
+inceleme katmanı GIS'te de kullanılacaktır. Harita çizim sunumu ile GIS
+tematik gösterimi aynı semantik verinin ayrı temsilleri olur.
+
+**Kabul:** aynı sokağın bulutundan ve ortofotosundan gelen direk/bordür
+adaylarını uzlaştır; yinelenen varlığı önle, eksik zorunlu alanı bul,
+yanlış sınıfı düzelt. Model/katalog değiştiğinde kabul edilmiş insan
+düzeltmeleri korunabilsin; işlemin tamamı bir kez geri alınabilsin.
+
+### MAP-05 — Üç boyutlu belirsizlik ve büyük ağ kalite yönetimini geliştir [ ]
+
+**Öncelik:** P1. **Kod dayanağı:** [K13]–[K15], [K04]–[K06].
+**Araştırma:** TBC ağ sonuçlarında kovaryans/kalite ve yeniden hesap etkisini
+gösterir; DynAdjust 3B jeodezik ağlar için incelenebilecek açık referanstır.
+[Adjust Network][S13], [DynAdjust][S24]
+
+- Mevcut yatay/kot en küçük kareler ve artık/elips hesaplarını koru.
+  Yeni kapsam GNSS baz vektörü, korelasyonlu XYZ/ENU kovaryansı, 3B kontrol
+  ve datum kısıtlarıdır. Kaynaktaki belirsizlik ile kullanıcının varsaydığı
+  önsel belirsizlik ayrı gösterilsin; bilinmeyen değer sıfır hata olmasın.
+- Serbest/kısmen bağlı ağ ve rank eksikliği için açık datum stratejisi
+  tasarla. Aykırı gözlem otomatik silinmesin; robust seçenek, ağırlık değişimi,
+  test varsayımı ve kullanıcı dışlaması raporda ayırt edilsin.
+- Yoğun normal matrisi büyüterek ölçeklemeye çalışma. Seyrek yapı,
+  koşulluluk, seçili kovaryans çözümü ve büyük ağın bölümlü işlenmesini
+  bağımsız doğruluk ve bellek ölçümüyle değerlendir. Küçük ağda mevcut
+  sonuçla eşdeğerlik, büyük ağda kestirilen bellek/CPU sınırı aransın.
+- Analiz sonucu önce fark vektörü, artık, kontrol noktası etkisi ve
+  güven bölgesiyle gösterilsin. Kullanıcı kabul ettiğinde seçilen çözüm
+  yazılsın; bağlı geometri/yüzeyler değişiklik grafiğine girsin.
+- Farklı epoklu kampanyalar ve deformasyon izlemede ortak referans ve
+  belirsizlik hesaba katılsın. Bir görüntü farkı veya iki XYZ farkı kendiliğinden
+  istatistiksel anlamlı deformasyon sayılmasın.
+
+**CBS ortaklığı:** kontrol noktası, artık/fark vektörü, güven bölgesi ve
+zaman serisi GIS'te katman/sorgu olarak erişilebilir. Tek dengeleme ve
+datum motoru kullanılır; GIS'e ikinci çözücü yazılmaz.
+
+**Kabul:** bağımsız 3B ağ başvurusuyla sabit/ağırlıklı kontrol,
+korelasyonlu baz, eksik datum ve aykırı ölçü sınansın. Analiz kaynak veriyi
+değiştirmesin; kabul ve Undo bütün etkileri kapsasın. 1.500 bilinmeyeni
+aşan hedef veri için gerçek bellek/süre raporu olmadan ölçeklenebilirlik işaretlenmesin.
+
+### MAP-06 — Kesin ve ilişkili harita tasarımını doğrudan sahnede yap [ ]
+
+**Öncelik:** P0 temel etkileşim; P1 ileri ilişkiler. **Kod:** [K16], [K06], [K43].
+**Araştırma:** QGIS'in gelişmiş çizim kodu açı/mesafe/X/Y/Z/M kısıtlarını
+ortak hizalama çağrısında topluyor. Bu, UI ile komutun ayrı matematik
+uygulamasını önlemek için somut örnektir. [QGIS gerçek kaynak kodu][S21]
+
+- Mevcut kenetleme, kesin giriş ve kısıt altyapısını Harita'nın gerçek
+  koordinatlarına uygula: referans çizgi/kenar, paralellik, diklik, teğet,
+  öteleme, hedef kot/eğim ve seçilmiş geometriye bağlı mesafe.
+  Giriş her zaman birimini ve referansını anlaşılır göstersin.
+- “Şimdi bu değere getir” ile “bu ilişkiyi koru” farklı olsun. Kalıcı
+  ilişki kullanıcı kararıyla kurulsun; serbest CAD nesnesi fark etmeden
+  mühendislik modelinin bağlı öğesine dönüşmesin.
+- Düz kenarla sınırlı mevcut alan/kenar işlemini olduğu gibi koru.
+  Eğrisel ve çok parçalı kapsam yeni matematik/kabul işi olarak açılsın;
+  yay doğruluğunu düşürüp sessiz kirişlere dönüştürerek çözülmesin.
+- Önizleme hareket edecek nesneyi, sabit kalacak referansı, komşu sınır ve
+  kot etkisini göstersin. Çelişkide hangi ilişkinin neden çözülemediği
+  sahnede bulunsun; otomatik tolerans büyütme veya bağ koparma yapılmasın.
+- Tek Enter/sağ tuş Onayla tek işlem, Esc sıfır yazım olsun. Sayısal
+  alanlarda yazarken her tuşta bütün çizim hesaplanmasın; yerel taslak ve
+  kontrollü önizleme kullanılsın. Araçlar mevcut sağ tuş/Undo sözleşmesini korusun.
+
+**CBS ortaklığı:** kesin çizim yardımcıları ve uygun geometrik ilişkiler
+GIS'in tipli katman düzenlemesinde de kullanılmalı. Örneğin bir çizgi
+katmanında alan üretmeye çalışan UI/API aynı tür kuralını uygulamalı.
+
+**Kabul:** gerçek koordinatta yaylı bordür/ada kenarı ve bağlı varlık
+üzerinde mesafeli düzenleme yap; bağımsız geometri başvurusuyla karşılaştır.
+Kaynak kısıtı değiştir, kilitli komşu ve çelişkili ilişkiyi dene. Çift onay,
+imleç sıçraması, ölçekten doğan konum değişimi ve kısmi Undo olmamalı.
+
+### MAP-07 — Topolojik üretimi açıklanabilir kalite sürecine dönüştür [ ]
+
+**Öncelik:** P0. **Kod dayanağı:** [K17], [K18], [K19].
+**Araştırma:** GRASS temizleme araçlarının sıra ve eşiklerini açık tutar;
+kodda birbirini izleyen işlemlerin topolojiyi hangi aşamada kurduğu görülür.
+[v.clean belgesi][S22], [v.clean kaynak kodu][S23]
+
+- Mevcut 13 kuralı, artımlı denetimi ve iptal desteğini kullan. Yeni iş;
+  kurum/iş profili, bulgunun yaşam döngüsü, ortak sınır düzenlemesinin etkisi
+  ve tekrar üretilebilir onarım tarifidir.
+- Hata, bilinçli istisna ve henüz değerlendirilmeyen bulgu ayrışsın.
+  İstisna nesne kimliği, kural sürümü, gerekçe ve kapsam taşısın; geometri
+  değişince istisnanın hâlâ geçerli olup olmadığı yeniden değerlendirilsin.
+- CAD yakınlık toleransı, koordinatın depolama hassasiyeti ve kurumun
+  kabul eşiği ayrı olsun. Büyük toplu snap/temizleme orijinal ölçüm
+  koordinatlarını sessiz yuvarlamasın; taşınan toplam/maksimum mesafe raporlansın.
+- Ortak sınırın bir kez düzenlenmesi bütün yetkili komşularda atomik
+  uygulansın. Kilitli/yetkisiz komşu, yay, delik, üçlü birleşim ve çoklu
+  köşe durumlarında kısmi tutarsız veri yerine açıklanabilir ret/önizleme verilsin.
+- Onarımın sırası ve parametreleri kaydedilsin. Önce/sonra farkı, alan
+  etkisi, etkilenen varlıklar ve kaynak gözlemden sapma görülsün; toplu
+  düzeltme kör bir “hepsini onar” düğmesi olmasın.
+
+**CBS ortaklığı:** kural motoru, bulgu/istisna kaydı, ortak sınır ve toplu
+onarım Harita/GIS'te aynıdır. GIS'te de Processing, veri formu ve MCP
+üzerinden aynı denetim sonucu erişilir.
+
+**Kabul:** komşu yaylı alanlar, delikli alan, kilitli komşu ve kaynak
+değişimiyle artımlı/tam denetim sonuçları eşleşsin. İptal kaynak geometriyi
+değiştirmesin. Bir onarım tarifi yeniden açılan projede aynı bulgulara
+uygulandığında aynı değişiklik kümesini üretsin.
+
+### MAP-08 — Sayısal kadastro için kayıt, sınır ve tarihçeyi ayır [ ]
+
+**Öncelik:** P1 teknik veri modeli; resmî işlemler son aşama kapısında.
+**Kod:** [K19], [K17], [K09]. **Araştırma:** ArcGIS parsel ağında kayıtlı
+ölçü ile geometrik koordinatı ve analiz ile uygulamayı ayırıyor.
+[Parcel least squares][S17], [Analyze / apply][S18]
+
+- Mevcut parsel polygonunu ortadan kaldırmadan sayısal parsel modelini
+  tasarla: parsel kimliği, kaynak kayıt/belge, sınır ve köşe ilişkisi,
+  ölçülmüş/kayıtlı değer, geçerlilik zamanı ve önceki/sonraki nesne bağı.
+- Ortak sınır yalnız iki polygonun tesadüfen çakışan koordinatları
+  olmasın. Mantıksal sınır kimliği üzerinden komşuluk ve kaynağı izlenebilsin;
+  CAD/GIS geometrisi bunun denetlenebilir temsili olsun.
+- Geometrik alan, kaynakta yazan alan ve kurumca kabul edilen alan
+  farklı değerler olarak kalsın. Bir hesap güncellemesi kayıtlı alanı veya
+  belgeyi değiştirmesin. Aynı il/ilçe/mahalle/ada/parsel bağlamında kimlik
+  kontrolü tasarlansın; yalnız parsel numarası tekil varsayılmasın.
+- Hak, pay, yükümlülük ve belge ilişkileri erişim kontrollü ayrı kayıtlar
+  olsun. Kişisel bilgiler geometri dağıtılırken veya AI sorgulanırken
+  varsayılan olarak bütün kullanıcılara açılmasın.
+- Değişiklik taslağı ile onaylanmış kayıt ayrışsın. Birleştirme/bölme
+  geçmişi ve kaynak uyuşmazlığı veri modelinde tasarlanabilir; resmî işlem
+  kuralları bu maddenin teknik modeli hazır diye etkinleştirilmez.
+
+**CBS ortaklığı:** parsel kimliği, ortak sınır grafiği, kayıt/hak ilişkisi,
+tarihçe ve erişim denetimi GIS'te de kullanılmalı. Aynı belediyede CAD ve
+GIS için çelişen iki parsel/hak veritabanı kurulmaz.
+
+**Kabul:** aynı parselin iki farklı ölçüm ve belge revizyonunu tut; bir
+sınır güncellendiğinde komşuluk ve geometrik alan değişsin, kaynak belge
+değeri değişmesin. Yetkisiz kullanıcı malik/pay verisini sorgu, dışa aktarım
+ve MCP ile alamamalı. Kabul resmî tescil uygunluğu iddiası içermez.
+
+### MAP-09 — İmarı sembol çiziminden tipli ve denetlenebilir plan modeline taşı [ ]
+
+**Öncelik:** P1. **Kod dayanağı:** [K20], [K19], [K33].
+**Araştırma:** Planet plan verisi/denetimiyle, XPlanung makinece okunur
+model ve doğrulama ayrımıyla değerli karşılıklardır. XPlanung Türkiye için
+PlanGML şeması değildir. [Planet][S04], [XPlanung FAQ][S20]
+
+- Plan, plan bölgesi, karar/işlev alanı, yapılaşma koşulu, ulaşım/koruma
+  sınırı, plan notu ve dayanak belgeyi tipli nesne/ilişki olarak tanımla.
+  Mevcut MPYY sembolünü bunlara bağla; renkten veya taramadan anlam tahmin etme.
+- Plan seviyesi, sürümü, taslak/onay/yürürlük durumu ve üst/alt plan
+  ilişkisi saklansın. Plan değişikliği kaynak revizyona bağlı taslak
+  oluştursun; yürürlükteki veriyi doğrudan değiştirmesin.
+- Kullanım türü, yoğunluk/kapasite, yükseklik, yapı yaklaşma ve özel
+  koşulları birimli alan/domain olarak işle. Uygulanamayan veya bilinmeyen
+  değer boş/0 ile aynı sayılmasın; plan notunun hangi alana uygulandığı belli olsun.
+- Türkiye PlanGML için yürürlükteki resmî şema ve kurum profilini uygulama
+  öncesi edinip sürümünü sabitle. Genel GML okuyucusunu yeniden yazma;
+  şema eşleme, kod listesi, plan seviyesi, ilişki ve geometri denetimi ekle.
+  Şema doğrulaması ile planlama/mevzuat denetimi ayrı sonuçlar versin.
+- Alan sınırı, karar çelişkisi, eksik plan notu, kopuk yol devamlılığı ve
+  üst/alt plan tutarsızlığı sahnede bulunabilsin. Kullanıcı bulgudan ilgili
+  karar, kaynak belge ve etkilenen alanlara gidebilsin.
+
+**CBS ortaklığı:** plan nesneleri, kod listeleri, durum, not/belge bağı ve
+doğrulama zorunlu ortak veridir. GIS sorgu/servis/analiz olarak tüketmeli;
+Harita hassas çizim ve plan düzenleme yüzeyini sunmalıdır.
+
+**Kabul:** örnek planı sembol + tipli karar + plan notuyla kur, başka
+profilli kaynağı eşle. Sembol değişikliği plan kararını değiştirmesin.
+Desteklenen resmî profil için bağımsız doğrulayıcıyla sonuç karşılaştırılsın;
+edinilmeyen veya doğrulanmayan profil “uyumlu” diye listelenmesin.
+
+### MAP-10 — Plan ve saha alternatiflerini ölçülebilir etkiyle karşılaştır [ ]
+
+**Öncelik:** P1. **Kod dayanağı:** [K21], [K30], [K31], [K40].
+**Araştırma:** ArcGIS Urban'da çalışma alanı/alternatifler mevcut durumdan
+ayrılabiliyor; OpenSite ilişkili saha tasarımına odaklanıyor.
+[Create a plan][S19], [OpenSite][S11]
+
+- GIS'teki senaryo temelini kullanarak Harita tasarım alternatifinin
+  sınırını tanımla: yalnız tasarım öğeleri ve referans aldığı mevcut durum
+  revizyonu. GIS'in bütün zaman/senaryo arayüzü Harita'ya topluca kopyalanmasın.
+- Donatı, kullanım alanı, nüfus/kapasite, yaya erişimi, arazi eğimi,
+  altyapıya yakınlık, geçirimsizlik ve bilinen risk katmanları için kaynaklı
+  karşılaştırma üret. Ölçüm birimi, analiz tarihi ve varsayımlar sonuçla taşınsın.
+- Metraj/alan değişiminin hangi karar veya geometri değişikliğinden
+  kaynaklandığı izlenebilsin. Ana veri değişince alternatif güncelliği
+  bozulduğunu göstersin; otomatik olarak yeni veriye uymuş sayılmasın.
+- Yerleşim/yükseklik zarfı gibi hafif 3B değerlendirmeleri [3d.md](3d.md)
+  altyapısıyla ilişkilendir. Bu gösterim ruhsatlı BIM, mühendislik güvenlik
+  analizi veya afet simülasyonu sonucu diye sunulmasın.
+- Karşılaştırma tablo, harita ve raporda aynı sayıyı kullansın. Tek bir
+  puanla “en iyi plan” seçmek yerine ölçütler, ağırlıklar, kısıtlar ve
+  veri eksikleri anlaşılır olsun. AI önerisi mevcut duruma kendiliğinden uygulanmasın.
+
+**CBS ortaklığı:** senaryo, analiz modeli, ağ/alan istatistikleri ve
+rapor verisi GIS ile ortak. Harita'daki düzenlenebilir tasarım nesnesi
+ile GIS'teki analitik çıktı sahipliği açık kalmalıdır.
+
+**Kabul:** iki alternatifte bir yol/yeşil alan kararını değiştir; alan,
+erişim ve arazi işi farklarını yeniden üret. Taban veriyi güncelleyip eski
+sonucun neden geçersiz olduğunu göster. Yanlış birimli veya eksik risk
+verisiyle kesin uygunluk sonucu verilmesin.
+
+### MAP-11 — Arazi yönetimi işlemlerini sürümlü ve denetlenebilir taslaklarla ele al [ ]
+
+**Öncelik:** P2; `GIS-06/GIS-07` gereği en son, sahibiyle ayrı kapsam.
+**Kod:** [K19], [K21], [K40]. **Araştırma:** Netmap, Netkamu ve Nettop
+geometriyle birlikte dağıtım/hak/tablo iş akışlarını ele alıyor.
+[Netmap][S03], [Netkamu][S06], [Nettop][S07]
+
+- Düzenleme, kamulaştırma/irtifak ve arazi toplulaştırması için ortak
+  teknik çekirdek tasarla: giriş kayıtları, kapsam geometrisi, değer/hak
+  ilişkisi, öneri senaryosu, denetim, itiraz/düzeltme ve teslim revizyonu.
+  Bunları yalnız poligon kesme araçları olarak tanımlama.
+- Sayı semantiği açık olsun: geometrik alan, kayıtlı alan, pay/payda,
+  dağıtım değeri ve parasal değer farklı türlerdir. Paylarda rasyonel,
+  parasal/dağıtım değerlerinde tanımlı decimal/rounding politikası kullan;
+  UI'daki yuvarlanmış sayılar yeniden hesap girdisi olmasın.
+- Kural paketi ülke/kurum, kaynak belge, yürürlük ve sürüm taşısın.
+  Hiçbir kanuni oran/sınır kaynak koduna isimsiz sabit olarak gömülmesin.
+  Güncel hukuk ve kurum süreçleri doğrulanmadan resmî uygunluk kararı verilmesin.
+- Dağıtım veya öneri üretimi kısıtları, hedef fonksiyonu, çözümsüzlük
+  nedenini ve hangi hak sahibinin nasıl etkilendiğini gösterebilsin.
+  Sonuç tekrarlanabilir taslak olsun; kullanıcı incelemesi ve yetkili
+  onayı olmadan kabul edilmiş kayıtların yerine geçmesin.
+- Belge/kişisel veri yetkileri, sürüm karşılaştırma, toplam kontrolü ve
+  sayısal artığın nereye dağıtıldığı raporda izlenebilsin. Kuruma gönderim,
+  bu plan kapsamında otomatik dış işlem olarak tasarlanmasın.
+
+**CBS ortaklığı:** geometri kapsamı, hak/kayıt, profil kuralları, senaryo,
+inceleme ve kontrollü rapor erişimi GIS'te ortak kullanılacaktır. Resmî
+işlemlerin açılması her iki program için aynı kurumsal kapıya bağlıdır.
+
+**Kabul:** önce sentetik veriyle toplam alan/pay/değer korunumunu ve
+kesin yuvarlamayı bağımsız hesapla doğrula. Daha sonra sahibiyle seçilecek
+anonim gerçek örneği yetkili uzman/kurumla karşılaştır. Bu ikinci kabul
+olmadan madde tamamlanamaz ve “resmî işlem hazır” denemez.
+
+### MAP-12 — Ortofoto ve görüntü kaynaklarını kalite kontrollü üretime bağla [ ]
+
+**Öncelik:** P1. **Kod dayanağı:** [K22]–[K24], [K04], [K40].
+**Araştırma:** STAC veri varlığının zaman/kaynak/metadatasını, GeoParquet
+analitik aktarımda koordinat anlamını taşır; bunlar doğruluk sertifikası
+değildir. [STAC][S33], [GeoParquet 1.1][S34]
+
+- Mevcut COG, STAC, GCP/oturtma ve yeniden örnekleme yollarını koru.
+  Ortofoto üreticisi, uçuş/çekim zamanı, GSD, CRS/epok, düşey kaynak,
+  denetim noktası doğruluğu ve işleme raporu kaynak kaydına bağlansın.
+- Modern fotogrametri araçlarından gelen ortofoto/DSM/DTM ve kalite
+  raporları için aktarım profili oluştur. Baştan tam bir fotogrametri
+  motoru yazmak yerine önce kanıtlı çıktıyı doğru tüketme ve denetleme sağlansın.
+- Otomatik görüntü eşleme/yeniden hizalama aday kontrol noktaları
+  üretsin; uyum için kullanılan noktalarla bağımsız denetim noktaları
+  ayrışsın. RMSE, yönlü hata ve kapsam dışı davranış görülsün; yalnız
+  görüntü güzel çakıştı diye kaynak koordinatlar değiştirilmesin.
+- CAD çizgisi ve semantik varlık çıkarımında görüntü çözünürlüğü,
+  örtülme ve kaynak doğruluğu hesaba katılsın. Bir piksel seçimi milimetre
+  hassasiyetli ölçü gibi sunulmasın; elle gözden geçirme kaynak bağıyla kaydedilsin.
+- Uzak büyük rasterde kapsam/zaman filtresi, erişim süresi dolması,
+  yerel çevrimdışı paket ve kaynak yenileme akışı tamamlanmış yeteneklerle
+  bütünleşsin. Orijinal veriyi tekrar tekrar tam indirmeye dayalı bir UX kurulmasın.
+
+**CBS ortaklığı:** kaynak keşfi/erişimi, kalite bandı, raster hazırlama,
+maske, koordinat işlemi ve türetilen katman GIS'te de aynı altyapıyı kullanır.
+Harita için ayrı raster okuyucu veya katalog kurulmaz.
+
+**Kabul:** zamanları farklı iki ortofotoyu bağımsız kontrol noktalarıyla
+karşılaştır; yanlış CRS, düşey veri ve erişilemeyen kaynak durumlarını dene.
+Görüntüden türeyen nesne kaynağa izlenebilsin. İptal ve çevrimdışı açılış
+orijinal dosyayı değiştirmesin; yanlış kalite sonucu üretmesin.
+
+### MAP-13 — LiDAR ve mobil haritalamayı ölçülebilir nesne üretimine taşı [ ]
+
+**Öncelik:** P1; 3B sahne [3d.md](3d.md) ile ortak. **Kod:** [K25]–[K28], [K07].
+**Araştırma:** COPC seçmeli erişim için hiyerarşi tanımlar; TBC kaydı,
+sınıflamayı, çıkarımı ve gerçekleşen–tasarım farkını ayrı işler olarak
+sunar. PDAL SMRF mevcut zemin süzgeci için açık başvurudur.
+[COPC][S31], [TBC scanning][S14], [PDAL SMRF][S27]
+
+- Mevcut LAS/LAZ/COPC, akan işlemler, zemin sınıflama ve kayıt sorgusunu
+  kullan. Önce ihtiyaçlı yeni kapsamı ayır: kayıt/şerit uyumu, kesit/düzlem
+  üzerinde düzenleme, kaynak bazlı sınıf düzeltmesi ve semantik çizgi/nesne çıkarımı.
+- Kaydın kimliği dosya özeti + kalıcı kayıt konumundan üretilebilsin.
+  LAS `Point Source ID` alanı tek başına bütün noktaların benzersiz kimliği
+  sanılmasın. Kaynak sınıfı ile kullanıcının değişikliği ayrı tutulabilsin.
+- Otomatik kayıt/ICP sonucunda kontrol noktası, örtüşme, artık,
+  güvenilir kapsam ve dönüşüm tarifi raporlansın. SLAM/IMU yörüngesi,
+  zaman eşleşmesi ve global kontrol bilinmiyorsa bulut “ölçüye kesin hazır” sayılmasın.
+- Görsel LOD ve ölçüm/çıkarım ayrı yetenek olsun: kamera önizlemesi
+  seyrek olabilir; kullanıcı nokta/mesafe/kesit sorguladığında tanımlı
+  tam kaynak kapsamı okunsun. GPU önizleme sonucunun doğruluk sınırı açık olsun.
+- Büyük bulutta görünür karo, öncelik, RAM/VRAM bütçesi ve iptal
+  korunsun. Gaussian splatting veya foto-gerçekçi mesh eklenirse görsel
+  temsil olarak bağlansın; fiziksel LiDAR/geometri ve kontrol doğruluğunun
+  yerine ölçüm otoritesi yapılmasın.
+- Kent ölçeğinde fotogrametrik mesh ve varlık bağlamı gerekiyorsa 3D
+  Tiles 1.1 akışı [3d.md](3d.md) ile ortak değerlendirilsin. COPC'nin tam
+  kayıt ölçümüyle 3B içerik akışının görevleri ayrı kalsın. [OGC 3D Tiles][S32]
+- Yeni E57/diğer tarama kaynakları veya öğrenilmiş sınıflama gerekiyorsa
+  ayrı sağlayıcı/eklenti yeteneği olarak değerlendirilip sözleşme, lisans,
+  doğruluk ve performans kapısından geçsin; mevcut biçim desteği yeniden yazılmasın.
+
+**CBS ortaklığı:** tam kayıt sorgusu, bölge/istatistik, sınıflama,
+çıkarım sonucu ve kaynak/kalite bilgisi GIS'te de Processing olarak bulunur.
+Yalnız Harita'ya özel dosya içinde saklanmış görünmez analiz sonucu oluşmaz.
+
+**Kabul:** eğimli zemin, bordür, örtülmüş yol ve çoklu tarama içeren veriyle
+işle. LOD değişirken ölçülen noktanın kimliği/değeri değişmesin. Kaynak
+sınıfları korunsun, düzeltme geri alınsın; kayıt ve nesne çıkarımı bağımsız
+kontrolle değerlendirilsin. Gerçek veri/süre/bellek raporu olmadan “milyar nokta hızlı” denmesin.
+
+### MAP-14 — Kırık hatlı ve kaynağı izlenen mühendislik yüzeyi geliştir [ ]
+
+**Öncelik:** P1, MAP-02/03/07 üzerine. **Kod:** [K28]–[K30], [K03].
+**Araştırma:** NetSurf araziyi üretim kaynağı olarak kullanıyor; Civil 3D
+sınırın türü ve işlem sırasının etkisini açıklar. [NetSurf][S02],
+[Surface Boundaries][S09]
+
+- Mevcut Delaunay motoru üzerine kalıcı yüzey tarifi tasarla: kaynak
+  nokta kümeleri, kabul edilmiş sınıflar, kırık hat, dış/iç sınır, maskeler,
+  düzenleme adımları ve sürüm. Son üçgen listesi tek kaynak olmasın.
+- Constrained Delaunay/kırık hat ekleme, çakışan kot, aynı XY farklı Z,
+  çok yakın nokta, tekrarlı nokta ve geçersiz sınır politikasını açıklaştır.
+  2.5B z=f(x,y) TIN ile düşey/üst üste yüzey içeren gerçek 3B mesh ayrı yetenek olsun.
+- Nokta ekle/sil/kot değiştir, kenar değiştir, üçgen dışla, sınır/kırık
+  hat düzenle ve yüzey birleştir işlemleri geçmişten yeniden üretilebilsin.
+  Bir görsel gizleme kararı analizden veri çıkarma kararıyla karıştırılmasın.
+- Kaynak değiştiğinde yalnız etkilenen bölge yeniden kurulabilsin;
+  kaynakları eksik veya eski olan yüzey durumunu söylesin. Tüm bağlı
+  kontur, profil, hacim ve pafta sonuçları aynı yüzey revizyonuna bağlansın.
+- Mevcut DEM kontur/analizini kullan; TIN konturu gerekiyorsa analitik
+  üçgen kesişiminden üret. Yumuşatma yalnız sunum türevi olsun; orijinal
+  yüzeyi ve hesap kotunu değiştirmesin. Kontur sıklığı kalite belirsizliğini saklamasın.
+- CPU doğruluk modeli ve GPU görüntü/hesap hızlandırması ayrışsın.
+  Tile sınırında çatlak, komşu yüzeyde dikiş ve bellek sınırı gerçek
+  büyük veriyle sınansın. Kod içindeki 400 milyon nokta sabiti performans kanıtı değildir.
+
+**CBS ortaklığı:** yüzey kaynağı, sorgu, kontur, türev raster ve kalite
+GIS'te de tüketilir. UGRID/NetCDF mesh okuyucusu korunur; düzenlenebilir
+mühendislik yüzeyiyle aynı sözleşmeymiş gibi genişletilmez.
+
+**Kabul:** bordür kırık hattı, gölet deliği, şev, aynı XY/farklı Z ve
+kaynak nokta revizyonu içeren yüzey kur. Kırık hat korunumu, sınır dışı
+üçgenler, kot sorgusu ve kontur bağımsız başvuruyla doğrulansın. Save–reopen
+ve tariften yeniden kurma aynı sonucu versin; iptalde eski geçerli yüzey kalsın.
+
+### MAP-15 — Saha kotlandırması, profil ve kazı/dolguyu aynı tasarıma bağla [ ]
+
+**Öncelik:** P1; tam yol/koridor için [road.md](road.md) esas. **Kod:** [K30]–[K32], [K40].
+**Araştırma:** OpenSite ilişkili saha/tesviye tasarımı, Netpro yol ve
+kesit/metraj akışı sunuyor. Bunların bütünü bir polylineda M değeri
+tutmakla elde edilmez. [OpenSite][S11], [Netpro][S05]
+
+- Meydan, otopark, park, platform, şev ve basit bağlantı rampası için
+  hedef kot/eğim, referans kenar/yüzey ve gün ışığına çıkış gibi ilişkili
+  tasarım öğeleri oluştur. Düşey değer yalnız serbest öznitelik olmasın.
+- Mevcut LRS/istasyon ve mesh profilini tekrar kullan. Bir profil;
+  güzergâh ve yüzey revizyonunu, istasyon tanımını, düşey abartıyı ve kot
+  referansını bilsin. Boy/en kesit tek seferlik çizgi çıktısından canlı türeve taşınsın.
+- Tasarım ile mevcut yüzeyin karşılaştırmasını tanımlı ortak kapsamda
+  yap. TIN–TIN, raster veya kesit yöntemi seçildiyse yöntem, çözünürlük,
+  eksik alan ve sayısal hata sınırı raporda bulunsun; farklı sonuçlar
+  açıklamasız aynı “hacim” başlığı altında sunulmasın.
+- Kazı/dolgu sınırı, sıfır hattı, malzeme bölgesi, kabarma/sıkışma
+  katsayısı ve stok sahası ayrı parametre olsun. Geometrik hacim ile
+  iş/malzeme miktarı ve maliyet farklı hesaplar olarak tutulabilsin.
+- Akış yönü/çukur/su birikme denetimi yüzey kalitesini ve çıkış
+  sınırını dikkate alsın. Basit eğim analizi hidrolik taşkın simülasyonu
+  diye sunulmasın; ilgili çözücü/afet işi [3d.md](3d.md) ile bağlansın.
+- Yol yatay/düşey güzergâhı, dever, şablon ve koridor için paralel
+  motor yazma. Ortak yüzey ve tasarım bağı üzerinden road planının
+  yeteneklerini Harita projesinde kullanılabilir hale getir.
+
+**CBS ortaklığı:** yüzey/profil sorgusu, kazı-dolgu bölgeleri, miktar
+tablosu, kaynak ve kapsam GIS'te analiz aracı/katmanı olarak kullanılmalı.
+GIS'in tematik fark haritası aynı hesap sonucunu göstermeli.
+
+**Kabul:** bir platformun kotunu değiştir; şev, kesit, hacim ve rapor
+birlikte güncellensin. Delikli/örtüşmeyen yüzeylerde kapsam ve dışlanan
+bölge açıklansın. Basit prizmatik örnekte analitik hacim; gerçek örnekte
+bağımsız yöntem karşılaştırması yap. İptal ve Undo bütün türevleri kapsasın.
+
+### MAP-16 — Akıllı altyapı tasarımı ile ağ analizini birleştir [ ]
+
+**Öncelik:** P1 teknik envanter/tasarım; P2 uzman çözücüler. **Kod:** [K31], [K32], [K40].
+**Araştırma:** EPANET basınçlı su, SWMM drenaj/hidroloji hesapları için
+farklı motorlardır. Mevcut grafik ağında izleme yapmak bu çözümleri
+sağlamaz. [EPANET][S29], [SWMM][S30]
+
+- Su/atıksu/yağmursuyu ve uygun enerji/telekom varlıkları için tipli
+  hat/düğüm, sabit varlık kimliği, kot/derinlik, çap/malzeme, işletme
+  durumu ve bağlantı portu modeli tasarla. Branşman ve servis bağlantısı
+  çizim çizgisinden ve analiz kenarından ayırt edilsin.
+- Hat profili; zemin yüzeyi, boru taban/eksen kotu, eğim, kapak/akar
+  kotu ve örtü koşullarını birlikte göstersin. Plan veya kot değişince
+  profil ve çakışma denetimi güncellensin.
+- Mevcut ağ/tracing/kapatma/servis alanı yeteneklerini koru. Geometrik
+  kesişim ile fiziksel bağlantı aynı sayılmasın; farklı seviyedeki
+  geçiş, vana/anahtar durumu ve port bağlantısı anlamlı olsun.
+- Hidrolik/hidrolojik analiz isteğe bağlı adaptör/Processing aracı
+  olarak gelsin. Girdi eşleme, birimler, sınır koşulları, çözücü sürümü,
+  yakınsamama, sonuç zamanı ve kalibrasyon bilgisi kayıtlı olsun.
+  Sonuç katmanı üretmeden önce hata/girdi raporu görülsün.
+- Diğer disiplinlerle yatay/düşey açıklık ve yüzey kaplaması denetlensin.
+  Tasarlanan, uygulanan ve ölçülmüş durum ayrı revizyonlardır; tüm
+  katmanları birleştirip işletme verisini taslakla değiştirme.
+
+**CBS ortaklığı:** varlık modeli, portlar, bağlantı, işletme durumu,
+analiz girdisi/sonucu ve bakım formu GIS'te de kullanılmalı. Harita profil/
+hassas tasarım; GIS işletme ve tematik inceleme yüzeyini sağlar.
+
+**Kabul:** küçük drenaj ve basınçlı su örneklerini ayrı çalıştır;
+bağlantısız hat, ters eğim, yetersiz örtü ve yanlış birimi yakala.
+Girdi/sonucu motorun bağımsız örneğiyle doğrula. Yakınsamayan analiz
+başarılı diye sahneye yazılmasın; iptal UI'ı ve ana veriyi kilitlemesin.
+
+### MAP-17 — Modern ve kayıp raporlu CAD/CBS veri devri sağla [ ]
+
+**Öncelik:** P0 mevcut aktarımı koruma; P1 mühendislik profilleri.
+**Kod:** [K33]–[K35], [K09], [K23]. **Araştırma:** InfraGML ölçüm/ekipman,
+arazi bölümü ve mühendislik verisi için parçalı model sunar; her altyapı
+tipini kapsayan tek format değildir. [InfraGML][S28], [GeoParquet][S34]
+
+- Mevcut CAD açma, birim/CRS eşleme, xref, GIS türetme ve geri alma
+  yollarını koru. Tam/koşullu destek matrisi nesne ve özellik düzeyinde
+  olsun: eğri, Z/M, metin/blok, stil, ilişki, kimlik, kalite ve kaynak.
+- DWG/DXF/NCZ mevcut desteklerinin sınırlarını raporla; güncel üretim
+  dosyalarını aksatan sorunları [cad.md](cad.md) ile tek iş listesinde
+  gider. Tarihsel cihaz biçimlerini yeni ürün hedefi yapma. NCZ dağıtım
+  kapısını koru. Bir okuyucunun bulunması aynı biçimde kusursuz
+  yazıcı/round-trip garantisi sayılmasın.
+- Yeni ihtiyaçlarda önce GeoPackage/GeoParquet, COG/COPC, sürümlü
+  GML/profil ve mühendislik model değişimini değerlendir. LandXML gibi
+  sahada yaşayan değişim biçimi gerekiyorsa sınırlı dönüştürücü olsun;
+  KentOS'un iç veri modelini eski biçime göre şekillendirme.
+- InfraGML/IFC gibi adaylar için tam standart desteği vaat etmek yerine
+  gereken alt modeli ve işveren/kurum profilini seç. Dönüşen, korunan,
+  yaklaşıklaştırılan ve kaybolan bilgi her aktarımda açıklansın.
+- Kaynak–türev eşlemesi ve iki yönlü değişiklik çatışması mevcut
+  digest/revizyon denetiminden geçsin. Eğrinin kirişleşmesi, yükseklik
+  kaybı veya ilişki kopması açık kullanıcı kararı olmadan uygulanmasın.
+- Teslim paketi çizim + bağlı kaynaklar + kullanılan profil/ızgara
+  bilgisi + kayıp/kalite raporu taşısın. Gizli anahtar, imzalı URL ve
+  yetkisiz kişisel veri pakete kopyalanmasın.
+
+**CBS ortaklığı:** ortak kaynak/kimlik, açık format sağlayıcıları,
+profil eşleme ve kayıp raporu zorunludur. Bu iş CAD↔GIS doğrudan mod
+değişimini yeniden getirmez; kontrollü veri devrini güçlendirir.
+
+**Kabul:** yay/Z/M/blok/ilişki içeren gerçek koordinatlı veri için
+KentOS→dış biçim→KentOS karşılaştırması yap. Sayısal hata ve semantik
+kayıplar ayrı raporlansın. Hem kaynak hem türev değiştiğinde geri alma
+çatışma versin; kaybolan dış kaynakta proje açılabilsin.
+
+### MAP-18 — Harita anotasyonu, pafta ve teslimi tek revizyondan üret [ ]
+
+**Öncelik:** P0 mevcut okunurluk; P1 üretim bağları. **Kod:** [K20], [K36]–[K39].
+**Araştırma:** Netcad/NetSurf üretim akışı ve açık veri yaklaşımının sonucu,
+hesap–harita–belgenin aynı kaynağı göstermesidir. Bu KentOS için
+tasarım kararıdır. [Netcad GIS][S01], [NetSurf][S02]
+
+- Mevcut pafta/atlas/GeoPDF/ön denetimi yeniden yazma. Yüzey, parsel,
+  plan, ölçüm kalite kaydı, profil ve altyapıdan gelen anotasyon/tabloları
+  kalıcı kaynak kimliği ve revizyonuna bağla.
+- Kot, nokta/varlık adı, eğri kotu, kenar/alan değeri, istasyon ve
+  plan koşulunu uygun görünüş tarifiyle üret. CAD gerçek boylu metni ve
+  GIS dinamik etiketini ayır; zoom'da kaybolup gelen ölçü veya çift ölçek UX'i yaratma.
+- Harita grid'i, gerekiyorsa ikinci koordinat sistemi, kuzey türü,
+  ölçek çubuğu, datum/epok ve kalite notları aynı proje bilgisinden gelsin.
+  UI'daki eksen adları ile dış kurumun teslim adlandırması açıkça eşlensin.
+- Mühendislik nesnesi güncellenince etkilenen pafta/tablolar listelensin.
+  Son yayındaki kaynak revizyonu ile güncel model farkı görülsün;
+  eski paftaya yeni tarih basarak güncelmiş gibi yayınlama.
+- Resmî profil çıktısı kapısı genel pafta üretiminden ayrı olsun.
+  Eksik/erişilemeyen kaynak, güncelliğini yitirmiş analiz, okunmayan anotasyon
+  ve kayıp font/stil teslim öncesi bulguya dönüşsün.
+- Büyük pafta seti iptal edilebilir arka plan işi olarak hazırlansın;
+  yalnız değişen sayfaların yeniden üretimi ve teslim paketi manifesti
+  mevcut atlas/job altyapısına bağlansın.
+
+**CBS ortaklığı:** şablon, atlas, grid, rapor verisi, kaynak revizyonu ve
+ön denetim GIS'te de aynı sistemdir. Harita ve GIS aynı kabul edilmiş
+veri için farklı alan/metraj değeri basmamalıdır.
+
+**Kabul:** 1:500/1:1000/1:5000 görünüşlerde aynı veriyle çıktı üret;
+zoom boyunca yazı/ölçü, grid ve çizgi konumu gözle denetlensin. Bir
+yüzey/parsel revizyonu yalnız ilgili sayfaları güncellesin. PDF'deki
+koordinat/ölçü bağımsız okuyucuda sınansın; resmî profil onaysızken genel çıktı çalışabilsin.
+
+### MAP-19 — Modern saha uygulaması ve gerçekleşen durum kontrolünü tamamla [ ]
+
+**Öncelik:** P1 çevrimdışı karşılaştırma; canlı cihaz işi donanım kapısında.
+**Kod:** [K09]–[K12], [K30]–[K32], [K40]. **Araştırma:** TBC ve 12d
+gerçekleşen veriyi tasarımla karşılaştıran akışları vurguluyor.
+[TBC scanning][S14], [12d Survey][S16]
+
+- Tasarımdan sahaya çıkacak paketi açık tanımla: seçilen revizyon,
+  nokta/hat/yüzey/varlık kimlikleri, CRS/epok, kot referansı, kabul
+  eşiği ve gerekli kalite notları. Sadece isimsiz koordinat listesi olmasın.
+- Alıcı/robotik cihaz/makine kontrolü adaptörleri opsiyonel olsun;
+  güncel cihaz SDK/protokolü, lisans ve gerçek donanım testine göre seçilsin.
+  Kontrolsüz otomatik dış cihaz komutu uygulama akışının varsayılanı olmasın.
+- Gerçekleşen ölçüm geldiğinde tasarım kimliğiyle veya önerilen
+  mekânsal eşlemeyle karşılaştır. Yatay/düşey/normal fark, kapsam,
+  ölçüm belirsizliği ve seçilmiş kabul profilini raporla; en yakın nokta
+  her zaman doğru varlık değildir.
+- As-built, aplikasyon kontrolü ve dönemsel deformasyon ölçümlerini
+  ayrı iş türleri yap. Tasarım değişikliği ile fiziksel hareketi
+  ayırt et; zaman serisinde datum/epok ve ortak kontrolü koru.
+- Sahadan gelen düzeltme ana tasarıma doğrudan yazılmasın. Yetkili
+  inceleme, uyuşmazlık ve kabul edilen gerçekleşen revizyon kaydı olsun.
+  Gelecekte mobil istemci aynı sözleşmeyi tüketebilsin; mevcut web/mobil ertelemesi korunsun.
+
+**CBS ortaklığı:** varlık eşleme, gerçekleşen katmanı, fark/kalite,
+yetkili inceleme ve zaman serisi GIS'te de kullanılmalı. Ölçüm cihazı
+bağlantısı için ikinci bir GIS uygulaması/motoru yazılmaz.
+
+**Kabul:** tasarım yüzeyi ve altyapıya iki tarihte ölçüm getir; eksik
+varlık, yanlış eşleme, kot farkı ve düşük kaliteli çözümü ayır. Eski
+tasarım revizyonuyla ölçülen kayıt daha sonra yeni tasarıma sessiz
+bağlanmasın. Canlı kabul gerçek cihazla, çevrimdışı kabul kayıtlı veriyle ayrı işaretlensin.
+
+### MAP-20 — Bütün iş akışlarını yeniden üretilebilir, durdurulabilir ve otomasyona açık teslim et [ ]
+
+**Öncelik:** P0, diğer 19 maddeye yayılır. **Kod:** [K40]–[K45], [K42].
+**Araştırma:** QGIS/GRASS kaynaklarında ortak hesap çağrısı ve açık işlem
+tarifi; STAC/GeoParquet'te anlamlı veri sözleşmesi görülebiliyor. Bunların
+üstüne aşağıdaki teslim ilkesi KentOS için önerilir. [S21], [S23], [S33], [S34]
+
+- Kaynak→dönüşüm→kabul edilmiş ölçüm→yüzey→tasarım→analiz→pafta için
+  yeniden üretilebilir işlem grafiği tasarla. Girdi kimlik/özetleri,
+  işlem sürümü, birim/CRS/epok, parametreler ve çıktı revizyonu kaydedilsin.
+  Mevcut Processing modelini ve job önbelleğini bunun temeli olarak kullan.
+- Her ağır işlem UI iş parçacığından ayrı yürüsün; ilerleme, bellek/
+  CPU/VRAM bütçesi ve iptal kanalı olsun. Durumlar “bekliyor / çalışıyor /
+  iptal ediliyor / iptal / başarısız / tamamlandı” diye ayrışsın. Eski
+  kaynakla veya kaybedilen yetkiyle sonuç yazımı revizyon/yetki kapısından geçmesin.
+- Her yeni iş GUI, komut, Python, MCP ve uygun olduğunda Processing
+  üzerinden aynı hesap/işleyiciye erişsin. `validate`/`plan` yazmasın;
+  `execute` atomik uygulansın. Analiz aracı için yalnız sahne tıklama
+  otomasyonu üretmek API desteği sayılmasın.
+- Python API örneği, birim/CRS açıklaması, girdi/çıktı şeması, ret
+  kodları ve gerçek senaryo belgesi aynı teslimde üretilecek. KentOS
+  UI bileşenleri, `.kek`, isteğe bağlı uv ortamı/bağımlılık ve eklenti
+  onayı için [plugins.md](plugins.md) ve [python.md](python.md) izlenecek.
+- AI mevcut kayıtlı araçları kullanabilsin: veriyi keşfet, kapsamı
+  belirle, planı/farkı üret, sonucu açıkla ve yetki dahilinde uygula.
+  Sağlayıcı seçimi opsiyonel olsun; erişilemeyen/gizli veri sorgu,
+  model girdisi veya çıktı dosyası üzerinden sızmasın. API anahtarı projeye yazılmasın.
+- Bulutta aynı parsel/sınır/yüzey üzerinde eşzamanlı değişiklikler
+  fark ve revizyonla uzlaştırılsın. Mevcut PostgreSQL/PostGIS ve taşınabilir
+  dosya altyapısı kullanılsın; rakip destekliyor diye yeni kurumsal DB motoru eklenmesin.
+- Büyük veri testleri gerçek ölçümle ayrı raporlansın: ilk görünüm,
+  etkileşim p95/p99, tam kaynak sorgusu, yeniden hesap, RAM/VRAM ve
+  iptal gecikmesi. GPU'nun hızlı önizlemesi toplam iş süresi diye sunulmasın.
+
+**CBS ortaklığı:** iş grafiği, erişim/işlem günlüğü, Processing, Python,
+MCP, eklenti ve AI sözleşmesi bütün ürünlerin ortak altyapısıdır. Harita
+için ayrı, GIS'ten kopuk otomasyon ekosistemi kurulmaz.
+
+**Kabul:** aynı küçük üretim işini GUI, Python ve MCP ile yap; geometri,
+kimlik ilişkisi, retler ve kalıcı sonuçlar eşdeğer olsun. Ağır işi iptal et,
+veri/izin değişirken sonucu yazmayı dene, yeniden açıp aynı tariften üret.
+Bir yüzey noktası değiştiğinde hangi profil/hacim/paftanın yeniden
+hesaplanması gerektiği görülsün; güncel olmayan çıktı başarıyla teslim edilmesin.
+
+## Uygulama sırası ve sahiplik
+
+Ana madde sayısı 20'dir; aşağıdaki sıra yeni madde veya yeni tamamlanma
+işareti oluşturmaz.
+
+| Aşama | İşler | Geçiş koşulu |
+| --- | --- | --- |
+| Temeli koru | MAP-01, MAP-02, MAP-06, MAP-07; MAP-17/18 mevcut aktarım ve okunurluk; MAP-20 ortak sözleşmeleri | Mevcut ölçek, render, seçim, sağ tuş, tipli katman ve dosya açma regresyonları temiz; güncel masaüstü GUI kabulü var. |
+| Kaynağı ve yüzeyi tamamla | MAP-03, MAP-04 temel katalog, MAP-05, MAP-12, MAP-13, MAP-14 | Ham veri/çözüm/türev ayrı; bağımsız doğruluk ve kaynak izleme; gerçek veriyle iptal/bellek kanıtı. Donanımsız kısım ayrı. |
+| Tasarıma ve üretime bağla | MAP-15, MAP-16, MAP-18, MAP-19 çevrimdışı; MAP-17 seçilmiş mühendislik profilleri | Bir kaynağın değişimi yüzey, tasarım, analiz ve teslimde kontrollü izleniyor; GIS tüketimi ve otomasyon tamam. |
+| Planlama ve kurumsal veri | MAP-08 teknik model, MAP-09, MAP-10; MAP-04 ileri çıkarım | Tipli semantik veri, yetki, senaryo, profil doğrulaması ve kaynaklı raporlar var. Resmî işlem kapıları açık değil. |
+| Cihaz / kurumsal son kabul | MAP-03/19 canlı donanım; MAP-08 resmî kapsam, MAP-11 ve MAP-09/18 resmî profil çıktıları | Gerçek cihaz sağlanmış ve saha testi yapılmış; mevzuat kapsamı sahibiyle ayrı çalışılmış, güncel profil ve yetkili uzman/kurum kabulü alınmış. |
+
+MAP-08'in teknik veri modeli MAP-09/10'la erken tasarlanabilir; resmî parsel
+işlemleri bundan ayrı son kapıda kalır. MAP-20 sona bırakılan toplu bir
+“API ekleme” işi değildir: her teslimin parçasıdır. [road.md](road.md),
+[3d.md](3d.md), [gis.md](gis.md) veya diğer planlarda zaten biten ortak iş
+yeniden yazılmaz; bu plandaki yeni kabul kapsamı için tekrar kullanılır.
+
+## Her madde için ortak kalite ve kabul koşulları
+
+- **Mevcut davranışı koruma:** önce güncel commit'ten masaüstü derlemesi
+  ve mevcut ilgili örneklerle başlangıç kaydı alınır. İşlev, sadece yeni
+  test sahnesinde değil kullanıcının gerçek koordinatlı ve karışık kaynaklı
+  projesinde de sınanır. Test penceresi/derlemesi ve commit belirtilir.
+- **Gerçek etkileşim:** fare, klavye, sayısal alan, Enter, sağ tuş Onayla,
+  Esc, Undo/Redo, dar/geniş pencere ve art arda zoom/pan denenir. Hesap
+  testinin geçmesi GUI kabulünü kapatmaz. Ekran görüntüsü tek başına
+  etkileşim kanıtı da değildir; işlem adımı ve önce/sonra veri durumu gerekir.
+- **Görüntü kanıtı:** ekran görüntüleri yerelde, repo dışında tutulur.
+  Kabul kaydı gerekirse görüntünün konumunu, senaryosunu ve sonucunu
+  belirtir; büyük ekran görüntüleri Git'e eklenmez.
+- **Bağımsız sayısal kanıt:** test bekleneni aynı uygulama fonksiyonunu
+  çağırarak üretmez. Analitik örnek, yüksek hassasiyetli hesap veya uygun
+  bağımsız motor/veri kullanılır. Datum, birim, epok ve tolerans belirtilir.
+- **Kalıcılık ve işlem bütünlüğü:** validate/plan/ret/iptal belgeyi,
+  dirty durumunu ve undo zincirini değiştirmez. Başarılı uygulama tek
+  mantıksal değişikliktir; kaynak/ilişki/sonuç save–reopen ile korunur.
+- **Erişim ve birlikte çalışma:** kilitli katman, salt okunur kullanıcı,
+  alan/kayıt yetkisi, eşzamanlı kaynak değişimi ve tekrar gönderilen
+  istek sınanır. Bir analiz/AI/eklenti yolu GUI'nin veri kuralını aşamaz.
+- **Performans:** veri boyu, nokta/üçgen/nesne sayısı, cihaz/işletim
+  sistemi, CPU/GPU yolu, ilk/ısınmış ölçüm ve bellek tepe değeri raporlanır.
+  Önizleme ile tam çözünürlüklü analiz ayrı ölçülür; bütçe uygulama öncesi
+  belirlenir. Başarılmayan hedef sayısı başarı iddiasına dönüşmez.
+- **Eksiksiz yüzey:** uygun UI, komut kataloğu, Python örneği, MCP,
+  Processing ve paylaşılmış CBS yeteneği birlikte gözden geçirilir.
+  Kapsam dışı donanım/profil açık yazılır; bu kısım tamamlanmış işaretlenmez.
+
+## İncelenen web kaynakları
+
+Erişim/inceleme: **31 Ekim 2026**. Aşağıdaki **35** satır, gerçekten içeriği
+okunan ayrı kaynaktır. Sürüm varsa korunmuştur. Ürün sayfası yeteneğin üretici
+beyanını gösterir; kod, doğruluk testi veya KentOS performans kanıtı değildir.
+Her kaynak için KentOS'a aktarılan bilgi kısaca belirtilmiştir.
+
+| No | Kaynak | İncelemede kullanılan bilgi / sınır |
+| --- | --- | --- |
+| S01 | [Netcad GIS][S01] | CAD/CBS birlikte üretim, kaynaklar ve veri alışverişi; kapalı motorun matematiği hakkında çıkarım yok. |
+| S02 | [NetSurf][S02] | Arazi kaynakları, yüzey güncelleme, eğri, profil ve hacim ilişkisi. |
+| S03 | [Netmap][S03] | Parsel, malik/dağıtım ve grafik/tablo denetimi; güncel hukuk doğrulaması sayılmadı. |
+| S04 | [Planet][S04] | Plan seviyeleri, plan verisi ve kontroller, PlanGML ve alan istatistiği; incelenen ürünün adı Planet. |
+| S05 | [Netpro][S05] | Yol geometrisi, kesit, metraj ve belgeleme akışının ilişkisi. |
+| S06 | [Netkamu][S06] | Kamulaştırma verisi, sahiplik/tablo ve teslim denetiminin birlikte ele alınması. |
+| S07 | [Nettop][S07] | Arazi toplulaştırmasında öneri, değerlendirme, sahiplik ve kontrol akışı. |
+| S08 | [Civil 3D 2027 — Survey Databases][S08] | Gözlem/kontrol/ekipman verisinin çizimden ayrı tutulması. KentOS için aynı depolama motoru zorunlu değil. |
+| S09 | [Civil 3D 2027 — Surface Boundaries][S09] | Dış/göster/gizle/veri kırpma sınırları ve işlem sırası; görsel gizleme ile veri çıkarma farklı. |
+| S10 | [Bentley OpenCities Map][S10] | Şema/kurallı CAD+GIS verisi ve bağlam kaynakları. Ticari veritabanı listesi KentOS'a bağımlılık kararı olarak alınmadı. |
+| S11 | [Bentley OpenSite][S11] | İlişkili saha/tesviye ve arazi işi tasarımı. Üretici hız beyanı KentOS hedefinin kanıtı değil. |
+| S12 | [TBC — Understanding Baseline Processing][S12] | GNSS oturumu, anten/yörünge seçimi ve çözüm üretiminin nokta içe aktarmadan farklı oluşu. |
+| S13 | [TBC — Adjust Network][S13] | Ağ, kontrol, kalite, hata bilgisi ve yeniden hesap akışı. |
+| S14 | [TBC — Scanning and point clouds][S14] | Kayıt, sınıflama, çıkarım, as-built karşılaştırma. Bazı yeteneklerin veri/lisans kapsamı ürüne özgü. |
+| S15 | [TBC — point feature extraction][S15] | Buluttan nokta varlığı üretimi ve kod/öznitelik atama tanımı. |
+| S16 | [12d — Surveying][S16] | Modern LiDAR, gerçekleşen veri ve tasarım uygunluk akışları. Sayfadaki eski yöntemler yeni hedefe alınmadı. |
+| S17 | [ArcGIS Pro 3.5 — Parcel least squares][S17] | Kayıtlı ölçü, ağ ve ağırlıklı analiz; parsel polygonunun ötesindeki veri ilişkisi. |
+| S18 | [ArcGIS Pro — Run least squares adjustment][S18] | Analiz çıktısını inceleme ile kaynağa uygulamanın ayrılması. Ürünün varsayılan eşikleri kopyalanmadı. |
+| S19 | [ArcGIS Urban 11.5 — Create a plan][S19] | Çalışma alanı, mevcut durum ve alternatiflerin ayrılması; KentOS senaryo tasarımına referans. |
+| S20 | [XLeitstelle — XPlanung FAQ][S20] | Makinece okunur plan ve şema/profil doğrulaması; teknik doğrulamanın uzmanlık/karar onayı olmayışı. |
+| S21 | [QGIS release-4_2 — gelişmiş çizim kaynak kodu][S21] | `QgsAdvancedDigitizingDockWidget`: sert/yumuşak kilitler, X/Y/Z/M ve `QgsCadUtils::alignMapPoint` çağrısı. Gerçek kod okundu; testing belgesi kararlı sürüm diye sunulmadı. |
+| S22 | [GRASS stable 8.5 — v.clean][S22] | İşlem türü, sıra, eşik, hata çıktısı ve veri birimi ayrımı. |
+| S23 | [GRASS — vector/v.clean/main.c][S23] | Temizleme adımlarının sıralı yürütülmesi ve topoloji kurma çağrıları gerçek koddan kontrol edildi; dal değişebilir. |
+| S24 | [Geoscience Australia — DynAdjust][S24] | Resmî depodaki 3B ağ/kovaryans ve büyük ağ yaklaşımı açıklaması. Çözücünün iç kodu satır satır denetlenmiş sayılmadı. |
+| S25 | [PROJ stable — Vertical grid shift][S25] | Düşey ızgara, kapsam ve zaman boyutunun koordinat işlemine etkisi. |
+| S26 | [PROJ stable — Kinematic datum shifting][S26] | ENU hız, referans zaman ve zamana bağlı dönüşüm modeli. |
+| S27 | [PDAL — filters.smrf][S27] | Zemin sınıflama parametreleri ve çıktı sınıfı. PDAL kurma veya bağımlılık ekleme kararı alınmadı. |
+| S28 | [OGC — InfraGML][S28] | Parçalar halinde mühendislik/ölçüm/arazi bölümü modeli. Sayfanın ilk kapsamı ıslak altyapıyı bütünüyle içermiyor; hidrolik model standardı diye sunulmadı. |
+| S29 | [US EPA — EPANET][S29] | Basınçlı su ağı hidrolik/su kalitesi hesaplarının analiz grafiğinden farkı. |
+| S30 | [US EPA — SWMM][S30] | Yağmursuyu/hidroloji/hidrolik çözüm kapsamı; eğim haritasının simülasyon yerine geçmemesi. |
+| S31 | [COPC 1.0 specification][S31] | LAZ 1.4 tabanlı seçmeli okuma, octree/hiyerarşi ve parça düzeni. Belgenin yaşı tekniği eski iş akışı yapmıyor; mevcut desteğin üzerine ihtiyaç tanımlandı. |
+| S32 | [OGC — 3D Tiles standard sayfası][S32] | 1.1 standart bağlantısı ve büyük 3B içerik akışının amacı incelendi. Büyük tam normatif belge bu oturumda açılamadı; tam standarda uygunluk denetimi yapılmış sayılmaz. |
+| S33 | [STAC — The STAC Specification][S33] | Item/Collection/Asset/zaman ve keşif sözleşmesi. Sayfadaki örnek sürüm en yeni sürüm iddiası yapılmadı. |
+| S34 | [GeoParquet 1.1.0][S34] | Geometri kolonları, CRS/PROJJSON, epoch ve kapsama metadata'sı. İç CAD ilişkilerini bütünüyle saklama garantisi değil. |
+| S35 | [TKGM — 2025/4 genelgesi][S35] | Belgenin kapsamı ve harita/plan tesliminde kayıtlı teknik bağlam incelendi. 12 Mayıs 2025 tarihli bu belge 31 Ekim 2026'da bütün kuralların yürürlük doğrulaması olarak kullanılmadı; oran/sınır türetilmedi. |
+
+### Erişim sınırları ve uygulamadan önce tamamlanacak kaynak doğrulaması
+
+- Netcad teknik wiki sayfalarında zaman aşımı alındı; ürün sayfalarının
+  içeriği okundu, açılamayan teknik wiki bu 35 kaynağa sayılmadı. Özellikle
+  belirli komutun bütün parametreleri doğrulanmış gibi yazılmadı.
+- Türkiye PlanGML resmî şema uç noktasının güncel içeriği bu oturumda
+  edinilemedi. MAP-09'un uygulama kapısı: resmî şema/profil, sürüm, kod
+  listeleri ve örnek geçerli/geçersiz teslim paketlerinin edinilmesidir.
+- HGM'nin güncel jeoit dağıtım sayfası arama dizininde görüldü fakat
+  içerik açılışı zaman aşımına uğradı; kaynak sayısına alınmadı. Üretim
+  ızgarası için resmî temin, kapsam ve kullanım koşulları doğrulanacak.
+  Kamuya açık gösterim/örnek ızgarası otomatik üretim modeli kabul edilmez.
+- 3D Tiles tam normatif 1.1 HTML belgesi araç boyut sınırını aştı;
+  standart sayfasının amaç/sürüm bilgisi okundu. İçerik türü/uzantı ve
+  uygunluk testi, [3d.md](3d.md) uygulaması sırasında normatif kaynakla yapılır.
+- Canlı kaynaklar değişebilir. Uygulama başlarken gerçekten seçilen
+  standart/şema/model sürümü ve açık kaynak commit'i sabitlenir; bu
+  rapordaki araştırma tarihi sonsuz geçerlilik iddiası değildir.
+
+[S01]: https://www.netcad.com/tr/urunler/netcad-gis
+[S02]: https://www.netcad.com/tr/urunler/netsurf
+[S03]: https://www.netcad.com/tr/urunler/netmap
+[S04]: https://www.netcad.com/tr/urunler/planet
+[S05]: https://www.netcad.com/tr/urunler/netpro
+[S06]: https://www.netcad.com/tr/urunler/netkamu
+[S07]: https://www.netcad.com/tr/urunler/nettop
+[S08]: https://help.autodesk.com/cloudhelp/2027/ENU/Civil3D-UserGuide/files/GUID-E0B6AAE2-A5EC-438F-8687-B5E023F85643.htm
+[S09]: https://help.autodesk.com/cloudhelp/2027/ENU/Civil3D-UserGuide/files/GUID-3EF4691D-2645-4357-819C-E3FA3E14BF21.htm
+[S10]: https://www.bentley.com/products/opencities-map/
+[S11]: https://www.bentley.com/products/opensite/
+[S12]: https://help.fieldsystems.trimble.com/tbc/1922.htm
+[S13]: https://help.fieldsystems.trimble.com/tbc/396.htm
+[S14]: https://help.fieldsystems.trimble.com/tbc/discover-scanning-point-clouds.htm
+[S15]: https://help.fieldsystems.trimble.com/tbc/26260.htm
+[S16]: https://www.12d.com/product/surveying.html
+[S17]: https://pro.arcgis.com/en/pro-app/3.5/help/data/parcel-editing/least-squares-parcel-fabric.htm
+[S18]: https://doc.esri.com/en/arcgis-pro/latest/help/data/parcel-editing/runleastsquaresadjustment.html
+[S19]: https://doc.arcgis.com/en/urban/11.5/help/help-create-plan.htm
+[S20]: https://xleitstelle.de/XPlanung/faq
+[S21]: https://raw.githubusercontent.com/qgis/QGIS/refs/heads/release-4_2/src/gui/qgsadvanceddigitizingdockwidget.cpp
+[S22]: https://grass.osgeo.org/grass-stable/manuals/v.clean.html
+[S23]: https://raw.githubusercontent.com/OSGeo/grass/main/vector/v.clean/main.c
+[S24]: https://github.com/GeoscienceAustralia/DynAdjust
+[S25]: https://proj.org/en/stable/operations/transformations/vgridshift.html
+[S26]: https://proj.org/en/stable/operations/transformations/deformation.html
+[S27]: https://pdal.org/en/latest/stages/filters.smrf.html
+[S28]: https://www.ogc.org/standards/infragml/
+[S29]: https://www.epa.gov/water-research/epanet
+[S30]: https://www.epa.gov/water-research/storm-water-management-model-swmm
+[S31]: https://copc.io/
+[S32]: https://www.ogc.org/standards/3dtiles/
+[S33]: https://stacspec.org/en/about/stac-spec/
+[S34]: https://geoparquet.org/releases/v1.1.0/
+[S35]: https://www.tkgm.gov.tr/sites/default/files/2025-05/2025_4%20Sayili%20Tescile%20Konu%20Harita%20ve%20Planlarin%20Yapimi%20ve%20Kontrolu%20Genelgesi.pdf
+
+[K01]: https://github.com/mcihad/kentos-cad/blob/5cabec02be37cd9b175f0764e3aafcfc8d89f90e/apps/desktop/src/module_surfaces.rs#L214
+[K02]: https://github.com/mcihad/kentos-cad/blob/5cabec02be37cd9b175f0764e3aafcfc8d89f90e/crates/shared/contracts/src/document.rs#L91
+[K03]: https://github.com/mcihad/kentos-cad/blob/5cabec02be37cd9b175f0764e3aafcfc8d89f90e/crates/shared/contracts/src/document.rs#L1040
+[K04]: https://github.com/mcihad/kentos-cad/blob/5cabec02be37cd9b175f0764e3aafcfc8d89f90e/crates/shared/geometry-core/src/crs/operation.rs#L203
+[K05]: https://github.com/mcihad/kentos-cad/blob/5cabec02be37cd9b175f0764e3aafcfc8d89f90e/crates/shared/geometry-core/src/crs/geoid.rs#L50
+[K06]: https://github.com/mcihad/kentos-cad/blob/5cabec02be37cd9b175f0764e3aafcfc8d89f90e/crates/shared/geometry-core/src/crs/ground.rs#L90
+[K07]: https://github.com/mcihad/kentos-cad/blob/5cabec02be37cd9b175f0764e3aafcfc8d89f90e/crates/render/wgpu/src/lib.rs#L27
+[K08]: https://github.com/mcihad/kentos-cad/blob/5cabec02be37cd9b175f0764e3aafcfc8d89f90e/crates/render/wgpu/src/styled/gpu.rs#L1339
+[K09]: https://github.com/mcihad/kentos-cad/blob/5cabec02be37cd9b175f0764e3aafcfc8d89f90e/crates/shared/contracts/src/formats.rs#L704
+[K10]: https://github.com/mcihad/kentos-cad/blob/5cabec02be37cd9b175f0764e3aafcfc8d89f90e/crates/shared/formats/src/gnss/nmea.rs#L26
+[K11]: https://github.com/mcihad/kentos-cad/blob/5cabec02be37cd9b175f0764e3aafcfc8d89f90e/apps/desktop/src/calc/fieldbook/mod.rs#L1
+[K12]: https://github.com/mcihad/kentos-cad/blob/5cabec02be37cd9b175f0764e3aafcfc8d89f90e/crates/native/application/src/survey_points.rs#L67
+[K13]: https://github.com/mcihad/kentos-cad/blob/5cabec02be37cd9b175f0764e3aafcfc8d89f90e/crates/shared/geometry-core/src/survey/adjust/horizontal.rs#L23
+[K14]: https://github.com/mcihad/kentos-cad/blob/5cabec02be37cd9b175f0764e3aafcfc8d89f90e/crates/shared/geometry-core/src/survey/adjust/mod.rs#L61
+[K15]: https://github.com/mcihad/kentos-cad/blob/5cabec02be37cd9b175f0764e3aafcfc8d89f90e/crates/shared/geometry-core/src/survey/adjust/linalg.rs#L1
+[K16]: https://github.com/mcihad/kentos-cad/blob/5cabec02be37cd9b175f0764e3aafcfc8d89f90e/crates/shared/geometry-core/src/ops/edge_shift.rs#L22
+[K17]: https://github.com/mcihad/kentos-cad/blob/5cabec02be37cd9b175f0764e3aafcfc8d89f90e/crates/shared/geometry-core/src/ops/topology_rules/mod.rs#L28
+[K18]: https://github.com/mcihad/kentos-cad/blob/5cabec02be37cd9b175f0764e3aafcfc8d89f90e/crates/shared/geometry-core/src/ops/topology_rules/incremental.rs#L145
+[K19]: https://github.com/mcihad/kentos-cad/blob/5cabec02be37cd9b175f0764e3aafcfc8d89f90e/crates/native/application/src/parcels.rs#L19
+[K20]: https://github.com/mcihad/kentos-cad/blob/5cabec02be37cd9b175f0764e3aafcfc8d89f90e/crates/native/style/src/system.rs#L1
+[K21]: https://github.com/mcihad/kentos-cad/blob/5cabec02be37cd9b175f0764e3aafcfc8d89f90e/crates/native/application/src/scenarios_edit.rs#L1
+[K22]: https://github.com/mcihad/kentos-cad/blob/5cabec02be37cd9b175f0764e3aafcfc8d89f90e/crates/native/application/src/rasters_georef.rs#L485
+[K23]: https://github.com/mcihad/kentos-cad/blob/5cabec02be37cd9b175f0764e3aafcfc8d89f90e/crates/shared/services/src/stac/mod.rs#L1
+[K24]: https://github.com/mcihad/kentos-cad/blob/5cabec02be37cd9b175f0764e3aafcfc8d89f90e/crates/shared/formats/src/raster/cog.rs#L1
+[K25]: https://github.com/mcihad/kentos-cad/blob/5cabec02be37cd9b175f0764e3aafcfc8d89f90e/crates/shared/pointcloud/src/ops/mod.rs#L1
+[K26]: https://github.com/mcihad/kentos-cad/blob/5cabec02be37cd9b175f0764e3aafcfc8d89f90e/crates/shared/pointcloud/src/ops/ground.rs#L17
+[K27]: https://github.com/mcihad/kentos-cad/blob/5cabec02be37cd9b175f0764e3aafcfc8d89f90e/crates/shared/pointcloud/src/ops/query.rs#L11
+[K28]: https://github.com/mcihad/kentos-cad/blob/5cabec02be37cd9b175f0764e3aafcfc8d89f90e/crates/shared/geometry-core/src/geom/delaunay.rs#L1
+[K29]: https://github.com/mcihad/kentos-cad/blob/5cabec02be37cd9b175f0764e3aafcfc8d89f90e/crates/shared/raster/src/contours.rs#L1
+[K30]: https://github.com/mcihad/kentos-cad/blob/5cabec02be37cd9b175f0764e3aafcfc8d89f90e/crates/shared/commands/src/cad_meshes.rs#L1
+[K31]: https://github.com/mcihad/kentos-cad/blob/5cabec02be37cd9b175f0764e3aafcfc8d89f90e/crates/shared/contracts/src/network.rs#L1
+[K32]: https://github.com/mcihad/kentos-cad/blob/5cabec02be37cd9b175f0764e3aafcfc8d89f90e/crates/shared/geometry-core/src/ops/lrs/mod.rs#L1
+[K33]: https://github.com/mcihad/kentos-cad/blob/5cabec02be37cd9b175f0764e3aafcfc8d89f90e/crates/native/application/src/gis_derive.rs#L240
+[K34]: https://github.com/mcihad/kentos-cad/blob/5cabec02be37cd9b175f0764e3aafcfc8d89f90e/crates/native/application/src/gis_takeback.rs#L1
+[K35]: https://github.com/mcihad/kentos-cad/blob/5cabec02be37cd9b175f0764e3aafcfc8d89f90e/crates/shared/contracts/src/xref.rs#L45
+[K36]: https://github.com/mcihad/kentos-cad/blob/5cabec02be37cd9b175f0764e3aafcfc8d89f90e/crates/shared/sheet/src/atlas.rs#L137
+[K37]: https://github.com/mcihad/kentos-cad/blob/5cabec02be37cd9b175f0764e3aafcfc8d89f90e/crates/shared/sheet/src/display/map.rs#L1
+[K38]: https://github.com/mcihad/kentos-cad/blob/5cabec02be37cd9b175f0764e3aafcfc8d89f90e/crates/shared/sheet/src/pdf/geo.rs#L1
+[K39]: https://github.com/mcihad/kentos-cad/blob/5cabec02be37cd9b175f0764e3aafcfc8d89f90e/crates/shared/sheet/src/preflight.rs#L1
+[K40]: https://github.com/mcihad/kentos-cad/blob/5cabec02be37cd9b175f0764e3aafcfc8d89f90e/crates/native/processing/src/lib.rs#L1
+[K41]: https://github.com/mcihad/kentos-cad/blob/5cabec02be37cd9b175f0764e3aafcfc8d89f90e/crates/server/application/src/jobs.rs#L1
+[K42]: https://github.com/mcihad/kentos-cad/blob/5cabec02be37cd9b175f0764e3aafcfc8d89f90e/crates/server/application/src/job_cache.rs#L1
+[K43]: https://github.com/mcihad/kentos-cad/blob/5cabec02be37cd9b175f0764e3aafcfc8d89f90e/crates/native/headless/src/dispatch.rs#L1
+[K44]: https://github.com/mcihad/kentos-cad/blob/5cabec02be37cd9b175f0764e3aafcfc8d89f90e/crates/native/python/src/lib.rs#L1
+[K45]: https://github.com/mcihad/kentos-cad/blob/5cabec02be37cd9b175f0764e3aafcfc8d89f90e/crates/native/mcp/src/tools.rs#L1
