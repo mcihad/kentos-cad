@@ -15,7 +15,7 @@
 # Kullanım (normal kullanıcıyla; gerektiğinde sudo sorar):
 #   curl -fsSLO https://raw.githubusercontent.com/mcihad/kentos-cad/main/scripts/setup/ubuntu.sh   # depo özelse gh ile indirin
 #   bash ubuntu.sh                 # hepsi
-#   bash ubuntu.sh --skip gui,r    # bölüm atla: apt, gui, docker, chrome, node, rust, repo, python, r, occt, web, db, nvidia
+#   bash ubuntu.sh --skip gui,r    # bölüm atla: apt, gui, docker, chrome, node, rust, repo, python, r, occt, web, db, tune, nvidia
 #   bash ubuntu.sh --only rust     # yalnız bu bölümler
 #
 # Betik tekrar çalıştırılabilir: kurulu olanı atlar. Paket adı Ubuntu sürümünde yoksa uyarır ve sürer;
@@ -32,7 +32,7 @@ REPO="$PROJECTS/kentos-cad"
 DB_DIR="$PROJECTS/database"
 
 # --- Bölümler --------------------------------------------------------------------------------------
-ALL_SECTIONS="apt gui docker chrome node rust repo python r occt web db nvidia"
+ALL_SECTIONS="apt gui docker chrome node rust repo python r occt web db tune nvidia"
 SKIP=""
 ONLY=""
 while [[ $# -gt 0 ]]; do
@@ -83,7 +83,7 @@ if want apt; then
   sudo add-apt-repository -y universe >/dev/null 2>&1 || true
   sudo apt-get update
   apt_install \
-    build-essential clang lld cmake ninja-build pkg-config git git-lfs curl wget ca-certificates gnupg \
+    build-essential clang lld mold cmake ninja-build pkg-config git git-lfs curl wget ca-certificates gnupg \
     unzip zip xz-utils bzip2 jq ripgrep fd-find tree htop bc file util-linux zsh \
     libssl-dev libsqlite3-dev zlib1g-dev \
     `# Iced + wgpu + winit (X11 ve Wayland), yazı tipleri, Vulkan` \
@@ -310,7 +310,33 @@ YAML
   fi
 fi
 
-# --- 13. NVIDIA sürücüsü (isteğe bağlı) ------------------------------------------------------------
+# --- 13. Masaüstünün tepkisi ----------------------------------------------------------------------
+if want tune; then
+  say "tune: sysctl, açılış, güç profili"
+  sudo tee /etc/sysctl.d/80-kentos-desktop.conf >/dev/null <<'EOF'
+# KentOS geliştirme makinesi: masaüstünün tepkisi ve büyük depo.
+# Kirli sayfalar küçük parçalarla yazılır: derlemenin GB'lık yazmaları arayüzü dondurmaz.
+vm.dirty_background_bytes = 268435456
+vm.dirty_bytes = 1073741824
+# Dizin ve inode önbelleği daha uzun tutulur: depoda gezinme, cargo ve git hızlanır.
+vm.vfs_cache_pressure = 50
+# Vite, rust-analyzer ve editörler büyük depoyu izleyebilsin.
+fs.inotify.max_user_watches = 524288
+fs.inotify.max_user_instances = 1024
+EOF
+  sudo sysctl -q --system
+  # Zram (systemd-zram-generator) yoksa kur: takas diske değil sıkıştırılmış belleğe gider.
+  apt_install systemd-zram-generator
+  # Açılışta ağın bağlanmasını beklemek ~5 s; masaüstü ve docker beklemeden de çalışır.
+  sudo systemctl disable NetworkManager-wait-online.service >/dev/null 2>&1 || true
+  sudo systemctl enable --now fstrim.timer >/dev/null 2>&1 || true
+  # Prize takılıyken başarım profili (powerprofilesctl set balanced ile geri döner).
+  if have powerprofilesctl && grep -qx 1 /sys/class/power_supply/A*/online 2>/dev/null; then
+    powerprofilesctl set performance || true
+  fi
+fi
+
+# --- 14. NVIDIA sürücüsü (isteğe bağlı) ------------------------------------------------------------
 if want nvidia && lspci 2>/dev/null | grep -qi nvidia; then
   say "NVIDIA sürücüsü (ubuntu-drivers)"
   apt_install ubuntu-drivers-common
