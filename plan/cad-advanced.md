@@ -379,8 +379,16 @@ sabit konumu ve geçici kimliği yanlışlıkla sahneye uygulamayı önler.
 Yazarken metne göre canlı önizleme henüz tamamlanmadı.
 Dairesel yuvarlama tek yarıçaptır; farklı kenar mesafeli eliptik/geçiş
 eğrisi ayrı sözleşmeyle araştırılacak, mevcut daire hesabı bozulmayacak.
-Elips/NURBS ötelemesinde açık yaklaşım/tolerans ve gerçek hata üst sınırı,
-süreklilik arayüzü ile birleşik ölçü/alt nesne kabulü halen açıktır.
+Elips/fit/NURBS ötelemesinde açık yaklaşım/tolerans seçimi, rasyonel Bézier
+paralelinin türev sınırı + f64 payı, kaynak/kopya raporu ve güvenli
+tekillik/kesişim denetimi eklendi. Yeni sağ uç düğüm ekleme düzeltmesi
+ve büyük koordinatlar bağımsız analitik eğrilerle doğrulandı. GUI'de
+20 cm içe öteleme/0,01 mm tolerans, 60 cm katlanma reddi, yeniden
+seçmeden ayar düzeltme ve tek Undo sınandı. [ADR 0822](../docs/adr/0822-user-toleranced-curve-offsets.md)
+sayısal sınırları ve tam IEEE ispatı olmadığını açıklar; [Python/MCP örneği](../docs/cad/curve-offset-python.md)
+aynı sözleşmeyi kullanır. Süreklilik arayüzü, yazarken canlı değer
+önizlemesi ile birleşik ölçü/alt nesne kabulü halen açıktır. Web, ADR 0228
+uyarınca ertelidir; masaüstü maddesini kapatmak için web geliştirilmez.
 
 ### CAD-ADV-05 — Parametrik 2B tasarımı açıklanabilir ve kapsamlı hale getir [ ]
 

@@ -3485,6 +3485,9 @@ impl Input for kentos_commands::LinearRefDefine {
 impl Input for EntitiesOffset {
     /// `by.distance`, `by.side.x`, `by.point.y` (which the step's input must give).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
+        if path == "approximation.tolerance" {
+            return self.approximation.as_mut().map(|a| &mut a.tolerance);
+        }
         match (&mut self.by, path) {
             (OffsetBy::Distance { distance, .. }, "by.distance") => Some(distance),
             (OffsetBy::Distance { side: p, .. }, _) | (OffsetBy::Through { point: p }, _) => {

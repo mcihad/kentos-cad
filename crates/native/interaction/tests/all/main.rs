@@ -26,6 +26,7 @@ mod dimension_values;
 mod drawing;
 mod drawing_unit;
 mod edits;
+mod offset_bounded;
 mod elevating;
 mod elevation_grips;
 mod explode_density;

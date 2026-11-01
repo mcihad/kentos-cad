@@ -104,6 +104,7 @@ from .types import (  # noqa: F401
     MatchProperty,
     MatchPropertyName,
     NewObject,
+    OffsetApproximation,
     OffsetBy,
     OrderTo,
     OrderToName,
@@ -3262,17 +3263,24 @@ class _EntitiesOffset(LocalCommand[EntitiesOffset, EntitiesOffsetMade, EntitiesO
     yapar; deleteSource (Kaynağı sil) kopyası yapılan kaynakları aynı adımda siler;
     layerId kopyaların katmanıdır, verilmezse her kopya kaynağının katmanına gider.
     Çizgi, çoklu çizgi (yaylarıyla, çok parçalısı parça parça), kapalı alan, daire, yay,
-    elips ve yardımcı çizgi ile ışın ötelenir; diğer türler not_offsettable ile
-    reddedilir. Kopyayı ortak geometri çekirdeği hesaplar: Ötele aracı, Python ve ajan
-    aynı nesneyi aynı mesafeyle öteleyince aynı kopyayı bulur. Kopya kaynağının
-    katmanını, rengini ve çizgi kalınlığını alır; özniteliklerini, etiketini, simgesini
-    ve eklerini almaz; köşeler kaynağın köşelerinin kotunu ve ölçüsünü (M) taşır.
-    Yapılamayan kopya (merkezini geçen daire, içe dönen yay) offset_failed uyarısıyla
-    atlanır; hiçbir kopya yapılamazsa hiçbir şey yazılmaz. Kilitli katmandaki nesne
-    ötelenmez: hiçbir şey yazılmaz. expectedRevision verilmişse ve çizim o sürümde
-    değilse hiçbir şey yazılmaz, sonuç conflict olur. Plan yazmadan kopyaları gösterir;
-    planın sürümüyle yazma planı yazar. Yerel çizim izin istemez; bulut projesine
-    değişiklik project.changes ile gider.
+    elips, fit eğrisi, NURBS ve yardımcı çizgi ile ışın ötelenir; diğer türler
+    not_offsettable ile reddedilir. Elips/fit/NURBS için approximation.tolerance (metre,
+    pozitif) ile yaklaşık çoklu çizgi üretimine açık onay gerekir; verilmezse
+    invalid_tolerance ile reddedilir. Sonuç approximations raporu kaynak UID,
+    created/entities dizinindeki copyIndex, istenen tolerans, türev sınırı ve f64
+    payından errorBound, köşe ve kendi kesişim sayısını verir. Görüntü LOD'u hesap
+    toleransı değildir. Tekil normal, içe katlanma, teğetsiz birleşim ve hesap bütçesi
+    aşımı yaklaşık işlemin tamamını atomik reddeder. Rapor kaynak izidir; sonraki kaynak
+    değişikliğini izleyen bir kısıt değildir. Kopyayı ortak geometri çekirdeği hesaplar:
+    Ötele aracı, Python ve ajan aynı nesneyi aynı mesafeyle öteleyince aynı kopyayı
+    bulur. Kopya kaynağının katmanını, rengini ve çizgi kalınlığını alır;
+    özniteliklerini, etiketini, simgesini ve eklerini almaz; köşeler kaynağın
+    köşelerinin kotunu ve ölçüsünü (M) taşır. Yapılamayan kopya (merkezini geçen daire,
+    içe dönen yay) offset_failed uyarısıyla atlanır; hiçbir kopya yapılamazsa hiçbir şey
+    yazılmaz. Kilitli katmandaki nesne ötelenmez: hiçbir şey yazılmaz. expectedRevision
+    verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Plan
+    yazmadan kopyaları gösterir; planın sürümüyle yazma planı yazar. Yerel çizim izin
+    istemez; bulut projesine değişiklik project.changes ile gider.
     """
     __slots__ = ()
     id = "cad.entities.offset"
@@ -3290,6 +3298,7 @@ class _EntitiesOffset(LocalCommand[EntitiesOffset, EntitiesOffsetMade, EntitiesO
         *,
         uids: Sequence[str],
         by: OffsetBy,
+        approximation: OffsetApproximation | None | Unset = UNSET,
         both_sides: bool = False,
         delete_source: bool = False,
         expected_revision: str | None | Unset = UNSET,
@@ -3306,22 +3315,33 @@ class _EntitiesOffset(LocalCommand[EntitiesOffset, EntitiesOffsetMade, EntitiesO
         yana) öbür yana da aynı mesafede bir kopya yapar; deleteSource (Kaynağı sil) kopyası
         yapılan kaynakları aynı adımda siler; layerId kopyaların katmanıdır, verilmezse her
         kopya kaynağının katmanına gider. Çizgi, çoklu çizgi (yaylarıyla, çok parçalısı
-        parça parça), kapalı alan, daire, yay, elips ve yardımcı çizgi ile ışın ötelenir;
-        diğer türler not_offsettable ile reddedilir. Kopyayı ortak geometri çekirdeği
-        hesaplar: Ötele aracı, Python ve ajan aynı nesneyi aynı mesafeyle öteleyince aynı
-        kopyayı bulur. Kopya kaynağının katmanını, rengini ve çizgi kalınlığını alır;
-        özniteliklerini, etiketini, simgesini ve eklerini almaz; köşeler kaynağın
-        köşelerinin kotunu ve ölçüsünü (M) taşır. Yapılamayan kopya (merkezini geçen daire,
-        içe dönen yay) offset_failed uyarısıyla atlanır; hiçbir kopya yapılamazsa hiçbir şey
-        yazılmaz. Kilitli katmandaki nesne ötelenmez: hiçbir şey yazılmaz. expectedRevision
-        verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Plan
-        yazmadan kopyaları gösterir; planın sürümüyle yazma planı yazar. Yerel çizim izin
-        istemez; bulut projesine değişiklik project.changes ile gider.
+        parça parça), kapalı alan, daire, yay, elips, fit eğrisi, NURBS ve yardımcı çizgi
+        ile ışın ötelenir; diğer türler not_offsettable ile reddedilir. Elips/fit/NURBS için
+        approximation.tolerance (metre, pozitif) ile yaklaşık çoklu çizgi üretimine açık
+        onay gerekir; verilmezse invalid_tolerance ile reddedilir. Sonuç approximations
+        raporu kaynak UID, created/entities dizinindeki copyIndex, istenen tolerans, türev
+        sınırı ve f64 payından errorBound, köşe ve kendi kesişim sayısını verir. Görüntü
+        LOD'u hesap toleransı değildir. Tekil normal, içe katlanma, teğetsiz birleşim ve
+        hesap bütçesi aşımı yaklaşık işlemin tamamını atomik reddeder. Rapor kaynak izidir;
+        sonraki kaynak değişikliğini izleyen bir kısıt değildir. Kopyayı ortak geometri
+        çekirdeği hesaplar: Ötele aracı, Python ve ajan aynı nesneyi aynı mesafeyle
+        öteleyince aynı kopyayı bulur. Kopya kaynağının katmanını, rengini ve çizgi
+        kalınlığını alır; özniteliklerini, etiketini, simgesini ve eklerini almaz; köşeler
+        kaynağın köşelerinin kotunu ve ölçüsünü (M) taşır. Yapılamayan kopya (merkezini
+        geçen daire, içe dönen yay) offset_failed uyarısıyla atlanır; hiçbir kopya
+        yapılamazsa hiçbir şey yazılmaz. Kilitli katmandaki nesne ötelenmez: hiçbir şey
+        yazılmaz. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey
+        yazılmaz, sonuç conflict olur. Plan yazmadan kopyaları gösterir; planın sürümüyle
+        yazma planı yazar. Yerel çizim izin istemez; bulut projesine değişiklik
+        project.changes ile gider.
 
         Args:
             doc: The drawing it works on.
             uids: The objects' persistent ids (lowercase UUID text with hyphens), at least one.
             by: The distance and the side, or the point the copies pass through.
+            approximation: Explicit consent to create a polyline approximation of an ellipse,
+                fit spline or NURBS parallel. Without it these curves are refused;
+                exact line/arc/path offsets need no approximation. Units are metres.
             both_sides: İki yana: a second copy of each object at the same distance on the other side.
             delete_source: Kaynağı sil: the objects offset are deleted in the same step.
             expected_revision: The document revision the input was prepared against, as decimal text
@@ -3344,6 +3364,7 @@ class _EntitiesOffset(LocalCommand[EntitiesOffset, EntitiesOffsetMade, EntitiesO
         return self.execute_input(doc, EntitiesOffset(
             uids=list(uids),
             by=by,
+            approximation=approximation,
             both_sides=both_sides,
             delete_source=delete_source,
             expected_revision=expected_revision,
@@ -3357,6 +3378,7 @@ class _EntitiesOffset(LocalCommand[EntitiesOffset, EntitiesOffsetMade, EntitiesO
         *,
         uids: Sequence[str],
         by: OffsetBy,
+        approximation: OffsetApproximation | None | Unset = UNSET,
         both_sides: bool = False,
         delete_source: bool = False,
         expected_revision: str | None | Unset = UNSET,
@@ -3368,6 +3390,7 @@ class _EntitiesOffset(LocalCommand[EntitiesOffset, EntitiesOffsetMade, EntitiesO
         return self.plan_input(doc, EntitiesOffset(
             uids=list(uids),
             by=by,
+            approximation=approximation,
             both_sides=both_sides,
             delete_source=delete_source,
             expected_revision=expected_revision,
@@ -3381,6 +3404,7 @@ class _EntitiesOffset(LocalCommand[EntitiesOffset, EntitiesOffsetMade, EntitiesO
         *,
         uids: Sequence[str],
         by: OffsetBy,
+        approximation: OffsetApproximation | None | Unset = UNSET,
         both_sides: bool = False,
         delete_source: bool = False,
         expected_revision: str | None | Unset = UNSET,
@@ -3392,6 +3416,7 @@ class _EntitiesOffset(LocalCommand[EntitiesOffset, EntitiesOffsetMade, EntitiesO
         return self.validate_input(doc, EntitiesOffset(
             uids=list(uids),
             by=by,
+            approximation=approximation,
             both_sides=both_sides,
             delete_source=delete_source,
             expected_revision=expected_revision,
@@ -3405,6 +3430,7 @@ class _EntitiesOffset(LocalCommand[EntitiesOffset, EntitiesOffsetMade, EntitiesO
         *,
         uids: Sequence[str],
         by: OffsetBy,
+        approximation: OffsetApproximation | None | Unset = UNSET,
         both_sides: bool = False,
         delete_source: bool = False,
         expected_revision: str | None | Unset = UNSET,
@@ -3421,6 +3447,7 @@ class _EntitiesOffset(LocalCommand[EntitiesOffset, EntitiesOffsetMade, EntitiesO
         return self.answer_input(doc, EntitiesOffset(
             uids=list(uids),
             by=by,
+            approximation=approximation,
             both_sides=both_sides,
             delete_source=delete_source,
             expected_revision=expected_revision,

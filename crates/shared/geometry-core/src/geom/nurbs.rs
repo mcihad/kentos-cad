@@ -470,8 +470,15 @@ impl<'a> Nurbs<'a> {
     pub fn insert(&self, u: f64, r: usize) -> OwnedNurbs {
         let p = self.degree;
         let np = self.ctrl.len() - 1;
-        let k = self.span(u);
         let s = self.knots.iter().filter(|x| **x == u).count();
+        // At an unclamped right domain end, insertion uses the knot on
+        // the right (A5.1), not the left span used for endpoint evaluation.
+        // Otherwise the last inserted control repeats and loses the endpoint.
+        let k = if u == self.domain().1 && s < p {
+            self.knots.iter().rposition(|k| *k == u).unwrap_or_else(|| self.span(u))
+        } else {
+            self.span(u)
+        };
         let r = r.min(p.saturating_sub(s));
         let pw: Vec<[f64; 3]> = (0..=np)
             .map(|i| {

@@ -2219,3 +2219,35 @@ fn architectural_template_review_preserves_settings_and_undoes_as_one_package() 
     assert_eq!(redone["structuredContent"]["settings"], after["structuredContent"]["settings"]);
     assert_eq!(redone["structuredContent"]["layers"], after["structuredContent"]["layers"]);
 }
+
+#[test]
+fn bounded_curve_offset_requires_consent_and_reports_the_source_through_mcp() {
+    let mut raw:Value=serde_json::from_str(include_str!("../../../../fixtures/interaction/v1/objects.kcad")).unwrap();
+    raw["settings"]["workspace"]=json!("cad");
+    raw["entities"]=json!([{"kind":"nurbs","id":1,"layerId":"cizim","attrs":{},"degree":2,
+        "ctrl":[{"x":1.,"y":0.},{"x":1.,"y":1.},{"x":0.,"y":1.}],"knots":[0.,0.,0.,1.,1.,1.],
+        "weights":[1.,std::f64::consts::FRAC_1_SQRT_2,1.],"closed":false}]);
+    let dir=std::env::temp_dir().join(format!("kentos-mcp-bounded-offset-{}",std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();let path=dir.join("curve.json");std::fs::write(&path,raw.to_string()).unwrap();
+    let mut server=Server::new();
+    let drawing=call(&mut server,"drawing.open",json!({"path":path}))["structuredContent"]["drawing"].clone();
+    let before=call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"].clone();
+    let uids=call(&mut server,"cad.entities.select",json!({"drawing":drawing,"region":{"kind":"all"}}))["structuredContent"]["output"]["uids"].clone();
+    let input=json!({"drawing":drawing,"uids":uids,"by":{"kind":"distance","distance":0.3,"side":{"x":2.,"y":2.}}});
+    let failed=call(&mut server,"cad.entities.offset",input.clone());
+    assert_eq!(failed["structuredContent"]["status"],"failed");
+    assert_eq!(call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"],before);
+    let mut input=input;input["approximation"]=json!({"tolerance":0.0001});input["op"]=json!("plan");
+    let plan=call(&mut server,"cad.entities.offset",input.clone());
+    assert_eq!(plan["structuredContent"]["status"],"completed");
+    assert_eq!(call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"],before);
+    input["op"]=json!("execute");
+    let done=call(&mut server,"cad.entities.offset",input);
+    assert_eq!(done["structuredContent"]["status"],"completed","{done}");
+    let r=&done["structuredContent"]["output"]["approximations"][0];
+    assert_eq!(r["source"],uids[0]);assert_eq!(r["copyIndex"],0);
+    assert!(r["errorBound"].as_f64().unwrap()<=0.0001);
+    call(&mut server,"drawing.undo",json!({"drawing":drawing}));
+    assert_eq!(call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"],before);
+    std::fs::remove_dir_all(dir).unwrap();
+}

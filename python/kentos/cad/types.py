@@ -23976,6 +23976,9 @@ class EntitiesOffset(_Model):
     Attributes:
         uids: The objects' persistent ids (lowercase UUID text with hyphens), at least one.
         by: The distance and the side, or the point the copies pass through.
+        approximation: Explicit consent to create a polyline approximation of an ellipse,
+            fit spline or NURBS parallel. Without it these curves are refused;
+            exact line/arc/path offsets need no approximation. Units are metres.
         both_sides: İki yana: a second copy of each object at the same distance on the other side.
         delete_source: Kaynağı sil: the objects offset are deleted in the same step.
         expected_revision: The document revision the input was prepared against, as decimal text
@@ -23986,6 +23989,7 @@ class EntitiesOffset(_Model):
     """
     uids: list[str]
     by: OffsetBy
+    approximation: OffsetApproximation | None | Unset = UNSET
     both_sides: bool = False
     delete_source: bool = False
     expected_revision: str | None | Unset = UNSET
@@ -23995,6 +23999,8 @@ class EntitiesOffset(_Model):
         out: dict[str, Any] = {}
         out["uids"] = list(self.uids)
         out["by"] = self.by.to_json()
+        if self.approximation is not UNSET:
+            out["approximation"] = None if self.approximation is None else self.approximation.to_json()
         out["bothSides"] = self.both_sides
         out["deleteSource"] = self.delete_source
         if self.expected_revision is not UNSET:
@@ -24008,6 +24014,7 @@ class EntitiesOffset(_Model):
         return cls(
             uids=list(data["uids"]),
             by=OffsetBy.from_json(data["by"]),
+            approximation=UNSET if "approximation" not in data else None if data["approximation"] is None else OffsetApproximation.from_json(data["approximation"]),
             both_sides=data["bothSides"] if "bothSides" in data else False,
             delete_source=data["deleteSource"] if "deleteSource" in data else False,
             expected_revision=data.get("expectedRevision", UNSET),
@@ -24031,6 +24038,7 @@ class EntitiesOffsetMade(_Model):
     removed: list[str]
     distances: list[float]
     revision: str
+    approximations: list[OffsetApproximationReport] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -24038,6 +24046,8 @@ class EntitiesOffsetMade(_Model):
         out["removed"] = list(self.removed)
         out["distances"] = [float(e0) for e0 in self.distances]
         out["revision"] = self.revision
+        if self.approximations is not UNSET:
+            out["approximations"] = [e0.to_json() for e0 in self.approximations]
         return out
 
     @classmethod
@@ -24047,6 +24057,7 @@ class EntitiesOffsetMade(_Model):
             removed=list(data["removed"]),
             distances=[float(e0) for e0 in data["distances"]],
             revision=data["revision"],
+            approximations=[OffsetApproximationReport.from_json(e0) for e0 in data["approximations"]] if "approximations" in data else UNSET,
         )
 
 
@@ -24069,6 +24080,7 @@ class EntitiesOffsetPlan(_Model):
     removed: list[str]
     distances: list[float]
     revision: str
+    approximations: list[OffsetApproximationReport] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -24077,6 +24089,8 @@ class EntitiesOffsetPlan(_Model):
         out["removed"] = list(self.removed)
         out["distances"] = [float(e0) for e0 in self.distances]
         out["revision"] = self.revision
+        if self.approximations is not UNSET:
+            out["approximations"] = [e0.to_json() for e0 in self.approximations]
         return out
 
     @classmethod
@@ -24087,6 +24101,7 @@ class EntitiesOffsetPlan(_Model):
             removed=list(data["removed"]),
             distances=[float(e0) for e0 in data["distances"]],
             revision=data["revision"],
+            approximations=[OffsetApproximationReport.from_json(e0) for e0 in data["approximations"]] if "approximations" in data else UNSET,
         )
 
 
@@ -43195,6 +43210,65 @@ class Observation(_Model):
             at=data["at"],
             quality=data.get("quality", UNSET),
             value=data.get("value", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OffsetApproximation(_Model):
+    """Explicit approximation settings, independent of view and drawing units.
+    Attributes:
+        tolerance: Maximum accepted distance in metres from the true parallel. Unit: length.
+    """
+    tolerance: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["tolerance"] = float(self.tolerance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OffsetApproximation:
+        return cls(
+            tolerance=float(data["tolerance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OffsetApproximationReport(_Model):
+    """Trace of each approximated copy. This is provenance, not an associative
+    constraint: subsequent source edits do not silently recompute the copy.
+    Attributes:
+        copy_index: Index into output.created (execute) or output.entities (plan).
+        tolerance: Unit: length.
+        error_bound: Parallel chord bound plus f64 allowance, metres, never screen LOD. Unit: length.
+        crossings: All non-neighbour output segments checked, including large results.
+    """
+    source: str
+    copy_index: int
+    tolerance: float
+    error_bound: float
+    vertices: int
+    crossings: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["source"] = self.source
+        out["copyIndex"] = self.copy_index
+        out["tolerance"] = float(self.tolerance)
+        out["errorBound"] = float(self.error_bound)
+        out["vertices"] = self.vertices
+        out["crossings"] = self.crossings
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OffsetApproximationReport:
+        return cls(
+            source=data["source"],
+            copy_index=data["copyIndex"],
+            tolerance=float(data["tolerance"]),
+            error_bound=float(data["errorBound"]),
+            vertices=data["vertices"],
+            crossings=data["crossings"],
         )
 
 
@@ -91587,6 +91661,8 @@ __all__ = [
     "Observation",
     "ObstacleKind",
     "ObstacleKindName",
+    "OffsetApproximation",
+    "OffsetApproximationReport",
     "OffsetBy",
     "OffsetSlabsOperation",
     "OpenCurveEdit",

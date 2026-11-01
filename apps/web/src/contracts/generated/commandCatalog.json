@@ -6726,7 +6726,7 @@
       "id": "cad.entities.offset",
       "version": 1,
       "title": "Nesneleri ötele",
-      "summary": "Kalıcı kimlikleriyle verilen nesnelerin paralel kopyalarını yapar; kopyalar ve kaynakların silinmesi tek geri alma adımındadır, adı “Ötele”. Girdi sonucun geometrisi değil, istenen öteleme: distance ile mesafe (metre, sıfırdan büyük) ve side noktası (çizgide ve yolda noktaya en yakın kenarın o yanı, daire, yay ve elipste nokta dışarıdaysa büyür, içerideyse küçülür) ya da through ile kopyanın geçeceği nokta (Noktadan geç: mesafe noktanın nesneye uzaklığıdır). bothSides (İki yana) öbür yana da aynı mesafede bir kopya yapar; deleteSource (Kaynağı sil) kopyası yapılan kaynakları aynı adımda siler; layerId kopyaların katmanıdır, verilmezse her kopya kaynağının katmanına gider. Çizgi, çoklu çizgi (yaylarıyla, çok parçalısı parça parça), kapalı alan, daire, yay, elips ve yardımcı çizgi ile ışın ötelenir; diğer türler not_offsettable ile reddedilir. Kopyayı ortak geometri çekirdeği hesaplar: Ötele aracı, Python ve ajan aynı nesneyi aynı mesafeyle öteleyince aynı kopyayı bulur. Kopya kaynağının katmanını, rengini ve çizgi kalınlığını alır; özniteliklerini, etiketini, simgesini ve eklerini almaz; köşeler kaynağın köşelerinin kotunu ve ölçüsünü (M) taşır. Yapılamayan kopya (merkezini geçen daire, içe dönen yay) offset_failed uyarısıyla atlanır; hiçbir kopya yapılamazsa hiçbir şey yazılmaz. Kilitli katmandaki nesne ötelenmez: hiçbir şey yazılmaz. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Plan yazmadan kopyaları gösterir; planın sürümüyle yazma planı yazar. Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.",
+      "summary": "Kalıcı kimlikleriyle verilen nesnelerin paralel kopyalarını yapar; kopyalar ve kaynakların silinmesi tek geri alma adımındadır, adı “Ötele”. Girdi sonucun geometrisi değil, istenen öteleme: distance ile mesafe (metre, sıfırdan büyük) ve side noktası (çizgide ve yolda noktaya en yakın kenarın o yanı, daire, yay ve elipste nokta dışarıdaysa büyür, içerideyse küçülür) ya da through ile kopyanın geçeceği nokta (Noktadan geç: mesafe noktanın nesneye uzaklığıdır). bothSides (İki yana) öbür yana da aynı mesafede bir kopya yapar; deleteSource (Kaynağı sil) kopyası yapılan kaynakları aynı adımda siler; layerId kopyaların katmanıdır, verilmezse her kopya kaynağının katmanına gider. Çizgi, çoklu çizgi (yaylarıyla, çok parçalısı parça parça), kapalı alan, daire, yay, elips, fit eğrisi, NURBS ve yardımcı çizgi ile ışın ötelenir; diğer türler not_offsettable ile reddedilir. Elips/fit/NURBS için approximation.tolerance (metre, pozitif) ile yaklaşık çoklu çizgi üretimine açık onay gerekir; verilmezse invalid_tolerance ile reddedilir. Sonuç approximations raporu kaynak UID, created/entities dizinindeki copyIndex, istenen tolerans, türev sınırı ve f64 payından errorBound, köşe ve kendi kesişim sayısını verir. Görüntü LOD'u hesap toleransı değildir. Tekil normal, içe katlanma, teğetsiz birleşim ve hesap bütçesi aşımı yaklaşık işlemin tamamını atomik reddeder. Rapor kaynak izidir; sonraki kaynak değişikliğini izleyen bir kısıt değildir. Kopyayı ortak geometri çekirdeği hesaplar: Ötele aracı, Python ve ajan aynı nesneyi aynı mesafeyle öteleyince aynı kopyayı bulur. Kopya kaynağının katmanını, rengini ve çizgi kalınlığını alır; özniteliklerini, etiketini, simgesini ve eklerini almaz; köşeler kaynağın köşelerinin kotunu ve ölçüsünü (M) taşır. Yapılamayan kopya (merkezini geçen daire, içe dönen yay) offset_failed uyarısıyla atlanır; hiçbir kopya yapılamazsa hiçbir şey yazılmaz. Kilitli katmandaki nesne ötelenmez: hiçbir şey yazılmaz. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Plan yazmadan kopyaları gösterir; planın sürümüyle yazma planı yazar. Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -6743,6 +6743,17 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Input of `cad.entities.offset` v1: parallel copies of the objects named\nby their persistent ids (docs/adr/0014), as one undo step “Ötele”. The\nÖtele tool gives the object it picked; the command reads no selection,\nlayer or view (TODOS.md CMD-07). A whole object is offset: the tool picks\nobjects, not their edges, so there is no sub-object reference in v1.\n\nWhat is offset: a line, a polyline (with its arcs; a multi-part one part\nby part), a closed area (a multi-part one with its parts joined), a\ncircle, an arc, an ellipse or an elliptical arc, a construction line or a\nray. Each copy is a new object from its source: its layer (or\n`layerId`), its colour and its own line weight, not its attributes,\nlabel, symbol or attachments; a vertex takes its source vertex's\nelevation and measure. The copies are written in the input's order, each\nsource's copy on the side asked for first and, with `bothSides`, the one\non the other side next; then, with `deleteSource`, the sources that gave\na copy are deleted in the same step.\n\nA copy that cannot be made (a circle shrunk past its centre, a path\nwhose arc would turn inside out, the side point on the object with\n`bothSides`) is left out with an `offset_failed` warning at `uids[i]`;\nwhen no copy can be made nothing is written and the answer is\n`offset_failed`. A repeated id counts once.\n\nRefusals (`CommandError.code`), checked in this order: `no_entities`,\n`invalid_uid` (each id in order), `not_finite` (the distance, then the\npoint's x and y), `invalid_distance` (a distance not above zero),\n`invalid_revision`, `revision_conflict` (status `conflict`),\n`entity_not_found` (each id in order), `layer_locked` (an object on a\nlocked layer, by itself or a group above it, at `uids[i]`: nothing is\nwritten), `not_offsettable` (an object of another kind, at `uids[i]`),\nthe target layer's `layer_not_found`, `not_a_layer`, `service_layer` and\n`layer_locked` at `layerId`, then `offset_failed`; on the desktop also\n`slots_exhausted`.",
         "properties": {
+          "approximation": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/OffsetApproximation"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Explicit consent to create a polyline approximation of an ellipse,\nfit spline or NURBS parallel. Without it these curves are refused;\nexact line/arc/path offsets need no approximation. Units are metres."
+          },
           "bothSides": {
             "default": false,
             "description": "İki yana: a second copy of each object at the same distance on the other side.",
@@ -6792,6 +6803,12 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `cad.entities.offset` v1: what was made and deleted.",
         "properties": {
+          "approximations": {
+            "items": {
+              "$ref": "#/$defs/OffsetApproximationReport"
+            },
+            "type": "array"
+          },
           "created": {
             "description": "The copies' persistent ids, in the order they were written.",
             "items": {
@@ -6834,6 +6851,12 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "What `cad.entities.offset` would write (plan mode); nothing is written.\nPreview and write are one computation: execute against the plan's\nrevision writes exactly `entities`.",
         "properties": {
+          "approximations": {
+            "items": {
+              "$ref": "#/$defs/OffsetApproximationReport"
+            },
+            "type": "array"
+          },
           "distances": {
             "description": "Each source's distance in metres, as in the output.",
             "items": {
@@ -6905,6 +6928,7 @@
           "layer_locked",
           "not_finite",
           "invalid_distance",
+          "invalid_tolerance",
           "not_offsettable",
           "offset_failed",
           "radius_collapse",
@@ -109480,6 +109504,67 @@
           "type": "string"
         }
       ]
+    },
+    "OffsetApproximation": {
+      "description": "Explicit approximation settings, independent of view and drawing units.",
+      "properties": {
+        "tolerance": {
+          "description": "Maximum accepted distance in metres from the true parallel.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "tolerance"
+      ],
+      "type": "object"
+    },
+    "OffsetApproximationReport": {
+      "description": "Trace of each approximated copy. This is provenance, not an associative\nconstraint: subsequent source edits do not silently recompute the copy.",
+      "properties": {
+        "copyIndex": {
+          "description": "Index into output.created (execute) or output.entities (plan).",
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "crossings": {
+          "description": "All non-neighbour output segments checked, including large results.",
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "errorBound": {
+          "description": "Parallel chord bound plus f64 allowance, metres, never screen LOD.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "source": {
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "type": "string"
+        },
+        "tolerance": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "vertices": {
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "source",
+        "copyIndex",
+        "tolerance",
+        "errorBound",
+        "vertices",
+        "crossings"
+      ],
+      "type": "object"
     },
     "OffsetBy": {
       "description": "How far the copies go and to which side.",

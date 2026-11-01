@@ -21,7 +21,9 @@
 //! sil. The preview is the command's plan and the click its write, one
 //! computation, the shared core's, as Python and MCP get it.
 
-use kentos_commands::{CommandResult, EntitiesOffset, OffsetBy};
+use kentos_commands::{
+    CommandResult, EntitiesOffset, EntitiesOffsetPlan, OffsetApproximation, OffsetBy,
+};
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::ops::offset::through_distance;
 use kentos_geometry_core::tools::point_text::js_trim;
@@ -40,6 +42,14 @@ use crate::tool::{Context, Cursor, Flow, Memory, Pointer, Preview, Tag, Tone, To
 pub const ID: &str = "offset";
 pub const LABEL: &str = "Ötele";
 
+fn millimetres(mm: f64) -> String {
+    let text = crate::format::fixed(mm, 6);
+    if mm > 0. && text.parse::<f64>().ok() == Some(0.) {
+        return mm.to_string();
+    }
+    text.trim_end_matches('0').trim_end_matches('.').to_owned()
+}
+
 /// The offset tool.
 #[derive(Clone, Debug, Default)]
 pub struct Offset {
@@ -51,6 +61,8 @@ pub struct Offset {
     drawn: Preview,
     /// What the session remembered and the project's units, as of the last call.
     seen: Option<(Memory, Format)>,
+    ask_tolerance: bool,
+    cache: Option<(u64, EntitiesOffset, CommandResult<EntitiesOffsetPlan>)>,
 }
 
 impl Offset {
@@ -93,6 +105,9 @@ impl Offset {
         EntitiesOffset {
             uids: vec![edge::uid(doc, slot)],
             by,
+            approximation: m.offset_approximate.then_some(OffsetApproximation {
+                tolerance: m.offset_tolerance,
+            }),
             both_sides: m.offset_both,
             delete_source: m.offset_erase,
             layer_id: None,
@@ -112,9 +127,48 @@ impl Offset {
         };
         let mut d = self.distance_for(&target, side);
         let mut out = Outline::default();
-        if let CommandResult::Completed { output, .. } =
-            offset::plan_in(cx.doc, &self.request(cx.doc, slot, side))
+        let request = self.request(cx.doc, slot, side);
+        let mut key = request.clone();
+        // A fixed-distance regular curve parallel depends on its oriented
+        // side, not every cursor coordinate on that side. Reuse its plan
+        // until the document, settings or side changes. Through-point and
+        // two-sided requests retain their full point in the cache key.
+        if !self.memory().offset_both
+            && let OffsetBy::Distance {
+                side: ref mut point,
+                ..
+            } = key.by
+            && let Some((p, t)) = kentos_geometry_core::ops::offset_bounded::nearest(&target, side)
         {
+            point.x = if t.x * (side.y - p.y) - t.y * (side.x - p.x) > 0. {
+                1.
+            } else {
+                -1.
+            };
+            point.y = 0.;
+        }
+        if !self
+            .cache
+            .as_ref()
+            .is_some_and(|(revision, old, _)| *revision == cx.doc.revision() && *old == key)
+        {
+            let result = offset::plan_in(cx.doc, &request);
+            self.cache = Some((cx.doc.revision(), key, result));
+        }
+        let Some((_, _, planned)) = &self.cache else {
+            return;
+        };
+        let mut diagnostics = Vec::new();
+        if let CommandResult::Completed { output, .. } = &planned {
+            for report in &output.approximations {
+                diagnostics.push(format!(
+                    "Yaklaşık · hata ≤ {} mm",
+                    millimetres((report.error_bound * 1e9).ceil() / 1e6)
+                ));
+                if report.crossings > 0 {
+                    diagnostics.push(format!("{} kendi kesişimi", report.crossings));
+                }
+            }
             d = output.distances.first().copied().unwrap_or(d);
             for copy in &output.entities {
                 out = out.and(Outline::of(
@@ -125,6 +179,23 @@ impl Offset {
                 ));
             }
         }
+        if let CommandResult::Failed { error } = &planned {
+            // Wrapped near the cursor; failed calculations never look like an
+            // approved dashed result. The settings remain available to fix it.
+            let mut line = String::new();
+            for word in error.message.split_whitespace() {
+                if !line.is_empty() && line.chars().count() + word.chars().count() > 42 {
+                    diagnostics.push(std::mem::take(&mut line));
+                }
+                if !line.is_empty() {
+                    line.push(' ');
+                }
+                line.push_str(word);
+            }
+            if !line.is_empty() {
+                diagnostics.push(line);
+            }
+        }
         let out = out.and(Outline::of(&target, None, 1.0, Tone::Accent));
         let mut lines = vec![format!("Mesafe {}", cx.format().length(d))];
         if self.memory().offset_both {
@@ -133,6 +204,7 @@ impl Offset {
         if self.memory().offset_erase {
             lines.push("Kaynak silinir".to_owned());
         }
+        lines.extend(diagnostics);
         self.drawn = Preview {
             strokes: out.strokes,
             marks: out.marks,
@@ -144,14 +216,14 @@ impl Offset {
     /// Writes the copies, and with Kaynağı sil the deletion of the object,
     /// through `cad.entities.offset`: a copy that does not come out is said
     /// (the command's warning); with none, nothing is written (its refusal).
-    fn write(&mut self, slot: Slot, side: Vec2, cx: &mut Context<'_>) {
+    fn write(&mut self, slot: Slot, side: Vec2, cx: &mut Context<'_>) -> bool {
         let input = self.request(cx.doc, slot, side);
         let result = offset::execute(&mut ExecutionContext::new(cx.doc), input);
         let Some(made) = points::written(result, cx) else {
-            return;
+            return false;
         };
         let Some(&d) = made.distances.first() else {
-            return;
+            return false;
         };
         cx.memory.offset_distance = d;
         let copies = made.created.len();
@@ -173,12 +245,14 @@ impl Offset {
             cx.selection.retain(|s| doc.get(s).is_some());
             cx.selection.set_hover(None);
         }
+        true
     }
 
     fn drop_target(&mut self) {
         self.target = None;
         self.side = None;
         self.drawn = Preview::default();
+        self.cache = None;
     }
 }
 
@@ -198,6 +272,12 @@ impl Tool for Offset {
 
     fn prompt(&self) -> Prompt {
         let m = self.memory();
+        if self.ask_tolerance {
+            return Prompt::new(
+                LABEL,
+                "yaklaşım toleransını yazın (ör. 0.1mm); Enter ile onaylayın",
+            );
+        }
         // The toggles say their state only when it is on: the prompt has to fit a narrow
         // window with all three of them, and the distance is by the cursor (docs/adr/0140).
         let toggle = |p: Prompt, label: &'static str, key: &'static str, yes: bool| {
@@ -210,7 +290,17 @@ impl Tool for Offset {
         let toggles = |p: Prompt| {
             let p = toggle(p, "Noktadan geç", "N", m.offset_through);
             let p = toggle(p, "İki yana", "I", m.offset_both);
-            toggle(p, "Kaynağı sil", "S", m.offset_erase)
+            let p = toggle(p, "Kaynağı sil", "S", m.offset_erase);
+            let p = toggle(p, "Yaklaşım", "Y", m.offset_approximate);
+            if m.offset_approximate {
+                p.option_with(
+                    "Tolerans",
+                    "T",
+                    format!("{} mm", millimetres(m.offset_tolerance * 1000.)),
+                )
+            } else {
+                p
+            }
         };
         match self.target {
             None => toggles(Prompt::new(LABEL, "ötelenecek nesneye tıklayın")),
@@ -280,15 +370,33 @@ impl Tool for Offset {
         if cx.doc.get(slot).is_none() {
             return self.drop_target();
         }
-        self.write(slot, p.world, cx);
-        self.drop_target();
+        if self.write(slot, p.world, cx) {
+            self.drop_target();
+        }
         self.see(cx);
+        self.redraw(cx);
     }
 
     /// N turns Noktadan geç over, I İki yana and S Kaynağı sil; a number
     /// above zero is the distance (and turns Noktadan geç off).
     fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
+        if self.ask_tolerance {
+            if let Some(n) = cx.typed_length(text).filter(|n| n.is_finite() && *n > 0.) {
+                cx.memory.offset_tolerance = n;
+                self.ask_tolerance = false;
+                self.see(cx);
+                self.redraw(cx);
+            } else {
+                cx.say(
+                    Level::Warn,
+                    "Sonlu, pozitif bir tolerans yazın (ör. 0.1mm).",
+                );
+            }
+            return true;
+        }
         match upper_tr(js_trim(text)).as_str() {
+            "Y" => cx.memory.offset_approximate = !cx.memory.offset_approximate,
+            "T" => self.ask_tolerance = true,
             "N" => cx.memory.offset_through = !cx.memory.offset_through,
             "I" => cx.memory.offset_both = !cx.memory.offset_both,
             "S" => cx.memory.offset_erase = !cx.memory.offset_erase,
@@ -306,9 +414,67 @@ impl Tool for Offset {
         true
     }
 
+    fn settings(&self, f: &Format) -> Vec<crate::tool_settings::Setting> {
+        use crate::tool_settings::Setting;
+        let m = self.memory();
+        let mut rows = vec![
+            Setting::text("distance", "Mesafe", f.length(m.offset_distance)),
+            Setting::toggle("N", "Noktadan geç", m.offset_through),
+            Setting::toggle("I", "İki yana", m.offset_both),
+            Setting::toggle("S", "Kaynağı sil", m.offset_erase),
+            Setting::toggle("Y", "Eğri yaklaşımı", m.offset_approximate),
+        ];
+        if m.offset_approximate {
+            rows.push(Setting::text(
+                "T",
+                "Tolerans",
+                format!("{} mm", millimetres(m.offset_tolerance * 1000.)),
+            ));
+            rows.push(Setting::hint("approximation-info","Yaklaşık sonuç","Elips ve eğri paraleli çoklu çizgi olur. Kaynak, Kaynağı sil kapalıysa korunur. Tolerans yakınlaşmadan bağımsızdır."));
+        }
+        rows
+    }
+
+    fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
+        match key {
+            "N" | "I" | "S" | "Y" => {
+                let yes = match value {
+                    "yes" => true,
+                    "no" => false,
+                    _ => return false,
+                };
+                match key {
+                    "N" => cx.memory.offset_through = yes,
+                    "I" => cx.memory.offset_both = yes,
+                    "S" => cx.memory.offset_erase = yes,
+                    _ => cx.memory.offset_approximate = yes,
+                }
+            }
+            "T" => {
+                let Some(n) = cx.typed_length(value).filter(|n| n.is_finite() && *n > 0.) else {
+                    cx.say(
+                        Level::Warn,
+                        "Sonlu, pozitif bir tolerans yazın (ör. 0.1mm).",
+                    );
+                    return false;
+                };
+                cx.memory.offset_tolerance = n;
+            }
+            "distance" => return self.input(value, cx),
+            _ => return false,
+        }
+        self.see(cx);
+        self.redraw(cx);
+        true
+    }
+
     /// Enter drops the picked object; with none, the tool leaves.
     fn confirm(&mut self, cx: &mut Context<'_>) -> Flow {
         self.see(cx);
+        if self.ask_tolerance {
+            self.ask_tolerance = false;
+            return Flow::Stay;
+        }
         if self.target.is_some() {
             self.drop_target();
             return Flow::Stay;
@@ -318,6 +484,10 @@ impl Tool for Offset {
 
     fn cancel(&mut self, cx: &mut Context<'_>) -> bool {
         self.see(cx);
+        if self.ask_tolerance {
+            self.ask_tolerance = false;
+            return true;
+        }
         if self.target.is_none() {
             return false;
         }

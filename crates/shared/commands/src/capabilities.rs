@@ -3216,6 +3216,7 @@ const ENTRIES: &[Entry] = &[
             &[
                 "not_finite",
                 "invalid_distance",
+                "invalid_tolerance",
                 "not_offsettable",
                 "offset_failed",
                 "radius_collapse",

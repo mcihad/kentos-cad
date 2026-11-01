@@ -51,6 +51,12 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ADR 0821, 0822 (CAD-ADV-04): bağımsız yay/daire analitik yuvarlaması; ortak anlamsal offset komutunda
+  elips/fit/NURBS için açık `approximation.tolerance`, bounded paralel ve kaynak/kopya raporu. Web'in eski doğrudan
+  geometri yazan köşe/offset araçları bunlara taşınacak. Masaüstü değer kutusunun gerçek seçim/yapıştırma, sabit konum,
+  geçici kimlik ve doğru katman sırası da web etkileşim kabulünde doğrulanacak. Ortak şema/Python/MCP günceldir;
+  TypeScript araç davranışı eşdeğer sayılmaz.
+
 - ADR 0805, 0806: veri tablosu (başlık bandı `table_head`, satır çizgisi, tıklanmayan satırın da aydınlanması, bütün başlık hücresinin basılması, ok kuralı, sürüklenen sütun, `Table::grid`) ve sekmeler (daralmaz, `‹ ›` ve liste,
   tekerlek, kesilen kenar solar, eylemlerin kendi satırı). Web dönünce `ui/` tablolarına ve sekmelerine aynı kural.
 - ADR 0804: bileşenlerin tek dili masaüstünde (tek kontrol yüksekliği 28, `Cell`, tek ızgara satırı, pencerenin × ve köşe kavisi, seçili satır yalnız

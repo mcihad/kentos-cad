@@ -78,9 +78,9 @@ fn offset_copies_at_the_distance_or_through_a_point() {
     b.start("offset");
     assert_eq!(
         b.session.prompt().text(),
-        "Ötele: ötelenecek nesneye tıklayın [Noktadan geç (N) / İki yana (I) / Kaynağı sil (S)]"
+        "Ötele: ötelenecek nesneye tıklayın [Noktadan geç (N) / İki yana (I) / Kaynağı sil (S) / Yaklaşım (Y)]"
     );
-    assert_eq!(b.options(), ["N", "I", "S"]);
+    assert_eq!(b.options(), ["N", "I", "S", "Y"]);
     // A typed number is the distance.
     assert!(b.type_text("2"));
     assert_eq!(b.memory.offset_distance, 2.0);
@@ -93,7 +93,7 @@ fn offset_copies_at_the_distance_or_through_a_point() {
     b.click(-20.0, 10.0);
     assert_eq!(
         b.session.prompt().text(),
-        "Ötele: kopyanın gideceği tarafa tıklayın [Noktadan geç (N) / İki yana (I) / Kaynağı sil (S)]"
+        "Ötele: kopyanın gideceği tarafa tıklayın [Noktadan geç (N) / İki yana (I) / Kaynağı sil (S) / Yaklaşım (Y)]"
     );
     b.move_to(-23.0, 10.0);
     let preview = b.session.preview(&Default::default()).expect("a preview");
@@ -109,12 +109,12 @@ fn offset_copies_at_the_distance_or_through_a_point() {
         b.session
             .prompt()
             .text()
-            .ends_with("[Noktadan geç (N): açık / İki yana (I) / Kaynağı sil (S)]")
+            .ends_with("[Noktadan geç (N): açık / İki yana (I) / Kaynağı sil (S) / Yaklaşım (Y)]")
     );
     b.click(-20.0, 10.0);
     assert_eq!(
         b.session.prompt().text(),
-        "Ötele: kopyanın geçeceği noktaya tıklayın [Noktadan geç (N): açık / İki yana (I) / Kaynağı sil (S)]"
+        "Ötele: kopyanın geçeceği noktaya tıklayın [Noktadan geç (N): açık / İki yana (I) / Kaynağı sil (S) / Yaklaşım (Y)]"
     );
     b.click(-17.0, 9.0);
     assert!(near(&line(&b, 15), &[[-17.0, 6.0], [-17.0, 18.0]]));
@@ -177,6 +177,7 @@ fn the_offset_tool_writes_what_the_semantic_command_writes() {
                     y: 4_420_000.0 + side[1],
                 },
             },
+            approximation: None,
             both_sides: both,
             delete_source: erase,
             layer_id: None,

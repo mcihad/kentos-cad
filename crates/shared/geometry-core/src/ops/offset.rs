@@ -264,8 +264,9 @@ pub fn collapses(message: &str) -> bool {
 /// What an offset says besides its copy.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct OffsetNote {
-    /// The copy follows a curve's parallel only this closely, metres: an ellipse, a fit-point or NURBS
-    /// curve's; none for an exact copy.
+    /// Legacy sampling estimate, metres; NOT an upper bound on the parallel's
+    /// error. New semantic commands use `offset_bounded` with explicit consent.
+    /// None for an exact copy.
     pub approximate: Option<f64>,
     /// How many times the copy's edges cross each other (a tight bend offset outward, a narrow neck inward).
     pub crossings: usize,
@@ -285,7 +286,8 @@ pub fn offset_noted(e: &Shape, distance: f64, through: Vec2) -> (Geometry, Offse
     };
     let approximate = match e {
         Shape::Spline { .. } | Shape::Nurbs { .. } => Some(CURVE_TOL),
-        // The ellipse's parallel is taken at 512 steps a turn: a chord keeps within a·h²/8.
+        // Legacy source-ellipse chord estimate; excludes offset-normal variation.
+        // Never present it as a bound on the parallel curve.
         _ => ellipse_of(e).map(|g| {
             let h = core::f64::consts::TAU / 512.0;
             major_length(&g) * h * h / 8.0

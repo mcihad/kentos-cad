@@ -663,7 +663,7 @@ const UNREACHED: &[(&str, &str, &str)] = &[
     (
         "cad.entities.offset",
         "approximate_offset",
-        "eğrinin kopyası yaklaşıktır, kesin bir beklentiyle yazılamaz; geometri-core'un offset_notes testinde eğriye uzaklığıyla denetlenir (ADR 0293)",
+        "yaklaşık kopyanın köşe sayısı algoritmaya bağlıdır; offset_bounded testleri analitik paralelin uzaklığı ve hata bütçesini bağımsız denetler; offset::tests, typed Python ve MCP açık onayı/raporu/Undo'yu sınar (ADR 0822)",
     ),
     (
         "cad.entities.relate",

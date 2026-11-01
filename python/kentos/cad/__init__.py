@@ -1674,6 +1674,8 @@ __all__ = [
     "Observation",
     "ObstacleKind",
     "ObstacleKindName",
+    "OffsetApproximation",
+    "OffsetApproximationReport",
     "OffsetBy",
     "OffsetSlabsOperation",
     "OpenCurveEdit",

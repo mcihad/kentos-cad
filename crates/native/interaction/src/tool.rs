@@ -612,6 +612,10 @@ pub struct Memory {
     pub offset_distance: f64,
     /// Ötele's “Noktadan geç” (`OffsetTool.through`): the copy passes through the clicked point.
     pub offset_through: bool,
+    /// Explicit user consent for approximated ellipse/spline/NURBS parallels.
+    pub offset_approximate: bool,
+    /// Maximum error of a curve parallel, metres; independent of the camera.
+    pub offset_tolerance: f64,
     /// Whether fillet and chamfer cut the corner's sides back (`CornerTool.trimSides`, Kırp).
     pub corner_trim: bool,
     /// The last fillet radius (`FilletTool.last`); none yet.
@@ -1144,6 +1148,8 @@ impl Default for Memory {
             polygon_inscribed: true,
             offset_distance: 1.0,
             offset_through: false,
+            offset_approximate: false,
+            offset_tolerance: 1e-4,
             corner_trim: true,
             fillet_radius: None,
             chamfer: None,

@@ -670,6 +670,21 @@ cases.append({
     ],
 })
 
+# The explicit curve-approximation budget is input data, checked before
+# revision/entity access even if the named object would offset exactly.
+cases.append({
+    "name": "yaklaşım toleransı sonlu ve pozitif olmalı; ret kaynakları ve geçmişi korur",
+    "steps": [
+        {"op": "execute", "input": {**inp([U(10)], D(0.5, 487018, 4420013)), "approximation": {"tolerance": 0}},
+         "result": failed("invalid_tolerance", "Yaklaşım toleransı sıfırdan büyük olmalı (metre).", "approximation.tolerance"), "expect": untouched},
+        {"op": "validate", "input": {**inp([MISSING], D(0.5, 487018, 4420013)), "approximation": {"tolerance": -1}},
+         "result": failed("invalid_tolerance", "Yaklaşım toleransı sıfırdan büyük olmalı (metre).", "approximation.tolerance"), "expect": untouched},
+        {"op": "execute", "input": {**inp([U(10)], D(0.5, 487018, 4420013)), "approximation": {"tolerance": 1}},
+         "nonFinite": {"approximation.tolerance": "NaN"},
+         "result": failed("not_finite", NFV("Yaklaşım toleransı", "Sonlu, pozitif bir tolerans verin."), "approximation.tolerance"), "expect": untouched},
+    ],
+})
+
 made = slotted([offset(10, F(1, 2), (487018, 4420013))])
 cases.append({
     "name": "beklenen sürüm ondalık bir tamsayı yazısıdır; çizimin sürümüyse yazılır",

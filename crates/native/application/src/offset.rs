@@ -25,13 +25,13 @@
 //!    `offset_failed`).
 //!
 //! What a copy says besides (docs/adr/0293): `approximate_offset` for an
-//! ellipse's, a fit-point or NURBS curve's (a polyline within the core's
-//! tolerance of the curve's parallel), `self_intersecting` when its edges
+//! ellipse's, a fit-point or NURBS curve's (explicit user tolerance and
+//! bounded parallel chords, independent of display tessellation), `self_intersecting` when its edges
 //! cross; the copy is written all the same.
 
 use kentos_commands::{
     CommandResult, CommandWarning, EditOperation, EntitiesEdit, EntitiesOffset, EntitiesOffsetMade,
-    EntitiesOffsetPlan, Entity, EntityEdit, OffsetBy,
+    EntitiesOffsetPlan, Entity, EntityEdit, OffsetApproximationReport, OffsetBy,
 };
 use kentos_domain::Document;
 use kentos_geometry_core::entity::Shape;
@@ -39,6 +39,7 @@ use kentos_geometry_core::geom::intersect::closest_on_edge;
 use kentos_geometry_core::ops::curve_cuts::Geometry;
 use kentos_geometry_core::ops::edges::entity_edges;
 use kentos_geometry_core::ops::offset::{OffsetNote, collapses, offset_noted, through_distance};
+use kentos_geometry_core::ops::offset_bounded;
 use kentos_geometry_core::vec2::Vec2;
 
 use crate::ExecutionContext;
@@ -92,6 +93,7 @@ pub fn plan_in(doc: &Document, input: &EntitiesOffset) -> CommandResult<Entities
                 entities: output.created,
                 removed: output.removed,
                 distances: checked.distances,
+                approximations: checked.approximations,
                 revision: output.revision,
             },
             warnings: [checked.warnings, warnings].concat(),
@@ -132,6 +134,7 @@ fn write_execute(
                 created: output.created,
                 removed: output.removed,
                 distances: checked.distances,
+                approximations: checked.approximations,
                 revision: output.revision,
             },
             warnings: [checked.warnings, warnings].concat(),
@@ -156,6 +159,7 @@ fn relay<T, U>(result: CommandResult<T>) -> CommandResult<U> {
 struct Checked {
     sources: Vec<String>,
     distances: Vec<f64>,
+    approximations: Vec<OffsetApproximationReport>,
     edit: EntitiesEdit,
     warnings: Vec<CommandWarning>,
 }
@@ -184,20 +188,28 @@ pub fn offsettable(entity: &Entity) -> bool {
 /// A point just across `target` from `side`: where İki yana's second copy
 /// is judged from. `None` when `side` is on the object (it has no far side).
 pub fn across(target: &Shape, side: Vec2) -> Option<Vec2> {
-    let nearest = entity_edges(target)
-        .iter()
-        .map(|edge| closest_on_edge(edge, side))
-        .min_by(|a, b| a.d.total_cmp(&b.d))?;
-    if nearest.d < 1e-9 {
+    let (nearest, distance) = if let Some((p, _)) = offset_bounded::nearest(target, side) {
+        (
+            p,
+            kentos_geometry_core::jsmath::js_hypot(p.x - side.x, p.y - side.y),
+        )
+    } else {
+        let n = entity_edges(target)
+            .iter()
+            .map(|edge| closest_on_edge(edge, side))
+            .min_by(|a, b| a.d.total_cmp(&b.d))?;
+        (n.p, n.d)
+    };
+    if distance < 1e-9 {
         return None;
     }
     let (ux, uy) = (
-        (nearest.p.x - side.x) / nearest.d,
-        (nearest.p.y - side.y) / nearest.d,
+        (nearest.x - side.x) / distance,
+        (nearest.y - side.y) / distance,
     );
     Some(Vec2::new(
-        nearest.p.x + ux * OTHER_SIDE,
-        nearest.p.y + uy * OTHER_SIDE,
+        nearest.x + ux * OTHER_SIDE,
+        nearest.y + uy * OTHER_SIDE,
     ))
 }
 
@@ -253,6 +265,21 @@ fn check_input(input: &EntitiesOffset) -> Result<(), Stop> {
             checks::point(point, "Geçilecek noktanın", "by.point")?;
         }
     }
+    if let Some(a) = &input.approximation {
+        checks::finite(
+            a.tolerance,
+            "Yaklaşım toleransı",
+            "Sonlu, pozitif bir tolerans verin.",
+            "approximation.tolerance",
+        )?;
+        if a.tolerance <= 0.0 {
+            return Err(refuse(
+                codes::INVALID_TOLERANCE,
+                "Yaklaşım toleransı sıfırdan büyük olmalı (metre).".into(),
+                "approximation.tolerance",
+            ));
+        }
+    }
     Ok(())
 }
 
@@ -296,16 +323,87 @@ fn check(doc: &Document, input: &EntitiesOffset) -> Result<Checked, Stop> {
     let point = Vec2::new(point.x, point.y);
     let mut sources = Vec::with_capacity(found.len());
     let mut distances = Vec::with_capacity(found.len());
+    let mut approximations = Vec::new();
     let mut adds = Vec::new();
     let mut removes = Vec::new();
     let mut first_error = None;
     for (i, _, entity, uid) in &found {
         let target = shape(entity);
-        let d = given.unwrap_or_else(|| through_distance(&target, point));
+        let d = given.unwrap_or_else(|| {
+            offset_bounded::nearest(&target, point).map_or_else(
+                || through_distance(&target, point),
+                |(p, _)| kentos_geometry_core::jsmath::js_hypot(p.x - point.x, p.y - point.y),
+            )
+        });
         sources.push((*uid).clone());
         distances.push(d);
         let mut made = 0;
-        for (copy, note) in copies(&target, d, point, input.both_sides) {
+        let computed = if offset_bounded::is_approximate(&target) {
+            let tolerance = input.approximation.as_ref().ok_or_else(|| refuse(
+                codes::INVALID_TOLERANCE,
+                "Elips ve eğri ötelemesi yaklaşık çoklu çizgi üretir. Yaklaşımı açıp toleransını seçin; kaynak eğri korunur.".into(),
+                "approximation"))?.tolerance;
+            let mut sides = vec![point];
+            if input.both_sides {
+                sides.push(across(&target, point).ok_or_else(|| {
+                    refuse(
+                        codes::OFFSET_FAILED,
+                        "Nokta eğrinin üzerinde; iki yana ötelemek için bir yanına tıklayın."
+                            .into(),
+                        &format!("uids[{i}]"),
+                    )
+                })?);
+            }
+            let mut copies = Vec::new();
+            for (side_index, side) in sides.into_iter().enumerate() {
+                let bounded =
+                    offset_bounded::offset(&target, d, side, tolerance).map_err(|message| {
+                        refuse(
+                            if message == offset_bounded::SINGULAR {
+                                codes::RADIUS_COLLAPSE
+                            } else {
+                                codes::OFFSET_FAILED
+                            },
+                            message,
+                            &format!("uids[{i}]"),
+                        )
+                    })?;
+                if given.is_none() && side_index == 0 {
+                    let gap = entity_edges(&bounded.shape)
+                        .iter()
+                        .map(|e| closest_on_edge(e, point).d)
+                        .fold(f64::INFINITY, f64::min);
+                    if gap > tolerance {
+                        return Err(refuse(codes::OFFSET_FAILED,
+                            "Seçilen nokta eğrinin uç normalinde değil; bu paralel noktadan geçemez. Mesafe yöntemini veya başka bir nokta seçin.".into(),"by.point"));
+                    }
+                }
+                let note = OffsetNote {
+                    approximate: Some(bounded.error_bound),
+                    crossings: bounded.crossings,
+                };
+                let report = OffsetApproximationReport {
+                    source: (*uid).clone(),
+                    copy_index: 0,
+                    tolerance,
+                    error_bound: bounded.error_bound,
+                    vertices: bounded.vertices,
+                    crossings: bounded.crossings,
+                };
+                copies.push((
+                    Geometry::Ok(kentos_geometry_core::entity::Entity::new(bounded.shape)),
+                    note,
+                    Some(report),
+                ));
+            }
+            copies
+        } else {
+            copies(&target, d, point, input.both_sides)
+                .into_iter()
+                .map(|(g, n)| (g, n, None))
+                .collect()
+        };
+        for (copy, note, mut report) in computed {
             let made_one = match copy {
                 Geometry::Ok(copy) => {
                     if let Some(tol) = note.approximate {
@@ -341,6 +439,10 @@ fn check(doc: &Document, input: &EntitiesOffset) -> Result<Checked, Stop> {
                 }
             };
             if let Some(geometry) = made_one {
+                if let Some(mut report) = report.take() {
+                    report.copy_index = adds.len();
+                    approximations.push(report);
+                }
                 made += 1;
                 adds.push(EntityEdit::Add {
                     from: (*uid).clone(),
@@ -369,6 +471,7 @@ fn check(doc: &Document, input: &EntitiesOffset) -> Result<Checked, Stop> {
     Ok(Checked {
         sources,
         distances,
+        approximations,
         edit: EntitiesEdit {
             operation: EditOperation::Offset,
             changes: adds,
@@ -380,7 +483,11 @@ fn check(doc: &Document, input: &EntitiesOffset) -> Result<Checked, Stop> {
 
 /// A tolerance in millimetres as the warning writes it: “0.1”, “0.0054”.
 fn approximate_mm(metres: f64) -> String {
-    let mm = metres * 1000.0;
-    let text = format!("{mm:.4}");
+    let mm = (metres * 1e9).ceil() / 1e6;
+    let text = format!("{mm:.6}");
     text.trim_end_matches('0').trim_end_matches('.').to_owned()
 }
+
+#[cfg(test)]
+#[path = "offset_tests.rs"]
+mod tests;

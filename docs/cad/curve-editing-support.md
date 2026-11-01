@@ -3,7 +3,8 @@
 2026-11-01 — CAD-ADV-04 çalışma kaydı. Bu matris tamamlanmış bir
 CAD-ADV-04 kabulü değildir. Masaüstünün native anlamsal komutlarını,
 aynı komutları çağıran Python ve MCP'yi tarif eder. Web araçlarının
-TypeScript etkileşimleri ayrıca doğrulanmadan eşdeğer sayılmaz.
+TypeScript etkileşimleri ayrıca doğrulanmadan eşdeğer sayılmaz; web işi
+[ADR 0228](../adr/0228-web-pause-desktop-and-cloud-first.md) kapsamında ertelenmiştir.
 
 ## Hedef geometriler
 
@@ -15,7 +16,7 @@ TypeScript etkileşimleri ayrıca doğrulanmadan eşdeğer sayılmaz.
 | Birleştir | Çizgi/açık çoklu çizgi | Bağımsız yay, yaylı yol | Genel destek yok | Genel komutta destek yok | Her ada otomatik tek kontur sayılmaz; bağlantı ve görünüş kuralları denetlenir. |
 | Köşe yuvarla | Mevcut düz kenar/yol köşeleri | Bağımsız çizgi–yay, çizgi–daire, yay–yay, yay–daire ve daire–daire için yeni analitik çözüm | Yok | Yok | Yeni dairesel çözüm, yolun yaylı alt kenarını bağımsız yay gibi değiştirmez. |
 | Pah | İki düz kenar ve düz yol köşesi | Yay/daire çiftleri reddedilir | Yok | Yok | Mevcut yol köşesi sınırları geçerlidir. |
-| Ötele | Var | Daire/yay ve uygun bulge analitik | Yaklaşık örneklenmiş sonuç | Yaklaşık örneklenmiş sonuç | Alanın delikleri karşı yönde ötelenir; çökme reddedilir. Yaklaşım hatası aşağıdaki açık iştir. |
+| Ötele | Var | Daire/yay ve uygun bulge analitik | Açık onay ve kullanıcı toleransıyla rasyonel Bézier paraleli | Pozitif ağırlıklı parçalarda aynı türev sınırı, kaynak/kopya raporu | Alanın delikleri karşı yönde ötelenir; çökme reddedilir. Yaklaşımın sayısal payı ve hesap sınırları ADR 0822'dedir. |
 
 `Spline` etiketli eski fit eğrisi ile `Nurbs` aynı tür değildir.
 Eski spline'ın Buda desteği yoktur. `cad.curves.edit`, NURBS'in fit ve
@@ -86,18 +87,22 @@ cad.entities.chamfer(doc, corner=straight_corner, distance=.1, second=.2)
 
 ## CAD-ADV-04'ün açık kabul işleri
 
-- [ ] Elips/NURBS ötelemesinde kullanıcı tarafından açıkça seçilen
-  yaklaşım ve tolerans, paralel eğrinin doğrulanmış hata üst sınırı,
-  kaynak/sonuç bağlantısı ve tekillik raporu. Mevcut kaynak kiriş
-  toleransı, öteleme sonucunun hata üst sınırı sayılamaz. Mevcut elips
-  notundaki `a*h²/8` de offset normalinin değişimini içermez.
+- [x] Elips/fit/NURBS ötelemesinde açık yaklaşım onayı ve tolerans,
+  rasyonel Bézier parçalarının türev sınırı + f64 payı, kaynak/kopya
+  raporu ve tekillik/kesişim denetimi eklendi. Bu tam yönlü IEEE aralık
+  ispatı değildir; sayısal ve hesap bütçesi sınırları [ADR 0822](../adr/0822-user-toleranced-curve-offsets.md)'de açıktır.
+  Eski kaynak kiriş tahmini sonuç garantisi olarak kullanılmaz. Native,
+  Python, MCP ve GUI plan/yazma/Undo kontrolleri geçti; gerçek GUI sonucu
+  bağımsız normal uzaklığı ve yoğun paralel/kiriş denetimiyle kontrol edildi.
 - [ ] Fit/kontrol noktaları, uç teğetleri ve açık/kapalı geçişler için
   gerçek arayüz kabulü; G1/G2'nin hangi işlemde korunduğunu açık gösterme.
   Mevcut knot/weight/fit komutları tekrar yazılmadan kullanılmalı.
 - [ ] Delikli ve yaylı kapalı alan, ağırlıklı NURBS, bağlı ölçü,
   multipart ve kalıcı alt nesne referansları için birleşik alan/uzunluk/
   süreklilik/hata bütçesi kabulü. Güvenli ret tamamlanmış destek değildir.
-- [ ] Yeni bağımsız yay/daire yuvarlamasının web araç yüzeyine alınması.
+- Web'in bağımsız yay/daire yuvarlaması ve toleranslı offset araç yüzeyi
+  ADR 0228 uyarınca ertelendi; [TODOS §0.2](../../TODOS.md) dönüş işini tutar.
+  Masaüstü kabulü için bu arayüz şimdi uygulanmaz.
 - [ ] Asimetrik eliptik/geçiş eğrisi ayrı geometrik sözleşmeyle araştırılmalı;
   mevcut dairesel `radius` alanına ikinci yarıçap ekleyerek taklit edilmemeli.
 - [x] Masaüstü imleç değer kutusu ortak KentOS metin bileşenine geçirildi.
@@ -120,7 +125,12 @@ cad.entities.chamfer(doc, corner=straight_corner, distance=.1, second=.2)
 - `ops/trim.rs`, `ops/nurbs_cuts.rs`, native `trim.rs`, `break_join.rs`:
   parçalar, sınır hesabı ve delik retleri. `interaction/src/area.rs`:
   mevcut Alan böl alternatifi.
-- `ops/offset.rs`, `ops/curve_cuts.rs`: açık yaklaşım hatası işi.
+- `ops/offset_bounded/`: rasyonel parçalar, paralel türev sınırı,
+  katlanma/birleşim, kiriş bütçesi ve büyük sonuçların kesişim denetimi.
+- `application/src/offset.rs`, `interaction/src/offset.rs`: açık onay,
+  aynı plan/yazma, kaynak/kopya raporu, sabit mesafede plan önbelleği.
+- `ops/offset.rs`, `ops/curve_cuts.rs`: eski geometri oynatma uyumluluğu;
+  eski örnekleme sayıları sonuç paralelinin hata garantisi değildir.
 - `application/src/curves_edit_cmd.rs`, `interaction/src/curve_edit.rs`:
   mevcut kontrol/fit/knot/ağırlık/teğet/aç/kapat araçları.
 

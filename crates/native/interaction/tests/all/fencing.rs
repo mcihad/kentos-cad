@@ -394,7 +394,7 @@ fn deleting_the_source_alone_moves_the_line() {
         b.session
             .prompt()
             .text()
-            .ends_with("İki yana (I) / Kaynağı sil (S)]")
+            .ends_with("İki yana (I) / Kaynağı sil (S) / Yaklaşım (Y)]")
     );
 }
 
