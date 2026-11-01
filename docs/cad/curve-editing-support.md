@@ -100,10 +100,13 @@ cad.entities.chamfer(doc, corner=straight_corner, distance=.1, second=.2)
 - [ ] Yeni bağımsız yay/daire yuvarlamasının web araç yüzeyine alınması.
 - [ ] Asimetrik eliptik/geçiş eğrisi ayrı geometrik sözleşmeyle araştırılmalı;
   mevcut dairesel `radius` alanına ikinci yarıçap ekleyerek taklit edilmemeli.
-- [ ] İmleç yanındaki çizilmiş sayısal kutu gerçek metin alanı gibi
-  tıklanıp seçilemiyor; tıklama sahnede işlemi uygulayabiliyor. İki mesafeyi
-  yazma/Enter yolu doğrulandı, fakat bu kutunun düzenleme, yapıştırma ve
-  yazarken canlı önizlemesi ayrı arayüz kabulüyle iyileştirilmeli.
+- [x] Masaüstü imleç değer kutusu ortak KentOS metin bileşenine geçirildi.
+  Açıldığı yerde sabit durur; tıklama, tümünü seçme, düzenleme ve yapıştırma
+  desteklenir. Kutunun üstünde CAD artısı çizilmez. Gecikmiş girişler
+  geçici kutu kimliğiyle reddedilir. Gerçek GUI'de `10cm;20cm`, tek Enter,
+  kaydedilmiş uç koordinatları, tek Undo ve Esc ile iptal kontrol edildi.
+- [ ] Girilen sayının yazarken canlı geometri önizlemesine bağlanması.
+  Mevcut fare önizlemesi, metindeki iki mesafeyi Enter öncesinde yansıtmaz.
 
 ## Kod dayanakları
 

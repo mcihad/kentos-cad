@@ -702,6 +702,12 @@ pub enum Message {
     PointCalc(kentos_interaction::point_calc::CalcKind),
     /// A key press no text box captured (keys.rs); routed by ADR 0018.
     Key(KeyPress),
+    CursorValueInput {
+        token: u64,
+        text: String,
+        pasted: bool,
+    },
+    CursorValueSubmit(u64),
     /// The OS window lost focus: abandon capture, never synthesize a release.
     InputFocusLost,
     /// Text inputs consume Esc to blur; block command dialogs still cancel once.
@@ -2006,6 +2012,9 @@ impl App {
             return Task::none();
         }
         if matches!(message, Message::CapturedEscape) {
+            if self.field.take().is_some() {
+                return crate::input::release_keyboard();
+            }
             if matches!(self.dialog, Some(Dialog::AttributeValues | Dialog::BlockDefine)) {
                 self.close_dialog();
             }
@@ -2190,6 +2199,10 @@ impl App {
             Message::PromptChoice(key, typed) => return self.prompt_choice(key, &typed),
             Message::PointCalc(kind) => return self.start_point_calc(kind),
             Message::Key(press) => return self.key(press),
+            Message::CursorValueInput { token, text, pasted } => {
+                return self.value_field_input(token, text, pasted);
+            }
+            Message::CursorValueSubmit(token) => return self.value_field_submit(token),
             Message::InputFocusLost => self.input_focus_lost(),
             Message::CapturedEscape => unreachable!("checked before dispatch"),
             Message::ScopedReply { .. } => unreachable!("checked before dispatch"),

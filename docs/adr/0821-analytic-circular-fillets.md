@@ -61,3 +61,27 @@ Ortak destek matrisi ve **açık** kabul işleri
 [curve-editing-support.md](../cad/curve-editing-support.md) içindedir.
 Elips/NURBS offset hata garantisi, eğri sürekliliği arayüzü, bütün
 alt nesne ilişkileri ve web etkileşim eşliği tamamlandı sayılmaz.
+
+
+## Masaüstü değer kutusu düzeltmesi — 2026-11-01
+
+Pahın `distance` ve `second` değerleri bağımsızdır. GUI'de `10cm;20cm`
+girişi ilk/ikinci seçilen kenara uygulanır; dairesel yuvarlamanın tek
+`radius` sözleşmesi değişmez. Görsel metin ve sahte caret yerine ortak
+KentOS `text_field` kullanılır. Kutu açıldığı dünya noktasında sabit kalır;
+fareyle tıklanıp seçilebilir ve yapıştırılabilir. CAD işaretçisi kutunun
+altında çizilir. Her açılışın geçici kimliği, kapanmış kutudan gecikmiş
+mesajın sonraki işlemi değiştirmesini önler. Yapıştırılan boşluk veri
+olarak kalır; klavyeden Boşluk mevcut onay davranışını sürdürür.
+
+Gerçek macOS testinde kutuya tıklama, Cmd+A, `10cm;20cm` yapıştırma ve
+tek Enter uygulaması denendi. Kaydedilen dosya public Python API ile
+okundu: ilk kenar ucu `(0.1,0)`, ikinci kenar ucu `(0,0.2)` metredir;
+metadata korunur. Tek Undo başlangıçtaki iki nesneyi geri getirir.
+Başka değer yazıp Esc ile iptal etme de sahneye yazmaz. Son derlemede
+masaüstü kütüphanesinin 1.568 testi geçti; 256 test atlandı. İki yeni
+widget testi gerçek metin alanına tıklama/seçme/yazma/Enter ile eski
+kutu mesajlarının reddini kapsar. Clippy uyarı reddi kontrolü geçti.
+Ekran görüntüleri `12-native-value-field-clean.png` ve
+`13-native-value-field-10cm-20cm.png`, önceki kanıtlarla aynı repo dışı
+geçici dizindedir. Yazarken metne göre canlı geometri önizlemesi açıktır.

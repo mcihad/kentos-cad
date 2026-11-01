@@ -373,6 +373,10 @@ bağımsız dosya karşılaştırmasıyla kontrol edildi; görseller repo dış�
 [Destek matrisi ve açık kabul işleri](../docs/cad/curve-editing-support.md),
 [ADR 0821](../docs/adr/0821-analytic-circular-fillets.md).
 Pahın iki kenar mesafesi ayrı olmalı; sahnede kenar sırası açık gösterilir.
+Masaüstü değer kutusu gerçek metin alanına geçirildi: tıklama, seçme,
+yapıştırma, tek Enter ve Esc iptali gerçek arayüzde doğrulandı. Kutunun
+sabit konumu ve geçici kimliği yanlışlıkla sahneye uygulamayı önler.
+Yazarken metne göre canlı önizleme henüz tamamlanmadı.
 Dairesel yuvarlama tek yarıçaptır; farklı kenar mesafeli eliptik/geçiş
 eğrisi ayrı sözleşmeyle araştırılacak, mevcut daire hesabı bozulmayacak.
 Elips/NURBS ötelemesinde açık yaklaşım/tolerans ve gerçek hata üst sınırı,

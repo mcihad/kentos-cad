@@ -764,9 +764,16 @@ impl App {
                     self.drawing_preview(&format),
                     self.field.as_ref().map(|f| preview::FieldView {
                         text: f.text.as_str(),
+                        token: f.token,
                         at: f.at,
                         hint: match f.mode {
                             Some(_) => "Enter kilitler · Tab öbür değere geçer · Esc kapatır".to_owned(),
+                            None if self.session.tool_id() == "chamfer" => {
+                                "1. kenar; 2. kenar · Enter uygular".to_owned()
+                            },
+                            None if self.session.tool_id() == "fillet" => {
+                                "Yarıçap · ör. 25cm · Enter uygular".to_owned()
+                            },
                             None => format.input_hint(),
                         },
                         label: f.mode.map(|m| self.lock_name(m)),

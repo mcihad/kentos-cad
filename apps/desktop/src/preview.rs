@@ -31,6 +31,7 @@ const LABEL_HALO: f32 = 1.5;
 /// the lock the number is for and the locks held (docs/adr/0166 §6).
 pub struct FieldView<'a> {
     pub text: &'a str,
+    pub token: u64,
     pub at: Vec2,
     pub hint: String,
     /// Uzunluk, Açı or Semt, Sapma: the lock the number is for; none for a point.
@@ -106,6 +107,10 @@ pub fn layer<'a>(
             Vector::new(16.0, 16.0),
         ));
     }
+    // Above dimension/text masks; editable value fields stay above the CAD pointer.
+    if let Some(pointer) = pointer {
+        layers.push(canvas_widget(pointer).width(Fill).height(Fill).into());
+    }
     if let Some(field) = field {
         // Above right of the cursor, its foot clear of the tag below right of
         // it however many locks it lists; left of it near the drawing's right
@@ -117,10 +122,6 @@ pub fn layer<'a>(
             Point::new(at.x.round(), at.y.round()),
             Vector::new(18.0, 8.0),
         ));
-    }
-    // Above dimension/text masks; actual cards and text inputs stay above it.
-    if let Some(pointer) = pointer {
-        layers.push(canvas_widget(pointer).width(Fill).height(Fill).into());
     }
     if layers.is_empty() {
         return Space::new().width(Fill).height(Fill).into();
@@ -168,44 +169,29 @@ fn measurement<'a>(lines: Vec<String>, tone: Tone, snap: Color) -> Element<'a, M
 fn value_field<'a>(field: FieldView<'a>, snap: Color) -> Element<'a, Message> {
     let FieldView {
         text: value,
+        token,
         hint,
         label,
         locks,
         length_first,
         ..
     } = field;
-    let caret =
-        container(Space::new().width(1).height(typography::body() + 2.0)).style(|theme: &Theme| {
-            container::Style {
-                background: Some(Tokens::of(theme).accent.into()),
-                ..container::Style::default()
-            }
-        });
-    let input = container(
-        row![
-            text(value)
-                .font(typography::mono())
-                .size(typography::body()),
-            caret
-        ]
-        .spacing(1)
-        .align_y(iced::Center),
-    )
-    .padding([0, 8])
-    .width(typography::scaled(170.0))
-    .height(typography::scaled(26.0))
-    .align_y(iced::Center)
-    .style(|theme: &Theme| {
-        let t = Tokens::of(theme);
-        container::Style {
-            background: Some(t.field.into()),
-            text_color: Some(t.text),
-            border: border::rounded(kentos_ui::theme::shape::radius(3.0))
-                .width(1)
-                .color(t.accent),
-            ..container::Style::default()
-        }
-    });
+    let input = kentos_ui::widget::text_field("", value)
+        .id(crate::input::field_widget_id(token))
+        .on_input(move |text| Message::CursorValueInput {
+            token,
+            text,
+            pasted: false,
+        })
+        .on_paste(move |text| Message::CursorValueInput {
+            token,
+            text,
+            pasted: true,
+        })
+        .on_submit(Message::CursorValueSubmit(token))
+        .font(typography::mono())
+        .size(typography::body())
+        .width(typography::scaled(170.0));
     let hint = text(hint)
         .size(typography::caption() - 1.0)
         .style(|theme: &Theme| text::Style {

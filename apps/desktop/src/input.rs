@@ -42,7 +42,9 @@ const ZOOM_STEP: f64 = 1.5;
 #[derive(Debug, Clone, PartialEq)]
 pub struct Field {
     pub text: String,
-    /// The world point it sits beside: the pointer's, as it moves.
+    /// Transient widget identity; late edits from a closed field cannot edit the next one.
+    pub token: u64,
+    /// The world point where it opened; pinned so the pointer can reach it.
     pub at: Vec2,
     /// What the text is: a point, or a lock's value (docs/adr/0166 §6).
     pub mode: Option<LockAsk>,
@@ -55,8 +57,18 @@ impl Field {
             text,
             at,
             mode: None,
+            token: next_field_token(),
         }
     }
+}
+
+fn next_field_token() -> u64 {
+    static NEXT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
+    NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
+}
+
+pub(crate) fn field_widget_id(token: u64) -> iced::widget::Id {
+    iced::widget::Id::from(format!("cursor-value-{token}"))
 }
 
 /// A plain typed number: what Tab locks as a length (the web's `PLAIN_NUMBER`).
@@ -539,10 +551,8 @@ impl App {
         };
         match event {
             viewport::Event::Moved(at) => {
-                let world = self.viewport.world(at);
-                if let Some(field) = &mut self.field {
-                    field.at = world;
-                }
+                // Keep an open editor where it opened so the pointer can reach
+                // its text, selection and paste controls without chasing it.
                 let p = self.pointer_at(at);
                 self.with_tool(|s, cx| s.pointer_move(&p, cx));
             }
@@ -930,7 +940,7 @@ impl App {
         if let Some(first) = keys::value_start(&press) {
             if let Some(at) = self.field_place() {
                 self.field = Some(Field::point(first.to_string(), at));
-                return Task::none();
+                return self.focus_value_field();
             }
             return self.type_into_line(&first.to_string());
         }
@@ -982,7 +992,34 @@ impl App {
                 None => return self.global_chord(&press),
             },
         }
+        self.focus_value_field()
+    }
+
+    fn focus_value_field(&self) -> Task<Message> {
+        self.field.as_ref().map_or_else(Task::none, |f| {
+            widget_operation::focus(field_widget_id(f.token))
+        })
+    }
+
+    pub(crate) fn value_field_input(&mut self, token: u64, text: String, pasted: bool) -> Task<Message> {
+        let Some(field) = self.field.as_mut().filter(|f| f.token == token) else {
+            return Task::none();
+        };
+        field.text = text;
+        // Preserve CAD's Space-as-Enter for a typed key. Pasted whitespace is
+        // data, so a pasted pair never commits before the user presses Enter.
+        if !pasted && field.text.ends_with(' ') && !field.text.trim().is_empty() {
+            return self.submit_field();
+        }
         Task::none()
+    }
+
+    pub(crate) fn value_field_submit(&mut self, token: u64) -> Task<Message> {
+        if self.field.as_ref().is_some_and(|f| f.token == token) {
+            self.submit_field()
+        } else {
+            Task::none()
+        }
     }
 
     /// Runs a chord that works in text fields too (Ctrl+S, F-keys: the web's
@@ -1009,6 +1046,7 @@ impl App {
             text: String::new(),
             at: self.viewport.cursor.unwrap_or(at),
             mode: Some(kind),
+            token: next_field_token(),
         });
     }
 
@@ -1318,4 +1356,139 @@ fn shortcut_in_input(chord: &str) -> Option<&'static str> {
 /// after a tool starts from the command line (the web's `view.focus()`).
 pub fn release_keyboard() -> Task<Message> {
     iced::advanced::widget::operate(operation::focusable::unfocus::<()>()).discard()
+}
+
+#[cfg(test)]
+mod value_field_tests {
+    use super::*;
+    use iced::advanced::widget::{Id, Operation, operation::TextInput};
+    use iced::{Point, Rectangle, Size};
+    use kentos_commands::Entity;
+    use kentos_ui::snapshot::Input;
+    use std::sync::{Arc, Mutex};
+
+    fn update(app: &mut App, message: Message) {
+        let _ = app.update(message);
+    }
+
+    fn drawing() -> App {
+        let (mut app, _) = App::boot(None);
+        let mut objects = crate::tools_scenes::Objects::new();
+        objects.line("cizim", [0., 0.], [2., 0.]);
+        objects.line("cizim", [0., 2.], [0., 0.]);
+        crate::tools_scenes::open(&mut app, objects);
+        crate::files_testing::make_cad(&mut app);
+        update(&mut app, Message::DialogClosed);
+        app
+    }
+
+    #[test]
+    fn clicking_and_editing_the_real_cursor_field_never_commits_the_scene_until_enter() {
+        let mut app = drawing();
+        let mut shot = crate::files_testing::offscreen(Size::new(1440., 900.));
+        shot.settle(&mut app, App::view, &mut update);
+        update(&mut app, Message::Run("tool.chamfer"));
+        crate::tools_scenes::click(&mut app, [1., 0.]);
+        crate::tools_scenes::click(&mut app, [0., 1.]);
+        let at = Vec2::new(crate::tools_scenes::E + 0.5, crate::tools_scenes::N + 0.5);
+        let field = Field::point("1".into(), at);
+        let id = field_widget_id(field.token);
+        app.field = Some(field);
+        shot.settle(&mut app, App::view, &mut update);
+        struct Find {
+            id: Id,
+            found: Arc<Mutex<Option<Rectangle>>>,
+        }
+        impl Operation for Find {
+            fn traverse(&mut self, visit: &mut dyn FnMut(&mut dyn Operation)) {
+                visit(self);
+            }
+            fn text_input(&mut self, id: Option<&Id>, bounds: Rectangle, _: &mut dyn TextInput) {
+                if id == Some(&self.id) {
+                    *self.found.lock().unwrap() = Some(bounds);
+                }
+            }
+        }
+        let found = Arc::new(Mutex::new(None));
+        shot.operate(
+            app.view(),
+            Box::new(Find {
+                id: id.clone(),
+                found: found.clone(),
+            }),
+        );
+        let bounds = found
+            .lock()
+            .unwrap()
+            .expect("an actual editable text widget");
+        let click = Point::new(bounds.center_x(), bounds.center_y());
+        let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+        shot.input(&mut app, App::view, &mut update, Input::Move(click));
+        shot.input(&mut app, App::view, &mut update, Input::Click(click));
+        assert_eq!(
+            app.field.as_ref().unwrap().at,
+            at,
+            "the editor stays reachable"
+        );
+        assert_eq!(
+            app.document.as_ref().unwrap().model.to_snapshot_v2(),
+            before,
+            "the click cannot become a chamfer point"
+        );
+        shot.operate(app.view(), Box::new(operation::text_input::select_all(id)));
+        shot.input(
+            &mut app,
+            App::view,
+            &mut update,
+            Input::Type("10cm;20cm".into()),
+        );
+        assert_eq!(app.field.as_ref().unwrap().text, "10cm;20cm");
+        assert_eq!(
+            app.document.as_ref().unwrap().model.to_snapshot_v2(),
+            before
+        );
+        shot.input(&mut app, App::view, &mut update, Input::Key(Named::Enter));
+        let doc = &mut app.document.as_mut().unwrap().model;
+        assert_eq!(doc.len(), 3);
+        let Some(Entity::Line(first)) = doc.get(Slot(1)) else {
+            panic!()
+        };
+        assert!((first.a.x - crate::tools_scenes::E - 0.1).abs() < 1e-8);
+        let Some(Entity::Line(second)) = doc.get(Slot(2)) else {
+            panic!()
+        };
+        assert!((second.b.y - crate::tools_scenes::N - 0.2).abs() < 1e-8);
+        doc.undo().unwrap();
+        assert_eq!(doc.to_snapshot_v2(), before);
+    }
+
+    #[test]
+    fn late_input_and_submit_cannot_edit_a_replacement_field_or_write_geometry() {
+        let mut app = drawing();
+        let old = Field::point("1".into(), Vec2::new(0., 0.));
+        let old_token = old.token;
+        app.field = Some(old);
+        let new = Field::point("2".into(), Vec2::new(1., 1.));
+        let new_token = new.token;
+        app.field = Some(new);
+        let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+        let _ = app.value_field_input(old_token, "99".into(), false);
+        let _ = app.value_field_submit(old_token);
+        assert_eq!(app.field.as_ref().unwrap().text, "2");
+        let _ = app.value_field_input(new_token, "10cm;20cm ".into(), true);
+        assert_eq!(
+            app.field.as_ref().unwrap().text,
+            "10cm;20cm ",
+            "paste is not Enter"
+        );
+        update(&mut app, Message::CapturedEscape);
+        assert!(app.field.is_none());
+        let _ = app.value_field_input(new_token, "777".into(), false);
+        let _ = app.value_field_submit(new_token);
+        assert!(app.field.is_none());
+        assert_eq!(
+            app.document.as_ref().unwrap().model.to_snapshot_v2(),
+            before
+        );
+    }
 }
