@@ -396,6 +396,10 @@ doğrudan nokta seçimi, koordinat girişi, uç teğeti önizlemesi, ağırlık
 düzeltmesi ve Aç/Kapat gerçek GUI'de doğrulandı. G2 eşlemesi olmadığı
 açıkça gösterilir. Fare paneldeyken Undo/Redo işaretlerinin eski kalması
 giderildi. [ADR 0824](../docs/adr/0824-visible-curve-editing-and-handles.md).
+Elips yayı uzatma çekirdekte varken native uç denetiminde engelleniyordu;
+tıklama/çit/pencere aynı analitik hesaba bağlandı. Katlanmış yolda yanlış
+uç kaydı düzeltildi. GUI/Python/MCP ve tek Undo doğrulandı.
+[ADR 0825](../docs/adr/0825-native-elliptical-arc-extension.md).
 Birleşik ölçü/alt nesne kabulü halen açıktır. Web, ADR 0228
 uyarınca ertelidir; masaüstü maddesini kapatmak için web geliştirilmez.
 

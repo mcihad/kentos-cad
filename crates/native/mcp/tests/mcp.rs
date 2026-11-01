@@ -2251,3 +2251,56 @@ fn bounded_curve_offset_requires_consent_and_reports_the_source_through_mcp() {
     assert_eq!(call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"],before);
     std::fs::remove_dir_all(dir).unwrap();
 }
+
+#[test]
+fn ellipse_extension_is_analytic_and_atomic_through_mcp() {
+    let mut raw: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/interaction/v1/objects.kcad"
+    ))
+    .unwrap();
+    raw["settings"]["workspace"] = json!("cad");
+    raw["origin"] = json!({"x":0,"y":0});
+    raw["entities"] = json!([
+        {"kind":"ellipse","id":1,"layerId":"cizim","attrs":{"QA":"ellipse"},"c":{"x":0,"y":0},"major":{"x":4,"y":0},"ratio":0.5,"t0":0,"t1":std::f64::consts::FRAC_PI_2},
+        {"kind":"line","id":2,"layerId":"cizim","attrs":{},"a":{"x":-2,"y":0},"b":{"x":-2,"y":3}}
+    ]);
+    let dir =
+        std::env::temp_dir().join(format!("kentos-mcp-ellipse-extend-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join("curve.json");
+    std::fs::write(&path, raw.to_string()).unwrap();
+    let mut server = Server::new();
+    let drawing =
+        call(&mut server, "drawing.open", json!({"path":path}))["structuredContent"]["drawing"]
+            .clone();
+    let before=call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"].clone();
+    let source = &before[0]["uid"];
+    let boundary = &before[1]["uid"];
+    let mut input = json!({"drawing":drawing,"picks":[{"uid":source,"at":{"x":0,"y":2}}],"boundaries":{"kind":"objects","uids":[boundary]},"op":"plan"});
+    let plan = call(&mut server, "cad.entities.extend", input.clone());
+    assert_eq!(plan["structuredContent"]["status"], "completed", "{plan}");
+    assert_eq!(
+        call(&mut server, "drawing.entities", json!({"drawing":drawing}))["structuredContent"]["items"],
+        before
+    );
+    input["op"] = json!("execute");
+    let done = call(&mut server, "cad.entities.extend", input);
+    assert_eq!(done["structuredContent"]["status"], "completed", "{done}");
+    let after=call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"].clone();
+    assert_eq!(after[0]["uid"], *source);
+    assert_eq!(after[0]["entity"]["kind"], "ellipse");
+    assert_eq!(after[0]["entity"]["attrs"]["QA"], "ellipse");
+    assert!(
+        (after[0]["entity"]["t1"].as_f64().unwrap() - 2. * std::f64::consts::PI / 3.).abs() < 1e-12
+    );
+    assert_eq!(
+        after[0]["entity"],
+        plan["structuredContent"]["output"]["changed"][0]
+    );
+    call(&mut server, "drawing.undo", json!({"drawing":drawing}));
+    assert_eq!(
+        call(&mut server, "drawing.entities", json!({"drawing":drawing}))["structuredContent"]["items"],
+        before
+    );
+    std::fs::remove_dir_all(dir).unwrap();
+}

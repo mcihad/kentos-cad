@@ -29,11 +29,12 @@ use kentos_commands::{
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::entity::{Entity as CoreEntity, Shape, area_parts, is_multi_part};
+use kentos_geometry_core::geom::ellipse::{ellipse_point, is_full_ellipse};
 use kentos_geometry_core::geometry::Bounds;
-use kentos_geometry_core::ops::curve_cuts::{Cut, Geometry};
+use kentos_geometry_core::ops::curve_cuts::{Cut, Geometry, ellipse_of};
 use kentos_geometry_core::ops::offset::through_distance;
 use kentos_geometry_core::ops::parts::polyline_of_pieces;
-use kentos_geometry_core::ops::path::{nearest_s, path_of, point_at_s};
+use kentos_geometry_core::ops::path::{path_of, point_at_s};
 use kentos_geometry_core::ops::trim::{fence_crossings, trimmable, window_point, window_points};
 use kentos_geometry_core::store::Store;
 use kentos_geometry_core::vec2::Vec2;
@@ -593,6 +594,16 @@ fn parted(s: &Shape) -> bool {
     matches!(s, Shape::Polyline { .. }) && is_multi_part(s)
 }
 
+/// Real ends of a supported open target. Full ellipses/closed paths have
+/// no extendable end; an elliptical arc stays analytic in the core.
+fn extend_ends(s: &Shape) -> Option<[Vec2; 2]> {
+    if let Some(e) = ellipse_of(s) {
+        return (!is_full_ellipse(&e)).then(|| [ellipse_point(&e, e.t0), ellipse_point(&e, e.t1)]);
+    }
+    let p = path_of(s).filter(|p| !p.closed)?;
+    Some([point_at_s(&p, 0.0), point_at_s(&p, p.length)])
+}
+
 /// The piece of `pieces` nearest `at`, with its distance.
 fn nearest_piece(pieces: &[Shape], at: Vec2) -> Option<(usize, f64)> {
     pieces
@@ -778,14 +789,20 @@ impl Run<'_> {
         } else {
             w.current.clone()
         };
-        let Some(line) = path_of(&target).filter(|p| !p.closed) else {
+        let Some(ends) = extend_ends(&target) else {
             self.warn(
                 path,
                 "Yalnız açık çizgiler, çoklu çizgiler ve yaylar uzatılabilir.".into(),
             );
             return;
         };
-        let end = usize::from(nearest_s(&line, at) > line.length / 2.0);
+        // Match the geometry core's endpoint choice, including curved and
+        // folded paths: Euclidean distance, ties to the end. Arc-length
+        // midpoint can name a different end and suppress a later valid pick.
+        let end = usize::from(
+            (at.x - ends[1].x).hypot(at.y - ends[1].y)
+                <= (at.x - ends[0].x).hypot(at.y - ends[0].y),
+        );
         if std::mem::replace(&mut w.used[k][end], true) {
             return;
         }
@@ -879,17 +896,10 @@ impl Run<'_> {
                     Some(w) => w.current.clone(),
                     None => s,
                 };
-                let lines: Vec<_> = area_parts(&current)
+                let ends: Vec<Vec2> = area_parts(&current)
                     .iter()
-                    .filter_map(path_of)
-                    .filter(|p| !p.closed)
-                    .collect();
-                if lines.is_empty() {
-                    return Met::No;
-                }
-                let ends: Vec<Vec2> = lines
-                    .iter()
-                    .flat_map(|line| [point_at_s(line, 0.0), point_at_s(line, line.length)])
+                    .filter_map(extend_ends)
+                    .flatten()
                     .filter(|p| {
                         p.x >= window.min_x
                             && p.x <= window.max_x

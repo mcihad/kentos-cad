@@ -100,3 +100,5 @@ mod spaces_number;
 
 mod tag_refresh;
 mod grid_forms;
+
+mod curve_extend;

@@ -936,3 +936,48 @@ fn circular_fillet_uses_two_picks_readonly_preview_and_one_undo_and_keeps_chamfe
     assert!(b.last_text().unwrap().contains("iki düz kenar"));
     assert_eq!(b.doc.to_snapshot_v2(), before);
 }
+
+#[test]
+fn ellipse_extension_hover_click_and_shift_share_the_analytic_command() {
+    use kentos_commands::{CommandResult, EntitiesTrim, TrimBoundaries, TrimPick, Vec2};
+    use kentos_native_application::{ExecutionContext, entities_extend};
+    use serde_json::json;
+    let (e, n) = (common::E, common::N);
+    let mut raw: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/interaction/v1/objects.kcad"
+    ))
+    .unwrap();
+    raw["entities"] = json!([
+        {"kind":"ellipse","id":1,"layerId":"cizim","attrs":{"QA":"ellipse"},"c":{"x":e,"y":n},"major":{"x":40,"y":0},"ratio":0.5,"t0":0,"t1":std::f64::consts::FRAC_PI_2},
+        {"kind":"line","id":2,"layerId":"cizim","attrs":{},"a":{"x":e-20.,"y":n},"b":{"x":e-20.,"y":n+30.}}
+    ]);
+    for shift in [false, true] {
+        let mut b = Bench::on(&raw.to_string());
+        b.draft.snap = false;
+        b.start(if shift { "trim" } else { "extend" });
+        b.shift = shift;
+        let before = b.doc.to_snapshot_v2();
+        let input = EntitiesTrim {
+            picks: vec![TrimPick {
+                uid: b.doc.uid(Slot(1)).unwrap().to_string(),
+                at: Vec2 { x: e, y: n + 20. },
+            }],
+            boundaries: Some(TrimBoundaries::All),
+            ..Default::default()
+        };
+        let CommandResult::Completed { output: plan, .. } =
+            entities_extend::plan(&ExecutionContext::new(&mut b.doc), &input)
+        else {
+            panic!("analytic plan")
+        };
+        b.move_to(0., 20.);
+        assert_eq!(b.doc.to_snapshot_v2(), before);
+        let preview = b.run(|s, cx| s.preview(&cx.format())).unwrap();
+        assert!(!preview.strokes.is_empty());
+        b.click(0., 20.);
+        assert_eq!(b.last_level(), Some(Level::Success), "{:?}", b.log);
+        assert_eq!(b.doc.get(Slot(1)), Some(&plan.changed[0]));
+        assert_eq!(b.doc.undo().as_deref(), Some("Uzat"));
+        assert_eq!(b.doc.to_snapshot_v2(), before);
+    }
+}

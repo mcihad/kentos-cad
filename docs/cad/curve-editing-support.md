@@ -11,7 +11,7 @@ TypeScript etkileşimleri ayrıca doğrulanmadan eşdeğer sayılmaz; web işi
 | İşlem | Çizgi / düz yol | Yay / daire / yaylı yol | Elips | NURBS | Delik / çoklu parça |
 |---|---|---|---|---|---|
 | Buda | Var | Analitik yay/bulge korunur | Elips yayı olarak kalır | Knot ekleyerek NURBS parçaları | Delikli alan reddedilir; Alan böl önerilir. Multipart native katmanı seçilen parçayı işler. |
-| Uzat | Açık uçlar | Açık yay ve açık yolun uç kenarı | Genel destek yok | Genel destek yok | Kapalı hedef uzamaz; multipart için uygun açık parça gerekir. |
+| Uzat | Açık uçlar | Açık yay ve açık yolun uç kenarı | Elips yayı aynı elips üzerinde ilk sınıra uzar; tam elips reddedilir | Genel destek yok | Kapalı hedef uzamaz; multipart için uygun açık parça gerekir. |
 | Kır | Var | Yay/bulge korunur | Elips yayı olarak kalır | NURBS parçaları | Delikli alan reddedilir. Multipart seçilen parçada kırılır, kalan parçalar korunur. |
 | Birleştir | Çizgi/açık çoklu çizgi | Bağımsız yay, yaylı yol | Genel destek yok | Genel komutta destek yok | Her ada otomatik tek kontur sayılmaz; bağlantı ve görünüş kuralları denetlenir. |
 | Köşe yuvarla | Mevcut düz kenar/yol köşeleri | Bağımsız çizgi–yay, çizgi–daire, yay–yay, yay–daire ve daire–daire için yeni analitik çözüm | Yok | Yok | Yeni dairesel çözüm, yolun yaylı alt kenarını bağımsız yay gibi değiştirmez. |
@@ -132,6 +132,8 @@ cad.entities.chamfer(doc, corner=straight_corner, distance=.1, second=.2)
 - `crates/native/interaction/src/corner/`: sahne seçimleri ve aynı anlamsal
   komut. `cad_corner.rs` ve `capabilities.rs`: AI/Python/MCP açıklaması.
 - `ops/path.rs`, native `edit.rs`, `widths.rs`: genişlik taşıma.
+- `application/src/trim.rs::extend_ends`: elips yayı tıklama/çit/pencere
+  uçları ve çekirdekle aynı uç seçimi; [ADR 0825](../adr/0825-native-elliptical-arc-extension.md).
 - `ops/trim.rs`, `ops/nurbs_cuts.rs`, native `trim.rs`, `break_join.rs`:
   parçalar, sınır hesabı ve delik retleri. `interaction/src/area.rs`:
   mevcut Alan böl alternatifi.
