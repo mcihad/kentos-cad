@@ -24,7 +24,7 @@ fn gap(s: &Shape, p: Vec2) -> f64 {
             )
             .d
         })
-        .fold(f64::INFINITY, f64::min)
+        .fold(f64::INFINITY, crate::jsmath::js_min)
 }
 fn rational_quarter(o: Vec2) -> Shape {
     Shape::Nurbs {
@@ -111,7 +111,7 @@ fn ellipse_parallel_checks_the_normal_not_an_inflated_ellipse() {
                 p.x + direction * 0.2 * t.y / n,
                 p.y - direction * 0.2 * t.x / n,
             );
-            max = max.max(gap(&out.shape, q));
+            max = crate::jsmath::js_max(max, gap(&out.shape, q));
         }
         assert!(max <= out.error_bound, "{max} > {}", out.error_bound);
     }

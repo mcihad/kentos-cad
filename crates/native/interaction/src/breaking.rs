@@ -32,17 +32,7 @@ pub const LABEL: &str = "Kır";
 
 /// The kinds the break tool takes, off locked layers.
 fn editable(e: &Entity, doc: &Document) -> bool {
-    matches!(
-        e,
-        Entity::Line(_)
-            | Entity::Polyline(_)
-            | Entity::Polygon(_)
-            | Entity::Arc(_)
-            | Entity::Circle(_)
-            | Entity::Ellipse(_)
-            | Entity::Xline(_)
-            | Entity::Ray(_)
-    ) && edge::unlocked(e, doc)
+    kentos_native_application::break_join::breakable(e) && edge::unlocked(e, doc)
 }
 
 /// The break tool.

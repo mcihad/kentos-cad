@@ -329,7 +329,7 @@ mod tests {
         (c, r, a0, a1)
     }
     fn ends(c: Vec2, r: f64, a0: f64, a1: f64) -> [Vec2; 2] {
-        [a0, a1].map(|a| add(c, p(r * a.cos(), r * a.sin())))
+        [a0, a1].map(|a| add(c, p(r * cos(a), r * sin(a))))
     }
     #[test]
     fn line_arc_uses_exact_offset_loci_and_keeps_the_clicked_arc_span() {

@@ -981,3 +981,50 @@ fn ellipse_extension_hover_click_and_shift_share_the_analytic_command() {
         assert_eq!(b.doc.to_snapshot_v2(), before);
     }
 }
+
+#[test]
+fn nurbs_break_uses_the_semantic_target_filter_and_keeps_exact_curve_pieces() {
+    use serde_json::json;
+    let (e, n) = (common::E, common::N);
+    let mut raw: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/interaction/v1/objects.kcad"
+    ))
+    .unwrap();
+    raw["entities"] = json!([{"kind":"nurbs","id":1,"layerId":"cizim","attrs":{"QA":"weighted"},"degree":2,
+        "ctrl":[{"x":e+20.,"y":n},{"x":e+20.,"y":n+20.},{"x":e,"y":n+20.}],"knots":[2,2,2,6,6,6],"weights":[1,std::f64::consts::FRAC_1_SQRT_2,1]}]);
+    let mut b = Bench::on(&raw.to_string());
+    b.draft.snap = false;
+    b.start("break");
+    let before = b.doc.to_snapshot_v2();
+    let s = 20. * std::f64::consts::FRAC_1_SQRT_2;
+    b.click(s, s);
+    assert!(
+        b.session.prompt().text().contains("ikinci kırılma"),
+        "{:?}",
+        b.log
+    );
+    b.confirm();
+    assert_eq!(b.last_level(), Some(Level::Success), "{:?}", b.log);
+    let pieces: Vec<_> = b
+        .doc
+        .entities()
+        .filter(|e| matches!(e, Entity::Nurbs(_)))
+        .collect();
+    assert_eq!(pieces.len(), 2);
+    let length: f64 = pieces
+        .iter()
+        .map(|e| {
+            assert_eq!(
+                e.base().attrs.get("QA").map(String::as_str),
+                Some("weighted")
+            );
+            let shape = kentos_native_application::geometry::shape(e);
+            kentos_geometry_core::geom::nurbs::of(&shape)
+                .unwrap()
+                .length()
+        })
+        .sum();
+    assert!((length - 10. * std::f64::consts::PI).abs() < 1e-8);
+    assert_eq!(b.doc.undo().as_deref(), Some("Kır"));
+    assert_eq!(b.doc.to_snapshot_v2(), before);
+}

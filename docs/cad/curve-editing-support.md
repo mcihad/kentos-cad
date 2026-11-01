@@ -100,7 +100,13 @@ cad.entities.chamfer(doc, corner=straight_corner, distance=.1, second=.2)
   koruduğu açık gösterilir. Aynı mevcut komutlar, kaydedilen GUI/Python
   karşılaştırması ve fare paneldeyken Undo/Redo kontrol edildi.
   [ADR 0824](../adr/0824-visible-curve-editing-and-handles.md).
-- [ ] Delikli ve yaylı kapalı alan, ağırlıklı NURBS, bağlı ölçü,
+- [x] Ağırlıklı NURBS başlangıç/bitiş/normalize parametre başvuruları:
+  gerçek knot domain'i, knot eklemede aynı konum, denetim düzenlemede
+  takip, Kır'da yeni parçaya aktarım, Buda/dönüşümde açıklanmış kopma.
+  Native/Python/MCP, gerçek GUI ve bağımsız dosya/De Boor doğrulaması
+  geçti. [ADR 0826](../adr/0826-nurbs-measurement-references.md),
+  [Python örneği](curve-references-python.md).
+- [ ] Delikli ve yaylı kapalı alan, bağlı ölçü,
   multipart ve kalıcı alt nesne referansları için birleşik alan/uzunluk/
   süreklilik/hata bütçesi kabulü. Güvenli ret tamamlanmış destek değildir.
 - Web'in bağımsız yay/daire yuvarlaması ve toleranslı offset araç yüzeyi

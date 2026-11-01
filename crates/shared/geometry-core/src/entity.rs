@@ -715,7 +715,23 @@ impl FromJson for Entity {
         let Json::Obj(fields) = v else {
             return Err("nesne bekleniyordu".into());
         };
-        let mut shape = Shape::from_json(v)?;
+        // Native contracts omit false NURBS flags. Read that canonical
+        // spelling too, including curves nested in blocks. An explicitly
+        // supplied null/wrong type still fails the ordinary field reader.
+        let normalized;
+        let shape_value = if matches!(v.get("kind"), Json::Str(k) if k == "nurbs") {
+            let mut f = fields.clone();
+            for name in ["closed", "periodic"] {
+                if !f.iter().any(|(key, _)| key == name) {
+                    f.push((name.into(), Json::Bool(false)));
+                }
+            }
+            normalized = Json::Obj(f);
+            &normalized
+        } else {
+            v
+        };
+        let mut shape = Shape::from_json(shape_value)?;
         if let Shape::Insert { attrs, .. } = &mut shape
             && let Json::Obj(fields) = v.get("attrs")
         {

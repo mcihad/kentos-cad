@@ -189,6 +189,7 @@ fn family(shape: &Shape) -> u8 {
         Shape::Opening { .. } => 8,
         Shape::Column { .. } => 9,
         Shape::Grid { .. } => 10,
+        Shape::Nurbs { .. } => 11,
         _ => 6,
     }
 }
@@ -349,6 +350,11 @@ pub fn point(e: &Entity, place: Place) -> Option<Vec2> {
                 &g,
                 if place == Place::Start { *t0 } else { *t1 },
             ))
+        }
+        (Shape::Nurbs { .. }, Place::Start | Place::End) => {
+            let c = crate::geom::nurbs::of(&e.shape)?;
+            let (lo, hi) = c.domain();
+            Some(c.point(if place == Place::Start { lo } else { hi }))
         }
         (Shape::Wall { .. }, Place::Vertex { part, ring: 0, index }) => {
             wall_line(&e.shape, part)?.0.pts.get(index).copied()
@@ -778,6 +784,11 @@ fn along_point(shape: &Shape, part: usize, ring: usize, index: usize, t: f64) ->
             whole.then(|| point_on_circle(*c, *r, a0 + t * sweep(*a0, *a1)))
         }
         Shape::Circle { c, r } => whole.then(|| point_on_circle(*c, *r, t * TAU)),
+        Shape::Nurbs { .. } => {
+            let c = crate::geom::nurbs::of(shape)?;
+            let (lo, hi) = c.domain();
+            whole.then(|| c.point(lo + t * (hi - lo)))
+        }
         Shape::Ellipse {
             c,
             major,
@@ -855,6 +866,14 @@ fn along_at(e: &Entity, at: Vec2) -> Option<Place> {
         Shape::Line { a, b } => t_on_segment(*a, *b, at).map(whole),
         Shape::Arc { c, r, a0, a1 } => t_on_arc(*c, *r, *a0, sweep(*a0, *a1), at).map(whole),
         Shape::Circle { c, r } => t_on_arc(*c, *r, 0.0, TAU, at).map(|t| whole(t % 1.0)),
+        Shape::Nurbs { .. } => {
+            let c = crate::geom::nurbs::of(&e.shape)?;
+            let u = c.closest(at);
+            let q = c.point(u);
+            let (lo, hi) = c.domain();
+            (js_hypot(q.x - at.x, q.y - at.y) <= near_enough(at))
+                .then(|| whole(clamp01((u - lo) / (hi - lo))))
+        }
         Shape::Ellipse {
             c,
             major,
@@ -1185,6 +1204,17 @@ pub fn range_length(e: &Entity, from: Place, to: Place) -> Option<f64> {
     match &e.shape {
         Shape::Line { a, b } => (!behind).then(|| js_hypot(b.x - a.x, b.y - a.y) * (t1 - t0)),
         Shape::Arc { r, a0, a1, .. } => (!behind).then(|| r * sweep(*a0, *a1) * (t1 - t0)),
+        Shape::Nurbs { closed, .. } => {
+            let c = crate::geom::nurbs::of(&e.shape)?;
+            let (lo, hi) = c.domain();
+            let a = lo + t0 * (hi - lo);
+            let b = lo + t1 * (hi - lo);
+            if behind {
+                closed.then(|| c.length_between(a, hi) + c.length_between(lo, b))
+            } else {
+                Some(c.length_between(a, b))
+            }
+        }
         Shape::Circle { r, .. } => {
             let d = t1 - t0;
             Some(r * TAU * if d >= 0.0 { d } else { d + 1.0 })
@@ -1330,6 +1360,16 @@ fn near_on(e: &Entity, at: Vec2, tol: f64) -> Near {
         if d <= tol && point_best.is_none_or(|(_, b)| d < b) {
             point_best = Some((p, d));
         }
+    }
+    // A chord's nearest point is not generally on a NURBS. Referencing it
+    // would either fail the on-curve check or bind an approximation.
+    if let Some(c) = crate::geom::nurbs::of(&e.shape) {
+        let q = c.point(c.closest(at));
+        let d = js_hypot(q.x - at.x, q.y - at.y);
+        return Near {
+            point: point_best,
+            edge: (d <= tol).then_some((q, d)),
+        };
     }
     let mut edge: Option<(Vec2, f64)> = None;
     for ed in entity_edges(&e.shape) {

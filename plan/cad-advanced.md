@@ -400,7 +400,12 @@ Elips yayı uzatma çekirdekte varken native uç denetiminde engelleniyordu;
 tıklama/çit/pencere aynı analitik hesaba bağlandı. Katlanmış yolda yanlış
 uç kaydı düzeltildi. GUI/Python/MCP ve tek Undo doğrulandı.
 [ADR 0825](../docs/adr/0825-native-elliptical-arc-extension.md).
-Birleşik ölçü/alt nesne kabulü halen açıktır. Web, ADR 0228
+Ağırlıklı NURBS ölçü bağları gerçek knot domain'inde izlenir; Kır'da
+bitiş yeni parçaya aktarılır. Native seçim filtresindeki eksik destek
+GUI testiyle bulunup giderildi. Denetim noktası taşıma, gerçek GUI
+bölme, Python/MCP, bağımsız De Boor ve tek Undo doğrulandı.
+[ADR 0826](../docs/adr/0826-nurbs-measurement-references.md).
+Birleşik alan/çoklu parça kabulü halen açıktır. Web, ADR 0228
 uyarınca ertelidir; masaüstü maddesini kapatmak için web geliştirilmez.
 
 ### CAD-ADV-05 — Parametrik 2B tasarımı açıklanabilir ve kapsamlı hale getir [ ]

@@ -12,6 +12,7 @@ use kentos_geometry_core::ops::subref::{
     Followed, Place, follow, follow_in, follow_path, follow_range, place_in, point, point_in, range_length,
 };
 use kentos_geometry_core::vec2::Vec2;
+use kentos_geometry_core::jsmath::js_hypot;
 use serde_json::Value;
 use serde_json::json;
 
@@ -538,4 +539,116 @@ fn slanted_opening_places_keep_large_coordinates_without_render_coordinates() {
             "{place:?}: {p:?}"
         );
     }
+}
+
+fn rational_quarter() -> Entity {
+    entity(
+        &json!({"kind":"nurbs","degree":2,"ctrl":[{"x":1,"y":0},{"x":1,"y":1},{"x":0,"y":1}],
+        "knots":[2,2,2,6,6,6],"weights":[1,std::f64::consts::FRAC_1_SQRT_2,1]}),
+    )
+}
+fn parameter_fraction(t: f64) -> Place {
+    Place::Along {
+        part: 0,
+        ring: 0,
+        index: 0,
+        t,
+    }
+}
+#[test]
+fn nurbs_places_use_its_actual_knot_domain_and_keep_shape_through_knot_insertion() {
+    use kentos_geometry_core::geom::nurbs::{of, with_curve};
+    let before = rational_quarter();
+    let c = of(&before.shape).unwrap();
+    let after = before.with(with_curve(&before.shape, c.insert(3., 1), false));
+    assert_eq!(point(&before, Place::Start), Some(Vec2::new(1., 0.)));
+    assert_eq!(point(&before, Place::End), Some(Vec2::new(0., 1.)));
+    for i in 0..=40 {
+        let t = i as f64 / 40.;
+        let place = parameter_fraction(t);
+        let a = point(&before, place).unwrap();
+        let b = point(&after, place).unwrap();
+        assert!(js_hypot(a.x - b.x, a.y - b.y) < 1e-14);
+        assert!((js_hypot(a.x, a.y) - 1.).abs() < 1e-14);
+        assert!(
+            matches!(follow(place,&before,Some(&after)),Followed::At(_,q) if js_hypot(a.x-q.x,a.y-q.y)<1e-14)
+        );
+    }
+    assert!(
+        (range_length(&before, parameter_fraction(0.), parameter_fraction(0.5)).unwrap()
+            - std::f64::consts::FRAC_PI_4)
+            .abs()
+            < 1e-11
+    );
+    assert_eq!(
+        range_length(&before, parameter_fraction(0.75), parameter_fraction(0.25)),
+        None
+    );
+    assert!(
+        point(
+            &before,
+            Place::Along {
+                part: 1,
+                ring: 0,
+                index: 0,
+                t: 0.5
+            }
+        )
+        .is_none()
+    );
+    assert!(point(&before, parameter_fraction(f64::NAN)).is_none());
+}
+#[test]
+fn nurbs_near_place_uses_the_curve_and_does_not_bind_a_control_point_or_chord() {
+    use kentos_geometry_core::ops::subref::{place_at, place_near};
+    use kentos_geometry_core::store::snap::SnapKind;
+    let e = rational_quarter();
+    let s = std::f64::consts::FRAC_1_SQRT_2;
+    let at = Vec2::new(s, s);
+    let (p, d) = place_near(&e, Vec2::new(s + 0.001, s + 0.001), 0.01).unwrap();
+    assert!(d < 0.002);
+    same_place("nearest fraction", p, parameter_fraction(0.5));
+    let q = point(&e, p).unwrap();
+    assert!((js_hypot(q.x, q.y) - 1.).abs() < 1e-14);
+    same_place(
+        "exact snap",
+        place_at(&e, SnapKind::Nearest, at).unwrap(),
+        parameter_fraction(0.5),
+    );
+    assert_eq!(
+        place_at(&e, SnapKind::Endpoint, Vec2::new(1., 0.)),
+        Some(Place::Start)
+    );
+    assert!(place_near(&e, Vec2::new(1., 1.), 0.01).is_none());
+    assert!(place_at(&e, SnapKind::Nearest, Vec2::new(0.5, 0.5)).is_none());
+}
+
+#[test]
+fn omitted_nurbs_flags_read_false_but_explicit_invalid_flags_still_fail() {
+    use kentos_geometry_core::entity::Shape;
+    let e = rational_quarter();
+    assert!(matches!(
+        e.shape,
+        Shape::Nurbs {
+            closed: false,
+            periodic: false,
+            ..
+        }
+    ));
+    for name in ["closed", "periodic"] {
+        for invalid in [serde_json::Value::Null, json!("false"), json!(1)] {
+            let mut value = json!({"kind":"nurbs","degree":2,"ctrl":[{"x":1,"y":0},{"x":1,"y":1},{"x":0,"y":1}],"knots":[0,0,0,1,1,1]});
+            value[name] = invalid;
+            assert!(Entity::from_json(&Json::parse(&value.to_string()).unwrap()).is_err());
+        }
+    }
+}
+
+#[test]
+fn nonclamped_nurbs_end_references_are_evaluated_curve_ends_not_control_points() {
+    let e = entity(
+        &json!({"kind":"nurbs","degree":2,"ctrl":[{"x":0,"y":0},{"x":2,"y":0},{"x":2,"y":2},{"x":4,"y":2}],"knots":[0,1,2,3,4,5,6]}),
+    );
+    assert_eq!(point(&e, Place::Start), Some(Vec2::new(1., 0.)));
+    assert_eq!(point(&e, Place::End), Some(Vec2::new(3., 2.)));
 }
