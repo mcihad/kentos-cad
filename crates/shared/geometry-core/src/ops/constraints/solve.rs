@@ -37,6 +37,22 @@ struct Eq {
     /// A tangent at an end (docs/adr/0335 §2): the arc's end that a coincident ties to the segment's end, built
     /// after the rule's own parts.
     end: Option<Ref>,
+    /// An ellipse's own centre-to-end ray: its point-part index, independent of pick order.
+    ellipse_ray_end: Option<usize>,
+}
+
+fn ellipse_ray_end(rule: &Rule, shapes: &[Shape]) -> Option<usize> {
+    let (Rule::Horizontal { a, b: Some(b) } | Rule::Vertical { a, b: Some(b) }) = rule else {
+        return None;
+    };
+    if a.object != b.object || !matches!(shapes.get(a.object), Some(Shape::Ellipse { .. })) {
+        return None;
+    }
+    match (a.element, b.element) {
+        (Element::Point(PointAt::Center), Element::Point(PointAt::Start | PointAt::End)) => Some(1),
+        (Element::Point(PointAt::Start | PointAt::End), Element::Point(PointAt::Center)) => Some(0),
+        _ => None,
+    }
 }
 
 fn element_of(r: &Ref) -> &Element {
@@ -66,7 +82,7 @@ fn eval(eq: &Eq, shapes: &[Shape], x: &[f64], free: &[bool], s: f64) -> Vec<D> {
             build(&shapes[r.object], element_of(r), &v)
         })
         .collect();
-    rows(&eq.rule, &parts, eq.value, &eq.at, s)
+    rows(&eq.rule, &parts, eq.value, &eq.at, s, eq.ellipse_ray_end)
 }
 
 /// Builds the parts of `rule` in `shapes` as constants (for a fix's place and a measure); none when a part is missing.
@@ -333,6 +349,7 @@ pub(super) fn run(p: &Problem<'_>, stop: &dyn Fn() -> bool) -> Outcome {
             parts,
             at,
             end,
+            ellipse_ray_end: ellipse_ray_end(&c.rule, shapes),
         });
     }
 

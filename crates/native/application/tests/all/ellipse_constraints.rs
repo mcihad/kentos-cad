@@ -120,3 +120,67 @@ fn an_explicitly_held_ellipse_does_not_move_for_a_new_point_constraint() {
     ));
     assert_eq!(d.get(Slot(1)).unwrap(), &before.entities[0]);
 }
+
+#[test]
+fn quarter_turn_with_a_fixed_axis_and_follower_is_planned_saved_undoable_and_conflict_atomic() {
+    for reverse in [false, true] {
+        let mut d = drawing();
+        let center = part(&d, 1, "center");
+        let start = part(&d, 1, "start");
+        let tip = part(&d, 2, "start");
+        add(
+            &mut d,
+            json!([
+                {"rule":{"kind":"fix","a":center}},
+                {"rule":{"kind":"distance","a":center,"b":start,"parameter":"eksen"},"value":"4"},
+                {"rule":{"kind":"coincident","a":start,"b":tip}}
+            ]),
+        );
+        let before = d.to_snapshot_v2();
+        let (a, b) = if reverse {
+            (&start, &center)
+        } else {
+            (&center, &start)
+        };
+        let input: ConstraintsEdit = serde_json::from_value(
+            json!({"edit":{"kind":"add","constraints":[{"rule":{"kind":"vertical","a":a,"b":b}}]}}),
+        )
+        .unwrap();
+        let planned = done(constraints_edit::plan(
+            &ExecutionContext::new(&mut d),
+            &input,
+        ));
+        assert_eq!(d.to_snapshot_v2(), before);
+        assert!(planned.diagnosis.conflicting.is_empty());
+        let out = done(constraints_edit::execute(
+            &mut ExecutionContext::new(&mut d),
+            input,
+        ));
+        assert!(out.diagnosis.conflicting.is_empty());
+        let e = ellipse(&d);
+        assert!(e.major.x.abs() < 1e-8);
+        assert!((e.major.y.abs() - 4.).abs() < 1e-8);
+        assert!((e.ratio - 0.5).abs() < 1e-8);
+        assert_eq!((e.c.x, e.c.y, e.t0, e.t1), (0., 0., 0., 0.));
+        let Some(Entity::Line(l)) = d.get(Slot(2)) else {
+            panic!()
+        };
+        assert!((l.a.x - e.major.x).abs() < 1e-8);
+        assert!((l.a.y - e.major.y).abs() < 1e-8);
+        let after = d.to_snapshot_v2();
+        let q = done(constraints_query::read(&d, &ConstraintsQuery::default()));
+        assert_eq!(q.diagnosis.dof, 3);
+        assert!(q.diagnosis.conflicting.is_empty());
+        let reopened = Document::from_snapshot_v2(after.clone()).unwrap();
+        assert_eq!(reopened.to_snapshot_v2(), after);
+        let conflict = serde_json::from_value(json!({"edit":{"kind":"add","constraints":[{"rule":{"kind":"horizontal","a":center,"b":start}}]}})).unwrap();
+        let rejected = constraints_edit::execute(&mut ExecutionContext::new(&mut d), conflict);
+        assert!(
+            !matches!(rejected, CommandResult::Completed { .. }),
+            "{rejected:?}"
+        );
+        assert_eq!(d.to_snapshot_v2(), after);
+        d.undo().unwrap();
+        assert_eq!(d.to_snapshot_v2(), before);
+    }
+}

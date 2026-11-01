@@ -68,3 +68,5 @@ vermelidir. Güvenli ret bir adaptörün uygulanması yerine sayılmaz.
 Elips nokta adaptörünün sınırları ve kabulü: [ADR 0829](../adr/0829-native-ellipse-point-constraints.md).
 
 Başarı sonrası durağan imleç ve birimli sonuç kabulü: [ADR 0830](../adr/0830-constraint-success-feedback-and-parameter-units.md).
+
+Elipsin kendi merkez–uç yönünde ekseni çökertmeden çeyrek dönüşü, kilit/çelişki ve UI/Python/MCP/Undo kabulü: [ADR 0831](../adr/0831-ellipse-ray-direction-without-axis-collapse.md).

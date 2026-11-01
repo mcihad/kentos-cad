@@ -166,3 +166,29 @@ fn undo_invalidates_success_hover_suppression_at_the_same_pointer_position() {
         "hover never recreates an undone constraint"
     );
 }
+
+#[test]
+fn quarter_turn_hover_is_read_only_then_two_clicks_apply_one_undoable_constraint() {
+    let mut b = drawing();
+    b.start("constraint");
+    b.type_text("SB");
+    b.click(0., 0.);
+    assert_eq!(b.doc.constraints().constraints.len(), 1);
+    let before = b.doc.to_snapshot_v2();
+    b.type_text("D");
+    b.click(0., 0.);
+    b.move_to(8., 0.);
+    assert_eq!(b.doc.to_snapshot_v2(), before, "preview must not write");
+    let preview = b.session.preview(&Default::default()).unwrap();
+    assert_ne!(preview.tag_tone, kentos_interaction::Tone::Danger);
+    b.click(8., 0.);
+    assert_eq!(b.doc.constraints().constraints.len(), 2, "{:?}", b.log);
+    let Some(kentos_commands::Entity::Ellipse(e)) = b.doc.get(Slot(1)) else {
+        panic!()
+    };
+    assert!(e.major.x.abs() < 1e-8);
+    assert!((e.major.y.abs() - 8.).abs() < 1e-8);
+    assert!((e.ratio - 0.5).abs() < 1e-8);
+    b.doc.undo().unwrap();
+    assert_eq!(b.doc.to_snapshot_v2(), before);
+}

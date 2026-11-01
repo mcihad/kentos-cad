@@ -101,3 +101,9 @@ sonra aynı noktadaki hover hemen tekrarlayan kısıt uyarısı gösterebiliyor;
 yatay dikişli serbest elipsi doğrudan düşeye zorlayan simetrik başlangıç
 adımı eksen çöküşüne yönelip güvenli tekillik reddi verebiliyor.
 Bunlar çözülmüş sayılmaz; CAD-ADV-05'in dal/önizleme kabulünde izlenir.
+
+
+Takip: başarı/tekrar hover sorunu [ADR 0830](0830-constraint-success-feedback-and-parameter-units.md),
+merkez–uç çeyrek dönüş sorunu [ADR 0831](0831-ellipse-ray-direction-without-axis-collapse.md)
+ile gerçek arayüzde doğrulanarak kapatıldı. CAD-ADV-05'in diğer açık
+kabul işleri destek matrisinde sürer.

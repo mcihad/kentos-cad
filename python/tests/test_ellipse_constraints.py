@@ -35,4 +35,26 @@ class EllipseConstraints(unittest.TestCase):
         self.assertEqual(cad.Document.from_bytes(saved).to_bytes(),saved)
         d.undo();self.assertEqual(d.to_bytes(),before)
 
+
+    def test_quarter_turn_is_atomic_plannable_and_keeps_axes(self):
+        d,uids=drawing()
+        q=cad.constraints.query(d).to_json()
+        horizontal=next(row['constraint']['id'] for row in q['constraints'] if row['constraint']['rule']['kind']=='horizontal')
+        cad.constraints.edit(d,edit=cad.RemoveConstraintEdit(ids=[horizontal]))
+        before=d.to_bytes()
+        part=lambda p:dict(uid=uids[0],element=dict(kind='point',place=dict(kind=p)))
+        edit=cad.AddConstraintEdit.from_json(dict(kind='add',constraints=[dict(rule=dict(kind='vertical',a=part('center'),b=part('start')))]))
+        cad.constraints.edit.plan(d,edit=edit)
+        self.assertEqual(d.to_bytes(),before)
+        cad.constraints.edit(d,edit=edit)
+        e=d.entity(uids[0]).entity.to_json();l=d.entity(uids[1]).entity.to_json()
+        self.assertAlmostEqual(e['major']['x'],0,places=8)
+        self.assertAlmostEqual(abs(e['major']['y']),4,places=8)
+        self.assertAlmostEqual(e['ratio'],.5,places=8)
+        self.assertAlmostEqual(l['a']['x'],e['major']['x'],places=8)
+        self.assertAlmostEqual(l['a']['y'],e['major']['y'],places=8)
+        self.assertEqual(e['t0'],e['t1'])
+        self.assertFalse(cad.constraints.query(d).diagnosis.conflicting)
+        d.undo();self.assertEqual(d.to_bytes(),before)
+
 if __name__=='__main__':unittest.main()

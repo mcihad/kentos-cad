@@ -458,6 +458,9 @@ doğrulandı. [ADR 0829](../docs/adr/0829-native-ellipse-point-constraints.md).
 Kısıt başarısının hemen tekrar hover hatasıyla örtülmesi düzeltildi;
 gerçek GUI’de mm/grad sonuçları ve sıfır olmayan küçük sayı dar/geniş
 pencerede doğrulandı. [ADR 0830](../docs/adr/0830-constraint-success-feedback-and-parameter-units.md).
+Elips merkez–uç yönünde simetrik 90° başlangıcın yanlış çelişki/tekillik
+üretmesi düzeltildi. Gerçek arayüzde 4/2 m eksenler, bağlı çizgi,
+query/Python eşitliği ve tek Undo doğrulandı. [ADR 0831](../docs/adr/0831-ellipse-ray-direction-without-axis-collapse.md).
 Yaylı kenar adaptörü, boyut cebiri, elips grip hedefi ve aynalı
 blok/sürükleme/dal birleşik kabulü bitmeden bu madde kapatılmaz.
 

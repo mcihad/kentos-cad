@@ -2478,5 +2478,59 @@ fn ellipse_axis_constraints_use_the_same_mcp_diagnosis_and_keep_analytic_geometr
         call(&mut server, "drawing.entities", json!({"drawing":drawing}))["structuredContent"]["items"],
         before
     );
+    // Free the direction only, keeping the centre, length and attached line.
+    let horizontal = added["structuredContent"]["output"]["added"][1].clone();
+    let removed = call(
+        &mut server,
+        "cad.constraints.edit",
+        json!({"drawing":drawing,"edit":{"kind":"remove","ids":[horizontal]}}),
+    );
+    assert_eq!(
+        removed["structuredContent"]["status"], "completed",
+        "{removed}"
+    );
+    let free_before = call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"].clone();
+    let turn = json!({"drawing":drawing,"edit":{"kind":"add","constraints":[{"rule":{"kind":"vertical","a":c,"b":s}}]}});
+    let mut turn_plan = turn.clone();
+    turn_plan["op"] = json!("plan");
+    let planned = call(&mut server, "cad.constraints.edit", turn_plan);
+    assert_eq!(
+        planned["structuredContent"]["status"], "completed",
+        "{planned}"
+    );
+    assert_eq!(
+        call(&mut server, "drawing.entities", json!({"drawing":drawing}))["structuredContent"]["items"],
+        free_before
+    );
+    let turned = call(&mut server, "cad.constraints.edit", turn);
+    assert_eq!(
+        turned["structuredContent"]["status"], "completed",
+        "{turned}"
+    );
+    let rotated = call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"].clone();
+    let e = &rotated[0]["entity"];
+    assert!(e["major"]["x"].as_f64().unwrap().abs() < 1e-8);
+    assert!((e["major"]["y"].as_f64().unwrap().abs() - 4.).abs() < 1e-8);
+    assert!((e["ratio"].as_f64().unwrap() - 0.5).abs() < 1e-8);
+    assert!(
+        (rotated[1]["entity"]["a"]["y"].as_f64().unwrap() - e["major"]["y"].as_f64().unwrap())
+            .abs()
+            < 1e-8
+    );
+    let turn_query = call(
+        &mut server,
+        "cad.constraints.query",
+        json!({"drawing":drawing}),
+    );
+    let mut q = turn_query["structuredContent"]["output"]["diagnosis"].clone();
+    let mut written = turned["structuredContent"]["output"]["diagnosis"].clone();
+    q.as_object_mut().unwrap().remove("iterations");
+    written.as_object_mut().unwrap().remove("iterations");
+    assert_eq!(q, written);
+    call(&mut server, "drawing.undo", json!({"drawing":drawing}));
+    assert_eq!(
+        call(&mut server, "drawing.entities", json!({"drawing":drawing}))["structuredContent"]["items"],
+        free_before
+    );
     std::fs::remove_dir_all(dir).unwrap();
 }

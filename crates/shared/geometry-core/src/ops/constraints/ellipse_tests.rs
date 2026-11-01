@@ -247,3 +247,128 @@ fn symmetry_of_two_elliptical_arc_ends_fits_dual_capacity() {
     assert!(((b.x - a.x) * (midpoint.y - a.y) - (b.y - a.y) * (midpoint.x - a.x)).abs() < 1e-8);
     assert!(((b.x - a.x) * (q.x - p.x) + (b.y - a.y) * (q.y - p.y)).abs() < 1e-8);
 }
+
+#[test]
+fn ellipse_center_ray_turns_a_quarter_without_collapsing_axes() {
+    for (angle, vertical) in [(0., true), (PI / 2., false), (PI, true), (-PI / 2., false)] {
+        for reverse in [false, true] {
+            let center = Vec2::new(3e6, 1e7);
+            let shapes = [ellipse(center, 4., 2., angle, 0., 0.)];
+            let (a, b) = if reverse {
+                (r(0, START), r(0, CENTER))
+            } else {
+                (r(0, CENTER), r(0, START))
+            };
+            let direction = if vertical {
+                Rule::Vertical { a, b: Some(b) }
+            } else {
+                Rule::Horizontal { a, b: Some(b) }
+            };
+            let out = solve_of(
+                &shapes,
+                &[
+                    c(Rule::Fix { a: r(0, CENTER) }),
+                    dim(
+                        Rule::Distance {
+                            a: r(0, CENTER),
+                            b: r(0, START),
+                            axis: Axis::Aligned,
+                            left: false,
+                        },
+                        4.,
+                    ),
+                    c(direction),
+                ],
+            );
+            assert!(
+                out.status.holds(),
+                "angle={angle}, vertical={vertical}, reverse={reverse}: {out:?}"
+            );
+            assert_eq!(out.dof, 1);
+            let Shape::Ellipse {
+                c: actual,
+                major,
+                ratio,
+                t0,
+                t1,
+            } = out.shapes[0]
+            else {
+                panic!()
+            };
+            close(actual, center);
+            assert!((js_hypot(major.x, major.y) - 4.).abs() < 1e-8);
+            assert!((ratio - 0.5).abs() < 1e-8);
+            assert_eq!((t0, t1), (0., 0.));
+            assert!((if vertical { major.x } else { major.y }).abs() < 1e-8);
+        }
+    }
+}
+
+#[test]
+fn ellipse_direction_conflict_and_held_orientation_leave_shapes_unchanged() {
+    let shapes = [ellipse(Vec2::new(0., 0.), 4., 2., 0., 0., 0.)];
+    let v = c(Rule::Vertical {
+        a: r(0, CENTER),
+        b: Some(r(0, START)),
+    });
+    let h = c(Rule::Horizontal {
+        a: r(0, CENTER),
+        b: Some(r(0, START)),
+    });
+    let constraints = [c(Rule::Fix { a: r(0, CENTER) }), h, v];
+    let out = solve_of(&shapes, &constraints);
+    assert!(!out.status.holds());
+    assert!(!out.conflicting.is_empty());
+    assert_eq!(out.shapes, shapes);
+    let out = solve(
+        &Problem {
+            shapes: &shapes,
+            constraints: &[v],
+            held: &[Hold {
+                object: 0,
+                element: None,
+            }],
+            fix_from: None,
+        },
+        &|| false,
+    );
+    assert!(!out.status.holds());
+    assert_eq!(out.shapes, shapes);
+}
+
+#[test]
+fn ellipse_ray_alignment_uses_the_true_partial_end_and_nearest_direction() {
+    for angle in [-2.7, -1.1, -0.1, 0.1, 1.1, 2.7] {
+        let shapes = [ellipse(Vec2::new(0., 0.), 4., 2., angle, 0., PI / 2.)];
+        let initial = at(&shapes[0], PI / 2.);
+        let out = solve_of(
+            &shapes,
+            &[
+                c(Rule::Fix { a: r(0, CENTER) }),
+                c(Rule::Horizontal {
+                    a: r(0, CENTER),
+                    b: Some(r(0, END)),
+                }),
+            ],
+        );
+        assert!(out.status.holds(), "angle={angle}: {out:?}");
+        let Shape::Ellipse {
+            t0,
+            t1,
+            major,
+            ratio,
+            ..
+        } = out.shapes[0]
+        else {
+            panic!()
+        };
+        let end = at(&out.shapes[0], t1);
+        assert!(end.y.abs() < 1e-8);
+        assert!(
+            end.x * initial.x > 0.,
+            "must not flip the selected ray's half plane"
+        );
+        assert!(js_hypot(major.x, major.y) > 0. && ratio > 0. && ratio <= 1.);
+        assert!(t1 > t0 && t1 - t0 < TAU);
+    }
+}

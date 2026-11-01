@@ -10,7 +10,14 @@ use super::{Axis, Rule};
 
 /// The residuals of `rule` from its parts built in order (`parts`), its value (`value`, metres or radians) and, for
 /// a fix, the parts' place to hold (`at`, in the same order).
-pub(super) fn rows(rule: &Rule, parts: &[Built], value: f64, at: &[Built], s: f64) -> Vec<D> {
+pub(super) fn rows(
+    rule: &Rule,
+    parts: &[Built],
+    value: f64,
+    at: &[Built],
+    s: f64,
+    ellipse_ray_end: Option<usize>,
+) -> Vec<D> {
     let point = |i: usize| match &parts[i] {
         Built::Point(p) => *p,
         Built::Segment(a, _) => *a,
@@ -28,6 +35,23 @@ pub(super) fn rows(rule: &Rule, parts: &[Built], value: f64, at: &[Built], s: f6
     };
     // The signed distance of `p` from the line through `a` and `b`: positive on its left.
     let side = |a: P, b: P, p: P| b.sub(a).cross(p.sub(a)) / b.sub(a).len();
+    if let Some(end) = ellipse_ray_end {
+        // The coordinate residual loses its angular derivative at a quarter turn and instead tries to
+        // collapse a positive ellipse axis. The nonzero centre ray has the same H/V zero set as this
+        // angle modulo pi, with a usable angular derivative even at that starting orientation.
+        let d = point(end).sub(point(1 - end));
+        if !d.x.v.is_finite() || !d.y.v.is_finite() || (d.x.v == 0.0 && d.y.v == 0.0) {
+            return vec![D::c(f64::NAN)];
+        }
+        let target = if matches!(rule, Rule::Vertical { .. }) {
+            crate::jsmath::PI / 2.0
+        } else {
+            0.0
+        };
+        let angle = D::atan2(d.y, d.x);
+        let turns = libm::floor((angle.v - target + crate::jsmath::PI / 2.0) / crate::jsmath::PI);
+        return vec![(angle - D::c(target + turns * crate::jsmath::PI)) * s];
+    }
     match rule {
         Rule::Coincident { b, .. } => {
             let a = point(0);
@@ -195,7 +219,7 @@ pub(super) fn rows(rule: &Rule, parts: &[Built], value: f64, at: &[Built], s: f6
 /// What a dimensional rule measures now: a distance (signed along an axis or from a segment), an angle in
 /// [0, 2π), a radius or a diameter, in metres or radians.
 pub(super) fn measured(rule: &Rule, parts: &[Built]) -> Option<f64> {
-    let probe = rows(rule, parts, 0.0, &[], 1.0);
+    let probe = rows(rule, parts, 0.0, &[], 1.0, None);
     let first = probe.first()?.v;
     let v = match rule {
         // The residual at value zero is the measure itself.

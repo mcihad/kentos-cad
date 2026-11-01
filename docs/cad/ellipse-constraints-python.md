@@ -42,3 +42,22 @@ Bu `cad.parameters.edit` girdisidir; `op: execute` yazmayı gerçekleştirir.
 Çelişki veya kilitli geometride ret halinde geçerli çizim korunur.
 Genel parametre ad değiştirme, bağımlılık ve sürücü/başvuru incelemesi
 [destek belgesinde](parametric-support.md) açıklanır.
+
+
+Merkez–Start/End çiftini yatay/düşey yapmak için aynı nokta başvurularını
+kullanın. Örneğin başlangıçta yatay olan tam elipsi düşeye almak:
+
+```python
+turn = cad.AddConstraintEdit.from_json(dict(kind="add", constraints=[
+    dict(rule=dict(kind="vertical", a=center, b=start)),
+]))
+cad.constraints.edit.plan(doc, edit=turn)
+cad.constraints.edit(doc, edit=turn)
+```
+
+Bu örnekte karşıt bir yatay bağ önceden eklenmişse önce onu kaldırmak
+kullanıcının açık seçimidir; komut eski bağı sessizce silmez. Aynı elipsin
+merkez–uç yönü en yakın eşdeğer doğrultuya döner; yataydan düşeye çeyrek
+dönüş de pozitif eksenler çökertilmeden çözülür. Tam çeyrek dönüşte eşit
+uzaklıktaki iki dal arasından deterministik olan seçilir.
+[Çözüm sınırı ve regresyon kanıtı](../adr/0831-ellipse-ray-direction-without-axis-collapse.md).
