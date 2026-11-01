@@ -2665,7 +2665,7 @@ impl App {
     /// were made on.
     pub(crate) fn show_document(&mut self, doc: Document) {
         self.close_cloud_project();
-        self.cancel();
+        self.leave_document_interaction();
         // A point template's names go on in the drawing they were drawn in:
         // another drawing starts them again (docs/adr/0176 §3b).
         self.release_template();

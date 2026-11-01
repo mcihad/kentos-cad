@@ -121,6 +121,35 @@ impl View for PaperCameraView<'_> {
 }
 
 impl App {
+    /// The drawing boundary is stronger than Esc: discard every unfinished
+    /// command and drawing aid, without committing or resuming a parent.
+    pub(crate) fn leave_document_interaction(&mut self) {
+        self.session.leave_document();
+        self.field = None;
+        // These editors hold object slots from the drawing being left. Do
+        // not blur/commit them against the next drawing, even if ids match.
+        let inline = self.text_field.take().is_some();
+        let paragraph = self.paragraph.take().is_some();
+        self.text_field_release |= inline || paragraph;
+        self.text_field_focus = false;
+        self.text_field_select = false;
+        self.paragraph_focus = false;
+        self.last_click = None;
+        self.snap = None;
+        self.snap_cycle = None;
+        self.cursor_point = None;
+        self.tracking.clear();
+        self.locks.reset();
+        self.drawing_menu = None;
+        self.snap_once = None;
+        self.hover_card = None;
+        self.bonds_refused = None;
+        self.panning = false;
+        self.pan_recorded = false;
+        self.scale_field = None;
+        self.command_input.clear();
+    }
+
     /// Runs something on the session with the open drawing; `None` when no
     /// drawing is open. What the tool says goes to the command line; the
     /// view changes it asks for (Kaydır, Pencere yakınlaştır) go to the

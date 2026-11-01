@@ -106,9 +106,9 @@ impl App {
         if self.document.is_none() {
             return true;
         }
-        // The selection is the drawing's, kept before the running tool lets go (Esc's work clears it).
+        // The selection is the drawing's; the unfinished interaction is not parked with it.
         let selection = std::mem::replace(&mut self.selection, Selection::new());
-        self.cancel();
+        self.leave_document_interaction();
         let Some(document) = self.document.take() else {
             return true;
         };
@@ -170,7 +170,7 @@ impl App {
     pub(crate) fn close_tab_now(&mut self) {
         let name = self.document.as_ref().map(|d| d.name().to_owned());
         self.close_cloud_project();
-        self.cancel();
+        self.leave_document_interaction();
         self.document = None;
         let next = if self.doc_tabs.at < self.doc_tabs.parked.len() {
             Some(self.doc_tabs.at)
@@ -277,6 +277,82 @@ mod tests {
 
     fn front(app: &App) -> u64 {
         app.document.as_ref().map(|d| d.session).expect("a drawing")
+    }
+
+    fn pending_hatch_value(app: &mut App) {
+        let _ = app.start_tool("hatch");
+        assert_eq!(app.with_tool(|s, cx| s.input("Ö", cx)), Some(true));
+        assert!(app.session.prompt().step.contains("ölçeğini yazın"));
+    }
+
+    #[test]
+    fn opening_another_drawing_drops_the_whole_command_not_just_its_value_step() {
+        let mut app = app_with_drawing();
+        pending_hatch_value(&mut app);
+        let revision = app.document.as_ref().unwrap().model.revision();
+        let next = drawing(2);
+        let next_revision = next.model.revision();
+        let next_count = next.model.len();
+        let _ = app.update(Message::Opened(Some(Ok(Box::new(next)))));
+        assert!(
+            !app.session.is_running(),
+            "a value prompt must not become a hatch command on the new drawing"
+        );
+        assert!(app.session.preview(&app.format()).is_none());
+        assert_eq!(
+            app.document.as_ref().unwrap().model.revision(),
+            next_revision
+        );
+        assert_eq!(app.document.as_ref().unwrap().model.len(), next_count);
+        assert_eq!(revision, next_revision, "neither drawing was edited");
+        assert_eq!(
+            app.session.last(),
+            Some("hatch"),
+            "repeat remains available, without its old draft"
+        );
+    }
+
+    #[test]
+    fn changing_tabs_drops_the_transparent_command_and_its_suspended_parent() {
+        let mut app = app_with_drawing();
+        let first = front(&app);
+        assert!(app.park_active());
+        let _ = app.update(Message::Opened(Some(Ok(Box::new(drawing(2))))));
+        pending_hatch_value(&mut app);
+        let _ = app.start_tool("pan");
+        assert_eq!(app.session.tool_id(), "hatch", "pan suspends the hatch");
+        let _ = app.update(Message::DocTabs(Event::Show(0)));
+        assert_eq!(front(&app), first);
+        assert!(
+            !app.session.is_running(),
+            "neither the child nor its parent may follow the tab"
+        );
+        assert!(app.session.preview(&app.format()).is_none());
+        let _ = app.update(Message::DocTabs(Event::Show(1)));
+        assert!(
+            !app.session.is_running(),
+            "returning to the source tab does not resume a discarded draft"
+        );
+        assert_eq!(app.document.as_ref().unwrap().model.len(), 15);
+        assert!(!app.document.as_ref().unwrap().dirty());
+    }
+
+    #[test]
+    fn closing_the_last_drawing_drops_a_pending_value_and_drawing_aids() {
+        let mut app = app_with_drawing();
+        pending_hatch_value(&mut app);
+        let point = kentos_interaction::Vec2::new(10.0, 20.0);
+        app.tracking.acquire_point(point);
+        app.locks.lock_length(3.0, point);
+        app.snap_once = Some((kentos_interaction::SnapKind::Endpoint, "Uç nokta"));
+        app.command_input = "yarım girdi".into();
+        app.close_tab_now();
+        assert!(app.document.is_none());
+        assert!(!app.session.is_running());
+        assert!(app.tracking.acquired().is_empty());
+        assert!(!app.locks.any());
+        assert!(app.snap_once.is_none());
+        assert!(app.command_input.is_empty());
     }
 
     #[test]

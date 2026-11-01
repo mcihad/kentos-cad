@@ -185,8 +185,24 @@ yazım, tek mantıksal Undo ve önizleme/sonuç eşitliği gerçek pencerede do�
   hizalı ölçü yerleştirme, klavyeden uzaklık ve yazmadan başa dönme;
   blok ekleme, fazladan kopyasız tek bitirme, tek Undo ve Esc doğrulandı.
   830 etkileşim, 8 menü ve 5 anlamsal komut testi geçti; 5 isteğe bağlı test atlandı.
-- [ ] Bütün araç aşamalarında geçersiz/onaysız girdinin gösterimi, odak/belge
-  değişimi, kilitli/bağlı nesne etkisi ve önizleme/sonuç eşitliği kabulünü tamamla.
+- [x] Dördüncü dilim, [ADR 0815](../docs/adr/0815-document-boundaries-discard-command-drafts.md):
+  dosya açma, sekme değiştirme ve kapatma normal Esc yerine bütün bekleyen
+  etkileşimi bırakır. Tarama sayı aşamasından başka dosya açıldığında
+  komutun yeni çizimde sürmesi gerçek pencerede bulunup düzeltildi.
+  Askıdaki komut, tutamaç/seçim kutusu, kilit/izleme, yarım girdi ve
+  yerinde yazı/paragraf taslağı başka belgeye taşınmaz; normal Esc korunur.
+- [x] Gerçek pencerede dosya açma, Taşı/tutamaç önizlemesi ve onaysız yazıyla
+  sekme değiştirme; yeni çizgi ve sekmelerin bağımsız tek Undo'su;
+  değer aşamasından Esc ve bekleyen komutla kapatma doğrulandı. Görüntüler
+  Git dışında. 832 etkileşim testi geçti. Geniş masaüstü: 1551 geçti,
+  256 atlandı; eski iptal çağrılarıyla da aynı koordinatlarda tekrarlayan
+  bir geçici ölçü testi başarısız kaldı. Bütün takım geçmiş sayılmıyor.
+  Önceki Enter açıklamalarının 18 fixture'daki metin/seçenek beklentileri
+  güncellendi; geometri ve Undo beklentileri korundu, senaryo çeşitleri geçti.
+- [ ] Bütün araç aşamalarında geçersiz/onaysız girdinin gösterimi, işletim
+  sistemi odak kaybı, diğer geç asenkron yanıtlar, kilitli/bağlı nesne etkisi
+  ve önizleme/sonuç eşitliği kabulünü tamamla. Alt+Q'nun komut girdisi
+  odaktayken aramayı açmaması ve geçici ölçü testinin mevcut uyumsuzluğu açık.
   Temel Tarama/Blok ekle/Hizalı ölçü akışları denendi; karmaşık tarama sınırları,
   öznitelik soran/dinamik bloklar ve diğer ölçü kiplerinin birleşik kabulü açık.
   Köşe yuvarla son yarıçap kısayolu faredeki farklı yarıçap önizlemesi yerine

@@ -359,6 +359,56 @@ mod tests {
     }
 
     #[test]
+    fn opening_a_drawing_discards_inline_editors_and_their_late_keep() {
+        for paragraph in [false, true] {
+            let mut app = app_with_drawing();
+            let _ = app.update(Message::Run("tool.text"));
+            press(&mut app, Point::new(300.0, 200.0));
+            let mut inline = app.text_field.clone().expect("a text field");
+            let _ = app.update(Message::TextField(Event::Input("Kalır".into())));
+            let _ = app.update(Message::TextField(Event::Keep));
+            app.leave_tool();
+            let (slot, text) = app
+                .document
+                .as_ref()
+                .unwrap()
+                .model
+                .entities()
+                .find_map(|e| match e {
+                    Entity::Text(t) if t.text == "Kalır" => {
+                        Some((kentos_domain::Slot(t.base.id), t.clone()))
+                    }
+                    _ => None,
+                })
+                .expect("the new text");
+            let original_texts = texts(&app);
+            let next = crate::document::Document::from_v2(
+                app.document.as_ref().unwrap().model.to_snapshot_v2(),
+                None,
+            )
+            .expect("another document with the same object ids");
+            if paragraph {
+                app.edit_paragraph(slot, &text);
+                app.paragraph.as_mut().unwrap().text = "Gitmez".into();
+            } else {
+                inline.editing = Some(slot);
+                inline.text = "Gitmez".into();
+                app.text_field = Some(inline);
+            }
+            let _ = app.update(Message::Opened(Some(Ok(Box::new(next)))));
+            assert!(app.text_field.is_none() && app.paragraph.is_none());
+            let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+            let _ = app.update(Message::TextField(Event::Keep));
+            let _ = app.update(Message::Paragraph(crate::paragraph_editor::Event::Keep));
+            assert_eq!(texts(&app), original_texts);
+            assert_eq!(
+                app.document.as_ref().unwrap().model.to_snapshot_v2(),
+                before
+            );
+        }
+    }
+
+    #[test]
     fn yazi_opens_the_field_where_it_is_clicked_and_enter_adds_the_text() {
         let mut app = app_with_drawing();
         let _ = app.update(Message::Run("tool.text"));

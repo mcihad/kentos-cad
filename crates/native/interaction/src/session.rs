@@ -966,6 +966,18 @@ impl Session {
         self.drop_reference();
     }
 
+    /// A drawing is replaced, parked or closed: no draft, suspended command,
+    /// grip or pending button press may reach the next drawing. Unlike Esc,
+    /// this is not a step back. The last command and remembered options stay
+    /// available for a fresh run; the host clears its locks and tracking too.
+    pub fn leave_document(&mut self) {
+        self.exit();
+        self.select.reset();
+        self.cursor = None;
+        self.pick_pressed = false;
+        self.resumed = false;
+    }
+
     /// No reference, none asked, Yapım kipi off: a new command's start.
     fn drop_reference(&mut self) {
         self.reference = None;

@@ -20,7 +20,7 @@
     { "key": "Ctrl+Z", "expect": { "canUndo": false, "objects": [{ "id": 1, "kind": "line", "points": [[-28, 12], [-8, 12]] }] } },
     { "move": [8, -15], "note": "Kilitli katmandaki çizgi düzenlenecek bir kenar değildir: vurgulanmaz.", "expect": { "hover": null } },
     { "click": [8, -15], "expect": { "log": "warn", "entities": 13, "canUndo": false } },
-    { "key": "S", "note": "Sınır seç: tıklamalar sınırları seçer.", "expect": { "tool": "trim", "options": ["T"] } },
+    { "key": "S", "note": "Sınır seç: tıklamalar sınırları seçer.", "expect": { "tool": "trim", "options": ["T", "Enter"] } },
     { "click": [-4, 10], "expect": { "selected": [3] } },
     { "rightClick": [20, -10], "note": "Sağ tık sınırları alır; seçim olarak vurgulu kalırlar.", "expect": { "tool": "trim", "options": ["T", "S", "K", "U", "R"], "selected": [3] } },
     { "click": [-26, 12], "note": "Seçilen sınır 1'i kesmiyor: budanacak kısım yok.", "expect": { "log": "warn", "objects": [{ "id": 1, "kind": "line", "points": [[-28, 12], [-8, 12]] }] } },

@@ -26,6 +26,51 @@ fn objects() -> Bench {
 }
 
 #[test]
+fn leaving_a_drawing_drops_a_selection_box_and_ignores_its_late_release() {
+    let mut b = objects();
+    let from = Bench::pointer(-26.0, -14.0);
+    let to = Bench::pointer(-6.0, 16.0);
+    b.run(|s, cx| s.pointer_down(&from, cx));
+    b.run(|s, cx| s.pointer_move(&to, cx));
+    assert!(b.session.select_box().is_some());
+    let revision = b.doc.revision();
+    b.session.leave_document();
+    assert!(b.session.select_box().is_none());
+    b.run(|s, cx| s.pointer_up(&to, cx));
+    assert!(
+        b.selection.is_empty(),
+        "the old box cannot select the next drawing's objects"
+    );
+    assert_eq!(b.doc.revision(), revision);
+    b.click(-16.0, -12.3);
+    assert_eq!(b.selected(), [1], "a fresh click still works");
+}
+
+#[test]
+fn leaving_a_drawing_drops_a_grip_preview_without_applying_it() {
+    let mut b = objects();
+    b.selection.set([kentos_domain::Slot(1)]);
+    let origin = Vec2::new(E - 24.0, N - 12.0);
+    assert!(b.run(|s, cx| s.heat_grip(kentos_domain::Slot(1), 0, origin, cx)));
+    b.move_to(-20.0, -10.0);
+    assert!(b.session.grip_active());
+    assert!(b.session.preview(&Default::default()).is_some());
+    let before = b.doc.to_snapshot_v2();
+    b.session.leave_document();
+    assert!(!b.session.grip_active());
+    assert!(b.session.preview(&Default::default()).is_none());
+    let late = Bench::pointer(-20.0, -10.0);
+    b.run(|s, cx| s.pointer_up(&late, cx));
+    b.confirm();
+    assert_eq!(
+        b.doc.to_snapshot_v2(),
+        before,
+        "no moved vertex or undo step leaks through"
+    );
+    assert!(b.doc.undo().is_none());
+}
+
+#[test]
 fn a_click_picks_one_and_shift_turns_it_over() {
     let mut b = objects();
     b.click(-16.0, -12.3);

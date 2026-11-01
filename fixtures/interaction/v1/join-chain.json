@@ -14,7 +14,7 @@
     {
       "run": "tool.join",
       "note": "Seçim yok: önce nesneler seçilir; Zincir kapalı.",
-      "expect": { "tool": "join", "prompt": "Birleştir: nesnelere tıklayın ya da pencereyle seçin, bitince sağ tıklayın (0 seçili) [uç boşluğu toleransı 0.001 m; değiştirmek için sayı yazın; Zincir (Z)]" }
+      "expect": { "tool": "join", "prompt": "Birleştir: nesnelere tıklayın ya da pencereyle seçin (0 seçili) [Bitir (Enter) / uç boşluğu toleransı 0.001 m; değiştirmek için sayı yazın; Zincir (Z)]" }
     },
     {
       "text": "z",
@@ -34,7 +34,7 @@
     { "key": "Ctrl+Z", "note": "Tek adım: “Birleştir”.", "expect": { "ids": [1, 2, 3, 4, 5, 6] } },
     { "key": "Esc", "note": "Seçim bırakılır (seçimle Birleştir hemen çalışır)." },
     { "run": "tool.join", "note": "Bellek başladığı gibi bırakılır: Zincir kapatılır." },
-    { "text": "z", "expect": { "prompt": "Birleştir: nesnelere tıklayın ya da pencereyle seçin, bitince sağ tıklayın (0 seçili) [uç boşluğu toleransı 0.001 m; değiştirmek için sayı yazın; Zincir (Z)]" } },
+    { "text": "z", "expect": { "prompt": "Birleştir: nesnelere tıklayın ya da pencereyle seçin (0 seçili) [Bitir (Enter) / uç boşluğu toleransı 0.001 m; değiştirmek için sayı yazın; Zincir (Z)]" } },
     { "key": "Esc" }
   ]
 }

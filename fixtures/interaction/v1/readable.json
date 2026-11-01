@@ -12,7 +12,7 @@
   "clickTolerance": 0.125,
   "steps": [
     { "move": [-20, 0] },
-    { "run": "tool.readable", "note": "Seçim yok: araç önce seçtirir.", "expect": { "tool": "readable", "options": [], "selected": [] } },
+    { "run": "tool.readable", "note": "Seçim yok: araç önce seçtirir.", "expect": { "tool": "readable", "options": ["Enter"], "selected": [] } },
     { "drag": [[-20, 10], [20, -16]], "note": "Soldan sağa pencere dört yazıyı seçer.", "expect": { "selected": [1, 2, 3, 4] } },
     { "rightClick": [20, 12], "note": "Sağ tık çevirir: kilitli katmandaki yazı atlanır, okunan yazı kalır; ters okunan iki yazı kutuları yerinde kalarak yarım döner; araç biter.", "expect": { "tool": "select", "log": "success", "entities": 4, "logged": ["1 nesne kilitli katmanda olduğu için atlandı.", "2 yazı okunur yapıldı."], "objects": [{ "id": 1, "kind": "text", "points": [[-10, 5.16]], "rotation": 0 }, { "id": 2, "kind": "text", "points": [[10.6293, 3.271]], "rotation": 20 }, { "id": 3, "kind": "text", "points": [[0, -5]], "rotation": 30 }, { "id": 4, "kind": "text", "points": [[0, -12]], "rotation": 180 }] } },
     { "key": "Ctrl+Z", "note": "Tek adımda geri alınır.", "expect": { "entities": 4, "canUndo": false, "objects": [{ "id": 1, "kind": "text", "points": [[-10, 5]], "rotation": 180 }, { "id": 2, "kind": "text", "points": [[10, 5]], "rotation": 200 }] } },

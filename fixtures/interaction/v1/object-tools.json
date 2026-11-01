@@ -12,7 +12,7 @@
   "clickTolerance": 0.125,
   "steps": [
     { "move": [-20, 0] },
-    { "run": "tool.join", "note": "Seçim yok: araç önce seçtirir; istemde uç boşluğu toleransı ve Zincir (ADR 0161 §2).", "expect": { "tool": "join", "options": ["Z"], "selected": [] } },
+    { "run": "tool.join", "note": "Seçim yok: araç önce seçtirir; istemde uç boşluğu toleransı ve Zincir (ADR 0161 §2).", "expect": { "tool": "join", "options": ["Enter", "Z"], "selected": [] } },
     { "click": [4, -4], "expect": { "selected": [8] } },
     { "drag": [[10, -5], [7, -19]], "note": "Sağdan sola kesişim penceresi: dokunduğu çizgiler de eklenir.", "expect": { "selected": [8, 9, 13] } },
     { "rightClick": [20, 10], "note": "Sağ tık birleştirir: kilitli katmandaki çizgi atlanır, iki çizgi ilk nesnenin yerinde çoklu çizgi olur; araç biter.", "expect": { "tool": "select", "log": "success", "entities": 12, "selected": [8], "objects": [{ "id": 8, "kind": "polyline", "points": [[0, -4], [8, -4], [8, -12]] }] } },
@@ -22,7 +22,7 @@
     { "run": "tool.explode", "note": "Seçimle hemen çalışır: kapalı alan dört çizgiye ayrılır, parçalar seçilir, araç biter.", "expect": { "tool": "select", "log": "success", "entities": 16, "selected": [14, 15, 16, 17], "newest": { "kind": "line", "points": [[14, -6], [14, -14]] } } },
     { "key": "Ctrl+Z", "expect": { "entities": 13, "objects": [{ "id": 10, "kind": "polygon", "points": [[14, -14], [24, -14], [24, -6], [14, -6]] }] } },
     { "key": "Esc", "expect": { "selected": [] } },
-    { "run": "tool.explode", "expect": { "tool": "explode", "options": [] } },
+    { "run": "tool.explode", "expect": { "tool": "explode", "options": ["Enter"] } },
     { "click": [0, 10], "expect": { "selected": [4] } },
     { "key": "Enter", "note": "Çoklu çizgi kenarlarına ayrılır.", "expect": { "tool": "select", "log": "success", "entities": 14, "newest": { "kind": "line", "points": [[0, 4], [10, 4]] } } },
     { "key": "Esc", "expect": { "selected": [] } },

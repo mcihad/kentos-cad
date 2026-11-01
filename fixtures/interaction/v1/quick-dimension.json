@@ -11,10 +11,10 @@
   "prefs": { "cursorInput": true },
   "clickTolerance": 0.125,
   "steps": [
-    { "run": "tool.quickDimension", "note": "Seçim yokken önce nesneler seçilir.", "expect": { "tool": "quickDimension", "options": [], "prompt": "Hızlı ölçü: nesnelere tıklayın ya da pencereyle seçin, bitince sağ tıklayın (0 seçili)", "entities": 4 } },
+    { "run": "tool.quickDimension", "note": "Seçim yokken önce nesneler seçilir.", "expect": { "tool": "quickDimension", "options": ["Enter"], "prompt": "Hızlı ölçü: nesnelere tıklayın ya da pencereyle seçin (0 seçili) [Bitir (Enter)]", "entities": 4 } },
     { "click": [-20, 10], "note": "Batı parselin batı kenarı.", "expect": { "selected": [1] } },
     { "click": [20, 10], "note": "Doğu parselin doğu kenarı.", "expect": { "selected": [1, 2] } },
-    { "click": [-15, -15], "note": "Yolun düz kısmı.", "expect": { "selected": [1, 2, 3], "prompt": "Hızlı ölçü: nesnelere tıklayın ya da pencereyle seçin, bitince sağ tıklayın (3 seçili)" } },
+    { "click": [-15, -15], "note": "Yolun düz kısmı.", "expect": { "selected": [1, 2, 3], "prompt": "Hızlı ölçü: nesnelere tıklayın ya da pencereyle seçin (3 seçili) [Seçimi tamamla (Enter)]" } },
     { "key": "Enter", "note": "Seçim biter; ölçülerin yeri sorulur, kenetsiz.", "expect": { "options": ["Z"], "prompt": "Hızlı ölçü: ölçülerin yerini gösterin ya da uzaklık yazın [Zemin (Z): kapalı]" } },
     { "move": [-10, 29], "note": "İmleç parsellerin kuzey kenarının 4 m üstünde: ölçüler imlecin en yakın kenara uzaklığında önizlenir." },
     { "click": [-10, 29], "note": "Dokuz ölçü tek adımda: batı parselin dört, doğununki üç kenarı (ortak kenar bir kez), parsellerin dışında; yolun düz kısmına hizalı, yayına yay uzunluğu, imlecin tarafında (sol). Son yazılan yayınki: uçları saatin tersine, merkezi (10, −20).", "expect": { "entities": 13, "newest": { "kind": "dimension", "points": [[0, -25], [-10, -15], [-10, -25]], "mask": false }, "log": "success", "tool": "select" } },

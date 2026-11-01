@@ -13,7 +13,7 @@
     {
       "run": "tool.blockDefine",
       "note": "Seçim yok: araç önce nesneleri seçtirir.",
-      "expect": { "tool": "blockDefine", "prompt": "Blok oluştur: nesnelere tıklayın ya da pencereyle seçin, bitince sağ tıklayın (0 seçili)" }
+      "expect": { "tool": "blockDefine", "prompt": "Blok oluştur: nesnelere tıklayın ya da pencereyle seçin (0 seçili) [Bitir (Enter)]" }
     },
     { "drag": [[-10.5, 9], [5.8, 6]], "note": "Soldan sağa pencere: yalnız içinde kalan üç ağaç.", "expect": { "selected": [9, 10, 11] } },
     { "rightClick": [5.8, 6], "note": "Sağ tık seçimi onaylar: sıra taban noktasında.", "expect": { "prompt": "Blok oluştur: taban noktasına tıklayın ya da Y,X yazın" } },
@@ -49,7 +49,7 @@
     {
       "run": "tool.blockDefine",
       "note": "Seçim yok: araç önce nesneleri seçtirir.",
-      "expect": { "tool": "blockDefine", "prompt": "Blok oluştur: nesnelere tıklayın ya da pencereyle seçin, bitince sağ tıklayın (0 seçili)" }
+      "expect": { "tool": "blockDefine", "prompt": "Blok oluştur: nesnelere tıklayın ya da pencereyle seçin (0 seçili) [Bitir (Enter)]" }
     },
     { "drag": [[11, 2.5], [13, 0.5]], "note": "Soldan sağa pencere: yalnız içinde kalanlar, çember ve çizgi.", "expect": { "selected": [13, 14] } },
     {
@@ -96,7 +96,7 @@
       "note": "Tanımlanan blok, Blok ekle'nin sıradaki bloğudur.",
       "expect": {
         "tool": "blockInsert",
-        "prompt": "Blok ekle: “Vana” için yerleştirme noktasına tıklayın [Blok (B) / Ölçek (Ö): 1.0000 / Y ölçeği (Y): 1.0000 / Dönüş (D): 0.0000° / Aynala (A): kapalı]"
+        "prompt": "Blok ekle: “Vana” için yerleştirme noktasına tıklayın [Blok (B) / Ölçek (Ö): 1.0000 / Y ölçeği (Y): 1.0000 / Dönüş (D): 0.0000° / Aynala (A): kapalı / Yerleştirmeden bitir (Enter)]"
       }
     },
     { "key": "Enter", "expect": { "tool": "select", "entities": 13 } }

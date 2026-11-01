@@ -12,9 +12,9 @@
   "clickTolerance": 0.1,
   "steps": [
     {"move": [0, -12]},
-    {"run": "tool.vertexPoints", "note": "Seçim yok: araç önce seçer.", "expect": {"tool": "vertexPoints", "prompt": "Köşelere nokta: nesnelere tıklayın ya da pencereyle seçin, bitince sağ tıklayın (0 seçili)"}},
+    {"run": "tool.vertexPoints", "note": "Seçim yok: araç önce seçer.", "expect": {"tool": "vertexPoints", "prompt": "Köşelere nokta: nesnelere tıklayın ya da pencereyle seçin (0 seçili) [Bitir (Enter)]"}},
     {"click": [-5, -5], "note": "12 numaralı parselin alt kenarı."},
-    {"click": [13, -5], "note": "13 numaralı parselin alt kenarı.", "expect": {"prompt": "Köşelere nokta: nesnelere tıklayın ya da pencereyle seçin, bitince sağ tıklayın (2 seçili)"}},
+    {"click": [13, -5], "note": "13 numaralı parselin alt kenarı.", "expect": {"prompt": "Köşelere nokta: nesnelere tıklayın ya da pencereyle seçin (2 seçili) [Seçimi tamamla (Enter)]"}},
     {"key": "Enter", "note": "Ortak köşeler bir kez sayılır; S1'in durduğu köşe atlanır.", "expect": {"options": ["A", "K", "Enter"], "prompt": "Köşelere nokta: 5 nokta; 1 köşede zaten nokta var [Ad (A): — / Kod (K): — / Uygula (Enter)]"}},
     {"key": "A", "note": "Ad ve Kod Nokta aracınınkilerdir.", "expect": {"options": [], "prompt": "Köşelere nokta: değeri yazın"}},
     {"text": "201"},
