@@ -455,6 +455,9 @@ yarı eksen/açı bilinmeyenleri, dual türevler, tam elipsin kapalı kalması
 ve dal sınırları test edildi. Gerçek GUI'de dört bağ fareyle kuruldu;
 4→6 m, bağlı çizgi, tek Undo ve Python ile nesne/UID/teşhis eşitliği
 doğrulandı. [ADR 0829](../docs/adr/0829-native-ellipse-point-constraints.md).
+Kısıt başarısının hemen tekrar hover hatasıyla örtülmesi düzeltildi;
+gerçek GUI’de mm/grad sonuçları ve sıfır olmayan küçük sayı dar/geniş
+pencerede doğrulandı. [ADR 0830](../docs/adr/0830-constraint-success-feedback-and-parameter-units.md).
 Yaylı kenar adaptörü, boyut cebiri, elips grip hedefi ve aynalı
 blok/sürükleme/dal birleşik kabulü bitmeden bu madde kapatılmaz.
 

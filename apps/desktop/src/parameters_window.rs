@@ -77,18 +77,46 @@ fn msg(event: Event) -> Message {
     Message::Parameters(event)
 }
 
-fn kind_words(kind: ParameterKind) -> &'static str {
-    match kind {
-        ParameterKind::Length => "uzunluk",
-        ParameterKind::Angle => "açı",
-        ParameterKind::Number => "sayı",
+fn value_words(v: f64) -> String {
+    if !v.is_finite() {
+        "—".into()
+    } else if v == 0.0 {
+        "0".into()
+    } else if v.abs() >= 1e12 || v.abs() < 1e-6 {
+        let text = format!("{v:.11e}");
+        let (mantissa, exponent) = text.split_once('e').expect("scientific number");
+        format!(
+            "{}e{exponent}",
+            mantissa.trim_end_matches('0').trim_end_matches('.')
+        )
+    } else {
+        let precision = (11.0 - v.abs().log10().floor()).clamp(0.0, 17.0) as usize;
+        let text = format!("{v:.precision$}");
+        if precision == 0 {
+            text
+        } else {
+            text.trim_end_matches('0').trim_end_matches('.').into()
+        }
     }
 }
 
-fn value_words(v: f64) -> String {
-    let t = format!("{v:.4}");
-    let t = t.trim_end_matches('0').trim_end_matches('.');
-    if t == "-0" { "0".into() } else { t.into() }
+fn parameter_value_words(
+    v: f64,
+    kind: ParameterKind,
+    settings: &kentos_commands::ProjectSettings,
+) -> String {
+    let value = value_words(v);
+    match kind {
+        ParameterKind::Length => format!("{value} {}", settings.unit().mark()),
+        ParameterKind::Angle => format!(
+            "{value} {}",
+            match settings.angle_unit {
+                kentos_commands::AngleUnit::Deg => "°",
+                kentos_commands::AngleUnit::Grad => "gon",
+            }
+        ),
+        ParameterKind::Number => format!("{value} · sayı"),
+    }
 }
 
 impl App {
@@ -432,10 +460,11 @@ impl App {
             let value = values
                 .get(&p.name)
                 .map(|v| {
+                    let value = parameter_value_words(*v, p.kind, model.settings());
                     if only_measures {
-                        format!("({}) · {}", value_words(*v), kind_words(p.kind))
+                        format!("({value})")
                     } else {
-                        format!("{} · {}", value_words(*v), kind_words(p.kind))
+                        value
                     }
                 })
                 .unwrap_or_else(|| "—".into());

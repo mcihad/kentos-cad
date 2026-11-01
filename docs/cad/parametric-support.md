@@ -26,7 +26,9 @@ doğrulanan ilk arayüz dilimini ve kalan gerçek geometri işlerini ayırır.
   dış veri gelse de grafik gezintisi durur.
 - Yeniden adlandır, mevcut `cad.parameters.edit rename` komutunu kullanır.
   Geometriyi gösterip aynı çizimin penceresine dönünce taslaklar kalır.
-- Yeni kullanıcı parametresinde uzunluk/açı/sayı açık seçilir.
+- Yeni kullanıcı parametresinde uzunluk/açı/sayı açık seçilir. Sonuçta gerçek
+  proje birimi (mm/cm/m/in/ft, °/gon) yazılır; çok küçük değer sıfır
+  gibi gösterilmez. Gösterim yuvarlaması saklanan değeri değiştirmez.
   Başvuru parametresi yalnız ölçer ve ifade alanı düzenlenemez.
 - Teşhis ve ayrıştırılmış bağımlılıklar çizim oturumu/sürümü/generation
   için önbelleğe alınır. Tuş başına çözücü yeniden çalışmaz. Undo ve
@@ -64,3 +66,5 @@ plakada çelişki, kilit, gevşetme, Undo ile UI/Python/MCP aynı sonucu
 vermelidir. Güvenli ret bir adaptörün uygulanması yerine sayılmaz.
 
 Elips nokta adaptörünün sınırları ve kabulü: [ADR 0829](../adr/0829-native-ellipse-point-constraints.md).
+
+Başarı sonrası durağan imleç ve birimli sonuç kabulü: [ADR 0830](../adr/0830-constraint-success-feedback-and-parameter-units.md).

@@ -324,6 +324,8 @@ pub struct ConstraintTool {
     hover: Option<Picked>,
     cursor: Option<Vec2>,
     drawn: Preview,
+    /// A successful click is not a request to preview adding the same constraint again.
+    completed_at: Option<(Vec2, u64)>,
 }
 
 impl ConstraintTool {
@@ -460,6 +462,7 @@ impl ConstraintTool {
         self.asking = false;
         self.hover = None;
         self.drawn = Preview::default();
+        self.completed_at = None;
     }
 
     /// Writes the constraint; the solver's word or its refusal said.
@@ -470,7 +473,9 @@ impl ConstraintTool {
         };
         let input = Self::input_of(rule, value, self.reference && dimensional(self.kind));
         let result = constraints_edit::execute(&mut ExecutionContext::new(cx.doc), input);
+        let mut completed_at = None;
         if let Some(out) = points::written(result, cx) {
+            completed_at = self.cursor.map(|at| (at, cx.doc.generation()));
             let moved = out.changed.len();
             cx.say(
                 Level::Success,
@@ -483,6 +488,7 @@ impl ConstraintTool {
             );
         }
         self.reset();
+        self.completed_at = completed_at;
     }
 
     /// The preview of the constraint the hovered part would complete: the plan's moved objects, dashed.
@@ -617,6 +623,17 @@ impl Tool for ConstraintTool {
         if self.asking {
             return;
         }
+        if let Some((at, generation)) = self.completed_at {
+            if generation == cx.doc.generation()
+                && (p.raw.x - at.x).hypot(p.raw.y - at.y) <= cx.view.world_length(4.0)
+            {
+                self.hover = None;
+                self.drawn = Preview::default();
+                cx.selection.set_hover(None);
+                return;
+            }
+            self.completed_at = None;
+        }
         let wanted = self.wanted();
         let Some(&want) = wanted.get(self.picked.len()) else {
             return;
@@ -630,6 +647,8 @@ impl Tool for ConstraintTool {
         if self.asking {
             return;
         }
+        self.cursor = Some(p.raw);
+        self.completed_at = None;
         let wanted = self.wanted();
         let Some(&want) = wanted.get(self.picked.len()) else {
             return;

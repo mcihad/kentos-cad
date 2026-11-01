@@ -106,3 +106,63 @@ fn fixing_a_circle_by_its_curve_still_fixes_center_and_radius() {
     assert_eq!(a.uid.0, b.doc.uid(slot).unwrap().into_bytes());
     assert_eq!(a.element, CadElement::Circle);
 }
+
+#[test]
+fn a_successful_single_point_constraint_does_not_immediately_preview_its_own_duplicate() {
+    let mut b = drawing();
+    b.start("constraint");
+    assert!(b.type_text("SB"));
+    b.move_to(0., 0.);
+    b.click(0., 0.);
+    b.move_to(0., 0.);
+    assert!(
+        b.session
+            .preview(&Default::default())
+            .unwrap()
+            .tag
+            .is_none(),
+        "success must not be covered by a duplicate preview"
+    );
+    assert_eq!(b.doc.constraints().constraints.len(), 1);
+    b.move_to(0.75, 0.); // Beyond the feedback holdoff, but inside the point-pick aperture.
+    assert!(
+        b.session
+            .preview(&Default::default())
+            .unwrap()
+            .tag
+            .is_some()
+    );
+    assert_eq!(
+        b.session.preview(&Default::default()).unwrap().tag_tone,
+        kentos_interaction::Tone::Danger
+    );
+    b.click(0., 0.); // Explicit repetition is still refused, not silently accepted.
+    assert_eq!(b.doc.constraints().constraints.len(), 1);
+    assert!(b.last_text().unwrap().contains("tekrarlıyor"));
+}
+
+#[test]
+fn undo_invalidates_success_hover_suppression_at_the_same_pointer_position() {
+    let mut b = drawing();
+    b.start("constraint");
+    b.type_text("SB");
+    b.move_to(0., 0.);
+    b.click(0., 0.);
+    b.move_to(0., 0.);
+    assert!(
+        b.session
+            .preview(&Default::default())
+            .unwrap()
+            .tag
+            .is_none()
+    );
+    b.doc.undo().unwrap();
+    b.move_to(0., 0.);
+    let preview = b.session.preview(&Default::default()).unwrap();
+    assert!(preview.tag.is_some());
+    assert_ne!(preview.tag_tone, kentos_interaction::Tone::Danger);
+    assert!(
+        b.doc.constraints().constraints.is_empty(),
+        "hover never recreates an undone constraint"
+    );
+}
