@@ -233,11 +233,13 @@ fn instantiate(
         )
     })?;
     e = remap(&e, map);
-    // A member on an upper storey stands on the level that many above the instance's (docs/adr/0796 §1).
-    let level = if member.storey == 0 {
+    // A member on an upper storey stands on the level that many above the instance's (docs/adr/0796 §1); a
+    // single-storey instance's own storey on its level (docs/adr/0811).
+    let rise = member.storey.saturating_sub(inst.storey.unwrap_or(0));
+    let level = if rise == 0 {
         inst.level.clone()
     } else {
-        storey_level(&storey_order(doc), inst.level.as_deref(), member.storey).ok_or_else(|| {
+        storey_level(&storey_order(doc), inst.level.as_deref(), rise).ok_or_else(|| {
             fail(
                 codes::MODULE_STOREY_MISSING,
                 format!(
@@ -408,23 +410,27 @@ fn bare(e: &Entity) -> Value {
     serde_json::to_value(e).unwrap_or(Value::Null)
 }
 
-/// Places every member of `m` as the instance `inst`, the new objects' ids given.
+/// An instance's objects (key and new id) and the new objects placed for them.
+type Placement = (Vec<ModuleObject>, Vec<(Uuid, Entity)>);
+
+/// Places every member of `m` the instance `inst` holds (a single-storey instance its storey's, docs/adr/0811): its
+/// objects (key and new id) and the new objects.
 fn place_all(
     doc: &Document,
     m: &ArchModule,
     inst: &ModuleInstance,
-    ids: &[Uuid],
-) -> Result<Vec<Entity>, Stop> {
-    let map: HashMap<String, String> = m
-        .members
+) -> Result<Placement, Stop> {
+    let held: Vec<&ModuleMember> = m.members.iter().filter(|mem| more::holds(m, inst, mem)).collect();
+    let ids: Vec<Uuid> = held.iter().map(|_| Uuid::now_v7()).collect();
+    let map: HashMap<String, String> = held
         .iter()
-        .zip(ids)
+        .zip(&ids)
         .map(|(mem, id)| (mem.key.clone(), id.to_string()))
         .collect();
     // The walls first: an opening reads itself back onto its new wall.
     let mut walls: HashMap<String, Entity> = HashMap::new();
     let none = |_: &str| None;
-    for (mem, id) in m.members.iter().zip(ids) {
+    for (mem, id) in held.iter().zip(&ids) {
         if matches!(mem.entity, Entity::Wall(_)) {
             walls.insert(id.to_string(), instantiate(doc, mem, inst, &map, &none)?);
         }
@@ -435,10 +441,19 @@ fn place_all(
             .cloned()
             .or_else(|| object_of(doc, uid).map(|(_, e)| e.clone()))
     };
-    m.members
+    let made = held
         .iter()
         .map(|mem| instantiate(doc, mem, inst, &map, &wall_of))
-        .collect()
+        .collect::<Result<Vec<_>, _>>()?;
+    let objects = held
+        .iter()
+        .zip(&ids)
+        .map(|(mem, id)| ModuleObject {
+            key: mem.key.clone(),
+            uid: id.to_string(),
+        })
+        .collect();
+    Ok((objects, ids.into_iter().zip(made).collect()))
 }
 
 fn check(doc: &Document, input: &ModulesEdit) -> Result<Work, Stop> {
@@ -656,6 +671,7 @@ fn check(doc: &Document, input: &ModulesEdit) -> Result<Work, Stop> {
                 phase: None,
                 numbering: ModuleNumbering::default(),
                 unit,
+                storey: None,
                 version: 1,
                 members: found
                     .iter()
@@ -687,6 +703,7 @@ fn check(doc: &Document, input: &ModulesEdit) -> Result<Work, Stop> {
             phase,
             numbering,
             unit,
+            storey,
         } => {
             let k = find(&modules, module)?;
             live(&modules[k])?;
@@ -699,7 +716,34 @@ fn check(doc: &Document, input: &ModulesEdit) -> Result<Work, Stop> {
                 ));
             }
             level_ok(doc, level.as_deref())?;
-            storeys_fit(doc, &modules[k], level.as_deref(), "operation.level")?;
+            // Tek kat (docs/adr/0811): one storey of a module of several, on the level given.
+            if let Some(n) = *storey {
+                let all = modules[k].storeys();
+                if all <= 1 || n >= all {
+                    return Err(fail(
+                        codes::INVALID_INPUT,
+                        if all <= 1 {
+                            format!("“{}” modülü tek katlı; kat seçmeden yerleştirin.", modules[k].name)
+                        } else {
+                            format!(
+                                "“{}” modülü {all} katlı; kat 0 ile {} arasında olur.",
+                                modules[k].name,
+                                all - 1
+                            )
+                        },
+                        "operation.storey",
+                    ));
+                }
+                if level.is_none() {
+                    return Err(fail(
+                        codes::INVALID_INPUT,
+                        format!("“{}” modülünün tek katı bir katta yerleşir; bir kat seçin.", modules[k].name),
+                        "operation.level",
+                    ));
+                }
+            } else {
+                storeys_fit(doc, &modules[k], level.as_deref(), "operation.level")?;
+            }
             more::unit_known(doc, unit.as_deref(), "operation.unit")?;
             for mem in &modules[k].members {
                 let l = &mem.entity.base().layer_id;
@@ -715,8 +759,7 @@ fn check(doc: &Document, input: &ModulesEdit) -> Result<Work, Stop> {
                 }
             }
             let m = &modules[k];
-            let ids: Vec<Uuid> = m.members.iter().map(|_| Uuid::now_v7()).collect();
-            let inst = ModuleInstance {
+            let mut inst = ModuleInstance {
                 id: next_instance_id(m),
                 at: *at,
                 rotation: turn,
@@ -725,21 +768,15 @@ fn check(doc: &Document, input: &ModulesEdit) -> Result<Work, Stop> {
                 phase: *phase,
                 numbering: numbering.clone().unwrap_or_default(),
                 unit: unit.clone(),
+                storey: *storey,
                 version: m.version,
-                members: m
-                    .members
-                    .iter()
-                    .zip(&ids)
-                    .map(|(mem, id)| ModuleObject {
-                        key: mem.key.clone(),
-                        uid: id.to_string(),
-                    })
-                    .collect(),
+                members: Vec::new(),
                 exceptions: Vec::new(),
                 broken: None,
             };
-            let made = place_all(doc, m, &inst, &ids)?;
-            work.adds = ids.iter().copied().zip(made).collect();
+            let (objects, made) = place_all(doc, m, &inst)?;
+            inst.members = objects;
+            work.adds = made;
             work.instance = Some(inst.id.clone());
             work.module = Some(m.id.clone());
             modules[k].instances.push(inst);
@@ -810,8 +847,10 @@ fn check(doc: &Document, input: &ModulesEdit) -> Result<Work, Stop> {
                     (Some(b), Some(l)) => order
                         .iter()
                         .position(|x| x == l)
-                        .filter(|&r| r >= b && r - b < kentos_commands::MAX_MODULE_STOREYS as usize)
-                        .map_or(mem.storey, |r| u32::try_from(r - b).unwrap_or(mem.storey)),
+                        .and_then(|r| r.checked_sub(b))
+                        .map(|d| d + src.storey.unwrap_or(0) as usize)
+                        .filter(|&d| d < kentos_commands::MAX_MODULE_STOREYS as usize)
+                        .map_or(mem.storey, |d| u32::try_from(d).unwrap_or(mem.storey)),
                     _ => mem.storey,
                 };
                 if let Some(a) = arch_mut(&mut t) {
@@ -849,6 +888,7 @@ fn check(doc: &Document, input: &ModulesEdit) -> Result<Work, Stop> {
                     || modules[k]
                         .members
                         .iter()
+                        .filter(|mem| more::holds(&modules[k], i, mem))
                         .any(|mem| i.members.iter().all(|o| o.key != mem.key))
             };
             let catching = targets
@@ -1139,6 +1179,20 @@ fn warnings(r: &ModuleReport) -> Vec<CommandWarning> {
             code: codes::MODULE_DRIFT_OVERWRITTEN.into(),
             message: format!(
                 "Elle değiştirilmiş {drifted} örnek nesnesi kaynağın değeriyle yazıldı; korumak için önce yerel istisna yapın."
+            ),
+            path: Some("operation".into()),
+        });
+    }
+    let left_storey = r
+        .conflicts
+        .iter()
+        .filter(|c| c.why == ModuleConflictWhy::Storey)
+        .count();
+    if left_storey > 0 {
+        out.push(CommandWarning {
+            code: codes::MODULE_STOREY_LEFT.into(),
+            message: format!(
+                "Tek katlı örneğin {left_storey} nesnesinin tanımdaki karşılığı başka bir kata geçti; olduğu gibi kaldı ve artık izlemez."
             ),
             path: Some("operation".into()),
         });

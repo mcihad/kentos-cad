@@ -348,6 +348,7 @@ pub(super) struct Features {
     pub(super) slide_more: bool,
     /// Schema 154 (docs/adr/0808): combinations of design options, a recipe's combination.
     pub(super) option_combos: bool,
+    pub(super) instance_storeys: bool,
     /// Schema 146 (docs/adr/0783): view templates and a recipe's pens, black and white and template.
     pub(super) view_templates: bool,
     /// Schema 147 (docs/adr/0784): the program's shares, levels of buildings and wings, a schedule's share fields.
@@ -571,6 +572,7 @@ impl Features {
             module_storeys: schema >= crate::SCHEMA_WITH_MODULE_STOREYS,
             slide_more: schema >= crate::SCHEMA_WITH_SLIDE_MORE,
             option_combos: schema >= crate::SCHEMA_WITH_OPTION_COMBOS,
+            instance_storeys: schema >= crate::SCHEMA_WITH_INSTANCE_STOREYS,
             view_templates: schema >= crate::SCHEMA_WITH_VIEW_TEMPLATES,
             program_shares: schema >= crate::SCHEMA_WITH_PROGRAM_SHARES,
             options: schema >= crate::SCHEMA_WITH_OPTIONS,

@@ -79,6 +79,12 @@ pub enum ModulesOperation {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         unit: Option<String>,
+        /// Tek kat (docs/adr/0811, Archicad's Single Story): only the members of this storey of a module of several,
+        /// standing on `level`. None: every storey, the base on `level`.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+        storey: Option<u32>,
     },
     /// Modüle ekle (docs/adr/0779 §1): the objects `uids`, drawn in the instance `instance` (on its level, in no
     /// module, leaning on nothing outside it and them), join the definition; its version goes one up and the other
@@ -314,6 +320,9 @@ pub enum ModuleConflictWhy {
     Drifted,
     /// Its object is on a locked layer: a member taken out of the definition stays there, released (docs/adr/0779 §2).
     Locked,
+    /// Its member moved to another storey than the single-storey instance holds (docs/adr/0811): its object stays as
+    /// it was, no longer followed.
+    Storey,
 }
 
 /// What a write did, or would do.
@@ -459,6 +468,11 @@ pub struct ModuleInstanceRow {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub levels: Vec<String>,
+    /// The one storey it holds (docs/adr/0811); none for every storey.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub storey: Option<u32>,
     pub mirror: bool,
 }
 

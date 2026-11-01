@@ -167,7 +167,7 @@ pub(super) fn sync_instance(
     let mut entries = Vec::new();
     let mut new_ids: HashMap<String, Uuid> = HashMap::new();
     for mem in &m.members {
-        if !map.contains_key(&mem.key) {
+        if !map.contains_key(&mem.key) && holds(m, inst, mem) {
             let id = Uuid::now_v7();
             map.insert(mem.key.clone(), id.to_string());
             new_ids.insert(mem.key.clone(), id);
@@ -181,6 +181,7 @@ pub(super) fn sync_instance(
     let mut order: Vec<&ModuleMember> = m
         .members
         .iter()
+        .filter(|mem| map.contains_key(&mem.key))
         .filter(|mem| new_ids.contains_key(&mem.key) || whole || changed.contains(&mem.key))
         .collect();
     order.sort_by_key(|mem| !matches!(mem.entity, Entity::Wall(_)));
@@ -218,6 +219,16 @@ pub(super) fn sync_instance(
                 key: mem.key.clone(),
                 uid,
                 why: ModuleConflictWhy::Exception,
+            });
+            continue;
+        }
+        // A single-storey instance's object whose member moved to another storey stays as it was (docs/adr/0811).
+        if !holds(m, inst, mem) {
+            work.report.conflicts.push(ModuleConflict {
+                instance: inst.id.clone(),
+                key: mem.key.clone(),
+                uid,
+                why: ModuleConflictWhy::Storey,
             });
             continue;
         }
@@ -384,11 +395,17 @@ pub(super) fn add_members(
                 ));
             }
         }
-        // On the instance's base level or one above it: an upper storey (docs/adr/0796 §1).
-        if arch_level_holder(e) && storey_of(&order, inst.level.as_deref(), e.own_level()).is_none() {
+        // On the instance's base level or one above it: an upper storey (docs/adr/0796 §1); a single-storey
+        // instance's own level only (docs/adr/0811).
+        let at = arch_level_holder(e).then(|| storey_of(&order, inst.level.as_deref(), e.own_level()));
+        if at.is_some_and(|s| s.is_none() || (inst.storey.is_some() && s != Some(0))) {
             return Err(fail(
                 codes::MODULE_LEVELS,
-                "Eklenen nesne örneğin katlarında değil; örneğin taban katındaki ya da üstündeki katlardaki nesneleri ekleyin.".into(),
+                if inst.storey.is_some() {
+                    "Eklenen nesne tek katlı örneğin katında değil; örneğin katındaki nesneleri ekleyin.".into()
+                } else {
+                    "Eklenen nesne örneğin katlarında değil; örneğin taban katındaki ya da üstündeki katlardaki nesneleri ekleyin.".into()
+                },
                 &path,
             ));
         }
@@ -406,6 +423,7 @@ pub(super) fn add_members(
     for (_, _, e, uid) in &found {
         let storey = if arch_level_holder(e) {
             storey_of(&order, inst.level.as_deref(), e.own_level()).unwrap_or(0)
+                + inst.storey.unwrap_or(0)
         } else {
             0
         };
@@ -463,8 +481,16 @@ pub(super) fn add_members(
             });
             continue;
         }
-        storeys_fit(doc, &modules[k], other.level.as_deref(), "operation.uids")?;
-        let entries = place_new(doc, &other, &added, work)?;
+        if other.storey.is_none() {
+            storeys_fit(doc, &modules[k], other.level.as_deref(), "operation.uids")?;
+        }
+        // A single-storey instance takes its storey's new members only (docs/adr/0811).
+        let theirs: Vec<ModuleMember> = added
+            .iter()
+            .filter(|mem| holds(&modules[k], &other, mem))
+            .cloned()
+            .collect();
+        let entries = place_new(doc, &other, &theirs, work)?;
         let target = &mut modules[k].instances[j];
         target.members.extend(entries);
         if target.version == old_version {
@@ -476,6 +502,29 @@ pub(super) fn add_members(
     work.module = Some(modules[k].id.clone());
     work.instance = Some(inst.id);
     Ok(())
+}
+
+/// The storey a member stands on (docs/adr/0811): a wall's, a space's or a fixture's own; another object's that of the
+/// members it leans on (a door its wall's, a tag its space's, a dimension its walls'), the highest; else the base.
+pub(crate) fn floor_of(m: &ArchModule, mem: &ModuleMember) -> u32 {
+    fn walk(m: &ArchModule, mem: &ModuleMember, depth: u8) -> u32 {
+        if mem.storey > 0 || arch_level_holder(&mem.entity) || depth == 0 {
+            return mem.storey;
+        }
+        leans_on(mem)
+            .iter()
+            .filter(|k| **k != mem.key)
+            .filter_map(|k| m.member(k))
+            .map(|x| walk(m, x, depth - 1))
+            .max()
+            .unwrap_or(0)
+    }
+    walk(m, mem, 8)
+}
+
+/// Whether the instance holds the member: every member, or a single-storey instance its storey's (docs/adr/0811).
+pub(crate) fn holds(m: &ArchModule, inst: &ModuleInstance, mem: &ModuleMember) -> bool {
+    inst.storey.is_none_or(|s| floor_of(m, mem) == s)
 }
 
 /// The definition's keys a member's object names: what it leans on.
@@ -940,7 +989,10 @@ pub(super) fn repeat(
                     &format!("operation.to[{j}].level"),
                 ));
             }
-            storeys_fit(doc, &modules[k], Some(&t.level), &format!("operation.to[{j}].level"))?;
+            // A single-storey instance repeats as one storey on the target (docs/adr/0811).
+            if src.storey.is_none() {
+                storeys_fit(doc, &modules[k], Some(&t.level), &format!("operation.to[{j}].level"))?;
+            }
             let line = t
                 .instances
                 .iter()
@@ -954,8 +1006,7 @@ pub(super) fn repeat(
                 .or_else(|| t.unit.clone())
                 .or_else(|| src.unit.clone());
             let m = &modules[k];
-            let ids: Vec<Uuid> = m.members.iter().map(|_| Uuid::now_v7()).collect();
-            let inst = ModuleInstance {
+            let mut inst = ModuleInstance {
                 id: next_instance_id(m),
                 at: src.at,
                 rotation: src.rotation,
@@ -964,21 +1015,15 @@ pub(super) fn repeat(
                 phase: src.phase,
                 numbering,
                 unit,
+                storey: src.storey,
                 version: m.version,
-                members: m
-                    .members
-                    .iter()
-                    .zip(&ids)
-                    .map(|(mem, id)| ModuleObject {
-                        key: mem.key.clone(),
-                        uid: id.to_string(),
-                    })
-                    .collect(),
+                members: Vec::new(),
                 exceptions: Vec::new(),
                 broken: None,
             };
-            let made = place_all(doc, m, &inst, &ids)?;
-            work.adds.extend(ids.iter().copied().zip(made));
+            let (objects, made) = place_all(doc, m, &inst)?;
+            inst.members = objects;
+            work.adds.extend(made);
             for o in &src.members {
                 if let Some(n) = inst.members.iter().find(|x| x.key == o.key) {
                     map.insert(o.uid.clone(), n.uid.clone());

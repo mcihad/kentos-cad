@@ -1258,6 +1258,13 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                         "oda modülü nesnesinin katı şema 152'den beri yazılır",
                     ));
                 }
+                if !has.instance_storeys && kentos_contracts::modules_have_instance_storeys(&a.modules) {
+                    return Err(r.fail_at(
+                        Code::UnknownField,
+                        at,
+                        "tek katlı modül örneği şema 155'ten beri yazılır",
+                    ));
+                }
                 if !has.option_combos && !a.option_combos.is_empty() {
                     return Err(r.fail_at(
                         Code::UnknownField,

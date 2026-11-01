@@ -10,6 +10,7 @@
 //! source; Seçimi örneğe ekle adds the selection's free objects to the chosen instance's definition (and so to every
 //! linked instance), Seçimi modülden çıkar takes the selection's members out; Katları tekrarla places the source
 //! level's linked instances on the chosen levels, each with its own number prefix, its plan said before it is written.
+//! An instance holding one storey of its module (docs/adr/0811) says which.
 //!
 //! A module of several storeys (docs/adr/0796) says its storeys and each instance the levels it stands on; Katları
 //! tekrarla's Modülsüz nesneler de copies the source level's objects in no module too, the plan saying how many are
@@ -768,6 +769,10 @@ impl App {
                     );
                 } else if let Some(l) = &inst.level {
                     facts.push(level_name(l));
+                }
+                // One storey of the module only (docs/adr/0811).
+                if let Some(n) = inst.storey {
+                    facts.push(format!("yalnız modülün {}. katı", n + 1));
                 }
                 if inst.mirror {
                     facts.push("aynalı".into());

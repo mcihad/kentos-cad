@@ -29,4 +29,8 @@ unit?: string, level?: string,
  * A module of several storeys: the levels the instance stands on, base first (docs/adr/0796 §1); a storey with no
  * level (a level removed since) is left out.
  */
-levels?: Array<string>, mirror: boolean, };
+levels?: Array<string>, 
+/**
+ * The one storey it holds (docs/adr/0811); none for every storey.
+ */
+storey?: number, mirror: boolean, };

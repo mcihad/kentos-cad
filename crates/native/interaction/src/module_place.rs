@@ -2,7 +2,8 @@
 //! its turn, whether it is mirrored, its level (Etkin kat, none, or a level), its phase and its numbering (a prefix
 //! and a suffix on its spaces' and openings' numbers); the instance follows the pointer, its objects drawn from
 //! `cad.modules.edit`'s plan, and a click places it in one undo step (“Oda modülü”). A flat module's instance takes
-//! its own group of the building program (Bölüm, docs/adr/0779 §4).
+//! its own group of the building program (Bölüm, docs/adr/0779 §4). Tek kat (docs/adr/0811): one storey of a module of
+//! several, on the level chosen.
 
 use kentos_commands::{ArchPhase, ModuleNumbering, ModulesEdit, ModulesOperation};
 use kentos_geometry_core::tools::point_text::{js_trim, parse_number};
@@ -40,6 +41,10 @@ pub struct ModulePlace {
     suffix: String,
     /// The building program's group the instance's spaces go to; none: the definition's.
     unit: Option<String>,
+    /// Tek kat (docs/adr/0811): one storey of the module only; none: every storey.
+    storey: Option<u32>,
+    /// How many storeys the chosen module spans.
+    storeys: u32,
     hover: Option<Vec2>,
     /// The project's modules (id, name) and levels (id, name), read when the tool starts and as it draws.
     known: Vec<(String, String)>,
@@ -61,6 +66,8 @@ impl Default for ModulePlace {
             prefix: String::new(),
             suffix: String::new(),
             unit: None,
+            storey: None,
+            storeys: 1,
             hover: None,
             known: Vec::new(),
             levels: Vec::new(),
@@ -116,6 +123,7 @@ impl ModulePlace {
                 phase: self.phase,
                 numbering: (!numbering.is_empty()).then_some(numbering),
                 unit: self.unit.clone(),
+                storey: self.storey.filter(|_| self.storeys > 1),
             },
             expected_revision: None,
         })
@@ -123,6 +131,14 @@ impl ModulePlace {
 
     fn learn(&mut self, cx: &Context<'_>) {
         self.known = Self::modules(cx);
+        let chosen = self.module.clone().or_else(|| self.known.first().map(|m| m.0.clone()));
+        self.storeys = cx
+            .doc
+            .settings()
+            .arch
+            .as_ref()
+            .and_then(|a| a.modules.iter().find(|m| Some(&m.id) == chosen.as_ref()))
+            .map_or(1, kentos_commands::ArchModule::storeys);
         self.levels = cx
             .doc
             .settings()
@@ -205,6 +221,9 @@ impl ModulePlace {
                     .find(|(id, name)| id == value || upper_tr(name) == words)
                 {
                     Some((id, _)) => {
+                        if self.module.as_ref() != Some(id) {
+                            self.storey = None;
+                        }
                         self.module = Some(id.clone());
                         true
                     }
@@ -268,6 +287,19 @@ impl ModulePlace {
             "S" => {
                 self.suffix = js_trim(value).to_owned();
                 true
+            }
+            "K" => {
+                if value == "all" {
+                    self.storey = None;
+                    return true;
+                }
+                match value.parse::<u32>() {
+                    Ok(n) if n < self.storeys => {
+                        self.storey = Some(n);
+                        true
+                    }
+                    _ => false,
+                }
             }
             "B" => {
                 if value == "none" {
@@ -398,6 +430,23 @@ impl Tool for ModulePlace {
         let mut levels: Vec<(&str, &str)> = vec![("active", "Etkin kat"), ("none", "Katsız")];
         levels.extend(self.levels.iter().map(|(a, b)| (a.as_str(), b.as_str())));
         rows.push(Setting::choice("L", "Kat", choices(&levels, &level)));
+        if self.storeys > 1 {
+            let mut parts: Vec<(String, String)> = vec![("all".into(), "Bütün katlar".into())];
+            parts.extend((0..self.storeys).map(|n| {
+                (
+                    n.to_string(),
+                    if n == 0 {
+                        "Yalnız modülün 1. katı (taban)".to_owned()
+                    } else {
+                        format!("Yalnız modülün {}. katı", n + 1)
+                    },
+                )
+            }));
+            let refs: Vec<(&str, &str)> =
+                parts.iter().map(|(a, b)| (a.as_str(), b.as_str())).collect();
+            let now = self.storey.map_or_else(|| "all".to_owned(), |n| n.to_string());
+            rows.push(Setting::choice("K", "Tek kat", choices(&refs, &now)));
+        }
         let phase = self.phase.map_or_else(|| "none".to_owned(), serde_name);
         let mut phases: Vec<(String, String)> = vec![("none".into(), "Tanımdaki gibi".into())];
         phases.extend(
@@ -478,6 +527,7 @@ impl Tool for ModulePlace {
                 "D" => "Açıyı derece olarak bir sayıyla yazın; örneğin 90.",
                 "L" => "Projede bu kat yok.",
                 "B" => "Bina programında bu bölüm yok.",
+                "K" => "Modülün bu katı yok; Bütün katlar ya da modülün bir katını seçin.",
                 _ => "Geçerli bir değer seçin.",
             },
         );

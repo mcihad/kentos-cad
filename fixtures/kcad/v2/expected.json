@@ -123,6 +123,9 @@
     {"file": "slide-more.kcad", "sniff": "kcad", "content": "slide-more.json"},
     {"file": "broken/slide-more-in-schema-152.kcad", "sniff": "kcad", "error": "bad_value"},
     {"file": "option-combos.kcad", "sniff": "kcad", "content": "option-combos.json"},
+    {"file": "instance-storeys.kcad", "sniff": "kcad", "content": "instance-storeys.json"},
+    {"file": "broken/instance-storeys-in-schema-154.kcad", "sniff": "kcad", "error": "unknown_field"},
+    {"file": "broken/instance-storeys-past-15.kcad", "sniff": "kcad", "error": "bad_value"},
     {"file": "broken/option-combos-in-schema-153.kcad", "sniff": "kcad", "error": "unknown_field"},
     {"file": "broken/option-combos-option-unknown.kcad", "sniff": "kcad", "error": "bad_value"},
     {"file": "broken/option-combos-set-twice.kcad", "sniff": "kcad", "error": "bad_value"},
@@ -324,7 +327,7 @@
     { "file": "broken/non-text-key.kcad", "sniff": "kcad", "error": "non_text_key" },
 
     { "file": "broken/wrong-format.kcad", "sniff": "kcad", "error": "schema_format" },
-    { "file": "broken/schema-version-155.kcad", "sniff": "kcad", "error": "schema_version" },
+    { "file": "broken/schema-version-156.kcad", "sniff": "kcad", "error": "schema_version" },
     { "file": "broken/unknown-field.kcad", "sniff": "kcad", "error": "unknown_field" },
     { "file": "broken/missing-field.kcad", "sniff": "kcad", "error": "missing_field" },
     { "file": "broken/int-for-float.kcad", "sniff": "kcad", "error": "wrong_type" },

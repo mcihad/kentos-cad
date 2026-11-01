@@ -11,7 +11,12 @@ export type ModulesOperation = { "kind": "define", name: string, id?: string, ui
 /**
  * The building program's group the instance's spaces are in (a flat placed again, docs/adr/0779 §4).
  */
-unit?: string, } | { "kind": "addMembers", module: string, instance: string, uids: Array<string>, } | { "kind": "removeMembers", module: string, uids: Array<string>, } | { "kind": "repeat", from: string, modules?: Array<string>, to: Array<ModuleLevelTarget>, loose?: boolean, 
+unit?: string, 
+/**
+ * Tek kat (docs/adr/0811, Archicad's Single Story): only the members of this storey of a module of several,
+ * standing on `level`. None: every storey, the base on `level`.
+ */
+storey?: number, } | { "kind": "addMembers", module: string, instance: string, uids: Array<string>, } | { "kind": "removeMembers", module: string, uids: Array<string>, } | { "kind": "repeat", from: string, modules?: Array<string>, to: Array<ModuleLevelTarget>, loose?: boolean, 
 /**
  * Copy the level's objects in no module even where their like already stands on the target (docs/adr/0810);
  * without it such an object is not copied again and the report's `matched` names the one already there.

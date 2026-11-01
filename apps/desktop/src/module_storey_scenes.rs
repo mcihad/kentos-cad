@@ -16,6 +16,13 @@
 //! KENTOS_SHOTS_ONLY=dubleks-yinelenen cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture
 //! ```
 //!
+//! And docs/adr/0811: Modül yerleştir on 2. kat with Tek kat (the duplex's upper storey alone); Oda modülleri with that
+//! instance placed, saying it holds the module's 2nd storey only:
+//!
+//! ```text
+//! KENTOS_SHOTS_ONLY=dubleks-tek-kat,dubleks-tek-kat-pencere cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture
+//! ```
+//!
 //! Test code only.
 
 use kentos_domain::Slot;
@@ -164,6 +171,32 @@ fn again(app: &mut App) {
     event(app, Event::RepeatLoose(true));
 }
 
+/// Modül yerleştir on 2. kat, Tek kat: the duplex's upper storey alone, seven objects (docs/adr/0811).
+fn single(app: &mut App) {
+    two(app);
+    run(app, "tool.modulePlace");
+    for (key, value) in [("L", "kat2"), ("K", "1")] {
+        let _ = app.update(Message::ToolSetting(crate::architecture_settings::Commit {
+            tool: "modulePlace",
+            key,
+            value: value.into(),
+        }));
+    }
+    hover(app, [16.0 - E, 0.0 - N]);
+}
+
+/// The upper storey placed alone on 2. kat; Oda modülleri choosing it: “yalnız modülün 2. katı”.
+fn single_window(app: &mut App) {
+    two(app);
+    edit(
+        app,
+        json!({"kind": "place", "module": "Dubleks", "at": {"x": 15, "y": 0}, "level": "kat2", "storey": 1}),
+    );
+    let _ = app.update(Message::ActiveLevel(Some("kat2".into())));
+    run(app, "arch.modules");
+    event(app, Event::Instance(2));
+}
+
 pub(crate) fn scenes() -> Vec<Scene> {
     vec![
         ("dubleks-pencere", window),
@@ -171,6 +204,8 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("dubleks-katlar", floors),
         ("dubleks-yerlestir", place),
         ("dubleks-yinelenen", again),
+        ("dubleks-tek-kat", single),
+        ("dubleks-tek-kat-pencere", single_window),
     ]
 }
 
@@ -204,5 +239,21 @@ mod tests {
         assert_eq!(app.document.as_ref().unwrap().model.entities().count(), before + 1);
         let _ = app.update(Message::Run("edit.undo"));
         assert_eq!(app.document.as_ref().unwrap().model.entities().count(), before);
+    }
+
+    /// docs/adr/0811: Tek kat places the duplex's upper storey alone on the top level (the whole duplex finds no
+    /// level above it): seven objects on 2. kat, one undo step.
+    #[test]
+    fn a_single_storey_goes_where_the_whole_does_not() {
+        let mut app = crate::files_testing::app_with_drawing();
+        single(&mut app);
+        let before_single = app.document.as_ref().unwrap().model.entities().count();
+        crate::tools_scenes::click(&mut app, [16.0 - E, 0.0 - N]);
+        let doc = &app.document.as_ref().unwrap().model;
+        assert_eq!(doc.entities().count(), before_single + 7);
+        let inst = doc.settings().arch.as_ref().unwrap().modules[0].instances.last().unwrap().clone();
+        assert_eq!((inst.storey, inst.level.as_deref(), inst.members.len()), (Some(1), Some("kat2"), 7));
+        let _ = app.update(Message::Run("edit.undo"));
+        assert_eq!(app.document.as_ref().unwrap().model.entities().count(), before_single);
     }
 }

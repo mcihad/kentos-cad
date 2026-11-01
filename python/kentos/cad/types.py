@@ -3418,14 +3418,16 @@ class ModuleConflictWhy(_StrEnum):
     - ``gone``: Its object was deleted from the drawing.
     - ``drifted``: Its object was changed by hand, away from the source, without being made a local exception; the source update
     - ``locked``: Its object is on a locked layer: a member taken out of the definition stays there, released (docs/adr/0779 §2).
+    - ``storey``: Its member moved to another storey than the single-storey instance holds (docs/adr/0811): its object stays as
     """
     EXCEPTION = "exception"
     GONE = "gone"
     DRIFTED = "drifted"
     LOCKED = "locked"
+    STOREY = "storey"
 
 
-ModuleConflictWhyName = Literal["exception", "gone", "drifted", "locked"]
+ModuleConflictWhyName = Literal["exception", "gone", "drifted", "locked", "storey"]
 """The names of :class:`ModuleConflictWhy`, for a plain string."""
 
 
@@ -39994,6 +39996,8 @@ class ModuleInstance(_Model):
         at: Unit: length.
         version: Unit: count.
         rotation: Unit: rad.
+        storey: One storey of a module of several (docs/adr/0811, Archicad's Single Story): the instance holds only the
+            definition's members on that storey, standing on the instance's `level`. None: every storey, the base on `level`. Unit: count.
         unit: The building program's group (docs/adr/0773) this instance's spaces are in (docs/adr/0779 §4): a flat module
             placed again is another flat. None: its spaces keep the definition's group.
     """
@@ -40008,6 +40012,7 @@ class ModuleInstance(_Model):
     numbering: ModuleNumbering | Unset = UNSET
     phase: ArchPhase | ArchPhaseName | None | Unset = UNSET
     rotation: float | Unset = UNSET
+    storey: int | None | Unset = UNSET
     unit: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -40030,6 +40035,8 @@ class ModuleInstance(_Model):
             out["phase"] = None if self.phase is None else _enum_out(self.phase)
         if self.rotation is not UNSET:
             out["rotation"] = float(self.rotation)
+        if self.storey is not UNSET:
+            out["storey"] = self.storey
         if self.unit is not UNSET:
             out["unit"] = self.unit
         return out
@@ -40048,6 +40055,7 @@ class ModuleInstance(_Model):
             numbering=ModuleNumbering.from_json(data["numbering"]) if "numbering" in data else UNSET,
             phase=UNSET if "phase" not in data else None if data["phase"] is None else _enum_in(ArchPhase, data["phase"]),
             rotation=float(data["rotation"]) if "rotation" in data else UNSET,
+            storey=data.get("storey", UNSET),
             unit=data.get("unit", UNSET),
         )
 
@@ -40064,6 +40072,7 @@ class ModuleInstanceRow(_Model):
         levels: A module of several storeys: the levels the instance stands on, base first (docs/adr/0796 §1); a storey with no
             level (a level removed since) is left out.
         missing: The keys whose objects are gone from the drawing.
+        storey: The one storey it holds (docs/adr/0811); none for every storey. Unit: count.
         unit: The building program's group of the instance's spaces.
     """
     id: str
@@ -40077,6 +40086,7 @@ class ModuleInstanceRow(_Model):
     level: str | None | Unset = UNSET
     levels: list[str] | Unset = UNSET
     missing: list[str] | Unset = UNSET
+    storey: int | None | Unset = UNSET
     unit: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -40098,6 +40108,8 @@ class ModuleInstanceRow(_Model):
             out["levels"] = list(self.levels)
         if self.missing is not UNSET:
             out["missing"] = list(self.missing)
+        if self.storey is not UNSET:
+            out["storey"] = self.storey
         if self.unit is not UNSET:
             out["unit"] = self.unit
         return out
@@ -40116,6 +40128,7 @@ class ModuleInstanceRow(_Model):
             level=data.get("level", UNSET),
             levels=list(data["levels"]) if "levels" in data else UNSET,
             missing=list(data["missing"]) if "missing" in data else UNSET,
+            storey=data.get("storey", UNSET),
             unit=data.get("unit", UNSET),
         )
 
@@ -80083,6 +80096,8 @@ class PlaceModulesOperation(ModulesOperation):
     Attributes:
         at: Unit: length.
         rotation: Unit: rad.
+        storey: Tek kat (docs/adr/0811, Archicad's Single Story): only the members of this storey of a module of several,
+            standing on `level`. None: every storey, the base on `level`. Unit: count.
         unit: The building program's group the instance's spaces are in (a flat placed again, docs/adr/0779 §4).
     """
     TAG_VALUE: ClassVar[str] = "place"
@@ -80093,6 +80108,7 @@ class PlaceModulesOperation(ModulesOperation):
     numbering: ModuleNumbering | None | Unset = UNSET
     phase: ArchPhase | ArchPhaseName | None | Unset = UNSET
     rotation: float | None | Unset = UNSET
+    storey: int | None | Unset = UNSET
     unit: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -80109,6 +80125,8 @@ class PlaceModulesOperation(ModulesOperation):
             out["phase"] = None if self.phase is None else _enum_out(self.phase)
         if self.rotation is not UNSET:
             out["rotation"] = None if self.rotation is None else float(self.rotation)
+        if self.storey is not UNSET:
+            out["storey"] = self.storey
         if self.unit is not UNSET:
             out["unit"] = self.unit
         return out
@@ -80123,6 +80141,7 @@ class PlaceModulesOperation(ModulesOperation):
             numbering=UNSET if "numbering" not in data else None if data["numbering"] is None else ModuleNumbering.from_json(data["numbering"]),
             phase=UNSET if "phase" not in data else None if data["phase"] is None else _enum_in(ArchPhase, data["phase"]),
             rotation=UNSET if "rotation" not in data else None if data["rotation"] is None else float(data["rotation"]),
+            storey=data.get("storey", UNSET),
             unit=data.get("unit", UNSET),
         )
 

@@ -51,5 +51,5 @@ karşılığı yoktur. KentOS uyarıdan önce yazmamayı seçer: eşi olan kopya
 ## Sonuçlar
 
 - Aynısı tam eşitliktir: bir milimetre kaydırılmış ya da adı değiştirilmiş kopya aynısı sayılmaz ve yeniden yapılır.
-- Açık: tek katın yerleşmesi (Single Story), seçenekler arası eşleme ve birleştirme.
+- Açık: tek katın yerleşmesi (Single Story; ADR 0811 kapattı), seçenekler arası eşleme ve birleştirme.
 - Web'e gerekenler (TODOS.md §0.2): `again`, `report.matched` ve penceredeki seçenek.

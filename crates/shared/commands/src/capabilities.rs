@@ -2075,6 +2075,7 @@ const ENTRIES: &[Entry] = &[
             "module_member_released",
             "module_repeat_left",
             "module_repeat_matched",
+            "module_storey_left",
         ],
         targets: none,
     },

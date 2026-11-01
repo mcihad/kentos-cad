@@ -21655,7 +21655,8 @@
           "module_drift_overwritten",
           "module_member_released",
           "module_repeat_left",
-          "module_repeat_matched"
+          "module_repeat_matched",
+          "module_storey_left"
         ]
       },
       "examples": [
@@ -71365,6 +71366,12 @@
       "meaning": "Kattaki bazı modülsüz nesnelerin aynısı hedef katta zaten var; yeniden kopyalanmadı (report.matched). Yine de kopyalamak için again verin."
     },
     {
+      "code": "module_storey_left",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Tek katlı örneğin bazı nesnelerinin tanımdaki karşılığı başka bir kata geçti; o nesneler olduğu gibi kaldı ve artık izlemez."
+    },
+    {
       "code": "not_a_space",
       "kind": "failed",
       "retryable": false,
@@ -105296,6 +105303,11 @@
           "const": "locked",
           "description": "Its object is on a locked layer: a member taken out of the definition stays there, released (docs/adr/0779 §2).",
           "type": "string"
+        },
+        {
+          "const": "storey",
+          "description": "Its member moved to another storey than the single-storey instance holds (docs/adr/0811): its object stays as\nit was, no longer followed.",
+          "type": "string"
         }
       ]
     },
@@ -105378,6 +105390,16 @@
           "format": "double",
           "type": "number",
           "x-unit": "rad"
+        },
+        "storey": {
+          "description": "One storey of a module of several (docs/adr/0811, Archicad's Single Story): the instance holds only the\ndefinition's members on that storey, standing on the instance's `level`. None: every storey, the base on `level`.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "count"
         },
         "unit": {
           "description": "The building program's group (docs/adr/0773) this instance's spaces are in (docs/adr/0779 §4): a flat module\nplaced again is another flat. None: its spaces keep the definition's group.",
@@ -105463,6 +105485,16 @@
         "stale": {
           "description": "At an older version than its module's.",
           "type": "boolean"
+        },
+        "storey": {
+          "description": "The one storey it holds (docs/adr/0811); none for every storey.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "count"
         },
         "unit": {
           "description": "The building program's group of the instance's spaces.",
@@ -105923,6 +105955,16 @@
                 "null"
               ],
               "x-unit": "rad"
+            },
+            "storey": {
+              "description": "Tek kat (docs/adr/0811, Archicad's Single Story): only the members of this storey of a module of several,\nstanding on `level`. None: every storey, the base on `level`.",
+              "format": "uint32",
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ],
+              "x-unit": "count"
             },
             "unit": {
               "description": "The building program's group the instance's spaces are in (a flat placed again, docs/adr/0779 §4).",

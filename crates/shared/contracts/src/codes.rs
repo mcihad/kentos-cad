@@ -1875,6 +1875,8 @@ codes! {
     MODULE_REPEAT_LEFT = "module_repeat_left", Warning, false, "Kattaki bazı modülsüz nesneler kopyalanmadı (kilitli katman, tekrarlanmayan tür, tekrarlanmayan örnek, tasarım seçeneği ya da dışarıya bağ); report.left hangilerini ve nedenini söyler.";
     /// A repeat's level objects in no module not copied again: their like already stands on the target (docs/adr/0810).
     MODULE_REPEAT_MATCHED = "module_repeat_matched", Warning, false, "Kattaki bazı modülsüz nesnelerin aynısı hedef katta zaten var; yeniden kopyalanmadı (report.matched). Yine de kopyalamak için again verin.";
+    /// A single-storey instance's object whose member moved to another storey (docs/adr/0811): it stays, unfollowed.
+    MODULE_STOREY_LEFT = "module_storey_left", Warning, false, "Tek katlı örneğin bazı nesnelerinin tanımdaki karşılığı başka bir kata geçti; o nesneler olduğu gibi kaldı ve artık izlemez.";
     NOT_A_SPACE = "not_a_space", Failed, false, "Nesne mahal değil.";
     INVALID_SPACE_NUMBER = "invalid_space_number", Failed, false, "Mahal numarası, farklı UUID listesi veya açık sıralama yönü geçersiz; girdiyi düzeltin.";
     SPACE_NUMBER_CONFLICT = "space_number_conflict", Failed, false, "Önerilen mahal numarası seçim dışındaki başka bir mahalde var; ilk numarayı ya da seçimi değiştirin.";

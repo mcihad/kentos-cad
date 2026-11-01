@@ -127,6 +127,12 @@ pub struct ModuleInstance {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub unit: Option<String>,
+    /// One storey of a module of several (docs/adr/0811, Archicad's Single Story): the instance holds only the
+    /// definition's members on that storey, standing on the instance's `level`. None: every storey, the base on `level`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub storey: Option<u32>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub version: u32,
     pub members: Vec<ModuleObject>,
@@ -172,6 +178,13 @@ pub struct ArchModule {
 /// Whether a member of `modules` stands on a storey above its instance's base level (KCAD 152, docs/adr/0796 §1).
 pub fn modules_have_storeys(modules: &[ArchModule]) -> bool {
     modules.iter().any(|m| m.members.iter().any(|x| x.storey > 0))
+}
+
+/// Whether an instance of `modules` holds one storey only (KCAD 155, docs/adr/0811).
+pub fn modules_have_instance_storeys(modules: &[ArchModule]) -> bool {
+    modules
+        .iter()
+        .any(|m| m.instances.iter().any(|i| i.storey.is_some()))
 }
 
 /// Whether any instance of `modules` names a building-program group (KCAD 145, docs/adr/0779 §4).
@@ -353,6 +366,12 @@ pub fn arch_modules_problem(modules: &[ArchModule]) -> Option<(String, String)> 
                 return Some((
                     format!("{ia}.unit"),
                     "Örneğin bölümü boş olamaz; en çok 64 karakter.".into(),
+                ));
+            }
+            if inst.storey.is_some_and(|s| s >= MAX_MODULE_STOREYS) {
+                return Some((
+                    format!("{ia}.storey"),
+                    format!("Örneğin katı 0 ile {} arasındadır.", MAX_MODULE_STOREYS - 1),
                 ));
             }
             if inst.version == 0 || inst.version > m.version {

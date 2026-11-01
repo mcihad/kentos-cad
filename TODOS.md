@@ -112,6 +112,7 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - ADR 0808: `cad.options.edit`'in `saveCombo`, `applyCombo`, `deleteCombo` işleyicileri, `cad.options.query`'nin `combos`'u, Tasarım seçenekleri'nde Bileşimler, görünüş tarifinin Bileşim'i; `.kcad` şema 154'ün web okuyucusu.
 - ADR 0809: `cad.options.query`'nin `compareCombos`'u ve Bileşimler'in Karşılaştır'ı.
 - ADR 0810: `cad.modules.edit` `repeat`'in `again`'i ve `report.matched`'ı, Katları tekrarla'nın Hedefte aynısı olanı da kopyala'sı.
+- ADR 0811: `.kcad` şema 155'in web okuyucusu (örneğin `storey`'i), `place`'in `storey`'i ve tek katlı örneğin izlenmesi, Modül yerleştir'in Tek kat'ı.
 - ADR 0795: web'e Bölüm çizelgesi aracı, `ScheduleOf::Units` satırları, hücrelerin programa yazılması, bina/kanat/tür süzgeci; `.kcad` şema 151'in web okuyucusu.
 - ADR 0799 oda iç görünüşü: `cad.elevations.edit` ve `.query`'nin web işleyicileri, Oda iç görünüşü aracı, Öznitelikler'in İç görünüş bölümü; ortak durumlar `fixtures/commands/v1/cad.elevations.*.json`.
 - ADR 0796: `cad.modules.edit`'in çok katlı tanımı (`ModuleMember.storey`), yerleştirme ve tekrarda kat eşlemesi (`module_storey_missing`), `repeat`'in `loose`'u (`copied`, `report.left`, `module_repeat_left`), `cad.modules.query`'nin `storeys` ve `levels`'ı web'in işleyicilerinde; Oda modülleri penceresinin kat sözleri ve Modülsüz nesneler de seçimi; KCAD şema 152'ın okunması ve yazılması (`module-storeys.kcad`).

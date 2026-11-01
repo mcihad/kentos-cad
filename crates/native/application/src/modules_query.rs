@@ -125,7 +125,10 @@ fn answer(doc: &Document, input: &ModulesQuery) -> Result<ModulesQueried, Stop> 
                     broken: i.broken,
                     unit: i.unit.clone(),
                     level: i.level.clone(),
-                    levels: if m.storeys() > 1 {
+                    storey: i.storey,
+                    levels: if i.storey.is_some() {
+                        i.level.iter().cloned().collect()
+                    } else if m.storeys() > 1 {
                         (0..m.storeys())
                             .filter_map(|n| {
                                 crate::modules_edit::storey_level(&order, i.level.as_deref(), n)
