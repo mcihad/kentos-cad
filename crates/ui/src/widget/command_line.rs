@@ -387,7 +387,7 @@ impl<'a, Message> Prompt<'a, Message> {
 
     /// Options that do not fit a command line `width` wide go, from the
     /// last one back, into a “Diğer” chip's menu at the head of the menu
-    /// chips: the step's words keep at least their first letters, the field
+    /// chips: the step gets its full width up to half the line, the field
     /// its least width, and every option stays a click away (one that
     /// offers values, as a submenu). A pinned chip stays on the line. A
     /// prompt that fits is left as it is.
@@ -398,6 +398,12 @@ impl<'a, Message> Prompt<'a, Message> {
         let token = self.command.as_ref().map_or(0.0, |command| {
             typography::mono_width(command, typography::caption()) + 12.0 + ASK_SPACING
         });
+        // Keep the expected input readable before keeping secondary options.
+        // Very long steps still yield to the input field and expose their full
+        // text in a tip; they must not consume the whole command line.
+        let step = (typography::measured_width(&self.text, typography::body(), false).ceil() + 2.0)
+            .min(width * 0.5)
+            .max(typography::from_default(STEP_MIN));
         // The row's own room: its paddings, the compact controls at the right, the glyph,
         // the gaps, the field's least width and the step's least words.
         let room = width
@@ -407,7 +413,7 @@ impl<'a, Message> Prompt<'a, Message> {
             - GLYPH_COLUMN
             - 2.0 * GAP
             - typography::from_default(FIELD_MIN)
-            - typography::from_default(STEP_MIN)
+            - step
             - token;
         if chips_width(&self.options, &self.menus) <= room {
             return self;
@@ -425,6 +431,11 @@ impl<'a, Message> Prompt<'a, Message> {
                 break;
             };
             self.hidden.push(self.options.remove(last));
+        }
+        // Fixed menus and pinned state chips cannot be moved. Do not add an
+        // empty overflow menu when they alone leave too little room.
+        if self.hidden.is_empty() {
+            return self;
         }
         self.hidden.reverse();
         let menu = self
@@ -1019,8 +1030,12 @@ fn input_row<'a, Message: Clone + 'a>(
         let mut ask = Row::new().spacing(ASK_SPACING).align_y(Center);
         // The chips keep their width and the field its minimum; the prompt's
         // words give way with an ellipsis (the web's `.cmdline__text`).
-        let reserve =
-            chips_width(&prompt.options, &prompt.menus) + GAP + typography::from_default(FIELD_MIN);
+        // Iced's rows reserve every inter-child gap before laying out the
+        // step. chips_width includes those gaps for the fit budget above;
+        // subtract them here so the step does not lose the same room twice.
+        let chip_gaps = ASK_SPACING * (prompt.options.len() + prompt.menus.len()) as f32;
+        let reserve = chips_width(&prompt.options, &prompt.menus) - chip_gaps
+            + typography::from_default(FIELD_MIN);
 
         if let Some(command) = prompt.command {
             ask = ask.push(
@@ -1034,12 +1049,15 @@ fn input_row<'a, Message: Clone + 'a>(
             );
         }
 
-        ask = ask.push(
+        let step_tip = crate::widget::Tip::new(prompt.text.to_string()).when_cut();
+        ask = ask.push(crate::widget::tip(
             crate::widget::elided::Elided::new(prompt.text)
                 .font(typography::ui())
                 .size(typography::body())
                 .reserve(reserve),
-        );
+            step_tip,
+            iced::widget::tooltip::Position::Top,
+        ));
 
         for option in prompt.options {
             let mut face = Row::new().spacing(6).align_y(Center);
@@ -2618,6 +2636,21 @@ mod tests {
         );
         assert!(pinned.hidden.iter().all(|o| !o.pinned));
         assert!(pinned.hidden.len() > hidden.len(), "{shown:?}");
+    }
+
+    #[test]
+    fn fixed_chips_alone_never_create_an_empty_overflow_menu() {
+        let prompt = Prompt::new("uzun bir aşama açıklaması için beklenen koordinatı belirtin")
+            .command("Taşı")
+            .option("Kilit: Uzunluk 12.000 m", 1)
+            .key("×")
+            .pinned()
+            .menu("Nokta hesabı", None, crate::widget::Menu::new())
+            .fit(300.0);
+        assert!(prompt.hidden.is_empty());
+        assert_eq!(prompt.options.len(), 1, "the lock remains accessible");
+        assert_eq!(prompt.menus.len(), 1);
+        assert_eq!(prompt.menus[0].label.to_string(), "Nokta hesabı");
     }
 
     #[test]

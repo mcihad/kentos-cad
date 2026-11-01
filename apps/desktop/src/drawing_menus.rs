@@ -490,7 +490,13 @@ impl App {
             .options
             .iter()
             .find(|option| option.key == "Enter")
-            .map_or("Onayla / bitir", |option| option.label);
+            .map_or_else(
+                || "Onayla / bitir".to_owned(),
+                |option| match &option.value {
+                    Some(value) => format!("{}: {value}", option.label),
+                    None => option.label.to_owned(),
+                },
+            );
         let mut menu = Menu::new()
             .header(prompt.title().unwrap_or_else(|| "Komut".to_owned()))
             .item(confirm, Message::Run("tool.confirm"))
@@ -722,6 +728,51 @@ mod tests {
         let _ = app.update(Message::Run("tool.confirm"));
         assert!(!app.session.is_running());
         assert_eq!(app.document.as_ref().unwrap().model.revision(), revision);
+    }
+
+    #[test]
+    fn the_confirm_menu_shows_the_radius_it_will_apply_once() {
+        use kentos_domain::Slot;
+
+        // The sample parcel has curved edges; this acceptance uses the
+        // interaction fixture's rectangle, whose adjacent sides are straight.
+        let snapshot = kentos_commands::DocumentSnapshotV1::from_json(include_str!(
+            "../../../fixtures/interaction/v1/objects.kcad"
+        ))
+        .unwrap();
+        let doc = crate::document::Document::new(snapshot, None).unwrap();
+        let (mut app, _) = App::boot(None);
+        let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+        app.memory.fillet_radius = Some(1.0);
+        let parcel = Slot(4);
+        let doc = &app.document.as_ref().unwrap().model;
+        let before = doc.get(parcel).cloned();
+        let revision = doc.revision();
+        app.spatial.sync(doc);
+        let corner = app.spatial.grips(&[parcel])[0].points[0];
+        let [x, y] = app.viewport.camera.world_to_screen(corner);
+        let at = Point::new(x as f32, y as f32);
+        let _ = app.update(Message::Run("tool.fillet"));
+        view(&mut app, viewport::Event::Pressed(at));
+        view(&mut app, viewport::Event::Released(at));
+        view(&mut app, viewport::Event::RightPressed(at));
+        view(&mut app, viewport::Event::RightClick(at));
+        let menu = format!("{:?}", app.drawing_menu_items());
+        assert!(menu.contains("Son yarıçap: 1.000 m"), "{menu}");
+        assert_eq!(app.document.as_ref().unwrap().model.revision(), revision);
+        let _ = app.update(Message::DrawingMenu(Event::Closed));
+        let _ = app.update(Message::Run("tool.confirm"));
+        assert_ne!(
+            app.document.as_ref().unwrap().model.get(parcel),
+            before.as_ref()
+        );
+        assert!(app.session.prompt().step.starts_with("yuvarlanacak köşeye"));
+        let _ = app.update(Message::Run("tool.cancel"));
+        let _ = app.update(Message::Run("edit.undo"));
+        assert_eq!(
+            app.document.as_ref().unwrap().model.get(parcel),
+            before.as_ref()
+        );
     }
 
     /// A grip being moved (the owner's report, 23 October 2026): a right

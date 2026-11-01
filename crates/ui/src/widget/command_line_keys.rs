@@ -12,6 +12,70 @@ use iced::{Element, Event, Point, Rectangle, Size, event, mouse};
 use super::CommandLine;
 use crate::snapshot::Snapshot;
 
+/// The running step stays readable before secondary options, with the real
+/// composed line, field and right-hand controls (CAD-ADV-01).
+#[test]
+fn the_expected_input_is_not_cut_to_keep_secondary_options() {
+    use crate::widget::elided::Cut;
+    use iced::advanced::widget::{Id, Operation};
+    use std::any::Any;
+
+    #[derive(Default)]
+    struct Cuts(Vec<bool>);
+    impl Operation for Cuts {
+        fn traverse(&mut self, operate: &mut dyn FnMut(&mut dyn Operation)) {
+            operate(self);
+        }
+        fn custom(&mut self, _: Option<&Id>, _: Rectangle, state: &mut dyn Any) {
+            if let Some(cut) = state.downcast_ref::<Cut>() {
+                self.0.push(cut.0);
+            }
+        }
+    }
+
+    // A 1100 px window leaves about 790 px beside its property dock.
+    let size = Size::new(790.0, 100.0);
+    let snapshot = Snapshot::software(size).expect("software renderer");
+    let prompt = super::Prompt::new("1 nesne için temel noktayı belirtin")
+        .command("Taşı")
+        .option("Yer değiştirme", Message::Input("Y".into()))
+        .key("Y")
+        .option("Koordinat farkı gir", Message::Input("Enter".into()))
+        .key("Enter")
+        .menu(
+            "Nokta hesabı",
+            Some(crate::icon::Icon::Check),
+            crate::widget::Menu::new(),
+        )
+        .fit(size.width);
+    // Overflow never removes a keyboard action.
+    assert_eq!(prompt.find("Enter"), Some(&Message::Input("Enter".into())));
+    let mut view: Element<'_, Message> = CommandLine::new(&[], "")
+        .prompt(prompt)
+        .lines(0)
+        .expanded(false, Message::Focus)
+        .on_input(Message::Input)
+        .into();
+    let mut tree = Tree::new(view.as_widget());
+    let node = view.as_widget_mut().layout(
+        &mut tree,
+        snapshot.renderer(),
+        &layout::Limits::new(Size::ZERO, size),
+    );
+    let mut cuts = Cuts::default();
+    view.as_widget_mut().operate(
+        &mut tree,
+        Layout::new(&node),
+        snapshot.renderer(),
+        &mut cuts,
+    );
+    assert_eq!(
+        cuts.0,
+        [false],
+        "the whole base-point instruction is visible"
+    );
+}
+
 #[derive(Debug, Clone, PartialEq)]
 enum Message {
     Input(String),

@@ -162,10 +162,22 @@ yazım, tek mantıksal Undo ve önizleme/sonuç eşitliği gerçek pencerede do�
   oluşturmadan bitirme, Esc ve tek Undo denendi. Geniş ve yaklaşık 1100×680
   mantıksal piksel pencerede menüler incelendi; görüntüler Git dışında.
   825 etkileşim, 7 menü ve 5 anlamsal komut testi geçti; 5 isteğe bağlı test atlandı.
-- [ ] Dar pencerede komut satırının kısalan aşama açıklamasını erişilebilir kıl.
-  Bütün araç aşamalarında geçersiz/onaysız girdinin gösterimi, odak/belge
+- [x] İkinci dilim, [ADR 0813](../docs/adr/0813-readable-command-stage-and-default-value.md):
+  dar satır aşama metnine ölçülmüş yer ayırır, ikincil seçenekleri mevcut
+  Diğer menüsüne taşır. Hâlâ kısalan uzun metin üzerine gelince tam açıklama
+  görünür. Yaklaşık 1100×680 pencerede Taşı temel nokta istemi tamamen
+  okunur; Diğer içindeki Enter seçeneği doğru aşamayı açar.
+- [x] Köşe yuvarla sağ tuş menüsü uygulanacak son yarıçapı birimiyle gösterir.
+  Gerçek pencerede 1 m yarıçap yazma, sonraki köşeye son yarıçapı tek
+  menü tıklamasıyla uygulama, tek Undo ve bekleyen köşeden Esc denendi.
+  Uzat'ta seçilen sınırı tek menü tıklamasıyla kullanma, çizgiyi uzatma,
+  tek Undo ve sınır seçimini Esc ile yazmadan iptal etme doğrulandı.
+  Bu dilimde 321 UI ve 8 masaüstü menü testi geçti; derleme başarılı.
+- [ ] Bütün araç aşamalarında geçersiz/onaysız girdinin gösterimi, odak/belge
   değişimi, kilitli/bağlı nesne etkisi ve önizleme/sonuç eşitliği kabulünü tamamla.
-  Uzat, Köşe yuvarla, Tarama, Blok ekle ve Ölçü için bu oturumda gerçek pencere kabulü yapılmadı.
+  Tarama, Blok ekle ve Ölçü için gerçek pencere kabulü açık.
+  Köşe yuvarla son yarıçap kısayolu faredeki farklı yarıçap önizlemesi yerine
+  menüde yazan son değeri uygular; bu ayrım genel önizleme kabulünde ayrıca incelenmeli.
 
 ### CAD-ADV-02 — Birim, 2B UCS ve hassasiyeti kullanıcının öğrenmek zorunda kalmadığı bir sisteme dönüştür [ ]
 
