@@ -5,14 +5,15 @@
 //! areas and the plan difference); Kabul et keeps the chosen option as the main model and deletes the others, its plan
 //! said first; Seçeneği sil removes a non-primary option with its objects. Bileşimler (docs/adr/0808) keeps named
 //! combinations of the sets' options: Birincillerden kaydet records what the drawing shows now, Uygula makes a
-//! combination's options the primaries, Sil removes one no view shows. Each write is one undo step (“Tasarım
+//! combination's options the primaries, Sil removes one no view shows; the picked one is compared with another set by
+//! set (docs/adr/0809). Each write is one undo step (“Tasarım
 //! seçeneği”); Kapat writes nothing.
 
 use iced::widget::{Column, button, container, row};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
-    CommandResult, OptionComboRow, OptionSetRow, OptionsCompare, OptionsCompared, OptionsEdit, OptionsEdited,
-    OptionsOperation, OptionsQuery,
+    CombosCompared, CommandResult, OptionComboRow, OptionSetRow, OptionsCompare, OptionsCompared, OptionsEdit, OptionsEdited,
+    OptionsCompareCombos, OptionsOperation, OptionsQuery,
 };
 use kentos_interaction::Level;
 use kentos_ui::icon::icon;
@@ -53,6 +54,9 @@ pub struct Window {
     pub combos: Vec<OptionComboRow>,
     pub combo: usize,
     pub combo_name: String,
+    /// The combination the picked one is compared with, and what that comparison says (docs/adr/0809).
+    pub versus: usize,
+    pub combos_compared: Option<Result<CombosCompared, String>>,
 }
 
 #[derive(Clone, Debug)]
@@ -74,6 +78,7 @@ pub enum Event {
     ComboSave,
     ComboApply,
     ComboDelete,
+    Versus(usize),
     Close,
 }
 
@@ -109,6 +114,45 @@ fn kind_words(kind: &str) -> &str {
 }
 
 /// What a comparison says, in one line.
+/// What a comparison of two combinations says, in one line: each set differing, the sets alike, the plans' totals.
+pub(crate) fn combos_words(c: &CombosCompared, rows: &[OptionSetRow]) -> String {
+    let name = |id: &str| rows.iter().find(|s| s.id == id).map_or(id.to_owned(), |s| s.name.clone());
+    let option = |set: &str, id: &str| {
+        rows.iter()
+            .find(|s| s.id == set)
+            .and_then(|s| s.options.iter().find(|o| o.id == id))
+            .map_or(id.to_uppercase(), |o| o.name.clone())
+    };
+    let mut parts: Vec<String> = c
+        .sets
+        .iter()
+        .map(|s| {
+            let mut ws = vec![format!("{} aynı", s.same)];
+            if !s.changed.is_empty() {
+                ws.push(format!("{} değişmiş", s.changed.len()));
+            }
+            if !s.removed.is_empty() {
+                ws.push(format!("{} yalnız {}'da", s.removed.len(), option(&s.set, &s.a)));
+            }
+            if !s.added.is_empty() {
+                ws.push(format!("{} yalnız {}'de", s.added.len(), option(&s.set, &s.b)));
+            }
+            format!("{} {} → {}: {}", name(&s.set), option(&s.set, &s.a), option(&s.set, &s.b), ws.join(", "))
+        })
+        .collect();
+    if !c.alike.is_empty() {
+        parts.push(format!("aynı: {}", c.alike.iter().map(|s| name(s)).collect::<Vec<_>>().join(", ")));
+    }
+    parts.push(format!(
+        "plan {} → {} nesne, mahal {} m², duvar {} m",
+        c.objects_a,
+        c.objects_b,
+        num(c.space_area, true),
+        num(c.wall_length, true)
+    ));
+    parts.join(" · ")
+}
+
 pub(crate) fn compared_words(c: &OptionsCompared) -> String {
     let mut parts = vec![format!("{} aynı", c.same)];
     if !c.changed.is_empty() {
@@ -141,11 +185,15 @@ impl App {
 
     fn design_options_read(&mut self, keep: Option<String>) {
         let (rows, combos) = self.design_options_rows();
-        let (combo, combo_name) = self
+        let (combo, combo_name, versus) = self
             .design_options
             .as_ref()
-            .map(|w| (w.combo.min(combos.len().saturating_sub(1)), w.combo_name.clone()))
+            .map(|w| {
+                let last = combos.len().saturating_sub(1);
+                (w.combo.min(last), w.combo_name.clone(), w.versus.min(last))
+            })
             .unwrap_or_default();
+        let versus = if versus == combo { usize::from(combo == 0 && combos.len() > 1) } else { versus };
         let chosen = keep
             .and_then(|id| rows.iter().position(|r| r.id == id))
             .unwrap_or(0);
@@ -170,6 +218,8 @@ impl App {
             combos,
             combo,
             combo_name,
+            versus,
+            combos_compared: None,
         });
         self.design_options_preview();
     }
@@ -257,9 +307,31 @@ impl App {
                 _ => Err("Önizlenemedi.".into()),
             }
         });
+        let combos_compared = match (w.combos.get(w.combo), w.combos.get(w.versus)) {
+            (Some(x), Some(y)) if x.id != y.id => Some(
+                match kentos_native_application::options_query::query(
+                    &doc.model,
+                    &OptionsQuery {
+                        compare_combos: Some(OptionsCompareCombos {
+                            a: x.id.clone(),
+                            b: y.id.clone(),
+                            search: None,
+                            tolerance: None,
+                        }),
+                        ..Default::default()
+                    },
+                ) {
+                    CommandResult::Completed { output, .. } => output.combos_compared.ok_or_else(String::new),
+                    CommandResult::Failed { error } | CommandResult::Conflict { error } => Err(error.message),
+                    _ => Err("Karşılaştırılamadı.".into()),
+                },
+            ),
+            _ => None,
+        };
         if let Some(w) = self.design_options.as_mut() {
             w.compared = compared;
             w.accept = accept;
+            w.combos_compared = combos_compared;
         }
     }
 
@@ -485,8 +557,18 @@ impl App {
             }
             Event::Combo(i) => {
                 if let Some(w) = self.design_options.as_mut() {
+                    if w.versus == i {
+                        w.versus = w.combo;
+                    }
                     w.combo = i;
                 }
+                self.design_options_preview();
+            }
+            Event::Versus(i) => {
+                if let Some(w) = self.design_options.as_mut() {
+                    w.versus = i;
+                }
+                self.design_options_preview();
             }
             Event::ComboName(t) => {
                 if let Some(w) = self.design_options.as_mut() {
@@ -513,6 +595,7 @@ impl App {
                         w.combo_name.clear();
                         w.combo = id.and_then(|id| w.combos.iter().position(|c| c.id == id)).unwrap_or(w.combo);
                     }
+                    self.design_options_preview();
                 }
             }
             Event::ComboApply | Event::ComboDelete => {
@@ -679,7 +762,7 @@ impl App {
         let option = set.and_then(|s| s.options.get(w.option));
         let is_primary = option.is_some_and(|o| o.primary);
         Frame::new(TITLE)
-            .push(body)
+            .scroll_fill(body)
             .action(words::secondary(DEFINE, Some(msg(Event::Define))))
             .action(words::secondary(COPY, option.map(|_| msg(Event::Copy))))
             .action(words::secondary(
@@ -743,11 +826,32 @@ impl App {
         let name = kentos_ui::widget::text_field("Bileşimin adı (Teklif 1)", &w.combo_name)
             .on_input(|t| msg(Event::ComboName(t)));
         let has_sets = !w.rows.is_empty();
-        Column::new()
+        let mut out = Column::new()
             .spacing(6)
             .push(label::strong("Bileşimler"))
-            .push(container(iced::widget::scrollable(list)).max_height(120.0))
-            .push(
+            .push(container(iced::widget::scrollable(list)).max_height(120.0));
+        if let (Some(c), true) = (picked, w.combos.len() > 1) {
+            let others = Select::new(
+                w.combos.iter().map(|c| Choice::new(c.name.clone())),
+                Some(w.versus),
+                |i| msg(Event::Versus(i)),
+            )
+            .searchable(false);
+            out = out.push(words::field(
+                "Karşılaştır",
+                row![label::caption(c.name.clone()), label::caption("ile"), container(others).width(220.0)]
+                    .spacing(8)
+                    .align_y(Center),
+                None,
+            ));
+            let line = match &w.combos_compared {
+                Some(Ok(cc)) => words::text_line(Kind::Ok, combos_words(cc, &w.rows)),
+                Some(Err(why)) => words::text_line(Kind::Warn, why.clone()),
+                None => words::text_line(Kind::Ok, "İki ayrı bileşim seçin.".to_owned()),
+            };
+            out = out.push(words::summary(vec![line]));
+        }
+        out.push(
                 row![
                     container(name).width(Fill),
                     words::secondary(COMBO_SAVE, has_sets.then(|| msg(Event::ComboSave))),

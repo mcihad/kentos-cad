@@ -68,5 +68,5 @@ saklanmış veriden değil komutla ve görünümün tarifinden yürütür.
 
 ## Sonuçlar
 
-- Açık: bileşimlerin karşılaştırması (iki teklifin plan farkı), seçenekler arası eşleme ve birleştirme.
+- Açık: bileşimlerin karşılaştırması (ADR 0809 kapattı), seçenekler arası eşleme ve birleştirme.
 - Web'e gerekenler (TODOS.md §0.2): şema 154'ün okunması, bileşimlerin komutları, tarifin bileşimi.

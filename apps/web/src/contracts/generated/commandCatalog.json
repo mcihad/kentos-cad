@@ -21978,12 +21978,22 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.options.query` v1 (read-only): the sets (one: `set`), the option an object (`uid`) is in, and two\noptions compared.\n\nRefusals: `option_set_not_found`, `option_not_found`, `invalid_uid`, `entity_not_found`, `not_in_option`,\n`invalid_input`.",
+        "description": "Input of `cad.options.query` v1 (read-only): the sets (one: `set`), the option an object (`uid`) is in, two\noptions compared, and two combinations compared.\n\nRefusals: `option_set_not_found`, `option_not_found`, `option_combo_not_found`, `invalid_uid`, `entity_not_found`,\n`not_in_option`, `invalid_input`.",
         "properties": {
           "compare": {
             "anyOf": [
               {
                 "$ref": "#/$defs/OptionsCompare"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "compareCombos": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/OptionsCompareCombos"
               },
               {
                 "type": "null"
@@ -22017,6 +22027,16 @@
               "$ref": "#/$defs/OptionComboRow"
             },
             "type": "array"
+          },
+          "combosCompared": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/CombosCompared"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "compared": {
             "anyOf": [
@@ -22070,6 +22090,16 @@
             },
             "type": "array"
           },
+          "combosCompared": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/CombosCompared"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "compared": {
             "anyOf": [
               {
@@ -22115,6 +22145,7 @@
         "refusals": [
           "option_set_not_found",
           "option_not_found",
+          "option_combo_not_found",
           "invalid_uid",
           "entity_not_found",
           "not_in_option",
@@ -81736,6 +81767,61 @@
       ],
       "type": "object"
     },
+    "CombosCompared": {
+      "description": "Two combinations compared (docs/adr/0809): the sets whose shown option differs, each compared as two options are\n(`a`'s option against `b`'s), and the two plans' objects, and the differences of their spaces' area and walls'\nlength (b − a).",
+      "properties": {
+        "a": {
+          "type": "string"
+        },
+        "alike": {
+          "description": "The sets both show the same option of.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "b": {
+          "type": "string"
+        },
+        "objectsA": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "objectsB": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "sets": {
+          "items": {
+            "$ref": "#/$defs/OptionsCompared"
+          },
+          "type": "array"
+        },
+        "spaceArea": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "wallLength": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "a",
+        "b",
+        "objectsA",
+        "objectsB",
+        "spaceArea",
+        "wallLength"
+      ],
+      "type": "object"
+    },
     "CommandWarning": {
       "description": "Something a completed command wants the caller to know.",
       "properties": {
@@ -111887,6 +111973,39 @@
       },
       "required": [
         "set",
+        "a",
+        "b"
+      ],
+      "type": "object"
+    },
+    "OptionsCompareCombos": {
+      "additionalProperties": false,
+      "description": "Two combinations to compare (docs/adr/0809): `a` the one compared against, `b` the other (id or name); every set\nwhose shown option differs between them compared as two options are, with `search` and `tolerance` as there.",
+      "properties": {
+        "a": {
+          "type": "string"
+        },
+        "b": {
+          "type": "string"
+        },
+        "search": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "tolerance": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        }
+      },
+      "required": [
         "a",
         "b"
       ],

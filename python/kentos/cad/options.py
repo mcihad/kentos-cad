@@ -12,6 +12,7 @@ from ._runtime import CommandNote, LocalCommand, Outcome, UNSET, Unset, _opt  # 
 from .protocol import Expected  # noqa: F401
 from .types import (  # noqa: F401
     OptionsCompare,
+    OptionsCompareCombos,
     OptionsEdit,
     OptionsEdited,
     OptionsOperation,
@@ -180,6 +181,7 @@ class _OptionsQuery(LocalCommand[OptionsQuery, OptionsQueried, OptionsQueried]):
         /,
         *,
         compare: OptionsCompare | None | Unset = UNSET,
+        compare_combos: OptionsCompareCombos | None | Unset = UNSET,
         set: str | None | Unset = UNSET,
         uid: str | None | Unset = UNSET,
         request_id: str | None = None,
@@ -196,6 +198,7 @@ class _OptionsQuery(LocalCommand[OptionsQuery, OptionsQueried, OptionsQueried]):
         Args:
             doc: The drawing it works on.
             compare:
+            compare_combos:
             set:
             uid:
             request_id: Names this write: sent again with the same call it is answered as
@@ -212,6 +215,7 @@ class _OptionsQuery(LocalCommand[OptionsQuery, OptionsQueried, OptionsQueried]):
         """
         return self.execute_input(doc, OptionsQuery(
             compare=compare,
+            compare_combos=compare_combos,
             set=set,
             uid=uid,
         ), request_id=request_id, expected=expected)
@@ -222,6 +226,7 @@ class _OptionsQuery(LocalCommand[OptionsQuery, OptionsQueried, OptionsQueried]):
         /,
         *,
         compare: OptionsCompare | None | Unset = UNSET,
+        compare_combos: OptionsCompareCombos | None | Unset = UNSET,
         set: str | None | Unset = UNSET,
         uid: str | None | Unset = UNSET,
     ) -> OptionsQueried:
@@ -230,6 +235,7 @@ class _OptionsQuery(LocalCommand[OptionsQuery, OptionsQueried, OptionsQueried]):
         """
         return self.plan_input(doc, OptionsQuery(
             compare=compare,
+            compare_combos=compare_combos,
             set=set,
             uid=uid,
         ))
@@ -240,6 +246,7 @@ class _OptionsQuery(LocalCommand[OptionsQuery, OptionsQueried, OptionsQueried]):
         /,
         *,
         compare: OptionsCompare | None | Unset = UNSET,
+        compare_combos: OptionsCompareCombos | None | Unset = UNSET,
         set: str | None | Unset = UNSET,
         uid: str | None | Unset = UNSET,
     ) -> list[CommandNote]:
@@ -248,6 +255,7 @@ class _OptionsQuery(LocalCommand[OptionsQuery, OptionsQueried, OptionsQueried]):
         """
         return self.validate_input(doc, OptionsQuery(
             compare=compare,
+            compare_combos=compare_combos,
             set=set,
             uid=uid,
         ))
@@ -258,6 +266,7 @@ class _OptionsQuery(LocalCommand[OptionsQuery, OptionsQueried, OptionsQueried]):
         /,
         *,
         compare: OptionsCompare | None | Unset = UNSET,
+        compare_combos: OptionsCompareCombos | None | Unset = UNSET,
         set: str | None | Unset = UNSET,
         uid: str | None | Unset = UNSET,
         op: str = "execute",
@@ -271,6 +280,7 @@ class _OptionsQuery(LocalCommand[OptionsQuery, OptionsQueried, OptionsQueried]):
         """
         return self.answer_input(doc, OptionsQuery(
             compare=compare,
+            compare_combos=compare_combos,
             set=set,
             uid=uid,
         ), op=op, request_id=request_id, expected=expected)

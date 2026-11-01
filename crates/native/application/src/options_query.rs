@@ -1,12 +1,13 @@
 //! `cad.options.query` v1 (docs/adr/0788 §2): the project's design option sets with each option's objects counted by
 //! kind, its spaces' area and its walls' length; the set and option an object is in; and two options of a set compared,
-//! their objects paired by place as Veri karşılaştır pairs them (`ops::compare`, docs/adr/0179). Read-only. The shared
-//! cases are `fixtures/commands/v1/cad.options.query.json`.
+//! their objects paired by place as Veri karşılaştır pairs them (`ops::compare`, docs/adr/0179); and two combinations
+//! compared set by set where they show different options (docs/adr/0809). Read-only. The shared cases are
+//! `fixtures/commands/v1/cad.options.query.json`, `.combos.json` and `.compare-combos.json`.
 
 use std::collections::BTreeMap;
 
 use kentos_commands::{
-    CommandResult, CommandWarning, DesignOption, Entity, OptionChange, OptionKindCount, OptionKindDifference,
+    CombosCompared, CommandResult, CommandWarning, DesignOption, OptionChoice, OptionCombo, Entity, OptionChange, OptionKindCount, OptionKindDifference,
     OptionComboRow, OptionRow, OptionSet, OptionSetRow, OptionsCompared, OptionsQueried, OptionsQuery, option_set,
 };
 use kentos_domain::{Document, Slot, Uuid};
@@ -160,6 +161,57 @@ fn compared(
     out
 }
 
+/// The plan the given choices show (the main model and the shown options): its objects, spaces' area and walls'
+/// length.
+fn plan_of(doc: &Document, choices: &[OptionChoice]) -> (u32, f64, f64) {
+    let hidden: std::collections::HashSet<String> = kentos_commands::option_hidden_uids(doc.arch_options(), choices)
+        .into_iter()
+        .map(str::to_owned)
+        .collect();
+    let (mut objects, mut area, mut length) = (0u32, 0.0, 0.0);
+    for (uid, e) in doc.entities_with_uids() {
+        if hidden.contains(&uid.to_string()) {
+            continue;
+        }
+        objects += 1;
+        match e {
+            Entity::Space(x) => area += crate::spaces::area_of(&x.space.parts),
+            Entity::Wall(w) => length += path_length(&w.wall.pts, w.wall.bulges.as_deref(), w.wall.closed),
+            _ => {}
+        }
+    }
+    (objects, area, length)
+}
+
+/// Two combinations compared (docs/adr/0809 §1): each set whose shown option differs, compared as two options are.
+fn combos_compared(doc: &Document, a: &OptionCombo, b: &OptionCombo, search: f64, tolerance: f64) -> CombosCompared {
+    let sets = doc.arch_options();
+    let (ca, cb) = (kentos_commands::combo_choices(sets, a), kentos_commands::combo_choices(sets, b));
+    let mut out = CombosCompared {
+        a: a.id.clone(),
+        b: b.id.clone(),
+        sets: Vec::new(),
+        alike: Vec::new(),
+        objects_a: 0,
+        objects_b: 0,
+        space_area: 0.0,
+        wall_length: 0.0,
+    };
+    for ((s, x), y) in sets.iter().zip(&ca).zip(&cb) {
+        match (s.option(&x.option), s.option(&y.option)) {
+            (Some(oa), Some(ob)) if oa.id != ob.id => out.sets.push(compared(doc, s, oa, ob, search, tolerance)),
+            _ => out.alike.push(s.id.clone()),
+        }
+    }
+    let (na, aa, la) = plan_of(doc, &ca);
+    let (nb, ab, lb) = plan_of(doc, &cb);
+    out.objects_a = na;
+    out.objects_b = nb;
+    out.space_area = ab - aa;
+    out.wall_length = lb - la;
+    out
+}
+
 /// The project's combinations (docs/adr/0808 §2): each with what it shows; current when its choices are the
 /// primaries, the shown plan's objects, spaces' area and walls' length.
 fn combo_rows(doc: &Document) -> Vec<OptionComboRow> {
@@ -171,22 +223,7 @@ fn combo_rows(doc: &Document) -> Vec<OptionComboRow> {
             let current = choices
                 .iter()
                 .all(|ch| sets.iter().any(|s| s.id == ch.set && s.primary == ch.option));
-            let hidden: std::collections::HashSet<String> = kentos_commands::option_hidden_uids(sets, &choices)
-                .into_iter()
-                .map(str::to_owned)
-                .collect();
-            let (mut objects, mut area, mut length) = (0u32, 0.0, 0.0);
-            for (uid, e) in doc.entities_with_uids() {
-                if hidden.contains(&uid.to_string()) {
-                    continue;
-                }
-                objects += 1;
-                match e {
-                    Entity::Space(x) => area += crate::spaces::area_of(&x.space.parts),
-                    Entity::Wall(w) => length += path_length(&w.wall.pts, w.wall.bulges.as_deref(), w.wall.closed),
-                    _ => {}
-                }
-            }
+            let (objects, area, length) = plan_of(doc, &choices);
             OptionComboRow {
                 id: c.id.clone(),
                 name: c.name.clone(),
@@ -203,6 +240,21 @@ fn combo_rows(doc: &Document) -> Vec<OptionComboRow> {
 /// The drawing's metres per unit (a length in metres made the drawing's).
 fn metres_per_unit(doc: &Document) -> f64 {
     kentos_project::format::Format::of(doc.settings()).to_metres(1.0)
+}
+
+/// A comparison's search distance and tolerance, absent ones 0.5 m and 1 mm in the drawing's unit.
+fn reach(doc: &Document, search: Option<f64>, tolerance: Option<f64>, at: &str) -> Result<(f64, f64), Stop> {
+    let unit = metres_per_unit(doc).max(f64::MIN_POSITIVE);
+    for (v, name) in [(search, "search"), (tolerance, "tolerance")] {
+        if v.is_some_and(|v| !(v.is_finite() && v >= 0.0)) {
+            return Err(fail(
+                codes::INVALID_INPUT,
+                "Arama uzaklığı ve tolerans sonlu, sıfır ya da daha büyük olmalı.".into(),
+                &format!("{at}.{name}"),
+            ));
+        }
+    }
+    Ok((search.unwrap_or(0.5 / unit), tolerance.unwrap_or(0.001 / unit)))
 }
 
 fn answer(doc: &Document, input: &OptionsQuery) -> Result<(OptionsQueried, Vec<CommandWarning>), Stop> {
@@ -267,19 +319,32 @@ fn answer(doc: &Document, input: &OptionsQuery) -> Result<(OptionsQueried, Vec<C
                 "compare.b",
             ));
         }
-        let unit = metres_per_unit(doc).max(f64::MIN_POSITIVE);
-        for (v, path) in [(c.search, "compare.search"), (c.tolerance, "compare.tolerance")] {
-            if v.is_some_and(|v| !(v.is_finite() && v >= 0.0)) {
-                return Err(fail(
-                    codes::INVALID_INPUT,
-                    "Arama uzaklığı ve tolerans sonlu, sıfır ya da daha büyük olmalı.".into(),
-                    path,
-                ));
-            }
-        }
-        let search = c.search.unwrap_or(0.5 / unit);
-        let tolerance = c.tolerance.unwrap_or(0.001 / unit);
+        let (search, tolerance) = reach(doc, c.search, c.tolerance, "compare")?;
         compared_out = Some(compared(doc, s, a, b, search, tolerance));
+    }
+    let mut combos_out = None;
+    if let Some(c) = &input.compare_combos {
+        let combos = doc.option_combos();
+        let find = |key: &str, path: &str| {
+            kentos_commands::option_combo(combos, key).ok_or_else(|| {
+                fail(
+                    codes::OPTION_COMBO_NOT_FOUND,
+                    format!("Projede “{key}” adlı ya da kimlikli seçenek bileşimi yok."),
+                    path,
+                )
+            })
+        };
+        let a = find(&c.a, "compareCombos.a")?;
+        let b = find(&c.b, "compareCombos.b")?;
+        if a.id == b.id {
+            return Err(fail(
+                codes::INVALID_INPUT,
+                "Bir bileşim kendisiyle karşılaştırılmaz; iki ayrı bileşim verin.".into(),
+                "compareCombos.b",
+            ));
+        }
+        let (search, tolerance) = reach(doc, c.search, c.tolerance, "compareCombos")?;
+        combos_out = Some(combos_compared(doc, a, b, search, tolerance));
     }
     let sets: Vec<OptionSetRow> = chosen
         .iter()
@@ -312,6 +377,7 @@ fn answer(doc: &Document, input: &OptionsQuery) -> Result<(OptionsQueried, Vec<C
             set,
             option,
             compared: compared_out,
+            combos_compared: combos_out,
             combos: combo_rows(doc),
             revision: doc.revision().to_string(),
         },

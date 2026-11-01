@@ -15,6 +15,12 @@
 //! KENTOS_SHOTS_ONLY=bilesim-pencere,bilesim-uygulandi,bilesim-tarif cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture
 //! ```
 //!
+//! And docs/adr/0809's comparison of two combinations: Teklif 1 against Teklif 2 in Bileşimler, set by set:
+//!
+//! ```text
+//! KENTOS_SHOTS_ONLY=bilesim-karsilastir cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture
+//! ```
+//!
 //! Test code only.
 
 use kentos_domain::Slot;
@@ -152,6 +158,14 @@ fn combos_window(app: &mut App) {
     event(app, Event::Combo(1));
 }
 
+/// Bileşimler's comparison: Teklif 1 picked, compared with Teklif 2 set by set.
+fn combos_compared(app: &mut App) {
+    proposals(app);
+    run(app, "arch.options");
+    event(app, Event::Combo(0));
+    event(app, Event::Versus(1));
+}
+
 /// Teklif 2 applied: the plan draws the kitchen's B and the note's B.
 fn combos_applied(app: &mut App) {
     combos_window(app);
@@ -186,6 +200,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("bilesim-pencere", combos_window),
         ("bilesim-uygulandi", combos_applied),
         ("bilesim-tarif", combos_recipe),
+        ("bilesim-karsilastir", combos_compared),
     ]
 }
 
@@ -269,6 +284,28 @@ mod tests {
         let _ = app.update(Message::Views(crate::views::Event::RecipeCombo(Some(1))));
         let _ = app.update(Message::Views(crate::views::Event::RecipeApply));
         assert_eq!(app.recipe_draft("Teklif").combo.as_deref(), Some("teklif-2"));
+    }
+
+    /// docs/adr/0809: Bileşimler compares the picked proposal with another, set by set; picking the other as the
+    /// first swaps them.
+    #[test]
+    fn the_window_compares_two_combinations() {
+        let mut app = crate::files_testing::app_with_drawing();
+        proposals(&mut app);
+        run(&mut app, "arch.options");
+        let w = app.design_options.as_ref().expect("the window");
+        assert_eq!((w.combo, w.versus), (0, 1));
+        let c = w.combos_compared.as_ref().expect("compared").as_ref().expect("no refusal");
+        assert_eq!((c.a.as_str(), c.b.as_str()), ("teklif-1", "teklif-2"));
+        assert_eq!(c.sets.iter().map(|s| s.set.as_str()).collect::<Vec<_>>(), ["mutfak", "not"]);
+        assert!(c.sets[0].changed.len() >= 2, "{:?}", c.sets[0]);
+        let words = crate::design_options_window::combos_words(c, &w.rows);
+        assert!(words.contains("Mutfak A → B"), "{words}");
+        event(&mut app, Event::Combo(1));
+        let w = app.design_options.as_ref().expect("the window");
+        assert_eq!((w.combo, w.versus), (1, 0));
+        let c = w.combos_compared.as_ref().expect("compared").as_ref().expect("no refusal");
+        assert_eq!((c.a.as_str(), c.b.as_str()), ("teklif-2", "teklif-1"));
     }
 
     /// docs/adr/0788 §3: the recipe's Tasarım seçeneği chooses B for the set and Tarifi uygula writes it.

@@ -17454,6 +17454,55 @@ class Combination(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class CombosCompared(_Model):
+    """Two combinations compared (docs/adr/0809): the sets whose shown option differs, each compared as two options are
+    (`a`'s option against `b`'s), and the two plans' objects, and the differences of their spaces' area and walls'
+    length (b − a).
+    Attributes:
+        objects_a: Unit: count.
+        objects_b: Unit: count.
+        space_area: Unit: area.
+        wall_length: Unit: length.
+        alike: The sets both show the same option of.
+    """
+    a: str
+    b: str
+    objects_a: int
+    objects_b: int
+    space_area: float
+    wall_length: float
+    alike: list[str] | Unset = UNSET
+    sets: list[OptionsCompared] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["a"] = self.a
+        out["b"] = self.b
+        out["objectsA"] = self.objects_a
+        out["objectsB"] = self.objects_b
+        out["spaceArea"] = float(self.space_area)
+        out["wallLength"] = float(self.wall_length)
+        if self.alike is not UNSET:
+            out["alike"] = list(self.alike)
+        if self.sets is not UNSET:
+            out["sets"] = [e0.to_json() for e0 in self.sets]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CombosCompared:
+        return cls(
+            a=data["a"],
+            b=data["b"],
+            objects_a=data["objectsA"],
+            objects_b=data["objectsB"],
+            space_area=float(data["spaceArea"]),
+            wall_length=float(data["wallLength"]),
+            alike=list(data["alike"]) if "alike" in data else UNSET,
+            sets=[OptionsCompared.from_json(e0) for e0 in data["sets"]] if "sets" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CommitResult(_Model):
     """The committed result; a retry with the same idempotency key gets the same one (`replayed`).
     Attributes:
@@ -44736,6 +44785,39 @@ class OptionsCompare(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class OptionsCompareCombos(_Model):
+    """Two combinations to compare (docs/adr/0809): `a` the one compared against, `b` the other (id or name); every set
+    whose shown option differs between them compared as two options are, with `search` and `tolerance` as there.
+    Attributes:
+        search: Unit: length.
+        tolerance: Unit: length.
+    """
+    a: str
+    b: str
+    search: float | None | Unset = UNSET
+    tolerance: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["a"] = self.a
+        out["b"] = self.b
+        if self.search is not UNSET:
+            out["search"] = None if self.search is None else float(self.search)
+        if self.tolerance is not UNSET:
+            out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OptionsCompareCombos:
+        return cls(
+            a=data["a"],
+            b=data["b"],
+            search=UNSET if "search" not in data else None if data["search"] is None else float(data["search"]),
+            tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class OptionsCompared(_Model):
     """Two options compared: the objects paired as the same, those only in `b` (added) and only in `a` (removed), the
     pairs changed, and the differences in counts and areas (b − a).
@@ -44876,6 +44958,7 @@ class OptionsQueried(_Model):
     sets: list[OptionSetRow]
     revision: str
     combos: list[OptionComboRow] | Unset = UNSET
+    combos_compared: CombosCompared | None | Unset = UNSET
     compared: OptionsCompared | None | Unset = UNSET
     option: str | None | Unset = UNSET
     set: str | None | Unset = UNSET
@@ -44886,6 +44969,8 @@ class OptionsQueried(_Model):
         out["revision"] = self.revision
         if self.combos is not UNSET:
             out["combos"] = [e0.to_json() for e0 in self.combos]
+        if self.combos_compared is not UNSET:
+            out["combosCompared"] = None if self.combos_compared is None else self.combos_compared.to_json()
         if self.compared is not UNSET:
             out["compared"] = None if self.compared is None else self.compared.to_json()
         if self.option is not UNSET:
@@ -44900,6 +44985,7 @@ class OptionsQueried(_Model):
             sets=[OptionSetRow.from_json(e0) for e0 in data["sets"]],
             revision=data["revision"],
             combos=[OptionComboRow.from_json(e0) for e0 in data["combos"]] if "combos" in data else UNSET,
+            combos_compared=UNSET if "combosCompared" not in data else None if data["combosCompared"] is None else CombosCompared.from_json(data["combosCompared"]),
             compared=UNSET if "compared" not in data else None if data["compared"] is None else OptionsCompared.from_json(data["compared"]),
             option=data.get("option", UNSET),
             set=data.get("set", UNSET),
@@ -44908,13 +44994,14 @@ class OptionsQueried(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class OptionsQuery(_Model):
-    """Input of `cad.options.query` v1 (read-only): the sets (one: `set`), the option an object (`uid`) is in, and two
-    options compared.
+    """Input of `cad.options.query` v1 (read-only): the sets (one: `set`), the option an object (`uid`) is in, two
+    options compared, and two combinations compared.
 
-    Refusals: `option_set_not_found`, `option_not_found`, `invalid_uid`, `entity_not_found`, `not_in_option`,
-    `invalid_input`.
+    Refusals: `option_set_not_found`, `option_not_found`, `option_combo_not_found`, `invalid_uid`, `entity_not_found`,
+    `not_in_option`, `invalid_input`.
     """
     compare: OptionsCompare | None | Unset = UNSET
+    compare_combos: OptionsCompareCombos | None | Unset = UNSET
     set: str | None | Unset = UNSET
     uid: str | None | Unset = UNSET
 
@@ -44922,6 +45009,8 @@ class OptionsQuery(_Model):
         out: dict[str, Any] = {}
         if self.compare is not UNSET:
             out["compare"] = None if self.compare is None else self.compare.to_json()
+        if self.compare_combos is not UNSET:
+            out["compareCombos"] = None if self.compare_combos is None else self.compare_combos.to_json()
         if self.set is not UNSET:
             out["set"] = self.set
         if self.uid is not UNSET:
@@ -44932,6 +45021,7 @@ class OptionsQuery(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> OptionsQuery:
         return cls(
             compare=UNSET if "compare" not in data else None if data["compare"] is None else OptionsCompare.from_json(data["compare"]),
+            compare_combos=UNSET if "compareCombos" not in data else None if data["compareCombos"] is None else OptionsCompareCombos.from_json(data["compareCombos"]),
             set=data.get("set", UNSET),
             uid=data.get("uid", UNSET),
         )
@@ -90091,6 +90181,7 @@ __all__ = [
     "ColumnsPlan",
     "Combination",
     "CombineTextEdit",
+    "CombosCompared",
     "CommentFormsOp",
     "CommitResult",
     "CompareAgainst",
@@ -91324,6 +91415,7 @@ __all__ = [
     "OptionSet",
     "OptionSetRow",
     "OptionsCompare",
+    "OptionsCompareCombos",
     "OptionsCompared",
     "OptionsDimensionEdit",
     "OptionsEdit",

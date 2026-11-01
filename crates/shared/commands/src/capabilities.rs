@@ -2103,7 +2103,10 @@ const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "cad.options.query",
-        refusals: &[&["option_set_not_found", "option_not_found", "invalid_uid", "entity_not_found", "not_in_option", "invalid_input"]],
+        refusals: &[
+            &["option_set_not_found", "option_not_found", "option_combo_not_found", "invalid_uid"],
+            &["entity_not_found", "not_in_option", "invalid_input"],
+        ],
         warnings: &["option_member_gone"],
         targets: none,
     },

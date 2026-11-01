@@ -181,11 +181,31 @@ pub struct OptionsCompare {
     pub tolerance: Option<f64>,
 }
 
-/// Input of `cad.options.query` v1 (read-only): the sets (one: `set`), the option an object (`uid`) is in, and two
-/// options compared.
+/// Two combinations to compare (docs/adr/0809): `a` the one compared against, `b` the other (id or name); every set
+/// whose shown option differs between them compared as two options are, with `search` and `tolerance` as there.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct OptionsCompareCombos {
+    pub a: String,
+    pub b: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub search: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub tolerance: Option<f64>,
+}
+
+/// Input of `cad.options.query` v1 (read-only): the sets (one: `set`), the option an object (`uid`) is in, two
+/// options compared, and two combinations compared.
 ///
-/// Refusals: `option_set_not_found`, `option_not_found`, `invalid_uid`, `entity_not_found`, `not_in_option`,
-/// `invalid_input`.
+/// Refusals: `option_set_not_found`, `option_not_found`, `option_combo_not_found`, `invalid_uid`, `entity_not_found`,
+/// `not_in_option`, `invalid_input`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -202,6 +222,9 @@ pub struct OptionsQuery {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub compare: Option<OptionsCompare>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub compare_combos: Option<OptionsCompareCombos>,
 }
 
 /// How many objects of a kind an option holds.
@@ -333,6 +356,34 @@ pub struct OptionComboRow {
     pub wall_length: f64,
 }
 
+/// Two combinations compared (docs/adr/0809): the sets whose shown option differs, each compared as two options are
+/// (`a`'s option against `b`'s), and the two plans' objects, and the differences of their spaces' area and walls'
+/// length (b − a).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CombosCompared {
+    pub a: String,
+    pub b: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<OptionsCompared>>", optional))]
+    pub sets: Vec<OptionsCompared>,
+    /// The sets both show the same option of.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub alike: Vec<String>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub objects_a: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub objects_b: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub space_area: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub wall_length: f64,
+}
+
 /// Output of `cad.options.query`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -351,6 +402,9 @@ pub struct OptionsQueried {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub compared: Option<OptionsCompared>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub combos_compared: Option<CombosCompared>,
     /// The project's combinations (docs/adr/0808).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<OptionComboRow>>", optional))]
