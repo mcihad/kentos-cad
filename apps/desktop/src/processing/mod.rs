@@ -209,6 +209,8 @@ pub(crate) enum Picking {
 /// What the window asks for.
 #[derive(Clone, Debug)]
 pub enum Event {
+    /// Open the current selection query in the existing shareable model designer.
+    SelectionRecipe,
     Close,
     /// Varsayılanlar: every field back to its default.
     Reset,
@@ -442,6 +444,10 @@ impl App {
 
     pub(crate) fn processing_event(&mut self, e: Event) -> Task<Message> {
         match e {
+            Event::SelectionRecipe => {
+                self.selection_recipe_from_dialog();
+                return Task::none();
+            }
             Event::Close => {
                 self.processing.dialog = None;
                 self.processing.batch = None;

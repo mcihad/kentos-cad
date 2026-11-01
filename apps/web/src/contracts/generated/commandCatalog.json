@@ -27262,7 +27262,7 @@
       "id": "cad.texts.edit",
       "version": 1,
       "title": "Yazıları düzenle",
-      "summary": "Yazılarda tek bir düzenleme yapar; tek geri alma adımı düzenlemenin adıyla. replace (Bul ve değiştir): uids'in (boşsa görünen bütün yazıların) her find'ı with olur; matchCase büyük-küçük harfi ayırır (Türkçe İ ve ı), wholeWord yalnız bütün sözcük; biçim dilimleri ve alanlar kayar, değiştirilen harflere değen alan kalkar; boş kalacak yazı (text_left_blank) ve kilitli katmandaki yazı (layer_locked) uyarıyla atlanır. number (Numarala, TCOUNT): uids sırayla start, start+step … sayılarını alır, en az digits basamakla (önüne sıfır), prefix ve suffix'le; place replace yazının yerine, prefix başına, suffix sonuna. combine (Yazıları birleştir, TXT2MTXT): yazılar en yukarıdan aşağıya (eşitse soldan) satır satır tek yazı olur; en yukarıdakinin yerinde (üstünden), yüksekliği ve görünüşüyle, öbürleri silinir. split (Satırlara ayır): yazının her paragrafı (satır sonları arası) durduğu yerde, biçimleri ve alanlarıyla ayrı yazı olur; yazı silinir. Tek paragraflı, sütunlu ya da eğri boyunca yazı not_splittable. fit (Yazıyı eğriye oturt): tek satırlık, nesneye bağlı olmayan yazılar curve'ün üstüne, kutularının ortasının düştüğü yere; turn (Doğrultuya döndür): düz yazılar edge'in at'a en yakın kenarının doğrultusuna, okunur; straighten (Düzleştir): eğri boyunca yazılar ilk harflerinde düz; almadıkları sayılır (skipped), hiçbirini almazsa text_not_taken. combine, split, number, fit, turn ve straighten'de kilitli katmandaki yazı reddedilir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "summary": "Yazılarda tek bir düzenleme yapar; tek geri alma adımı düzenlemenin adıyla. replace (Bul ve değiştir): uids'in (boşsa görünen bütün yazıların) her find'ı with olur; matchCase büyük-küçük harfi ayırır (Türkçe İ ve ı), wholeWord yalnız bütün sözcük; biçim dilimleri ve alanlar kayar, değiştirilen harflere değen alan kalkar; boş kalacak yazı (text_left_blank) ve kilitli katmandaki yazı (layer_locked) uyarıyla atlanır. height (Yazı yüksekliği): uids yazılarının gerçek model yüksekliğini height metre yapar; içerik, yer, hizalama ve alanlar korunur, stil yüksekliği override olarak işaretlenir. Kilitli hedefte tüm işlem reddedilir. number (Numarala, TCOUNT): uids sırayla start, start+step … sayılarını alır, en az digits basamakla (önüne sıfır), prefix ve suffix'le; place replace yazının yerine, prefix başına, suffix sonuna. combine (Yazıları birleştir, TXT2MTXT): yazılar en yukarıdan aşağıya (eşitse soldan) satır satır tek yazı olur; en yukarıdakinin yerinde (üstünden), yüksekliği ve görünüşüyle, öbürleri silinir. split (Satırlara ayır): yazının her paragrafı (satır sonları arası) durduğu yerde, biçimleri ve alanlarıyla ayrı yazı olur; yazı silinir. Tek paragraflı, sütunlu ya da eğri boyunca yazı not_splittable. fit (Yazıyı eğriye oturt): tek satırlık, nesneye bağlı olmayan yazılar curve'ün üstüne, kutularının ortasının düştüğü yere; turn (Doğrultuya döndür): düz yazılar edge'in at'a en yakın kenarının doğrultusuna, okunur; straighten (Düzleştir): eğri boyunca yazılar ilk harflerinde düz; almadıkları sayılır (skipped), hiçbirini almazsa text_not_taken. combine, split, number, fit, turn ve straighten'de kilitli katmandaki yazı reddedilir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -57698,7 +57698,7 @@
       "id": "cad.entities.select",
       "version": 1,
       "title": "Nesne seç",
-      "summary": "Bir bölgenin, listenin ya da benzerliğin nesnelerini kalıcı kimlikleriyle verir: pencere, kesişen kutu, çit, çokgen (içindekiler, kesişenler, dışındakiler), daire, noktayı içeren alanlar (küçükten büyüğe), bir tıklamanın adayları, hepsi, verilenler (önceki seçim), ters çevir ve benzerleri (tür, katman, renk, sembol). Seçim süzgecinin türleri ve katman listesiyle süzülür, dışarıda kalanlar sayılır. Yalnız gösterilen nesneler sayılır (gizli katman, katman süzgeci ve zaman penceresi dışarıda); kilitli katmanınkiler seçilir. Araçlar aynı sorguyla seçer. modelScope verilirse pafta viewport katmanları, açıklama temsili ve kırpması uygulanır; uid modelin özgün kimliğidir. Çizimi değiştirmez; plan aynı cevabı verir.",
+      "summary": "Bir bölgenin, listenin ya da benzerliğin nesnelerini kalıcı kimlikleriyle verir: pencere, kesişen kutu, çit, çokgen (içindekiler, kesişenler, dışındakiler), daire, noktayı içeren alanlar (küçükten büyüğe), bir tıklamanın adayları, hepsi, verilenler (önceki seçim), ters çevir ve benzerleri (tür, katman, renk, sembol). Seçim süzgecinin türleri ve katman listesiyle süzülür, dışarıda kalanlar sayılır. Yalnız gösterilen nesneler sayılır (gizli katman, katman süzgeci ve zaman penceresi dışarıda); kilitli katmanınkiler seçilir. Araçlar aynı sorguyla seçer. modelScope verilirse pafta viewport katmanları, açıklama temsili ve kırpması uygulanır; uid modelin özgün kimliğidir. properties bölgesi source bölgesini query ile daraltır: textHeightMin/Max gerçek model metresi, assignedColor nesnenin kendi rengi (byLayer: kendi rengi yok), displayedColor katmandan çözülmüş CAD rengi (tema paletinden önce; tematik renderer bulunan çizimde reddedilir), expression katman süzgeci dili ve proje çizim birimindeki geometri okumalarıdır. Blokta hedef yerleştirmedir; tanım üyeleri değiştirilmez. İç içe properties reddedilir. Çizimi değiştirmez; plan aynı cevabı verir.",
       "aliases": [
         "sec",
         "select"
@@ -128534,9 +128534,82 @@
       ],
       "type": "object"
     },
+    "SelectProperties": {
+      "additionalProperties": false,
+      "description": "All present criteria must match. Heights are real model metres; expression readings\nuse the project's drawing unit, just as layer filters do. No drawing or selection is written.",
+      "properties": {
+        "assignedColor": {
+          "description": "Own CAD colour (hex or palette token), or \"byLayer\" for no explicit colour.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "blockPath": {
+          "description": "Optional picked block-piece path (zero-based definition indexes, as cad.entities.pick returns).\nColour criteria inspect that piece through each placement; the result is the owning insert UID.\nNever edits a definition. Height/expression criteria cannot be combined with this path.",
+          "items": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": "array"
+        },
+        "displayedColor": {
+          "description": "CAD paint after layer inheritance, before theme palette conversion. This is not a GIS thematic pixel colour.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "expression": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "textHeightMax": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "textHeightMin": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        }
+      },
+      "type": "object"
+    },
     "SelectRegion": {
       "description": "Where the objects are, or which they are.",
       "oneOf": [
+        {
+          "description": "Refine a geometric/list scope with CAD properties and the existing expression language.\nTargets are drawing objects (inserts, not their definition members). Filters cannot be nested.",
+          "properties": {
+            "kind": {
+              "const": "properties",
+              "type": "string"
+            },
+            "query": {
+              "$ref": "#/$defs/SelectProperties"
+            },
+            "source": {
+              "$ref": "#/$defs/SelectRegion"
+            }
+          },
+          "required": [
+            "kind",
+            "source",
+            "query"
+          ],
+          "type": "object"
+        },
         {
           "description": "Pencere: wholly inside the box from `a` to `b` (an infinite line never is).",
           "properties": {
@@ -138043,6 +138116,34 @@
     "TextEdit": {
       "description": "One edit of `cad.texts.edit` (docs/adr/0325 §3).",
       "oneOf": [
+        {
+          "description": "Set real model text height in metres, preserving text, fields, alignment and position.",
+          "properties": {
+            "height": {
+              "exclusiveMinimum": 0.0,
+              "format": "double",
+              "type": "number",
+              "x-unit": "length"
+            },
+            "kind": {
+              "const": "height",
+              "type": "string"
+            },
+            "uids": {
+              "items": {
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "kind",
+            "uids",
+            "height"
+          ],
+          "type": "object"
+        },
         {
           "description": "Bul ve değiştir: every `find` in the texts `uids` (empty: every shown text) replaced by `with`; a text left\nblank, or on a locked layer, is left as it was and said.",
           "properties": {

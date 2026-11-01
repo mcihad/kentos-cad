@@ -30,6 +30,15 @@ pub fn uids_of(doc: &Document, slots: &[Slot]) -> Vec<String> {
         .collect()
 }
 
+/// Real model height, through the same semantic command used by Python and MCP.
+pub fn set_text_heights(doc: &mut Document, slots: &[Slot], height: f64) -> Vec<String> {
+    let input = kentos_commands::TextsEdit {
+        edit: kentos_commands::TextEdit::Height { uids: uids_of(doc, slots), height },
+        expected_revision: None,
+    };
+    said(kentos_native_application::texts_edit::execute(&mut ExecutionContext::new(doc), input))
+}
+
 /// Sets objects' layer, colour, symbol, attributes or label; what to say:
 /// the command's refusal, or its warnings (a hidden layer).
 pub fn set_properties(doc: &mut Document, input: EntitiesSetProperties) -> Vec<String> {

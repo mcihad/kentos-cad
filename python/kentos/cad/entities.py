@@ -4024,7 +4024,13 @@ class _EntitiesSelect(LocalCommand[EntitiesSelect, EntitiesSelected, EntitiesSel
     (gizli katman, katman süzgeci ve zaman penceresi dışarıda); kilitli katmanınkiler
     seçilir. Araçlar aynı sorguyla seçer. modelScope verilirse pafta viewport
     katmanları, açıklama temsili ve kırpması uygulanır; uid modelin özgün kimliğidir.
-    Çizimi değiştirmez; plan aynı cevabı verir.
+    properties bölgesi source bölgesini query ile daraltır: textHeightMin/Max gerçek
+    model metresi, assignedColor nesnenin kendi rengi (byLayer: kendi rengi yok),
+    displayedColor katmandan çözülmüş CAD rengi (tema paletinden önce; tematik renderer
+    bulunan çizimde reddedilir), expression katman süzgeci dili ve proje çizim
+    birimindeki geometri okumalarıdır. Blokta hedef yerleştirmedir; tanım üyeleri
+    değiştirilmez. İç içe properties reddedilir. Çizimi değiştirmez; plan aynı cevabı
+    verir.
     """
     __slots__ = ()
     id = "cad.entities.select"
@@ -4055,7 +4061,13 @@ class _EntitiesSelect(LocalCommand[EntitiesSelect, EntitiesSelected, EntitiesSel
         Yalnız gösterilen nesneler sayılır (gizli katman, katman süzgeci ve zaman penceresi
         dışarıda); kilitli katmanınkiler seçilir. Araçlar aynı sorguyla seçer. modelScope
         verilirse pafta viewport katmanları, açıklama temsili ve kırpması uygulanır; uid
-        modelin özgün kimliğidir. Çizimi değiştirmez; plan aynı cevabı verir.
+        modelin özgün kimliğidir. properties bölgesi source bölgesini query ile daraltır:
+        textHeightMin/Max gerçek model metresi, assignedColor nesnenin kendi rengi (byLayer:
+        kendi rengi yok), displayedColor katmandan çözülmüş CAD rengi (tema paletinden önce;
+        tematik renderer bulunan çizimde reddedilir), expression katman süzgeci dili ve
+        proje çizim birimindeki geometri okumalarıdır. Blokta hedef yerleştirmedir; tanım
+        üyeleri değiştirilmez. İç içe properties reddedilir. Çizimi değiştirmez; plan aynı
+        cevabı verir.
 
         Args:
             doc: The drawing it works on.

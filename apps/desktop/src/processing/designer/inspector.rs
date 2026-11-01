@@ -52,7 +52,7 @@ pub(super) struct Context<'a, 'b> {
 pub(super) fn inspector<'a>(d: &'a Designer, cx: &Context<'a, '_>) -> Element<'a, Message> {
     let body: Element<'a, Message> = match &d.selected {
         Some(NodeRef::Input(name)) => match d.draft.inputs.iter().find(|i| i.name() == name) {
-            Some(input) => input_settings(d, input, cx.registry),
+            Some(input) => input_settings(d, input, cx.registry, cx.color),
             None => model_settings(d, cx.registry),
         },
         Some(NodeRef::Step(id)) if d.draft.steps.iter().any(|s| &s.id == id) => {
@@ -396,6 +396,7 @@ fn input_settings<'a>(
     d: &'a Designer,
     input: &'a ModelInput,
     registry: &'a Registry,
+    color: &dyn Fn(&str) -> iced::Color,
 ) -> Element<'a, Message> {
     let lookup = |id: &str| registry.tool(id);
     let name = input.name().to_owned();
@@ -542,9 +543,15 @@ fn input_settings<'a>(
                 Some(Value::Null) | None => String::new(),
                 Some(v) => v.to_string(),
             };
+            let control = if text_of("widget") == "color" {
+                let name = name.clone();
+                crate::processing::fields::color_choice(&text, flag("colorInheritance"), color, move |value| {
+                    ev(Event::Input(name.clone(),InputField::Text(value.unwrap_or_default())))
+                })
+            } else { text_field("", &text, set(InputField::Text)) };
             rows.push(field_row(
                 words::input::DEFAULT,
-                text_field("", &text, set(InputField::Text)),
+                control,
                 None,
             ));
             rows.push(field_row(

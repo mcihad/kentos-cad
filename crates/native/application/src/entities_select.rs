@@ -24,6 +24,19 @@ use crate::ExecutionContext;
 use crate::checks::{self, Stop, error, is_uid_text};
 use crate::codes;
 
+mod properties;
+
+/// The picked piece's own assignment and resolved CAD paint; the owning insert remains the edit target.
+pub fn block_piece_colors(doc: &Document, slot: Slot, path: &[u32]) -> Option<(String, String)> {
+    properties::piece_colors(doc, &crate::blocks::core_blocks(doc.blocks()), doc.get(slot)?, path)
+}
+
+/// Property refinement for Processing, over its already resolved scope, with the exact command checks.
+pub fn refine_properties(doc: &Document, store: &Store, ids: Vec<Slot>, query: &kentos_commands::SelectProperties) -> Result<Vec<Slot>, Box<CommandError>> {
+    properties::check(doc, query).map_err(|stop| Box::new(stop.into_error()))?;
+    Ok(properties::filter(doc, store, ids, query))
+}
+
 /// What a query gives: the objects in the region's order and what was left out.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Selected {
@@ -84,8 +97,12 @@ pub fn answer(
             }
         }
     };
+    let scoped_region = match &input.region {
+        SelectRegion::Properties { source, .. } => source.as_ref(),
+        other => other,
+    };
     if let (Some(scope), SelectRegion::Point { at, .. } | SelectRegion::Containing { at }) =
-        (&scope, &input.region)
+        (&scope, scoped_region)
         && !scope.contains_model([at.x, at.y])
     {
         return CommandResult::Completed {
@@ -216,10 +233,14 @@ fn given(doc: &Document, uids: &[String]) -> Vec<Slot> {
 fn region(
     doc: &Document,
     store: &Store,
-    region: &SelectRegion,
+    which: &SelectRegion,
     left_out: &mut SelectLeftOut,
 ) -> Vec<Slot> {
-    match region {
+    match which {
+        SelectRegion::Properties { source, query } => {
+            let ids = region(doc, store, source, left_out);
+            properties::filter(doc, store, ids, query)
+        }
         SelectRegion::Window { a, b } | SelectRegion::Crossing { a, b } => {
             let r = Bounds {
                 min_x: a.x.min(b.x),
@@ -227,7 +248,7 @@ fn region(
                 max_x: a.x.max(b.x),
                 max_y: a.y.max(b.y),
             };
-            slots(store.in_rect(&r, matches!(region, SelectRegion::Crossing { .. })))
+            slots(store.in_rect(&r, matches!(which, SelectRegion::Crossing { .. })))
         }
         SelectRegion::Fence { points, tolerance } => {
             let fence: Vec<Vec2> = points.iter().copied().map(v).collect();
@@ -338,6 +359,13 @@ pub fn similar_to(objects: &[Facts], examples: &[Facts], c: SimilarCriteria) -> 
 }
 
 fn check(doc: &Document, input: &EntitiesSelect) -> Result<(), Stop> {
+    if let SelectRegion::Properties { source, query } = &input.region {
+        if matches!(source.as_ref(), SelectRegion::Properties { .. }) {
+            return Err(Stop::failed(error(codes::INVALID_INPUT, "İç içe seçim süzgeci kullanılamaz.".into(), Some("region.source".into()))));
+        }
+        properties::check(doc, query)?;
+        return check(doc, &EntitiesSelect { region: *source.clone(), ..input.clone() });
+    }
     let finite = |value: f64, what: &str, path: &str| {
         checks::finite(value, what, "Metre olarak bir sayı verin.", path)
     };
@@ -406,6 +434,7 @@ fn check(doc: &Document, input: &EntitiesSelect) -> Result<(), Stop> {
         Ok(())
     };
     match &input.region {
+        SelectRegion::Properties { .. } => unreachable!("checked above"),
         SelectRegion::Window { a, b } | SelectRegion::Crossing { a, b } => {
             checks::point(*a, "Kutunun ilk köşesinin", "region.a")?;
             checks::point(*b, "Kutunun öbür köşesinin", "region.b")?;

@@ -309,6 +309,20 @@ yazıları seçip değiştir; blok içi ByLayer ve explicit renk örneklerini ay
 Yazarken gecikme, ilk karakter, Enter/Esc, seçim değişimi ve kilitli hedef
 gerçek etkileşimle sınansın. Aynı sorgu Python/MCP'de aynı hedefleri bulsun.
 
+**İlerleme — 2026-11-01:** Türle daralan özellik kapsamı, güncel hedef anahtarıyla
+eski hücre taslağı koruması, tek Undo ile toplu yazı yüksekliği, geometrik
+kaynağa ek CAD özellik sorgusu, iç içe blokta ByLayer/ByBlock/explicit renk
+kaynağı ve yerleştirme/tanım ayrımı, mevcut Processing modeliyle paylaşılır
+seçim tarifi uygulandı. 50.000 nesneli gerçek arayüz kabulünde 5.000 yazı
+bulundu; yalnız 4.705 kilitsiz yazının yüksekliği değişti. Kaydedilen dosya ve
+arayüz Undo'su bağımsız karşılaştırıldı. Python/MCP eşliği ve otomatik
+koruma testleri geçti. Ayrıntı: [ADR 0820](../docs/adr/0820-selection-property-scope-and-batch-text-height.md).
+Renk girişi ortak görsel renk seçici, adlandırılmış örnekler ve Katmana/Bloğa
+göre seçenekleriyle düzenlendi; hex yazmak gerekmiyor. 1100 piksel genişlikte
+panel ve sorgu formu gerçek uygulamada denetlendi.
+**Kalan:** Kalıcı katman süzgecinden ayrı geçici nesne yalıtımı/bitirme ve
+hücre açıkken seçim değişiminin gerçek arayüz tekrarı. Bunlar doğrulanmadan madde tamamlandı işaretlenmez.
+
 ### CAD-ADV-04 — Eğrisel çizim ve düzenlemenin gerçek geometrik sınırlarını kapat [ ]
 
 **Öncelik:** P1. **Kod:** [C06], [C07], [C08].

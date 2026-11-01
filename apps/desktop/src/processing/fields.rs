@@ -329,6 +329,9 @@ fn text<'a>(
     max_length: Option<usize>,
     env: &Env<'a, '_>,
 ) -> Element<'a, Message> {
+    if let Some(inheritance) = def.color_picker {
+        return color_field(def, inheritance, env);
+    }
     let ev = env.send;
     let value = env.value(&def.name).as_str().unwrap_or("");
     let invalid = env.window.issue_of(&def.name).is_some();
@@ -344,6 +347,53 @@ fn text<'a>(
     } else {
         field.width(Fill).into()
     }
+}
+
+/// Shared colour picker plus named drawing swatches: colour codes are optional inside the picker.
+/// Values stay ordinary strings, so tool runs and saved model steps use the same API.
+fn color_field<'a>(def: &'a ParamDef, inheritance: bool, env: &Env<'a, '_>) -> Element<'a, Message> {
+    let ev = env.send;
+    let name = def.name.clone();
+    color_choice(env.value(&def.name).as_str().unwrap_or_default(), inheritance, env.color,
+        move |value| ev(Event::Value(name.clone(),json!(value))))
+}
+
+pub(super) fn color_choice<'a>(value: &str, inheritance: bool, color: &dyn Fn(&str) -> iced::Color,
+    set: impl Fn(Option<String>) -> Message + Clone + 'a) -> Element<'a, Message> {
+    use kentos_ui::widget::color::{ColorPicker, to_hex};
+    let mut values = vec![String::new()];
+    let mut choices = vec![Choice::new("Renk koşulu yok")];
+    if inheritance {
+        values.extend(["byLayer".into(), "byBlock".into()]);
+        choices.extend([Choice::new("Katmana göre"), Choice::new("Bloğa göre").detail("Blok parçasında")]);
+    }
+    // A colour predicate needs literal black; the ribbon's adaptive `ink`
+    // token can resolve to white on the drawing canvas.
+    let swatches = || crate::ribbon_panels::DRAW_COLORS.into_iter().map(|(label, value)|
+        (label, if value == "ink" { "#000000" } else { value }));
+    for (label, value) in swatches() {
+        values.push(value.into());
+        choices.push(Choice::new(label).color(color(value)));
+    }
+    if !value.is_empty() && !values.iter().any(|s| s.eq_ignore_ascii_case(value)) {
+        values.push(value.into());
+        choices.push(Choice::new("Özel renk").color(color(value)));
+    }
+    let selected = values.iter().position(|s| s.eq_ignore_ascii_case(value));
+    let choose = set.clone();
+    let chooser = Select::new(choices, selected, move |i| {
+        let value = values.get(i).filter(|s| !s.is_empty()).cloned();
+        choose(value)
+    });
+    let shown = if value.is_empty() || matches!(value, "byLayer" | "byBlock") {
+        color("#E5484D")
+    } else { color(value) };
+    let anchor = container(row![icon(Icon::Drop).size(14.0), label::caption("Özel renk…")].spacing(6).align_y(Center))
+        .padding([7,8]).style(style::container::field_box);
+    let picker = ColorPicker::new(shown, move |c| set(Some(to_hex(c))))
+        .palette(swatches().map(|(_, value)| color(value)))
+        .anchor(anchor);
+    row![container(chooser).width(Fill), picker].spacing(8).align_y(Center).into()
 }
 
 /// A choice: up to three short options as buttons, else a list with each one's hint.

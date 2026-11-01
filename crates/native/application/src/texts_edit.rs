@@ -41,6 +41,7 @@ fn label(e: &TextEdit) -> &'static str {
         TextEdit::Fit { .. } => "Eğriye oturt",
         TextEdit::Turn { .. } => "Doğrultuya döndür",
         TextEdit::Straighten { .. } => "Düzleştir",
+        TextEdit::Height { .. } => "Yazı yüksekliği",
     }
 }
 
@@ -227,6 +228,18 @@ fn on_curves(
 fn check(doc: &Document, input: &TextsEdit) -> Result<Checked, Stop> {
     let mut c = Checked::default();
     match &input.edit {
+        TextEdit::Height { uids, height } => {
+            if !height.is_finite() || *height <= 0.0 {
+                return Err(fail(codes::INVALID_HEIGHT, "Yazı yüksekliği sonlu ve sıfırdan büyük olmalı.".into(), "edit.height"));
+            }
+            for (slot, uid, mut text) in texts(doc, uids)? {
+                text.height = *height;
+                if text.face.text_style.is_some() && !text.face.overrides.iter().any(|s| s == "height") {
+                    text.face.overrides.push("height".into());
+                }
+                c.changed.push((slot, uid, text));
+            }
+        }
         TextEdit::Replace {
             uids,
             find,

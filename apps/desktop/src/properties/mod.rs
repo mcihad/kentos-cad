@@ -56,6 +56,11 @@ use crate::document::Document;
 /// A change asked for in the panel.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Event {
+    /// A rendered panel's actions belong to that exact drawing, revision and selection.
+    Guarded(PanelKey, Box<Event>),
+    /// Only narrow the property inspector; preserve the actual scene selection.
+    Kind(Option<String>),
+    Query,
     /// A section's header: closes or opens it.
     Toggle(&'static str),
     /// What a text or number cell committed.
@@ -236,6 +241,7 @@ pub enum Field {
     /// A text object's text, height and angle.
     Text(Slot),
     TextHeight(Slot),
+    TextHeights(Vec<Slot>),
     TextAngle(Slot),
     /// An attribute, by its key.
     Attribute(Slot, String),
@@ -416,9 +422,25 @@ pub(crate) fn js_parse_float(text: &str) -> f64 {
 pub(crate) struct PanelCache(RefCell<Option<(PanelKey, Panel)>>);
 
 /// The open drawing (its session), its changes and the selection's version.
-type PanelKey = (u64, u64, u64);
+pub type PanelKey = (u64, u64, u64, u64);
+
+#[derive(Default)]
+pub(crate) struct InspectScope {
+    kind: Option<(u64, u64, String)>,
+    epoch: u64,
+}
 
 impl App {
+    fn properties_key(&self, doc: &Document) -> PanelKey {
+        (doc.session, doc.model.generation(), self.selection.version(), self.properties_scope.epoch)
+    }
+
+    fn properties_kind(&self, doc: &Document) -> Option<&str> {
+        self.properties_scope.kind.as_ref().and_then(|(session, selection, kind)| {
+            (*session == doc.session && *selection == self.selection.version()).then_some(kind.as_str())
+        })
+    }
+
     /// The panel's content for the selection now.
     pub(crate) fn properties_panel(&self, doc: &Document) -> Panel {
         // An empty panel includes live source/file state. A single complex polyline/block is
@@ -426,11 +448,7 @@ impl App {
         if self.selection.is_empty() {
             return self.work_out_panel(doc);
         }
-        let key = (
-            doc.session,
-            doc.model.generation(),
-            self.selection.version(),
-        );
+        let key = self.properties_key(doc);
         let mut cache = self.properties_cache.0.borrow_mut();
         if let Some((known, panel)) = cache.as_ref()
             && *known == key
@@ -447,7 +465,12 @@ impl App {
     }
 
     fn work_out_panel(&self, doc: &Document) -> Panel {
-        let selected: Vec<Slot> = self.selection.ids().to_vec();
+        let mut types = BTreeMap::<&'static str, usize>::new();
+        let selected: Vec<Slot> = self.selection.ids().iter().copied().filter(|slot| {
+            let Some(e) = doc.model.get(*slot) else { return false; };
+            *types.entry(e.kind()).or_default() += 1;
+            self.properties_kind(doc).is_none_or(|kind| e.kind() == kind)
+        }).collect();
         // The program's own rows (module_surfaces.rs).
         let shown = rows::Shown {
             crs: self.shows_property_rows(crate::module_surfaces::PropertyRows::Crs),
@@ -465,6 +488,21 @@ impl App {
             },
             shown,
         );
+        panel.types = types.into_iter().collect();
+        panel.total = panel.types.iter().map(|(_, n)| n).sum();
+        if self.properties_kind(doc).is_some() {
+            panel.meta = Some(format!("{} / {} nesne", selected.len(), panel.total));
+        }
+        if let Some((slot, sub)) = self.selection.sub().filter(|(_, sub)| !sub.path.is_empty()) {
+            let path = sub.path.iter().map(u32::to_string).collect::<Vec<_>>().join("/");
+            let mut info = vec![Row::text("Parça yolu", path), Row::text("Hedef", "Blok yerleştirmesi"),
+                Row::note("Tanım için: Bloğu düzenle.")];
+            if let Some((assigned, displayed)) = kentos_native_application::entities_select::block_piece_colors(&doc.model, slot, &sub.path) {
+                info.push(Row::text("Atanan renk", assigned));
+                info.push(Row::text("Görünür renk", displayed));
+            }
+            panel.sections.insert(0, rows::Section {id:"picked-piece",title:"Seçilen blok parçası".into(),rows:info});
+        }
         // Nothing selected: the layer chosen in the tree (else the active one), when a service draws or fed it; a
         // map's programs' (module_surfaces.rs).
         if selected.is_empty()
@@ -503,6 +541,24 @@ impl App {
     /// The panel's body: the summary or the empty state, then the grid.
     pub(crate) fn properties_view<'a>(&'a self, doc: &'a Document) -> Element<'a, Message> {
         let panel = self.properties_panel(doc);
+        let total = panel.total;
+        let targets = self.properties_kind(doc).and_then(|kind| panel.types.iter().find(|(k, _)| *k == kind).map(|(_, n)| *n)).unwrap_or(total);
+        let scope: Element<'a, Message> = if panel.types.len() > 1 {
+            use kentos_ui::widget::select::{Choice as SelectChoice, Select};
+            let kinds: Vec<_> = panel.types.iter().map(|(kind, _)| kind.to_string()).collect();
+            let selected = self.properties_kind(doc).and_then(|kind| kinds.iter().position(|k| k == kind)).map_or(0, |i| i + 1);
+            let choices: Vec<_> = std::iter::once(SelectChoice::new(format!("Tüm türler ({total})")))
+                .chain(panel.types.iter().map(|(kind, n)| SelectChoice::new(format!("{} ({n})", crate::selecting::kind_title(kind)))))
+                .collect();
+            boxed(column![
+                label::caption("Düzenlenecek nesne türü"),
+                Select::new(choices, Some(selected), move |i| Message::Properties(Event::Kind(i.checked_sub(1).and_then(|i| kinds.get(i).cloned())))),
+                label::caption(format!("{targets} hedef · {} düzenlenebilir · {} kilitli, atlanacak", panel.editable, targets.saturating_sub(panel.editable))),
+                label::caption("Sahnedeki seçim korunur; yalnız özellik kapsamı daralır."),
+            ].spacing(5), [9, 12])
+        } else {
+            space().height(0).into()
+        };
         let head: Element<'a, Message> = match panel.summary {
             Summary::Empty => boxed(
                 column![
@@ -531,7 +587,9 @@ impl App {
             }
             Summary::Many { count, kinds } => boxed(
                 column![
-                    label::strong(format!("{count} nesne seçili")),
+                    label::strong(if self.properties_kind(doc).is_some() {
+                        format!("{count} nesne · özellik kapsamı")
+                    } else { format!("{count} nesne seçili") }),
                     label::caption(kinds),
                 ]
                 .spacing(3),
@@ -586,7 +644,16 @@ impl App {
                 sheet = sheet.row(label, cell);
             }
         }
-        Column::new().push(head).push(sheet).width(Fill).into()
+        let query = boxed(iced::widget::button(label::body("Özelliklerle seç…"))
+            .style(style::button::secondary)
+            .on_press(Message::Properties(Event::Query)), [8, 12]);
+        let body: Element<'a, Message> = Column::new().push(query).push(scope).push(head).push(sheet).width(Fill).into();
+        let key = self.properties_key(doc);
+        // A different target must get a fresh edit-cell tree, even if its shown value is identical.
+        iced::widget::keyed_column([(key, body.map(move |message| match message {
+            Message::Properties(event) => Message::Properties(Event::Guarded(key, Box::new(event))),
+            other => other,
+        }))]).into()
     }
 
     /// An attachment's picture: its photo once decoded, else its kind's icon;
@@ -689,6 +756,33 @@ impl App {
     /// product commands as the web's panel writes (docs/adr/0066), or a
     /// section toggled. The command's refusal and warnings are said.
     pub(crate) fn properties_event(&mut self, event: Event) {
+        let event = match event {
+            Event::Guarded(key, event) => {
+                if self.document.as_ref().is_none_or(|doc| self.properties_key(doc) != key) {
+                    self.warn("Özellik düzenlemesi uygulanmadı: çizim veya seçim değişti. Güncel hedefi yeniden seçin.");
+                    return;
+                }
+                *event
+            }
+            other => other,
+        };
+        if matches!(event, Event::Query) {
+            let scope = if self.selection.is_empty() { "all" } else { "selection" };
+            let mut input = serde_json::json!({"scope":scope});
+            if let Some(kind) = self.document.as_ref().and_then(|doc| self.properties_kind(doc)) {
+                input["kinds"] = serde_json::json!([kind]);
+            }
+            let path = self.selection.sub().map(|(_, sub)| sub.path.iter().map(u32::to_string).collect::<Vec<_>>().join("/")).unwrap_or_default();
+            self.open_processing("selection.byExpression", Some(serde_json::from_value(serde_json::json!({
+                "input":input,"condition":"true","mode":"new","cadFilter":true,"blockPath":path
+            })).expect("fixed query values")));
+            return;
+        }
+        if let Event::Kind(kind) = event {
+            self.properties_scope.kind = self.document.as_ref().and_then(|doc| kind.map(|kind| (doc.session, self.selection.version(), kind)));
+            self.properties_scope.epoch = self.properties_scope.epoch.wrapping_add(1);
+            return;
+        }
         if let Event::Toggle(id) = event {
             if !self.props_closed.remove(id) {
                 self.props_closed.insert(id);
@@ -763,7 +857,7 @@ impl App {
         let drawing = doc.path.clone();
         let model = &mut doc.model;
         let said = match event {
-            Event::Toggle(_) | Event::SelectObject(_) => Vec::new(),
+            Event::Toggle(_) | Event::SelectObject(_) | Event::Kind(_) | Event::Query | Event::Guarded(_, _) => Vec::new(),
             Event::Unlink(ids) => {
                 let mut input = set_input(model, &ids, PropertiesOperation::Unlink);
                 input.unlink = true;
@@ -1312,6 +1406,12 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
             Some(f.to_metres(web_number(text)))
         }
     };
+    if let Field::TextHeights(slots) = field {
+        let Some(height) = length(text).filter(|h| h.is_finite() && *h > 0.0) else {
+            return vec!["Yazı yüksekliği sıfırdan büyük bir uzunluk olmalı (örnek: 2.5 mm).".into()];
+        };
+        return properties::set_text_heights(model, slots, height);
+    }
     if let Field::CaseworkDepth(slot) = field {
         let Some(recipe) = model
             .uid(*slot)
@@ -2133,6 +2233,7 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         | Field::PolylineWidth(_)
         | Field::Elevations(_)
         | Field::TextWidth(_)
+        | Field::TextHeights(_)
         | Field::TextBox(_)
         | Field::AnnotativeScales(_)
         | Field::TextSpacing(_)

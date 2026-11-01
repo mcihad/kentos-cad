@@ -55,6 +55,29 @@ fn source<'a>(app: &'a App, step: &str, param: &str) -> Option<&'a ValueSource> 
     designer(app).source(step, param)
 }
 
+#[test]
+fn selection_recipe_keeps_filters_in_the_existing_shareable_model_without_writing_the_drawing() {
+    let mut app = app_with_parcels();
+    let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+    app.open_processing("selection.byExpression", Some(serde_json::from_value(json!({
+        "input":{"scope":"all"},"condition":"true","mode":"within","cadFilter":true,"textHeightMin":0.3,"assignedColor":"byLayer"
+    })).unwrap()));
+    let _ = app.update(Message::Processing(Field::SelectionRecipe));
+    assert_eq!(app.dialog, Some(Dialog::ModelDesigner));
+    let draft = &designer(&app).draft;
+    assert_eq!(draft.steps.len(),1);
+    assert_eq!(draft.steps[0].tool,"selection.byExpression");
+    assert_eq!(draft.steps[0].source("textHeightMin"),Some(&ValueSource::Value(json!(0.3))));
+    assert_eq!(draft.steps[0].source("mode"),Some(&ValueSource::Value(json!("within"))));
+    let text = serde_json::to_string(draft).unwrap();
+    assert_eq!(Model::from_text(&text).unwrap().to_json(), draft.to_json());
+    assert!(designer(&app).problems.is_empty(),"{:?}",designer(&app).problems);
+    event(&mut app, Event::Save);
+    let id=designer(&app).draft.id.clone();
+    assert!(app.processing.registry.model(&id).is_some());
+    assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(),before);
+}
+
 /// Yeni model…, an input and a step that reads it: the parts a new model is built from.
 fn new_chain(app: &mut App) -> String {
     let _ = app.update(Message::Run("processing.newModel"));

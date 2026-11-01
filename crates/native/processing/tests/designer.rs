@@ -107,6 +107,23 @@ fn defaults(f: &Value) -> Defaults {
     }
 }
 
+#[test]
+fn colour_picker_metadata_survives_a_tool_parameter_becoming_a_shared_model_input() {
+    let registry = kentos_processing::Registry::builtin();
+    let tool = registry.tool("selection.byExpression").unwrap();
+    let mut model = edit::new_model("color-query".into());
+    let step = edit::add_step(&mut model, &tool.id, &|id| registry.tool(id), None, None);
+    for (name, inheritance) in [("assignedColor",true),("displayedColor",false)] {
+        let p = tool.parameters.iter().find(|p| p.name == name).unwrap();
+        assert_eq!(p.color_picker,Some(inheritance));
+        let input = edit::input_from_param(&mut model,&step,p,&defaults(&fixture())).unwrap();
+        let saved = Model::from_text(&serde_json::to_string(&model).unwrap()).unwrap();
+        let read = saved.inputs.iter().find(|p| p.name() == input).unwrap().def().unwrap();
+        assert_eq!(read.color_picker,Some(inheritance));
+        assert!(matches!(read.kind,kentos_processing::ParamKind::Text {..}));
+    }
+}
+
 fn node(v: &Value) -> Option<NodeRef> {
     match v["kind"].as_str()? {
         "input" => Some(NodeRef::Input(v["name"].as_str()?.to_owned())),

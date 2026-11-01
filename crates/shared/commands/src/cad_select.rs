@@ -74,6 +74,12 @@ impl Default for SimilarCriteria {
 #[serde(tag = "kind", rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum SelectRegion {
+    /// Refine a geometric/list scope with CAD properties and the existing expression language.
+    /// Targets are drawing objects (inserts, not their definition members). Filters cannot be nested.
+    Properties {
+        source: Box<SelectRegion>,
+        query: SelectProperties,
+    },
     /// Pencere: wholly inside the box from `a` to `b` (an infinite line never is).
     Window {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -146,6 +152,41 @@ pub enum SelectRegion {
         #[cfg_attr(feature = "ts", ts(optional))]
         criteria: Option<SimilarCriteria>,
     },
+}
+
+/// All present criteria must match. Heights are real model metres; expression readings
+/// use the project's drawing unit, just as layer filters do. No drawing or selection is written.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SelectProperties {
+    /// Optional picked block-piece path (zero-based definition indexes, as cad.entities.pick returns).
+    /// Colour criteria inspect that piece through each placement; the result is the owning insert UID.
+    /// Never edits a definition. Height/expression criteria cannot be combined with this path.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<u32>>"))]
+    pub block_path: Vec<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub text_height_min: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub text_height_max: Option<f64>,
+    /// Own CAD colour (hex or palette token), or "byLayer" for no explicit colour.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub assigned_color: Option<String>,
+    /// CAD paint after layer inheritance, before theme palette conversion. This is not a GIS thematic pixel colour.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub displayed_color: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub expression: Option<String>,
 }
 
 /// A kind the selection filter holds (docs/adr/0187 §5): a NURBS curve is an Eğri (`spline`).

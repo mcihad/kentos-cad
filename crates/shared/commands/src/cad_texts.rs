@@ -132,6 +132,13 @@ pub enum NumberPlace {
 #[serde(tag = "kind", rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum TextEdit {
+    /// Set real model text height in metres, preserving text, fields, alignment and position.
+    Height {
+        #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
+        uids: Vec<String>,
+        #[cfg_attr(feature = "schema", schemars(extend("exclusiveMinimum" = 0.0, "x-unit" = "length")))]
+        height: f64,
+    },
     /// Bul ve değiştir: every `find` in the texts `uids` (empty: every shown text) replaced by `with`; a text left
     /// blank, or on a locked layer, is left as it was and said.
     #[serde(rename_all = "camelCase")]

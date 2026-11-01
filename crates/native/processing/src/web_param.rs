@@ -168,6 +168,9 @@ pub fn param_from_json(v: &Value) -> Option<ParamDef> {
     def.description = text(o, "description");
     def.optional = flag(o, "optional");
     def.advanced = flag(o, "advanced");
+    if text(o, "widget").as_deref() == Some("color") && matches!(def.kind, ParamKind::Text { .. }) {
+        def.color_picker = Some(flag(o, "colorInheritance"));
+    }
     // `'default' in p`: a default written as null is a default.
     if let Some(d) = o.get("default") {
         def.default = Some(DefaultValue::Value(d.clone()));

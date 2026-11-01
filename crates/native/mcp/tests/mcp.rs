@@ -46,6 +46,40 @@ fn square() -> Value {
     ])
 }
 
+#[test]
+fn property_selection_and_bulk_text_height_use_the_same_command_through_mcp() {
+    let mut raw: Value=serde_json::from_str(include_str!("../../../../fixtures/interaction/v1/objects.kcad")).unwrap();
+    raw["settings"]["workspace"]=json!("cad");
+    raw["settings"]["srid"]=json!(0);
+    raw["settings"]["drawingUnit"]=json!("m");
+    raw["entities"]=json!([
+        {"kind":"text","id":1,"layerId":"cizim","attrs":{},"p":{"x":0,"y":0},"text":"A","height":0.3,"rotation":0},
+        {"kind":"text","id":2,"layerId":"cizim","attrs":{},"p":{"x":2,"y":0},"text":"B","height":0.5,"rotation":0},
+        {"kind":"line","id":3,"layerId":"cizim","attrs":{},"a":{"x":0,"y":1},"b":{"x":5,"y":1}}
+    ]);
+    let dir=std::env::temp_dir().join(format!("kentos-mcp-property-selection-{}",std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let path=dir.join("selection.json");
+    std::fs::write(&path,raw.to_string()).unwrap();
+    let mut server=Server::new();
+    let drawing=call(&mut server,"drawing.open",json!({"path":path}))["structuredContent"]["drawing"].clone();
+    let region=json!({"kind":"properties","source":{"kind":"all"},"query":{"textHeightMin":0.3,"textHeightMax":0.3}});
+    let selected=call(&mut server,"cad.entities.select",json!({"drawing":drawing,"region":region}))["structuredContent"]["output"]["uids"].clone();
+    assert_eq!(selected.as_array().unwrap().len(),1);
+    let processing=call(&mut server,"cad.processing.run",json!({"drawing":drawing,"tool":"selection.byExpression","parameters":{"input":{"scope":"all"},"condition":"true","cadFilter":true,"textHeightMin":0.3,"textHeightMax":0.3}}));
+    assert_eq!(processing["structuredContent"]["output"]["selected"],selected,"{processing}");
+    let before=call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"].clone();
+    let input=json!({"drawing":drawing,"edit":{"kind":"height","uids":selected,"height":0.35},"op":"plan"});
+    let planned=call(&mut server,"cad.texts.edit",input);
+    assert_eq!(planned["structuredContent"]["status"],"completed","{planned}");
+    assert_eq!(call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"],before);
+    let changed=call(&mut server,"cad.texts.edit",json!({"drawing":drawing,"edit":{"kind":"height","uids":selected,"height":0.35}}));
+    assert_eq!(changed["structuredContent"]["output"]["changed"],selected,"{changed}");
+    call(&mut server,"drawing.undo",json!({"drawing":drawing}));
+    assert_eq!(call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"],before);
+    std::fs::remove_dir_all(dir).unwrap();
+}
+
 /// A command the catalog says only reads (`effect: query`) is read-only to a client, a file command that writes a file
 /// is not, and no command that changes the drawing is (docs/adr/0622 §8).
 #[test]

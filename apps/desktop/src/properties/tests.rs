@@ -287,6 +287,71 @@ fn nothing_selected_shows_the_drawing() {
     assert!(!editable(&app));
 }
 
+fn scoped_text(app: &mut App, layer: &str, height: f64) -> Slot {
+    Slot(add(app, serde_json::from_value(serde_json::json!({
+        "kind":"text", "id":0, "layerId":layer, "attrs":{}, "p":{"x":E,"y":N},
+        "text":"Ölçülü metin", "height":height, "rotation":0
+    })).unwrap()))
+}
+
+#[test]
+fn type_scope_preserves_selection_counts_locked_targets_and_edits_only_its_texts() {
+    let mut app = objects();
+    crate::files_testing::make_cad(&mut app);
+    let a = scoped_text(&mut app, "cizim", 0.2);
+    let b = scoped_text(&mut app, "cizim", 0.3);
+    let locked = scoped_text(&mut app, "kilitli", 0.4);
+    app.selection.set([Slot(4), a, b, locked]);
+    let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+    event(&mut app, Event::Kind(Some("text".into())));
+    let doc = app.document.as_ref().unwrap();
+    let panel = app.properties_panel(doc);
+    assert_eq!(panel.total, 4);
+    assert_eq!(panel.editable, 2);
+    assert!(matches!(panel.summary, Summary::Many { count:3, .. }));
+    assert_eq!(app.selection.ids(), [Slot(4), a, b, locked]);
+    assert_eq!(doc.model.to_snapshot_v2(), before);
+    let height = panel.sections.into_iter().flat_map(|s| s.rows).find(|r| r.label == "Yükseklik").unwrap();
+    assert_eq!(height.value, "Çeşitli");
+    let Some(Editor::Number(Field::TextHeights(ids))) = height.editor else {panic!("bulk height")};
+    assert_eq!(ids, [a, b]);
+    event(&mut app, Event::Commit(Field::TextHeights(ids), "25 cm".into()));
+    for slot in [a,b] {
+        let Entity::Text(t) = entity(&app,slot.0) else {panic!("text")};
+        assert_eq!(t.height, 0.25);
+        assert_eq!(t.text, "Ölçülü metin");
+    }
+    let Entity::Text(t) = entity(&app,locked.0) else {panic!("text")};
+    assert_eq!(t.height,0.4);
+    assert_eq!(undo_label(&mut app).as_deref(),Some("Yazı yüksekliği"));
+    assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(),before);
+    app.selection.set([Slot(4)]);
+    assert!(app.properties_kind(app.document.as_ref().unwrap()).is_none());
+}
+
+#[test]
+fn an_queued_property_edit_cannot_write_after_selection_revision_or_scope_changes() {
+    let mut app = objects();
+    let a = scoped_text(&mut app,"cizim",0.2);
+    let b = scoped_text(&mut app,"cizim",0.2);
+    app.selection.set([a]);
+    let key = app.properties_key(app.document.as_ref().unwrap());
+    let old = Event::Guarded(key,Box::new(Event::Commit(Field::Text(a),"Yanlış hedef".into())));
+    app.selection.set([b]);
+    let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+    event(&mut app,old);
+    assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(),before);
+    let key = app.properties_key(app.document.as_ref().unwrap());
+    event(&mut app,Event::Kind(Some("text".into())));
+    event(&mut app,Event::Guarded(key,Box::new(Event::Commit(Field::Text(b),"Eski kapsam".into()))));
+    assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(),before);
+    let key = app.properties_key(app.document.as_ref().unwrap());
+    scoped_text(&mut app,"cizim",0.1);
+    let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+    event(&mut app,Event::Guarded(key,Box::new(Event::Commit(Field::Text(b),"Eski revizyon".into()))));
+    assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(),before);
+}
+
 #[test]
 fn one_parcel_its_kind_layer_measures_and_attributes() {
     let mut app = objects();

@@ -323,6 +323,10 @@ pub fn input_from_param(
         }
         (kind, "string") => {
             created.insert("default".into(), if d.is_string() { d } else { json!("") });
+            if let Some(inheritance) = p.color_picker {
+                created.insert("widget".into(), json!("color"));
+                created.insert("colorInheritance".into(), json!(inheritance));
+            }
             match kind {
                 ParamKind::Text { allow_empty, .. } if *allow_empty => {
                     created.insert("allowEmpty".into(), json!(true));

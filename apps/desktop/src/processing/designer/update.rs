@@ -153,6 +153,28 @@ impl App {
         self.designer_checked();
     }
 
+    pub(crate) fn selection_recipe_from_dialog(&mut self) {
+        let Some(window) = &self.processing.dialog else { return; };
+        if !matches!(window.tool.id.as_str(), "selection.byExpression" | "selection.byLocation") { return; }
+        if !window.issues.is_empty() {
+            self.warn("Seçim tarifini oluşturmadan önce işaretli girişleri düzeltin.");
+            return;
+        }
+        let mut model = edit::new_model(new_model_id());
+        model.label = format!("{} · seçim tarifi", window.tool.label);
+        model.category = "selection".into();
+        model.description = "Seçimi değiştirir; çizime nesne veya katman eklemez. Girdi kapsamı ve seçim biçimi adım ayarlarından değiştirilebilir.".into();
+        model.steps.push(kentos_processing::model::ModelStep {
+            id:"selection".into(), tool:window.tool.id.clone(),
+            values:window.values.iter().map(|(name,value)| (name.clone(),ValueSource::Value(value.clone()))).collect(),
+            position:None, caption:Some("Seçim koşulları".into()),
+        });
+        self.processing.designer = Some(Box::new(Designer::new(model, false, false)));
+        self.processing.dialog = None;
+        self.dialog = Some(Dialog::ModelDesigner);
+        self.designer_checked();
+    }
+
     /// The draft's problems again, and the selected step's controls.
     fn designer_checked(&mut self) {
         let registry = self.processing.registry.clone();

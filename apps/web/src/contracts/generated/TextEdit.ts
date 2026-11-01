@@ -5,11 +5,11 @@ import type { Vec2 } from "./Vec2";
 /**
  * One edit of `cad.texts.edit` (docs/adr/0325 §3).
  */
-export type TextEdit = { "kind": "replace", uids?: Array<string>, find: string, with: string, 
+export type TextEdit = { "kind": "height", uids: Array<string>, height: number, } | { "kind": "replace", uids?: Array<string>, find: string, with: string,
 /**
  * Big and small letters apart (Turkish İ and ı); absent: alike.
  */
-matchCase?: boolean, 
+matchCase?: boolean,
 /**
  * Only a whole word.
  */

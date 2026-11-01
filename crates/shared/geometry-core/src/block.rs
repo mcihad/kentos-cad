@@ -459,6 +459,23 @@ impl Blocks {
         None
     }
 
+    /// The unflattened local entities along a picked path, including nested inserts and the final leaf.
+    /// Uses the same placed/dynamic definitions as `piece`; retains each entity's own look metadata.
+    pub fn piece_chain(&self, insert: &Shape, path: &[u32]) -> Option<Vec<Entity>> {
+        if path.is_empty() || path.len() > MAX_DEPTH { return None; }
+        let mut cur = insert.clone();
+        let mut out = Vec::with_capacity(path.len());
+        for (depth, &i) in path.iter().enumerate() {
+            let (flat, _, _) = self.placed(&cur)?;
+            let e = flat.entities.get(i as usize)?;
+            let inner = matches!(e.shape, Shape::Insert { .. });
+            if inner != (depth + 1 < path.len()) { return None; }
+            cur = e.shape.clone();
+            out.push(e.clone());
+        }
+        Some(out)
+    }
+
     /// A block path through an insert under these definitions, made a path through `after_insert` under `after`
     /// (docs/adr/0315 §1): each step's object found again by its local id, which a definition keeps through its
     /// edits; a step whose id is not once in both definitions keeps its place. None when a step leaves either.

@@ -9479,6 +9479,7 @@ class SelectRegion(_Union):
 
     One of:
 
+    - :class:`PropertiesSelectRegion` (``kind: properties``)
     - :class:`WindowSelectRegion` (``kind: window``)
     - :class:`CrossingSelectRegion` (``kind: crossing``)
     - :class:`FenceSelectRegion` (``kind: fence``)
@@ -9843,6 +9844,7 @@ class TextEdit(_Union):
 
     One of:
 
+    - :class:`HeightTextEdit` (``kind: height``)
     - :class:`ReplaceTextEdit` (``kind: replace``)
     - :class:`NumberTextEdit` (``kind: number``)
     - :class:`CombineTextEdit` (``kind: combine``)
@@ -57995,6 +57997,54 @@ class SelectLeftOut(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SelectProperties(_Model):
+    """All present criteria must match. Heights are real model metres; expression readings
+    use the project's drawing unit, just as layer filters do. No drawing or selection is written.
+    Attributes:
+        assigned_color: Own CAD colour (hex or palette token), or "byLayer" for no explicit colour.
+        block_path: Optional picked block-piece path (zero-based definition indexes, as cad.entities.pick returns).
+            Colour criteria inspect that piece through each placement; the result is the owning insert UID.
+            Never edits a definition. Height/expression criteria cannot be combined with this path.
+        displayed_color: CAD paint after layer inheritance, before theme palette conversion. This is not a GIS thematic pixel colour.
+        text_height_max: Unit: length.
+        text_height_min: Unit: length.
+    """
+    assigned_color: str | None | Unset = UNSET
+    block_path: list[int] | Unset = UNSET
+    displayed_color: str | None | Unset = UNSET
+    expression: str | None | Unset = UNSET
+    text_height_max: float | None | Unset = UNSET
+    text_height_min: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.assigned_color is not UNSET:
+            out["assignedColor"] = self.assigned_color
+        if self.block_path is not UNSET:
+            out["blockPath"] = list(self.block_path)
+        if self.displayed_color is not UNSET:
+            out["displayedColor"] = self.displayed_color
+        if self.expression is not UNSET:
+            out["expression"] = self.expression
+        if self.text_height_max is not UNSET:
+            out["textHeightMax"] = None if self.text_height_max is None else float(self.text_height_max)
+        if self.text_height_min is not UNSET:
+            out["textHeightMin"] = None if self.text_height_min is None else float(self.text_height_min)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SelectProperties:
+        return cls(
+            assigned_color=data.get("assignedColor", UNSET),
+            block_path=list(data["blockPath"]) if "blockPath" in data else UNSET,
+            displayed_color=data.get("displayedColor", UNSET),
+            expression=data.get("expression", UNSET),
+            text_height_max=UNSET if "textHeightMax" not in data else None if data["textHeightMax"] is None else float(data["textHeightMax"]),
+            text_height_min=UNSET if "textHeightMin" not in data else None if data["textHeightMin"] is None else float(data["textHeightMin"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SensorLatest(_Model):
     """An asset's latest observation.
     Attributes:
@@ -85509,6 +85559,29 @@ class SetScheduleOperation(ScheduleOperation):
 
 
 @dataclass(kw_only=True, slots=True)
+class PropertiesSelectRegion(SelectRegion):
+    """Refine a geometric/list scope with CAD properties and the existing expression language.
+    Targets are drawing objects (inserts, not their definition members). Filters cannot be nested.
+    """
+    TAG_VALUE: ClassVar[str] = "properties"
+    source: SelectRegion
+    query: SelectProperties
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "properties"}
+        out["source"] = self.source.to_json()
+        out["query"] = self.query.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PropertiesSelectRegion:
+        return cls(
+            source=SelectRegion.from_json(data["source"]),
+            query=SelectProperties.from_json(data["query"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class WindowSelectRegion(SelectRegion):
     """Pencere: wholly inside the box from `a` to `b` (an infinite line never is).
     Attributes:
@@ -87821,6 +87894,30 @@ class UnlinkTablesOperation(TablesOperation):
 
 
 @dataclass(kw_only=True, slots=True)
+class HeightTextEdit(TextEdit):
+    """Set real model text height in metres, preserving text, fields, alignment and position.
+    Attributes:
+        height: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "height"
+    uids: list[str]
+    height: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "height"}
+        out["uids"] = list(self.uids)
+        out["height"] = float(self.height)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HeightTextEdit:
+        return cls(
+            uids=list(data["uids"]),
+            height=float(data["height"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ReplaceTextEdit(TextEdit):
     """Bul ve değiştir: every `find` in the texts `uids` (empty: every shown text) replaced by `with`; a text left
     blank, or on a locked layer, is left as it was and said.
@@ -89703,7 +89800,7 @@ _ROAD_WORK: dict[str, type[RoadWork]] = {"plan": PlanRoadWork, "junctions": Junc
 _SCHEDULE_OPERATION: dict[str, type[ScheduleOperation]] = {"cell": CellScheduleOperation, "set": SetScheduleOperation}
 
 
-_SELECT_REGION: dict[str, type[SelectRegion]] = {"window": WindowSelectRegion, "crossing": CrossingSelectRegion, "fence": FenceSelectRegion, "polygon": PolygonSelectRegion, "circle": CircleSelectRegion, "containing": ContainingSelectRegion, "point": PointSelectRegion, "all": AllSelectRegion, "objects": ObjectsSelectRegion, "invert": InvertSelectRegion, "similar": SimilarSelectRegion}
+_SELECT_REGION: dict[str, type[SelectRegion]] = {"properties": PropertiesSelectRegion, "window": WindowSelectRegion, "crossing": CrossingSelectRegion, "fence": FenceSelectRegion, "polygon": PolygonSelectRegion, "circle": CircleSelectRegion, "containing": ContainingSelectRegion, "point": PointSelectRegion, "all": AllSelectRegion, "objects": ObjectsSelectRegion, "invert": InvertSelectRegion, "similar": SimilarSelectRegion}
 
 
 _SHAPE_ELEVATION: dict[str, type[ShapeElevation]] = {"set": SetShapeElevation, "raise": RaiseShapeElevation, "clear": ClearShapeElevation}
@@ -89748,7 +89845,7 @@ _TABLE_SOURCE: dict[str, type[TableSource]] = {"coordinates": CoordinatesTableSo
 _TABLES_OPERATION: dict[str, type[TablesOperation]] = {"edit": EditTablesOperation, "refresh": RefreshTablesOperation, "link": LinkTablesOperation, "unlink": UnlinkTablesOperation}
 
 
-_TEXT_EDIT: dict[str, type[TextEdit]] = {"replace": ReplaceTextEdit, "number": NumberTextEdit, "combine": CombineTextEdit, "split": SplitTextEdit, "fit": FitTextEdit, "turn": TurnTextEdit, "straighten": StraightenTextEdit}
+_TEXT_EDIT: dict[str, type[TextEdit]] = {"height": HeightTextEdit, "replace": ReplaceTextEdit, "number": NumberTextEdit, "combine": CombineTextEdit, "split": SplitTextEdit, "fit": FitTextEdit, "turn": TurnTextEdit, "straighten": StraightenTextEdit}
 
 
 _TRANSFORM: dict[str, type[Transform]] = {"move": MoveTransform, "rotate": RotateTransform, "scale": ScaleTransform, "mirror": MirrorTransform, "align": AlignTransform, "similarity": SimilarityTransform, "affine": AffineTransform, "projective": ProjectiveTransform, "rubbersheet": RubbersheetTransform, "arrange": ArrangeTransform}
@@ -90841,6 +90938,7 @@ __all__ = [
     "HeightMethod",
     "HeightMethodName",
     "HeightReference",
+    "HeightTextEdit",
     "Helmert",
     "HidePaperEmptyTable",
     "HidePaperOp",
@@ -91878,6 +91976,7 @@ __all__ = [
     "ProjectiveTransform",
     "PropertiesOperation",
     "PropertiesOperationName",
+    "PropertiesSelectRegion",
     "PublishFormsOp",
     "PublishSheets",
     "PushOpeningsOperation",
@@ -92155,6 +92254,7 @@ __all__ = [
     "SelectKind",
     "SelectKindName",
     "SelectLeftOut",
+    "SelectProperties",
     "SelectRegion",
     "SelectionPaperCoordSource",
     "SensorLatest",

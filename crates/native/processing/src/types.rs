@@ -332,6 +332,9 @@ pub struct ParamDef {
     pub picks: Option<(String, String)>,
     /// A features input that may hold no object (`allow_empty`).
     pub allow_empty: bool,
+    /// A string rendered with the shared colour picker; true also offers CAD inheritance choices.
+    /// The parameter's wire value remains a colour string (or null when optional).
+    pub color_picker: Option<bool>,
 }
 
 impl ParamDef {
@@ -347,6 +350,7 @@ impl ParamDef {
             kind,
             picks: None,
             allow_empty: false,
+            color_picker: None,
         }
     }
 
@@ -354,6 +358,11 @@ impl ParamDef {
     /// docs/adr/0216 §3): not refused when empty; its layer's id comes with it (`FeatureSet::layer_id`).
     pub fn allow_empty(mut self) -> Self {
         self.allow_empty = true;
+        self
+    }
+
+    pub fn color_picker(mut self, inheritance: bool) -> Self {
+        self.color_picker = Some(inheritance);
         self
     }
 

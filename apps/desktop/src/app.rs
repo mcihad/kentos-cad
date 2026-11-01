@@ -919,6 +919,7 @@ pub struct App {
     pub(crate) props_closed: std::collections::HashSet<&'static str>,
     /// Öznitelikler for a selection of several objects, as last worked out (properties/).
     pub(crate) properties_cache: crate::properties::PanelCache,
+    pub(crate) properties_scope: crate::properties::InspectScope,
     /// The bottom panel's Noktalar tab: its query and rows (points/, docs/adr/0153).
     pub(crate) points: crate::points::PointsPanel,
     /// The bottom panel's Tablo tab: its choices and rows (features/, docs/adr/0199 §4).
@@ -1434,6 +1435,7 @@ impl App {
             text_field_release: false,
             props_closed: std::collections::HashSet::new(),
             properties_cache: Default::default(),
+            properties_scope: Default::default(),
             points: Default::default(),
             features: Default::default(),
             charts: Default::default(),

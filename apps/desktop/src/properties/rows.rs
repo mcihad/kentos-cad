@@ -45,6 +45,10 @@ pub(crate) struct Panel {
     /// The header's meta: `#12`, `3 nesne`.
     pub meta: Option<String>,
     pub sections: Vec<Section>,
+    /// All selected types; a property-only filter never changes scene selection.
+    pub types: Vec<(&'static str, usize)>,
+    pub total: usize,
+    pub editable: usize,
 }
 
 /// Over the grid: the object's kind and label and its layer, or the selection's size and kinds.
@@ -166,7 +170,7 @@ impl Choice {
 }
 
 impl Row {
-    fn text(label: impl Into<Cow<'static, str>>, value: impl Into<String>) -> Self {
+    pub(super) fn text(label: impl Into<Cow<'static, str>>, value: impl Into<String>) -> Self {
         Self {
             label: label.into(),
             value: value.into(),
@@ -180,7 +184,7 @@ impl Row {
     }
 
     /// A quiet line under the row above it, with no name of its own.
-    fn note(text: &str) -> Self {
+    pub(super) fn note(text: &str) -> Self {
         Self {
             note: true,
             ..Self::text("", text)
@@ -255,6 +259,9 @@ pub(crate) fn panel(
             summary: Summary::Empty,
             meta: None,
             sections: vec![document_section(doc, shown.crs)],
+            types: Vec::new(),
+            total: 0,
+            editable: 0,
         },
         [one] => {
             let base = one.base();
@@ -268,6 +275,9 @@ pub(crate) fn panel(
                 },
                 meta: Some(format!("#{}", base.id)),
                 sections: entity_sections(doc, one, shown),
+                types: Vec::new(),
+                total: 1,
+                editable: usize::from(!layers.is_locked(&base.layer_id)),
             }
         }
         many => {
@@ -292,6 +302,9 @@ pub(crate) fn panel(
                 },
                 meta: Some(format!("{} nesne", many.len())),
                 sections: many_sections(doc, many, totals(selected), shown),
+                types: Vec::new(),
+                total: many.len(),
+                editable: many.iter().filter(|e| !layers.is_locked(&e.base().layer_id)).count(),
             }
         }
     }
@@ -3840,6 +3853,11 @@ fn many_sections(
             .filter(|t| open.contains(&t.base.id))
             .map(|t| Slot(t.base.id))
             .collect();
+        let height = if texts.iter().all(|t| t.height == texts[0].height) {
+            Row::figure("Yükseklik", f.length_bare(texts[0].height))
+        } else {
+            Row::text("Yükseklik", "Çeşitli")
+        }.unit(f.length_unit_label()).editor(edit(Editor::Number(Field::TextHeights(slots.clone()))));
         sections.push(Section {
             id: "texts",
             title: if texts.len() == objects.len() {
@@ -3848,6 +3866,7 @@ fn many_sections(
                 format!("Yazılar ({})", texts.len()).into()
             },
             rows: [
+                vec![height],
                 style_rows(
                     doc.model.settings(),
                     true,

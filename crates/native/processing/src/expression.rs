@@ -241,7 +241,11 @@ pub fn preview_expression(
     if returns == Returns::Condition {
         let values = evaluate_in(expr, list, how, As::Bool);
         let hits = values.iter().filter(|v| **v == Value::Bool(true)).count();
-        return format!("{hits} / {} nesne koşulu sağlıyor.{note}", list.len());
+        return if list.len() < entities.len() {
+            format!("İlk {} / {} nesnenin {hits} tanesi ifade koşulunu sağlıyor.{note}", list.len(), entities.len())
+        } else {
+            format!("{hits} / {} nesne koşulu sağlıyor.{note}", list.len())
+        };
     }
     let values = evaluate_in(expr, list, how, As::Text);
     let empty = values.iter().filter(|v| **v == Value::Null).count();

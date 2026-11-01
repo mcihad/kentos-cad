@@ -34,7 +34,7 @@
           "layer": {"newName": "Kenar ölçüleri"}
         },
         "attributes.calculate": {"input": {"scope": "selection"}, "field": "Hesap alanı", "value": "metin($alan, 2)", "where": "", "empty": "keep", "label": true},
-        "selection.byExpression": {"input": {"scope": "all"}, "condition": "$alan > 500", "mode": "new"},
+        "selection.byExpression": {"input": {"scope": "all"}, "condition": "$alan > 500", "mode": "new", "cadFilter": false, "textHeightMin": null, "textHeightMax": null, "assignedColor": null, "displayedColor": null, "blockPath": null},
         "builtin.parcelSheet": {"parcels": {"scope": "selection"}, "prefix": "P"}
       }
     }

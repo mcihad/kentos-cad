@@ -140,7 +140,11 @@ fn form<'a>(
     }
     // Where the result goes here: the drawing, a GeoPackage or a database (sink.rs, docs/adr/0592 §3); on the server
     // the side column's Sonuç says it.
-    if !at_server && !window.tool.id.starts_with(MODEL_PREFIX) {
+    let selection_only = matches!(window.tool.id.as_str(), "selection.byExpression" | "selection.byLocation");
+    if selection_only {
+        out = out.push(label::caption("Bu işlem yalnız seçimi değiştirir; yeni katman oluşturmaz, çizim verisini değiştirmez."));
+    }
+    if !at_server && !window.tool.id.starts_with(MODEL_PREFIX) && !selection_only {
         out = out.push(
             column![
                 label::caption("Sonucun yeri")
@@ -477,6 +481,12 @@ fn side<'a>(
         for paragraph in help.split("\n\n").filter(|p| !p.trim().is_empty()) {
             out = out.push(label::body(paragraph.to_owned()).style(style::text::muted));
         }
+    }
+    if matches!(tool.id.as_str(), "selection.byExpression" | "selection.byLocation") {
+        out = out.push(button(label::body("Seçim tarifini model olarak kaydet…"))
+            .padding(kentos_ui::theme::metrics::action())
+            .style(style::button::secondary)
+            .on_press(ev(Event::SelectionRecipe)));
     }
     if let Some(model) = model {
         let lookup = |id: &str| registry.tool(id);

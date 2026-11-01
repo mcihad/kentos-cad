@@ -135,21 +135,24 @@ class _TextsEdit(LocalCommand[TextsEdit, TextsEdited, TextsPlan]):
     bütün yazıların) her find'ı with olur; matchCase büyük-küçük harfi ayırır (Türkçe İ
     ve ı), wholeWord yalnız bütün sözcük; biçim dilimleri ve alanlar kayar, değiştirilen
     harflere değen alan kalkar; boş kalacak yazı (text_left_blank) ve kilitli katmandaki
-    yazı (layer_locked) uyarıyla atlanır. number (Numarala, TCOUNT): uids sırayla start,
-    start+step … sayılarını alır, en az digits basamakla (önüne sıfır), prefix ve
-    suffix'le; place replace yazının yerine, prefix başına, suffix sonuna. combine
-    (Yazıları birleştir, TXT2MTXT): yazılar en yukarıdan aşağıya (eşitse soldan) satır
-    satır tek yazı olur; en yukarıdakinin yerinde (üstünden), yüksekliği ve görünüşüyle,
-    öbürleri silinir. split (Satırlara ayır): yazının her paragrafı (satır sonları
-    arası) durduğu yerde, biçimleri ve alanlarıyla ayrı yazı olur; yazı silinir. Tek
-    paragraflı, sütunlu ya da eğri boyunca yazı not_splittable. fit (Yazıyı eğriye
-    oturt): tek satırlık, nesneye bağlı olmayan yazılar curve'ün üstüne, kutularının
-    ortasının düştüğü yere; turn (Doğrultuya döndür): düz yazılar edge'in at'a en yakın
-    kenarının doğrultusuna, okunur; straighten (Düzleştir): eğri boyunca yazılar ilk
-    harflerinde düz; almadıkları sayılır (skipped), hiçbirini almazsa text_not_taken.
-    combine, split, number, fit, turn ve straighten'de kilitli katmandaki yazı
-    reddedilir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey
-    yazılmaz, sonuç conflict olur.
+    yazı (layer_locked) uyarıyla atlanır. height (Yazı yüksekliği): uids yazılarının
+    gerçek model yüksekliğini height metre yapar; içerik, yer, hizalama ve alanlar
+    korunur, stil yüksekliği override olarak işaretlenir. Kilitli hedefte tüm işlem
+    reddedilir. number (Numarala, TCOUNT): uids sırayla start, start+step … sayılarını
+    alır, en az digits basamakla (önüne sıfır), prefix ve suffix'le; place replace
+    yazının yerine, prefix başına, suffix sonuna. combine (Yazıları birleştir,
+    TXT2MTXT): yazılar en yukarıdan aşağıya (eşitse soldan) satır satır tek yazı olur;
+    en yukarıdakinin yerinde (üstünden), yüksekliği ve görünüşüyle, öbürleri silinir.
+    split (Satırlara ayır): yazının her paragrafı (satır sonları arası) durduğu yerde,
+    biçimleri ve alanlarıyla ayrı yazı olur; yazı silinir. Tek paragraflı, sütunlu ya da
+    eğri boyunca yazı not_splittable. fit (Yazıyı eğriye oturt): tek satırlık, nesneye
+    bağlı olmayan yazılar curve'ün üstüne, kutularının ortasının düştüğü yere; turn
+    (Doğrultuya döndür): düz yazılar edge'in at'a en yakın kenarının doğrultusuna,
+    okunur; straighten (Düzleştir): eğri boyunca yazılar ilk harflerinde düz;
+    almadıkları sayılır (skipped), hiçbirini almazsa text_not_taken. combine, split,
+    number, fit, turn ve straighten'de kilitli katmandaki yazı reddedilir.
+    expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
+    conflict olur.
     """
     __slots__ = ()
     id = "cad.texts.edit"
@@ -175,21 +178,24 @@ class _TextsEdit(LocalCommand[TextsEdit, TextsEdited, TextsPlan]):
         yazıların) her find'ı with olur; matchCase büyük-küçük harfi ayırır (Türkçe İ ve ı),
         wholeWord yalnız bütün sözcük; biçim dilimleri ve alanlar kayar, değiştirilen
         harflere değen alan kalkar; boş kalacak yazı (text_left_blank) ve kilitli katmandaki
-        yazı (layer_locked) uyarıyla atlanır. number (Numarala, TCOUNT): uids sırayla start,
-        start+step … sayılarını alır, en az digits basamakla (önüne sıfır), prefix ve
-        suffix'le; place replace yazının yerine, prefix başına, suffix sonuna. combine
-        (Yazıları birleştir, TXT2MTXT): yazılar en yukarıdan aşağıya (eşitse soldan) satır
-        satır tek yazı olur; en yukarıdakinin yerinde (üstünden), yüksekliği ve görünüşüyle,
-        öbürleri silinir. split (Satırlara ayır): yazının her paragrafı (satır sonları
-        arası) durduğu yerde, biçimleri ve alanlarıyla ayrı yazı olur; yazı silinir. Tek
-        paragraflı, sütunlu ya da eğri boyunca yazı not_splittable. fit (Yazıyı eğriye
-        oturt): tek satırlık, nesneye bağlı olmayan yazılar curve'ün üstüne, kutularının
-        ortasının düştüğü yere; turn (Doğrultuya döndür): düz yazılar edge'in at'a en yakın
-        kenarının doğrultusuna, okunur; straighten (Düzleştir): eğri boyunca yazılar ilk
-        harflerinde düz; almadıkları sayılır (skipped), hiçbirini almazsa text_not_taken.
-        combine, split, number, fit, turn ve straighten'de kilitli katmandaki yazı
-        reddedilir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey
-        yazılmaz, sonuç conflict olur.
+        yazı (layer_locked) uyarıyla atlanır. height (Yazı yüksekliği): uids yazılarının
+        gerçek model yüksekliğini height metre yapar; içerik, yer, hizalama ve alanlar
+        korunur, stil yüksekliği override olarak işaretlenir. Kilitli hedefte tüm işlem
+        reddedilir. number (Numarala, TCOUNT): uids sırayla start, start+step … sayılarını
+        alır, en az digits basamakla (önüne sıfır), prefix ve suffix'le; place replace
+        yazının yerine, prefix başına, suffix sonuna. combine (Yazıları birleştir,
+        TXT2MTXT): yazılar en yukarıdan aşağıya (eşitse soldan) satır satır tek yazı olur;
+        en yukarıdakinin yerinde (üstünden), yüksekliği ve görünüşüyle, öbürleri silinir.
+        split (Satırlara ayır): yazının her paragrafı (satır sonları arası) durduğu yerde,
+        biçimleri ve alanlarıyla ayrı yazı olur; yazı silinir. Tek paragraflı, sütunlu ya da
+        eğri boyunca yazı not_splittable. fit (Yazıyı eğriye oturt): tek satırlık, nesneye
+        bağlı olmayan yazılar curve'ün üstüne, kutularının ortasının düştüğü yere; turn
+        (Doğrultuya döndür): düz yazılar edge'in at'a en yakın kenarının doğrultusuna,
+        okunur; straighten (Düzleştir): eğri boyunca yazılar ilk harflerinde düz;
+        almadıkları sayılır (skipped), hiçbirini almazsa text_not_taken. combine, split,
+        number, fit, turn ve straighten'de kilitli katmandaki yazı reddedilir.
+        expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
+        conflict olur.
 
         Args:
             doc: The drawing it works on.
