@@ -94,9 +94,12 @@ cad.entities.chamfer(doc, corner=straight_corner, distance=.1, second=.2)
   Eski kaynak kiriş tahmini sonuç garantisi olarak kullanılmaz. Native,
   Python, MCP ve GUI plan/yazma/Undo kontrolleri geçti; gerçek GUI sonucu
   bağımsız normal uzaklığı ve yoğun paralel/kiriş denetimiyle kontrol edildi.
-- [ ] Fit/kontrol noktaları, uç teğetleri ve açık/kapalı geçişler için
-  gerçek arayüz kabulü; G1/G2'nin hangi işlemde korunduğunu açık gösterme.
-  Mevcut knot/weight/fit komutları tekrar yazılmadan kullanılmalı.
+- [x] Fit/kontrol noktaları, uç teğetleri ve açık/kapalı geçişler için
+  görünür ayarlar, doğrudan nokta seçimi, koordinat girişi ve gerçek arayüz
+  kabulü. G2 eşlemesi olmadığı, Aç/Kapat'ın yeniden kurduğu ve düğümün şekli
+  koruduğu açık gösterilir. Aynı mevcut komutlar, kaydedilen GUI/Python
+  karşılaştırması ve fare paneldeyken Undo/Redo kontrol edildi.
+  [ADR 0824](../adr/0824-visible-curve-editing-and-handles.md).
 - [ ] Delikli ve yaylı kapalı alan, ağırlıklı NURBS, bağlı ölçü,
   multipart ve kalıcı alt nesne referansları için birleşik alan/uzunluk/
   süreklilik/hata bütçesi kabulü. Güvenli ret tamamlanmış destek değildir.

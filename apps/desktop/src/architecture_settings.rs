@@ -156,6 +156,66 @@ mod tests {
     use super::*;
     use crate::files_testing::{app_with_drawing, make_cad};
     #[test]
+    fn curve_handles_follow_undo_and_redo_while_the_pointer_is_over_a_panel() {
+        use kentos_domain::Slot;
+        use kentos_interaction::Vec2;
+        let (mut app, _) = App::boot(None);
+        let mut objects = crate::tools_scenes::Objects::new();
+        objects.path("cizim", &[[0., 0.], [10., 10.], [20., 0.]], false);
+        crate::tools_scenes::open(&mut app, objects);
+        make_cad(&mut app);
+        let _ = app.update(Message::DialogClosed);
+        app.selection.set([Slot(1)]);
+        let _ = app.update(Message::Run("tool.curveEdit"));
+        let _ = app.update(Message::ToolSetting(Commit {
+            tool: "curveEdit",
+            key: "curve-action",
+            value: "E".into(),
+        }));
+        assert!(
+            matches!(
+                app.document.as_ref().unwrap().model.get(Slot(1)),
+                Some(kentos_commands::Entity::Nurbs(_))
+            ),
+            "{}",
+            app.session.prompt().text()
+        );
+        let original = Vec2::new(crate::tools_scenes::E + 10., crate::tools_scenes::N + 10.);
+        let moved = Vec2::new(original.x + 3., original.y + 2.);
+        let _ = app.update(Message::ToolSetting(Commit {
+            tool: "curveEdit",
+            key: "fit-edit",
+            value: "T".into(),
+        }));
+        // Selecting a point still needs the actual pick, not a computed
+        // location. Send it through the viewport like the user's click.
+        crate::tools_scenes::click(&mut app, [10., 10.]);
+        assert!(
+            app.session.prompt().text().contains("yeni yerini"),
+            "{}",
+            app.session.prompt().text()
+        );
+        assert_eq!(app.with_tool(|s, cx| s.accept_point(moved, cx)), Some(true));
+        app.follow_document();
+        let has = |app: &App, p| {
+            app.session
+                .preview(&app.format())
+                .unwrap()
+                .markers
+                .iter()
+                .any(|m| m.at == p)
+        };
+        assert!(has(&app, moved));
+        app.viewport.cursor = None;
+        let _ = app.update(Message::Run("edit.undo"));
+        assert!(has(&app, original));
+        assert!(!has(&app, moved));
+        assert!(app.viewport.cursor.is_none());
+        let _ = app.update(Message::Run("edit.redo"));
+        assert!(has(&app, moved));
+        assert!(!has(&app, original));
+    }
+    #[test]
     fn defaults_are_separate_from_the_selection_and_stale_commits_are_ignored() {
         let mut app = app_with_drawing();
         make_cad(&mut app);

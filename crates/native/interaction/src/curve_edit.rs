@@ -28,8 +28,18 @@ use crate::log::Level;
 use crate::points::{self, plain_number, wire};
 use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{
-    Context, Cursor, Flow, Marker, MarkerShape, Pointer, Preview, Stroke, Tone, Tool,
+    Context, Cursor, Flow, Label, Marker, MarkerShape, Pointer, Preview, Stroke, Tag, Tone, Tool,
 };
+
+mod settings;
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+enum PointView {
+    Fit,
+    Control,
+    #[default]
+    Both,
+}
 
 /// The tool's id: its command is `tool.curveEdit`.
 pub const ID: &str = "curveEdit";
@@ -188,6 +198,10 @@ pub struct CurveEditTool {
     drawn: Preview,
     /// What the prompt shows: the picked curve's kind, the format, the degree and tolerance remembered.
     seen: Option<(Option<Kind>, Format, u32, f64)>,
+    point_view: PointView,
+    settings: Vec<crate::tool_settings::Setting>,
+    reference: Option<Vec2>,
+    details_seen: Option<(u64, Option<Slot>, Option<Ask>, PointView)>,
 }
 
 impl CurveEditTool {
@@ -202,12 +216,33 @@ impl CurveEditTool {
             self.picked = None;
             self.ask = None;
         }
-        self.seen = Some((
+        let seen = Some((
             kind,
             cx.format(),
             cx.memory.nurbs_degree,
             cx.memory.curve_tolerance,
         ));
+        let details = Some((cx.doc.revision(), self.picked, self.ask, self.point_view));
+        if self.seen == seen && self.details_seen == details {
+            return;
+        }
+        self.seen = seen;
+        let entity = self.picked.and_then(|s| cx.doc.get(s));
+        self.reference = entity.and_then(|e| {
+            let (fit, ctrl) = points_of(e);
+            match self.ask {
+                Some(Ask::MoveFit(Some(i))) => fit.get(i).copied(),
+                Some(Ask::MoveControl(Some(i))) => ctrl.get(i).copied(),
+                Some(Ask::Tangents(None)) => fit.first().copied(),
+                Some(Ask::Tangents(Some(_))) => fit.last().copied(),
+                _ => None,
+            }
+        });
+        if matches!(entity, Some(Entity::Nurbs(n)) if n.fit.is_none()) {
+            self.point_view = PointView::Control;
+        }
+        self.settings = settings::rows(entity, self.ask, self.point_view, cx);
+        self.details_seen = Some((cx.doc.revision(), self.picked, self.ask, self.point_view));
     }
 
     fn input_for(&self, edit: CurveEdit, doc: &Document) -> Option<CurvesEdit> {
@@ -221,13 +256,22 @@ impl CurveEditTool {
 
     fn apply(&mut self, edit: CurveEdit, cx: &mut Context<'_>) {
         let words = said(&edit);
+        let view = match &edit {
+            CurveEdit::ToSpline { through: true, .. } => PointView::Fit,
+            CurveEdit::ToSpline { through: false, .. } => PointView::Control,
+            _ => self.point_view,
+        };
         let Some(input) = self.input_for(edit, cx.doc) else {
             return;
         };
         let result = curves_edit::execute(&mut ExecutionContext::new(cx.doc), input);
-        if points::written(result, cx).is_some() {
-            cx.say(Level::Success, words);
+        if points::written(result, cx).is_none() {
+            self.see(cx);
+            self.redraw(cx);
+            return;
         }
+        cx.say(Level::Success, words);
+        self.point_view = view;
         self.ask = None;
         self.see(cx);
         self.redraw(cx);
@@ -319,21 +363,35 @@ impl CurveEditTool {
         let mut shown = e.clone();
         let follows = matches!(
             self.ask,
-            Some(Ask::AddFit | Ask::MoveFit(Some(_)) | Ask::MoveControl(Some(_)))
+            Some(
+                Ask::AddFit | Ask::MoveFit(Some(_)) | Ask::MoveControl(Some(_)) | Ask::Tangents(_)
+            )
         );
         if follows
             && let Some(mouse) = self.mouse
-            && let Some(edit) = self.clone().edit_without_saying(mouse, cx)
+            && let Some(edit) = self.edit_without_saying(mouse, cx)
             && let Some(input) = self.input_for(edit, cx.doc)
-            && let CommandResult::Completed { output, .. } = curves_edit::plan_in(cx.doc, &input)
-            && let Some(after) = output.changed.into_iter().next()
         {
-            let out = Outline::of(&shape(&after), None, 2.0, Tone::Accent);
-            self.drawn.strokes.extend(out.strokes);
-            shown = after;
+            match curves_edit::plan_in(cx.doc, &input) {
+                CommandResult::Completed { output, .. } => {
+                    if let Some(after) = output.changed.into_iter().next() {
+                        let out = Outline::of(&shape(&after), None, 2.0, Tone::Accent);
+                        self.drawn.strokes.extend(out.strokes);
+                        shown = after;
+                    }
+                }
+                CommandResult::Failed { error } => {
+                    self.drawn.tag = Some(Tag {
+                        at: mouse,
+                        lines: vec![error.message],
+                    });
+                }
+                _ => {}
+            }
         }
         let (fit, ctrl) = points_of(&shown);
-        if matches!(shown, Entity::Nurbs(_)) && ctrl.len() > 1 {
+        if self.point_view != PointView::Fit && matches!(shown, Entity::Nurbs(_)) && ctrl.len() > 1
+        {
             let closed = matches!(kind_of(&shown), Some(Kind::Nurbs { closed: true, .. }));
             self.drawn
                 .strokes
@@ -343,14 +401,14 @@ impl CurveEditTool {
             self.ask,
             Some(Ask::AddFit | Ask::MoveFit(_) | Ask::RemoveFit | Ask::Tangents(_))
         );
-        for p in &fit {
+        for p in fit.iter().filter(|_| self.point_view != PointView::Control) {
             self.drawn.markers.push(Marker {
                 at: *p,
                 shape: MarkerShape::Ring(4.0),
                 tone: if fit_asked { Tone::Accent } else { Tone::Snap },
             });
         }
-        if matches!(shown, Entity::Nurbs(_)) || !fit_asked {
+        if self.point_view != PointView::Fit && (matches!(shown, Entity::Nurbs(_)) || !fit_asked) {
             for p in &ctrl {
                 self.drawn.markers.push(Marker {
                     at: *p,
@@ -378,6 +436,19 @@ impl CurveEditTool {
         if let Some(Ask::Tangents(start)) = self.ask
             && let Some(mouse) = self.mouse
         {
+            for (at, text) in fit
+                .first()
+                .zip(fit.last())
+                .into_iter()
+                .flat_map(|(a, b)| [(*a, "Başlangıç"), (*b, "Bitiş")])
+            {
+                self.drawn.labels.push(Label {
+                    at,
+                    text: text.into(),
+                    offset: [10., 12.],
+                    tone: Tone::Snap,
+                });
+            }
             let from = if start.is_none() {
                 fit.first()
             } else {
@@ -390,11 +461,11 @@ impl CurveEditTool {
     }
 
     /// [`Self::edit_at`] for the preview: nothing said, the tool unchanged.
-    fn edit_without_saying(mut self, at: Vec2, cx: &Context<'_>) -> Option<CurveEdit> {
+    fn edit_without_saying(&self, at: Vec2, cx: &Context<'_>) -> Option<CurveEdit> {
         let e = cx.doc.get(self.picked?)?;
         let (fit, _) = points_of(e);
         let closed = matches!(kind_of(e), Some(Kind::Nurbs { closed: true, .. }));
-        match self.ask.take()? {
+        match self.ask? {
             Ask::AddFit => Some(CurveEdit::AddFit {
                 index: insertion(&fit, at, closed) as u32,
                 at: wire(at),
@@ -407,6 +478,18 @@ impl CurveEditTool {
                 index: i as u32,
                 at: wire(at),
             }),
+            Ask::Tangents(start) => {
+                let from = if start.is_none() {
+                    fit.first()?
+                } else {
+                    fit.last()?
+                };
+                let direction = Some(wire(Vec2::new(at.x - from.x, at.y - from.y)));
+                Some(CurveEdit::Tangents {
+                    start: start.map_or(direction, |s| s.map(wire)),
+                    end: start.and(direction),
+                })
+            }
             _ => None,
         }
     }
@@ -456,6 +539,15 @@ impl CurveEditTool {
         match chosen {
             Some(Err(edit)) => self.apply(edit, cx),
             Some(Ok(a)) => {
+                self.point_view = match a {
+                    Ask::AddFit | Ask::MoveFit(_) | Ask::RemoveFit | Ask::Tangents(_) => {
+                        PointView::Fit
+                    }
+                    Ask::MoveControl(_) | Ask::Weight(_) | Ask::RemoveControl | Ask::Knot => {
+                        PointView::Control
+                    }
+                    _ => self.point_view,
+                };
                 self.ask = Some(a);
                 self.see(cx);
                 self.redraw(cx);
@@ -467,6 +559,11 @@ impl CurveEditTool {
 }
 
 impl Tool for CurveEditTool {
+    fn document_changed(&mut self, cx: &Context<'_>) {
+        self.see(cx);
+        self.redraw(cx);
+    }
+
     fn cursor(&self) -> Cursor {
         match self.ask {
             Some(
@@ -482,6 +579,48 @@ impl Tool for CurveEditTool {
 
     fn label(&self) -> &'static str {
         LABEL
+    }
+
+    fn settings(&self, _format: &Format) -> Vec<crate::tool_settings::Setting> {
+        self.settings.clone()
+    }
+
+    fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
+        self.see(cx);
+        match key {
+            "point-view" => {
+                let next = match value {
+                    "fit"
+                        if matches!(self.seen, Some((Some(Kind::Nurbs { fit: true, .. }), ..))) =>
+                    {
+                        PointView::Fit
+                    }
+                    "control" => PointView::Control,
+                    "both" => PointView::Both,
+                    _ => return false,
+                };
+                self.point_view = next;
+                self.ask = None;
+                self.see(cx);
+                self.redraw(cx);
+                true
+            }
+            "fit-edit" | "control-edit" | "curve-action" => self.option(value, cx),
+            "weight" if matches!(self.ask, Some(Ask::Weight(Some(_)))) => self.input(value, cx),
+            "degree" if matches!(self.seen, Some((Some(Kind::Polyline { .. }), ..))) => {
+                let Some(n) =
+                    plain_number(value).filter(|n| n.fract() == 0. && (1. ..=11.).contains(n))
+                else {
+                    cx.say(Level::Warn, "Derece 1 ile 11 arasında bir tam sayıdır.");
+                    return false;
+                };
+                cx.memory.nurbs_degree = n as u32;
+                self.see(cx);
+                true
+            }
+            "tolerance" if matches!(self.ask, Some(Ask::Tolerance)) => self.input(value, cx),
+            _ => false,
+        }
     }
 
     fn prompt(&self) -> Prompt {
@@ -613,6 +752,12 @@ impl Tool for CurveEditTool {
             && cx.doc.get(slot).is_some_and(|e| editable(e, cx.doc))
         {
             self.picked = Some(slot);
+            self.point_view = if matches!(cx.doc.get(slot), Some(Entity::Nurbs(n)) if n.fit.is_some())
+            {
+                PointView::Fit
+            } else {
+                PointView::Control
+            };
         }
         self.see(cx);
         self.redraw(cx);
@@ -632,6 +777,10 @@ impl Tool for CurveEditTool {
         self.snaps()
     }
 
+    fn snap_from(&self) -> Option<Vec2> {
+        self.reference
+    }
+
     fn accept_point(&mut self, p: Vec2, cx: &mut Context<'_>) -> bool {
         if !self.snaps() {
             return false;
@@ -643,7 +792,11 @@ impl Tool for CurveEditTool {
 
     fn pointer_move(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         self.see(cx);
-        self.mouse = Some(p.world);
+        self.mouse = Some(if self.snaps() {
+            points::constrain(self.reference, p, cx).0
+        } else {
+            p.raw
+        });
         if self.picked.is_none() {
             let hit = edge::pick(p, cx, editable);
             cx.selection.set_hover(hit);
@@ -654,9 +807,40 @@ impl Tool for CurveEditTool {
     fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         self.see(cx);
         if self.picked.is_some() && self.ask.is_some() {
-            let at = if self.snaps() { p.world } else { p.raw };
+            let at = if self.snaps() {
+                points::constrain(self.reference, p, cx).0
+            } else {
+                p.raw
+            };
             let reach = NEAR * cx.pick_tolerance();
             return self.give(at, reach, cx);
+        }
+        // Visible handles are already an explicit editing target. Picking
+        // one starts its move without writing; the next click/point commits.
+        if let Some(e) = self.picked.and_then(|s| cx.doc.get(s))
+            && matches!(e, Entity::Nurbs(_))
+        {
+            let (fit, ctrl) = points_of(e);
+            let reach = cx.pick_tolerance();
+            let handle = if self.point_view != PointView::Control {
+                nearest(&fit, p.raw, reach).map(|i| (Ask::MoveFit(Some(i)), PointView::Fit))
+            } else {
+                None
+            }
+            .or_else(|| {
+                (self.point_view != PointView::Fit)
+                    .then(|| nearest(&ctrl, p.raw, reach))
+                    .flatten()
+                    .map(|i| (Ask::MoveControl(Some(i)), PointView::Control))
+            });
+            if let Some((ask, view)) = handle {
+                self.ask = Some(ask);
+                self.point_view = view;
+                self.mouse = Some(p.raw);
+                self.see(cx);
+                self.redraw(cx);
+                return;
+            }
         }
         let Some(slot) = edge::pick_said(p, cx, editable) else {
             if self.picked.is_none() {
@@ -668,6 +852,11 @@ impl Tool for CurveEditTool {
             return;
         };
         self.picked = Some(slot);
+        self.point_view = if matches!(cx.doc.get(slot), Some(Entity::Nurbs(n)) if n.fit.is_some()) {
+            PointView::Fit
+        } else {
+            PointView::Control
+        };
         self.ask = None;
         cx.selection.set_hover(None);
         self.see(cx);
@@ -680,9 +869,16 @@ impl Tool for CurveEditTool {
         if self.picked.is_none() {
             return false;
         }
+        if self.accepts_points()
+            && let Some(p) = cx.typed_point(text, self.reference, self.mouse)
+        {
+            self.give(p, NEAR * cx.pick_tolerance(), cx);
+            return true;
+        }
         match self.ask {
             Some(Ask::Weight(Some(i))) => {
-                let Some(weight) = plain_number(text) else {
+                let Some(weight) = plain_number(text).filter(|w| w.is_finite() && *w > 0.) else {
+                    cx.say(Level::Warn, "Sıfırdan büyük, sonlu bir ağırlık yazın.");
                     return false;
                 };
                 self.apply(
@@ -729,6 +925,7 @@ impl Tool for CurveEditTool {
         match self.ask {
             Some(Ask::Tangents(None)) => {
                 self.ask = Some(Ask::Tangents(Some(None)));
+                self.see(cx);
                 self.redraw(cx);
                 return Flow::Stay;
             }
@@ -750,10 +947,12 @@ impl Tool for CurveEditTool {
             _ => {}
         }
         if self.ask.take().is_some() {
+            self.see(cx);
             self.redraw(cx);
             return Flow::Stay;
         }
         if self.picked.take().is_some() {
+            self.see(cx);
             self.drawn = Preview::default();
             return Flow::Stay;
         }
@@ -763,10 +962,12 @@ impl Tool for CurveEditTool {
     fn cancel(&mut self, cx: &mut Context<'_>) -> bool {
         self.see(cx);
         if self.ask.take().is_some() {
+            self.see(cx);
             self.redraw(cx);
             return true;
         }
         if self.picked.take().is_some() {
+            self.see(cx);
             self.drawn = Preview::default();
             return true;
         }

@@ -1868,6 +1868,14 @@ impl Session {
             .as_ref()
             .map_or_else(Vec::new, |tool| tool.settings(format))
     }
+
+    /// Refresh decorations after a model change, even with the pointer in
+    /// a panel. Tools that do not cache document-derived previews opt out.
+    pub fn document_changed(&mut self, cx: &Context<'_>) {
+        if let Some(tool) = self.tool.as_mut() {
+            tool.document_changed(cx);
+        }
+    }
     pub fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
         let taken = self
             .tool

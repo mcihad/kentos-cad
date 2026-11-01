@@ -1774,6 +1774,9 @@ pub trait Tool {
     /// Etkin kat changed under the running tool (docs/adr/0720 §4): it sees the context again, so its settings and
     /// its preview follow at once, the pointer resting where it was.
     fn level_changed(&mut self, _cx: &mut Context<'_>) {}
+    /// The document changed without a pointer event (Undo/Redo, script or
+    /// another editor). Refresh transient decorations without writing it.
+    fn document_changed(&mut self, _cx: &Context<'_>) {}
 
     fn activate(&mut self, _cx: &mut Context<'_>) -> Flow {
         Flow::Stay

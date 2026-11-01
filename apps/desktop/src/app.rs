@@ -1993,6 +1993,9 @@ impl App {
         self.follow_map();
         // Kat görünümü with Etkin kat as the drawing has its levels now (docs/adr/0715).
         self.sync_level_view();
+        // Undo/Redo and script writes can arrive while the pointer rests
+        // over a panel. The active tool's cached handles must follow too.
+        self.with_tool(|s, cx| s.document_changed(cx));
     }
 
     /// The drawing area draws in the project's map system (docs/adr/0583 §3): vectors moved in the style engine's

@@ -391,8 +391,12 @@ ve büyük koordinatlar bağımsız analitik eğrilerle doğrulandı. GUI'de
 20 cm içe öteleme/0,01 mm tolerans, 60 cm katlanma reddi, yeniden
 seçmeden ayar düzeltme ve tek Undo sınandı. [ADR 0822](../docs/adr/0822-user-toleranced-curve-offsets.md)
 sayısal sınırları ve tam IEEE ispatı olmadığını açıklar; [Python/MCP örneği](../docs/cad/curve-offset-python.md)
-aynı sözleşmeyi kullanır. Süreklilik arayüzü ile birleşik ölçü/alt nesne
-kabulü halen açıktır. Web, ADR 0228
+aynı sözleşmeyi kullanır. Eğri düzenlemede görünür geçiş/denetim ayarları,
+doğrudan nokta seçimi, koordinat girişi, uç teğeti önizlemesi, ağırlık
+düzeltmesi ve Aç/Kapat gerçek GUI'de doğrulandı. G2 eşlemesi olmadığı
+açıkça gösterilir. Fare paneldeyken Undo/Redo işaretlerinin eski kalması
+giderildi. [ADR 0824](../docs/adr/0824-visible-curve-editing-and-handles.md).
+Birleşik ölçü/alt nesne kabulü halen açıktır. Web, ADR 0228
 uyarınca ertelidir; masaüstü maddesini kapatmak için web geliştirilmez.
 
 ### CAD-ADV-05 — Parametrik 2B tasarımı açıklanabilir ve kapsamlı hale getir [ ]
