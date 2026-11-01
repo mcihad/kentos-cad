@@ -4,6 +4,8 @@
 //! inside). Before a step is recorded (`commit`), after the linked texts,
 //! its changes are read:
 //!
+//! - an explicit split/join relocation rehosts a closed-object hatch onto the
+//!   source piece containing its seed; with no such closed piece it stays untied;
 //! - a hatch one of whose objects the step changed or removed has its region
 //!   cut again by the core's rule (`ops::hatch_region`), its pattern and
 //!   colour kept; a removed island or cutout leaves the list;
@@ -137,10 +139,28 @@ impl Document {
             .collect();
         let seed = CoreVec2::new(a.seed.x, a.seed.y);
         let mut moved_seed = None;
+        let mut outer_id = a.outer;
         let (area, sources, islands, cutouts) = match &a.outer {
             // Inside a closed object (docs/adr/0186 §6).
             Some(outer) => {
-                let outer = core(&*object(outer)?)?;
+                // Explicit split/join relocation uses the piece containing the
+                // original seed. region_cut's largest-area fallback must not
+                // silently jump a hatch to a different split piece.
+                let relocated = self.relocated.get(&Uuid::from_bytes(outer.0));
+                let outer = if let Some(onto) = relocated {
+                    let (id, candidate) = onto.iter().find_map(|uid| {
+                        let id = EntityId(*uid.as_bytes());
+                        let candidate = core(&*object(&id)?)?;
+                        kentos_geometry_core::ops::areas::areas_of_entity(&candidate.shape)
+                            .iter()
+                            .any(|area| kentos_geometry_core::geom::region::inside_area(area, seed))
+                            .then_some((id, candidate))
+                    })?;
+                    outer_id = Some(id);
+                    candidate
+                } else {
+                    core(&*object(outer)?)?
+                };
                 let (area, _) = region_cut(&outer.shape, &island_shapes, &boxes, seed)?;
                 let mut sources = vec![outer.shape];
                 sources.extend(island_shapes);
@@ -202,7 +222,7 @@ impl Document {
             }),
             assoc: Some(HatchAssoc {
                 gap: a.gap,
-                outer: a.outer,
+                outer: outer_id,
                 bounds: bounds.into_iter().map(|(id, _)| id).collect(),
                 islands,
                 cutouts,

@@ -1138,6 +1138,28 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: AreasEdit) -> CommandResu
     };
     match ours(edit::write_in(cx, edit_input(&p, &input))) {
         CommandResult::Completed { output, warnings } => {
+            // A split keeps the first piece's UID, not its old vertex indices.
+            // Relocate each source only onto its own pieces, in this same step.
+            if p.operation == EditOperation::AreaSplit {
+                let mut pieces = std::collections::BTreeMap::<Uuid, Vec<Uuid>>::new();
+                for uid in &output.changed {
+                    if let Ok(u) = Uuid::parse_str(uid) {
+                        pieces.insert(u, vec![u]);
+                    }
+                }
+                let added = p.changes.iter().filter_map(|change| match change {
+                    EntityEdit::Add { from, .. } => Uuid::parse_str(from).ok(),
+                    _ => None,
+                });
+                for (from, uid) in added.zip(&output.created) {
+                    if let (Some(onto), Ok(uid)) = (pieces.get_mut(&from), Uuid::parse_str(uid)) {
+                        onto.push(uid);
+                    }
+                }
+                for (of, onto) in pieces {
+                    cx.doc.relocate_ties(of, onto);
+                }
+            }
             let mut created = output.created.iter();
             let mut result = Vec::new();
             for r in &p.result {

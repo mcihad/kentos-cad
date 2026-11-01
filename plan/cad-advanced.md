@@ -335,7 +335,7 @@ menü ve tekrar eden özet kaldırıldı. Gerçek arayüzde karma tür seçimi, 
 kapsamı, minimum 240 mantıksal piksel panelde taşmama ve seçim boşken yalıtımı
 tek tıkla bitirme sınandı. Günlükler ve ekran görüntüleri repo dışındadır.
 
-### CAD-ADV-04 — Eğrisel çizim ve düzenlemenin gerçek geometrik sınırlarını kapat [~]
+### CAD-ADV-04 — Eğrisel çizim ve düzenlemenin gerçek geometrik sınırlarını kapat [x]
 
 **Öncelik:** P1. **Kod:** [C06], [C07], [C08].
 **Dayanak:** QCAD Trim'in destek denetimi/işlem ayrımı ve hızlı budama
@@ -362,7 +362,7 @@ tek tıkla bitirme sınandı. Günlükler ve ekran görüntüleri repo dışınd
 hata bütçesi bağımsız başvuruyla doğrulansın; bağlı ölçü/tarama ve Undo
 korunsun. Destek genişlemeden mevcut retler kaldırılmasın.
 
-**İlerleme — 2026-11-01, henüz tamamlanmadı:** Bağımsız çizgi/yay/daire
+**Kabul — 2026-11-02, masaüstü ve yayımlanmış destek matrisi kapsamında:** Bağımsız çizgi/yay/daire
 çiftleri için analitik dairesel yuvarlama, tıklanan taraf, yönlü G1,
 uç dışına tıklama, sıfır yarıçap ve büyük koordinat kontrolleri eklendi.
 İlişkili taramanın yeni bağlayıcıyı sınırına katması ve tek Undo doğrulandı.
@@ -405,7 +405,15 @@ bitiş yeni parçaya aktarılır. Native seçim filtresindeki eksik destek
 GUI testiyle bulunup giderildi. Denetim noktası taşıma, gerçek GUI
 bölme, Python/MCP, bağımsız De Boor ve tek Undo doğrulandı.
 [ADR 0826](../docs/adr/0826-nurbs-measurement-references.md).
-Birleşik alan/çoklu parça kabulü halen açıktır. Web, ADR 0228
+Yaylı/delikli alan bölmede taramanın yanlış parçaya sıçraması giderildi;
+ölçüler kaynak köşenin yeni parçasını izler. Çok parçalı yaylı çizgide
+dokunulmayan parça, toplam uzunluk ve başvuruların yeni indeksi korunur.
+Gerçek GUI, bağımsız Green integrali, kaydedilmiş UID/Undo, Python/MCP
+ve regresyonlar geçti. [ADR 0827](../docs/adr/0827-curved-area-split-reference-identity.md).
+Bu kabul destek matrisindeki sınırları silmez: genel elips/NURBS
+Birleştir, NURBS Uzat ve asimetrik Blend uygulanmış özellik sayılmaz.
+Asimetrik geçişin [ayrı geometrik sözleşme araştırması](../docs/cad/asymmetric-curve-blends.md)
+tamamlandı; daire yuvarlamaya sahte ikinci yarıçap eklenmedi. Web, ADR 0228
 uyarınca ertelidir; masaüstü maddesini kapatmak için web geliştirilmez.
 
 ### CAD-ADV-05 — Parametrik 2B tasarımı açıklanabilir ve kapsamlı hale getir [ ]

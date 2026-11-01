@@ -1,7 +1,7 @@
 # 2B eğri düzenleme: destek ve sınırlar
 
-2026-11-01 — CAD-ADV-04 çalışma kaydı. Bu matris tamamlanmış bir
-CAD-ADV-04 kabulü değildir. Masaüstünün native anlamsal komutlarını,
+2026-11-02 — CAD-ADV-04 masaüstü kabul kaydı. Desteklenen kapsam ve
+açıkça desteklenmeyen tür çiftleri aşağıdadır. Masaüstünün native anlamsal komutlarını,
 aynı komutları çağıran Python ve MCP'yi tarif eder. Web araçlarının
 TypeScript etkileşimleri ayrıca doğrulanmadan eşdeğer sayılmaz; web işi
 [ADR 0228](../adr/0228-web-pause-desktop-and-cloud-first.md) kapsamında ertelenmiştir.
@@ -85,7 +85,7 @@ cad.entities.fillet(doc, corner=corner, radius=.5, trim=True)
 cad.entities.chamfer(doc, corner=straight_corner, distance=.1, second=.2)
 ```
 
-## CAD-ADV-04'ün açık kabul işleri
+## CAD-ADV-04 kabul kaydı
 
 - [x] Elips/fit/NURBS ötelemesinde açık yaklaşım onayı ve tolerans,
   rasyonel Bézier parçalarının türev sınırı + f64 payı, kaynak/kopya
@@ -106,14 +106,22 @@ cad.entities.chamfer(doc, corner=straight_corner, distance=.1, second=.2)
   Native/Python/MCP, gerçek GUI ve bağımsız dosya/De Boor doğrulaması
   geçti. [ADR 0826](../adr/0826-nurbs-measurement-references.md),
   [Python örneği](curve-references-python.md).
-- [ ] Delikli ve yaylı kapalı alan, bağlı ölçü,
-  multipart ve kalıcı alt nesne referansları için birleşik alan/uzunluk/
-  süreklilik/hata bütçesi kabulü. Güvenli ret tamamlanmış destek değildir.
+- [x] Delikli/yaylı kapalı alan, bağlı ölçü/tarama ve çoklu parçada
+  birleşik alan/uzunluk/kimlik/Undo kabulü. Alan bölmede tarama tohumunu
+  içeren parçaya, ölçü gerçek köşeye aktarılır. Çoklu parçanın dokunulmayan
+  kısmı korunur; değişen parça indeksi başvurulara taşınır. Analitik
+  kapsül alanı ve çevresi bağımsız Green integraliyle doğrulandı.
+  [ADR 0827](../adr/0827-curved-area-split-reference-identity.md).
+  Destek tablosundaki retler genel desteğe dönüşmüş sayılmaz; genel
+  elips/NURBS Birleştir ve NURBS Uzat bu dilimin uygulanmış yetenekleri
+  değildir. Delikli alanda Kır yerine alan yapısını koruyan Alan böl vardır.
 - Web'in bağımsız yay/daire yuvarlaması ve toleranslı offset araç yüzeyi
   ADR 0228 uyarınca ertelendi; [TODOS §0.2](../../TODOS.md) dönüş işini tutar.
   Masaüstü kabulü için bu arayüz şimdi uygulanmaz.
-- [ ] Asimetrik eliptik/geçiş eğrisi ayrı geometrik sözleşmeyle araştırılmalı;
-  mevcut dairesel `radius` alanına ikinci yarıçap ekleyerek taklit edilmemeli.
+- [x] Asimetrik eliptik/geçiş araştırması ayrı geometrik sözleşmeyle
+  tamamlandı: [karar ve sonraki özellik sınırı](asymmetric-curve-blends.md).
+  Bu, yeni Blend aracının uygulandığı anlamına gelmez; mevcut dairesel
+  `radius` alanına ikinci yarıçap eklenmez.
 - [x] Masaüstü imleç değer kutusu ortak KentOS metin bileşenine geçirildi.
   Açıldığı yerde sabit durur; tıklama, tümünü seçme, düzenleme ve yapıştırma
   desteklenir. Kutunun üstünde CAD artısı çizilmez. Gecikmiş girişler

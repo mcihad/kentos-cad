@@ -104,3 +104,5 @@ mod grid_forms;
 mod curve_extend;
 
 mod curve_ties;
+
+mod area_curve_ties;

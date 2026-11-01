@@ -2358,3 +2358,52 @@ fn weighted_nurbs_dimension_refs_follow_the_same_mcp_edit_and_undo() {
     );
     std::fs::remove_dir_all(dir).unwrap();
 }
+
+#[test]
+fn split_curved_holed_area_keeps_each_mcp_hatch_on_its_seed_piece() {
+    let mut raw: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/interaction/v1/objects.kcad"
+    ))
+    .unwrap();
+    raw["settings"]["workspace"] = json!("cad");
+    raw["entities"] = json!([{"kind":"polygon","id":1,"layerId":"cizim","attrs":{},
+        "pts":[{"x":0,"y":0},{"x":4,"y":0},{"x":4,"y":2},{"x":0,"y":2}],"bulges":[0,1,0,1],
+        "holes":[{"pts":[{"x":0.5,"y":0.5},{"x":1.5,"y":0.5},{"x":1.5,"y":1.5},{"x":0.5,"y":1.5}]}]}]);
+    let dir = std::env::temp_dir().join(format!("kentos-mcp-area-ties-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join("area.json");
+    std::fs::write(&path, raw.to_string()).unwrap();
+    let mut server = Server::new();
+    let drawing =
+        call(&mut server, "drawing.open", json!({"path":path}))["structuredContent"]["drawing"]
+            .clone();
+    let source=call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"][0]["uid"].clone();
+    for x in [1., 3.] {
+        let out = call(
+            &mut server,
+            "cad.entities.hatch",
+            json!({"drawing":drawing,"region":{"kind":"point","at":{"x":x,"y":1.75}},"pattern":{"name":"ANSI31"},"layerId":"cizim"}),
+        );
+        assert_eq!(out["structuredContent"]["status"], "completed", "{out}");
+    }
+    let before=call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"].clone();
+    let out = call(
+        &mut server,
+        "cad.areas.edit",
+        json!({"drawing":drawing,"work":{"kind":"split","ids":[source],"line":[{"x":2,"y":-1},{"x":2,"y":3}]}}),
+    );
+    assert_eq!(out["structuredContent"]["status"], "completed", "{out}");
+    let after=call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"].clone();
+    assert_eq!(after[1]["entity"]["assoc"]["outer"], source);
+    assert_eq!(
+        after[2]["entity"]["assoc"]["outer"],
+        out["structuredContent"]["output"]["created"][0]
+    );
+    assert!(after[2]["entity"].get("holes").is_none());
+    call(&mut server, "drawing.undo", json!({"drawing":drawing}));
+    assert_eq!(
+        call(&mut server, "drawing.entities", json!({"drawing":drawing}))["structuredContent"]["items"],
+        before
+    );
+    std::fs::remove_dir_all(dir).unwrap();
+}
