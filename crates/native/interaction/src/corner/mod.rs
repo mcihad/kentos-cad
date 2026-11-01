@@ -195,8 +195,13 @@ impl CornerTool {
         let f = self.format();
         match self.kind {
             Kind::Fillet => plain_number(text)
-                .filter(|n| *n >= 0.0)
-                .map(|n| Op::Radius(f.to_metres(n))),
+                .map(|n| f.to_metres(n))
+                .or_else(|| {
+                    kentos_geometry_core::tools::point_text::parse_length(text)
+                        .map(|n| n.metres(|n| f.to_metres(n)))
+                })
+                .filter(|n| n.is_finite() && *n >= 0.0)
+                .map(Op::Radius),
             Kind::Chamfer => cut_lengths(text, &f).map(|(d1, d2)| Op::Cut(d1, d2)),
         }
     }
@@ -367,7 +372,14 @@ impl CornerTool {
             if let Some(mouse) = self.mouse {
                 self.drawn.tag = Some(Tag {
                     at: mouse,
-                    lines: vec![self.describe(op), "Tıklayın: uygula".to_owned()],
+                    lines: {
+                        let mut lines =
+                            vec![self.describe(op), "Tıkla: bu önizlemeyi uygula".to_owned()];
+                        if let Some(last) = self.last() {
+                            lines.push(format!("Enter: son değer — {}", self.describe(last)));
+                        }
+                        lines
+                    },
                 });
             }
         }
@@ -496,11 +508,18 @@ impl Tool for CornerTool {
             self.lock(c, cx);
             return self.redraw(cx);
         }
+        let said = cx.log.len();
         let Some(slot) = edge::pick_said(p, cx, editable) else {
-            cx.say(
-                Level::Warn,
-                "Bir köşeye ya da düzenlenebilir bir çizgi veya çoklu çizgi kenarına tıklayın.",
-            );
+            // Keep the actionable locked-layer/filter reason; do not hide it
+            // behind a second generic warning in the status bar.
+            if cx.log.len() == said {
+                let under = cx.spatial.pick_edge(p.raw, cx.pick_tolerance(), |_| true);
+                cx.say(Level::Warn, if under.is_some() {
+                    "Bu araç düz çizgi veya çoklu çizginin düz kenarları arasındaki köşeyi işler. Yay, daire, elips ya da eğri yerine iki düz kenar seçin."
+                } else {
+                    "Bir köşeye ya da düzenlenebilir bir çizgi veya çoklu çizgi kenarına tıklayın."
+                });
+            }
             return;
         };
         if self.stage == Stage::Find {
@@ -533,7 +552,11 @@ impl Tool for CornerTool {
             return false;
         }
         let Some(op) = self.op_for_text(text) else {
-            return false;
+            cx.say(Level::Warn, match self.kind {
+                Kind::Fillet => "Sıfır veya pozitif bir yarıçap yazın (örnek: 2 ya da 25cm). Enter son yarıçapı uygular; Esc köşe seçimine döner.",
+                Kind::Chamfer => "Sıfır veya pozitif bir mesafe yazın (örnek: 2 ya da 1,2). Enter son mesafeyi uygular; Esc köşe seçimine döner.",
+            });
+            return true;
         };
         self.commit(op, cx);
         self.see(cx);

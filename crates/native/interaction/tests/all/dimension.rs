@@ -58,6 +58,36 @@ fn on_tools() -> Bench {
 }
 
 #[test]
+fn dimension_value_is_previewed_at_its_real_position_angle_and_paper_height() {
+    for mode in ["H", "D", "R", "Ç", "A", "O"] {
+        let mut b = on_tools();
+        assert!(b.type_text(mode));
+        let at = match mode {
+            "R" | "Ç" => { b.click(20., -8.); (23., -1.) },
+            "A" => { b.click(-10.,10.); b.click(24.,14.); (20.,12.) },
+            "O" => { b.click(0.,0.); (3.,5.) },
+            _ => { b.click(0.,0.); b.click(10.,4.); (5.,8.) },
+        };
+        b.move_to(at.0, at.1);
+        let before = b.doc.to_snapshot_v2();
+        let preview = b.session.preview(&Default::default()).unwrap();
+        let ghost = preview.texts.first().expect("actual value beside its dimension line");
+        assert_eq!(b.doc.to_snapshot_v2(), before);
+        assert!(ghost.height > 0.);
+        b.click(at.0, at.1);
+        let entity = b.newest();
+        let layout = kentos_interaction::dimension_layout(entity).unwrap();
+        let d = newest(&b);
+        assert_eq!(ghost.p, layout.text_at, "{mode}: same text anchor as the committed dimension");
+        assert_eq!(ghost.rotation, layout.rotation, "{mode}: same readable angle");
+        assert_eq!(ghost.height, d.height);
+        assert_eq!(ghost.text, preview.tag.as_ref().unwrap().lines[0]);
+        assert!(b.doc.undo().is_some());
+        assert_eq!(b.doc.to_snapshot_v2(), before);
+    }
+}
+
+#[test]
 fn aligned_takes_two_points_then_where_the_line_goes() {
     let mut b = Bench::new("dimension");
     assert_eq!(

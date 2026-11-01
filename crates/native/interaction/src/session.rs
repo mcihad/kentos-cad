@@ -978,6 +978,22 @@ impl Session {
         self.resumed = false;
     }
 
+    /// Capture/focus lost: a late button release cannot apply an edit. A
+    /// multi-click command keeps the points explicitly picked before it.
+    pub fn pointer_cancel(&mut self, cx: &mut Context<'_>) {
+        if let Some(tool) = &mut self.tool {
+            tool.pointer_cancel(cx);
+        }
+        for parent in &mut self.parents {
+            if let Suspended::Tool(tool) = &mut parent.below {
+                tool.pointer_cancel(cx);
+            }
+        }
+        self.select.reset();
+        self.pick_pressed = false;
+        self.cursor = None;
+    }
+
     /// No reference, none asked, Yapım kipi off: a new command's start.
     fn drop_reference(&mut self) {
         self.reference = None;

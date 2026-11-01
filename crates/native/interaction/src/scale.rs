@@ -89,6 +89,10 @@ impl Scale {
 }
 
 impl Stages for Scale {
+    fn edits_sources(&self) -> bool {
+        !self.copy
+    }
+
     fn id(&self) -> &'static str {
         ID
     }

@@ -26,6 +26,26 @@ fn objects() -> Bench {
 }
 
 #[test]
+fn capture_loss_drops_modify_selection_drag_but_preserves_the_selected_sources() {
+    let mut b = objects();
+    b.start("move");
+    b.click(-16.0, -12.0);
+    assert_eq!(b.selected(), [1]);
+    let from = Bench::pointer(-26.0, -14.0);
+    let to = Bench::pointer(-6.0, 16.0);
+    b.run(|s, cx| s.pointer_down(&from, cx));
+    b.run(|s, cx| s.pointer_move(&to, cx));
+    assert!(b.session.select_box().is_some());
+    let before = b.doc.to_snapshot_v2();
+    b.run(|s, cx| s.pointer_cancel(cx));
+    assert!(b.session.select_box().is_none());
+    b.run(|s, cx| s.pointer_up(&to, cx));
+    assert_eq!(b.selected(), [1]);
+    assert_eq!(b.session.tool_id(), "move");
+    assert_eq!(b.doc.to_snapshot_v2(), before);
+}
+
+#[test]
 fn leaving_a_drawing_drops_a_selection_box_and_ignores_its_late_release() {
     let mut b = objects();
     let from = Bench::pointer(-26.0, -14.0);

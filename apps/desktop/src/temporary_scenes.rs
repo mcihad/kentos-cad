@@ -242,9 +242,17 @@ mod tests {
         candidates(&mut app);
         let squares = app.session.temporary_squares();
         assert_eq!(
-            squares.iter().filter(|q| (q.x - (E + 2.2)).abs() > 1.0).count(),
+            squares
+                .iter()
+                .filter(|q| { (q.x - (E + 0.1)).abs() < 1e-6 || (q.x - (E + 5.9)).abs() < 1e-6 })
+                .count(),
             2,
-            "both sides have a face and a grid (the third square, at its end, the length's): {squares:?}"
+            "the reference switches are on the two room faces; bond locks beside the numbers are separate: {squares:?}"
+        );
+        assert_eq!(
+            squares.len(),
+            4,
+            "two reference switches and two bond controls"
         );
 
         let mut app = app_with_drawing();

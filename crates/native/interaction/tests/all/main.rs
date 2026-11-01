@@ -125,3 +125,31 @@ mod grid_system;
 mod space_void;
 mod stair_above;
 mod prompt_settings;
+
+#[test]
+fn every_builtin_tool_can_leave_its_initial_stage_without_writing_a_draft() {
+    for &id in kentos_interaction::Session::tools() {
+        let mut b = common::Bench::new(id);
+        let before = b.doc.to_snapshot_v2();
+        if b.session.is_running() {
+            assert!(
+                !b.session.prompt().step.is_empty(),
+                "{id}: a visible instruction"
+            );
+        }
+        for _ in 0..8 {
+            if !b.session.is_running() {
+                break;
+            }
+            if !b.run(|s, cx| s.cancel(cx)) {
+                b.session.exit();
+            }
+        }
+        assert!(!b.session.is_running(), "{id}: Esc must have a way out");
+        assert_eq!(
+            b.doc.to_snapshot_v2(),
+            before,
+            "{id}: cancellation must not write"
+        );
+    }
+}

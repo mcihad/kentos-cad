@@ -25,6 +25,24 @@ fn bench(selected: &[u32]) -> Bench {
     b
 }
 
+#[test]
+fn corner_refusals_keep_the_specific_locked_layer_or_curve_reason_without_writing() {
+    let mut b = bench(&[]);
+    b.start("fillet");
+    let before = b.doc.to_snapshot_v2();
+    b.click(8., -15.);
+    let message = b.last_text().unwrap();
+    assert!(message.contains("kilitli") && message.contains("Katmanlar"), "{message}");
+    assert_eq!(b.doc.to_snapshot_v2(), before);
+    let mut b = Bench::on(include_str!("../../../../../fixtures/interaction/v1/tools.kcad"));
+    b.draft.snap = false;
+    b.start("fillet");
+    let before = b.doc.to_snapshot_v2();
+    b.click(20., -8.);
+    assert!(b.last_text().unwrap().contains("iki düz kenar seçin"));
+    assert_eq!(b.doc.to_snapshot_v2(), before);
+}
+
 fn line(b: &Bench, slot: u32) -> [[f64; 2]; 2] {
     let Some(Entity::Line(l)) = b.doc.get(Slot(slot)) else {
         panic!("line {slot}: {:?}", b.doc.get(Slot(slot)));
@@ -300,6 +318,48 @@ fn extend_grows_to_the_chosen_boundaries() {
 }
 
 // ── Köşe yuvarla, Pah ───────────────────────────────────────────────────────
+
+#[test]
+fn fillet_explains_invalid_radius_and_distinguishes_click_preview_from_enter() {
+    let mut b = bench(&[]);
+    b.memory.fillet_radius = Some(1.0);
+    b.start("fillet");
+    b.click(0.2, 4.2);
+    let before = b.doc.to_snapshot_v2();
+    for invalid in ["-1", "NaN", "yanlış"] {
+        assert!(b.type_text(invalid));
+        assert_eq!(b.last_level(), Some(Level::Warn));
+        assert!(b.last_text().unwrap().contains("yarıçap"));
+        assert_eq!(b.doc.to_snapshot_v2(), before);
+    }
+    b.move_to(0.0, 7.0);
+    let tag = b.session.preview(&Default::default()).unwrap().tag.unwrap();
+    assert!(tag.lines.iter().any(|s| s.contains("3.000")));
+    assert!(
+        tag.lines
+            .iter()
+            .any(|s| s.contains("Enter") && s.contains("1.000"))
+    );
+    b.click(0.0, 7.0);
+    assert!(near(
+        &path(&b, 4),
+        &[[0.0, 14.0], [0.0, 7.0], [3.0, 4.0], [10.0, 4.0]]
+    ));
+    assert_eq!(b.doc.undo().as_deref(), Some("Köşe yuvarla"));
+    // Enter uses the explicit saved default; a mouse click uses its tagged preview.
+    b.memory.fillet_radius = Some(1.0);
+    b.click(0.2, 4.2);
+    b.move_to(0.0, 7.0);
+    b.confirm();
+    assert!(near(
+        &path(&b, 4),
+        &[[0.0, 14.0], [0.0, 5.0], [1.0, 4.0], [10.0, 4.0]]
+    ));
+    assert_eq!(b.doc.undo().as_deref(), Some("Köşe yuvarla"));
+    b.click(0.2, 4.2);
+    assert!(b.type_text("25cm"));
+    assert_eq!(b.memory.fillet_radius, Some(0.25));
+}
 
 #[test]
 fn a_fillet_rounds_a_polyline_corner_by_a_typed_radius() {

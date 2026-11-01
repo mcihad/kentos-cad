@@ -47,6 +47,10 @@ impl Mirror {
 }
 
 impl Stages for Mirror {
+    fn edits_sources(&self) -> bool {
+        self.erase_source
+    }
+
     fn id(&self) -> &'static str {
         ID
     }

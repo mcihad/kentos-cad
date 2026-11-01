@@ -286,6 +286,113 @@ mod tests {
     }
 
     #[test]
+    fn scoped_replies_keep_document_jobs_but_reject_old_tool_runs_and_drawings() {
+        let mut app = app_with_drawing();
+        let document = front(&app);
+        let _ = app.start_tool("hatch");
+        let run = app.session.runs();
+        let reply = |run, text: &str| Message::ScopedReply {
+            document,
+            run,
+            reply: Box::new(Message::CommandInput(text.into())),
+        };
+        let _ = app.start_tool("line");
+        let _ = app.update(reply(Some(run), "old tool"));
+        assert_ne!(app.command_input, "old tool");
+        let _ = app.update(reply(None, "document job"));
+        assert_eq!(app.command_input, "document job");
+        app.show_document(drawing(1));
+        let _ = app.update(reply(None, "old document"));
+        assert_ne!(app.command_input, "old document");
+    }
+
+    #[test]
+    fn leaving_a_drawing_discards_a_block_definition_dialog_and_its_late_create() {
+        let mut app = app_with_drawing();
+        let slots: Vec<_> = app
+            .document
+            .as_ref()
+            .unwrap()
+            .model
+            .entities()
+            .take(2)
+            .map(|e| kentos_domain::Slot(e.base().id))
+            .collect();
+        app.selection.set(slots);
+        app.open_block_define(kentos_interaction::Vec2::new(0., 0.));
+        assert_eq!(app.dialog, Some(crate::app::Dialog::BlockDefine));
+        app.show_document(drawing(1));
+        let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+        assert!(app.dialog.is_none());
+        let _ = app.update(Message::Blocks(crate::blocks::Event::Create));
+        assert_eq!(
+            app.document.as_ref().unwrap().model.to_snapshot_v2(),
+            before
+        );
+    }
+
+    #[test]
+    fn a_late_file_reply_cannot_feed_a_new_run_or_another_document() {
+        use crate::app::Picker;
+        use crate::files_testing::{drive, scratch};
+        let folder = scratch("late-tool-file");
+        let path = folder.join("old.txt");
+        std::fs::write(&path, "Old drawing only").unwrap();
+        for replace_document in [false, true] {
+            let mut app = app_with_drawing();
+            app.picker = Picker::File(path.clone());
+            let _ = app.start_tool("placeTextFile");
+            let late = app.text_file_tasks();
+            if replace_document {
+                app.show_document(drawing(1));
+            }
+            let _ = app.start_tool("placeTextFile");
+            // Do not request a second file while driving the deliberately delayed first reply.
+            app.text_file_wanted = false;
+            let before = app.session.prompt().text();
+            let snapshot = app.document.as_ref().unwrap().model.to_snapshot_v2();
+            drive(&mut app, late);
+            assert_eq!(
+                app.session.prompt().text(),
+                before,
+                "old file must not supply the new run"
+            );
+            assert_eq!(
+                app.document.as_ref().unwrap().model.to_snapshot_v2(),
+                snapshot
+            );
+            app.text_file_wanted = true;
+            let valid = app.text_file_tasks();
+            drive(&mut app, valid);
+            assert!(
+                app.session.prompt().text().contains("old.txt"),
+                "the current run receives its own file"
+            );
+        }
+    }
+
+    #[test]
+    fn an_attribute_dialog_cannot_place_into_the_next_drawing() {
+        let mut app = app_with_drawing();
+        let snapshot = kentos_commands::DocumentSnapshotV1::from_json(include_str!("../../../fixtures/interaction/v1/block-attributes.kcad")).unwrap();
+        app.show_document(crate::document::Document::new(snapshot, None).unwrap());
+        let block = app.document.as_ref().unwrap().model.blocks()[0].id;
+        app.open_attribute_values(block);
+        assert!(app.attribute_values.is_some());
+        let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+        let _ = app.update(Message::CapturedEscape);
+        assert!(app.attribute_values.is_none(), "one Esc cancels even when a text field consumed it");
+        assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(), before);
+        app.open_attribute_values(block);
+        app.show_document(drawing(1));
+        assert!(app.attribute_values.is_none());
+        assert!(app.dialog.is_none());
+        let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+        let _ = app.update(Message::AttributeValues(crate::attribute_values::Event::Place));
+        assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(), before);
+    }
+
+    #[test]
     fn opening_another_drawing_drops_the_whole_command_not_just_its_value_step() {
         let mut app = app_with_drawing();
         pending_hatch_value(&mut app);

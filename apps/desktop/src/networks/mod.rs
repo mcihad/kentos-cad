@@ -132,14 +132,20 @@ impl App {
     /// One question: its network built when it must be, then asked; the answer comes back as a message.
     pub(crate) fn network_ask(&mut self, ask: NetworkAsk) -> Task<Message> {
         let ticket = ask.ticket;
-        let failed = |why: String| {
-            Task::done(Message::Networks(Event::Answered(NetworkReply {
-                ticket,
-                answer: Answer::Failed(why),
-            })))
-        };
         let Some(doc) = self.document.as_ref() else {
             return Task::none();
+        };
+        let document = doc.session;
+        let run = Some(self.session.runs());
+        let failed = |why: String| {
+            Task::done(Message::ScopedReply {
+                document,
+                run,
+                reply: Box::new(Message::Networks(Event::Answered(NetworkReply {
+                    ticket,
+                    answer: Answer::Failed(why),
+                }))),
+            })
         };
         let def = ask.def.clone().or_else(|| {
             doc.model
@@ -197,7 +203,7 @@ impl App {
                 answer: Answer::Failed("Ağların iş parçacığı yanıt vermedi.".into()),
             })))
         });
-        Task::batch([build, answer])
+        Task::batch([build, self.tool_reply(answer)])
     }
 
     /// Builds network `key` as `def` says when it is not built so already: the drawing read here, the graph on the
@@ -271,7 +277,7 @@ impl App {
             problems,
             done,
         });
-        Ok(Task::perform(wait, |r| match r {
+        let task = Task::perform(wait, |r| match r {
             Ok(built) => Message::Networks(Event::Built(built)),
             Err(_) => Message::Networks(Event::Built(Built {
                 network: String::new(),
@@ -283,7 +289,8 @@ impl App {
                 millis: 0.0,
                 again: false,
             })),
-        }))
+        });
+        Ok(self.document_reply(task))
     }
 
     pub(crate) fn networks_event(&mut self, e: Event) -> Task<Message> {

@@ -1790,6 +1790,9 @@ pub trait Tool {
     fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>);
     /// The left button came up.
     fn pointer_up(&mut self, _p: &Pointer, _cx: &mut Context<'_>) {}
+    /// Native pointer capture was lost: drop a mouse gesture without applying
+    /// it. Explicitly picked command points and values remain available.
+    fn pointer_cancel(&mut self, _cx: &mut Context<'_>) {}
     /// Typed text: a coordinate, a number or an option. False when not understood.
     fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool;
     /// The values an option chooses between, for its chip and the right

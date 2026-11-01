@@ -702,6 +702,16 @@ pub enum Message {
     PointCalc(kentos_interaction::point_calc::CalcKind),
     /// A key press no text box captured (keys.rs); routed by ADR 0018.
     Key(KeyPress),
+    /// The OS window lost focus: abandon capture, never synthesize a release.
+    InputFocusLost,
+    /// Text inputs consume Esc to blur; block command dialogs still cancel once.
+    CapturedEscape,
+    /// A worker's reply belongs to the drawing and command that asked.
+    ScopedReply {
+        document: u64,
+        run: Option<u64>,
+        reply: Box<Message>,
+    },
     /// Shift, Ctrl, Alt or the logo key changed (Shift turns ortho over for a click).
     Modifiers(keyboard::Modifiers),
     Dock(docking::Event<Panel>),
@@ -1989,6 +1999,32 @@ impl App {
     }
 
     fn handle(&mut self, message: Message) -> Task<Message> {
+        if matches!(message, Message::InputFocusLost) {
+            self.input_focus_lost();
+            return Task::none();
+        }
+        if matches!(message, Message::CapturedEscape) {
+            if matches!(self.dialog, Some(Dialog::AttributeValues | Dialog::BlockDefine)) {
+                self.close_dialog();
+            }
+            return Task::none();
+        }
+        if let Message::ScopedReply {
+            document,
+            run,
+            reply,
+        } = message
+        {
+            if self
+                .document
+                .as_ref()
+                .is_some_and(|d| d.session == document)
+                && run.is_none_or(|run| self.session.runs() == run)
+            {
+                return self.handle(*reply);
+            }
+            return Task::none();
+        }
         // What the drawing area's device can draw with, known after its first frame (AA-01).
         self.sync_device();
         // Dots Nokta yoğunluğu left out are said once a layer (docs/adr/0213 §2.4).
@@ -2152,6 +2188,9 @@ impl App {
             Message::PromptChoice(key, typed) => return self.prompt_choice(key, &typed),
             Message::PointCalc(kind) => return self.start_point_calc(kind),
             Message::Key(press) => return self.key(press),
+            Message::InputFocusLost => self.input_focus_lost(),
+            Message::CapturedEscape => unreachable!("checked before dispatch"),
+            Message::ScopedReply { .. } => unreachable!("checked before dispatch"),
             Message::Modifiers(modifiers) => {
                 let shift = self.modifiers.shift() != modifiers.shift();
                 self.modifiers = modifiers;

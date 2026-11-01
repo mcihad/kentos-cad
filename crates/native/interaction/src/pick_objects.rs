@@ -207,6 +207,10 @@ impl Tool for PickObjects {
         });
     }
 
+    fn pointer_cancel(&mut self, _cx: &mut Context<'_>) {
+        self.press = None;
+    }
+
     fn pointer_up(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         let Some(press) = self.press.take() else {
             return;

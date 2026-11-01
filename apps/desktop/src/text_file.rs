@@ -15,7 +15,7 @@ impl App {
         if !std::mem::take(&mut self.text_file_wanted) {
             return Task::none();
         }
-        match &self.picker {
+        let task = match &self.picker {
             Picker::File(path) => {
                 let name = path
                     .file_name()
@@ -40,7 +40,8 @@ impl App {
                 },
                 Message::TextFile,
             ),
-        }
+        };
+        self.tool_reply(task)
     }
 
     /// The file chosen, or none: to the tool that asked.
@@ -58,7 +59,7 @@ impl App {
         if !std::mem::take(&mut self.image_file_wanted) {
             return Task::none();
         }
-        match &self.picker {
+        let task = match &self.picker {
             Picker::File(path) => {
                 let name = path
                     .file_name()
@@ -85,7 +86,8 @@ impl App {
                 },
                 Message::ImageFile,
             ),
-        }
+        };
+        self.tool_reply(task)
     }
 
     /// The picture chosen, read as the tool takes it (its library item and

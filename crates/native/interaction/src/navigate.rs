@@ -85,6 +85,10 @@ impl Tool for Pan {
         self.last = Some(p.screen);
     }
 
+    fn pointer_cancel(&mut self, _cx: &mut Context<'_>) {
+        self.last = None;
+    }
+
     fn pointer_up(&mut self, _p: &Pointer, _cx: &mut Context<'_>) {
         self.last = None;
     }

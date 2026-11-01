@@ -193,6 +193,21 @@ impl Harness {
 }
 
 #[test]
+fn alt_q_search_is_not_typed_into_a_focused_field_but_altgr_stays_text() {
+    for mut h in [Harness::new(), Harness::cell()] {
+        let (status, messages) = h.key_from_event("@", Code::KeyQ, Modifiers::ALT);
+        assert_eq!(
+            status,
+            event::Status::Ignored,
+            "Alt+Q must reach the command search"
+        );
+        assert!(messages.iter().all(|m| !matches!(m, Message::Input(_))));
+        let (status, _) = h.key_from_event("@", Code::KeyQ, Modifiers::CTRL | Modifiers::ALT);
+        assert_eq!(status, event::Status::Captured, "AltGr+Q still types @");
+    }
+}
+
+#[test]
 fn clipboard_uses_the_key_event_when_focus_missed_the_modifier_notification() {
     for (mut h, property) in [(Harness::cell(), true), (Harness::new(), false)] {
         h.key_from_event("a", Code::KeyA, Modifiers::COMMAND);

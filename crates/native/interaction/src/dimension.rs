@@ -67,7 +67,7 @@ use crate::prompt::{Prompt, upper_tr};
 use crate::styles;
 use crate::tool::{
     Context, DimensionMode as Mode, Flow, Memory, Offers, OptionChoice, Pointer, Preview, Stroke,
-    Tag, Tone, Tool, ToolOption,
+    Tag, TextGhost, Tone, Tool, ToolOption,
 };
 
 /// The tool's id: its command is `tool.dimension`.
@@ -262,6 +262,7 @@ pub struct Dimension {
     /// The text's height in metres, as of the last call: the dimension
     /// style's, else 2.5 mm's (docs/adr/0183 §4).
     height: f64,
+    font: Option<kentos_commands::DrawingFont>,
     /// The dimension style's look, as of the last call; none for Standart.
     look: kentos_commands::DimensionLook,
     /// The dimension styles as of the last call: a CAD project's Stil.
@@ -283,6 +284,7 @@ impl Dimension {
         let (look, height) =
             styles::dimension_look(cx, styles::standard_dimension_height(cx.doc.settings()));
         self.height = height;
+        self.font = cx.doc.settings().drawing_font;
         self.look = look;
         self.styles = styles::Seen::dimension(cx);
         self.memory = *cx.memory;
@@ -297,6 +299,26 @@ impl Dimension {
 
     fn mode(&self) -> Mode {
         self.memory.dimension_mode
+    }
+
+    fn value_ghost(
+        &self,
+        layout: &kentos_geometry_core::geom::dimension::DimensionLayout,
+        format: &Format,
+    ) -> TextGhost {
+        TextGhost {
+            p: layout.text_at,
+            text: format.dimension_in(layout.prefix, layout.unit, layout.value, &self.look),
+            height: self.height,
+            rotation: layout.rotation,
+            align: Some(kentos_geometry_core::text::TextAlign::MiddleCenter),
+            mask: self.memory.dimension_mask,
+            face: kentos_commands::TextFace {
+                font: self.look.font.or(self.font),
+                ..Default::default()
+            },
+            width_factor: 1.,
+        }
     }
 
     /// Nothing picked yet: the style can still change.
@@ -1257,7 +1279,9 @@ impl Tool for Dimension {
         if self.placing() {
             // The dimension as it would be written, and its value by the cursor.
             let mut tag = None;
+            let mut texts = Vec::new();
             if let Some(l) = self.shown.as_ref().and_then(layout_dimension) {
+                texts.push(self.value_ghost(&l, format));
                 strokes.extend(
                     l.lines
                         .iter()
@@ -1278,6 +1302,7 @@ impl Tool for Dimension {
             return Preview {
                 strokes,
                 tag,
+                texts,
                 ..Preview::default()
             };
         }
@@ -1298,7 +1323,9 @@ impl Tool for Dimension {
         // Kırıklı yarıçap's point on the arc: the dimension as it would be, its jog at the centre shown.
         if self.mode() == Mode::Jogged && self.d.pts.len() == 1 {
             let mut tag = None;
+            let mut texts = Vec::new();
             if let Some(l) = self.shown.as_ref().and_then(layout_dimension) {
+                texts.push(self.value_ghost(&l, format));
                 strokes.extend(
                     l.lines
                         .iter()
@@ -1318,6 +1345,7 @@ impl Tool for Dimension {
             return Preview {
                 strokes,
                 tag,
+                texts,
                 ..Preview::default()
             };
         }

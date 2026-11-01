@@ -15,6 +15,37 @@ use kentos_interaction::{Preview, Session, ViewChange};
 
 const OBJECTS: &str = include_str!("../../../../../fixtures/interaction/v1/objects.kcad");
 
+#[test]
+fn focus_loss_cancels_a_pan_drag_but_keeps_its_parent_points_and_undo() {
+    let mut b = Bench::new("polyline");
+    b.click(0.0, 0.0);
+    b.click(10.0, 0.0);
+    let before = b.doc.to_snapshot_v2();
+    over(&mut b, "pan");
+    let p = Bench::pointer(2.0, 2.0);
+    b.run(|s, cx| s.pointer_down(&p, cx));
+    b.run(|s, cx| s.pointer_cancel(cx));
+    let changes = b.views.len();
+    b.move_to(20.0, 20.0);
+    assert_eq!(
+        b.views.len(),
+        changes,
+        "no pan after focus returns without a button"
+    );
+    assert_eq!(b.doc.to_snapshot_v2(), before);
+    back(&mut b);
+    assert_eq!(
+        b.points(),
+        2,
+        "the explicit points survive switching to another app"
+    );
+    b.click(10.0, 10.0);
+    b.confirm();
+    assert_eq!(b.doc.len(), 1);
+    assert!(b.doc.undo().is_some());
+    assert_eq!(b.doc.len(), 0);
+}
+
 /// What a command shows at one moment: its prompt, its points, its options and its preview.
 #[derive(Debug, PartialEq)]
 struct Shown {

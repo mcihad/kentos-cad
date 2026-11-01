@@ -137,7 +137,7 @@ impl App {
             self.say(Level::Info, "Burada gösterilen nokta bulutu yok.");
             return Task::none();
         }
-        super::super::rasters::off_thread(move || {
+        let task = super::super::rasters::off_thread(move || {
             let mut best: Option<(f64, String, Facts)> = None;
             let mut lines = Vec::new();
             for (layer, entry) in clouds {
@@ -162,7 +162,8 @@ impl App {
                 None => {}
             }
             Message::PointClouds(Clouds::Queried(lines, found))
-        })
+        });
+        self.tool_reply(task)
     }
 
     /// XYZ sor's answer: its lines on the command line, the point marked.

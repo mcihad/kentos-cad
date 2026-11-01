@@ -97,6 +97,76 @@ fn the_box_shows_while_it_is_drawn() {
 // ── Taşı, Kopyala ───────────────────────────────────────────────────────────
 
 #[test]
+fn locked_objects_have_no_transformed_ghost_and_stay_put_on_apply() {
+    for tool in ["move", "copy"] {
+        let mut b = bench(&[1, 6]);
+        let locked = b.doc.get(Slot(6)).cloned();
+        b.start(tool);
+        b.click(0., 0.);
+        b.move_to(3., 2.);
+        let preview = b.session.preview(&Default::default()).unwrap();
+        let ghosts: Vec<_> = preview
+            .strokes
+            .iter()
+            .filter(|s| s.dash == Some([4., 3.]))
+            .collect();
+        assert_eq!(
+            ghosts.len(),
+            1,
+            "{tool}: only the editable line can move or copy"
+        );
+        let p = ghosts[0].pts[0];
+        assert_eq!([p.x - 487000., p.y - 4420000.], [-21., -10.]);
+        b.click(3., 2.);
+        assert_eq!(b.doc.get(Slot(6)).cloned(), locked);
+        assert!(b.doc.undo().is_some());
+        assert_eq!(b.doc.get(Slot(6)).cloned(), locked);
+    }
+}
+
+#[test]
+fn source_move_previews_the_associative_hatch_without_writing_and_copy_does_not_move_it() {
+    for (tool, select_hatch) in [("move", false), ("move", true), ("copy", false)] {
+        let mut b = bench(&[]);
+        b.start("hatch");
+        b.click(-20., 9.);
+        b.session.leave_document();
+        let hatch = b
+            .doc
+            .entities()
+            .find_map(|e| matches!(e, Entity::Hatch(_)).then_some(Slot(e.base().id)));
+        let hatch = hatch.expect("an associative hatch");
+        let before = b.doc.to_snapshot_v2();
+        b.selection.set([Slot(4)]);
+        if select_hatch { b.selection.set([Slot(4), hatch]); }
+        b.start(tool);
+        b.click(-24., 4.);
+        b.move_to(-21., 6.);
+        let preview = b.session.preview(&Default::default()).unwrap();
+        assert_eq!(b.doc.to_snapshot_v2(), before, "preview must not write");
+        let linked = preview
+            .strokes
+            .iter()
+            .any(|s| s.tone == kentos_interaction::Tone::Snap);
+        assert_eq!(
+            linked,
+            tool == "move" && !select_hatch,
+            "copies leave original followers; an already correctly transformed selected hatch needs no derived edit"
+        );
+        assert_eq!(!preview.hatch.is_empty(), tool == "move" && !select_hatch);
+        if select_hatch {
+            assert_eq!(preview.strokes.iter().filter(|s| s.dash == Some([4.,3.])).count(), 2,
+                "one source and one selected hatch; no extra derived ghost when following changes nothing");
+        }
+        let was = b.doc.get(hatch).cloned();
+        b.click(-21., 6.);
+        assert_eq!(b.doc.get(hatch).cloned() != was, tool == "move");
+        assert!(b.doc.undo().is_some());
+        assert_eq!(b.doc.to_snapshot_v2(), before);
+    }
+}
+
+#[test]
 fn a_selection_moves_by_its_base_and_target_in_one_step() {
     let mut b = bench(&[1]);
     b.start("move");

@@ -122,7 +122,7 @@ işlev/veri yolunun sınırıdır; bütün depoda başka destek olmadığı iddi
 
 ## 20 ana geliştirme maddesi
 
-### CAD-ADV-01 — Komut, önizleme, onay ve iptali öngörülebilir hale getir [~]
+### CAD-ADV-01 — Komut, önizleme, onay ve iptali öngörülebilir hale getir [x]
 
 **Öncelik:** P0. **Kod:** [C02], [C03], [C32].
 **Dayanak:** QCAD'in Trim durumları ve işlem grupları; DraftSight hızlı
@@ -199,14 +199,27 @@ yazım, tek mantıksal Undo ve önizleme/sonuç eşitliği gerçek pencerede do�
   bir geçici ölçü testi başarısız kaldı. Bütün takım geçmiş sayılmıyor.
   Önceki Enter açıklamalarının 18 fixture'daki metin/seçenek beklentileri
   güncellendi; geometri ve Undo beklentileri korundu, senaryo çeşitleri geçti.
-- [ ] Bütün araç aşamalarında geçersiz/onaysız girdinin gösterimi, işletim
-  sistemi odak kaybı, diğer geç asenkron yanıtlar, kilitli/bağlı nesne etkisi
-  ve önizleme/sonuç eşitliği kabulünü tamamla. Alt+Q'nun komut girdisi
-  odaktayken aramayı açmaması ve geçici ölçü testinin mevcut uyumsuzluğu açık.
-  Temel Tarama/Blok ekle/Hizalı ölçü akışları denendi; karmaşık tarama sınırları,
-  öznitelik soran/dinamik bloklar ve diğer ölçü kiplerinin birleşik kabulü açık.
-  Köşe yuvarla son yarıçap kısayolu faredeki farklı yarıçap önizlemesi yerine
-  menüde yazan son değeri uygular; bu ayrım genel önizleme kabulünde ayrıca incelenmeli.
+- [x] Son kabul, [ADR 0816](../docs/adr/0816-command-lifecycle-and-preview-acceptance.md):
+  OS odak kaybı yarım fare hareketini yazmadan bırakır; açıkça girilmiş
+  komut noktalarını korur. Belge/araç oturumuna ait dosya, nokta bulutu ve
+  ağ yanıtları eski hedefe aitse reddedilir. Blok tanımı/öznitelik taslağı
+  başka belgeye geçmez; odaklı öznitelik alanında tek Esc iptal eder.
+- [x] Kilitli nesne gölgesi artık gerçek işlem gibi sabit kalır; bağlı
+  tarama boşluğu/deseni kaynakla birlikte önizlenir. Ölçünün gerçek yazı
+  konumu/yönü/yüksekliği yerleştirmeden önce görünür. Fillet geçersiz
+  değer ve kilit/eğri gerekçesini açıklar; fare önizlemesi ile Enter'ın son
+  yarıçapı ayrı gösterilir. Alt+Q odaklı komut girdisinde de çalışır.
+- [x] Gerçek pencerede iç adalı/çizgi ağından tarama, öznitelikli/dinamik
+  blok, yarıçap/açı/doğrusal/ordinat/yay uzunluğu ölçüsü, bağlı/kilitli
+  taşıma, kısa/basılı sağ tık ve Python çıktısı açık/kapalı denendi.
+  Ana araçların tek onay, yazmadan Esc, tek mantıksal Undo ve önizleme/sonuç
+  kabulü tamamlandı; ayrıntılı matris ADR 0816'da. Bu, bütün geometrik
+  kiplerin veya diğer CAD-ADV maddelerinin tamamlandığı anlamına gelmez.
+- [x] Son doğrulama: 840 etkileşim + 1557 masaüstü + masaüstü profiliyle
+  286 UI testi geçti; 258 isteğe bağlı test atlandı, başarısız test yok.
+  Derleme ve Clippy başarılı. Önceki geçici ölçü testinin iki referans +
+  iki bağ kontrolü ayrıştırılarak doğrulandı; renderer değişmedi. Son dilimin
+  49 ekran görüntüsü ve günlükleri Git dışında tutuldu.
 
 ### CAD-ADV-02 — Birim, 2B UCS ve hassasiyeti kullanıcının öğrenmek zorunda kalmadığı bir sisteme dönüştür [ ]
 

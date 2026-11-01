@@ -115,7 +115,22 @@ pub(crate) fn host_character_chord(event: &Event) -> bool {
             Some('v') => !modifiers.alt(),
             _ => false,
         };
-    (modifiers.control() || modifiers.logo()) && !altgr && !editing
+    // Alt+Q is the advertised command-search chord, including on macOS
+    // layouts where Option+Q carries printable text. AltGr remains text.
+    let search_key = match key.to_latin(*physical_key) {
+        Some(c) if c.is_ascii_alphabetic() => c.eq_ignore_ascii_case(&'q'),
+        Some('ı') => false,
+        _ => matches!(
+            physical_key,
+            keyboard::key::Physical::Code(keyboard::key::Code::KeyQ)
+        ),
+    };
+    let search = modifiers.alt()
+        && !modifiers.control()
+        && !modifiers.logo()
+        && !modifiers.shift()
+        && search_key;
+    search || ((modifiers.control() || modifiers.logo()) && !altgr && !editing)
 }
 
 /// Ok tuşunun adımı: sol ve yukarı −1, sağ ve aşağı +1.

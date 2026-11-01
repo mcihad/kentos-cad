@@ -89,6 +89,10 @@ impl Rotate {
 }
 
 impl Stages for Rotate {
+    fn edits_sources(&self) -> bool {
+        !self.copy
+    }
+
     fn id(&self) -> &'static str {
         ID
     }

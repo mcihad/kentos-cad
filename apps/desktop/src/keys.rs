@@ -38,6 +38,9 @@ pub struct KeyPress {
 /// there never reaches the drawing (ADR 0018, step 1). The modifier keys'
 /// state goes to the app whatever has the focus (Shift turns ortho over).
 pub fn key_event(event: Event, status: event::Status, _window: window::Id) -> Option<Message> {
+    if matches!(event, Event::Window(window::Event::Unfocused)) {
+        return Some(Message::InputFocusLost);
+    }
     if let Event::Keyboard(keyboard::Event::ModifiersChanged(modifiers)) = event {
         return Some(Message::Modifiers(modifiers));
     }
@@ -53,6 +56,9 @@ pub fn key_event(event: Event, status: event::Status, _window: window::Id) -> Op
         return None;
     };
     if status == event::Status::Captured {
+        if modified_key == Key::Named(Named::Escape) {
+            return Some(Message::CapturedEscape);
+        }
         return None;
     }
     Some(Message::Key(KeyPress {

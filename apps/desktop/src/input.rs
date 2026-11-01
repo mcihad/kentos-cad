@@ -121,6 +121,41 @@ impl View for PaperCameraView<'_> {
 }
 
 impl App {
+    /// Scope the reply before work starts, not when it finishes.
+    pub(crate) fn tool_reply(&self, task: Task<Message>) -> Task<Message> {
+        self.scoped_reply(task, Some(self.session.runs()))
+    }
+
+    pub(crate) fn document_reply(&self, task: Task<Message>) -> Task<Message> {
+        self.scoped_reply(task, None)
+    }
+
+    fn scoped_reply(&self, task: Task<Message>, run: Option<u64>) -> Task<Message> {
+        let Some(document) = self.document.as_ref().map(|d| d.session) else {
+            return Task::none();
+        };
+        task.map(move |reply| Message::ScopedReply {
+            document,
+            run,
+            reply: Box::new(reply),
+        })
+    }
+
+    pub(crate) fn input_focus_lost(&mut self) {
+        self.with_tool(|s, cx| s.pointer_cancel(cx));
+        self.modifiers = Default::default();
+        self.alt_armed = false;
+        self.key_tips = None;
+        self.drawing_menu = None;
+        self.snap = None;
+        self.snap_cycle = None;
+        self.cursor_point = None;
+        self.tracking.clear();
+        self.viewport.cursor = None;
+        self.panning = false;
+        self.pan_recorded = false;
+    }
+
     /// The drawing boundary is stronger than Esc: discard every unfinished
     /// command and drawing aid, without committing or resuming a parent.
     pub(crate) fn leave_document_interaction(&mut self) {
@@ -148,6 +183,21 @@ impl App {
         self.pan_recorded = false;
         self.scale_field = None;
         self.command_input.clear();
+        self.text_file_wanted = false;
+        self.image_file_wanted = false;
+        self.raster_values_wanted.clear();
+        self.cloud_query_wanted.clear();
+        self.network_wanted.clear();
+        self.command_wanted.clear();
+        self.form_on_create = None;
+        self.attribute_values = None;
+        self.block_define_closed();
+        if matches!(
+            self.dialog,
+            Some(crate::app::Dialog::AttributeValues | crate::app::Dialog::BlockDefine)
+        ) {
+            self.dialog = None;
+        }
     }
 
     /// Runs something on the session with the open drawing; `None` when no
@@ -1154,11 +1204,18 @@ impl App {
                     return self.start_point_calc(def.kind);
                 }
                 let f = self.format();
-                self.warn(format!(
-                    "“{text}” anlaşılamadı. Koordinatı {} ya da {} biçiminde yazın.",
-                    f.pair_label(),
-                    f.relative_label()
-                ));
+                let step = self.session.prompt().step.into_owned();
+                self.warn(
+                    if self.session.takes_points() || self.session.grip_active() {
+                        format!(
+                            "“{text}” anlaşılamadı. {step}. Koordinat: {} ya da {}.",
+                            f.pair_label(),
+                            f.relative_label()
+                        )
+                    } else {
+                        format!("“{text}” anlaşılamadı. {step}.")
+                    },
+                );
             }
             return Task::none();
         }

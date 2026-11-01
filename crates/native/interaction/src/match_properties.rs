@@ -360,6 +360,10 @@ impl Tool for MatchProperties {
 
     /// A click picks the source, then gives to the object under it; a drag
     /// past 4 px gives to what its window holds.
+    fn pointer_cancel(&mut self, _cx: &mut Context<'_>) {
+        self.press = None;
+    }
+
     fn pointer_up(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         let Some(press) = self.press.take() else {
             return;

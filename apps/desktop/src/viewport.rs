@@ -693,6 +693,7 @@ impl Viewport {
         };
         let area: Element<'a, Message> = shader(Program {
             id: self.id,
+            document: doc.session,
             parts: [grid, fixed, curves, construction, selected, hovered],
             origin,
             camera: self.camera,
@@ -1349,6 +1350,7 @@ pub fn mark_colors(canvas: impl Into<Canvas>) -> MarkColors {
 /// The shader widget's program: a frame's inputs, and the pointer's gestures.
 struct Program {
     id: ViewId,
+    document: u64,
     /// The grid, the drawing's parts and the highlights, bottom first.
     parts: [Arc<ScenePart>; 6],
     origin: Vec2,
@@ -1382,6 +1384,7 @@ impl Program {
 #[derive(Debug, Default)]
 pub struct Gesture {
     bounds: Option<Rectangle>,
+    document: Option<u64>,
     /// Event position and Iced's cursor for that delivery. Native batches may
     /// share their final cursor; buttons must follow the preceding move.
     pointer: Option<(Point, mouse::Cursor)>,
@@ -1396,6 +1399,17 @@ pub struct Gesture {
     left: bool,
 }
 
+impl Gesture {
+    fn release_capture(&mut self) {
+        self.pointer = None;
+        self.pan = None;
+        self.inside = false;
+        self.last_middle = None;
+        self.right = None;
+        self.left = false;
+    }
+}
+
 impl shader::Program<Message> for Program {
     type State = Gesture;
     type Primitive = Frame;
@@ -1407,6 +1421,15 @@ impl shader::Program<Message> for Program {
         bounds: Rectangle,
         cursor: mouse::Cursor,
     ) -> Option<shader::Action<Message>> {
+        if state.document != Some(self.document) {
+            state.release_capture();
+            state.document = Some(self.document);
+        }
+        // Do this before a held-button redraw can publish a late right menu.
+        if matches!(event, iced::Event::Window(iced::window::Event::Unfocused)) {
+            state.release_capture();
+            return None;
+        }
         // A new frame ends the preceding native event batch. A later press
         // without a move must use Iced's fresh cursor, not an old event.
         if matches!(
@@ -1542,6 +1565,10 @@ pub fn gesture(
     cursor: mouse::Cursor,
     now: Instant,
 ) -> Option<(Option<Event>, bool)> {
+    if matches!(event, iced::Event::Window(iced::window::Event::Unfocused)) {
+        state.release_capture();
+        return None;
+    }
     if state.bounds != Some(bounds) {
         state.bounds = Some(bounds);
         state.pointer = None;
@@ -1903,6 +1930,50 @@ mod tests {
         );
         assert_eq!(first, Some((Some(Event::Resized(AREA)), false)));
         state
+    }
+
+    #[test]
+    fn focus_loss_drops_every_button_and_never_synthesizes_a_release() {
+        let mut state = sized();
+        let now = Instant::now();
+        let at = Point::new(300.0, 200.0);
+        state.pan = Some(at);
+        state.right = Some((now, at, false));
+        state.left = true;
+        state.last_middle = Some((now, at));
+        let lost = gesture(
+            &mut state,
+            &iced::Event::Window(iced::window::Event::Unfocused),
+            AREA,
+            over(300.0, 200.0),
+            now,
+        );
+        assert_eq!(lost, None);
+        assert_eq!(right_hold(&mut state, now + RIGHT_HOLD * 2), None);
+        for button in [
+            mouse::Button::Left,
+            mouse::Button::Right,
+            mouse::Button::Middle,
+        ] {
+            assert_eq!(
+                mouse_event(
+                    &mut state,
+                    mouse::Event::ButtonReleased(button),
+                    over(300.0, 200.0)
+                ),
+                None
+            );
+        }
+        assert!(state.last_middle.is_none());
+        let moved = mouse_event(
+            &mut state,
+            mouse::Event::CursorMoved { position: at },
+            over(300.0, 200.0),
+        );
+        assert_eq!(
+            moved,
+            Some((Some(Event::Moved(Point::new(200.0, 150.0))), false))
+        );
     }
 
     fn mouse_event(

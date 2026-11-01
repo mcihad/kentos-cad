@@ -371,6 +371,11 @@ impl Tool for ViewCrop {
         }
     }
 
+    fn pointer_cancel(&mut self, _cx: &mut Context<'_>) {
+        self.held = None;
+        self.draft = None;
+    }
+
     fn pointer_up(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         let Some(h) = self.held else {
             return;

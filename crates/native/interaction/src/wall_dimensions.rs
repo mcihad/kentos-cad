@@ -1091,6 +1091,41 @@ pub(crate) fn append_followers(
             preview
                 .strokes
                 .extend(Outline::of(&shape(entity), Some([2., 3.]), 1.0, Tone::Snap).strokes);
+            if let Entity::Hatch(h) = entity {
+                let ring: Vec<_> = h.ring.iter().map(|p| Vec2::new(p.x, p.y)).collect();
+                let holes: Vec<Vec<_>> = h
+                    .holes
+                    .iter()
+                    .flatten()
+                    .map(|r| r.iter().map(|p| Vec2::new(p.x, p.y)).collect())
+                    .collect();
+                let pieces = kentos_geometry_core::geom::hatch_pattern::pattern_pieces(
+                    &ring,
+                    &holes,
+                    &kentos_native_application::geometry::core_pattern(&h.pattern),
+                    4_000,
+                );
+                if !pieces.capped {
+                    preview.hatch.extend(pieces.segments);
+                    preview
+                        .hatch
+                        .extend(pieces.dots.into_iter().map(|p| [p, p]));
+                }
+            }
+            if let Entity::Text(t) = entity {
+                preview.texts.push(TextGhost {
+                    p: Vec2::new(t.p.x, t.p.y),
+                    text: t.text.clone(),
+                    height: t.height,
+                    rotation: t.rotation,
+                    align: t
+                        .align
+                        .and_then(|a| kentos_geometry_core::text::TextAlign::from_name(a.name())),
+                    mask: t.mask,
+                    face: t.face.clone(),
+                    width_factor: t.width_factor.unwrap_or(1.),
+                });
+            }
         }
     }
     for entity in followers

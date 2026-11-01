@@ -21,8 +21,7 @@
 //! tag beside the cursor. None of the geometry is computed here.
 
 use kentos_commands::{
-    ArrayLayout, EntitiesArray, EntitiesArrayed, EntitiesTransform, EntitiesTransformed, Entity,
-    Transform,
+    ArrayLayout, EntitiesArray, EntitiesArrayed, EntitiesTransform, EntitiesTransformed, Transform,
 };
 use kentos_domain::Slot;
 use kentos_geometry_core::geom::affine::Affine;
@@ -100,6 +99,11 @@ pub trait Stages {
     }
     /// The transform to preview with the cursor at `hover` (the web's `previewTransforms`).
     fn preview(&self, hover: Vec2) -> Option<Affine>;
+    /// Only edits of the existing sources carry their followers. Copies
+    /// keep the original sources and their linked objects where they are.
+    fn edits_sources(&self) -> bool {
+        matches!(self.id(), "move" | "align")
+    }
     /// Every transform to preview, one ghost of the selection each (the web's
     /// `previewTransforms`): the arrays' copies show without a cursor too.
     fn previews(&self, hover: Option<Vec2>) -> Vec<Affine> {
@@ -253,24 +257,11 @@ impl<S: Stages> Modify<S> {
         if affines.is_empty() {
             return;
         }
-        let ids: Vec<f64> = cx
-            .selection
-            .ids()
-            .iter()
-            .map(|slot| f64::from(slot.0))
-            .collect();
-        let paths = cx
-            .spatial
-            .store()
-            .transform_outlines(&ids, &affines, MAX_GHOSTS);
-        (self.ghosts, self.marks) = ghosts(&paths);
-        // Existing copy/array previews stay unchanged. The domain owns all derived
-        // membership; the same shared matrix kernel supplies only the source edits.
-        if !cx.doc.dimension_sets().is_empty()
-            && matches!(
-                self.stages.id(),
-                "move" | "rotate" | "scale" | "mirror" | "align"
-            )
+        let mut derived = std::collections::HashSet::new();
+        // The domain owns linked text, hatch and dimension membership. Preview
+        // the same source edits the command will write, without touching it.
+        if cx.doc.can_follow()
+            && self.stages.edits_sources()
             && let [matrix] = affines.as_slice()
         {
             let changes: Vec<_> = cx
@@ -280,9 +271,7 @@ impl<S: Stages> Modify<S> {
                 .take(MAX_GHOSTS)
                 .filter_map(|&slot| {
                     let entity = cx.doc.get(slot)?;
-                    if !matches!(entity, Entity::Wall(_) | Entity::Opening(_))
-                        || cx.doc.layers().is_locked(&entity.base().layer_id)
-                    {
+                    if cx.doc.layers().is_locked(&entity.base().layer_id) {
                         return None;
                     }
                     with_shape(
@@ -295,34 +284,36 @@ impl<S: Stages> Modify<S> {
             let delta =
                 cx.doc
                     .preview_followers_with(&mut self.follower_scratch, &changes, &[], &[]);
-            for (_, entity) in delta.updated.iter().chain(&delta.added).take(MAX_GHOSTS) {
-                if matches!(entity, Entity::Dimension(_)) {
-                    let mut preview = crate::wall_dimensions::dimension_preview(
-                        entity,
-                        &cx.format(),
-                        cx.doc.settings().drawing_font,
-                    );
-                    for stroke in &mut preview.strokes {
-                        stroke.tone = crate::tool::Tone::Snap;
-                    }
-                    self.followers.strokes.extend(preview.strokes);
-                    self.followers.texts.extend(preview.texts);
-                }
-            }
-            for slot in delta.removed.iter().take(MAX_GHOSTS) {
-                if let Some(entity) = cx.doc.get(*slot) {
-                    self.followers.strokes.extend(
-                        crate::edge::Outline::of(
-                            &shape(entity),
-                            Some([2., 3.]),
-                            1.0,
-                            crate::tool::Tone::Danger,
-                        )
-                        .strokes,
-                    );
-                }
-            }
+            derived.extend(delta.updated.iter().map(|(slot, _)| *slot));
+            derived.extend(delta.removed.iter().copied());
+            let followers = kentos_commands::DerivedEntitiesPlan {
+                updated: delta.updated.into_iter().map(|(_, e)| e).collect(),
+                added: delta.added.into_iter().map(|(_, e)| e).collect(),
+                removed: delta
+                    .removed
+                    .into_iter()
+                    .filter_map(|s| cx.doc.uid(s).map(|u| u.to_string()))
+                    .collect(),
+            };
+            crate::wall_dimensions::append_followers(&mut self.followers, &followers, cx);
         }
+        let ids: Vec<f64> = cx
+            .selection
+            .ids()
+            .iter()
+            .filter(|slot| !derived.contains(slot))
+            .filter(|slot| {
+                cx.doc
+                    .get(**slot)
+                    .is_some_and(|e| !cx.doc.layers().is_locked(&e.base().layer_id))
+            })
+            .map(|slot| f64::from(slot.0))
+            .collect();
+        let paths = cx
+            .spatial
+            .store()
+            .transform_outlines(&ids, &affines, MAX_GHOSTS);
+        (self.ghosts, self.marks) = ghosts(&paths);
     }
 
     fn after(&mut self, flow: Flow, cx: &Context<'_>) {
@@ -480,6 +471,10 @@ impl<S: Stages> Tool for Modify<S> {
         self.after(flow, cx);
     }
 
+    fn pointer_cancel(&mut self, _cx: &mut Context<'_>) {
+        self.press = None;
+    }
+
     fn pointer_up(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         let Some(press) = self.press.take().filter(|_| self.picking) else {
             return;
@@ -635,6 +630,7 @@ impl<S: Stages> Tool for Modify<S> {
             marks: self.marks.clone(),
             markers: overlay.markers,
             texts: self.followers.texts.clone(),
+            hatch: self.followers.hatch.clone(),
             tag,
             tracking: self.hover.and(self.tracking),
             ..Preview::default()

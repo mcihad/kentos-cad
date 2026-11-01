@@ -479,6 +479,10 @@ impl Tool for Split {
         self.pick(p, cx);
     }
 
+    fn pointer_cancel(&mut self, cx: &mut Context<'_>) {
+        self.crossings.pointer_cancel(cx);
+    }
+
     fn pointer_up(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         if self.mode == Mode::Crossings {
             self.crossings.pointer_up(p, cx);
