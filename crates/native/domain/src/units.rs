@@ -1,22 +1,24 @@
 //! What a unit change writes besides the objects and the block definitions
 //! (docs/adr/0256 §1): the drawing unit, the home view and the drawing's
-//! anchor. The unit is a project setting, which is no undo step
+//! anchor and current/named UCS origins. The unit is a project setting, which is no undo step
 //! (docs/adr/0049); a unit change that keeps the numbers scales the objects
 //! with it, and undo must give both back, so it writes them as an op of its
 //! own in its step.
 
-use kentos_contracts::{Bounds, DrawingUnit, Vec2};
+use kentos_contracts::{Bounds, DrawingUnit, NamedUcs, Ucs, Vec2};
 
 use crate::document::Document;
 use crate::history::Op;
 
 /// The drawing unit (none: metres), where the view opens and the anchor the
-/// GPU works from.
-#[derive(Clone, Copy, Debug, PartialEq)]
+/// GPU works from, together with the drawing's current and named UCS frames.
+#[derive(Clone, Debug, PartialEq)]
 pub struct UnitState {
     pub drawing_unit: Option<DrawingUnit>,
     pub home_view: Option<Bounds>,
     pub origin: Vec2,
+    pub ucs: Option<Ucs>,
+    pub named_ucs: Vec<NamedUcs>,
 }
 
 impl Document {
@@ -26,6 +28,8 @@ impl Document {
             drawing_unit: self.settings.drawing_unit,
             home_view: self.home_view,
             origin: self.origin,
+            ucs: self.settings.ucs,
+            named_ucs: self.settings.named_ucs.clone(),
         }
     }
 

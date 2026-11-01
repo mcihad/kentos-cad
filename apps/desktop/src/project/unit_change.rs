@@ -42,9 +42,9 @@ impl Question {
         let mut q = Self {
             from,
             to,
-            objects: 0,
-            blocks: 0,
-            factor: 1.0,
+            objects: u32::try_from(doc.len()).unwrap_or(u32::MAX),
+            blocks: u32::try_from(doc.blocks().len()).unwrap_or(u32::MAX),
+            factor: kentos_commands::units::Scale::keeping_numbers(from, to).factor(),
             notes: Vec::new(),
             refused: None,
         };
@@ -59,6 +59,9 @@ impl Question {
             | CommandResult::Conflict { error }
             | CommandResult::NeedsInput { error } => q.refused = Some(error.message),
             CommandResult::Queued { .. } | CommandResult::Cancelled => {}
+        }
+        if q.refused.is_none() && (doc.settings().ucs.is_some() || !doc.settings().named_ucs.is_empty()) {
+            q.notes.push("Yerel ve kayıtlı koordinat başlangıçları da çizimle birlikte ölçeklenir; eksenlerin yönü değişmez.".into());
         }
         q
     }
@@ -228,6 +231,61 @@ mod tests {
         let _ = app.update(Message::Run("file.settings"));
         send(app, SettingsEvent::DrawingUnit(to));
         send(app, SettingsEvent::Save);
+    }
+
+    #[test]
+    fn a_refused_correction_still_counts_the_drawing_and_explains_the_factor() {
+        use kentos_commands::{Ucs, Vec2};
+        let mut app = crate::files_testing::app_with_drawing();
+        room(&mut app, true);
+        let doc = &mut app.document.as_mut().unwrap().model;
+        let mut settings = doc.settings().clone();
+        settings.ucs = Some(Ucs::new(Vec2 { x: 100_000., y: 20. }, 0.));
+        doc.set_settings(settings);
+        let q = super::Question::of(doc, DrawingUnit::Mm, DrawingUnit::M);
+        assert_eq!((q.objects, q.blocks, q.factor), (1, 0, 1000.));
+        assert!(q.refused.as_ref().unwrap().contains("UCS"));
+        assert_eq!(super::Question::sample(q.from, 4.), "4000 mm");
+    }
+
+    #[test]
+    fn the_question_explains_that_frames_follow_a_geometry_correction() {
+        use kentos_commands::{Ucs, Vec2};
+        let mut app = crate::files_testing::app_with_drawing();
+        room(&mut app, true);
+        let doc = &mut app.document.as_mut().unwrap().model;
+        let mut settings = doc.settings().clone();
+        settings.ucs = Some(Ucs::new(Vec2 { x: 10., y: 20. }, 0.));
+        doc.set_settings(settings);
+        let q = super::Question::of(doc, DrawingUnit::Mm, DrawingUnit::M);
+        assert!(q.refused.is_none());
+        assert!(q.notes.iter().any(|n| n.contains("koordinat başlangıçları")));
+    }
+
+    #[test]
+    fn saving_the_project_draft_does_not_overwrite_the_scaled_frames() {
+        use kentos_commands::{NamedUcs, Ucs, Vec2};
+        let mut app = crate::files_testing::app_with_drawing();
+        room(&mut app, true);
+        let doc = &mut app.document.as_mut().unwrap().model;
+        let frame = Ucs::new(Vec2 { x: 10., y: 20. }, 0.5);
+        let mut settings = doc.settings().clone();
+        settings.ucs = Some(frame);
+        settings.named_ucs = vec![NamedUcs {
+            name: "Oda aksı".into(), origin: frame.origin, angle: frame.angle,
+        }];
+        doc.set_settings(settings);
+        open_and_change(&mut app, DrawingUnit::M);
+        send(&mut app, SettingsEvent::UnitAnswer(Some(kentos_commands::UnitGeometry::Scale)));
+        let doc = &app.document.as_ref().unwrap().model;
+        let at = Vec2 { x: 10000., y: 20000. };
+        assert_eq!(doc.settings().ucs.unwrap().origin, at);
+        assert_eq!(doc.settings().named_ucs[0].origin, at);
+        let _ = app.update(Message::Run("edit.undo"));
+        let doc = &app.document.as_ref().unwrap().model;
+        assert_eq!(doc.settings().ucs, Some(frame));
+        assert_eq!(doc.settings().named_ucs[0].origin, frame.origin);
+        assert_eq!(corner(&app), 4.);
     }
 
     /// Kaydet asks; Boyları korunsun changes only the unit; undo gives it back.

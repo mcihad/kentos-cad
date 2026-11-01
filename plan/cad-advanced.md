@@ -221,7 +221,7 @@ yazım, tek mantıksal Undo ve önizleme/sonuç eşitliği gerçek pencerede do�
   iki bağ kontrolü ayrıştırılarak doğrulandı; renderer değişmedi. Son dilimin
   49 ekran görüntüsü ve günlükleri Git dışında tutuldu.
 
-### CAD-ADV-02 — Birim, 2B UCS ve hassasiyeti kullanıcının öğrenmek zorunda kalmadığı bir sisteme dönüştür [ ]
+### CAD-ADV-02 — Birim, 2B UCS ve hassasiyeti kullanıcının öğrenmek zorunda kalmadığı bir sisteme dönüştür [~]
 
 **Öncelik:** P0. **Kod:** [C01], [C27], [C31].
 **Dayanak:** model/kâğıt ayrımı ve kaynak yerleştirme davranışları. [R22], [R23]
@@ -246,6 +246,27 @@ yazım, tek mantıksal Undo ve önizleme/sonuç eşitliği gerçek pencerede do�
 birimleriyle yerleştir; fiziksel boy değişmesin. 4 × 3 m örnek her yolda
 12 m² ölçülsün. Dönük UCS, uzak koordinat, clipboard, Undo ve kaydet–aç
 aynı sonucu versin; yeni bir ölçek seçici eklemek çözüm sayılmasın.
+
+**1 Kasım ilk dilim — [ADR 0817](../docs/adr/0817-unit-correction-keeps-coordinate-frames.md):**
+
+- [x] “Sayıları koru” birim düzeltmesinde geçerli/kayıtlı UCS başlangıçları
+  çizimle birlikte ölçeklenir; eksen yönleri korunur. Tek Undo/Redo hepsini
+  birlikte geri getirir. Boyları koruyan birim değişimi, sonraki bağımsız
+  UCS seçimini Undo ile ezmez.
+- [x] Gerçek GUI testinin yakaladığı ikinci hata giderildi: Proje ayarları
+  taslağı dönüştürülmüş UCS'yi eski değerle geri yazmıyor. Sınır dışı UCS
+  plan aşamasında açıklanıp yazmadan reddediliyor; onayda doğru nesne sayısı
+  ve çarpan, UCS etkisi gösteriliyor. 4×3m oda boyları korununca 12m² kalıyor.
+- [x] 270 uygulama + 1560 masaüstü testi, 15 Python testi, 3 karma blok birimi
+  ve 7 sayısal hassasiyet testi geçti; gerçek Apple M5/Metal GPU kontrolü
+  çalıştırıldı. 293 isteğe bağlı test atlandı. Python dokümanı/katalog ve
+  üretim kontrolü güncel; görüntüler repo dışında.
+- [ ] Aynı 1m eleman ve 4×3m örneği için mm/m/inç girdileri, farklı kaynak
+  blok birimleri, açma/ekleme/pano/yerleştirme, büyük koordinat/dönük
+  kamera/UCS ve kaydet–aç birleşik GUI kabulünü tamamla.
+- [ ] Birimsiz/çelişkili dosya kararını önizlemeyle birlikte doğrula;
+  dinamik blok, ilişkili dizi/ölçü tarifleri ve paftanın birim düzeltmesi
+  sonrası bütünlüğünü birlikte sınayıp bulunan sorunları gider.
 
 ### CAD-ADV-03 — Kalabalık çizimde seçimden toplu özellik düzenlemeye güvenli geçiş sağla [ ]
 

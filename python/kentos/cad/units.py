@@ -25,19 +25,21 @@ if TYPE_CHECKING:
 
 class _UnitsChange(LocalCommand[UnitsChange, UnitsChanged, UnitsChanged]):
     """``cad.units.change`` v1. Birimi değiştir: Yerel projenin çizim birimini from'dan
-    to'ya değiştirir (mm, cm, m); from çizimin şimdiki birimi olmalıdır. geometry ne
-    olacağını söyler: keep boyları korur, yalnız okuma ve yazma birimi değişir (4000
-    mm'lik duvar 4 m okunur, hiçbir nesne değişmez); scale sayıları korur, çizim iki
-    birimin oranıyla 0,0'a göre ölçeklenir (4000 mm 4000 m okunur: ×1000; cm'den mm'ye
-    ÷10). scale'de nesnelerin koordinatları, uzunlukları, yarıçapları, kotları, yazı,
-    ölçü, kılavuz ve tablo yükseklikleri ve boyları, paragraf kutusu, eğri boyunca
-    yazının eğrisi, tarama aralığı ve desen ölçeği, resim ve raster çerçeveleri, blok
-    tanımları, ana görünüm ölçeklenir; açılar, oranlar, yerleştirmenin kendi ölçeği,
-    kâğıt üstü boylar ve ölçüler (M) kalır. Nokta bulutlarının noktaları, pafta kitabı
-    ve projenin toleransları değişmez; uyarı söyler. Telde geometri her durumda
-    metredir. Birim ve ölçeklenen çizim tek geri alma adımıdır (“Birimi değiştir”).
-    Koordinat sistemli projenin birimi sistemindir (unit_needs_local); scale'de kilitli
-    katmanda nesne varsa hiçbir şey yazılmaz (layer_locked). expectedRevision verilmişse
+    to'ya değiştirir (mm, cm, m, in, ft); from çizimin şimdiki birimi olmalıdır.
+    geometry ne olacağını söyler: keep boyları korur, yalnız okuma ve yazma birimi
+    değişir (4000 mm'lik duvar 4 m okunur, hiçbir nesne değişmez); scale sayıları korur,
+    çizim iki birimin oranıyla 0,0'a göre ölçeklenir (4000 mm 4000 m okunur: ×1000;
+    cm'den mm'ye ÷10). scale'de nesnelerin koordinatları, uzunlukları, yarıçapları,
+    kotları, yazı, ölçü, kılavuz ve tablo yükseklikleri ve boyları, paragraf kutusu,
+    eğri boyunca yazının eğrisi, tarama aralığı ve desen ölçeği, resim ve raster
+    çerçeveleri, blok tanımları, ana görünüm ve geçerli/kayıtlı UCS başlangıçları
+    ölçeklenir; açılar, oranlar, yerleştirmenin kendi ölçeği, kâğıt üstü boylar ve
+    ölçüler (M) kalır. Nokta bulutlarının noktaları, pafta kitabı ve projenin
+    toleransları değişmez; uyarı söyler. Telde geometri her durumda metredir. Birim ve
+    ölçeklenen çizim tek geri alma adımıdır (“Birimi değiştir”). Koordinat sistemli
+    projenin birimi sistemindir (unit_needs_local); scale'de kilitli katmanda nesne
+    varsa hiçbir şey yazılmaz (layer_locked). Ölçeklenen UCS başlangıcı izin verilen
+    alanın dışına çıkacaksa hiçbir şey yazılmaz (far_point). expectedRevision verilmişse
     ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
     """
     __slots__ = ()
@@ -61,21 +63,23 @@ class _UnitsChange(LocalCommand[UnitsChange, UnitsChanged, UnitsChanged]):
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> UnitsChanged:
-        """Birimi değiştir: Yerel projenin çizim birimini from'dan to'ya değiştirir (mm, cm,
-        m); from çizimin şimdiki birimi olmalıdır. geometry ne olacağını söyler: keep
+        """Birimi değiştir: Yerel projenin çizim birimini from'dan to'ya değiştirir (mm, cm, m,
+        in, ft); from çizimin şimdiki birimi olmalıdır. geometry ne olacağını söyler: keep
         boyları korur, yalnız okuma ve yazma birimi değişir (4000 mm'lik duvar 4 m okunur,
         hiçbir nesne değişmez); scale sayıları korur, çizim iki birimin oranıyla 0,0'a göre
         ölçeklenir (4000 mm 4000 m okunur: ×1000; cm'den mm'ye ÷10). scale'de nesnelerin
         koordinatları, uzunlukları, yarıçapları, kotları, yazı, ölçü, kılavuz ve tablo
         yükseklikleri ve boyları, paragraf kutusu, eğri boyunca yazının eğrisi, tarama
-        aralığı ve desen ölçeği, resim ve raster çerçeveleri, blok tanımları, ana görünüm
-        ölçeklenir; açılar, oranlar, yerleştirmenin kendi ölçeği, kâğıt üstü boylar ve
-        ölçüler (M) kalır. Nokta bulutlarının noktaları, pafta kitabı ve projenin
-        toleransları değişmez; uyarı söyler. Telde geometri her durumda metredir. Birim ve
-        ölçeklenen çizim tek geri alma adımıdır (“Birimi değiştir”). Koordinat sistemli
-        projenin birimi sistemindir (unit_needs_local); scale'de kilitli katmanda nesne
-        varsa hiçbir şey yazılmaz (layer_locked). expectedRevision verilmişse ve çizim o
-        sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+        aralığı ve desen ölçeği, resim ve raster çerçeveleri, blok tanımları, ana görünüm ve
+        geçerli/kayıtlı UCS başlangıçları ölçeklenir; açılar, oranlar, yerleştirmenin kendi
+        ölçeği, kâğıt üstü boylar ve ölçüler (M) kalır. Nokta bulutlarının noktaları, pafta
+        kitabı ve projenin toleransları değişmez; uyarı söyler. Telde geometri her durumda
+        metredir. Birim ve ölçeklenen çizim tek geri alma adımıdır (“Birimi değiştir”).
+        Koordinat sistemli projenin birimi sistemindir (unit_needs_local); scale'de kilitli
+        katmanda nesne varsa hiçbir şey yazılmaz (layer_locked). Ölçeklenen UCS başlangıcı
+        izin verilen alanın dışına çıkacaksa hiçbir şey yazılmaz (far_point).
+        expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
+        conflict olur.
 
         Args:
             doc: The drawing it works on.

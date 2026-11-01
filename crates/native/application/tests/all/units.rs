@@ -102,3 +102,79 @@ fn keeping_the_sizes_is_an_undo_step_too() {
     assert_eq!(doc.undo().as_deref(), Some(units_change::STEP));
     assert_eq!(doc.settings().drawing_unit, Some(DrawingUnit::Mm));
 }
+
+#[test]
+fn unit_correction_keeps_current_and_named_frames_on_the_scaled_geometry() {
+    use kentos_commands::{NamedUcs, Ucs, Vec2};
+    for geometry in [UnitGeometry::Keep, UnitGeometry::Scale] {
+        let mut doc = drawing();
+        let mut settings = doc.settings().clone();
+        let frame = Ucs::new(Vec2 { x: 10., y: -20. }, std::f64::consts::FRAC_PI_2);
+        settings.ucs = Some(frame);
+        settings.named_ucs = vec![NamedUcs {
+            name: "Yerel aks".into(),
+            origin: frame.origin,
+            angle: frame.angle,
+        }];
+        doc.set_settings(settings);
+        let before = doc.to_snapshot_v2();
+        let mut input = scale(DrawingUnit::Mm, DrawingUnit::M);
+        input.geometry = geometry;
+        let planned = units_change::plan_in(&doc, &input);
+        assert!(matches!(planned, CommandResult::Completed { .. }));
+        assert_eq!(doc.to_snapshot_v2(), before, "plan writes nothing");
+        assert!(matches!(change(&mut doc, input), CommandResult::Completed { .. }));
+        let factor = if geometry == UnitGeometry::Scale { 1000. } else { 1. };
+        let expected = Vec2 { x: 10. * factor, y: -20. * factor };
+        assert_eq!(doc.settings().ucs.unwrap().origin, expected);
+        assert_eq!(doc.settings().named_ucs[0].origin, expected);
+        assert_eq!(doc.settings().ucs.unwrap().angle, frame.angle);
+        assert_eq!(doc.settings().named_ucs[0].angle, frame.angle);
+        let scaled = doc.to_snapshot_v2();
+        assert!(doc.undo().is_some());
+        assert_eq!(doc.to_snapshot_v2(), before, "one Undo restores frames and objects");
+        assert!(!doc.can_undo());
+        assert!(doc.redo().is_some());
+        assert_eq!(doc.to_snapshot_v2(), scaled);
+    }
+}
+
+#[test]
+fn a_unit_correction_cannot_push_a_frame_outside_the_serializable_range() {
+    use kentos_commands::{NamedUcs, Ucs, Vec2};
+    for named in [false, true] {
+        let mut doc = drawing();
+        let mut settings = doc.settings().clone();
+        let frame = Ucs::new(Vec2 { x: 100_000., y: 20. }, 0.);
+        if named {
+            settings.named_ucs = vec![NamedUcs {
+                name: "Uzak aks".into(), origin: frame.origin, angle: frame.angle,
+            }];
+        } else {
+            settings.ucs = Some(frame);
+        }
+        doc.set_settings(settings);
+        let before = doc.to_snapshot_v2();
+        let input = scale(DrawingUnit::Mm, DrawingUnit::M);
+        assert!(matches!(units_change::plan_in(&doc, &input), CommandResult::Failed { .. }));
+        assert!(matches!(change(&mut doc, input), CommandResult::Failed { .. }));
+        assert_eq!(doc.to_snapshot_v2(), before);
+        assert!(!doc.can_undo());
+    }
+}
+
+#[test]
+fn undo_of_display_unit_change_leaves_a_later_ucs_choice_alone() {
+    use kentos_commands::{Ucs, Vec2};
+    let mut doc = drawing();
+    let mut input = scale(DrawingUnit::Mm, DrawingUnit::M);
+    input.geometry = UnitGeometry::Keep;
+    assert!(matches!(change(&mut doc, input), CommandResult::Completed { .. }));
+    let mut settings = doc.settings().clone();
+    let frame = Ucs::new(Vec2 { x: 17., y: 29. }, 0.5);
+    settings.ucs = Some(frame);
+    doc.set_settings(settings);
+    assert!(doc.undo().is_some());
+    assert_eq!(doc.settings().drawing_unit, Some(DrawingUnit::Mm));
+    assert_eq!(doc.settings().ucs, Some(frame));
+}

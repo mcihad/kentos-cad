@@ -611,8 +611,8 @@ impl Op {
                 after: before.clone(),
             },
             Op::Units { before, after } => Op::Units {
-                before: *after,
-                after: *before,
+                before: after.clone(),
+                after: before.clone(),
             },
             Op::Domains { before, after } => Op::Domains {
                 before: after.clone(),
@@ -1548,10 +1548,18 @@ impl Document {
                 after.apply_from(before, self);
                 return;
             }
-            Op::Units { after, .. } => {
+            Op::Units { before, after } => {
                 self.settings.drawing_unit = after.drawing_unit;
                 self.home_view = after.home_view;
                 self.origin = after.origin;
+                // A keep-sizes unit change did not edit frames. Do not undo
+                // a UCS the user chose later through ordinary project settings.
+                if before.ucs != after.ucs {
+                    self.settings.ucs = after.ucs;
+                }
+                if before.named_ucs != after.named_ucs {
+                    self.settings.named_ucs.clone_from(&after.named_ucs);
+                }
                 return;
             }
             Op::Domains { after, .. } => {

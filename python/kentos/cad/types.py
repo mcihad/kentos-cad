@@ -68795,7 +68795,7 @@ class UnitsChange(_Model):
     table heights and sizes, a paragraph's box, a curved text's curve, a
     hatch's spacing and pattern scale, a picture's and a raster's frame; the
     block definitions (base point, objects, attribute definitions); the home
-    view and the drawing's anchor. Angles, ratios, an insert's own scale,
+    view, the drawing's anchor and current/named UCS origins. Angles, ratios, an insert's own scale,
     paper sizes and a route's measures stay. A point cloud's points are in
     its files and stay (`point_clouds_kept`); the sheet book stays
     (`sheets_kept`); the topology tolerance and the networks' tolerances are
@@ -68806,7 +68806,8 @@ class UnitsChange(_Model):
     `conflict`), `unit_needs_local` (the project has a coordinate system:
     its unit is the system's), `unit_mismatch` (`from` is not the drawing's
     unit, which the message names), `layer_locked` (with `scale`: objects on
-    a locked layer, whose `uids` the error lists, the first 100).
+    a locked layer, whose `uids` the error lists, the first 100), `far_point`
+    (with `scale`: a current or named UCS origin would leave its allowed range).
     Attributes:
         from_: The drawing's unit now: said, not assumed, so a script written for
             another drawing does not scale this one.

@@ -15,6 +15,32 @@ def near(a: tuple[float, float], b: tuple[float, float]) -> bool:
 
 
 class UcsTests(unittest.TestCase):
+    def test_unit_correction_scales_frames_and_survives_save_undo_redo(self) -> None:
+        doc = cad.Document.new("Birim ve UCS", workspace="cad", drawing_unit="mm")
+        frame = cad.FrameUcsTo(origin=cad.Vec2(10.0, 20.0), angle=math.pi / 2)
+        cad.ucs.set(doc, to=frame)
+        cad.ucs.set(doc, to=cad.SaveUcsTo(name="Oda aksı"))
+        a, b = doc.to_world([(0.0, 0.0), (4.0, 0.0)])
+        line = cad.line.create(doc, layer_id=doc.active_layer, a=a, b=b)
+        plan = cad.units.change.plan(doc, from_="mm", to="m", geometry="scale")
+        self.assertEqual(plan.factor, 1000.0)
+        self.assertEqual(doc.ucs.origin, (10.0, 20.0), "plan writes nothing")
+        cad.units.change(doc, from_="mm", to="m", geometry="scale")
+        self.assertEqual(doc.ucs.origin, (10000.0, 20000.0))
+        self.assertEqual(doc.named_ucs[0].origin, (10000.0, 20000.0))
+        self.assertEqual(doc.ucs.angle, math.pi / 2)
+        self.assertAlmostEqual(doc.measure(line.uid).length or 0, 4000.0)
+        restored = cad.Document.from_bytes(doc.to_bytes())
+        self.assertEqual(restored.ucs, doc.ucs)
+        self.assertEqual(restored.named_ucs, doc.named_ucs)
+        self.assertAlmostEqual(restored.measure(line.uid).length or 0, 4000.0)
+        self.assertEqual(doc.undo(), "Birimi değiştir")
+        self.assertEqual(doc.ucs.origin, (10.0, 20.0))
+        self.assertEqual(doc.named_ucs[0].origin, (10.0, 20.0))
+        self.assertAlmostEqual(doc.measure(line.uid).length or 0, 4.0)
+        self.assertEqual(doc.redo(), "Birimi değiştir")
+        self.assertEqual(doc.ucs.origin, (10000.0, 20000.0))
+
     def test_a_ucs_is_set_named_and_its_points_turned(self) -> None:
         doc = cad.Document.new("Bina", workspace="cad", drawing_unit="m")
         self.assertTrue(doc.ucs.is_world)

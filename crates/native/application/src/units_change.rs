@@ -53,6 +53,31 @@ struct Checked {
     blocks: u32,
 }
 
+/// The same state is checked during plan and execution, before any write.
+fn next_state(doc: &Document, to: DrawingUnit, scale: Option<Scale>) -> UnitState {
+    let mut next = UnitState {
+        drawing_unit: Some(to),
+        ..doc.unit_state()
+    };
+    if let Some(s) = scale {
+        if let Some(view) = &mut next.home_view {
+            scale_bounds(view, s);
+        }
+        let point = |p: &mut Vec2| {
+            p.x = s.apply(p.x);
+            p.y = s.apply(p.y);
+        };
+        point(&mut next.origin);
+        if let Some(frame) = &mut next.ucs {
+            point(&mut frame.origin);
+        }
+        for frame in &mut next.named_ucs {
+            point(&mut frame.origin);
+        }
+    }
+    next
+}
+
 /// The objects on a locked layer (the layer or a group above it), in the
 /// drawing's order; the layers by their names with how many each holds.
 fn on_locked_layers(doc: &Document) -> (Vec<String>, Vec<(String, usize)>) {
@@ -161,6 +186,15 @@ fn check(doc: &Document, input: &UnitsChange) -> Result<Checked, Stop> {
                 .into(),
         ));
     }
+    let scale = Scale::keeping_numbers(input.from, input.to);
+    let next = next_state(doc, input.to, Some(scale));
+    if let Some(why) = kentos_commands::ucs_problem(next.ucs.as_ref(), &next.named_ucs) {
+        return Err(refuse(
+            codes::FAR_POINT,
+            format!("Birim düzeltmesi yerel koordinat başlangıcını izin verilen alanın dışına taşıyor: {why} Boyları koruyun veya önce UCS başlangıcını düzenleyin; hiçbir şey yazılmadı."),
+            "geometry",
+        ));
+    }
     let settings = doc.settings();
     if settings.topology.is_some() || !settings.networks.is_empty() {
         warnings.push(warning(
@@ -170,7 +204,7 @@ fn check(doc: &Document, input: &UnitsChange) -> Result<Checked, Stop> {
         ));
     }
     Ok(Checked {
-        scale: Some(Scale::keeping_numbers(input.from, input.to)),
+        scale: Some(scale),
         warnings,
         objects: u32::try_from(doc.len() - clouds).unwrap_or(u32::MAX),
         blocks: u32::try_from(doc.blocks().len()).unwrap_or(u32::MAX),
@@ -234,20 +268,7 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: UnitsChange) -> CommandRe
         Err(stop) => return stop.into(),
     };
     let doc = &mut *cx.doc;
-    let before = doc.unit_state();
-    let mut next = UnitState {
-        drawing_unit: Some(input.to),
-        ..before
-    };
-    if let Some(s) = checked.scale {
-        if let Some(view) = &mut next.home_view {
-            scale_bounds(view, s);
-        }
-        next.origin = Vec2 {
-            x: s.apply(before.origin.x),
-            y: s.apply(before.origin.y),
-        };
-    }
+    let next = next_state(doc, input.to, checked.scale);
     // The unit first: it names the step.
     doc.set_unit_state(next, STEP);
     if let Some(s) = checked.scale {

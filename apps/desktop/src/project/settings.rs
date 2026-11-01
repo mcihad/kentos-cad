@@ -712,6 +712,11 @@ impl App {
         );
         match result {
             CommandResult::Completed { output, warnings } => {
+                // The unit command changed world-space frame origins together
+                // with the geometry. The settings draft must not put its old
+                // copies back when the rest of the form is saved below.
+                s.settings.ucs = doc.model.settings().ucs;
+                s.settings.named_ucs = doc.model.settings().named_ucs.clone();
                 let said = match output.geometry {
                     UnitGeometry::Keep => {
                         format!("Çizim birimi {} oldu; boylar korundu.", output.to.mark())
