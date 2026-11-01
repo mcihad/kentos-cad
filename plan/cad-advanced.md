@@ -416,7 +416,7 @@ Asimetrik geçişin [ayrı geometrik sözleşme araştırması](../docs/cad/asym
 tamamlandı; daire yuvarlamaya sahte ikinci yarıçap eklenmedi. Web, ADR 0228
 uyarınca ertelidir; masaüstü maddesini kapatmak için web geliştirilmez.
 
-### CAD-ADV-05 — Parametrik 2B tasarımı açıklanabilir ve kapsamlı hale getir [ ]
+### CAD-ADV-05 — Parametrik 2B tasarımı açıklanabilir ve kapsamlı hale getir [~]
 
 **Öncelik:** P1. **Kod:** [C09], [C10].
 **Dayanak:** AutoCAD geometrik/ölçüsel kısıt ayrımı ve BricsCAD parametre
@@ -442,6 +442,16 @@ bağımlılığı inceleme yaklaşımı. [R03], [R13]
 ölçü/teğet/eşitlik/konum bağları kur. Parametre değiştir, kısmi kısıtlı
 şekli sürükle ve çelişki oluştur. UI/Python/MCP aynı teşhis ve geometriyi
 versin; çözüm dalı kullanıcı niyetine aykırı sessiz sıçramasın.
+
+**İlerleme — 2026-11-02, tamamlanmadı:** Parametre penceresi ortak
+query teşhisini ve gerçek serbestlikleri gösterir; bağımlılık inceleme,
+rename ve ilgili geometriyi seçme, uzunluk/açı/sayı tür seçimi eklendi.
+Tuşlarda çözücü tekrar çalışmaz; Undo teşhisi yeniler. Hata/sonuç görünür
+üst bölümdedir. Gerçek GUI'de iki delikli plakada rename/değer/atomik
+hata ve Python eşitliği doğrulandı. [ADR 0828](../docs/adr/0828-explainable-parameter-window.md),
+[kodla doğrulanmış destek ve açık işler](../docs/cad/parametric-support.md).
+Yaylı kenar/elips adaptörleri, boyut cebiri ve aynalı blok/sürükleme/dal
+birleşik kabulü bitmeden bu madde kapatılmaz.
 
 ### CAD-ADV-06 — Parametrik blokları sürdürülebilir 2B bileşenlere dönüştür [ ]
 

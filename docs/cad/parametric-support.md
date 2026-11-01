@@ -1,0 +1,64 @@
+# Parametrik 2B tasarım — mevcut destek ve CAD-ADV-05 işleri
+
+2026-11-02. CAD-ADV-05 **tamamlanmadı**. Bu belge kod sınırını,
+doğrulanan ilk arayüz dilimini ve kalan gerçek geometri işlerini ayırır.
+
+| Geometri / yetenek | Kodda mevcut davranış | Açık iş |
+|---|---|---|
+| Nokta / çizgi | Konum, düz kenar, uzaklık, yön ve geometrik bağlar | Birleşik sürükleme/dal kabulünü genişlet |
+| Daire / bağımsız yay | Merkez/yarıçap, yay uç açıları; teğet/eşitlik/ölçüler | Büyük koordinat ve kilitli referans birleşik kabulü |
+| Çoklu çizgi / alan | Her halka/parçanın köşeleri bilinmeyen; düz kenarlar Segment | Yaylı kenarın bulge/yarıçapı sabit, henüz değişken değil |
+| Elips | Genel kısıt adaptörü yok | Merkez/eksen/uç adaptörü, gerçek türevler ve tekillik/dal sınırı |
+| NURBS | Ölçü başvurusu CAD-ADV-04'te var; kısıt çözücü adaptörü ayrı | Uç/kontrol/teğet ihtiyacını sınırlı sözleşmeyle uygula |
+| Blok / iç nesne | Genel çözücü Insert bilinmeyeni ve dönüşüm yolu almıyor | Aynalı/dönük yerleştirme ve kilitli referans politikası |
+| Parametre ifadeleri | Uzunluk/açı/sayı, ad değiştirme, token bağımlılığı, döngü, sıfıra bölme | Boyut cebiri ve uygunsuz birim karışımı ayrıca denetlenmeli |
+| Teşhis | `cad.constraints.query`: serbestlik, hareket edebilenler, fazla/çelişen/tekil/kopuk | Sahnedeki serbest yönlerin gösterimi ve büyük problemde durdurma |
+
+## Doğrulanan ilk arayüz dilimi
+
+- Parametreler aynı query'nin teşhisini gösterir. Serbest geometriye gitme,
+  kısıt adından ilgili nesneyi seçme ve yakınlaştırma belgeyi değiştirmez.
+  Serbestlik yalnız çözücüye katılan geometri içindir; projedeki bütün
+  nesnelerin global serbestlik derecesi olduğu iddia edilmez.
+- Adı seçince tanımlayan ve dolaylı etkilenen parametreler görünür;
+  geometriyi göster eylemi bağlı ölçülerin kaynaklarını seçer. İfadeler
+  ortak parser ile okunur; ad alt dizisi araması yapılmaz. Çevrimli
+  dış veri gelse de grafik gezintisi durur.
+- Yeniden adlandır, mevcut `cad.parameters.edit rename` komutunu kullanır.
+  Geometriyi gösterip aynı çizimin penceresine dönünce taslaklar kalır.
+- Yeni kullanıcı parametresinde uzunluk/açı/sayı açık seçilir.
+  Başvuru parametresi yalnız ölçer ve ifade alanı düzenlenemez.
+- Teşhis ve ayrıştırılmış bağımlılıklar çizim oturumu/sürümü/generation
+  için önbelleğe alınır. Tuş başına çözücü yeniden çalışmaz. Undo ve
+  yeniden açılan başka çizim eski teşhisi kullanmaz.
+- Hata/sonuç açıklaması üsttedir, seçilen ayrıntı tablonun altındadır.
+  Sadece değişen satırda Uygula çıkar; Sil seçilen parametreye aittir.
+
+## Kod kanıtı
+
+- `geometry-core/src/ops/constraints/model.rs`: bilinmeyen düzeni;
+  `element_vars` yaylı Segment'i reddeder, elips/NURBS/Insert slotu yoktur.
+- Aynı dizindeki `rules.rs`, `solve.rs`: dual türevler, bağımsız gruplar,
+  teşhis ve en az değişim çözümü. Yeni bir motor kurulmayacak.
+- `native/domain/src/constraints.rs`: kalıcı başvuruların adaptörü;
+  `core_point` Along/Mid'i çözücü noktasına çevirmiyor.
+- `native/application/src/constraint_solve.rs`, `constraints_query.rs`:
+  birim dönüşümü, gerçek ölçü ve aynı teşhis; kilitli nesneler tutulur.
+- `native/application/src/parameters_edit.rs`: atomik rename/set,
+  geçersiz ifade ve çelişkide son geçerli model.
+- `desktop/src/parameters_window.rs` ve `parameters_window/analysis.rs`:
+  yukarıdaki arayüz, salt okunur ortak query ve önbellek.
+
+## Araştırma ve sonraki kabul
+
+[AutoCAD dimensional constraints](https://help.autodesk.com/cloudhelp/2026/ENU/AutoCAD-Core/files/GUID-F7ED2587-8F25-4770-BD13-C7C95456E707.htm)
+sürücü ile yalnız ölçen referansı ayırır.
+[BricsCAD Parameters Manager](https://helpcenter.bricsys.com/en-us/document/panels/parameters-manager-panel?version=V25)
+tanımlayan/etkilenen parametreleri inceleme, ad değiştirme ve ilgili
+geometriyi seçme örneğidir. KentOS kendi mevcut komut ve çözücüsünü
+kullanır; bu kaynakların yeteneklerinin tamamı varmış gibi gösterilmez.
+
+CAD-ADV-05 kapanmadan yaylı kenar/elips kapsamı, ölçü boyutları, aynalı
+blok ve geçici sürükleme/çözüm dalı davranışı tamamlanmalı; teknik
+plakada çelişki, kilit, gevşetme, Undo ile UI/Python/MCP aynı sonucu
+vermelidir. Güvenli ret bir adaptörün uygulanması yerine sayılmaz.
