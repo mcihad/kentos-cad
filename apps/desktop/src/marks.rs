@@ -312,6 +312,32 @@ impl<Message> canvas::Program<Message> for Marks {
     }
 }
 
+/// Kept above draft text masks, below actual widgets and menus. Iced makes
+/// the cursor unavailable here when a card above it owns the pointer.
+pub struct PointerMark {
+    pub crosshair: Crosshair,
+    pub colors: MarkColors,
+}
+
+impl<Message> canvas::Program<Message> for PointerMark {
+    type State = ();
+    fn draw(
+        &self,
+        _: &(),
+        renderer: &Renderer,
+        _: &Theme,
+        bounds: Rectangle,
+        cursor: mouse::Cursor,
+    ) -> Vec<canvas::Geometry> {
+        let Some(at) = cursor.position_in(bounds) else {
+            return Vec::new();
+        };
+        let mut frame = canvas::Frame::new(renderer, bounds.size());
+        crosshair(&mut frame, self.crosshair, at, bounds.size(), &self.colors);
+        vec![frame.into_geometry()]
+    }
+}
+
 /// The web's `drawGrips`: every grip but the one being moved, which is drawn
 /// last, larger and in the drawing's ink.
 fn grips(

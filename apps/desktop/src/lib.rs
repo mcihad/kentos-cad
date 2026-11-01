@@ -762,6 +762,7 @@ fn run(program: Option<Module>, path: Option<PathBuf>) -> ExitCode {
     .default_font(typography::ui())
     .subscription(app::App::subscription)
     .window(iced::window::Settings {
+        icon: kentos_ui::widget::brand::window_icon(),
         size: iced::Size::new(1440.0, 900.0),
         // The smallest window the layouts are checked at: the ribbon fits (docs/adr/0051),
         // the windows keep their buttons in view.

@@ -1,3 +1,4 @@
+import { brandLogo } from './shell/brandButton';
 import type { AppContext } from '../app/context';
 import { formatChord } from '../core/keymap';
 import { h } from './dom';
@@ -106,12 +107,15 @@ export function openShortcutsDialog(ctx: AppContext): void {
 export function openAboutDialog(ctx: AppContext): void {
   new Dialog({
     title: 'KentOS CAD',
-    width: 440,
+    width: 560,
     content: [
-      h('p', { class: 'dialog__lead' }, 'Web tabanlı harita ve kadastro çizim ortamı.'),
+      brandLogo(240),
+      h('p', { class: 'dialog__lead' }, 'Ölçülü 2B çizim, coğrafi veriler ve pafta üretimi.'),
       h(
         'dl',
         { class: 'about' },
+        h('dt', null, 'Uygulama'),
+        h('dd', null, 'KentOS CAD · Web'),
         h('dt', null, 'Sürüm'),
         h('dd', { class: 'num' }, __KENTOS_VERSION__),
         h('dt', null, 'Çizim motoru'),

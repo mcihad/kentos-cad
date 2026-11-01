@@ -102,7 +102,7 @@ pub use assets::AssetBrowser;
 pub use beside::{
     above_left, above_right, beside, beside_above_left, beside_above_right, beside_pointer,
 };
-pub use brand::brand_mark;
+pub use brand::{brand_mark, brand_logo};
 pub use cell::Cell;
 pub use chips::ChipInput;
 pub use class_scale::ClassScale;

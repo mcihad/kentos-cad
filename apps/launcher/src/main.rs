@@ -52,6 +52,7 @@ fn main() -> iced::Result {
         .subscription(app::Launcher::subscription)
         .default_font(typography::ui())
         .window(window::Settings {
+            icon: kentos_ui::widget::brand::window_icon(),
             size: WINDOW,
             min_size: Some(SMALLEST),
             ..window::Settings::default()

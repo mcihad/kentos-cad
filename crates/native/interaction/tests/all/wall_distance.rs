@@ -54,7 +54,10 @@ fn a_selected_wall_shows_the_gap_to_the_wall_across_and_writes_nothing() {
     let before = b.doc.to_snapshot_v2();
     let numbers = b.session.temporary_numbers();
     assert_eq!(numbers.len(), 1, "inside only: nothing east of the room");
-    assert!(b.session.temporary_length().is_some(), "and the edge's length (docs/adr/0728)");
+    assert!(
+        b.session.temporary_length().is_some(),
+        "and the edge's length (docs/adr/0728)"
+    );
     let preview = b
         .session
         .preview(&Default::default())
@@ -150,4 +153,36 @@ fn a_many_edged_wall_is_measured_on_the_edge_the_pointer_is_by() {
         second.is_empty() || second.iter().all(|p| (p.y - (N + 1.5)).abs() > 1e-6),
         "the second edge: {second:?}"
     );
+}
+
+#[test]
+fn approaching_a_room_gap_keeps_the_edge_that_owns_the_visible_number() {
+    let mut b = bench();
+    let room = wall(
+        &mut b,
+        &[(0., 0.), (20., 0.), (20., 8.), (0., 8.), (0., 0.)],
+    );
+    b.selection.set([room]);
+    b.move_to(19.9, 4.);
+    let numbers = b.session.temporary_numbers();
+    let target = *numbers
+        .iter()
+        .find(|p| (p.x - (E + 10.)).abs() < 0.01)
+        .expect("20 m gap");
+    let before = b.doc.to_snapshot_v2();
+    for x in [19., 18., 17., 16., 15., 14., 13., 12., 11., 10.] {
+        b.move_to(x, target.y - N);
+        assert_eq!(
+            b.session.temporary_numbers(),
+            numbers,
+            "approaching the visible number at x={x}"
+        );
+    }
+    b.views.clear();
+    b.click(target.x - E, target.y - N);
+    assert!(
+        b.views.iter().any(|v| matches!(v, ViewChange::Text(_))),
+        "click opens the displayed gap"
+    );
+    assert_eq!(b.doc.to_snapshot_v2(), before);
 }

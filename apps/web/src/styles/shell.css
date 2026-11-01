@@ -1306,3 +1306,19 @@
   gap: 6px;
   margin-top: 10px;
 }
+
+/* Supplied wordmarks keep their own colours in every theme. Transparent export
+   margins are clipped only by the view; source images remain unchanged. */
+.brand__logo { display: inline-block; flex: 0 0 auto; position: relative; aspect-ratio: 4; height: auto; overflow: hidden; }
+.brand__logo img { position: absolute; width: 114%; height: auto; max-width: none; left: -8.6%; top: -47%; }
+.brand__logo-light { display: none; }
+[data-theme='light'] .brand__logo-dark { display: none; }
+[data-theme='light'] .brand__logo-light { display: block; left: -9.2%; top: -47%; }
+.brand__mark { object-fit: contain; border-radius: 22%; }
+.brand__compact { display: none; }
+.ribbon[data-tight='1'] .brand__logo,
+.ribbon[data-tight='2'] .brand__logo,
+.ribbon[data-tight='3'] .brand__logo { display: none; }
+.ribbon[data-tight='1'] .brand__compact,
+.ribbon[data-tight='2'] .brand__compact,
+.ribbon[data-tight='3'] .brand__compact { display: block; }

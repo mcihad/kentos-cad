@@ -764,6 +764,9 @@ impl Select {
         self.moved = None;
         self.refused = None;
         self.follow.clear();
+        // A move replaces the previous frame; followers must never accumulate
+        // old hatch outlines, patterns or dimension labels while the pointer moves.
+        self.followers = Preview::default();
         self.ghosts.clear();
         self.marks.clear();
         self.mode_tag = None;
@@ -930,6 +933,7 @@ impl Select {
         };
         let preview = Preview {
             strokes,
+            hatch: self.followers.hatch.clone(),
             texts: self.followers.texts.clone(),
             marks: self.marks.clone(),
             tag: (!lines.is_empty()).then_some(Tag { at, lines }),

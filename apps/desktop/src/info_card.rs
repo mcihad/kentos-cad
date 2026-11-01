@@ -224,7 +224,7 @@ impl App {
             .padding(Padding::from([10, 12]))
             .style(style::container::popover);
         Some(beside(
-            framed,
+            iced::widget::mouse_area(framed).interaction(iced::mouse::Interaction::Idle),
             Point::new(x.round() as f32, y.round() as f32),
             GAP,
         ))

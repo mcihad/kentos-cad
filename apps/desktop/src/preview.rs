@@ -47,7 +47,7 @@ pub struct FieldView<'a> {
 /// area keeps its place in the widget tree (and its gesture state).
 pub fn layer<'a>(
     camera: &Camera,
-    marks: Marks,
+    mut marks: Marks,
     preview: Option<Preview>,
     field: Option<FieldView<'a>>,
     lock_tag: Option<(String, Vec2)>,
@@ -61,6 +61,13 @@ pub fn layer<'a>(
     // The snap colour of the drawing (`--canvas-snap`): a corner's reach is drawn in it.
     let snap = marks.colors.snap;
     let halo = marks.colors.halo;
+    let pointer = marks
+        .crosshair
+        .take()
+        .map(|crosshair| crate::marks::PointerMark {
+            crosshair,
+            colors: marks.colors,
+        });
     if !marks.is_empty() {
         layers.push(canvas_widget(marks).width(Fill).height(Fill).into());
     }
@@ -110,6 +117,10 @@ pub fn layer<'a>(
             Point::new(at.x.round(), at.y.round()),
             Vector::new(18.0, 8.0),
         ));
+    }
+    // Above dimension/text masks; actual cards and text inputs stay above it.
+    if let Some(pointer) = pointer {
+        layers.push(canvas_widget(pointer).width(Fill).height(Fill).into());
     }
     if layers.is_empty() {
         return Space::new().width(Fill).height(Fill).into();

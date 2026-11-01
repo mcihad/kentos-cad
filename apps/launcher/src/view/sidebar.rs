@@ -8,8 +8,8 @@ use std::sync::LazyLock;
 use iced::widget::{Space, button, column, container, row, space, stack, svg, text};
 use iced::{Alignment, ContentFit, Element, Fill, FillPortion, Length, Padding};
 use kentos_ui::icon::{Icon, Tone, icon};
-use kentos_ui::theme::{Mode, Tokens, brand, typography};
-use kentos_ui::widget::brand_mark;
+use kentos_ui::theme::{Mode, Tokens, typography};
+use kentos_ui::widget::brand_logo;
 
 use crate::app::{Launcher, Message, Page};
 use crate::glyphs;
@@ -24,26 +24,14 @@ static PLAN: LazyLock<svg::Handle> = LazyLock::new(|| {
 /// what is under it. The plan starts where the pages end.
 const PAD_X: f32 = 12.0;
 const PAD_Y: f32 = 14.0;
-const MARK: f32 = 26.0;
+const MARK: f32 = 37.5;
 const UNDER_MARK: f32 = 22.0;
 const ITEM_GAP: f32 = 2.0;
 const PAGES: f32 = 4.0;
 
 pub fn sidebar(launcher: &Launcher) -> Element<'_, Message> {
     let mode = launcher.mode();
-    let word = px(18.0);
-    let mark = row![
-        brand_mark(px(MARK)),
-        row![
-            text("Kent").size(word).font(typography::ui_strong()),
-            text("OS")
-                .size(word)
-                .font(typography::ui())
-                .color(brand(mode).text),
-        ],
-    ]
-    .spacing(px(10.0))
-    .align_y(Alignment::Center);
+    let mark = brand_logo(px(150.0));
 
     let pages = column![
         item(

@@ -15,11 +15,11 @@ fonts = []
 # CBS/CAD bileşenleri: projeksiyon, katman modeli, model alanı, ViewCube.
 spatial = ["dep:glam", "dep:bytemuck"]
 # Ekransız görüntü: arayüzü pencere açmadan çizip PNG'ye yazar.
-snapshot = ["dep:iced_runtime", "dep:png"]
+snapshot = ["dep:iced_runtime"]
 
 [dependencies]
-iced = { workspace = true, features = ["canvas", "advanced", "svg"] }
+iced = { workspace = true, features = ["canvas", "advanced", "svg", "image-without-codecs"] }
 glam = { workspace = true, optional = true }
 bytemuck = { workspace = true, features = ["derive"], optional = true }
 iced_runtime = { workspace = true, optional = true }
-png = { workspace = true, optional = true }
+png = { workspace = true }

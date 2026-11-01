@@ -187,6 +187,7 @@ impl App {
         let mut ribbon = Ribbon::new()
             .application(
                 AppButton::new("Kent")
+                    .wordmark()
                     .tail("OS")
                     .tip(kentos_ui::widget::Tip::new("KentOS").body(
                         "Uygulama menüsü: yeni, aç, kaydet, içe ve dışa aktar, bulut ve ayarlar.",
@@ -1865,8 +1866,7 @@ impl App {
                 .style(style::button::secondary)
         };
         match dialog {
-            // The web's rows (dialogs.ts, 653b550): the version, the engine, the
-            // project's coordinate system and the server, then how far the port is.
+            // Application identity and details of the current drawing/connection.
             Asking::About => {
                 let crs = self.document.as_ref().map_or_else(
                     || "Açık çizim yok".to_owned(),
@@ -1874,30 +1874,33 @@ impl App {
                 );
                 let rows = kentos_ui::widget::PropertySheet::new()
                     .row("Sürüm", label::body(env!("CARGO_PKG_VERSION")))
-                    .row("Çizim motoru", label::body("KentOS'un wgpu hattı"))
+                    .row(
+                        "Platform",
+                        label::body(format!("{} · {}", std::env::consts::OS, std::env::consts::ARCH)),
+                    )
+                    .row(
+                        "Çizim",
+                        label::body(self.document.as_ref().map_or("Açık çizim yok", |d| d.model.name())),
+                    )
+                    .row("Çizim motoru", label::body("GPU destekli 2B çizim"))
                     .row("Koordinat sistemi", label::body(crs))
                     .row("Sunucu", label::body(self.server_text()));
-                // The program's own name and line; its own commands counted (docs/adr/0802).
+                // Keep the selected module's own name and description.
                 let about = self.program.map_or(
                     "Harita, kadastro ve imar için CAD/CBS masaüstü uygulaması.",
                     kentos_launch::Module::note,
                 );
-                let commands: Vec<_> = catalog()
-                    .commands()
-                    .iter()
-                    .filter(|c| self.offers(c.id))
-                    .collect();
                 Dialog::new(self.program_title())
-                        .push(label::body(about))
-                        .push(rows)
-                        .push(label::caption(format!(
-                            "Masaüstüne taşınan komut: {} / {}. Web uygulamasıyla aynı Rust hesap çekirdeğini ve sözleşmelerini kullanır.",
-                            commands.iter().filter(|c| c.standing == Standing::Ported).count(),
-                            commands.len()
-                        )))
-                        .action(close())
-                        .width(440.0)
-.modal(Message::DialogClosed)
+                    .push(kentos_ui::widget::brand_logo(260.0))
+                    .push(label::body(about))
+                    .push(label::strong("Uygulama bilgileri"))
+                    .push(rows)
+                    .push(label::strong("Çizim, veri ve otomasyon"))
+                    .push(label::body("Ölçülü CAD çizimleri, CBS verileri ve pafta üretimi. Python API ve MCP bağlantısıyla komutları betiklerden veya yapay zekâ araçlarından kullanın."))
+                    .push(label::caption("Model ölçüleri, çizim birimi ve pafta ölçeği ayrı tutulur. Proje bilgilerini ve birim ayarlarını Proje ayarları bölümünde inceleyebilirsiniz."))
+                    .action(close())
+                    .width(560.0)
+                    .modal(Message::DialogClosed)
             }
             // The web's “Fare ve klavye kısayolları” (shortcuts.rs).
             Asking::Shortcuts => self.shortcuts_view(),

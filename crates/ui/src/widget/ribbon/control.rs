@@ -568,6 +568,7 @@ pub struct AppButton<'a, Message> {
     tip: Option<Tip>,
     open: bool,
     on_press: Option<Message>,
+    wordmark: bool,
 }
 
 impl<'a, Message: Clone + 'a> AppButton<'a, Message> {
@@ -578,6 +579,7 @@ impl<'a, Message: Clone + 'a> AppButton<'a, Message> {
             tip: None,
             open: false,
             on_press: None,
+            wordmark: false,
         }
     }
 
@@ -603,6 +605,12 @@ impl<'a, Message: Clone + 'a> AppButton<'a, Message> {
         self.on_press = Some(message);
         self
     }
+
+    /// Use the supplied light/dark KentOS wordmark instead of the generic title.
+    pub fn wordmark(mut self) -> Self {
+        self.wordmark = true;
+        self
+    }
 }
 
 impl<'a, Message: Clone + 'a> From<AppButton<'a, Message>> for Element<'a, Message> {
@@ -620,8 +628,13 @@ impl<'a, Message: Clone + 'a> From<AppButton<'a, Message>> for Element<'a, Messa
                     .style(brand_text(0.85)),
             );
         }
-        let face: Element<'a, Message> = button(
+        let face_content = if app_button.wordmark {
+            row![crate::widget::brand_logo(typography::scaled(100.0)), icon(Icon::ChevronDown).size(12.0)]
+        } else {
             row![brand_mark(20.0), word, icon(Icon::ChevronDown).size(12.0)]
+        };
+        let face: Element<'a, Message> = button(
+            face_content
                 .spacing(7)
                 .height(Fill)
                 .align_y(Center),

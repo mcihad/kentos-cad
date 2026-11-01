@@ -11,36 +11,28 @@ import { tooltip } from '../widgets/tooltip';
  * import and export, the cloud and the settings.
  */
 
-/**
- * The mark: a navy tile with a white K whose arms meet at a survey point.
- * The brand colour is its own (--c-brand), not the accent the user picks.
- */
-export function brandMark(size = 20): SVGSVGElement {
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('viewBox', '0 0 24 24');
-  svg.setAttribute('width', String(size));
-  svg.setAttribute('height', String(size));
-  svg.setAttribute('aria-hidden', 'true');
-  svg.classList.add('brand__mark');
-  const id = `brand-g-${Math.random().toString(36).slice(2, 8)}`;
-  svg.innerHTML =
-    `<defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="var(--c-brand-hi)"/><stop offset="1" stop-color="var(--c-brand)"/></linearGradient></defs>` +
-    `<rect x="1" y="1" width="22" height="22" rx="6" fill="url(#${id})"/>` +
-    '<rect x="1.5" y="1.5" width="21" height="21" rx="5.5" fill="none" stroke="rgba(255,255,255,0.28)" stroke-width="1"/>' +
-    '<path d="M8 6.2v11.6" stroke="var(--c-brand-ink)" stroke-width="2.3" stroke-linecap="round"/>' +
-    '<path d="M16.6 6.4 10.3 12l6.3 5.6" fill="none" stroke="var(--c-brand-ink)" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>' +
-    '<circle cx="10.3" cy="12" r="2.1" fill="var(--c-brand-ink)"/>' +
-    '<circle cx="10.3" cy="12" r="0.8" fill="var(--c-brand-hi)"/>';
-  return svg;
+/** The supplied icon and light/dark wordmarks, bundled from the shared assets. */
+const appIcon = new URL('../../../../../assets/images/kentos_app_icon.png', import.meta.url).href;
+const darkLogo = new URL('../../../../../assets/images/kentos_dark_logo.png', import.meta.url).href;
+const lightLogo = new URL('../../../../../assets/images/kentos_light_logo.png', import.meta.url).href;
+export function brandMark(size = 20): HTMLImageElement {
+  return h('img', { class: 'brand__mark', src: appIcon, width: size, height: size, alt: '', 'aria-hidden': 'true' });
+}
+export function brandLogo(width = 100): HTMLSpanElement {
+  return h('span', { class: 'brand__logo', style: `width:${width}px`, role: 'img', 'aria-label': 'KentOS' },
+    h('img', { class: 'brand__logo-dark', src: darkLogo, alt: '' }),
+    h('img', { class: 'brand__logo-light', src: lightLogo, alt: '' }));
 }
 
 /** The mark, the wordmark and a caret: opens the application menu. */
 export function brandButton(ctx: AppContext, d: DisposableStore, extraClass = ''): HTMLButtonElement {
+  const compact = brandMark(20);
+  compact.classList.add('brand__compact');
   const b = h(
     'button',
     { class: `brand ${extraClass}`.trim(), type: 'button', 'aria-haspopup': 'dialog', 'aria-expanded': 'false', 'aria-label': 'KentOS uygulama menüsü' },
-    brandMark(20),
-    h('span', { class: 'brand__word' }, 'Kent', h('span', { class: 'brand__os' }, 'OS')),
+    brandLogo(),
+    compact,
     h('span', { class: 'brand__caret' }, icon('chevronDown', 12)),
   );
   let opening = false;

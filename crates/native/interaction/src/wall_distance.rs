@@ -164,7 +164,30 @@ impl Overlay {
         let measured: Vec<usize> = (0..self.edges.len())
             .filter(|k| self.edges[*k].0.is_some())
             .collect();
+        // A number can be far from the wall that owns it. Preserve the shown
+        // edge on the way from its midpoint to its number; otherwise crossing
+        // the room's nearest-edge bisector makes the target disappear.
+        let approaching = pointer.is_some_and(|p| {
+            self.edge.is_some_and(|k| {
+                let Some((_, [a, b])) = self.edges.get(k) else {
+                    return false;
+                };
+                let middle = Vec2::new((a.x + b.x) / 2., (a.y + b.y) / 2.);
+                let numbers: Vec<_> = self
+                    .sides
+                    .iter()
+                    .map(|s| s.text_at)
+                    .chain(self.length.iter().map(|l| l.text_at))
+                    .collect();
+                crate::opening_distance::nearest_number(&numbers, |p| *p, cx.view.to_screen(p), cx)
+                    .is_some()
+                    || numbers
+                        .iter()
+                        .any(|at| off_segment(p, [middle, *at]) <= cx.view.world_length(12.))
+            })
+        });
         let edge = match pointer {
+            Some(_) if approaching => self.edge,
             Some(at) => measured.iter().copied().min_by(|a, b| {
                 off_segment(at, self.edges[*a].1).total_cmp(&off_segment(at, self.edges[*b].1))
             }),

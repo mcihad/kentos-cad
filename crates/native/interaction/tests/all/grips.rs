@@ -18,6 +18,55 @@ const OBJECTS: &str = include_str!("../../../../../fixtures/interaction/v1/objec
 
 const PROMPT: &str = "Tutamaç: yeni konumu belirtin ya da koordinat yazın (Esc: vazgeç) [Taşı (T) / Döndür (D) / Ölçekle (L) / Aynala (A) / Taban noktası (B) / Kopya (K): kapalı]";
 
+#[test]
+fn repeated_grip_moves_replace_associated_hatch_previews_without_creating_objects() {
+    let drawing = include_str!("../../../../../fixtures/interaction/v1/hatch.kcad");
+    let mut b = Bench::on(drawing);
+    b.start("hatch");
+    b.click(-26., 0.);
+    b.confirm();
+    let hatch = b
+        .doc
+        .entities()
+        .find(|e| matches!(e, Entity::Hatch(_)))
+        .expect("associated hatch")
+        .base()
+        .id;
+    assert!(hatch > 0);
+    b.run(|s, cx| s.cancel(cx));
+    b.draft.snap = false;
+    b.selection.set([Slot(1)]);
+    let corner = match b.doc.get(Slot(1)).unwrap() {
+        Entity::Polygon(p) => rel(p.pts[0]),
+        _ => panic!("polygon"),
+    };
+    let before = b.doc.to_snapshot_v2();
+    b.click(corner[0], corner[1]);
+    assert!(b.session.grip_active());
+    b.move_to(corner[0] - 1., corner[1] - 1.);
+    let expected = b.session.preview(&Format::default()).unwrap();
+    assert!(expected.strokes.len() > 2, "the hatch follows its boundary");
+    for i in 0..200 {
+        let delta = if i % 2 == 0 { 2. } else { 1. };
+        b.move_to(corner[0] - delta, corner[1] - delta);
+    }
+    let after = b.session.preview(&Format::default()).unwrap();
+    assert_eq!(
+        after.strokes.len(),
+        expected.strokes.len(),
+        "preview does not accumulate outlines"
+    );
+    assert_eq!(
+        after, expected,
+        "only the latest pointer position is previewed"
+    );
+    assert_eq!(b.doc.to_snapshot_v2(), before, "hover never creates copies");
+    b.click(corner[0] - 1., corner[1] - 1.);
+    assert_eq!(b.doc.len(), before.entities.len());
+    assert_eq!(b.doc.undo().as_deref(), Some("Tutamaçla düzenle"));
+    assert_eq!(b.doc.to_snapshot_v2(), before);
+}
+
 /// The drawing with `slots` selected, snapping off.
 fn bench(slots: &[u32]) -> Bench {
     let mut b = Bench::on(OBJECTS);

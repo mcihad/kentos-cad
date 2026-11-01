@@ -241,12 +241,9 @@ impl App {
             None => ("CAD", "Harita, kadastro ve kent bilgi sistemi çizimi"),
         };
         let brand = row![
-            kentos_ui::widget::brand_mark(44.0),
+            kentos_ui::widget::brand_logo(160.0),
             column![
                 row![
-                    text("KentOS ")
-                        .font(typography::ui_strong())
-                        .size(typography::title()),
                     text(product)
                         .size(typography::title())
                         .style(style::text::muted),
