@@ -520,3 +520,44 @@ pub struct EntitiesRelated {
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
 }
+
+
+/// Session-only object visibility; never changes layers, saved files or geometry Undo.
+pub const CAD_ENTITIES_ISOLATE: &str = "cad.entities.isolate";
+pub const CAD_ENTITIES_ISOLATE_VERSION: u32 = 1;
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct EntitiesIsolate {
+    pub action: IsolationAction,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum IsolationAction {
+    /// Replace isolation with these drawing object UIDs. New objects remain visible.
+    Isolate { uids: Vec<String> },
+    /// End isolation; existing layer filters, locks and visibility stay unchanged.
+    End,
+    /// Read the current session state.
+    Query,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct EntitiesIsolated {
+    pub active: bool,
+    /// Live objects hidden by isolation alone.
+    pub hidden: usize,
+    /// Live objects passing isolation alone; layers and other visibility rules can still hide them.
+    pub retained: usize,
+}

@@ -3,6 +3,32 @@
   "version": 1,
   "commands": [
     {
+      "id": "view.isolateObjects",
+      "title": "Seçimi geçici yalıt",
+      "icon": "layerIsolate",
+      "description": "Seçili nesneler dışındakileri bu oturumda gizler. Katman süzgeçleri ve görünürlüğü değişmez; dosyaya yazılmaz. Yeni nesneler görünür kalır.",
+      "aliases": [
+        "ISOLATEOBJECTS",
+        "NESNEYALIT"
+      ],
+      "shortcuts": [],
+      "category": "Seçim",
+      "status": "implemented"
+    },
+    {
+      "id": "view.endObjectIsolation",
+      "title": "Nesne yalıtımını bitir",
+      "icon": "layerIsolate",
+      "description": "Geçici nesne yalıtımını bitirir. Katman görünürlüğü, kilitler ve kalıcı süzgeçler korunur.",
+      "aliases": [
+        "UNISOLATEOBJECTS",
+        "YALITIMIBITIR"
+      ],
+      "shortcuts": [],
+      "category": "Seçim",
+      "status": "implemented"
+    },
+    {
       "id": "address.search",
       "title": "Adres ara",
       "icon": "addressSearch",

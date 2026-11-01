@@ -106,6 +106,7 @@ fn in_scope<'d>(value: &FeaturesValue, host: &'d dyn Scene) -> Vec<&'d Entity> {
     if !out.is_empty() {
         list.retain(|e| !out.contains(&Slot(e.base().id)));
     }
+    list.retain(|e| doc.isolation_shown(Slot(e.base().id)));
     list
 }
 

@@ -38,6 +38,7 @@ pub(crate) fn inspect_captured(doc:&Document,book:&SheetBook,sheet:&str,render:&
     let list = display::display_list(book, sheet, render)
         .map_err(|e| PlotError::new(&e.code, e.message))?;
     let mut spatial = Spatial::new();
+    spatial.ignore_object_isolation();
     spatial.reload(doc);
     let images=match sources{Some(sources)=>Images::captured(doc,drawing,sources),None=>Images::new(doc,drawing)};
     let factor = kentos_sheet::print_setup::plan_for(book, sheet)
@@ -291,6 +292,7 @@ pub fn page_inputs(
         .sheet(id)
         .ok_or_else(|| PlotError::new("unknown_sheet", "Pafta yok."))?;
     let mut spatial = Spatial::new();
+    spatial.ignore_object_isolation();
     spatial.reload(doc);
     let library = crate::book::library_of(doc);
     let mut render = base.clone();
@@ -383,6 +385,7 @@ mod tests {
                 .find_map(|p| if let Prim::Map(m) = p { Some(m) } else { None })
                 .unwrap();
             let mut spatial = Spatial::new();
+            spatial.ignore_object_isolation();
             spatial.reload(&doc);
             let library = crate::book::library_of(&doc);
             let center = map.view.center.unwrap();

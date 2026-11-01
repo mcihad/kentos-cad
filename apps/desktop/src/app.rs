@@ -1975,7 +1975,7 @@ impl App {
         self.spatial.sync(&doc.model);
         self.styles.follow_project(Some(doc.model.styles()));
         let model = &doc.model;
-        self.selection.retain(|slot| model.get(slot).is_some());
+        self.selection.retain(|slot| model.get(slot).is_some() && model.isolation_shown(slot));
         // The slider's range follows the drawing (docs/adr/0210 §5).
         self.time_refresh();
         // A new object its layer's filter leaves out is said (docs/adr/0211 §3).
@@ -3253,6 +3253,8 @@ impl App {
             "view.overview" => self.toggle_overview(),
             "view.magnifier" => self.toggle_magnifier(),
             // Yalıtımı kaldır (docs/adr/0177 §1): what Katmanı yalıt hid, shown again.
+            "view.isolateObjects" => self.object_isolation(false),
+            "view.endObjectIsolation" => self.object_isolation(true),
             "layer.unisolate" => match &mut self.document {
                 Some(doc) => {
                     let (level, text) = kentos_interaction::layer_tools::unisolate(&mut doc.model);
@@ -3532,6 +3534,8 @@ impl App {
                 self.session.lock_reference().is_some() && self.session.travel().is_some()
             }
             "draft.lock.clear" => self.session.lock_reference().is_some() && self.locks.any(),
+            "view.isolateObjects" => doc.is_some() && !self.selection.is_empty() && !self.session.is_running(),
+            "view.endObjectIsolation" => doc.is_some_and(kentos_domain::Document::objects_isolated) && !self.session.is_running(),
             "edit.deselect" | "view.zoomSelection" => !self.selection.is_empty(),
             // An attachment goes on one object (attachments.rs, docs/adr/0225 §2), as the web's.
             "attachment.add" | "attachment.addLink" => doc.is_some() && self.selection.len() == 1,

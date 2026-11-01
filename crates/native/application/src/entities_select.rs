@@ -25,6 +25,7 @@ use crate::checks::{self, Stop, error, is_uid_text};
 use crate::codes;
 
 mod properties;
+pub mod isolation;
 
 /// The picked piece's own assignment and resolved CAD paint; the owning insert remains the edit target.
 pub fn block_piece_colors(doc: &Document, slot: Slot, path: &[u32]) -> Option<(String, String)> {

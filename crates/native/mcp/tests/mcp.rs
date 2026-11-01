@@ -77,6 +77,18 @@ fn property_selection_and_bulk_text_height_use_the_same_command_through_mcp() {
     assert_eq!(changed["structuredContent"]["output"]["changed"],selected,"{changed}");
     call(&mut server,"drawing.undo",json!({"drawing":drawing}));
     assert_eq!(call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"],before);
+    let isolate = json!({"kind":"isolate","uids":selected});
+    let planned = call(&mut server,"cad.entities.isolate",json!({"drawing":drawing,"action":isolate,"op":"plan"}));
+    assert_eq!(planned["structuredContent"]["output"]["hidden"],2,"{planned}");
+    assert_eq!(call(&mut server,"cad.entities.select",json!({"drawing":drawing,"region":{"kind":"all"}}))["structuredContent"]["output"]["uids"].as_array().unwrap().len(),3);
+    let isolated=call(&mut server,"cad.entities.isolate",json!({"drawing":drawing,"action":isolate}));
+    assert_eq!(isolated["structuredContent"]["output"]["retained"],1,"{isolated}");
+    assert_eq!(call(&mut server,"cad.entities.select",json!({"drawing":drawing,"region":{"kind":"all"}}))["structuredContent"]["output"]["uids"],selected);
+    let processing=call(&mut server,"cad.processing.run",json!({"drawing":drawing,"tool":"selection.byExpression","parameters":{"input":{"scope":"all"},"condition":"true"}}));
+    assert_eq!(processing["structuredContent"]["output"]["selected"],selected,"{processing}");
+    call(&mut server,"cad.entities.isolate",json!({"drawing":drawing,"action":{"kind":"end"}}));
+    assert_eq!(call(&mut server,"cad.entities.select",json!({"drawing":drawing,"region":{"kind":"all"}}))["structuredContent"]["output"]["uids"].as_array().unwrap().len(),3);
+    assert_eq!(call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"],before);
     std::fs::remove_dir_all(dir).unwrap();
 }
 

@@ -3197,3 +3197,59 @@ fn a_kots_rows_bind_it_to_a_level_and_set_its_offset() {
     assert_eq!((d.za, d.level.is_none()), (Some(6.5), true));
     assert_eq!(value(&app, "Geometri", "Kat"), "Yok (kendi kotu)");
 }
+
+#[test]
+fn object_isolation_updates_drawing_picking_and_output_without_layer_or_history_changes() {
+    use serde_json::json;
+    let mut app = objects();
+    crate::files_testing::make_cad(&mut app);
+    let model = &mut app.document.as_mut().unwrap().model;
+    let all: Vec<_> = model.entities().map(|e| Slot(e.base().id)).collect();
+    let before = model.to_snapshot_v2();
+    let undo = model.undo_labels();
+    app.selection.set([Slot(1)]);
+    app.object_isolation(false);
+    app.follow_document();
+    let model = &mut app.document.as_mut().unwrap().model;
+    assert!(model.objects_isolated());
+    assert_eq!(model.to_snapshot_v2(), before);
+    assert_eq!(model.undo_labels(), undo);
+    for slot in &all {
+        assert_eq!(app.spatial.store().view_shown(f64::from(slot.0)), *slot == Slot(1), "{slot:?}");
+    }
+    let (_, looks) = app.spatial.level_looks();
+    assert_eq!(looks.hidden.len(), all.len()-1, "the styled scene uses the same hidden objects");
+    let q = kentos_native_application::registry::run(
+        &mut kentos_native_application::ExecutionContext::new(model), "cad.entities.select",
+        kentos_commands::CallOp::Execute, json!({"region":{"kind":"all"}})).unwrap();
+    assert_eq!(q["output"]["uids"].as_array().unwrap().len(), 1);
+    let mut output = kentos_interaction::Spatial::new();
+    output.ignore_object_isolation();
+    output.reload(model);
+    assert!(output.level_looks().1.hidden.is_empty(), "temporary editor state must not reach plotted labels or geometry");
+    assert!(all.iter().all(|s| output.store().view_shown(f64::from(s.0))));
+    app.object_isolation(true);
+    app.follow_document();
+    assert!(app.spatial.level_looks().1.hidden.is_empty());
+    assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(), before);
+    assert!(all.iter().all(|s| app.spatial.store().view_shown(f64::from(s.0))));
+}
+
+
+#[test]
+fn single_cad_text_height_uses_the_same_physical_units_and_atomic_validation_as_bulk() {
+    let mut app = objects();
+    crate::files_testing::make_cad(&mut app);
+    let slot = scoped_text(&mut app, "cizim", 0.5);
+    app.selection.set([slot]);
+    for (input, metres) in [("77 cm",0.77),("250 mm",0.25),("1 ft",0.3048)] {
+        event(&mut app, Event::Commit(Field::TextHeight(slot), input.into()));
+        let Entity::Text(t) = app.document.as_ref().unwrap().model.get(slot).unwrap() else { panic!("text"); };
+        assert!((t.height-metres).abs()<1e-12,"{input}");
+    }
+    let before=app.document.as_ref().unwrap().model.to_snapshot_v2();
+    for bad in ["", "0", "-1 cm", "77 garbage", "NaN"] {
+        event(&mut app, Event::Commit(Field::TextHeight(slot), bad.into()));
+        assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(),before,"{bad}");
+    }
+}

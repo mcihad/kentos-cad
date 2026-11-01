@@ -1,6 +1,6 @@
 # 0820 — Seçimden güvenli toplu özellik düzenlemeye geçiş
 
-Tarih: 2026-11-01. Kapsam: CAD-ADV-03'ün özellik kapsamı, sorgu ve toplu yazı yüksekliği bölümleri. Geçici nesne yalıtımı kabulü henüz tamamlanmadığından planın bütünü kapatılmaz.
+Tarih: 2026-11-01. Kapsam: CAD-ADV-03; özellik kapsamı, sorgu, güvenli tek/toplu yazı yüksekliği ve geçici nesne yalıtımı.
 
 ## Karar
 
@@ -81,12 +81,93 @@ girdisinin varsayılanı ve model çalıştırma formu aynı renk bileşenini ku
 - Gerçek Enter/Escape, negatif giriş, birimin ilk karakterleri, tür kapsamı, kayıtlı seçim tarifini çalıştırma, sonuçtan sahneye yakınlaştırma ve üç iç içe blok renk kaynağı kullanılarak sınandı. Hedef değişiminde kuyrukta kalmış olaylar otomasyonla ayrıca sınandı.
 - Test çizimleri, ekran görüntüleri ve günlükler repo dışında `/tmp/kentos-cad-advanced-03-2026-11-01/` içindedir. Depoya ekran görüntüsü eklenmez.
 
-## Henüz kapanmayan kabul
+## Geçici nesne yalıtımı
 
-Kalıcı katman süzgecinden ayrı geçici **nesne** yalıtımı ve yalıtımı bitirme akışı tamamlanmalıdır. Var olan Katmanı yalıt/Yalıtımı kaldır bunun yerine tamamlanmış nesne yalıtımı sayılmaz. 1100 mantıksal piksel genişliğindeki gerçek pencerede panel ve blok renk sorgusu sınandı; atanan renk 1/3, aynı görünür renk 2/3 hedef buldu. Seçim değiştirirken açık hücre taslağının gerçek etkileşim tekrarı da plan kapatılmadan tamamlanır. Bu kayıt bu kalan işleri tamamlanmış göstermez.
+`cad.entities.isolate` kaydedilmeyen, belge oturumuna ait bir görünüm komutudur.
+`action.kind` değerleri `isolate`, `end` ve `query` olur; `isolate` geçerli,
+boş olmayan bir `uids` listesi ister. Bütün kimlikler değiştirmeden önce
+kontrol edilir; geçersiz/bilinmeyen hedef isteği atomik reddeder. `plan` salt
+okunurdur. Sonuçtaki `hidden` ve `retained` yalnız bu maskeyi sayar;
+katman, evre veya başka görünürlük koşulları ayrıca uygulanır.
+
+Maske kalıcı UID'lerle tutulur. Yeniden yalıtma önceki maskeyi değiştirir;
+yeni çizilen nesneler görünürdür, silinip Undo ile geri gelen gizli nesne
+aynı UID ile gizli kalır. Katman gözleri, kilitleri, kalıcı süzgeçleri ve
+evreleri değiştirilmez. Gizli katmandaki bir nesne yalıtılarak zorla açılmaz.
+Çizim, etiket, yakalama/seçim ve Processing'in görünür kaynakları aynı
+maskeyi kullanır. Processing modelinin açık `Ids` girdisi önceki sözleşmesi
+gereği görünürlükten bağımsızdır; bu kaynak sessizce yeniden yorumlanmaz.
+
+Yalıtım dosyaya, otomatik kurtarma kopyasına veya geometrik Undo geçmişine
+yazılmaz; belgeyi kirletmez, geometri revizyonunu artırmaz, Redo'yu silmez.
+Yeniden açılan belge yalıtımsızdır. Komut anlamsal günlüğe ve Python yankısına
+normal komut yolu ile gider. PDF/pafta/atlas/preflight ve pafta önizlemesi
+geçici editör maskesini dikkate almaz; kalıcı proje görünüm ayarları korunur.
+
+```python
+from kentos import cad
+
+cad.entities.isolate(doc, action=cad.IsolateIsolationAction(uids=selected_uids))
+state = cad.entities.isolate(doc, action=cad.QueryIsolationAction())
+cad.entities.isolate(doc, action=cad.EndIsolationAction())
+```
+
+MCP aynı `cad.entities.isolate` şemasını kullanır. Masaüstünde paletin yalıtım
+simgesi, sahne sağ tuş menüsü ve ISOLATEOBJECTS/UNISOLATEOBJECTS komutları aynı
+yola gider. AutoCAD'in resmî palet ekranındaki üst satır incelenerek tür/sayı
+kutusu, özelliklerle seçim simgesi ve yalıtım simgesi tek satırda toplandı.
+Ayrı metinli araç satırı, ikinci bir “…” menüsü ve tekrarlayan tür/katman
+başlığı yoktur. Simgelerin açıklamaları vardır. Yalıtım açıkken simge etkin
+vurgulu olur ve **Nesne yalıtımını bitir** işlevine döner; seçim boşalsa da
+erişilebilir kalır. Yalnız açık yalıtımda kısa durum satırı, kilitli hedef
+varsa düzenlenebilir/kilitli sayısı gösterilir. Karma tür seçimi yalnız
+özellik kapsamını daraltır; sahne seçimi korunur. Nesne adı/katman ve tam
+tür özeti seçici açıklamasında korunur.
+
+## Kalan kabulün doğrulanması — 2026-11-01
+
+- Native iki ek test: salt okunur plan, dosya/revizyon/geometri geçmişinin
+  değişmemesi, yeni nesne, silme/Undo, kalıcı UID, hatalı hedefin atomik reddi,
+  yeniden açma ve Redo'nun korunması.
+- Masaüstü: 1566 test geçti (256 ignored); çizim/picking/etiket görünürlüğü
+  ve çıkışın maskeden bağımsızlığı ayrıca sınandı. Beş etkilenen kitaplıkta
+  Clippy `-D warnings` geçti.
+- Python: beş test geçti. 50.000 nesnede 5.000 hedef yalıtılıp 45.000 gizli
+  sayıldı; aynı hedefler sorgu ve Processing ile bulundu. Yükseklik değişimi,
+  Undo/Redo, maskeyi bitirme ve kaydedilmeyen görünüm doğrulandı.
+- MCP'nin gerçek Server testi: plan/isolate/query/end, Processing hedefleri,
+  belge değişmezliği ve toplu düzenleme aynı komutlarla geçti.
+- Gerçek PDF üretimi regresyon testi: geçici maskeyle bütün editör nesneleri
+  gizliyken bile, önceki PDF'nin baytları ve preflight bulguları birebir aynı.
+- Gerçek uygulamada A yazısının açık hücresine **77 cm** girilip B seçildi.
+  Odaktan çıkan taslak yalnız A'ya **0,77 m** yazıldı; B ve kilitli C **0,50 m**
+  kaldı. B'de **88 cm** taslağı Escape ile bırakıldı. Kaydedilen dosyanın
+  bağımsız karşılaştırması yalnız A yüksekliğinin değiştiğini doğruladı.
+- Bu tekrar tekli yazı yüksekliği alanının birim ekini eskiden atabildiğini
+  ortaya çıkardı. CAD tekli alanı da toplu alanla aynı fiziksel birim okuyucusuna
+  geçirildi; cm/mm/ft ve atomik hatalı giriş testleri eklendi.
+- A yalıtıldı; gizli B'nin yerinde gerçek tıklama seçim üretmedi. Seçim boşken
+  bitirme eylemi erişilebilir kaldı. Yalıtım sırasında kaydedilen dosya,
+  yalıtım öncesi belgeyle bütün baytlarıyla eşit çıktı. Bitirince B, kilitli C
+  ve çizgi döndü; başlangıçta gizli katman gizli kaldı.
+- ISOLATEOBJECTS komut aramasıyla A tekrar yalıtıldı; **100 cm** Enter ile
+  **1,000 m** oldu. Undo yüksekliği **0,770 m** yaptı ve yalıtımı korudu.
+  Yalıtımı bitirdikten sonra Redo tekrar **1,000 m** yaptı. Son iki Undo ve
+  kayıt sonunda bütün belge, başlangıçla birebir eşit bulundu.
+- Son palet düzeni gerçek uygulamada tekrarlandı: dört sahne nesnesi korunurken
+  yazı türüyle üç hedefe daraldı, iki düzenlenebilir/bir kilitli sayıldı.
+  Küçük sorgu simgesi mevcut seçili/yazı kapsamını açtı. Yalıtım simgesi
+  çalıştırıldı; seçim boşaltılıp panel minimum 240 mantıksal piksele daraltıldı.
+  Seçici ve iki simge taşmadı; etkin simge tek tıkla yalıtımı bitirdi.
+  Processing paketinin 72 testi geçti (9 ignored).
+- Görüntüler, karşılaştırma dosyaları ve günlükler repo dışında
+  `/tmp/kentos-cad-advanced-03-finish-2026-11-01/` içindedir.
 
 ## Kaynaklar
 
+- [Autodesk Isolate/Hide Objects](https://help.autodesk.com/cloudhelp/2026/ENU/AutoCAD-LT/files/GUID-8F36228C-1CAD-4993-96F6-7FF679878E47.htm): katman yalıtımından ayrı, oturumluk nesne görünürlüğü.
+- [Autodesk OBJECTISOLATIONMODE](https://help.autodesk.com/cloudhelp/2023/ENU/AutoCAD-LT/files/GUID-B4ED98BE-62D0-4982-82A2-87B744C56F99.htm): geçici/kalıcı görünüm ayrımı; bu uygulama geçici olanı seçer.
+- [AutoCAD Properties Palette ve ekran örnekleri](https://help.autodesk.com/cloudhelp/2026/ENU/AutoCAD-LT-DidYouKnow/files/GUID-94C065AB-FF9E-4752-B778-23D2FBB87E18.htm): üstte tür/sayı seçici ile küçük seçim araçları; tür kapsamı sahne seçimini değiştirmez.
 - [QCAD Property Editor](https://qcad.org/en/manual/scripts/widgets/propertyeditor/doc/propertyeditor/): karma seçimde türle özellik kapsamı.
 - [QCAD Selection Filter](https://www.qcad.org/en/manual/scripts/pro/widgets/selectionfilter/doc/selectionfilter/): kaynak/görünen renk ayrımı ve seçim birleştirme biçimleri.
 

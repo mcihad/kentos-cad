@@ -254,3 +254,22 @@ fn svg_assets_render_with_no_window_or_system_fonts() {
     assert!(String::from_utf8_lossy(&pdf.bytes).contains("/Subtype /Image"));
     assert!(!pdf.findings.iter().any(|f| f.code == "svg_not_in_pdf"));
 }
+
+
+#[test]
+fn temporary_editor_isolation_does_not_change_the_exported_pdf() {
+    let data: Value = serde_json::from_str(include_str!("../../../../../fixtures/sheet/v1/headless-output.json")).unwrap();
+    let case = data["cases"].as_array().unwrap().iter().find(|c| c["expected"]["visible"] == true).unwrap();
+    let mut doc = Document::from_snapshot(serde_json::from_value(case["setup"].clone()).unwrap()).unwrap();
+    let mut book = SheetBook::default();
+    book.sheets.push(serde_json::from_value(case["sheet"].clone()).unwrap());
+    doc.set_sheets(kentos_sheet::project::project_sheets(&book, |_| None).unwrap()).unwrap();
+    let baseline = kentos_plot::book::book_pdf(&doc, &[], "QA", "2026-11-01").unwrap();
+    // A valid session can have no remaining visible targets after its isolated object is deleted.
+    doc.isolate_objects(&[]);
+    let interactive = Spatial::of(&doc);
+    assert!(!interactive.level_looks().1.hidden.is_empty());
+    let isolated = kentos_plot::book::book_pdf(&doc, &[], "QA", "2026-11-01").unwrap();
+    assert_eq!(baseline.bytes, isolated.bytes, "output geometry and labels must ignore the editor's mask");
+    assert_eq!(baseline.findings, isolated.findings);
+}

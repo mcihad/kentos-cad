@@ -46,7 +46,8 @@ use kentos_interaction::properties;
 use kentos_ui::label;
 use kentos_ui::style;
 use kentos_ui::widget::property_grid::{self, PropertySheet};
-use kentos_ui::widget::{EditCell, Menu, swatch};
+use kentos_ui::widget::{EditCell, Menu};
+use kentos_ui::icon::{Icon, icon};
 
 pub(crate) use rows::{Choice, Editor, Panel, Row, Summary};
 
@@ -543,59 +544,55 @@ impl App {
         let panel = self.properties_panel(doc);
         let total = panel.total;
         let targets = self.properties_kind(doc).and_then(|kind| panel.types.iter().find(|(k, _)| *k == kind).map(|(_, n)| *n)).unwrap_or(total);
-        let scope: Element<'a, Message> = if panel.types.len() > 1 {
-            use kentos_ui::widget::select::{Choice as SelectChoice, Select};
-            let kinds: Vec<_> = panel.types.iter().map(|(kind, _)| kind.to_string()).collect();
-            let selected = self.properties_kind(doc).and_then(|kind| kinds.iter().position(|k| k == kind)).map_or(0, |i| i + 1);
-            let choices: Vec<_> = std::iter::once(SelectChoice::new(format!("Tüm türler ({total})")))
-                .chain(panel.types.iter().map(|(kind, n)| SelectChoice::new(format!("{} ({n})", crate::selecting::kind_title(kind)))))
-                .collect();
-            boxed(column![
-                label::caption("Düzenlenecek nesne türü"),
-                Select::new(choices, Some(selected), move |i| Message::Properties(Event::Kind(i.checked_sub(1).and_then(|i| kinds.get(i).cloned())))),
-                label::caption(format!("{targets} hedef · {} düzenlenebilir · {} kilitli, atlanacak", panel.editable, targets.saturating_sub(panel.editable))),
-                label::caption("Sahnedeki seçim korunur; yalnız özellik kapsamı daralır."),
-            ].spacing(5), [9, 12])
-        } else {
-            space().height(0).into()
+        // Like a CAD property palette: type/count and compact tools share one row.
+        use kentos_ui::widget::select::{Choice as SelectChoice, Select};
+        let kinds: Vec<_> = panel.types.iter().map(|(kind, _)| kind.to_string()).collect();
+        let selected = if panel.types.len() > 1 { self.properties_kind(doc).and_then(|kind| kinds.iter().position(|k| k == kind)).map_or(0, |i| i + 1) } else { 0 };
+        let all = match panel.types.as_slice() {
+            [] => "Seçili nesne yok".to_owned(),
+            [(kind, n)] => format!("{} ({n})", crate::selecting::kind_title(kind)),
+            _ => format!("Tümü ({total})"),
         };
-        let head: Element<'a, Message> = match panel.summary {
-            Summary::Empty => boxed(
-                column![
-                    label::strong("Seçili nesne yok"),
-                    label::muted(
-                        "Özelliklerini görmek için çizimde bir nesneye tıklayın. Birden fazla nesne için sürükleyerek seçin."
-                    ),
-                ]
-                .spacing(4),
-                [14, 14],
-            ),
-            Summary::One { kind, label, layer } => {
-                let mut title = row![label::strong(kind)].spacing(8).align_y(Center);
-                if let Some(text) = label {
-                    title = title.push(label::body(text).style(accent_text));
-                }
-                let mut lines = column![title].spacing(3);
-                if let Some((color, path)) = layer {
-                    lines = lines.push(
-                        row![swatch(self.drawing_color(&color)), label::caption(path)]
-                            .spacing(6)
-                            .align_y(Center),
-                    );
-                }
-                boxed(lines, [9, 12])
-            }
-            Summary::Many { count, kinds } => boxed(
-                column![
-                    label::strong(if self.properties_kind(doc).is_some() {
-                        format!("{count} nesne · özellik kapsamı")
-                    } else { format!("{count} nesne seçili") }),
-                    label::caption(kinds),
-                ]
-                .spacing(3),
-                [9, 12],
-            ),
+        let mut choices = vec![SelectChoice::new(all)];
+        if panel.types.len() > 1 {
+            choices.extend(panel.types.iter().map(|(kind, n)| SelectChoice::new(format!("{} ({n})", crate::selecting::kind_title(kind)))));
+        }
+        let scope = Select::new(choices, Some(selected), move |i| Message::Properties(Event::Kind(i.checked_sub(1).and_then(|i| kinds.get(i).cloned()))))
+            .searchable(false);
+        let summary = match &panel.summary {
+            Summary::Empty => "Çizimde bir nesneye tıklayın veya özellik koşullarıyla seçin.".to_owned(),
+            Summary::One { kind, label, layer } => format!("{kind}{}{}",
+                label.as_ref().map_or(String::new(), |label| format!(" · {label}")),
+                layer.as_ref().map_or(String::new(), |(_, path)| format!(" · {path}"))),
+            Summary::Many { count, kinds } => format!("{count} nesne · {kinds}. Tür seçimi yalnız özellik panelini daraltır; sahne seçimi korunur."),
         };
+        let scope = kentos_ui::widget::tip(scope, kentos_ui::widget::Tip::new("Özellik kapsamı").body(summary), iced::widget::tooltip::Position::Bottom);
+        let compact_tool = |glyph, title, message: Option<Message>, active| {
+            kentos_ui::widget::tip(
+                iced::widget::button(icon(glyph).size(14.0))
+                    .padding(kentos_ui::theme::metrics::icon_small(14.0))
+                    .on_press_maybe(message)
+                    .style(style::button::tool(active)),
+                kentos_ui::widget::Tip::new(title),
+                iced::widget::tooltip::Position::Bottom,
+            )
+        };
+        let isolated = doc.model.objects_isolated();
+        let isolation_command = if isolated { "view.endObjectIsolation" } else { "view.isolateObjects" };
+        let query = compact_tool(Icon::Filter, "Özelliklerle seç…", Some(Message::Properties(Event::Query)), false);
+        let isolation = compact_tool(
+            crate::icons::from_web(Some("layerIsolate")),
+            if isolated { "Nesne yalıtımını bitir" } else { "Seçimi geçici yalıt" },
+            self.available(isolation_command).then_some(Message::Run(isolation_command)), isolated,
+        );
+        let selection_bar = boxed(row![container(scope).width(Fill), query, isolation].spacing(4).align_y(Center), [6, 8]);
+        let mut body = Column::new().push(selection_bar);
+        if isolated {
+            body = body.push(boxed(label::caption("Geçici yalıtım açık").style(style::text::accent), [0, 12]));
+        }
+        if targets > panel.editable {
+            body = body.push(boxed(label::caption(format!("{} düzenlenebilir · {} kilitli", panel.editable, targets - panel.editable)), [3, 12]));
+        }
         let mut sheet = PropertySheet::new();
         for section in panel.sections {
             let open = !self.props_closed.contains(section.id);
@@ -644,10 +641,7 @@ impl App {
                 sheet = sheet.row(label, cell);
             }
         }
-        let query = boxed(iced::widget::button(label::body("Özelliklerle seç…"))
-            .style(style::button::secondary)
-            .on_press(Message::Properties(Event::Query)), [8, 12]);
-        let body: Element<'a, Message> = Column::new().push(query).push(scope).push(head).push(sheet).width(Fill).into();
+        let body: Element<'a, Message> = body.push(sheet).width(Fill).into();
         let key = self.properties_key(doc);
         // A different target must get a fresh edit-cell tree, even if its shown value is identical.
         iced::widget::keyed_column([(key, body.map(move |message| match message {
@@ -1406,6 +1400,12 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
             Some(f.to_metres(web_number(text)))
         }
     };
+    if cad && let Field::TextHeight(slot) = field {
+        let Some(height) = length(text).filter(|h| h.is_finite() && *h > 0.0) else {
+            return vec!["Yazı yüksekliği sıfırdan büyük bir uzunluk olmalı (örnek: 2.5 mm).".into()];
+        };
+        return properties::set_text_heights(model, &[*slot], height);
+    }
     if let Field::TextHeights(slots) = field {
         let Some(height) = length(text).filter(|h| h.is_finite() && *h > 0.0) else {
             return vec!["Yazı yüksekliği sıfırdan büyük bir uzunluk olmalı (örnek: 2.5 mm).".into()];
@@ -2444,9 +2444,28 @@ fn boxed<'a>(content: impl Into<Element<'a, Message>>, padding: [u16; 2]) -> Ele
     .into()
 }
 
-/// The object's label in the summary: the accent's text colour (a parcel's number).
-fn accent_text(theme: &Theme) -> iced::widget::text::Style {
-    iced::widget::text::Style {
-        color: Some(kentos_ui::theme::Tokens::of(theme).accent),
+impl App {
+    /// Temporary object visibility uses the same product command as Python and MCP.
+    pub(crate) fn object_isolation(&mut self, end: bool) {
+        use kentos_commands::{EntitiesIsolate, IsolationAction, CommandResult};
+        if self.session.is_running() {
+            self.warn("Önce etkin işlemi bitirin veya Esc ile iptal edin; ardından nesneleri yalıtın.");
+            return;
+        }
+        let Some(doc) = self.document.as_mut() else { return; };
+        let input = EntitiesIsolate { action: if end { IsolationAction::End } else {
+            IsolationAction::Isolate { uids: self.selection.ids().iter()
+                .filter_map(|s| doc.model.uid(*s)).map(|u| u.to_string()).collect() }
+        }};
+        match kentos_native_application::entities_select::isolation::execute(
+            &mut kentos_native_application::ExecutionContext::new(&mut doc.model), input) {
+            CommandResult::Completed { output, .. } => {
+                self.output(if output.active {
+                    format!("Geçici nesne yalıtımı: {} nesne gizlendi. Katman ayarları korunuyor; Nesne yalıtımını bitir ile geri dönün.", output.hidden)
+                } else { "Nesne yalıtımı bitti. Katman görünürlüğü ve süzgeçleri korunuyor.".into() });
+            }
+            CommandResult::Failed { error } | CommandResult::Conflict { error } => self.warn(error.message),
+            CommandResult::Cancelled | CommandResult::Queued { .. } | CommandResult::NeedsInput { .. } => {}
+        }
     }
 }

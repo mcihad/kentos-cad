@@ -1024,6 +1024,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     ),
     // The selection as one explicit query ([`entities_select`], docs/adr/0275).
     (
+        kentos_commands::CAD_ENTITIES_ISOLATE,
+        kentos_commands::CAD_ENTITIES_ISOLATE_VERSION,
+    ),
+    (
         kentos_commands::CAD_ENTITIES_SELECT,
         kentos_commands::CAD_ENTITIES_SELECT_VERSION,
     ),

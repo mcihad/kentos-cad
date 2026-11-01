@@ -549,6 +549,7 @@ pub fn plan(doc: &Document, input: &AtlasInput<'_>) -> Result<AtlasPlanned, Atla
         }
     };
     let mut spatial = Spatial::new();
+    spatial.ignore_object_isolation();
     spatial.reload(pages_doc);
     spatial.set_time_window(window);
     let carried_set: HashSet<&str> = fields.iter().map(String::as_str).collect();
@@ -913,6 +914,7 @@ impl AtlasPlanned {
             }
         }
         let mut spatial = Spatial::new();
+        spatial.ignore_object_isolation();
         spatial.reload(&work);
         spatial.set_time_window(self.window);
         // A part's band holds room for its labels (docs/adr/0636); rows read from the source are the objects themselves.

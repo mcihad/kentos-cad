@@ -50,6 +50,7 @@ use serde_json::Value;
 use kentos_commands::{DimensionSetsCreateInput, DimensionSetsEditInput, DimensionSetsQueryInput};
 use crate::{dimension_sets_create, dimension_sets_edit, dimension_sets_query};
 
+use crate::entities_select::isolation as entities_isolation;
 use crate::addresses_check;
 use crate::addresses_compare;
 use crate::addresses_normalize;
@@ -212,6 +213,7 @@ macro_rules! by_command {
             kentos_commands::CAD_POINTS_CONSTRUCT => $then!(points_construct, PointsConstruct),
             kentos_commands::CAD_CURVES_CONSTRUCT => $then!(curves_construct, CurvesConstruct),
             kentos_commands::CAD_SNAP_FIND => $then!(snap_find, SnapFind),
+            kentos_commands::CAD_ENTITIES_ISOLATE => $then!(entities_isolation, kentos_commands::EntitiesIsolate),
             kentos_commands::CAD_ENTITIES_SELECT => $then!(entities_select, EntitiesSelect),
             kentos_commands::CAD_ENTITIES_PICK => $then!(entities_pick, EntitiesPick),
             kentos_commands::CAD_ENTITIES_RELATE => $then!(entities_relate, EntitiesRelate),

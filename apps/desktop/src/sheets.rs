@@ -203,6 +203,7 @@ impl SheetMaps {
                 })
                 .map(|model| {
                     let mut spatial = Spatial::new();
+                    spatial.ignore_object_isolation();
                     spatial.set_wall_scale(Some(at));
                     spatial.set_wall_detail(detail);
                     spatial.set_option_view(options.to_vec());
@@ -1625,10 +1626,13 @@ impl App {
             return;
         }
         self.sheet_data_key = Some(key);
-        let unscoped = self
-            .spatial
-            .draws_otherwise()
-            .then(|| Spatial::of(&doc.model));
+        let unscoped = (self.spatial.draws_otherwise() || doc.model.objects_isolated())
+            .then(|| {
+                let mut spatial = Spatial::new();
+                spatial.ignore_object_isolation();
+                spatial.reload(&doc.model);
+                spatial
+            });
         let data = kentos_plot::inputs::sheet_data(
             &doc.model,
             unscoped.as_ref().unwrap_or(&self.spatial),

@@ -77,6 +77,7 @@ COMMANDS: dict[str, Any] = {
     "cad.entities.extend": entities.extend,
     "cad.entities.fillet": entities.fillet,
     "cad.entities.hatch": entities.hatch,
+    "cad.entities.isolate": entities.isolate,
     "cad.entities.join": entities.join,
     "cad.entities.lengthen": entities.lengthen,
     "cad.entities.match": entities.match,

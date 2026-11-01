@@ -174,6 +174,8 @@ pub const PORTED: &[&str] = &[
     "tool.pan",
     "tool.zoomWindow",
     "view.zoomSelection",
+    "view.isolateObjects",
+    "view.endObjectIsolation",
     "tool.repeat",
     // The window's arrangement and the server check (view_commands.rs): the side panels
     // (F4), full screen, the command search (Alt+Q); Koordinat sistemi… is Proje ayarları

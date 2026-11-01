@@ -29,6 +29,32 @@ def drawing(count=30):
 
 
 class SelectionProperties(unittest.TestCase):
+    def test_temporary_isolation_is_typed_unsaved_and_shared_with_processing(self):
+        doc = drawing()
+        original = doc.to_bytes()
+        all_uids = cad.entities.select(doc, region=cad.AllSelectRegion()).uids
+        action = cad.IsolateIsolationAction(uids=[all_uids[0]])
+        self.assertEqual(cad.IsolationAction.from_json(action.to_json()).to_json(), action.to_json())
+        planned = cad.entities.isolate.plan(doc, action=action)
+        self.assertEqual(planned.retained, 1)
+        self.assertFalse(cad.entities.isolate(doc, action=cad.QueryIsolationAction()).active)
+        self.assertEqual(cad.entities.isolate(doc, action=action), planned)
+        self.assertEqual(doc.to_bytes(), original)
+        self.assertEqual(cad.entities.select(doc, region=cad.AllSelectRegion()).uids, all_uids[:1])
+        result = cad.processing.run(doc, tool="selection.byExpression", parameters={
+            "input":{"scope":"all"},"condition":"true"})
+        self.assertEqual(result.selected, all_uids[:1])
+        with self.assertRaises(cad.CommandFailed):
+            cad.entities.isolate(doc, action=cad.IsolateIsolationAction(uids=[all_uids[0], "invalid"]))
+        self.assertTrue(cad.entities.isolate(doc, action=cad.QueryIsolationAction()).active)
+        reopened = cad.Document.from_bytes(doc.to_bytes())
+        self.assertFalse(cad.entities.isolate(reopened, action=cad.QueryIsolationAction()).active)
+        self.assertEqual(cad.entities.select(reopened, region=cad.AllSelectRegion()).uids, all_uids)
+        ended = cad.entities.isolate(doc, action=cad.EndIsolationAction())
+        self.assertFalse(ended.active)
+        self.assertEqual(cad.entities.select(doc, region=cad.AllSelectRegion()).uids, all_uids)
+        self.assertEqual(doc.to_bytes(), original)
+
     def test_processing_combines_property_hits_with_selection_without_writing(self):
         doc = drawing()
         before = doc.to_bytes()
@@ -77,6 +103,10 @@ class SelectionProperties(unittest.TestCase):
         records = {r.uid: r.entity.to_json() for r in doc.entities()}
         editable = [u for u in selected.uids if records[u]["layerId"] != "kilitli"]
         self.assertEqual(len(editable), 4705)
+        isolated = cad.entities.isolate(doc, action=cad.IsolateIsolationAction(uids=selected.uids))
+        self.assertEqual((isolated.hidden, isolated.retained), (45000, 5000))
+        self.assertEqual(set(cad.entities.select(doc, region=cad.AllSelectRegion()).uids), set(selected.uids))
+        self.assertEqual(doc.to_bytes(), before)
         edit = cad.HeightTextEdit(uids=editable, height=.35)
         cad.texts.edit.plan(doc, edit=edit)
         self.assertEqual(doc.to_bytes(), before)
@@ -87,6 +117,9 @@ class SelectionProperties(unittest.TestCase):
         self.assertEqual(doc.undo(), "Yazı yüksekliği")
         self.assertEqual(doc.to_bytes(), before)
         doc.redo()
+        self.assertEqual(doc.to_bytes(), after)
+        cad.entities.isolate(doc, action=cad.EndIsolationAction())
+        self.assertEqual(len(cad.entities.select(doc, region=cad.AllSelectRegion()).uids), 50000)
         self.assertEqual(doc.to_bytes(), after)
 
     def test_lock_invalid_height_and_revision_conflict_never_partially_write(self):

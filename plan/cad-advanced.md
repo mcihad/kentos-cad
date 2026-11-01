@@ -283,7 +283,7 @@ repo dışında. Web'in eski koordinat okuyucusunda başlangıçta da bulunan
 32 UCS/birimli ifade/ayak-inç test hatası ADR'de ayrı kayıtlıdır; masaüstü
 kabulü bunları tamamlanmış web eşliği olarak saymaz.
 
-### CAD-ADV-03 — Kalabalık çizimde seçimden toplu özellik düzenlemeye güvenli geçiş sağla [ ]
+### CAD-ADV-03 — Kalabalık çizimde seçimden toplu özellik düzenlemeye güvenli geçiş sağla [x]
 
 **Öncelik:** P0. **Kod:** [C04], [C05].
 **Dayanak:** QCAD tür süzgeci ve kaynak/görünen renk ayrımı. [R18], [R19]
@@ -320,8 +320,20 @@ koruma testleri geçti. Ayrıntı: [ADR 0820](../docs/adr/0820-selection-propert
 Renk girişi ortak görsel renk seçici, adlandırılmış örnekler ve Katmana/Bloğa
 göre seçenekleriyle düzenlendi; hex yazmak gerekmiyor. 1100 piksel genişlikte
 panel ve sorgu formu gerçek uygulamada denetlendi.
-**Kalan:** Kalıcı katman süzgecinden ayrı geçici nesne yalıtımı/bitirme ve
-hücre açıkken seçim değişiminin gerçek arayüz tekrarı. Bunlar doğrulanmadan madde tamamlandı işaretlenmez.
+**Tamamlama — 2026-11-01:** Kalıcı katman süzgecinden ayrı, kaydedilmeyen
+geçici nesne yalıtımı/bitirme; çizim/etiket/picking/Processing görünürlüğü,
+Undo/Redo'nun ve PDF/pafta çıktısının korunması uygulandı. Aynı komut
+Python ve MCP'de kullanılabilir. 50.000 nesnede 5.000 hedefin yalıtılması
+ve 45.000 nesnenin gizlenmesi otomatik sınandı. Açık hücreden başka nesneye
+geçiş gerçek uygulamada tekrarlandı: 77 cm yalnız eski hedefe 0,77 m
+uygulandı; yeni hedef ve kilitli yazı değişmedi. Tekli yükseklik alanının
+birim eki okuması da aynı uzunluk okuyucusuna geçirildi. Dosya karşılaştırması,
+gizli hedefe tıklama, yalıtım sırasında Undo ve yalıtım bitince Redo doğrulandı.
+AutoCAD'in resmî ekran örneği incelenerek palet; tek tür/sayı kutusu ve yanındaki
+küçük sorgu/yalıtım simgeleriyle sadeleştirildi. Ayrı büyük düğmeler, ikinci
+menü ve tekrar eden özet kaldırıldı. Gerçek arayüzde karma tür seçimi, sorgu
+kapsamı, minimum 240 mantıksal piksel panelde taşmama ve seçim boşken yalıtımı
+tek tıkla bitirme sınandı. Günlükler ve ekran görüntüleri repo dışındadır.
 
 ### CAD-ADV-04 — Eğrisel çizim ve düzenlemenin gerçek geometrik sınırlarını kapat [ ]
 

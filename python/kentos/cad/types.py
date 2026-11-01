@@ -8179,6 +8179,26 @@ class InsertsClipOperation(_Union):
         return _variant(_INSERTS_CLIP_OPERATION, "InsertsClipOperation", "kind", data).from_json(data)
 
 
+class IsolationAction(_Union):
+    """One of:
+
+    - :class:`IsolateIsolationAction` (``kind: isolate``)
+    - :class:`EndIsolationAction` (``kind: end``)
+    - :class:`QueryIsolationAction` (``kind: query``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> IsolationAction:
+        return _variant(_ISOLATION_ACTION, "IsolationAction", "kind", data).from_json(data)
+
+
 class JoinsOp(_Union):
     """What `cad.joins.edit` does.
 
@@ -23710,6 +23730,49 @@ class EntitiesHatch(_Model):
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             symbol=data.get("symbol", UNSET),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EntitiesIsolate(_Model):
+    action: IsolationAction
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["action"] = self.action.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesIsolate:
+        return cls(
+            action=IsolationAction.from_json(data["action"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EntitiesIsolated(_Model):
+    """
+    Attributes:
+        hidden: Live objects hidden by isolation alone.
+        retained: Live objects passing isolation alone; layers and other visibility rules can still hide them.
+    """
+    active: bool
+    hidden: int
+    retained: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["active"] = self.active
+        out["hidden"] = self.hidden
+        out["retained"] = self.retained
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesIsolated:
+        return cls(
+            active=data["active"],
+            hidden=data["hidden"],
+            retained=data["retained"],
         )
 
 
@@ -79119,6 +79182,52 @@ class InvertInsertsClipOperation(InsertsClipOperation):
 
 
 @dataclass(kw_only=True, slots=True)
+class IsolateIsolationAction(IsolationAction):
+    """Replace isolation with these drawing object UIDs. New objects remain visible."""
+    TAG_VALUE: ClassVar[str] = "isolate"
+    uids: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "isolate"}
+        out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> IsolateIsolationAction:
+        return cls(
+            uids=list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EndIsolationAction(IsolationAction):
+    """End isolation; existing layer filters, locks and visibility stay unchanged."""
+    TAG_VALUE: ClassVar[str] = "end"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "end"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EndIsolationAction:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class QueryIsolationAction(IsolationAction):
+    """Read the current session state."""
+    TAG_VALUE: ClassVar[str] = "query"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "query"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> QueryIsolationAction:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
 class CreateJoinsOp(JoinsOp):
     """A new view."""
     TAG_VALUE: ClassVar[str] = "create"
@@ -89635,6 +89744,9 @@ _IMAGES_OPERATION: dict[str, type[ImagesOperation]] = {"embed": EmbedImagesOpera
 _INSERTS_CLIP_OPERATION: dict[str, type[InsertsClipOperation]] = {"set": SetInsertsClipOperation, "remove": RemoveInsertsClipOperation, "frame": FrameInsertsClipOperation, "invert": InvertInsertsClipOperation}
 
 
+_ISOLATION_ACTION: dict[str, type[IsolationAction]] = {"isolate": IsolateIsolationAction, "end": EndIsolationAction, "query": QueryIsolationAction}
+
+
 _JOINS_OP: dict[str, type[JoinsOp]] = {"create": CreateJoinsOp, "fromRelation": FromRelationJoinsOp, "update": UpdateJoinsOp, "remove": RemoveJoinsOp}
 
 
@@ -90601,6 +90713,7 @@ __all__ = [
     "EmptyInput",
     "EmptyResult",
     "EmptyResultName",
+    "EndIsolationAction",
     "EndOpeningReference",
     "EndSubPlace",
     "EnforceFormsOp",
@@ -90630,6 +90743,8 @@ __all__ = [
     "EntitiesExplode",
     "EntitiesFillet",
     "EntitiesHatch",
+    "EntitiesIsolate",
+    "EntitiesIsolated",
     "EntitiesJoin",
     "EntitiesLengthen",
     "EntitiesMatch",
@@ -91014,6 +91129,8 @@ __all__ = [
     "InvitationStateName",
     "IslandStyle",
     "IslandStyleName",
+    "IsolateIsolationAction",
+    "IsolationAction",
     "ItemWords",
     "JambCadElement",
     "JambEnd",
@@ -91988,6 +92105,7 @@ __all__ = [
     "QueriedRow",
     "QueriedSource",
     "QueriedStatistic",
+    "QueryIsolationAction",
     "QueryNear",
     "QueryOrder",
     "QueryPlan",

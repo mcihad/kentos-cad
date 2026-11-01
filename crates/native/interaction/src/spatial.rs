@@ -69,6 +69,8 @@ use crate::Vec2;
 #[derive(Default)]
 pub struct Spatial {
     store: Store,
+    isolation_version: u64,
+    isolation_ignored: bool,
     /// The scale a sheet's map draws the walls at, none: the drawing's (docs/adr/0339 §4).
     wall_scale: Option<f64>,
     /// The detail a sheet's map draws the walls at whatever its scale (docs/adr/0781 §1): its view's recipe's.
@@ -145,6 +147,12 @@ struct Filtered {
 }
 
 impl Spatial {
+    /// Output/preflight must render the full drawing rather than an editor's temporary isolation.
+    /// Set before loading. Interactive spatial stores respect isolation by default.
+    pub fn ignore_object_isolation(&mut self) {
+        self.isolation_ignored = true;
+    }
+
     /// An empty store; [`Spatial::reload`] fills it.
     pub fn new() -> Self {
         Self::default()
@@ -365,6 +373,7 @@ impl Spatial {
     /// Kat görünümü (docs/adr/0715) joins it: the levels it hides are hidden as well, the level it draws faint is
     /// snapped to only. A sheet's map edited in place shows its own level instead (docs/adr/0716).
     fn sync_phases(&mut self, doc: &Document) {
+        self.isolation_version = doc.isolation_version();
         // The design options not shown (docs/adr/0788 §4): hidden, their walls joining nothing, their openings cutting
         // nothing.
         let options: Vec<f64> = doc
@@ -390,7 +399,13 @@ impl Spatial {
             },
             None => (self.level_view, self.active_level.clone()),
         };
-        let looks = crate::level_view::looks(doc, view, active.as_deref());
+        let mut looks = crate::level_view::looks(doc, view, active.as_deref());
+        if !self.isolation_ignored && doc.objects_isolated() {
+            looks.hidden.extend(doc.entities().filter(|e| !doc.isolation_shown(Slot(e.base().id)))
+                .map(|e| e.base().id));
+            looks.hidden.sort_unstable();
+            looks.hidden.dedup();
+        }
         self.sync_upper(doc, &looks.upper);
         // What is faint and what is seen from above is snapped to, never picked.
         let unpicked = |l: &crate::level_view::LevelLooks| {
@@ -532,6 +547,9 @@ impl Spatial {
         }
         let mark = doc.change_mark();
         if mark == self.mark && self.revision == Some(doc.revision()) {
+            if self.isolation_version != doc.isolation_version() {
+                self.sync_phases(doc);
+            }
             return;
         }
         self.store

@@ -362,6 +362,7 @@ impl App {
                 "edit.selectAll",
                 "edit.previousSelection",
                 "-",
+                "view.endObjectIsolation",
                 "view.coords",
             ]
         } else {
@@ -384,6 +385,8 @@ impl App {
                 "tool.selectSimilar",
                 "edit.deselect",
                 "view.zoomSelection",
+                "view.isolateObjects",
+                "view.endObjectIsolation",
                 "-",
                 "view.coords",
             ]

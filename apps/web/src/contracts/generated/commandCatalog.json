@@ -57695,6 +57695,105 @@
       ]
     },
     {
+      "id": "cad.entities.isolate",
+      "version": 1,
+      "title": "Geçici nesne yalıtımı",
+      "summary": "action.kind=isolate verilen nesneler dışındakileri yalnız bu oturumda gizler; action.kind=end bitirir, action.kind=query durumu okur. Kalıcı katman süzgeci, görünürlük, kilit ve geometri değişmez. Sonradan oluşturulan nesneler görünürdür. Yalıtım dosyaya, çıktıya ve geometri Undo geçmişine yazılmaz. Tekrar isolate mevcut geçici maskeyi değiştirir. Plan salt okunurdur; hidden/retained sayıları yalnız yalıtım maskesinindir, diğer görünürlük kuralları bağımsızdır.",
+      "aliases": [
+        "isolateobjects",
+        "unisolateobjects"
+      ],
+      "effect": "view",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "$ref": "#/$defs/IsolationAction"
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "title": "EntitiesIsolate",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "active": {
+            "type": "boolean"
+          },
+          "hidden": {
+            "description": "Live objects hidden by isolation alone.",
+            "format": "uint",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "retained": {
+            "description": "Live objects passing isolation alone; layers and other visibility rules can still hide them.",
+            "format": "uint",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "active",
+          "hidden",
+          "retained"
+        ],
+        "title": "EntitiesIsolated",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "active": {
+            "type": "boolean"
+          },
+          "hidden": {
+            "description": "Live objects hidden by isolation alone.",
+            "format": "uint",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "retained": {
+            "description": "Live objects passing isolation alone; layers and other visibility rules can still hide them.",
+            "format": "uint",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "active",
+          "hidden",
+          "retained"
+        ],
+        "title": "EntitiesIsolated",
+        "type": "object"
+      },
+      "examples": [
+        {
+          "title": "Geçici yalıtımı bitir",
+          "input": {
+            "action": {
+              "kind": "end"
+            }
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.entities.select",
       "version": 1,
       "title": "Nesne seç",
@@ -98749,6 +98848,59 @@
           "const": "ignore",
           "description": "Yok say: the islands are hatched over.",
           "type": "string"
+        }
+      ]
+    },
+    "IsolationAction": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "description": "Replace isolation with these drawing object UIDs. New objects remain visible.",
+          "properties": {
+            "kind": {
+              "const": "isolate",
+              "type": "string"
+            },
+            "uids": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "kind",
+            "uids"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "End isolation; existing layer filters, locks and visibility stay unchanged.",
+          "properties": {
+            "kind": {
+              "const": "end",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Read the current session state.",
+          "properties": {
+            "kind": {
+              "const": "query",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
         }
       ]
     },

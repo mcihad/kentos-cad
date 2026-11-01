@@ -77,6 +77,9 @@ pub struct Document {
     /// Counts every change to what the drawing holds, changes from outside included.
     pub(crate) generation: u64,
     pub(crate) dirty: bool,
+    /// Session-only visibility, keyed by persistent identity. Never saved or put in geometry Undo.
+    pub(crate) object_isolation: Option<Arc<std::collections::BTreeSet<Uuid>>>,
+    pub(crate) isolation_version: u64,
 }
 
 /// What a step may do to the drawing's objects (docs/adr/0411 §5).
@@ -98,6 +101,43 @@ impl Document {
     /// Sets what a step may do to the objects: the host's, from the account's role.
     pub fn set_object_policy(&mut self, policy: ObjectPolicy) {
         self.object_policy = policy;
+    }
+
+    /// Whether a temporary object isolation is active. Layer visibility remains independent.
+    pub fn objects_isolated(&self) -> bool {
+        self.object_isolation.is_some()
+    }
+
+    pub fn isolation_version(&self) -> u64 {
+        self.isolation_version
+    }
+
+    /// The session mask alone; a true result does not override layers, filters or phases.
+    pub fn isolation_shown(&self, slot: Slot) -> bool {
+        self.object_isolation.as_ref().is_none_or(|hidden|
+            self.uid(slot).is_some_and(|uid| !hidden.contains(&uid)))
+    }
+
+    /// Replace the temporary mask. New objects stay visible; deletion and Undo retain UID semantics.
+    /// Hosts validate all targets before calling this. No saved revision or Undo step is changed.
+    pub fn isolate_objects(&mut self, keep: &[Uuid]) {
+        let keep: std::collections::BTreeSet<_> = keep.iter().copied().collect();
+        let hidden = self.entities_with_uids().map(|(uid, _)| uid)
+            .filter(|uid| !keep.contains(uid)).collect();
+        let next = Some(Arc::new(hidden));
+        if self.object_isolation != next {
+            self.object_isolation = next;
+            self.isolation_version += 1;
+            self.generation += 1;
+        }
+    }
+
+    /// End temporary isolation without altering any layer setting or geometry history.
+    pub fn end_object_isolation(&mut self) {
+        if self.object_isolation.take().is_some() {
+            self.isolation_version += 1;
+            self.generation += 1;
+        }
     }
 
     pub fn name(&self) -> &str {
@@ -285,6 +325,8 @@ impl Document {
             edits: self.edits,
             generation: self.generation,
             dirty: self.dirty,
+            object_isolation: self.object_isolation.clone(),
+            isolation_version: self.isolation_version,
         }
     }
 

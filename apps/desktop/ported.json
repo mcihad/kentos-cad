@@ -103,6 +103,8 @@
     "tool.pan",
     "tool.zoomWindow",
     "view.zoomSelection",
+    "view.isolateObjects",
+    "view.endObjectIsolation",
     "tool.repeat",
     "view.rightPanel",
     "view.properties",

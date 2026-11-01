@@ -245,6 +245,7 @@ impl<'a> MapDrawer<'a> {
             let main = self.spatial;
             let copy = copy.map(|copy| {
                 let mut spatial = Spatial::new();
+                spatial.ignore_object_isolation();
                 spatial.set_wall_scale(Some(at));
                 spatial.set_wall_detail(m.wall_detail);
                 spatial.set_option_view(m.options.to_vec());
@@ -505,6 +506,7 @@ pub(crate) fn prepare_captured(
         sheets.to_vec()
     };
     let mut spatial = Spatial::new();
+    spatial.ignore_object_isolation();
     spatial.reload(doc);
     let band_notes = with_bands(doc, &mut spatial);
     let library = library_of(doc);

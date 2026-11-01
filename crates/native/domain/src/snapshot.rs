@@ -212,6 +212,8 @@ impl Document {
             edits: 0,
             generation: 0,
             dirty: false,
+            object_isolation: None,
+            isolation_version: 0,
         }
     }
 
