@@ -43,7 +43,7 @@ use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{
     Context, Cursor, Flow, Label, Marker, MarkerShape, Memory, Pointer, Preview, Stroke, Tag, Tone, Tool,
 };
-use crate::{Vec2, js_trim};
+use crate::{InputPreview, Vec2, js_trim};
 use plan::Op;
 use site::{Corner, Site, editable};
 
@@ -113,6 +113,9 @@ pub struct CornerTool {
     mouse: Option<Vec2>,
     drawn: Preview,
     seen: Option<(Memory, Format)>,
+    /// None: mouse preview; Some(None): invalid editor text; Some(Some): typed size.
+    input_draft: Option<Option<Op>>,
+    input_ready: bool,
 }
 
 impl CornerTool {
@@ -125,6 +128,8 @@ impl CornerTool {
             mouse: None,
             drawn: Preview::default(),
             seen: None,
+            input_draft: None,
+            input_ready: false,
         }
     }
 
@@ -248,6 +253,8 @@ impl CornerTool {
     }
 
     fn reset(&mut self) {
+        self.input_draft=None;
+        self.input_ready=false;
         self.stage = Stage::Find;
         self.corner = None;
         self.first = None;
@@ -332,6 +339,7 @@ impl CornerTool {
     /// its objects, and with a size the reach along both sides, the result
     /// and the size beside the cursor.
     fn redraw(&mut self, cx: &Context<'_>) {
+        self.input_ready=false;
         self.drawn = Preview::default();
         let doc = &*cx.doc;
         if self.stage == Stage::Second {
@@ -364,8 +372,19 @@ impl CornerTool {
             });
             return;
         }
-        let t = self.pulled_distance(&c, cx);
-        let op = self.op_for_pull(t, &c);
+        let pulled = self.op_for_pull(self.pulled_distance(&c, cx), &c);
+        let op=match self.input_draft {
+            Some(Some(op))=>op,
+            Some(None)=> {
+                self.drawn.strokes=out.strokes;
+                self.drawn.tag=Some(Tag { at:self.mouse.unwrap_or(c.geom.at), lines:vec![match self.kind {
+                    Kind::Fillet=>"Geçerli bir yarıçap yazın (ör. 25cm).".into(),
+                    Kind::Chamfer=>"İki kenar mesafesini yazın (ör. 10cm;20cm).".into(),
+                }] });
+                return;
+            }
+            None=>pulled,
+        };
         if self.kind == Kind::Chamfer {
             for (i,u) in [c.geom.u1,c.geom.u2].into_iter().enumerate() {
                 self.drawn.labels.push(Label {
@@ -373,17 +392,6 @@ impl CornerTool {
                     text:format!("{}. kenar",i+1),offset:[10.,-18.],tone:Tone::Accent,
                 });
             }
-        }
-        // Where the rounding or the cut starts on each side.
-        for u in [c.geom.u1, c.geom.u2]
-            .into_iter()
-            .filter(|_| !matches!(c.site, Site::Curves { .. }))
-        {
-            out.strokes.push(
-                Stroke::solid(vec![c.geom.at, offset_along(c.geom.at, u, t)], false)
-                    .width(2.0)
-                    .tone(Tone::Snap),
-            );
         }
         // The command's plan: the sides as they would be dashed, the arc or the cut solid.
         let request = Request {
@@ -394,6 +402,22 @@ impl CornerTool {
         };
         let planned = corner_plan(doc, request);
         if let CommandResult::Completed { output, .. } = &planned {
+            self.input_ready=true;
+            // Reach guides must describe this exact typed/mouse plan, and
+            // must never imply a valid result when the semantic plan failed.
+            let reaches=match op {
+                Op::Cut(a,b)=>[a,b],
+                Op::Radius(r)=> {
+                    let factor=fillet_radius_for(1.,c.geom.phi);
+                    [if factor>1e-12 {r/factor} else {0.};2]
+                }
+            };
+            if !matches!(c.site, Site::Curves {..}) {
+                for (u,reach) in [c.geom.u1,c.geom.u2].into_iter().zip(reaches) {
+                    out.strokes.push(Stroke::solid(vec![c.geom.at,offset_along(c.geom.at,u,reach)],false)
+                        .width(2.).tone(Tone::Snap));
+                }
+            }
             for e in &output.changed {
                 out = out.and(Outline::of(&shape(e), Some([5.0, 3.0]), 2.0, Tone::Accent));
             }
@@ -404,9 +428,10 @@ impl CornerTool {
                 self.drawn.tag = Some(Tag {
                     at: mouse,
                     lines: {
-                        let mut lines =
-                            vec![self.describe(op), "Tıkla: bu önizlemeyi uygula".to_owned()];
-                        if let Some(last) = self.last() {
+                        let mut lines = vec![self.describe(op), if self.input_draft.is_some() {
+                            "Enter veya tıkla: yazılan değeri uygula".to_owned()
+                        } else {"Tıkla: bu önizlemeyi uygula".to_owned()}];
+                        if self.input_draft.is_none() && let Some(last) = self.last() {
                             lines.push(format!("Enter: son değer — {}", self.describe(last)));
                         }
                         lines
@@ -558,8 +583,11 @@ impl Tool for CornerTool {
         self.mouse = Some(p.raw);
         if self.stage == Stage::Size {
             if let Some(c) = self.corner {
-                let op = self.op_for_pull(self.pulled_distance(&c, cx), &c);
-                self.commit(op, cx);
+                match self.input_draft {
+                    Some(Some(op)) => self.commit(op,cx),
+                    Some(None) => cx.say(Level::Warn,"Önce geçerli bir değer yazın veya Esc ile iptal edin."),
+                    None => self.commit(self.op_for_pull(self.pulled_distance(&c,cx),&c),cx),
+                }
             }
             self.see(cx);
             return self.redraw(cx);
@@ -605,6 +633,37 @@ impl Tool for CornerTool {
         }
     }
 
+    fn previews_input(&self) -> bool {
+        self.stage == Stage::Size
+    }
+
+    fn preview_input(&mut self, text: Option<&str>, cx: &Context<'_>) -> InputPreview {
+        self.see(cx);
+        if self.stage != Stage::Size {
+            self.input_draft = None;
+            return InputPreview::Off;
+        }
+        self.input_draft = text.map(|text| {
+            if js_trim(text).is_empty() {
+                self.last().or_else(|| {
+                    self.corner
+                        .filter(|c| matches!(c.site, Site::Lines { .. }))
+                        .map(|c| self.op_for_pull(0., &c))
+                })
+            } else {
+                self.op_for_text(text)
+            }
+        });
+        self.redraw(cx);
+        if self.input_draft.is_none() {
+            InputPreview::Off
+        } else if self.input_ready {
+            InputPreview::Ready
+        } else {
+            InputPreview::Invalid
+        }
+    }
+
     /// K turns Kırp over (not while the second line is picked); in the size
     /// step a typed size applies at once.
     fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
@@ -642,7 +701,8 @@ impl Tool for CornerTool {
             return Flow::Exit;
         };
         let fallback = matches!(c.site, Site::Lines { .. }).then(|| self.op_for_pull(0.0, &c));
-        match self.last().or(fallback) {
+        let op=match self.input_draft {Some(op)=>op,None=>self.last().or(fallback)};
+        match op {
             Some(op) => self.commit(op, cx),
             None => cx.say(
                 Level::Warn,

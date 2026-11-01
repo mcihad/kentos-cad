@@ -70,6 +70,17 @@ pub fn key_event(event: Event, status: event::Status, _window: window::Id) -> Op
     }))
 }
 
+/// The drawing's menu already closes itself on Esc. Do not forward the same
+/// captured press to the editor underneath after the menu's close message.
+/// This subscription is selected while the menu is open, before dispatch.
+pub fn drawing_menu_key_event(
+    event: Event,
+    status: event::Status,
+    window: window::Id,
+) -> Option<Message> {
+    key_event(event, status, window).filter(|message| !matches!(message, Message::CapturedEscape))
+}
+
 impl KeyPress {
     pub fn named(&self) -> Option<Named> {
         match self.key {

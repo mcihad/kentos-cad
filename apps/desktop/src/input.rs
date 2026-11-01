@@ -44,6 +44,8 @@ pub struct Field {
     pub text: String,
     /// Transient widget identity; late edits from a closed field cannot edit the next one.
     pub token: u64,
+    /// Whether the opted-in tool's readonly plan accepts this editor value.
+    pub preview: kentos_interaction::InputPreview,
     /// The world point where it opened; pinned so the pointer can reach it.
     pub at: Vec2,
     /// What the text is: a point, or a lock's value (docs/adr/0166 §6).
@@ -58,6 +60,7 @@ impl Field {
             at,
             mode: None,
             token: next_field_token(),
+            preview: kentos_interaction::InputPreview::Off,
         }
     }
 }
@@ -430,6 +433,9 @@ impl App {
     /// takes no confirm (Kaydır, Pencere yakınlaştır), the last one starts
     /// again (the web's `t.confirm ? t.confirm() : tools.repeatLast()`).
     pub(crate) fn confirm(&mut self) -> Task<Message> {
+        if self.field.as_ref().is_some_and(|f| f.preview != kentos_interaction::InputPreview::Off) {
+            return self.submit_field();
+        }
         if self.session.confirms() {
             self.with_tool(|s, cx| s.confirm(cx));
             if !self.session.is_running() {
@@ -557,6 +563,9 @@ impl App {
                 self.with_tool(|s, cx| s.pointer_move(&p, cx));
             }
             viewport::Event::Pressed(at) => {
+                if self.field.as_ref().is_some_and(|f| f.preview != kentos_interaction::InputPreview::Off) {
+                    return self.submit_field();
+                }
                 // A new drag of Kaydır records its start again.
                 self.pan_recorded = false;
                 // A click on the drawing takes the keyboard from any text field
@@ -597,7 +606,7 @@ impl App {
             // Held, a menu; a quick click, Enter or the idle menu (drawing_menus.rs).
             viewport::Event::RightPressed(at) => self.right_pressed(at),
             viewport::Event::RightHeld(at) => self.right_held(at),
-            viewport::Event::RightClick(at) => self.right_clicked(at),
+            viewport::Event::RightClick(at) => return self.right_clicked(at),
             _ => {}
         }
         Task::none()
@@ -940,6 +949,7 @@ impl App {
         if let Some(first) = keys::value_start(&press) {
             if let Some(at) = self.field_place() {
                 self.field = Some(Field::point(first.to_string(), at));
+                self.refresh_value_preview();
                 return self.focus_value_field();
             }
             return self.type_into_line(&first.to_string());
@@ -992,7 +1002,32 @@ impl App {
                 None => return self.global_chord(&press),
             },
         }
+        self.refresh_value_preview();
         self.focus_value_field()
+    }
+
+    pub(crate) fn refresh_value_preview(&mut self) {
+        if !self.session.previews_input() {
+            return;
+        }
+        let draft = self
+            .field
+            .as_ref()
+            .filter(|f| f.mode.is_none())
+            .map(|f| (f.token, f.text.clone()));
+        let preview = self
+            .with_tool(|s, cx| s.preview_input(draft.as_ref().map(|(_, t)| t.as_str()), cx))
+            .unwrap_or_default();
+        if let Some(field) = self.field.as_mut() {
+            field.preview = if draft
+                .as_ref()
+                .is_some_and(|(token, _)| *token == field.token)
+            {
+                preview
+            } else {
+                kentos_interaction::InputPreview::Off
+            };
+        }
     }
 
     fn focus_value_field(&self) -> Task<Message> {
@@ -1011,6 +1046,7 @@ impl App {
         if !pasted && field.text.ends_with(' ') && !field.text.trim().is_empty() {
             return self.submit_field();
         }
+        self.refresh_value_preview();
         Task::none()
     }
 
@@ -1047,6 +1083,7 @@ impl App {
             at: self.viewport.cursor.unwrap_or(at),
             mode: Some(kind),
             token: next_field_token(),
+            preview: kentos_interaction::InputPreview::Off,
         });
     }
 
@@ -1187,10 +1224,16 @@ impl App {
 
     /// Enter or Space in the value field (the web's `CursorInput.submit`).
     fn submit_field(&mut self) -> Task<Message> {
+        self.refresh_value_preview();
+        if self.field.as_ref().is_some_and(|f|f.preview==kentos_interaction::InputPreview::Invalid) {
+            self.warn("Önizleme geçerli değil; kutudaki değeri düzeltin veya Esc ile iptal edin.".to_owned());
+            return self.focus_value_field();
+        }
         let Some(field) = self.field.take() else {
             return Task::none();
         };
         let text = js_trim(&field.text).to_owned();
+        self.refresh_value_preview();
         if let Some(mode) = field.mode {
             // A lock's field: its number locks it, and the point is placed
             // once its length and direction are both held; left empty, the
@@ -1444,6 +1487,22 @@ mod value_field_tests {
         );
         assert_eq!(app.field.as_ref().unwrap().text, "10cm;20cm");
         assert_eq!(
+            app.field.as_ref().unwrap().preview,
+            kentos_interaction::InputPreview::Ready
+        );
+        let shown = app
+            .session
+            .preview(&app.format())
+            .unwrap()
+            .tag
+            .unwrap()
+            .lines
+            .join(" ");
+        assert!(
+            shown.contains("0.100") && shown.contains("0.200"),
+            "{shown}"
+        );
+        assert_eq!(
             app.document.as_ref().unwrap().model.to_snapshot_v2(),
             before
         );
@@ -1460,6 +1519,194 @@ mod value_field_tests {
         assert!((second.b.y - crate::tools_scenes::N - 0.2).abs() < 1e-8);
         doc.undo().unwrap();
         assert_eq!(doc.to_snapshot_v2(), before);
+    }
+
+    #[test]
+    fn invalid_live_value_stays_editable_and_one_scene_click_applies_the_corrected_pair() {
+        let mut app = drawing();
+        let mut shot = crate::files_testing::offscreen(Size::new(1440., 900.));
+        shot.settle(&mut app, App::view, &mut update);
+        update(&mut app, Message::Run("tool.chamfer"));
+        crate::tools_scenes::click(&mut app, [1., 0.]);
+        crate::tools_scenes::click(&mut app, [0., 1.]);
+        let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+        let field = Field::point(
+            String::new(),
+            Vec2::new(crate::tools_scenes::E + 0.5, crate::tools_scenes::N + 0.5),
+        );
+        let token = field.token;
+        app.field = Some(field);
+        update(
+            &mut app,
+            Message::CursorValueInput {
+                token,
+                text: "10m;20m".into(),
+                pasted: true,
+            },
+        );
+        assert_eq!(
+            app.field.as_ref().unwrap().preview,
+            kentos_interaction::InputPreview::Invalid
+        );
+        update(&mut app, Message::CursorValueSubmit(token));
+        assert_eq!(app.field.as_ref().unwrap().token, token);
+        assert_eq!(
+            app.document.as_ref().unwrap().model.to_snapshot_v2(),
+            before
+        );
+        update(
+            &mut app,
+            Message::CursorValueInput {
+                token,
+                text: "10cm;20cm".into(),
+                pasted: true,
+            },
+        );
+        assert_eq!(
+            app.field.as_ref().unwrap().preview,
+            kentos_interaction::InputPreview::Ready
+        );
+        assert_eq!(
+            app.document.as_ref().unwrap().model.to_snapshot_v2(),
+            before
+        );
+        crate::tools_scenes::click(&mut app, [0.5, 0.5]);
+        assert!(app.field.is_none());
+        let doc = &mut app.document.as_mut().unwrap().model;
+        assert_eq!(doc.len(), 3);
+        let Some(Entity::Line(a)) = doc.get(Slot(1)) else {
+            panic!()
+        };
+        assert!((a.a.x - crate::tools_scenes::E - 0.1).abs() < 1e-8);
+        let Some(Entity::Line(b)) = doc.get(Slot(2)) else {
+            panic!()
+        };
+        assert!((b.b.y - crate::tools_scenes::N - 0.2).abs() < 1e-8);
+        doc.undo();
+        assert_eq!(doc.to_snapshot_v2(), before);
+    }
+
+    #[test]
+    fn right_click_menu_and_quick_confirm_apply_the_typed_pair_once() {
+        for quick in [false, true] {
+            let mut app = drawing();
+            let mut shot = crate::files_testing::offscreen(Size::new(1440., 900.));
+            shot.settle(&mut app, App::view, &mut update);
+            update(&mut app, Message::Run("tool.chamfer"));
+            crate::tools_scenes::click(&mut app, [1., 0.]);
+            crate::tools_scenes::click(&mut app, [0., 1.]);
+            app.memory.chamfer = Some((0.4, 0.4));
+            let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+            let field = Field::point(
+                String::new(),
+                Vec2::new(crate::tools_scenes::E, crate::tools_scenes::N),
+            );
+            let token = field.token;
+            app.field = Some(field);
+            update(
+                &mut app,
+                Message::CursorValueInput {
+                    token,
+                    text: "10cm;20cm".into(),
+                    pasted: true,
+                },
+            );
+            let _ = app.settings.choose(&[(
+                crate::drawing_menus::RIGHT_CLICK_ENTER,
+                serde_json::Value::Bool(quick),
+            )]);
+            let _ = app.right_clicked(Point::new(700., 500.));
+            if !quick {
+                assert_eq!(
+                    app.document.as_ref().unwrap().model.to_snapshot_v2(),
+                    before
+                );
+                assert_eq!(app.field.as_ref().unwrap().text, "10cm;20cm");
+                assert!(format!("{:?}", app.drawing_menu_items()).contains("Uygula: 10cm;20cm"));
+                update(
+                    &mut app,
+                    Message::DrawingMenu(crate::drawing_menus::Event::Closed),
+                );
+                update(&mut app, Message::Run("tool.confirm"));
+            }
+            assert!(app.field.is_none());
+            let doc = &mut app.document.as_mut().unwrap().model;
+            assert_eq!(doc.len(), 3);
+            let Some(Entity::Line(a)) = doc.get(Slot(1)) else {
+                panic!()
+            };
+            let Some(Entity::Line(b)) = doc.get(Slot(2)) else {
+                panic!()
+            };
+            assert!((a.a.x - crate::tools_scenes::E - 0.1).abs() < 1e-8);
+            assert!((b.b.y - crate::tools_scenes::N - 0.2).abs() < 1e-8);
+            doc.undo();
+            assert_eq!(doc.to_snapshot_v2(), before);
+        }
+    }
+
+    #[test]
+    fn escape_closes_the_real_menu_without_discarding_its_value_editor() {
+        let mut app = drawing();
+        let mut shot = crate::files_testing::offscreen(Size::new(1440., 900.));
+        shot.settle(&mut app, App::view, &mut update);
+        update(&mut app, Message::Run("tool.chamfer"));
+        crate::tools_scenes::click(&mut app, [1., 0.]);
+        crate::tools_scenes::click(&mut app, [0., 1.]);
+        let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+        let field = Field::point(
+            "10cm;20cm".into(),
+            Vec2::new(crate::tools_scenes::E, crate::tools_scenes::N),
+        );
+        let token = field.token;
+        app.field = Some(field);
+        app.refresh_value_preview();
+        let _ = app.right_clicked(Point::new(700., 500.));
+        assert!(app.drawing_menu.is_some());
+        shot.input(&mut app, App::view, &mut update, Input::Key(Named::Escape));
+        assert!(app.drawing_menu.is_none());
+        // Runtime notifications follow the widget's close message. The
+        // subscription in effect for this event belongs to the open menu.
+        let event = iced::Event::Keyboard(iced::keyboard::Event::KeyPressed {
+            key: iced::keyboard::Key::Named(Named::Escape),
+            modified_key: iced::keyboard::Key::Named(Named::Escape),
+            physical_key: iced::keyboard::key::Physical::Code(iced::keyboard::key::Code::Escape),
+            location: iced::keyboard::Location::Standard,
+            modifiers: iced::keyboard::Modifiers::empty(),
+            text: None,
+            repeat: false,
+        });
+        assert!(matches!(
+            keys::key_event(
+                event.clone(),
+                iced::event::Status::Captured,
+                iced::window::Id::unique()
+            ),
+            Some(Message::CapturedEscape)
+        ));
+        assert!(
+            keys::drawing_menu_key_event(
+                event,
+                iced::event::Status::Captured,
+                iced::window::Id::unique()
+            )
+            .is_none()
+        );
+        assert_eq!(app.field.as_ref().unwrap().token, token);
+        assert_eq!(app.field.as_ref().unwrap().text, "10cm;20cm");
+        assert_eq!(
+            app.document.as_ref().unwrap().model.to_snapshot_v2(),
+            before
+        );
+        update(&mut app, Message::CapturedEscape);
+        assert!(
+            app.field.is_none(),
+            "a later Esc cancels just the value draft"
+        );
+        assert_eq!(
+            app.document.as_ref().unwrap().model.to_snapshot_v2(),
+            before
+        );
     }
 
     #[test]

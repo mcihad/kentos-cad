@@ -1698,6 +1698,14 @@ impl Session {
         self.settle(cx);
     }
 
+    pub fn previews_input(&self) -> bool {
+        self.tool.as_ref().is_some_and(|t| t.previews_input())
+    }
+
+    pub fn preview_input(&mut self, text: Option<&str>, cx: &Context<'_>) -> crate::InputPreview {
+        self.tool.as_mut().map_or(crate::InputPreview::Off, |t|t.preview_input(text,cx))
+    }
+
     pub fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
         // #ad: a point's place by its name (docs/adr/0152 §4).
         if let Some(name) = point_name(text) {

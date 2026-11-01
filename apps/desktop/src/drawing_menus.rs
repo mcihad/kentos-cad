@@ -187,20 +187,22 @@ impl App {
     /// The right button came up sooner than the hold: the menu of what is
     /// going on; Enter only when the user chose it so, never for a grip
     /// (docs/adr/0622 §6).
-    pub(crate) fn right_clicked(&mut self, at: Point) {
+    pub(crate) fn right_clicked(&mut self, at: Point) -> Task<Message> {
         if self.drawing_menu.is_some() {
-            return;
+            return Task::none();
         }
-        self.field = None;
+        if !self.field.as_ref().is_some_and(|f| f.preview != kentos_interaction::InputPreview::Off) {
+            self.field = None;
+        }
         self.line_focused = false;
         if self.settings.bool(RIGHT_CLICK_ENTER)
             && self.session.confirms()
             && !self.session.grip_active()
         {
-            self.with_tool(|s, cx| s.confirm(cx));
-            return;
+            return self.confirm();
         }
         self.open_drawing_menu(at);
+        Task::none()
     }
 
     /// The menu of what is going on, at `at`: a grip's while one is moved,
@@ -500,9 +502,16 @@ impl App {
                     None => option.label.to_owned(),
                 },
             );
+        let draft=self.field.as_ref().filter(|f|f.preview!=kentos_interaction::InputPreview::Off);
+        let invalid=draft.is_some_and(|f|f.preview==kentos_interaction::InputPreview::Invalid);
+        let confirm=match draft {
+            Some(_) if invalid=>"Önce değeri düzeltin".to_owned(),
+            Some(f) if !f.text.trim().is_empty()=>format!("Uygula: {}",f.text.trim()),
+            _=>confirm,
+        };
         let mut menu = Menu::new()
             .header(prompt.title().unwrap_or_else(|| "Komut".to_owned()))
-            .item(confirm, Message::Run("tool.confirm"))
+            .item(confirm, (!invalid).then_some(Message::Run("tool.confirm")))
             .icon(Icon::Check)
             .shortcut("Enter")
             .item("İptal", Message::Run("tool.cancel"))

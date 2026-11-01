@@ -110,8 +110,15 @@ cad.entities.chamfer(doc, corner=straight_corner, distance=.1, second=.2)
   desteklenir. Kutunun üstünde CAD artısı çizilmez. Gecikmiş girişler
   geçici kutu kimliğiyle reddedilir. Gerçek GUI'de `10cm;20cm`, tek Enter,
   kaydedilmiş uç koordinatları, tek Undo ve Esc ile iptal kontrol edildi.
-- [ ] Girilen sayının yazarken canlı geometri önizlemesine bağlanması.
-  Mevcut fare önizlemesi, metindeki iki mesafeyi Enter öncesinde yansıtmaz.
+- [x] Girilen sayının yazarken canlı geometri önizlemesine bağlanması.
+  Pahın iki mesafesi ve yuvarlama yarıçapı salt okunur aynı komut planıyla
+  gösterilir; fare hareketi yazılan değerin yerini almaz. Geçersiz metin veya
+  geometri, son hatırlanan değere düşmeden kutuyu düzeltmeye açık bırakır.
+  Tek Enter, sahne tıklaması veya menü onayı aynı yazılı değeri uygular.
+  Menüde değer görünür; ilk Esc yalnız menüyü, sonraki Esc değer taslağını
+  kapatır. Gerçek GUI'de kaydedilen 10/20 cm pah uçları, 25 cm yay merkezi/
+  yarıçapı, kaynak kimlikleri ve tek Undo bağımsız dosya okuyucusuyla doğrulandı.
+  [ADR 0823](../adr/0823-live-corner-value-previews.md).
 
 ## Kod dayanakları
 

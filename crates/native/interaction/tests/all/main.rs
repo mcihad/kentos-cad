@@ -15,6 +15,7 @@ mod colour;
 mod common;
 mod constraint_marks;
 mod constructing;
+mod corner_preview;
 mod coordinate_z;
 mod curve_methods;
 mod data_search;

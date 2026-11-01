@@ -320,7 +320,7 @@ pub use spatial::{
     GripSet, LabelSpot, Spatial, arc_sweep, dimension_layout, enclosed, full_ellipse, measures,
     vertices,
 };
-pub use tool::{Area, CellGhost, ImageFile, Label, TextGhost, frame_of};
+pub use tool::{Area, CellGhost, ImageFile, InputPreview, Label, TextGhost, frame_of};
 pub use tool::{
     Context, Corners, Cursor, DimensionMode, Draft, DraftColor, Flow, LengthenMode, Marker,
     MarkerShape, Memory, Name, Offers, OptionChoice, Overlap, ParagraphField, Pointer, Preview,

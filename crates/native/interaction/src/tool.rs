@@ -20,6 +20,15 @@ use crate::select::SelectBox;
 use crate::selection::Selection;
 use crate::spatial::Spatial;
 
+/// A transient typed preview. This never writes or changes remembered values.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum InputPreview {
+    #[default]
+    Off,
+    Ready,
+    Invalid,
+}
+
 /// Where the pointer is, as a tool sees it (the web's `ToolPointer`).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Pointer {
@@ -1801,6 +1810,12 @@ pub trait Tool {
     fn pointer_cancel(&mut self, _cx: &mut Context<'_>) {}
     /// Typed text: a coordinate, a number or an option. False when not understood.
     fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool;
+    /// Only opted-in tools see unfinished editor text. A readonly context
+    /// makes an accidental semantic write impossible in this path.
+    fn previews_input(&self) -> bool { false }
+    fn preview_input(&mut self, _text: Option<&str>, _cx: &Context<'_>) -> InputPreview {
+        InputPreview::Off
+    }
     /// The values an option chooses between, for its chip and the right
     /// button's menu to offer as a menu (Yazı's Hiza, docs/adr/0145 §6; the
     /// web's `optionChoices`); none: the chip sends the key.

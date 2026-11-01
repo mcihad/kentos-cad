@@ -1746,7 +1746,11 @@ impl App {
                 .as_ref()
                 .is_some_and(|d| d.dirty() && !d.is_database());
         Subscription::batch([
-            event::listen_with(keys::key_event),
+            event::listen_with(if self.drawing_menu.is_some() {
+                keys::drawing_menu_key_event
+            } else {
+                keys::key_event
+            }),
             window::close_requests().map(Message::CloseRequested),
             if unsaved {
                 Subscription::run(recovery::ticks)
@@ -2012,7 +2016,11 @@ impl App {
             return Task::none();
         }
         if matches!(message, Message::CapturedEscape) {
+            if self.field.is_some() && self.drawing_menu.take().is_some() {
+                return Task::none();
+            }
             if self.field.take().is_some() {
+                self.refresh_value_preview();
                 return crate::input::release_keyboard();
             }
             if matches!(self.dialog, Some(Dialog::AttributeValues | Dialog::BlockDefine)) {

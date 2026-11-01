@@ -376,7 +376,12 @@ Pahın iki kenar mesafesi ayrı olmalı; sahnede kenar sırası açık gösteril
 Masaüstü değer kutusu gerçek metin alanına geçirildi: tıklama, seçme,
 yapıştırma, tek Enter ve Esc iptali gerçek arayüzde doğrulandı. Kutunun
 sabit konumu ve geçici kimliği yanlışlıkla sahneye uygulamayı önler.
-Yazarken metne göre canlı önizleme henüz tamamlanmadı.
+Pahın iki mesafesi ve yuvarlama yarıçapı yazılırken aynı salt okunur komut
+planıyla canlı gösterilir. Geçersiz değer kutuda kalır; fare eski değeri
+uygulamaz. Tek Enter, sahne tıklaması ve sağ tuş menüsü aynı yazılı değeri
+uygular. Menü Esc'si değer kutusunu kapatmaz. Gerçek GUI sonucu, kaynak
+kimlikleri ve tek Undo bağımsız dosya okuyucusuyla doğrulandı.
+[ADR 0823](../docs/adr/0823-live-corner-value-previews.md).
 Dairesel yuvarlama tek yarıçaptır; farklı kenar mesafeli eliptik/geçiş
 eğrisi ayrı sözleşmeyle araştırılacak, mevcut daire hesabı bozulmayacak.
 Elips/fit/NURBS ötelemesinde açık yaklaşım/tolerans seçimi, rasyonel Bézier
@@ -386,8 +391,8 @@ ve büyük koordinatlar bağımsız analitik eğrilerle doğrulandı. GUI'de
 20 cm içe öteleme/0,01 mm tolerans, 60 cm katlanma reddi, yeniden
 seçmeden ayar düzeltme ve tek Undo sınandı. [ADR 0822](../docs/adr/0822-user-toleranced-curve-offsets.md)
 sayısal sınırları ve tam IEEE ispatı olmadığını açıklar; [Python/MCP örneği](../docs/cad/curve-offset-python.md)
-aynı sözleşmeyi kullanır. Süreklilik arayüzü, yazarken canlı değer
-önizlemesi ile birleşik ölçü/alt nesne kabulü halen açıktır. Web, ADR 0228
+aynı sözleşmeyi kullanır. Süreklilik arayüzü ile birleşik ölçü/alt nesne
+kabulü halen açıktır. Web, ADR 0228
 uyarınca ertelidir; masaüstü maddesini kapatmak için web geliştirilmez.
 
 ### CAD-ADV-05 — Parametrik 2B tasarımı açıklanabilir ve kapsamlı hale getir [ ]
