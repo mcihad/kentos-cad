@@ -61,10 +61,11 @@ fn points(b: &Bench) -> Vec<[f64; 2]> {
 fn a_displacement_is_typed_or_taken_again_with_enter() {
     let mut b = bench(&[1]);
     b.start("move");
-    assert!(b.type_text("Y"));
+    // The existing abbreviated option name remains unambiguous with Enter visible.
+    assert!(b.type_text("yer"));
     assert_eq!(
         b.session.prompt().text(),
-        "Taşı: yer değiştirmeyi yazın: dY,dX"
+        "Taşı: yer değiştirmeyi yazın: dY,dX [İşlem yapmadan bitir (Enter)]"
     );
     let before = b.log.len();
     assert!(b.type_text("12.5,-7.25"));
@@ -80,7 +81,7 @@ fn a_displacement_is_typed_or_taken_again_with_enter() {
     b.confirm();
     assert_eq!(
         b.session.prompt().text(),
-        "Taşı: yer değiştirmeyi yazın: dY,dX (Enter: 12.500,-7.250)"
+        "Taşı: yer değiştirmeyi yazın: dY,dX (Enter: 12.500,-7.250) [Son yer değiştirmeyi uygula (Enter)]"
     );
     b.confirm();
     assert!(near(line(&b, 1), [[1.0, -26.5], [17.0, -26.5]]));
@@ -112,7 +113,7 @@ fn single_mode_copies_once_and_stays_for_the_next_run() {
     b.start("copy");
     assert_eq!(
         b.session.prompt().text(),
-        "Kopyala: 1 nesne için temel noktayı belirtin [Yer değiştirme (Y) / Kip (P): çoklu]"
+        "Kopyala: 1 nesne için temel noktayı belirtin [Yer değiştirme (Y) / Koordinat farkı gir (Enter) / Kip (P): çoklu]"
     );
     assert!(b.type_text("P"));
     assert!(b.session.prompt().text().ends_with("Kip (P): tek]"));
@@ -142,14 +143,14 @@ fn an_array_copies_along_the_displacement_or_fits_it() {
     assert!(b.type_text("A"));
     assert_eq!(
         b.session.prompt().text(),
-        "Kopyala: dizideki öğe sayısını yazın (asıllar dahil)"
+        "Kopyala: dizideki öğe sayısını yazın (asıllar dahil) [Kopya yerleştirmeye dön (Enter)]"
     );
     assert!(b.type_text("1"));
     assert_eq!(b.last_level(), Some(Level::Warn));
     assert!(b.type_text("4"));
     assert_eq!(
         b.session.prompt().text(),
-        "Kopyala: dizinin ikinci noktasını belirtin (4 yer) [Sığdır (S): kapalı]"
+        "Kopyala: dizinin ikinci noktasını belirtin (4 yer) [Sığdır (S): kapalı / Kopya yerleştirmeye dön (Enter)]"
     );
     b.click(p0[0] + 3.0, p0[1]);
     let got = points(&b);

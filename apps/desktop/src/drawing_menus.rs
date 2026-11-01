@@ -484,9 +484,16 @@ impl App {
     /// A command running (the web's `commandItems`).
     fn command_menu(&self) -> Menu<Message> {
         let prompt = self.prompt();
+        // Enter may finish picking, advance a stage, or apply a fence without
+        // leaving the command. Use the tool's own description of that action.
+        let confirm = prompt
+            .options
+            .iter()
+            .find(|option| option.key == "Enter")
+            .map_or("Onayla / bitir", |option| option.label);
         let mut menu = Menu::new()
             .header(prompt.title().unwrap_or_else(|| "Komut".to_owned()))
-            .item("Onayla / bitir", Message::Run("tool.confirm"))
+            .item(confirm, Message::Run("tool.confirm"))
             .icon(Icon::Check)
             .shortcut("Enter")
             .item("İptal", Message::Run("tool.cancel"))
@@ -668,6 +675,53 @@ mod tests {
             !app.session.is_running(),
             "Enter with no point leaves the line tool"
         );
+    }
+
+    #[test]
+    fn the_menu_names_the_enter_action_of_the_current_move_stage() {
+        use kentos_domain::Slot;
+
+        fn menu(app: &mut App) -> String {
+            let at = Point::new(300.0, 200.0);
+            view(app, viewport::Event::RightPressed(at));
+            view(app, viewport::Event::RightClick(at));
+            let text = format!("{:?}", app.drawing_menu_items());
+            let _ = app.update(Message::DrawingMenu(Event::Closed));
+            text
+        }
+
+        let mut app = app_with_drawing();
+        let revision = app.document.as_ref().unwrap().model.revision();
+        let _ = app.update(Message::Run("tool.move"));
+        assert!(menu(&mut app).contains("Bitir"));
+        // Pick a real parcel corner through the viewport, as a mouse does.
+        let parcel = Slot(4);
+        app.spatial.sync(&app.document.as_ref().unwrap().model);
+        let corner = app.spatial.grips(&[parcel])[0].points[0];
+        let [x, y] = app.viewport.camera.world_to_screen(corner);
+        let at = Point::new(x as f32, y as f32);
+        view(&mut app, viewport::Event::Pressed(at));
+        view(&mut app, viewport::Event::Released(at));
+        assert_eq!(app.selection.ids(), &[parcel]);
+        assert!(menu(&mut app).contains("Seçimi tamamla"));
+        // One menu action completes picking; it must not move the object.
+        let _ = app.update(Message::Run("tool.confirm"));
+        assert!(app.session.is_running());
+        assert!(menu(&mut app).contains("Koordinat farkı gir"));
+        let _ = app.update(Message::Run("tool.confirm"));
+        assert!(menu(&mut app).contains("İşlem yapmadan bitir"));
+        let _ = app.update(Message::Run("tool.confirm"));
+        assert!(!app.session.is_running());
+        assert_eq!(app.document.as_ref().unwrap().model.revision(), revision);
+
+        // At a target point Enter leaves without placing the preview.
+        let _ = app.update(Message::Run("tool.move"));
+        view(&mut app, viewport::Event::Pressed(at));
+        view(&mut app, viewport::Event::Released(at));
+        assert!(menu(&mut app).contains("Taşımadan bitir"));
+        let _ = app.update(Message::Run("tool.confirm"));
+        assert!(!app.session.is_running());
+        assert_eq!(app.document.as_ref().unwrap().model.revision(), revision);
     }
 
     /// A grip being moved (the owner's report, 23 October 2026): a right

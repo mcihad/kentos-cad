@@ -105,7 +105,7 @@ fn fillet_all_picks_first_and_says_what_does_not_fit() {
     let rev = b.doc.revision();
     b.start("filletAll");
     assert!(b.session.prompt().text().starts_with(
-        "Tüm köşeleri yuvarla: nesnelere tıklayın ya da pencereyle seçin, bitince sağ tıklayın (0 seçili) [yarıçap 1.000 m; değiştirmek için değer yazın]"
+        "Tüm köşeleri yuvarla: nesnelere tıklayın ya da pencereyle seçin (0 seçili) [Bitir (Enter) / yarıçap 1.000 m; değiştirmek için değer yazın]"
     ));
     // A number typed while picking is the radius.
     assert!(b.type_text("6"));

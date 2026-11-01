@@ -136,7 +136,7 @@ fn picks_first_without_a_selection_and_leaves_with_nothing_to_measure() {
     b.start("quickDimension");
     assert_eq!(
         b.session.prompt().text(),
-        "Hızlı ölçü: nesnelere tıklayın ya da pencereyle seçin, bitince sağ tıklayın (0 seçili)"
+        "Hızlı ölçü: nesnelere tıklayın ya da pencereyle seçin (0 seçili) [Bitir (Enter)]"
     );
     b.selection.set([spot]);
     b.confirm();

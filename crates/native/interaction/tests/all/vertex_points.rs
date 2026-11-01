@@ -201,7 +201,7 @@ fn picks_first_when_nothing_is_selected_and_takes_ad_and_kod_as_nokta_does() {
     b.start("vertexPoints");
     assert_eq!(
         b.session.prompt().text(),
-        "Köşelere nokta: nesnelere tıklayın ya da pencereyle seçin, bitince sağ tıklayın (0 seçili)"
+        "Köşelere nokta: nesnelere tıklayın ya da pencereyle seçin (0 seçili) [Bitir (Enter)]"
     );
     // A click on the left parcel's bottom edge.
     b.click(10.0, 0.0);

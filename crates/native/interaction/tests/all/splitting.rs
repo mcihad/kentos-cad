@@ -131,7 +131,7 @@ fn split_picks_first_and_a_locked_layer_is_left_out() {
     // The crossing pair and the locked line 13 across nothing.
     b.start("split");
     assert!(b.session.prompt().text().starts_with(
-        "Parçala: nesnelere tıklayın ya da pencereyle seçin, bitince sağ tıklayın (0 seçili)"
+        "Parçala: nesnelere tıklayın ya da pencereyle seçin (0 seçili)"
     ));
     b.click(-26.0, 12.0);
     b.click(-20.0, 8.0);

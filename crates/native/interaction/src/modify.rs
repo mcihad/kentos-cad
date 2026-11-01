@@ -384,13 +384,23 @@ impl<S: Stages> Tool for Modify<S> {
             return prompt;
         }
         if self.picking {
-            self.stages.picking_hint(Prompt::new(
-                self.stages.label(),
-                format!(
-                    "nesnelere tıklayın ya da pencereyle seçin, bitince sağ tıklayın ({} seçili)",
-                    self.selected
+            self.stages.picking_hint(
+                Prompt::new(
+                    self.stages.label(),
+                    format!(
+                        "nesnelere tıklayın ya da pencereyle seçin ({} seçili)",
+                        self.selected
+                    ),
+                )
+                .option(
+                    if self.selected == 0 {
+                        "Bitir"
+                    } else {
+                        "Seçimi tamamla"
+                    },
+                    "Enter",
                 ),
-            ))
+            )
         } else {
             self.stages.prompt(self.selected)
         }

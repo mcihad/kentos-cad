@@ -83,7 +83,7 @@ fn intersect_adds_the_common_part_and_can_erase_the_sources() {
     b.start("areaIntersect");
     assert_eq!(
         b.session.prompt().text(),
-        "Alan kesiştir: nesnelere tıklayın ya da pencereyle seçin, bitince sağ tıklayın (0 seçili) [Kaynakları sil (S): hayır / Tek nesne (T): hayır]"
+        "Alan kesiştir: nesnelere tıklayın ya da pencereyle seçin (0 seçili) [Bitir (Enter) / Kaynakları sil (S): hayır / Tek nesne (T): hayır]"
     );
     assert!(b.type_text("s"));
     assert!(b.session.prompt().text().contains("(S): evet"));
@@ -353,7 +353,7 @@ fn union_with_one_object_makes_one_multi_part_area() {
     b.start("areaUnion");
     assert_eq!(
         b.session.prompt().text(),
-        "Alan birleştir: nesnelere tıklayın ya da pencereyle seçin, bitince sağ tıklayın (0 seçili) [Tek nesne (T): hayır]"
+        "Alan birleştir: nesnelere tıklayın ya da pencereyle seçin (0 seçili) [Bitir (Enter) / Tek nesne (T): hayır]"
     );
     assert!(b.type_text("t"));
     assert!(b.memory.area_one_object);

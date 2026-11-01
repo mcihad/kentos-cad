@@ -498,12 +498,17 @@ impl Tool for Boundary {
         if self.picking {
             return Prompt::new(
                 label,
-                format!(
-                    "sınır olacak nesnelere tıklayın, bitince sağ tıklayın ({} seçili)",
-                    self.selected
-                ),
+                format!("sınır olacak nesnelere tıklayın ({} seçili)", self.selected),
             )
-            .option("Tüm kenarlar", "T");
+            .option("Tüm kenarlar", "T")
+            .option(
+                if self.selected == 0 {
+                    "Görünen tüm kenarları kullan"
+                } else {
+                    "Seçilen sınırları kullan"
+                },
+                "Enter",
+            );
         }
         let p = Prompt::new(label, self.action_prompt());
         let p = match &self.bounds {

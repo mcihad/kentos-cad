@@ -172,7 +172,14 @@ impl Stages for Move {
                 }
                 _ => String::new(),
             };
-            return Prompt::new(label, format!("yer değiştirmeyi yazın: dY,dX{last}"));
+            return Prompt::new(label, format!("yer değiştirmeyi yazın: dY,dX{last}")).option(
+                if self.last.is_some() {
+                    "Son yer değiştirmeyi uygula"
+                } else {
+                    "İşlem yapmadan bitir"
+                },
+                "Enter",
+            );
         }
         if let Some(a) = self.array {
             return match a.count {
@@ -182,12 +189,14 @@ impl Stages for Move {
                     format!("dizinin ikinci noktasını belirtin ({c} yer)"),
                 )
                 .option_with("Sığdır", "S", if a.fit { "açık" } else { "kapalı" }),
-            };
+            }
+            .option("Kopya yerleştirmeye dön", "Enter");
         }
         match self.base {
             None => {
                 let prompt = Prompt::new(label, format!("{n} nesne için temel noktayı belirtin"))
-                    .option("Yer değiştirme", "Y");
+                    .option("Yer değiştirme", "Y")
+                    .option("Koordinat farkı gir", "Enter");
                 if self.copy {
                     prompt.option_with("Kip", "P", if self.single { "tek" } else { "çoklu" })
                 } else {
@@ -199,7 +208,8 @@ impl Stages for Move {
                     .option("Dizi", "A")
                     .option("Bitir", "Enter")
             }
-            Some(_) => Prompt::new(label, "hedef noktayı belirtin ya da @dY,dX yazın"),
+            Some(_) => Prompt::new(label, "hedef noktayı belirtin ya da @dY,dX yazın")
+                .option("Taşımadan bitir", "Enter"),
         }
     }
 

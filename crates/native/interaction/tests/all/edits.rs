@@ -270,8 +270,12 @@ fn extend_grows_to_the_chosen_boundaries() {
     assert!(b.type_text("S"));
     assert_eq!(
         b.session.prompt().text(),
-        "Uzat: sınır olacak nesnelere tıklayın, bitince sağ tıklayın (0 seçili) [Tüm kenarlar (T)]"
+        "Uzat: sınır olacak nesnelere tıklayın (0 seçili) [Tüm kenarlar (T) / Görünen tüm kenarları kullan (Enter)]"
     );
+    // Showing Enter must not make the existing abbreviation for Tüm kenarlar ambiguous.
+    assert!(b.type_text("tüm"));
+    assert!(b.session.prompt().text().contains("görünen tüm kenarlar"));
+    assert!(b.type_text("S"));
     b.click(-4.0, 10.0);
     assert_eq!(b.selected(), [3]);
     b.confirm();
@@ -484,7 +488,7 @@ fn join_without_a_selection_picks_first_and_takes_a_typed_tolerance() {
     b.start("join");
     assert_eq!(
         b.session.prompt().text(),
-        "Birleştir: nesnelere tıklayın ya da pencereyle seçin, bitince sağ tıklayın (0 seçili) [uç boşluğu toleransı 0.001 m; değiştirmek için sayı yazın; Zincir (Z)]"
+        "Birleştir: nesnelere tıklayın ya da pencereyle seçin (0 seçili) [Bitir (Enter) / uç boşluğu toleransı 0.001 m; değiştirmek için sayı yazın; Zincir (Z)]"
     );
     assert!(b.type_text("0.5"));
     assert_eq!(b.memory.join_tolerance, 0.5);

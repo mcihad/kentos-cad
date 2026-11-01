@@ -44,12 +44,12 @@ fn without_a_selection_the_tool_picks_first() {
     b.start("move");
     assert_eq!(
         b.session.prompt().text(),
-        "Taşı: nesnelere tıklayın ya da pencereyle seçin, bitince sağ tıklayın (0 seçili)"
+        "Taşı: nesnelere tıklayın ya da pencereyle seçin (0 seçili) [Bitir (Enter)]"
     );
     // A click turns one object over; a second click on it takes it out again.
     b.click(-16.0, -12.0);
     assert_eq!(b.selected(), [1]);
-    assert!(b.session.prompt().text().ends_with("(1 seçili)"));
+    assert!(b.session.prompt().text().ends_with("(1 seçili) [Seçimi tamamla (Enter)]"));
     b.click(-16.0, -12.0);
     assert!(b.selected().is_empty());
     // Hovering names what a click would pick.
@@ -69,7 +69,7 @@ fn without_a_selection_the_tool_picks_first() {
     b.confirm();
     assert_eq!(
         b.session.prompt().text(),
-        "Taşı: 2 nesne için temel noktayı belirtin [Yer değiştirme (Y)]"
+        "Taşı: 2 nesne için temel noktayı belirtin [Yer değiştirme (Y) / Koordinat farkı gir (Enter)]"
     );
     assert_eq!(b.selection.hover(), None);
 }
@@ -102,12 +102,12 @@ fn a_selection_moves_by_its_base_and_target_in_one_step() {
     b.start("move");
     assert_eq!(
         b.session.prompt().text(),
-        "Taşı: 1 nesne için temel noktayı belirtin [Yer değiştirme (Y)]"
+        "Taşı: 1 nesne için temel noktayı belirtin [Yer değiştirme (Y) / Koordinat farkı gir (Enter)]"
     );
     b.click(-24.0, -12.0);
     assert_eq!(
         b.session.prompt().text(),
-        "Taşı: hedef noktayı belirtin ya da @dY,dX yazın"
+        "Taşı: hedef noktayı belirtin ya da @dY,dX yazın [Taşımadan bitir (Enter)]"
     );
     // The preview: the line's ghost where it would go, dashed, and the line from the base.
     b.move_to(-20.0, -10.0);

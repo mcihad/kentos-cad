@@ -10,11 +10,13 @@ Katı modelleme, 3B sahne, BIM modelleme, 3B modelden kesit/cephe türetme,
 LiDAR işleme ve yol koridoru bu planın kapsamı değildir. Dış dosyadaki Z/M
 bilgisinin kaybolmadan taşınması ise 2B ürünün veri bütünlüğü sorumluluğudur.
 
-Bu çalışmada yalnız bu araştırma/plan dosyası oluşturulmuştur; uygulama
-kodu ve `CLAUDE.md` üzerinde işlem yapılmamıştır. Başka ajanın çalışma alanındaki değişiklikleri incelemeye
+31 Ekim araştırmasında yalnız bu plan dosyası oluşturulmuştur. Başka ajanın çalışma alanındaki değişiklikleri incelemeye
 karıştırmamak için kod bağlantıları sabit commit'e verilmiştir. Yeni ana
-maddeler açık durumdadır; var olan bir temelin listelenmesi yeni kabul
+maddelerin uygulama ilerlemesi aşağıda ayrıca tutulur; var olan bir temelin listelenmesi yeni kabul
 kapsamının tamamlandığı anlamına gelmez.
+
+**Uygulama başlangıcı:** 1 Kasım 2026, `main`, `4f1d11fde` üzerine.
+`[~]` kısmen uygulanmış ve kalan kabulü açık, `[x]` bütün kabulü doğrulanmış demektir.
 
 ## Yaklaşım ve diğer planlarla ilişki
 
@@ -120,7 +122,7 @@ işlev/veri yolunun sınırıdır; bütün depoda başka destek olmadığı iddi
 
 ## 20 ana geliştirme maddesi
 
-### CAD-ADV-01 — Komut, önizleme, onay ve iptali öngörülebilir hale getir [ ]
+### CAD-ADV-01 — Komut, önizleme, onay ve iptali öngörülebilir hale getir [~]
 
 **Öncelik:** P0. **Kod:** [C02], [C03], [C32].
 **Dayanak:** QCAD'in Trim durumları ve işlem grupları; DraftSight hızlı
@@ -148,6 +150,22 @@ aynı anlaşılır etkileşim sözleşmesini tamamla.
 **Kabul:** Taşı, Kopyala, Buda/Uzat, Köşe yuvarla, Tarama, Blok ekle ve
 Ölçü'de fare + klavye + sağ tuş akışlarını çalıştır. Tek onay, Esc'de sıfır
 yazım, tek mantıksal Undo ve önizleme/sonuç eşitliği gerçek pencerede doğrulansın.
+
+**1 Kasım ilk dilim — [ADR 0812](../docs/adr/0812-stage-specific-command-confirmation.md):**
+
+- [x] Sağ tuş komut menüsü, aracın mevcut `Prompt` verisindeki Enter eylemini
+  gösterir. Seçimi tamamlama, koordinat farkı girme, son farkı uygulama,
+  kopya dizisinden dönme ve taşımadan bitirme birbirinden ayrıldı.
+  Aynı eylemler komut satırında da görünür; onay/iptal ve geometri hesapları değiştirilmedi.
+- [x] Gerçek masaüstünde Taşı/Kopyala/Buda: tek menü tıklamasıyla ilgili
+  aşamaya geçiş/bitirme, hedef tıklamasıyla taşıma, kopyayı fazladan nesne
+  oluşturmadan bitirme, Esc ve tek Undo denendi. Geniş ve yaklaşık 1100×680
+  mantıksal piksel pencerede menüler incelendi; görüntüler Git dışında.
+  825 etkileşim, 7 menü ve 5 anlamsal komut testi geçti; 5 isteğe bağlı test atlandı.
+- [ ] Dar pencerede komut satırının kısalan aşama açıklamasını erişilebilir kıl.
+  Bütün araç aşamalarında geçersiz/onaysız girdinin gösterimi, odak/belge
+  değişimi, kilitli/bağlı nesne etkisi ve önizleme/sonuç eşitliği kabulünü tamamla.
+  Uzat, Köşe yuvarla, Tarama, Blok ekle ve Ölçü için bu oturumda gerçek pencere kabulü yapılmadı.
 
 ### CAD-ADV-02 — Birim, 2B UCS ve hassasiyeti kullanıcının öğrenmek zorunda kalmadığı bir sisteme dönüştür [ ]
 
