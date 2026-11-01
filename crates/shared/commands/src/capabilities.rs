@@ -2074,6 +2074,7 @@ const ENTRIES: &[Entry] = &[
             "module_drift_overwritten",
             "module_member_released",
             "module_repeat_left",
+            "module_repeat_matched",
         ],
         targets: none,
     },

@@ -70,20 +70,22 @@ fn near(a: &Value, b: &Value) -> bool {
     }
 }
 
+/// `e` as a value without its slot and the fields `skip` names.
+fn cleaned(e: &Entity, skip: &[&str]) -> Value {
+    let mut v = serde_json::to_value(e).unwrap_or(Value::Null);
+    if let Some(o) = v.as_object_mut() {
+        o.remove("id");
+        for k in skip {
+            o.remove(*k);
+        }
+    }
+    v
+}
+
 /// Whether `current` is `expected` but for what the document writes itself and the coordinates' rounding.
 pub(super) fn same_object(expected: &Entity, current: &Entity) -> bool {
     let skip = written_by_the_document(current);
-    let clean = |e: &Entity| {
-        let mut v = serde_json::to_value(e).unwrap_or(Value::Null);
-        if let Some(o) = v.as_object_mut() {
-            o.remove("id");
-            for k in skip {
-                o.remove(*k);
-            }
-        }
-        v
-    };
-    near(&clean(expected), &clean(current))
+    near(&cleaned(expected, skip), &cleaned(current, skip))
 }
 
 /// What the instance's object of `mem` is when it follows the source: the definition placed by the instance's matrix,
@@ -643,22 +645,13 @@ fn loose_plan(
     from: &str,
     repeated: &HashSet<String>,
 ) -> (Vec<(String, Entity)>, Vec<ModuleLeft>) {
-    let in_modules: HashSet<&str> = modules
-        .iter()
-        .flat_map(|m| m.instances.iter().flat_map(|i| i.members.iter().map(|o| o.uid.as_str())))
-        .collect();
+    let (in_modules, in_options) = held_apart(doc, modules);
     let by_uid = |u: &str| {
         Uuid::parse_str(u)
             .ok()
             .and_then(|x| doc.slot_of(x))
             .and_then(|s| doc.get(s))
     };
-    // A design option's objects (docs/adr/0788) stay: a plain copy would join the main model.
-    let in_options: HashSet<&str> = doc
-        .arch_options()
-        .iter()
-        .flat_map(|s| s.options.iter().flat_map(|o| o.members.iter().map(String::as_str)))
-        .collect();
     let mut copy: Vec<(String, Entity)> = Vec::new();
     let mut left: Vec<(u32, ModuleLeft)> = Vec::new();
     for e in doc.entities() {
@@ -672,9 +665,9 @@ fn loose_plan(
         if repeated.contains(&uid) {
             continue;
         }
-        let why = if in_modules.contains(uid.as_str()) {
+        let why = if in_modules.contains(&uid) {
             Some(ModuleLeftWhy::Module)
-        } else if in_options.contains(uid.as_str()) {
+        } else if in_options.contains(&uid) {
             Some(ModuleLeftWhy::Option)
         } else if doc.layers().is_locked(&e.base().layer_id) {
             Some(ModuleLeftWhy::Locked)
@@ -727,6 +720,41 @@ fn loose_plan(
     (copy, left.into_iter().map(|(_, l)| l).collect())
 }
 
+/// The ids of the objects of module instances and of design options (docs/adr/0788): a repeat neither copies them
+/// as loose objects nor takes them for a loose copy's like.
+fn held_apart(doc: &Document, modules: &[ArchModule]) -> (HashSet<String>, HashSet<String>) {
+    let in_modules = modules
+        .iter()
+        .flat_map(|m| m.instances.iter().flat_map(|i| i.members.iter().map(|o| o.uid.clone())))
+        .collect();
+    let in_options = doc
+        .arch_options()
+        .iter()
+        .flat_map(|s| s.options.iter().flat_map(|o| o.members.iter().cloned()))
+        .collect();
+    (in_modules, in_options)
+}
+
+/// The loose objects already on the level `level` a copy may be the like of (docs/adr/0810): in no module instance
+/// and no design option, with their ids and their values for [`near`].
+fn loose_there(doc: &Document, modules: &[ArchModule], level: &str) -> Vec<(String, Value)> {
+    let (in_modules, in_options) = held_apart(doc, modules);
+    let by_uid = |u: &str| {
+        Uuid::parse_str(u)
+            .ok()
+            .and_then(|x| doc.slot_of(x))
+            .and_then(|s| doc.get(s))
+    };
+    doc.entities()
+        .filter(|e| e.level(by_uid) == Some(level))
+        .filter_map(|e| {
+            let uid = doc.uid(Slot(e.base().id))?.to_string();
+            (!in_modules.contains(&uid) && !in_options.contains(&uid))
+                .then(|| (uid, cleaned(e, written_by_the_document(e))))
+        })
+        .collect()
+}
+
 /// A loose space's or opening's number on a repeat's target (docs/adr/0796 §2): the source level's project prefix (a
 /// space's, docs/adr/0690) taken off, then the target's numbering put on; with none, the target level's prefix in place
 /// of the source's; else as it was.
@@ -749,6 +777,7 @@ fn renumbered(
 }
 
 /// Katları tekrarla (docs/adr/0779 §5; the level's objects in no module too, docs/adr/0796 §2).
+#[allow(clippy::too_many_arguments)]
 pub(super) fn repeat(
     doc: &Document,
     modules: &mut [ArchModule],
@@ -756,6 +785,7 @@ pub(super) fn repeat(
     of: &[String],
     to: &[ModuleLevelTarget],
     loose: bool,
+    again: bool,
     work: &mut Work,
 ) -> Result<(), Stop> {
     level_ok(doc, Some(from)).map_err(|s| {
@@ -969,8 +999,8 @@ pub(super) fn repeat(
         for ((uid, _), id) in copies.iter().zip(&ids) {
             map.insert(uid.clone(), id.to_string());
         }
-        for ((uid, e), id) in copies.iter().zip(&ids) {
-            let mut c = remap(e, &map);
+        let copy_of = |e: &Entity, map: &HashMap<String, String>| {
+            let mut c = remap(e, map);
             c.base_mut().id = 0;
             if let Some(a) = arch_mut(&mut c) {
                 a.level = Some(t.level.clone());
@@ -988,6 +1018,44 @@ pub(super) fn repeat(
                     renumbered(n, None, None, t.numbering.as_ref())
                 };
             }
+            c
+        };
+        // A copy whose like already stands on the target is not made again (docs/adr/0810): what leans on it leans on
+        // the one there, so a like is sought again until none is found.
+        let mut matched: HashMap<usize, String> = HashMap::new();
+        if !again && !copies.is_empty() {
+            let there = loose_there(doc, modules, &t.level);
+            let mut used: HashSet<usize> = HashSet::new();
+            loop {
+                let mut found = false;
+                for (i, (uid, e)) in copies.iter().enumerate() {
+                    if matched.contains_key(&i) {
+                        continue;
+                    }
+                    let c = copy_of(e, &map);
+                    let mine = cleaned(&c, written_by_the_document(&c));
+                    if let Some(n) = (0..there.len()).find(|n| !used.contains(n) && near(&mine, &there[*n].1)) {
+                        used.insert(n);
+                        map.insert(uid.clone(), there[n].0.clone());
+                        matched.insert(i, there[n].0.clone());
+                        found = true;
+                    }
+                }
+                if !found {
+                    break;
+                }
+            }
+        }
+        for (i, ((uid, e), id)) in copies.iter().zip(&ids).enumerate() {
+            if let Some(like) = matched.get(&i) {
+                work.report.matched.push(ModuleCopied {
+                    source: uid.clone(),
+                    uid: like.clone(),
+                    level: t.level.clone(),
+                });
+                continue;
+            }
+            let c = copy_of(e, &map);
             work.adds.push((*id, c));
             work.copied.push(ModuleCopied {
                 source: uid.clone(),
@@ -995,6 +1063,15 @@ pub(super) fn repeat(
                 level: t.level.clone(),
             });
         }
+    }
+    if sources.is_empty() && work.copied.is_empty() {
+        return Err(fail(
+            codes::MODULE_REPEAT_TAKEN,
+            format!(
+                "“{from}” katının modülsüz nesnelerinin aynısı hedef katlarda zaten var; yine de kopyalamak için again verin."
+            ),
+            "operation.to",
+        ));
     }
     work.report.left = left;
     if let [k] = involved[..] {

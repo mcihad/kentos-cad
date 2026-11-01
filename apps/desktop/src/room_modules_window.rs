@@ -13,7 +13,8 @@
 //!
 //! A module of several storeys (docs/adr/0796) says its storeys and each instance the levels it stands on; Katları
 //! tekrarla's Modülsüz nesneler de copies the source level's objects in no module too, the plan saying how many are
-//! copied and how many are left.
+//! copied and how many are left. A loose object whose like already stands on a target is not copied again unless
+//! Hedefte aynısı olanı da kopyala is on, the plan saying how many are there already (docs/adr/0810).
 
 use iced::widget::{Column, button, container, row};
 use iced::{Center, Element, Fill, Task};
@@ -57,6 +58,8 @@ pub struct Window {
     pub repeat_preview: Option<Result<ModulesEdited, String>>,
     /// Katları tekrarla copies the source level's objects in no module too (docs/adr/0796 §2).
     pub repeat_loose: bool,
+    /// Katları tekrarla copies a loose object even where its like already stands on the target (docs/adr/0810).
+    pub repeat_again: bool,
 }
 
 /// A level Katları tekrarla may place on: its id and name, whether chosen, its number prefix.
@@ -83,6 +86,7 @@ pub enum Event {
     RepeatChoose(usize, bool),
     RepeatPrefix(usize, String),
     RepeatLoose(bool),
+    RepeatAgain(bool),
     Repeat,
     Close,
 }
@@ -154,10 +158,17 @@ impl App {
             .as_ref()
             .map(|w| w.name.clone())
             .unwrap_or_default();
-        let (repeat_from, repeat_to, repeat_loose) = self
+        let (repeat_from, repeat_to, repeat_loose, repeat_again) = self
             .room_modules
             .as_ref()
-            .map(|w| (w.repeat_from.clone(), w.repeat_to.clone(), w.repeat_loose))
+            .map(|w| {
+                (
+                    w.repeat_from.clone(),
+                    w.repeat_to.clone(),
+                    w.repeat_loose,
+                    w.repeat_again,
+                )
+            })
             .unwrap_or_default();
         self.room_modules = Some(Window {
             rows,
@@ -169,6 +180,7 @@ impl App {
             repeat_to,
             repeat_preview: None,
             repeat_loose,
+            repeat_again,
         });
         self.room_modules_levels();
         self.room_modules_preview();
@@ -248,6 +260,7 @@ impl App {
             modules: Vec::new(),
             to,
             loose: w.repeat_loose,
+            again: w.repeat_loose && w.repeat_again,
         })
     }
 
@@ -642,6 +655,12 @@ impl App {
                 }
                 self.room_modules_repeat_preview();
             }
+            Event::RepeatAgain(on) => {
+                if let Some(w) = self.room_modules.as_mut() {
+                    w.repeat_again = on;
+                }
+                self.room_modules_repeat_preview();
+            }
             Event::Repeat => {
                 let Some(operation) = self.room_modules_repeat_input() else {
                     self.warn("Tekrarlanacak hedef katı seçin.");
@@ -659,6 +678,12 @@ impl App {
                     }
                     if !done.report.left.is_empty() {
                         said += &format!("; {} nesne kopyalanmadı", done.report.left.len());
+                    }
+                    if !done.report.matched.is_empty() {
+                        said += &format!(
+                            "; {} nesnenin aynısı hedefte vardı, yeniden kopyalanmadı",
+                            done.report.matched.len()
+                        );
                     }
                     self.say(Level::Success, format!("{said}."));
                     if let Some(w) = self.room_modules.as_mut() {
@@ -825,7 +850,7 @@ impl App {
         let can_update = live && matches!(w.preview, Some(Ok(_)));
         let has_instance = chosen.is_some_and(|m| !m.instances.is_empty());
         Frame::new(TITLE)
-            .push(body)
+            .scroll_fill(body)
             .action(words::secondary(DEFINE, Some(msg(Event::Define))))
             .action(words::secondary(
                 DETACH,
@@ -929,9 +954,15 @@ impl App {
                             done.report.left.len()
                         )
                     };
+                    if !done.report.matched.is_empty() {
+                        said += &format!(
+                            " {} nesnenin aynısı hedef katta zaten var; yeniden kopyalanmaz.",
+                            done.report.matched.len()
+                        );
+                    }
                 }
                 words::text_line(
-                    if done.report.left.is_empty() {
+                    if done.report.left.is_empty() && done.report.matched.is_empty() {
                         Kind::Ok
                     } else {
                         Kind::Warn
@@ -951,6 +982,11 @@ impl App {
                 w.repeat_loose,
                 "Modülsüz nesneler de (duvar, açıklık, mahal, donatı, ölçü, etiket)",
                 Some(msg(Event::RepeatLoose(!w.repeat_loose))),
+            ))
+            .push(words::check(
+                w.repeat_again,
+                "Hedefte aynısı olanı da kopyala",
+                w.repeat_loose.then(|| msg(Event::RepeatAgain(!w.repeat_again))),
             ))
             .push(words::summary(vec![summary]))
             .push(words::secondary(REPEAT, can.then(|| msg(Event::Repeat))))

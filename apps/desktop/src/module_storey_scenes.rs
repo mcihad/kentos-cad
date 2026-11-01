@@ -9,6 +9,13 @@
 //! KENTOS_SHOTS_ONLY=dubleks-pencere,dubleks-tekrar,dubleks-katlar,dubleks-yerlestir cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture
 //! ```
 //!
+//! And docs/adr/0810: the ground floor's loose objects already copied to the 2nd floor, one copy deleted; Katları
+//! tekrarla again plans to copy that one alone, the others' like already there:
+//!
+//! ```text
+//! KENTOS_SHOTS_ONLY=dubleks-yinelenen cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture
+//! ```
+//!
 //! Test code only.
 
 use kentos_domain::Slot;
@@ -119,11 +126,83 @@ fn place(app: &mut App) {
     hover(app, [16.0 - E, 0.0 - N]);
 }
 
+/// The ground floor's loose objects copied to the 2nd floor (no module), the fixture's copy deleted: the plan of
+/// Katları tekrarla again, the others' like already there (docs/adr/0810).
+fn again(app: &mut App) {
+    open(app, [-2.0, -6.0, 36.0, 5.0]);
+    let doc = &mut app.document.as_mut().expect("a drawing").model;
+    let input: kentos_commands::ModulesEdit = serde_json::from_value(json!({"operation": {
+        "kind": "repeat", "from": "zemin", "to": [{"level": "kat2"}], "loose": true}}))
+    .expect("input");
+    let kentos_commands::CommandResult::Completed { output, .. } =
+        kentos_native_application::modules_edit::execute(
+            &mut kentos_native_application::ExecutionContext::new(doc),
+            input,
+        )
+    else {
+        panic!("the first repeat")
+    };
+    let fixture = output
+        .copied
+        .iter()
+        .find(|c| c.source == uid(18))
+        .expect("the fixture's copy")
+        .uid
+        .clone();
+    let _ = kentos_native_application::delete::execute(
+        &mut kentos_native_application::ExecutionContext::new(doc),
+        serde_json::from_value(json!({"uids": [fixture]})).expect("input"),
+    );
+    run(app, "arch.modules");
+    event(app, Event::RepeatFrom(1));
+    let k2 = app
+        .room_modules
+        .as_ref()
+        .and_then(|w| w.repeat_to.iter().position(|t| t.level == "kat2"))
+        .expect("the 2nd floor");
+    event(app, Event::RepeatChoose(k2, true));
+    event(app, Event::RepeatLoose(true));
+}
+
 pub(crate) fn scenes() -> Vec<Scene> {
     vec![
         ("dubleks-pencere", window),
         ("dubleks-tekrar", repeat),
         ("dubleks-katlar", floors),
         ("dubleks-yerlestir", place),
+        ("dubleks-yinelenen", again),
     ]
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn plan(app: &App) -> kentos_commands::ModulesEdited {
+        match &app.room_modules.as_ref().expect("the window").repeat_preview {
+            Some(Ok(done)) => done.clone(),
+            other => panic!("{other:?}"),
+        }
+    }
+
+    /// docs/adr/0810: the repeat copies the deleted fixture alone, the others' like already on the 2nd floor;
+    /// Hedefte aynısı olanı da kopyala copies them all; written, the fixture is copied once and the step undoes whole.
+    #[test]
+    fn a_second_repeat_copies_only_what_the_target_lacks() {
+        let mut app = crate::files_testing::app_with_drawing();
+        again(&mut app);
+        let p = plan(&app);
+        assert_eq!(p.copied.iter().map(|c| c.source.as_str()).collect::<Vec<_>>(), [uid(18)]);
+        assert_eq!(p.report.matched.len(), 11);
+        event(&mut app, Event::RepeatAgain(true));
+        let p = plan(&app);
+        assert_eq!(p.copied.len(), 12);
+        assert!(p.report.matched.is_empty());
+        event(&mut app, Event::RepeatAgain(false));
+        let before = app.document.as_ref().unwrap().model.entities().count();
+        event(&mut app, Event::Repeat);
+        assert_eq!(app.document.as_ref().unwrap().model.entities().count(), before + 1);
+        let _ = app.update(Message::Run("edit.undo"));
+        assert_eq!(app.document.as_ref().unwrap().model.entities().count(), before);
+    }
 }

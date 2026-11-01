@@ -40303,6 +40303,8 @@ class ModuleReport(_Model):
         changed_keys: The definition's members whose values change, by key.
         deleted: The objects deleted with their keys (Modülden çıkar).
         left: The level's objects a repeat with `loose` did not copy, in the drawing's order (docs/adr/0796 §2).
+        matched: The level's objects in no module a repeat did not copy because their like already stands on the target: the
+            source, the object already there and its level (docs/adr/0810).
         released: The objects that leave the module and stay as ordinary objects (Modülden çıkar).
         removed_keys: The keys leaving the definition (Modülden çıkar).
         updated: The instances at the new version, in their order.
@@ -40312,6 +40314,7 @@ class ModuleReport(_Model):
     conflicts: list[ModuleConflict] | Unset = UNSET
     deleted: list[str] | Unset = UNSET
     left: list[ModuleLeft] | Unset = UNSET
+    matched: list[ModuleCopied] | Unset = UNSET
     released: list[str] | Unset = UNSET
     removed_keys: list[str] | Unset = UNSET
     skipped: list[ModuleSkipped] | Unset = UNSET
@@ -40329,6 +40332,8 @@ class ModuleReport(_Model):
             out["deleted"] = list(self.deleted)
         if self.left is not UNSET:
             out["left"] = [e0.to_json() for e0 in self.left]
+        if self.matched is not UNSET:
+            out["matched"] = [e0.to_json() for e0 in self.matched]
         if self.released is not UNSET:
             out["released"] = list(self.released)
         if self.removed_keys is not UNSET:
@@ -40347,6 +40352,7 @@ class ModuleReport(_Model):
             conflicts=[ModuleConflict.from_json(e0) for e0 in data["conflicts"]] if "conflicts" in data else UNSET,
             deleted=list(data["deleted"]) if "deleted" in data else UNSET,
             left=[ModuleLeft.from_json(e0) for e0 in data["left"]] if "left" in data else UNSET,
+            matched=[ModuleCopied.from_json(e0) for e0 in data["matched"]] if "matched" in data else UNSET,
             released=list(data["released"]) if "released" in data else UNSET,
             removed_keys=list(data["removedKeys"]) if "removedKeys" in data else UNSET,
             skipped=[ModuleSkipped.from_json(e0) for e0 in data["skipped"]] if "skipped" in data else UNSET,
@@ -80178,10 +80184,14 @@ class RepeatModulesOperation(ModulesOperation):
     """Katları tekrarla (docs/adr/0779 §5): every linked instance on the level `from` (of `modules`, none: of every
     module) placed again on each level of `to` at the same point, turn and mirror, on that level; its numbering and
     group the target's (or the instance's own line in it), else the source instance's.
+    Attributes:
+        again: Copy the level's objects in no module even where their like already stands on the target (docs/adr/0810);
+            without it such an object is not copied again and the report's `matched` names the one already there.
     """
     TAG_VALUE: ClassVar[str] = "repeat"
     from_: str
     to: list[ModuleLevelTarget]
+    again: bool | Unset = UNSET
     loose: bool | Unset = UNSET
     modules: list[str] | Unset = UNSET
 
@@ -80189,6 +80199,8 @@ class RepeatModulesOperation(ModulesOperation):
         out: dict[str, Any] = {"kind": "repeat"}
         out["from"] = self.from_
         out["to"] = [e0.to_json() for e0 in self.to]
+        if self.again is not UNSET:
+            out["again"] = self.again
         if self.loose is not UNSET:
             out["loose"] = self.loose
         if self.modules is not UNSET:
@@ -80200,6 +80212,7 @@ class RepeatModulesOperation(ModulesOperation):
         return cls(
             from_=data["from"],
             to=[ModuleLevelTarget.from_json(e0) for e0 in data["to"]],
+            again=data.get("again", UNSET),
             loose=data.get("loose", UNSET),
             modules=list(data["modules"]) if "modules" in data else UNSET,
         )

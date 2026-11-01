@@ -110,6 +110,11 @@ pub enum ModulesOperation {
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
         #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
         loose: bool,
+        /// Copy the level's objects in no module even where their like already stands on the target (docs/adr/0810);
+        /// without it such an object is not copied again and the report's `matched` names the one already there.
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+        again: bool,
     },
     /// Kaynağı güncelle: the instance `from`'s objects (its local exceptions aside) become the definition, its version
     /// one up; the other linked instances (`instances`, none: all) take it, each keeping its exceptions and its
@@ -352,6 +357,11 @@ pub struct ModuleReport {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ModuleLeft>>", optional))]
     pub left: Vec<ModuleLeft>,
+    /// The level's objects in no module a repeat did not copy because their like already stands on the target: the
+    /// source, the object already there and its level (docs/adr/0810).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ModuleCopied>>", optional))]
+    pub matched: Vec<ModuleCopied>,
 }
 
 /// Output of `cad.modules.edit` (and its plan): the module as it is after, the objects made and changed, the report.

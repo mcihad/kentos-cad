@@ -241,16 +241,15 @@ alanları iki kez saymasın; GUI/Python/MCP aynı hesap ve bulguları üretsin.
 
 ### ADV-05 — İlişkili oda/daire modülleri ve kontrollü tekrar kullanımı [~]
 
-_Durum (31 Ekim 2026, [ADR 0775](../docs/adr/0775-room-modules-and-controlled-reuse.md), [ADR 0779](../docs/adr/0779-room-modules-members-drift-and-flats.md), [ADR 0788](../docs/adr/0788-design-options.md), [ADR 0796](../docs/adr/0796-multi-storey-modules-and-loose-level-repeat.md), [ADR 0808](../docs/adr/0808-design-option-combinations.md), [ADR 0809](../docs/adr/0809-comparing-option-combinations.md)):_
+_Durum (31 Ekim 2026, [ADR 0775](../docs/adr/0775-room-modules-and-controlled-reuse.md), [ADR 0779](../docs/adr/0779-room-modules-members-drift-and-flats.md), [ADR 0788](../docs/adr/0788-design-options.md), [ADR 0796](../docs/adr/0796-multi-storey-modules-and-loose-level-repeat.md), [ADR 0808](../docs/adr/0808-design-option-combinations.md), [ADR 0809](../docs/adr/0809-comparing-option-combinations.md), [ADR 0810](../docs/adr/0810-loose-repeat-skips-what-is-there.md)):_
 tek kat, düz duvarlı oda ve bütün daire modülü; tanım ve örnek ayrı, yerleştirme, planlı kaynak güncelleme, yerel
-istisna, bağımsızlaştırma, kaynağı silme; üye ekleme ve çıkarma; elle değişen örnek nesnesi; katları tekrarlama, kattaki modülsüz nesnelerle (bağları kopyalarına çevrilir); çok katlı modül (dubleks;
+istisna, bağımsızlaştırma, kaynağı silme; üye ekleme ve çıkarma; elle değişen örnek nesnesi; katları tekrarlama, kattaki modülsüz nesnelerle (bağları kopyalarına çevrilir, hedefte aynısı olan yeniden kopyalanmaz); çok katlı modül (dubleks;
 katlar kotlarına göre eşlenir, sığmayan kat reddedilir).
 Tasarım seçenekleri: küme ve birincil seçenek, bağımsız kopya, birincili değiştirme, iki seçeneğin karşılaştırması
 (sayı, alan, plan farkı), kabul (öbürleri silinir) ve silme; görünüş tarifiyle başka seçeneği gösteren pafta;
 seçenekler birbirini görmez (birleşim, çakışma, mahal sınırı); adlı bileşimler (kümelerin birer seçeneği; kaydet,
 uygula, sil, tarifte göster) ve iki bileşimin küme küme karşılaştırması. Dört banyo, iki katta dört daire ve mutfak A/B ve dubleks
-kabulü geçti. Açık: seçenekler arası eşleme/birleştirme, tek katın yerleşmesi, modülsüz kopyaların yinelenme
-denetimi, gerçek pencerede elle kabul.
+kabulü geçti. Açık: seçenekler arası eşleme/birleştirme, tek katın yerleşmesi, gerçek pencerede elle kabul.
 
 **Kullanıcı sonucu:** Bir banyoyu veya daireyi dört kez çizmek yerine bağlı
 örnekleri kullan; kaynak değişimini inceleyerek uygula. Dayanak A7.

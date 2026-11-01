@@ -910,8 +910,9 @@ fn check(doc: &Document, input: &ModulesEdit) -> Result<Work, Stop> {
             modules: of,
             to,
             loose,
+            again,
         } => {
-            more::repeat(doc, &mut modules, from, of, to, *loose, &mut work)?;
+            more::repeat(doc, &mut modules, from, of, to, *loose, *again, &mut work)?;
         }
         ModulesOperation::Except { module, uids } | ModulesOperation::Restore { module, uids } => {
             let restore = matches!(input.operation, ModulesOperation::Restore { .. });
@@ -1158,6 +1159,16 @@ fn warnings(r: &ModuleReport) -> Vec<CommandWarning> {
             message: format!(
                 "Kattaki {} modülsüz nesne kopyalanmadı (kilitli katman, tekrarlanmayan tür, tekrarlanmayan örnek, tasarım seçeneği ya da dışarıya bağ); report.left hangilerini ve nedenini söyler.",
                 r.left.len()
+            ),
+            path: Some("operation".into()),
+        });
+    }
+    if !r.matched.is_empty() {
+        out.push(CommandWarning {
+            code: codes::MODULE_REPEAT_MATCHED.into(),
+            message: format!(
+                "Kattaki {} modülsüz nesnenin aynısı hedef katta zaten var; yeniden kopyalanmadı (report.matched). Yine de kopyalamak için again verin.",
+                r.matched.len()
             ),
             path: Some("operation".into()),
         });

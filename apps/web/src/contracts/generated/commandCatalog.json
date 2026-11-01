@@ -21654,7 +21654,8 @@
           "module_member_gone",
           "module_drift_overwritten",
           "module_member_released",
-          "module_repeat_left"
+          "module_repeat_left",
+          "module_repeat_matched"
         ]
       },
       "examples": [
@@ -71358,6 +71359,12 @@
       "meaning": "Kattaki bazı modülsüz nesneler kopyalanmadı (kilitli katman, tekrarlanmayan tür, tekrarlanmayan örnek, tasarım seçeneği ya da dışarıya bağ); report.left hangilerini ve nedenini söyler."
     },
     {
+      "code": "module_repeat_matched",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Kattaki bazı modülsüz nesnelerin aynısı hedef katta zaten var; yeniden kopyalanmadı (report.matched). Yine de kopyalamak için again verin."
+    },
+    {
       "code": "not_a_space",
       "kind": "failed",
       "retryable": false,
@@ -105713,6 +105720,13 @@
           },
           "type": "array"
         },
+        "matched": {
+          "description": "The level's objects in no module a repeat did not copy because their like already stands on the target: the\nsource, the object already there and its level (docs/adr/0810).",
+          "items": {
+            "$ref": "#/$defs/ModuleCopied"
+          },
+          "type": "array"
+        },
         "released": {
           "description": "The objects that leave the module and stay as ordinary objects (Modülden çıkar).",
           "items": {
@@ -105982,6 +105996,10 @@
         {
           "description": "Katları tekrarla (docs/adr/0779 §5): every linked instance on the level `from` (of `modules`, none: of every\nmodule) placed again on each level of `to` at the same point, turn and mirror, on that level; its numbering and\ngroup the target's (or the instance's own line in it), else the source instance's.",
           "properties": {
+            "again": {
+              "description": "Copy the level's objects in no module even where their like already stands on the target (docs/adr/0810);\nwithout it such an object is not copied again and the report's `matched` names the one already there.",
+              "type": "boolean"
+            },
             "from": {
               "type": "string"
             },

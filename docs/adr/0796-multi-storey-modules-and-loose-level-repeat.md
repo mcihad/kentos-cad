@@ -148,7 +148,8 @@ on dubleks ve holleri zemin katta, dört kata modülsüz nesnelerle tekrar (40 �
 - Kat eşlemesi kat sırasıyladır; kotların farkı (kat yüksekliği) modül nesnesini değiştirmez, duvar yüksekliği tanımdakidir.
 - Modülsüz tekrar kolon, merdiven, rampa, döşeme, kaplama ve ayırıcıyı kopyalamaz (`kind`); katsız nesneler (yazı, aks,
   katları karışık ölçü) katın nesnesi sayılmaz, kopyalanmaz ve söylenmez. Aksa bağlı ölçü `outside` kalır.
-- Modülsüz kopyaların ikinci kez yerleşmesi engellenmez; yinelenen kopya denetimi yok.
+- Modülsüz kopyaların ikinci kez yerleşmesi engellenmez; yinelenen kopya denetimi yok (ADR 0810 kapattı: hedefte aynısı
+  olan kopyalanmaz).
 - Tasarım seçeneğinin nesneleri (birincil olanınki de) modülsüz tekrarda kopyalanmaz; seçenek kümesini başka kata
   tekrarlamak açık iştir. Seçenekteki bir modül örneğinin tekrarı ayrıca denenmedi.
 - Gerçek pencerede elle denenmedi; resimler pencere açmadan.
