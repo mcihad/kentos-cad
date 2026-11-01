@@ -224,7 +224,11 @@ def sizes(o):
     lip = b.get("lip") if b.get("lip") is not None else LIP
     drum = (b.get("drum") if b.get("drum") is not None else leaf) if op == "revolving" else None
     multi = slide_multi(o, leaf) if op == "slide" and o["form"] in ("door", "window") and n in (3, 4) else None
-    if op == "slide" and n == 2:
+    if op == "slide" and n == 2 and b.get("split") is not None:
+        # ADR 0807 §2: unequal leaves, each its share of the light and half the overlap.
+        lap = b["overlap"] if b.get("overlap") is not None else leaf * SLIDE_LAP
+        leaves = [b["split"] * leaf + lap / 2.0, (1.0 - b["split"]) * leaf + lap / 2.0]
+    elif op == "slide" and n == 2:
         w = (leaf + b["overlap"]) / 2.0 if b.get("overlap") is not None else leaf * (1.0 + SLIDE_LAP) / 2.0
         leaves = [w, w]
     elif multi:
@@ -250,7 +254,7 @@ def sizes(o):
     elif multi:
         clear = multi["clear"]
     elif op == "slide":
-        clear = leaf if n == 1 else leaf - leaves[0]
+        clear = leaf if n == 1 else leaf - max(leaves)
     elif op == "revolving":
         clear = drum * math.cos(math.pi / n)
     elif op == "pocket":
@@ -284,7 +288,12 @@ def slide_multi(o, leaf):
     n = o["leaves"]
     t = b.get("tracks") or 2
     both = bool(b.get("bothSides")) and n == 4
+    xox = bool(b.get("bothSides")) and n == 3
     lap = b["overlap"] if b.get("overlap") is not None else leaf * SLIDE_LAP / (n - 1)
+    if xox:
+        # ADR 0807 §1: the outer leaves on track 1 slide over the middle one that stays on track 0.
+        w = (leaf + 2 * lap) / 3
+        return {"tracks": 2, "width": w, "clear": w - lap, "panels": "XOX"}
     if both:
         order = [0, 1, 1, 0]
     else:
@@ -367,6 +376,10 @@ def problem(o, path):
             words = f"{LABEL[op]} kapının {word} sayısı {n}; {lo} ile {hi} arasında olmalı."
         return failed("invalid_opening", words, f"{path}.leaves")
     b = o.get("build") or {}
+    if b.get("split") is not None and not (0 < b["split"] < 1):
+        return failed("invalid_opening",
+                      f"Kanatların payı {num(b['split'])}; 0 ile 1 arasında olmalı (ör. 0,6: birinci kanat ışığın %60'ı).",
+                      f"{path}.build.split")
     s = sizes(o)
 
     def only(name, what, of):
@@ -387,9 +400,9 @@ def problem(o, path):
             return why
     if b.get("bothSides"):
         if op == "slide":
-            if n != 4:
+            if n not in (3, 4):
                 return failed("invalid_opening",
-                              f"İki yana açılma dört kanatlı sürmenindir ({n} kanat); kanat sayısını 4 yapın ya da tek yana açın.",
+                              f"İki yana açılma üç ya da dört kanatlı sürmenindir ({n} kanat); kanat sayısını 3 ya da 4 yapın ya da tek yana açın.",
                               f"{path}.build.bothSides")
         elif only("bothSides", "İki yana toplanma", "folding"):
             return only("bothSides", "İki yana toplanma", "folding")
@@ -426,6 +439,10 @@ def problem(o, path):
                           f"{path}.build.tracks")
         if b["tracks"] not in (2, 3):
             return failed("invalid_opening", f"Ray sayısı {b['tracks']}; 2 ya da 3 olmalı.", f"{path}.build.tracks")
+        if b["tracks"] == 3 and b.get("bothSides") and n == 3:
+            return failed("invalid_opening",
+                          "XOX sürmenin iki yandaki kanadı ortadakinin önünde, tek raydadır; ray sayısını 2 yapın ya da tek yana açın.",
+                          f"{path}.build.tracks")
         if b["tracks"] == 3 and b.get("bothSides"):
             return failed("invalid_opening",
                           "İki yana açılan dört kanat iki raydadır; ray sayısını 2 yapın ya da tek yana açın.",
@@ -913,6 +930,10 @@ def types_cases():
 NOTE_MULTI = ("ADR 0792. Beklenenler scripts/fixtures/special_doors_command_cases.py'nin ADR'den yazılmış kurallarından, "
               "KentOS kodu olmadan: üç ve dört kanatlı sürmenin rayları, sabit ve sürme kanatları, toplandığı yan, "
               "bindirmesi, net geçişi ve kanat düzeni. Kurulum ADR 0777'nin çizimi; yeni nesne 11'den başlar.")
+NOTE_MORE = ("ADR 0807. Beklenenler scripts/fixtures/special_doors_command_cases.py'nin ADR'den yazılmış kurallarından, "
+             "KentOS kodu olmadan: XOX sürmede iki yandaki kanatlar 1. rayda ortadaki sabit kanadın üstüne kayar, her kanat "
+             "(ışık + 2·bindirme)/3, net geçiş kanat eksi bindirme; eşit olmayan iki kanatta birincisi pay·ışık + bindirme/2, "
+             "ikincisi (1 − pay)·ışık + bindirme/2, net geçiş ışık eksi büyük kanat. Kurulum ADR 0777'nin çizimi.")
 PENCERE120 = {"form": "window", "width": 1.2, "leaves": 2, "frame": 0.06, "sill": 0.9, "head": 2.2}
 
 
@@ -963,7 +984,7 @@ def multi_create_cases():
     add("Tek kanatlı sürmede ray sayısı reddedilir", *door(0.9, 1, {"tracks": 3}))
     add("Kanatlı kapıya ray sayısı verilmez", {"host": H, "at": 5.0, "build": {"tracks": 2}},
         from_kapi(1, 5.0, build={"tracks": 2}))
-    add("Üç kanat iki yana açılmaz", *door(2.4, 3, {"bothSides": True}))
+    add("Üç kanat iki yana: XOX (ADR 0807)", *door(2.4, 3, {"bothSides": True}))
     add("İki yana açılan dört kanat üç rayda olmaz", *door(3.2, 4, {"bothSides": True, "tracks": 3}))
     add("Dört kanadın bindirmesi ışığın dörtte birini aşamaz", *door(2.0, 4, {"overlap": 0.5}))
     add("Üç kanadın bindirmesi ışığın üçte birini aşamaz", *door(2.4, 3, {"overlap": 0.8}))
@@ -1076,7 +1097,7 @@ def multi_edit_cases():
     case("S1 iki kanatken ray sayısı reddedilir", 9, *same({"build": {"tracks": 2}}))
     case("S1 beş kanatlı olmaz", 9, *same({"leaves": 5}))
     case("S1 dört kanatta 30 cm bindirme ışığın dörtte birini aşar", 9, *same({"leaves": 4, "build": {"overlap": 0.3}}))
-    case("S1 üç kanatta iki yana açılmaz", 9, *same({"leaves": 3, "build": {"bothSides": True}}))
+    case("S1 üç kanatta iki yana: XOX (ADR 0807)", 9, *same({"leaves": 3, "build": {"bothSides": True}}))
     case("S1 dört kanat iki yana üç rayda olmaz", 9, *same({"leaves": 4, "build": {"bothSides": True, "tracks": 3}}))
     case("S1 üç kanat, bindirmesi ve rayı kaldırılır", 9, {"leaves": 3}, {"leaves": 3}, unset=("overlap", "track"))
     case("S1 üç kanatlı pencere olur", 9, *same({"form": "window", "leaves": 3}))
@@ -1158,7 +1179,7 @@ def multi_types_cases():
            {"width": 2.4, "operation": "slide", "leaves": 3, "build": {"tracks": 1}})
     define("Yeni tip: iki yana dört kanat üç rayda olmaz", "S4X", "Kapı 90", K90,
            {"width": 3.2, "operation": "slide", "leaves": 4, "build": {"bothSides": True, "tracks": 3}})
-    define("Yeni tip: üç kanat iki yana açılmaz", "S3B", "Kapı 90", K90,
+    define("Yeni tip: üç kanat iki yana, XOX (ADR 0807)", "S3B", "Kapı 90", K90,
            {"width": 2.4, "operation": "slide", "leaves": 3, "build": {"bothSides": True}})
     define("Yeni tip: katlanır kapıya ray sayısı verilmez", "KT9", "KT1",
            {k: v for k, v in KT1.items() if k not in ("id", "name", "version")}, {"build": {"tracks": 2}})
@@ -1198,6 +1219,106 @@ def multi_types_cases():
     return out
 
 
+def more_create_cases():
+    """ADR 0807: XOX (three leaves, both sides) and two unequal sliding leaves (`split`)."""
+    out = []
+
+    def add(name, given, made):
+        why = problem(made, "openings[0]")
+        step = {"op": "execute", "input": {"layerId": "kapi", "openings": [given]}, "within": 1e-9}
+        if why:
+            step["result"] = why
+            step["expect"] = {"ids": IDS, "revision": "same"}
+        else:
+            step["result"] = {"status": "completed", "output": {"uids": ["$any"], "ids": [NEW], "revision": "$current"},
+                              "warnings": []}
+            step["expect"] = {"ids": IDS + [NEW], "entities": {str(NEW): stored(made, NEW)}, "canUndo": True,
+                              "dirty": True, "revision": "changed"}
+        out.append({"name": name, "steps": [step]})
+    H = "$uidOf:1"
+
+    def door(width, leaves, build=None, form="door", **own):
+        given = {"host": H, "at": 5.0, "width": width, "operation": "slide", "leaves": leaves, **own}
+        if form != "door":
+            given["form"] = form
+        if build:
+            given["build"] = build
+        maker = from_kapi if form == "door" else window
+        return given, maker(1, 5.0, width=width, operation="slide", leaves=leaves, **own,
+                            **({"build": build} if build else {}))
+    add("XOX: iki yandaki kanat ortaya kayar", *door(2.4, 3, {"bothSides": True}))
+    add("XOX raylı", *door(2.4, 3, {"bothSides": True, "track": True}))
+    add("XOX 6 cm bindirmeyle", *door(2.4, 3, {"bothSides": True, "overlap": 0.06}))
+    add("XOX iki rayla açıkça", *door(2.4, 3, {"bothSides": True, "tracks": 2}))
+    add("XOX sona toplanma yönüyle aynı", *door(2.4, 3, {"bothSides": True}, hand="end"))
+    add("XOX pencere", *door(2.4, 3, {"bothSides": True}, form="window"))
+    add("XOX üç rayda olmaz", *door(2.4, 3, {"bothSides": True, "tracks": 3}))
+    add("XOX'un bindirmesi ışığın üçte birini aşamaz", *door(2.4, 3, {"bothSides": True, "overlap": 0.8}))
+    add("İki kanatlı sürme iki yana açılmaz", *door(1.6, 2, {"bothSides": True}))
+    add("Tek kanatlı sürme iki yana açılmaz", *door(0.9, 1, {"bothSides": True}))
+    add("Eşit olmayan iki kanat: birincisi %60", *door(1.6, 2, {"split": 0.6}))
+    add("Eşit olmayan iki kanat: birincisi %35, 4 cm bindirme", *door(1.6, 2, {"split": 0.35, "overlap": 0.04}))
+    add("Eşit olmayan iki kanat raylı", *door(2.0, 2, {"split": 0.7, "track": True}))
+    add("Eşit olmayan iki kanatlı pencere", *door(1.6, 2, {"split": 0.4}, form="window"))
+    add("Pay yarıysa eşit kanatlar", *door(1.6, 2, {"split": 0.5}))
+    add("Pay 1 reddedilir", *door(1.6, 2, {"split": 1.0}))
+    add("Pay 0 reddedilir", *door(1.6, 2, {"split": 0.0}))
+    add("Pay eksi reddedilir", *door(1.6, 2, {"split": -0.2}))
+    add("Eşit olmayan iki kanat, montaj boşluğuyla", *door(1.8, 2, {"split": 0.65, "fit": 0.01}))
+    add("XOX montaj boşluğuyla", *door(2.6, 3, {"bothSides": True, "fit": 0.01}))
+    add("Eşit olmayan iki kanat sona menteşeli", *door(1.6, 2, {"split": 0.6}, hand="end"))
+    add("XOX geniş açıklıkta, 10 cm bindirme", *door(4.2, 3, {"bothSides": True, "overlap": 0.1}))
+    return out
+
+
+def more_query_cases():
+    out = []
+
+    def made(name, given, o):
+        r = {"uid": f"$uidOf:{NEW}", "form": o["form"], "type": o["style"],
+             "typeName": {"kentos-kapi-90": "Kapı 90", "kentos-pencere-120": "Pencere 120"}[o["style"]],
+             "host": f"$uidOf:{o['host']}", "sizes": sizes(o)}
+        out.append({"name": name, "steps": [
+            {"op": "execute", "command": "cad.openings.create", "input": {"layerId": "kapi", "openings": [given]},
+             "within": 1e-9, "result": {"status": "completed", "output": {"uids": ["$any"], "ids": [NEW], "revision": "$current"},
+                                        "warnings": []}},
+            {"op": "plan", "input": {"uids": [f"$uidOf:{NEW}"]}, "within": 1e-9,
+             "result": {"status": "completed", "output": {"openings": [r], "types": uses(list(BASE.values()) + [o]),
+                                                          "revision": "$current"}, "warnings": []}}]})
+    H = "$uidOf:1"
+
+    def door(name, width, leaves, build=None, form="door", **own):
+        given = {"host": H, "at": 5.0, "width": width, "operation": "slide", "leaves": leaves, **own}
+        if form != "door":
+            given["form"] = form
+        if build:
+            given["build"] = build
+        maker = from_kapi if form == "door" else window
+        made(name, given, maker(1, 5.0, width=width, operation="slide", leaves=leaves, **own,
+                                **({"build": build} if build else {})))
+    door("XOX: net geçiş bir kanat eksi bindirme", 2.4, 3, {"bothSides": True})
+    door("XOX 6 cm bindirme", 2.4, 3, {"bothSides": True, "overlap": 0.06})
+    door("XOX bindirmesiz: üç eşit kanat", 2.4, 3, {"bothSides": True, "overlap": 0.0})
+    door("XOX pencere: düzen, net geçişi yok", 2.4, 3, {"bothSides": True}, form="window")
+    door("Eşit olmayan kanat %60: net geçiş büyük kanatla", 1.6, 2, {"split": 0.6})
+    door("Eşit olmayan kanat %30, 4 cm bindirme", 1.6, 2, {"split": 0.3, "overlap": 0.04})
+    door("Pay yarı: eşit kanatlar", 1.6, 2, {"split": 0.5})
+    door("Eşit olmayan kanatlı pencere", 1.6, 2, {"split": 0.4}, form="window")
+    door("XOX geniş: 3,6 m", 3.6, 3, {"bothSides": True})
+    door("XOX dar: 1,5 m", 1.5, 3, {"bothSides": True})
+    door("XOX iki rayla açıkça", 2.4, 3, {"bothSides": True, "tracks": 2})
+    door("XOX 10 cm bindirme", 3.0, 3, {"bothSides": True, "overlap": 0.10})
+    door("XOX raylı pencere", 3.0, 3, {"bothSides": True, "track": True}, form="window")
+    door("XOX 2 cm bindirmeli pencere", 1.8, 3, {"bothSides": True, "overlap": 0.02}, form="window")
+    door("Pay %75: büyük kanat başta", 2.0, 2, {"split": 0.75})
+    door("Pay %20: küçük kanat başta", 2.0, 2, {"split": 0.2})
+    door("Pay %60 bindirmesiz", 1.6, 2, {"split": 0.6, "overlap": 0.0})
+    door("Pay %90", 1.2, 2, {"split": 0.9})
+    door("Pay %45 raylı", 1.8, 2, {"split": 0.45, "track": True})
+    door("Pay %10 pencere, 3 cm bindirme", 1.4, 2, {"split": 0.1, "overlap": 0.03}, form="window")
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--check", action="store_true")
@@ -1227,6 +1348,12 @@ def main():
         "cad.openingtypes.edit.multislide.json": doc(
             "cad.openingtypes.edit", "Kapı tipleri: üç ve dört kanatlı sürme tipleri, izleyen kapı, retler",
             NOTE_MULTI, multi_types_cases()),
+        "cad.openings.create.slidemore.json": doc(
+            "cad.openings.create", "Açıklık ekle: XOX sürme ve eşit olmayan iki kanatlı sürme; retler",
+            NOTE_MORE, more_create_cases()),
+        "cad.openings.query.slidemore.json": doc(
+            "cad.openings.query", "Açıklıkları oku: XOX sürmenin ve eşit olmayan iki kanadın genişlikleri ve net geçişi",
+            NOTE_MORE, more_query_cases()),
     }
     bad = 0
     for name, d in files.items():

@@ -2004,6 +2004,17 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
                             if x.leaves == 2 {
                                 let lap = format!("{} · %5", f.length(sizes.leaf * 0.05));
                                 geo.push(length("Kanat bindirmesi", OpeningTypeField::Overlap, b.overlap, lap));
+                                // The first leaf's share (docs/adr/0807 §2): empty halves.
+                                let editor = number(Field::OpeningBuild(slot, OpeningTypeField::Split));
+                                let shown = b.split.map_or_else(
+                                    || "Eşit".to_owned(),
+                                    |v| format!("%{}", (v * 1000.0).round() / 10.0),
+                                );
+                                geo.push(Row::figure("Birinci kanadın payı", shown).editor(editor));
+                                if !sizes.leaves.is_empty() {
+                                    let words: Vec<String> = sizes.leaves.iter().map(|l| f.length(*l)).collect();
+                                    geo.push(Row::text("Kanatlar", words.join(" + ")));
+                                }
                             }
                             // Three and four leaves (docs/adr/0792 §1): the tracks, both jambs with four, the overlap
                             // at each meeting and the layout they make.
@@ -2020,6 +2031,9 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
                                 geo.push(Row::figure("Ray sayısı", tracks.to_string()).editor(select(tracks.to_string(), picks)));
                                 if x.leaves == 4 {
                                     geo.push(switch("İki yana açılır", OpeningTypeField::BothSides, b.both_sides == Some(true)));
+                                } else {
+                                    // Three leaves: the outer two slide over a fixed middle (XOX, docs/adr/0807 §1).
+                                    geo.push(switch("Ortası sabit (XOX)", OpeningTypeField::BothSides, b.both_sides == Some(true)));
                                 }
                                 let share = sizes.leaf * kentos_commands::SLIDE_LAP / f64::from(x.leaves - 1);
                                 let lap = format!("{} · öntanımlı", f.length(share));

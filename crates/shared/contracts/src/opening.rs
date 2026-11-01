@@ -476,6 +476,23 @@ pub fn needs_multi_slide(e: &crate::Entity) -> bool {
     }
 }
 
+/// Whether an opening's fields are an XOX slide (three leaves to both sides) or two unequal sliding leaves
+/// (docs/adr/0807): what only schema 153 says. An XOX slide in an older schema is refused (`bad_value`); a split on a
+/// sliding one there was read and left unused.
+pub fn is_slide_more(f: &OpeningFields) -> bool {
+    f.operation == OpeningOperation::Slide && (is_xox(f) || (f.leaves == 2 && f.build.as_ref().is_some_and(|b| b.split.is_some())))
+}
+
+/// Whether an opening's fields are an XOX slide (docs/adr/0807 §1): three sliding leaves to both sides.
+pub fn is_xox(f: &OpeningFields) -> bool {
+    f.operation == OpeningOperation::Slide && f.leaves == 3 && f.build.as_ref().is_some_and(|b| b.both_sides == Some(true))
+}
+
+/// Whether `e` says what only schema 153 can (docs/adr/0807): [`is_slide_more`].
+pub fn needs_slide_more(e: &crate::Entity) -> bool {
+    matches!(e, crate::Entity::Opening(o) if is_slide_more(&o.opening))
+}
+
 /// Whether `e` says what only schema 119 can (docs/adr/0719): a niche or flue, a depth or inset, the break
 /// `tooDeep`, or a schedule whose filter names a niche or flue.
 pub fn needs_recesses(e: &crate::Entity) -> bool {

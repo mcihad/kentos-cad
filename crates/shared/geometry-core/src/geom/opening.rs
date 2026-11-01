@@ -954,7 +954,7 @@ pub fn symbol(place: &[Vec2], spec: &Spec) -> Vec<Shape> {
             } else if spec.operation == Operation::Slide {
                 let k = depth / 12.0;
                 let lap = b.overlap.map_or(clear * 0.05, |o| o / 2.0);
-                let half = clear / 2.0;
+                let half = two_leaf_meet(spec, clear);
                 out.push(line(add(m0, mul(p.f.left, k)), add(m0, add(mul(u, half + lap), mul(p.f.left, k)))));
                 out.push(line(
                     add(m0, add(mul(u, half - lap), mul(p.f.left, -k))),
@@ -992,7 +992,7 @@ pub fn symbol(place: &[Vec2], spec: &Spec) -> Vec<Shape> {
                         out.push(line(add(m0, mul(p.f.left, k)), add(m0, add(mul(u, clear), mul(p.f.left, k)))));
                     } else {
                         let lap = b.overlap.map_or(clear * 0.05, |o| o / 2.0);
-                        let half = clear / 2.0;
+                        let half = two_leaf_meet(spec, clear);
                         out.push(line(add(m0, mul(p.f.left, k)), add(m0, add(mul(u, half + lap), mul(p.f.left, k)))));
                         out.push(line(
                             add(m0, add(mul(u, half - lap), mul(p.f.left, -k))),
@@ -1069,6 +1069,14 @@ pub fn symbol(place: &[Vec2], spec: &Spec) -> Vec<Shape> {
     out
 }
 
+/// Where two sliding leaves meet along the light (docs/adr/0807 §2): its `split` of it, none: the middle.
+fn two_leaf_meet(spec: &Spec, clear: f64) -> f64 {
+    match spec.build.split.filter(|s| *s > 0.0 && *s < 1.0) {
+        Some(share) => clear * share,
+        None => clear / 2.0,
+    }
+}
+
 /// How much sliding leaves overlap when they give none, a share of the light (the contract's `SLIDE_LAP`).
 pub const SLIDE_LAP: f64 = 0.05;
 
@@ -1091,6 +1099,16 @@ pub fn slide_leaves(spec: &Spec, light: f64) -> (u8, f64, Vec<SlideLeaf>) {
     let t = if b.tracks == 0 { 2 } else { b.tracks.clamp(2, 3) };
     let both = b.both_sides && n == 4;
     let o = b.overlap.unwrap_or(light * SLIDE_LAP / f64::from(n - 1));
+    if b.both_sides && n == 3 {
+        // XOX (docs/adr/0807 §1): the outer leaves on track 1 slide toward the middle one, which stays on track 0.
+        let w = (light + 2.0 * o) / 3.0;
+        let out = vec![
+            SlideLeaf { s: 0.0, track: 1, slides: true, to_end: true },
+            SlideLeaf { s: w - o, track: 0, slides: false, to_end: false },
+            SlideLeaf { s: 2.0 * (w - o), track: 1, slides: true, to_end: false },
+        ];
+        return (2, w, out);
+    }
     let group = |count: u8, to_end: bool| -> Vec<(u8, bool, bool)> {
         (0..count)
             .map(|k| if k < t { (k, k > 0, to_end) } else { (0, false, to_end) })

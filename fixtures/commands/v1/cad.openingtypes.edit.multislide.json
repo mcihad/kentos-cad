@@ -1218,7 +1218,7 @@
    ]
   },
   {
-   "name": "Yeni tip: üç kanat iki yana açılmaz",
+   "name": "Yeni tip: üç kanat iki yana, XOX (ADR 0807)",
    "steps": [
     {
      "op": "execute",
@@ -1239,12 +1239,73 @@
      },
      "within": 1e-09,
      "result": {
-      "status": "failed",
-      "error": {
-       "code": "invalid_opening_type",
-       "message": "İki yana açılma dört kanatlı sürmenindir (3 kanat); kanat sayısını 4 yapın ya da tek yana açın.",
-       "path": "operation.change.build.bothSides"
-      }
+      "status": "completed",
+      "output": {
+       "types": [
+        {
+         "id": "d01",
+         "name": "D01",
+         "version": 1,
+         "form": "door",
+         "width": 2.4,
+         "leaves": 4,
+         "operation": "revolving",
+         "frame": 0.1,
+         "head": 2.4,
+         "build": {
+          "drum": 2.0
+         }
+        },
+        {
+         "id": "cg1",
+         "name": "CG1",
+         "version": 1,
+         "form": "door",
+         "width": 0.9,
+         "operation": "pocket",
+         "frame": 0.03,
+         "head": 2.1,
+         "build": {
+          "leafThickness": 0.04,
+          "lip": 0.06
+         }
+        },
+        {
+         "id": "kt1",
+         "name": "KT1",
+         "version": 1,
+         "form": "door",
+         "width": 1.6,
+         "leaves": 4,
+         "operation": "folding",
+         "frame": 0.04,
+         "head": 2.1
+        },
+        {
+         "id": "s3b",
+         "name": "S3B",
+         "version": 1,
+         "form": "door",
+         "width": 2.4,
+         "leaves": 3,
+         "operation": "slide",
+         "frame": 0.05,
+         "head": 2.1,
+         "build": {
+          "bothSides": true
+         }
+        }
+       ],
+       "report": {
+        "applied": [],
+        "kept": [],
+        "skipped": [],
+        "refused": [],
+        "fields": []
+       },
+       "revision": "$current"
+      },
+      "warnings": []
      },
      "expect": {
       "ids": [
@@ -1259,7 +1320,7 @@
        9,
        10
       ],
-      "revision": "same"
+      "revision": "changed"
      }
     }
    ]

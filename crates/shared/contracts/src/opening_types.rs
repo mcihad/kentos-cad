@@ -887,6 +887,12 @@ pub fn slide_panels(
     }
     let t = tracks.unwrap_or(2).clamp(2, 3);
     let o = overlap.unwrap_or(light * SLIDE_LAP / f64::from(n - 1));
+    if both && n == 3 {
+        // XOX (docs/adr/0807 §1): the outer leaves on track 1 slide over the middle one that stays on track 0.
+        let w = (light + 2.0 * o) / 3.0;
+        let leaves = vec![(0.0, 1, true), (w - o, 0, false), (2.0 * (w - o), 1, true)];
+        return Some(SlidePanels { tracks: 2, overlap: o, width: w, leaves, clear: w - o });
+    }
     let from_jamb = |count: u8| -> Vec<(u8, bool)> {
         (0..count).map(|k| if k < t { (k, k > 0) } else { (0, false) }).collect()
     };
@@ -970,6 +976,11 @@ pub fn opening_sizes(f: &OpeningFields) -> OpeningSizes {
         Vec::new()
     } else {
         match (f.operation, f.leaves) {
+            (OpeningOperation::Slide, 2) if b.split.is_some() => {
+                // Unequal leaves (docs/adr/0807 §2): each its share of the light and half the overlap.
+                let lap = b.overlap.unwrap_or(leaf * SLIDE_LAP);
+                vec![share * leaf + lap / 2.0, (1.0 - share) * leaf + lap / 2.0]
+            }
             (OpeningOperation::Slide, 2) => {
                 let w = match b.overlap {
                     Some(lap) => (leaf + lap) / 2.0,
@@ -1006,7 +1017,7 @@ pub fn opening_sizes(f: &OpeningFields) -> OpeningSizes {
             (OpeningOperation::Fixed, _) => (Some(0.0), None),
             (OpeningOperation::Slide, [_]) => (Some(leaf), None),
             (OpeningOperation::Slide, _) if multi.is_some() => (multi.as_ref().map(|m| m.clear), None),
-            (OpeningOperation::Slide, [w, _]) => (Some(leaf - w), None),
+            (OpeningOperation::Slide, [a, z]) => (Some(leaf - a.max(*z)), None),
             // The throat between the drum's walls: the chord of its opening, 180° − 360°/n (docs/adr/0777 §1).
             (OpeningOperation::Revolving, ws) => {
                 let n = ws.len().max(1) as f64;
@@ -1089,11 +1100,11 @@ pub fn special_door_problem(f: &OpeningFields) -> Option<(String, String)> {
     if let Some(both) = b.both_sides {
         if op == OpeningOperation::Slide {
             // A four-leaf sliding door parts to both jambs (docs/adr/0792 §1).
-            if f.leaves != 4 {
+            if !(3..=4).contains(&f.leaves) {
                 return Some((
                     "build.bothSides".into(),
                     format!(
-                        "İki yana açılma dört kanatlı sürmenindir ({} kanat); kanat sayısını 4 yapın ya da tek yana açın.",
+                        "İki yana açılma üç ya da dört kanatlı sürmenindir ({} kanat); kanat sayısını 3 ya da 4 yapın ya da tek yana açın.",
                         f.leaves
                     ),
                 ));
@@ -1156,6 +1167,12 @@ pub fn special_door_problem(f: &OpeningFields) -> Option<(String, String)> {
         }
         if !(2..=3).contains(&t) {
             return Some(("build.tracks".into(), format!("Ray sayısı {t}; 2 ya da 3 olmalı.")));
+        }
+        if t == 3 && b.both_sides == Some(true) && f.leaves == 3 {
+            return Some((
+                "build.tracks".into(),
+                "XOX sürmenin iki yandaki kanadı ortadakinin önünde, tek raydadır; ray sayısını 2 yapın ya da tek yana açın.".into(),
+            ));
         }
         if t == 3 && b.both_sides == Some(true) {
             return Some((

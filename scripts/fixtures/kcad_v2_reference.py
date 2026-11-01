@@ -2516,6 +2516,16 @@ def document(d):
     if any("storey" in mem for m in (d["settings"].get("arch") or {}).get("modules", []) for mem in m.get("members", [])):
         # A module member on a storey above its instance's base level (docs/adr/0796).
         schema = max(schema, 152)
+
+    def slide_more(o):
+        b = o.get("build") or {}
+        return o.get("operation") == "slide" and ((o.get("leaves") == 3 and b.get("bothSides"))
+                                                  or (o.get("leaves") == 2 and "split" in b))
+    if (any(e["kind"] == "opening" and slide_more(e) for e in d["entities"])
+            or any(e["kind"] == "opening" and slide_more(e) for b in d.get("blocks") or [] for e in b.get("entities", []))
+            or any(slide_more(t) for t in (d["settings"].get("arch") or {}).get("openingTypes", []))):
+        # An XOX slide and two unequal sliding leaves (docs/adr/0807).
+        schema = max(schema, 153)
     return root(cmap(body), version=uint(schema))
 
 
@@ -3229,7 +3239,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-153.kcad"] = container(root(cmap(parts), version=uint(153)))
+    files["schema-version-154.kcad"] = container(root(cmap(parts), version=uint(154)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5761,7 +5771,15 @@ def build():
     slide_bad("tracks-on-two", lambda d: d["entities"][2].update(leaves=2, build={"tracks": 2}))
     slide_bad("four-tracks", lambda d: d["entities"][3]["build"].update(tracks=4))
     slide_bad("both-ways-three-tracks", lambda d: d["entities"][2]["build"].update(tracks=3))
-    slide_bad("both-ways-three-leaves", lambda d: d["entities"][2].update(leaves=3))
+    slide_bad("both-ways-two-leaves", lambda d: d["entities"][2].update(leaves=2))
+    # Schema 153 (docs/adr/0807): an XOX door and window and two unequal sliding leaves; schema 152 refuses the XOX
+    # (three sliding leaves did not part to both sides).
+    sm_doc = load("slide-more.json")
+    sm = document(sm_doc)
+    assert sm.count(b"\x67version\x18\x99") == 1, "the XOX slide is schema 153"
+    out["slide-more.kcad"] = container(sm)
+    out["broken/slide-more-in-schema-152.kcad"] = container(sm.replace(b"\x67version\x18\x99", b"\x67version\x18\x98"))
+
     # Schema 148 (docs/adr/0785): three materials, a style's and a wall's core and insulation bound, a slab
     # bound; the schema before refuses them, as does schema 143, a material without a name, two of
     # one id, an id with capitals, a default category written.

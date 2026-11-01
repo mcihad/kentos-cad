@@ -731,11 +731,14 @@ pub const SCHEMA_WITH_UNIT_SCHEDULES: u32 = 151;
 /// Schema 152 (docs/adr/0796): a room module member's storey above its instance's
 /// base level (`arch.modules[].members[].storey`: a module of several storeys); written only when a member has one.
 pub const SCHEMA_WITH_MODULE_STOREYS: u32 = 152;
+/// Schema 153 (docs/adr/0807): an XOX slide (three sliding leaves with `build.bothSides`) and two unequal sliding
+/// leaves (`build.split` on a two-leaf slide), on an opening or a project's type; written only when one is.
+pub const SCHEMA_WITH_SLIDE_MORE: u32 = 153;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 151] = [
+pub const SCHEMAS: [u32; 152] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -887,6 +890,7 @@ pub const SCHEMAS: [u32; 151] = [
     SCHEMA_WITH_MULTI_SLIDE,
     SCHEMA_WITH_UNIT_SCHEDULES,
     SCHEMA_WITH_MODULE_STOREYS,
+    SCHEMA_WITH_SLIDE_MORE,
 ];
 
 /// The file a drawing is saved as.

@@ -165,7 +165,9 @@ def symbol(place, o):
 
     def lapped(k):
         lap = c * 0.05 if overlap is None else overlap / 2
-        half = c / 2
+        # ADR 0807 §2: two unequal leaves meet at the first's share of the light.
+        share = float(o.split) if o.split is not None and 0 < o.split < 1 else 0.5
+        half = c * share
         out.append(line(ad(m0, n, k), ad(ad(m0, u, half + lap), n, k)))
         out.append(line(ad(ad(m0, u, half - lap), n, -k), ad(ad(m0, u, c), n, -k)))
         if o.track:
@@ -250,6 +252,10 @@ def slide_leaves(o, c):
     tr = 2 if o.tracks is None else min(max(o.tracks, 2), 3)
     both = o.both and n == 4
     lap = c * 0.05 / (n - 1) if o.overlap is None else float(o.overlap)
+    if o.both and n == 3:
+        # ADR 0807 §1, XOX: the outer leaves on track 1 slide over the fixed middle on track 0, each lapping it.
+        w = (c + 2 * lap) / 3
+        return 2, w, [(0.0, 1, True, True), (w - lap, 0, False, False), (2 * (w - lap), 1, True, False)]
 
     def group(count, to_end):
         return [(k, k > 0, to_end) if k < tr else (0, False, to_end) for k in range(count)]
@@ -567,6 +573,18 @@ def multi_cases(case, straight, layered):
          [Door(0, 4, F(24, 10), form="window", operation="slide", leaves=3, tracks=3, side="right", hand="end")])
     case("Odanın duvarında dört kanat", [Wall([(0, 0), (6, 0), (6, 4), (0, 4)], w3, closed=True)],
          [Door(0, 3, F(32, 10), operation="slide", leaves=4, tracks=3)])
+    # ADR 0807: XOX (three leaves parting from a fixed middle) and two unequal sliding leaves.
+    case("XOX: ortası sabit, iki yandaki kanat kayar", straight(w2), [S(leaves=3, both=True)])
+    case("XOX raylı, 6 cm bindirme", straight(w2), [S(leaves=3, both=True, track=True, overlap=F(6, 100))])
+    case("XOX sağa açılır, kasalı", straight(w2), [S(leaves=3, both=True, side="right", frame=F(5, 100))])
+    case("XOX pencere, raylı", straight(w3),
+         [Door(0, 4, F(24, 10), form="window", operation="slide", leaves=3, both=True, track=True)])
+    case("XOX eğik duvarda", [Wall([(0, 0), (6, 8)], w3)],
+         [Door(0, 5, F(30, 10), operation="slide", leaves=3, both=True)])
+    case("Eşit olmayan iki kanat: %60", straight(w2), [S(leaves=2, split=F(6, 10))])
+    case("Eşit olmayan iki kanat: %30, 4 cm bindirme", straight(w2), [S(leaves=2, split=F(3, 10), overlap=F(4, 100))])
+    case("Eşit olmayan iki kanatlı pencere: %40", straight(w3),
+         [Door(0, 4, F(16, 10), form="window", operation="slide", leaves=2, split=F(4, 10))])
     case("Yanında kapı, üç kanat", straight(w2),
          [Door(0, F(25, 10), F(24, 10), operation="slide", leaves=3), Door(0, 6, F(9, 10))])
 

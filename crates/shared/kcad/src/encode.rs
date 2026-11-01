@@ -2089,6 +2089,14 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 153 (docs/adr/0807): an XOX slide, two unequal sliding leaves.
+    let more = |list: Objs<'_>| list.iter().any(kentos_contracts::needs_slide_more);
+    if doc.settings.arch.as_ref().is_some_and(kentos_contracts::ArchSettings::has_slide_more)
+        || more(objs)
+        || doc.blocks.iter().any(|b| more(Objs::Plain(&b.entities)))
+    {
+        return crate::SCHEMA_WITH_SLIDE_MORE;
+    }
     // Schema 152 (docs/adr/0796): a module member on a storey above its instance's base level.
     if doc.settings.arch.as_ref().is_some_and(|a| kentos_contracts::modules_have_storeys(&a.modules)) {
         return crate::SCHEMA_WITH_MODULE_STOREYS;

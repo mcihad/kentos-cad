@@ -1289,6 +1289,13 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                         "projenin kapı ve pencere tipleri şema 139'den beri yazılır",
                     ));
                 }
+                if !has.slide_more && a.has_xox() {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "üç kanatlı sürmenin iki yana açılan tipi (XOX) şema 153 ister",
+                    ));
+                }
                 if !has.multi_slide && a.has_multi_slide() {
                     return Err(r.fail_at(
                         Code::UnknownField,

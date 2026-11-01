@@ -1389,6 +1389,26 @@ impl ArchSettings {
         })
     }
 
+    /// Whether a type of the project is an XOX slide or has two unequal sliding leaves (docs/adr/0807): only schema 153
+    /// knows it.
+    pub fn has_slide_more(&self) -> bool {
+        self.opening_types.iter().any(|t| {
+            let b = t.build.as_ref();
+            t.operation == crate::OpeningOperation::Slide
+                && ((t.leaves == 3 && b.is_some_and(|b| b.both_sides == Some(true)))
+                    || (t.leaves == 2 && b.is_some_and(|b| b.split.is_some())))
+        })
+    }
+
+    /// Whether a type of the project is an XOX slide (docs/adr/0807 §1).
+    pub fn has_xox(&self) -> bool {
+        self.opening_types.iter().any(|t| {
+            t.operation == crate::OpeningOperation::Slide
+                && t.leaves == 3
+                && t.build.as_ref().is_some_and(|b| b.both_sides == Some(true))
+        })
+    }
+
     /// The project's type of this id, or else of this name (case aside).
     pub fn opening_type(&self, key: &str) -> Option<&crate::OpeningType> {
         let folded = key.trim().to_lowercase();

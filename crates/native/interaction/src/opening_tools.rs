@@ -88,6 +88,8 @@ enum Ask {
     Drum,
     Lip,
     Overlap,
+    /// A two-leaf slide's first leaf's share (Ş; docs/adr/0807 §2).
+    Split,
 }
 
 /// Kapı, Pencere or Boşluk.
@@ -539,6 +541,9 @@ impl Tool for OpeningTool {
             Some(Ask::Overlap) => {
                 return Prompt::new(self.label(), "iki kanadın bindirmesini yazın (boş: %5)").option("Geri", "G");
             }
+            Some(Ask::Split) => {
+                return Prompt::new(self.label(), "birinci kanadın payını yazın: %60 ya da 0.6 (boş: eşit)").option("Geri", "G");
+            }
             None => {}
         }
         let note = if self.placement.two_points {
@@ -750,7 +755,7 @@ impl Tool for OpeningTool {
                 ),
                 Ask::Distance if v > 0.0 => self.distance = Some(v),
                 Ask::Distance => self.distance = None,
-                Ask::Type | Ask::Leaves | Ask::Drum | Ask::Lip | Ask::Overlap => {}
+                Ask::Type | Ask::Leaves | Ask::Drum | Ask::Lip | Ask::Overlap | Ask::Split => {}
             }
             self.ask = None;
             self.see(cx);

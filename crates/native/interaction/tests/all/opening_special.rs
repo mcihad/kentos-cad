@@ -128,7 +128,7 @@ fn a_multi_leaf_sliding_door_takes_its_tracks_and_parts_both_ways() {
     assert!(set(&mut b, "E", "3.2"));
     assert!(set(&mut b, "K", "3"));
     assert_eq!(row(&b, "V").as_deref(), Some("2"), "two tracks unless given");
-    assert_eq!(row(&b, "İ"), None, "three leaves part to one jamb");
+    assert_eq!(row(&b, "İ").as_deref(), Some("Hayır"), "three leaves may slide over a fixed middle (XOX)");
     assert!(set(&mut b, "V", "3"));
     assert!(!set(&mut b, "V", "4"), "two or three tracks");
     b.click(3., 0.3);
@@ -154,4 +154,35 @@ fn a_multi_leaf_sliding_door_takes_its_tracks_and_parts_both_ways() {
     assert_eq!(o.leaves, 2);
     let built = o.build.unwrap_or_default();
     assert_eq!((built.tracks, built.both_sides), (None, None));
+}
+
+/// XOX and two unequal sliding leaves (docs/adr/0807): three leaves take İ (the outer two slide over a fixed middle on
+/// two tracks), two take the first leaf's share (Ş); both are the command's input, back to one leaf they go.
+#[test]
+fn a_sliding_door_takes_xox_and_its_leaves_share() {
+    let mut b = wall();
+    assert!(set(&mut b, "Ç", "slide"));
+    assert!(set(&mut b, "E", "2.4"));
+    assert!(set(&mut b, "K", "3"));
+    assert!(set(&mut b, "İ", "on"));
+    b.click(3., 0.3);
+    let o = newest(&b);
+    assert_eq!(o.build.as_ref().and_then(|x| x.both_sides), Some(true));
+    assert_eq!(o.sizes().panels.as_deref(), Some("XOX"));
+    assert_eq!(row(&b, "Ş"), None, "no share for three leaves");
+    assert!(set(&mut b, "K", "2"));
+    assert_eq!(row(&b, "Ş").as_deref(), Some("Eşit"));
+    assert!(set(&mut b, "Ş", "%60"));
+    assert_eq!(row(&b, "Ş").as_deref(), Some("%60"));
+    assert!(!set(&mut b, "Ş", "%150"), "a share is below one");
+    assert!(set(&mut b, "E", "1.6"));
+    b.click(8., 0.3);
+    let o = newest(&b);
+    let built = o.build.clone().unwrap_or_default();
+    assert_eq!((built.split, built.both_sides), (Some(0.6), None));
+    let sizes = o.sizes();
+    assert_eq!(sizes.leaves.len(), 2);
+    assert!(sizes.leaves[0] > sizes.leaves[1], "{:?}", sizes.leaves);
+    assert!(set(&mut b, "Ş", ""));
+    assert_eq!(row(&b, "Ş").as_deref(), Some("Eşit"));
 }

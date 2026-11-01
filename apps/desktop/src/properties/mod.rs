@@ -1565,8 +1565,23 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                     ..Default::default()
                 }
             } else {
-                let Some(n) = length(text) else {
-                    return vec!["Bir uzunluk girin; örneğin 10 cm veya 0.10 m.".into()];
+                // A two-leaf slide's share (docs/adr/0807 §2): a fraction or a percentage, not a length.
+                let n = if *which == kentos_commands::OpeningTypeField::Split {
+                    let t = text.trim().trim_start_matches('%').replace(',', ".");
+                    match t.parse::<f64>() {
+                        Ok(v) if v > 1.0 || text.trim().starts_with('%') => Some(v / 100.0),
+                        Ok(v) => Some(v),
+                        Err(_) => None,
+                    }
+                } else {
+                    length(text)
+                };
+                let Some(n) = n else {
+                    return vec![if *which == kentos_commands::OpeningTypeField::Split {
+                        "Bir pay girin; örneğin %60 veya 0.6.".into()
+                    } else {
+                        "Bir uzunluk girin; örneğin 10 cm veya 0.10 m.".into()
+                    }];
                 };
                 if !n.is_finite() {
                     return Vec::new();

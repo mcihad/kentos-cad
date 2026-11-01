@@ -25,6 +25,8 @@ pub(super) struct Moves {
     pub overlap: Option<f64>,
     /// A three- or four-leaf sliding door's tracks (docs/adr/0792 §1); none: two.
     pub tracks: Option<u8>,
+    /// A two-leaf sliding door's first leaf's share (docs/adr/0807 §2); none: halves.
+    pub split: Option<f64>,
 }
 
 /// The operations' names as the settings write them.
@@ -78,7 +80,8 @@ impl OpeningTool {
                 b.track = self.moves.track.then_some(true);
                 b.overlap = self.moves.overlap.filter(|_| n >= 2);
                 b.tracks = self.moves.tracks.filter(|_| n >= 3);
-                b.both_sides = (self.moves.both_sides && n == 4).then_some(true);
+                b.both_sides = (self.moves.both_sides && (3..=4).contains(&n)).then_some(true);
+                b.split = self.moves.split.filter(|_| n == 2);
             }
             _ => {}
         }
@@ -167,12 +170,15 @@ impl OpeningTool {
                         ),
                     ));
                 }
-                if n == 4 {
+                if (3..=4).contains(&n) {
                     rows.push(Setting::choice(
                         "İ",
-                        "İki yana açılır",
+                        if n == 3 { "Ortası sabit (XOX)" } else { "İki yana açılır" },
                         choices(&on_off, if self.moves.both_sides { "on" } else { "off" }),
                     ));
+                }
+                if n == 2 {
+                    rows.push(Setting::text("Ş", "Birinci kanadın payı", split_text(self.moves.split)));
                 }
                 if n >= 2 {
                     rows.push(Setting::text(
@@ -238,6 +244,16 @@ impl OpeningTool {
                 }
             },
             "H" => self.moves.track = value == "on",
+            "Ş" => match read_split(value) {
+                Some(v) => self.moves.split = v,
+                None => {
+                    cx.say(
+                        Level::Warn,
+                        "Birinci kanadın payı 0 ile 1 arasında bir sayı ya da %60 gibi bir yüzde olmalı (boş: eşit).",
+                    );
+                    return Some(false);
+                }
+            },
             "J" | "P" | "S" => {
                 let t = value.trim();
                 let back = t.is_empty() || t.to_lowercase().starts_with("ışık") || t == "%5";
@@ -288,8 +304,12 @@ impl OpeningTool {
             }
             "P" if self.operation_now() == OpeningOperation::Pocket => self.ask = Some(Ask::Lip),
             "S" if self.operation_now() == OpeningOperation::Slide => self.ask = Some(Ask::Overlap),
+            "Ş" if self.operation_now() == OpeningOperation::Slide && self.leaves_now() == 2 => {
+                self.ask = Some(Ask::Split)
+            }
             "İ" if self.operation_now() == OpeningOperation::Folding
-                || (self.operation_now() == OpeningOperation::Slide && self.leaves_now() == 4) =>
+                || (self.operation_now() == OpeningOperation::Slide
+                    && (3..=4).contains(&self.leaves_now())) =>
             {
                 self.moves.both_sides = !self.moves.both_sides;
             }
@@ -317,6 +337,7 @@ impl OpeningTool {
             Ask::Drum => "J",
             Ask::Lip => "P",
             Ask::Overlap => "S",
+            Ask::Split => "Ş",
             _ => return None,
         };
         let done = self.door_configure(key, text, cx).unwrap_or(false);
@@ -364,8 +385,11 @@ impl OpeningTool {
                 if n >= 3 {
                     p = p.option_with("Ray sayısı", "V", self.moves.tracks.unwrap_or(2).to_string());
                 }
-                if n == 4 {
-                    p = p.toggle("İki yana", "İ", self.moves.both_sides);
+                if (3..=4).contains(&n) {
+                    p = p.toggle(if n == 3 { "XOX" } else { "İki yana" }, "İ", self.moves.both_sides);
+                }
+                if n == 2 {
+                    p = p.option_with("Pay", "Ş", split_text(self.moves.split));
                 }
                 if n >= 2 {
                     p = p.option_with(
@@ -381,4 +405,23 @@ impl OpeningTool {
             _ => p,
         }
     }
+}
+
+/// A two-leaf slide's share as the settings show it: “Eşit” or “%60”.
+fn split_text(split: Option<f64>) -> String {
+    split.map_or_else(|| "Eşit".to_owned(), |v| format!("%{}", (v * 1000.0).round() / 10.0))
+}
+
+/// A share typed: empty or “eşit” halves, “%60” or “60” a percentage, “0.6” a fraction; `None` when it is not
+/// strictly between 0 and 1.
+fn read_split(value: &str) -> Option<Option<f64>> {
+    let t = value.trim().trim_start_matches('%').replace(',', ".");
+    if t.is_empty() || value.trim().to_lowercase().starts_with("eşit") {
+        return Some(None);
+    }
+    let mut v: f64 = t.parse().ok()?;
+    if v > 1.0 || value.trim().starts_with('%') {
+        v /= 100.0;
+    }
+    (v > 0.0 && v < 1.0).then_some(Some(v))
 }

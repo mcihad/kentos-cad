@@ -344,6 +344,8 @@ pub(super) struct Features {
     pub(super) module_units: bool,
     /// Schema 152 (docs/adr/0796): a module member's storey.
     pub(super) module_storeys: bool,
+    /// Schema 153 (docs/adr/0807): an XOX slide, two unequal sliding leaves.
+    pub(super) slide_more: bool,
     /// Schema 146 (docs/adr/0783): view templates and a recipe's pens, black and white and template.
     pub(super) view_templates: bool,
     /// Schema 147 (docs/adr/0784): the program's shares, levels of buildings and wings, a schedule's share fields.
@@ -565,6 +567,7 @@ impl Features {
             recipe_detail: schema >= crate::SCHEMA_WITH_RECIPE_DETAIL,
             module_units: schema >= crate::SCHEMA_WITH_MODULE_UNITS,
             module_storeys: schema >= crate::SCHEMA_WITH_MODULE_STOREYS,
+            slide_more: schema >= crate::SCHEMA_WITH_SLIDE_MORE,
             view_templates: schema >= crate::SCHEMA_WITH_VIEW_TEMPLATES,
             program_shares: schema >= crate::SCHEMA_WITH_PROGRAM_SHARES,
             options: schema >= crate::SCHEMA_WITH_OPTIONS,
@@ -2293,6 +2296,13 @@ pub(super) fn object(
         return Err(r.fail(
             Code::BadValue,
             "döner merdivenin bükümü (bulges) şema 117 ister",
+        ));
+    }
+    // Schema 153 (docs/adr/0807): an XOX slide; before it three sliding leaves did not part to both sides.
+    if matches!(&entity, Entity::Opening(o) if kentos_contracts::is_xox(&o.opening)) && !has.slide_more {
+        return Err(r.fail(
+            Code::BadValue,
+            "üç kanatlı sürmenin iki yana açılması (XOX) şema 153 ister",
         ));
     }
     // Schema 150 (docs/adr/0792): a three- or four-leaf sliding door or window, its tracks, a schedule of them.
