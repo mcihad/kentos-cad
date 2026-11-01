@@ -450,8 +450,13 @@ Tuşlarda çözücü tekrar çalışmaz; Undo teşhisi yeniler. Hata/sonuç gör
 üst bölümdedir. Gerçek GUI'de iki delikli plakada rename/değer/atomik
 hata ve Python eşitliği doğrulandı. [ADR 0828](../docs/adr/0828-explainable-parameter-window.md),
 [kodla doğrulanmış destek ve açık işler](../docs/cad/parametric-support.md).
-Yaylı kenar/elips adaptörleri, boyut cebiri ve aynalı blok/sürükleme/dal
-birleşik kabulü bitmeden bu madde kapatılmaz.
+Elips merkezi ve gerçek Start/End için mevcut çözücü adaptörü eklendi;
+yarı eksen/açı bilinmeyenleri, dual türevler, tam elipsin kapalı kalması
+ve dal sınırları test edildi. Gerçek GUI'de dört bağ fareyle kuruldu;
+4→6 m, bağlı çizgi, tek Undo ve Python ile nesne/UID/teşhis eşitliği
+doğrulandı. [ADR 0829](../docs/adr/0829-native-ellipse-point-constraints.md).
+Yaylı kenar adaptörü, boyut cebiri, elips grip hedefi ve aynalı
+blok/sürükleme/dal birleşik kabulü bitmeden bu madde kapatılmaz.
 
 ### CAD-ADV-06 — Parametrik blokları sürdürülebilir 2B bileşenlere dönüştür [ ]
 

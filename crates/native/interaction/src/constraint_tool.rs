@@ -158,8 +158,76 @@ fn point_place(p: Place) -> Option<SubPlace> {
     })
 }
 
+/// Constraint points include the centre. The shared reference picker intentionally excludes it
+/// from its automatic association policy; keep that policy unchanged for dimensions and other tools.
+fn constraint_point_near(
+    core: &kentos_geometry_core::entity::Entity,
+    at: Vec2,
+    tol: f64,
+) -> Option<(Place, SubPlace, f64)> {
+    let mut best = place_near(core, at, tol).and_then(|(p, d)| point_place(p).map(|s| (p, s, d)));
+    if let Some(c) = kentos_geometry_core::ops::subref::point(core, Place::Center) {
+        let d = (c.x - at.x).hypot(c.y - at.y);
+        if d <= tol && best.as_ref().is_none_or(|(_, _, distance)| d < *distance) {
+            best = Some((Place::Center, SubPlace::Center, d));
+        }
+    }
+    best
+}
+
 /// The part of an object under the pointer that `want` takes.
 fn part_at(p: &Pointer, cx: &Context<'_>, want: Want) -> Option<Picked> {
+    // A centre (or point object) need not lie on an edge. Query the spatial candidates first,
+    // then test actual supported constraint points; never treat the whole interior as a point hit.
+    if matches!(
+        want,
+        Want::Point | Want::PointOrCurve | Want::SegmentOrPoint | Want::PointOrSegment
+    ) {
+        let store = cx.spatial.store();
+        let mut best: Option<(f64, Picked)> = None;
+        for item in store.near(p.raw, cx.pick_tolerance() * 1.5) {
+            if !store.pickable(item) || item.id < 0.0 || item.id > u32::MAX as f64 {
+                continue;
+            }
+            let slot = Slot(item.id as u32);
+            let Some(e) = cx.doc.get(slot) else {
+                continue;
+            };
+            if !crate::selectable::entity_allowed(cx.draft.select_kinds, e) {
+                continue;
+            }
+            let core = edge::core(e);
+            let Some((place, sub, distance)) =
+                constraint_point_near(&core, p.raw, cx.pick_tolerance() * 1.5)
+            else {
+                continue;
+            };
+            let element = CadElement::Point { place: sub };
+            if !kentos_geometry_core::ops::constraints::has_part(
+                &core.shape,
+                &kentos_domain::constraints::core_element(&element),
+            ) {
+                continue;
+            }
+            let Some(at) = kentos_geometry_core::ops::subref::point(&core, place) else {
+                continue;
+            };
+            if best.as_ref().is_none_or(|(d, _)| distance < *d) {
+                best = Some((
+                    distance,
+                    Picked {
+                        slot,
+                        element,
+                        at,
+                        ends: None,
+                    },
+                ));
+            }
+        }
+        if let Some((_, picked)) = best {
+            return Some(picked);
+        }
+    }
     let slot = edge::pick(p, cx, |_, _| true)?;
     let e = cx.doc.get(slot)?;
     let core = edge::core(e);
@@ -167,15 +235,29 @@ fn part_at(p: &Pointer, cx: &Context<'_>, want: Want) -> Option<Picked> {
     let at = p.raw;
     let round = matches!(e, Entity::Circle(_) | Entity::Arc(_));
     let point = || {
-        place_near(&core, at, tol * 1.5).and_then(|(place, _)| {
-            let sub = point_place(place)?;
-            let q = kentos_geometry_core::ops::subref::point(&core, place)?;
-            Some(Picked {
-                slot,
-                element: CadElement::Point { place: sub },
-                at: q,
-                ends: None,
-            })
+        let place = constraint_point_near(&core, at, tol * 1.5)
+            .map(|(p, s, _)| (p, s))
+            .or_else(|| {
+                // When a point is required, a circular/elliptic curve can designate its centre.
+                // A curve-accepting Coincident or Fix must retain its curve semantics instead.
+                matches!(
+                    want,
+                    Want::Point | Want::PointOrSegment | Want::SegmentOrPoint
+                )
+                .then_some((Place::Center, SubPlace::Center))
+            })?;
+        let element = CadElement::Point { place: place.1 };
+        if !kentos_geometry_core::ops::constraints::has_part(
+            &core.shape,
+            &kentos_domain::constraints::core_element(&element),
+        ) {
+            return None;
+        }
+        Some(Picked {
+            slot,
+            element,
+            at: kentos_geometry_core::ops::subref::point(&core, place.0)?,
+            ends: None,
         })
     };
     let segment = || {

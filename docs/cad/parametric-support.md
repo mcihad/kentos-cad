@@ -8,7 +8,7 @@ doğrulanan ilk arayüz dilimini ve kalan gerçek geometri işlerini ayırır.
 | Nokta / çizgi | Konum, düz kenar, uzaklık, yön ve geometrik bağlar | Birleşik sürükleme/dal kabulünü genişlet |
 | Daire / bağımsız yay | Merkez/yarıçap, yay uç açıları; teğet/eşitlik/ölçüler | Büyük koordinat ve kilitli referans birleşik kabulü |
 | Çoklu çizgi / alan | Her halka/parçanın köşeleri bilinmeyen; düz kenarlar Segment | Yaylı kenarın bulge/yarıçapı sabit, henüz değişken değil |
-| Elips | Genel kısıt adaptörü yok | Merkez/eksen/uç adaptörü, gerçek türevler ve tekillik/dal sınırı |
+| Elips | Merkez ve mevcut Start/End (tam elipste dikiş); gerçek yarı eksen/açı bilinmeyenleri, dual türevler | Genel teğet, ayrı eksen noktaları, gripte kısmi tutuş kabulü |
 | NURBS | Ölçü başvurusu CAD-ADV-04'te var; kısıt çözücü adaptörü ayrı | Uç/kontrol/teğet ihtiyacını sınırlı sözleşmeyle uygula |
 | Blok / iç nesne | Genel çözücü Insert bilinmeyeni ve dönüşüm yolu almıyor | Aynalı/dönük yerleştirme ve kilitli referans politikası |
 | Parametre ifadeleri | Uzunluk/açı/sayı, ad değiştirme, token bağımlılığı, döngü, sıfıra bölme | Boyut cebiri ve uygunsuz birim karışımı ayrıca denetlenmeli |
@@ -37,7 +37,7 @@ doğrulanan ilk arayüz dilimini ve kalan gerçek geometri işlerini ayırır.
 ## Kod kanıtı
 
 - `geometry-core/src/ops/constraints/model.rs`: bilinmeyen düzeni;
-  `element_vars` yaylı Segment'i reddeder, elips/NURBS/Insert slotu yoktur.
+  `element_vars` yaylı Segment'i reddeder; elips 5/7 bilinmeyen alır, NURBS/Insert slotu yoktur.
 - Aynı dizindeki `rules.rs`, `solve.rs`: dual türevler, bağımsız gruplar,
   teşhis ve en az değişim çözümü. Yeni bir motor kurulmayacak.
 - `native/domain/src/constraints.rs`: kalıcı başvuruların adaptörü;
@@ -62,3 +62,5 @@ CAD-ADV-05 kapanmadan yaylı kenar/elips kapsamı, ölçü boyutları, aynalı
 blok ve geçici sürükleme/çözüm dalı davranışı tamamlanmalı; teknik
 plakada çelişki, kilit, gevşetme, Undo ile UI/Python/MCP aynı sonucu
 vermelidir. Güvenli ret bir adaptörün uygulanması yerine sayılmaz.
+
+Elips nokta adaptörünün sınırları ve kabulü: [ADR 0829](../adr/0829-native-ellipse-point-constraints.md).

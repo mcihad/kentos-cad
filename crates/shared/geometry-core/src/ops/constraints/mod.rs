@@ -297,6 +297,11 @@ pub fn moved_parts(before: &Shape, after: &Shape) -> Option<Vec<Element>> {
             Element::Point(PointAt::Start),
             Element::Point(PointAt::End),
         ]),
+        Shape::Ellipse { .. } => parts.extend([
+            Element::Point(PointAt::Center),
+            Element::Point(PointAt::Start),
+            Element::Point(PointAt::End),
+        ]),
         Shape::Point { parts: more, .. } => {
             let count = 1 + more.as_ref().map_or(0, Vec::len);
             parts.extend((0..count as u32).map(|k| Element::Point(PointAt::Node(k))));
@@ -328,5 +333,7 @@ pub fn measure(shapes: &[Shape], rule: &Rule) -> Option<f64> {
     solve::measure(shapes, rule)
 }
 
+#[cfg(test)]
+mod ellipse_tests;
 #[cfg(test)]
 mod tests;

@@ -2407,3 +2407,76 @@ fn split_curved_holed_area_keeps_each_mcp_hatch_on_its_seed_piece() {
     );
     std::fs::remove_dir_all(dir).unwrap();
 }
+
+#[test]
+fn ellipse_axis_constraints_use_the_same_mcp_diagnosis_and_keep_analytic_geometry() {
+    let mut raw: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/interaction/v1/objects.kcad"
+    ))
+    .unwrap();
+    raw["settings"]["workspace"] = json!("cad");
+    raw["origin"] = json!({"x":0,"y":0});
+    raw["entities"] = json!([
+        {"kind":"ellipse","id":1,"layerId":"cizim","attrs":{},"c":{"x":0,"y":0},"major":{"x":4,"y":0},"ratio":0.5,"t0":0,"t1":0},
+        {"kind":"line","id":2,"layerId":"cizim","attrs":{},"a":{"x":4,"y":0},"b":{"x":7,"y":0}}
+    ]);
+    let dir = std::env::temp_dir().join(format!(
+        "kentos-mcp-ellipse-constraints-{}",
+        std::process::id()
+    ));
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join("ellipse.json");
+    std::fs::write(&path, raw.to_string()).unwrap();
+    let mut server = Server::new();
+    let drawing =
+        call(&mut server, "drawing.open", json!({"path":path}))["structuredContent"]["drawing"]
+            .clone();
+    let items=call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"].clone();
+    let part = |i: usize, p: &str| json!({"uid":items[i]["uid"],"element":{"kind":"point","place":{"kind":p}}});
+    let (c, s, l) = (part(0, "center"), part(0, "start"), part(1, "start"));
+    let added = call(
+        &mut server,
+        "cad.constraints.edit",
+        json!({"drawing":drawing,"edit":{"kind":"add","constraints":[
+            {"rule":{"kind":"fix","a":c}},{"rule":{"kind":"horizontal","a":c,"b":s}},
+            {"rule":{"kind":"distance","a":c,"b":s,"parameter":"eksen"},"value":"4"},
+            {"rule":{"kind":"coincident","a":s,"b":l}}
+        ]}}),
+    );
+    assert_eq!(added["structuredContent"]["status"], "completed", "{added}");
+    let before=call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"].clone();
+    let input = json!({"drawing":drawing,"edits":[{"kind":"set","name":"eksen","expression":"6"}]});
+    let mut plan_input = input.clone();
+    plan_input["op"] = json!("plan");
+    let plan = call(&mut server, "cad.parameters.edit", plan_input);
+    assert_eq!(plan["structuredContent"]["status"], "completed", "{plan}");
+    assert_eq!(
+        call(&mut server, "drawing.entities", json!({"drawing":drawing}))["structuredContent"]["items"],
+        before
+    );
+    let done = call(&mut server, "cad.parameters.edit", input);
+    assert_eq!(done["structuredContent"]["status"], "completed", "{done}");
+    let after=call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"].clone();
+    let e = &after[0]["entity"];
+    assert_eq!(e["kind"], "ellipse");
+    assert!((e["major"]["x"].as_f64().unwrap() - 6.).abs() < 1e-9);
+    assert!((e["ratio"].as_f64().unwrap() - 1. / 3.).abs() < 1e-9);
+    assert_eq!(e["t0"], e["t1"]);
+    assert!((after[1]["entity"]["a"]["x"].as_f64().unwrap() - 6.).abs() < 1e-9);
+    let query = call(
+        &mut server,
+        "cad.constraints.query",
+        json!({"drawing":drawing}),
+    );
+    let mut q = query["structuredContent"]["output"]["diagnosis"].clone();
+    let mut written = done["structuredContent"]["output"]["diagnosis"].clone();
+    q.as_object_mut().unwrap().remove("iterations");
+    written.as_object_mut().unwrap().remove("iterations");
+    assert_eq!(q, written);
+    call(&mut server, "drawing.undo", json!({"drawing":drawing}));
+    assert_eq!(
+        call(&mut server, "drawing.entities", json!({"drawing":drawing}))["structuredContent"]["items"],
+        before
+    );
+    std::fs::remove_dir_all(dir).unwrap();
+}

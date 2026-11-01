@@ -1,10 +1,13 @@
 //! The unknowns of a constrained drawing (docs/adr/0334 §4): an object's own numbers, laid out one after another, and
 //! the parts a constraint names built from them. A point object is its points' east and north; a line its two ends; a
 //! circle its centre and radius; an arc its centre, radius and two angles; a path every vertex of every ring of every
-//! part (a bulged edge keeps its bulge, so it is not a segment). Other kinds take no constraint.
+//! part (a bulged edge keeps its bulge, so it is not a segment). An ellipse has centre, two positive
+//! semi-axis lengths and orientation; an elliptical arc also has two unwrapped end parameters.
 
 use crate::entity::Shape;
+use crate::geom::arc::sweep;
 use crate::geom::bulge::is_arc_bulge;
+use crate::jsmath::{TAU, atan2, cos, js_hypot, sin};
 use crate::vec2::Vec2;
 
 use super::dual::{D, P};
@@ -16,7 +19,7 @@ pub(super) enum VarKind {
     East,
     North,
     Length,
-    /// An arc's angle; weighted by its radius so a turn is measured along the arc.
+    /// A circular/elliptic angle; weighted by its radius or major semi-axis.
     Angle,
 }
 
@@ -151,6 +154,24 @@ impl Model {
                     push(&mut m, *a0, VarKind::Angle);
                     push(&mut m, *a1, VarKind::Angle);
                 }
+                Shape::Ellipse {
+                    c,
+                    major,
+                    ratio,
+                    t0,
+                    t1,
+                } => {
+                    let a = js_hypot(major.x, major.y);
+                    push(&mut m, c.x, VarKind::East);
+                    push(&mut m, c.y, VarKind::North);
+                    push(&mut m, a, VarKind::Length);
+                    push(&mut m, a * ratio, VarKind::Length);
+                    push(&mut m, atan2(major.y, major.x), VarKind::Angle);
+                    if sweep(*t0, *t1) < TAU - 1e-12 {
+                        push(&mut m, *t0, VarKind::Angle);
+                        push(&mut m, t0 + sweep(*t0, *t1), VarKind::Angle);
+                    }
+                }
                 other => {
                     let Some(rings) = rings_of(other) else {
                         continue;
@@ -238,7 +259,13 @@ impl Model {
             }
             (PointAt::Start, Shape::Line { .. }) => Some(vec![s, s + 1]),
             (PointAt::End, Shape::Line { .. }) => Some(vec![s + 2, s + 3]),
-            (PointAt::Center, Shape::Circle { .. } | Shape::Arc { .. }) => Some(vec![s, s + 1]),
+            (PointAt::Center, Shape::Circle { .. } | Shape::Arc { .. } | Shape::Ellipse { .. }) => {
+                Some(vec![s, s + 1])
+            }
+            (PointAt::Start | PointAt::End, Shape::Ellipse { t0, t1, .. }) => {
+                let n = if sweep(*t0, *t1) >= TAU - 1e-12 { 5 } else { 7 };
+                Some((s..s + n).collect())
+            }
             // An arc's ends: from its centre, radius and angle.
             (PointAt::Start, Shape::Arc { .. }) => Some(vec![s, s + 1, s + 2, s + 3]),
             (PointAt::End, Shape::Arc { .. }) => Some(vec![s, s + 1, s + 2, s + 4]),
@@ -288,6 +315,30 @@ pub(super) fn build(shape: &Shape, element: &Element, v: &[D]) -> Built {
                     y: c.y + r * a.sin(),
                 })
             }
+            (PointAt::Start | PointAt::End, Shape::Ellipse { t0, t1, .. }) => {
+                let full = sweep(*t0, *t1) >= TAU - 1e-12;
+                let t = if full {
+                    D::c(*t0)
+                } else if *at == PointAt::Start {
+                    v[5]
+                } else {
+                    v[6]
+                };
+                // Positive axes and the existing arc branch are part of the geometry, not a relaxed tolerance.
+                let valid_axes = v[2].v > 0.0 && v[3].v > 0.0 && v[3].v <= v[2].v;
+                let valid_span = full || (v[6].v > v[5].v && v[6].v - v[5].v < TAU - 1e-12);
+                if !(valid_axes && valid_span) {
+                    return Built::Point(P {
+                        x: D::c(f64::NAN),
+                        y: D::c(f64::NAN),
+                    });
+                }
+                let (ct, st, co, so) = (t.cos(), t.sin(), v[4].cos(), v[4].sin());
+                Built::Point(P {
+                    x: v[0] + v[2] * co * ct - v[3] * so * st,
+                    y: v[1] + v[2] * so * ct + v[3] * co * st,
+                })
+            }
             _ => Built::Point(P { x: v[0], y: v[1] }),
         },
         Element::Segment { .. } => Built::Segment(P { x: v[0], y: v[1] }, P { x: v[2], y: v[3] }),
@@ -318,6 +369,29 @@ pub(super) fn write_back(shape: &mut Shape, slot: &Slot, x: &[f64]) {
             *r = x[s + 2];
             *a0 = x[s + 3];
             *a1 = x[s + 4];
+        }
+        Shape::Ellipse {
+            c,
+            major,
+            ratio,
+            t0,
+            t1,
+        } => {
+            let a = js_hypot(major.x, major.y);
+            let angle = atan2(major.y, major.x);
+            let full = sweep(*t0, *t1) >= TAU - 1e-12;
+            *c = Vec2::new(x[s], x[s + 1]);
+            if x[s + 2] != a || x[s + 4] != angle {
+                *major = Vec2::new(x[s + 2] * cos(x[s + 4]), x[s + 2] * sin(x[s + 4]));
+            }
+            if x[s + 2] != a || x[s + 3] != a * *ratio {
+                *ratio = x[s + 3] / x[s + 2];
+            }
+            if !full {
+                // Retain the stored angle chart when only the centre or axes changed.
+                *t1 += x[s + 6] - (*t0 + sweep(*t0, *t1));
+                *t0 = x[s + 5];
+            }
         }
         Shape::Polygon {
             pts, holes, parts, ..

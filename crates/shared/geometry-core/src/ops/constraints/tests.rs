@@ -18,11 +18,11 @@ const SEG: Element = Element::Segment {
 const START: Element = Element::Point(PointAt::Start);
 const END: Element = Element::Point(PointAt::End);
 
-fn r(object: usize, element: Element) -> Ref {
+pub(super) fn r(object: usize, element: Element) -> Ref {
     Ref { object, element }
 }
 
-fn c(rule: Rule) -> Constraint {
+pub(super) fn c(rule: Rule) -> Constraint {
     Constraint {
         rule,
         value: 0.0,
@@ -30,7 +30,7 @@ fn c(rule: Rule) -> Constraint {
     }
 }
 
-fn dim(rule: Rule, value: f64) -> Constraint {
+pub(super) fn dim(rule: Rule, value: f64) -> Constraint {
     Constraint {
         rule,
         value,
@@ -96,7 +96,7 @@ fn rectangle_rules(width: f64) -> Vec<Constraint> {
     out
 }
 
-fn solve_of(shapes: &[Shape], constraints: &[Constraint]) -> Outcome {
+pub(super) fn solve_of(shapes: &[Shape], constraints: &[Constraint]) -> Outcome {
     solve(
         &Problem {
             shapes,

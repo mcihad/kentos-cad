@@ -1,11 +1,11 @@
 //! Forward-mode dual numbers over a constraint's own unknowns (docs/adr/0334 §4): each residual is written once and
 //! gives its exact first derivatives, so the solver's Jacobian has no finite-difference error. A constraint touches at
-//! most [`SLOTS`] unknowns (two points and a segment, or an arc's centre, radius and angles with a point).
+//! most [`SLOTS`] unknowns (two elliptical arc endpoints and a symmetry segment take eighteen).
 
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
 /// The most unknowns one constraint touches.
-pub const SLOTS: usize = 16;
+pub const SLOTS: usize = 20;
 
 /// A value and its derivatives by the constraint's unknowns, slot by slot.
 #[derive(Clone, Copy, Debug)]

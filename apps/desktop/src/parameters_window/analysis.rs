@@ -34,6 +34,9 @@ impl Analysis {
         let Some(r) = &self.listed else {
             return self.error.clone().unwrap_or_else(|| "Teşhis yok".into());
         };
+        if r.constraints.is_empty() {
+            return "Geometriye bağlı kısıt yok".into();
+        }
         let state = match r.diagnosis.status {
             SolveStatus::Fully => "Tam kısıtlı",
             SolveStatus::Under => "Kısmen kısıtlı",
