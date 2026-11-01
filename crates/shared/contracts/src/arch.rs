@@ -1318,6 +1318,10 @@ pub struct ArchSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::OptionSet>>", optional))]
     pub options: Vec<crate::OptionSet>,
+    /// The project's combinations of its sets' options (docs/adr/0808, KCAD 154): named proposals a view may show.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::OptionCombo>>", optional))]
+    pub option_combos: Vec<crate::OptionCombo>,
 }
 
 impl ArchSettings {
@@ -1351,6 +1355,11 @@ impl ArchSettings {
     /// Whether it keeps door and window types (KCAD 137, docs/adr/0772).
     pub fn has_opening_types(&self) -> bool {
         !self.opening_types.is_empty()
+    }
+
+    /// Whether it keeps combinations of design options (KCAD 154, docs/adr/0808).
+    pub fn has_option_combos(&self) -> bool {
+        !self.option_combos.is_empty()
     }
 
     /// Whether it keeps design option sets (KCAD 153, docs/adr/0788).
@@ -1455,6 +1464,9 @@ impl ArchSettings {
             return Some(problem);
         }
         if let Some(problem) = crate::option_sets_problem(&self.options) {
+            return Some(problem);
+        }
+        if let Some(problem) = crate::option_combos_problem(&self.options, &self.option_combos) {
             return Some(problem);
         }
         if let Some(why) = crate::annotation::names_problem(

@@ -914,6 +914,13 @@ def edit_cases():
                                                  "path": "expectedRevision"}}, expect={"revision": "same"})
     s["input"]["expectedRevision"] = "abc"
     case("Ret: geçersiz beklenen sürüm", [s])
+    s = edit_step("execute", {"kind": "derive", "space": UID(5)},
+                  {"status": "conflict", "error": {"code": "revision_conflict",
+                                                   "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+                                                   "path": "expectedRevision", "revision": "$current"}},
+                  expect={"revision": "same"})
+    s["input"]["expectedRevision"] = "999"
+    case("Ret: çizim bu arada değişti", [s])
     locked_group = {"id": "ic-gorunusler", "name": GROUP, "type": "group", "visible": True, "locked": True,
                     "expanded": True, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25},
                     "children": []}

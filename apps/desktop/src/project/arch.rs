@@ -207,6 +207,8 @@ pub fn read(
         materials: choices.map_or_else(Vec::new, |a| a.materials.clone()),
         // So are the design options (docs/adr/0788).
         options: choices.map_or_else(Vec::new, |a| a.options.clone()),
+        // And their combinations (docs/adr/0808).
+        option_combos: choices.map_or_else(Vec::new, |a| a.option_combos.clone()),
     };
     match arch.problem() {
         Some((_, why)) => Err(why),

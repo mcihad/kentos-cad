@@ -734,11 +734,14 @@ pub const SCHEMA_WITH_MODULE_STOREYS: u32 = 152;
 /// Schema 153 (docs/adr/0807): an XOX slide (three sliding leaves with `build.bothSides`) and two unequal sliding
 /// leaves (`build.split` on a two-leaf slide), on an opening or a project's type; written only when one is.
 pub const SCHEMA_WITH_SLIDE_MORE: u32 = 153;
+/// Schema 154 (docs/adr/0808): a project's combinations of design options (`arch.optionCombos`) and a view recipe's
+/// combination (`recipe.combo`); written only when there is one.
+pub const SCHEMA_WITH_OPTION_COMBOS: u32 = 154;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 152] = [
+pub const SCHEMAS: [u32; 153] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -891,6 +894,7 @@ pub const SCHEMAS: [u32; 152] = [
     SCHEMA_WITH_UNIT_SCHEDULES,
     SCHEMA_WITH_MODULE_STOREYS,
     SCHEMA_WITH_SLIDE_MORE,
+    SCHEMA_WITH_OPTION_COMBOS,
 ];
 
 /// The file a drawing is saved as.

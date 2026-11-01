@@ -20,6 +20,7 @@ pub(super) fn named_views(
     detail: bool,
     templates: bool,
     options: bool,
+    combos: bool,
 ) -> Result<Vec<NamedView>, KcadError> {
     let at = r.position();
     let all = list(r, |r, _| {
@@ -79,6 +80,13 @@ pub(super) fn named_views(
                             Code::UnknownField,
                             at,
                             "görünüş tarifinin tasarım seçenekleri şema 149'dan beri yazılır",
+                        ));
+                    }
+                    if !combos && read.combo.is_some() {
+                        return Err(r.fail_at(
+                            Code::UnknownField,
+                            at,
+                            "görünüş tarifinin seçenek bileşimi şema 154'ten beri yazılır",
                         ));
                     }
                     recipe = Some(read);

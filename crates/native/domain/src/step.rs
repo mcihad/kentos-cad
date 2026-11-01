@@ -756,6 +756,7 @@ fn report_of_ops(ops: &[Op]) -> StepReport {
             | Op::ArchModules { .. }
             | Op::ViewArea { .. }
             | Op::ArchOptions { .. }
+            | Op::OptionCombos { .. }
             | Op::Source { .. }
             | Op::Lineage { .. } => {
                 if !report.parts.contains(&ProjectPart::Settings) {

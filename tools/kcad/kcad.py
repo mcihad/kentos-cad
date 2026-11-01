@@ -485,6 +485,9 @@ SCHEMA_WITH_MODULE_STOREYS = 152
 # Schema 153 (docs/adr/0807): an XOX slide (three sliding leaves with build.bothSides) and two unequal sliding leaves
 # (build.split on a two-leaf slide).
 SCHEMA_WITH_SLIDE_MORE = 153
+# Schema 154 (docs/adr/0808): a project's combinations of design options (`arch.optionCombos`) and a view recipe's
+# combination (`recipe.combo`).
+SCHEMA_WITH_OPTION_COMBOS = 154
 SCHEDULE_UNIT_FIELDS = ("unitKind", "building", "wing", "recordedArea", "shareWeight")
 UNIT_KINDS = ("unit", "common", "outdoor")
 MATERIAL_ID = re.compile(r"[a-z0-9-]{1,64}")
@@ -812,7 +815,7 @@ def field_records_ok(raw, count):
     return at == len(raw)
 
 
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS, SCHEMA_WITH_JOIN_SOURCES, SCHEMA_WITH_DATASETS, SCHEMA_WITH_WITHHELD_FIELDS, SCHEMA_WITH_SPACE_COLUMNS, SCHEMA_WITH_SPACE_SCOPE, SCHEMA_WITH_SPACE_SOURCES, SCHEMA_WITH_SPACE_SEPARATORS, SCHEMA_WITH_SPACE_CHOICES, SCHEMA_WITH_DIMENSION_SETS, SCHEMA_WITH_DIMENSION_SET_EDGES, SCHEMA_WITH_RAILINGS, SCHEMA_WITH_SPACE_VOIDS, SCHEMA_WITH_STAIR_ARCS, SCHEMA_WITH_DIMENSION_CROSS, SCHEMA_WITH_RECESSES, SCHEMA_WITH_LEVEL_STATE, SCHEMA_WITH_DIMENSION_LEVELS, SCHEMA_WITH_SCHEDULE_COLUMNS, SCHEMA_WITH_SLABS, SCHEMA_WITH_RAMP_LEVELS, SCHEMA_WITH_STAIR_LEVELS, SCHEMA_WITH_GRID_COLUMN_FORMS, SCHEMA_WITH_CASEWORK, SCHEMA_WITH_DIMENSION_SET_SPANS, SCHEMA_WITH_DIMENSION_SET_SCALES, SCHEMA_WITH_AUDIT_EXCEPTIONS, SCHEMA_WITH_FIXTURES, SCHEMA_WITH_PROFILE_FILES, SCHEMA_WITH_FIELD_COLUMNS, SCHEMA_WITH_TABLE_CONSTRAINTS, SCHEMA_WITH_CAD_WORK, SCHEMA_WITH_LAYER_INDEXES, SCHEMA_WITH_ARCH_BONDS, SCHEMA_WITH_BUILDING_PARTS, SCHEMA_WITH_OPENING_TYPES, SCHEMA_WITH_BUILDING_PROGRAM, SCHEMA_WITH_VIEW_RECIPES, SCHEMA_WITH_MODULES, SCHEMA_WITH_RECIPE_DETAIL, SCHEMA_WITH_SPECIAL_DOORS, SCHEMA_WITH_MODULE_UNITS, SCHEMA_WITH_VIEW_TEMPLATES, SCHEMA_WITH_PROGRAM_SHARES, SCHEMA_WITH_MATERIALS, SCHEMA_WITH_OPTIONS, SCHEMA_WITH_MULTI_SLIDE, SCHEMA_WITH_UNIT_SCHEDULES, SCHEMA_WITH_MODULE_STOREYS, SCHEMA_WITH_SLIDE_MORE)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS, SCHEMA_WITH_JOIN_SOURCES, SCHEMA_WITH_DATASETS, SCHEMA_WITH_WITHHELD_FIELDS, SCHEMA_WITH_SPACE_COLUMNS, SCHEMA_WITH_SPACE_SCOPE, SCHEMA_WITH_SPACE_SOURCES, SCHEMA_WITH_SPACE_SEPARATORS, SCHEMA_WITH_SPACE_CHOICES, SCHEMA_WITH_DIMENSION_SETS, SCHEMA_WITH_DIMENSION_SET_EDGES, SCHEMA_WITH_RAILINGS, SCHEMA_WITH_SPACE_VOIDS, SCHEMA_WITH_STAIR_ARCS, SCHEMA_WITH_DIMENSION_CROSS, SCHEMA_WITH_RECESSES, SCHEMA_WITH_LEVEL_STATE, SCHEMA_WITH_DIMENSION_LEVELS, SCHEMA_WITH_SCHEDULE_COLUMNS, SCHEMA_WITH_SLABS, SCHEMA_WITH_RAMP_LEVELS, SCHEMA_WITH_STAIR_LEVELS, SCHEMA_WITH_GRID_COLUMN_FORMS, SCHEMA_WITH_CASEWORK, SCHEMA_WITH_DIMENSION_SET_SPANS, SCHEMA_WITH_DIMENSION_SET_SCALES, SCHEMA_WITH_AUDIT_EXCEPTIONS, SCHEMA_WITH_FIXTURES, SCHEMA_WITH_PROFILE_FILES, SCHEMA_WITH_FIELD_COLUMNS, SCHEMA_WITH_TABLE_CONSTRAINTS, SCHEMA_WITH_CAD_WORK, SCHEMA_WITH_LAYER_INDEXES, SCHEMA_WITH_ARCH_BONDS, SCHEMA_WITH_BUILDING_PARTS, SCHEMA_WITH_OPENING_TYPES, SCHEMA_WITH_BUILDING_PROGRAM, SCHEMA_WITH_VIEW_RECIPES, SCHEMA_WITH_MODULES, SCHEMA_WITH_RECIPE_DETAIL, SCHEMA_WITH_SPECIAL_DOORS, SCHEMA_WITH_MODULE_UNITS, SCHEMA_WITH_VIEW_TEMPLATES, SCHEMA_WITH_PROGRAM_SHARES, SCHEMA_WITH_MATERIALS, SCHEMA_WITH_OPTIONS, SCHEMA_WITH_MULTI_SLIDE, SCHEMA_WITH_UNIT_SCHEDULES, SCHEMA_WITH_MODULE_STOREYS, SCHEMA_WITH_SLIDE_MORE, SCHEMA_WITH_OPTION_COMBOS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -3443,6 +3446,7 @@ class _Schema:
         self.module_units = version >= SCHEMA_WITH_MODULE_UNITS
         self.module_storeys = version >= SCHEMA_WITH_MODULE_STOREYS
         self.slide_more = version >= SCHEMA_WITH_SLIDE_MORE
+        self.option_combos = version >= SCHEMA_WITH_OPTION_COMBOS
         self.view_templates = version >= SCHEMA_WITH_VIEW_TEMPLATES
         self.program_shares = version >= SCHEMA_WITH_PROGRAM_SHARES
         self.materials = version >= SCHEMA_WITH_MATERIALS
@@ -5500,6 +5504,15 @@ class _Schema:
         # Schema 149 (docs/adr/0788 §3): the design options the view shows.
         if self.options:
             extra = {**extra, "options": (self.array(choice), False)}
+
+        def combo(c):
+            if type(c) is not str or not re.match(r"^[a-z0-9-]{1,64}$", c):
+                self.fail("bad_value", "görünüş tarifinin bileşimi bir bileşimin kimliğiyle verilir")
+            return c
+
+        # Schema 154 (docs/adr/0808): the combination of design options the view shows.
+        if self.option_combos:
+            extra = {**extra, "combo": (combo, False)}
         r = self.fields({"version": (self.uint(32), True), "level": (level, False), "phase": (self.enum(RECIPE_PHASES), False),
                          "layerState": (self.text, False), "hidden": (self.array(category), False),
                          "scale": (self.uint(32), False), **extra})(v)
@@ -5511,7 +5524,7 @@ class _Schema:
             t = r["template"]
             if not t.strip() or len(t) > MOST_UCS_NAME or any(unicodedata.category(c) == "Cc" for c in t):
                 self.fail("bad_value", "görünüş tarifinin şablonu bir şablonun kimliği olmalı")
-            if set(r) - {"version", "level", "crop", "template", "options"}:
+            if set(r) - {"version", "level", "crop", "template", "options", "combo"}:
                 self.fail("bad_value", "şablona bağlı tarifte yalnız kat ve kırpma görünümündür")
         if r["version"] < 1:
             self.fail("bad_value", "görünüş tarifinin sürümü en az 1 olur")
@@ -5538,7 +5551,7 @@ class _Schema:
                 w = out[k]
                 if w != w.strip() or not w or len(w) > MOST_UCS_NAME or any(unicodedata.category(c) == "Cc" for c in w):
                     self.fail("bad_value", f"“{w}” bir şablon {'kimliği' if k == 'id' else 'adı'} olamaz")
-            if {"level", "crop", "template", "options"} & set(out["recipe"]):
+            if {"level", "crop", "template", "options", "combo"} & set(out["recipe"]):
                 self.fail("bad_value", "görünüş şablonu kat, kırpma, tasarım seçeneği ya da başka şablon taşımaz")
             return out
         all_ = self.array(one)(v)
@@ -9315,6 +9328,8 @@ class _Schema:
                          **({"modules": (self.any, False)} if self.modules else {}),
                          # Schema 149 (docs/adr/0788): the project's design option sets.
                          **({"options": (self.any, False)} if self.options else {}),
+                         # Schema 154 (docs/adr/0808): combinations of the sets' options.
+                         **({"optionCombos": (self.any, False)} if self.option_combos else {}),
                          # Schema 130 (docs/adr/0732 §3): Mimari denetim's exceptions.
                          **({"auditExceptions": (self.array(self.fields({
                              "key": (self.text, True), "code": (self.text, True),
@@ -9378,6 +9393,8 @@ class _Schema:
             self.arch_modules(a["modules"])
         if "options" in a:
             self.arch_options(a["options"])
+        if "optionCombos" in a:
+            self.option_combos_(a.get("options", []), a["optionCombos"])
         if "openingTypes" in a:
             types = a["openingTypes"]
             if not 1 <= len(types) <= 1000:
@@ -9389,6 +9406,38 @@ class _Schema:
                 ids.add(t["id"])
                 names.add(t["name"].lower())
         return a
+
+    def option_combos_(self, sets, combos):
+        """Combinations of design options (docs/adr/0808 §1): 1–50, ids of lower-case letters, digits and “-” and names
+        (trimmed, 1–120 characters) each once; each choice a set of the project and one of its options, a set once."""
+        if type(combos) is not list or not 1 <= len(combos) <= 50:
+            self.fail("bad_value", "seçenek bileşimleri 1–50 olmalı; boş liste yazılmaz")
+        ident = re.compile(r"^[a-z0-9-]{1,64}$")
+        ids, names = set(), set()
+        for c in combos:
+            if type(c) is not dict or set(c) - {"id", "name", "choices"} or "id" not in c or "name" not in c:
+                self.fail("bad_value", "bileşim kimlik, ad ve seçimlerden oluşur")
+            if type(c["id"]) is not str or not ident.match(c["id"]) or c["id"] in ids:
+                self.fail("bad_value", f"“{c['id']}” bileşim kimliği olamaz ya da yineleniyor")
+            n = c["name"]
+            if type(n) is not str or not n or n != n.strip() or len(n) > 120 or any(unicodedata.category(x) == "Cc" for x in n):
+                self.fail("bad_value", "bileşimin adı boş olamaz; en çok 120 karakter")
+            if n.lower() in names:
+                self.fail("bad_value", f"“{n}” adlı iki bileşim var")
+            ids.add(c["id"])
+            names.add(n.lower())
+            if "choices" in c and (type(c["choices"]) is not list or not c["choices"]):
+                self.fail("bad_value", "bileşimin boş seçim listesi yazılmaz")
+            seen = set()
+            for ch in c.get("choices", []):
+                if type(ch) is not dict or set(ch) != {"set", "option"}:
+                    self.fail("bad_value", "bileşimin seçimi küme ve seçenektir")
+                s = next((x for x in sets if x.get("id") == ch["set"]), None)
+                if s is None or not any(o.get("id") == ch["option"] for o in s.get("options", [])):
+                    self.fail("bad_value", "bileşimin seçimi projenin kümesi ve seçeneği olmalı")
+                if ch["set"] in seen:
+                    self.fail("bad_value", "bileşimde bir küme iki kez seçilmiş")
+                seen.add(ch["set"])
 
     def arch_options(self, sets):
         """Design option sets (docs/adr/0788 §6): 1–50 sets, ids of lower-case letters, digits and “-” and names each

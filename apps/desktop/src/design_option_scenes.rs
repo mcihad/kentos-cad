@@ -8,6 +8,13 @@
 //! KENTOS_SHOTS_ONLY=secenek-tanimla,secenek-pencere,secenek-plan-a,secenek-plan-b,secenek-tarif cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture
 //! ```
 //!
+//! And docs/adr/0808's combinations: the kitchen's and the note's options saved as two proposals in the window's
+//! Bileşimler, the second applied (the plan draws B), a view's recipe showing a proposal:
+//!
+//! ```text
+//! KENTOS_SHOTS_ONLY=bilesim-pencere,bilesim-uygulandi,bilesim-tarif cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture
+//! ```
+//!
 //! Test code only.
 
 use kentos_domain::Slot;
@@ -122,6 +129,53 @@ fn recipe(app: &mut App) {
     let _ = app.update(Message::Views(crate::views::Event::Choose("Mutfak B".into())));
 }
 
+/// The kitchen's set and a note's (the text at 1, 1 as A, its copy moved down as B), two proposals saved:
+/// Teklif 1 the primaries, Teklif 2 the kitchen's B and the note's B.
+fn proposals(app: &mut App) {
+    two(app);
+    command(app, "cad.options.edit", json!({"operation": {"kind": "define", "name": "Not", "uids": ["0192f5a1-7880-7000-8000-00000000000d"]}}));
+    let copied = command(app, "cad.options.edit", json!({"operation": {"kind": "copy", "set": "not", "option": "a"}}));
+    let b = copied["output"]["created"][0].clone();
+    command(app, "cad.entities.transform", json!({"uids": [b], "transform": {"kind": "move", "dx": 0.0, "dy": -0.5}}));
+    command(app, "cad.options.edit", json!({"operation": {"kind": "saveCombo", "name": "Teklif 1"}}));
+    command(
+        app,
+        "cad.options.edit",
+        json!({"operation": {"kind": "saveCombo", "name": "Teklif 2", "choices": [{"set": "mutfak", "option": "b"}, {"set": "not", "option": "b"}]}}),
+    );
+}
+
+/// Tasarım seçenekleri's Bileşimler: the two proposals, Teklif 2 picked.
+fn combos_window(app: &mut App) {
+    proposals(app);
+    run(app, "arch.options");
+    event(app, Event::Combo(1));
+}
+
+/// Teklif 2 applied: the plan draws the kitchen's B and the note's B.
+fn combos_applied(app: &mut App) {
+    combos_window(app);
+    event(app, Event::ComboApply);
+    event(app, Event::Close);
+}
+
+/// Görünümler on a view whose recipe shows Teklif 2 while the primaries stay A.
+fn combos_recipe(app: &mut App) {
+    proposals(app);
+    command(
+        app,
+        "cad.views.edit",
+        json!({"edit": {"kind": "save", "name": "Teklif 2", "center": {"x": 3.0, "y": 2.0}, "width": 8.0, "height": 6.0}}),
+    );
+    command(
+        app,
+        "cad.views.edit",
+        json!({"edit": {"kind": "recipe", "name": "Teklif 2", "recipe": {"level": {"id": "zemin"}, "combo": "teklif-2"}}}),
+    );
+    let _ = app.update(Message::Run("view.namedViews"));
+    let _ = app.update(Message::Views(crate::views::Event::Choose("Teklif 2".into())));
+}
+
 pub(crate) fn scenes() -> Vec<Scene> {
     vec![
         ("secenek-tanimla", define),
@@ -129,6 +183,9 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("secenek-plan-a", plan_a),
         ("secenek-plan-b", plan_b),
         ("secenek-tarif", recipe),
+        ("bilesim-pencere", combos_window),
+        ("bilesim-uygulandi", combos_applied),
+        ("bilesim-tarif", combos_recipe),
     ]
 }
 
@@ -175,6 +232,43 @@ mod tests {
         assert_eq!(doc.entities().count(), before);
         event(&mut app, Event::Close);
         assert_eq!(app.dialog, None);
+    }
+
+    /// docs/adr/0808: Bileşimler saves the primaries under the typed name, applies a proposal (the plan draws its
+    /// options), deletes one; the recipe's Bileşim writes the proposal's id.
+    #[test]
+    fn the_window_saves_applies_and_deletes_combinations() {
+        let mut app = crate::files_testing::app_with_drawing();
+        proposals(&mut app);
+        run(&mut app, "arch.options");
+        event(&mut app, Event::ComboName("Teklif 3".into()));
+        event(&mut app, Event::ComboSave);
+        let w = app.design_options.as_ref().expect("the window");
+        assert_eq!(w.combos.iter().map(|c| c.name.as_str()).collect::<Vec<_>>(), ["Teklif 1", "Teklif 2", "Teklif 3"]);
+        assert_eq!(w.combo, 2);
+        assert!(w.combos[2].current);
+        event(&mut app, Event::Combo(1));
+        event(&mut app, Event::ComboApply);
+        let doc = &app.document.as_ref().expect("a drawing").model;
+        assert_eq!(doc.arch_options().iter().map(|s| s.primary.as_str()).collect::<Vec<_>>(), ["b", "b"]);
+        assert!(last_said(&app).contains("Teklif 2"), "{}", last_said(&app));
+        app.spatial.sync(&app.document.as_ref().expect("a drawing").model);
+        assert!(!shown(&app, 5), "the kitchen's A is not drawn");
+        event(&mut app, Event::Combo(2));
+        event(&mut app, Event::ComboDelete);
+        let doc = &app.document.as_ref().expect("a drawing").model;
+        assert_eq!(doc.option_combos().len(), 2);
+        event(&mut app, Event::Close);
+        command(
+            &mut app,
+            "cad.views.edit",
+            json!({"edit": {"kind": "save", "name": "Teklif", "center": {"x": 3.0, "y": 2.0}, "width": 8.0, "height": 6.0}}),
+        );
+        let _ = app.update(Message::Run("view.namedViews"));
+        let _ = app.update(Message::Views(crate::views::Event::Choose("Teklif".into())));
+        let _ = app.update(Message::Views(crate::views::Event::RecipeCombo(Some(1))));
+        let _ = app.update(Message::Views(crate::views::Event::RecipeApply));
+        assert_eq!(app.recipe_draft("Teklif").combo.as_deref(), Some("teklif-2"));
     }
 
     /// docs/adr/0788 §3: the recipe's Tasarım seçeneği chooses B for the set and Tarifi uygula writes it.

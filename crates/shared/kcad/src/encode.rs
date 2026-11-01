@@ -2089,6 +2089,12 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 154 (docs/adr/0808): combinations of design options, a view recipe's combination.
+    if doc.settings.arch.as_ref().is_some_and(|a| !a.option_combos.is_empty())
+        || doc.settings.named_views.iter().any(|v| v.recipe.as_ref().is_some_and(|r| r.combo.is_some()))
+    {
+        return crate::SCHEMA_WITH_OPTION_COMBOS;
+    }
     // Schema 153 (docs/adr/0807): an XOX slide, two unequal sliding leaves.
     let more = |list: Objs<'_>| list.iter().any(kentos_contracts::needs_slide_more);
     if doc.settings.arch.as_ref().is_some_and(kentos_contracts::ArchSettings::has_slide_more)

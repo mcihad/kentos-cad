@@ -427,6 +427,17 @@ fn recipe_known(s: &ProjectSettings, r: &ViewRecipe) -> Result<(), Stop> {
             ));
         }
     }
+    // A recipe's combination is the project's (docs/adr/0808 §3).
+    if let Some(id) = &r.combo {
+        let combos = s.arch.as_ref().map_or(&[][..], |a| a.option_combos.as_slice());
+        if !combos.iter().any(|c| &c.id == id) {
+            return Err(fail(
+                codes::OPTION_COMBO_NOT_FOUND,
+                format!("Projede “{id}” kimlikli seçenek bileşimi yok. Tasarım seçenekleri › Bileşimler'den birinin kimliğini verin."),
+                "edit.recipe.combo",
+            ));
+        }
+    }
     if let Some(name) = &r.layer_state
         && !s.layer_states.iter().any(|st| st.name.trim() == name.trim())
     {

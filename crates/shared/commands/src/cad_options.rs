@@ -11,7 +11,7 @@ use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
-use crate::OptionSet;
+use crate::{OptionChoice, OptionCombo, OptionSet};
 
 pub const CAD_OPTIONS_EDIT: &str = "cad.options.edit";
 pub const CAD_OPTIONS_EDIT_VERSION: u32 = 1;
@@ -80,6 +80,21 @@ pub enum OptionsOperation {
     },
     /// Seçeneği sil: a non-primary option goes with its objects.
     Delete { set: String, option: String },
+    /// Bileşimi kaydet (docs/adr/0808): the combination `name` with `choices` (a set and its option, by id or name;
+    /// absent: every set's primary now), made or, when a combination has the name, given these choices.
+    SaveCombo {
+        name: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        id: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        choices: Option<Vec<OptionChoice>>,
+    },
+    /// Bileşimi uygula: each set the combination names shows its option (made the primary).
+    ApplyCombo { combo: String },
+    /// Bileşimi sil: the combination goes; one a view's recipe shows is refused (`option_combo_in_use`).
+    DeleteCombo { combo: String },
     /// Yeniden adlandır: the set (no `option`) or one of its options.
     Rename {
         set: String,
@@ -94,7 +109,9 @@ pub enum OptionsOperation {
 ///
 /// Refusals: `invalid_input`, `no_entities`, `invalid_uid`, `entity_not_found`, `layer_locked`, `option_set_exists`,
 /// `option_set_not_found`, `option_not_found`, `option_exists`, `option_member_taken`, `not_in_option`,
-/// `option_leaning`, `option_primary`, `option_set_full`, `nothing_to_set`, `invalid_revision`, `revision_conflict`.
+/// `option_leaning`, `option_primary`, `option_set_full`, `nothing_to_set`, `option_combo_not_found`,
+/// `option_combo_in_use`, `invalid_revision`, `revision_conflict`. Warning: `option_combo_dropped` (an accepted or deleted
+/// option a combination named).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -134,6 +151,10 @@ pub struct OptionsEdited {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub released: Vec<String>,
+    /// The combination after Bileşimi kaydet or Bileşimi uygula (docs/adr/0808).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub combo: Option<OptionCombo>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
 }
@@ -291,6 +312,27 @@ pub struct OptionKindDifference {
     pub b: u32,
 }
 
+/// A combination as `cad.options.query` reads it (docs/adr/0808): what it shows of every set, whether that is what the
+/// drawing shows now, and the objects, spaces' area and walls' length of the plan it shows (the main model and its
+/// options).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct OptionComboRow {
+    pub id: String,
+    pub name: String,
+    pub choices: Vec<OptionChoice>,
+    pub current: bool,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub objects: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub space_area: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub wall_length: f64,
+}
+
 /// Output of `cad.options.query`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -309,6 +351,10 @@ pub struct OptionsQueried {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub compared: Option<OptionsCompared>,
+    /// The project's combinations (docs/adr/0808).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<OptionComboRow>>", optional))]
+    pub combos: Vec<OptionComboRow>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
 }

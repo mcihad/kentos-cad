@@ -209,6 +209,10 @@ pub struct ViewRecipe {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::OptionChoice>>", optional))]
     pub options: Vec<crate::OptionChoice>,
+    /// The combination of design options it shows by its id (docs/adr/0808): its choices, under the recipe's own.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub combo: Option<String>,
 }
 
 fn is_zero(v: &u32) -> bool {
@@ -229,6 +233,7 @@ impl ViewRecipe {
             && !self.mono
             && self.template.is_none()
             && self.options.is_empty()
+            && self.combo.is_none()
     }
 
     /// The pen of `category`, if the recipe gives one.
@@ -385,7 +390,7 @@ pub fn template_problem(r: &ViewRecipe) -> Option<String> {
     if r.level.is_some() || r.crop || r.template.is_some() {
         return Some("Görünüş şablonu kat, kırpma ya da başka şablon taşımaz: bunlar görünümündür.".into());
     }
-    if !r.options.is_empty() {
+    if !r.options.is_empty() || r.combo.is_some() {
         return Some("Görünüş şablonu tasarım seçeneği taşımaz: hangi seçeneğin gösterileceği görünümündür.".into());
     }
     None
@@ -456,6 +461,7 @@ pub fn resolved_recipe(r: &ViewRecipe, templates: &[ViewTemplate]) -> ViewRecipe
         level: r.level.clone(),
         crop: r.crop,
         options: r.options.clone(),
+        combo: r.combo.clone(),
         template: None,
         ..t.recipe.clone()
     }
@@ -483,6 +489,11 @@ pub fn recipe_problem(r: &ViewRecipe) -> Option<String> {
     }
     if let Some(why) = crate::option_choices_problem(&r.options) {
         return Some(why);
+    }
+    if let Some(c) = &r.combo
+        && !crate::option_id_ok(c)
+    {
+        return Some("Görünüş tarifinin bileşimi bir bileşimin kimliğiyle verilir.".into());
     }
     if let Some(l) = &r.level
         && (l.id.trim().is_empty() || l.id.chars().count() > MOST_VIEW_NAME || l.id.chars().any(char::is_control))

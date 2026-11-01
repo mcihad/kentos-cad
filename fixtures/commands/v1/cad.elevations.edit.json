@@ -6226,6 +6226,35 @@
       ]
     },
     {
+      "name": "Ret: çizim bu arada değişti",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.elevations.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "space": "0192f5a1-7990-7000-8000-000000000005"
+            },
+            "expectedRevision": "999"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
       "name": "Ret: İç görünüşler grubu kilitli",
       "setup": {
         "format": "kentos.document",

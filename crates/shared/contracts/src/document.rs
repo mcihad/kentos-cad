@@ -837,8 +837,24 @@ impl ProjectSettings {
     }
 
     /// The named views as sheets' maps draw them: each recipe following a template resolved by it (docs/adr/0783 §2).
+    /// A recipe naming a combination of design options (docs/adr/0808) shows its choices for the sets it does not
+    /// choose itself; the combination's id is left out.
     pub fn drawn_views(&self) -> Vec<crate::NamedView> {
-        crate::resolved_named_views(&self.named_views, &self.view_templates)
+        let mut views = crate::resolved_named_views(&self.named_views, &self.view_templates);
+        let arch = self.arch.as_ref();
+        for v in &mut views {
+            let Some(r) = v.recipe.as_mut() else { continue };
+            let Some(id) = r.combo.take() else { continue };
+            let Some(combo) = arch.and_then(|a| a.option_combos.iter().find(|c| c.id == id)) else {
+                continue;
+            };
+            for c in &combo.choices {
+                if !r.options.iter().any(|o| o.set == c.set) {
+                    r.options.push(c.clone());
+                }
+            }
+        }
+        views
     }
 
     /// Whether the project has a coordinate system: the registry's, or its

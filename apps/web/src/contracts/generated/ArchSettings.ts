@@ -6,6 +6,7 @@ import type { ArchModule } from "./ArchModule";
 import type { BuildingProgram } from "./BuildingProgram";
 import type { LevelView } from "./LevelView";
 import type { OpeningType } from "./OpeningType";
+import type { OptionCombo } from "./OptionCombo";
 import type { OptionSet } from "./OptionSet";
 import type { PhaseView } from "./PhaseView";
 import type { SpaceMethod } from "./SpaceMethod";
@@ -68,4 +69,8 @@ materials?: Array<ArchMaterial>,
 /**
  * The project's design option sets (docs/adr/0788, KCAD 153): alternatives for a part of the plan, one primary.
  */
-options?: Array<OptionSet>, };
+options?: Array<OptionSet>, 
+/**
+ * The project's combinations of its sets' options (docs/adr/0808, KCAD 154): named proposals a view may show.
+ */
+optionCombos?: Array<OptionCombo>, };

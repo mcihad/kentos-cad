@@ -332,6 +332,11 @@ pub(crate) enum Op {
         before: Vec<kentos_contracts::OptionSet>,
         after: Vec<kentos_contracts::OptionSet>,
     },
+    /// The project's combinations of design options (docs/adr/0808), before and after.
+    OptionCombos {
+        before: Vec<kentos_contracts::OptionCombo>,
+        after: Vec<kentos_contracts::OptionCombo>,
+    },
     /// A binding to a source table and its reconciling base (docs/adr/0636 §5), before and after: written in the step
     /// that changed its key or its area, so undo gives the binding back with the objects (none: no binding).
     Source {
@@ -639,6 +644,10 @@ impl Op {
                 after: before.clone(),
             },
             Op::ArchOptions { before, after } => Op::ArchOptions {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::OptionCombos { before, after } => Op::OptionCombos {
                 before: after.clone(),
                 after: before.clone(),
             },
@@ -1274,6 +1283,7 @@ impl Document {
                 | Op::ArchModules { .. }
                 | Op::ViewArea { .. }
                 | Op::ArchOptions { .. }
+                | Op::OptionCombos { .. }
                 | Op::Source { .. }
                 | Op::Lineage { .. }
                 | Op::Constraints { .. } => false,
@@ -1574,6 +1584,12 @@ impl Document {
             Op::ArchOptions { after, .. } => {
                 let mut arch = self.settings.arch.take().unwrap_or_default();
                 arch.options = after.clone();
+                self.settings.arch = (!arch.is_empty()).then_some(arch);
+                return;
+            }
+            Op::OptionCombos { after, .. } => {
+                let mut arch = self.settings.arch.take().unwrap_or_default();
+                arch.option_combos = after.clone();
                 self.settings.arch = (!arch.is_empty()).then_some(arch);
                 return;
             }

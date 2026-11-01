@@ -2093,10 +2093,12 @@ const ENTRIES: &[Entry] = &[
                 "option_primary",
                 "option_set_full",
                 "nothing_to_set",
+                "option_combo_not_found",
+                "option_combo_in_use",
             ],
             REVISION,
         ],
-        warnings: &[],
+        warnings: &["option_combo_dropped"],
         targets: none,
     },
     Entry {
@@ -4253,6 +4255,8 @@ const ENTRIES: &[Entry] = &[
             &["unknown_template", "template_exists", "too_many_templates"],
             // A recipe's design options (docs/adr/0788 §3).
             &["option_set_not_found", "option_not_found"],
+            // A recipe's combination of design options (docs/adr/0808).
+            &["option_combo_not_found"],
         ],
         warnings: &["view_replaced", "template_detached"],
         targets: none,

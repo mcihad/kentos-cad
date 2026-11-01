@@ -4,7 +4,7 @@
 
 use std::collections::{BTreeSet, HashMap};
 
-use kentos_contracts::{OptionChoice, OptionSet, option_sets_problem};
+use kentos_contracts::{OptionChoice, OptionCombo, OptionSet, option_combos_problem, option_sets_problem};
 
 use crate::Refusal;
 use crate::document::Document;
@@ -33,6 +33,30 @@ impl Document {
         }
         self.transact(label, |doc| {
             doc.record(vec![Op::ArchOptions { before, after: next }], label);
+            Ok(true)
+        })
+    }
+
+    /// The project's combinations of design options (docs/adr/0808).
+    pub fn option_combos(&self) -> &[OptionCombo] {
+        self.settings
+            .arch
+            .as_ref()
+            .map_or(&[], |a| a.option_combos.as_slice())
+    }
+
+    /// Gives the project the combinations `next` as one change named `label` (into the open transaction, else an undo
+    /// step of its own); they are checked against the sets the project has then. Whether anything changed.
+    pub fn set_option_combos(&mut self, next: Vec<OptionCombo>, label: &str) -> Result<bool, Refusal> {
+        if let Some((path, problem)) = option_combos_problem(self.arch_options(), &next) {
+            return Err(Refusal(format!("{path}: {problem}")));
+        }
+        let before = self.option_combos().to_vec();
+        if before == next {
+            return Ok(false);
+        }
+        self.transact(label, |doc| {
+            doc.record(vec![Op::OptionCombos { before, after: next }], label);
             Ok(true)
         })
     }

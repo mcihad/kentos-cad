@@ -1273,7 +1273,7 @@ def view_recipe(r):
     if "mono" in r:
         assert r["mono"] is True, r
     if "template" in r and not LENIENT:
-        assert r["template"].strip() and not set(r) - {"version", "level", "crop", "template", "options"}, r
+        assert r["template"].strip() and not set(r) - {"version", "level", "crop", "template", "options", "combo"}, r
     pen = lambda x: cmap(fields(x, {"of": (text, True), "weight": (f64, False), "color": (text, False)}, "recipe.pens"))  # noqa: E731
     # Schema 149 (docs/adr/0788 §3): the design options the view shows, each set once.
     if "options" in r:
@@ -1286,7 +1286,9 @@ def view_recipe(r):
                            "scale": (uint, False), "detail": (text, False), "crop": (lambda b: b"\xf5", False),
                            "pens": (lambda xs: array([pen(x) for x in xs]), False), "mono": (lambda b: b"\xf5", False),
                            "template": (text, False),
-                           "options": (lambda xs: array([choice(x) for x in xs]), False)}, "recipe"))
+                           "options": (lambda xs: array([choice(x) for x in xs]), False),
+                           # Schema 154 (docs/adr/0808): the combination of design options it shows, by its id.
+                           "combo": (text, False)}, "recipe"))
 
 
 # Schema 146 (docs/adr/0783 §2): the project's view templates, at most 50: an id and a name (unique) and a recipe with no
@@ -1308,7 +1310,7 @@ def view_templates(list_):
         vals = [t[k] for t in list_]
         assert len(set(vals)) == len(vals) and all(v == v.strip() and 0 < len(v) <= 64 for v in vals), vals
     for t in list_:
-        assert not {"level", "crop", "template", "options"} & set(t["recipe"]), t
+        assert not {"level", "crop", "template", "options", "combo"} & set(t["recipe"]), t
     return array([cmap(fields(t, {"id": (text, True), "name": (text, True), "recipe": (view_recipe, True)}, "viewTemplates"))
                   for t in list_])
 
@@ -2526,6 +2528,10 @@ def document(d):
             or any(slide_more(t) for t in (d["settings"].get("arch") or {}).get("openingTypes", []))):
         # An XOX slide and two unequal sliding leaves (docs/adr/0807).
         schema = max(schema, 153)
+    if (d["settings"].get("arch") or {}).get("optionCombos") or any(
+            "combo" in (v.get("recipe") or {}) for v in d["settings"].get("namedViews", [])):
+        # Combinations of design options, a view recipe's combination (docs/adr/0808).
+        schema = max(schema, 154)
     return root(cmap(body), version=uint(schema))
 
 
@@ -3239,7 +3245,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-154.kcad"] = container(root(cmap(parts), version=uint(154)))
+    files["schema-version-155.kcad"] = container(root(cmap(parts), version=uint(155)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5779,6 +5785,19 @@ def build():
     assert sm.count(b"\x67version\x18\x99") == 1, "the XOX slide is schema 153"
     out["slide-more.kcad"] = container(sm)
     out["broken/slide-more-in-schema-152.kcad"] = container(sm.replace(b"\x67version\x18\x99", b"\x67version\x18\x98"))
+    # Schema 154 (docs/adr/0808): two kitchens' and a bath's options, two proposals combining them, a view showing
+    # one; schema 153 refuses them, a combination naming an option its set lacks and a set twice are bad values.
+    oc = document(load("option-combos.json"))
+    assert oc.count(b"\x67version\x18\x9a") == 1, "the combinations are schema 154"
+    out["option-combos.kcad"] = container(oc)
+    out["broken/option-combos-in-schema-153.kcad"] = container(oc.replace(b"\x67version\x18\x9a", b"\x67version\x18\x99"))
+
+    def combo_bad(name, change):
+        d = load("option-combos.json")
+        change(d["settings"]["arch"]["optionCombos"][0])
+        out["broken/option-combos-" + name + ".kcad"] = container(document(d))
+    combo_bad("option-unknown", lambda c: c["choices"][0].update(option="z"))
+    combo_bad("set-twice", lambda c: c["choices"].append(dict(c["choices"][0])))
 
     # Schema 148 (docs/adr/0785): three materials, a style's and a wall's core and insulation bound, a slab
     # bound; the schema before refuses them, as does schema 143, a material without a name, two of

@@ -9,8 +9,8 @@
 use std::collections::{HashMap, HashSet};
 
 use kentos_commands::{
-    CommandResult, DesignOption, Entity, OptionSet, OptionsEdit, OptionsEdited, OptionsOperation,
-    opening_type_id_of, option_set,
+    CommandResult, CommandWarning, DesignOption, Entity, OptionChoice, OptionCombo, OptionSet, OptionsEdit,
+    OptionsEdited, OptionsOperation, opening_type_id_of, option_combo, option_set,
 };
 use kentos_domain::{Document, Slot, Uuid};
 
@@ -46,6 +46,64 @@ struct Work {
     option: Option<String>,
     released: Vec<String>,
     deleted: Vec<String>,
+    /// The combinations after the write (docs/adr/0808), the one it is about, the choices it dropped.
+    combos: Vec<OptionCombo>,
+    combo: Option<String>,
+    dropped: Vec<String>,
+}
+
+fn combo_at(combos: &[OptionCombo], key: &str) -> Result<usize, Stop> {
+    option_combo(combos, key)
+        .and_then(|c| combos.iter().position(|x| x.id == c.id))
+        .ok_or_else(|| {
+            fail(
+                codes::OPTION_COMBO_NOT_FOUND,
+                format!("Projede “{key}” adlı ya da kimlikli seçenek bileşimi yok."),
+                "operation.combo",
+            )
+        })
+}
+
+/// A new combination's id: its name folded (“bilesim” when nothing of it is left), numbered on while taken.
+fn combo_id(combos: &[OptionCombo], name: &str) -> String {
+    let base = match opening_type_id_of(name) {
+        t if t == "tip" => "bilesim".to_owned(),
+        t => t,
+    };
+    let mut id = base.clone();
+    let mut n = 2;
+    while combos.iter().any(|c| c.id == id) {
+        id = format!("{base}-{n}");
+        n += 1;
+    }
+    id
+}
+
+/// The choices the combinations name for sets or options the write leaves gone, dropped from them (docs/adr/0808
+/// §4); the combinations' names that lost one.
+fn drop_gone(sets: &[OptionSet], combos: &mut [OptionCombo]) -> Vec<String> {
+    let mut out = Vec::new();
+    for c in combos {
+        let before = c.choices.len();
+        c.choices.retain(|ch| {
+            sets.iter()
+                .any(|s| s.id == ch.set && s.options.iter().any(|o| o.id == ch.option))
+        });
+        if c.choices.len() != before {
+            out.push(c.name.clone());
+        }
+    }
+    out
+}
+
+/// The named views whose recipe shows the combination `id`.
+fn views_showing(doc: &Document, id: &str) -> Vec<String> {
+    doc.settings()
+        .named_views
+        .iter()
+        .filter(|v| v.recipe.as_ref().and_then(|r| r.combo.as_deref()) == Some(id))
+        .map(|v| v.name.clone())
+        .collect()
 }
 
 fn name_ok(name: &str, path: &str) -> Result<(), Stop> {
@@ -66,13 +124,17 @@ fn name_ok(name: &str, path: &str) -> Result<(), Stop> {
 }
 
 fn set_at(sets: &[OptionSet], key: &str) -> Result<usize, Stop> {
+    set_at_in(sets, key, "operation.set")
+}
+
+fn set_at_in(sets: &[OptionSet], key: &str, path: &str) -> Result<usize, Stop> {
     option_set(sets, key)
         .and_then(|s| sets.iter().position(|x| x.id == s.id))
         .ok_or_else(|| {
             fail(
                 codes::OPTION_SET_NOT_FOUND,
                 format!("Projede “{key}” adlı ya da kimlikli tasarım seçeneği kümesi yok."),
-                "operation.set",
+                path,
             )
         })
 }
@@ -284,6 +346,7 @@ fn check(doc: &Document, input: &OptionsEdit) -> Result<Work, Stop> {
     checks::revision(doc, input.expected_revision.as_deref())?;
     let mut sets = pruned(doc, doc.arch_options());
     let mut work = Work::default();
+    let mut combos = doc.option_combos().to_vec();
     match &input.operation {
         OptionsOperation::Define {
             name,
@@ -563,9 +626,168 @@ fn check(doc: &Document, input: &OptionsEdit) -> Result<Work, Stop> {
             }
             work.set = Some(sets[si].id.clone());
         }
+        OptionsOperation::SaveCombo { name, id, choices } => {
+            name_ok(name, "operation.name")?;
+            if sets.is_empty() {
+                return Err(fail(
+                    codes::OPTION_SET_NOT_FOUND,
+                    "Projede tasarım seçeneği kümesi yok; bileşim seçeneklerden kurulur.".into(),
+                    "operation",
+                ));
+            }
+            let picked: Vec<OptionChoice> = match choices {
+                None => sets
+                    .iter()
+                    .map(|s| OptionChoice {
+                        set: s.id.clone(),
+                        option: s.primary.clone(),
+                    })
+                    .collect(),
+                Some(list) => {
+                    let mut out: Vec<OptionChoice> = Vec::new();
+                    for (i, ch) in list.iter().enumerate() {
+                        let si = set_at_in(&sets, &ch.set, &format!("operation.choices[{i}].set"))?;
+                        let oi = option_at(&sets[si], &ch.option, &format!("operation.choices[{i}].option"))?;
+                        if out.iter().any(|c| c.set == sets[si].id) {
+                            return Err(fail(
+                                codes::INVALID_INPUT,
+                                format!("“{}” kümesi bileşimde iki kez seçilmiş.", sets[si].name),
+                                &format!("operation.choices[{i}]"),
+                            ));
+                        }
+                        out.push(OptionChoice {
+                            set: sets[si].id.clone(),
+                            option: sets[si].options[oi].id.clone(),
+                        });
+                    }
+                    out
+                }
+            };
+            let folded = name.to_lowercase();
+            let at = match id {
+                Some(id) => combos.iter().position(|c| &c.id == id),
+                None => combos.iter().position(|c| c.name.to_lowercase() == folded),
+            };
+            match at {
+                Some(ci) => {
+                    if combos
+                        .iter()
+                        .enumerate()
+                        .any(|(j, c)| j != ci && c.name.to_lowercase() == folded)
+                    {
+                        return Err(fail(
+                            codes::INVALID_INPUT,
+                            format!("Projede “{name}” adlı bir seçenek bileşimi var."),
+                            "operation.name",
+                        ));
+                    }
+                    if combos[ci].name == *name && combos[ci].choices == picked {
+                        return Err(fail(
+                            codes::NOTHING_TO_SET,
+                            format!("“{name}” bileşimi zaten bu seçeneklerle kayıtlı."),
+                            "operation",
+                        ));
+                    }
+                    combos[ci].name = name.clone();
+                    combos[ci].choices = picked;
+                    work.combo = Some(combos[ci].id.clone());
+                }
+                None => {
+                    if let Some(id) = id
+                        && !kentos_commands::option_id_ok(id)
+                    {
+                        return Err(fail(
+                            codes::INVALID_INPUT,
+                            format!("“{id}” bileşim kimliği olamaz: küçük harf, rakam ve tire, en çok 64 karakter."),
+                            "operation.id",
+                        ));
+                    }
+                    if combos.iter().any(|c| c.name.to_lowercase() == folded) {
+                        return Err(fail(
+                            codes::INVALID_INPUT,
+                            format!("Projede “{name}” adlı bir seçenek bileşimi var."),
+                            "operation.name",
+                        ));
+                    }
+                    if combos.len() >= kentos_commands::MAX_OPTION_COMBOS {
+                        return Err(fail(
+                            codes::INVALID_INPUT,
+                            format!(
+                                "Bir projede en çok {} seçenek bileşimi olur.",
+                                kentos_commands::MAX_OPTION_COMBOS
+                            ),
+                            "operation.name",
+                        ));
+                    }
+                    let id = id.clone().unwrap_or_else(|| combo_id(&combos, name));
+                    work.combo = Some(id.clone());
+                    combos.push(OptionCombo {
+                        id,
+                        name: name.clone(),
+                        choices: picked,
+                    });
+                }
+            }
+        }
+        OptionsOperation::ApplyCombo { combo } => {
+            let ci = combo_at(&combos, combo)?;
+            let mut changed = false;
+            for ch in &combos[ci].choices {
+                if let Some(s) = sets.iter_mut().find(|s| s.id == ch.set)
+                    && s.options.iter().any(|o| o.id == ch.option)
+                    && s.primary != ch.option
+                {
+                    s.primary = ch.option.clone();
+                    changed = true;
+                }
+            }
+            if !changed {
+                return Err(fail(
+                    codes::NOTHING_TO_SET,
+                    format!("“{}” bileşiminin seçenekleri zaten birincil.", combos[ci].name),
+                    "operation.combo",
+                ));
+            }
+            work.combo = Some(combos[ci].id.clone());
+        }
+        OptionsOperation::DeleteCombo { combo } => {
+            let ci = combo_at(&combos, combo)?;
+            let views = views_showing(doc, &combos[ci].id);
+            if !views.is_empty() {
+                return Err(fail(
+                    codes::OPTION_COMBO_IN_USE,
+                    format!(
+                        "“{}” bileşimini {} görünümün tarifi gösteriyor ({}); önce tariflerden kaldırın.",
+                        combos[ci].name,
+                        views.len(),
+                        views.join(", ")
+                    ),
+                    "operation.combo",
+                ));
+            }
+            work.combo = Some(combos[ci].id.clone());
+            combos.remove(ci);
+        }
     }
+    work.dropped = drop_gone(&sets, &mut combos);
+    work.combos = combos;
     work.sets = sets;
     Ok(work)
+}
+
+fn warnings_of(work: &Work) -> Vec<CommandWarning> {
+    if work.dropped.is_empty() {
+        return Vec::new();
+    }
+    vec![CommandWarning {
+        code: codes::OPTION_COMBO_DROPPED.into(),
+        message: format!(
+            "Kalkan seçenekler {} bileşiminden düştü: {}; o kümelerde birincil gösterilir.",
+            work.dropped.len(),
+            work.dropped.join(", ")
+        ),
+        path: None,
+    }]
 }
 
 fn output(doc: &Document, work: &Work, created: Vec<String>) -> OptionsEdited {
@@ -578,6 +800,10 @@ fn output(doc: &Document, work: &Work, created: Vec<String>) -> OptionsEdited {
         created,
         deleted: work.deleted.clone(),
         released: work.released.clone(),
+        combo: work
+            .combo
+            .as_ref()
+            .and_then(|id| work.combos.iter().find(|c| &c.id == id).cloned()),
         revision: doc.revision().to_string(),
     }
 }
@@ -603,7 +829,7 @@ pub fn plan_in(doc: &Document, input: &OptionsEdit) -> CommandResult<OptionsEdit
             let created = work.adds.iter().map(|(u, _)| u.to_string()).collect();
             CommandResult::Completed {
                 output: output(doc, &work, created),
-                warnings: Vec::new(),
+                warnings: warnings_of(&work),
             }
         }
         Err(stop) => stop.into(),
@@ -630,6 +856,7 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: OptionsEdit) -> CommandRe
     // The sets first: the step's followers (openings, spaces, schedules) read the options as they are after it.
     let result = doc.transact(STEP, |d| {
         d.set_arch_options(work.sets.clone(), STEP)?;
+        d.set_option_combos(work.combos.clone(), STEP)?;
         if !work.adds.is_empty() {
             d.add_many_with_uids(work.adds.clone(), STEP)?;
         }
@@ -645,6 +872,6 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: OptionsEdit) -> CommandRe
     }
     CommandResult::Completed {
         output: output(doc, &work, created),
-        warnings: Vec::new(),
+        warnings: warnings_of(&work),
     }
 }

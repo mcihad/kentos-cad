@@ -6,6 +6,8 @@ import type { OptionsOperation } from "./OptionsOperation";
  *
  * Refusals: `invalid_input`, `no_entities`, `invalid_uid`, `entity_not_found`, `layer_locked`, `option_set_exists`,
  * `option_set_not_found`, `option_not_found`, `option_exists`, `option_member_taken`, `not_in_option`,
- * `option_leaning`, `option_primary`, `option_set_full`, `nothing_to_set`, `invalid_revision`, `revision_conflict`.
+ * `option_leaning`, `option_primary`, `option_set_full`, `nothing_to_set`, `option_combo_not_found`,
+ * `option_combo_in_use`, `invalid_revision`, `revision_conflict`. Warning: `option_combo_dropped` (an accepted or deleted
+ * option a combination named).
  */
 export type OptionsEdit = { operation: OptionsOperation, expectedRevision?: string, };

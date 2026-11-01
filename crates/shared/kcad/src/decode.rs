@@ -1195,7 +1195,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             }
             "namedViews" if has.views => {
                 named_views =
-                    views::named_views(r, has.viewmarks, has.view_recipes, has.recipe_detail, has.view_templates, has.options)?;
+                    views::named_views(r, has.viewmarks, has.view_recipes, has.recipe_detail, has.view_templates, has.options, has.option_combos)?;
             }
             // Schema 146 (docs/adr/0783 §2): the project's view templates, read whole as the contract's JSON.
             "viewTemplates" if has.view_templates => view_templates = views::view_templates(r)?,
@@ -1256,6 +1256,13 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                         Code::UnknownField,
                         at,
                         "oda modülü nesnesinin katı şema 152'den beri yazılır",
+                    ));
+                }
+                if !has.option_combos && !a.option_combos.is_empty() {
+                    return Err(r.fail_at(
+                        Code::UnknownField,
+                        at,
+                        "tasarım seçeneklerinin bileşimleri şema 154'ten beri yazılır",
                     ));
                 }
                 if !has.options && a.has_options() {

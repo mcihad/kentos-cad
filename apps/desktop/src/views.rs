@@ -95,6 +95,8 @@ pub enum Event {
     RecipeCrop(bool),
     /// A design option set's choice (docs/adr/0788 §3): the set's index, the option's (none: the primary).
     RecipeOption(usize, Option<usize>),
+    /// The combination of design options the recipe shows (docs/adr/0808 §3): none, or the project's i-th.
+    RecipeCombo(Option<usize>),
     RecipeApply,
     RecipeClear,
     /// The template the view follows (docs/adr/0783 §2): none, or the index in the project's templates.

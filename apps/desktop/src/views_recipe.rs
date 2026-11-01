@@ -164,6 +164,11 @@ pub fn recipe_caption(app: &App, r: &ViewRecipe) -> String {
             .unwrap_or_else(|| format!("{} {}", c.set, c.option));
         parts.push(words);
     }
+    // The combination it shows (docs/adr/0808 §3), by its name.
+    if let Some(id) = &r.combo {
+        let combos = app.document.as_ref().map_or(&[][..], |d| d.model.option_combos());
+        parts.push(combos.iter().find(|c| &c.id == id).map_or_else(|| id.clone(), |c| c.name.clone()));
+    }
     parts.push(format!("sürüm {}", r.version));
     parts.join(" · ")
 }
@@ -307,6 +312,11 @@ impl App {
             .as_ref()
             .map(|d| d.model.arch_options().to_vec())
             .unwrap_or_default();
+        let combos: Vec<String> = self
+            .document
+            .as_ref()
+            .map(|d| d.model.option_combos().iter().map(|c| c.id.clone()).collect())
+            .unwrap_or_default();
         let Some(w) = self.views_window.as_mut() else {
             return;
         };
@@ -338,7 +348,7 @@ impl App {
             Event::RecipeDetail(i) => r.detail = DETAILS.get(i).copied().flatten(),
             Event::RecipeCrop(on) => r.crop = on,
             Event::RecipeTemplate(i) => {
-                let (level, options) = (r.level.clone(), r.options.clone());
+                let (level, options, combo) = (r.level.clone(), r.options.clone(), r.combo.clone());
                 let (version, crop) = (r.version, r.crop);
                 match i.and_then(|i| templates.get(i)) {
                     // Following a template: its fields come from it, the level and the crop stay the view's.
@@ -348,6 +358,7 @@ impl App {
                             level,
                             crop,
                             options,
+                            combo,
                             template: Some(t.id.clone()),
                             ..ViewRecipe::default()
                         }
@@ -360,6 +371,7 @@ impl App {
                                 level,
                                 crop,
                                 options,
+                                combo,
                                 template: None,
                                 ..t.recipe.clone()
                             };
@@ -380,6 +392,7 @@ impl App {
                 }
             }
             Event::TemplateName(name) => w.template_name = name,
+            Event::RecipeCombo(i) => r.combo = i.and_then(|i| combos.get(i)).cloned(),
             Event::RecipeOption(i, option) => {
                 if let Some(set) = sets.get(i) {
                     r.options.retain(|c| c.set != set.id);
@@ -510,6 +523,27 @@ impl App {
                     .spacing(8)
                     .align_y(iced::Center),
                 None,
+            ));
+        }
+        // A combination of the options (docs/adr/0808 §3): its choices for the sets not chosen above.
+        let combos = self.document.as_ref().map_or(&[][..], |d| d.model.option_combos());
+        if !combos.is_empty() {
+            let chosen = r
+                .combo
+                .as_ref()
+                .and_then(|id| combos.iter().position(|c| &c.id == id))
+                .map_or(0, |j| j + 1);
+            let select = Select::new(
+                std::iter::once(Choice::new("Yok (birincil)".to_owned()))
+                    .chain(combos.iter().map(|c| Choice::new(c.name.clone()))),
+                Some(chosen),
+                move |j| m(Event::RecipeCombo(j.checked_sub(1))),
+            )
+            .searchable(false);
+            options = options.push(words::field(
+                "Bileşim",
+                container(select).width(Fill),
+                Some("Yukarıda seçilmeyen kümelerde bileşimin seçenekleri gösterilir.".into()),
             ));
         }
         let hide = ViewCategory::ALL

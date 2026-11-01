@@ -514,7 +514,7 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: ElevationsEdit) -> Comman
             if !keep.is_empty() {
                 let with: Vec<(Uuid, Entity)> = keep
                     .iter()
-                    .map(|(_, e, u)| (u.expect("partitioned on an id"), e.clone()))
+                    .filter_map(|(_, e, u)| u.map(|u| (u, e.clone())))
                     .collect();
                 match doc.add_many_with_uids(with, ELEVATION_STEP) {
                     Ok(slots) => added.extend(keep.iter().map(|(r, _, _)| r.clone()).zip(slots)),

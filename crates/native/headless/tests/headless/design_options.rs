@@ -201,3 +201,79 @@ fn design_options_timing() {
     );
     assert!(copy_ms < 100.0 && primary_ms < 200.0 && compare_ms < 100.0);
 }
+
+fn views(doc: &mut Document, edit: Value) {
+    let input: kentos_commands::ViewsEdit = serde_json::from_value(json!({ "edit": edit })).unwrap();
+    match kentos_native_application::views_edit::execute(&mut ExecutionContext::new(doc), input) {
+        CommandResult::Completed { .. } => {}
+        other => panic!("{other:?}"),
+    }
+}
+
+/// Combinations (docs/adr/0808): the kitchen's and the note's options saved as two proposals; a view's recipe showing
+/// the second draws its choices on the map, under the recipe's own; applying it makes them primary in one undo step;
+/// KCAD keeps the combinations (schema 154); accepting the kitchen drops its choice from them.
+#[test]
+fn proposals_combine_the_sets_and_a_view_draws_one() {
+    let mut doc = drawing();
+    edit(&mut doc, json!({"kind": "define", "name": "Mutfak", "uids": kitchen()}));
+    let b = edit(&mut doc, json!({"kind": "copy", "set": "mutfak", "option": "a"})).created;
+    edit(&mut doc, json!({"kind": "define", "name": "Not", "uids": [uid(13)]}));
+    let nb = edit(&mut doc, json!({"kind": "copy", "set": "not", "option": "a"})).created;
+    let first = edit(&mut doc, json!({"kind": "saveCombo", "name": "Teklif 1"})).combo.unwrap();
+    assert_eq!(first.id, "teklif-1");
+    assert_eq!(first.choices.len(), 2);
+    let second = edit(
+        &mut doc,
+        json!({"kind": "saveCombo", "name": "Teklif 2", "choices": [{"set": "Mutfak", "option": "B"}, {"set": "not", "option": "b"}]}),
+    )
+    .combo
+    .unwrap();
+    assert_eq!(second.id, "teklif-2");
+    // A view showing the second, its own choice for the note above the combination's.
+    views(&mut doc, json!({"kind": "save", "name": "Teklif 2", "center": {"x": 3.0, "y": 2.0}, "width": 8.0, "height": 6.0}));
+    views(
+        &mut doc,
+        json!({"kind": "recipe", "name": "Teklif 2", "recipe": {"combo": "teklif-2", "options": [{"set": "not", "option": "a"}]}}),
+    );
+    let drawn = doc.settings().drawn_views();
+    let recipe = drawn.iter().find(|v| v.name == "Teklif 2").unwrap().recipe.clone().unwrap();
+    assert_eq!(recipe.combo, None, "the map reads the combination's choices, not its id");
+    let shown: Vec<(String, String)> = recipe.options.iter().map(|c| (c.set.clone(), c.option.clone())).collect();
+    assert_eq!(shown, [("not".into(), "a".into()), ("mutfak".into(), "b".into())]);
+    let map = kentos_plot::layers::map_phasing_of(&doc, None, &[], &recipe.options);
+    assert_eq!(map.look(slot(&doc, &uid(5)).0), kentos_commands::PhaseLook::Hidden);
+    assert_eq!(map.look(slot(&doc, &b[0]).0), kentos_commands::PhaseLook::Shown);
+    assert_eq!(map.look(slot(&doc, &uid(13)).0), kentos_commands::PhaseLook::Shown);
+    assert_eq!(map.look(slot(&doc, &nb[0]).0), kentos_commands::PhaseLook::Hidden);
+    // The read: the first is what the drawing shows now, the second is not.
+    let CommandResult::Completed { output, .. } = options_query::query(&doc, &OptionsQuery::default()) else {
+        panic!()
+    };
+    assert_eq!(output.combos.iter().map(|c| c.current).collect::<Vec<_>>(), [true, false]);
+    // Applying it is one undo step; a view showing it keeps it from being deleted.
+    let before = doc.to_snapshot_v2();
+    edit(&mut doc, json!({"kind": "applyCombo", "combo": "Teklif 2"}));
+    assert_eq!(doc.arch_options().iter().map(|s| s.primary.as_str()).collect::<Vec<_>>(), ["b", "b"]);
+    doc.undo();
+    assert_eq!(doc.to_snapshot_v2().settings, before.settings);
+    let input: OptionsEdit = serde_json::from_value(json!({"operation": {"kind": "deleteCombo", "combo": "teklif-2"}})).unwrap();
+    match options_edit::execute(&mut ExecutionContext::new(&mut doc), input) {
+        CommandResult::Failed { error } => assert_eq!(error.code, "option_combo_in_use"),
+        other => panic!("{other:?}"),
+    }
+    // KCAD keeps them (schema 154; the samples of fixtures/kcad/v2 hold the number).
+    let bytes = kentos_kcad::encode_verified(&doc.to_snapshot_v2()).unwrap();
+    let again = Document::from_snapshot_v2(kentos_kcad::decode(&bytes).unwrap()).unwrap();
+    assert_eq!(again.option_combos(), doc.option_combos());
+    // Accepting the kitchen's A drops its choice from both, said once.
+    let input: OptionsEdit = serde_json::from_value(json!({"operation": {"kind": "accept", "set": "mutfak", "option": "a"}})).unwrap();
+    match options_edit::execute(&mut ExecutionContext::new(&mut doc), input) {
+        CommandResult::Completed { warnings, .. } => {
+            assert_eq!(warnings.len(), 1);
+            assert_eq!(warnings[0].code, "option_combo_dropped");
+        }
+        other => panic!("{other:?}"),
+    }
+    assert!(doc.option_combos().iter().all(|c| c.choices.iter().all(|ch| ch.set == "not")));
+}

@@ -104,12 +104,13 @@ fn pt(x: f64, y: f64) -> Value {
     json!({ "x": x, "y": y })
 }
 
-/// An object of the elevation from its JSON: the layer's, with no id yet.
-fn entity(layer: &str, mut v: Value) -> Entity {
+/// An object of the elevation from its JSON: the layer's, with no id yet (none when the JSON is not an object, which
+/// the drawing's code never writes).
+fn entity(layer: &str, mut v: Value) -> Option<Entity> {
     v["id"] = json!(0);
     v["layerId"] = json!(layer);
     v["attrs"] = json!({});
-    serde_json::from_value(v).expect("an elevation's object is a valid entity")
+    serde_json::from_value(v).ok()
 }
 
 /// A wall segment's face lying on a side.
@@ -405,7 +406,7 @@ pub(crate) fn draw(
             open += 1;
         }
         let role = |what: &str| format!("{k}/{what}");
-        let mut items: Vec<(String, Entity)> = Vec::new();
+        let mut items: Vec<(String, Option<Entity>)> = Vec::new();
         match height {
             Some(hh) => items.push((
                 role("frame"),
@@ -577,7 +578,7 @@ pub(crate) fn draw(
             openings: seen.iter().map(|o| o.uid.clone()).collect(),
             open: gaps,
         });
-        out.items.extend(items);
+        out.items.extend(items.into_iter().filter_map(|(r, e)| e.map(|e| (r, e))));
         ox = ox + len + gap;
     }
     // What stands in the room and has no height in the model.

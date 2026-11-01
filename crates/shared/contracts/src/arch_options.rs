@@ -17,6 +17,8 @@ use serde::{Deserialize, Serialize};
 pub const MAX_OPTION_SETS: usize = 50;
 pub const MAX_OPTIONS: usize = 12;
 pub const MAX_OPTION_MEMBERS: usize = 20_000;
+/// The most option combinations a project keeps (docs/adr/0808).
+pub const MAX_OPTION_COMBOS: usize = 50;
 
 /// One alternative of a set: its id, its name and its objects by their persistent ids.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -55,6 +57,82 @@ pub struct OptionSet {
 pub struct OptionChoice {
     pub set: String,
     pub option: String,
+}
+
+/// A named combination of options (docs/adr/0808; Archicad's Design Option Combination): one option for some of the
+/// project's sets; a set it does not name shows its primary. A proposal (“Teklif 1: mutfak B, banyo A”) is one
+/// combination; a view's recipe may show it, Bileşimi uygula makes its choices the primaries.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct OptionCombo {
+    pub id: String,
+    pub name: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<OptionChoice>>", optional))]
+    pub choices: Vec<OptionChoice>,
+}
+
+/// The combination of this id, or else of this name (case aside).
+pub fn option_combo<'a>(combos: &'a [OptionCombo], key: &str) -> Option<&'a OptionCombo> {
+    let folded = key.trim().to_lowercase();
+    combos
+        .iter()
+        .find(|c| c.id == key)
+        .or_else(|| combos.iter().find(|c| c.name.to_lowercase() == folded))
+}
+
+/// What a combination shows, every set once in the project's order: its choice, else the set's primary.
+pub fn combo_choices(sets: &[OptionSet], combo: &OptionCombo) -> Vec<OptionChoice> {
+    sets.iter()
+        .map(|s| OptionChoice {
+            set: s.id.clone(),
+            option: s.shown(&combo.choices).to_owned(),
+        })
+        .collect()
+}
+
+/// What is wrong with a project's combinations of its sets' options: its path and why; none when nothing is.
+pub fn option_combos_problem(sets: &[OptionSet], combos: &[OptionCombo]) -> Option<(String, String)> {
+    if combos.len() > MAX_OPTION_COMBOS {
+        return Some((
+            "optionCombos".into(),
+            format!("Bir projede en çok {MAX_OPTION_COMBOS} seçenek bileşimi olur."),
+        ));
+    }
+    let mut ids = std::collections::HashSet::new();
+    let mut names = std::collections::HashSet::new();
+    for (i, c) in combos.iter().enumerate() {
+        let at = format!("optionCombos[{i}]");
+        if !option_id_ok(&c.id) || !ids.insert(c.id.as_str()) {
+            return Some((
+                format!("{at}.id"),
+                format!("“{}” bileşim kimliği olamaz ya da yineleniyor: küçük harf, rakam ve tire, en çok 64 karakter.", c.id),
+            ));
+        }
+        let name = c.name.trim();
+        if name.is_empty() || name != c.name || name.chars().count() > 120 || name.chars().any(char::is_control) {
+            return Some((format!("{at}.name"), "Bileşimin adı boş olamaz; en çok 120 karakter.".into()));
+        }
+        if !names.insert(name.to_lowercase()) {
+            return Some((format!("{at}.name"), format!("“{name}” adlı iki seçenek bileşimi var.")));
+        }
+        for (j, ch) in c.choices.iter().enumerate() {
+            let ca = format!("{at}.choices[{j}]");
+            let Some(set) = sets.iter().find(|s| s.id == ch.set) else {
+                return Some((format!("{ca}.set"), format!("Bileşimin “{}” kümesi projede yok.", ch.set)));
+            };
+            if !set.options.iter().any(|o| o.id == ch.option) {
+                return Some((format!("{ca}.option"), format!("“{}” kümesinde “{}” seçeneği yok.", set.name, ch.option)));
+            }
+            if c.choices[..j].iter().any(|d| d.set == ch.set) {
+                return Some((ca, format!("“{}” kümesi bileşimde iki kez seçilmiş.", set.name)));
+            }
+        }
+    }
+    None
 }
 
 impl OptionSet {

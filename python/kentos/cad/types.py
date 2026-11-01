@@ -8628,6 +8628,9 @@ class OptionsOperation(_Union):
     - :class:`PrimaryOptionsOperation` (``kind: primary``)
     - :class:`AcceptOptionsOperation` (``kind: accept``)
     - :class:`DeleteOptionsOperation` (``kind: delete``)
+    - :class:`SaveComboOptionsOperation` (``kind: saveCombo``)
+    - :class:`ApplyComboOptionsOperation` (``kind: applyCombo``)
+    - :class:`DeleteComboOptionsOperation` (``kind: deleteCombo``)
     - :class:`RenameOptionsOperation` (``kind: rename``)
     """
     __slots__ = ()
@@ -12322,6 +12325,7 @@ class ArchSettings(_Model):
         materials: The project's building materials (docs/adr/0785, KCAD 150), in the order they were made.
         modules: The project's room modules and their instances (docs/adr/0775, KCAD 142).
         opening_types: The project's door and window types (docs/adr/0772, KCAD 137), in the order they were made.
+        option_combos: The project's combinations of its sets' options (docs/adr/0808, KCAD 154): named proposals a view may show.
         options: The project's design option sets (docs/adr/0788, KCAD 153): alternatives for a part of the plan, one primary.
         phase_view: The phases the drawing shows (docs/adr/0346 §2, schema 82); absent: all, as they are.
         program: The building's program (docs/adr/0773, KCAD 140): buildings, wings, units and the design brief.
@@ -12338,6 +12342,7 @@ class ArchSettings(_Model):
     materials: list[ArchMaterial] | Unset = UNSET
     modules: list[ArchModule] | Unset = UNSET
     opening_types: list[OpeningType] | Unset = UNSET
+    option_combos: list[OptionCombo] | Unset = UNSET
     options: list[OptionSet] | Unset = UNSET
     phase_view: PhaseView | PhaseViewName | None | Unset = UNSET
     program: BuildingProgram | Unset = UNSET
@@ -12364,6 +12369,8 @@ class ArchSettings(_Model):
             out["modules"] = [e0.to_json() for e0 in self.modules]
         if self.opening_types is not UNSET:
             out["openingTypes"] = [e0.to_json() for e0 in self.opening_types]
+        if self.option_combos is not UNSET:
+            out["optionCombos"] = [e0.to_json() for e0 in self.option_combos]
         if self.options is not UNSET:
             out["options"] = [e0.to_json() for e0 in self.options]
         if self.phase_view is not UNSET:
@@ -12391,6 +12398,7 @@ class ArchSettings(_Model):
             materials=[ArchMaterial.from_json(e0) for e0 in data["materials"]] if "materials" in data else UNSET,
             modules=[ArchModule.from_json(e0) for e0 in data["modules"]] if "modules" in data else UNSET,
             opening_types=[OpeningType.from_json(e0) for e0 in data["openingTypes"]] if "openingTypes" in data else UNSET,
+            option_combos=[OptionCombo.from_json(e0) for e0 in data["optionCombos"]] if "optionCombos" in data else UNSET,
             options=[OptionSet.from_json(e0) for e0 in data["options"]] if "options" in data else UNSET,
             phase_view=UNSET if "phaseView" not in data else None if data["phaseView"] is None else _enum_in(PhaseView, data["phaseView"]),
             program=BuildingProgram.from_json(data["program"]) if "program" in data else UNSET,
@@ -44473,6 +44481,75 @@ class OptionChoice(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class OptionCombo(_Model):
+    """A named combination of options (docs/adr/0808; Archicad's Design Option Combination): one option for some of the
+    project's sets; a set it does not name shows its primary. A proposal (“Teklif 1: mutfak B, banyo A”) is one
+    combination; a view's recipe may show it, Bileşimi uygula makes its choices the primaries.
+    """
+    id: str
+    name: str
+    choices: list[OptionChoice] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        if self.choices is not UNSET:
+            out["choices"] = [e0.to_json() for e0 in self.choices]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OptionCombo:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            choices=[OptionChoice.from_json(e0) for e0 in data["choices"]] if "choices" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OptionComboRow(_Model):
+    """A combination as `cad.options.query` reads it (docs/adr/0808): what it shows of every set, whether that is what the
+    drawing shows now, and the objects, spaces' area and walls' length of the plan it shows (the main model and its
+    options).
+    Attributes:
+        objects: Unit: count.
+        space_area: Unit: area.
+        wall_length: Unit: length.
+    """
+    id: str
+    name: str
+    choices: list[OptionChoice]
+    current: bool
+    objects: int
+    space_area: float
+    wall_length: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["choices"] = [e0.to_json() for e0 in self.choices]
+        out["current"] = self.current
+        out["objects"] = self.objects
+        out["spaceArea"] = float(self.space_area)
+        out["wallLength"] = float(self.wall_length)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OptionComboRow:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            choices=[OptionChoice.from_json(e0) for e0 in data["choices"]],
+            current=data["current"],
+            objects=data["objects"],
+            space_area=float(data["spaceArea"]),
+            wall_length=float(data["wallLength"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class OptionKindCount(_Model):
     """How many objects of a kind an option holds.
     Attributes:
@@ -44719,7 +44796,9 @@ class OptionsEdit(_Model):
 
     Refusals: `invalid_input`, `no_entities`, `invalid_uid`, `entity_not_found`, `layer_locked`, `option_set_exists`,
     `option_set_not_found`, `option_not_found`, `option_exists`, `option_member_taken`, `not_in_option`,
-    `option_leaning`, `option_primary`, `option_set_full`, `nothing_to_set`, `invalid_revision`, `revision_conflict`.
+    `option_leaning`, `option_primary`, `option_set_full`, `nothing_to_set`, `option_combo_not_found`,
+    `option_combo_in_use`, `invalid_revision`, `revision_conflict`. Warning: `option_combo_dropped` (an accepted or deleted
+    option a combination named).
     """
     operation: OptionsOperation
     expected_revision: str | None | Unset = UNSET
@@ -44744,11 +44823,13 @@ class OptionsEdited(_Model):
     """Output of `cad.options.edit` (and its plan): the set after, the option made or named, the objects made, deleted
     and given back to the main model.
     Attributes:
+        combo: The combination after Bileşimi kaydet or Bileşimi uygula (docs/adr/0808).
         option: The option made (Tanımla, Kopyala) or the one the operation named.
         released: The objects that are the main model's now (Kabul et, Seçenekten çıkar).
         set: The set after; none once accepted.
     """
     revision: str
+    combo: OptionCombo | None | Unset = UNSET
     created: list[str] | Unset = UNSET
     deleted: list[str] | Unset = UNSET
     option: str | None | Unset = UNSET
@@ -44758,6 +44839,8 @@ class OptionsEdited(_Model):
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["revision"] = self.revision
+        if self.combo is not UNSET:
+            out["combo"] = None if self.combo is None else self.combo.to_json()
         if self.created is not UNSET:
             out["created"] = list(self.created)
         if self.deleted is not UNSET:
@@ -44774,6 +44857,7 @@ class OptionsEdited(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> OptionsEdited:
         return cls(
             revision=data["revision"],
+            combo=UNSET if "combo" not in data else None if data["combo"] is None else OptionCombo.from_json(data["combo"]),
             created=list(data["created"]) if "created" in data else UNSET,
             deleted=list(data["deleted"]) if "deleted" in data else UNSET,
             option=data.get("option", UNSET),
@@ -44786,10 +44870,12 @@ class OptionsEdited(_Model):
 class OptionsQueried(_Model):
     """Output of `cad.options.query`.
     Attributes:
+        combos: The project's combinations (docs/adr/0808).
         set: With `uid`: its set and option.
     """
     sets: list[OptionSetRow]
     revision: str
+    combos: list[OptionComboRow] | Unset = UNSET
     compared: OptionsCompared | None | Unset = UNSET
     option: str | None | Unset = UNSET
     set: str | None | Unset = UNSET
@@ -44798,6 +44884,8 @@ class OptionsQueried(_Model):
         out: dict[str, Any] = {}
         out["sets"] = [e0.to_json() for e0 in self.sets]
         out["revision"] = self.revision
+        if self.combos is not UNSET:
+            out["combos"] = [e0.to_json() for e0 in self.combos]
         if self.compared is not UNSET:
             out["compared"] = None if self.compared is None else self.compared.to_json()
         if self.option is not UNSET:
@@ -44811,6 +44899,7 @@ class OptionsQueried(_Model):
         return cls(
             sets=[OptionSetRow.from_json(e0) for e0 in data["sets"]],
             revision=data["revision"],
+            combos=[OptionComboRow.from_json(e0) for e0 in data["combos"]] if "combos" in data else UNSET,
             compared=UNSET if "compared" not in data else None if data["compared"] is None else OptionsCompared.from_json(data["compared"]),
             option=data.get("option", UNSET),
             set=data.get("set", UNSET),
@@ -69207,6 +69296,7 @@ class ViewRecipe(_Model):
     sheet's map linked to the view draws. It is the view's, not the model's (no object changes) nor the person's (the
     screen's level view, theme and layer panel stay theirs). `version` counts its changes: written by `cad.views.edit`.
     Attributes:
+        combo: The combination of design options it shows by its id (docs/adr/0808): its choices, under the recipe's own.
         crop: The map draws only the view's area, its frame's paper outside it empty (docs/adr/0781 §2; Revit's Crop Region).
         detail: The walls' detail the map draws (docs/adr/0781 §1; Revit's Detail Level, Archicad's Partial Structure Display);
             none: its scale's, or the project's when it fixes one.
@@ -69223,6 +69313,7 @@ class ViewRecipe(_Model):
             everything but the level and the crop, which stay the view's. An input may name it.
         version: 1 for a new recipe, one more at each change; given in an input, it is ignored. Unit: version.
     """
+    combo: str | None | Unset = UNSET
     crop: bool | Unset = UNSET
     detail: WallDetail | WallDetailName | None | Unset = UNSET
     hidden: list[ViewCategory | ViewCategoryName] | Unset = UNSET
@@ -69238,6 +69329,8 @@ class ViewRecipe(_Model):
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
+        if self.combo is not UNSET:
+            out["combo"] = self.combo
         if self.crop is not UNSET:
             out["crop"] = self.crop
         if self.detail is not UNSET:
@@ -69267,6 +69360,7 @@ class ViewRecipe(_Model):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> ViewRecipe:
         return cls(
+            combo=data.get("combo", UNSET),
             crop=data.get("crop", UNSET),
             detail=UNSET if "detail" not in data else None if data["detail"] is None else _enum_in(WallDetail, data["detail"]),
             hidden=[_enum_in(ViewCategory, e0) for e0 in data["hidden"]] if "hidden" in data else UNSET,
@@ -81204,6 +81298,70 @@ class DeleteOptionsOperation(OptionsOperation):
 
 
 @dataclass(kw_only=True, slots=True)
+class SaveComboOptionsOperation(OptionsOperation):
+    """Bileşimi kaydet (docs/adr/0808): the combination `name` with `choices` (a set and its option, by id or name;
+    absent: every set's primary now), made or, when a combination has the name, given these choices.
+    """
+    TAG_VALUE: ClassVar[str] = "saveCombo"
+    name: str
+    choices: list[OptionChoice] | None | Unset = UNSET
+    id: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "saveCombo"}
+        out["name"] = self.name
+        if self.choices is not UNSET:
+            out["choices"] = None if self.choices is None else [e0.to_json() for e0 in self.choices]
+        if self.id is not UNSET:
+            out["id"] = self.id
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SaveComboOptionsOperation:
+        return cls(
+            name=data["name"],
+            choices=UNSET if "choices" not in data else None if data["choices"] is None else [OptionChoice.from_json(e0) for e0 in data["choices"]],
+            id=data.get("id", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ApplyComboOptionsOperation(OptionsOperation):
+    """Bileşimi uygula: each set the combination names shows its option (made the primary)."""
+    TAG_VALUE: ClassVar[str] = "applyCombo"
+    combo: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "applyCombo"}
+        out["combo"] = self.combo
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ApplyComboOptionsOperation:
+        return cls(
+            combo=data["combo"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DeleteComboOptionsOperation(OptionsOperation):
+    """Bileşimi sil: the combination goes; one a view's recipe shows is refused (`option_combo_in_use`)."""
+    TAG_VALUE: ClassVar[str] = "deleteCombo"
+    combo: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "deleteCombo"}
+        out["combo"] = self.combo
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DeleteComboOptionsOperation:
+        return cls(
+            combo=data["combo"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class RenameOptionsOperation(OptionsOperation):
     """Yeniden adlandır: the set (no `option`) or one of its options."""
     TAG_VALUE: ClassVar[str] = "rename"
@@ -89311,7 +89469,7 @@ _OPENING_TYPES_OPERATION: dict[str, type[OpeningTypesOperation]] = {"define": De
 _OPENINGS_OPERATION: dict[str, type[OpeningsOperation]] = {"set": SetOpeningsOperation, "move": MoveOpeningsOperation, "flip": FlipOpeningsOperation, "rehost": RehostOpeningsOperation, "replaceType": ReplaceTypeOpeningsOperation, "detach": DetachOpeningsOperation, "push": PushOpeningsOperation, "refresh": RefreshOpeningsOperation, "reset": ResetOpeningsOperation, "renumber": RenumberOpeningsOperation, "array": ArrayOpeningsOperation, "copy": CopyOpeningsOperation, "distance": DistanceOpeningsOperation}
 
 
-_OPTIONS_OPERATION: dict[str, type[OptionsOperation]] = {"define": DefineOptionsOperation, "copy": CopyOptionsOperation, "addMembers": AddMembersOptionsOperation, "removeMembers": RemoveMembersOptionsOperation, "primary": PrimaryOptionsOperation, "accept": AcceptOptionsOperation, "delete": DeleteOptionsOperation, "rename": RenameOptionsOperation}
+_OPTIONS_OPERATION: dict[str, type[OptionsOperation]] = {"define": DefineOptionsOperation, "copy": CopyOptionsOperation, "addMembers": AddMembersOptionsOperation, "removeMembers": RemoveMembersOptionsOperation, "primary": PrimaryOptionsOperation, "accept": AcceptOptionsOperation, "delete": DeleteOptionsOperation, "saveCombo": SaveComboOptionsOperation, "applyCombo": ApplyComboOptionsOperation, "deleteCombo": DeleteComboOptionsOperation, "rename": RenameOptionsOperation}
 
 
 _PAPER_ANNOTATION_SCALE: dict[str, type[PaperAnnotationScale]] = {"auto": AutoPaperAnnotationScale, "fixed": FixedPaperAnnotationScale}
@@ -89593,6 +89751,7 @@ __all__ = [
     "AnnotativeOperationName",
     "AnnotativeScale",
     "AnyCell",
+    "ApplyComboOptionsOperation",
     "ApplyPageSetupPaperOp",
     "ApplyTemplatePaperOp",
     "ArcConstructedCurve",
@@ -90035,6 +90194,7 @@ __all__ = [
     "DefineOptionsOperation",
     "DeleteBlockChange",
     "DeleteColumnsTableEdit",
+    "DeleteComboOptionsOperation",
     "DeleteDimensionSetEdit",
     "DeleteFeatureChange",
     "DeleteOptionsOperation",
@@ -91156,6 +91316,8 @@ __all__ = [
     "OperationStep",
     "OptionChange",
     "OptionChoice",
+    "OptionCombo",
+    "OptionComboRow",
     "OptionKindCount",
     "OptionKindDifference",
     "OptionRow",
@@ -91819,6 +91981,7 @@ __all__ = [
     "RubbersheetTransform",
     "RunInput",
     "RunSink",
+    "SaveComboOptionsOperation",
     "SavePageSetupsPaperOp",
     "SavePlotProfilesPaperOp",
     "SaveUcsTo",

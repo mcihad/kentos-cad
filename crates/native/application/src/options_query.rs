@@ -7,7 +7,7 @@ use std::collections::BTreeMap;
 
 use kentos_commands::{
     CommandResult, CommandWarning, DesignOption, Entity, OptionChange, OptionKindCount, OptionKindDifference,
-    OptionRow, OptionSet, OptionSetRow, OptionsCompared, OptionsQueried, OptionsQuery, option_set,
+    OptionComboRow, OptionRow, OptionSet, OptionSetRow, OptionsCompared, OptionsQueried, OptionsQuery, option_set,
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::ops::compare::{Attrs, Matching, Member, Settings, Status, compare};
@@ -160,6 +160,46 @@ fn compared(
     out
 }
 
+/// The project's combinations (docs/adr/0808 §2): each with what it shows; current when its choices are the
+/// primaries, the shown plan's objects, spaces' area and walls' length.
+fn combo_rows(doc: &Document) -> Vec<OptionComboRow> {
+    let sets = doc.arch_options();
+    doc.option_combos()
+        .iter()
+        .map(|c| {
+            let choices = kentos_commands::combo_choices(sets, c);
+            let current = choices
+                .iter()
+                .all(|ch| sets.iter().any(|s| s.id == ch.set && s.primary == ch.option));
+            let hidden: std::collections::HashSet<String> = kentos_commands::option_hidden_uids(sets, &choices)
+                .into_iter()
+                .map(str::to_owned)
+                .collect();
+            let (mut objects, mut area, mut length) = (0u32, 0.0, 0.0);
+            for (uid, e) in doc.entities_with_uids() {
+                if hidden.contains(&uid.to_string()) {
+                    continue;
+                }
+                objects += 1;
+                match e {
+                    Entity::Space(x) => area += crate::spaces::area_of(&x.space.parts),
+                    Entity::Wall(w) => length += path_length(&w.wall.pts, w.wall.bulges.as_deref(), w.wall.closed),
+                    _ => {}
+                }
+            }
+            OptionComboRow {
+                id: c.id.clone(),
+                name: c.name.clone(),
+                choices,
+                current,
+                objects,
+                space_area: area,
+                wall_length: length,
+            }
+        })
+        .collect()
+}
+
 /// The drawing's metres per unit (a length in metres made the drawing's).
 fn metres_per_unit(doc: &Document) -> f64 {
     kentos_project::format::Format::of(doc.settings()).to_metres(1.0)
@@ -272,6 +312,7 @@ fn answer(doc: &Document, input: &OptionsQuery) -> Result<(OptionsQueried, Vec<C
             set,
             option,
             compared: compared_out,
+            combos: combo_rows(doc),
             revision: doc.revision().to_string(),
         },
         warnings,

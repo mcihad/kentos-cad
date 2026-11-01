@@ -3,13 +3,15 @@
 //! tanımla makes the selection a new set's first option; Seçeneği kopyala adds an independent copy of the chosen
 //! option; Birincil yap makes the drawing and the sheets show it; Karşılaştır reads two options side by side (counts,
 //! areas and the plan difference); Kabul et keeps the chosen option as the main model and deletes the others, its plan
-//! said first; Seçeneği sil removes a non-primary option with its objects. Each write is one undo step (“Tasarım
+//! said first; Seçeneği sil removes a non-primary option with its objects. Bileşimler (docs/adr/0808) keeps named
+//! combinations of the sets' options: Birincillerden kaydet records what the drawing shows now, Uygula makes a
+//! combination's options the primaries, Sil removes one no view shows. Each write is one undo step (“Tasarım
 //! seçeneği”); Kapat writes nothing.
 
 use iced::widget::{Column, button, container, row};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
-    CommandResult, OptionSetRow, OptionsCompare, OptionsCompared, OptionsEdit, OptionsEdited,
+    CommandResult, OptionComboRow, OptionSetRow, OptionsCompare, OptionsCompared, OptionsEdit, OptionsEdited,
     OptionsOperation, OptionsQuery,
 };
 use kentos_interaction::Level;
@@ -32,6 +34,9 @@ const ACCEPT: &str = "Kabul et";
 const DELETE: &str = "Seçeneği sil";
 const ADD: &str = "Seçimi ekle";
 const REMOVE: &str = "Seçimi çıkar";
+const COMBO_SAVE: &str = "Birincillerden kaydet";
+const COMBO_APPLY: &str = "Bileşimi uygula";
+const COMBO_DELETE: &str = "Bileşimi sil";
 
 #[derive(Clone, Debug, Default)]
 pub struct Window {
@@ -44,6 +49,10 @@ pub struct Window {
     pub compared: Option<Result<OptionsCompared, String>>,
     /// What Kabul et with the chosen option would do; its refusal's words when refused.
     pub accept: Option<Result<OptionsEdited, String>>,
+    /// The project's combinations (docs/adr/0808), the one picked and the name a new one is saved under.
+    pub combos: Vec<OptionComboRow>,
+    pub combo: usize,
+    pub combo_name: String,
 }
 
 #[derive(Clone, Debug)]
@@ -60,6 +69,11 @@ pub enum Event {
     Remove,
     Accept,
     Delete,
+    Combo(usize),
+    ComboName(String),
+    ComboSave,
+    ComboApply,
+    ComboDelete,
     Close,
 }
 
@@ -115,18 +129,23 @@ pub(crate) fn compared_words(c: &OptionsCompared) -> String {
 }
 
 impl App {
-    fn design_options_rows(&self) -> Vec<OptionSetRow> {
+    fn design_options_rows(&self) -> (Vec<OptionSetRow>, Vec<OptionComboRow>) {
         let Some(doc) = self.document.as_ref() else {
-            return Vec::new();
+            return (Vec::new(), Vec::new());
         };
         match kentos_native_application::options_query::query(&doc.model, &OptionsQuery::default()) {
-            CommandResult::Completed { output, .. } => output.sets,
-            _ => Vec::new(),
+            CommandResult::Completed { output, .. } => (output.sets, output.combos),
+            _ => (Vec::new(), Vec::new()),
         }
     }
 
     fn design_options_read(&mut self, keep: Option<String>) {
-        let rows = self.design_options_rows();
+        let (rows, combos) = self.design_options_rows();
+        let (combo, combo_name) = self
+            .design_options
+            .as_ref()
+            .map(|w| (w.combo.min(combos.len().saturating_sub(1)), w.combo_name.clone()))
+            .unwrap_or_default();
         let chosen = keep
             .and_then(|id| rows.iter().position(|r| r.id == id))
             .unwrap_or(0);
@@ -148,6 +167,9 @@ impl App {
             compare: (0, usize::from(n > 1)),
             compared: None,
             accept: None,
+            combos,
+            combo,
+            combo_name,
         });
         self.design_options_preview();
     }
@@ -461,6 +483,65 @@ impl App {
                 }
                 self.design_options_read(Some(set));
             }
+            Event::Combo(i) => {
+                if let Some(w) = self.design_options.as_mut() {
+                    w.combo = i;
+                }
+            }
+            Event::ComboName(t) => {
+                if let Some(w) = self.design_options.as_mut() {
+                    w.combo_name = t;
+                }
+            }
+            Event::ComboSave => {
+                let keep = chosen.map(|(s, _)| s);
+                let name = self
+                    .design_options
+                    .as_ref()
+                    .map(|w| w.combo_name.trim().to_owned())
+                    .filter(|n| !n.is_empty())
+                    .unwrap_or_else(|| format!("Teklif {}", self.design_options.as_ref().map_or(0, |w| w.combos.len()) + 1));
+                if let Some(done) = self.design_options_command(OptionsOperation::SaveCombo {
+                    name: name.clone(),
+                    id: None,
+                    choices: None,
+                }) {
+                    self.say(Level::Success, format!("“{name}” bileşimi kümelerin şimdiki birincilleriyle kaydedildi."));
+                    let id = done.combo.map(|c| c.id);
+                    self.design_options_read(keep);
+                    if let Some(w) = self.design_options.as_mut() {
+                        w.combo_name.clear();
+                        w.combo = id.and_then(|id| w.combos.iter().position(|c| c.id == id)).unwrap_or(w.combo);
+                    }
+                }
+            }
+            Event::ComboApply | Event::ComboDelete => {
+                let keep = chosen.map(|(s, _)| s);
+                let Some(c) = self
+                    .design_options
+                    .as_ref()
+                    .and_then(|w| w.combos.get(w.combo).cloned())
+                else {
+                    return Task::none();
+                };
+                let apply = matches!(event, Event::ComboApply);
+                let operation = if apply {
+                    OptionsOperation::ApplyCombo { combo: c.id.clone() }
+                } else {
+                    OptionsOperation::DeleteCombo { combo: c.id.clone() }
+                };
+                if self.design_options_command(operation).is_some() {
+                    self.say(
+                        Level::Success,
+                        if apply {
+                            format!("“{}” uygulandı; çizim ve paftalar onun seçeneklerini gösteriyor.", c.name)
+                        } else {
+                            format!("“{}” bileşimi silindi.", c.name)
+                        },
+                    );
+                }
+                self.design_options_read(keep);
+            }
             Event::Close => {
                 self.design_options = None;
                 self.dialog = None;
@@ -581,6 +662,7 @@ impl App {
             name,
             Some("Seçilen nesneler kümenin birincil A seçeneği olur; ana modelden onlara bağlı nesne (kapının duvarı, etiketin mahali) varsa onları da seçin.".into()),
         );
+        let combos = self.design_options_combos(w);
         let body = Column::new()
             .spacing(14)
             .push(
@@ -591,7 +673,8 @@ impl App {
                 .spacing(16)
                 .height(300.0),
             )
-            .push(define);
+            .push(define)
+            .push(combos);
         let set = w.rows.get(w.chosen);
         let option = set.and_then(|s| s.options.get(w.option));
         let is_primary = option.is_some_and(|o| o.primary);
@@ -616,6 +699,70 @@ impl App {
             .modal(msg(Event::Close))
     }
 
+    /// Bileşimler: the project's combinations, each with what it shows, the one picked applied or deleted, a new one
+    /// saved from the primaries.
+    fn design_options_combos<'a>(&'a self, w: &'a Window) -> Element<'a, Message> {
+        let mut list = Column::new().spacing(2);
+        for (i, c) in w.combos.iter().enumerate() {
+            let shown: Vec<String> = c
+                .choices
+                .iter()
+                .filter_map(|ch| {
+                    let s = w.rows.iter().find(|s| s.id == ch.set)?;
+                    let o = s.options.iter().find(|o| o.id == ch.option)?;
+                    Some(format!("{} {}", s.name, o.name))
+                })
+                .collect();
+            let mut facts = vec![shown.join(", "), format!("{} nesne", c.objects)];
+            if c.space_area > 0.0 {
+                facts.push(format!("mahal {} m²", num(c.space_area, false)));
+            }
+            if c.current {
+                facts.insert(0, "şimdiki".into());
+            }
+            let line = row![
+                container(label::body(c.name.clone())).width(140.0),
+                label::caption(facts.join(" · "))
+            ]
+            .spacing(12)
+            .align_y(Center);
+            list = list.push(
+                button(line)
+                    .on_press(msg(Event::Combo(i)))
+                    .padding([4, 8])
+                    .width(Fill)
+                    .style(style::button::row(i == w.combo)),
+            );
+        }
+        if w.combos.is_empty() {
+            list = list.push(label::caption(
+                "Bileşim yok. Kümelerde göstermek istediğiniz seçenekleri birincil yapıp bir adla kaydedin; teklifler arasında tek tıkla geçilir.",
+            ));
+        }
+        let picked = w.combos.get(w.combo);
+        let name = kentos_ui::widget::text_field("Bileşimin adı (Teklif 1)", &w.combo_name)
+            .on_input(|t| msg(Event::ComboName(t)));
+        let has_sets = !w.rows.is_empty();
+        Column::new()
+            .spacing(6)
+            .push(label::strong("Bileşimler"))
+            .push(container(iced::widget::scrollable(list)).max_height(120.0))
+            .push(
+                row![
+                    container(name).width(Fill),
+                    words::secondary(COMBO_SAVE, has_sets.then(|| msg(Event::ComboSave))),
+                    words::secondary(
+                        COMBO_APPLY,
+                        picked.filter(|c| !c.current).map(|_| msg(Event::ComboApply))
+                    ),
+                    words::secondary(COMBO_DELETE, picked.map(|_| msg(Event::ComboDelete))),
+                ]
+                .spacing(8)
+                .align_y(Center),
+            )
+            .into()
+    }
+
     pub(crate) fn design_options_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         if self.design_options.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
@@ -629,6 +776,9 @@ impl App {
             Control::Press(DELETE) => Some(msg(Event::Delete)),
             Control::Press(ADD) => Some(msg(Event::Add)),
             Control::Press(REMOVE) => Some(msg(Event::Remove)),
+            Control::Press(COMBO_SAVE) => Some(msg(Event::ComboSave)),
+            Control::Press(COMBO_APPLY) => Some(msg(Event::ComboApply)),
+            Control::Press(COMBO_DELETE) => Some(msg(Event::ComboDelete)),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }

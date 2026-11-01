@@ -38,7 +38,7 @@ kanadın önünde aynı rayda durur, ortada iki bindirme vardır: Loewen'in kesi
 4. **Şema 153.** XOX ya da paylı iki kanatlı sürme (açıklıkta ya da projenin tipinde) şema 153 ister: önceki şemada
    XOX `bad_value`, sürmedeki pay önceden okunup kullanılmazdı. Yazıcı 153'ü yalnız bunlardan biri varken seçer
    (`needs_slide_more`, `ArchSettings::has_slide_more`). Örnekler `slide-more.kcad`, `broken/slide-more-in-schema-152.kcad`,
-   `broken/multi-slide-both-ways-two-leaves.kcad`; aralık dışı `broken/schema-version-154.kcad`.
+   `broken/multi-slide-both-ways-two-leaves.kcad`; aralık dışı `broken/schema-version-155.kcad`.
 
 ## Doğrulama
 

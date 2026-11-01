@@ -21751,7 +21751,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.options.edit` v1.\n\nRefusals: `invalid_input`, `no_entities`, `invalid_uid`, `entity_not_found`, `layer_locked`, `option_set_exists`,\n`option_set_not_found`, `option_not_found`, `option_exists`, `option_member_taken`, `not_in_option`,\n`option_leaning`, `option_primary`, `option_set_full`, `nothing_to_set`, `invalid_revision`, `revision_conflict`.",
+        "description": "Input of `cad.options.edit` v1.\n\nRefusals: `invalid_input`, `no_entities`, `invalid_uid`, `entity_not_found`, `layer_locked`, `option_set_exists`,\n`option_set_not_found`, `option_not_found`, `option_exists`, `option_member_taken`, `not_in_option`,\n`option_leaning`, `option_primary`, `option_set_full`, `nothing_to_set`, `option_combo_not_found`,\n`option_combo_in_use`, `invalid_revision`, `revision_conflict`. Warning: `option_combo_dropped` (an accepted or deleted\noption a combination named).",
         "properties": {
           "expectedRevision": {
             "pattern": "^(0|[1-9][0-9]*)$",
@@ -21774,6 +21774,17 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `cad.options.edit` (and its plan): the set after, the option made or named, the objects made, deleted\nand given back to the main model.",
         "properties": {
+          "combo": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/OptionCombo"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The combination after Bileşimi kaydet or Bileşimi uygula (docs/adr/0808)."
+          },
           "created": {
             "items": {
               "type": "string"
@@ -21826,6 +21837,17 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `cad.options.edit` (and its plan): the set after, the option made or named, the objects made, deleted\nand given back to the main model.",
         "properties": {
+          "combo": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/OptionCombo"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The combination after Bileşimi kaydet or Bileşimi uygula (docs/adr/0808)."
+          },
           "created": {
             "items": {
               "type": "string"
@@ -21891,8 +21913,13 @@
           "option_primary",
           "option_set_full",
           "nothing_to_set",
+          "option_combo_not_found",
+          "option_combo_in_use",
           "invalid_revision",
           "revision_conflict"
+        ],
+        "warnings": [
+          "option_combo_dropped"
         ]
       },
       "examples": [
@@ -21984,6 +22011,13 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `cad.options.query`.",
         "properties": {
+          "combos": {
+            "description": "The project's combinations (docs/adr/0808).",
+            "items": {
+              "$ref": "#/$defs/OptionComboRow"
+            },
+            "type": "array"
+          },
           "compared": {
             "anyOf": [
               {
@@ -22029,6 +22063,13 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `cad.options.query`.",
         "properties": {
+          "combos": {
+            "description": "The project's combinations (docs/adr/0808).",
+            "items": {
+              "$ref": "#/$defs/OptionComboRow"
+            },
+            "type": "array"
+          },
           "compared": {
             "anyOf": [
               {
@@ -42017,7 +42058,8 @@
           "template_exists",
           "too_many_templates",
           "option_set_not_found",
-          "option_not_found"
+          "option_not_found",
+          "option_combo_not_found"
         ],
         "warnings": [
           "view_replaced",
@@ -71195,6 +71237,24 @@
       "meaning": "Seçeneğin bazı nesneleri çizimde yok (silinmiş); seçenekten düştüler."
     },
     {
+      "code": "option_combo_not_found",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Projede bu kimlikte ya da adda seçenek bileşimi yok."
+    },
+    {
+      "code": "option_combo_in_use",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bir görünümün tarifi bu bileşimi gösteriyor; önce tariften kaldırın."
+    },
+    {
+      "code": "option_combo_dropped",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bir bileşimin seçimi kalkan seçeneği gösteriyordu; o küme için birincil gösterilir."
+    },
+    {
       "code": "elevation_space_not_net",
       "kind": "failed",
       "retryable": false,
@@ -75601,6 +75661,13 @@
           "description": "The project's door and window types (docs/adr/0772, KCAD 137), in the order they were made.",
           "items": {
             "$ref": "#/$defs/OpeningType"
+          },
+          "type": "array"
+        },
+        "optionCombos": {
+          "description": "The project's combinations of its sets' options (docs/adr/0808, KCAD 154): named proposals a view may show.",
+          "items": {
+            "$ref": "#/$defs/OptionCombo"
           },
           "type": "array"
         },
@@ -111562,6 +111629,75 @@
       ],
       "type": "object"
     },
+    "OptionCombo": {
+      "additionalProperties": false,
+      "description": "A named combination of options (docs/adr/0808; Archicad's Design Option Combination): one option for some of the\nproject's sets; a set it does not name shows its primary. A proposal (“Teklif 1: mutfak B, banyo A”) is one\ncombination; a view's recipe may show it, Bileşimi uygula makes its choices the primaries.",
+      "properties": {
+        "choices": {
+          "items": {
+            "$ref": "#/$defs/OptionChoice"
+          },
+          "type": "array"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ],
+      "type": "object"
+    },
+    "OptionComboRow": {
+      "description": "A combination as `cad.options.query` reads it (docs/adr/0808): what it shows of every set, whether that is what the\ndrawing shows now, and the objects, spaces' area and walls' length of the plan it shows (the main model and its\noptions).",
+      "properties": {
+        "choices": {
+          "items": {
+            "$ref": "#/$defs/OptionChoice"
+          },
+          "type": "array"
+        },
+        "current": {
+          "type": "boolean"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "objects": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "spaceArea": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "wallLength": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "choices",
+        "current",
+        "objects",
+        "spaceArea",
+        "wallLength"
+      ],
+      "type": "object"
+    },
     "OptionKindCount": {
       "description": "How many objects of a kind an option holds.",
       "properties": {
@@ -112006,6 +112142,72 @@
             "kind",
             "set",
             "option"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Bileşimi kaydet (docs/adr/0808): the combination `name` with `choices` (a set and its option, by id or name;\nabsent: every set's primary now), made or, when a combination has the name, given these choices.",
+          "properties": {
+            "choices": {
+              "items": {
+                "$ref": "#/$defs/OptionChoice"
+              },
+              "type": [
+                "array",
+                "null"
+              ]
+            },
+            "id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "const": "saveCombo",
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "name"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Bileşimi uygula: each set the combination names shows its option (made the primary).",
+          "properties": {
+            "combo": {
+              "type": "string"
+            },
+            "kind": {
+              "const": "applyCombo",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "combo"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Bileşimi sil: the combination goes; one a view's recipe shows is refused (`option_combo_in_use`).",
+          "properties": {
+            "combo": {
+              "type": "string"
+            },
+            "kind": {
+              "const": "deleteCombo",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "combo"
           ],
           "type": "object"
         },
@@ -140765,6 +140967,13 @@
       "additionalProperties": false,
       "description": "A named view's architectural recipe (docs/adr/0774 §1; Revit's view properties, Archicad's view settings): what a\nsheet's map linked to the view draws. It is the view's, not the model's (no object changes) nor the person's (the\nscreen's level view, theme and layer panel stay theirs). `version` counts its changes: written by `cad.views.edit`.",
       "properties": {
+        "combo": {
+          "description": "The combination of design options it shows by its id (docs/adr/0808): its choices, under the recipe's own.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "crop": {
           "description": "The map draws only the view's area, its frame's paper outside it empty (docs/adr/0781 §2; Revit's Crop Region).",
           "type": "boolean"

@@ -62,4 +62,8 @@ template?: string,
 /**
  * The design options it shows (docs/adr/0788 §3), a set's choice each; a set not named shows its primary.
  */
-options?: Array<OptionChoice>, };
+options?: Array<OptionChoice>, 
+/**
+ * The combination of design options it shows by its id (docs/adr/0808): its choices, under the recipe's own.
+ */
+combo?: string, };

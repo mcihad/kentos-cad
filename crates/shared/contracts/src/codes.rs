@@ -1840,6 +1840,13 @@ codes! {
     OPTION_SET_FULL = "option_set_full", Failed, false, "Kümede en çok 12 seçenek olur; birini silin ya da kabul edin.";
     /// Objects of an option no longer in the drawing.
     OPTION_MEMBER_GONE = "option_member_gone", Warning, false, "Seçeneğin bazı nesneleri çizimde yok (silinmiş); seçenekten düştüler.";
+    // Seçenek bileşimleri (docs/adr/0808).
+    /// No combination of that id or name.
+    OPTION_COMBO_NOT_FOUND = "option_combo_not_found", Failed, false, "Projede bu kimlikte ya da adda seçenek bileşimi yok.";
+    /// A combination a view's recipe shows: it stays while a view shows it.
+    OPTION_COMBO_IN_USE = "option_combo_in_use", Failed, false, "Bir görünümün tarifi bu bileşimi gösteriyor; önce tariften kaldırın.";
+    /// A combination's choice of a set or option gone (accepted or deleted): the set shows its primary there.
+    OPTION_COMBO_DROPPED = "option_combo_dropped", Warning, false, "Bir bileşimin seçimi kalkan seçeneği gösteriyordu; o küme için birincil gösterilir.";
     // Türetilmiş çizim: oda iç görünüşü (docs/adr/0799).
     /// A space whose rings are not its walls' inner faces: its sides are not the walls one sees.
     ELEVATION_SPACE_NOT_NET = "elevation_space_not_net", Failed, false, "Mahalin sınırı duvarların iç yüzleri değil (eksen ya da brüt); iç görünüş yalnız net sınırlı mahalden üretilir. Mahalin yöntemini Net yapın.";
