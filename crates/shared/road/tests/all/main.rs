@@ -2,5 +2,6 @@
 
 mod alignments;
 mod profiles;
+mod verticals;
 mod surfaces;
 mod sources;
