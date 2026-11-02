@@ -2854,3 +2854,95 @@ fn an_elliptical_arc_grip_target_and_follower_share_mcp_plan_query_and_undo() {
     );
     std::fs::remove_dir_all(dir).unwrap();
 }
+#[test]
+fn a_circular_path_edge_radius_shares_mcp_plan_persistence_query_and_undo() {
+    let dir = std::env::temp_dir().join(format!("kentos-mcp-path-arc-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join("arc.json");
+    std::fs::write(
+        &path,
+        include_str!("../../../../fixtures/interaction/v1/constraint-arc-edge.kcad"),
+    )
+    .unwrap();
+    let mut server = Server::new();
+    let drawing =
+        call(&mut server, "drawing.open", json!({"path":path}))["structuredContent"]["drawing"]
+            .clone();
+    let items=call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"].clone();
+    let uid = items[0]["uid"].clone();
+    let point = |i| json!({"uid":uid,"element":{"kind":"point","place":{"kind":"vertex","part":0,"ring":0,"index":i}}});
+    let added = call(
+        &mut server,
+        "cad.constraints.edit",
+        json!({"drawing":drawing,"edit":{"kind":"add","constraints":[{"rule":{"kind":"fix","a":point(0)}},{"rule":{"kind":"fix","a":point(1)}},{"rule":{"kind":"radius","a":{"uid":uid,"element":{"kind":"arcEdge","part":0,"ring":0,"index":0}},"parameter":"r1"},"value":"2.5m"}]}}),
+    );
+    assert_eq!(added["structuredContent"]["status"], "completed", "{added}");
+    let before=call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"].clone();
+    let input = json!({"drawing":drawing,"edits":[{"kind":"set","name":"r1","expression":"3m"}]});
+    let mut preview = input.clone();
+    preview["op"] = json!("plan");
+    let p = call(&mut server, "cad.parameters.edit", preview);
+    assert_eq!(p["structuredContent"]["status"], "completed", "{p}");
+    assert_eq!(
+        call(&mut server, "drawing.entities", json!({"drawing":drawing}))["structuredContent"]["items"],
+        before
+    );
+    let r = call(&mut server, "cad.parameters.edit", input);
+    assert_eq!(r["structuredContent"]["status"], "completed", "{r}");
+    let after=call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"].clone();
+    assert_eq!(
+        p["structuredContent"]["output"]["changed"],
+        json!([after[0]["entity"]])
+    );
+    assert_eq!(after[0]["uid"], uid);
+    for key in ["kind", "id", "layerId", "attrs", "pts", "widths"] {
+        assert_eq!(after[0]["entity"][key], before[0]["entity"][key]);
+    }
+    let b = after[0]["entity"]["bulges"][0].as_f64().unwrap();
+    assert!((b - (3. - 5_f64.sqrt()) / 2.).abs() < 1e-8);
+    let q = call(
+        &mut server,
+        "cad.constraints.query",
+        json!({"drawing":drawing}),
+    );
+    assert_eq!(q["structuredContent"]["output"]["diagnosis"]["dof"], 0);
+    assert!(
+        q["structuredContent"]["output"]["constraints"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|r| r["holds"] == true)
+    );
+    let saved = dir.join("new.kcad");
+    let result = call(
+        &mut server,
+        "drawing.save",
+        json!({"drawing":drawing,"path":saved}),
+    );
+    assert!(!result["isError"].as_bool().unwrap_or(false), "{result}");
+    let again =
+        call(&mut server, "drawing.open", json!({"path":saved}))["structuredContent"]["drawing"]
+            .clone();
+    assert_eq!(
+        call(&mut server, "drawing.entities", json!({"drawing":again}))["structuredContent"]["items"],
+        after
+    );
+    let reopened = call(
+        &mut server,
+        "cad.constraints.query",
+        json!({"drawing":again}),
+    );
+    assert!(
+        reopened["structuredContent"]["output"]["constraints"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|r| r["holds"] == true)
+    );
+    call(&mut server, "drawing.undo", json!({"drawing":drawing}));
+    assert_eq!(
+        call(&mut server, "drawing.entities", json!({"drawing":drawing}))["structuredContent"]["items"],
+        before
+    );
+    std::fs::remove_dir_all(dir).unwrap();
+}

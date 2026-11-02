@@ -2389,6 +2389,9 @@ def document(d):
         # A layer's indexes (docs/adr/0758).
         schema = max(schema, 136)
     rules = [c["rule"] for c in d.get("constraints", {}).get("constraints", [])]
+    if any(type(r.get(k)) is dict and r[k]["element"]["kind"] == "arcEdge" for r in rules for k in ("a", "b", "axis")):
+        schema = max(schema, 157)
+
     if any(type(r.get(k)) is dict and r[k]["element"]["kind"] in ("wall", "jamb") for r in rules for k in ("a", "b", "axis")):
         # A constraint naming a wall's line or an opening's jamb (docs/adr/0770 §4).
         schema = max(schema, 137)
@@ -3248,7 +3251,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-156.kcad"] = container(root(cmap(parts), version=uint(156)))
+    files["schema-version-158.kcad"] = container(root(cmap(parts), version=uint(158)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4848,6 +4851,9 @@ def build():
     out["broken/parameters-empty.kcad"] = dynamic_broken(lambda d: d["entities"][0].update(parameters={}))
     out["broken/parameters-not-dynamic.kcad"] = dynamic_broken(lambda d: d["blocks"][0].pop("dynamic"))
     out["constraints.kcad"] = container(document(load("constraints.json")))
+    from arc_edge_cases import files as arc_edge_files
+    out.update(arc_edge_files(document, container, load))
+
     # The constraints are schema 73's (docs/adr/0334 §1): in schema 72 an unknown field; an empty set, a rule whose parts
     # do not fit it, an object the drawing does not hold, parameters reading each other round, a reference constraint
     # with an expression, an unknown field refused.

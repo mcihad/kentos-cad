@@ -25773,6 +25773,8 @@
             "kinds": [
               "circle",
               "arc",
+              "polyline",
+              "polygon",
               "opening",
               "space"
             ],
@@ -25783,6 +25785,8 @@
             "operation": "arcLength",
             "kinds": [
               "arc",
+              "polyline",
+              "polygon",
               "opening",
               "space"
             ],
@@ -57810,6 +57814,14 @@
         "title": "EntitiesIsolated",
         "type": "object"
       },
+      "capabilities": {
+        "refusals": [
+          "invalid_input",
+          "no_entities",
+          "invalid_uid",
+          "entity_not_found"
+        ]
+      },
       "examples": [
         {
           "title": "Geçici yalıtımı bitir",
@@ -57819,15 +57831,7 @@
             }
           }
         }
-      ],
-      "capabilities": {
-        "refusals": [
-          "invalid_input",
-          "no_entities",
-          "invalid_uid",
-          "entity_not_found"
-        ]
-      }
+      ]
     },
     {
       "id": "cad.entities.select",
@@ -78944,6 +78948,41 @@
             },
             "kind": {
               "const": "segment",
+              "type": "string"
+            },
+            "part": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer",
+              "x-unit": "index"
+            },
+            "ring": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer",
+              "x-unit": "index"
+            }
+          },
+          "required": [
+            "kind",
+            "part",
+            "ring",
+            "index"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "The circle of a path's circular edge. Its endpoints remain the path's Vertex points; the bulge can vary.",
+          "properties": {
+            "index": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer",
+              "x-unit": "index"
+            },
+            "kind": {
+              "const": "arcEdge",
               "type": "string"
             },
             "part": {

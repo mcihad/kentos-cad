@@ -48,16 +48,16 @@ fn every_schema_has_a_sample_and_the_one_before_refuses_its_feature() {
             refused.insert(n);
         }
     }
-    for &s in &SCHEMAS {
+    for (index, &s) in SCHEMAS.iter().enumerate() {
         assert!(
             written.contains(&s),
             "schema {s} has no sample written in it"
         );
-        if s > SCHEMAS[0] {
+        if let Some(&previous) = index.checked_sub(1).and_then(|i| SCHEMAS.get(i)) {
             assert!(
-                refused.contains(&(s - 1)),
+                refused.contains(&previous),
                 "schema {s}'s feature has no sample refused in schema {}",
-                s - 1
+                previous
             );
         }
     }

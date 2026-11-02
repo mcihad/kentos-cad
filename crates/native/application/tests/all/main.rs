@@ -111,3 +111,5 @@ mod ellipse_constraints;
 
 mod nurbs_constraints;
 mod insert_constraints;
+
+mod arc_edge_constraints;

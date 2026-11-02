@@ -758,8 +758,21 @@ fn lerp(a: Vec2, b: Vec2, t: f64) -> Vec2 {
     Vec2::new(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t)
 }
 
+/// The analytic arc of one addressed path edge; none for a straight or missing edge.
+pub fn arc_edge_of(shape: &Shape, part: usize, ring: usize, index: usize) -> Option<crate::geom::bulge::BulgeArc> {
+    let (a, b, bulge) = edge_of(shape, part, ring, index)?;
+    bulge_arc(a, b, bulge)
+}
+
+/// The actual vertices of an existing path edge, including a closing edge's wrap to zero.
+pub(crate) fn edge_vertex_indices(shape: &Shape, part: usize, ring: usize, index: usize) -> Option<(usize, usize)> {
+    let r = ring_of(shape, part, ring)?;
+    let n = r.pts.len();
+    (index < n && (r.closed || index + 1 < n)).then(|| (index, (index + 1) % n))
+}
+
 /// A path's edge from vertex `index`: its ends and bulge; none when the ring has no such edge.
-fn edge_of(shape: &Shape, part: usize, ring: usize, index: usize) -> Option<(Vec2, Vec2, f64)> {
+pub(crate) fn edge_of(shape: &Shape, part: usize, ring: usize, index: usize) -> Option<(Vec2, Vec2, f64)> {
     let r = ring_of(shape, part, ring)?;
     let n = r.pts.len();
     if index >= n || (!r.closed && index + 1 >= n) {

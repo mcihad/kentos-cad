@@ -325,6 +325,7 @@ pub(super) struct Features {
     pub(super) layer_indexes: bool,
     /// Schema 137 (docs/adr/0770): constraints naming a wall's line or a jamb.
     pub(super) arch_bonds: bool,
+    pub(super) arc_edge_bonds: bool,
     /// Schema 138 (docs/adr/0771): turning wall components, node decisions, bound slabs.
     pub(super) building_parts: bool,
     /// Schema 148 (docs/adr/0785): the project's materials, a component's or a slab's binding.
@@ -559,6 +560,7 @@ impl Features {
             cad_work: schema >= crate::SCHEMA_WITH_CAD_WORK,
             layer_indexes: schema >= crate::SCHEMA_WITH_LAYER_INDEXES,
             arch_bonds: schema >= crate::SCHEMA_WITH_ARCH_BONDS,
+            arc_edge_bonds: schema >= crate::SCHEMA_WITH_ARC_EDGE_BONDS,
             building_parts: schema >= crate::SCHEMA_WITH_BUILDING_PARTS,
             materials: schema >= crate::SCHEMA_WITH_MATERIALS,
             multi_slide: schema >= crate::SCHEMA_WITH_MULTI_SLIDE,

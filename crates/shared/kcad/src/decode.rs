@@ -325,7 +325,7 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
             "projectId" => project_id = Some(ProjectId(id16(r)?)),
             "activeLayer" => active_layer = Some(text(r)?),
             "constraints" if has.constraints => {
-                constraints_ = Some(constraints(r, has.arch_bonds)?)
+                constraints_ = Some(constraints(r, has.arch_bonds, has.arc_edge_bonds)?)
             }
             "dimensionSets" if has.dimension_sets => {
                 dimension_sets_ = Some(dimension_sets(r, has)?)
@@ -486,6 +486,7 @@ fn dimension_sets(
 fn constraints(
     r: &mut Reader<'_>,
     arch: bool,
+    arcs: bool,
 ) -> Result<(usize, kentos_contracts::ConstraintSet), KcadError> {
     let at = r.position();
     let value = r.opaque()?;
@@ -512,6 +513,13 @@ fn constraints(
             at,
             "boş kısıt kümesi yazılmaz; kısıt yoksa alan hiç yazılmaz",
         ));
+    }
+    if !arcs && set.constraints.iter().any(|c| {
+        c.rule.elements().iter().any(|r| {
+            matches!(r.element, kentos_contracts::CadElement::ArcEdge { .. })
+        })
+    }) {
+        return Err(r.fail_at(Code::BadValue, at, "yaylı kenar kısıtları şema 157 ister"));
     }
     // Schema 137 (docs/adr/0770): a wall's line or an opening's jamb only from it on.
     if !arch

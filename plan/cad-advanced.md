@@ -481,8 +481,14 @@ Sahne kısıt etiketleri panel sınırında tutuldu; ortak nokta grubu satıra
 sığdırıldı. Sahne/pencere birim gösterimi ortaklaştırıldı; gerçek GUI'de
 m, mm/gon, hover ve ikinci çizimde temiz önbellek doğrulandı.
 [ADR 0836](../docs/adr/0836-constraint-label-viewport-and-units.md).
-Yaylı kenar adaptörü, boyut cebiri, tam elips eksen grip'leri ve birleşik
-çözüm dalı kabulü bitmeden bu madde kapatılmaz.
+Yaylı path kenarı için ArcEdge adaptörü kabul edildi: değişken eğrilik,
+korunan uç/genişlik/çözüm dalı ve ortak uçta teğet. Gerçek arayüzde büyük
+koordinatta altı bağ, 2.5→3 m, altı geçerli bağ, dosyayı yeniden açma,
+baytları tam geri getiren tek Undo ve 1.5 m atomik ret doğrulandı;
+UI/Python geometri farkı 0. [ADR 0837](../docs/adr/0837-variable-circular-path-edge-constraints.md),
+[saklama doğrulaması](../docs/adr/0838-stored-constraint-roundtrip-certificate.md).
+Boyut cebiri, tam elips eksen grip'leri, daha özel imkânsız yarıçap
+iletisi ve birleşik çözüm dalı kabulü bitmeden bu madde kapatılmaz.
 
 ### CAD-ADV-06 — Parametrik blokları sürdürülebilir 2B bileşenlere dönüştür [ ]
 

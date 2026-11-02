@@ -42,6 +42,12 @@ pub enum Element {
         ring: u32,
         index: u32,
     },
+    /// A path's circular edge, addressed independently from its straight edges; its underlying circle.
+    ArcEdge {
+        part: u32,
+        ring: u32,
+        index: u32,
+    },
     /// A circle or an arc's circle.
     Circle,
 }
@@ -316,10 +322,27 @@ pub fn moved_parts(before: &Shape, after: &Shape) -> Option<Vec<Element>> {
                         index,
                     })
                 }));
+                for (index, &var) in r.edge_vars.iter().enumerate() {
+                    if let Some((a, b)) = ma.edge_ends[var] {
+                        let physical =
+                            crate::jsmath::js_hypot(ma.x[b] - ma.x[a], ma.x[b + 1] - ma.x[a + 1])
+                                * 0.5;
+                        if (ma.x[var] - mb.x[var]).abs() * physical > MOVED {
+                            parts.push(Element::ArcEdge {
+                                part: r.part,
+                                ring: r.ring,
+                                index: index as u32,
+                            });
+                        }
+                    }
+                }
             }
         }
     }
     parts.retain(|el| {
+        if matches!(el, Element::ArcEdge { .. }) {
+            return true;
+        }
         if matches!(after, Shape::Ellipse { .. }) {
             let point = |shapes: &[Shape], m: &model::Model| {
                 let vars = m.element_vars(shapes, 0, el)?;
@@ -344,12 +367,26 @@ pub fn moved_parts(before: &Shape, after: &Shape) -> Option<Vec<Element>> {
     Some(parts)
 }
 
+/// The canonical stored circle of a circular constraint part, for picking and drawing-sense inference.
+pub fn circle_of(shape: &Shape, element: &Element) -> Option<(crate::vec2::Vec2, f64)> {
+    match (shape, element) {
+        (Shape::Circle { c, r } | Shape::Arc { c, r, .. }, Element::Circle) => Some((*c, *r)),
+        (_, Element::ArcEdge { part, ring, index }) => {
+            crate::ops::subref::arc_edge_of(shape, *part as usize, *ring as usize, *index as usize)
+                .map(|a| (a.c, a.r))
+        }
+        _ => None,
+    }
+}
+
 /// What a dimensional rule measures in `shapes`: a distance, an angle in [0, 2π), a radius or a diameter, in metres
 /// or radians; none for a geometric rule or parts the shapes do not have.
 pub fn measure(shapes: &[Shape], rule: &Rule) -> Option<f64> {
     solve::measure(shapes, rule)
 }
 
+#[cfg(test)]
+mod arc_edge_tests;
 #[cfg(test)]
 mod ellipse_tests;
 #[cfg(test)]

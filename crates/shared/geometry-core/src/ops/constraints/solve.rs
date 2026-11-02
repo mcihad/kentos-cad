@@ -229,24 +229,23 @@ fn segment_ends(shape: &Shape, element: &Element) -> Vec<PointAt> {
         (Shape::Line { .. }, Element::Segment { .. }) => vec![PointAt::Start, PointAt::End],
         (
             Shape::Polygon { .. } | Shape::Polyline { .. },
-            Element::Segment { part, ring, index },
-        ) => vec![
-            PointAt::Vertex {
-                part: *part,
-                ring: *ring,
-                index: *index,
-            },
-            PointAt::Vertex {
-                part: *part,
-                ring: *ring,
-                index: index + 1,
-            },
-            PointAt::Vertex {
-                part: *part,
-                ring: *ring,
-                index: 0,
-            },
-        ],
+            Element::Segment { part, ring, index } | Element::ArcEdge { part, ring, index },
+        ) => crate::ops::subref::edge_vertex_indices(
+            shape,
+            *part as usize,
+            *ring as usize,
+            *index as usize,
+        )
+        .map(|(a, b)| {
+            [a, b]
+                .map(|i| PointAt::Vertex {
+                    part: *part,
+                    ring: *ring,
+                    index: i as u32,
+                })
+                .to_vec()
+        })
+        .unwrap_or_default(),
         _ => Vec::new(),
     }
 }
@@ -259,7 +258,10 @@ fn tangent_end(rule: &Rule, all: &[super::Constraint], shapes: &[Shape]) -> Opti
         return None;
     };
     if !matches!(a.element, Element::Segment { .. })
-        || !matches!(shapes.get(b.object)?, Shape::Arc { .. })
+        || !(matches!(
+            (&b.element, shapes.get(b.object)?),
+            (Element::Circle, Shape::Arc { .. })
+        ) || matches!(b.element, Element::ArcEdge { .. }))
     {
         return None;
     }
@@ -267,9 +269,23 @@ fn tangent_end(rule: &Rule, all: &[super::Constraint], shapes: &[Shape]) -> Opti
     let on_segment = |r: &Ref| {
         r.object == a.object && matches!(r.element, Element::Point(p) if ends.contains(&p))
     };
-    let arc_end = |r: &Ref| {
-        r.object == b.object && matches!(r.element, Element::Point(PointAt::Start | PointAt::End))
+    let arc_ends = if matches!(b.element, Element::ArcEdge { .. }) {
+        segment_ends(shapes.get(b.object)?, &b.element)
+    } else {
+        vec![PointAt::Start, PointAt::End]
     };
+    let arc_end = |r: &Ref| {
+        r.object == b.object && matches!(r.element, Element::Point(p) if arc_ends.contains(&p))
+    };
+    if a.object == b.object
+        && let Some(&point) = arc_ends.iter().find(|p| ends.contains(p))
+    {
+        // Adjacent straight/circular edges share the path vertex inherently; no duplicate Coincident is needed.
+        return Some(Ref {
+            object: b.object,
+            element: Element::Point(point),
+        });
+    }
     all.iter().find_map(|c| match c.rule {
         Rule::Coincident { a: p, b: q } if !c.reference && arc_end(&p) && on_segment(&q) => Some(p),
         Rule::Coincident { a: p, b: q } if !c.reference && arc_end(&q) && on_segment(&p) => Some(q),
@@ -299,6 +315,19 @@ struct Rows {
 }
 
 pub(super) fn run(p: &Problem<'_>, stop: &dyn Fn() -> bool) -> Outcome {
+    run_checked(p, stop, None)
+}
+
+/// A failed stored nonlinear relation may be a rounded image of a strict local solution. A certificate run
+/// varies world-coordinate numbers only and must round back to the entire unchanged source, without recursion.
+fn run_checked(
+    p: &Problem<'_>,
+    stop: &dyn Fn() -> bool,
+    mut roundtrip: Option<&mut bool>,
+) -> Outcome {
+    if let Some(flag) = roundtrip.as_mut() {
+        **flag = false;
+    }
     let shapes = p.shapes;
     let mut used = vec![false; shapes.len()];
     let mut broken = Vec::new();
@@ -377,7 +406,18 @@ pub(super) fn run(p: &Problem<'_>, stop: &dyn Fn() -> bool) -> Outcome {
     };
 
     // The unknowns held.
-    let mut free = vec![true; model.x.len()];
+    let mut free: Vec<bool> = model.kinds.iter().map(|k| *k != VarKind::Bulge).collect();
+    for r in p.constraints.iter().flat_map(|c| c.rule.refs()) {
+        if matches!(r.element, Element::ArcEdge { .. })
+            && let Some(vars) = model.element_vars(shapes, r.object, &r.element)
+        {
+            for j in vars {
+                if model.kinds[j] == VarKind::Bulge {
+                    free[j] = true;
+                }
+            }
+        }
+    }
     let mut point_targets = Vec::new();
     for h in p.held {
         if matches!(shapes.get(h.object), Some(Shape::Ellipse { .. }))
@@ -404,6 +444,12 @@ pub(super) fn run(p: &Problem<'_>, stop: &dyn Fn() -> bool) -> Outcome {
         };
         for j in vars.into_iter().flatten() {
             free[j] = false;
+        }
+    }
+
+    if roundtrip.is_some() {
+        for (j, kind) in model.kinds.iter().enumerate() {
+            free[j] &= matches!(kind, VarKind::East | VarKind::North);
         }
     }
 
@@ -486,7 +532,12 @@ pub(super) fn run(p: &Problem<'_>, stop: &dyn Fn() -> bool) -> Outcome {
         }
         let at = if matches!(c.rule, Rule::Fix { .. }) {
             let from = fix_x.as_deref().unwrap_or(&model.x);
-            built_parts(&model, shapes, from, &c.rule).unwrap_or_default()
+            let fix_shapes = if fix_x.is_some() {
+                p.fix_from.unwrap_or(shapes)
+            } else {
+                shapes
+            };
+            built_parts(&model, fix_shapes, from, &c.rule).unwrap_or_default()
         } else {
             Vec::new()
         };
@@ -547,6 +598,12 @@ pub(super) fn run(p: &Problem<'_>, stop: &dyn Fn() -> bool) -> Outcome {
 
     // The unknowns' weights: an arc's angles by its radius.
     let weight = |x: &[f64], j: usize| match model.kinds[j] {
+        VarKind::Bulge => model.edge_ends[j].map_or(1.0, |(a, b)| {
+            libm::fmax(
+                crate::jsmath::js_hypot(x[b] - x[a], x[b + 1] - x[a + 1]) * 0.5,
+                1e-9,
+            )
+        }),
         VarKind::Angle => {
             // The radius is the arc's third number: two or three before the angle.
             let start = model.slots[model.owner[j]].as_ref().map_or(j, |s| s.start);
@@ -556,6 +613,32 @@ pub(super) fn run(p: &Problem<'_>, stop: &dyn Fn() -> bool) -> Outcome {
     };
 
     let mut x = model.x.clone();
+    // A radius at a semicircle has a zero derivative with fixed ends. Seed its existing minor branch
+    // analytically, without perturbing endpoints or relaxing any row; the ordinary solve verifies all bonds.
+    for eq in &eqs {
+        let (a, radius) = match eq.rule {
+            Rule::Radius { a } => (a, eq.value),
+            Rule::Diameter { a } => (a, eq.value * 0.5),
+            _ => continue,
+        };
+        if !matches!(a.element, Element::ArcEdge { .. }) {
+            continue;
+        }
+        let Some(vars) = model.element_vars(shapes, a.object, &a.element) else {
+            continue;
+        };
+        let j = vars[4];
+        if !free[j] || (x[j].abs() - 1.0).abs() > 1e-12 {
+            continue;
+        }
+        let a = crate::vec2::Vec2::new(x[vars[0]], x[vars[1]]);
+        let b = crate::vec2::Vec2::new(x[vars[2]], x[vars[3]]);
+        if let Some(bulge) =
+            crate::geom::bulge::bulge_of_radius(a, b, radius * crate::jsmath::js_sign(x[j]))
+        {
+            x[j] = if x[j].abs() > 1.0 { 1.0 / bulge } else { bulge };
+        }
+    }
     let mut redundant = BTreeSet::new();
     let mut conflicting = BTreeSet::new();
     let mut singular = BTreeSet::new();
@@ -733,6 +816,68 @@ pub(super) fn run(p: &Problem<'_>, stop: &dyn Fn() -> bool) -> Outcome {
             redundant.insert(eq.constraint);
         }
     }
+    let nonlinear = |rule: &Rule| {
+        matches!(
+            rule,
+            Rule::Distance {
+                axis: super::Axis::Aligned,
+                ..
+            } | Rule::Angle { .. }
+                | Rule::Radius { .. }
+                | Rule::Diameter { .. }
+                | Rule::Tangent { .. }
+        ) || matches!(
+            rule,
+            Rule::Coincident {
+                b: Ref {
+                    element: Element::Circle | Element::ArcEdge { .. },
+                    ..
+                },
+                ..
+            }
+        )
+    };
+    let coordinate_resolution = || {
+        model.kinds.iter().zip(&start_x).all(|(kind, &value)| {
+            if !matches!(kind, VarKind::East | VarKind::North) {
+                return true;
+            }
+            let a = value.abs();
+            let next = f64::from_bits(a.to_bits() + 1);
+            // Certification is bounded by the existing one-nanometre edit resolution, never a world-size tolerance.
+            next.is_finite() && (next - a) * 0.5 <= super::MOVED
+        })
+    };
+    if roundtrip.is_none()
+        && lone_unmet
+        && free.iter().all(|f| !*f)
+        && broken.is_empty()
+        && coordinate_resolution()
+        && lone
+            .iter()
+            .filter(|&&e| conflicting.contains(&eqs[e].constraint))
+            .all(|&e| eqs[e].constraint.is_some() && nonlinear(&eqs[e].rule))
+    {
+        let mut same = false;
+        let checked = run_checked(
+            &Problem {
+                shapes,
+                constraints: p.constraints,
+                held: &[],
+                fix_from: p.fix_from,
+            },
+            stop,
+            Some(&mut same),
+        );
+        if checked.status == Status::Cancelled {
+            cancelled = true;
+        }
+        if checked.status.holds() && checked.broken.is_empty() && same {
+            lone_unmet = false;
+            conflicting.clear();
+            redundant.extend(lone.iter().map(|&e| eqs[e].constraint));
+        }
+    }
     // Held unknowns are fixed by the holding.
     for (j, f) in free.iter().enumerate() {
         if !f {
@@ -781,7 +926,12 @@ pub(super) fn run(p: &Problem<'_>, stop: &dyn Fn() -> bool) -> Outcome {
     let mut loose = vec![false; shapes.len()];
     for j in 0..n {
         let i = model.owner[j];
-        moved[i] |= (x[j] - model.x[j]).abs() > tol * 1e-3;
+        let physical = if model.kinds[j] == VarKind::Bulge {
+            weight(&x, j)
+        } else {
+            1.0
+        };
+        moved[i] |= (x[j] - model.x[j]).abs() * physical > tol * 1e-3;
         loose[i] |= !determined[j] && live[i];
     }
     let mut changed = Vec::new();
@@ -794,7 +944,8 @@ pub(super) fn run(p: &Problem<'_>, stop: &dyn Fn() -> bool) -> Outcome {
             changed.push(i);
         }
     }
-    if status.holds()
+    if roundtrip.is_none()
+        && status.holds()
         && free.iter().any(|f| *f)
         && canonical_followers(p, &model, &free, &mut out_x, &mut shapes_out, &mut changed)
     {
@@ -840,6 +991,23 @@ pub(super) fn run(p: &Problem<'_>, stop: &dyn Fn() -> bool) -> Outcome {
             measured(rule, &parts).map(|v| (*i, v))
         })
         .collect();
+    if let Some(flag) = roundtrip
+        && status.holds()
+        && broken.is_empty()
+    {
+        let coordinate_bits = model.kinds.iter().enumerate().all(|(j, kind)| {
+            !matches!(kind, VarKind::East | VarKind::North)
+                || out_x[j].to_bits() == start_x[j].to_bits()
+        });
+        // Write every slot, even changes below the usual reporting threshold: omitted writes cannot certify.
+        let mut canonical = shapes.to_vec();
+        for (i, slot) in model.slots.iter().enumerate() {
+            if let Some(slot) = slot {
+                write_back(&mut canonical[i], slot, &out_x);
+            }
+        }
+        *flag = coordinate_bits && canonical == shapes;
+    }
     broken.sort_unstable();
     Outcome {
         shapes: shapes_out,

@@ -45,6 +45,15 @@ pub enum CadElement {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
         index: u32,
     },
+    /// The circle of a path's circular edge. Its endpoints remain the path's Vertex points; the bulge can vary.
+    ArcEdge {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+        part: u32,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+        ring: u32,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+        index: u32,
+    },
     /// A circle, or an arc's circle.
     Circle,
     /// A line of a wall's straight edge `edge` (docs/adr/0770 §4): a face, its axis or a face of its core, left and
@@ -518,7 +527,7 @@ fn shape(e: &ElementRef) -> Shape {
     match e.element {
         CadElement::Point { .. } => Shape::Point,
         CadElement::Segment { .. } => Shape::Segment,
-        CadElement::Circle => Shape::Circle,
+        CadElement::Circle | CadElement::ArcEdge { .. } => Shape::Circle,
         CadElement::Wall { .. } => Shape::WallLine,
         CadElement::Jamb { .. } => Shape::Jamb,
     }
@@ -540,7 +549,7 @@ fn element_problem(e: &ElementRef) -> Option<String> {
             }
             _ => None,
         },
-        CadElement::Segment { part, ring, index: i } if index(part) || index(ring) || index(i) => {
+        CadElement::Segment { part, ring, index: i } | CadElement::ArcEdge { part, ring, index: i } if index(part) || index(ring) || index(i) => {
             Some("kenarın sırası sınırı aşıyor".into())
         }
         CadElement::Wall { edge, .. } if index(edge) => Some("duvar kenarının sırası sınırı aşıyor".into()),

@@ -56,6 +56,11 @@ pub fn core_element(e: &CadElement) -> Element {
             ring: *ring,
             index: *index,
         },
+        CadElement::ArcEdge { part, ring, index } => Element::ArcEdge {
+            part: *part,
+            ring: *ring,
+            index: *index,
+        },
         CadElement::Circle => Element::Circle,
         // Architectural parts are their adapter's (docs/adr/0770 §4); to the core solver a part no object has.
         CadElement::Wall { .. } | CadElement::Jamb { .. } => Element::Segment {
@@ -276,7 +281,7 @@ impl Document {
                 return false;
             };
             let indexed = match &r.element {
-                CadElement::Segment { .. } => true,
+                CadElement::Segment { .. } | CadElement::ArcEdge { .. } => true,
                 CadElement::Point { place } => {
                     matches!(place, SubPlace::Vertex { .. } | SubPlace::Node { .. })
                 }

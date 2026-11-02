@@ -109,7 +109,7 @@ fn wants(kind: Kind, first: Option<&CadElement>) -> Vec<Want> {
         Kind::Tangent => vec![SegmentOrCircle, Circle],
         Kind::Concentric => vec![Circle, Circle],
         Kind::Equal => match first {
-            Some(CadElement::Circle) => vec![SegmentOrCircle, Circle],
+            Some(CadElement::Circle | CadElement::ArcEdge { .. }) => vec![SegmentOrCircle, Circle],
             Some(_) => vec![SegmentOrCircle, Segment],
             None => vec![SegmentOrCircle, SegmentOrCircle],
         },
@@ -262,6 +262,10 @@ fn part_at(p: &Pointer, cx: &Context<'_>, want: Want) -> Option<Picked> {
     };
     let segment = || {
         let place = edge_place_near(&core, EdgeKind::Straight, at)?;
+        let on = kentos_geometry_core::ops::subref::point(&core, place)?;
+        if (on.x - at.x).hypot(on.y - at.y) > tol * 1.5 {
+            return None;
+        }
         let (a, b) = edge_line(&core, place)?;
         let (part, ring, index) = match place {
             Place::Along {
@@ -283,9 +287,40 @@ fn part_at(p: &Pointer, cx: &Context<'_>, want: Want) -> Option<Picked> {
         })
     };
     let circle = || {
-        round.then_some(Picked {
+        let element = if round {
+            CadElement::Circle
+        } else {
+            let Place::Along {
+                part,
+                ring,
+                index,
+                t,
+            } = edge_place_near(&core, EdgeKind::Arc, at)?
+            else {
+                return None;
+            };
+            let on = kentos_geometry_core::ops::subref::point(
+                &core,
+                Place::Along {
+                    part,
+                    ring,
+                    index,
+                    t,
+                },
+            )?;
+            if (on.x - at.x).hypot(on.y - at.y) > tol * 1.5 {
+                return None;
+            }
+            kentos_geometry_core::ops::subref::arc_edge_of(&core.shape, part, ring, index)?;
+            CadElement::ArcEdge {
+                part: part as u32,
+                ring: ring as u32,
+                index: index as u32,
+            }
+        };
+        Some(Picked {
             slot,
-            element: CadElement::Circle,
+            element,
             at,
             ends: None,
         })
@@ -306,7 +341,7 @@ fn want_words(w: Want) -> &'static str {
     match w {
         Want::Point => "bir noktaya (uç, köşe, merkez, yerleştirme)",
         Want::Segment => "bir düz kenara",
-        Want::Circle => "bir daireye ya da yaya",
+        Want::Circle => "bir daireye, yaya ya da yaylı kenara",
         Want::PointOrCurve => "bir noktaya ya da kenara",
         Want::SegmentOrCircle => "bir kenara ya da daireye",
         Want::SegmentOrPoint => "bir kenara ya da noktaya",
@@ -627,6 +662,15 @@ impl Tool for ConstraintTool {
             for (_, n, letters) in KINDS {
                 prompt = prompt.option(n, letters);
             }
+        }
+        if self
+            .picked
+            .iter()
+            .chain(self.hover.iter())
+            .any(|p| matches!(p.element, CadElement::ArcEdge { .. }))
+        {
+            prompt = prompt
+                .note("Yaylı kenar: uçları köşeleridir; yayın yönü ve küçük/büyük dalı korunur");
         }
         if self.nurbs_endpoints {
             prompt = prompt.note("NURBS: yalnız uçlar değişir; iç noktalar korunur");

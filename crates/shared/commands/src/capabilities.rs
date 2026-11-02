@@ -3751,7 +3751,7 @@ const ENTRIES: &[Entry] = &[
             vec![
                 target(
                     Some("radius"),
-                    &["circle", "arc", "opening", "space"],
+                    &["circle", "arc", "polyline", "polygon", "opening", "space"],
                     &[],
                     Some("not_measurable"),
                     Some(
@@ -3760,7 +3760,7 @@ const ENTRIES: &[Entry] = &[
                 ),
                 target(
                     Some("arcLength"),
-                    &["arc", "opening", "space"],
+                    &["arc", "polyline", "polygon", "opening", "space"],
                     &[],
                     Some("not_measurable"),
                     Some(

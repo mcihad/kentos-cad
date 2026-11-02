@@ -7144,6 +7144,7 @@ class CadElement(_Union):
 
     - :class:`PointCadElement` (``kind: point``)
     - :class:`SegmentCadElement` (``kind: segment``)
+    - :class:`ArcEdgeCadElement` (``kind: arcEdge``)
     - :class:`CircleCadElement` (``kind: circle``)
     - :class:`WallCadElement` (``kind: wall``)
     - :class:`JambCadElement` (``kind: jamb``)
@@ -73135,6 +73136,35 @@ class SegmentCadElement(CadElement):
 
 
 @dataclass(kw_only=True, slots=True)
+class ArcEdgeCadElement(CadElement):
+    """The circle of a path's circular edge. Its endpoints remain the path's Vertex points; the bulge can vary.
+    Attributes:
+        part: Unit: index.
+        ring: Unit: index.
+        index: Unit: index.
+    """
+    TAG_VALUE: ClassVar[str] = "arcEdge"
+    part: int
+    ring: int
+    index: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "arcEdge"}
+        out["part"] = self.part
+        out["ring"] = self.ring
+        out["index"] = self.index
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArcEdgeCadElement:
+        return cls(
+            part=data["part"],
+            ring=data["ring"],
+            index=data["index"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CircleCadElement(CadElement):
     """A circle, or an arc's circle."""
     TAG_VALUE: ClassVar[str] = "circle"
@@ -89703,7 +89733,7 @@ _BLOCK_PARAMETER: dict[str, type[BlockParameter]] = {"linear": LinearBlockParame
 _BOUND_CHANGE: dict[str, type[BoundChange]] = {"clear": ClearBoundChange, "to": ToBoundChange}
 
 
-_CAD_ELEMENT: dict[str, type[CadElement]] = {"point": PointCadElement, "segment": SegmentCadElement, "circle": CircleCadElement, "wall": WallCadElement, "jamb": JambCadElement}
+_CAD_ELEMENT: dict[str, type[CadElement]] = {"point": PointCadElement, "segment": SegmentCadElement, "arcEdge": ArcEdgeCadElement, "circle": CircleCadElement, "wall": WallCadElement, "jamb": JambCadElement}
 
 
 _CASEWORK_CHANGE: dict[str, type[CaseworkChange]] = {"module": ModuleCaseworkChange, "recipe": RecipeCaseworkChange, "release": ReleaseCaseworkChange}
@@ -90166,6 +90196,7 @@ __all__ = [
     "ArcContinueCurveConstruction",
     "ArcCreate",
     "ArcCreated",
+    "ArcEdgeCadElement",
     "ArcEntity",
     "ArcEntityGeometry",
     "ArcLengthDimensionMeasure",

@@ -740,11 +740,13 @@ pub const SCHEMA_WITH_OPTION_COMBOS: u32 = 154;
 /// Schema 155 (docs/adr/0811): a room module instance holding one storey of its module only
 /// (`arch.modules[].instances[].storey`, Archicad's Single Story); written only when an instance has one.
 pub const SCHEMA_WITH_INSTANCE_STOREYS: u32 = 155;
+/// Schema 157 (docs/adr/0837): variable circular path edges in geometric constraints.
+pub const SCHEMA_WITH_ARC_EDGE_BONDS: u32 = 157;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 154] = [
+pub const SCHEMAS: [u32; 155] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -899,6 +901,7 @@ pub const SCHEMAS: [u32; 154] = [
     SCHEMA_WITH_SLIDE_MORE,
     SCHEMA_WITH_OPTION_COMBOS,
     SCHEMA_WITH_INSTANCE_STOREYS,
+    SCHEMA_WITH_ARC_EDGE_BONDS,
 ];
 
 /// The file a drawing is saved as.

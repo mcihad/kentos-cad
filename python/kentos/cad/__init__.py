@@ -142,6 +142,7 @@ __all__ = [
     "ArcContinueCurveConstruction",
     "ArcCreate",
     "ArcCreated",
+    "ArcEdgeCadElement",
     "ArcEntity",
     "ArcEntityGeometry",
     "ArcLengthDimensionMeasure",

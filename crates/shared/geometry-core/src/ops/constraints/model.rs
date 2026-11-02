@@ -1,7 +1,8 @@
 //! The unknowns of a constrained drawing (docs/adr/0334 §4): an object's own numbers, laid out one after another, and
 //! the parts a constraint names built from them. A point object is its points' east and north; a line its two ends; a
 //! circle its centre and radius; an arc its centre, radius and two angles; a path every vertex of every ring of every
-//! part (a bulged edge keeps its bulge, so it is not a segment). An ellipse has centre, two positive
+//! part; an explicitly named circular edge also varies its bulge. Unnamed bulges stay fixed; a curved edge is never
+//! treated as a straight segment. An ellipse has centre, two positive
 //! semi-axis lengths and orientation; an elliptical arc also has two unwrapped end parameters.
 //! The bounded NURBS adapter varies only the two endpoint poles of an open, nonperiodic, doubly clamped curve.
 //! Its interior poles, degree, knots and weights remain source constants.
@@ -24,6 +25,8 @@ pub(super) enum VarKind {
     Length,
     /// A circular/elliptic angle; weighted by its radius or major semi-axis.
     Angle,
+    /// Path arc sagitta relative to its half chord; inactive unless an ArcEdge is named.
+    Bulge,
 }
 
 /// Where an object's unknowns start, and its rings (part, ring) with where each starts and how many vertices.
@@ -41,6 +44,7 @@ pub(super) struct RingAt {
     pub count: usize,
     pub closed: bool,
     pub bulges: Vec<f64>,
+    pub edge_vars: Vec<usize>,
 }
 
 /// The layout of every object's unknowns.
@@ -49,6 +53,8 @@ pub(super) struct Model {
     pub kinds: Vec<VarKind>,
     /// The object each unknown belongs to.
     pub owner: Vec<usize>,
+    /// Endpoint coordinate slots for each path bulge unknown; none for other numbers.
+    pub edge_ends: Vec<Option<(usize, usize)>>,
     /// Per object: its slot, none when its kind takes no constraint.
     pub slots: Vec<Option<Slot>>,
 }
@@ -140,6 +146,7 @@ impl Model {
             x: Vec::new(),
             kinds: Vec::new(),
             owner: Vec::new(),
+            edge_ends: Vec::new(),
             slots: vec![None; shapes.len()],
         };
         for (i, shape) in shapes.iter().enumerate() {
@@ -151,6 +158,7 @@ impl Model {
                 m.x.push(v);
                 m.kinds.push(k);
                 m.owner.push(i);
+                m.edge_ends.push(None);
             };
             let mut slot = Slot {
                 start,
@@ -224,6 +232,25 @@ impl Model {
                             push(&mut m, v.x, VarKind::East);
                             push(&mut m, v.y, VarKind::North);
                         }
+                        // Keep all edge slots, including straight edges, for a stable vertex layout. Only an
+                        // explicitly named circular edge activates its bulge; old point/straight-edge bonds keep it.
+                        let count = if closed {
+                            pts.len()
+                        } else {
+                            pts.len().saturating_sub(1)
+                        };
+                        let mut edge_vars = Vec::with_capacity(count);
+                        for edge in 0..count {
+                            let var = m.x.len();
+                            push(
+                                &mut m,
+                                bulges.get(edge).copied().unwrap_or(0.0),
+                                VarKind::Bulge,
+                            );
+                            m.edge_ends[var] =
+                                Some((at + 2 * edge, at + 2 * ((edge + 1) % pts.len())));
+                            edge_vars.push(var);
+                        }
                         slot.rings.push(RingAt {
                             part,
                             ring,
@@ -231,6 +258,7 @@ impl Model {
                             count: pts.len(),
                             closed,
                             bulges,
+                            edge_vars,
                         });
                     }
                 }
@@ -285,6 +313,22 @@ impl Model {
                     r.start + 2 * j,
                     r.start + 2 * j + 1,
                 ])
+            }
+            (
+                Element::ArcEdge { part, ring, index },
+                Shape::Polygon { .. } | Shape::Polyline { .. },
+            ) => {
+                let r = slot
+                    .rings
+                    .iter()
+                    .find(|r| r.part == *part && r.ring == *ring)?;
+                let edge = *index as usize;
+                let &var = r.edge_vars.get(edge)?;
+                if !is_arc_bulge(r.bulges.get(edge).copied().unwrap_or(0.0)) {
+                    return None;
+                }
+                let (a, b) = self.edge_ends[var]?;
+                Some(vec![a, a + 1, b, b + 1, var])
             }
             (Element::Circle, Shape::Circle { .. }) => Some(vec![s, s + 1, s + 2]),
             (Element::Circle, Shape::Arc { .. }) => Some(vec![s, s + 1, s + 2]),
@@ -385,6 +429,47 @@ pub(super) fn build(shape: &Shape, element: &Element, v: &[D]) -> Built {
             _ => Built::Point(P { x: v[0], y: v[1] }),
         },
         Element::Segment { .. } => Built::Segment(P { x: v[0], y: v[1] }, P { x: v[2], y: v[3] }),
+        Element::ArcEdge { part, ring, index } => {
+            let source =
+                crate::ops::subref::edge_of(shape, *part as usize, *ring as usize, *index as usize)
+                    .map_or(0.0, |(_, _, b)| b);
+            let b = v[4];
+            let same_sign = source * b.v > 0.0;
+            let same_branch = if source.abs() <= 1.0 {
+                b.v.abs() <= 1.0
+            } else {
+                b.v.abs() > 1.0
+            };
+            if !is_arc_bulge(b.v) || !same_sign || !same_branch {
+                return Built::Circle(
+                    P {
+                        x: D::c(f64::NAN),
+                        y: D::c(f64::NAN),
+                    },
+                    D::c(f64::NAN),
+                );
+            }
+            let a = P { x: v[0], y: v[1] };
+            let z = P { x: v[2], y: v[3] };
+            let d = z - a;
+            if d.len().v < 1e-12 {
+                return Built::Circle(
+                    P {
+                        x: D::c(f64::NAN),
+                        y: D::c(f64::NAN),
+                    },
+                    D::c(f64::NAN),
+                );
+            }
+            let k = (D::c(1.0) - b * b) / (b * 4.0);
+            Built::Circle(
+                P {
+                    x: (a.x + z.x) * 0.5 - d.y * k,
+                    y: (a.y + z.y) * 0.5 + d.x * k,
+                },
+                d.len() * (D::c(1.0) + b * b) / (b.abs() * 4.0),
+            )
+        }
         Element::Circle => Built::Circle(P { x: v[0], y: v[1] }, v[2]),
     }
 }
@@ -453,31 +538,50 @@ pub(super) fn write_back(shape: &mut Shape, slot: &Slot, x: &[f64]) {
             }
         }
         Shape::Polygon {
-            pts, holes, parts, ..
+            pts,
+            bulges,
+            holes,
+            parts,
+            ..
         }
         | Shape::Polyline {
-            pts, holes, parts, ..
+            pts,
+            bulges,
+            holes,
+            parts,
+            ..
         } => {
             for at in &slot.rings {
-                let ring: Option<&mut Vec<Vec2>> = match (at.part, at.ring) {
-                    (0, 0) => Some(pts),
+                let ring = match (at.part, at.ring) {
+                    (0, 0) => Some((&mut *pts, &mut *bulges)),
                     (0, h) => holes
                         .as_mut()
                         .and_then(|hs| hs.get_mut(h as usize - 1))
-                        .map(|r| &mut r.pts),
+                        .map(|r| (&mut r.pts, &mut r.bulges)),
                     (k, 0) => parts
                         .as_mut()
                         .and_then(|ps| ps.get_mut(k as usize - 1))
-                        .map(|p| &mut p.pts),
+                        .map(|p| (&mut p.pts, &mut p.bulges)),
                     (k, h) => parts
                         .as_mut()
                         .and_then(|ps| ps.get_mut(k as usize - 1))
                         .and_then(|p| p.holes.as_mut())
                         .and_then(|hs| hs.get_mut(h as usize - 1))
-                        .map(|r| &mut r.pts),
+                        .map(|r| (&mut r.pts, &mut r.bulges)),
                 };
-                for (i, v) in ring.into_iter().flatten().enumerate() {
-                    *v = Vec2::new(x[at.start + 2 * i], x[at.start + 2 * i + 1]);
+                if let Some((points, bulges)) = ring {
+                    for (i, v) in points.iter_mut().enumerate() {
+                        *v = Vec2::new(x[at.start + 2 * i], x[at.start + 2 * i + 1]);
+                    }
+                    for (i, &var) in at.edge_vars.iter().enumerate() {
+                        if x[var] != at.bulges.get(i).copied().unwrap_or(0.0) {
+                            let b = bulges.get_or_insert_with(|| vec![0.0; points.len()]);
+                            if b.len() <= i {
+                                b.resize(i + 1, 0.0);
+                            }
+                            b[i] = x[var];
+                        }
+                    }
                 }
             }
         }

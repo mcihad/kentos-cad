@@ -101,6 +101,29 @@ fn part(
             let (a, b) = kentos_geometry_core::ops::subref::edge_line(&core, place)?;
             Some((at, vec![vec![a, b]]))
         }
+        CadElement::ArcEdge { part, ring, index } => {
+            let arc = kentos_geometry_core::ops::subref::arc_edge_of(
+                &shape,
+                *part as usize,
+                *ring as usize,
+                *index as usize,
+            )?;
+            let at = point(
+                &core,
+                Place::Mid {
+                    part: *part as usize,
+                    ring: *ring as usize,
+                    index: *index as usize,
+                },
+            )?;
+            let edge = kentos_geometry_core::geom::intersect::Edge::Arc {
+                c: arc.c,
+                r: arc.r,
+                a0: arc.a0,
+                sweep: arc.sweep,
+            };
+            Some((at, vec![chords(&edge)]))
+        }
         CadElement::Wall { .. } | CadElement::Jamb { .. } => None,
         CadElement::Circle => {
             let (c, r) = match shape {

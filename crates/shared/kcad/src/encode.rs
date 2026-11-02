@@ -2089,6 +2089,13 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    if doc.constraints.constraints.iter().any(|c| {
+        c.rule.elements().iter().any(|r| {
+            matches!(r.element, kentos_contracts::CadElement::ArcEdge { .. })
+        })
+    }) {
+        return crate::SCHEMA_WITH_ARC_EDGE_BONDS;
+    }
     // Schema 155 (docs/adr/0811): a module instance holding one storey only.
     if doc.settings.arch.as_ref().is_some_and(|a| kentos_contracts::modules_have_instance_storeys(&a.modules)) {
         return crate::SCHEMA_WITH_INSTANCE_STOREYS;

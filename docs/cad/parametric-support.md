@@ -7,7 +7,7 @@ doğrulanan ilk arayüz dilimini ve kalan gerçek geometri işlerini ayırır.
 |---|---|---|
 | Nokta / çizgi | Konum, düz kenar, uzaklık, yön ve geometrik bağlar | Birleşik sürükleme/dal kabulünü genişlet |
 | Daire / bağımsız yay | Merkez/yarıçap, yay uç açıları; teğet/eşitlik/ölçüler | Büyük koordinat ve kilitli referans birleşik kabulü |
-| Çoklu çizgi / alan | Her halka/parçanın köşeleri bilinmeyen; düz kenarlar Segment | Yaylı kenarın bulge/yarıçapı sabit, henüz değişken değil |
+| Çoklu çizgi / alan | Her halka/parçanın köşeleri bilinmeyen; düz kenarlar Segment | ArcEdge ile açık anılan dairesel kenarda değişken bulge/yarıçap, teğet ve mevcut daire kuralları; uç/genişlik/dal korunur. Genel eğri serbest nokta/süpürme açısı açık |
 | Elips | Merkez ve mevcut Start/End (tam elipste dikiş); gerçek yarı eksen/açı bilinmeyenleri, dual türevler | Genel teğet ve ayrı eksen noktaları açık; kısmi yay Start/End grip hedefi, izleyen çizgi, plan/önizleme ve Undo kabulü geçti |
 | NURBS | Açık/periyodik olmayan ve iki ucu tam clamped eğride Start/End; dört uç koordinatı, iç kontrol noktaları sabit | Genel kontrol/teğet/G2 ve diğer uç yapıları bu adaptörde yok |
 | Blok yerleştirmesi / iç nesne | Yerleştirme noktası Node(0), yalnız iki konum bilinmeyeni; ayna/açı/ölçek ve kaynak korunur | İç parça, dönme ve ölçek bilinmeyenleri bu adaptörde yok; birleşik GUI/Python/MCP ve grip/Undo kabulü geçti |
@@ -78,3 +78,5 @@ Aynalı/dönük blok yerleştirme noktası ve gerçek grip kabulü: [ADR 0833](.
 Elips yayı uç grip hedefi, çözülmüş önizleme ve büyük koordinatta saklanan uç/izleyen nokta kabulü: [ADR 0835](../adr/0835-elliptical-endpoint-grip-targets.md). Tam elips eksen grip'leri bu kabulün kapsamında değildir.
 
 Sahne kısıt etiketlerinin panel sınırına sığması, pencereyle ortak birimler ve çizim oturumuna bağlı önbellek: [ADR 0836](../adr/0836-constraint-label-viewport-and-units.md).
+
+Çoklu çizgi/alan dairesel kenarı, altı bağla büyük koordinat ve UI/Python/MCP/dosya/Undo kabulü: [ADR 0837](../adr/0837-variable-circular-path-edge-constraints.md). Saklanan f64 temsilde sahte çelişkiyi tolerans büyütmeden doğrulama: [ADR 0838](../adr/0838-stored-constraint-roundtrip-certificate.md).

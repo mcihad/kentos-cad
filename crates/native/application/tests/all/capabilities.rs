@@ -1118,7 +1118,24 @@ fn curved_space(e: &mut kentos_commands::Entity) {
         s.space.columns = kentos_commands::SpaceColumns::Ignore;
     }
 }
+// Kind capabilities need a geometry that fits the requested operation. In particular a two-vertex arc
+// cannot stand in for a straight corner, and a straight polyline cannot prove the radius target's arc support.
+fn straight_path(e: &mut kentos_commands::Entity) {
+    if let kentos_commands::Entity::Polyline(p) | kentos_commands::Entity::Polygon(p)=e {
+        p.pts=vec![kentos_commands::Vec2{x:0.,y:0.},kentos_commands::Vec2{x:5.,y:0.},kentos_commands::Vec2{x:5.,y:5.}];
+        p.bulges=None;p.parts=None;p.holes=None;p.widths=None;p.zs=None;p.ms=None;
+    }
+}
+fn curved_path(e: &mut kentos_commands::Entity) {
+    straight_path(e);
+    if let kentos_commands::Entity::Polyline(p) | kentos_commands::Entity::Polygon(p)=e {p.bulges=Some(vec![1.,0.,0.]);}
+}
 const FORMS: &[(&str, &str, Form)] = &[
+    ("cad.dimensions.create", "polyline", curved_path),
+    ("cad.dimensions.create", "polygon", curved_path),
+    ("cad.entities.fillet", "polyline", straight_path),
+    ("cad.entities.chamfer", "polyline", straight_path),
+    ("cad.points.construct", "polyline", straight_path),
     ("cad.spaces.separators","polyline",|e|if let kentos_commands::Entity::Polyline(p)=e {
         p.pts=vec![kentos_commands::Vec2{x:0.,y:0.},kentos_commands::Vec2{x:5.,y:0.}];
         p.bulges=None;p.closed=false;p.parts=None;p.holes=None;p.widths=None;p.zs=None;p.ms=None;p.space_separator=None;

@@ -64,7 +64,7 @@ pub(super) fn rows(
                     let (s0, s1) = segment(1);
                     vec![side(s0, s1, a)]
                 }
-                super::Element::Circle => {
+                super::Element::Circle | super::Element::ArcEdge { .. } => {
                     let (c, r) = circle(1);
                     vec![a.sub(c).len() - r]
                 }
@@ -135,7 +135,9 @@ pub(super) fn rows(
             vec![side(a0, a1, b0), side(a0, a1, b1)]
         }
         Rule::Equal { a, .. } => match a.element {
-            super::Element::Circle => vec![circle(1).1 - circle(0).1],
+            super::Element::Circle | super::Element::ArcEdge { .. } => {
+                vec![circle(1).1 - circle(0).1]
+            }
             _ => {
                 let (a0, a1) = segment(0);
                 let (b0, b1) = segment(1);

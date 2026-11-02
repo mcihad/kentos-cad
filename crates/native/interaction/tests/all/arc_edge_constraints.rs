@@ -1,0 +1,129 @@
+//! Real tool picking of a circular path edge must create its own persistent reference.
+use crate::common::{Bench, E, N};
+use kentos_commands::{
+    CadElement, CommandResult, ConstraintRule, ConstraintsQuery, Entity, SubPlace,
+};
+use kentos_domain::Slot;
+use kentos_native_application::constraints_query;
+use serde_json::{Value, json};
+fn drawing() -> Bench {
+    let mut raw: Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/interaction/v1/constraint-arc-edge.kcad"
+    ))
+    .unwrap();
+    for e in raw["entities"].as_array_mut().unwrap() {
+        if e["kind"] == "polyline" {
+            for p in e["pts"].as_array_mut().unwrap() {
+                p["x"] = json!(p["x"].as_f64().unwrap() + E);
+                p["y"] = json!(p["y"].as_f64().unwrap() + N);
+            }
+        } else {
+            for k in ["a", "b"] {
+                e[k]["x"] = json!(e[k]["x"].as_f64().unwrap() + E);
+                e[k]["y"] = json!(e[k]["y"].as_f64().unwrap() + N);
+            }
+        }
+    }
+    Bench::on(&raw.to_string())
+}
+#[test]
+fn two_fixed_vertices_and_a_radius_from_the_arc_midpoint_need_only_one_confirmation() {
+    let mut b = drawing();
+    b.start("constraint");
+    assert!(b.type_text("SB"));
+    b.click(0., 0.);
+    b.click(4., 0.);
+    assert_eq!(b.doc.constraints().constraints.len(), 2, "{:?}", b.log);
+    let before = b.doc.to_snapshot_v2();
+    assert!(b.type_text("R"));
+    b.move_to(2., -1.);
+    assert_eq!(b.doc.to_snapshot_v2(), before, "hover is read only");
+    b.click(2., -1.);
+    assert!(b.type_text("3m"));
+    let cs = &b.doc.constraints().constraints;
+    assert_eq!(cs.len(), 3, "{:?}", b.log);
+    let ConstraintRule::Radius { a, .. } = cs[2].rule else {
+        panic!("radius")
+    };
+    assert_eq!(
+        a.element,
+        CadElement::ArcEdge {
+            part: 0,
+            ring: 0,
+            index: 0
+        }
+    );
+    for (i, c) in cs.iter().take(2).enumerate() {
+        assert!(
+            matches!(c.rule,ConstraintRule::Fix{a} if a.element==CadElement::Point{place:SubPlace::Vertex{part:0,ring:0,index:i as u32}})
+        );
+    }
+    let Entity::Polyline(p) = b.doc.get(Slot(1)).unwrap() else {
+        panic!("path")
+    };
+    assert_eq!(p.pts[0], kentos_commands::Vec2 { x: E, y: N });
+    assert_eq!(p.pts[1], kentos_commands::Vec2 { x: E + 4., y: N });
+    assert!((p.bulges.as_ref().unwrap()[0] - (3. - 5_f64.sqrt()) / 2.).abs() < 1e-8);
+    let CommandResult::Completed { output, .. } =
+        constraints_query::read(&b.doc, &ConstraintsQuery::default())
+    else {
+        panic!("query")
+    };
+    assert!(output.constraints.iter().all(|r| r.holds));
+    assert_eq!(output.diagnosis.dof, 0);
+    b.doc.undo();
+    assert_eq!(b.doc.to_snapshot_v2(), before);
+}
+#[test]
+fn radius_tool_does_not_offer_a_straight_path_as_a_circular_edge() {
+    let mut b = drawing();
+    let slot = b.add_path("cizim", &[[6., 0.], [10., 0.]], false);
+    let before = b.doc.to_snapshot_v2();
+    b.start("constraint");
+    assert!(b.type_text("R"));
+    b.click(8., 0.);
+    assert_eq!(b.points(), 0);
+    assert_eq!(b.doc.to_snapshot_v2(), before);
+    assert!(b.doc.get(slot).is_some());
+}
+
+#[test]
+fn adjacent_edges_of_one_path_can_be_picked_independently_and_made_tangent() {
+    let mut b = Bench::on(include_str!(
+        "../../../../../fixtures/interaction/v1/empty.kcad"
+    ));
+    let slot = b.add_bulged("cizim", &[[-3., 4.], [0., 0.], [4., 0.]], &[0., 0.35, 0.]);
+    b.start("constraint");
+    assert!(b.type_text("SB"));
+    for (x, y) in [(-3., 4.), (0., 0.), (4., 0.)] {
+        b.click(x, y);
+    }
+    assert_eq!(b.doc.constraints().constraints.len(), 3, "{:?}", b.log);
+    assert!(b.type_text("T"));
+    b.click(-1.5, 2.);
+    b.click(2., -0.7);
+    assert_eq!(b.doc.constraints().constraints.len(), 4, "{:?}", b.log);
+    let ConstraintRule::Tangent { a, b: arc, .. } = b.doc.constraints().constraints[3].rule else {
+        panic!("tangent")
+    };
+    assert_eq!(
+        a.element,
+        CadElement::Segment {
+            part: 0,
+            ring: 0,
+            index: 0
+        }
+    );
+    assert_eq!(
+        arc.element,
+        CadElement::ArcEdge {
+            part: 0,
+            ring: 0,
+            index: 1
+        }
+    );
+    let Entity::Polyline(p) = b.doc.get(slot).unwrap() else {
+        panic!("path")
+    };
+    assert!((p.bulges.as_ref().unwrap()[1] - 0.5).abs() < 1e-8);
+}

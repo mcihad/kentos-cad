@@ -39,6 +39,7 @@ pub fn cad_element(e: &Element) -> CadElement {
             },
         },
         Element::Segment { part, ring, index } => CadElement::Segment { part, ring, index },
+        Element::ArcEdge { part, ring, index } => CadElement::ArcEdge { part, ring, index },
         Element::Circle => CadElement::Circle,
     }
 }

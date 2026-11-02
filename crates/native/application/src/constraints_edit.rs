@@ -182,7 +182,7 @@ fn fits(rule: &ConstraintRule) -> bool {
     }
     let point = |e: &ElementRef| matches!(e.element, E::Point { .. });
     let seg = |e: &ElementRef| matches!(e.element, E::Segment { .. });
-    let circle = |e: &ElementRef| matches!(e.element, E::Circle);
+    let circle = |e: &ElementRef| matches!(e.element, E::Circle | E::ArcEdge { .. });
     match rule {
         ConstraintRule::Coincident { a, b } => {
             point(a) && !matches!(b.element, E::Point { .. } if false)
@@ -263,53 +263,43 @@ fn sensed(doc: &Document, mut rule: ConstraintRule) -> ConstraintRule {
         parameter: String::new(),
     };
     match &mut rule {
-        ConstraintRule::Tangent { a, b, inside, left } => match a.element {
-            CadElement::Segment { .. } => {
-                let centre = ElementRef {
-                    uid: b.uid,
-                    element: CadElement::Point {
-                        place: kentos_commands::SubPlace::Center,
-                    },
-                };
-                *left = measure(&probe(centre, *a)).is_none_or(|d| d >= 0.0);
+        ConstraintRule::Tangent { a, b, inside, left } => {
+            let shape = |r: ElementRef| {
+                doc.slot_of(Uuid::from_bytes(r.uid.0))
+                    .and_then(|slot| doc.get(slot))
+                    .and_then(kentos_domain::constraints::core_shape)
+            };
+            let circle = |r: ElementRef| {
+                shape(r).and_then(|s| {
+                    kentos_geometry_core::ops::constraints::circle_of(
+                        &s,
+                        &kentos_domain::constraints::core_element(&r.element),
+                    )
+                })
+            };
+            if let CadElement::Segment { part, ring, index } = a.element {
+                let line = shape(*a).and_then(|s| {
+                    kentos_geometry_core::ops::subref::edge_line(
+                        &kentos_geometry_core::entity::Entity::new(s),
+                        kentos_geometry_core::ops::subref::Place::Mid {
+                            part: part as usize,
+                            ring: ring as usize,
+                            index: index as usize,
+                        },
+                    )
+                });
+                *left = line.zip(circle(*b)).is_none_or(|((p, q), (c, _))| {
+                    (q.x - p.x) * (c.y - p.y) - (q.y - p.y) * (c.x - p.x) >= 0.0
+                });
                 *inside = false;
-            }
-            _ => {
-                let (ca, cb) = (
-                    ElementRef {
-                        uid: a.uid,
-                        element: CadElement::Point {
-                            place: kentos_commands::SubPlace::Center,
-                        },
-                    },
-                    ElementRef {
-                        uid: b.uid,
-                        element: CadElement::Point {
-                            place: kentos_commands::SubPlace::Center,
-                        },
-                    },
-                );
-                let d = measure(&ConstraintRule::Distance {
-                    a: ca,
-                    b: cb,
-                    axis: DistanceAxis::Aligned,
-                    left: false,
-                    parameter: String::new(),
-                });
-                let ra = measure(&ConstraintRule::Radius {
-                    a: *a,
-                    parameter: String::new(),
-                });
-                let rb = measure(&ConstraintRule::Radius {
-                    a: *b,
-                    parameter: String::new(),
-                });
-                if let (Some(d), Some(ra), Some(rb)) = (d, ra, rb) {
+            } else {
+                if let Some(((a, ra), (b, rb))) = circle(*a).zip(circle(*b)) {
+                    let d = (b.x - a.x).hypot(b.y - a.y);
                     *inside = (d - (ra - rb).abs()).abs() < (d - (ra + rb)).abs();
                 }
                 *left = false;
             }
-        },
+        }
         ConstraintRule::Distance {
             a, b, axis, left, ..
         } => match (b.element, *axis) {
