@@ -398,6 +398,8 @@
     "terrain.new",
     "alignment.editor",
     "alignment.new",
+    "profile.editor",
+    "profile.new",
     "arch.program",
     "lineTypes.manage",
     "hatchPatterns.manage",

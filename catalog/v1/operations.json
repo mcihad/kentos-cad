@@ -2607,6 +2607,21 @@
         "road.alignments.create"
       ]
     },
+    "profile.editor": {
+      "level": "semantic",
+      "via": [
+        "road.profiles.create",
+        "road.profiles.edit",
+        "road.profiles.query"
+      ],
+      "note": "Boykesit penceresi PVI'leri yazdıkça çekirdekle kurar ve arazi boykesitini yüzeyden çizer; Kaydet ve Aksa yeniden bağla road.profiles.create ve .edit ile yazar (plan/road.md Y4, ADR 0902)."
+    },
+    "profile.new": {
+      "level": "semantic",
+      "via": [
+        "road.profiles.create"
+      ]
+    },
     "terrain.new": {
       "level": "semantic",
       "via": [

@@ -585,6 +585,9 @@ pub const PORTED: &[&str] = &[
     // plan/road.md Y3: Güzergâh and Yeni aks (alignment_window.rs).
     "alignment.editor",
     "alignment.new",
+    // plan/road.md Y4: Boykesit and Boykesit oluştur (profile_window.rs).
+    "profile.editor",
+    "profile.new",
     // docs/adr/0773: Bina programı (program_window.rs).
     "arch.program",
     // docs/adr/0313: Çizgi tipleri (line_types_window.rs).

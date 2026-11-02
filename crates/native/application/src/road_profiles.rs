@@ -74,7 +74,7 @@ pub(crate) fn judged(doc: &Document, list: &[ProfileDef]) -> Result<(), Stop> {
 }
 
 /// The PVIs as the core takes them.
-pub(crate) fn pvis_of(def: &ProfileDef) -> Vec<Pvi> {
+pub fn pvis_of(def: &ProfileDef) -> Vec<Pvi> {
     def.pvis
         .iter()
         .map(|p| Pvi {

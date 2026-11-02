@@ -259,6 +259,8 @@ CAD = [
     # KentOS Yol's horizontal alignments (plan/road.md Y3, docs/adr/0901): the Güzergâh window and a new alignment.
     T("alignment", "Güzergâh", [
         P("Güzergâh", "alignmentEditor", [L("alignment.editor"), L("alignment.new")]),
+        # The vertical alignments (plan/road.md Y4, docs/adr/0902): the Boykesit window and a new profile.
+        P("Boykesit", "profileEditor", [L("profile.editor"), L("profile.new")]),
     ], works=ROAD),
     T("plan", "Plan", [
         P("Yol", "planRoad", [L("tool.planRoad"), S("tool.roadJunctions"), S("tool.medianClose"), S("tool.centerline")]),

@@ -1,6 +1,6 @@
 # ADR 0902 — Düşey güzergâh ve boykesit: arazi boykesiti, PVI'li parabolik ve dairesel kurplar
 
-Tarih: 2026-11-02. plan/road.md Y4 (ROAD-PROFILE-01…06, 09, 10, 12, 13). Durum: Y4.1–Y4.3 tamam, Y4.4 sürüyor.
+Tarih: 2026-11-02. plan/road.md Y4 (ROAD-PROFILE-01…06, 09, 10, 12, 13). Durum: Y4.1–Y4.4 tamam, Y4.5 (boykesitin çizime yazılması) sürüyor.
 
 ## Dayanak
 
@@ -59,7 +59,11 @@ Tarih: 2026-11-02. plan/road.md Y4 (ROAD-PROFILE-01…06, 09, 10, 12, 13). Durum
 ## Aşamalar
 
 Y4.1 arazi boykesiti çekirdeği; Y4.2 düşey güzergâh çekirdeği; Y4.3 komutlar (`road.profiles.*`), `.kcad`, Python, MCP;
-Y4.4 Boykesit penceresi ve çizime boykesit.
+Y4.4 Boykesit penceresi (`profile.editor`, `profile.new`; `apps/desktop/src/profile_window.rs`): arazi yüzeyden bir kez
+çıkarılır (aks ya da yüzey değişince yeniden), proje kotu yazıldıkça çekirdekle kurulur; grafik yatay ölçeği genişliğe,
+düşey ölçeği yatay × abartmaya göre (ikisi sığmazsa ikisi birlikte küçülür), bantlar yuvarlak km'lerde; kurp binince ya
+da PVI aksın dışındaysa nedeni grafiğin altında. Araziden uçlar ilk ve son PVI'yi aksın uçlarına, arazinin oradaki ya
+da yüzeyin dışındaysa en yakın kotuna koyar. Y4.5 boykesitin çizime (paftaya) yazılması kendi komutuyla.
 
 ## Sonra
 

@@ -514,6 +514,20 @@
         "size": "large"
        }
       ]
+     },
+     {
+      "label": "Boykesit",
+      "icon": "profileEditor",
+      "items": [
+       {
+        "command": "profile.editor",
+        "size": "large"
+       },
+       {
+        "command": "profile.new",
+        "size": "large"
+       }
+      ]
      }
     ],
     "works": [

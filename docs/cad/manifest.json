@@ -7383,6 +7383,40 @@
    "tests": 1
   },
   {
+   "id": "profile.editor",
+   "kind": "command",
+   "title": "Boykesit…",
+   "level": "semantic",
+   "via": [
+    "road.profiles.create",
+    "road.profiles.edit",
+    "road.profiles.query"
+   ],
+   "operation": null,
+   "python": "Connection: road.profiles.create, Connection: road.profiles.edit, Connection: road.profiles.query",
+   "mcp": "road.profiles.create, road.profiles.edit, road.profiles.query",
+   "note": "Boykesit penceresi PVI'leri yazdıkça çekirdekle kurar ve arazi boykesitini yüzeyden çizer; Kaydet ve Aksa yeniden bağla road.profiles.create ve .edit ile yazar (plan/road.md Y4, ADR 0902).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "profile.new",
+   "kind": "command",
+   "title": "Boykesit oluştur…",
+   "level": "semantic",
+   "via": [
+    "road.profiles.create"
+   ],
+   "operation": null,
+   "python": "Connection: road.profiles.create",
+   "mcp": "road.profiles.create",
+   "note": null,
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "profile.window",
    "kind": "command",
    "title": "Veri profili",

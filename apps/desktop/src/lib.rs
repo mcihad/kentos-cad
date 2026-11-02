@@ -253,8 +253,11 @@ mod joins_window;
 mod event_links_window;
 mod alignment_layer;
 mod alignment_window;
+mod profile_window;
 #[cfg(test)]
 mod alignment_window_tests;
+#[cfg(test)]
+mod profile_window_tests;
 mod terrain_layer;
 mod terrain_window;
 #[cfg(test)]

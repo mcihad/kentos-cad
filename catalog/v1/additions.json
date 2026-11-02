@@ -3098,6 +3098,38 @@
       "status": "implemented"
     },
     {
+      "id": "profile.editor",
+      "title": "Boykesit…",
+      "short": "Boykesit",
+      "icon": "profileEditor",
+      "description": "Yol projesinin düşey güzergâhları (boykesitler): bir aksın üstünde PVI tablosu (km, kot, kurp: simetrik ya da asimetrik parabol, çember). Seçilen yüzeyden arazi (siyah) kotu, PVI'lerden proje (kırmızı) kotu düşey abartmayla çizilir; altında km, mesafe, siyah ve kırmızı kot, fark ve eğim bantları. Boykesit yazıldıkça kurulur: kurpların K değeri ya da neden kurulamadığı görünür. Kaydet road.profiles.create ve road.profiles.edit ile yazar, her yazma bir geri alma adımıdır; aks değişince boykesit eskir, Aksa yeniden bağla onu aksın bugünkü hâline bağlar.",
+      "aliases": [
+        "YOLBOYKESIT",
+        "YOLBOYKESİT",
+        "DUSEYGUZERGAH",
+        "DÜŞEYGÜZERGÂH",
+        "VERTICALALIGNMENT"
+      ],
+      "shortcuts": [],
+      "category": "Boykesit",
+      "status": "implemented"
+    },
+    {
+      "id": "profile.new",
+      "title": "Boykesit oluştur…",
+      "short": "Yeni boykesit",
+      "icon": "profileNew",
+      "description": "Yeni bir düşey güzergâh kurar: Boykesit penceresini aksın üstünde yeni bir boykesitle açar; Araziden uçlar ilk ve son PVI'yi aksın uçlarına ve arazinin kotuna koyar. Kaydet road.profiles.create ile yazar.",
+      "aliases": [
+        "BOYKESITOLUSTUR",
+        "BOYKESİTOLUŞTUR",
+        "CREATEPROFILE"
+      ],
+      "shortcuts": [],
+      "category": "Boykesit",
+      "status": "implemented"
+    },
+    {
       "id": "raster.mosaic",
       "title": "Sanal mozaik",
       "icon": "rasterMosaic",
@@ -4087,6 +4119,8 @@
     "roomElevation": "<rect x=\"2.5\" y=\"4.5\" width=\"15\" height=\"11\" rx=\"0.5\"/><rect x=\"4.5\" y=\"8.5\" width=\"3\" height=\"7\" stroke-width=\"1\"/><rect x=\"10.5\" y=\"7.5\" width=\"5\" height=\"4\" stroke-width=\"1\"/><path d=\"M2.5 17.5h15\" stroke-width=\"0.9\" stroke-dasharray=\"1.6 1.2\"/>",
     "alignmentEditor": "<path d=\"M2 16.5 6.5 12c2.6-2.6 5.6-4 11.5-4\" stroke-width=\"1.5\"/><path d=\"M4.1 13l1.7 1.7M8.4 9.6l1.2 2.1M12.9 7.9l.5 2.3\" stroke-width=\"1\"/><path d=\"M2 16.5 9 4.5 18 8\" stroke-width=\".7\" stroke-dasharray=\"1.5 1.2\"/>",
     "alignmentNew": "<path d=\"M2 16 6 12c2.3-2.3 5-3.6 10-3.6\" stroke-width=\"1.5\"/><path d=\"M3.9 12.6l1.6 1.6M7.9 9.4l1.1 2\" stroke-width=\"1\"/><path d=\"M15.5 12.2v6.3M12.4 15.4h6.3\" stroke-width=\"1.5\"/>",
+    "profileEditor": "<path d=\"M2.5 3v14.5H18\" stroke-width=\"1\"/><path d=\"M4 14l4-6 4 3 5-6\" stroke-width=\"1.5\"/>",
+    "profileNew": "<path d=\"M2.5 3v14.5H11\" stroke-width=\"1\"/><path d=\"M4 12l3-5 3 2.5\" stroke-width=\"1.5\"/><path d=\"M15.5 10.2v6.3M12.4 13.4h6.3\" stroke-width=\"1.5\"/>",
     "terrainSurface": "<path d=\"M2.5 15.5 8 4l9.5 3.5-2 9z\" stroke-width=\"1.1\"/><path d=\"M8 4l1 7.5 8.5-4M2.5 15.5 9 11.5l6.5 5\" stroke-width=\".8\"/><path d=\"M4.6 10.4 9 11.5l4.6 1.4\" stroke-width=\"1.9\"/>",
     "terrainNew": "<path d=\"M2 13 6.8 3.5 14 6l-1.6 7z\" stroke-width=\"1.1\"/><path d=\"M6.8 3.5 8 9.2 14 6M2 13l6-3.8 4.4 3.8\" stroke-width=\".8\"/><path d=\"M15.5 12.2v6.3M12.4 15.4h6.3\" stroke-width=\"1.5\"/>"
   },
