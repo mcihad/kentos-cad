@@ -9,6 +9,84 @@ from kentos import cad
 ROOT = Path(__file__).resolve().parents[2]
 
 
+class BlockPublicationUpgrade(unittest.TestCase):
+    def source(self):
+        doc, library = drawing('block-publication')
+        source = library['blocks'][0]
+        source['card']['publication']['release'] = 3
+        source['card']['publication']['typeName'] = 'Donatılı tek kanat'
+        source['entities'].append(dict(kind='line', id=5, layerId='', attrs={},
+                                       a=dict(x=.2, y=.2), b=dict(x=.4, y=.4)))
+        args = dict(from_=doc.blocks()[0].id, to=source['id'],
+                    uids=[list(doc.entities())[1].uid], library=json.dumps(library, ensure_ascii=False))
+        return doc, library, args
+
+    def test_selected_publication_guarded_upgrade_roundtrips_and_undo_restores_exact_source(self):
+        doc, library, args = self.source()
+        before = doc.to_bytes()
+        old_entities = [r.entity.to_json() for r in doc.entities()]
+        old_block = doc.blocks()[0].to_json()
+        plan = cad.blocks.replace.answer(doc, **args, op='plan')
+        self.assertEqual(plan.status, 'completed')
+        self.assertEqual(doc.to_bytes(), before)
+        result = cad.blocks.replace(doc, **args, expected=cad.Expected(plan=plan.plan_id))
+        self.assertEqual(result.replaced, args['uids'])
+        self.assertEqual(len(result.added), 1)
+        self.assertNotEqual(result.target, args['from_'])
+        self.assertEqual(doc.blocks()[0].to_json(), old_block)
+        after = doc.to_bytes()
+        self.assertEqual(cad.Document.from_bytes(after).to_bytes(), after)
+        entities = [r.entity.to_json() for r in doc.entities()]
+        self.assertEqual(entities[0], old_entities[0])
+        self.assertEqual(entities[2], old_entities[2])
+        self.assertEqual(entities[1]['parameters'], old_entities[1]['parameters'])
+        self.assertEqual(entities[1]['block'], result.target)
+        doc.undo()
+        self.assertEqual(doc.to_bytes(), before)
+        doc.redo()
+        self.assertEqual(doc.to_bytes(), after)
+        with tempfile.TemporaryDirectory() as folder:
+            path=Path(folder)/'upgraded.kcad';doc.save(path)
+            self.assertEqual(cad.Document.open(path).to_bytes(),after)
+
+    def test_publication_reuses_target_and_keeps_old_definition_for_the_rest(self):
+        doc, _, args = self.source()
+        first = cad.blocks.replace(doc, **args)
+        first_bytes = doc.to_bytes()
+        args['uids'] = [next(doc.entities()).uid]
+        second = cad.blocks.replace(doc, **args)
+        self.assertEqual(first.target, second.target)
+        self.assertEqual(len(doc.blocks()), 2)
+        self.assertNotIn('added', second.to_json())
+        doc.undo();self.assertEqual(doc.to_bytes(),first_bytes)
+
+    def test_older_unrelated_and_unit_semantic_changes_refuse_in_all_modes(self):
+        for change in ('older','family','type','units','plain','version'):
+            doc, library, args = self.source()
+            b=library['blocks'][0]
+            if change=='older': b['card']['publication']['release']=2
+            elif change in ('family','type'): b['card']['publication'][change+'Id']='11111111-2222-4333-8444-555555555555'
+            elif change=='units': b['units']='unitless'
+            elif change=='plain': b.pop('dynamic')
+            else: library['version']=1
+            args['library']=json.dumps(library,ensure_ascii=False)
+            before=doc.to_bytes()
+            for op in ('validate','plan','execute'):
+                result=cad.blocks.replace.answer(doc,**args,op=op)
+                self.assertEqual(result.status,'failed',(change,op,result))
+                self.assertEqual(doc.to_bytes(),before)
+
+    def test_changed_source_after_review_cannot_apply_the_old_plan(self):
+        doc, library, args = self.source()
+        before=doc.to_bytes()
+        plan=cad.blocks.replace.answer(doc,**args,op='plan')
+        library['blocks'][0]['description']='Önizlemeden sonra değişti'
+        args['library']=json.dumps(library,ensure_ascii=False)
+        answer=cad.blocks.replace.answer(doc,**args,expected=cad.Expected(plan=plan.plan_id))
+        self.assertNotEqual(answer.status,'completed')
+        self.assertEqual(doc.to_bytes(),before)
+
+
 def drawing(name="dynamic-blocks"):
     doc = cad.Document.open(ROOT / f"fixtures/kcad/v2/{name}.kcad")
     library = json.loads(cad.blocks.edit(doc, operation="export").library)

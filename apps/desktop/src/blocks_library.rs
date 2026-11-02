@@ -73,6 +73,8 @@ pub(crate) enum Reading {
 /// What a drawing offers: itself as one block, and its blocks; whether it named its unit.
 #[derive(Debug, Clone, Default)]
 pub struct FileBlocks {
+    /// Immutable common-command source for an explicitly reviewed publication upgrade.
+    pub library: Option<Arc<String>>,
     /// The unit it was read in; none when it names none and none was chosen: no size is said then.
     pub unit: Option<DrawingUnit>,
     pub whole: Option<Item>,
@@ -82,6 +84,7 @@ pub struct FileBlocks {
 /// A block a drawing offers: its name, its real size (metres), its unit, its outline at the origin.
 #[derive(Debug, Clone, Default)]
 pub struct Item {
+    pub id: Option<kentos_commands::BlockId>,
     pub name: String,
     pub publication: Option<kentos_commands::BlockPublication>,
     pub size: Option<(f64, f64)>,
@@ -91,6 +94,7 @@ pub struct Item {
 
 #[derive(Debug, Clone)]
 pub enum Event {
+    ReviewUpgrade(kentos_commands::BlockId, kentos_commands::BlockId, Arc<String>, String),
     Search(String),
     AddRoot,
     RootChosen(Option<PathBuf>),
@@ -201,6 +205,7 @@ pub fn read_file(path: &Path, unit: Option<DrawingUnit>) -> Result<FileBlocks, S
         .iter()
         .filter(|b| !b.name.starts_with('*') && b.xref.is_none())
         .map(|b| Item {
+            id: Some(b.id),
             name: b.name.clone(),
             publication: b.card.as_ref().and_then(|c| c.publication.clone()),
             size: known
@@ -228,10 +233,15 @@ pub fn read_file(path: &Path, unit: Option<DrawingUnit>) -> Result<FileBlocks, S
                 .map_or_else(String::new, |s| s.to_string_lossy().into_owned()),
             size: known.then_some((x1 - x0, y1 - y0)),
             publication: None,
+            id: None,
             units: None,
             paths: Vec::new(),
         });
     Ok(FileBlocks {
+        library: doc.blocks().iter().any(|b| b.card.as_ref().is_some_and(|c| c.publication.is_some())).then(|| Arc::new(kentos_commands::canonical::canonical_json(&serde_json::json!({
+            "format":kentos_commands::BLOCKS_FORMAT,"version":kentos_commands::BLOCKS_PUBLICATION_VERSION,
+            "blocks":doc.blocks().iter().map(|b| &**b).collect::<Vec<_>>()
+        })))),
         unit: if known {
             unit.or(Some(doc.settings().unit()))
         } else {
@@ -321,6 +331,7 @@ impl Library {
 impl App {
     pub(crate) fn blocks_library_event(&mut self, event: Event) -> Task<Message> {
         match event {
+            Event::ReviewUpgrade(from, to, library, label) => return self.blocks_upgrade(from, to, (*library).clone(), label),
             Event::Search(t) => self.blocks_panel.library.query = t,
             Event::AddRoot => {
                 return Task::perform(
@@ -816,7 +827,32 @@ impl App {
                 tooltip::Position::Left,
             );
             if can_place {
-                ContextMenu::new(face, move |_| Menu::new().item("Yerleştir", place.clone())).into()
+                let publication = item.publication.clone();
+                let target_name = item.publication.as_ref().map(|p| format!("{} · {} · Yayın {}", item.name, p.type_name, p.release)).unwrap_or_else(|| item.name.clone());
+                let source = item.id.zip(read.library.clone());
+                ContextMenu::new(face, move |_| {
+                    let upgrades: Vec<_> = publication.as_ref().map_or_else(Vec::new, |p| {
+                        self.document.as_ref().map_or_else(Vec::new, |doc| doc.model.blocks().iter()
+                            .filter_map(|b| {
+                                let q = b.card.as_ref()?.publication.as_ref()?;
+                                (q.family_id == p.family_id && q.type_id == p.type_id && p.release > q.release)
+                                    .then(|| (b.id, format!("{} · Yayın {} → {}", b.name, q.release, p.release)))
+                            }).collect())
+                    });
+                    let mut menu = Menu::new().item("Yerleştir", place.clone());
+                    if let Some((to, library)) = &source {
+                        if upgrades.len() == 1 {
+                            menu = menu.item("Yayını karşılaştır…", msg(Event::ReviewUpgrade(upgrades[0].0, *to, library.clone(), target_name.clone())));
+                        } else if !upgrades.is_empty() {
+                            let mut choices = Menu::new();
+                            for (from, name) in &upgrades {
+                                choices = choices.item(name.clone(), msg(Event::ReviewUpgrade(*from, *to, library.clone(), target_name.clone())));
+                            }
+                            menu = menu.submenu("Yayını karşılaştır", choices);
+                        }
+                    }
+                    menu
+                }).into()
             } else {
                 face
             }

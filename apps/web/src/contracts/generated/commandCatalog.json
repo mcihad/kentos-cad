@@ -32040,7 +32040,7 @@
       "id": "cad.blocks.replace",
       "version": 1,
       "title": "Bloğu başkasıyla değiştir",
-      "summary": "from bloğunun çizimdeki yerleştirmelerini (ya da uids ile verilenleri) to bloğuna geçirir; tek geri alma adımı. Her yerleştirme yerini, ölçeğini, dönüşünü, katmanını ve görünüşünü korur; to'nun sabit olmayan özniteliklerinin değerleri ve taşınabilir özniteliklerinin yerleri kalır, öbürleri düşer ve söylenir (dropped, places); to'nun alanları doldurulur. Aynı ad ve türdeki uyumlu örnek parametreleri korunur, hedef formülleri yeniden hesaplanır; taşınamayan bir örnek değeri varsa invalid_parameter_value ile tüm işlem reddedilir, sessizce sıfırlanmaz. purge ile from artık hiçbir yerde yerleşmiyorsa silinir. Kilitli katmandakiler atlanır ve söylenir. AutoCAD'in BLOCKREPLACE'i. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "summary": "from bloğunun çizimdeki yerleştirmelerini (ya da uids ile verilenleri) to bloğuna geçirir; tek geri alma adımı. Her yerleştirme yerini, ölçeğini, dönüşünü, katmanını ve görünüşünü korur; to'nun sabit olmayan özniteliklerinin değerleri ve taşınabilir özniteliklerinin yerleri kalır, öbürleri düşer ve söylenir (dropped, places); to'nun alanları doldurulur. Aynı ad ve türdeki uyumlu örnek parametreleri korunur, hedef formülleri yeniden hesaplanır; taşınamayan bir örnek değeri varsa invalid_parameter_value ile tüm işlem reddedilir, sessizce sıfırlanmaz. İsteğe bağlı library (kentos.blocks sürüm 2) verilirse to kaynak kitaplığın kimliğidir: aynı aile/tipin daha yeni yayını ayrı bağımlılık grafiğiyle alınır; yalnız kapsam yerleştirmeleri geçirilir. Eski tanımlar korunur; yerel hedef değişikliği ve uyumsuz girdiler atomik reddedilir. Bu kipte purge verilmez; target ve added çözümlenen hedefi bildirir. purge ile from artık hiçbir yerde yerleşmiyorsa silinir. Kilitli katmandakiler atlanır ve söylenir. AutoCAD'in BLOCKREPLACE'i. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
       "aliases": [
         "blockreplace",
         "blokdegistir"
@@ -32078,6 +32078,13 @@
             ],
             "description": "The block whose inserts are replaced."
           },
+          "library": {
+            "description": "Optional `kentos.blocks` version 2 text: `to` is its source block id.\nRequires the same publication family/type and a strictly newer release than `from`.\nImports a separate dependency graph, preserves the old definitions, and upgrades only the named root inserts.\nCompatible instance inputs survive; local target edits or incompatible inputs refuse atomically.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "purge": {
             "description": "Deletes `from` when no insert uses it after.",
             "type": [
@@ -32114,6 +32121,13 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `cad.blocks.replace` v1.",
         "properties": {
+          "added": {
+            "description": "With a publication library: definitions actually added, including nested dependencies.",
+            "items": {
+              "$ref": "#/$defs/BlockId"
+            },
+            "type": "array"
+          },
           "dropped": {
             "description": "`from`'s attribute tags whose values were taken off: `to` has no such attribute, or a constant one.",
             "items": {
@@ -32149,6 +32163,17 @@
           "revision": {
             "pattern": "^(0|[1-9][0-9]*)$",
             "type": "string"
+          },
+          "target": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/BlockId"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "With a publication library: the resolved drawing target, distinct from the library's source id."
           }
         },
         "required": [
@@ -32166,6 +32191,13 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `cad.blocks.replace` v1.",
         "properties": {
+          "added": {
+            "description": "With a publication library: definitions actually added, including nested dependencies.",
+            "items": {
+              "$ref": "#/$defs/BlockId"
+            },
+            "type": "array"
+          },
           "dropped": {
             "description": "`from`'s attribute tags whose values were taken off: `to` has no such attribute, or a constant one.",
             "items": {
@@ -32201,6 +32233,17 @@
           "revision": {
             "pattern": "^(0|[1-9][0-9]*)$",
             "type": "string"
+          },
+          "target": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/BlockId"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "With a publication library: the resolved drawing target, distinct from the library's source id."
           }
         },
         "required": [
@@ -32221,6 +32264,7 @@
           "invalid_revision",
           "revision_conflict",
           "unknown_block",
+          "invalid_library",
           "no_entities",
           "invalid_uid",
           "entity_not_found",

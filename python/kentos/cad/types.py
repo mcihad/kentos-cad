@@ -14885,12 +14885,17 @@ class BlocksReplace(_Model):
     `from`), `layer_locked` (every one locked; some: a warning), `invalid_field`, `invalid_parameter_value`.
     Attributes:
         from_: The block whose inserts are replaced.
+        library: Optional `kentos.blocks` version 2 text: `to` is its source block id.
+            Requires the same publication family/type and a strictly newer release than `from`.
+            Imports a separate dependency graph, preserves the old definitions, and upgrades only the named root inserts.
+            Compatible instance inputs survive; local target edits or incompatible inputs refuse atomically.
         purge: Deletes `from` when no insert uses it after.
         to: The block they place instead.
         uids: Only these inserts of `from`, by persistent id (absent: every one of the drawing's).
     """
     expected_revision: str | None | Unset = UNSET
     from_: str | None | Unset = UNSET
+    library: str | None | Unset = UNSET
     purge: bool | None | Unset = UNSET
     to: str | None | Unset = UNSET
     uids: list[str] | None | Unset = UNSET
@@ -14901,6 +14906,8 @@ class BlocksReplace(_Model):
             out["expectedRevision"] = self.expected_revision
         if self.from_ is not UNSET:
             out["from"] = self.from_
+        if self.library is not UNSET:
+            out["library"] = self.library
         if self.purge is not UNSET:
             out["purge"] = self.purge
         if self.to is not UNSET:
@@ -14914,6 +14921,7 @@ class BlocksReplace(_Model):
         return cls(
             expected_revision=data.get("expectedRevision", UNSET),
             from_=data.get("from", UNSET),
+            library=data.get("library", UNSET),
             purge=data.get("purge", UNSET),
             to=data.get("to", UNSET),
             uids=UNSET if "uids" not in data else None if data["uids"] is None else list(data["uids"]),
@@ -14929,6 +14937,8 @@ class BlocksReplaced(_Model):
         places: Places dropped: `to` has no movable attribute of their tag. Unit: count.
         fields: Values `to`'s fields wrote. Unit: count.
         purged: `from` was deleted (`purge`).
+        added: With a publication library: definitions actually added, including nested dependencies.
+        target: With a publication library: the resolved drawing target, distinct from the library's source id.
     """
     replaced: list[str]
     dropped: list[str]
@@ -14936,6 +14946,8 @@ class BlocksReplaced(_Model):
     fields: int
     purged: bool
     revision: str
+    added: list[str] | Unset = UNSET
+    target: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -14945,6 +14957,10 @@ class BlocksReplaced(_Model):
         out["fields"] = self.fields
         out["purged"] = self.purged
         out["revision"] = self.revision
+        if self.added is not UNSET:
+            out["added"] = list(self.added)
+        if self.target is not UNSET:
+            out["target"] = self.target
         return out
 
     @classmethod
@@ -14956,6 +14972,8 @@ class BlocksReplaced(_Model):
             fields=data["fields"],
             purged=data["purged"],
             revision=data["revision"],
+            added=list(data["added"]) if "added" in data else UNSET,
+            target=data.get("target", UNSET),
         )
 
 

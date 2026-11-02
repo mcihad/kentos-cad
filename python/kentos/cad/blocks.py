@@ -1364,10 +1364,14 @@ class _BlocksReplace(LocalCommand[BlocksReplace, BlocksReplaced, BlocksReplaced]
     yerleri kalır, öbürleri düşer ve söylenir (dropped, places); to'nun alanları
     doldurulur. Aynı ad ve türdeki uyumlu örnek parametreleri korunur, hedef formülleri
     yeniden hesaplanır; taşınamayan bir örnek değeri varsa invalid_parameter_value ile
-    tüm işlem reddedilir, sessizce sıfırlanmaz. purge ile from artık hiçbir yerde
-    yerleşmiyorsa silinir. Kilitli katmandakiler atlanır ve söylenir. AutoCAD'in
-    BLOCKREPLACE'i. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey
-    yazılmaz, sonuç conflict olur.
+    tüm işlem reddedilir, sessizce sıfırlanmaz. İsteğe bağlı library (kentos.blocks
+    sürüm 2) verilirse to kaynak kitaplığın kimliğidir: aynı aile/tipin daha yeni yayını
+    ayrı bağımlılık grafiğiyle alınır; yalnız kapsam yerleştirmeleri geçirilir. Eski
+    tanımlar korunur; yerel hedef değişikliği ve uyumsuz girdiler atomik reddedilir. Bu
+    kipte purge verilmez; target ve added çözümlenen hedefi bildirir. purge ile from
+    artık hiçbir yerde yerleşmiyorsa silinir. Kilitli katmandakiler atlanır ve söylenir.
+    AutoCAD'in BLOCKREPLACE'i. expectedRevision verilmişse ve çizim o sürümde değilse
+    hiçbir şey yazılmaz, sonuç conflict olur.
     """
     __slots__ = ()
     id = "cad.blocks.replace"
@@ -1385,6 +1389,7 @@ class _BlocksReplace(LocalCommand[BlocksReplace, BlocksReplaced, BlocksReplaced]
         *,
         expected_revision: str | None | Unset = UNSET,
         from_: str | None | Unset = UNSET,
+        library: str | None | Unset = UNSET,
         purge: bool | None | Unset = UNSET,
         to: str | None | Unset = UNSET,
         uids: Sequence[str] | None | Unset = UNSET,
@@ -1398,14 +1403,23 @@ class _BlocksReplace(LocalCommand[BlocksReplace, BlocksReplaced, BlocksReplaced]
         düşer ve söylenir (dropped, places); to'nun alanları doldurulur. Aynı ad ve türdeki
         uyumlu örnek parametreleri korunur, hedef formülleri yeniden hesaplanır; taşınamayan
         bir örnek değeri varsa invalid_parameter_value ile tüm işlem reddedilir, sessizce
-        sıfırlanmaz. purge ile from artık hiçbir yerde yerleşmiyorsa silinir. Kilitli
-        katmandakiler atlanır ve söylenir. AutoCAD'in BLOCKREPLACE'i. expectedRevision
-        verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+        sıfırlanmaz. İsteğe bağlı library (kentos.blocks sürüm 2) verilirse to kaynak
+        kitaplığın kimliğidir: aynı aile/tipin daha yeni yayını ayrı bağımlılık grafiğiyle
+        alınır; yalnız kapsam yerleştirmeleri geçirilir. Eski tanımlar korunur; yerel hedef
+        değişikliği ve uyumsuz girdiler atomik reddedilir. Bu kipte purge verilmez; target
+        ve added çözümlenen hedefi bildirir. purge ile from artık hiçbir yerde yerleşmiyorsa
+        silinir. Kilitli katmandakiler atlanır ve söylenir. AutoCAD'in BLOCKREPLACE'i.
+        expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
+        conflict olur.
 
         Args:
             doc: The drawing it works on.
             expected_revision:
             from_: The block whose inserts are replaced.
+            library: Optional `kentos.blocks` version 2 text: `to` is its source block id.
+                Requires the same publication family/type and a strictly newer release than `from`.
+                Imports a separate dependency graph, preserves the old definitions, and upgrades only the named root inserts.
+                Compatible instance inputs survive; local target edits or incompatible inputs refuse atomically.
             purge: Deletes `from` when no insert uses it after.
             to: The block they place instead.
             uids: Only these inserts of `from`, by persistent id (absent: every one of the drawing's).
@@ -1424,6 +1438,7 @@ class _BlocksReplace(LocalCommand[BlocksReplace, BlocksReplaced, BlocksReplaced]
         return self.execute_input(doc, BlocksReplace(
             expected_revision=expected_revision,
             from_=from_,
+            library=library,
             purge=purge,
             to=to,
             uids=_opt(uids, lambda x: list(x)),
@@ -1436,6 +1451,7 @@ class _BlocksReplace(LocalCommand[BlocksReplace, BlocksReplaced, BlocksReplaced]
         *,
         expected_revision: str | None | Unset = UNSET,
         from_: str | None | Unset = UNSET,
+        library: str | None | Unset = UNSET,
         purge: bool | None | Unset = UNSET,
         to: str | None | Unset = UNSET,
         uids: Sequence[str] | None | Unset = UNSET,
@@ -1446,6 +1462,7 @@ class _BlocksReplace(LocalCommand[BlocksReplace, BlocksReplaced, BlocksReplaced]
         return self.plan_input(doc, BlocksReplace(
             expected_revision=expected_revision,
             from_=from_,
+            library=library,
             purge=purge,
             to=to,
             uids=_opt(uids, lambda x: list(x)),
@@ -1458,6 +1475,7 @@ class _BlocksReplace(LocalCommand[BlocksReplace, BlocksReplaced, BlocksReplaced]
         *,
         expected_revision: str | None | Unset = UNSET,
         from_: str | None | Unset = UNSET,
+        library: str | None | Unset = UNSET,
         purge: bool | None | Unset = UNSET,
         to: str | None | Unset = UNSET,
         uids: Sequence[str] | None | Unset = UNSET,
@@ -1468,6 +1486,7 @@ class _BlocksReplace(LocalCommand[BlocksReplace, BlocksReplaced, BlocksReplaced]
         return self.validate_input(doc, BlocksReplace(
             expected_revision=expected_revision,
             from_=from_,
+            library=library,
             purge=purge,
             to=to,
             uids=_opt(uids, lambda x: list(x)),
@@ -1480,6 +1499,7 @@ class _BlocksReplace(LocalCommand[BlocksReplace, BlocksReplaced, BlocksReplaced]
         *,
         expected_revision: str | None | Unset = UNSET,
         from_: str | None | Unset = UNSET,
+        library: str | None | Unset = UNSET,
         purge: bool | None | Unset = UNSET,
         to: str | None | Unset = UNSET,
         uids: Sequence[str] | None | Unset = UNSET,
@@ -1495,6 +1515,7 @@ class _BlocksReplace(LocalCommand[BlocksReplace, BlocksReplaced, BlocksReplaced]
         return self.answer_input(doc, BlocksReplace(
             expected_revision=expected_revision,
             from_=from_,
+            library=library,
             purge=purge,
             to=to,
             uids=_opt(uids, lambda x: list(x)),

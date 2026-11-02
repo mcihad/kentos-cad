@@ -4210,3 +4210,30 @@ fn block_publication_metadata_is_a_guarded_mcp_edit_and_persists() {
     assert_eq!(std::fs::read(&path).unwrap(), before);
     std::fs::remove_dir_all(dir).unwrap();
 }
+
+#[test]
+fn selected_publication_upgrade_is_readonly_until_guarded_apply_and_one_undo_in_mcp() {
+    let dir=std::env::temp_dir().join(format!("kentos-mcp-block-upgrade-{}",std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();let path=dir.join("upgrade.kcad");
+    let before=include_bytes!("../../../../fixtures/kcad/v2/block-publication.kcad");std::fs::write(&path,before).unwrap();
+    let snapshot=kentos_native_application::file_import_block::read_drawing(before).unwrap();
+    let mut block=snapshot.blocks[0].clone();let from=block.id;
+    block.card.as_mut().unwrap().publication.as_mut().unwrap().release=3;
+    let library=json!({"format":"kentos.blocks","version":2,"blocks":[block]}).to_string();
+    let mut server=Server::new();
+    let drawing=call(&mut server,"drawing.open",json!({"path":path}))["structuredContent"]["drawing"].clone();
+    let mut input=json!({"drawing":drawing,"from":from,"to":from,"library":library,"uids":[snapshot.uids[1].to_text()],"op":"plan"});
+    let plan=call(&mut server,"cad.blocks.replace",input.clone())["structuredContent"].clone();
+    assert_eq!(plan["status"],"completed","{plan}");
+    call(&mut server,"drawing.save",json!({"drawing":drawing,"path":path}));assert_eq!(std::fs::read(&path).unwrap(),before);
+    input["op"]=json!("execute");input["expected"]=json!({"plan":plan["planId"]});
+    let written=call(&mut server,"cad.blocks.replace",input);
+    assert_eq!(written["structuredContent"]["status"],"completed","{written}");
+    call(&mut server,"drawing.save",json!({"drawing":drawing,"path":path}));
+    let after=kentos_native_application::file_import_block::read_drawing(&std::fs::read(&path).unwrap()).unwrap();
+    assert_eq!(after.blocks.len(),2);assert_eq!(after.blocks[0],snapshot.blocks[0]);
+    assert_eq!(after.entities[0],snapshot.entities[0]);assert_eq!(after.entities[2],snapshot.entities[2]);
+    assert_ne!(after.entities[1],snapshot.entities[1]);
+    call(&mut server,"drawing.undo",json!({"drawing":drawing}));call(&mut server,"drawing.save",json!({"drawing":drawing,"path":path}));
+    assert_eq!(std::fs::read(&path).unwrap(),before);std::fs::remove_dir_all(dir).unwrap();
+}
