@@ -89,7 +89,7 @@ use kentos_native_application::{
     images_clip, labels_pin, labels_report, layers_compose, layers_contingents, layers_edit,
     layers_filter, layers_find, layers_indexes, layers_info, layers_labels, layers_renderer,
     layers_rules, layers_service, layers_set, layers_states, layers_subtypes, layers_table,
-    layers_time, layers_translate, leaders_edit, legends, levels_assign, line, linearref_define,
+    layers_time, layers_translate, leaders_edit, legends, levels_assign, line, linearref_define, road_terrains_create, road_terrains_edit, road_terrains_query,
     network_define, north, nurbs, objects_derive, offset, openings_create, openings_distances,
     openings_edit, opening_types_edit, materials_edit, openings_query, modules_edit, modules_query, options_edit, options_query, elevations_edit, elevations_query, parcels, point, points_construct, polygon, polygon_regular, polyline,
     rectangle_create, revcloud_create, revisions, roads_edit, scenarios_edit, sector_create, set,
@@ -3482,6 +3482,25 @@ impl Input for kentos_commands::LinearRefDefine {
     }
 }
 
+// KentOS Yol's terrain surfaces (plan/road.md Y2.3): no number is put at an error's path.
+impl Input for kentos_commands::TerrainsCreate {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::TerrainsEdit {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::TerrainsQuery {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
 impl Input for EntitiesOffset {
     /// `by.distance`, `by.side.x`, `by.point.y` (which the step's input must give).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
@@ -4571,6 +4590,15 @@ fn run_op(
         kentos_commands::CAD_LINEARREF_DEFINE => {
             run!(linearref_define, kentos_commands::LinearRefDefine)
         }
+        kentos_commands::ROAD_TERRAINS_CREATE => {
+            run!(road_terrains_create, kentos_commands::TerrainsCreate)
+        }
+        kentos_commands::ROAD_TERRAINS_EDIT => {
+            run!(road_terrains_edit, kentos_commands::TerrainsEdit)
+        }
+        kentos_commands::ROAD_TERRAINS_QUERY => {
+            run!(road_terrains_query, kentos_commands::TerrainsQuery)
+        }
         kentos_commands::CAD_SUBNETWORKS_FIND => {
             run!(subnetworks, kentos_commands::SubnetworksFind)
         }
@@ -5572,6 +5600,12 @@ fn check(
                 let got = serde_json::to_value(&doc.settings().address_locators)
                     .map_err(|e| format!("{at}: {e}"))?;
                 expect_same(&got, &fill(want, doc, state, at)?, "adres verileri", at)?;
+            }
+            // A road project's terrain surfaces' definitions (plan/road.md Y2.3); null: none.
+            "road" => {
+                let got = serde_json::to_value(&doc.settings().road)
+                    .map_err(|e| format!("{at}: {e}"))?;
+                expect_same(&got, &fill(want, doc, state, at)?, "yol ayarları", at)?;
             }
             // The project's links of event layers to their routes (docs/adr/0569 §2).
             "linearEvents" => {

@@ -1498,6 +1498,33 @@ const ENTRIES: &[Entry] = &[
         warnings: &["unknown_layer"],
         targets: none,
     },
+    // KentOS Yol's terrain surfaces (plan/road.md Y2.3).
+    Entry {
+        id: "road.terrains.create",
+        refusals: &[
+            &["not_a_road_project", "invalid_terrain"],
+            REVISION,
+            &["terrain_unbuildable"],
+        ],
+        warnings: &["terrain_source_left"],
+        targets: none,
+    },
+    Entry {
+        id: "road.terrains.edit",
+        refusals: &[
+            &["not_a_road_project", "no_terrain", "no_id", "invalid_terrain"],
+            REVISION,
+            &["unknown_terrain", "terrain_unbuildable"],
+        ],
+        warnings: &["terrain_source_left"],
+        targets: none,
+    },
+    Entry {
+        id: "road.terrains.query",
+        refusals: &[&["not_a_road_project", "unknown_terrain", "no_terrain", "invalid_places"]],
+        warnings: &[],
+        targets: none,
+    },
     // Alt ağlar (docs/adr/0557 §2).
     Entry {
         id: "cad.subnetworks.find",

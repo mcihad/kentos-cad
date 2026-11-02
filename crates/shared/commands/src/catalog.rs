@@ -6591,6 +6591,108 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // KentOS Yol's terrain surfaces (plan/road.md Y2.3, docs/adr/0900 §11), held together by
+        // fixtures/commands/v1/road.terrains.{create,edit,query}.json.
+        CommandDescriptor {
+            id: crate::ROAD_TERRAINS_CREATE.into(),
+            version: crate::ROAD_TERRAINS_CREATE_VERSION,
+            title: "Arazi yüzeyi oluştur".into(),
+            summary: "Yol projesinde (cadWork road) çizimin noktalarından ve kırık hatlarından kısıtlı Delaunay üçgenleriyle (kentos.cdt/1) bir arazi yüzeyi kurar ve tanımını projenin yol ayarlarına sona yazar, kabul edilmiş olarak (built: kaynaklarının özeti). \
+                      Kaynaklar: points ve breaklines için katman ya da grup kimlikleri (layers; grubun bütün katmanları) ve nesne kimlikleri (uids). Nokta nesnesinin kotlu yerleri nokta olur; çizginin, çoklu çizginin ve alanın her köşesi kotlu yolu kırık hattır (alanın halkaları kapalı). boundary ve voids düz kenarlı bir alanın ya da kapalı çoklu çizginin kimliğidir; köşeleri yüzeyin kotunu alır. tolerance aynı yerdeki iki kaydın tek köşe olacağı kot farkı (m, varsayılan 0,001), maxEdge dış kenarı bundan uzun dış üçgenlerin atılacağı uzunluk (m). \
+                      Üçgenler kaydedilmez: yüzey her açılışta kaynaklarından yeniden kurulur. Kullanılamayan her kaynak (çizimde yok, kotu eksik, yaylı kenar, türü uymuyor, kapalı değil) terrain_source_left uyarısıdır; yüzey onsuz kurulur. Kurulamayan yüzey (çok az nokta, bir yerde iki kot, kesişen kırık hatlar, noktaların dışında sınır) terrain_unbuildable ile reddedilir, ileti yeri söyler. \
+                      id verilmezse t-1, t-2 … ilk boş olanıdır; kimlik ve ad (büyük küçük harf ayrımsız) projede tektir. Proje ayarıdır: çizimi kirli yapar, geri alma adımı değildir. Retler: not_a_road_project, invalid_terrain, invalid_revision, revision_conflict, terrain_unbuildable."
+                .into(),
+            aliases: vec!["yuzeyolustur".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::TerrainsCreate>(),
+            output: schema::<crate::TerrainsWritten>(),
+            plan: Some(schema::<crate::TerrainsWritten>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Zemin katmanının noktalarından, eksen kırık hattıyla, parsel sınırında mevcut zemin".into(),
+                input: json!({
+                    "name": "Mevcut zemin",
+                    "points": { "layers": ["zemin"] },
+                    "breaklines": { "layers": ["kirik"] },
+                    "boundary": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e17",
+                    "maxEdge": 60.0
+                }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_TERRAINS_EDIT.into(),
+            version: crate::ROAD_TERRAINS_EDIT_VERSION,
+            title: "Arazi yüzeyini düzenle".into(),
+            summary: "Yol projesinin bir arazi yüzeyini düzenler. set: surface tanımı aynı kimlikli yüzeyin yerini alır (built verilmez; yüzey son kabul edildiği özeti korur, tanımı değişen yüzey kabul edilene dek eskidir). \
+                      accept: id'li yüzey kaynaklarından yeniden kurulur ve kabul edilir (built kaynakların bugünkü özeti olur); kurulamıyorsa terrain_unbuildable. remove: id'li yüzey kalkar. \
+                      Cevap projenin yüzeyleri ve (set ve accept'te) yüzeyin bugünkü durumudur: current, stale, new ya da unbuildable, özeti, kullanılamayan kaynakları ve ölçüleri. Proje ayarıdır, geri alma adımı değildir. \
+                      Retler: not_a_road_project, no_terrain, no_id, invalid_terrain, invalid_revision, revision_conflict, unknown_terrain, terrain_unbuildable."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::TerrainsEdit>(),
+            output: schema::<crate::TerrainsWritten>(),
+            plan: Some(schema::<crate::TerrainsWritten>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Kaynakları değişen yüzeyi yeniden kabul et".into(),
+                    input: json!({ "operation": "accept", "id": "t-1" }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Yüzeyi sil".into(),
+                    input: json!({ "operation": "remove", "id": "t-1" }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_TERRAINS_QUERY.into(),
+            version: crate::ROAD_TERRAINS_QUERY_VERSION,
+            title: "Arazi yüzeyini sorgula".into(),
+            summary: "Yol projesinin arazi yüzeylerini kaynaklarından bugün kurulduğu gibi verir; hiçbir şey yazmaz. Her yüzeyin durumu (current: son kabul edildiği kaynaklarla aynı; stale: kaynakları ya da tanımı değişti; new: hiç kabul edilmedi; unbuildable: kurulamıyor, problem nedenini ve yerini söyler), kaynaklarının özeti, kullanılamayan kaynakları ve ölçüleri (köşe, üçgen, kısıt kenarı, plan alanı m², en düşük ve en yüksek kot, birleşen, bölünen, kırpılan). \
+                      surface (kimlik ya da ad) verilince yalnız o yüzey; at yerlerin kotları (inside, outside, void; dışarıda ve boşlukta kot yok, dışa uzatılmaz), along iki ya da daha çok yerli hattın kesiti: hattın köşeleri ve üçgen kenarlarını kestiği her yer, başından uzaklığı (station), kotu, ve önceki yerden bu yere hattın yüzeyin dışında kalıp kalmadığı (gap). \
+                      Retler: not_a_road_project, unknown_terrain, no_terrain, invalid_places."
+                .into(),
+            aliases: vec!["kotsor".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::TerrainsQuery>(),
+            output: schema::<crate::TerrainsQueried>(),
+            plan: Some(schema::<crate::TerrainsQueried>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Projenin yüzeyleri ve durumları".into(),
+                    input: json!({}),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Bir yerin kotu ve bir hattın kesiti".into(),
+                    input: json!({ "surface": "Mevcut zemin", "at": [[20.0, 15.0]], "along": [[0.0, 10.0], [40.0, 20.0]] }),
+                    output: None,
+                },
+            ],
+        },
         // Topolojiyi denetle (docs/adr/0589), held together by fixtures/commands/v1/cad.topology.check.json.
         CommandDescriptor {
             id: crate::CAD_TOPOLOGY_CHECK.into(),
@@ -12109,6 +12211,15 @@ mod tests {
                         serde_json::from_value::<crate::LinearRefDefine>(e.input.clone())
                             .map(|_| ())
                     }
+                    crate::ROAD_TERRAINS_CREATE => {
+                        serde_json::from_value::<crate::TerrainsCreate>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_TERRAINS_EDIT => {
+                        serde_json::from_value::<crate::TerrainsEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_TERRAINS_QUERY => {
+                        serde_json::from_value::<crate::TerrainsQuery>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_SUBNETWORKS_FIND => {
                         serde_json::from_value::<crate::SubnetworksFind>(e.input.clone())
                             .map(|_| ())
@@ -12746,6 +12857,14 @@ mod tests {
                         }
                         crate::CAD_LINEARREF_DEFINE => {
                             serde_json::from_value::<crate::LinearRefDefined>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_TERRAINS_CREATE | crate::ROAD_TERRAINS_EDIT => {
+                            serde_json::from_value::<crate::TerrainsWritten>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_TERRAINS_QUERY => {
+                            serde_json::from_value::<crate::TerrainsQueried>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_ADDRESSES_DEFINE => {

@@ -260,6 +260,10 @@ pub mod match_props;
 pub mod network_define;
 pub mod event_follow;
 pub mod linearref_define;
+pub mod road_terrains;
+pub mod road_terrains_create;
+pub mod road_terrains_edit;
+pub mod road_terrains_query;
 pub mod lrs_events;
 pub mod nurbs;
 pub mod walls;
@@ -1081,6 +1085,20 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_LINEARREF_DEFINE,
         kentos_commands::CAD_LINEARREF_DEFINE_VERSION,
+    ),
+    // KentOS Yol's terrain surfaces ([`road_terrains_create`], [`road_terrains_edit`], [`road_terrains_query`],
+    // plan/road.md Y2.3).
+    (
+        kentos_commands::ROAD_TERRAINS_CREATE,
+        kentos_commands::ROAD_TERRAINS_CREATE_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_TERRAINS_EDIT,
+        kentos_commands::ROAD_TERRAINS_EDIT_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_TERRAINS_QUERY,
+        kentos_commands::ROAD_TERRAINS_QUERY_VERSION,
     ),
     // Alt ağlar ([`subnetworks`], [`subnetworks_update`], docs/adr/0557 §2).
     (

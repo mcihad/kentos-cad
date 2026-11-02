@@ -586,6 +586,21 @@ codes! {
     UNKNOWN_EVENT_LINK = "unknown_event_link", Failed, false, "Projede bu kimlikte olay bağı yok.";
     /// A write left the events of a link that keeps them on their routes out of place (docs/adr/0569 §3).
     EVENTS_DIRTY = "events_dirty", Warning, false, "Olay bağı olayları rotalarında tutuyor ama bu yazma bazılarını yerine koyamadı (rota yok, ölçü sayı değil ya da rotanın dışında, katman kilitli); Olay kaymasını denetle nedenleri söyler.";
+    /// A road command in a project that is not a road project (plan/road.md Y2.3).
+    NOT_A_ROAD_PROJECT = "not_a_road_project", Failed, false, "Bu komut yalnız yol projesinde (KentOS Yol, cadWork road) çalışır.";
+    /// A terrain surface's definition, or the project's surfaces with it, against their rules.
+    INVALID_TERRAIN = "invalid_terrain", Failed, false, "Yüzeyin tanımı ya da onunla projenin yüzeyleri kurallarına uymuyor.";
+    /// `set` without the surface, or a query's places without the surface they are on.
+    NO_TERRAIN = "no_terrain", Failed, false, "Yüzey verilmedi.";
+    /// A surface the project does not have.
+    UNKNOWN_TERRAIN = "unknown_terrain", Failed, false, "Projede bu kimlikte ya da adda yüzey yok.";
+    /// No surface is made of what its sources give (too few points, two heights at one place, crossing breaklines,
+    /// a boundary outside the points).
+    TERRAIN_UNBUILDABLE = "terrain_unbuildable", Failed, false, "Kaynaklardan yüzey kurulamıyor; ileti nedenini ve yerini söyler.";
+    /// A query's places: not finite, a line of one place, too many.
+    INVALID_PLACES = "invalid_places", Failed, false, "Yerler sonlu sayılar olmalı; hat en az iki yerden oluşur, en çok 100 000 yer.";
+    /// A warning: a surface names a source the drawing cannot give (missing, without heights, an arc edge …).
+    TERRAIN_SOURCE_LEFT = "terrain_source_left", Warning, false, "Yüzeyin bir kaynağı kullanılamadı; yüzey onsuz kuruldu.";
     /// A warning: a network or a locator names a layer the drawing does not have.
     UNKNOWN_LAYER = "unknown_layer", Warning, false, "Tanım çizimde olmayan bir katmanı adlıyor.";
     /// `set` without a locator.

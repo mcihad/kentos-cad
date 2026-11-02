@@ -736,6 +736,8 @@ fn command_tool(c: &Value) -> Value {
             | "cad.network.define"
             // Its remove takes an event link away (docs/adr/0569 §2).
             | "cad.linearref.define"
+            // Its remove takes a terrain surface's definition away; its set changes one (plan/road.md Y2.3).
+            | "road.terrains.edit"
             // It overwrites the attribute's values and takes them away from what no subnetwork reaches (docs/adr/0557 §2).
             | "cad.subnetworks.update"
             // Its remove takes address data's definition away (docs/adr/0229 §14).
@@ -1124,7 +1126,10 @@ fn on_desktop(server: &mut Server, handle: &str, name: &str, args: &Value) -> Re
                 format!("{command}: masaüstündeki çizimi kullanıcı dışa aktarır; ondan isteyin."),
             ));
         }
-        command if command.starts_with("cad.") => ("call", envelope_of(command, args)),
+        // KentOS Yol's commands go the same way (plan/road.md Y2.3).
+        command if command.starts_with("cad.") || command.starts_with("road.") => {
+            ("call", envelope_of(command, args))
+        }
         "drawing.job.start" => ("start", job_envelope(args)),
         "drawing.job.status" | "drawing.job.wait" => ("job", json!({ "id": args.get("id") })),
         "drawing.job.cancel" => ("cancel", json!({ "id": args.get("id") })),

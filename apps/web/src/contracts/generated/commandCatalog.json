@@ -33995,6 +33995,487 @@
       ]
     },
     {
+      "id": "road.terrains.create",
+      "version": 1,
+      "title": "Arazi yüzeyi oluştur",
+      "summary": "Yol projesinde (cadWork road) çizimin noktalarından ve kırık hatlarından kısıtlı Delaunay üçgenleriyle (kentos.cdt/1) bir arazi yüzeyi kurar ve tanımını projenin yol ayarlarına sona yazar, kabul edilmiş olarak (built: kaynaklarının özeti). Kaynaklar: points ve breaklines için katman ya da grup kimlikleri (layers; grubun bütün katmanları) ve nesne kimlikleri (uids). Nokta nesnesinin kotlu yerleri nokta olur; çizginin, çoklu çizginin ve alanın her köşesi kotlu yolu kırık hattır (alanın halkaları kapalı). boundary ve voids düz kenarlı bir alanın ya da kapalı çoklu çizginin kimliğidir; köşeleri yüzeyin kotunu alır. tolerance aynı yerdeki iki kaydın tek köşe olacağı kot farkı (m, varsayılan 0,001), maxEdge dış kenarı bundan uzun dış üçgenlerin atılacağı uzunluk (m). Üçgenler kaydedilmez: yüzey her açılışta kaynaklarından yeniden kurulur. Kullanılamayan her kaynak (çizimde yok, kotu eksik, yaylı kenar, türü uymuyor, kapalı değil) terrain_source_left uyarısıdır; yüzey onsuz kurulur. Kurulamayan yüzey (çok az nokta, bir yerde iki kot, kesişen kırık hatlar, noktaların dışında sınır) terrain_unbuildable ile reddedilir, ileti yeri söyler. id verilmezse t-1, t-2 … ilk boş olanıdır; kimlik ve ad (büyük küçük harf ayrımsız) projede tektir. Proje ayarıdır: çizimi kirli yapar, geri alma adımı değildir. Retler: not_a_road_project, invalid_terrain, invalid_revision, revision_conflict, terrain_unbuildable.",
+      "aliases": [
+        "yuzeyolustur"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.terrains.create` v1: a new surface's definition; its id when not given is the first free of `t-1`,\n`t-2` …\n\nRefusals, checked in this order: `not_a_road_project`, `invalid_terrain` (the definition, or the project's surfaces\nwith it, by `road_problem`; path the field's), `invalid_revision`, `revision_conflict`, `terrain_unbuildable` (no\nsurface is made of what the sources give: too few points, two heights at one place, crossing breaklines, a boundary\noutside; the message says where). What the definition names and the drawing cannot give is the warning\n`terrain_source_left`, one for each, by the object's or the layer's id.",
+        "properties": {
+          "boundary": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "breaklines": {
+            "$ref": "#/$defs/SurfaceSources"
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "maxEdge": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "name": {
+            "type": "string"
+          },
+          "points": {
+            "$ref": "#/$defs/SurfaceSources"
+          },
+          "tolerance": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "voids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "TerrainsCreate",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.terrains.create` and `.edit` v1, and their plan: the project's surfaces as the write leaves them,\nthe one written or accepted as its sources give it (none for a remove), and the revision after it (a plan: before).",
+        "properties": {
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "surface": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TerrainReport"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "surfaces": {
+            "items": {
+              "$ref": "#/$defs/TerrainSurfaceDef"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "surfaces",
+          "revision"
+        ],
+        "title": "TerrainsWritten",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.terrains.create` and `.edit` v1, and their plan: the project's surfaces as the write leaves them,\nthe one written or accepted as its sources give it (none for a remove), and the revision after it (a plan: before).",
+        "properties": {
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "surface": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TerrainReport"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "surfaces": {
+            "items": {
+              "$ref": "#/$defs/TerrainSurfaceDef"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "surfaces",
+          "revision"
+        ],
+        "title": "TerrainsWritten",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "invalid_terrain",
+          "invalid_revision",
+          "revision_conflict",
+          "terrain_unbuildable"
+        ],
+        "warnings": [
+          "terrain_source_left"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Zemin katmanının noktalarından, eksen kırık hattıyla, parsel sınırında mevcut zemin",
+          "input": {
+            "boundary": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e17",
+            "breaklines": {
+              "layers": [
+                "kirik"
+              ]
+            },
+            "maxEdge": 60.0,
+            "name": "Mevcut zemin",
+            "points": {
+              "layers": [
+                "zemin"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "road.terrains.edit",
+      "version": 1,
+      "title": "Arazi yüzeyini düzenle",
+      "summary": "Yol projesinin bir arazi yüzeyini düzenler. set: surface tanımı aynı kimlikli yüzeyin yerini alır (built verilmez; yüzey son kabul edildiği özeti korur, tanımı değişen yüzey kabul edilene dek eskidir). accept: id'li yüzey kaynaklarından yeniden kurulur ve kabul edilir (built kaynakların bugünkü özeti olur); kurulamıyorsa terrain_unbuildable. remove: id'li yüzey kalkar. Cevap projenin yüzeyleri ve (set ve accept'te) yüzeyin bugünkü durumudur: current, stale, new ya da unbuildable, özeti, kullanılamayan kaynakları ve ölçüleri. Proje ayarıdır, geri alma adımı değildir. Retler: not_a_road_project, no_terrain, no_id, invalid_terrain, invalid_revision, revision_conflict, unknown_terrain, terrain_unbuildable.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.terrains.edit` v1.\n\nRefusals, in this order: `not_a_road_project`, `no_terrain` (set without `surface`), `no_id` (accept or remove\nwithout `id`), `invalid_terrain` (set: the definition, given without `built`, or the surfaces with it),\n`invalid_revision`, `revision_conflict`, `unknown_terrain` (no surface of the id), `terrain_unbuildable` (accept).",
+        "properties": {
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "operation": {
+            "$ref": "#/$defs/TerrainsEditOperation"
+          },
+          "surface": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TerrainSurfaceDef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "operation"
+        ],
+        "title": "TerrainsEdit",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.terrains.create` and `.edit` v1, and their plan: the project's surfaces as the write leaves them,\nthe one written or accepted as its sources give it (none for a remove), and the revision after it (a plan: before).",
+        "properties": {
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "surface": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TerrainReport"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "surfaces": {
+            "items": {
+              "$ref": "#/$defs/TerrainSurfaceDef"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "surfaces",
+          "revision"
+        ],
+        "title": "TerrainsWritten",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.terrains.create` and `.edit` v1, and their plan: the project's surfaces as the write leaves them,\nthe one written or accepted as its sources give it (none for a remove), and the revision after it (a plan: before).",
+        "properties": {
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "surface": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TerrainReport"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "surfaces": {
+            "items": {
+              "$ref": "#/$defs/TerrainSurfaceDef"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "surfaces",
+          "revision"
+        ],
+        "title": "TerrainsWritten",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "no_terrain",
+          "no_id",
+          "invalid_terrain",
+          "invalid_revision",
+          "revision_conflict",
+          "unknown_terrain",
+          "terrain_unbuildable"
+        ],
+        "warnings": [
+          "terrain_source_left"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Kaynakları değişen yüzeyi yeniden kabul et",
+          "input": {
+            "id": "t-1",
+            "operation": "accept"
+          }
+        },
+        {
+          "title": "Yüzeyi sil",
+          "input": {
+            "id": "t-1",
+            "operation": "remove"
+          }
+        }
+      ]
+    },
+    {
+      "id": "road.terrains.query",
+      "version": 1,
+      "title": "Arazi yüzeyini sorgula",
+      "summary": "Yol projesinin arazi yüzeylerini kaynaklarından bugün kurulduğu gibi verir; hiçbir şey yazmaz. Her yüzeyin durumu (current: son kabul edildiği kaynaklarla aynı; stale: kaynakları ya da tanımı değişti; new: hiç kabul edilmedi; unbuildable: kurulamıyor, problem nedenini ve yerini söyler), kaynaklarının özeti, kullanılamayan kaynakları ve ölçüleri (köşe, üçgen, kısıt kenarı, plan alanı m², en düşük ve en yüksek kot, birleşen, bölünen, kırpılan). surface (kimlik ya da ad) verilince yalnız o yüzey; at yerlerin kotları (inside, outside, void; dışarıda ve boşlukta kot yok, dışa uzatılmaz), along iki ya da daha çok yerli hattın kesiti: hattın köşeleri ve üçgen kenarlarını kestiği her yer, başından uzaklığı (station), kotu, ve önceki yerden bu yere hattın yüzeyin dışında kalıp kalmadığı (gap). Retler: not_a_road_project, unknown_terrain, no_terrain, invalid_places.",
+      "aliases": [
+        "kotsor"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.terrains.query` v1: every surface's state and figures, or one's (`surface`: its id or name) with its\nheights at places (`at`) and its section along a line (`along`, two places or more).\n\nRefusals: `not_a_road_project`, `unknown_terrain`, `no_terrain` (`at` or `along` without `surface`),\n`invalid_places` (a place not finite, a line of one place, more than 100 000 places).",
+        "properties": {
+          "along": {
+            "items": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            },
+            "type": "array",
+            "x-unit": "length"
+          },
+          "at": {
+            "items": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            },
+            "type": "array",
+            "x-unit": "length"
+          },
+          "surface": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "title": "TerrainsQuery",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.terrains.query` v1: the surfaces' reports (one when `surface` is given), and that one's heights\nand section.",
+        "properties": {
+          "heights": {
+            "items": {
+              "$ref": "#/$defs/TerrainHeight"
+            },
+            "type": "array"
+          },
+          "section": {
+            "items": {
+              "$ref": "#/$defs/TerrainSectionPoint"
+            },
+            "type": "array"
+          },
+          "surfaces": {
+            "items": {
+              "$ref": "#/$defs/TerrainReport"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "surfaces"
+        ],
+        "title": "TerrainsQueried",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.terrains.query` v1: the surfaces' reports (one when `surface` is given), and that one's heights\nand section.",
+        "properties": {
+          "heights": {
+            "items": {
+              "$ref": "#/$defs/TerrainHeight"
+            },
+            "type": "array"
+          },
+          "section": {
+            "items": {
+              "$ref": "#/$defs/TerrainSectionPoint"
+            },
+            "type": "array"
+          },
+          "surfaces": {
+            "items": {
+              "$ref": "#/$defs/TerrainReport"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "surfaces"
+        ],
+        "title": "TerrainsQueried",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_terrain",
+          "no_terrain",
+          "invalid_places"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Projenin yüzeyleri ve durumları",
+          "input": {}
+        },
+        {
+          "title": "Bir yerin kotu ve bir hattın kesiti",
+          "input": {
+            "along": [
+              [
+                0.0,
+                10.0
+              ],
+              [
+                40.0,
+                20.0
+              ]
+            ],
+            "at": [
+              [
+                20.0,
+                15.0
+              ]
+            ],
+            "surface": "Mevcut zemin"
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.topology.check",
       "version": 1,
       "title": "Topolojiyi denetle",
@@ -67793,6 +68274,48 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Olay bağı olayları rotalarında tutuyor ama bu yazma bazılarını yerine koyamadı (rota yok, ölçü sayı değil ya da rotanın dışında, katman kilitli); Olay kaymasını denetle nedenleri söyler."
+    },
+    {
+      "code": "not_a_road_project",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu komut yalnız yol projesinde (KentOS Yol, cadWork road) çalışır."
+    },
+    {
+      "code": "invalid_terrain",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Yüzeyin tanımı ya da onunla projenin yüzeyleri kurallarına uymuyor."
+    },
+    {
+      "code": "no_terrain",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Yüzey verilmedi."
+    },
+    {
+      "code": "unknown_terrain",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Projede bu kimlikte ya da adda yüzey yok."
+    },
+    {
+      "code": "terrain_unbuildable",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kaynaklardan yüzey kurulamıyor; ileti nedenini ve yerini söyler."
+    },
+    {
+      "code": "invalid_places",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Yerler sonlu sayılar olmalı; hat en az iki yerden oluşur, en çok 100 000 yer."
+    },
+    {
+      "code": "terrain_source_left",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Yüzeyin bir kaynağı kullanılamadı; yüzey onsuz kuruldu."
     },
     {
       "code": "unknown_layer",
@@ -138455,6 +138978,293 @@
       ],
       "type": "object"
     },
+    "TerrainFigures": {
+      "description": "A surface's figures: corners, kept triangles, constrained edges (breaklines' and rings' pieces), plan area and the\nkept corners' lowest and highest heights.",
+      "properties": {
+        "area": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "constrained": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "maxZ": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "elevation"
+        },
+        "merged": {
+          "description": "Records at one place within the tolerance, made one corner.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "minZ": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "elevation"
+        },
+        "split": {
+          "description": "Breakline pieces split at a corner on them.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "triangles": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "trimmed": {
+          "description": "Outer triangles left out by the edge method.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "vertices": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        }
+      },
+      "required": [
+        "vertices",
+        "triangles",
+        "constrained",
+        "area",
+        "merged",
+        "split",
+        "trimmed"
+      ],
+      "type": "object"
+    },
+    "TerrainHeight": {
+      "description": "A place's height: none outside and in a void.",
+      "properties": {
+        "place": {
+          "$ref": "#/$defs/TerrainPlace"
+        },
+        "x": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "y": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "z": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "elevation"
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "place"
+      ],
+      "type": "object"
+    },
+    "TerrainLeft": {
+      "description": "What a surface names and could not use, and why: `missing` (not in the drawing), `no_height`, `arc_edge`,\n`wrong_kind`, `not_closed`, `too_few`.",
+      "properties": {
+        "id": {
+          "description": "The object's or the layer's id.",
+          "type": "string"
+        },
+        "role": {
+          "description": "`points`, `breaklines`, `boundary`, `voids`.",
+          "type": "string"
+        },
+        "why": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "role",
+        "why"
+      ],
+      "type": "object"
+    },
+    "TerrainPlace": {
+      "description": "Where a place is on a surface.",
+      "enum": [
+        "inside",
+        "outside",
+        "void"
+      ],
+      "type": "string"
+    },
+    "TerrainProblem": {
+      "description": "Why no surface is made: the core's code (`too_few_points`, `height_ambiguous`, `height_conflict`,\n`constraints_cross`, `boundary_outside` …), its words and its place.",
+      "properties": {
+        "at": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "code": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "type": "object"
+    },
+    "TerrainReport": {
+      "description": "A surface as its sources give it now.",
+      "properties": {
+        "built": {
+          "description": "The digest it was last accepted from.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "digest": {
+          "description": "The sources' digest now.",
+          "type": "string"
+        },
+        "figures": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TerrainFigures"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "left": {
+          "items": {
+            "$ref": "#/$defs/TerrainLeft"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        },
+        "problem": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TerrainProblem"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "state": {
+          "$ref": "#/$defs/TerrainState"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "state",
+        "digest"
+      ],
+      "type": "object"
+    },
+    "TerrainSectionPoint": {
+      "description": "A place of a section: its distance from the line's start, where it is, its height (none off the surface), and\n`gap`: the line from the previous place to this one is off the surface.",
+      "properties": {
+        "gap": {
+          "type": "boolean"
+        },
+        "station": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "x": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "y": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "z": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "elevation"
+        }
+      },
+      "required": [
+        "station",
+        "x",
+        "y"
+      ],
+      "type": "object"
+    },
+    "TerrainState": {
+      "description": "A surface's state against its sources.",
+      "oneOf": [
+        {
+          "const": "current",
+          "description": "Made from the sources it was last accepted from.",
+          "type": "string"
+        },
+        {
+          "const": "stale",
+          "description": "Its sources, or its definition, changed since.",
+          "type": "string"
+        },
+        {
+          "const": "new",
+          "description": "Never accepted.",
+          "type": "string"
+        },
+        {
+          "const": "unbuildable",
+          "description": "No surface is made of what its sources give now (`problem` says why).",
+          "type": "string"
+        }
+      ]
+    },
     "TerrainSurfaceDef": {
       "additionalProperties": false,
       "description": "A terrain surface's definition.",
@@ -138520,6 +139330,26 @@
         "name"
       ],
       "type": "object"
+    },
+    "TerrainsEditOperation": {
+      "description": "What `road.terrains.edit` does.",
+      "oneOf": [
+        {
+          "const": "set",
+          "description": "`surface` replaces the project's definition of its id; it keeps the digest it was last accepted from, so a\nchanged definition is out of date until accepted.",
+          "type": "string"
+        },
+        {
+          "const": "accept",
+          "description": "The surface of `id`, made again from its sources, is accepted: its digest becomes the sources'.",
+          "type": "string"
+        },
+        {
+          "const": "remove",
+          "description": "The surface of `id` goes.",
+          "type": "string"
+        }
+      ]
     },
     "TextAlign": {
       "description": "Which point of a text its `p` is (docs/adr/0145 §1): horizontally its\nleft, centre or right; vertically on its baseline, at its bottom (0.2 of\nits height under the baseline), its middle (half its height over it) or\nits top (its height over it). The left of the baseline, where a text\nalways stood, is no value but the field's absence: a text has one\nspelling.",

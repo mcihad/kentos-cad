@@ -1,6 +1,6 @@
 # ADR 0900 — Yol arazi yüzeyi: kısıtlı Delaunay ve kot sorgusu
 
-Tarih: 2026-11-02. plan/road.md Y2 (ROAD-TIN-01…11, ROAD-SURVEY-01/03/08, ROAD-NUM-10). Durum: Y2.1 ve Y2.2 uygulandı.
+Tarih: 2026-11-02. plan/road.md Y2 (ROAD-TIN-01…11, ROAD-SURVEY-01/03/08, ROAD-NUM-10). Durum: Y2.1, Y2.2 ve Y2.3 uygulandı.
 
 ## Dayanak
 
@@ -64,6 +64,22 @@ Tarih: 2026-11-02. plan/road.md Y2 (ROAD-TIN-01…11, ROAD-SURVEY-01/03/08, ROAD
     türden nesne kaynak sayılmaz), okuduğunun ve yöntemin özetini (SHA-256, kanonik JSON) çıkarır. `built` en son kabul
     edilen özettir: aynısıysa yüzey güncel, değilse eskidi, yoksa yeni. Yaylı kırık hat ve kesişen kırık hatların bölünmesi
     sonraki dilimdir.
+
+11. **Komutlar (Y2.3).** Civil 3D'nin `FindElevationAtXY` ve `SampleElevations`'ı
+    ([TinSurface.SampleElevations](https://help.autodesk.com/cloudhelp/2026/ENU/Civil3D-API/files/html/2cd1483c-2a6c-5bb6-167b-bd01f0a839cf.htm)),
+    OpenRoads'un nokta analizi, hattın profili ve arazinin en yüksek, en düşük kotu
+    ([arazi istatistiği](https://DOCS.BENTLEY.COM/LiveContent/web/OpenRoads%20Designer%20SDK%20Help-v1/en/GUID-924386D9-A468-49C5-9F0F-7D251A9EA07A.html))
+    gibi üç ürün komutu, yalnız yol projesinde (`not_a_road_project`): `road.terrains.create` (yüzeyi kurar, tanımı kabul
+    edilmiş olarak sona; kimlik verilmezse ilk boş `t-n`), `road.terrains.edit` (`set`: tanım değişir, özet kalır, değişen
+    tanım kabul edilene dek eskidir; `accept`; `remove`; son yüzey kalkınca yol ayarı da kalkar), `road.terrains.query`
+    (her yüzeyin durumu `current`/`stale`/`new`/`unbuildable`, özeti, kullanılamayan kaynakları, ölçüleri: köşe, üçgen,
+    kısıt kenarı, plan alanı, en düşük ve en yüksek kot; bir yüzeyin `at` yerlerinde kotu ve `along` hattında kesiti:
+    hattın köşeleri ve kenarları kestiği her yer, istasyonu, kotu, önceki yerden yüzeyin dışına çıkan `gap`). Kesitte kenar
+    kesişiminin kotu kenarın kendi doğrusundan, öbür yerlerinki üçgeninden (`Surface::section`, `figures`). Kurulamayan
+    yüzeyin nedeni çekirdeğin kodu ve ona bağlı sabit Türkçe cümle, yeriyle. Proje ayarıdır, geri alma adımı değildir;
+    aynı tanımı yazmak çizimi kirletmez. 28 + 21 + 20 ortak durum (`scripts/fixtures/road_terrain_command_cases.py`:
+    kaynaklar §10'un kuralıyla, yüzey Triangle'ın, ölçüler ve kesitler kesirlerle, özet kanonik JSON'un SHA-256'sı);
+    Python `kentos.cad.road.terrains` ve kısa biçimi `kentos.road`, MCP aracı (masaüstü bağlantısında da `road.*`).
 
 ## Sonra
 

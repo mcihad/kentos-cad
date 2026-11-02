@@ -6264,6 +6264,51 @@ TenantKindName = Literal["organization", "personal"]
 """The names of :class:`TenantKind`, for a plain string."""
 
 
+class TerrainPlace(_StrEnum):
+    """Where a place is on a surface."""
+    INSIDE = "inside"
+    OUTSIDE = "outside"
+    VOID = "void"
+
+
+TerrainPlaceName = Literal["inside", "outside", "void"]
+"""The names of :class:`TerrainPlace`, for a plain string."""
+
+
+class TerrainState(_StrEnum):
+    """A surface's state against its sources.
+
+    - ``current``: Made from the sources it was last accepted from.
+    - ``stale``: Its sources, or its definition, changed since.
+    - ``new``: Never accepted.
+    - ``unbuildable``: No surface is made of what its sources give now (`problem` says why).
+    """
+    CURRENT = "current"
+    STALE = "stale"
+    NEW = "new"
+    UNBUILDABLE = "unbuildable"
+
+
+TerrainStateName = Literal["current", "stale", "new", "unbuildable"]
+"""The names of :class:`TerrainState`, for a plain string."""
+
+
+class TerrainsEditOperation(_StrEnum):
+    """What `road.terrains.edit` does.
+
+    - ``set``: `surface` replaces the project's definition of its id; it keeps the digest it was last accepted from, so a
+    - ``accept``: The surface of `id`, made again from its sources, is accepted: its digest becomes the sources'.
+    - ``remove``: The surface of `id` goes.
+    """
+    SET = "set"
+    ACCEPT = "accept"
+    REMOVE = "remove"
+
+
+TerrainsEditOperationName = Literal["set", "accept", "remove"]
+"""The names of :class:`TerrainsEditOperation`, for a plain string."""
+
+
 class TextAlign(_StrEnum):
     """Which point of a text its `p` is (docs/adr/0145 §1): horizontally its
     left, centre or right; vertically on its baseline, at its bottom (0.2 of
@@ -67061,6 +67106,233 @@ class TerminalDevice(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class TerrainFigures(_Model):
+    """A surface's figures: corners, kept triangles, constrained edges (breaklines' and rings' pieces), plan area and the
+    kept corners' lowest and highest heights.
+    Attributes:
+        vertices: Unit: count.
+        triangles: Unit: count.
+        constrained: Unit: count.
+        area: Unit: area.
+        merged: Records at one place within the tolerance, made one corner. Unit: count.
+        split: Breakline pieces split at a corner on them. Unit: count.
+        trimmed: Outer triangles left out by the edge method. Unit: count.
+        max_z: Unit: elevation.
+        min_z: Unit: elevation.
+    """
+    vertices: int
+    triangles: int
+    constrained: int
+    area: float
+    merged: int
+    split: int
+    trimmed: int
+    max_z: float | None | Unset = UNSET
+    min_z: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["vertices"] = self.vertices
+        out["triangles"] = self.triangles
+        out["constrained"] = self.constrained
+        out["area"] = float(self.area)
+        out["merged"] = self.merged
+        out["split"] = self.split
+        out["trimmed"] = self.trimmed
+        if self.max_z is not UNSET:
+            out["maxZ"] = None if self.max_z is None else float(self.max_z)
+        if self.min_z is not UNSET:
+            out["minZ"] = None if self.min_z is None else float(self.min_z)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainFigures:
+        return cls(
+            vertices=data["vertices"],
+            triangles=data["triangles"],
+            constrained=data["constrained"],
+            area=float(data["area"]),
+            merged=data["merged"],
+            split=data["split"],
+            trimmed=data["trimmed"],
+            max_z=UNSET if "maxZ" not in data else None if data["maxZ"] is None else float(data["maxZ"]),
+            min_z=UNSET if "minZ" not in data else None if data["minZ"] is None else float(data["minZ"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TerrainHeight(_Model):
+    """A place's height: none outside and in a void.
+    Attributes:
+        x: Unit: length.
+        y: Unit: length.
+        z: Unit: elevation.
+    """
+    x: float
+    y: float
+    place: TerrainPlace | TerrainPlaceName
+    z: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["x"] = float(self.x)
+        out["y"] = float(self.y)
+        out["place"] = _enum_out(self.place)
+        if self.z is not UNSET:
+            out["z"] = None if self.z is None else float(self.z)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainHeight:
+        return cls(
+            x=float(data["x"]),
+            y=float(data["y"]),
+            place=_enum_in(TerrainPlace, data["place"]),
+            z=UNSET if "z" not in data else None if data["z"] is None else float(data["z"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TerrainLeft(_Model):
+    """What a surface names and could not use, and why: `missing` (not in the drawing), `no_height`, `arc_edge`,
+    `wrong_kind`, `not_closed`, `too_few`.
+    Attributes:
+        id: The object's or the layer's id.
+        role: `points`, `breaklines`, `boundary`, `voids`.
+    """
+    id: str
+    role: str
+    why: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["role"] = self.role
+        out["why"] = self.why
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainLeft:
+        return cls(
+            id=data["id"],
+            role=data["role"],
+            why=data["why"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TerrainProblem(_Model):
+    """Why no surface is made: the core's code (`too_few_points`, `height_ambiguous`, `height_conflict`,
+    `constraints_cross`, `boundary_outside` …), its words and its place.
+    Attributes:
+        at: Unit: length.
+    """
+    code: str
+    message: str
+    at: list[float] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["code"] = self.code
+        out["message"] = self.message
+        if self.at is not UNSET:
+            out["at"] = None if self.at is None else [float(e0) for e0 in self.at]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainProblem:
+        return cls(
+            code=data["code"],
+            message=data["message"],
+            at=UNSET if "at" not in data else None if data["at"] is None else [float(e0) for e0 in data["at"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TerrainReport(_Model):
+    """A surface as its sources give it now.
+    Attributes:
+        digest: The sources' digest now.
+        built: The digest it was last accepted from.
+    """
+    id: str
+    name: str
+    state: TerrainState | TerrainStateName
+    digest: str
+    built: str | None | Unset = UNSET
+    figures: TerrainFigures | None | Unset = UNSET
+    left: list[TerrainLeft] | Unset = UNSET
+    problem: TerrainProblem | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["state"] = _enum_out(self.state)
+        out["digest"] = self.digest
+        if self.built is not UNSET:
+            out["built"] = self.built
+        if self.figures is not UNSET:
+            out["figures"] = None if self.figures is None else self.figures.to_json()
+        if self.left is not UNSET:
+            out["left"] = [e0.to_json() for e0 in self.left]
+        if self.problem is not UNSET:
+            out["problem"] = None if self.problem is None else self.problem.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainReport:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            state=_enum_in(TerrainState, data["state"]),
+            digest=data["digest"],
+            built=data.get("built", UNSET),
+            figures=UNSET if "figures" not in data else None if data["figures"] is None else TerrainFigures.from_json(data["figures"]),
+            left=[TerrainLeft.from_json(e0) for e0 in data["left"]] if "left" in data else UNSET,
+            problem=UNSET if "problem" not in data else None if data["problem"] is None else TerrainProblem.from_json(data["problem"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TerrainSectionPoint(_Model):
+    """A place of a section: its distance from the line's start, where it is, its height (none off the surface), and
+    `gap`: the line from the previous place to this one is off the surface.
+    Attributes:
+        station: Unit: length.
+        x: Unit: length.
+        y: Unit: length.
+        z: Unit: elevation.
+    """
+    station: float
+    x: float
+    y: float
+    gap: bool | Unset = UNSET
+    z: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["station"] = float(self.station)
+        out["x"] = float(self.x)
+        out["y"] = float(self.y)
+        if self.gap is not UNSET:
+            out["gap"] = self.gap
+        if self.z is not UNSET:
+            out["z"] = None if self.z is None else float(self.z)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainSectionPoint:
+        return cls(
+            station=float(data["station"]),
+            x=float(data["x"]),
+            y=float(data["y"]),
+            gap=data.get("gap", UNSET),
+            z=UNSET if "z" not in data else None if data["z"] is None else float(data["z"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class TerrainSurfaceDef(_Model):
     """A terrain surface's definition.
     Attributes:
@@ -67116,6 +67388,187 @@ class TerrainSurfaceDef(_Model):
             points=SurfaceSources.from_json(data["points"]) if "points" in data else UNSET,
             tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
             voids=list(data["voids"]) if "voids" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TerrainsCreate(_Model):
+    """Input of `road.terrains.create` v1: a new surface's definition; its id when not given is the first free of `t-1`,
+    `t-2` …
+
+    Refusals, checked in this order: `not_a_road_project`, `invalid_terrain` (the definition, or the project's surfaces
+    with it, by `road_problem`; path the field's), `invalid_revision`, `revision_conflict`, `terrain_unbuildable` (no
+    surface is made of what the sources give: too few points, two heights at one place, crossing breaklines, a boundary
+    outside; the message says where). What the definition names and the drawing cannot give is the warning
+    `terrain_source_left`, one for each, by the object's or the layer's id.
+    Attributes:
+        max_edge: Unit: m.
+        tolerance: Unit: m.
+    """
+    name: str
+    boundary: str | None | Unset = UNSET
+    breaklines: SurfaceSources | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    id: str | None | Unset = UNSET
+    max_edge: float | None | Unset = UNSET
+    points: SurfaceSources | Unset = UNSET
+    tolerance: float | None | Unset = UNSET
+    voids: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        if self.boundary is not UNSET:
+            out["boundary"] = self.boundary
+        if self.breaklines is not UNSET:
+            out["breaklines"] = self.breaklines.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.id is not UNSET:
+            out["id"] = self.id
+        if self.max_edge is not UNSET:
+            out["maxEdge"] = None if self.max_edge is None else float(self.max_edge)
+        if self.points is not UNSET:
+            out["points"] = self.points.to_json()
+        if self.tolerance is not UNSET:
+            out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
+        if self.voids is not UNSET:
+            out["voids"] = list(self.voids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainsCreate:
+        return cls(
+            name=data["name"],
+            boundary=data.get("boundary", UNSET),
+            breaklines=SurfaceSources.from_json(data["breaklines"]) if "breaklines" in data else UNSET,
+            expected_revision=data.get("expectedRevision", UNSET),
+            id=data.get("id", UNSET),
+            max_edge=UNSET if "maxEdge" not in data else None if data["maxEdge"] is None else float(data["maxEdge"]),
+            points=SurfaceSources.from_json(data["points"]) if "points" in data else UNSET,
+            tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
+            voids=list(data["voids"]) if "voids" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TerrainsEdit(_Model):
+    """Input of `road.terrains.edit` v1.
+
+    Refusals, in this order: `not_a_road_project`, `no_terrain` (set without `surface`), `no_id` (accept or remove
+    without `id`), `invalid_terrain` (set: the definition, given without `built`, or the surfaces with it),
+    `invalid_revision`, `revision_conflict`, `unknown_terrain` (no surface of the id), `terrain_unbuildable` (accept).
+    """
+    operation: TerrainsEditOperation | TerrainsEditOperationName
+    expected_revision: str | None | Unset = UNSET
+    id: str | None | Unset = UNSET
+    surface: TerrainSurfaceDef | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = _enum_out(self.operation)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.id is not UNSET:
+            out["id"] = self.id
+        if self.surface is not UNSET:
+            out["surface"] = None if self.surface is None else self.surface.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainsEdit:
+        return cls(
+            operation=_enum_in(TerrainsEditOperation, data["operation"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            id=data.get("id", UNSET),
+            surface=UNSET if "surface" not in data else None if data["surface"] is None else TerrainSurfaceDef.from_json(data["surface"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TerrainsQueried(_Model):
+    """Output of `road.terrains.query` v1: the surfaces' reports (one when `surface` is given), and that one's heights
+    and section.
+    """
+    surfaces: list[TerrainReport]
+    heights: list[TerrainHeight] | Unset = UNSET
+    section: list[TerrainSectionPoint] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["surfaces"] = [e0.to_json() for e0 in self.surfaces]
+        if self.heights is not UNSET:
+            out["heights"] = [e0.to_json() for e0 in self.heights]
+        if self.section is not UNSET:
+            out["section"] = [e0.to_json() for e0 in self.section]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainsQueried:
+        return cls(
+            surfaces=[TerrainReport.from_json(e0) for e0 in data["surfaces"]],
+            heights=[TerrainHeight.from_json(e0) for e0 in data["heights"]] if "heights" in data else UNSET,
+            section=[TerrainSectionPoint.from_json(e0) for e0 in data["section"]] if "section" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TerrainsQuery(_Model):
+    """Input of `road.terrains.query` v1: every surface's state and figures, or one's (`surface`: its id or name) with its
+    heights at places (`at`) and its section along a line (`along`, two places or more).
+
+    Refusals: `not_a_road_project`, `unknown_terrain`, `no_terrain` (`at` or `along` without `surface`),
+    `invalid_places` (a place not finite, a line of one place, more than 100 000 places).
+    Attributes:
+        along: Unit: length.
+        at: Unit: length.
+    """
+    along: list[list[float]] | Unset = UNSET
+    at: list[list[float]] | Unset = UNSET
+    surface: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.along is not UNSET:
+            out["along"] = [[float(e1) for e1 in e0] for e0 in self.along]
+        if self.at is not UNSET:
+            out["at"] = [[float(e1) for e1 in e0] for e0 in self.at]
+        if self.surface is not UNSET:
+            out["surface"] = self.surface
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainsQuery:
+        return cls(
+            along=[[float(e1) for e1 in e0] for e0 in data["along"]] if "along" in data else UNSET,
+            at=[[float(e1) for e1 in e0] for e0 in data["at"]] if "at" in data else UNSET,
+            surface=data.get("surface", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TerrainsWritten(_Model):
+    """Output of `road.terrains.create` and `.edit` v1, and their plan: the project's surfaces as the write leaves them,
+    the one written or accepted as its sources give it (none for a remove), and the revision after it (a plan: before).
+    """
+    surfaces: list[TerrainSurfaceDef]
+    revision: str
+    surface: TerrainReport | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["surfaces"] = [e0.to_json() for e0 in self.surfaces]
+        out["revision"] = self.revision
+        if self.surface is not UNSET:
+            out["surface"] = None if self.surface is None else self.surface.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainsWritten:
+        return cls(
+            surfaces=[TerrainSurfaceDef.from_json(e0) for e0 in data["surfaces"]],
+            revision=data["revision"],
+            surface=UNSET if "surface" not in data else None if data["surface"] is None else TerrainReport.from_json(data["surface"]),
         )
 
 
@@ -93008,7 +93461,24 @@ __all__ = [
     "TenantKindName",
     "TerminalConfig",
     "TerminalDevice",
+    "TerrainFigures",
+    "TerrainHeight",
+    "TerrainLeft",
+    "TerrainPlace",
+    "TerrainPlaceName",
+    "TerrainProblem",
+    "TerrainReport",
+    "TerrainSectionPoint",
+    "TerrainState",
+    "TerrainStateName",
     "TerrainSurfaceDef",
+    "TerrainsCreate",
+    "TerrainsEdit",
+    "TerrainsEditOperation",
+    "TerrainsEditOperationName",
+    "TerrainsQueried",
+    "TerrainsQuery",
+    "TerrainsWritten",
     "TextAlign",
     "TextAlignName",
     "TextColumns",

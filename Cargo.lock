@@ -2944,6 +2944,7 @@ dependencies = [
  "kentos-processing",
  "kentos-project",
  "kentos-qml",
+ "kentos-road",
  "kentos-services",
  "kentos-sheet",
  "kentos-style-core",
