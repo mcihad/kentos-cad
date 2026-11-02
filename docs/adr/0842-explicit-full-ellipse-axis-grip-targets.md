@@ -1,6 +1,6 @@
 # ADR 0842 — Tam elipste sürüklenen ekseni açık hedef olarak tut
 
-2026-11-02. CAD-ADV-05; bu dilimin kabulü tamamlandı. Madde bütünü henüz açık.
+2026-11-02. CAD-ADV-05; bu dilimin kabulü tamamlandı. Birleşik kabul ADR 0843 ile tamamlandı.
 
 ## Problem ve dayanak
 
@@ -94,6 +94,6 @@ Ekranlar ve ham sonuçlar repo dışındadır:
 `ellipse-axis-intent-gui-acceptance.json`,
 `ellipse-axis-intent-clean-results.json`. Bunlar ürün varlığı değildir.
 
-Birleşik teknik plaka, kilit/gevşetme ve çözüm dalı kabulü tamamlanmadan
-CAD-ADV-05 kapatılmaz. Kalıcı bağımsız eksen başvuruları, genel elips
+Birleşik teknik plaka, kilit/gevşetme ve çözüm dalı kabulü
+[ADR 0843](0843-combined-parametric-plate-and-readable-bars.md) ile tamamlandı. Kalıcı bağımsız eksen başvuruları, genel elips
 teğeti ve web çözücü kapsam genişlemesi bu teslimde uygulanmadı.

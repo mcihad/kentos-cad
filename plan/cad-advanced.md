@@ -416,7 +416,7 @@ Asimetrik geçişin [ayrı geometrik sözleşme araştırması](../docs/cad/asym
 tamamlandı; daire yuvarlamaya sahte ikinci yarıçap eklenmedi. Web, ADR 0228
 uyarınca ertelidir; masaüstü maddesini kapatmak için web geliştirilmez.
 
-### CAD-ADV-05 — Parametrik 2B tasarımı açıklanabilir ve kapsamlı hale getir [~]
+### CAD-ADV-05 — Parametrik 2B tasarımı açıklanabilir ve kapsamlı hale getir [x]
 
 **Öncelik:** P1. **Kod:** [C09], [C10].
 **Dayanak:** AutoCAD geometrik/ölçüsel kısıt ayrımı ve BricsCAD parametre
@@ -443,7 +443,7 @@ bağımlılığı inceleme yaklaşımı. [R03], [R13]
 şekli sürükle ve çelişki oluştur. UI/Python/MCP aynı teşhis ve geometriyi
 versin; çözüm dalı kullanıcı niyetine aykırı sessiz sıçramasın.
 
-**İlerleme — 2026-11-02, tamamlanmadı:** Parametre penceresi ortak
+**Kabul — 2026-11-02:** Parametre penceresi ortak
 query teşhisini ve gerçek serbestlikleri gösterir; bağımlılık inceleme,
 rename ve ilgili geometriyi seçme, uzunluk/açı/sayı tür seçimi eklendi.
 Tuşlarda çözücü tekrar çalışmaz; Undo teşhisi yeniler. Hata/sonuç görünür
@@ -508,8 +508,17 @@ değişimi, üç geçerli bağ/dört serbestlik, önizleme iptali, açıklamalı
 çatışması, yeniden açma, tam GUI/Python dosya eşitliği ve tek Undo geçti.
 [ADR 0842](../docs/adr/0842-explicit-full-ellipse-axis-grip-targets.md),
 [Python/MCP rehberi](../docs/cad/ellipse-axis-grips-python.md).
-Birleşik teknik plaka, kilit/gevşetme ve çözüm dalı kabulü bitmeden bu
-madde kapatılmaz.
+Birleşik büyük koordinat teknik plakasında dokuz nesne/24 bağ/yedi
+parametre kabul edildi: eşit delikler, teğet kılavuz, bağımlı genişlik,
+yalnız ölçen köşegen, kısmi elips sürüklemesi, atomik sabit/kilit reddi ve
+açık gevşetme. UI/Python dosyaları tam aynı; MCP, kaydet/aç ve tek Undo
+geçti. Yakın bağımsız kısıt çubuklarının ölçü yazılarını örtmesi düzeltildi;
+gerçek hover, dar pencere ve zoom kontrol edildi. Temiz adayda masaüstü
+1583, MCP 49, Python kısıt 19 test ve Clippy geçti.
+[ADR 0843](../docs/adr/0843-combined-parametric-plate-and-readable-bars.md),
+[tekrar çalışma rehberi](../docs/cad/technical-plate-constraints.md).
+Kabul destek matrisindeki aşamalı kapsama aittir; genel NURBS/G2 ve
+kalıcı bağımsız elips eksen başvurusu uygulanmış sayılmaz.
 
 ### CAD-ADV-06 — Parametrik blokları sürdürülebilir 2B bileşenlere dönüştür [ ]
 

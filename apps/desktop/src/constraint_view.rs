@@ -80,7 +80,7 @@ struct Placed<'a> {
 }
 
 /// Keep a shared-anchor bar together at a viewport edge and wrap it when necessary. The viewport size excludes
-/// dock panels, so a label never disappears underneath one. Nearby independent anchors retain their positions.
+/// dock panels, so a label never disappears underneath one. Independent nearby bars use the nearest free row.
 fn boxes<'a>(marks: &'a ConstraintMarks, camera: &Camera, size: Size) -> Vec<Placed<'a>> {
     use std::collections::BTreeMap;
     const GAP: f32 = 2.0;
@@ -126,6 +126,10 @@ fn boxes<'a>(marks: &'a ConstraintMarks, camera: &Camera, size: Size) -> Vec<Pla
         });
     }
     let mut out = Vec::new();
+    // Index the occupied vertical strips: a long label and a nearby circle/line bar must not paint over each
+    // other. The same final rectangles are used by hover below. Do not compare every glyph in every frame.
+    let mut occupied: BTreeMap<i32, Vec<Rectangle>> = BTreeMap::new();
+    let strip = HEIGHT + GAP;
     for (anchor, mut bar) in groups {
         let mut x = 0.0;
         let mut y = 0.0;
@@ -142,12 +146,47 @@ fn boxes<'a>(marks: &'a ConstraintMarks, camera: &Camera, size: Size) -> Vec<Pla
         }
         let height = y + HEIGHT;
         let left = anchor.x.clamp(PAD, (size.width - PAD - width).max(PAD));
-        let top = anchor.y.clamp(PAD, (size.height - PAD - height).max(PAD));
+        let max_top = (size.height - PAD - height).max(PAD);
+        let preferred = anchor.y.clamp(PAD, max_top).floor();
+        let candidate = |top: f32, mark: &Placed<'_>| {
+            Rectangle::new(
+                Point::new((mark.rect.x + left).floor(), (mark.rect.y + top).floor()),
+                mark.rect.size(),
+            )
+        };
+        let free = |top: f32| {
+            bar.iter().all(|mark| {
+                let r = candidate(top, mark);
+                r.y + HEIGHT <= size.height - PAD
+                    && occupied
+                        .range(
+                            (r.y / strip).floor() as i32..=((r.y + HEIGHT) / strip).floor() as i32,
+                        )
+                        .all(|(_, row)| row.iter().all(|other| !r.intersects(other)))
+            })
+        };
+        // Stable set order and closest vertical displacement keep bars near their source. At a truly saturated
+        // viewport the complete set remains in Parametreler; overlapping/unhoverable marks are not emitted.
+        let Some(top) = (0..=(size.height / strip).ceil() as usize)
+            .flat_map(|row| {
+                let dy = row as f32 * strip;
+                [preferred - dy, preferred + dy]
+            })
+            .filter(|top| *top >= PAD && *top <= max_top)
+            .find(|top| free(*top))
+        else {
+            continue;
+        };
         for mut mark in bar {
             mark.rect.x = (mark.rect.x + left).floor();
             mark.rect.y = (mark.rect.y + top).floor();
             // A viewport cannot contain an arbitrary number of rows. The parameter window always retains the set.
             if mark.rect.y + HEIGHT <= size.height - PAD {
+                for row in (mark.rect.y / strip).floor() as i32
+                    ..=((mark.rect.y + HEIGHT) / strip).floor() as i32
+                {
+                    occupied.entry(row).or_default().push(mark.rect);
+                }
                 out.push(mark);
             }
         }
@@ -411,5 +450,56 @@ mod tests {
             );
         }
         assert!(boxes(&m, &c, Size::new(10., 10.)).is_empty());
+    }
+    #[test]
+    fn technical_plate_nearby_anchors_keep_every_mark_readable_and_hoverable() {
+        let _font = crate::appearance::tests::TYPOGRAPHY.lock();
+        let snapshot = kentos_kcad::decode(include_bytes!(
+            "../../../fixtures/interaction/v1/constraint-technical-plate.kcad"
+        ))
+        .unwrap();
+        let model = kentos_domain::Document::from_snapshot_v2(snapshot).unwrap();
+        let marks = ConstraintMarks {
+            glyphs: glyphs(&model),
+            bounds: Vec::new(),
+        };
+        // Match the actual acceptance window, then pan/zoom and a smaller drawable area.
+        for (size, scale) in [
+            (Size::new(1128., 592.), 37.6),
+            (Size::new(800., 500.), 26.),
+            (Size::new(480., 400.), 16.),
+        ] {
+            let mut c = camera(size.width as f64, size.height as f64);
+            c.center = kentos_interaction::Vec2::new(487013., 4420004.);
+            c.scale = scale;
+            let laid = boxes(&marks, &c, size);
+            assert_eq!(
+                laid.len(),
+                marks.glyphs.len(),
+                "all plate marks must remain available"
+            );
+            for (i, p) in laid.iter().enumerate() {
+                inside(p.rect, size);
+                assert!(
+                    laid.iter().skip(i + 1).all(|o| !p.rect.intersects(&o.rect)),
+                    "independent anchors overlap: {:?}",
+                    p.rect
+                );
+                assert_eq!(
+                    laid.iter()
+                        .filter(|m| m.rect.contains(p.rect.center()))
+                        .count(),
+                    1,
+                    "hover names exactly one mark"
+                );
+            }
+            let again = boxes(&marks, &c, size);
+            assert!(
+                laid.iter()
+                    .zip(&again)
+                    .all(|(a, b)| a.index == b.index && a.rect == b.rect),
+                "stationary camera must be stable"
+            );
+        }
     }
 }

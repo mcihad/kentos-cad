@@ -3185,3 +3185,181 @@ fn named_ellipse_axis_grip_keeps_measure_follower_save_and_single_undo_through_m
     assert_eq!(std::fs::read(&path).unwrap(), before);
     std::fs::remove_dir_all(dir).unwrap();
 }
+
+#[test]
+fn technical_plate_parameters_grip_lock_and_explicit_relax_share_atomic_mcp_path() {
+    let dir =
+        std::env::temp_dir().join(format!("kentos-mcp-technical-plate-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join("plate.kcad");
+    let baseline =
+        include_bytes!("../../../../fixtures/interaction/v1/constraint-technical-plate.kcad");
+    let check = |server: &mut Server, drawing: &Value, count, dof| {
+        let q =
+            call(server, "cad.constraints.query", json!({"drawing":drawing}))["structuredContent"]
+                ["output"]
+                .clone();
+        let cs = q["constraints"].as_array().unwrap();
+        assert_eq!(cs.len(), count);
+        assert!(cs.iter().all(|c| c["holds"] == true), "{q}");
+        assert_eq!(q["diagnosis"]["dof"], dof, "{q}");
+        assert!(
+            q["diagnosis"]["conflicting"].is_null() && q["diagnosis"]["broken"].is_null(),
+            "{q}"
+        );
+        q
+    };
+    for (name, value) in [
+        ("delik_yaricapi", "1.5"),
+        ("taban", "7"),
+        ("delik_araligi", "8"),
+        ("grip", ""),
+    ] {
+        std::fs::write(&path, baseline).unwrap();
+        let mut server = Server::new();
+        let drawing = call(&mut server, "drawing.open", json!({"path":path}))["structuredContent"]
+            ["drawing"]
+            .clone();
+        let before =
+            call(&mut server, "drawing.entities", json!({"drawing":drawing}))["structuredContent"]
+                ["items"]
+                .clone();
+        check(&mut server, &drawing, 24, 4);
+        let (command, input) = if name == "grip" {
+            (
+                "cad.entities.edit",
+                json!({"drawing":drawing,"operation":"grip","changes":[{"kind":"ellipseAxis","uid":before[7]["uid"],"index":1,"at":{"x":487019.,"y":4420007.}}]}),
+            )
+        } else {
+            (
+                "cad.parameters.edit",
+                json!({"drawing":drawing,"edits":[{"kind":"set","name":name,"expression":value}]}),
+            )
+        };
+        let mut plan = input.clone();
+        plan["op"] = json!("plan");
+        let p = call(&mut server, command, plan);
+        assert_eq!(p["structuredContent"]["status"], "completed", "{p}");
+        assert_eq!(
+            call(&mut server, "drawing.entities", json!({"drawing":drawing}))["structuredContent"]
+                ["items"],
+            before
+        );
+        let done = call(&mut server, command, input);
+        assert_eq!(done["structuredContent"]["status"], "completed", "{done}");
+        let q = check(&mut server, &drawing, 24, 4);
+        let after =
+            call(&mut server, "drawing.entities", json!({"drawing":drawing}))["structuredContent"]
+                ["items"]
+                .clone();
+        let a = after.as_array().unwrap();
+        let b = before.as_array().unwrap();
+        if name == "grip" {
+            assert_eq!(&a[..7], &b[..7]);
+            assert_ne!(a[8]["entity"]["a"], b[8]["entity"]["a"]);
+        } else {
+            assert_eq!(&a[7..], &b[7..]);
+            let left = &a[4]["entity"];
+            let right = &a[5]["entity"];
+            let line = &a[6]["entity"];
+            let r = if name == "delik_yaricapi" { 1.5 } else { 1. };
+            assert!((left["r"].as_f64().unwrap() - r).abs() < 1e-9);
+            assert!((right["r"].as_f64().unwrap() - r).abs() < 1e-9);
+            assert!(
+                (line["a"]["y"].as_f64().unwrap() - left["c"]["y"].as_f64().unwrap() - r).abs()
+                    < 1e-8
+            );
+            assert!(
+                right["c"]["x"].as_f64().unwrap() > left["c"]["x"].as_f64().unwrap(),
+                "hole branch preserved"
+            );
+            let reference = q["constraints"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .find(|c| c["constraint"]["reference"] == true)
+                .unwrap();
+            let width: f64 = if name == "taban" { 14. } else { 12. };
+            assert!((reference["measured"].as_f64().unwrap() - width.hypot(8.)).abs() < 1e-8);
+        }
+        call(
+            &mut server,
+            "drawing.save",
+            json!({"drawing":drawing,"path":path}),
+        );
+        assert_ne!(std::fs::read(&path).unwrap(), baseline);
+        call(&mut server, "drawing.undo", json!({"drawing":drawing}));
+        call(
+            &mut server,
+            "drawing.save",
+            json!({"drawing":drawing,"path":path}),
+        );
+        assert_eq!(std::fs::read(&path).unwrap(), baseline);
+    }
+    let mut server = Server::new();
+    let drawing =
+        call(&mut server, "drawing.open", json!({"path":path}))["structuredContent"]["drawing"]
+            .clone();
+    let before=call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"].clone();
+    call(
+        &mut server,
+        "cad.layers.set",
+        json!({"drawing":drawing,"operation":"locked","layer":"cizim","value":true}),
+    );
+    let refused = call(
+        &mut server,
+        "cad.parameters.edit",
+        json!({"drawing":drawing,"edits":[{"kind":"set","name":"delik_yaricapi","expression":"1.5"}]}),
+    );
+    assert_eq!(
+        refused["structuredContent"]["error"]["code"], "layer_locked",
+        "{refused}"
+    );
+    assert_eq!(
+        call(&mut server, "drawing.entities", json!({"drawing":drawing}))["structuredContent"]["items"],
+        before
+    );
+    call(
+        &mut server,
+        "cad.layers.set",
+        json!({"drawing":drawing,"operation":"locked","layer":"cizim","value":false}),
+    );
+    let mut geometry = before[0]["entity"].clone();
+    geometry
+        .as_object_mut()
+        .unwrap()
+        .retain(|k, _| ["kind", "a", "b"].contains(&k.as_str()));
+    geometry["a"] = json!({"x":487001.,"y":4420000.});
+    let mut input = json!({"drawing":drawing,"operation":"grip","changes":[{"kind":"update","uid":before[0]["uid"],"geometry":geometry}]});
+    let refused = call(&mut server, "cad.entities.edit", input.clone());
+    assert_eq!(
+        refused["structuredContent"]["error"]["code"], "constraint_conflict",
+        "{refused}"
+    );
+    assert_eq!(
+        call(&mut server, "drawing.entities", json!({"drawing":drawing}))["structuredContent"]["items"],
+        before
+    );
+    input["relaxConstraints"] = json!(true);
+    let relaxed = call(&mut server, "cad.entities.edit", input);
+    assert_eq!(
+        relaxed["structuredContent"]["status"], "completed",
+        "{relaxed}"
+    );
+    assert!(
+        relaxed["structuredContent"]["warnings"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|w| w["code"] == "constraints_relaxed")
+    );
+    check(&mut server, &drawing, 21, 9);
+    call(&mut server, "drawing.undo", json!({"drawing":drawing}));
+    call(
+        &mut server,
+        "drawing.save",
+        json!({"drawing":drawing,"path":path}),
+    );
+    assert_eq!(std::fs::read(&path).unwrap(), baseline);
+    std::fs::remove_dir_all(dir).unwrap();
+}

@@ -1,17 +1,19 @@
-# Parametrik 2B tasarım — mevcut destek ve CAD-ADV-05 işleri
+# Parametrik 2B tasarım — doğrulanan destek ve sınırlar
 
-2026-11-02. CAD-ADV-05 **tamamlanmadı**. Bu belge kod sınırını,
-doğrulanan ilk arayüz dilimini ve kalan gerçek geometri işlerini ayırır.
+2026-11-02. CAD-ADV-05'in aşamalı 2B kapsamı ve birleşik kabulü
+**tamamlandı** ([ADR 0843](../adr/0843-combined-parametric-plate-and-readable-bars.md)).
+Bu belge uygulanan adaptörlerin sınırını açıklar; bütün eğrilerde sınırsız
+parametrik çözüm iddiası değildir.
 
-| Geometri / yetenek | Kodda mevcut davranış | Açık iş |
+| Geometri / yetenek | Kodda mevcut davranış | Kapsam sınırı / kabul |
 |---|---|---|
-| Nokta / çizgi | Konum, düz kenar, uzaklık, yön ve geometrik bağlar | Birleşik sürükleme/dal kabulünü genişlet |
-| Daire / bağımsız yay | Merkez/yarıçap, yay uç açıları; teğet/eşitlik/ölçüler | Büyük koordinat ve kilitli referans birleşik kabulü |
+| Nokta / çizgi | Konum, düz kenar, uzaklık, yön ve geometrik bağlar | Büyük koordinat birleşik plaka, kilit/gevşetme/Undo kabulü geçti |
+| Daire / bağımsız yay | Merkez/yarıçap, yay uç açıları; teğet/eşitlik/ölçüler | Büyük koordinat teğet/eşit delikler, üst teğet ve sağ/sol dalı, kilitli referans birleşik kabulü geçti |
 | Çoklu çizgi / alan | Her halka/parçanın köşeleri bilinmeyen; düz kenarlar Segment | ArcEdge ile açık anılan dairesel kenarda değişken bulge/yarıçap, teğet ve mevcut daire kuralları; uç/genişlik/dal korunur. Genel eğri serbest nokta/süpürme açısı açık |
 | Elips | Merkez ve mevcut Start/End (tam elipste dikiş); gerçek yarı eksen/açı bilinmeyenleri, dual türevler | Genel teğet ve kalıcı ayrı eksen başvuruları açık; tam elips eksen grip hedefi geçici niyet olarak uygulanır; kısmi yay Start/End grip hedefi, izleyen çizgi, plan/önizleme ve Undo kabulü geçti |
 | NURBS | Açık/periyodik olmayan ve iki ucu tam clamped eğride Start/End; dört uç koordinatı, iç kontrol noktaları sabit | Genel kontrol/teğet/G2 ve diğer uç yapıları bu adaptörde yok |
 | Blok yerleştirmesi / iç nesne | Yerleştirme noktası Node(0), yalnız iki konum bilinmeyeni; ayna/açı/ölçek ve kaynak korunur | İç parça, dönme ve ölçek bilinmeyenleri bu adaptörde yok; birleşik GUI/Python/MCP ve grip/Undo kabulü geçti |
-| Parametre ifadeleri | Uzunluk/açı/sayı, ad değiştirme, token bağımlılığı, döngü, sıfıra bölme; yeni ifadede boyut cebiri, değişken üs bağımlısı, eski dosyada salt okunur birim uyarısı | Eski pi yarım tur anlamındadır; açık onarım dışında değer değiştirilmez. Birleşik teknik detay kabulü açık |
+| Parametre ifadeleri | Uzunluk/açı/sayı, ad değiştirme, token bağımlılığı, döngü, sıfıra bölme; yeni ifadede boyut cebiri, değişken üs bağımlısı, eski dosyada salt okunur birim uyarısı | Eski pi yarım tur anlamındadır; açık onarım dışında değer değiştirilmez. Birleşik teknik detay kabulü geçti |
 | Teşhis | `cad.constraints.query`: serbestlik, hareket edebilenler, fazla/çelişen/tekil/kopuk | Sahnedeki serbest yönlerin gösterimi ve büyük problemde durdurma |
 
 ## Doğrulanan ilk arayüz dilimi
@@ -51,7 +53,7 @@ doğrulanan ilk arayüz dilimini ve kalan gerçek geometri işlerini ayırır.
 - `desktop/src/parameters_window.rs` ve `parameters_window/analysis.rs`:
   yukarıdaki arayüz, salt okunur ortak query ve önbellek.
 
-## Araştırma ve sonraki kabul
+## Araştırma ve birleşik kabul
 
 [AutoCAD dimensional constraints](https://help.autodesk.com/cloudhelp/2026/ENU/AutoCAD-Core/files/GUID-F7ED2587-8F25-4770-BD13-C7C95456E707.htm)
 sürücü ile yalnız ölçen referansı ayırır.
@@ -60,10 +62,13 @@ tanımlayan/etkilenen parametreleri inceleme, ad değiştirme ve ilgili
 geometriyi seçme örneğidir. KentOS kendi mevcut komut ve çözücüsünü
 kullanır; bu kaynakların yeteneklerinin tamamı varmış gibi gösterilmez.
 
-CAD-ADV-05 kapanmadan yaylı kenar/elips kapsamı, ölçü boyutları, aynalı
-blok ve geçici sürükleme/çözüm dalı davranışı tamamlanmalı; teknik
-plakada çelişki, kilit, gevşetme, Undo ile UI/Python/MCP aynı sonucu
-vermelidir. Güvenli ret bir adaptörün uygulanması yerine sayılmaz.
+Yaylı kenar/elips kapsamı, ölçü boyutları, aynalı blok ve geçici sürükleme
+adaptörlerinin kabulü aşağıdaki ADR'lerdedir. Birleşik teknik plakada
+ölçü/teğet/eşitlik/konum, çözüm dalı, çelişki, kilit, açık gevşetme ve Undo
+UI/Python/MCP ile doğrulandı: [ADR 0843](../adr/0843-combined-parametric-plate-and-readable-bars.md),
+[tekrar çalışma rehberi](technical-plate-constraints.md). Güvenli ret bir
+adaptörün uygulanması yerine sayılmaz; üst tablodaki genel eğri sınırları
+hâlâ geçerlidir.
 
 Elips nokta adaptörünün sınırları ve kabulü: [ADR 0829](../adr/0829-native-ellipse-point-constraints.md).
 
