@@ -113,17 +113,51 @@ fn part(
     }
 }
 
-/// A value as a dimension's mark writes it: three decimals at most, no trailing zeros.
-fn value_words(v: f64, kind: ParameterKind) -> String {
-    let t = format!("{v:.3}");
-    let t = t.trim_end_matches('0').trim_end_matches('.');
-    let t = if t == "-0" { "0" } else { t };
-    match kind {
-        ParameterKind::Angle => format!("{t}°"),
-        _ => t.to_owned(),
+/// A parameter value already expressed in its project unit, shared by scene marks and the parameter window.
+/// Display precision never changes a stored value; small nonzero values use scientific notation.
+fn value_words(v: f64) -> String {
+    if !v.is_finite() {
+        "—".into()
+    } else if v == 0.0 {
+        "0".into()
+    } else if v.abs() >= 1e12 || v.abs() < 1e-6 {
+        let text = format!("{v:.11e}");
+        let Some((mantissa, exponent)) = text.split_once('e') else {
+            return text;
+        };
+        format!(
+            "{}e{exponent}",
+            mantissa.trim_end_matches('0').trim_end_matches('.')
+        )
+    } else {
+        let precision = (11.0 - v.abs().log10().floor()).clamp(0.0, 17.0) as usize;
+        let text = format!("{v:.precision$}");
+        if precision == 0 {
+            text
+        } else {
+            text.trim_end_matches('0').trim_end_matches('.').into()
+        }
     }
 }
 
+pub fn parameter_value_words(
+    v: f64,
+    kind: ParameterKind,
+    settings: &kentos_commands::ProjectSettings,
+) -> String {
+    let value = value_words(v);
+    match kind {
+        ParameterKind::Length => format!("{value} {}", settings.unit().mark()),
+        ParameterKind::Angle => format!(
+            "{value} {}",
+            match settings.angle_unit {
+                kentos_commands::AngleUnit::Deg => "°",
+                kentos_commands::AngleUnit::Grad => "gon",
+            }
+        ),
+        ParameterKind::Number => format!("{value} · sayı"),
+    }
+}
 /// The marks of the drawing's constraints, each part's in the set's order.
 pub fn glyphs(doc: &Document) -> Vec<Glyph> {
     let set = doc.constraints();
@@ -139,7 +173,10 @@ pub fn glyphs(doc: &Document) -> Vec<Glyph> {
                 .parameter(name)
                 .map_or(ParameterKind::Length, |p| p.kind);
             match values.get(name) {
-                Some(v) => format!("{name} = {}", value_words(*v, kind)),
+                Some(v) => format!(
+                    "{name} = {}",
+                    parameter_value_words(*v, kind, doc.settings())
+                ),
                 None => name.to_owned(),
             }
         });

@@ -18,6 +18,7 @@ use kentos_commands::{
     CadParameter, CommandResult, ConstraintEdit, ConstraintsEdit, ParameterEdit, ParameterKind,
     ParametersEdit, rule_label,
 };
+use kentos_interaction::constraint_marks::parameter_value_words;
 use kentos_native_application::{ExecutionContext, constraints_edit, parameters_edit};
 use kentos_ui::theme::typography;
 use kentos_ui::widget::{Dialog as Frame, Elided};
@@ -75,48 +76,6 @@ pub enum Event {
 
 fn msg(event: Event) -> Message {
     Message::Parameters(event)
-}
-
-fn value_words(v: f64) -> String {
-    if !v.is_finite() {
-        "—".into()
-    } else if v == 0.0 {
-        "0".into()
-    } else if v.abs() >= 1e12 || v.abs() < 1e-6 {
-        let text = format!("{v:.11e}");
-        let (mantissa, exponent) = text.split_once('e').expect("scientific number");
-        format!(
-            "{}e{exponent}",
-            mantissa.trim_end_matches('0').trim_end_matches('.')
-        )
-    } else {
-        let precision = (11.0 - v.abs().log10().floor()).clamp(0.0, 17.0) as usize;
-        let text = format!("{v:.precision$}");
-        if precision == 0 {
-            text
-        } else {
-            text.trim_end_matches('0').trim_end_matches('.').into()
-        }
-    }
-}
-
-fn parameter_value_words(
-    v: f64,
-    kind: ParameterKind,
-    settings: &kentos_commands::ProjectSettings,
-) -> String {
-    let value = value_words(v);
-    match kind {
-        ParameterKind::Length => format!("{value} {}", settings.unit().mark()),
-        ParameterKind::Angle => format!(
-            "{value} {}",
-            match settings.angle_unit {
-                kentos_commands::AngleUnit::Deg => "°",
-                kentos_commands::AngleUnit::Grad => "gon",
-            }
-        ),
-        ParameterKind::Number => format!("{value} · sayı"),
-    }
 }
 
 impl App {

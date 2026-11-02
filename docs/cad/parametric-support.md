@@ -76,3 +76,5 @@ Açık NURBS uçlarının 6→8 m, bağlı çizgi, kapsam notu, dosya/Undo ve UI
 Aynalı/dönük blok yerleştirme noktası ve gerçek grip kabulü: [ADR 0833](../adr/0833-block-insertion-anchor-constraints.md), [Python/MCP kullanımı](block-anchor-constraints-python.md). İlk seçilen sabit nesnenin geçici hold altında gereksiz raporlanması [ADR 0834](../adr/0834-permanent-diagnosis-after-temporary-holds.md) ile düzeltildi; geçici tutuş başarılı hareketi seçer, teşhis kalıcı bağları gösterir.
 
 Elips yayı uç grip hedefi, çözülmüş önizleme ve büyük koordinatta saklanan uç/izleyen nokta kabulü: [ADR 0835](../adr/0835-elliptical-endpoint-grip-targets.md). Tam elips eksen grip'leri bu kabulün kapsamında değildir.
+
+Sahne kısıt etiketlerinin panel sınırına sığması, pencereyle ortak birimler ve çizim oturumuna bağlı önbellek: [ADR 0836](../adr/0836-constraint-label-viewport-and-units.md).

@@ -122,7 +122,7 @@ fn each_part_has_its_mark_and_a_meeting_point_one() {
     // A dimension: its name and value on its first mark only.
     let width = by(2);
     assert_eq!(width.len(), 2);
-    assert_eq!(width[0].label.as_deref(), Some("genislik = 10"));
+    assert_eq!(width[0].label.as_deref(), Some("genislik = 10 m"));
     assert_eq!(width[1].label, None);
     assert!(marks.iter().all(|g| !g.unmet && !g.reference));
     // The pointer on the perpendicular's mark shows its two edges.
@@ -130,4 +130,36 @@ fn each_part_has_its_mark_and_a_meeting_point_one() {
     assert_eq!(parts.len(), 2);
     assert!(parts.iter().all(|p| p.edges.len() == 1));
     assert!(bound(&b.doc, 9).is_empty());
+}
+
+#[test]
+fn parameter_marks_share_project_units_and_keep_small_nonzero_values_visible() {
+    use kentos_commands::{AngleUnit, DrawingUnit, ParameterKind};
+    use kentos_interaction::constraint_marks::parameter_value_words as words;
+    let (mut b, bottom, _) = ell();
+    let mut settings = b.doc.settings().clone();
+    settings.srid = 0;
+    settings.drawing_unit = Some(DrawingUnit::Mm);
+    settings.angle_unit = AngleUnit::Grad;
+    b.doc.set_settings(settings);
+    let rules = vec![(
+        ConstraintRule::Distance {
+            a: point(&b, bottom, SubPlace::Start),
+            b: point(&b, bottom, SubPlace::End),
+            axis: DistanceAxis::Aligned,
+            left: false,
+            parameter: "boy".into(),
+        },
+        Some("10000mm"),
+    )];
+    add(&mut b, rules);
+    assert_eq!(glyphs(&b.doc)[0].label.as_deref(), Some("boy = 10000 mm"));
+    let s = b.doc.settings();
+    assert_eq!(words(100.0, ParameterKind::Angle, s), "100 gon");
+    assert_eq!(words(0.00000002, ParameterKind::Length, s), "2e-8 mm");
+    assert_eq!(words(-0.0, ParameterKind::Number, s), "0 · sayı");
+    let mut deg = s.clone();
+    deg.angle_unit = AngleUnit::Deg;
+    assert_eq!(words(90.0, ParameterKind::Angle, &deg), "90 °");
+    assert_eq!(words(f64::NAN, ParameterKind::Length, s), "— mm");
 }

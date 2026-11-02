@@ -477,6 +477,10 @@ Elips yayı Start/End grip hedefi, çözülmüş yay/izleyen çizgi önizlemesi,
 büyük koordinat doğruluğu ve kalıcı Fix çatışması gerçek Mac arayüzünde
 kabul edildi; ölçülü tek Enter, dosya/Python/MCP ve tek Undo geçti.
 [ADR 0835](../docs/adr/0835-elliptical-endpoint-grip-targets.md).
+Sahne kısıt etiketleri panel sınırında tutuldu; ortak nokta grubu satıra
+sığdırıldı. Sahne/pencere birim gösterimi ortaklaştırıldı; gerçek GUI'de
+m, mm/gon, hover ve ikinci çizimde temiz önbellek doğrulandı.
+[ADR 0836](../docs/adr/0836-constraint-label-viewport-and-units.md).
 Yaylı kenar adaptörü, boyut cebiri, tam elips eksen grip'leri ve birleşik
 çözüm dalı kabulü bitmeden bu madde kapatılmaz.
 
