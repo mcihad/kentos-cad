@@ -91,7 +91,7 @@ pub(super) fn section(doc: &Document, slot: Slot, locked: bool) -> Option<Sectio
         return None;
     }
     Some(Section {
-        id: "materials",
+        id: "materials".into(),
         title: "Malzemeler".into(),
         rows,
     })

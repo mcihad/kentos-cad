@@ -300,7 +300,7 @@ def settings(s):
                 "workspace": (enum(("hybrid", "cad", "gis", "plan3d", "disaster")), False),
                 # Schema 135 (docs/adr/0801): what a CAD project is drawn for.
                 "cadWork": (enum(("architecture", "map", "road")), False),
-                # Schema 159 (plan/road.md Y2.2): a road project's terrain surfaces' definitions, as their JSON.
+                # Schema 160 (plan/road.md Y2.2): a road project's terrain surfaces' definitions, as their JSON.
                 "road": (opaque, False),
                 "drawingFont": (enum(("barlow", "arimo", "overpass", "quicksand", "architects-daughter", "courier-prime", "plex-mono")), False),
                 # Schema 50 (docs/adr/0262 §1): inches and feet too, written only in schema 50.
@@ -2352,6 +2352,8 @@ def document(d):
     schema = schema_of(d["entities"], d.get("blocks"), d["layers"], d["settings"], "sheets" in d, "requests" in d, "arrays" in d, "constraints" in d, has_sets)
     if any(b.get("card", {}).get("publication") is not None for b in d.get("blocks", [])):
         schema = max(schema, 158)
+    if any(b.get("dynamic", {}).get("parameterGroups") for b in d.get("blocks", [])):
+        schema = max(schema, 159)
     if d.get("casework"):
         # A kitchen run (docs/adr/0727 §5).
         schema = max(schema, 127)
@@ -2392,7 +2394,7 @@ def document(d):
         schema = max(schema, 135)
     if d["settings"].get("cadWork") == "road":
         # A road project's work (plan/road.md Y1.1).
-        schema = max(schema, 159)
+        schema = max(schema, 160)
 
     def indexed(nodes):
         return any(n.get("indexes") or indexed(n.get("children", [])) for n in nodes)
@@ -3263,7 +3265,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-160.kcad"] = container(root(cmap(parts), version=uint(160)))
+    files["schema-version-161.kcad"] = container(root(cmap(parts), version=uint(161)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4854,6 +4856,28 @@ def build():
         one = copy.deepcopy(load("block-publication.json"))
         one["blocks"][0]["card"]["publication"].update(value)
         out[f"broken/block-publication-{suffix}.kcad"] = container(document(one))
+    grouped = document(load("block-parameter-groups.json"))
+    out["block-parameter-groups.kcad"] = container(grouped)
+    out["broken/block-parameter-groups-in-schema-158.kcad"] = container(grouped.replace(b"\x67version\x18\x9f", b"\x67version\x18\x9e"))
+    for suffix, groups in (
+        ("empty", []),
+        ("blank", [{"name": " ", "parameters": ["Tip"]}]),
+        ("control", [{"name": "Kanat\n", "parameters": ["Tip"]}]),
+        ("long", [{"name": "k" * 65, "parameters": ["Tip"]}]),
+        ("no-members", [{"name": "Kanat", "parameters": []}]),
+        ("unknown-member", [{"name": "Kanat", "parameters": ["Tipi"]}]),
+        ("member-twice", [{"name": "Kanat", "parameters": ["Tip", "Tip"]}]),
+        ("two-groups", [{"name": "Bir", "parameters": ["Tip"]}, {"name": "İki", "parameters": ["Tip"]}]),
+        ("name-twice", [{"name": "KANAT", "parameters": ["Tip"]}, {"name": "kanat", "parameters": ["Yön"]}]),
+        ("unknown-field", [{"name": "Kanat", "parameters": ["Tip"], "color": "red"}]),
+    ):
+        one = load("block-parameter-groups.json")
+        one["blocks"][0]["dynamic"]["parameterGroups"] = groups
+        data = document(one)
+        # Empty metadata is an illegal explicit default, even in the new schema.
+        if suffix == "empty":
+            data = data.replace(b"\x67version\x18\x9e", b"\x67version\x18\x9f")
+        out[f"broken/block-parameter-groups-{suffix}.kcad"] = container(data)
     out["dynamic-blocks.kcad"] = container(document(load("dynamic-blocks.json")))
     payload = document(load("dynamic-blocks.json"))
     assert payload.count(b"\x67version\x18\x3b") == 1
@@ -5516,26 +5540,26 @@ def build():
     untyped = copy.deepcopy(worked)
     del untyped["settings"]["workspace"]
     out["broken/cad-work-no-type.kcad"] = container(document(untyped))
-    # Schema 159 (plan/road.md Y1.1): a road project, KentOS Yol's; schema 158 refuses the work.
+    # Schema 160 (plan/road.md Y1.1): a road project, KentOS Yol's; schema 159 refuses the work.
     rd = document(load("road-work.json"))
-    assert rd.count(b"\x67version\x18\x9f") == 1, "the road work is schema 159"
+    assert rd.count(b"\x67version\x18\xa0") == 1, "the road work is schema 160"
     out["road-work.kcad"] = container(rd)
     # The work alone: the surfaces would be refused first (their key sorts before `cadWork`).
     bare = load("road-work.json")
     del bare["settings"]["road"]
-    out["broken/road-work-in-schema-158.kcad"] = container(
-        document(bare).replace(b"\x67version\x18\x9f", b"\x67version\x18\x9e"))
-    # Schema 159 (plan/road.md Y2.2): the terrain surfaces are a road project's only; a map project's are refused.
+    out["broken/road-work-in-schema-159.kcad"] = container(
+        document(bare).replace(b"\x67version\x18\xa0", b"\x67version\x18\x9f"))
+    # Schema 160 (plan/road.md Y2.2): the terrain surfaces are a road project's only; a map project's are refused.
     mp = load("road-work.json")
     mp["settings"]["cadWork"] = "map"
     mpd = document(mp)
     assert mpd.count(b"\x67version\x18\x87") == 1, "a map project with a road's settings would be schema 135"
-    out["broken/road-settings-of-a-map-project.kcad"] = container(mpd.replace(b"\x67version\x18\x87", b"\x67version\x18\x9f"))
-    # Schema 159 (plan/road.md Y4, docs/adr/0902): a profile lies on an alignment of its own PIs, not a parallel axis.
+    out["broken/road-settings-of-a-map-project.kcad"] = container(mpd.replace(b"\x67version\x18\x87", b"\x67version\x18\xa0"))
+    # Schema 160 (plan/road.md Y4, docs/adr/0902): a profile lies on an alignment of its own PIs, not a parallel axis.
     onp = load("road-work.json")
     onp["settings"]["road"]["profiles"][0]["alignment"] = "g-2"
     out["broken/road-profile-on-parallel-axis.kcad"] = container(document(onp))
-    # Schema 159 (plan/road.md Y5, docs/adr/0903): a sample line set lies on an alignment of its own PIs and names a
+    # Schema 160 (plan/road.md Y5, docs/adr/0903): a sample line set lies on an alignment of its own PIs and names a
     # template of the project.
     snp = load("road-work.json")
     snp["settings"]["road"]["sections"][1]["alignment"] = "g-2"

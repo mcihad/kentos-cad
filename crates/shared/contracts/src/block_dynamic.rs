@@ -23,10 +23,26 @@ use crate::{BlockDefinition, Vec2};
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct DynamicBlock {
     pub parameters: Vec<BlockParameter>,
+    /// Ordered presentation groups. Unassigned parameters retain their automatic headings;
+    /// membership never changes the evaluator's parameter/action order or instance values.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<BlockParameterGroup>>", optional))]
+    pub parameter_groups: Vec<BlockParameterGroup>,
     /// Applied in this order to the definition's objects, each on what the ones before left.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<BlockAction>>", optional))]
     pub actions: Vec<BlockAction>,
+}
+
+/// A property-panel heading and the exact parameter names it contains, in display order.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct BlockParameterGroup {
+    pub name: String,
+    pub parameters: Vec<String>,
 }
 
 /// The values a number parameter may take: within `min` and `max`, on `step`s from `min` (from 0 without one), one
@@ -440,10 +456,45 @@ pub fn same_param_value(a: &ParamValue, b: &ParamValue) -> bool {
     }
 }
 
+/// Presentation metadata is bounded by the same parameter limit; a member belongs to exactly one group.
+pub fn parameter_groups_problem(d: &DynamicBlock) -> Option<(String, String)> {
+    let mut groups = HashSet::new();
+    let mut members = HashSet::new();
+    if d.parameter_groups.len() > MAX_DYNAMIC_ITEMS {
+        return Some(("parameterGroups".into(), "parametre grubu sayısı sınırı aşıldı".into()));
+    }
+    for (i, group) in d.parameter_groups.iter().enumerate() {
+        let path = |field| format!("parameterGroups[{i}].{field}");
+        if group.name.trim() != group.name || group.name.is_empty()
+            || group.name.chars().count() > 64 || group.name.chars().any(char::is_control)
+        {
+            return Some((path("name"), "grup adı 1–64 karakter olmalı; başında/sonunda boşluk veya denetim karakteri olamaz".into()));
+        }
+        if !groups.insert(name_key(&group.name)) {
+            return Some((path("name"), format!("“{}” adlı iki parametre grubu var", group.name)));
+        }
+        if group.parameters.is_empty() || group.parameters.len() > MAX_DYNAMIC_ITEMS {
+            return Some((path("parameters"), "parametre grubu en az bir geçerli parametre içermeli".into()));
+        }
+        for (j, name) in group.parameters.iter().enumerate() {
+            if !d.parameters.iter().any(|p| p.name() == name) {
+                return Some((format!("{}[{j}]", path("parameters")), format!("“{name}” parametresi tanımda yok")));
+            }
+            if !members.insert(name) {
+                return Some((format!("{}[{j}]", path("parameters")), format!("“{name}” parametresi birden fazla grupta veya aynı grupta iki kez")));
+            }
+        }
+    }
+    None
+}
+
 /// Why a definition's dynamic part is not one: its path under the definition and its words. `ids` are the local ids
 /// of the definition's objects.
 pub fn dynamic_problem(d: &DynamicBlock, ids: &HashSet<u32>) -> Option<(String, String)> {
     let at = |path: String, m: String| Some((path, m));
+    if let Some(problem) = parameter_groups_problem(d) {
+        return Some(problem);
+    }
     if d.parameters.is_empty() {
         return at(
             "parameters".into(),
@@ -708,6 +759,7 @@ mod tests {
 
     fn door() -> DynamicBlock {
         DynamicBlock {
+            parameter_groups: Vec::new(),
             parameters: vec![
                 BlockParameter::Linear {
                     name: "Genişlik".into(),

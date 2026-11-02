@@ -64,6 +64,8 @@ pub enum Event {
     Query,
     /// A section's header: closes or opens it.
     Toggle(&'static str),
+    /// A user-defined heading has an owned, definition-scoped key.
+    ToggleGroup(String),
     /// What a text or number cell committed.
     Commit(Field, String),
     /// Katman ▾: the objects to the layer.
@@ -504,7 +506,7 @@ impl App {
                 info.push(Row::text("Atanan renk", assigned));
                 info.push(Row::text("Görünür renk", displayed));
             }
-            panel.sections.insert(0, rows::Section {id:"picked-piece",title:"Seçilen blok parçası".into(),rows:info});
+            panel.sections.insert(0, rows::Section {id:"picked-piece".into(),title:"Seçilen blok parçası".into(),rows:info});
         }
         // Nothing selected: the layer chosen in the tree (else the active one), when a service draws or fed it; a
         // map's programs' (module_surfaces.rs).
@@ -597,11 +599,14 @@ impl App {
         }
         let mut sheet = PropertySheet::new();
         for section in panel.sections {
-            let open = !self.props_closed.contains(section.id);
+            let (open, toggle) = match &section.id {
+                std::borrow::Cow::Borrowed(id) => (!self.props_closed.contains(id), Event::Toggle(id)),
+                std::borrow::Cow::Owned(id) => (!self.props_groups_closed.contains(id), Event::ToggleGroup(id.clone())),
+            };
             sheet = sheet.section(
                 section.title,
                 open,
-                Message::Properties(Event::Toggle(section.id)),
+                Message::Properties(toggle),
             );
             if !open {
                 continue;
@@ -785,6 +790,12 @@ impl App {
             }
             return;
         }
+        if let Event::ToggleGroup(id) = event {
+            if !self.props_groups_closed.remove(&id) {
+                self.props_groups_closed.insert(id);
+            }
+            return;
+        }
         if let Event::SelectObject(slot) = event {
             self.selection.set([slot]);
             return;
@@ -853,7 +864,7 @@ impl App {
         let drawing = doc.path.clone();
         let model = &mut doc.model;
         let said = match event {
-            Event::Toggle(_) | Event::SelectObject(_) | Event::Kind(_) | Event::Query | Event::Guarded(_, _) => Vec::new(),
+            Event::Toggle(_) | Event::ToggleGroup(_) | Event::SelectObject(_) | Event::Kind(_) | Event::Query | Event::Guarded(_, _) => Vec::new(),
             Event::Unlink(ids) => {
                 let mut input = set_input(model, &ids, PropertiesOperation::Unlink);
                 input.unlink = true;

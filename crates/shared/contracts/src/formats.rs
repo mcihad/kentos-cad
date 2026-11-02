@@ -227,7 +227,8 @@ use crate::layer::LineType;
 /// 99 (docs/adr/0733 §1): a block insert's `arch` (level and phase): `.kcad` document schema 131; in the typed columns
 ///    an insert's option 5, its arch as one JSON text. The web's copy stays 53.
 /// 104: optional block publication family/type/release metadata, KCAD schema 158 (ADR 0856).
-pub const FORMATS_VERSION: u32 = 104;
+/// 105: ordered user-defined dynamic block parameter groups, KCAD schema 159 (ADR 0858).
+pub const FORMATS_VERSION: u32 = 105;
 
 // ── Every import ────────────────────────────────────────────────────────
 

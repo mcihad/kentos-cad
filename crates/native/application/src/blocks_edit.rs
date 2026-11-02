@@ -18,6 +18,9 @@
 //! 4. the operation's own: the block rules with the definition as it would
 //!    be, the objects (`redefine`), a definition an insert uses (`remove`).
 
+#[path = "block_unit_rescale.rs"]
+mod unit_rescale;
+
 use std::collections::HashSet;
 
 use kentos_commands::{
@@ -31,6 +34,12 @@ use crate::blocks_define::{as_drawn, block_rules, copies, name, no_layer, replac
 use crate::checks::{self, Stop, error};
 /// The stable codes of the answers (`CommandError.code`, `CommandWarning.code`).
 pub use crate::codes;
+
+/// Presentation groups have no geometry or per-insert side effects.
+#[allow(clippy::type_complexity)]
+fn dynamic_draws(b: &BlockDefinition) -> Option<(&Vec<kentos_commands::BlockParameter>, &Vec<kentos_commands::BlockAction>)> {
+    b.dynamic.as_ref().map(|d| (&d.parameters, &d.actions))
+}
 
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &BlocksEdit) -> CommandResult<()> {
@@ -56,7 +65,8 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &BlocksEdit) -> CommandResult<Bloc
             output: BlocksEditPlan {
                 added: Vec::new(),
                 removed: in_drawing_order(cx.doc, &checked.removed),
-                changed: checked.changed.into_iter().collect(),
+                changed: checked.changed.into_iter()
+                    .chain(checked.definition_changes.into_iter().flat_map(|u| u.blocks)).collect(),
                 insert: checked.insert,
                 deleted: checked.deleted.into_iter().map(|(_, uid)| uid).collect(),
                 revision: cx.doc.revision().to_string(),
@@ -89,7 +99,9 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: BlocksEdit) -> CommandRes
         Ok(checked) => checked,
         Err(stop) => return stop.into(),
     };
-    let changed: Vec<BlockId> = checked.changed.iter().map(|b| b.id).collect();
+    let changed: Vec<BlockId> = checked.changed.iter().map(|b| b.id)
+        .chain(checked.definition_changes.iter().flat_map(|u| u.blocks.iter().map(|b| b.id)))
+        .collect();
     let removed = in_drawing_order(cx.doc, &checked.removed);
     let mut slot = None;
     let mut warnings = checked.warnings.clone();
@@ -109,6 +121,18 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: BlocksEdit) -> CommandRes
     if !checked.removed.is_empty() {
         if let Err(stop) = remove(cx.doc, label(input.operation), &checked.removed) {
             return stop.into();
+        }
+    } else if let Some(related) = checked.definition_changes {
+        let blocks: Vec<_> = checked.changed.into_iter().chain(related.blocks).collect();
+        let written = cx.doc.transact(labels::BLOCK_CHANGE, |doc| {
+            doc.merge_blocks(&blocks).map_err(|r| r.to_string())?;
+            for (slot, entity) in related.entities {
+                doc.update(slot, entity);
+            }
+            Ok::<(), String>(())
+        });
+        if let Err(message) = written {
+            return Stop::failed(error(codes::BLOCK_REFUSED, message, None)).into();
         }
     } else if checked.changed.is_some() || checked.insert.is_some() {
         let block = checked.changed.clone().or_else(|| {
@@ -189,10 +213,16 @@ fn done(
     }
 }
 
-/// What may be written: the definition as it will be (when it changes), the
-/// definitions to delete (the order they go in), and with `replace` the
-/// objects to delete and the insert.
+/// Related definitions and reference-local records validated with the primary
+/// definition, then written in the same transaction.
+pub(crate) struct DefinitionChanges {
+    pub blocks: Vec<BlockDefinition>,
+    pub entities: Vec<(Slot, Entity)>,
+}
+
+/// What may be written: definitions, replaced objects, inserts and fitted values.
 struct Checked {
+    definition_changes: Option<DefinitionChanges>,
     changed: Option<BlockDefinition>,
     removed: Vec<BlockId>,
     deleted: Vec<(Slot, String)>,
@@ -205,6 +235,7 @@ struct Checked {
 impl Checked {
     fn nothing() -> Checked {
         Checked {
+            definition_changes: None,
             changed: None,
             removed: Vec::new(),
             deleted: Vec::new(),
@@ -332,6 +363,7 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
     }
     let mut checked = Checked::nothing();
     let mut next = old.clone();
+    let mut unit_scale = None;
     match input.operation {
         BlockEditOperation::Rename => {
             next.name = input.name.clone().unwrap_or_default();
@@ -367,7 +399,9 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
                 checked.warnings = r.warnings;
             }
         }
-        BlockEditOperation::Units => units(doc, old, &mut next, input)?,
+        BlockEditOperation::Units => {
+            unit_scale = units(doc, old, &mut next, input)?;
+        }
         BlockEditOperation::Update => {
             if input.entities.as_ref().is_some_and(|entities| entities.iter().any(|e| kentos_domain::space_follow::separator_path(e).is_some())) {
                 return Err(Stop::failed(error(codes::BLOCK_REFUSED,
@@ -452,7 +486,16 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
         // Its parameters and actions (docs/adr/0318 §1): the rules, the expressions, then its inserts' values refitted.
         BlockEditOperation::Dynamic => {
             next.dynamic = input.dynamic.clone();
-            rules_with(doc, &next)?;
+            let formula_edit = next.dynamic.is_some()
+                && crate::block_params::formula_inputs_changed(old.dynamic.as_ref(), next.dynamic.as_ref());
+            if !formula_edit {
+                rules_with(doc, &next)?;
+            } else if let Some((_, why)) = next.dynamic.as_ref().and_then(|d|
+                kentos_commands::block_dynamic::dynamic_problem(d, &kentos_commands::block_dynamic::local_ids(&next)))
+            {
+                return Err(Stop::failed(error(codes::INVALID_DYNAMIC_BLOCK,
+                    format!("“{}” bloğunun dinamik parametreleri: {why}.", old.name), Some("dynamic".into()))));
+            }
             if let Some((path, words)) = next.dynamic.as_ref().and_then(crate::block_params::expressions_problem) {
                 return Err(Stop::failed(error(
                     codes::INVALID_DYNAMIC_BLOCK,
@@ -460,7 +503,20 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
                     Some(path),
                 )));
             }
-            checked.sync = Some(crate::block_params::refit_inserts(doc, &next));
+            if formula_edit {
+                let (applied, changes) = crate::block_params::prepare_formula_edit(doc, &next)?;
+                next = applied;
+                checked.sync = Some(crate::blocks_sync::Synced {
+                    report: kentos_commands::AttributeSync {
+                        inserts: u32::try_from(changes.entities.len()).unwrap_or(u32::MAX),
+                        ..Default::default()
+                    },
+                    changes: Vec::new(), locked: 0,
+                });
+                checked.definition_changes = Some(changes);
+            } else if dynamic_draws(&next) != dynamic_draws(old) {
+                checked.sync = Some(crate::block_params::refit_inserts(doc, &next));
+            }
         }
         BlockEditOperation::Place
         | BlockEditOperation::Purge
@@ -477,9 +533,9 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
         kentos_commands::Vec2,
         &Vec<AttributeDefinition>,
         Option<kentos_commands::BlockUnits>,
-        &Option<kentos_commands::DynamicBlock>,
+        Option<(&Vec<kentos_commands::BlockParameter>, &Vec<kentos_commands::BlockAction>)>,
     ) {
-        (&b.entities, b.base, &b.attributes, b.units, &b.dynamic)
+        (&b.entities, b.base, &b.attributes, b.units, dynamic_draws(b))
     }
     let redrawn = draws(&next) != draws(old);
     if redrawn
@@ -498,6 +554,9 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
         checked.sync = Some(crate::blocks_sync::sync(
             doc, old, &next, &renames, &[], true, false,
         )?);
+    }
+    if let Some(scale) = unit_scale {
+        checked.definition_changes = Some(unit_rescale::check(doc, old, &next, scale)?);
     }
     if next != *old {
         checked.changed = Some(next);
@@ -704,17 +763,18 @@ fn units(
     old: &BlockDefinition,
     next: &mut BlockDefinition,
     input: &BlocksEdit,
-) -> Result<(), Stop> {
+) -> Result<Option<kentos_commands::units::Scale>, Stop> {
     use kentos_commands::BlockUnits;
     use kentos_commands::units::Scale;
     let Some(to) = input.units else {
-        return Ok(());
+        return Ok(None);
     };
     let drawing = crate::units_change::unit_of(doc);
     let (was_free, now_free) = (
         old.units == Some(BlockUnits::Unitless),
         to == BlockUnits::Unitless,
     );
+    let mut scale = None;
     if was_free != now_free {
         if doc.block_removal_refused(old.id).is_some() {
             return Err(Stop::failed(error(
@@ -726,27 +786,36 @@ fn units(
                 Some("block".into()),
             )));
         }
-        rescaled(
-            next,
-            if now_free {
-                Scale::to_unit(drawing)
-            } else {
-                Scale::from_unit(drawing)
-            },
-        );
+        scale = Some(if now_free {
+            Scale::to_unit(drawing)
+        } else {
+            Scale::from_unit(drawing)
+        });
     } else if !now_free && input.rescale == Some(true) {
         let from = old.units.and_then(BlockUnits::unit).unwrap_or(drawing);
         let to = to.unit().unwrap_or(drawing);
-        rescaled(next, Scale::keeping_numbers(from, to));
+        scale = Some(Scale::keeping_numbers(from, to));
+    }
+    scale = scale.filter(|s| s.mul != s.div);
+    if let Some(s) = scale {
+        rescaled(next, s);
     }
     next.units = Some(to);
-    rules_with(doc, next)
+    if scale.is_none() {
+        rules_with(doc, next)?;
+    }
+    Ok(scale)
 }
 
 /// A definition alone scaled (docs/adr/0315 §4): its points and sizes, and its nested inserts' factors, since the
 /// definitions they place stay as they are.
 pub(crate) fn rescaled(block: &mut BlockDefinition, s: kentos_commands::units::Scale) {
+    if s.mul == s.div {
+        return;
+    }
     kentos_commands::units::scale_block(block, s);
+    kentos_commands::units::scale_dynamic_block(block, s);
+    crate::units_change::scale_expressions(block, s);
     for e in &mut block.entities {
         if let Entity::Insert(i) = e {
             i.scale = s.apply(i.scale);

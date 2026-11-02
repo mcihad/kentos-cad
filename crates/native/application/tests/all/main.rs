@@ -2,6 +2,8 @@
 //! file of its own, the ones run alone (by `--test`) beside this folder.
 //! One binary links once where each file was linked on its own.
 
+mod block_formula_values;
+mod block_unit_rescale;
 mod address_spellings;
 mod addresses_compare;
 mod arch_bond_timing;

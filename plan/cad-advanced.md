@@ -704,8 +704,51 @@ Python testi, ilgili çekirdek/pencere testleri, Clippy ve derleme geçti.
 [kullanım ve API](../docs/cad/block-publication-upgrade.md). Bu dilim etiket
 veya parametre yeniden adlandırmasını kendiliğinden tahmin etmez.
 
-Kalıcı tip–örnek parametre kapsamı ve birleşik blok kabulü açıktır. Kullanıcı tanımlı grup metaverisi bu otomatik
-gruplarla tamamlanmış sayılmaz. Web öznitelik penceresinin native eşitleme kapsamıyla
+**İlerleme — 2026-11-03, kalıcı kullanıcı parametre grupları:** Dinamik
+blok sağ menüsünde başlıklar yazılır veya mevcut ad listesinden seçilir;
+otomatik başlığa dönüş ve grup sırası açıktır. Ortak
+`DynamicBlock.parameterGroups` grup/üye sırasını KCAD 159, kitaplık ve
+Python/MCP'de korur. Hesaplama sırası, geometri, yerleştirme değerleri ve
+yerel geometri sayacı değişmez. Özel başlıklar bağımsız kapanır; kalan
+otomatik başlıklar ayırt edilir. Gerçek GUI'de ret, iptal, dar pencere,
+yeniden açma, tek Undo/Redo ve grup içinden 1→1.05 m ölçü düzenleme kabul
+edildi. GUI/Python dosyaları üç işlemde tam aynı; gerçek Undo kayıtları
+önceki baytlarla tam aynı. 1612 masaüstü, 319 application, 60 MCP, 457
+Python, 234 KCAD testi, bağımsız 1501 dosya, Clippy ve derleme geçti.
+[ADR 0858](../docs/adr/0858-user-defined-block-parameter-groups.md),
+[gruplama ve sıfırlama/API](../docs/cad/block-parameter-groups.md).
+
+**İlerleme — 2026-11-03, dinamik blok birimi düzeltmesi:** Gerçek GUI'de
+üretilen “geometri küçülüyor, tutamaç ve kayıtlı genişlik eski kalıyor”
+hatası giderildi. `Sayıları koru` statik/dinamik koordinat, sınır/adım,
+katalog değeri, formül, kök/iç yerleştirme girdisi, taşınmış öznitelik
+yeri ve kırpmayı aynı işlemde dönüştürür. Üst/dünya konumu ve ilgisiz
+çocuk tanımı korunur. Etkilenen kilitli doğrudan/üst kullanım, sayı taşması
+ve geçersizleşen kırpma yazısız reddedilir. Sadece birim etiketi veya
+aynı birim seçimi dinamik geometrinin sayısını değiştirmez. Gerçek
+menüden iki boyut aralığında dönüşüm, tek Undo/Redo, 1→1.05 m düzenleme
+ve kaydet–aç yapıldı; GUI/Python dosyaları tam aynı. 330 application,
+1612 masaüstü, 61 MCP ve 459 Python testi, Clippy ve derleme geçti. Tip–örnek kapsamı
+bu hata düzeltmesiyle tamamlanmış sayılmaz.
+[ADR 0859](../docs/adr/0859-scoped-dynamic-block-unit-correction.md),
+[kullanım/API](../docs/cad/block-unit-correction.md).
+
+**İlerleme — 2026-11-03, formül ve kayıt güvenliği:** Kutupsal uzaklık
+formülünün sayı saklayıp gerçek Kaydet/Kurtarma işlemini bozduğu hata
+giderildi; sonuç başlangıç ve yönü koruyan noktadır. Formül veya okuduğu
+varsayılan değişince boş kökler ve üst tanımların iç kullanımları da
+hesaplanır. Eski hesap önbelleği girdi sayılmaz; bir örneğin hesabı
+geçersizse literal genişlik/yön silinmeden bütün işlem reddedilir. Gerçek
+GUI'de 2.1→2.2 m hesap, 1.05→1.10 m tek Enter, kaydet–aç, tek Undo/Redo ve
+sıfıra bölen formülde yazısız ret doğrulandı. GUI/korumalı Python dosyaları
+ve geri alma kayıtları bayt düzeyinde aynı; 10 dosya bağımsız okuyucudan
+geçti. 339 application + ayrı çekirdek çizim, 1612 masaüstü, 62 MCP,
+462 Python testi, paylaşılan 14801 komut senaryosu, Clippy ve derleme geçti.
+Bu dilim kalıcı tip–örnek kapsamının yerine geçmez.
+[ADR 0860](../docs/adr/0860-polar-formulas-and-complete-reference-refresh.md),
+[formül/API rehberi](../docs/cad/block-parameter-formulas.md).
+
+Kalıcı tip–örnek parametre kapsamı ve birleşik blok kabulü açıktır. Web öznitelik penceresinin native eşitleme kapsamıyla
 aynı olmadığı kodda görüldü; bu dilim web eşitliğini tamamlanmış saymaz.
 
 ### CAD-ADV-07 — Tekrarları tanı, blok ve ilişkili diziye kontrollü dönüştür [ ]

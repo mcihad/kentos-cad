@@ -313,7 +313,7 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: UnitsChange) -> CommandRe
 
 /// Conjugate a parameter expression through the unit conversion: s*f(length/s, angle).
 /// Use the real lexer so quoted text, Unicode names and longer parameter names are not rewritten accidentally.
-fn scale_expressions(block: &mut kentos_commands::BlockDefinition, s: Scale) {
+pub(crate) fn scale_expressions(block: &mut kentos_commands::BlockDefinition, s: Scale) {
     use kentos_commands::BlockParameter as P;
     use kentos_expression::lexer::{Tok, tokenize};
     let Some(dynamic) = &mut block.dynamic else {

@@ -116,21 +116,39 @@ fn derive(
     d: &DynamicBlock,
     values: &mut BTreeMap<String, ParamValue>,
 ) -> Result<(), (String, String)> {
-    let derived: Vec<(&str, &str, &kentos_commands::NumberRule)> = d
+    let derived: Vec<(&BlockParameter, &str, &kentos_commands::NumberRule)> = d
         .parameters
         .iter()
         .filter_map(|p| {
             let rule = p.rule()?;
-            Some((p.name(), rule.expression.as_deref()?, rule))
+            Some((p, rule.expression.as_deref()?, rule))
         })
         .collect();
     for _ in 0..derived.len() {
-        for (name, source, rule) in &derived {
+        for (parameter, source, rule) in &derived {
+            let name = parameter.name();
             let x = computed(source, variables(d, values)).map_err(|m| (name.to_string(), m))?;
             if let Some(m) = number_problem(rule, x) {
                 return Err((name.to_string(), format!("ifadenin sonucu {x}: {m}")));
             }
-            values.insert(name.to_string(), ParamValue::Number(x));
+            let value = match parameter {
+                BlockParameter::Polar { from, to, .. } => {
+                    let (dx, dy) = (to.x - from.x, to.y - from.y);
+                    let length = dx.hypot(dy);
+                    if x < 0.0 || !length.is_finite() || length == 0.0 {
+                        return Err((name.to_owned(), "kutupsal formülün uzaklığı negatif olamaz; tanımın yönü sonlu ve sıfırdan farklı olmalı".into()));
+                    }
+                    ParamValue::Point(kentos_commands::Vec2 {
+                        x: from.x + (dx / length) * x,
+                        y: from.y + (dy / length) * x,
+                    })
+                }
+                _ => ParamValue::Number(x),
+            };
+            if let Some(why) = value_problem(parameter, &value) {
+                return Err((name.to_owned(), format!("ifadenin sonucu: {why}")));
+            }
+            values.insert(name.to_owned(), value);
         }
     }
     Ok(())
@@ -334,6 +352,52 @@ pub(crate) fn refresh_definitions(
     let definitions: Vec<_> = blocks.iter().collect();
     crate::blocks_define::block_rules_with_entities(&definitions, &entities)?;
     Ok(changes)
+}
+
+/// Whether expressions, their geometric reference, or defaults they read changed.
+/// Unchanged formula dependencies retain the established fitting policy;
+/// presentation groups and unrelated parameters do not trigger a migration.
+pub(crate) fn formula_inputs_changed(old: Option<&DynamicBlock>, next: Option<&DynamicBlock>) -> bool {
+    fn parameters(d: Option<&DynamicBlock>) -> Vec<&BlockParameter> {
+        d.into_iter().flat_map(|d| &d.parameters)
+            .filter(|p| p.rule().is_some_and(|r| r.expression.is_some())).collect()
+    }
+    fn inputs(d: Option<&DynamicBlock>) -> BTreeMap<String, Option<ParamValue>> {
+        use kentos_expression::lexer::{Tok, tokenize};
+        let Some(d) = d else { return BTreeMap::new(); };
+        let mut out = BTreeMap::new();
+        for source in d.parameters.iter().filter_map(|p| p.rule()?.expression.as_deref()) {
+            if let Ok(tokens) = tokenize(source) {
+                for token in tokens {
+                    if let Tok::At(name) = token.t {
+                        let value = d.parameters.iter().find(|p| p.name() == name).and_then(BlockParameter::default_value);
+                        out.insert(name, value);
+                    }
+                }
+            }
+        }
+        out
+    }
+    parameters(old) != parameters(next) || inputs(old) != inputs(next)
+}
+
+/// A direct formula-definition edit uses the same complete-graph refresh as a
+/// library update. Literal inputs are retained, including in unchanged parents;
+/// an incompatible input or failed calculation refuses before any definition is written.
+pub(crate) fn prepare_formula_edit(
+    doc: &Document,
+    next: &BlockDefinition,
+) -> Result<(BlockDefinition, crate::blocks_edit::DefinitionChanges), Stop> {
+    let mut blocks: Vec<_> = doc.blocks().iter()
+        .map(|b| if b.id == next.id { next.clone() } else { (**b).clone() }).collect();
+    let entities = refresh_definitions(doc, &mut blocks, &HashSet::from([next.id]))?;
+    let mut primary = next.clone();
+    let mut related = Vec::new();
+    for b in blocks {
+        if b.id == next.id { primary = b; }
+        else if doc.block(b.id).is_some_and(|old| old != &b) { related.push(b); }
+    }
+    Ok((primary, crate::blocks_edit::DefinitionChanges { blocks: related, entities }))
 }
 
 /// Every parameter's value as an insert shows it: its kept value, else its default; a lookup's the label of the

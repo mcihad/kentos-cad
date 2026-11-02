@@ -320,6 +320,7 @@ __all__ = [
     "BlockFileModeName",
     "BlockInserted",
     "BlockParameter",
+    "BlockParameterGroup",
     "BlockPublication",
     "BlockRecord",
     "BlockReport",

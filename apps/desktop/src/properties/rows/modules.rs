@@ -138,7 +138,7 @@ pub(super) fn section(doc: &Document, slot: Slot, locked: bool) -> Option<Sectio
         })),
     );
     Some(Section {
-        id: "module",
+        id: "module".into(),
         title: format!("Modül: {}", m.name).into(),
         rows,
     })

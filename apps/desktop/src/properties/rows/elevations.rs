@@ -80,7 +80,7 @@ pub(super) fn section(doc: &Document, slot: Slot) -> Option<Section> {
     })));
     rows.push(Row::text("Türetildiği sürüm", row.derived_at.clone()));
     Some(Section {
-        id: "elevation",
+        id: "elevation".into(),
         title: format!("İç görünüş: {}", row.name).into(),
         rows,
     })

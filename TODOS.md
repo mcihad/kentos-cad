@@ -51,6 +51,21 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ADR 0860: kutupsal uzaklık formülünden nokta sonucu üretimi ve doğrudan
+  dinamik tanım düzenlemesinde boş kök/iç yerleştirme hesaplarının birlikte
+  yenilenmesi; uyumsuz örnekte literal girdileri silmeden atomik ret.
+  Native/Python/MCP kabulü ayrı web handler'ını tamamlanmış saymaz.
+
+- ADR 0859: blok birimi düzeltmesinde dinamik koordinat/kural/formüllerin,
+  kök ve iç yerleştirme girdilerinin, taşınmış öznitelik yerleri ve kırpmanın
+  birlikte dönüşmesi; etkilenen kilitli kullanımda atomik ret. Native
+  komut ve Python/MCP kabulü web handler eşitliği değildir.
+
+- ADR 0858: dinamik blok kullanıcı parametre gruplarının yazılması,
+  mevcut gruptan seçim, sıralama ve özellik panelinde bağımsız kapanma.
+  Ortak `DynamicBlock.parameterGroups`/KCAD şema 159 sözleşmesi hazırdır;
+  masaüstü kabulü web kabulü değildir.
+
 - ADR 0857: kitaplık yayınını aynı aile/tipin seçilmiş yerleştirmelerine
   yükseltme menüsü ve korumalı etki penceresi; eski tanımları koruma,
   uyumsuz kaynak/girdi reddi, iptal ve tek Undo kabulü. Ortak

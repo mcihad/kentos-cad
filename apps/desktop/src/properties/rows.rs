@@ -71,7 +71,7 @@ pub(crate) enum Summary {
 /// A section of the grid; its id keeps it closed while the app runs.
 #[derive(Clone)]
 pub(crate) struct Section {
-    pub id: &'static str,
+    pub id: Cow<'static, str>,
     /// Its heading; a count in some (“Yazılar (3)”).
     pub title: Cow<'static, str>,
     pub rows: Vec<Row>,
@@ -340,7 +340,7 @@ fn document_section(doc: &Document, crs: bool) -> Section {
         Row::text("Etkin katman", active),
     ]);
     Section {
-        id: "doc",
+        id: "doc".into(),
         title: "Çizim".into(),
         rows,
     }
@@ -441,7 +441,7 @@ pub(crate) fn service_section(
             failure.unwrap_or_else(|| "Çiziliyor".to_owned()),
         ));
         return Some(Section {
-            id: "service",
+            id: "service".into(),
             title: "Servis katmanı".into(),
             rows,
         });
@@ -481,7 +481,7 @@ pub(crate) fn service_section(
         ));
     }
     Some(Section {
-        id: "feed",
+        id: "feed".into(),
         title: "Veri kaynağı".into(),
         rows,
     })
@@ -2579,14 +2579,14 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
     }
 
     let mut sections = vec![Section {
-        id: "general",
+        id: "general".into(),
         title: "Genel".into(),
         rows: general,
     }];
     // A record has no geometry (docs/adr/0410 §4): no section for it.
     if drawn {
         sections.push(Section {
-            id: "geometry",
+            id: "geometry".into(),
             title: "Geometri".into(),
             rows: geo,
         });
@@ -2630,7 +2630,7 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
     }
     if !tags.is_empty() {
         sections.push(Section {
-            id: "blockAttrs",
+            id: "blockAttrs".into(),
             title: "Blok öznitelikleri".into(),
             rows: tags
                 .iter()
@@ -2670,7 +2670,7 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
             &labels,
         ));
         sections.push(Section {
-            id: "fields",
+            id: "fields".into(),
             title: "Alanlar".into(),
             rows,
         });
@@ -2685,7 +2685,7 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
         .collect();
     if !others.is_empty() {
         sections.push(Section {
-            id: "attrs",
+            id: "attrs".into(),
             title: "Öznitelik bilgileri".into(),
             rows: others
                 .into_iter()
@@ -3799,7 +3799,7 @@ fn many_sections(
         );
     }
     let mut sections = vec![Section {
-        id: "general",
+        id: "general".into(),
         title: "Ortak özellikler".into(),
         rows,
     }];
@@ -3826,7 +3826,7 @@ fn many_sections(
         let rows = scale_rows(&scaled, &slots, slots.is_empty());
         if !rows.is_empty() {
             sections.push(Section {
-                id: "scales",
+                id: "scales".into(),
                 title: "Ölçekli açıklama".into(),
                 rows,
             });
@@ -3852,7 +3852,7 @@ fn many_sections(
             Row::text("Yükseklik", "Çeşitli")
         }.unit(f.length_unit_label()).editor(edit(Editor::Number(Field::TextHeights(slots.clone()))));
         sections.push(Section {
-            id: "texts",
+            id: "texts".into(),
             title: if texts.len() == objects.len() {
                 "Yazı".into()
             } else {
@@ -3899,7 +3899,7 @@ fn many_sections(
             .map(|l| Slot(l.base.id))
             .collect();
         sections.push(Section {
-            id: "leaders",
+            id: "leaders".into(),
             title: if leaders.len() == objects.len() {
                 "Kılavuz".into()
             } else {
@@ -3938,13 +3938,13 @@ fn many_sections(
             // A chain selection can contain both rows; its first member is not the whole selection's row.
             rows.retain(|row| row.label != "Sıra");
             sections.push(Section {
-                id: "dimension-set",
+                id: "dimension-set".into(),
                 title: "Duvar ölçüleri".into(),
                 rows,
             });
         }
         sections.push(Section {
-            id: "dimensions",
+            id: "dimensions".into(),
             title: if dims.len() == objects.len() {
                 "Ölçü".into()
             } else {
@@ -3990,7 +3990,7 @@ fn many_sections(
     }
     if !totals.is_empty() {
         sections.push(Section {
-            id: "totals",
+            id: "totals".into(),
             title: "Toplamlar".into(),
             rows: totals,
         });
@@ -4046,7 +4046,7 @@ fn shared_attributes(objects: &[&Entity], ids: &[Slot], locked: bool) -> Option<
         })
         .collect();
     Some(Section {
-        id: "sharedAttrs",
+        id: "sharedAttrs".into(),
         title: "Ortak öznitelikler".into(),
         rows,
     })

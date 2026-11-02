@@ -164,8 +164,21 @@ pub(super) fn sections(doc: &Document, slot: Slot, i: &InsertEntity, locked: boo
     let factor = kentos_native_application::blocks_insert::unit_factor(&doc.model, block);
     let current = kentos_native_application::block_params::current(d, &i.parameters);
     let mut groups: [Vec<Row>; 4] = Default::default();
-    for p in &d.parameters {
-        let out = &mut groups[group(p)];
+    let mut custom: Vec<Vec<Row>> = vec![Vec::new(); d.parameter_groups.len()];
+    // Display order is explicit metadata; evaluation still uses d.parameters unchanged.
+    let parameters: std::collections::HashMap<_, _> = if d.parameter_groups.is_empty() {
+        std::collections::HashMap::new()
+    } else { d.parameters.iter().map(|p| (p.name(), p)).collect() };
+    let membership: std::collections::HashMap<_, _> = d.parameter_groups.iter().enumerate()
+        .flat_map(|(i, g)| g.parameters.iter().map(move |name| (name.as_str(), i))).collect();
+    let ordered = d.parameter_groups.iter().flat_map(|g| g.parameters.iter())
+        .filter_map(|name| parameters.get(name.as_str()).copied())
+        .chain(d.parameters.iter().filter(|p| !membership.contains_key(p.name())));
+    for p in ordered {
+        let out = match membership.get(p.name()) {
+            Some(&index) => &mut custom[index],
+            None => &mut groups[group(p)],
+        };
         let name = p.name();
         let value = current.get(name);
         let text = value.map_or_else(|| "—".to_owned(), |v| shown(p, v, f, factor));
@@ -295,10 +308,19 @@ pub(super) fn sections(doc: &Document, slot: Slot, i: &InsertEntity, locked: boo
         identity.push(Row::note("Bu tanımda henüz parametre yok."));
     }
     let mut sections = vec![Section {
-        id: "blockParams",
+        id: "blockParams".into(),
         title: "Blok parametreleri".into(),
         rows: identity,
     }];
+    for (g, rows) in d.parameter_groups.iter().zip(custom) {
+        if !rows.is_empty() {
+            sections.push(Section {
+                id: format!("blockParamsGroup:{}:{}", block.id.to_text(), g.name).into(),
+                title: g.name.clone().into(),
+                rows,
+            });
+        }
+    }
     for ((id, title), rows) in [
         ("blockParamsDimensions", "Boyut ve konum"),
         ("blockParamsAppearance", "Görünüş"),
@@ -310,8 +332,8 @@ pub(super) fn sections(doc: &Document, slot: Slot, i: &InsertEntity, locked: boo
     {
         if !rows.is_empty() {
             sections.push(Section {
-                id,
-                title: title.into(),
+                id: id.into(),
+                title: if d.parameter_groups.is_empty() { title.into() } else { format!("{title} · Otomatik").into() },
                 rows,
             });
         }
