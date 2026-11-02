@@ -718,6 +718,21 @@ Python, 234 KCAD testi, bağımsız 1501 dosya, Clippy ve derleme geçti.
 [ADR 0858](../docs/adr/0858-user-defined-block-parameter-groups.md),
 [gruplama ve sıfırlama/API](../docs/cad/block-parameter-groups.md).
 
+**İlerleme — 2026-11-03, dinamik blok birimi düzeltmesi:** Gerçek GUI'de
+üretilen “geometri küçülüyor, tutamaç ve kayıtlı genişlik eski kalıyor”
+hatası giderildi. `Sayıları koru` statik/dinamik koordinat, sınır/adım,
+katalog değeri, formül, kök/iç yerleştirme girdisi, taşınmış öznitelik
+yeri ve kırpmayı aynı işlemde dönüştürür. Üst/dünya konumu ve ilgisiz
+çocuk tanımı korunur. Etkilenen kilitli doğrudan/üst kullanım, sayı taşması
+ve geçersizleşen kırpma yazısız reddedilir. Sadece birim etiketi veya
+aynı birim seçimi dinamik geometrinin sayısını değiştirmez. Gerçek
+menüden iki boyut aralığında dönüşüm, tek Undo/Redo, 1→1.05 m düzenleme
+ve kaydet–aç yapıldı; GUI/Python dosyaları tam aynı. 330 application,
+1612 masaüstü, 61 MCP ve 459 Python testi, Clippy ve derleme geçti. Tip–örnek kapsamı
+bu hata düzeltmesiyle tamamlanmış sayılmaz.
+[ADR 0859](../docs/adr/0859-scoped-dynamic-block-unit-correction.md),
+[kullanım/API](../docs/cad/block-unit-correction.md).
+
 Kalıcı tip–örnek parametre kapsamı ve birleşik blok kabulü açıktır. Web öznitelik penceresinin native eşitleme kapsamıyla
 aynı olmadığı kodda görüldü; bu dilim web eşitliğini tamamlanmış saymaz.
 

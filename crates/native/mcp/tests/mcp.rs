@@ -4269,3 +4269,34 @@ fn parameter_group_metadata_uses_guarded_mcp_edit_without_mutating_instances() {
     assert_eq!(std::fs::read(&path).unwrap(), before);
     std::fs::remove_dir_all(dir).unwrap();
 }
+
+#[test]
+fn guarded_block_unit_correction_updates_dynamic_values_and_undoes_exactly() {
+    let dir = std::env::temp_dir().join(format!("kentos-mcp-block-units-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join("units.kcad");
+    let before = include_bytes!("../../../../fixtures/kcad/v2/block-parameter-groups.kcad");
+    std::fs::write(&path, before).unwrap();
+    let source = kentos_native_application::file_import_block::read_drawing(before).unwrap();
+    let mut server = Server::new();
+    let drawing = call(&mut server,"drawing.open",json!({"path":path}))["structuredContent"]["drawing"].clone();
+    let mut input = json!({"drawing":drawing,"operation":"units","block":source.blocks[0].id,"units":"mm","rescale":true,"op":"plan"});
+    let plan = call(&mut server,"cad.blocks.edit",input.clone())["structuredContent"].clone();
+    assert_eq!(plan["status"],"completed","{plan}");
+    call(&mut server,"drawing.save",json!({"drawing":drawing,"path":path}));
+    assert_eq!(std::fs::read(&path).unwrap(),before);
+    input["op"] = json!("execute"); input["expected"] = json!({"plan":plan["planId"]});
+    let result = call(&mut server,"cad.blocks.edit",input);
+    assert_eq!(result["structuredContent"]["status"],"completed","{result}");
+    call(&mut server,"drawing.save",json!({"drawing":drawing,"path":path}));
+    let after = kentos_native_application::file_import_block::read_drawing(&std::fs::read(&path).unwrap()).unwrap();
+    let dynamic = serde_json::to_value(&after.blocks[0].dynamic).unwrap();
+    assert_eq!(dynamic["parameters"][0]["to"]["x"],json!(0.0009));
+    let entities = serde_json::to_value(&after.entities).unwrap();
+    assert_eq!(entities[1]["parameters"]["Genişlik"],json!(0.001));
+    assert_eq!(entities[1]["p"],serde_json::to_value(&source.entities).unwrap()[1]["p"]);
+    call(&mut server,"drawing.undo",json!({"drawing":drawing}));
+    call(&mut server,"drawing.save",json!({"drawing":drawing,"path":path}));
+    assert_eq!(std::fs::read(&path).unwrap(),before);
+    std::fs::remove_dir_all(dir).unwrap();
+}
