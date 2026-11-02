@@ -319,3 +319,76 @@ pub struct ProfilesQueried {
     pub ticks: Vec<ProfileAt>,
     pub terrain: Vec<ProfileGroundRow>,
 }
+
+pub const ROAD_PROFILES_DRAW: &str = "road.profiles.draw";
+pub const ROAD_PROFILES_DRAW_VERSION: u32 = 1;
+
+/// Input of `road.profiles.draw` v1 (plan/road.md Y4, docs/adr/0902 §8): a profile drawn on a layer as lines and texts,
+/// so it goes to sheets and DXF as Netcad's and Civil 3D's profile views do, from its first to its last PVI. The frame's
+/// lower left is `at` (the first PVI's station at the `datum` elevation); a metre of station is a drawing unit, a metre
+/// of elevation `exaggeration` units (10 when absent). Inside: the elevation grid with its heights, the terrain (black;
+/// off the surface left out), the design (red) line and each curve's sizes and K. Under it the bands: km, black and red
+/// elevations and their difference at every round `every` metres of km (50 when absent) and at the ends, and the grades.
+/// Texts are `height` paper millimetres high at the project's drawing scale (2.5 when absent). The datum when absent is a
+/// metre under the lowest elevation shown, floored; the top a metre over the highest, ceiled.
+///
+/// Refusals, in this order: `not_a_road_project`, `unknown_road_profile`, `invalid_label` (`every`, `height` or
+/// `exaggeration` not above 0, more than 100 000 ticks, a datum over the lowest elevation), the layer's
+/// (`layer_not_found`, `not_a_layer`, `service_layer`, `layer_locked`), `invalid_revision`, `revision_conflict`, and
+/// the geometry's when the profile no longer builds. Warnings: `layer_hidden`, `profile_stale`, `profile_surface_gone`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ProfilesDraw {
+    pub profile: String,
+    pub layer_id: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub at: [f64; 2],
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub every: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub datum: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub exaggeration: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
+    pub height: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
+/// Output of `road.profiles.draw` v1, and its plan: the frame's lower left and upper right, the datum and top
+/// elevations, the exaggeration and the elevation grid's step, the bands' columns in station order, the objects written
+/// (none in a plan).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ProfilesDrawn {
+    pub profile: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub frame: [[f64; 2]; 2],
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub datum: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub top: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub exaggeration: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub grid: f64,
+    pub columns: Vec<ProfileAt>,
+    pub uids: Vec<String>,
+    pub revision: String,
+}

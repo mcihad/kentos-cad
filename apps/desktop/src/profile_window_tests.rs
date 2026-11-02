@@ -73,6 +73,18 @@ fn the_window_makes_a_profile_on_the_terrain_and_rebinds_a_stale_one() {
     send(&mut app, W::Cancel);
     let doc = &mut app.document.as_mut().expect("doc").model;
     assert_eq!(doc.undo().as_deref(), Some("Boykesiti düzenle"));
+
+    // Çizime yaz: the chosen profile drawn as objects on the layer, one undo step.
+    let mut app = self::app(true);
+    let before = app.document.as_ref().expect("doc").model.entities().count();
+    let _ = app.update(Message::Run("profile.editor"));
+    send(&mut app, W::Choose(0));
+    send(&mut app, W::DrawLayer("0".into()));
+    send(&mut app, W::Place("0; -300".into()));
+    send(&mut app, W::Draw);
+    let doc = &mut app.document.as_mut().expect("doc").model;
+    assert!(doc.entities().count() > before + 50, "the frame, grid, lines and bands are drawn");
+    assert_eq!(doc.undo().as_deref(), Some("Boykesit çiz"));
 }
 
 #[test]
@@ -123,6 +135,25 @@ fn screens() {
         let file = out.join(format!("yol-y4-boykesit-eski-{name}.png"));
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
         println!("{}", file.display());
+        // Çizime yaz: the profile drawn under the alignments, the window closed over it.
+        if name == "acik-genis" {
+            send(&mut app, W::Choose(0));
+            send(&mut app, W::DrawLayer("0".into()));
+            send(&mut app, W::Draw);
+            send(&mut app, W::Cancel);
+            let _ = app.update(Message::Run("view.zoomExtents"));
+            snapshot.settle(&mut app, App::view, &mut update);
+            let file = out.join("yol-y4-boykesit-cizimde-acik-genis.png");
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+            // Closer: the first 230 m, its bands and the first curve.
+            app.zoom_to_bounds(&kentos_commands::Bounds { min_x: 0.0, min_y: -320.0, max_x: 250.0, max_y: -120.0 });
+            snapshot.settle(&mut app, App::view, &mut update);
+            let file = out.join("yol-y4-boykesit-bantlar-acik-genis.png");
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+            let _ = app.update(Message::Run("profile.editor"));
+        }
         // A curve too long: the window says why before it is saved.
         send(&mut app, W::Choose(0));
         send(&mut app, W::Pvi(1, 3, "400".into()));

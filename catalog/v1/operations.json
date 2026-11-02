@@ -2612,9 +2612,10 @@
       "via": [
         "road.profiles.create",
         "road.profiles.edit",
-        "road.profiles.query"
+        "road.profiles.query",
+        "road.profiles.draw"
       ],
-      "note": "Boykesit penceresi PVI'leri yazdıkça çekirdekle kurar ve arazi boykesitini yüzeyden çizer; Kaydet ve Aksa yeniden bağla road.profiles.create ve .edit ile yazar (plan/road.md Y4, ADR 0902)."
+      "note": "Boykesit penceresi PVI'leri yazdıkça çekirdekle kurar ve arazi boykesitini yüzeyden çizer; Kaydet ve Aksa yeniden bağla road.profiles.create ve .edit ile, Çizime yaz road.profiles.draw ile yazar (plan/road.md Y4, ADR 0902)."
     },
     "profile.new": {
       "level": "semantic",

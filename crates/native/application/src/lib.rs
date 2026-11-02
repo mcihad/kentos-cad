@@ -269,6 +269,7 @@ pub mod road_alignments_label;
 pub mod road_alignments_query;
 pub mod road_profiles;
 pub mod road_profiles_create;
+pub mod road_profiles_draw;
 pub mod road_profiles_edit;
 pub mod road_profiles_query;
 pub mod road_terrains_contours;
@@ -1142,6 +1143,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::ROAD_PROFILES_EDIT,
         kentos_commands::ROAD_PROFILES_EDIT_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_PROFILES_DRAW,
+        kentos_commands::ROAD_PROFILES_DRAW_VERSION,
     ),
     (
         kentos_commands::ROAD_PROFILES_QUERY,

@@ -6923,6 +6923,32 @@ pub fn catalog() -> CommandCatalog {
             ],
         },
         CommandDescriptor {
+            id: crate::ROAD_PROFILES_DRAW.into(),
+            version: crate::ROAD_PROFILES_DRAW_VERSION,
+            title: "Boykesit çiz".into(),
+            summary: "Yol projesinin bir boykesitini (profile: kimliği ya da adı) bir katmana çizgi ve yazı nesneleri olarak yazar, paftaya ve DXF'e gider: ilk PVI'den son PVI'ye çerçeve (sol altı at: ilk PVI'nin km'si ve datum kotu; km'nin bir metresi bir çizim birimi, kotun bir metresi exaggeration birim, yoksa 10), kot ızgarası ve kotları, arazi (siyah; yüzeyin dışı çizilmez), proje çizgisi (kırmızı; kurp 16 parçada) ve her kurbun boyları ve K'sı. \
+                      Çerçevenin altında bantlar: Km, Siyah kot, Kırmızı kot, Fark (kırmızı − siyah), her every metrelik yuvarlak km'de (yoksa 50) ve uçlarda, Eğim PVI'ler arasında. Yazılar height mm (yoksa 2,5) yüksekliğinde, çizim ölçeğiyle. datum verilmezse gösterilen en alçak kotun bir metre altı (aşağı yuvarlanmış), tepe en yükseğin bir metre üstü. \
+                      Cevap çerçevenin köşeleri, datum, tepe, abartma, ızgara aralığı ve bantların sütunlarıdır. Tek geri alma adımı “Boykesit çiz”. Retler: not_a_road_project, unknown_road_profile, invalid_label, layer_not_found, not_a_layer, service_layer, layer_locked, invalid_revision, revision_conflict; uyarılar layer_hidden, profile_stale, profile_surface_gone."
+                .into(),
+            aliases: vec!["boykesitciz".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ProfilesDraw>(),
+            output: schema::<crate::ProfilesDrawn>(),
+            plan: Some(schema::<crate::ProfilesDrawn>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Proje kotunu 1000, -500'den başlayarak çiz, her 20 m'de bant".into(),
+                input: json!({ "profile": "Proje kotu", "layerId": "boykesit", "at": [1000.0, -500.0], "every": 20.0 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::ROAD_PROFILES_QUERY.into(),
             version: crate::ROAD_PROFILES_QUERY_VERSION,
             title: "Boykesiti sorgula".into(),
@@ -12542,6 +12568,9 @@ mod tests {
                     crate::ROAD_PROFILES_QUERY => {
                         serde_json::from_value::<crate::ProfilesQuery>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_PROFILES_DRAW => {
+                        serde_json::from_value::<crate::ProfilesDraw>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_SUBNETWORKS_FIND => {
                         serde_json::from_value::<crate::SubnetworksFind>(e.input.clone())
                             .map(|_| ())
@@ -13215,6 +13244,10 @@ mod tests {
                         }
                         crate::ROAD_PROFILES_QUERY => {
                             serde_json::from_value::<crate::ProfilesQueried>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_PROFILES_DRAW => {
+                            serde_json::from_value::<crate::ProfilesDrawn>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_ADDRESSES_DEFINE => {

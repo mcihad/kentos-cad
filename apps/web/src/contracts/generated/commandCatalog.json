@@ -35856,6 +35856,269 @@
       ]
     },
     {
+      "id": "road.profiles.draw",
+      "version": 1,
+      "title": "Boykesit çiz",
+      "summary": "Yol projesinin bir boykesitini (profile: kimliği ya da adı) bir katmana çizgi ve yazı nesneleri olarak yazar, paftaya ve DXF'e gider: ilk PVI'den son PVI'ye çerçeve (sol altı at: ilk PVI'nin km'si ve datum kotu; km'nin bir metresi bir çizim birimi, kotun bir metresi exaggeration birim, yoksa 10), kot ızgarası ve kotları, arazi (siyah; yüzeyin dışı çizilmez), proje çizgisi (kırmızı; kurp 16 parçada) ve her kurbun boyları ve K'sı. Çerçevenin altında bantlar: Km, Siyah kot, Kırmızı kot, Fark (kırmızı − siyah), her every metrelik yuvarlak km'de (yoksa 50) ve uçlarda, Eğim PVI'ler arasında. Yazılar height mm (yoksa 2,5) yüksekliğinde, çizim ölçeğiyle. datum verilmezse gösterilen en alçak kotun bir metre altı (aşağı yuvarlanmış), tepe en yükseğin bir metre üstü. Cevap çerçevenin köşeleri, datum, tepe, abartma, ızgara aralığı ve bantların sütunlarıdır. Tek geri alma adımı “Boykesit çiz”. Retler: not_a_road_project, unknown_road_profile, invalid_label, layer_not_found, not_a_layer, service_layer, layer_locked, invalid_revision, revision_conflict; uyarılar layer_hidden, profile_stale, profile_surface_gone.",
+      "aliases": [
+        "boykesitciz"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.profiles.draw` v1 (plan/road.md Y4, docs/adr/0902 §8): a profile drawn on a layer as lines and texts,\nso it goes to sheets and DXF as Netcad's and Civil 3D's profile views do, from its first to its last PVI. The frame's\nlower left is `at` (the first PVI's station at the `datum` elevation); a metre of station is a drawing unit, a metre\nof elevation `exaggeration` units (10 when absent). Inside: the elevation grid with its heights, the terrain (black;\noff the surface left out), the design (red) line and each curve's sizes and K. Under it the bands: km, black and red\nelevations and their difference at every round `every` metres of km (50 when absent) and at the ends, and the grades.\nTexts are `height` paper millimetres high at the project's drawing scale (2.5 when absent). The datum when absent is a\nmetre under the lowest elevation shown, floored; the top a metre over the highest, ceiled.\n\nRefusals, in this order: `not_a_road_project`, `unknown_road_profile`, `invalid_label` (`every`, `height` or\n`exaggeration` not above 0, more than 100 000 ticks, a datum over the lowest elevation), the layer's\n(`layer_not_found`, `not_a_layer`, `service_layer`, `layer_locked`), `invalid_revision`, `revision_conflict`, and\nthe geometry's when the profile no longer builds. Warnings: `layer_hidden`, `profile_stale`, `profile_surface_gone`.",
+        "properties": {
+          "at": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array",
+            "x-unit": "length"
+          },
+          "datum": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "elevation"
+          },
+          "every": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "exaggeration": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1"
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "height": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "paper-mm"
+          },
+          "layerId": {
+            "type": "string"
+          },
+          "profile": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "profile",
+          "layerId",
+          "at"
+        ],
+        "title": "ProfilesDraw",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.profiles.draw` v1, and its plan: the frame's lower left and upper right, the datum and top\nelevations, the exaggeration and the elevation grid's step, the bands' columns in station order, the objects written\n(none in a plan).",
+        "properties": {
+          "columns": {
+            "items": {
+              "$ref": "#/$defs/ProfileAt"
+            },
+            "type": "array"
+          },
+          "datum": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "elevation"
+          },
+          "exaggeration": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "1"
+          },
+          "frame": {
+            "items": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array",
+            "x-unit": "length"
+          },
+          "grid": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "profile": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "top": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "elevation"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "profile",
+          "frame",
+          "datum",
+          "top",
+          "exaggeration",
+          "grid",
+          "columns",
+          "uids",
+          "revision"
+        ],
+        "title": "ProfilesDrawn",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.profiles.draw` v1, and its plan: the frame's lower left and upper right, the datum and top\nelevations, the exaggeration and the elevation grid's step, the bands' columns in station order, the objects written\n(none in a plan).",
+        "properties": {
+          "columns": {
+            "items": {
+              "$ref": "#/$defs/ProfileAt"
+            },
+            "type": "array"
+          },
+          "datum": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "elevation"
+          },
+          "exaggeration": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "1"
+          },
+          "frame": {
+            "items": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array",
+            "x-unit": "length"
+          },
+          "grid": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "profile": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "top": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "elevation"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "profile",
+          "frame",
+          "datum",
+          "top",
+          "exaggeration",
+          "grid",
+          "columns",
+          "uids",
+          "revision"
+        ],
+        "title": "ProfilesDrawn",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_road_profile",
+          "invalid_label",
+          "layer_not_found",
+          "not_a_layer",
+          "layer_locked",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "layer_hidden",
+          "profile_stale",
+          "profile_surface_gone"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Proje kotunu 1000, -500'den başlayarak çiz, her 20 m'de bant",
+          "input": {
+            "at": [
+              1000.0,
+              -500.0
+            ],
+            "every": 20.0,
+            "layerId": "boykesit",
+            "profile": "Proje kotu"
+          }
+        }
+      ]
+    },
+    {
       "id": "road.profiles.query",
       "version": 1,
       "title": "Boykesiti sorgula",
@@ -86740,6 +87003,11 @@
         {
           "const": "alignmentLabels",
           "description": "`road.alignments.label` (plan/road.md Y3): an alignment's km ticks and words, “Aks km yazısı”.",
+          "type": "string"
+        },
+        {
+          "const": "profileDrawing",
+          "description": "`road.profiles.draw` (plan/road.md Y4): a profile's frame, grid, terrain, design line and bands, “Boykesit çiz”.",
           "type": "string"
         }
       ]

@@ -2154,6 +2154,8 @@ __all__ = [
     "ProfilesApply",
     "ProfilesCheck",
     "ProfilesCreate",
+    "ProfilesDraw",
+    "ProfilesDrawn",
     "ProfilesEdit",
     "ProfilesEditOperation",
     "ProfilesEditOperationName",

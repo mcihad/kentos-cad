@@ -334,6 +334,7 @@ COMMANDS: dict[str, Any] = {
     "road.alignments.label": road.alignments.label,
     "road.alignments.query": road.alignments.query,
     "road.profiles.create": road.profiles.create,
+    "road.profiles.draw": road.profiles.draw,
     "road.profiles.edit": road.profiles.edit,
     "road.profiles.query": road.profiles.query,
     "road.terrains.contours": road.terrains.contours,

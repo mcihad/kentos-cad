@@ -1,6 +1,6 @@
 # ADR 0902 — Düşey güzergâh ve boykesit: arazi boykesiti, PVI'li parabolik ve dairesel kurplar
 
-Tarih: 2026-11-02. plan/road.md Y4 (ROAD-PROFILE-01…06, 09, 10, 12, 13). Durum: Y4.1–Y4.4 tamam, Y4.5 (boykesitin çizime yazılması) sürüyor.
+Tarih: 2026-11-02. plan/road.md Y4 (ROAD-PROFILE-01…06, 09, 10, 12, 13). Durum: Y4.1–Y4.5 tamam.
 
 ## Dayanak
 
@@ -63,7 +63,14 @@ Y4.4 Boykesit penceresi (`profile.editor`, `profile.new`; `apps/desktop/src/prof
 çıkarılır (aks ya da yüzey değişince yeniden), proje kotu yazıldıkça çekirdekle kurulur; grafik yatay ölçeği genişliğe,
 düşey ölçeği yatay × abartmaya göre (ikisi sığmazsa ikisi birlikte küçülür), bantlar yuvarlak km'lerde; kurp binince ya
 da PVI aksın dışındaysa nedeni grafiğin altında. Araziden uçlar ilk ve son PVI'yi aksın uçlarına, arazinin oradaki ya
-da yüzeyin dışındaysa en yakın kotuna koyar. Y4.5 boykesitin çizime (paftaya) yazılması kendi komutuyla.
+da yüzeyin dışındaysa en yakın kotuna koyar. Y4.5 `road.profiles.draw`: boykesit bir katmana çizgi ve yazı nesneleri
+olarak, ilk PVI'den son PVI'ye; çerçevenin sol altı `at` (ilk PVI'nin km'si, datum kotu), km'nin metresi bir çizim birimi,
+kotun metresi abartma kadar; kot ızgarası (en çok on çizgi), arazi (yüzeyin dışı çizilmez: iki noktası kotlu ve ortası
+yüzeyde olan aralık çizilir), proje çizgisi (kurp 16 parçada), kurp yazısı (boylar, K), bantlar (Km, Siyah kot, Kırmızı
+kot, Fark her yuvarlak km'de ve uçlarda; Eğim PVI'ler arasında). Datum verilmezse gösterilen en alçak kotun bir metre altı
+(aşağı yuvarlanmış), tepe en yükseğin bir metre üstü; gösterilen kotlar proje çizgisinin parça uçları ve uç noktaları ile
+§1'in arazi noktalarıdır. Cevap çerçeve, datum, tepe, ızgara aralığı ve bant sütunlarıdır; 27 ortak durum yazılan nesne
+sayısını da bağımsız sayar. Masaüstünde Boykesit penceresinin Çizime yaz'ı (katman, yer).
 
 ## Sonra
 

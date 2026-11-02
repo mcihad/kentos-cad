@@ -94,13 +94,13 @@ PART = {"id": "b-3", "name": "Kısmi kot", "alignment": "g-1", "alignmentRevisio
         "pvis": [pv("a", 100, 104), pv("b", 400, 110)]}
 
 
-def setup(profiles=(), work="road", surfaces=SURFACES):
+def setup(profiles=(), work="road", surfaces=SURFACES, layers=None):
     settings = {"srid": 5254, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "deg",
                 "plotScale": 1000.0, "workspace": "cad", "cadWork": work, "drawingFont": "barlow"}
     if work == "road":
         settings["road"] = road_of(list(profiles), surfaces)
     return {"format": "kentos.document", "version": 2, "name": "Yol boykesitleri", "settings": settings,
-            "origin": {"x": 0.0, "y": 0.0}, "layers": copy.deepcopy(LAYERS), "activeLayer": "0",
+            "origin": {"x": 0.0, "y": 0.0}, "layers": copy.deepcopy(layers or LAYERS), "activeLayer": "0",
             "entities": copy.deepcopy(ENTITIES), "uids": list(UIDS), "styles": {"items": [], "categories": []}}
 
 
@@ -562,9 +562,143 @@ def query_cases():
     return file("road.profiles.query", "Boykesiti sorgula", setup(start), cases)
 
 
+# ── road.profiles.draw ─────────────────────────────────────────────────────────────────────────────────────────────
+
+DRAW_LAYERS = LAYERS + [{**node("kilitli", "Kilitli"), "locked": True}, {**node("gizli", "Gizli"), "visible": False},
+                        {**node("grup", "Yol"), "type": "group", "children": [node("yol-boykesit", "Yol boykesit")]}]
+
+
+def drawing(d, at_, every=50.0, datum=None, ex=10.0, surface_ok=True):
+    """What the drawing says (frame, datum, top, grid, columns) and how many objects it writes."""
+    b = ALIGNED[d["alignment"]]
+    pvis = d["pvis"]
+    s0, s1 = pvis[0]["station"], pvis[-1]["station"]
+    curves, ev, S, _ = solve(d)
+    rows = vref.report(to_vref(pvis), curves)
+    # The design line's bounds: the pieces' ends (PVIs without a curve, the curves' ends, an asymmetric one's PVI) and
+    # the curves' highest or lowest points.
+    bounds = {float(S[0]), float(S[-1])}
+    for i, p in enumerate(pvis):
+        c = curves.get(i)
+        if c is None:
+            bounds.add(float(S[i]))
+        else:
+            bounds |= {float(c[0]), float(c[1])}
+            if "lengthIn" in p:
+                bounds.add(float(S[i]))
+    zs = [ev(q)[0] for q in sorted(bounds)] + [r["extreme"][1] for r in rows if r["extreme"] is not None]
+    on = d.get("surface") == "t-1" and surface_ok
+    points = []
+    if on:
+        inner = [(r["station"], r.get("z")) for r in ground(d["alignment"]) if s0 < r["station"] < s1]
+        points = [(s0, black_at(b, s0))] + inner + [(s1, black_at(b, s1))]
+        zs += [z for _, z in points if z is not None]
+    lo, hi = min(zs), max(zs)
+    base = math.floor(lo) - 1.0 if datum is None else datum
+    top = math.ceil(hi) + 1.0
+    grid = next((g for g in (1, 2, 5, 10, 20, 50, 100, 200, 500, 1000) if (top - base) / g <= 10), 1000)
+    stations = [s for s in ticks(b, every) if s0 - 1e-9 <= s <= s1 + 1e-9]
+    stations = [min(max(s, s0), s1) for s in stations]
+    for end in (s0, s1):
+        if all(abs(s - end) > 1e-6 for s in stations):
+            stations.append(end)
+    cols = [at(d, s, on) for s in sorted(stations)]
+    # The objects: the frame; the grid's inner lines and every height's text; the terrain's runs; the design line;
+    # each curve's text; the bands' lines and names; each column's line, km, black, red and difference; the grades.
+    heights = [k * grid for k in range(math.ceil(base / grid), math.floor(top / grid + 1e-9) + 1)]
+    inner_lines = [v for v in heights if base + 1e-9 < v < top - 1e-9]
+    runs = 0
+    drawn = False
+    for (sa, za), (sb, zb) in zip(points, points[1:]):
+        if za is not None and zb is not None and black_at(b, (sa + sb) / 2) is not None:
+            if not drawn:
+                runs += 1
+            drawn = True
+        else:
+            drawn = False
+    n = (1 + len(inner_lines) + len(heights) + runs + 1 + len(rows) + 10
+         + sum(3 + ("black" in c) + ("difference" in c) for c in cols) + len(pvis) - 1)
+    out = {"profile": d["id"], "frame": [list(at_), [at_[0] + (s1 - s0), at_[1] + (top - base) * ex]],
+           "datum": base, "top": top, "exaggeration": ex, "grid": float(grid), "columns": cols}
+    return out, n, lo
+
+
+def draw_cases():
+    start = [MAIN, SIDE, PART]
+    base_setup = setup(start, layers=DRAW_LAYERS)
+    cases = []
+    first = len(ENTITIES) + 1
+
+    def ok(name, input_, d, op="execute", warns=(), undo=False, setup_=None, before=start, **kw):
+        out, n, _ = drawing(d, input_["at"], **kw)
+        out = {**out, "uids": "$any" if op == "execute" else [], "revision": "$current"}
+        if op == "validate":
+            result, expect = completed(None, warns), {**UNCHANGED, "road": road_of(before)}
+        elif op == "plan":
+            result, expect = completed(out, warns), {**UNCHANGED, "road": road_of(before)}
+        else:
+            result = completed(out, warns)
+            expect = {**STEPPED, "road": road_of(before), "ids": list(range(1, first + n))}
+        steps = [step(op, input_, result, expect)]
+        if undo:
+            steps.append({"op": "undo", "returns": "Boykesit çiz", "expect": {"ids": list(range(1, first)), "canRedo": True}})
+        cases.append(case(name, steps, setup_))
+
+    def no(name, input_, result, setup_=None, before=start):
+        cases.append(case(name, [step("execute", input_, result, {**UNCHANGED, "road": road_of(before)})], setup_))
+
+    hidden = {"code": "layer_hidden", "message": "“Gizli” katmanı gizli; çizilen nesne görünmeyecek.", "path": "layerId"}
+    ok("Proje kotu: her 50 m'de bant, 10 kat abartma", {"profile": "b-1", "layerId": "0", "at": [0.0, -200.0]}, MAIN)
+    ok("Her 20 m'de bant", {"profile": "b-1", "layerId": "0", "at": [0.0, -200.0], "every": 20.0}, MAIN, every=20.0)
+    ok("Her 100 m'de, 5 kat abartma", {"profile": "b-1", "layerId": "0", "at": [1000.0, 500.0], "every": 100.0,
+                                        "exaggeration": 5.0}, MAIN, every=100.0, ex=5.0)
+    ok("Verilen kıyas kotu", {"profile": "b-1", "layerId": "0", "at": [0.0, -200.0], "datum": 90.0}, MAIN, datum=90.0)
+    ok("Büyük yazı: aynı nesneler", {"profile": "b-1", "layerId": "0", "at": [0.0, -200.0], "height": 3.5}, MAIN)
+    ok("Boykesit adıyla, büyük küçük harf ayrımsız", {"profile": "proje KOTU", "layerId": "0", "at": [0.0, -200.0]}, MAIN)
+    ok("Yüzeysiz kısmi boykesit: siyah kot yok", {"profile": "b-3", "layerId": "0", "at": [0.0, -200.0]}, PART)
+    ok("Eskiyen boykesit uyarıyla çizilir", {"profile": "b-2", "layerId": "0", "at": [0.0, -400.0]}, SIDE,
+       warns=[stale_warning(SIDE)])
+    broken = {**MAIN, "surface": "t-2"}
+    ok("Kurulamayan yüzey: siyah kotsuz, uyarıyla", {"profile": "b-1", "layerId": "0", "at": [0.0, -200.0]}, broken,
+       warns=[gone_warning(broken, "“Kurulamaz” kurulamıyor")],
+       setup_=setup([broken, SIDE, PART], layers=DRAW_LAYERS), before=[broken, SIDE, PART], surface_ok=False)
+    ok("Grubun içindeki katmana", {"profile": "b-1", "layerId": "yol-boykesit", "at": [0.0, -200.0]}, MAIN)
+    ok("Gizli katmana uyarıyla", {"profile": "b-1", "layerId": "gizli", "at": [0.0, -200.0]}, MAIN, warns=[hidden])
+    ok("Gizli katmana, eskiyen boykesit: iki uyarı", {"profile": "b-2", "layerId": "gizli", "at": [0.0, -400.0]}, SIDE,
+       warns=[hidden, stale_warning(SIDE)])
+    ok("Plan yazmaz", {"profile": "b-1", "layerId": "0", "at": [0.0, -200.0]}, MAIN, op="plan")
+    ok("Doğrulama yazmaz", {"profile": "b-1", "layerId": "0", "at": [0.0, -200.0]}, MAIN, op="validate")
+    ok("Tek geri alma adımı", {"profile": "b-3", "layerId": "0", "at": [0.0, -200.0]}, PART, undo=True)
+
+    _, _, lowest = drawing(MAIN, [0.0, 0.0])
+    no("Yol projesi değil", {"profile": "b-1", "layerId": "0", "at": [0.0, 0.0]}, NOT_ROAD,
+       setup(work="map", layers=DRAW_LAYERS), before=None)
+    no("Olmayan boykesit", {"profile": "yok", "layerId": "0", "at": [0.0, 0.0]},
+       failed("unknown_road_profile", "“yok” kimlikli ya da adlı boykesit projede yok.", "profile"))
+    no("Sıfır km aralığı", {"profile": "b-1", "layerId": "0", "at": [0.0, 0.0], "every": 0.0},
+       failed("invalid_label", "Km aralığı (every) 0'dan büyük olmalı.", "every"))
+    no("Eksi yazı yüksekliği", {"profile": "b-1", "layerId": "0", "at": [0.0, 0.0], "height": -1.0},
+       failed("invalid_label", "Yazı yüksekliği (height) 0'dan büyük olmalı.", "height"))
+    no("Sıfır abartma", {"profile": "b-1", "layerId": "0", "at": [0.0, 0.0], "exaggeration": 0.0},
+       failed("invalid_label", "Düşey abartma (exaggeration) 0'dan büyük olmalı.", "exaggeration"))
+    no("Kıyas kotu en alçak kottan yüksek", {"profile": "b-1", "layerId": "0", "at": [0.0, 0.0], "datum": 105.0},
+       failed("invalid_label", f"Kıyas kotu (datum) en alçak kottan ({lowest:.2f}) yüksek olamaz.", "datum"))
+    no("Çok sık sütun", {"profile": "b-1", "layerId": "0", "at": [0.0, 0.0], "every": 0.001},
+       failed("invalid_label", "Bu aralıkla 100000'den çok sütun çıkar; every'yi büyütün.", "every"))
+    no("Olmayan katman", {"profile": "b-1", "layerId": "yok", "at": [0.0, 0.0]},
+       failed("layer_not_found", "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.", "layerId"))
+    no("Katman grubu", {"profile": "b-1", "layerId": "grup", "at": [0.0, 0.0]},
+       failed("not_a_layer", "“Yol” bir katman grubu; nesne yalnız katmana eklenir. Grubun içinden bir katman seçin.", "layerId"))
+    no("Kilitli katman", {"profile": "b-1", "layerId": "kilitli", "at": [0.0, 0.0]},
+       failed("layer_locked", "“Kilitli” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.", "layerId"))
+    no("Geçersiz beklenen sürüm", {"profile": "b-1", "layerId": "0", "at": [0.0, 0.0], "expectedRevision": "on"}, BAD_REVISION)
+    no("Eski sürüme göre hazırlanmış", {"profile": "b-1", "layerId": "0", "at": [0.0, 0.0], "expectedRevision": "41"}, CONFLICT)
+    return file("road.profiles.draw", "Boykesit çiz", base_setup, cases)
+
+
 def main():
     files = {"road.profiles.create.json": create_cases(), "road.profiles.edit.json": edit_cases(),
-             "road.profiles.query.json": query_cases()}
+             "road.profiles.query.json": query_cases(), "road.profiles.draw.json": draw_cases()}
     check = "--check" in sys.argv[1:]
     bad = False
     for name, data in files.items():

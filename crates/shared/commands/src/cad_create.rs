@@ -117,6 +117,8 @@ pub enum CreateOperation {
     LandXml,
     /// `road.alignments.label` (plan/road.md Y3): an alignment's km ticks and words, “Aks km yazısı”.
     AlignmentLabels,
+    /// `road.profiles.draw` (plan/road.md Y4): a profile's frame, grid, terrain, design line and bands, “Boykesit çiz”.
+    ProfileDrawing,
 }
 
 /// One new object: its geometry and what else it carries. The layer is the

@@ -1251,6 +1251,7 @@ class CreateOperation(_StrEnum):
     - ``terrainContours``: Eş yükselti eğrileri (plan/road.md Y2.5): a terrain surface's contour lines.
     - ``landXml``: LandXML al (plan/road.md Y2.5): a LandXML surface's points, breaklines and boundaries.
     - ``alignmentLabels``: `road.alignments.label` (plan/road.md Y3): an alignment's km ticks and words, “Aks km yazısı”.
+    - ``profileDrawing``: `road.profiles.draw` (plan/road.md Y4): a profile's frame, grid, terrain, design line and bands, “Boykesit çiz”.
     """
     PARALLEL = "parallel"
     PERPENDICULAR_IN = "perpendicularIn"
@@ -1290,9 +1291,10 @@ class CreateOperation(_StrEnum):
     TERRAIN_CONTOURS = "terrainContours"
     LAND_XML = "landXml"
     ALIGNMENT_LABELS = "alignmentLabels"
+    PROFILE_DRAWING = "profileDrawing"
 
 
-CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions", "terrainContours", "landXml", "alignmentLabels"]
+CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions", "terrainContours", "landXml", "alignmentLabels", "profileDrawing"]
 """The names of :class:`CreateOperation`, for a plain string."""
 
 
@@ -52503,6 +52505,118 @@ class ProfilesCreate(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ProfilesDraw(_Model):
+    """Input of `road.profiles.draw` v1 (plan/road.md Y4, docs/adr/0902 §8): a profile drawn on a layer as lines and texts,
+    so it goes to sheets and DXF as Netcad's and Civil 3D's profile views do, from its first to its last PVI. The frame's
+    lower left is `at` (the first PVI's station at the `datum` elevation); a metre of station is a drawing unit, a metre
+    of elevation `exaggeration` units (10 when absent). Inside: the elevation grid with its heights, the terrain (black;
+    off the surface left out), the design (red) line and each curve's sizes and K. Under it the bands: km, black and red
+    elevations and their difference at every round `every` metres of km (50 when absent) and at the ends, and the grades.
+    Texts are `height` paper millimetres high at the project's drawing scale (2.5 when absent). The datum when absent is a
+    metre under the lowest elevation shown, floored; the top a metre over the highest, ceiled.
+
+    Refusals, in this order: `not_a_road_project`, `unknown_road_profile`, `invalid_label` (`every`, `height` or
+    `exaggeration` not above 0, more than 100 000 ticks, a datum over the lowest elevation), the layer's
+    (`layer_not_found`, `not_a_layer`, `service_layer`, `layer_locked`), `invalid_revision`, `revision_conflict`, and
+    the geometry's when the profile no longer builds. Warnings: `layer_hidden`, `profile_stale`, `profile_surface_gone`.
+    Attributes:
+        at: Unit: length.
+        datum: Unit: elevation.
+        every: Unit: m.
+        exaggeration: Unit: 1.
+        height: Unit: paper-mm.
+    """
+    profile: str
+    layer_id: str
+    at: list[float]
+    datum: float | None | Unset = UNSET
+    every: float | None | Unset = UNSET
+    exaggeration: float | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    height: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["profile"] = self.profile
+        out["layerId"] = self.layer_id
+        out["at"] = [float(e0) for e0 in self.at]
+        if self.datum is not UNSET:
+            out["datum"] = None if self.datum is None else float(self.datum)
+        if self.every is not UNSET:
+            out["every"] = None if self.every is None else float(self.every)
+        if self.exaggeration is not UNSET:
+            out["exaggeration"] = None if self.exaggeration is None else float(self.exaggeration)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.height is not UNSET:
+            out["height"] = None if self.height is None else float(self.height)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfilesDraw:
+        return cls(
+            profile=data["profile"],
+            layer_id=data["layerId"],
+            at=[float(e0) for e0 in data["at"]],
+            datum=UNSET if "datum" not in data else None if data["datum"] is None else float(data["datum"]),
+            every=UNSET if "every" not in data else None if data["every"] is None else float(data["every"]),
+            exaggeration=UNSET if "exaggeration" not in data else None if data["exaggeration"] is None else float(data["exaggeration"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProfilesDrawn(_Model):
+    """Output of `road.profiles.draw` v1, and its plan: the frame's lower left and upper right, the datum and top
+    elevations, the exaggeration and the elevation grid's step, the bands' columns in station order, the objects written
+    (none in a plan).
+    Attributes:
+        frame: Unit: length.
+        datum: Unit: elevation.
+        top: Unit: elevation.
+        exaggeration: Unit: 1.
+        grid: Unit: m.
+    """
+    profile: str
+    frame: list[list[float]]
+    datum: float
+    top: float
+    exaggeration: float
+    grid: float
+    columns: list[ProfileAt]
+    uids: list[str]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["profile"] = self.profile
+        out["frame"] = [[float(e1) for e1 in e0] for e0 in self.frame]
+        out["datum"] = float(self.datum)
+        out["top"] = float(self.top)
+        out["exaggeration"] = float(self.exaggeration)
+        out["grid"] = float(self.grid)
+        out["columns"] = [e0.to_json() for e0 in self.columns]
+        out["uids"] = list(self.uids)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfilesDrawn:
+        return cls(
+            profile=data["profile"],
+            frame=[[float(e1) for e1 in e0] for e0 in data["frame"]],
+            datum=float(data["datum"]),
+            top=float(data["top"]),
+            exaggeration=float(data["exaggeration"]),
+            grid=float(data["grid"]),
+            columns=[ProfileAt.from_json(e0) for e0 in data["columns"]],
+            uids=list(data["uids"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ProfilesEdit(_Model):
     """Input of `road.profiles.edit` v1: the profile by its id or name.
 
@@ -94576,6 +94690,8 @@ __all__ = [
     "ProfilesApply",
     "ProfilesCheck",
     "ProfilesCreate",
+    "ProfilesDraw",
+    "ProfilesDrawn",
     "ProfilesEdit",
     "ProfilesEditOperation",
     "ProfilesEditOperationName",

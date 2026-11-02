@@ -53,6 +53,7 @@ const REBIND: &str = "Aksa yeniden bağla";
 const ADD: &str = "Satır ekle";
 const REMOVE_PVI: &str = "Satırı sil";
 const FROM_GROUND: &str = "Araziden uçlar";
+const DRAW: &str = "Çizime yaz";
 const CURVES: [&str; 4] = ["Yok", "Parabol", "Asimetrik", "Çember"];
 
 /// A PVI as typed: its id, station and elevation texts, its curve's kind (an index of [`CURVES`]) and sizes' texts
@@ -284,6 +285,9 @@ pub struct Window {
     /// The vertical exaggeration's text.
     exaggeration: String,
     pub(crate) ground: Ground,
+    /// Çizime yaz: the layer, and the frame's lower left as typed (“Y; X”).
+    layer: Option<String>,
+    place: String,
 }
 
 #[derive(Debug, Clone)]
@@ -303,6 +307,9 @@ pub enum Event {
     Add,
     RemovePvi,
     FromGround,
+    DrawLayer(String),
+    Place(String),
+    Draw,
     Save,
     Cancel,
 }
@@ -345,11 +352,21 @@ impl App {
             return;
         }
         let kept = doc.model.road_profiles().to_vec();
+        // The drawing goes under the alignments, where nothing is drawn yet.
+        let (mut x0, mut y0) = (f64::INFINITY, f64::INFINITY);
+        for p in doc.model.road_alignments().iter().flat_map(|a| a.pis.iter()) {
+            x0 = x0.min(p.x);
+            y0 = y0.min(p.y);
+        }
+        let place = if x0.is_finite() { format!("{}; {}", trimmed(x0), trimmed(y0 - 300.0)) } else { "0; 0".into() };
+        let layer = self.relation_layers().into_iter().next().map(|(id, _)| id);
         self.profile_window = Some(Window {
             chosen: (!kept.is_empty()).then_some(0),
             rows: kept.iter().map(Row::of).collect(),
             kept,
             exaggeration: "10".into(),
+            layer,
+            place,
             ..Window::default()
         });
         self.dialog = Some(Dialog::Profiles);
@@ -548,6 +565,9 @@ impl App {
                     _ => warning = Some("Uçlar aksın uçlarına konur: önce bir aks seçin."),
                 }
             }
+            Event::DrawLayer(id) => w.layer = Some(id),
+            Event::Place(t) => w.place = t,
+            Event::Draw => return self.draw_profile(),
             Event::Cancel => {
                 self.profile_window = None;
                 self.dialog = None;
@@ -593,6 +613,49 @@ impl App {
                 w.chosen = w.chosen.filter(|i| *i < w.rows.len());
             }
             self.say(Level::Success, "Boykesit aksın bugünkü hâline bağlandı.");
+        }
+        Task::none()
+    }
+
+    /// Çizime yaz: the chosen saved profile drawn on the chosen layer at the typed place (`road.profiles.draw`), one
+    /// undo step.
+    fn draw_profile(&mut self) -> Task<Message> {
+        let Some(w) = &self.profile_window else {
+            return Task::none();
+        };
+        let Some(r) = w.chosen.and_then(|i| w.rows.get(i)) else {
+            return Task::none();
+        };
+        if !w.kept.iter().any(|k| r.def().ok().as_ref() == Some(k)) {
+            self.warn("Önce boykesiti kaydedin; kaydedilmiş boykesit çizilir.".to_owned());
+            return Task::none();
+        }
+        let parts: Vec<Option<f64>> =
+            w.place.split([';', ' ']).filter(|s| !s.is_empty()).map(|s| number(s).ok().flatten()).collect();
+        let [Some(x), Some(y)] = parts[..] else {
+            self.warn("Yeri “Y; X” olarak yazın.".to_owned());
+            return Task::none();
+        };
+        let input = kentos_commands::ProfilesDraw {
+            profile: r.id.clone(),
+            layer_id: w.layer.clone().unwrap_or_default(),
+            at: [x, y],
+            every: None,
+            datum: None,
+            exaggeration: number(&w.exaggeration).ok().flatten().filter(|v| *v > 0.0),
+            height: None,
+            expected_revision: None,
+        };
+        let Some(doc) = self.document.as_mut() else {
+            return Task::none();
+        };
+        let result =
+            kentos_native_application::road_profiles_draw::execute(&mut ExecutionContext::new(&mut doc.model), input);
+        if let Some(out) = self.answered(result) {
+            self.say(
+                Level::Success,
+                format!("Boykesit çizildi: {} nesne, kıyas kotu {}.", out.uids.len(), comma(out.datum, 2)),
+            );
         }
         Task::none()
     }
@@ -724,6 +787,7 @@ impl App {
         let saved = chosen.is_some_and(|r| w.kept.iter().any(|k| r.def().ok().as_ref() == Some(k)));
         let body = column![
             row![container(left).width(220), container(right).width(Fill)].spacing(16),
+            self.profile_draw_row(w, saved),
             row![
                 words::ghost(REMOVE, w.chosen.map(|_| msg(Event::Remove))),
                 words::secondary(REBIND, (saved && chosen.is_some_and(stale_of)).then(|| msg(Event::Rebind))),
@@ -736,6 +800,26 @@ impl App {
         ]
         .spacing(14);
         Frame::new(TITLE).push(body).width(1080.0).modal(msg(Event::Cancel))
+    }
+
+    fn profile_draw_row<'a>(&'a self, w: &'a Window, saved: bool) -> Element<'a, Message> {
+        let ids: Vec<String> = self.relation_layers().into_iter().map(|(id, _)| id).collect();
+        let names: Vec<String> = self.relation_layers().into_iter().map(|(_, n)| n).collect();
+        let layer = Select::new(
+            names.iter().map(|n| Choice::new(n.clone())),
+            w.layer.as_ref().and_then(|l| ids.iter().position(|id| id == l)),
+            move |i| msg(Event::DrawLayer(ids[i].clone())),
+        )
+        .placeholder("Katman");
+        row![
+            label::strong("Çizime"),
+            words::field("Katman", layer, None),
+            words::field("Yer (Y; X)", kentos_ui::widget::text_field("Y; X", &w.place).on_input(|t| msg(Event::Place(t))).width(220), None),
+            words::secondary(DRAW, saved.then(|| msg(Event::Draw))),
+        ]
+        .spacing(10)
+        .align_y(iced::alignment::Vertical::Bottom)
+        .into()
     }
 
     fn road_profile_editor<'a>(&'a self, w: &'a Window, r: &'a Row, stale: bool) -> Element<'a, Message> {
@@ -860,12 +944,14 @@ impl App {
             Control::Press(ADD) => Some(msg(Event::Add)),
             Control::Press(REMOVE_PVI) => Some(msg(Event::RemovePvi)),
             Control::Press(FROM_GROUND) => Some(msg(Event::FromGround)),
+            Control::Press(DRAW) => Some(msg(Event::Draw)),
             Control::Press(words) => match w.rows.iter().position(|r| r.name == words) {
                 Some(i) => Some(msg(Event::Choose(i))),
                 None => return Err(format!("“{TITLE}” penceresinde “{words}” düğmesi yok")),
             },
             Control::Fill("Ad", text) => Some(msg(Event::Name(text.to_owned()))),
             Control::Fill("Düşey abartma", text) => Some(msg(Event::Exaggeration(text.to_owned()))),
+            Control::Fill("Yer (Y; X)", text) => Some(msg(Event::Place(text.to_owned()))),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }
