@@ -634,7 +634,12 @@ pub(crate) fn outcome(row: &CallRecord) -> String {
     for file in &row.effects {
         said.push(format!("dosya yazıldı: {}", file.path));
     }
-    let text = if said.is_empty() {
+    let text = if said.is_empty() && row.base != row.revision {
+        // Block and other definition edits may have no object ids or named
+        // project parts in this journal format. A changed revision still
+        // proves a write; do not claim the drawing was unchanged.
+        "Çizim güncellendi".to_owned()
+    } else if said.is_empty() {
         "Çizimde değişiklik yok".to_owned()
     } else {
         let mut text = said.join(" · ");

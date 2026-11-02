@@ -659,6 +659,12 @@ temiz tekrar yapıldı. [ADR 0853](../docs/adr/0853-related-block-library-defini
 Geçmiş kartının yalnız tanım değişince “değişiklik yok” özeti vermesi
 GUI'de tespit edildi ve ayrıca düzeltilecek; kayıt doğruluğu bununla karıştırılmadı.
 
+**İlerleme — 2026-11-02, geçmişte doğru sonuç:** Nesne listesi değişmeden
+blok tanımı değiştiğinde kart artık “Çizim güncellendi” der; gerçek no-op'un
+“değişiklik yok” ve Undo'nun durum eki korunur. Aynı dosyanın gerçek sağ tuş
+menüsüyle iki kez alınması ve tek Undo ekranlarıyla doğrulandı. 1604 masaüstü
+testi, Clippy ve derleme geçti. [ADR 0854](../docs/adr/0854-history-revision-fallback-for-definition-writes.md).
+
 Tür/sürüm ve seçilmiş yükseltme, kalıcı tip–örnek parametre kapsamı ve
 birleşik blok kabulü açıktır. Kullanıcı tanımlı grup metaverisi bu otomatik
 gruplarla tamamlanmış sayılmaz. Web öznitelik penceresinin native eşitleme kapsamıyla

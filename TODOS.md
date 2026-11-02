@@ -51,6 +51,10 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ADR 0854: geçmişte nesne/proje parçası listesi boş olsa da revision değişmişse
+  “değişiklik yok” yazılmamalı. Native'in genel güncelleme, gerçek no-op ve Undo
+  ayrımı web geçmiş görünümünde ayrıca sınanacak; günlük biçimi değişmedi.
+
 - ADR 0853: bağlı blok kitaplığı güncellemeleri birleşik son grafik üzerinden
   atomik uygulanmalı; yeni çocuk/var olan ana tanım ve eşzamanlı iç içe parametre
   adı değişimi sıra yüzünden reddedilmemeli. Web'in alışveriş yazıcısı ayrıca
