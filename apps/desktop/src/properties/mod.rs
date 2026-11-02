@@ -96,6 +96,8 @@ pub enum Event {
     Parameter(Slot, String, kentos_commands::ParamValue),
     /// Değerler ▾ › Hepsini varsayılana döndür.
     ParametersReset(Slot),
+    /// Reset only the named parameter (a lookup resets the values its rows control).
+    ParameterReset(Slot, String),
     /// Kaynak ▾'s Göm of a linked picture: its file read and kept in the
     /// project's library, the picture embedded (docs/adr/0192 §2).
     EmbedImage(Slot),
@@ -605,7 +607,7 @@ impl App {
                 continue;
             }
             for mut row in section.rows {
-                if row.note && (row.warn || section.id == "blockParams") {
+                if row.note && (row.warn || section.id.starts_with("blockParams")) {
                     sheet = sheet.note(self.cell(row));
                     continue;
                 }
@@ -983,6 +985,9 @@ impl App {
                 properties::set_parameters(model, slot, Some(BTreeMap::from([(name, value)])), None)
             }
             Event::ParametersReset(slot) => properties::set_parameters(model, slot, None, None),
+            Event::ParameterReset(slot, name) => {
+                properties::set_parameters(model, slot, None, Some(vec![name]))
+            }
             Event::InsertMirror(slot, mirror) => match model.get(slot) {
                 Some(Entity::Insert(i)) => {
                     let mut i = i.clone();

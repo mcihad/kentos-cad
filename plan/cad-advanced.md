@@ -589,8 +589,18 @@ GUI/Python kayıtları tam aynı, GUI tek Undo başlangıçla tam aynı. 1595 ma
 51 MCP ve Python kabulü geçti. [ADR 0847](../docs/adr/0847-block-editor-update-impact.md),
 [kullanım/API](../docs/cad/block-update-review.md).
 
-Tür/sürüm ve seçilmiş yükseltme, okunur parametre grupları, tip–örnek
-ayrımı ve birleşik blok kabulü açıktır. Web öznitelik penceresinin native eşitleme kapsamıyla
+**İlerleme — 2026-11-02, parametre grupları:** Boyut/konum, görünüş, katalog
+ve hesaplanan grupları bağımsız kapanır; tanım/sürüm ve örnek kapsamı açıklanır.
+Değerler menüsü tek parametreyi veya katalog girdilerini ortak `reset/names`
+komutuyla sıfırlar; diğer override'lar korunur. Hesaplanan sonuç değişiklik
+sayacına eklenmez. 1598 masaüstü, 52 MCP, Python testi, derleme ve Clippy geçti.
+Gerçek GUI/Python önce–sonra dosyaları ve tek Undo tam aynı; dar pencere,
+açık/koyu tema, Büyük yazı ve menüler görüldü.
+[ADR 0848](../docs/adr/0848-block-parameter-groups-and-named-reset.md).
+
+Tür/sürüm ve seçilmiş yükseltme, kalıcı tip–örnek parametre kapsamı ve
+birleşik blok kabulü açıktır. Kullanıcı tanımlı grup metaverisi bu otomatik
+gruplarla tamamlanmış sayılmaz. Web öznitelik penceresinin native eşitleme kapsamıyla
 aynı olmadığı kodda görüldü; bu dilim web eşitliğini tamamlanmış saymaz.
 
 ### CAD-ADV-07 — Tekrarları tanı, blok ve ilişkili diziye kontrollü dönüştür [ ]

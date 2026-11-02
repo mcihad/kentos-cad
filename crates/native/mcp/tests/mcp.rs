@@ -3507,3 +3507,68 @@ fn a_block_definition_review_is_read_only_and_its_plan_guards_the_same_write() {
     assert_eq!(std::fs::read(&path).unwrap(), baseline);
     std::fs::remove_dir_all(dir).unwrap();
 }
+
+#[test]
+fn a_named_block_parameter_reset_keeps_unrelated_visibility_in_mcp() {
+    let dir = std::env::temp_dir().join(format!("kentos-mcp-block-reset-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join("door.kcad");
+    std::fs::write(
+        &path,
+        include_bytes!("../../../../fixtures/kcad/v2/dynamic-blocks.kcad"),
+    )
+    .unwrap();
+    let mut server = Server::new();
+    let drawing =
+        call(&mut server, "drawing.open", json!({"path":path}))["structuredContent"]["drawing"]
+            .clone();
+    let uid = call(&mut server, "drawing.entities", json!({"drawing":drawing}))["structuredContent"]["items"][0]["uid"].clone();
+    let set = call(
+        &mut server,
+        "cad.blocks.parameters",
+        json!({
+            "drawing":drawing,"operation":"set","uids":[uid],
+            "values":{"Genişlik":1.05,"Görünüş":"Sade"}
+        }),
+    );
+    assert_eq!(set["structuredContent"]["status"], "completed", "{set}");
+    call(
+        &mut server,
+        "drawing.save",
+        json!({"drawing":drawing,"path":path}),
+    );
+    let before = std::fs::read(&path).unwrap();
+    for name in ["Genişlik", "Tip"] {
+        let mut input =
+            json!({"drawing":drawing,"operation":"reset","uids":[uid],"names":[name],"op":"plan"});
+        let planned = call(&mut server, "cad.blocks.parameters", input.clone());
+        assert_eq!(
+            planned["structuredContent"]["status"], "completed",
+            "{planned}"
+        );
+        call(
+            &mut server,
+            "drawing.save",
+            json!({"drawing":drawing,"path":path}),
+        );
+        assert_eq!(std::fs::read(&path).unwrap(), before);
+        input["op"] = json!("execute");
+        input["expected"] = json!({"plan":planned["structuredContent"]["planId"]});
+        let written = call(&mut server, "cad.blocks.parameters", input);
+        assert_eq!(
+            written["structuredContent"]["status"], "completed",
+            "{written}"
+        );
+        let values = &written["structuredContent"]["output"]["inserts"][0]["values"];
+        assert_eq!(values["Genişlik"], 0.9);
+        assert_eq!(values["Görünüş"], "Sade");
+        call(&mut server, "drawing.undo", json!({"drawing":drawing}));
+        call(
+            &mut server,
+            "drawing.save",
+            json!({"drawing":drawing,"path":path}),
+        );
+        assert_eq!(std::fs::read(&path).unwrap(), before);
+    }
+    std::fs::remove_dir_all(dir).unwrap();
+}

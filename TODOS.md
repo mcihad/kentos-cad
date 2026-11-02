@@ -1456,6 +1456,8 @@ Liste:
   CAD-ADV-06 ek kapsamı: güncel taslakla ayrı Test et/Düzenleyiciye dön (ADR 0846),
   proje biriminde parametre ve sınırlar (ADR 0845), ortak plan üzerinden salt okunur
   Etkiyi gör ve eski sonuçların reddi (ADR 0847); web'de bu akışlar da gerekir.
+  Otomatik açılır/kapanır parametre grupları, tanım/sürüm ve örnek kapsamı,
+  tek parametre/katalog reset menüsü de gerekir (ADR 0848).
 - [ ] `CAD-STYLE-12`, `13`, `14`, `15` haritanın katmanları, değişikliğin etkisi, kitaplık API'si ve etki raporu (ADR 0314, 16 Ekim):
   web'de gerekenler: pafta tasarımcısının Denetçi'sinde haritanın Katmanlar bölümü ve web'in pafta çiziminde `layerOverrides`
   (`kentos_plot::layers::map_layers`'ın kuralı WASM'la ya da sheet-wasm'dan); `cad.library.edit` ve `cad.styles.impact`'in TS

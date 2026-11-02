@@ -2626,14 +2626,7 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
     };
     // A dynamic block's parameters (docs/adr/0319 §3).
     if let Entity::Insert(i) = e {
-        let rows = params::rows(doc, slot, i, locked);
-        if !rows.is_empty() {
-            sections.push(Section {
-                id: "blockParams",
-                title: "Blok parametreleri".into(),
-                rows,
-            });
-        }
+        sections.extend(params::sections(doc, slot, i, locked));
     }
     if !tags.is_empty() {
         sections.push(Section {

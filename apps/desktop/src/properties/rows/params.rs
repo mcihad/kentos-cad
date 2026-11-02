@@ -2,13 +2,13 @@
 //! definition with the value the insert shows (`block_params::current`: its kept value, else the default; a lookup's
 //! row whose values all hold). A length and an angle are typed, a point as “doğu, kuzey”, a flip, a visibility state
 //! and a lookup row chosen; a parameter its expression computes is shown, not set. Every change goes through
-//! `cad.blocks.parameters` (`set`), the rule's refusal said; Değerler ▾ resets them all (`reset`).
+//! `cad.blocks.parameters` (`set`), the rule's refusal said; Değerler ▾ resets all or named values (`reset`).
 
 use kentos_commands::{BlockParameter, InsertEntity, ParamValue};
 use kentos_domain::Slot;
 use kentos_interaction::Format;
 
-use super::{Choice, Editor, Row};
+use super::{Choice, Editor, Row, Section};
 use crate::app::Message;
 use crate::document::Document;
 use crate::properties::{Event, Field};
@@ -130,8 +130,30 @@ fn choose(slot: Slot, name: &str, shown: &str, labels: Vec<(String, ParamValue)>
     }
 }
 
-/// The rows of insert `i`, one a parameter, then Değerler; none for a plain block's insert. Editors unless locked.
-pub(super) fn rows(doc: &Document, slot: Slot, i: &InsertEntity, locked: bool) -> Vec<Row> {
+/// Presentation groups only: never reorder definition parameters or actions used by the shared evaluator.
+fn group(p: &BlockParameter) -> usize {
+    if p.rule().is_some_and(|r| r.expression.is_some()) {
+        3
+    } else {
+        match p {
+            BlockParameter::Flip { .. } | BlockParameter::Visibility { .. } => 1,
+            BlockParameter::Lookup { .. } => 2,
+            _ => 0,
+        }
+    }
+}
+
+fn overridden(p: &BlockParameter, i: &InsertEntity) -> bool {
+    match p {
+        BlockParameter::Lookup { rows, .. } => rows
+            .iter()
+            .any(|r| r.values.keys().any(|name| i.parameters.contains_key(name))),
+        _ => group(p) != 3 && i.parameters.contains_key(p.name()),
+    }
+}
+
+/// The insert's identity, reset actions and collapsible parameter groups. No document state is changed here.
+pub(super) fn sections(doc: &Document, slot: Slot, i: &InsertEntity, locked: bool) -> Vec<Section> {
     let Some(block) = doc.model.block(i.block) else {
         return Vec::new();
     };
@@ -141,8 +163,9 @@ pub(super) fn rows(doc: &Document, slot: Slot, i: &InsertEntity, locked: bool) -
     let f = Format::of(doc.model.settings());
     let factor = kentos_native_application::blocks_insert::unit_factor(&doc.model, block);
     let current = kentos_native_application::block_params::current(d, &i.parameters);
-    let mut out = Vec::new();
+    let mut groups: [Vec<Row>; 4] = Default::default();
     for p in &d.parameters {
+        let out = &mut groups[group(p)];
         let name = p.name();
         let value = current.get(name);
         let text = value.map_or_else(|| "—".to_owned(), |v| shown(p, v, f, factor));
@@ -218,25 +241,80 @@ pub(super) fn rows(doc: &Document, slot: Slot, i: &InsertEntity, locked: bool) -
             out.push(Row::note(&details.join(" · ")));
         }
     }
-    let changed = i.parameters.len();
+    let changed = d
+        .parameters
+        .iter()
+        .filter(|p| !matches!(p, BlockParameter::Lookup { .. }) && overridden(p, i))
+        .count();
     let said = match changed {
         0 => "Varsayılan".to_owned(),
         n => format!("{n} değer değişti"),
     };
+    let mut reset_items = vec![Choice::Action {
+        label: "Hepsini varsayılana döndür",
+        icon: "undo",
+        message: (changed > 0).then_some(Message::Properties(Event::ParametersReset(slot))),
+    }];
+    if changed > 0 {
+        reset_items.push(Choice::Separator);
+        reset_items.extend(d.parameters.iter().filter(|p| overridden(p, i)).map(|p| {
+            Choice::Pick {
+                label: format!("{} · Varsayılana döndür", p.name()),
+                chosen: false,
+                swatch: None,
+                icon: Some("undo"),
+                wide: false,
+                enabled: true,
+                message: Message::Properties(Event::ParameterReset(slot, p.name().to_owned())),
+            }
+        }));
+    }
     let reset = Editor::Select {
         text: said.clone(),
         swatch: None,
         icon: None,
-        items: vec![Choice::Action {
-            label: "Hepsini varsayılana döndür",
-            icon: "undo",
-            message: (changed > 0).then_some(Message::Properties(Event::ParametersReset(slot))),
-        }],
+        items: reset_items,
     };
-    out.push(
+    let mut identity = vec![
+        Row::text("Tanım", block.name.clone()),
+        Row::text(
+            "Tanım sürümü",
+            block
+                .card
+                .as_ref()
+                .map_or_else(|| "Kartı yok".into(), |c| c.version.to_string()),
+        ),
+        Row::note(
+            "Buradaki değerler bu yerleştirmeye aittir. Tanımı düzenlemek diğer kullanımları da etkiler.",
+        ),
         Row::text("Değerler", said)
             .editor(Some(reset))
             .editor_if(!locked),
-    );
-    out
+    ];
+    if d.parameters.is_empty() {
+        identity.push(Row::note("Bu tanımda henüz parametre yok."));
+    }
+    let mut sections = vec![Section {
+        id: "blockParams",
+        title: "Blok parametreleri".into(),
+        rows: identity,
+    }];
+    for ((id, title), rows) in [
+        ("blockParamsDimensions", "Boyut ve konum"),
+        ("blockParamsAppearance", "Görünüş"),
+        ("blockParamsCatalog", "Katalog"),
+        ("blockParamsComputed", "Hesaplanan"),
+    ]
+    .into_iter()
+    .zip(groups)
+    {
+        if !rows.is_empty() {
+            sections.push(Section {
+                id,
+                title: title.into(),
+                rows,
+            });
+        }
+    }
+    sections
 }

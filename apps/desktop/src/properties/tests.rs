@@ -3282,14 +3282,14 @@ fn parameter_drawing(unit: kentos_commands::DrawingUnit, unitless: bool) -> (App
 fn block_parameter_mm_input_uses_canonical_metres_rules_and_one_undo() {
     use kentos_commands::DrawingUnit;
     let (mut app, slot) = parameter_drawing(DrawingUnit::Mm, false);
-    assert_eq!(value(&app, "Blok parametreleri", "Genişlik"), "900 mm");
+    assert_eq!(value(&app, "Boyut ve konum", "Genişlik"), "900 mm");
     assert!(rows(&app).iter().flat_map(|(_, rows)| rows).any(|r| r.note && r.value == "Tanım varsayılanı · En az 600 mm · En çok 1200 mm · Adım 50 mm"));
     let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
     event(
         &mut app,
         Event::Commit(Field::Parameter(slot, "Genişlik".into()), "1050".into()),
     );
-    assert_eq!(value(&app, "Blok parametreleri", "Genişlik"), "1050 mm");
+    assert_eq!(value(&app, "Boyut ve konum", "Genişlik"), "1050 mm");
     assert!(rows(&app).iter().flat_map(|(_, rows)| rows).any(|r| r.note && r.value.starts_with("Örneğe özel · En az 600 mm")));
     let model = &app.document.as_ref().unwrap().model;
     let Entity::Insert(i) = model.get(slot).unwrap() else {
@@ -3324,7 +3324,188 @@ fn block_parameter_mm_input_uses_canonical_metres_rules_and_one_undo() {
         &mut app,
         Event::Commit(Field::Parameter(slot, "Genişlik".into()), "105 cm".into()),
     );
-    assert_eq!(value(&app, "Blok parametreleri", "Genişlik"), "1050 mm");
+    assert_eq!(value(&app, "Boyut ve konum", "Genişlik"), "1050 mm");
+}
+
+#[test]
+fn block_parameter_groups_keep_definition_order_and_separate_catalog_appearance_and_computed() {
+    use kentos_commands::{BlockParameter, DrawingUnit, NumberRule};
+    let (mut app, slot) = parameter_drawing(DrawingUnit::Mm, false);
+    let mut snapshot = app.document.as_ref().unwrap().model.to_snapshot_v2();
+    snapshot.blocks[0]
+        .dynamic
+        .as_mut()
+        .unwrap()
+        .parameters
+        .push(BlockParameter::Linear {
+            name: "Çift genişlik".into(),
+            from: Wire { x: 0., y: 0. },
+            to: Wire { x: 1.8, y: 0. },
+            rule: NumberRule {
+                expression: Some("@Genişlik * 2".into()),
+                ..Default::default()
+            },
+        });
+    let doc = crate::document::Document::from_v2(snapshot, None).unwrap();
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    app.selection.set([slot]);
+    let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+    let groups = rows(&app);
+    let group = |title: &str| {
+        groups
+            .iter()
+            .find(|(t, _)| t == title)
+            .unwrap()
+            .1
+            .iter()
+            .filter(|r| !r.note)
+            .map(|r| r.label.as_ref())
+            .collect::<Vec<_>>()
+    };
+    assert_eq!(group("Boyut ve konum"), vec!["Genişlik"]);
+    assert_eq!(group("Görünüş"), vec!["Yön", "Görünüş"]);
+    assert_eq!(group("Katalog"), vec!["Tip"]);
+    assert_eq!(group("Hesaplanan"), vec!["Çift genişlik"]);
+    assert!(!row_editable(&app, "Hesaplanan", "Çift genişlik"));
+    assert_eq!(value(&app, "Blok parametreleri", "Tanım"), "Kapı (dinamik)");
+    assert_eq!(value(&app, "Blok parametreleri", "Tanım sürümü"), "1");
+    assert_eq!(
+        app.document.as_ref().unwrap().model.to_snapshot_v2(),
+        before,
+        "display groups do not reorder the definition or write anything"
+    );
+    event(&mut app, Event::Toggle("blockParamsAppearance"));
+    assert!(app.props_closed.contains("blockParamsAppearance"));
+    assert!(!app.props_closed.contains("blockParamsDimensions"));
+    assert_eq!(
+        app.document.as_ref().unwrap().model.to_snapshot_v2(),
+        before
+    );
+    event(
+        &mut app,
+        Event::Commit(Field::Parameter(slot, "Genişlik".into()), "1050".into()),
+    );
+    assert_eq!(
+        value(&app, "Blok parametreleri", "Değerler"),
+        "1 değer değişti",
+        "derived value and matching lookup are not additional user overrides"
+    );
+    let sections = rows(&app);
+    let reset = sections
+        .iter()
+        .find(|(s, _)| s == "Blok parametreleri")
+        .unwrap()
+        .1
+        .iter()
+        .find(|r| r.label == "Değerler")
+        .unwrap();
+    let Some(Editor::Select { items, .. }) = &reset.editor else {
+        panic!("reset menu")
+    };
+    assert!(
+        items
+            .iter()
+            .any(|c| matches!(c,Choice::Pick{label,..} if label.starts_with("Genişlik ·")))
+    );
+    assert!(
+        !items
+            .iter()
+            .any(|c| matches!(c,Choice::Pick{label,..} if label.starts_with("Çift genişlik ·")))
+    );
+}
+
+#[test]
+fn one_parameter_reset_preserves_other_instance_overrides_definition_and_exact_undo() {
+    use kentos_commands::{DrawingUnit, ParamValue};
+    let (mut app, slot) = parameter_drawing(DrawingUnit::Mm, false);
+    event(
+        &mut app,
+        Event::Commit(Field::Parameter(slot, "Genişlik".into()), "1050".into()),
+    );
+    event(
+        &mut app,
+        Event::Parameter(slot, "Görünüş".into(), ParamValue::Text("Sade".into())),
+    );
+    let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+    event(&mut app, Event::ParameterReset(slot, "Genişlik".into()));
+    assert_eq!(value(&app, "Boyut ve konum", "Genişlik"), "900 mm");
+    assert_eq!(value(&app, "Görünüş", "Görünüş"), "Sade");
+    assert_eq!(
+        value(&app, "Blok parametreleri", "Değerler"),
+        "1 değer değişti"
+    );
+    let model = &app.document.as_ref().unwrap().model;
+    assert_eq!(model.to_snapshot_v2().blocks, before.blocks);
+    let call = model.journal().last().unwrap();
+    assert_eq!(call.command.as_deref(), Some("cad.blocks.parameters"));
+    assert_eq!(call.input.as_ref().unwrap()["operation"], "reset");
+    assert_eq!(
+        call.input.as_ref().unwrap()["names"],
+        serde_json::json!(["Genişlik"])
+    );
+    let _ = app.update(Message::Run("edit.undo"));
+    assert_eq!(
+        app.document.as_ref().unwrap().model.to_snapshot_v2(),
+        before
+    );
+    // A catalog reset delegates its affected names to the shared command, never resets visibility accidentally.
+    event(&mut app, Event::ParameterReset(slot, "Tip".into()));
+    assert_eq!(value(&app, "Boyut ve konum", "Genişlik"), "900 mm");
+    assert_eq!(value(&app, "Görünüş", "Görünüş"), "Sade");
+    let _ = app.update(Message::Run("edit.undo"));
+    assert_eq!(
+        app.document.as_ref().unwrap().model.to_snapshot_v2(),
+        before
+    );
+    event(&mut app, Event::ParameterReset(slot, "Yok".into()));
+    assert_eq!(
+        app.document.as_ref().unwrap().model.to_snapshot_v2(),
+        before,
+        "bad reset is atomic"
+    );
+}
+
+#[test]
+fn locked_parameter_groups_expose_no_reset_or_edit_and_reject_a_stale_menu() {
+    use kentos_commands::DrawingUnit;
+    let (mut app, slot) = parameter_drawing(DrawingUnit::Mm, false);
+    event(
+        &mut app,
+        Event::Commit(Field::Parameter(slot, "Genişlik".into()), "1050".into()),
+    );
+    let old = app.properties_key(app.document.as_ref().unwrap());
+    let model = &mut app.document.as_mut().unwrap().model;
+    model.set_layer_locked("kapilar", true);
+    let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+    for (title, rows) in rows(&app) {
+        if [
+            "Blok parametreleri",
+            "Boyut ve konum",
+            "Görünüş",
+            "Katalog",
+            "Hesaplanan",
+        ]
+        .contains(&title.as_str())
+        {
+            assert!(rows.iter().all(|r| r.editor.is_none()), "{title}");
+        }
+    }
+    event(&mut app, Event::ParameterReset(slot, "Genişlik".into()));
+    assert_eq!(
+        app.document.as_ref().unwrap().model.to_snapshot_v2(),
+        before
+    );
+    event(
+        &mut app,
+        Event::Guarded(
+            old,
+            Box::new(Event::ParameterReset(slot, "Genişlik".into())),
+        ),
+    );
+    assert_eq!(
+        app.document.as_ref().unwrap().model.to_snapshot_v2(),
+        before
+    );
 }
 
 #[test]
@@ -3341,7 +3522,7 @@ fn block_parameter_unitless_numbers_are_not_reinterpreted_as_metres() {
         let label = kentos_interaction::Format::of(app.document.as_ref().unwrap().model.settings())
             .length_unit_label();
         assert_eq!(
-            value(&app, "Blok parametreleri", "Genişlik"),
+            value(&app, "Boyut ve konum", "Genişlik"),
             format!("0.9 {label}")
         );
         event(
@@ -3356,7 +3537,7 @@ fn block_parameter_unitless_numbers_are_not_reinterpreted_as_metres() {
         };
         assert!((n - 1.05).abs() < 1e-12, "{unit:?}: {n}");
         assert_eq!(
-            value(&app, "Blok parametreleri", "Genişlik"),
+            value(&app, "Boyut ve konum", "Genişlik"),
             format!("1.05 {label}")
         );
     }
@@ -3393,13 +3574,13 @@ fn block_parameter_angles_local_points_and_derived_values_follow_project_units()
     let doc = crate::document::Document::from_v2(snapshot, None).unwrap();
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     app.selection.set([slot]);
-    assert_eq!(value(&app, "Blok parametreleri", "Dönüş"), "100.0000 g");
+    assert_eq!(value(&app, "Boyut ve konum", "Dönüş"), "100.0000 g");
     assert_eq!(
-        value(&app, "Blok parametreleri", "Yerel nokta"),
+        value(&app, "Boyut ve konum", "Yerel nokta"),
         "125, -250 mm"
     );
     assert_eq!(
-        value(&app, "Blok parametreleri", "Çift genişlik"),
+        value(&app, "Hesaplanan", "Çift genişlik"),
         "1800 mm"
     );
     assert!(
@@ -3423,9 +3604,9 @@ fn block_parameter_angles_local_points_and_derived_values_follow_project_units()
             "250 mm, -50 cm".into(),
         ),
     );
-    assert_eq!(value(&app, "Blok parametreleri", "Dönüş"), "50.0000 g");
+    assert_eq!(value(&app, "Boyut ve konum", "Dönüş"), "50.0000 g");
     assert_eq!(
-        value(&app, "Blok parametreleri", "Yerel nokta"),
+        value(&app, "Boyut ve konum", "Yerel nokta"),
         "250, -500 mm"
     );
     let Entity::Insert(i) = app.document.as_ref().unwrap().model.get(slot).unwrap() else {
@@ -3444,9 +3625,9 @@ fn block_parameter_angles_local_points_and_derived_values_follow_project_units()
         &mut app,
         Event::Parameter(slot, "Tip".into(), ParamValue::Text("Dar".into())),
     );
-    assert_eq!(value(&app, "Blok parametreleri", "Genişlik"), "700 mm");
+    assert_eq!(value(&app, "Boyut ve konum", "Genişlik"), "700 mm");
     assert_eq!(
-        value(&app, "Blok parametreleri", "Çift genişlik"),
+        value(&app, "Hesaplanan", "Çift genişlik"),
         "1400 mm"
     );
     event(
@@ -3500,7 +3681,7 @@ fn block_parameter_physical_dimensions_stay_independent_of_instance_scale_in_all
         let doc = crate::document::Document::from_v2(snapshot, None).unwrap();
         let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
         app.selection.set([slot]);
-        let shown = value(&app, "Blok parametreleri", "Genişlik");
+        let shown = value(&app, "Boyut ve konum", "Genişlik");
         let n: f64 = shown.split_whitespace().next().unwrap().parse().unwrap();
         assert!((n - initial).abs() < 1e-10, "{unit:?}: {shown}");
         event(
