@@ -125,3 +125,13 @@ ADR 0776'nın B8'i kapandı.
 **TODOS.md §0.2 (Web'e ertelenenler):** ADR 0793: web'in WebGPU ve WebGL2 stilli çizicisi stil bloğunun `origin.z`'sine
 modelde `1 / (METRES_PER_PX × çizim ölçeği)` yazar ve `weightK`'yı (GLSL ikizinde de) uygular; web'in stil çekirdeği
 çağrısı `Batches.ground`'u okur; `add_room_copies`'in bağ kuralı web'in kopya, dizi ve yapıştırmasına.
+
+## 2 Kasım 2026 — Python kabulünün kanonik kurulum verisi
+
+Kopya/dizi/yapıştırmanın 69 ortak durumu, etiketin önbellek metnini boş `text`
+olarak açıkça yazıyordu. Native JSON kurulum yolu bunu okuyabilirken bağımsız
+KCAD yazıcısından geçen Python kurulumu, dosyanın varsayılan alanı atlama
+kuralına takılıyordu. `copy_links_cases.py` boş alanı yazmaz; üretim okuyucusu
+ve kabul beklentileri gevşetilmedi. 21 dönüşüm, 24 dizi, 24 yapıştırma durumu
+native ve Python yollarında geçti. Düzeltmeden sonra bütün Python paketi
+429 testle geçti; yeni blok değiştirme durumları da bu koşuya dahildir.

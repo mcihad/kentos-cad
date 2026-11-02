@@ -43,8 +43,8 @@ def column(i, x, y, tag):
 
 
 def tag(i, of, x, y):
-    return {"kind": "tag", "id": i, "layerId": "etiket", "attrs": {}, "of": uid(of), "at": {"x": x, "y": y},
-            "text": ""}
+    # KCAD's canonical TagFields omit empty cached text; the document fills it from the tagged object.
+    return {"kind": "tag", "id": i, "layerId": "etiket", "attrs": {}, "of": uid(of), "at": {"x": x, "y": y}}
 
 
 def line(i, a, b):
