@@ -2596,9 +2596,10 @@
       "via": [
         "road.alignments.create",
         "road.alignments.edit",
-        "road.alignments.query"
+        "road.alignments.query",
+        "road.alignments.label"
       ],
-      "note": "Güzergâh penceresi PI'ları ve km'yi yazdıkça çekirdekle kurar; Kaydet ve Ters çevir road.alignments.create ve .edit ile yazar, Noktanın km'si road.alignments.query ile sorar (plan/road.md Y3, ADR 0901)."
+      "note": "Km'yi çizime yaz road.alignments.label ile yazar. Güzergâh penceresi PI'ları ve km'yi yazdıkça çekirdekle kurar; Kaydet ve Ters çevir road.alignments.create ve .edit ile yazar, Noktanın km'si road.alignments.query ile sorar (plan/road.md Y3, ADR 0901)."
     },
     "alignment.new": {
       "level": "semantic",

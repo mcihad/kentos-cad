@@ -74,6 +74,14 @@ fn the_window_makes_an_alignment_and_its_parallel_each_one_undo_step() {
     send(&mut app, W::Point("485520; 4420030".into()));
     let answer = app.alignment_window.as_ref().expect("open").answer.clone();
     assert!(answer.starts_with("km 2+525,205 · sol 19,496 m"), "{answer}");
+    // Km'yi çizime yaz: the km's ticks and words on the layer, one undo step.
+    let before = app.document.as_ref().expect("doc").model.entities().count();
+    send(&mut app, W::Choose(0));
+    send(&mut app, W::LabelLayer("0".into()));
+    send(&mut app, W::Label);
+    let doc = &mut app.document.as_mut().expect("doc").model;
+    assert!(doc.entities().count() > before + 20, "the ticks and words are drawn");
+    assert_eq!(doc.undo().as_deref(), Some("Aks km yazısı"));
     // Removing the source while the parallel follows it is refused in the window.
     send(&mut app, W::Choose(0));
     send(&mut app, W::Remove);
@@ -150,6 +158,18 @@ fn screens() {
         let file = out.join(format!("y3-guzergah-penceresi-{name}.png"));
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
         println!("{}", file.display());
+        // The km written on the drawing, then the window closed over it.
+        send(&mut app, W::Point(String::new()));
+        send(&mut app, W::LabelLayer("km".into()));
+        send(&mut app, W::Label);
+        send(&mut app, W::Cancel);
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("y3-km-yazisi-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+        let _ = app.update(Message::Run("alignment.editor"));
+        send(&mut app, W::Choose(0));
         // A radius too large: the window says why before it is saved.
         send(&mut app, W::Pi(1, 2, "4000".into()));
         snapshot.settle(&mut app, App::view, &mut update);

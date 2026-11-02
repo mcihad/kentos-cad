@@ -52,6 +52,7 @@ const REVERSE: &str = "Ters çevir";
 const ADD_PI: &str = "Satır ekle";
 const REMOVE_PI: &str = "Satırı sil";
 const FROM_SELECTION: &str = "Seçili çizgiden al";
+const LABEL: &str = "Km'yi çizime yaz";
 
 /// A PI as typed: its id and its numbers' texts.
 #[derive(Debug, Clone, PartialEq)]
@@ -200,6 +201,8 @@ pub struct Window {
     /// Noktanın km'si: the place typed, and its answer.
     point: String,
     pub(crate) answer: String,
+    /// Km'yi çizime yaz: the layer the km goes on.
+    layer: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -224,6 +227,8 @@ pub enum Event {
     Source(String),
     Offset(String),
     Point(String),
+    LabelLayer(String),
+    Label,
     Save,
     Cancel,
 }
@@ -318,10 +323,12 @@ impl App {
             return;
         }
         let kept = doc.model.road_alignments().to_vec();
+        let layer = self.relation_layers().into_iter().next().map(|(id, _)| id);
         self.alignment_window = Some(Window {
             chosen: (!kept.is_empty()).then_some(0),
             rows: kept.iter().map(Row::of).collect(),
             kept,
+            layer,
             ..Window::default()
         });
         self.dialog = Some(Dialog::Alignments);
@@ -508,6 +515,8 @@ impl App {
                 w.point = t;
                 return self.ask_point();
             }
+            Event::LabelLayer(id) => w.layer = Some(id),
+            Event::Label => return self.label_alignment(),
             Event::Cancel => {
                 self.alignment_window = None;
                 self.dialog = None;
@@ -567,6 +576,38 @@ impl App {
         };
         if let Some(w) = self.alignment_window.as_mut() {
             w.answer = answer;
+        }
+        Task::none()
+    }
+
+    /// Km'yi çizime yaz: the chosen saved alignment's km on the chosen layer (`road.alignments.label`), one undo step.
+    fn label_alignment(&mut self) -> Task<Message> {
+        let Some(w) = &self.alignment_window else {
+            return Task::none();
+        };
+        let Some(r) = w.chosen.and_then(|i| w.rows.get(i)) else {
+            return Task::none();
+        };
+        if !w.kept.iter().any(|k| r.def().ok().as_ref() == Some(k)) {
+            self.warn("Önce aksı kaydedin; km kaydedilmiş akstan yazılır.".to_owned());
+            return Task::none();
+        }
+        let input = kentos_commands::AlignmentsLabel {
+            alignment: r.id.clone(),
+            layer_id: w.layer.clone().unwrap_or_default(),
+            every: None,
+            major: None,
+            height: None,
+            curves: None,
+            expected_revision: None,
+        };
+        let Some(doc) = self.document.as_mut() else {
+            return Task::none();
+        };
+        let result = kentos_native_application::road_alignments_label::execute(&mut ExecutionContext::new(&mut doc.model), input);
+        if let Some(out) = self.answered(result) {
+            let words = out.labels.iter().filter(|l| l.text.is_some()).count();
+            self.say(Level::Success, format!("{} işaret ve {words} km yazısı çizildi.", out.labels.len()));
         }
         Task::none()
     }
@@ -742,8 +783,24 @@ impl App {
             Some(r) => scrollable(self.alignment_editor(w, r)).height(typography::scaled(420.0)).into(),
         };
         let saved = chosen.is_some_and(|r| w.kept.iter().any(|k| r.def().ok().as_ref() == Some(k)));
+        let ids: Vec<String> = self.relation_layers().into_iter().map(|(id, _)| id).collect();
+        let names: Vec<String> = self.relation_layers().into_iter().map(|(_, n)| n).collect();
+        let layer = kentos_ui::widget::select::Select::new(
+            names.iter().map(|n| kentos_ui::widget::select::Choice::new(n.clone())),
+            w.layer.as_ref().and_then(|l| ids.iter().position(|id| id == l)),
+            move |i| msg(Event::LabelLayer(ids[i].clone())),
+        )
+        .placeholder("Katman");
+        let km = row![
+            label::strong("Km yazısı"),
+            words::field("Katman", layer, None),
+            words::secondary(LABEL, saved.then(|| msg(Event::Label))),
+        ]
+        .spacing(10)
+        .align_y(iced::alignment::Vertical::Bottom);
         let body = column![
             row![container(left).width(230), container(right).width(Fill)].spacing(16),
+            km,
             row![
                 words::ghost(REMOVE, w.chosen.map(|_| msg(Event::Remove))),
                 words::secondary(
@@ -876,6 +933,7 @@ impl App {
             Control::Press(ADD_PI) => Some(msg(Event::PiAdd)),
             Control::Press(REMOVE_PI) => Some(msg(Event::PiRemove)),
             Control::Press(FROM_SELECTION) => Some(msg(Event::FromSelection)),
+            Control::Press(LABEL) => Some(msg(Event::Label)),
             Control::Press(words) => match w.rows.iter().position(|r| r.name == words) {
                 Some(i) => Some(msg(Event::Choose(i))),
                 None => return Err(format!("“{TITLE}” penceresinde “{words}” düğmesi yok")),

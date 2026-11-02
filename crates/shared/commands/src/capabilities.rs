@@ -1584,6 +1584,16 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "road.alignments.label",
+        refusals: &[
+            &["not_a_road_project", "unknown_alignment", "invalid_label"],
+            LAYER,
+            REVISION,
+        ],
+        warnings: &["layer_hidden"],
+        targets: none,
+    },
+    Entry {
         id: "road.alignments.query",
         refusals: &[&[
             "not_a_road_project",

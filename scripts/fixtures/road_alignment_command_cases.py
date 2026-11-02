@@ -54,9 +54,13 @@ EQUATIONS = {"start": 2000.0, "equations": [{"back": 2200.0, "ahead": 2500.0},
                                             {"back": 2650.0, "ahead": 2700.0, "increasing": False}]}
 
 
-def node(id_, name):
-    return {"id": id_, "name": name, "type": "layer", "visible": True, "locked": False, "expanded": True,
-            "style": dict(STYLE), "children": []}
+def node(id_, name, children=None, **flags):
+    return {"id": id_, "name": name, "type": "group" if children is not None else "layer", "visible": True,
+            "locked": False, "expanded": True, "style": dict(STYLE), "children": children or [], **flags}
+
+
+LAYERS = [node("0", "0"), node("km", "Km"), node("kilitli", "Kilitli", locked=True),
+          node("gizli", "Gizli", visible=False), node("grup", "Yol", [node("yol-km", "Yol km")])]
 
 
 def setup(alignments=None, work="road", ground=None):
@@ -67,7 +71,7 @@ def setup(alignments=None, work="road", ground=None):
     if ground is not None:
         settings["survey"] = {"groundHeight": ground}
     return {"format": "kentos.document", "version": 2, "name": "Yol aksları", "settings": settings,
-            "origin": {"x": 0.0, "y": 0.0}, "layers": [node("0", "0")], "activeLayer": "0", "entities": [],
+            "origin": {"x": 0.0, "y": 0.0}, "layers": copy.deepcopy(LAYERS), "activeLayer": "0", "entities": [],
             "uids": [], "styles": {"items": [], "categories": []}}
 
 
@@ -107,7 +111,8 @@ def km_text(km, digits=3):
     whole = math.floor(rounded / 1000.0)
     rest = rounded - whole * 1000.0
     sign = "-" if km < 0 and rounded > 0 else ""
-    return f"{sign}{whole}+{rest:0{4 + digits}.{digits}f}"
+    width = 4 + digits if digits else 3
+    return f"{sign}{whole}+{rest:0{width}.{digits}f}"
 
 
 def region_of(regions, s):
@@ -672,9 +677,121 @@ def query_cases():
     return file("road.alignments.query", "Aksı sorgula (plan/road.md Y3, ADR 0901)", setup(start), cases)
 
 
+# ── road.alignments.label ───────────────────────────────────────────────────────────────────────────────────────────
+
+def label_rows(b, every, major, curves):
+    near = lambda a, z: abs(a - z) <= mp.mpf("1e-6")
+    rows = [{"kind": "start", "station": 0.0, "km": float(ref.km_of(b.regions, 0)),
+             "text": km_text(ref.km_of(b.regions, 0), 3)}]
+    for i, r in enumerate(b.regions):
+        a, z = r[1], r[1] + r[2] * (r[3] - r[0])
+        lo, hi = min(a, z), max(a, z)
+        n = mp.ceil(lo / every)
+        here = []
+        while n * every <= hi + mp.mpf("1e-9"):
+            k = n * every
+            st = r[0] + r[2] * (k - r[1])
+            last = i == len(b.regions) - 1
+            if st >= r[0] - mp.mpf("1e-9") and (st < r[3] - mp.mpf("1e-9") or (last and st <= r[3] + mp.mpf("1e-9"))):
+                here.append((min(max(st, r[0]), r[3]), k))
+            n += 1
+        for st, k in sorted(here):
+            if near(st, 0) or near(st, b.length):
+                continue
+            major_ = abs(k / major - mp.nint(k / major)) <= mp.mpf("1e-9")
+            row = {"kind": "major" if major_ else "tick", "station": float(st), "km": float(k)}
+            if major_:
+                row["text"] = km_text(k, 0)
+            rows.append(row)
+    if curves:
+        for c in b.reports:
+            names = ["TS", "SC", "CS", "ST"] if c["spiralIn"] or c["spiralOut"] else ["TC", "TC", "CT", "CT"]
+            seen = []
+            for name, st in zip(names, c["stations"]):
+                if any(abs(t - st) <= 1e-6 for t in seen):
+                    continue
+                seen.append(st)
+                km = ref.km_of(b.regions, mp.mpf(st))
+                rows.append({"kind": name, "station": st, "km": float(km), "text": f"{name} {km_text(km, 3)}"})
+    end_km = ref.km_of(b.regions, b.length)
+    rows.append({"kind": "end", "station": float(b.length), "km": float(end_km), "text": km_text(end_km, 3)})
+    rows.sort(key=lambda r: r["station"])
+    return rows
+
+
+def label_cases():
+    main = {**MAIN, "stationing": EQUATIONS}
+    start = [main, LEFT, LINK]
+    cases = []
+    bm, bl, bk = build(start, main), build(start, LEFT), build(start, LINK)
+
+    def ok(name, input_, b, alignment, every=20, major=100, curves=True, op="execute", warns=(), undo=False):
+        rows = label_rows(b, mp.mpf(every), mp.mpf(major), curves)
+        n = len(rows) + sum(1 for r in rows if "text" in r)
+        out = {"alignment": alignment, "labels": rows, "uids": "$any" if op == "execute" else [], "revision": "$current"}
+        if op == "validate":
+            result, expect = completed(None, warns), {**UNCHANGED, "road": road_of(start)}
+        elif op == "plan":
+            result, expect = completed(out, warns), {**UNCHANGED, "road": road_of(start)}
+        else:
+            result = completed(out, warns)
+            expect = {**STEPPED, "road": road_of(start), "ids": list(range(1, n + 1))}
+        steps = [step(op, input_, result, expect)]
+        if undo:
+            steps.append({"op": "undo", "returns": "Aks km yazısı", "expect": {"ids": [], "canRedo": True}})
+        cases.append({"name": name, "steps": steps})
+
+    def no(name, input_, result, setup_=None, before=start):
+        c = {"name": name, "steps": [step("execute", input_, result, {**UNCHANGED, "road": road_of(before)})]}
+        if setup_ is not None:
+            c["setup"] = setup_
+        cases.append(c)
+
+    ok("Her 20 m'de işaret, her 100 m'de km; eşitlikler ve kurp noktaları", {"alignment": "g-1", "layerId": "km"}, bm, "g-1")
+    ok("Her 25 m'de işaret", {"alignment": "g-1", "layerId": "km", "every": 25.0}, bm, "g-1", every=25)
+    ok("Her 50 m'de km yazısı", {"alignment": "g-1", "layerId": "km", "every": 50.0, "major": 50.0}, bm, "g-1", 50, 50)
+    ok("Her 500 m'de km, 100 m'de işaret", {"alignment": "g-1", "layerId": "km", "every": 100.0, "major": 500.0}, bm,
+       "g-1", 100, 500)
+    ok("Kurp noktaları yazılmadan", {"alignment": "g-1", "layerId": "km", "curves": False}, bm, "g-1", curves=False)
+    ok("Büyük yazıyla", {"alignment": "g-1", "layerId": "km", "height": 3.5}, bm, "g-1")
+    ok("Adıyla, büyük küçük harf ayrımsız", {"alignment": "ANA aks", "layerId": "km"}, bm, "g-1")
+    ok("Paralel aksın km'si kaynağınınki", {"alignment": "g-2", "layerId": "km"}, bl, "g-2")
+    ok("Kırık noktalı aks, km 0'dan", {"alignment": "g-3", "layerId": "km", "every": 10.0, "major": 50.0}, bk, "g-3", 10, 50)
+    ok("Grubun içindeki katmana", {"alignment": "g-3", "layerId": "yol-km"}, bk, "g-3")
+    ok("Gizli katmana uyarıyla", {"alignment": "g-3", "layerId": "gizli"}, bk, "g-3",
+       warns=[{"code": "layer_hidden", "message": "“Gizli” katmanı gizli; çizilen nesne görünmeyecek.", "path": "layerId"}])
+    ok("Plan yazmaz", {"alignment": "g-1", "layerId": "km"}, bm, "g-1", op="plan")
+    ok("Doğrulama yazmaz", {"alignment": "g-1", "layerId": "km"}, bm, "g-1", op="validate")
+    ok("Geri alınır", {"alignment": "g-3", "layerId": "km"}, bk, "g-3", undo=True)
+    no("Yol projesi değil", {"alignment": "g-1", "layerId": "km"}, NOT_ROAD, setup(work="map"), [])
+    no("Olmayan aks", {"alignment": "g-9", "layerId": "km"},
+       failed("unknown_alignment", "“g-9” kimlikli ya da adlı aks projede yok.", "alignment"))
+    no("Aralık sıfır", {"alignment": "g-1", "layerId": "km", "every": 0.0},
+       failed("invalid_label", "İşaret aralığı (every) 0'dan büyük olmalı.", "every"))
+    no("Eksi aralık", {"alignment": "g-1", "layerId": "km", "every": -5.0},
+       failed("invalid_label", "İşaret aralığı (every) 0'dan büyük olmalı.", "every"))
+    no("Km aralığı işaretin katı değil", {"alignment": "g-1", "layerId": "km", "major": 30.0},
+       failed("invalid_label", "Km yazılan aralık (major) işaret aralığının tam katı olmalı.", "major"))
+    no("Km aralığı işaretten küçük", {"alignment": "g-1", "layerId": "km", "major": 10.0},
+       failed("invalid_label", "Km yazılan aralık (major) işaret aralığının tam katı olmalı.", "major"))
+    no("Yazı yüksekliği sıfır", {"alignment": "g-1", "layerId": "km", "height": 0.0},
+       failed("invalid_label", "Yazı yüksekliği (height) 0'dan büyük olmalı.", "height"))
+    no("Çok sık işaret", {"alignment": "g-1", "layerId": "km", "every": 0.001, "major": 0.001},
+       failed("invalid_label", "Bu aralıkla 100000'den çok işaret çıkar; every'yi büyütün.", "every"))
+    no("Olmayan katman", {"alignment": "g-1", "layerId": "yok"},
+       failed("layer_not_found", "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.", "layerId"))
+    no("Katman grubu", {"alignment": "g-1", "layerId": "grup"},
+       failed("not_a_layer", "“Yol” bir katman grubu; nesne yalnız katmana eklenir. Grubun içinden bir katman seçin.", "layerId"))
+    no("Kilitli katman", {"alignment": "g-1", "layerId": "kilitli"},
+       failed("layer_locked", "“Kilitli” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.", "layerId"))
+    no("Geçersiz beklenen sürüm", {"alignment": "g-1", "layerId": "km", "expectedRevision": "on"}, BAD_REVISION)
+    no("Eski sürüme göre hazırlanmış", {"alignment": "g-1", "layerId": "km", "expectedRevision": "41"}, CONFLICT)
+    return file("road.alignments.label", "Aks km yazısı (plan/road.md Y3, ADR 0901)", setup(start), cases)
+
+
 def main():
     files = {"road.alignments.create.json": create_cases(), "road.alignments.edit.json": edit_cases(),
-             "road.alignments.query.json": query_cases()}
+             "road.alignments.query.json": query_cases(), "road.alignments.label.json": label_cases()}
     check = "--check" in sys.argv[1:]
     bad = False
     for name, data in files.items():

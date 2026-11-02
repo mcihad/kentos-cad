@@ -191,6 +191,7 @@ pub fn label(operation: Option<CreateOperation>) -> &'static str {
         // Eş yükselti eğrileri (plan/road.md Y2.5).
         Some(CreateOperation::TerrainContours) => "Eş yükselti eğrileri",
         Some(CreateOperation::LandXml) => "LandXML al",
+        Some(CreateOperation::AlignmentLabels) => "Aks km yazısı",
     }
 }
 

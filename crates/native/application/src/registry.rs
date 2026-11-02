@@ -99,7 +99,7 @@ use crate::{
     layers_find, layers_indexes, layers_info, layers_labels, layers_renderer, layers_rules,
     layers_service, layers_set, layers_states, layers_subtypes, layers_table, layers_time,
     layers_translate, leaders_edit, legends, levels_assign, library_edit, line, line_types_edit,
-    linearref_define, file_import_landxml, road_alignments_create, road_alignments_edit, road_alignments_query, road_terrains_contours, road_terrains_create, road_terrains_edit, road_terrains_query, maplibre, network_define, north, nurbs, objects_derive, offset,
+    linearref_define, file_import_landxml, road_alignments_create, road_alignments_edit, road_alignments_label, road_alignments_query, road_terrains_contours, road_terrains_create, road_terrains_edit, road_terrains_query, maplibre, network_define, north, nurbs, objects_derive, offset,
     openings_create, openings_distances, openings_edit, opening_types_edit, materials_edit, openings_query, modules_edit, modules_query, options_edit, options_query, elevations_edit, elevations_query, parameters_edit, parcels, point,
     points_construct, polygon, polygon_regular, polyline, qml, ramps_create, rasters_georef,
     rasters_mosaic, rasters_reproject, rectangle_create, revcloud_create, revisions, roads_edit,
@@ -226,6 +226,9 @@ macro_rules! by_command {
             }
             kentos_commands::ROAD_ALIGNMENTS_QUERY => {
                 $then!(road_alignments_query, kentos_commands::AlignmentsQuery)
+            }
+            kentos_commands::ROAD_ALIGNMENTS_LABEL => {
+                $then!(road_alignments_label, kentos_commands::AlignmentsLabel)
             }
             kentos_commands::CAD_SUBNETWORKS_FIND => {
                 $then!(subnetworks, kentos_commands::SubnetworksFind)

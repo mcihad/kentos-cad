@@ -115,6 +115,8 @@ pub enum CreateOperation {
     TerrainContours,
     /// LandXML al (plan/road.md Y2.5): a LandXML surface's points, breaklines and boundaries.
     LandXml,
+    /// `road.alignments.label` (plan/road.md Y3): an alignment's km ticks and words, “Aks km yazısı”.
+    AlignmentLabels,
 }
 
 /// One new object: its geometry and what else it carries. The layer is the

@@ -6824,6 +6824,32 @@ pub fn catalog() -> CommandCatalog {
             ],
         },
         CommandDescriptor {
+            id: crate::ROAD_ALIGNMENTS_LABEL.into(),
+            version: crate::ROAD_ALIGNMENTS_LABEL_VERSION,
+            title: "Aks km yazısı".into(),
+            summary: "Yol projesinin bir aksının (alignment: kimliği ya da adı) km'sini bir katmana çizgi ve yazı nesneleri olarak yazar, paftaya ve DXF'e gider: km eşitliklerinden okunan her yuvarlak every metrelik km'de (yoksa 20) aksı kesen kısa işaret, her major'da (yoksa 100; every'nin tam katı) uzun işaret ve sağında km yazısı (2+100), başlangıç ve bitişte milimetresine km, curves açıksa (varsayılan) kurpların TS, SC, CS, ST noktaları (klotoidsiz kurpta TC, CT) solda km'leriyle. \
+                      Kâğıtta işaret her yana 1,5 mm (uzun 3 mm), yazı height mm (yoksa 2,5) yüksekliğinde, çizim ölçeğiyle. Cevap yazılanların aks boyunca sırasıdır: türü (tick, major, start, end ya da noktanın adı), aksın kendi km'si, km yazısı ve metni. \
+                      Tek geri alma adımı “Aks km yazısı”. Retler: not_a_road_project, unknown_alignment, invalid_label, layer_not_found, not_a_layer, service_layer, layer_locked, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["kmyaz".into(), "aksyazi".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::AlignmentsLabel>(),
+            output: schema::<crate::AlignmentsLabelled>(),
+            plan: Some(schema::<crate::AlignmentsLabelled>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana aksın km'si her 20 m'de işaret, her 100 m'de yazı".into(),
+                input: json!({ "alignment": "Ana aks", "layerId": "km" }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::ROAD_ALIGNMENTS_QUERY.into(),
             version: crate::ROAD_ALIGNMENTS_QUERY_VERSION,
             title: "Aksı sorgula".into(),
@@ -12398,6 +12424,9 @@ mod tests {
                     crate::ROAD_ALIGNMENTS_QUERY => {
                         serde_json::from_value::<crate::AlignmentsQuery>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_ALIGNMENTS_LABEL => {
+                        serde_json::from_value::<crate::AlignmentsLabel>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_SUBNETWORKS_FIND => {
                         serde_json::from_value::<crate::SubnetworksFind>(e.input.clone())
                             .map(|_| ())
@@ -13059,6 +13088,10 @@ mod tests {
                         }
                         crate::ROAD_ALIGNMENTS_QUERY => {
                             serde_json::from_value::<crate::AlignmentsQueried>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_ALIGNMENTS_LABEL => {
+                            serde_json::from_value::<crate::AlignmentsLabelled>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_ADDRESSES_DEFINE => {

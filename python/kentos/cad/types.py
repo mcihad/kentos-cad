@@ -1249,6 +1249,7 @@ class CreateOperation(_StrEnum):
     - ``interiorDimensions``: İç ölçü zinciri (docs/adr/0711): the faces a cut crosses, measured as a chain.
     - ``terrainContours``: Eş yükselti eğrileri (plan/road.md Y2.5): a terrain surface's contour lines.
     - ``landXml``: LandXML al (plan/road.md Y2.5): a LandXML surface's points, breaklines and boundaries.
+    - ``alignmentLabels``: `road.alignments.label` (plan/road.md Y3): an alignment's km ticks and words, “Aks km yazısı”.
     """
     PARALLEL = "parallel"
     PERPENDICULAR_IN = "perpendicularIn"
@@ -1287,9 +1288,10 @@ class CreateOperation(_StrEnum):
     INTERIOR_DIMENSIONS = "interiorDimensions"
     TERRAIN_CONTOURS = "terrainContours"
     LAND_XML = "landXml"
+    ALIGNMENT_LABELS = "alignmentLabels"
 
 
-CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions", "terrainContours", "landXml"]
+CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions", "terrainContours", "landXml", "alignmentLabels"]
 """The names of :class:`CreateOperation`, for a plain string."""
 
 
@@ -11454,6 +11456,38 @@ class AlignmentJoinRow(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class AlignmentLabelRow(_Model):
+    """A written label: where it is, its km, what it says (none for a minor tick), and its kind (`tick`, `major`, `start`,
+    `end`, or a curve point's name).
+    Attributes:
+        station: Unit: m.
+        km: Unit: m.
+    """
+    kind: str
+    station: float
+    km: float
+    text: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = self.kind
+        out["station"] = float(self.station)
+        out["km"] = float(self.km)
+        if self.text is not UNSET:
+            out["text"] = self.text
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AlignmentLabelRow:
+        return cls(
+            kind=data["kind"],
+            station=float(data["station"]),
+            km=float(data["km"]),
+            text=data.get("text", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class AlignmentListed(_Model):
     """An alignment in the project's list.
     Attributes:
@@ -11793,6 +11827,88 @@ class AlignmentsEdit(_Model):
             offset=UNSET if "offset" not in data else None if data["offset"] is None else float(data["offset"]),
             pis=UNSET if "pis" not in data else None if data["pis"] is None else [AlignmentPi.from_json(e0) for e0 in data["pis"]],
             stationing=UNSET if "stationing" not in data else None if data["stationing"] is None else AlignmentStationing.from_json(data["stationing"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AlignmentsLabel(_Model):
+    """Input of `road.alignments.label` v1 (plan/road.md Y3): an alignment's km written on a layer as objects, so it goes
+    to sheets and DXF: a tick across it at every round `every` metres of km (20 when absent), a longer one with its
+    km written at every `major` (100; a multiple of `every`), the start's and the end's km, and the curves' TS, SC, CS,
+    ST (TC, CT without clothoids) with their km (`curves`, true when absent). Texts are `height` paper millimetres high
+    at the project's drawing scale (2.5 when absent).
+
+    Refusals, in this order: `not_a_road_project`, `unknown_alignment`, `invalid_label` (`every` or `height` not above
+    0, `major` not a whole multiple of `every`, more than 100 000 ticks), the layer's (`layer_not_found`,
+    `not_a_layer`, `service_layer`, `layer_locked`), `invalid_revision`, `revision_conflict`, and the geometry's when
+    the alignment no longer builds. A hidden layer is the warning `layer_hidden`.
+    Attributes:
+        every: Unit: m.
+        height: Unit: paper-mm.
+        major: Unit: m.
+    """
+    alignment: str
+    layer_id: str
+    curves: bool | None | Unset = UNSET
+    every: float | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    height: float | None | Unset = UNSET
+    major: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["alignment"] = self.alignment
+        out["layerId"] = self.layer_id
+        if self.curves is not UNSET:
+            out["curves"] = self.curves
+        if self.every is not UNSET:
+            out["every"] = None if self.every is None else float(self.every)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.height is not UNSET:
+            out["height"] = None if self.height is None else float(self.height)
+        if self.major is not UNSET:
+            out["major"] = None if self.major is None else float(self.major)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AlignmentsLabel:
+        return cls(
+            alignment=data["alignment"],
+            layer_id=data["layerId"],
+            curves=data.get("curves", UNSET),
+            every=UNSET if "every" not in data else None if data["every"] is None else float(data["every"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+            major=UNSET if "major" not in data else None if data["major"] is None else float(data["major"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AlignmentsLabelled(_Model):
+    """Output of `road.alignments.label` v1, and its plan: the labels in their order along the alignment, the objects
+    written (none in a plan).
+    """
+    alignment: str
+    labels: list[AlignmentLabelRow]
+    uids: list[str]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["alignment"] = self.alignment
+        out["labels"] = [e0.to_json() for e0 in self.labels]
+        out["uids"] = list(self.uids)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AlignmentsLabelled:
+        return cls(
+            alignment=data["alignment"],
+            labels=[AlignmentLabelRow.from_json(e0) for e0 in data["labels"]],
+            uids=list(data["uids"]),
+            revision=data["revision"],
         )
 
 
@@ -91831,6 +91947,7 @@ __all__ = [
     "AlignmentElementRow",
     "AlignmentFoot",
     "AlignmentJoinRow",
+    "AlignmentLabelRow",
     "AlignmentListed",
     "AlignmentOffset",
     "AlignmentPi",
@@ -91841,6 +91958,8 @@ __all__ = [
     "AlignmentsEdit",
     "AlignmentsEditOperation",
     "AlignmentsEditOperationName",
+    "AlignmentsLabel",
+    "AlignmentsLabelled",
     "AlignmentsQueried",
     "AlignmentsQuery",
     "AlignmentsWritten",

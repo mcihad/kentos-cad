@@ -432,3 +432,77 @@ pub struct AlignmentsQueried {
     pub ticks: Vec<AlignmentPlace>,
     pub points: Vec<PointStation>,
 }
+
+pub const ROAD_ALIGNMENTS_LABEL: &str = "road.alignments.label";
+pub const ROAD_ALIGNMENTS_LABEL_VERSION: u32 = 1;
+
+/// Input of `road.alignments.label` v1 (plan/road.md Y3): an alignment's km written on a layer as objects, so it goes
+/// to sheets and DXF: a tick across it at every round `every` metres of km (20 when absent), a longer one with its
+/// km written at every `major` (100; a multiple of `every`), the start's and the end's km, and the curves' TS, SC, CS,
+/// ST (TC, CT without clothoids) with their km (`curves`, true when absent). Texts are `height` paper millimetres high
+/// at the project's drawing scale (2.5 when absent).
+///
+/// Refusals, in this order: `not_a_road_project`, `unknown_alignment`, `invalid_label` (`every` or `height` not above
+/// 0, `major` not a whole multiple of `every`, more than 100 000 ticks), the layer's (`layer_not_found`,
+/// `not_a_layer`, `service_layer`, `layer_locked`), `invalid_revision`, `revision_conflict`, and the geometry's when
+/// the alignment no longer builds. A hidden layer is the warning `layer_hidden`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AlignmentsLabel {
+    pub alignment: String,
+    pub layer_id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub every: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub major: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
+    pub height: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub curves: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
+/// A written label: where it is, its km, what it says (none for a minor tick), and its kind (`tick`, `major`, `start`,
+/// `end`, or a curve point's name).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AlignmentLabelRow {
+    pub kind: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub station: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub km: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub text: Option<String>,
+}
+
+/// Output of `road.alignments.label` v1, and its plan: the labels in their order along the alignment, the objects
+/// written (none in a plan).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AlignmentsLabelled {
+    pub alignment: String,
+    pub labels: Vec<AlignmentLabelRow>,
+    pub uids: Vec<String>,
+    pub revision: String,
+}

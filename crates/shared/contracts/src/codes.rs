@@ -626,6 +626,8 @@ codes! {
     STATION_OUTSIDE = "station_outside", Failed, false, "Bu km aksın üstünde değil.";
     /// A km on more than one place, asked without its region.
     STATION_AMBIGUOUS = "station_ambiguous", Failed, false, "Bu km aksın birden çok yerine düşüyor; km eşitliğinin bölgesini verin.";
+    /// An alignment's km labels asked with a step not above 0, a major step not a multiple of it, too many ticks.
+    INVALID_LABEL = "invalid_label", Failed, false, "İşaret aralığı ve yazı yüksekliği 0'dan büyük, km yazılan aralık işaret aralığının tam katı olmalı.";
     /// A reversed alignment's equations go.
     EQUATIONS_DROPPED = "equations_dropped", Warning, false, "Ters çevrilen aksın km eşitlikleri kaldırıldı.";
     /// A warning: a surface names a source the drawing cannot give (missing, without heights, an arc edge …).

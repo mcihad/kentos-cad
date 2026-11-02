@@ -1,6 +1,6 @@
 # ADR 0901 — Yatay güzergâh: aliyman, klotoid ve kurp; km ve km eşitliği
 
-Tarih: 2026-11-02. plan/road.md Y3 (ROAD-ALIGN-01…10, 15, 16; ROAD-NUM-05). Durum: Y3.1 (çekirdek), Y3.2 (`road.alignments.*` komutları, Python, MCP) ve Y3.3 (Güzergâh penceresi, planda aks ve km) uygulandı.
+Tarih: 2026-11-02. plan/road.md Y3 (ROAD-ALIGN-01…10, 15, 16; ROAD-NUM-05). Durum: Y3.1 (çekirdek), Y3.2 (`road.alignments.*` komutları, Python, MCP) Y3.3 (Güzergâh penceresi, planda aks ve km) ve Y3.4 (km yazısı çizime) uygulandı.
 
 ## Dayanak
 
@@ -71,6 +71,14 @@ Tarih: 2026-11-02. plan/road.md Y3 (ROAD-ALIGN-01…10, 15, 16; ROAD-NUM-05). Du
    kübaj geldikçe aynı tabloyu okur. Aksın revizyonu her geometri değişikliğinde artar.
 10. **Saklama.** Akslar projenin ayarıdır (`settings.road.alignments`), mimari modüller gibi geri alma geçmişinde
     tutulur (`Op::RoadAlignments`): Güzergâh düzenleyicisindeki her yazma tek geri alma adımıdır.
+
+11. **Km yazısı (Y3.4).** Ekrandaki km işaretleri yalnız görüntüdür; paftaya ve DXF'e giden km yazısı
+    `road.alignments.label` ile katmana çizgi ve yazı nesnesi olarak yazılır (Netcad'in Km yaz'ı, Civil 3D'nin
+    istasyon etiketleri gibi): her yuvarlak `every` metrelik km'de (km eşitliklerinden okunarak) kısa işaret, her
+    `major`'da uzun işaret ve sağında km, uçlarda milimetresine km, kurpların TS–SC–CS–ST'si solda km'leriyle. Kâğıtta
+    işaret 1,5 mm (uzun 3 mm), yazı `height` mm, çizim ölçeğiyle; tek geri alma adımı “Aks km yazısı”. Aks
+    değişince yazılan nesneler izlemez (kendiliğinden yeniden yazılmaz); yeniden yazmak kullanıcının işidir (açık iş:
+    aksa bağlı km yazısı).
 
 ## Sonra
 

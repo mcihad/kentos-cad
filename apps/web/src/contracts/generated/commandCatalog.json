@@ -35332,6 +35332,170 @@
       ]
     },
     {
+      "id": "road.alignments.label",
+      "version": 1,
+      "title": "Aks km yazısı",
+      "summary": "Yol projesinin bir aksının (alignment: kimliği ya da adı) km'sini bir katmana çizgi ve yazı nesneleri olarak yazar, paftaya ve DXF'e gider: km eşitliklerinden okunan her yuvarlak every metrelik km'de (yoksa 20) aksı kesen kısa işaret, her major'da (yoksa 100; every'nin tam katı) uzun işaret ve sağında km yazısı (2+100), başlangıç ve bitişte milimetresine km, curves açıksa (varsayılan) kurpların TS, SC, CS, ST noktaları (klotoidsiz kurpta TC, CT) solda km'leriyle. Kâğıtta işaret her yana 1,5 mm (uzun 3 mm), yazı height mm (yoksa 2,5) yüksekliğinde, çizim ölçeğiyle. Cevap yazılanların aks boyunca sırasıdır: türü (tick, major, start, end ya da noktanın adı), aksın kendi km'si, km yazısı ve metni. Tek geri alma adımı “Aks km yazısı”. Retler: not_a_road_project, unknown_alignment, invalid_label, layer_not_found, not_a_layer, service_layer, layer_locked, invalid_revision, revision_conflict.",
+      "aliases": [
+        "kmyaz",
+        "aksyazi"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.alignments.label` v1 (plan/road.md Y3): an alignment's km written on a layer as objects, so it goes\nto sheets and DXF: a tick across it at every round `every` metres of km (20 when absent), a longer one with its\nkm written at every `major` (100; a multiple of `every`), the start's and the end's km, and the curves' TS, SC, CS,\nST (TC, CT without clothoids) with their km (`curves`, true when absent). Texts are `height` paper millimetres high\nat the project's drawing scale (2.5 when absent).\n\nRefusals, in this order: `not_a_road_project`, `unknown_alignment`, `invalid_label` (`every` or `height` not above\n0, `major` not a whole multiple of `every`, more than 100 000 ticks), the layer's (`layer_not_found`,\n`not_a_layer`, `service_layer`, `layer_locked`), `invalid_revision`, `revision_conflict`, and the geometry's when\nthe alignment no longer builds. A hidden layer is the warning `layer_hidden`.",
+        "properties": {
+          "alignment": {
+            "type": "string"
+          },
+          "curves": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "every": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "height": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "paper-mm"
+          },
+          "layerId": {
+            "type": "string"
+          },
+          "major": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          }
+        },
+        "required": [
+          "alignment",
+          "layerId"
+        ],
+        "title": "AlignmentsLabel",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.alignments.label` v1, and its plan: the labels in their order along the alignment, the objects\nwritten (none in a plan).",
+        "properties": {
+          "alignment": {
+            "type": "string"
+          },
+          "labels": {
+            "items": {
+              "$ref": "#/$defs/AlignmentLabelRow"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "alignment",
+          "labels",
+          "uids",
+          "revision"
+        ],
+        "title": "AlignmentsLabelled",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.alignments.label` v1, and its plan: the labels in their order along the alignment, the objects\nwritten (none in a plan).",
+        "properties": {
+          "alignment": {
+            "type": "string"
+          },
+          "labels": {
+            "items": {
+              "$ref": "#/$defs/AlignmentLabelRow"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "alignment",
+          "labels",
+          "uids",
+          "revision"
+        ],
+        "title": "AlignmentsLabelled",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_alignment",
+          "invalid_label",
+          "layer_not_found",
+          "not_a_layer",
+          "layer_locked",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "layer_hidden"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Ana aksın km'si her 20 m'de işaret, her 100 m'de yazı",
+          "input": {
+            "alignment": "Ana aks",
+            "layerId": "km"
+          }
+        }
+      ]
+    },
+    {
       "id": "road.alignments.query",
       "version": 1,
       "title": "Aksı sorgula",
@@ -69437,6 +69601,12 @@
       "meaning": "Bu km aksın birden çok yerine düşüyor; km eşitliğinin bölgesini verin."
     },
     {
+      "code": "invalid_label",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "İşaret aralığı ve yazı yüksekliği 0'dan büyük, km yazılan aralık işaret aralığının tam katı olmalı."
+    },
+    {
       "code": "equations_dropped",
       "kind": "warning",
       "retryable": false,
@@ -76142,6 +76312,36 @@
       "required": [
         "between",
         "reverse"
+      ],
+      "type": "object"
+    },
+    "AlignmentLabelRow": {
+      "description": "A written label: where it is, its km, what it says (none for a minor tick), and its kind (`tick`, `major`, `start`,\n`end`, or a curve point's name).",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "km": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "station": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "text": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "station",
+        "km"
       ],
       "type": "object"
     },
@@ -85939,6 +86139,11 @@
         {
           "const": "landXml",
           "description": "LandXML al (plan/road.md Y2.5): a LandXML surface's points, breaklines and boundaries.",
+          "type": "string"
+        },
+        {
+          "const": "alignmentLabels",
+          "description": "`road.alignments.label` (plan/road.md Y3): an alignment's km ticks and words, “Aks km yazısı”.",
           "type": "string"
         }
       ]

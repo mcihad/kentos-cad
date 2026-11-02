@@ -1,0 +1,6797 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "road.alignments.label",
+  "commandVersion": 1,
+  "title": "Aks km yazısı (plan/road.md Y3, ADR 0901)",
+  "note": "scripts/fixtures/road_alignment_command_cases.py yazar; geometri road_alignment_cases.py'nin mpmath başvurusundandır, zemin boyu PROJ'un ölçeğinden; KentOS kodu yok. `expect.road` projenin yol ayarlarıdır. Aks geri alma geçmişinde tutulan bir proje ayarıdır.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Yol aksları",
+    "settings": {
+      "srid": 5254,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 1000.0,
+      "workspace": "cad",
+      "cadWork": "road",
+      "drawingFont": "barlow",
+      "road": {
+        "alignments": [
+          {
+            "id": "g-1",
+            "name": "Ana aks",
+            "revision": 1,
+            "pis": [
+              {
+                "id": "a",
+                "x": 485000.0,
+                "y": 4420000.0
+              },
+              {
+                "id": "p1",
+                "x": 485600.0,
+                "y": 4420000.0,
+                "radius": 400.0,
+                "spiralIn": 80.0,
+                "spiralOut": 80.0
+              },
+              {
+                "id": "b",
+                "x": 486100.0,
+                "y": 4420500.0
+              }
+            ],
+            "stationing": {
+              "start": 2000.0,
+              "equations": [
+                {
+                  "back": 2200.0,
+                  "ahead": 2500.0
+                },
+                {
+                  "back": 2650.0,
+                  "ahead": 2700.0,
+                  "increasing": false
+                }
+              ]
+            }
+          },
+          {
+            "id": "g-2",
+            "name": "Sol kenar",
+            "revision": 1,
+            "offsetOf": {
+              "alignment": "g-1",
+              "offset": -7.5
+            }
+          },
+          {
+            "id": "g-3",
+            "name": "Bağlantı",
+            "revision": 1,
+            "pis": [
+              {
+                "id": "a",
+                "x": 484000.0,
+                "y": 4419000.0
+              },
+              {
+                "id": "p1",
+                "x": 484100.0,
+                "y": 4419000.0
+              },
+              {
+                "id": "b",
+                "x": 484100.0,
+                "y": 4419100.0
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "origin": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "layers": [
+      {
+        "id": "0",
+        "name": "0",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "km",
+        "name": "Km",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "gizli",
+        "name": "Gizli",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "grup",
+        "name": "Yol",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "yol-km",
+            "name": "Yol km",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      }
+    ],
+    "activeLayer": "0",
+    "entities": [],
+    "uids": [],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "cases": [
+    {
+      "name": "Her 20 m'de işaret, her 100 m'de km; eşitlikler ve kurp noktaları",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "alignment": "g-1",
+            "layerId": "km"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "alignment": "g-1",
+              "labels": [
+                {
+                  "kind": "start",
+                  "station": 0.0,
+                  "km": 2000.0,
+                  "text": "2+000.000"
+                },
+                {
+                  "kind": "tick",
+                  "station": 20.0,
+                  "km": 2020.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 40.0,
+                  "km": 2040.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 60.0,
+                  "km": 2060.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 80.0,
+                  "km": 2080.0
+                },
+                {
+                  "kind": "major",
+                  "station": 100.0,
+                  "km": 2100.0,
+                  "text": "2+100"
+                },
+                {
+                  "kind": "tick",
+                  "station": 120.0,
+                  "km": 2120.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 140.0,
+                  "km": 2140.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 160.0,
+                  "km": 2160.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 180.0,
+                  "km": 2180.0
+                },
+                {
+                  "kind": "major",
+                  "station": 200.0,
+                  "km": 2500.0,
+                  "text": "2+500"
+                },
+                {
+                  "kind": "tick",
+                  "station": 220.0,
+                  "km": 2520.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 240.0,
+                  "km": 2540.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 260.0,
+                  "km": 2560.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 280.0,
+                  "km": 2580.0
+                },
+                {
+                  "kind": "major",
+                  "station": 300.0,
+                  "km": 2600.0,
+                  "text": "2+600"
+                },
+                {
+                  "kind": "tick",
+                  "station": 320.0,
+                  "km": 2620.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 340.0,
+                  "km": 2640.0
+                },
+                {
+                  "kind": "major",
+                  "station": 350.0,
+                  "km": 2700.0,
+                  "text": "2+700"
+                },
+                {
+                  "kind": "tick",
+                  "station": 370.0,
+                  "km": 2680.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 390.0,
+                  "km": 2660.0
+                },
+                {
+                  "kind": "TS",
+                  "station": 394.05186090744627,
+                  "km": 2655.948139092554,
+                  "text": "TS 2+655.948"
+                },
+                {
+                  "kind": "tick",
+                  "station": 410.0,
+                  "km": 2640.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 430.0,
+                  "km": 2620.0
+                },
+                {
+                  "kind": "major",
+                  "station": 450.0,
+                  "km": 2600.0,
+                  "text": "2+600"
+                },
+                {
+                  "kind": "tick",
+                  "station": 470.0,
+                  "km": 2580.0
+                },
+                {
+                  "kind": "SC",
+                  "station": 474.05186090744627,
+                  "km": 2575.948139092554,
+                  "text": "SC 2+575.948"
+                },
+                {
+                  "kind": "tick",
+                  "station": 490.0,
+                  "km": 2560.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 510.0,
+                  "km": 2540.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 530.0,
+                  "km": 2520.0
+                },
+                {
+                  "kind": "major",
+                  "station": 550.0,
+                  "km": 2500.0,
+                  "text": "2+500"
+                },
+                {
+                  "kind": "tick",
+                  "station": 570.0,
+                  "km": 2480.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 590.0,
+                  "km": 2460.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 610.0,
+                  "km": 2440.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 630.0,
+                  "km": 2420.0
+                },
+                {
+                  "kind": "major",
+                  "station": 650.0,
+                  "km": 2400.0,
+                  "text": "2+400"
+                },
+                {
+                  "kind": "tick",
+                  "station": 670.0,
+                  "km": 2380.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 690.0,
+                  "km": 2360.0
+                },
+                {
+                  "kind": "CS",
+                  "station": 708.2111262664256,
+                  "km": 2341.7888737335743,
+                  "text": "CS 2+341.789"
+                },
+                {
+                  "kind": "tick",
+                  "station": 710.0,
+                  "km": 2340.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 730.0,
+                  "km": 2320.0
+                },
+                {
+                  "kind": "major",
+                  "station": 750.0,
+                  "km": 2300.0,
+                  "text": "2+300"
+                },
+                {
+                  "kind": "tick",
+                  "station": 770.0,
+                  "km": 2280.0
+                },
+                {
+                  "kind": "ST",
+                  "station": 788.2111262664256,
+                  "km": 2261.7888737335743,
+                  "text": "ST 2+261.789"
+                },
+                {
+                  "kind": "tick",
+                  "station": 790.0,
+                  "km": 2260.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 810.0,
+                  "km": 2240.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 830.0,
+                  "km": 2220.0
+                },
+                {
+                  "kind": "major",
+                  "station": 850.0,
+                  "km": 2200.0,
+                  "text": "2+200"
+                },
+                {
+                  "kind": "tick",
+                  "station": 870.0,
+                  "km": 2180.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 890.0,
+                  "km": 2160.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 910.0,
+                  "km": 2140.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 930.0,
+                  "km": 2120.0
+                },
+                {
+                  "kind": "major",
+                  "station": 950.0,
+                  "km": 2100.0,
+                  "text": "2+100"
+                },
+                {
+                  "kind": "tick",
+                  "station": 970.0,
+                  "km": 2080.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 990.0,
+                  "km": 2060.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1010.0,
+                  "km": 2040.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1030.0,
+                  "km": 2020.0
+                },
+                {
+                  "kind": "major",
+                  "station": 1050.0,
+                  "km": 2000.0,
+                  "text": "2+000"
+                },
+                {
+                  "kind": "tick",
+                  "station": 1070.0,
+                  "km": 1980.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1090.0,
+                  "km": 1960.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1110.0,
+                  "km": 1940.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1130.0,
+                  "km": 1920.0
+                },
+                {
+                  "kind": "major",
+                  "station": 1150.0,
+                  "km": 1900.0,
+                  "text": "1+900"
+                },
+                {
+                  "kind": "tick",
+                  "station": 1170.0,
+                  "km": 1880.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1190.0,
+                  "km": 1860.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1210.0,
+                  "km": 1840.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1230.0,
+                  "km": 1820.0
+                },
+                {
+                  "kind": "major",
+                  "station": 1250.0,
+                  "km": 1800.0,
+                  "text": "1+800"
+                },
+                {
+                  "kind": "tick",
+                  "station": 1270.0,
+                  "km": 1780.0
+                },
+                {
+                  "kind": "end",
+                  "station": 1289.3697683604194,
+                  "km": 1760.6302316395806,
+                  "text": "1+760.630"
+                }
+              ],
+              "uids": "$any",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0,
+                    "equations": [
+                      {
+                        "back": 2200.0,
+                        "ahead": 2500.0
+                      },
+                      {
+                        "back": 2650.0,
+                        "ahead": 2700.0,
+                        "increasing": false
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Sol kenar",
+                  "revision": 1,
+                  "offsetOf": {
+                    "alignment": "g-1",
+                    "offset": -7.5
+                  }
+                },
+                {
+                  "id": "g-3",
+                  "name": "Bağlantı",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 484000.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 484100.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 484100.0,
+                      "y": 4419100.0
+                    }
+                  ]
+                }
+              ]
+            },
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89
+            ]
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Her 25 m'de işaret",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "alignment": "g-1",
+            "layerId": "km",
+            "every": 25.0
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "alignment": "g-1",
+              "labels": [
+                {
+                  "kind": "start",
+                  "station": 0.0,
+                  "km": 2000.0,
+                  "text": "2+000.000"
+                },
+                {
+                  "kind": "tick",
+                  "station": 25.0,
+                  "km": 2025.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 50.0,
+                  "km": 2050.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 75.0,
+                  "km": 2075.0
+                },
+                {
+                  "kind": "major",
+                  "station": 100.0,
+                  "km": 2100.0,
+                  "text": "2+100"
+                },
+                {
+                  "kind": "tick",
+                  "station": 125.0,
+                  "km": 2125.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 150.0,
+                  "km": 2150.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 175.0,
+                  "km": 2175.0
+                },
+                {
+                  "kind": "major",
+                  "station": 200.0,
+                  "km": 2500.0,
+                  "text": "2+500"
+                },
+                {
+                  "kind": "tick",
+                  "station": 225.0,
+                  "km": 2525.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 250.0,
+                  "km": 2550.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 275.0,
+                  "km": 2575.0
+                },
+                {
+                  "kind": "major",
+                  "station": 300.0,
+                  "km": 2600.0,
+                  "text": "2+600"
+                },
+                {
+                  "kind": "tick",
+                  "station": 325.0,
+                  "km": 2625.0
+                },
+                {
+                  "kind": "major",
+                  "station": 350.0,
+                  "km": 2700.0,
+                  "text": "2+700"
+                },
+                {
+                  "kind": "tick",
+                  "station": 375.0,
+                  "km": 2675.0
+                },
+                {
+                  "kind": "TS",
+                  "station": 394.05186090744627,
+                  "km": 2655.948139092554,
+                  "text": "TS 2+655.948"
+                },
+                {
+                  "kind": "tick",
+                  "station": 400.0,
+                  "km": 2650.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 425.0,
+                  "km": 2625.0
+                },
+                {
+                  "kind": "major",
+                  "station": 450.0,
+                  "km": 2600.0,
+                  "text": "2+600"
+                },
+                {
+                  "kind": "SC",
+                  "station": 474.05186090744627,
+                  "km": 2575.948139092554,
+                  "text": "SC 2+575.948"
+                },
+                {
+                  "kind": "tick",
+                  "station": 475.0,
+                  "km": 2575.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 500.0,
+                  "km": 2550.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 525.0,
+                  "km": 2525.0
+                },
+                {
+                  "kind": "major",
+                  "station": 550.0,
+                  "km": 2500.0,
+                  "text": "2+500"
+                },
+                {
+                  "kind": "tick",
+                  "station": 575.0,
+                  "km": 2475.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 600.0,
+                  "km": 2450.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 625.0,
+                  "km": 2425.0
+                },
+                {
+                  "kind": "major",
+                  "station": 650.0,
+                  "km": 2400.0,
+                  "text": "2+400"
+                },
+                {
+                  "kind": "tick",
+                  "station": 675.0,
+                  "km": 2375.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 700.0,
+                  "km": 2350.0
+                },
+                {
+                  "kind": "CS",
+                  "station": 708.2111262664256,
+                  "km": 2341.7888737335743,
+                  "text": "CS 2+341.789"
+                },
+                {
+                  "kind": "tick",
+                  "station": 725.0,
+                  "km": 2325.0
+                },
+                {
+                  "kind": "major",
+                  "station": 750.0,
+                  "km": 2300.0,
+                  "text": "2+300"
+                },
+                {
+                  "kind": "tick",
+                  "station": 775.0,
+                  "km": 2275.0
+                },
+                {
+                  "kind": "ST",
+                  "station": 788.2111262664256,
+                  "km": 2261.7888737335743,
+                  "text": "ST 2+261.789"
+                },
+                {
+                  "kind": "tick",
+                  "station": 800.0,
+                  "km": 2250.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 825.0,
+                  "km": 2225.0
+                },
+                {
+                  "kind": "major",
+                  "station": 850.0,
+                  "km": 2200.0,
+                  "text": "2+200"
+                },
+                {
+                  "kind": "tick",
+                  "station": 875.0,
+                  "km": 2175.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 900.0,
+                  "km": 2150.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 925.0,
+                  "km": 2125.0
+                },
+                {
+                  "kind": "major",
+                  "station": 950.0,
+                  "km": 2100.0,
+                  "text": "2+100"
+                },
+                {
+                  "kind": "tick",
+                  "station": 975.0,
+                  "km": 2075.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1000.0,
+                  "km": 2050.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1025.0,
+                  "km": 2025.0
+                },
+                {
+                  "kind": "major",
+                  "station": 1050.0,
+                  "km": 2000.0,
+                  "text": "2+000"
+                },
+                {
+                  "kind": "tick",
+                  "station": 1075.0,
+                  "km": 1975.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1100.0,
+                  "km": 1950.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1125.0,
+                  "km": 1925.0
+                },
+                {
+                  "kind": "major",
+                  "station": 1150.0,
+                  "km": 1900.0,
+                  "text": "1+900"
+                },
+                {
+                  "kind": "tick",
+                  "station": 1175.0,
+                  "km": 1875.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1200.0,
+                  "km": 1850.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1225.0,
+                  "km": 1825.0
+                },
+                {
+                  "kind": "major",
+                  "station": 1250.0,
+                  "km": 1800.0,
+                  "text": "1+800"
+                },
+                {
+                  "kind": "tick",
+                  "station": 1275.0,
+                  "km": 1775.0
+                },
+                {
+                  "kind": "end",
+                  "station": 1289.3697683604194,
+                  "km": 1760.6302316395806,
+                  "text": "1+760.630"
+                }
+              ],
+              "uids": "$any",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0,
+                    "equations": [
+                      {
+                        "back": 2200.0,
+                        "ahead": 2500.0
+                      },
+                      {
+                        "back": 2650.0,
+                        "ahead": 2700.0,
+                        "increasing": false
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Sol kenar",
+                  "revision": 1,
+                  "offsetOf": {
+                    "alignment": "g-1",
+                    "offset": -7.5
+                  }
+                },
+                {
+                  "id": "g-3",
+                  "name": "Bağlantı",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 484000.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 484100.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 484100.0,
+                      "y": 4419100.0
+                    }
+                  ]
+                }
+              ]
+            },
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76
+            ]
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Her 50 m'de km yazısı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "alignment": "g-1",
+            "layerId": "km",
+            "every": 50.0,
+            "major": 50.0
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "alignment": "g-1",
+              "labels": [
+                {
+                  "kind": "start",
+                  "station": 0.0,
+                  "km": 2000.0,
+                  "text": "2+000.000"
+                },
+                {
+                  "kind": "major",
+                  "station": 50.0,
+                  "km": 2050.0,
+                  "text": "2+050"
+                },
+                {
+                  "kind": "major",
+                  "station": 100.0,
+                  "km": 2100.0,
+                  "text": "2+100"
+                },
+                {
+                  "kind": "major",
+                  "station": 150.0,
+                  "km": 2150.0,
+                  "text": "2+150"
+                },
+                {
+                  "kind": "major",
+                  "station": 200.0,
+                  "km": 2500.0,
+                  "text": "2+500"
+                },
+                {
+                  "kind": "major",
+                  "station": 250.0,
+                  "km": 2550.0,
+                  "text": "2+550"
+                },
+                {
+                  "kind": "major",
+                  "station": 300.0,
+                  "km": 2600.0,
+                  "text": "2+600"
+                },
+                {
+                  "kind": "major",
+                  "station": 350.0,
+                  "km": 2700.0,
+                  "text": "2+700"
+                },
+                {
+                  "kind": "TS",
+                  "station": 394.05186090744627,
+                  "km": 2655.948139092554,
+                  "text": "TS 2+655.948"
+                },
+                {
+                  "kind": "major",
+                  "station": 400.0,
+                  "km": 2650.0,
+                  "text": "2+650"
+                },
+                {
+                  "kind": "major",
+                  "station": 450.0,
+                  "km": 2600.0,
+                  "text": "2+600"
+                },
+                {
+                  "kind": "SC",
+                  "station": 474.05186090744627,
+                  "km": 2575.948139092554,
+                  "text": "SC 2+575.948"
+                },
+                {
+                  "kind": "major",
+                  "station": 500.0,
+                  "km": 2550.0,
+                  "text": "2+550"
+                },
+                {
+                  "kind": "major",
+                  "station": 550.0,
+                  "km": 2500.0,
+                  "text": "2+500"
+                },
+                {
+                  "kind": "major",
+                  "station": 600.0,
+                  "km": 2450.0,
+                  "text": "2+450"
+                },
+                {
+                  "kind": "major",
+                  "station": 650.0,
+                  "km": 2400.0,
+                  "text": "2+400"
+                },
+                {
+                  "kind": "major",
+                  "station": 700.0,
+                  "km": 2350.0,
+                  "text": "2+350"
+                },
+                {
+                  "kind": "CS",
+                  "station": 708.2111262664256,
+                  "km": 2341.7888737335743,
+                  "text": "CS 2+341.789"
+                },
+                {
+                  "kind": "major",
+                  "station": 750.0,
+                  "km": 2300.0,
+                  "text": "2+300"
+                },
+                {
+                  "kind": "ST",
+                  "station": 788.2111262664256,
+                  "km": 2261.7888737335743,
+                  "text": "ST 2+261.789"
+                },
+                {
+                  "kind": "major",
+                  "station": 800.0,
+                  "km": 2250.0,
+                  "text": "2+250"
+                },
+                {
+                  "kind": "major",
+                  "station": 850.0,
+                  "km": 2200.0,
+                  "text": "2+200"
+                },
+                {
+                  "kind": "major",
+                  "station": 900.0,
+                  "km": 2150.0,
+                  "text": "2+150"
+                },
+                {
+                  "kind": "major",
+                  "station": 950.0,
+                  "km": 2100.0,
+                  "text": "2+100"
+                },
+                {
+                  "kind": "major",
+                  "station": 1000.0,
+                  "km": 2050.0,
+                  "text": "2+050"
+                },
+                {
+                  "kind": "major",
+                  "station": 1050.0,
+                  "km": 2000.0,
+                  "text": "2+000"
+                },
+                {
+                  "kind": "major",
+                  "station": 1100.0,
+                  "km": 1950.0,
+                  "text": "1+950"
+                },
+                {
+                  "kind": "major",
+                  "station": 1150.0,
+                  "km": 1900.0,
+                  "text": "1+900"
+                },
+                {
+                  "kind": "major",
+                  "station": 1200.0,
+                  "km": 1850.0,
+                  "text": "1+850"
+                },
+                {
+                  "kind": "major",
+                  "station": 1250.0,
+                  "km": 1800.0,
+                  "text": "1+800"
+                },
+                {
+                  "kind": "end",
+                  "station": 1289.3697683604194,
+                  "km": 1760.6302316395806,
+                  "text": "1+760.630"
+                }
+              ],
+              "uids": "$any",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0,
+                    "equations": [
+                      {
+                        "back": 2200.0,
+                        "ahead": 2500.0
+                      },
+                      {
+                        "back": 2650.0,
+                        "ahead": 2700.0,
+                        "increasing": false
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Sol kenar",
+                  "revision": 1,
+                  "offsetOf": {
+                    "alignment": "g-1",
+                    "offset": -7.5
+                  }
+                },
+                {
+                  "id": "g-3",
+                  "name": "Bağlantı",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 484000.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 484100.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 484100.0,
+                      "y": 4419100.0
+                    }
+                  ]
+                }
+              ]
+            },
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62
+            ]
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Her 500 m'de km, 100 m'de işaret",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "alignment": "g-1",
+            "layerId": "km",
+            "every": 100.0,
+            "major": 500.0
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "alignment": "g-1",
+              "labels": [
+                {
+                  "kind": "start",
+                  "station": 0.0,
+                  "km": 2000.0,
+                  "text": "2+000.000"
+                },
+                {
+                  "kind": "tick",
+                  "station": 100.0,
+                  "km": 2100.0
+                },
+                {
+                  "kind": "major",
+                  "station": 200.0,
+                  "km": 2500.0,
+                  "text": "2+500"
+                },
+                {
+                  "kind": "tick",
+                  "station": 300.0,
+                  "km": 2600.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 350.0,
+                  "km": 2700.0
+                },
+                {
+                  "kind": "TS",
+                  "station": 394.05186090744627,
+                  "km": 2655.948139092554,
+                  "text": "TS 2+655.948"
+                },
+                {
+                  "kind": "tick",
+                  "station": 450.0,
+                  "km": 2600.0
+                },
+                {
+                  "kind": "SC",
+                  "station": 474.05186090744627,
+                  "km": 2575.948139092554,
+                  "text": "SC 2+575.948"
+                },
+                {
+                  "kind": "major",
+                  "station": 550.0,
+                  "km": 2500.0,
+                  "text": "2+500"
+                },
+                {
+                  "kind": "tick",
+                  "station": 650.0,
+                  "km": 2400.0
+                },
+                {
+                  "kind": "CS",
+                  "station": 708.2111262664256,
+                  "km": 2341.7888737335743,
+                  "text": "CS 2+341.789"
+                },
+                {
+                  "kind": "tick",
+                  "station": 750.0,
+                  "km": 2300.0
+                },
+                {
+                  "kind": "ST",
+                  "station": 788.2111262664256,
+                  "km": 2261.7888737335743,
+                  "text": "ST 2+261.789"
+                },
+                {
+                  "kind": "tick",
+                  "station": 850.0,
+                  "km": 2200.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 950.0,
+                  "km": 2100.0
+                },
+                {
+                  "kind": "major",
+                  "station": 1050.0,
+                  "km": 2000.0,
+                  "text": "2+000"
+                },
+                {
+                  "kind": "tick",
+                  "station": 1150.0,
+                  "km": 1900.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1250.0,
+                  "km": 1800.0
+                },
+                {
+                  "kind": "end",
+                  "station": 1289.3697683604194,
+                  "km": 1760.6302316395806,
+                  "text": "1+760.630"
+                }
+              ],
+              "uids": "$any",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0,
+                    "equations": [
+                      {
+                        "back": 2200.0,
+                        "ahead": 2500.0
+                      },
+                      {
+                        "back": 2650.0,
+                        "ahead": 2700.0,
+                        "increasing": false
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Sol kenar",
+                  "revision": 1,
+                  "offsetOf": {
+                    "alignment": "g-1",
+                    "offset": -7.5
+                  }
+                },
+                {
+                  "id": "g-3",
+                  "name": "Bağlantı",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 484000.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 484100.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 484100.0,
+                      "y": 4419100.0
+                    }
+                  ]
+                }
+              ]
+            },
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28
+            ]
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Kurp noktaları yazılmadan",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "alignment": "g-1",
+            "layerId": "km",
+            "curves": false
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "alignment": "g-1",
+              "labels": [
+                {
+                  "kind": "start",
+                  "station": 0.0,
+                  "km": 2000.0,
+                  "text": "2+000.000"
+                },
+                {
+                  "kind": "tick",
+                  "station": 20.0,
+                  "km": 2020.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 40.0,
+                  "km": 2040.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 60.0,
+                  "km": 2060.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 80.0,
+                  "km": 2080.0
+                },
+                {
+                  "kind": "major",
+                  "station": 100.0,
+                  "km": 2100.0,
+                  "text": "2+100"
+                },
+                {
+                  "kind": "tick",
+                  "station": 120.0,
+                  "km": 2120.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 140.0,
+                  "km": 2140.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 160.0,
+                  "km": 2160.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 180.0,
+                  "km": 2180.0
+                },
+                {
+                  "kind": "major",
+                  "station": 200.0,
+                  "km": 2500.0,
+                  "text": "2+500"
+                },
+                {
+                  "kind": "tick",
+                  "station": 220.0,
+                  "km": 2520.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 240.0,
+                  "km": 2540.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 260.0,
+                  "km": 2560.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 280.0,
+                  "km": 2580.0
+                },
+                {
+                  "kind": "major",
+                  "station": 300.0,
+                  "km": 2600.0,
+                  "text": "2+600"
+                },
+                {
+                  "kind": "tick",
+                  "station": 320.0,
+                  "km": 2620.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 340.0,
+                  "km": 2640.0
+                },
+                {
+                  "kind": "major",
+                  "station": 350.0,
+                  "km": 2700.0,
+                  "text": "2+700"
+                },
+                {
+                  "kind": "tick",
+                  "station": 370.0,
+                  "km": 2680.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 390.0,
+                  "km": 2660.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 410.0,
+                  "km": 2640.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 430.0,
+                  "km": 2620.0
+                },
+                {
+                  "kind": "major",
+                  "station": 450.0,
+                  "km": 2600.0,
+                  "text": "2+600"
+                },
+                {
+                  "kind": "tick",
+                  "station": 470.0,
+                  "km": 2580.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 490.0,
+                  "km": 2560.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 510.0,
+                  "km": 2540.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 530.0,
+                  "km": 2520.0
+                },
+                {
+                  "kind": "major",
+                  "station": 550.0,
+                  "km": 2500.0,
+                  "text": "2+500"
+                },
+                {
+                  "kind": "tick",
+                  "station": 570.0,
+                  "km": 2480.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 590.0,
+                  "km": 2460.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 610.0,
+                  "km": 2440.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 630.0,
+                  "km": 2420.0
+                },
+                {
+                  "kind": "major",
+                  "station": 650.0,
+                  "km": 2400.0,
+                  "text": "2+400"
+                },
+                {
+                  "kind": "tick",
+                  "station": 670.0,
+                  "km": 2380.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 690.0,
+                  "km": 2360.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 710.0,
+                  "km": 2340.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 730.0,
+                  "km": 2320.0
+                },
+                {
+                  "kind": "major",
+                  "station": 750.0,
+                  "km": 2300.0,
+                  "text": "2+300"
+                },
+                {
+                  "kind": "tick",
+                  "station": 770.0,
+                  "km": 2280.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 790.0,
+                  "km": 2260.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 810.0,
+                  "km": 2240.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 830.0,
+                  "km": 2220.0
+                },
+                {
+                  "kind": "major",
+                  "station": 850.0,
+                  "km": 2200.0,
+                  "text": "2+200"
+                },
+                {
+                  "kind": "tick",
+                  "station": 870.0,
+                  "km": 2180.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 890.0,
+                  "km": 2160.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 910.0,
+                  "km": 2140.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 930.0,
+                  "km": 2120.0
+                },
+                {
+                  "kind": "major",
+                  "station": 950.0,
+                  "km": 2100.0,
+                  "text": "2+100"
+                },
+                {
+                  "kind": "tick",
+                  "station": 970.0,
+                  "km": 2080.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 990.0,
+                  "km": 2060.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1010.0,
+                  "km": 2040.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1030.0,
+                  "km": 2020.0
+                },
+                {
+                  "kind": "major",
+                  "station": 1050.0,
+                  "km": 2000.0,
+                  "text": "2+000"
+                },
+                {
+                  "kind": "tick",
+                  "station": 1070.0,
+                  "km": 1980.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1090.0,
+                  "km": 1960.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1110.0,
+                  "km": 1940.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1130.0,
+                  "km": 1920.0
+                },
+                {
+                  "kind": "major",
+                  "station": 1150.0,
+                  "km": 1900.0,
+                  "text": "1+900"
+                },
+                {
+                  "kind": "tick",
+                  "station": 1170.0,
+                  "km": 1880.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1190.0,
+                  "km": 1860.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1210.0,
+                  "km": 1840.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1230.0,
+                  "km": 1820.0
+                },
+                {
+                  "kind": "major",
+                  "station": 1250.0,
+                  "km": 1800.0,
+                  "text": "1+800"
+                },
+                {
+                  "kind": "tick",
+                  "station": 1270.0,
+                  "km": 1780.0
+                },
+                {
+                  "kind": "end",
+                  "station": 1289.3697683604194,
+                  "km": 1760.6302316395806,
+                  "text": "1+760.630"
+                }
+              ],
+              "uids": "$any",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0,
+                    "equations": [
+                      {
+                        "back": 2200.0,
+                        "ahead": 2500.0
+                      },
+                      {
+                        "back": 2650.0,
+                        "ahead": 2700.0,
+                        "increasing": false
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Sol kenar",
+                  "revision": 1,
+                  "offsetOf": {
+                    "alignment": "g-1",
+                    "offset": -7.5
+                  }
+                },
+                {
+                  "id": "g-3",
+                  "name": "Bağlantı",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 484000.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 484100.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 484100.0,
+                      "y": 4419100.0
+                    }
+                  ]
+                }
+              ]
+            },
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81
+            ]
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Büyük yazıyla",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "alignment": "g-1",
+            "layerId": "km",
+            "height": 3.5
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "alignment": "g-1",
+              "labels": [
+                {
+                  "kind": "start",
+                  "station": 0.0,
+                  "km": 2000.0,
+                  "text": "2+000.000"
+                },
+                {
+                  "kind": "tick",
+                  "station": 20.0,
+                  "km": 2020.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 40.0,
+                  "km": 2040.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 60.0,
+                  "km": 2060.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 80.0,
+                  "km": 2080.0
+                },
+                {
+                  "kind": "major",
+                  "station": 100.0,
+                  "km": 2100.0,
+                  "text": "2+100"
+                },
+                {
+                  "kind": "tick",
+                  "station": 120.0,
+                  "km": 2120.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 140.0,
+                  "km": 2140.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 160.0,
+                  "km": 2160.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 180.0,
+                  "km": 2180.0
+                },
+                {
+                  "kind": "major",
+                  "station": 200.0,
+                  "km": 2500.0,
+                  "text": "2+500"
+                },
+                {
+                  "kind": "tick",
+                  "station": 220.0,
+                  "km": 2520.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 240.0,
+                  "km": 2540.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 260.0,
+                  "km": 2560.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 280.0,
+                  "km": 2580.0
+                },
+                {
+                  "kind": "major",
+                  "station": 300.0,
+                  "km": 2600.0,
+                  "text": "2+600"
+                },
+                {
+                  "kind": "tick",
+                  "station": 320.0,
+                  "km": 2620.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 340.0,
+                  "km": 2640.0
+                },
+                {
+                  "kind": "major",
+                  "station": 350.0,
+                  "km": 2700.0,
+                  "text": "2+700"
+                },
+                {
+                  "kind": "tick",
+                  "station": 370.0,
+                  "km": 2680.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 390.0,
+                  "km": 2660.0
+                },
+                {
+                  "kind": "TS",
+                  "station": 394.05186090744627,
+                  "km": 2655.948139092554,
+                  "text": "TS 2+655.948"
+                },
+                {
+                  "kind": "tick",
+                  "station": 410.0,
+                  "km": 2640.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 430.0,
+                  "km": 2620.0
+                },
+                {
+                  "kind": "major",
+                  "station": 450.0,
+                  "km": 2600.0,
+                  "text": "2+600"
+                },
+                {
+                  "kind": "tick",
+                  "station": 470.0,
+                  "km": 2580.0
+                },
+                {
+                  "kind": "SC",
+                  "station": 474.05186090744627,
+                  "km": 2575.948139092554,
+                  "text": "SC 2+575.948"
+                },
+                {
+                  "kind": "tick",
+                  "station": 490.0,
+                  "km": 2560.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 510.0,
+                  "km": 2540.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 530.0,
+                  "km": 2520.0
+                },
+                {
+                  "kind": "major",
+                  "station": 550.0,
+                  "km": 2500.0,
+                  "text": "2+500"
+                },
+                {
+                  "kind": "tick",
+                  "station": 570.0,
+                  "km": 2480.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 590.0,
+                  "km": 2460.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 610.0,
+                  "km": 2440.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 630.0,
+                  "km": 2420.0
+                },
+                {
+                  "kind": "major",
+                  "station": 650.0,
+                  "km": 2400.0,
+                  "text": "2+400"
+                },
+                {
+                  "kind": "tick",
+                  "station": 670.0,
+                  "km": 2380.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 690.0,
+                  "km": 2360.0
+                },
+                {
+                  "kind": "CS",
+                  "station": 708.2111262664256,
+                  "km": 2341.7888737335743,
+                  "text": "CS 2+341.789"
+                },
+                {
+                  "kind": "tick",
+                  "station": 710.0,
+                  "km": 2340.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 730.0,
+                  "km": 2320.0
+                },
+                {
+                  "kind": "major",
+                  "station": 750.0,
+                  "km": 2300.0,
+                  "text": "2+300"
+                },
+                {
+                  "kind": "tick",
+                  "station": 770.0,
+                  "km": 2280.0
+                },
+                {
+                  "kind": "ST",
+                  "station": 788.2111262664256,
+                  "km": 2261.7888737335743,
+                  "text": "ST 2+261.789"
+                },
+                {
+                  "kind": "tick",
+                  "station": 790.0,
+                  "km": 2260.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 810.0,
+                  "km": 2240.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 830.0,
+                  "km": 2220.0
+                },
+                {
+                  "kind": "major",
+                  "station": 850.0,
+                  "km": 2200.0,
+                  "text": "2+200"
+                },
+                {
+                  "kind": "tick",
+                  "station": 870.0,
+                  "km": 2180.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 890.0,
+                  "km": 2160.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 910.0,
+                  "km": 2140.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 930.0,
+                  "km": 2120.0
+                },
+                {
+                  "kind": "major",
+                  "station": 950.0,
+                  "km": 2100.0,
+                  "text": "2+100"
+                },
+                {
+                  "kind": "tick",
+                  "station": 970.0,
+                  "km": 2080.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 990.0,
+                  "km": 2060.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1010.0,
+                  "km": 2040.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1030.0,
+                  "km": 2020.0
+                },
+                {
+                  "kind": "major",
+                  "station": 1050.0,
+                  "km": 2000.0,
+                  "text": "2+000"
+                },
+                {
+                  "kind": "tick",
+                  "station": 1070.0,
+                  "km": 1980.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1090.0,
+                  "km": 1960.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1110.0,
+                  "km": 1940.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1130.0,
+                  "km": 1920.0
+                },
+                {
+                  "kind": "major",
+                  "station": 1150.0,
+                  "km": 1900.0,
+                  "text": "1+900"
+                },
+                {
+                  "kind": "tick",
+                  "station": 1170.0,
+                  "km": 1880.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1190.0,
+                  "km": 1860.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1210.0,
+                  "km": 1840.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1230.0,
+                  "km": 1820.0
+                },
+                {
+                  "kind": "major",
+                  "station": 1250.0,
+                  "km": 1800.0,
+                  "text": "1+800"
+                },
+                {
+                  "kind": "tick",
+                  "station": 1270.0,
+                  "km": 1780.0
+                },
+                {
+                  "kind": "end",
+                  "station": 1289.3697683604194,
+                  "km": 1760.6302316395806,
+                  "text": "1+760.630"
+                }
+              ],
+              "uids": "$any",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0,
+                    "equations": [
+                      {
+                        "back": 2200.0,
+                        "ahead": 2500.0
+                      },
+                      {
+                        "back": 2650.0,
+                        "ahead": 2700.0,
+                        "increasing": false
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Sol kenar",
+                  "revision": 1,
+                  "offsetOf": {
+                    "alignment": "g-1",
+                    "offset": -7.5
+                  }
+                },
+                {
+                  "id": "g-3",
+                  "name": "Bağlantı",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 484000.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 484100.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 484100.0,
+                      "y": 4419100.0
+                    }
+                  ]
+                }
+              ]
+            },
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89
+            ]
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Adıyla, büyük küçük harf ayrımsız",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "alignment": "ANA aks",
+            "layerId": "km"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "alignment": "g-1",
+              "labels": [
+                {
+                  "kind": "start",
+                  "station": 0.0,
+                  "km": 2000.0,
+                  "text": "2+000.000"
+                },
+                {
+                  "kind": "tick",
+                  "station": 20.0,
+                  "km": 2020.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 40.0,
+                  "km": 2040.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 60.0,
+                  "km": 2060.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 80.0,
+                  "km": 2080.0
+                },
+                {
+                  "kind": "major",
+                  "station": 100.0,
+                  "km": 2100.0,
+                  "text": "2+100"
+                },
+                {
+                  "kind": "tick",
+                  "station": 120.0,
+                  "km": 2120.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 140.0,
+                  "km": 2140.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 160.0,
+                  "km": 2160.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 180.0,
+                  "km": 2180.0
+                },
+                {
+                  "kind": "major",
+                  "station": 200.0,
+                  "km": 2500.0,
+                  "text": "2+500"
+                },
+                {
+                  "kind": "tick",
+                  "station": 220.0,
+                  "km": 2520.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 240.0,
+                  "km": 2540.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 260.0,
+                  "km": 2560.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 280.0,
+                  "km": 2580.0
+                },
+                {
+                  "kind": "major",
+                  "station": 300.0,
+                  "km": 2600.0,
+                  "text": "2+600"
+                },
+                {
+                  "kind": "tick",
+                  "station": 320.0,
+                  "km": 2620.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 340.0,
+                  "km": 2640.0
+                },
+                {
+                  "kind": "major",
+                  "station": 350.0,
+                  "km": 2700.0,
+                  "text": "2+700"
+                },
+                {
+                  "kind": "tick",
+                  "station": 370.0,
+                  "km": 2680.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 390.0,
+                  "km": 2660.0
+                },
+                {
+                  "kind": "TS",
+                  "station": 394.05186090744627,
+                  "km": 2655.948139092554,
+                  "text": "TS 2+655.948"
+                },
+                {
+                  "kind": "tick",
+                  "station": 410.0,
+                  "km": 2640.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 430.0,
+                  "km": 2620.0
+                },
+                {
+                  "kind": "major",
+                  "station": 450.0,
+                  "km": 2600.0,
+                  "text": "2+600"
+                },
+                {
+                  "kind": "tick",
+                  "station": 470.0,
+                  "km": 2580.0
+                },
+                {
+                  "kind": "SC",
+                  "station": 474.05186090744627,
+                  "km": 2575.948139092554,
+                  "text": "SC 2+575.948"
+                },
+                {
+                  "kind": "tick",
+                  "station": 490.0,
+                  "km": 2560.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 510.0,
+                  "km": 2540.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 530.0,
+                  "km": 2520.0
+                },
+                {
+                  "kind": "major",
+                  "station": 550.0,
+                  "km": 2500.0,
+                  "text": "2+500"
+                },
+                {
+                  "kind": "tick",
+                  "station": 570.0,
+                  "km": 2480.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 590.0,
+                  "km": 2460.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 610.0,
+                  "km": 2440.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 630.0,
+                  "km": 2420.0
+                },
+                {
+                  "kind": "major",
+                  "station": 650.0,
+                  "km": 2400.0,
+                  "text": "2+400"
+                },
+                {
+                  "kind": "tick",
+                  "station": 670.0,
+                  "km": 2380.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 690.0,
+                  "km": 2360.0
+                },
+                {
+                  "kind": "CS",
+                  "station": 708.2111262664256,
+                  "km": 2341.7888737335743,
+                  "text": "CS 2+341.789"
+                },
+                {
+                  "kind": "tick",
+                  "station": 710.0,
+                  "km": 2340.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 730.0,
+                  "km": 2320.0
+                },
+                {
+                  "kind": "major",
+                  "station": 750.0,
+                  "km": 2300.0,
+                  "text": "2+300"
+                },
+                {
+                  "kind": "tick",
+                  "station": 770.0,
+                  "km": 2280.0
+                },
+                {
+                  "kind": "ST",
+                  "station": 788.2111262664256,
+                  "km": 2261.7888737335743,
+                  "text": "ST 2+261.789"
+                },
+                {
+                  "kind": "tick",
+                  "station": 790.0,
+                  "km": 2260.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 810.0,
+                  "km": 2240.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 830.0,
+                  "km": 2220.0
+                },
+                {
+                  "kind": "major",
+                  "station": 850.0,
+                  "km": 2200.0,
+                  "text": "2+200"
+                },
+                {
+                  "kind": "tick",
+                  "station": 870.0,
+                  "km": 2180.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 890.0,
+                  "km": 2160.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 910.0,
+                  "km": 2140.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 930.0,
+                  "km": 2120.0
+                },
+                {
+                  "kind": "major",
+                  "station": 950.0,
+                  "km": 2100.0,
+                  "text": "2+100"
+                },
+                {
+                  "kind": "tick",
+                  "station": 970.0,
+                  "km": 2080.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 990.0,
+                  "km": 2060.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1010.0,
+                  "km": 2040.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1030.0,
+                  "km": 2020.0
+                },
+                {
+                  "kind": "major",
+                  "station": 1050.0,
+                  "km": 2000.0,
+                  "text": "2+000"
+                },
+                {
+                  "kind": "tick",
+                  "station": 1070.0,
+                  "km": 1980.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1090.0,
+                  "km": 1960.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1110.0,
+                  "km": 1940.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1130.0,
+                  "km": 1920.0
+                },
+                {
+                  "kind": "major",
+                  "station": 1150.0,
+                  "km": 1900.0,
+                  "text": "1+900"
+                },
+                {
+                  "kind": "tick",
+                  "station": 1170.0,
+                  "km": 1880.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1190.0,
+                  "km": 1860.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1210.0,
+                  "km": 1840.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1230.0,
+                  "km": 1820.0
+                },
+                {
+                  "kind": "major",
+                  "station": 1250.0,
+                  "km": 1800.0,
+                  "text": "1+800"
+                },
+                {
+                  "kind": "tick",
+                  "station": 1270.0,
+                  "km": 1780.0
+                },
+                {
+                  "kind": "end",
+                  "station": 1289.3697683604194,
+                  "km": 1760.6302316395806,
+                  "text": "1+760.630"
+                }
+              ],
+              "uids": "$any",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0,
+                    "equations": [
+                      {
+                        "back": 2200.0,
+                        "ahead": 2500.0
+                      },
+                      {
+                        "back": 2650.0,
+                        "ahead": 2700.0,
+                        "increasing": false
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Sol kenar",
+                  "revision": 1,
+                  "offsetOf": {
+                    "alignment": "g-1",
+                    "offset": -7.5
+                  }
+                },
+                {
+                  "id": "g-3",
+                  "name": "Bağlantı",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 484000.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 484100.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 484100.0,
+                      "y": 4419100.0
+                    }
+                  ]
+                }
+              ]
+            },
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89
+            ]
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Paralel aksın km'si kaynağınınki",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "alignment": "g-2",
+            "layerId": "km"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "alignment": "g-2",
+              "labels": [
+                {
+                  "kind": "start",
+                  "station": 0.0,
+                  "km": 2000.0,
+                  "text": "2+000.000"
+                },
+                {
+                  "kind": "tick",
+                  "station": 20.0,
+                  "km": 2020.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 40.0,
+                  "km": 2040.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 60.0,
+                  "km": 2060.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 80.0,
+                  "km": 2080.0
+                },
+                {
+                  "kind": "major",
+                  "station": 100.0,
+                  "km": 2100.0,
+                  "text": "2+100"
+                },
+                {
+                  "kind": "tick",
+                  "station": 120.0,
+                  "km": 2120.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 140.0,
+                  "km": 2140.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 160.0,
+                  "km": 2160.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 180.0,
+                  "km": 2180.0
+                },
+                {
+                  "kind": "major",
+                  "station": 200.0,
+                  "km": 2500.0,
+                  "text": "2+500"
+                },
+                {
+                  "kind": "tick",
+                  "station": 220.0,
+                  "km": 2520.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 240.0,
+                  "km": 2540.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 260.0,
+                  "km": 2560.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 280.0,
+                  "km": 2580.0
+                },
+                {
+                  "kind": "major",
+                  "station": 300.0,
+                  "km": 2600.0,
+                  "text": "2+600"
+                },
+                {
+                  "kind": "tick",
+                  "station": 320.0,
+                  "km": 2620.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 340.0,
+                  "km": 2640.0
+                },
+                {
+                  "kind": "major",
+                  "station": 350.0,
+                  "km": 2700.0,
+                  "text": "2+700"
+                },
+                {
+                  "kind": "tick",
+                  "station": 370.0,
+                  "km": 2680.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 390.0,
+                  "km": 2660.0
+                },
+                {
+                  "kind": "TS",
+                  "station": 394.05186090744627,
+                  "km": 2655.948139092554,
+                  "text": "TS 2+655.948"
+                },
+                {
+                  "kind": "tick",
+                  "station": 410.0,
+                  "km": 2640.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 430.0,
+                  "km": 2620.0
+                },
+                {
+                  "kind": "major",
+                  "station": 450.0,
+                  "km": 2600.0,
+                  "text": "2+600"
+                },
+                {
+                  "kind": "tick",
+                  "station": 470.0,
+                  "km": 2580.0
+                },
+                {
+                  "kind": "SC",
+                  "station": 474.05186090744627,
+                  "km": 2575.948139092554,
+                  "text": "SC 2+575.948"
+                },
+                {
+                  "kind": "tick",
+                  "station": 490.0,
+                  "km": 2560.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 510.0,
+                  "km": 2540.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 530.0,
+                  "km": 2520.0
+                },
+                {
+                  "kind": "major",
+                  "station": 550.0,
+                  "km": 2500.0,
+                  "text": "2+500"
+                },
+                {
+                  "kind": "tick",
+                  "station": 570.0,
+                  "km": 2480.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 590.0,
+                  "km": 2460.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 610.0,
+                  "km": 2440.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 630.0,
+                  "km": 2420.0
+                },
+                {
+                  "kind": "major",
+                  "station": 650.0,
+                  "km": 2400.0,
+                  "text": "2+400"
+                },
+                {
+                  "kind": "tick",
+                  "station": 670.0,
+                  "km": 2380.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 690.0,
+                  "km": 2360.0
+                },
+                {
+                  "kind": "CS",
+                  "station": 708.2111262664256,
+                  "km": 2341.7888737335743,
+                  "text": "CS 2+341.789"
+                },
+                {
+                  "kind": "tick",
+                  "station": 710.0,
+                  "km": 2340.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 730.0,
+                  "km": 2320.0
+                },
+                {
+                  "kind": "major",
+                  "station": 750.0,
+                  "km": 2300.0,
+                  "text": "2+300"
+                },
+                {
+                  "kind": "tick",
+                  "station": 770.0,
+                  "km": 2280.0
+                },
+                {
+                  "kind": "ST",
+                  "station": 788.2111262664256,
+                  "km": 2261.7888737335743,
+                  "text": "ST 2+261.789"
+                },
+                {
+                  "kind": "tick",
+                  "station": 790.0,
+                  "km": 2260.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 810.0,
+                  "km": 2240.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 830.0,
+                  "km": 2220.0
+                },
+                {
+                  "kind": "major",
+                  "station": 850.0,
+                  "km": 2200.0,
+                  "text": "2+200"
+                },
+                {
+                  "kind": "tick",
+                  "station": 870.0,
+                  "km": 2180.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 890.0,
+                  "km": 2160.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 910.0,
+                  "km": 2140.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 930.0,
+                  "km": 2120.0
+                },
+                {
+                  "kind": "major",
+                  "station": 950.0,
+                  "km": 2100.0,
+                  "text": "2+100"
+                },
+                {
+                  "kind": "tick",
+                  "station": 970.0,
+                  "km": 2080.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 990.0,
+                  "km": 2060.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1010.0,
+                  "km": 2040.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1030.0,
+                  "km": 2020.0
+                },
+                {
+                  "kind": "major",
+                  "station": 1050.0,
+                  "km": 2000.0,
+                  "text": "2+000"
+                },
+                {
+                  "kind": "tick",
+                  "station": 1070.0,
+                  "km": 1980.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1090.0,
+                  "km": 1960.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1110.0,
+                  "km": 1940.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1130.0,
+                  "km": 1920.0
+                },
+                {
+                  "kind": "major",
+                  "station": 1150.0,
+                  "km": 1900.0,
+                  "text": "1+900"
+                },
+                {
+                  "kind": "tick",
+                  "station": 1170.0,
+                  "km": 1880.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1190.0,
+                  "km": 1860.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1210.0,
+                  "km": 1840.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1230.0,
+                  "km": 1820.0
+                },
+                {
+                  "kind": "major",
+                  "station": 1250.0,
+                  "km": 1800.0,
+                  "text": "1+800"
+                },
+                {
+                  "kind": "tick",
+                  "station": 1270.0,
+                  "km": 1780.0
+                },
+                {
+                  "kind": "end",
+                  "station": 1289.3697683604194,
+                  "km": 1760.6302316395806,
+                  "text": "1+760.630"
+                }
+              ],
+              "uids": "$any",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0,
+                    "equations": [
+                      {
+                        "back": 2200.0,
+                        "ahead": 2500.0
+                      },
+                      {
+                        "back": 2650.0,
+                        "ahead": 2700.0,
+                        "increasing": false
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Sol kenar",
+                  "revision": 1,
+                  "offsetOf": {
+                    "alignment": "g-1",
+                    "offset": -7.5
+                  }
+                },
+                {
+                  "id": "g-3",
+                  "name": "Bağlantı",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 484000.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 484100.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 484100.0,
+                      "y": 4419100.0
+                    }
+                  ]
+                }
+              ]
+            },
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89
+            ]
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Kırık noktalı aks, km 0'dan",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "alignment": "g-3",
+            "layerId": "km",
+            "every": 10.0,
+            "major": 50.0
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "alignment": "g-3",
+              "labels": [
+                {
+                  "kind": "start",
+                  "station": 0.0,
+                  "km": 0.0,
+                  "text": "0+000.000"
+                },
+                {
+                  "kind": "tick",
+                  "station": 10.0,
+                  "km": 10.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 20.0,
+                  "km": 20.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 30.0,
+                  "km": 30.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 40.0,
+                  "km": 40.0
+                },
+                {
+                  "kind": "major",
+                  "station": 50.0,
+                  "km": 50.0,
+                  "text": "0+050"
+                },
+                {
+                  "kind": "tick",
+                  "station": 60.0,
+                  "km": 60.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 70.0,
+                  "km": 70.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 80.0,
+                  "km": 80.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 90.0,
+                  "km": 90.0
+                },
+                {
+                  "kind": "major",
+                  "station": 100.0,
+                  "km": 100.0,
+                  "text": "0+100"
+                },
+                {
+                  "kind": "tick",
+                  "station": 110.0,
+                  "km": 110.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 120.0,
+                  "km": 120.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 130.0,
+                  "km": 130.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 140.0,
+                  "km": 140.0
+                },
+                {
+                  "kind": "major",
+                  "station": 150.0,
+                  "km": 150.0,
+                  "text": "0+150"
+                },
+                {
+                  "kind": "tick",
+                  "station": 160.0,
+                  "km": 160.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 170.0,
+                  "km": 170.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 180.0,
+                  "km": 180.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 190.0,
+                  "km": 190.0
+                },
+                {
+                  "kind": "end",
+                  "station": 200.0,
+                  "km": 200.0,
+                  "text": "0+200.000"
+                }
+              ],
+              "uids": "$any",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0,
+                    "equations": [
+                      {
+                        "back": 2200.0,
+                        "ahead": 2500.0
+                      },
+                      {
+                        "back": 2650.0,
+                        "ahead": 2700.0,
+                        "increasing": false
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Sol kenar",
+                  "revision": 1,
+                  "offsetOf": {
+                    "alignment": "g-1",
+                    "offset": -7.5
+                  }
+                },
+                {
+                  "id": "g-3",
+                  "name": "Bağlantı",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 484000.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 484100.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 484100.0,
+                      "y": 4419100.0
+                    }
+                  ]
+                }
+              ]
+            },
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26
+            ]
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Grubun içindeki katmana",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "alignment": "g-3",
+            "layerId": "yol-km"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "alignment": "g-3",
+              "labels": [
+                {
+                  "kind": "start",
+                  "station": 0.0,
+                  "km": 0.0,
+                  "text": "0+000.000"
+                },
+                {
+                  "kind": "tick",
+                  "station": 20.0,
+                  "km": 20.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 40.0,
+                  "km": 40.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 60.0,
+                  "km": 60.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 80.0,
+                  "km": 80.0
+                },
+                {
+                  "kind": "major",
+                  "station": 100.0,
+                  "km": 100.0,
+                  "text": "0+100"
+                },
+                {
+                  "kind": "tick",
+                  "station": 120.0,
+                  "km": 120.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 140.0,
+                  "km": 140.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 160.0,
+                  "km": 160.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 180.0,
+                  "km": 180.0
+                },
+                {
+                  "kind": "end",
+                  "station": 200.0,
+                  "km": 200.0,
+                  "text": "0+200.000"
+                }
+              ],
+              "uids": "$any",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0,
+                    "equations": [
+                      {
+                        "back": 2200.0,
+                        "ahead": 2500.0
+                      },
+                      {
+                        "back": 2650.0,
+                        "ahead": 2700.0,
+                        "increasing": false
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Sol kenar",
+                  "revision": 1,
+                  "offsetOf": {
+                    "alignment": "g-1",
+                    "offset": -7.5
+                  }
+                },
+                {
+                  "id": "g-3",
+                  "name": "Bağlantı",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 484000.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 484100.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 484100.0,
+                      "y": 4419100.0
+                    }
+                  ]
+                }
+              ]
+            },
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14
+            ]
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Gizli katmana uyarıyla",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "alignment": "g-3",
+            "layerId": "gizli"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "alignment": "g-3",
+              "labels": [
+                {
+                  "kind": "start",
+                  "station": 0.0,
+                  "km": 0.0,
+                  "text": "0+000.000"
+                },
+                {
+                  "kind": "tick",
+                  "station": 20.0,
+                  "km": 20.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 40.0,
+                  "km": 40.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 60.0,
+                  "km": 60.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 80.0,
+                  "km": 80.0
+                },
+                {
+                  "kind": "major",
+                  "station": 100.0,
+                  "km": 100.0,
+                  "text": "0+100"
+                },
+                {
+                  "kind": "tick",
+                  "station": 120.0,
+                  "km": 120.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 140.0,
+                  "km": 140.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 160.0,
+                  "km": 160.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 180.0,
+                  "km": 180.0
+                },
+                {
+                  "kind": "end",
+                  "station": 200.0,
+                  "km": 200.0,
+                  "text": "0+200.000"
+                }
+              ],
+              "uids": "$any",
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "layer_hidden",
+                "message": "“Gizli” katmanı gizli; çizilen nesne görünmeyecek.",
+                "path": "layerId"
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0,
+                    "equations": [
+                      {
+                        "back": 2200.0,
+                        "ahead": 2500.0
+                      },
+                      {
+                        "back": 2650.0,
+                        "ahead": 2700.0,
+                        "increasing": false
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Sol kenar",
+                  "revision": 1,
+                  "offsetOf": {
+                    "alignment": "g-1",
+                    "offset": -7.5
+                  }
+                },
+                {
+                  "id": "g-3",
+                  "name": "Bağlantı",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 484000.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 484100.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 484100.0,
+                      "y": 4419100.0
+                    }
+                  ]
+                }
+              ]
+            },
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14
+            ]
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Plan yazmaz",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "alignment": "g-1",
+            "layerId": "km"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "alignment": "g-1",
+              "labels": [
+                {
+                  "kind": "start",
+                  "station": 0.0,
+                  "km": 2000.0,
+                  "text": "2+000.000"
+                },
+                {
+                  "kind": "tick",
+                  "station": 20.0,
+                  "km": 2020.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 40.0,
+                  "km": 2040.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 60.0,
+                  "km": 2060.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 80.0,
+                  "km": 2080.0
+                },
+                {
+                  "kind": "major",
+                  "station": 100.0,
+                  "km": 2100.0,
+                  "text": "2+100"
+                },
+                {
+                  "kind": "tick",
+                  "station": 120.0,
+                  "km": 2120.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 140.0,
+                  "km": 2140.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 160.0,
+                  "km": 2160.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 180.0,
+                  "km": 2180.0
+                },
+                {
+                  "kind": "major",
+                  "station": 200.0,
+                  "km": 2500.0,
+                  "text": "2+500"
+                },
+                {
+                  "kind": "tick",
+                  "station": 220.0,
+                  "km": 2520.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 240.0,
+                  "km": 2540.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 260.0,
+                  "km": 2560.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 280.0,
+                  "km": 2580.0
+                },
+                {
+                  "kind": "major",
+                  "station": 300.0,
+                  "km": 2600.0,
+                  "text": "2+600"
+                },
+                {
+                  "kind": "tick",
+                  "station": 320.0,
+                  "km": 2620.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 340.0,
+                  "km": 2640.0
+                },
+                {
+                  "kind": "major",
+                  "station": 350.0,
+                  "km": 2700.0,
+                  "text": "2+700"
+                },
+                {
+                  "kind": "tick",
+                  "station": 370.0,
+                  "km": 2680.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 390.0,
+                  "km": 2660.0
+                },
+                {
+                  "kind": "TS",
+                  "station": 394.05186090744627,
+                  "km": 2655.948139092554,
+                  "text": "TS 2+655.948"
+                },
+                {
+                  "kind": "tick",
+                  "station": 410.0,
+                  "km": 2640.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 430.0,
+                  "km": 2620.0
+                },
+                {
+                  "kind": "major",
+                  "station": 450.0,
+                  "km": 2600.0,
+                  "text": "2+600"
+                },
+                {
+                  "kind": "tick",
+                  "station": 470.0,
+                  "km": 2580.0
+                },
+                {
+                  "kind": "SC",
+                  "station": 474.05186090744627,
+                  "km": 2575.948139092554,
+                  "text": "SC 2+575.948"
+                },
+                {
+                  "kind": "tick",
+                  "station": 490.0,
+                  "km": 2560.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 510.0,
+                  "km": 2540.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 530.0,
+                  "km": 2520.0
+                },
+                {
+                  "kind": "major",
+                  "station": 550.0,
+                  "km": 2500.0,
+                  "text": "2+500"
+                },
+                {
+                  "kind": "tick",
+                  "station": 570.0,
+                  "km": 2480.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 590.0,
+                  "km": 2460.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 610.0,
+                  "km": 2440.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 630.0,
+                  "km": 2420.0
+                },
+                {
+                  "kind": "major",
+                  "station": 650.0,
+                  "km": 2400.0,
+                  "text": "2+400"
+                },
+                {
+                  "kind": "tick",
+                  "station": 670.0,
+                  "km": 2380.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 690.0,
+                  "km": 2360.0
+                },
+                {
+                  "kind": "CS",
+                  "station": 708.2111262664256,
+                  "km": 2341.7888737335743,
+                  "text": "CS 2+341.789"
+                },
+                {
+                  "kind": "tick",
+                  "station": 710.0,
+                  "km": 2340.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 730.0,
+                  "km": 2320.0
+                },
+                {
+                  "kind": "major",
+                  "station": 750.0,
+                  "km": 2300.0,
+                  "text": "2+300"
+                },
+                {
+                  "kind": "tick",
+                  "station": 770.0,
+                  "km": 2280.0
+                },
+                {
+                  "kind": "ST",
+                  "station": 788.2111262664256,
+                  "km": 2261.7888737335743,
+                  "text": "ST 2+261.789"
+                },
+                {
+                  "kind": "tick",
+                  "station": 790.0,
+                  "km": 2260.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 810.0,
+                  "km": 2240.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 830.0,
+                  "km": 2220.0
+                },
+                {
+                  "kind": "major",
+                  "station": 850.0,
+                  "km": 2200.0,
+                  "text": "2+200"
+                },
+                {
+                  "kind": "tick",
+                  "station": 870.0,
+                  "km": 2180.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 890.0,
+                  "km": 2160.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 910.0,
+                  "km": 2140.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 930.0,
+                  "km": 2120.0
+                },
+                {
+                  "kind": "major",
+                  "station": 950.0,
+                  "km": 2100.0,
+                  "text": "2+100"
+                },
+                {
+                  "kind": "tick",
+                  "station": 970.0,
+                  "km": 2080.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 990.0,
+                  "km": 2060.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1010.0,
+                  "km": 2040.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1030.0,
+                  "km": 2020.0
+                },
+                {
+                  "kind": "major",
+                  "station": 1050.0,
+                  "km": 2000.0,
+                  "text": "2+000"
+                },
+                {
+                  "kind": "tick",
+                  "station": 1070.0,
+                  "km": 1980.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1090.0,
+                  "km": 1960.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1110.0,
+                  "km": 1940.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1130.0,
+                  "km": 1920.0
+                },
+                {
+                  "kind": "major",
+                  "station": 1150.0,
+                  "km": 1900.0,
+                  "text": "1+900"
+                },
+                {
+                  "kind": "tick",
+                  "station": 1170.0,
+                  "km": 1880.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1190.0,
+                  "km": 1860.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1210.0,
+                  "km": 1840.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 1230.0,
+                  "km": 1820.0
+                },
+                {
+                  "kind": "major",
+                  "station": 1250.0,
+                  "km": 1800.0,
+                  "text": "1+800"
+                },
+                {
+                  "kind": "tick",
+                  "station": 1270.0,
+                  "km": 1780.0
+                },
+                {
+                  "kind": "end",
+                  "station": 1289.3697683604194,
+                  "km": 1760.6302316395806,
+                  "text": "1+760.630"
+                }
+              ],
+              "uids": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0,
+                    "equations": [
+                      {
+                        "back": 2200.0,
+                        "ahead": 2500.0
+                      },
+                      {
+                        "back": 2650.0,
+                        "ahead": 2700.0,
+                        "increasing": false
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Sol kenar",
+                  "revision": 1,
+                  "offsetOf": {
+                    "alignment": "g-1",
+                    "offset": -7.5
+                  }
+                },
+                {
+                  "id": "g-3",
+                  "name": "Bağlantı",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 484000.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 484100.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 484100.0,
+                      "y": 4419100.0
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Doğrulama yazmaz",
+      "steps": [
+        {
+          "op": "validate",
+          "input": {
+            "alignment": "g-1",
+            "layerId": "km"
+          },
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0,
+                    "equations": [
+                      {
+                        "back": 2200.0,
+                        "ahead": 2500.0
+                      },
+                      {
+                        "back": 2650.0,
+                        "ahead": 2700.0,
+                        "increasing": false
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Sol kenar",
+                  "revision": 1,
+                  "offsetOf": {
+                    "alignment": "g-1",
+                    "offset": -7.5
+                  }
+                },
+                {
+                  "id": "g-3",
+                  "name": "Bağlantı",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 484000.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 484100.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 484100.0,
+                      "y": 4419100.0
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Geri alınır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "alignment": "g-3",
+            "layerId": "km"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "alignment": "g-3",
+              "labels": [
+                {
+                  "kind": "start",
+                  "station": 0.0,
+                  "km": 0.0,
+                  "text": "0+000.000"
+                },
+                {
+                  "kind": "tick",
+                  "station": 20.0,
+                  "km": 20.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 40.0,
+                  "km": 40.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 60.0,
+                  "km": 60.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 80.0,
+                  "km": 80.0
+                },
+                {
+                  "kind": "major",
+                  "station": 100.0,
+                  "km": 100.0,
+                  "text": "0+100"
+                },
+                {
+                  "kind": "tick",
+                  "station": 120.0,
+                  "km": 120.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 140.0,
+                  "km": 140.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 160.0,
+                  "km": 160.0
+                },
+                {
+                  "kind": "tick",
+                  "station": 180.0,
+                  "km": 180.0
+                },
+                {
+                  "kind": "end",
+                  "station": 200.0,
+                  "km": 200.0,
+                  "text": "0+200.000"
+                }
+              ],
+              "uids": "$any",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0,
+                    "equations": [
+                      {
+                        "back": 2200.0,
+                        "ahead": 2500.0
+                      },
+                      {
+                        "back": 2650.0,
+                        "ahead": 2700.0,
+                        "increasing": false
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Sol kenar",
+                  "revision": 1,
+                  "offsetOf": {
+                    "alignment": "g-1",
+                    "offset": -7.5
+                  }
+                },
+                {
+                  "id": "g-3",
+                  "name": "Bağlantı",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 484000.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 484100.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 484100.0,
+                      "y": 4419100.0
+                    }
+                  ]
+                }
+              ]
+            },
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14
+            ]
+          },
+          "within": 1e-06
+        },
+        {
+          "op": "undo",
+          "returns": "Aks km yazısı",
+          "expect": {
+            "ids": [],
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yol projesi değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "alignment": "g-1",
+            "layerId": "km"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_road_project",
+              "message": "Aks yalnız yol projesinde (KentOS Yol) olur; bu çizim yol projesi değil."
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "road": null
+          },
+          "within": 1e-06
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Yol aksları",
+        "settings": {
+          "srid": 5254,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 1000.0,
+          "workspace": "cad",
+          "cadWork": "map",
+          "drawingFont": "barlow"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "km",
+            "name": "Km",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "grup",
+            "name": "Yol",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "yol-km",
+                "name": "Yol km",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [],
+        "uids": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Olmayan aks",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "alignment": "g-9",
+            "layerId": "km"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "unknown_alignment",
+              "message": "“g-9” kimlikli ya da adlı aks projede yok.",
+              "path": "alignment"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0,
+                    "equations": [
+                      {
+                        "back": 2200.0,
+                        "ahead": 2500.0
+                      },
+                      {
+                        "back": 2650.0,
+                        "ahead": 2700.0,
+                        "increasing": false
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Sol kenar",
+                  "revision": 1,
+                  "offsetOf": {
+                    "alignment": "g-1",
+                    "offset": -7.5
+                  }
+                },
+                {
+                  "id": "g-3",
+                  "name": "Bağlantı",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 484000.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 484100.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 484100.0,
+                      "y": 4419100.0
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Aralık sıfır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "alignment": "g-1",
+            "layerId": "km",
+            "every": 0.0
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_label",
+              "message": "İşaret aralığı (every) 0'dan büyük olmalı.",
+              "path": "every"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0,
+                    "equations": [
+                      {
+                        "back": 2200.0,
+                        "ahead": 2500.0
+                      },
+                      {
+                        "back": 2650.0,
+                        "ahead": 2700.0,
+                        "increasing": false
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Sol kenar",
+                  "revision": 1,
+                  "offsetOf": {
+                    "alignment": "g-1",
+                    "offset": -7.5
+                  }
+                },
+                {
+                  "id": "g-3",
+                  "name": "Bağlantı",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 484000.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 484100.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 484100.0,
+                      "y": 4419100.0
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Eksi aralık",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "alignment": "g-1",
+            "layerId": "km",
+            "every": -5.0
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_label",
+              "message": "İşaret aralığı (every) 0'dan büyük olmalı.",
+              "path": "every"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0,
+                    "equations": [
+                      {
+                        "back": 2200.0,
+                        "ahead": 2500.0
+                      },
+                      {
+                        "back": 2650.0,
+                        "ahead": 2700.0,
+                        "increasing": false
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Sol kenar",
+                  "revision": 1,
+                  "offsetOf": {
+                    "alignment": "g-1",
+                    "offset": -7.5
+                  }
+                },
+                {
+                  "id": "g-3",
+                  "name": "Bağlantı",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 484000.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 484100.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 484100.0,
+                      "y": 4419100.0
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Km aralığı işaretin katı değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "alignment": "g-1",
+            "layerId": "km",
+            "major": 30.0
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_label",
+              "message": "Km yazılan aralık (major) işaret aralığının tam katı olmalı.",
+              "path": "major"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0,
+                    "equations": [
+                      {
+                        "back": 2200.0,
+                        "ahead": 2500.0
+                      },
+                      {
+                        "back": 2650.0,
+                        "ahead": 2700.0,
+                        "increasing": false
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Sol kenar",
+                  "revision": 1,
+                  "offsetOf": {
+                    "alignment": "g-1",
+                    "offset": -7.5
+                  }
+                },
+                {
+                  "id": "g-3",
+                  "name": "Bağlantı",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 484000.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 484100.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 484100.0,
+                      "y": 4419100.0
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Km aralığı işaretten küçük",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "alignment": "g-1",
+            "layerId": "km",
+            "major": 10.0
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_label",
+              "message": "Km yazılan aralık (major) işaret aralığının tam katı olmalı.",
+              "path": "major"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0,
+                    "equations": [
+                      {
+                        "back": 2200.0,
+                        "ahead": 2500.0
+                      },
+                      {
+                        "back": 2650.0,
+                        "ahead": 2700.0,
+                        "increasing": false
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Sol kenar",
+                  "revision": 1,
+                  "offsetOf": {
+                    "alignment": "g-1",
+                    "offset": -7.5
+                  }
+                },
+                {
+                  "id": "g-3",
+                  "name": "Bağlantı",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 484000.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 484100.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 484100.0,
+                      "y": 4419100.0
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Yazı yüksekliği sıfır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "alignment": "g-1",
+            "layerId": "km",
+            "height": 0.0
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_label",
+              "message": "Yazı yüksekliği (height) 0'dan büyük olmalı.",
+              "path": "height"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0,
+                    "equations": [
+                      {
+                        "back": 2200.0,
+                        "ahead": 2500.0
+                      },
+                      {
+                        "back": 2650.0,
+                        "ahead": 2700.0,
+                        "increasing": false
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Sol kenar",
+                  "revision": 1,
+                  "offsetOf": {
+                    "alignment": "g-1",
+                    "offset": -7.5
+                  }
+                },
+                {
+                  "id": "g-3",
+                  "name": "Bağlantı",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 484000.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 484100.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 484100.0,
+                      "y": 4419100.0
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Çok sık işaret",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "alignment": "g-1",
+            "layerId": "km",
+            "every": 0.001,
+            "major": 0.001
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_label",
+              "message": "Bu aralıkla 100000'den çok işaret çıkar; every'yi büyütün.",
+              "path": "every"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0,
+                    "equations": [
+                      {
+                        "back": 2200.0,
+                        "ahead": 2500.0
+                      },
+                      {
+                        "back": 2650.0,
+                        "ahead": 2700.0,
+                        "increasing": false
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Sol kenar",
+                  "revision": 1,
+                  "offsetOf": {
+                    "alignment": "g-1",
+                    "offset": -7.5
+                  }
+                },
+                {
+                  "id": "g-3",
+                  "name": "Bağlantı",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 484000.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 484100.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 484100.0,
+                      "y": 4419100.0
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Olmayan katman",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "alignment": "g-1",
+            "layerId": "yok"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_not_found",
+              "message": "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0,
+                    "equations": [
+                      {
+                        "back": 2200.0,
+                        "ahead": 2500.0
+                      },
+                      {
+                        "back": 2650.0,
+                        "ahead": 2700.0,
+                        "increasing": false
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Sol kenar",
+                  "revision": 1,
+                  "offsetOf": {
+                    "alignment": "g-1",
+                    "offset": -7.5
+                  }
+                },
+                {
+                  "id": "g-3",
+                  "name": "Bağlantı",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 484000.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 484100.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 484100.0,
+                      "y": 4419100.0
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Katman grubu",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "alignment": "g-1",
+            "layerId": "grup"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_layer",
+              "message": "“Yol” bir katman grubu; nesne yalnız katmana eklenir. Grubun içinden bir katman seçin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0,
+                    "equations": [
+                      {
+                        "back": 2200.0,
+                        "ahead": 2500.0
+                      },
+                      {
+                        "back": 2650.0,
+                        "ahead": 2700.0,
+                        "increasing": false
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Sol kenar",
+                  "revision": 1,
+                  "offsetOf": {
+                    "alignment": "g-1",
+                    "offset": -7.5
+                  }
+                },
+                {
+                  "id": "g-3",
+                  "name": "Bağlantı",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 484000.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 484100.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 484100.0,
+                      "y": 4419100.0
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Kilitli katman",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "alignment": "g-1",
+            "layerId": "kilitli"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_locked",
+              "message": "“Kilitli” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0,
+                    "equations": [
+                      {
+                        "back": 2200.0,
+                        "ahead": 2500.0
+                      },
+                      {
+                        "back": 2650.0,
+                        "ahead": 2700.0,
+                        "increasing": false
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Sol kenar",
+                  "revision": 1,
+                  "offsetOf": {
+                    "alignment": "g-1",
+                    "offset": -7.5
+                  }
+                },
+                {
+                  "id": "g-3",
+                  "name": "Bağlantı",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 484000.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 484100.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 484100.0,
+                      "y": 4419100.0
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Geçersiz beklenen sürüm",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "alignment": "g-1",
+            "layerId": "km",
+            "expectedRevision": "on"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "Beklenen sürüm “on” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0,
+                    "equations": [
+                      {
+                        "back": 2200.0,
+                        "ahead": 2500.0
+                      },
+                      {
+                        "back": 2650.0,
+                        "ahead": 2700.0,
+                        "increasing": false
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Sol kenar",
+                  "revision": 1,
+                  "offsetOf": {
+                    "alignment": "g-1",
+                    "offset": -7.5
+                  }
+                },
+                {
+                  "id": "g-3",
+                  "name": "Bağlantı",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 484000.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 484100.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 484100.0,
+                      "y": 4419100.0
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Eski sürüme göre hazırlanmış",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "alignment": "g-1",
+            "layerId": "km",
+            "expectedRevision": "41"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0,
+                    "equations": [
+                      {
+                        "back": 2200.0,
+                        "ahead": 2500.0
+                      },
+                      {
+                        "back": 2650.0,
+                        "ahead": 2700.0,
+                        "increasing": false
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Sol kenar",
+                  "revision": 1,
+                  "offsetOf": {
+                    "alignment": "g-1",
+                    "offset": -7.5
+                  }
+                },
+                {
+                  "id": "g-3",
+                  "name": "Bağlantı",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 484000.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 484100.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 484100.0,
+                      "y": 4419100.0
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    }
+  ]
+}
