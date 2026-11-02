@@ -309,12 +309,8 @@ pub fn write(cx: &mut ExecutionContext<'_>, input: &BlocksEdit) -> CommandResult
     let changed: Vec<BlockId> = p.replaced.iter().map(|b| b.id).collect();
     if !p.added.is_empty() || !p.replaced.is_empty() {
         let written = cx.doc.transact(label, |doc| {
-            for b in p.replaced {
-                doc.update_block(b).map_err(|r| r.to_string())?;
-            }
-            for b in p.added {
-                doc.add_block(b).map_err(|r| r.to_string())?;
-            }
+            let blocks: Vec<_> = p.replaced.into_iter().chain(p.added).collect();
+            doc.merge_blocks(&blocks).map_err(|r| r.to_string())?;
             Ok::<(), String>(())
         });
         if let Err(message) = written {

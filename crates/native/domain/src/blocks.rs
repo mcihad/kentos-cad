@@ -10,6 +10,7 @@
 //! document does not check that an object added to it names a known block;
 //! the product commands that write inserts do (docs/adr/0144 §1).
 
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use kentos_contracts::blocks::{self as rules, BlockFault};
@@ -81,6 +82,53 @@ impl Document {
         };
         self.record(vec![op], labels::BLOCK_CHANGE);
         Ok(true)
+    }
+
+    /// Adds and replaces a related set of definitions as one edit. Only the
+    /// complete final graph is checked: an existing parent may acquire a new
+    /// child, or both sides of a nested parameter rename may change together.
+    /// Existing definition order is kept; new definitions follow input order.
+    /// A rejected set writes nothing and does not change undo or redo history.
+    pub fn merge_blocks(&mut self, blocks: &[BlockDefinition]) -> Result<(), Refusal> {
+        let incoming = rules::definitions(blocks).map_err(|fault| {
+            Refusal(fault.message(|i| blocks.get(i).map_or("", |b| b.name.as_str())))
+        })?;
+        let existing: HashMap<_, _> = self
+            .blocks
+            .iter()
+            .enumerate()
+            .map(|(i, b)| (b.id, i))
+            .collect();
+        let mut next: Vec<&BlockDefinition> = self
+            .blocks
+            .iter()
+            .map(|b| incoming.get(&b.id).map_or(&**b, |i| &blocks[*i]))
+            .collect();
+        next.extend(blocks.iter().filter(|b| !existing.contains_key(&b.id)));
+        refused(&next)?;
+
+        let mut ops = Vec::new();
+        let mut added = 0;
+        for block in blocks {
+            match existing.get(&block.id).map(|i| &self.blocks[*i]) {
+                Some(before) if **before == *block => {}
+                Some(before) => ops.push(Op::BlockUpdate {
+                    before: before.clone(),
+                    after: Arc::new(block.clone()),
+                }),
+                None => {
+                    ops.push(Op::BlockAdd {
+                        index: self.blocks.len() + added,
+                        block: Arc::new(block.clone()),
+                    });
+                    added += 1;
+                }
+            }
+        }
+        if !ops.is_empty() {
+            self.record(ops, labels::BLOCK_CHANGE);
+        }
+        Ok(())
     }
 
     /// Removes a definition no insert uses: one undo step “Blok sil”; undo

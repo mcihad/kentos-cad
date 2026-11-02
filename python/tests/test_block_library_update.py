@@ -91,3 +91,130 @@ class BlockLibraryUpdate(unittest.TestCase):
         self.assertEqual(cad.Document.from_bytes(saved).to_bytes(), saved)
         doc.undo()
         self.assertEqual(doc.to_bytes(), before)
+
+
+class BlockLibraryBatchUpdate(unittest.TestCase):
+    def nested_library(self):
+        doc, library = drawing()
+        child = copy.deepcopy(library["blocks"][0])
+        child["id"] = "22222222-3333-4444-8555-666666666666"
+        child["name"] = "Yeni çocuk"
+        parent = library["blocks"][0]
+        parent["entities"].append(dict(kind="insert", id=5, layerId="", attrs={},
+                                       block=child["id"], p=dict(x=1.5, y=0),
+                                       scale=1, rotation=0, parameters={"Genişlik": 1.0}))
+        library["blocks"].append(child)
+        return doc, library
+
+    def apply_and_check(self, doc, library):
+        before = doc.to_bytes()
+        entities = [r.entity.to_json() for r in doc.entities()]
+        arguments = dict(operation="import", library=json.dumps(library), replace=True)
+        validated = cad.blocks.edit.answer(doc, **arguments, op="validate")
+        self.assertEqual(validated.status, "completed", str(validated.error))
+        plan = cad.blocks.edit.answer(doc, **arguments, op="plan")
+        self.assertEqual(plan.status, "completed", str(plan.error))
+        self.assertEqual(doc.to_bytes(), before)
+        answer = cad.blocks.edit.answer(doc, **arguments, expected=cad.Expected(plan=plan.plan_id))
+        self.assertEqual(answer.status, "completed", str(answer.error))
+        self.assertEqual([r.entity.to_json() for r in doc.entities()], entities)
+        saved = doc.to_bytes()
+        self.assertNotEqual(saved, before)
+        self.assertEqual(cad.Document.from_bytes(saved).to_bytes(), saved)
+        doc.undo()
+        self.assertEqual(doc.to_bytes(), before)
+        doc.redo()
+        self.assertEqual(doc.to_bytes(), saved)
+
+    def test_new_child_and_existing_parent_update_together_in_either_library_order(self):
+        for reverse in (False, True):
+            with self.subTest(reverse=reverse):
+                doc, library = self.nested_library()
+                if reverse:
+                    library["blocks"].reverse()
+                self.apply_and_check(doc, library)
+                blocks = {b.name: b for b in doc.blocks()}
+                parent = blocks["Kapı (dinamik)"]
+                self.assertEqual(parent.entities[-1].block, blocks["Yeni çocuk"].id)
+
+    def test_nested_parameter_rename_updates_parent_and_child_as_one_valid_set(self):
+        doc, library = self.nested_library()
+        # Establish the starting graph with its child first; old sequential import
+        # cannot add the child and replace the existing parent in one command.
+        cad.blocks.edit(doc, operation="import", library=json.dumps(dict(
+            format=library["format"], version=library["version"], blocks=[library["blocks"][1]])))
+        cad.blocks.edit(doc, operation="import", library=json.dumps(library), replace=True)
+        library = json.loads(cad.blocks.edit(doc, operation="export").library)
+        parent = next(b for b in library["blocks"] if b["name"] == "Kapı (dinamik)")
+        child = next(b for b in library["blocks"] if b["name"] == "Yeni çocuk")
+        child["dynamic"] = json.loads(json.dumps(child["dynamic"], ensure_ascii=False).replace(
+            "Genişlik", "Açıklık"))
+        nested = parent["entities"][-1]
+        nested["parameters"]["Açıklık"] = nested["parameters"].pop("Genişlik")
+        self.apply_and_check(doc, library)
+        exported = json.loads(cad.blocks.edit(doc, operation="export").library)
+        child = next(b for b in exported["blocks"] if b["name"] == "Yeni çocuk")
+        self.assertIn("Açıklık", [p["name"] for p in child["dynamic"]["parameters"]])
+        parent = next(b for b in exported["blocks"] if b["name"] == "Kapı (dinamik)")
+        self.assertEqual(parent["entities"][-1]["parameters"], {"Açıklık": 1.0})
+
+    def test_file_import_brings_a_new_child_and_updates_its_existing_parent_together(self):
+        source, library = self.nested_library()
+        cad.blocks.edit(source, operation="import", library=json.dumps(dict(
+            format=library["format"], version=library["version"], blocks=[library["blocks"][1]])))
+        cad.blocks.edit(source, operation="import", library=json.dumps(library), replace=True)
+        doc, _ = drawing()
+        before = doc.to_bytes()
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "nested.kcad"
+            source.save(path)
+            arguments = dict(path=str(path), mode="blocks", replace=True)
+            plan = cad.file.import_.block.answer(doc, **arguments, op="plan")
+            self.assertEqual(plan.status, "completed", str(plan.error))
+            self.assertEqual(doc.to_bytes(), before)
+            cad.file.import_.block(doc, **arguments, expected=cad.Expected(plan=plan.plan_id))
+            after = doc.to_bytes()
+            self.assertEqual(len(doc.blocks()), 2)
+            self.assertEqual(cad.Document.from_bytes(after).to_bytes(), after)
+            doc.undo()
+            self.assertEqual(doc.to_bytes(), before)
+            doc.redo()
+            self.assertEqual(doc.to_bytes(), after)
+
+    def test_file_import_coordinates_a_nested_parameter_rename(self):
+        source, library = self.nested_library()
+        child_file = dict(format=library["format"], version=library["version"], blocks=[library["blocks"][1]])
+        cad.blocks.edit(source, operation="import", library=json.dumps(child_file))
+        cad.blocks.edit(source, operation="import", library=json.dumps(library), replace=True)
+        doc = cad.Document.from_bytes(source.to_bytes())
+        before = doc.to_bytes()
+        # Prepare a valid source independently of the new batch writer: detach
+        # its nested reference, rename the child, then restore the adapted parent.
+        parent = library["blocks"][0]
+        nested = parent["entities"].pop()
+        cad.blocks.edit(source, operation="import", library=json.dumps(library), replace=True)
+        library["blocks"][1]["dynamic"] = json.loads(json.dumps(
+            library["blocks"][1]["dynamic"], ensure_ascii=False).replace("Genişlik", "Açıklık"))
+        cad.blocks.edit(source, operation="import", library=json.dumps(library), replace=True)
+        nested["parameters"]["Açıklık"] = nested["parameters"].pop("Genişlik")
+        parent["entities"].append(nested)
+        cad.blocks.edit(source, operation="import", library=json.dumps(library), replace=True)
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "renamed.kcad"
+            source.save(path)
+            arguments = dict(path=str(path), mode="blocks", replace=True)
+            plan = cad.file.import_.block.answer(doc, **arguments, op="plan")
+            self.assertEqual(plan.status, "completed", str(plan.error))
+            self.assertEqual(doc.to_bytes(), before)
+            cad.file.import_.block(doc, **arguments, expected=cad.Expected(plan=plan.plan_id))
+            after = doc.to_bytes()
+            exported = json.loads(cad.blocks.edit(doc, operation="export").library)
+            child = next(b for b in exported["blocks"] if b["name"] == "Yeni çocuk")
+            self.assertIn("Açıklık", [p["name"] for p in child["dynamic"]["parameters"]])
+            parent = next(b for b in exported["blocks"] if b["name"] == "Kapı (dinamik)")
+            self.assertEqual(parent["entities"][-1]["parameters"], {"Açıklık": 1.0})
+            self.assertEqual(cad.Document.from_bytes(after).to_bytes(), after)
+            doc.undo()
+            self.assertEqual(doc.to_bytes(), before)
+            doc.redo()
+            self.assertEqual(doc.to_bytes(), after)

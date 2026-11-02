@@ -51,6 +51,11 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ADR 0853: bağlı blok kitaplığı güncellemeleri birleşik son grafik üzerinden
+  atomik uygulanmalı; yeni çocuk/var olan ana tanım ve eşzamanlı iç içe parametre
+  adı değişimi sıra yüzünden reddedilmemeli. Web'in alışveriş yazıcısı ayrıca
+  uyarlanıp salt okunur plan, kaynak koruması ve tek Undo/Redo ile sınanacak.
+
 - ADR 0852: kitaplık/dosyadan yeniden tanımlama mevcut sahne parametreleri ve
   özel öznitelik konumlarını birleşik son tanımlarla doğrulamalı. Native'in
   atomik reddi ve tek Undo'su web komut/etkileşim katmanında ayrıca sınanacak;

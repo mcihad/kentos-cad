@@ -646,6 +646,19 @@ uyumlu GUI kaydı bağımsız Python ile bayt düzeyinde aynı.
 [API rehberi](../docs/cad/block-library-update-safety.md). Değişen formül ve
 birim semantiği ayrıca ele alınacak; bu koruma aile/yayın yükseltmesi değildir.
 
+**İlerleme — 2026-11-02, bağlı kitaplık tanımlarını birlikte uygulama:**
+Var olan ana tanım yeni çocukla veya çocuktaki parametre adı değişimiyle
+aynı işlemde güncellenebilir. Ara tanımları tek tek doğrulayan sıra hatası
+kapatıldı; birleşik son grafik denetlenip tek Undo/Redo olarak yazılır.
+134 domain, 317 application, 56 MCP, 1603 masaüstü ve 440 Python testi,
+Clippy ve derleme geçti. Eski GUI'de hem konsol planı hem sağ tuş dosyadan
+yeniden tanımlama hatası üretildi; yeni GUI aynı dosya/menüyle geçti.
+Her iki GUI yolunun kayıtları Python ile, gerçek tek Undo kayıtları
+başlangıçla tam aynı. Araya farklı işlem giren tekrar kabul dışı bırakılıp
+temiz tekrar yapıldı. [ADR 0853](../docs/adr/0853-related-block-library-definitions-apply-together.md).
+Geçmiş kartının yalnız tanım değişince “değişiklik yok” özeti vermesi
+GUI'de tespit edildi ve ayrıca düzeltilecek; kayıt doğruluğu bununla karıştırılmadı.
+
 Tür/sürüm ve seçilmiş yükseltme, kalıcı tip–örnek parametre kapsamı ve
 birleşik blok kabulü açıktır. Kullanıcı tanımlı grup metaverisi bu otomatik
 gruplarla tamamlanmış sayılmaz. Web öznitelik penceresinin native eşitleme kapsamıyla
