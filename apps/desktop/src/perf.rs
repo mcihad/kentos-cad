@@ -122,6 +122,7 @@ fn drawing(n: usize) -> DocumentSnapshotV2 {
             profile_files: Vec::new(),
             heights: None,
             coordinate_epoch: None,
+            road: None,
             named_ucs: Vec::new(),
             named_views: Vec::new(),
             view_templates: Vec::new(),

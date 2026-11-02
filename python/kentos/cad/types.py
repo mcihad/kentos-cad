@@ -53007,6 +53007,8 @@ class ProjectSettings(_Model):
             mapping of the same name; each its JSON document as text. The `profiller` folder beside the drawing's file holds
             others; of a name both have, the drawing's is the one read.
         relations: The project's relations (docs/adr/0405 §1).
+        road: A road project's own settings (plan/road.md Y2.2): its terrain surfaces' definitions; absent: none. Only a CAD
+            project drawn for a road has them (`.kcad` schema 158).
         second_custom_crs: The second system when it is a definition (instead of `second_srid`).
         second_srid: The project's second coordinate system (docs/adr/0167 §1): its
             coordinates are shown beside the project's own; absent: none. Never
@@ -53066,6 +53068,7 @@ class ProjectSettings(_Model):
     networks: list[NetworkDef] | Unset = UNSET
     profile_files: list[ProjectProfileFile] | Unset = UNSET
     relations: list[ProjectRelation] | Unset = UNSET
+    road: RoadSettings | None | Unset = UNSET
     second_custom_crs: CrsDefinition | None | Unset = UNSET
     second_srid: int | None | Unset = UNSET
     source_bases: list[SourceBase] | Unset = UNSET
@@ -53148,6 +53151,8 @@ class ProjectSettings(_Model):
             out["profileFiles"] = [e0.to_json() for e0 in self.profile_files]
         if self.relations is not UNSET:
             out["relations"] = [e0.to_json() for e0 in self.relations]
+        if self.road is not UNSET:
+            out["road"] = None if self.road is None else self.road.to_json()
         if self.second_custom_crs is not UNSET:
             out["secondCustomCrs"] = None if self.second_custom_crs is None else self.second_custom_crs.to_json()
         if self.second_srid is not UNSET:
@@ -53215,6 +53220,7 @@ class ProjectSettings(_Model):
             networks=[NetworkDef.from_json(e0) for e0 in data["networks"]] if "networks" in data else UNSET,
             profile_files=[ProjectProfileFile.from_json(e0) for e0 in data["profileFiles"]] if "profileFiles" in data else UNSET,
             relations=[ProjectRelation.from_json(e0) for e0 in data["relations"]] if "relations" in data else UNSET,
+            road=UNSET if "road" not in data else None if data["road"] is None else RoadSettings.from_json(data["road"]),
             second_custom_crs=UNSET if "secondCustomCrs" not in data else None if data["secondCustomCrs"] is None else CrsDefinition.from_json(data["secondCustomCrs"]),
             second_srid=data.get("secondSrid", UNSET),
             source_bases=[SourceBase.from_json(e0) for e0 in data["sourceBases"]] if "sourceBases" in data else UNSET,
@@ -57112,6 +57118,27 @@ class RingGeometry(_Model):
             pts=[Vec2.from_json(e0) for e0 in data["pts"]],
             bulges=UNSET if "bulges" not in data else None if data["bulges"] is None else [float(e0) for e0 in data["bulges"]],
             zs=UNSET if "zs" not in data else None if data["zs"] is None else [None if e0 is None else float(e0) for e0 in data["zs"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RoadSettings(_Model):
+    """A road project's settings; absent while it has none.
+    Attributes:
+        surfaces: The terrain surfaces, in the order the project tree shows them.
+    """
+    surfaces: list[TerrainSurfaceDef] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.surfaces is not UNSET:
+            out["surfaces"] = [e0.to_json() for e0 in self.surfaces]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoadSettings:
+        return cls(
+            surfaces=[TerrainSurfaceDef.from_json(e0) for e0 in data["surfaces"]] if "surfaces" in data else UNSET,
         )
 
 
@@ -65257,6 +65284,33 @@ class SubtypeField(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SurfaceSources(_Model):
+    """Where a surface's points or breaklines come from: every object of the layers (and of the groups' layers), and the
+    objects named by their persistent ids.
+    Attributes:
+        layers: Layer or group ids.
+        uids: Objects' persistent ids.
+    """
+    layers: list[str] | Unset = UNSET
+    uids: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.layers is not UNSET:
+            out["layers"] = list(self.layers)
+        if self.uids is not UNSET:
+            out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SurfaceSources:
+        return cls(
+            layers=list(data["layers"]) if "layers" in data else UNSET,
+            uids=list(data["uids"]) if "uids" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SurveyAdjust(_Model):
     """`cad.survey.adjust`'s input.
 
@@ -67003,6 +67057,65 @@ class TerminalDevice(_Model):
             paths=[list(e0) for e0 in data["paths"]],
             by=data.get("by", UNSET),
             configs=[TerminalConfig.from_json(e0) for e0 in data["configs"]] if "configs" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TerrainSurfaceDef(_Model):
+    """A terrain surface's definition.
+    Attributes:
+        id: Its id, unique in the project; what a profile or a section names.
+        name: Its name (“Mevcut zemin”), unique in the project.
+        boundary: The outer boundary: a closed polyline's or an area's id; its vertices take the surface's heights.
+        breaklines: The breaklines: each line's and polyline's path, every vertex with an elevation.
+        built: The digest (64 lower-case hex digits) of the sources it was last made and accepted from; absent: never.
+        max_edge: The edge method: an outer triangle whose outer edge is longer than this is left out, m; absent: none. Unit: m.
+        points: The points: each point object's places with an elevation.
+        tolerance: Two records at one place are one vertex when their heights are this close, m; absent: 0.001. Unit: m.
+        voids: The voids: closed polylines' or areas' ids.
+    """
+    id: str
+    name: str
+    boundary: str | None | Unset = UNSET
+    breaklines: SurfaceSources | Unset = UNSET
+    built: str | None | Unset = UNSET
+    max_edge: float | None | Unset = UNSET
+    points: SurfaceSources | Unset = UNSET
+    tolerance: float | None | Unset = UNSET
+    voids: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        if self.boundary is not UNSET:
+            out["boundary"] = self.boundary
+        if self.breaklines is not UNSET:
+            out["breaklines"] = self.breaklines.to_json()
+        if self.built is not UNSET:
+            out["built"] = self.built
+        if self.max_edge is not UNSET:
+            out["maxEdge"] = None if self.max_edge is None else float(self.max_edge)
+        if self.points is not UNSET:
+            out["points"] = self.points.to_json()
+        if self.tolerance is not UNSET:
+            out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
+        if self.voids is not UNSET:
+            out["voids"] = list(self.voids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainSurfaceDef:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            boundary=data.get("boundary", UNSET),
+            breaklines=SurfaceSources.from_json(data["breaklines"]) if "breaklines" in data else UNSET,
+            built=data.get("built", UNSET),
+            max_edge=UNSET if "maxEdge" not in data else None if data["maxEdge"] is None else float(data["maxEdge"]),
+            points=SurfaceSources.from_json(data["points"]) if "points" in data else UNSET,
+            tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
+            voids=list(data["voids"]) if "voids" in data else UNSET,
         )
 
 
@@ -92457,6 +92570,7 @@ __all__ = [
     "RingGeometry",
     "RoadKind",
     "RoadKindName",
+    "RoadSettings",
     "RoadWork",
     "RoadsEdit",
     "RoadsEdited",
@@ -92814,6 +92928,7 @@ __all__ = [
     "SubtractSlabsOperation",
     "Subtype",
     "SubtypeField",
+    "SurfaceSources",
     "SurveyAdjust",
     "SurveyAdjusted",
     "SurveyAdjustedPoint",
@@ -92893,6 +93008,7 @@ __all__ = [
     "TenantKindName",
     "TerminalConfig",
     "TerminalDevice",
+    "TerrainSurfaceDef",
     "TextAlign",
     "TextAlignName",
     "TextColumns",

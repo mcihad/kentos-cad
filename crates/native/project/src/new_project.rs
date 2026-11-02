@@ -89,6 +89,7 @@ pub fn default_settings(srid: u32) -> ProjectSettings {
         profile_files: Vec::new(),
         heights: None,
         coordinate_epoch: None,
+        road: None,
         named_ucs: Vec::new(),
         named_views: Vec::new(),
         forms: Vec::new(),

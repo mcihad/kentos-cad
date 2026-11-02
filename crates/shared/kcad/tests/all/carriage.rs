@@ -147,6 +147,7 @@ fn settings_fields(s: &ProjectSettings) -> Vec<&'static str> {
         profile_files: _,
         heights: _,
         coordinate_epoch: _,
+        road: _,
     } = s;
     vec![
         "srid",
@@ -197,6 +198,7 @@ fn settings_fields(s: &ProjectSettings) -> Vec<&'static str> {
         "profileFiles",
         "heights",
         "coordinateEpoch",
+        "road",
     ]
 }
 

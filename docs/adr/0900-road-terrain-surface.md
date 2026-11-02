@@ -1,6 +1,6 @@
 # ADR 0900 — Yol arazi yüzeyi: kısıtlı Delaunay ve kot sorgusu
 
-Tarih: 2026-11-02. plan/road.md Y2 (ROAD-TIN-01…11, ROAD-SURVEY-01/03/08, ROAD-NUM-10). Durum: Y2.1 uygulanıyor.
+Tarih: 2026-11-02. plan/road.md Y2 (ROAD-TIN-01…11, ROAD-SURVEY-01/03/08, ROAD-NUM-10). Durum: Y2.1 ve Y2.2 uygulandı.
 
 ## Dayanak
 
@@ -51,6 +51,19 @@ Tarih: 2026-11-02. plan/road.md Y2 (ROAD-TIN-01…11, ROAD-SURVEY-01/03/08, ROAD
 9. **Doğrulama.** Bağımsız başvuru: Shewchuk'un Triangle'ı (`triangle` Python paketi, `pc`/`p` anahtarları), genel
    konumda üçgen kümeleri bire bir; ayrıca KentOS kodu olmadan yazılmış Python denetleyicisi: her kısıt kenar mı,
    her kısıtsız kenar kesirlerle yerel Delaunay mı, alanların toplamı alana eşit mi, kotlar düzlemde mi.
+
+10. **Kayıt (Y2.2).** Yüzey projede tanımıyla saklanır, üçgenleriyle değil: proje ayarlarının `road.surfaces`'ı
+    (`kentos_contracts::RoadSettings`, `TerrainSurfaceDef`: kimlik, ad, `points` ve `breaklines` için katman ya da grup
+    kimlikleri ve nesne kimlikleri, sınır, boşluklar, tolerans, `maxEdge`, `built`), `.kcad` şema 158'in (yol projesinin
+    şeması) ayarı; yalnız `cadWork: road` projesinde. Üçgenler açılışta kaynaklardan yeniden kurulur (Y2.1'in yöntemi kesin
+    ve 100 000 noktada 0,1 s); böylece yüzey kaynaklarıyla hiç çelişmez. Civil 3D'nin yüzey tanımı ve “out of date”
+    durumu, OpenRoads'un kurala bağlı arazisi gibi: `kentos_road::sources::gather` tanımın adlarını çizimde okur (nokta
+    nesnesinin kotlu yerleri; çizginin ve çoklu çizginin her köşesi kotlu yolları, alanın halkaları kapalı kırık hat;
+    sınır ve boşluk düz kenarlı alan ya da kapalı çoklu çizgi, kotu yüzeyden), kullanamadığını kimliği ve nedeniyle
+    söyler (`missing`, `no_height`, `arc_edge`, `wrong_kind`, `not_closed`, `too_few`; adla anılmayan, katmandaki başka
+    türden nesne kaynak sayılmaz), okuduğunun ve yöntemin özetini (SHA-256, kanonik JSON) çıkarır. `built` en son kabul
+    edilen özettir: aynısıysa yüzey güncel, değilse eskidi, yoksa yeni. Yaylı kırık hat ve kesişen kırık hatların bölünmesi
+    sonraki dilimdir.
 
 ## Sonra
 

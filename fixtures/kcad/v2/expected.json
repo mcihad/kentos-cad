@@ -90,6 +90,7 @@
     {"file": "broken/cad-work-no-type.kcad", "sniff": "kcad", "error": "bad_value"},
     {"file": "road-work.kcad", "sniff": "kcad", "content": "road-work.json"},
     {"file": "broken/road-work-in-schema-157.kcad", "sniff": "kcad", "error": "bad_value"},
+    {"file": "broken/road-settings-of-a-map-project.kcad", "sniff": "kcad", "error": "bad_value"},
     {"file": "arch-bonds.kcad", "sniff": "kcad", "content": "arch-bonds.json"},
     {"file": "broken/arch-bonds-in-schema-136.kcad", "sniff": "kcad", "error": "bad_value"},
     {"file": "broken/arch-bonds-coincident.kcad", "sniff": "kcad", "error": "bad_value"},

@@ -671,6 +671,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     let (mut workspace, mut drawing_font, mut area_decimals, mut length_decimals) =
         (None, None, None, None);
     let mut cad_work = None;
+    let mut road = None;
     map(r, |r, key| {
         match key {
             "srid" => srid = Some(r.uint(u64::from(u32::MAX))? as u32),
@@ -1248,6 +1249,17 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 }
                 wall_styles = l;
             }
+            // Schema 158 (plan/road.md Y2.2): a road project's terrain surfaces' definitions.
+            "road" if has.road_work => {
+                let (v, at): (kentos_contracts::RoadSettings, usize) = objects::json_part(r, "yol ayarları")?;
+                if v.is_empty() {
+                    return Err(r.fail_at(Code::BadValue, at, "boş yol ayarı yazılmaz"));
+                }
+                if let Some((field, words)) = v.problem() {
+                    return Err(r.fail_at(Code::BadValue, at, &format!("{field}: {words}")));
+                }
+                road = Some(v);
+            }
             "arch" if has.walls => {
                 let (a, at): (kentos_contracts::ArchSettings, usize) =
                     objects::json_part(r, "mimari ayarlar")?;
@@ -1479,7 +1491,12 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             r,
         ));
     }
+    // A road's settings are a road project's (plan/road.md Y2.2).
+    if road.is_some() && cad_work != Some(CadWork::Road) {
+        return Err(relation("road", "yol ayarları yalnız yol projesinin olur (cadWork road)", r));
+    }
     Ok(ProjectSettings {
+        road,
         source_bases,
         heights,
         coordinate_epoch,

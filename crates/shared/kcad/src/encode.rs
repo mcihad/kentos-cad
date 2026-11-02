@@ -518,7 +518,8 @@ impl<'d> Encoder<'d> {
             + usize::from(!s.line_types.is_empty())
             + usize::from(!s.hatch_patterns.is_empty())
             + usize::from(s.line_type_scale.is_some())
-            + usize::from(s.auto_select.is_some());
+            + usize::from(s.auto_select.is_some())
+            + usize::from(s.road.is_some());
         self.open(n, true)?;
         if let Some(u) = &s.ucs {
             self.key("ucs");
@@ -535,6 +536,23 @@ impl<'d> Encoder<'d> {
                     return Err(e.fail(Code::BadValue, &format!("{field}: {words}")));
                 }
                 e.json(&serde_json::to_value(a).unwrap_or_default())
+            })?;
+        }
+        // Schema 158 (plan/road.md Y2.2): a road project's terrain surfaces' definitions, as their JSON (after `arch`,
+        // before `srid`); a road project's only.
+        if let Some(v) = &s.road {
+            self.key("road");
+            self.at(Seg::Name("road"), |e| {
+                if v.is_empty() {
+                    return Err(e.fail(Code::BadValue, "boş yol ayarı yazılmaz"));
+                }
+                if s.cad_work != Some(kentos_contracts::CadWork::Road) {
+                    return Err(e.fail(Code::BadValue, "yol ayarları yalnız yol projesinin olur (cadWork road)"));
+                }
+                if let Some((field, words)) = v.problem() {
+                    return Err(e.fail(Code::BadValue, &format!("{field}: {words}")));
+                }
+                e.json(&serde_json::to_value(v).unwrap_or_default())
             })?;
         }
         self.key("srid");

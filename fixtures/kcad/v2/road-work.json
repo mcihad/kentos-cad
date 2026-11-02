@@ -11,7 +11,28 @@
     "plotScale": 1000.0,
     "workspace": "cad",
     "cadWork": "road",
-    "drawingFont": "barlow"
+    "drawingFont": "barlow",
+    "road": {
+      "surfaces": [
+        {
+          "id": "t-zemin",
+          "name": "Mevcut zemin",
+          "points": {
+            "layers": [
+              "zemin"
+            ]
+          },
+          "breaklines": {
+            "uids": [
+              "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e16"
+            ]
+          },
+          "boundary": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e17",
+          "tolerance": 0.005,
+          "maxEdge": 60.0
+        }
+      ]
+    }
   },
   "origin": {
     "x": 0.0,
@@ -31,6 +52,20 @@
         "lineWeight": 0.25
       },
       "children": []
+    },
+    {
+      "id": "zemin",
+      "name": "Zemin",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#8B6B3E",
+        "lineType": "continuous",
+        "lineWeight": 0.18
+      },
+      "children": []
     }
   ],
   "activeLayer": "0",
@@ -48,10 +83,112 @@
         "x": 12.5,
         "y": 0.0
       }
+    },
+    {
+      "kind": "point",
+      "id": 2,
+      "layerId": "zemin",
+      "attrs": {
+        "Ad": "Z1"
+      },
+      "p": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "z": 100.0
+    },
+    {
+      "kind": "point",
+      "id": 3,
+      "layerId": "zemin",
+      "attrs": {
+        "Ad": "Z2"
+      },
+      "p": {
+        "x": 40.0,
+        "y": 0.0
+      },
+      "z": 101.5
+    },
+    {
+      "kind": "point",
+      "id": 4,
+      "layerId": "zemin",
+      "attrs": {
+        "Ad": "Z3"
+      },
+      "p": {
+        "x": 40.0,
+        "y": 30.0
+      },
+      "z": 103.25
+    },
+    {
+      "kind": "point",
+      "id": 5,
+      "layerId": "zemin",
+      "attrs": {
+        "Ad": "Z4"
+      },
+      "p": {
+        "x": 0.0,
+        "y": 30.0
+      },
+      "z": 102.0
+    },
+    {
+      "kind": "polyline",
+      "id": 6,
+      "layerId": "zemin",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 5.0,
+          "y": 15.0
+        },
+        {
+          "x": 35.0,
+          "y": 15.0
+        }
+      ],
+      "zs": [
+        101.0,
+        102.5
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 7,
+      "layerId": "0",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "x": 40.0,
+          "y": 0.0
+        },
+        {
+          "x": 40.0,
+          "y": 30.0
+        },
+        {
+          "x": 0.0,
+          "y": 30.0
+        }
+      ]
     }
   ],
   "uids": [
-    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11"
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e12",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e13",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e14",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e15",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e16",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e17"
   ],
   "styles": {
     "items": [],

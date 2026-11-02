@@ -9,8 +9,8 @@ publish.workspace = true
 # Pure, like the other shared cores (CLAUDE.md §14): no file system, network or UI. Its decisions are the geometry
 # core's exact predicates (ADR 0232 §4); the numbers it reads and writes are metres in the project's plane.
 [dependencies]
+kentos-contracts = { path = "../contracts" }
 kentos-geometry-core = { path = "../geometry-core" }
 serde = { workspace = true }
-
-[dev-dependencies]
 serde_json = { workspace = true }
+

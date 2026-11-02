@@ -4277,8 +4277,13 @@ class _Schema:
                 **({"mapSrid": (self.uint(32), False)} if self.source_crs else {}),
                 **({"autoSelect": (self.bool, False)} if self.layer_geometry else {}),
                 **({"heights": (self.heights_, False), "coordinateEpoch": (self.epoch_, False)} if self.heights else {}),
+                **({"road": (self.road_, False)} if self.road_work else {}),
             }
         )(v)
+        # A road's settings are a road project's (plan/road.md Y2.2).
+        if "road" in s and s.get("cadWork") != "road":
+            self.path.append("road")
+            self.fail("bad_value", "yol ayarları yalnız yol projesinin olur (cadWork road)")
         # A second coordinate system is another system than the project's own; a project without one has none (a
         # definition of its own is one, docs/adr/0168 §1).
         has_system = s["srid"] != 0 or "customCrs" in s
@@ -9323,6 +9328,67 @@ class _Schema:
         if len(blocks) != len(set(blocks)):
             self.fail("bad_value", "bir bloğun kullanım alanı bir kez yazılır")
         return p
+
+    def road_(self, v):
+        """A road project's terrain surfaces' definitions (plan/road.md Y2.2): what each is made of, never its
+        triangles; ids and names (case aside) unique, points or breaklines named, the boundary no void."""
+        def word(x):
+            t = self.text(x)
+            if not t or len(t) > 64 or any(c.isspace() for c in t):
+                self.fail("bad_value", "boş olmayan, boşluksuz, en çok 64 karakterlik bir kimlik olmalı")
+            return t
+
+        def words(x):
+            got = self.array(word)(x)
+            if len(set(got)) != len(got):
+                self.fail("bad_value", "bir kimlik iki kez yazılmış")
+            return got
+
+        def positive(most):
+            def read(x):
+                f = self.float(x)
+                if not (f > 0 and (most is None or f <= most)):
+                    self.fail("bad_value", "0'dan büyük olmalı" + (f", en çok {most}" if most else ""))
+                return f
+            return read
+
+        def digest(x):
+            t = self.text(x)
+            if len(t) != 64 or any(c not in "0123456789abcdef" for c in t):
+                self.fail("bad_value", "özet 64 küçük onaltılık rakam olmalı")
+            return t
+
+        sources = self.fields({"layers": (words, False), "uids": (words, False)})
+
+        def nonempty_sources(x):
+            got = sources(x)
+            if not got:
+                self.fail("bad_value", "boş kaynak yazılmaz")
+            return got
+
+        def surface(x):
+            t = self.fields({"id": (word, True), "name": (self.text, True), "points": (nonempty_sources, False),
+                             "breaklines": (nonempty_sources, False), "boundary": (word, False),
+                             "voids": (words, False), "tolerance": (positive(1.0), False),
+                             "maxEdge": (positive(None), False), "built": (digest, False)})(x)
+            name = t["name"]
+            if not name or name.strip() != name or len(name) > 120:
+                self.fail("bad_value", "yüzeyin adı boş, boşluklu ya da çok uzun")
+            if "points" not in t and "breaklines" not in t:
+                self.fail("bad_value", "yüzeyin noktası ya da kırık hattı olmalı")
+            if "boundary" in t and t["boundary"] in t.get("voids", []):
+                self.fail("bad_value", "sınır aynı zamanda boşluk olamaz")
+            if "voids" in t and not t["voids"]:
+                self.fail("bad_value", "boş boşluk listesi yazılmaz")
+            return t
+
+        r = self.fields({"surfaces": (self.array(surface), False)})(v)
+        got = r.get("surfaces", [])
+        if not got or len(got) > 64:
+            self.fail("bad_value", "yol ayarında 1 ile 64 arası yüzey olur")
+        if len({x["id"] for x in got}) != len(got) or len({x["name"].lower() for x in got}) != len(got):
+            self.fail("bad_value", "iki yüzeyin kimliği ya da adı aynı")
+        return r
 
     def arch_(self, v):
         """The project's levels and the walls' detail (docs/adr/0339 §3); an empty one is not written."""

@@ -3180,6 +3180,7 @@ dependencies = [
 name = "kentos-road"
 version = "0.1.0"
 dependencies = [
+ "kentos-contracts",
  "kentos-geometry-core",
  "serde",
  "serde_json",

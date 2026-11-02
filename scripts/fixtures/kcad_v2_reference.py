@@ -300,6 +300,8 @@ def settings(s):
                 "workspace": (enum(("hybrid", "cad", "gis", "plan3d", "disaster")), False),
                 # Schema 135 (docs/adr/0801): what a CAD project is drawn for.
                 "cadWork": (enum(("architecture", "map", "road")), False),
+                # Schema 158 (plan/road.md Y2.2): a road project's terrain surfaces' definitions, as their JSON.
+                "road": (opaque, False),
                 "drawingFont": (enum(("barlow", "arimo", "overpass", "quicksand", "architects-daughter", "courier-prime", "plex-mono")), False),
                 # Schema 50 (docs/adr/0262 §1): inches and feet too, written only in schema 50.
                 "drawingUnit": (enum(("mm", "cm", "m", "in", "ft")), False),
@@ -5498,7 +5500,17 @@ def build():
     rd = document(load("road-work.json"))
     assert rd.count(b"\x67version\x18\x9e") == 1, "the road work is schema 158"
     out["road-work.kcad"] = container(rd)
-    out["broken/road-work-in-schema-157.kcad"] = container(rd.replace(b"\x67version\x18\x9e", b"\x67version\x18\x9d"))
+    # The work alone: the surfaces would be refused first (their key sorts before `cadWork`).
+    bare = load("road-work.json")
+    del bare["settings"]["road"]
+    out["broken/road-work-in-schema-157.kcad"] = container(
+        document(bare).replace(b"\x67version\x18\x9e", b"\x67version\x18\x9d"))
+    # Schema 158 (plan/road.md Y2.2): the terrain surfaces are a road project's only; a map project's are refused.
+    mp = load("road-work.json")
+    mp["settings"]["cadWork"] = "map"
+    mpd = document(mp)
+    assert mpd.count(b"\x67version\x18\x87") == 1, "a map project with a road's settings would be schema 135"
+    out["broken/road-settings-of-a-map-project.kcad"] = container(mpd.replace(b"\x67version\x18\x87", b"\x67version\x18\x9e"))
     # Schema 136 (docs/adr/0758): a layer's indexes, a key over two fields, a plain one and a key taking empty values as
     # the same; schema 135 refuses them, an empty list, a group's, one over a field the layer lacks, empty values the
     # same on a plain index and a default written are refused too.

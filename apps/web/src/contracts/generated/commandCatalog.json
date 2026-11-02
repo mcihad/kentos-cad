@@ -124204,6 +124204,17 @@
           },
           "type": "array"
         },
+        "road": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RoadSettings"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "A road project's own settings (plan/road.md Y2.2): its terrain surfaces' definitions; absent: none. Only a CAD\nproject drawn for a road has them (`.kcad` schema 158)."
+        },
         "secondCustomCrs": {
           "anyOf": [
             {
@@ -127955,6 +127966,20 @@
           "type": "string"
         }
       ]
+    },
+    "RoadSettings": {
+      "additionalProperties": false,
+      "description": "A road project's settings; absent while it has none.",
+      "properties": {
+        "surfaces": {
+          "description": "The terrain surfaces, in the order the project tree shows them.",
+          "items": {
+            "$ref": "#/$defs/TerrainSurfaceDef"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
     },
     "RoadWork": {
       "description": "What is drawn or tidied.",
@@ -135653,6 +135678,27 @@
       ],
       "type": "object"
     },
+    "SurfaceSources": {
+      "additionalProperties": false,
+      "description": "Where a surface's points or breaklines come from: every object of the layers (and of the groups' layers), and the\nobjects named by their persistent ids.",
+      "properties": {
+        "layers": {
+          "description": "Layer or group ids.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "uids": {
+          "description": "Objects' persistent ids.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
     "SurveyAdjustedPoint": {
       "description": "A new point adjusted: its place (Yatay ağ) or its height (Kot ağı), and its standard deviation (m: the position\nerror, or the height's).",
       "properties": {
@@ -138406,6 +138452,72 @@
         "layer",
         "terminals",
         "paths"
+      ],
+      "type": "object"
+    },
+    "TerrainSurfaceDef": {
+      "additionalProperties": false,
+      "description": "A terrain surface's definition.",
+      "properties": {
+        "boundary": {
+          "description": "The outer boundary: a closed polyline's or an area's id; its vertices take the surface's heights.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "breaklines": {
+          "$ref": "#/$defs/SurfaceSources",
+          "description": "The breaklines: each line's and polyline's path, every vertex with an elevation."
+        },
+        "built": {
+          "description": "The digest (64 lower-case hex digits) of the sources it was last made and accepted from; absent: never.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "description": "Its id, unique in the project; what a profile or a section names.",
+          "type": "string"
+        },
+        "maxEdge": {
+          "description": "The edge method: an outer triangle whose outer edge is longer than this is left out, m; absent: none.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "name": {
+          "description": "Its name (“Mevcut zemin”), unique in the project.",
+          "type": "string"
+        },
+        "points": {
+          "$ref": "#/$defs/SurfaceSources",
+          "description": "The points: each point object's places with an elevation."
+        },
+        "tolerance": {
+          "description": "Two records at one place are one vertex when their heights are this close, m; absent: 0.001.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "voids": {
+          "description": "The voids: closed polylines' or areas' ids.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "name"
       ],
       "type": "object"
     },
