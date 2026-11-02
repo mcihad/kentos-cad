@@ -193,6 +193,7 @@ pub enum Dialog {
     AttributeValues,
     /// Blok kartı (block_card.rs, docs/adr/0317 §4); the window is `App::block_card`.
     BlockCard,
+    BlockParameterGroups,
     /// Blok çizelgesi (block_schedule.rs, docs/adr/0317 §3); the window is `App::block_schedule`.
     BlockSchedule,
     /// Bul ve değiştir (find_replace.rs, docs/adr/0145 §6); the window is `App::find_replace`.
@@ -559,6 +560,7 @@ pub enum Message {
     /// Blok ekle's Öznitelik değerleri (attribute_values.rs).
     AttributeValues(crate::attribute_values::Event),
     BlockCard(crate::block_card::Event),
+    BlockParameterGroups(crate::block_parameter_groups::Event),
     BlockSchedule(crate::block_schedule::Event),
     FindReplace(crate::find_replace::Event),
     LayerMerge(crate::layer_merge::Event),
@@ -893,6 +895,7 @@ pub struct App {
     /// Blok ekle's Öznitelik değerleri, while it asks (attribute_values.rs).
     pub(crate) attribute_values: Option<crate::attribute_values::Window>,
     pub(crate) block_card: Option<crate::block_card::Window>,
+    pub(crate) block_parameter_groups: Option<crate::block_parameter_groups::Window>,
     pub(crate) block_schedule: Option<crate::block_schedule::Window>,
     /// Bul ve değiştir's window, while it is open (find_replace.rs).
     pub(crate) find_replace: Option<crate::find_replace::Window>,
@@ -926,6 +929,7 @@ pub struct App {
     pub(crate) text_field_release: bool,
     /// Öznitelikler's closed sections, by id, while the app runs (the web's `collapsed`).
     pub(crate) props_closed: std::collections::HashSet<&'static str>,
+    pub(crate) props_groups_closed: std::collections::HashSet<String>,
     /// Öznitelikler for a selection of several objects, as last worked out (properties/).
     pub(crate) properties_cache: crate::properties::PanelCache,
     pub(crate) properties_scope: crate::properties::InspectScope,
@@ -1425,6 +1429,7 @@ impl App {
             block_attributes: None,
             attribute_values: None,
             block_card: None,
+            block_parameter_groups: None,
             block_schedule: None,
             find_replace: None,
             text_tools: Default::default(),
@@ -1443,6 +1448,7 @@ impl App {
             text_field_select: false,
             text_field_release: false,
             props_closed: std::collections::HashSet::new(),
+            props_groups_closed: std::collections::HashSet::new(),
             properties_cache: Default::default(),
             properties_scope: Default::default(),
             points: Default::default(),
@@ -2260,6 +2266,7 @@ impl App {
             Message::BlockAttributes(event) => return self.block_attributes_event(event),
             Message::AttributeValues(event) => self.attribute_values_event(event),
             Message::BlockCard(event) => return self.block_card_event(event),
+            Message::BlockParameterGroups(event) => return self.block_parameter_groups_event(event),
             Message::BlockSchedule(event) => return self.block_schedule_event(event),
             Message::FindReplace(event) => return self.find_replace_event(event),
             Message::LayerMerge(event) => return self.layer_merge_event(event),

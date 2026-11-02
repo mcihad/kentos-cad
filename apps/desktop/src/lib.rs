@@ -92,6 +92,7 @@ mod band_scenes;
 mod block_attr_scenes;
 mod block_attributes;
 mod block_card;
+mod block_parameter_groups;
 #[cfg(test)]
 mod block_dynamic_scenes;
 #[cfg(test)]

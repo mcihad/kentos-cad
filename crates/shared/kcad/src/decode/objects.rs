@@ -327,6 +327,7 @@ pub(super) struct Features {
     pub(super) arch_bonds: bool,
     pub(super) arc_edge_bonds: bool,
     pub(super) block_publications: bool,
+    pub(super) block_parameter_groups: bool,
     /// Schema 138 (docs/adr/0771): turning wall components, node decisions, bound slabs.
     pub(super) building_parts: bool,
     /// Schema 148 (docs/adr/0785): the project's materials, a component's or a slab's binding.
@@ -563,6 +564,7 @@ impl Features {
             arch_bonds: schema >= crate::SCHEMA_WITH_ARCH_BONDS,
             arc_edge_bonds: schema >= crate::SCHEMA_WITH_ARC_EDGE_BONDS,
             block_publications: schema >= crate::SCHEMA_WITH_BLOCK_PUBLICATIONS,
+            block_parameter_groups: schema >= crate::SCHEMA_WITH_BLOCK_PARAMETER_GROUPS,
             building_parts: schema >= crate::SCHEMA_WITH_BUILDING_PARTS,
             materials: schema >= crate::SCHEMA_WITH_MATERIALS,
             multi_slide: schema >= crate::SCHEMA_WITH_MULTI_SLIDE,

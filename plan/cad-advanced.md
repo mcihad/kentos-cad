@@ -704,8 +704,21 @@ Python testi, ilgili çekirdek/pencere testleri, Clippy ve derleme geçti.
 [kullanım ve API](../docs/cad/block-publication-upgrade.md). Bu dilim etiket
 veya parametre yeniden adlandırmasını kendiliğinden tahmin etmez.
 
-Kalıcı tip–örnek parametre kapsamı ve birleşik blok kabulü açıktır. Kullanıcı tanımlı grup metaverisi bu otomatik
-gruplarla tamamlanmış sayılmaz. Web öznitelik penceresinin native eşitleme kapsamıyla
+**İlerleme — 2026-11-03, kalıcı kullanıcı parametre grupları:** Dinamik
+blok sağ menüsünde başlıklar yazılır veya mevcut ad listesinden seçilir;
+otomatik başlığa dönüş ve grup sırası açıktır. Ortak
+`DynamicBlock.parameterGroups` grup/üye sırasını KCAD 159, kitaplık ve
+Python/MCP'de korur. Hesaplama sırası, geometri, yerleştirme değerleri ve
+yerel geometri sayacı değişmez. Özel başlıklar bağımsız kapanır; kalan
+otomatik başlıklar ayırt edilir. Gerçek GUI'de ret, iptal, dar pencere,
+yeniden açma, tek Undo/Redo ve grup içinden 1→1.05 m ölçü düzenleme kabul
+edildi. GUI/Python dosyaları üç işlemde tam aynı; gerçek Undo kayıtları
+önceki baytlarla tam aynı. 1612 masaüstü, 319 application, 60 MCP, 457
+Python, 234 KCAD testi, bağımsız 1501 dosya, Clippy ve derleme geçti.
+[ADR 0858](../docs/adr/0858-user-defined-block-parameter-groups.md),
+[gruplama ve sıfırlama/API](../docs/cad/block-parameter-groups.md).
+
+Kalıcı tip–örnek parametre kapsamı ve birleşik blok kabulü açıktır. Web öznitelik penceresinin native eşitleme kapsamıyla
 aynı olmadığı kodda görüldü; bu dilim web eşitliğini tamamlanmış saymaz.
 
 ### CAD-ADV-07 — Tekrarları tanı, blok ve ilişkili diziye kontrollü dönüştür [ ]

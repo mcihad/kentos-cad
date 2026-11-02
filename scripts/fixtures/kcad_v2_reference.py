@@ -2350,6 +2350,8 @@ def document(d):
     schema = schema_of(d["entities"], d.get("blocks"), d["layers"], d["settings"], "sheets" in d, "requests" in d, "arrays" in d, "constraints" in d, has_sets)
     if any(b.get("card", {}).get("publication") is not None for b in d.get("blocks", [])):
         schema = max(schema, 158)
+    if any(b.get("dynamic", {}).get("parameterGroups") for b in d.get("blocks", [])):
+        schema = max(schema, 159)
     if d.get("casework"):
         # A kitchen run (docs/adr/0727 §5).
         schema = max(schema, 127)
@@ -3258,7 +3260,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-159.kcad"] = container(root(cmap(parts), version=uint(159)))
+    files["schema-version-160.kcad"] = container(root(cmap(parts), version=uint(160)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4849,6 +4851,28 @@ def build():
         one = copy.deepcopy(load("block-publication.json"))
         one["blocks"][0]["card"]["publication"].update(value)
         out[f"broken/block-publication-{suffix}.kcad"] = container(document(one))
+    grouped = document(load("block-parameter-groups.json"))
+    out["block-parameter-groups.kcad"] = container(grouped)
+    out["broken/block-parameter-groups-in-schema-158.kcad"] = container(grouped.replace(b"\x67version\x18\x9f", b"\x67version\x18\x9e"))
+    for suffix, groups in (
+        ("empty", []),
+        ("blank", [{"name": " ", "parameters": ["Tip"]}]),
+        ("control", [{"name": "Kanat\n", "parameters": ["Tip"]}]),
+        ("long", [{"name": "k" * 65, "parameters": ["Tip"]}]),
+        ("no-members", [{"name": "Kanat", "parameters": []}]),
+        ("unknown-member", [{"name": "Kanat", "parameters": ["Tipi"]}]),
+        ("member-twice", [{"name": "Kanat", "parameters": ["Tip", "Tip"]}]),
+        ("two-groups", [{"name": "Bir", "parameters": ["Tip"]}, {"name": "İki", "parameters": ["Tip"]}]),
+        ("name-twice", [{"name": "KANAT", "parameters": ["Tip"]}, {"name": "kanat", "parameters": ["Yön"]}]),
+        ("unknown-field", [{"name": "Kanat", "parameters": ["Tip"], "color": "red"}]),
+    ):
+        one = load("block-parameter-groups.json")
+        one["blocks"][0]["dynamic"]["parameterGroups"] = groups
+        data = document(one)
+        # Empty metadata is an illegal explicit default, even in the new schema.
+        if suffix == "empty":
+            data = data.replace(b"\x67version\x18\x9e", b"\x67version\x18\x9f")
+        out[f"broken/block-parameter-groups-{suffix}.kcad"] = container(data)
     out["dynamic-blocks.kcad"] = container(document(load("dynamic-blocks.json")))
     payload = document(load("dynamic-blocks.json"))
     assert payload.count(b"\x67version\x18\x3b") == 1

@@ -112,7 +112,7 @@ pub(crate) fn sections(app: &App, slot: Slot) -> Vec<Section> {
     let mut out = Vec::new();
     if !rows.is_empty() {
         out.push(Section {
-            id: "attachments",
+            id: "attachments".into(),
             title: if count > 0 {
                 Cow::Owned(format!("Ekler ({count})"))
             } else {
@@ -167,7 +167,7 @@ pub(crate) fn sections(app: &App, slot: Slot) -> Vec<Section> {
             }
         }
         out.push(Section {
-            id: "actions",
+            id: "actions".into(),
             title: Cow::Borrowed("Eylemler"),
             rows,
         });

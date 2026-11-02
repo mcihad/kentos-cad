@@ -118,6 +118,7 @@ pub enum Event {
     Fields(BlockId),
     /// Kart… (block_card.rs, docs/adr/0317 §4).
     Card(BlockId),
+    ParameterGroups(BlockId),
     /// Başka blokla değiştir ▸ (docs/adr/0317 §3): this block's inserts place the other.
     ReplaceWith(BlockId, BlockId),
     Replace(replace::Event),
@@ -291,6 +292,7 @@ impl App {
             Event::Sync(id) => self.blocks_sync(id, false),
             Event::Fields(id) => self.blocks_sync(id, true),
             Event::Card(id) => self.open_block_card(id),
+            Event::ParameterGroups(id) => self.open_block_parameter_groups(id),
             Event::ReplaceWith(from, to) => return self.blocks_replace(from, to),
             Event::Replace(event) => return self.block_replace_event(event),
             Event::Schedule(id) => self.open_block_schedule(Some(id)),
@@ -946,6 +948,8 @@ impl App {
             .icon(crate::icons::from_web(Some("blockFields")))
             .item("Kart…", msg(Event::Card(id)))
             .icon(crate::icons::from_web(Some("blockCard")))
+            .item("Parametre grupları…", model.block(id).and_then(|b| b.dynamic.as_ref()).map(|_| msg(Event::ParameterGroups(id))))
+            .detail("Özellik panelindeki başlıkları düzenler; ölçüler ve örnek değerleri korunur.")
             .submenu("Başka blokla değiştir", self.replace_menu(id, inserts))
             .icon(crate::icons::from_web(Some("blockReplace")))
             .item("Say ve çizelgele…", msg(Event::Schedule(id)))

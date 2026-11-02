@@ -136,7 +136,7 @@ pub(super) fn section(
         |t| format!("Tip: {}", t.name),
     );
     Some(Section {
-        id: "openingType",
+        id: "openingType".into(),
         title: title.into(),
         rows,
     })

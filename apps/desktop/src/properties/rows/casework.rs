@@ -219,7 +219,7 @@ pub(super) fn section(doc: &Document, slot: Slot, locked: bool) -> Option<Sectio
         }
     }
     Some(Section {
-        id: "casework",
+        id: "casework".into(),
         title: Cow::Borrowed("Mutfak dizisi"),
         rows,
     })

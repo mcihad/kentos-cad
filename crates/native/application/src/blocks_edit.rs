@@ -32,6 +32,12 @@ use crate::checks::{self, Stop, error};
 /// The stable codes of the answers (`CommandError.code`, `CommandWarning.code`).
 pub use crate::codes;
 
+/// Presentation groups have no geometry or per-insert side effects.
+#[allow(clippy::type_complexity)]
+fn dynamic_draws(b: &BlockDefinition) -> Option<(&Vec<kentos_commands::BlockParameter>, &Vec<kentos_commands::BlockAction>)> {
+    b.dynamic.as_ref().map(|d| (&d.parameters, &d.actions))
+}
+
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &BlocksEdit) -> CommandResult<()> {
     if crate::blocks_library::is_library(input.operation) {
@@ -460,7 +466,9 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
                     Some(path),
                 )));
             }
-            checked.sync = Some(crate::block_params::refit_inserts(doc, &next));
+            if dynamic_draws(&next) != dynamic_draws(old) {
+                checked.sync = Some(crate::block_params::refit_inserts(doc, &next));
+            }
         }
         BlockEditOperation::Place
         | BlockEditOperation::Purge
@@ -477,9 +485,9 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
         kentos_commands::Vec2,
         &Vec<AttributeDefinition>,
         Option<kentos_commands::BlockUnits>,
-        &Option<kentos_commands::DynamicBlock>,
+        Option<(&Vec<kentos_commands::BlockParameter>, &Vec<kentos_commands::BlockAction>)>,
     ) {
-        (&b.entities, b.base, &b.attributes, b.units, &b.dynamic)
+        (&b.entities, b.base, &b.attributes, b.units, dynamic_draws(b))
     }
     let redrawn = draws(&next) != draws(old);
     if redrawn

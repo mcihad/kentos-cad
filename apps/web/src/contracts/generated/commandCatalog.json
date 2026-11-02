@@ -78729,6 +78729,26 @@
         }
       ]
     },
+    "BlockParameterGroup": {
+      "additionalProperties": false,
+      "description": "A property-panel heading and the exact parameter names it contains, in display order.",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "parameters": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "parameters"
+      ],
+      "type": "object"
+    },
     "BlockPublication": {
       "additionalProperties": false,
       "description": "The publisher-assigned identity of a 2D component type and its release.\nThis is metadata, not a signature or permission to update a drawing.",
@@ -89257,6 +89277,13 @@
           "description": "Applied in this order to the definition's objects, each on what the ones before left.",
           "items": {
             "$ref": "#/$defs/BlockAction"
+          },
+          "type": "array"
+        },
+        "parameterGroups": {
+          "description": "Ordered presentation groups. Unassigned parameters retain their automatic headings;\nmembership never changes the evaluator's parameter/action order or instance values.",
+          "items": {
+            "$ref": "#/$defs/BlockParameterGroup"
           },
           "type": "array"
         },

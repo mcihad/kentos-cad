@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `157`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-158.kcad`) |
+| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `159`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-160.kcad`) |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -1568,6 +1568,18 @@ Motor anahtarı olan stil bütün kurallarıyla denetlenir (`kentos_contracts::l
 2.0'da tanımlı tek göç v1'den olduğu için başka `format` ve `version` değerleri `bad_value`'dur. Nesnelerin eski yerel kimlikleri ayrıca yazılmaz: aynı v1 dosyasından türetilen kimlikler zaten dosyadaki `uid`'lerdir.
 
 ### 6.9 Bloklar
+
+**Şema 159 (ADR 0858):** `dynamic.parameterGroups` doluysa yazıcı 159
+seçer. Dinamik bölümün mevcut kanonik JSON metnine sıralı
+`[{"name": "Kanat", "parameters": ["Yön", "Genişlik"]}]` eklenir.
+Boş metadata yazılmaz; grup adı 1–64 Unicode karakter, kırpılmış ve denetim
+karaktersizdir. Grup adları mevcut Türkçe ad karşılaştırmasıyla benzersizdir.
+Her dolu grubun üyeleri tanımdaki tam parametre adlarıdır; bir parametre en
+fazla bir gruptadır. Grup/üye sayıları `MAX_DYNAMIC_ITEMS` ile sınırlıdır.
+Grup ve üye sırası yalnız özellik panelini düzenler; hesaplama dizilerinin
+sırasını ve yerleştirme değerlerini değiştirmez. 158 veya daha eski şemada
+alan `unknown_field`, geçersiz/boş metadata `bad_value` olur. Metadata yoksa
+eski en küçük şema ve baytlar korunur. Fixture: `block-parameter-groups.kcad`.
 
 **Şema 158 (ADR 0856):** `card.publication` varsa yazıcı 158 seçer. Bu
 isteğe bağlı harita `release` (uint32, en az 1), `familyId` ve `typeId` (16 bayt UUID,

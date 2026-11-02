@@ -3499,6 +3499,52 @@ fn block_parameter_groups_keep_definition_order_and_separate_catalog_appearance_
 }
 
 #[test]
+fn custom_parameter_groups_keep_explicit_member_order_independent_collapse_and_native_editors() {
+    use kentos_commands::{BlockParameterGroup, DrawingUnit};
+    let (mut app, slot) = parameter_drawing(DrawingUnit::Mm, false);
+    let mut snapshot = app.document.as_ref().unwrap().model.to_snapshot_v2();
+    snapshot.blocks[0].dynamic.as_mut().unwrap().parameter_groups = vec![
+        BlockParameterGroup { name: "Ürün".into(), parameters: vec!["Tip".into(), "Görünüş".into()] },
+        BlockParameterGroup { name: "Kanat".into(), parameters: vec!["Yön".into(), "Genişlik".into()] },
+    ];
+    let doc = crate::document::Document::from_v2(snapshot, None).unwrap();
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    app.selection.set([slot]);
+    let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+    let doc = app.document.as_ref().unwrap();
+    let sections = app.properties_panel(doc).sections;
+    let custom: Vec<_> = sections.iter().filter(|s| s.id.starts_with("blockParamsGroup:")).collect();
+    assert_eq!(custom.iter().map(|s| s.title.as_ref()).collect::<Vec<_>>(), ["Ürün", "Kanat"]);
+    assert_eq!(custom[0].rows.iter().filter(|r| !r.note).map(|r| r.label.as_ref()).collect::<Vec<_>>(), ["Tip", "Görünüş"]);
+    assert_eq!(custom[1].rows.iter().filter(|r| !r.note).map(|r| r.label.as_ref()).collect::<Vec<_>>(), ["Yön", "Genişlik"]);
+    assert_ne!(custom[0].id, custom[1].id);
+    let first = custom[0].id.clone();
+    let second = custom[1].id.clone();
+    event(&mut app, Event::ToggleGroup(first.to_string()));
+    assert!(app.props_groups_closed.contains(first.as_ref()));
+    assert!(!app.props_groups_closed.contains(second.as_ref()));
+    assert_eq!(value(&app, "Kanat", "Genişlik"), "900 mm");
+    assert!(row_editable(&app, "Kanat", "Genişlik"));
+    assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(), before);
+}
+
+#[test]
+fn automatic_parameter_headings_remain_distinguishable_from_a_custom_group_with_the_same_name() {
+    use kentos_commands::{BlockParameterGroup, DrawingUnit};
+    let (mut app, slot) = parameter_drawing(DrawingUnit::Mm, false);
+    let mut snapshot = app.document.as_ref().unwrap().model.to_snapshot_v2();
+    snapshot.blocks[0].dynamic.as_mut().unwrap().parameter_groups = vec![
+        BlockParameterGroup { name: "Görünüş".into(), parameters: vec!["Genişlik".into()] },
+    ];
+    let doc = crate::document::Document::from_v2(snapshot, None).unwrap();
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    app.selection.set([slot]);
+    assert_eq!(value(&app, "Görünüş", "Genişlik"), "900 mm");
+    assert_eq!(value(&app, "Görünüş · Otomatik", "Yön"), "Hayır");
+    assert!(rows(&app).iter().any(|(title, _)| title == "Katalog · Otomatik"));
+}
+
+#[test]
 fn one_parameter_reset_preserves_other_instance_overrides_definition_and_exact_undo() {
     use kentos_commands::{DrawingUnit, ParamValue};
     let (mut app, slot) = parameter_drawing(DrawingUnit::Mm, false);

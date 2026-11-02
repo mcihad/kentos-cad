@@ -51,6 +51,11 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ADR 0858: dinamik blok kullanıcı parametre gruplarının yazılması,
+  mevcut gruptan seçim, sıralama ve özellik panelinde bağımsız kapanma.
+  Ortak `DynamicBlock.parameterGroups`/KCAD şema 159 sözleşmesi hazırdır;
+  masaüstü kabulü web kabulü değildir.
+
 - ADR 0857: kitaplık yayınını aynı aile/tipin seçilmiş yerleştirmelerine
   yükseltme menüsü ve korumalı etki penceresi; eski tanımları koruma,
   uyumsuz kaynak/girdi reddi, iptal ve tek Undo kabulü. Ortak

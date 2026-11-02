@@ -744,11 +744,13 @@ pub const SCHEMA_WITH_INSTANCE_STOREYS: u32 = 155;
 pub const SCHEMA_WITH_ARC_EDGE_BONDS: u32 = 157;
 /// Schema 158 (ADR 0856): publisher-assigned block family/type/release metadata.
 pub const SCHEMA_WITH_BLOCK_PUBLICATIONS: u32 = 158;
+/// Schema 159 (ADR 0858): ordered user-defined dynamic block parameter groups.
+pub const SCHEMA_WITH_BLOCK_PARAMETER_GROUPS: u32 = 159;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 156] = [
+pub const SCHEMAS: [u32; 157] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -905,6 +907,7 @@ pub const SCHEMAS: [u32; 156] = [
     SCHEMA_WITH_INSTANCE_STOREYS,
     SCHEMA_WITH_ARC_EDGE_BONDS,
     SCHEMA_WITH_BLOCK_PUBLICATIONS,
+    SCHEMA_WITH_BLOCK_PARAMETER_GROUPS,
 ];
 
 /// The file a drawing is saved as.

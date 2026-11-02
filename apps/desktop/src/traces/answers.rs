@@ -51,6 +51,7 @@ impl App {
             Dialog::BlockAttributes => crate::block_attributes::ATTRIBUTES_TITLE.to_owned(),
             Dialog::AttributeValues => crate::attribute_values::VALUES_TITLE.to_owned(),
             Dialog::BlockCard => crate::block_card::CARD_TITLE.to_owned(),
+            Dialog::BlockParameterGroups => crate::block_parameter_groups::TITLE.to_owned(),
             Dialog::BlockSchedule => crate::block_schedule::SCHEDULE_TITLE.to_owned(),
             Dialog::FindReplace => crate::find_replace::FIND_TITLE.to_owned(),
             Dialog::LayerMerge => crate::layer_merge::MERGE_TITLE.to_owned(),

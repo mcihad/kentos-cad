@@ -13996,6 +13996,26 @@ class BlockInserted(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class BlockParameterGroup(_Model):
+    """A property-panel heading and the exact parameter names it contains, in display order."""
+    name: str
+    parameters: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["parameters"] = list(self.parameters)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BlockParameterGroup:
+        return cls(
+            name=data["name"],
+            parameters=list(data["parameters"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class BlockPublication(_Model):
     """The publisher-assigned identity of a 2D component type and its release.
     This is metadata, not a signature or permission to update a drawing.
@@ -21998,15 +22018,20 @@ class DynamicBlock(_Model):
     """A definition's parameters and actions.
     Attributes:
         actions: Applied in this order to the definition's objects, each on what the ones before left.
+        parameter_groups: Ordered presentation groups. Unassigned parameters retain their automatic headings;
+            membership never changes the evaluator's parameter/action order or instance values.
     """
     parameters: list[BlockParameter]
     actions: list[BlockAction] | Unset = UNSET
+    parameter_groups: list[BlockParameterGroup] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["parameters"] = [e0.to_json() for e0 in self.parameters]
         if self.actions is not UNSET:
             out["actions"] = [e0.to_json() for e0 in self.actions]
+        if self.parameter_groups is not UNSET:
+            out["parameterGroups"] = [e0.to_json() for e0 in self.parameter_groups]
         return out
 
     @classmethod
@@ -22014,6 +22039,7 @@ class DynamicBlock(_Model):
         return cls(
             parameters=[BlockParameter.from_json(e0) for e0 in data["parameters"]],
             actions=[BlockAction.from_json(e0) for e0 in data["actions"]] if "actions" in data else UNSET,
+            parameter_groups=[BlockParameterGroup.from_json(e0) for e0 in data["parameterGroups"]] if "parameterGroups" in data else UNSET,
         )
 
 
@@ -90450,6 +90476,7 @@ __all__ = [
     "BlockFileModeName",
     "BlockInserted",
     "BlockParameter",
+    "BlockParameterGroup",
     "BlockPublication",
     "BlockRecord",
     "BlockReport",
