@@ -219,6 +219,7 @@ pub enum Dialog {
     StyleImpact,
     /// Read-only impact of the current block editor draft.
     BlockReview,
+    BlockReplace,
     /// Alanlar (layer_fields.rs, docs/adr/0199 §3); the window is `App::layer_fields`.
     LayerFields,
     /// Katman süzgeci (layer_filters.rs, docs/adr/0211 §4); the window is `App::layer_filter`.

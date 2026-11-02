@@ -63,6 +63,7 @@ impl App {
             Dialog::HatchPatterns => crate::hatch_patterns_window::HATCH_PATTERNS_TITLE.to_owned(),
             Dialog::StyleImpact => crate::style_impact::IMPACT_TITLE.to_owned(),
             Dialog::BlockReview => crate::block_editor::REVIEW_TITLE.to_owned(),
+            Dialog::BlockReplace => crate::blocks_panel::REPLACE_TITLE.to_owned(),
             Dialog::LayerFields => crate::layer_fields::FIELDS_TITLE.to_owned(),
             Dialog::TopologyRules => crate::topology::rules::RULES_TITLE.to_owned(),
             Dialog::Networks => crate::networks::window::TITLE.to_owned(),
@@ -144,6 +145,12 @@ impl App {
             Some(Dialog::BlockReview) => match control {
                 Control::Press("Kapat") => Ok(Some(Message::BlockEditor(crate::block_editor::Event::CloseReview))),
                 other => Err(format!("Blok etkisi penceresinde {other} yok")),
+            },
+            Some(Dialog::BlockReplace) => match control {
+                Control::Check("Yalnız seçili yerleştirmeler", on) => Ok(Some(Message::BlocksPanel(crate::blocks_panel::Event::Replace(crate::blocks_panel::ReplaceEvent::Scope(on))))),
+                Control::Press("Değiştir") => Ok(Some(Message::BlocksPanel(crate::blocks_panel::Event::Replace(crate::blocks_panel::ReplaceEvent::Apply)))),
+                Control::Press("Vazgeç") => Ok(Some(Message::BlocksPanel(crate::blocks_panel::Event::Replace(crate::blocks_panel::ReplaceEvent::Close)))),
+                other => Err(format!("Blok değiştirme penceresinde {other} yok")),
             },
             Some(Dialog::LayerFields) => self.layer_fields_control(control),
             Some(Dialog::TopologyRules) => self.topology_rules_control(control),

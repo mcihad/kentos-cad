@@ -10,6 +10,9 @@
 //! oluştur), place the chosen one and purge the unused ones. Every change goes through
 //! `cad.blocks.edit` in the words of `kentos_interaction::blocks`, the web's.
 
+mod replace;
+pub(crate) use replace::{Event as ReplaceEvent, TITLE as REPLACE_TITLE};
+
 use std::time::{Duration, Instant};
 
 use iced::keyboard::key::Named;
@@ -48,6 +51,7 @@ type Counted = ((u64, u64), Vec<Placements>);
 #[derive(Debug, Default)]
 pub struct PanelState {
     query: String,
+    replacement: Option<replace::Window>,
     /// The row chosen with the mouse or the keys: the keyboard's row.
     pub(crate) focused: Option<BlockId>,
     /// The last row pressed and when: a second press soon after places it.
@@ -116,6 +120,7 @@ pub enum Event {
     Card(BlockId),
     /// Başka blokla değiştir ▸ (docs/adr/0317 §3): this block's inserts place the other.
     ReplaceWith(BlockId, BlockId),
+    Replace(replace::Event),
     /// Say ve çizelgele… (block_schedule.rs, docs/adr/0317 §3).
     Schedule(BlockId),
     /// The list's rows or its cards (docs/adr/0317 §4).
@@ -279,7 +284,8 @@ impl App {
             Event::Sync(id) => self.blocks_sync(id, false),
             Event::Fields(id) => self.blocks_sync(id, true),
             Event::Card(id) => self.open_block_card(id),
-            Event::ReplaceWith(from, to) => self.blocks_replace(from, to),
+            Event::ReplaceWith(from, to) => return self.blocks_replace(from, to),
+            Event::Replace(event) => return self.block_replace_event(event),
             Event::Schedule(id) => self.open_block_schedule(Some(id)),
             Event::Cards(on) => self.blocks_panel.cards = on,
             Event::Category(c) => self.blocks_panel.category = c,
@@ -999,7 +1005,7 @@ impl App {
             );
         }
         menu.detail(
-            "Yerleştirmeler yerinde kalır; uyan öznitelik değerleri taşınır, uymayanlar söylenir.",
+            "Önce kapsamı ve etkiyi inceleyin; uyumlu örnek değerleri korunur, kayıplar gösterilir.",
         )
     }
 
@@ -1054,54 +1060,6 @@ impl App {
                     Level::Success,
                     format!("“{name}” bloğunun {what}: {}.", parts.join("; ")),
                 );
-                for w in warnings {
-                    self.warn(w.message);
-                }
-            }
-            CommandResult::Failed { error }
-            | CommandResult::Conflict { error }
-            | CommandResult::NeedsInput { error } => self.warn(error.message),
-            _ => {}
-        }
-    }
-
-    /// Başka blokla değiştir: `from`'s inserts place `to` (`cad.blocks.replace`).
-    fn blocks_replace(&mut self, from: BlockId, to: BlockId) {
-        use kentos_commands::{BlocksReplace, CommandResult};
-        let Some(doc) = self.document.as_mut() else {
-            return;
-        };
-        let names = |id| {
-            doc.model
-                .block(id)
-                .map(|b| b.name.clone())
-                .unwrap_or_default()
-        };
-        let (a, b) = (names(from), names(to));
-        let input = BlocksReplace {
-            from: Some(from),
-            to: Some(to),
-            uids: None,
-            purge: None,
-            expected_revision: None,
-        };
-        let ran = kentos_native_application::blocks_replace::execute(
-            &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
-            input,
-        );
-        match ran {
-            CommandResult::Completed { output, warnings } => {
-                let mut line = format!(
-                    "“{a}” bloğunun {} yerleştirmesi “{b}” oldu.",
-                    output.replaced.len()
-                );
-                if !output.dropped.is_empty() {
-                    line.push_str(&format!(
-                        " “{b}” bloğunda karşılığı olmayan değerler düştü: {}.",
-                        output.dropped.join(", ")
-                    ));
-                }
-                self.say(Level::Success, line);
                 for w in warnings {
                     self.warn(w.message);
                 }

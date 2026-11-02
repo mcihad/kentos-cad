@@ -608,6 +608,16 @@ GUI/Python kayıtları ve tek Undo tam aynı, yeniden açma geçti.
 [ADR 0849](../docs/adr/0849-block-replacement-keeps-compatible-parameters.md).
 Bu, aile/sürüm tanıyan kitaplık yükseltme arayüzünü tamamlamaz.
 
+**İlerleme — 2026-11-02, seçilmiş değiştirme önizlemesi:** Bloklar sağ menüsü
+hemen bütün örneklere yazmaz; seçili/tüm doğrudan kapsamı ve gerçek komut
+etkisini gösterir. Onay aynı plan kimliğiyle yürür; eski sonuç veya değişmiş
+belge reddedilir. Gerçek GUI'de 1/3 kapsam, uyumsuz hedef, Esc, dar pencere,
+Python ile tam kayıt eşitliği ve her iki kapsamın tam tek Undo'su geçti.
+1603 masaüstü ve 429 Python testi, derleme ve Clippy geçti.
+[ADR 0850](../docs/adr/0850-block-replacement-scope-and-guarded-preview.md).
+Bu seçim mevcut çizim tanımları arasındadır; harici kitaplığın aile/yayın
+sürümünü izleyen yükseltme halen açıktır.
+
 Tür/sürüm ve seçilmiş yükseltme, kalıcı tip–örnek parametre kapsamı ve
 birleşik blok kabulü açıktır. Kullanıcı tanımlı grup metaverisi bu otomatik
 gruplarla tamamlanmış sayılmaz. Web öznitelik penceresinin native eşitleme kapsamıyla

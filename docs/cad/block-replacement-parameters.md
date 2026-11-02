@@ -1,5 +1,13 @@
 # Blok değişiminde örneğe özel değerler
 
+Bir veya birkaç yerleştirmeyi seçin. **Bloklar › Bu çizim** panelinde kaynak
+tanımın sağ menüsünden **Başka blokla değiştir** ile hedefi seçin. Açılan
+pencerede **Yalnız seçili yerleştirmeler** açıkken sadece açılışta seçilen
+uygun örnekler alınır; kapatılınca bütün doğrudan yerleştirmeler alınır.
+Etki sayısını ve varsa veri kaybını okuyup **Değiştir** ile uygulayın.
+Vazgeç/Esc yazmaz. İç içe tanımlar ve eski tanım tutulur. Çizim arada
+değişmişse pencereyi kapatıp güncel kapsamı yeniden incelemek gerekir.
+
 Yerleştirmeyi seçin, **Öznitelikler › Geometri › Blok** alanından hedef tanımı
 seçin. Yalnız o yerleştirme değişir. Uyumlu ad/türdeki örnek değerleri korunur;
 hedef formülleri yeniden hesaplanır. Uyumsuz girdi varsa işlem reddedilir,

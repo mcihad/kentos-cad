@@ -51,6 +51,10 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ADR 0850: Bloklar değiştirme akışına açık seçili/tüm doğrudan kapsam,
+  gerçek komut planı, kayıp raporu ve eski belge/plan koruması gelecek.
+  İç içe tanım kapsamı genişletilmez; web kabulü henüz yapılmadı.
+
 - ADR 0849: web'in blok tanımı seçimi ayrı geometri yazarak örnek değerlerini
   sıfırlamamalı; `cad.blocks.replace` kapsamı, uyumlu parametre koruması ve
   `invalid_parameter_value` atomik reddiyle eşitlenmeli. Üretilen katalog

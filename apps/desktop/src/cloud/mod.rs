@@ -939,6 +939,7 @@ impl App {
         use crate::app::Dialog;
         match self.dialog.take() {
             Some(Dialog::BlockReview) => self.block_editor_review_close(),
+            Some(Dialog::BlockReplace) => self.block_replace_close(),
             Some(Dialog::ArchTemplate) => self.arch_template = None,
             Some(Dialog::SignIn) => self.cloud.sign_in = None,
             Some(Dialog::Catalog) if self.cloud.share.is_some() => {
