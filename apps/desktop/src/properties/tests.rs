@@ -3253,3 +3253,261 @@ fn single_cad_text_height_uses_the_same_physical_units_and_atomic_validation_as_
         assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(),before,"{bad}");
     }
 }
+
+
+/// CAD-ADV-06: the inspector is a unit-aware view over unchanged canonical block parameters.
+fn parameter_drawing(unit: kentos_commands::DrawingUnit, unitless: bool) -> (App, Slot) {
+    let mut snapshot = kentos_kcad::decode(include_bytes!(
+        "../../../../fixtures/kcad/v2/dynamic-blocks.kcad"
+    ))
+    .unwrap();
+    snapshot.settings.drawing_unit = Some(unit);
+    if unitless {
+        snapshot.blocks[0].units = Some(kentos_commands::BlockUnits::Unitless);
+    }
+    let mut app = crate::files_testing::app_with_drawing();
+    let doc = crate::document::Document::from_v2(snapshot, None).unwrap();
+    let uid = doc
+        .model
+        .entities_with_uids()
+        .find_map(|(uid, e)| matches!(e, Entity::Insert(_)).then_some(uid))
+        .unwrap();
+    let slot = doc.model.slot_of(uid).unwrap();
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    app.selection.set([slot]);
+    (app, slot)
+}
+
+#[test]
+fn block_parameter_mm_input_uses_canonical_metres_rules_and_one_undo() {
+    use kentos_commands::DrawingUnit;
+    let (mut app, slot) = parameter_drawing(DrawingUnit::Mm, false);
+    assert_eq!(value(&app, "Blok parametreleri", "Genişlik"), "900 mm");
+    let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+    event(
+        &mut app,
+        Event::Commit(Field::Parameter(slot, "Genişlik".into()), "1050".into()),
+    );
+    assert_eq!(value(&app, "Blok parametreleri", "Genişlik"), "1050 mm");
+    let model = &app.document.as_ref().unwrap().model;
+    let Entity::Insert(i) = model.get(slot).unwrap() else {
+        panic!()
+    };
+    assert_eq!(
+        i.parameters["Genişlik"],
+        kentos_commands::ParamValue::Number(1.05)
+    );
+    let call = model.journal().last().unwrap();
+    assert_eq!(call.command.as_deref(), Some("cad.blocks.parameters"));
+    assert_eq!(call.input.as_ref().unwrap()["values"]["Genişlik"], 1.05);
+    let changed = model.to_snapshot_v2();
+    // A real rule failure must be atomic; an invalid suffix must never silently become a number.
+    for text in ["2000", "950 bananas", "NaN", ""] {
+        event(
+            &mut app,
+            Event::Commit(Field::Parameter(slot, "Genişlik".into()), text.into()),
+        );
+        assert_eq!(
+            app.document.as_ref().unwrap().model.to_snapshot_v2(),
+            changed,
+            "{text}"
+        );
+    }
+    assert!(undo_label(&mut app).is_some());
+    assert_eq!(
+        app.document.as_ref().unwrap().model.to_snapshot_v2(),
+        before
+    );
+    event(
+        &mut app,
+        Event::Commit(Field::Parameter(slot, "Genişlik".into()), "105 cm".into()),
+    );
+    assert_eq!(value(&app, "Blok parametreleri", "Genişlik"), "1050 mm");
+}
+
+#[test]
+fn block_parameter_unitless_numbers_are_not_reinterpreted_as_metres() {
+    use kentos_commands::{DrawingUnit, ParamValue};
+    for unit in [
+        DrawingUnit::Mm,
+        DrawingUnit::Cm,
+        DrawingUnit::M,
+        DrawingUnit::In,
+        DrawingUnit::Ft,
+    ] {
+        let (mut app, slot) = parameter_drawing(unit, true);
+        let label = kentos_interaction::Format::of(app.document.as_ref().unwrap().model.settings())
+            .length_unit_label();
+        assert_eq!(
+            value(&app, "Blok parametreleri", "Genişlik"),
+            format!("0.9 {label}")
+        );
+        event(
+            &mut app,
+            Event::Commit(Field::Parameter(slot, "Genişlik".into()), "1.05".into()),
+        );
+        let Entity::Insert(i) = app.document.as_ref().unwrap().model.get(slot).unwrap() else {
+            panic!()
+        };
+        let ParamValue::Number(n) = i.parameters["Genişlik"] else {
+            panic!()
+        };
+        assert!((n - 1.05).abs() < 1e-12, "{unit:?}: {n}");
+        assert_eq!(
+            value(&app, "Blok parametreleri", "Genişlik"),
+            format!("1.05 {label}")
+        );
+    }
+}
+
+#[test]
+fn block_parameter_angles_local_points_and_derived_values_follow_project_units() {
+    use kentos_commands::{AngleUnit, BlockParameter, DrawingUnit, NumberRule, ParamValue};
+    let (mut app, slot) = parameter_drawing(DrawingUnit::Mm, false);
+    let mut snapshot = app.document.as_ref().unwrap().model.to_snapshot_v2();
+    snapshot.settings.angle_unit = AngleUnit::Grad;
+    let d = snapshot.blocks[0].dynamic.as_mut().unwrap();
+    d.parameters.extend([
+        BlockParameter::Angle {
+            name: "Dönüş".into(),
+            center: Wire { x: 0., y: 0. },
+            base: std::f64::consts::FRAC_PI_2,
+            rule: NumberRule::default(),
+        },
+        BlockParameter::Point {
+            name: "Yerel nokta".into(),
+            at: Wire { x: 0.125, y: -0.25 },
+        },
+        BlockParameter::Linear {
+            name: "Çift genişlik".into(),
+            from: Wire { x: 0., y: 0. },
+            to: Wire { x: 1.8, y: 0. },
+            rule: NumberRule {
+                expression: Some("@Genişlik * 2".into()),
+                ..Default::default()
+            },
+        },
+    ]);
+    let doc = crate::document::Document::from_v2(snapshot, None).unwrap();
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    app.selection.set([slot]);
+    assert_eq!(value(&app, "Blok parametreleri", "Dönüş"), "100.0000 g");
+    assert_eq!(
+        value(&app, "Blok parametreleri", "Yerel nokta"),
+        "125, -250 mm"
+    );
+    assert_eq!(
+        value(&app, "Blok parametreleri", "Çift genişlik"),
+        "1800 mm"
+    );
+    assert!(
+        rows(&app)
+            .iter()
+            .flat_map(|(_, r)| r)
+            .find(|r| r.label == "Çift genişlik")
+            .unwrap()
+            .editor
+            .is_none()
+    );
+    event(
+        &mut app,
+        Event::Commit(Field::Parameter(slot, "Dönüş".into()), "50".into()),
+    );
+    event(
+        &mut app,
+        Event::Commit(
+            Field::Parameter(slot, "Yerel nokta".into()),
+            "250 mm, -50 cm".into(),
+        ),
+    );
+    assert_eq!(value(&app, "Blok parametreleri", "Dönüş"), "50.0000 g");
+    assert_eq!(
+        value(&app, "Blok parametreleri", "Yerel nokta"),
+        "250, -500 mm"
+    );
+    let Entity::Insert(i) = app.document.as_ref().unwrap().model.get(slot).unwrap() else {
+        panic!()
+    };
+    let ParamValue::Number(a) = i.parameters["Dönüş"] else {
+        panic!()
+    };
+    assert!((a - std::f64::consts::FRAC_PI_4).abs() < 1e-12);
+    assert_eq!(
+        i.parameters["Yerel nokta"],
+        ParamValue::Point(Wire { x: 0.25, y: -0.5 })
+    );
+    // Lookup choices remain canonical values; conversion belongs only to the text editor.
+    event(
+        &mut app,
+        Event::Parameter(slot, "Tip".into(), ParamValue::Text("Dar".into())),
+    );
+    assert_eq!(value(&app, "Blok parametreleri", "Genişlik"), "700 mm");
+    assert_eq!(
+        value(&app, "Blok parametreleri", "Çift genişlik"),
+        "1400 mm"
+    );
+    event(
+        &mut app,
+        Event::Commit(
+            Field::Parameter(slot, "Yerel nokta".into()),
+            "1e-8 -2e-8".into(),
+        ),
+    );
+    let shown = rows(&app)
+        .into_iter()
+        .flat_map(|(_, r)| r)
+        .find(|r| r.label == "Yerel nokta")
+        .unwrap()
+        .value;
+    // Values emitted with scientific notation must be accepted again, without scale drift.
+    let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+    event(
+        &mut app,
+        Event::Commit(Field::Parameter(slot, "Yerel nokta".into()), shown),
+    );
+    assert_eq!(
+        app.document.as_ref().unwrap().model.to_snapshot_v2(),
+        before
+    );
+}
+
+#[test]
+fn block_parameter_physical_dimensions_stay_independent_of_instance_scale_in_all_units() {
+    use kentos_commands::{DrawingUnit, ParamValue};
+    for (unit, initial) in [
+        (DrawingUnit::Mm, 900.),
+        (DrawingUnit::Cm, 90.),
+        (DrawingUnit::M, 0.9),
+        (DrawingUnit::In, 9000. / 254.),
+        (DrawingUnit::Ft, 750. / 254.),
+    ] {
+        let (mut app, slot) = parameter_drawing(unit, false);
+        let model = &app.document.as_ref().unwrap().model;
+        let id = model.get(slot).unwrap().base().id;
+        let mut snapshot = model.to_snapshot_v2();
+        let Entity::Insert(i) = snapshot
+            .entities
+            .iter_mut()
+            .find(|e| e.base().id == id)
+            .unwrap()
+        else {
+            panic!()
+        };
+        i.scale = 3.;
+        let doc = crate::document::Document::from_v2(snapshot, None).unwrap();
+        let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+        app.selection.set([slot]);
+        let shown = value(&app, "Blok parametreleri", "Genişlik");
+        let n: f64 = shown.split_whitespace().next().unwrap().parse().unwrap();
+        assert!((n - initial).abs() < 1e-10, "{unit:?}: {shown}");
+        event(
+            &mut app,
+            Event::Commit(Field::Parameter(slot, "Genişlik".into()), "105 cm".into()),
+        );
+        let Entity::Insert(i) = app.document.as_ref().unwrap().model.get(slot).unwrap() else {
+            panic!()
+        };
+        assert_eq!(i.scale, 3.);
+        assert_eq!(i.parameters["Genişlik"], ParamValue::Number(1.05));
+    }
+}

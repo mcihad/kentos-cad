@@ -2138,20 +2138,31 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         let Some(Entity::Insert(i)) = model.get(*slot) else {
             return Vec::new();
         };
-        let Some(p) = model
-            .block(i.block)
-            .and_then(|b| b.dynamic.as_ref())
+        let Some(block) = model.block(i.block) else {
+            return Vec::new();
+        };
+        let Some(p) = block
+            .dynamic
+            .as_ref()
             .and_then(|d| d.parameters.iter().find(|p| p.name() == name))
         else {
             return Vec::new();
         };
-        let Some(value) = rows::params::typed(p, text) else {
+        let factor = kentos_native_application::blocks_insert::unit_factor(model, block);
+        let Some(value) = rows::params::typed(p, text, f, factor) else {
             return vec![format!(
                 "“{name}” için {} yazın.",
                 match p {
-                    kentos_commands::BlockParameter::Angle { .. } => "derece olarak bir açı",
-                    kentos_commands::BlockParameter::Linear { .. } => "bir sayı",
-                    _ => "“doğu, kuzey” olarak iki sayı",
+                    kentos_commands::BlockParameter::Angle { .. } => {
+                        format!("{} biriminde bir açı", f.angle_unit_label())
+                    }
+                    kentos_commands::BlockParameter::Linear { .. } => format!(
+                        "{} biriminde bir uzunluk (ör. 900 mm)", f.length_unit_label()
+                    ),
+                    _ => format!(
+                        "yerel X, Y olarak iki uzunluk ({}; ör. 900 mm, 250 mm)",
+                        f.length_unit_label()
+                    ),
                 }
             )];
         };

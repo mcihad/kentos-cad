@@ -6,7 +6,7 @@
 
 use kentos_commands::{BlockParameter, InsertEntity, ParamValue};
 use kentos_domain::Slot;
-use kentos_interaction::fixed;
+use kentos_interaction::Format;
 
 use super::{Choice, Editor, Row};
 use crate::app::Message;
@@ -14,37 +14,55 @@ use crate::document::Document;
 use crate::properties::{Event, Field};
 
 /// How a value is shown in its cell.
-pub(crate) fn shown(v: &ParamValue) -> String {
+fn shown(p: &BlockParameter, v: &ParamValue, f: Format, factor: f64) -> String {
     match v {
         ParamValue::Flag(b) => if *b { "Evet" } else { "Hayır" }.to_owned(),
-        ParamValue::Number(x) => fixed(*x, 3),
+        ParamValue::Number(x) if matches!(p, BlockParameter::Angle { .. }) => f.angle_bare(*x),
+        ParamValue::Number(x) => f.plain(*x * factor),
         ParamValue::Text(t) => t.clone(),
-        ParamValue::Point(p) => format!("{}, {}", fixed(p.x, 3), fixed(p.y, 3)),
+        // These are definition-local coordinates, not world/UCS coordinates.
+        ParamValue::Point(p) => format!("{}, {}", f.plain(p.x * factor), f.plain(p.y * factor)),
     }
 }
 
-/// The value typed in a cell for `p` (docs/adr/0319 §3): a length as a number, an angle in degrees, a point as two
-/// numbers (east, north) apart by a comma, a semicolon or a space; none when it does not read.
-pub(crate) fn typed(p: &BlockParameter, text: &str) -> Option<ParamValue> {
-    let n = |t: &str| {
-        let x = crate::properties::web_number(t.trim());
+/// Project-unit input, converted back to definition-local values. A unitless definition uses raw drawing-unit
+/// coordinates; physical definitions use metres (`blocks_insert::unit_factor`). The insert's extra scale is not
+/// part of its parameter. Public commands keep their canonical contract.
+pub(crate) fn typed(p: &BlockParameter, text: &str, f: Format, factor: f64) -> Option<ParamValue> {
+    use kentos_geometry_core::tools::point_text::{
+        Len, parse_length, parse_length_pair, parse_number,
+    };
+    // Keep complete numeric input (including an exponent emitted by Format::plain) without parseFloat's
+    // dangerous acceptance of a numeric prefix followed by an unknown unit.
+    let number = |t: &str| t.trim().replacen(',', ".", 1).parse::<f64>().ok();
+    let length = |t: &str| parse_length(t).or_else(|| number(t).map(Len::Unit));
+    let local = |v: kentos_geometry_core::tools::point_text::Len| {
+        let x = v.metres(|n| f.to_metres(n)) / factor;
         x.is_finite().then_some(x)
     };
     match p {
-        BlockParameter::Linear { .. } => n(text).map(ParamValue::Number),
-        BlockParameter::Angle { .. } => n(text).map(|d| ParamValue::Number(d.to_radians())),
+        BlockParameter::Linear { .. } => local(length(text)?).map(ParamValue::Number),
+        BlockParameter::Angle { .. } => {
+            let a = f.angle_from_typed(parse_number(text).or_else(|| number(text))?);
+            a.is_finite().then_some(ParamValue::Number(a))
+        }
         BlockParameter::Polar { .. } | BlockParameter::Point { .. } => {
-            let parts: Vec<&str> = text
-                .split([',', ';', ' '])
-                .filter(|s| !s.trim().is_empty())
-                .collect();
-            match parts.as_slice() {
-                [x, y] => Some(ParamValue::Point(kentos_commands::Vec2 {
-                    x: n(x)?,
-                    y: n(y)?,
-                })),
-                _ => None,
-            }
+            let separator = if text.contains(';') { ';' } else { ',' };
+            let pair = if text.matches(separator).count() == 1 {
+                let (x, y) = text.split_once(separator)?;
+                Some((length(x)?, length(y)?))
+            } else {
+                parse_length_pair(text).or_else(|| {
+                    let mut parts = text.split_whitespace();
+                    let pair = (length(parts.next()?)?, length(parts.next()?)?);
+                    parts.next().is_none().then_some(pair)
+                })
+            };
+            let (x, y) = pair?;
+            Some(ParamValue::Point(kentos_commands::Vec2 {
+                x: local(x)?,
+                y: local(y)?,
+            }))
         }
         _ => None,
     }
@@ -73,24 +91,30 @@ fn choose(slot: Slot, name: &str, shown: &str, labels: Vec<(String, ParamValue)>
 
 /// The rows of insert `i`, one a parameter, then Değerler; none for a plain block's insert. Editors unless locked.
 pub(super) fn rows(doc: &Document, slot: Slot, i: &InsertEntity, locked: bool) -> Vec<Row> {
-    let Some(d) = doc.model.block(i.block).and_then(|b| b.dynamic.as_ref()) else {
+    let Some(block) = doc.model.block(i.block) else {
         return Vec::new();
     };
+    let Some(d) = block.dynamic.as_ref() else {
+        return Vec::new();
+    };
+    let f = Format::of(doc.model.settings());
+    let factor = kentos_native_application::blocks_insert::unit_factor(&doc.model, block);
     let current = kentos_native_application::block_params::current(d, &i.parameters);
     let mut out = Vec::new();
     for p in &d.parameters {
         let name = p.name();
         let value = current.get(name);
-        let text = value.map_or_else(|| "—".to_owned(), shown);
+        let text = value.map_or_else(|| "—".to_owned(), |v| shown(p, v, f, factor));
         let derived = p.rule().is_some_and(|r| r.expression.is_some());
         let row = match p {
-            BlockParameter::Linear { .. } => Row::figure(name.to_owned(), text.clone()),
+            BlockParameter::Linear { .. } => {
+                Row::figure(name.to_owned(), text.clone()).unit(f.length_unit_label())
+            }
             BlockParameter::Angle { .. } => {
-                let deg = match value {
-                    Some(ParamValue::Number(a)) => fixed(a.to_degrees(), 4),
-                    _ => "—".to_owned(),
-                };
-                Row::figure(name.to_owned(), deg).unit("°")
+                Row::figure(name.to_owned(), text.clone()).unit(f.angle_unit_label())
+            }
+            BlockParameter::Polar { .. } | BlockParameter::Point { .. } => {
+                Row::text(name.to_owned(), text.clone()).unit(f.length_unit_label())
             }
             _ => Row::text(name.to_owned(), text.clone()),
         };

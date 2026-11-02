@@ -557,6 +557,16 @@ Temiz adayda 1584 masaüstü, 317 application, 50 MCP, dört Python testi,
 Clippy ve dosya doğrulaması geçti.
 [ADR 0844](../docs/adr/0844-block-attribute-rename-identity.md),
 [Python/MCP rehberi](../docs/cad/block-attribute-renames.md).
+**İlerleme — 2026-11-02, birim paneli:** Doğrusal/nokta parametreleri
+proje uzunluk birimiyle, açı derece/grad ayarıyla okunur ve düzenlenir.
+Fiziksel/birimsiz tanım ayrımı ve ilave örnek ölçeği korunur; mm/cm/m/in/ft,
+formül, lookup, sınır dışı/bozuk giriş ve tek Undo kabulü geçti. Gerçek
+GUI'de 900→1050 mm düzenlemesinin dosyası Python ile tam aynı, GUI tek
+Undo dosyası ilk durumla tam aynı; geniş ve dar pencere görüldü.
+1588 masaüstü ve 50 MCP testi, derleme ve Clippy geçti.
+[ADR 0845](../docs/adr/0845-block-parameter-project-units.md).
+Bu, aşağıdaki ileri kapsamın bittiği anlamına gelmez.
+
 Tür/sürüm ve seçilmiş yükseltme, okunur parametre grupları, tip–örnek
 ayrımı, iç içe etki önizlemesi, editörde test yerleştirmesi ve birleşik
 blok kabulü açıktır. Web öznitelik penceresinin native eşitleme kapsamıyla
