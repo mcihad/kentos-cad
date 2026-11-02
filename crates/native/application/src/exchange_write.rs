@@ -2,7 +2,7 @@
 //! Başka çizimden al, Katman olarak ekle, Dosyadan blok ekle and Yapıştır write after the exchange's rules
 //! (`kentos_domain::exchange`) made the drawing they bring in.
 
-use kentos_commands::{BlockDefinition, Entity, LayerNode, LayerNodeType};
+use kentos_commands::{BlockDefinition, LayerNode, LayerNodeType};
 use kentos_domain::NewLayer;
 
 /// What went into the drawing as one undo step.
@@ -80,39 +80,20 @@ pub fn changes_tree(model: &kentos_domain::Document, nodes: &[LayerNode]) -> boo
     })
 }
 
-/// The blocks of `blocks` the drawing has not, and the met ones redefined,
-/// each once the blocks it places are there (the web's `putLayersAndBlocks`).
+/// New and replaced definitions written together after checking the final
+/// graph, including coordinated changes of nested parameter values.
 pub fn put_blocks(
     model: &mut kentos_domain::Document,
     blocks: &[BlockDefinition],
     counts: &mut Counts,
 ) -> Result<(), String> {
-    let mut pending: Vec<BlockDefinition> = blocks.to_vec();
-    let mut guard = pending.len() + 1;
-    while !pending.is_empty() && guard > 0 {
-        guard -= 1;
-        let mut i = 0;
-        while i < pending.len() {
-            let b = &pending[i];
-            // A definition may place only blocks the drawing has (docs/adr/0144): a redefinition waits too.
-            let ready = b.entities.iter().all(|e| match e {
-                Entity::Insert(ins) => ins.block == b.id || model.block(ins.block).is_some(),
-                _ => true,
-            });
-            if !ready {
-                i += 1;
-                continue;
-            }
-            let b = pending.remove(i);
-            if model.block(b.id).is_some() {
-                if model.update_block(b).map_err(|r| r.0)? {
-                    counts.redefined += 1;
-                }
-            } else {
-                model.add_block(b).map_err(|r| r.0)?;
-                counts.blocks += 1;
-            }
-        }
-    }
+    let added = blocks.iter().filter(|b| model.block(b.id).is_none()).count();
+    let redefined = blocks
+        .iter()
+        .filter(|b| model.block(b.id).is_some_and(|old| old != *b))
+        .count();
+    model.merge_blocks(blocks).map_err(|r| r.0)?;
+    counts.blocks += added;
+    counts.redefined += redefined;
     Ok(())
 }

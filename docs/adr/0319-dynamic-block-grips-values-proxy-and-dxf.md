@@ -146,7 +146,7 @@ Dinamik blokla yapılan üç iş ayrı komutlardır, katalogda ayrı yetenekleri
   - nokta ve kutupsal tutamaçlar yalnız çevirmelerin aynasını izler. Taşıma ve döndürmeyle kayan bir parametrenin tutamacı
     tanımdaki yerindedir;
   - DXF'te dinamik blok taşınmaz; KentOS'ta yeniden açılan dosyanın blokları düzdür (§5);
-  - tanımın içindeki iç içe dinamik yerleştirme DXF'e değerleriyle değil, varsayılanıyla gider;
+  - iç içe dinamik yerleştirmenin DXF'e varsayılanıyla gitme sınırı [ADR 0851](0851-dynamic-block-default-visibility-and-nested-dxf.md) ile kaldırıldı; kendi değerleriyle sabit geometri yazılır;
   - görünürlük ve tablonun tutamacı yoktur (Öznitelikler'den seçilir).
 
 ## Doğrulama

@@ -196,3 +196,64 @@ fn an_edit_without_a_command_has_no_buttons() {
         .clone();
     assert!(app.call_buttons(&call, false).is_some());
 }
+
+#[test]
+fn block_only_file_update_does_not_claim_the_drawing_was_unchanged() {
+    let mut app = crate::files_testing::app_with_drawing();
+    let mut source = kentos_kcad::decode(include_bytes!(
+        "../../../../fixtures/kcad/v2/dynamic-blocks.kcad"
+    ))
+    .expect("fixture");
+    app.document = Some(crate::document::Document::from_v2(source.clone(), None).expect("drawing"));
+    let id = source.blocks[0].id;
+    let instances = source.entities.clone();
+    source.blocks[0].entities.push(
+        serde_json::from_value(json!({
+            "kind":"line","id":5,"layerId":"","attrs":{},
+            "a":{"x":0.06,"y":0.45},"b":{"x":0.3,"y":0.45}
+        }))
+        .expect("new piece"),
+    );
+    let folder = crate::files_testing::scratch("history-block-outcome");
+    let path = folder.join("updated.kcad");
+    crate::document::write(&source, &path).expect("source file");
+    app.blocks_redefine_chosen(id, Some(path.clone()));
+    let _ = app.update(Message::LogFrame);
+    let entry = app.history.entries.iter().find(|e| {
+        matches!(&e.call, Call::Row(r) if r.command.as_deref() == Some("file.import.block"))
+    }).expect("file command in history").clone();
+    let row = app.row_now(&entry).expect("current row");
+    assert_ne!(row.base, row.revision);
+    assert!(row.created.is_empty() && row.changed.is_empty() && row.removed.is_empty());
+    assert_eq!(super::text::outcome(row), "Çizim güncellendi");
+    assert_eq!(
+        app.document
+            .as_ref()
+            .unwrap()
+            .model
+            .to_snapshot_v2()
+            .entities,
+        instances
+    );
+
+    app.blocks_redefine_chosen(id, Some(path));
+    let _ = app.update(Message::LogFrame);
+    let unchanged = app
+        .history
+        .entries
+        .iter()
+        .rev()
+        .find_map(|e| match &e.call {
+            Call::Row(row) if row.command.as_deref() == Some("file.import.block") => Some(row),
+            _ => None,
+        })
+        .expect("no-op command");
+    assert_eq!(unchanged.base, unchanged.revision);
+    assert_eq!(super::text::outcome(unchanged), "Çizimde değişiklik yok");
+    let _ = app.run("edit.undo");
+    assert_eq!(
+        super::text::outcome(app.row_now(&entry).expect("undo row")),
+        "Çizim güncellendi · geri alındı"
+    );
+    std::fs::remove_dir_all(folder).unwrap();
+}

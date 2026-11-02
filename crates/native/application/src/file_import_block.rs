@@ -12,13 +12,14 @@
 //! naming none without `sourceUnit` is refused. `category` goes on the cards of the blocks taken that have none, and
 //! the answer gives each block's size.
 
+use std::collections::HashSet;
 use std::path::Path;
 
 use kentos_commands::{
     BlockCard, BlockFileImported, BlockFileMode, BlockId, BlockSize, CommandResult,
     DocumentSnapshotV1, DocumentSnapshotV2, DrawingUnit, FileUnit, ImportBlock, UnitDecision,
 };
-use kentos_domain::Document;
+use kentos_domain::{Document, Slot};
 use kentos_domain::exchange::{self, Picks, Same, block_key};
 
 use crate::ExecutionContext;
@@ -207,6 +208,7 @@ fn read(input: &ImportBlock) -> Result<Read, Stop> {
 /// What is written: the drawing with what came in, and what the answer says.
 struct Checked {
     drawing: DocumentSnapshotV2,
+    changes: Vec<(Slot, kentos_commands::Entity)>,
     block: Option<BlockId>,
     skipped: Vec<String>,
     /// The pictures and tables a block cannot hold, left out of `drawing` mode.
@@ -267,6 +269,24 @@ fn check(doc: &Document, input: &ImportBlock) -> Result<Checked, Stop> {
         let ours = doc.to_snapshot_v2();
         categorised(&ours, &mut checked.drawing, category);
     }
+    let incoming: HashSet<_> = checked
+        .drawing
+        .blocks
+        .iter()
+        .filter(|b| doc.block(b.id).is_none_or(|old| old != *b))
+        .map(|b| b.id)
+        .collect();
+    checked.changes = crate::block_params::refresh_definitions(
+        doc,
+        &mut checked.drawing.blocks,
+        &incoming,
+    )
+    .map_err(|stop| {
+        let mut fault = stop.into_error();
+        fault.code = codes::BLOCK_REFUSED.into();
+        fault.path = Some("path".into());
+        Stop::failed(fault)
+    })?;
     Ok(checked)
 }
 
@@ -297,6 +317,7 @@ fn check_read(doc: &Document, input: &ImportBlock) -> Result<Checked, Stop> {
                 b.units = Some(units);
             }
             Ok(Checked {
+                changes: Vec::new(),
                 drawing: made.drawing,
                 block: Some(id),
                 skipped: Vec::new(),
@@ -367,6 +388,7 @@ fn check_read(doc: &Document, input: &ImportBlock) -> Result<Checked, Stop> {
                 Stop::failed(error(codes::IMPORT_UNREADABLE, why, Some("path".into())))
             })?;
             Ok(Checked {
+                changes: Vec::new(),
                 drawing,
                 block: None,
                 skipped,
@@ -439,6 +461,9 @@ fn write(doc: &mut Document, input: &ImportBlock) -> CommandResult<BlockFileImpo
             Some("path".into()),
         ))
         .into();
+    }
+    for (slot, entity) in checked.changes {
+        doc.update(slot, entity);
     }
     doc.end_group(group);
     // The text and dimension styles and the library items the pieces use are settings, as Başka çizimden al has

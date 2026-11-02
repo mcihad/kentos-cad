@@ -618,6 +618,64 @@ Python ile tam kayıt eşitliği ve her iki kapsamın tam tek Undo'su geçti.
 Bu seçim mevcut çizim tanımları arasındadır; harici kitaplığın aile/yayın
 sürümünü izleyen yükseltme halen açıktır.
 
+**İlerleme — 2026-11-02, iç içe statik aktarım:** Varsayılan ilk görünüşün
+gizli parçaları özel değer yokken de gizlidir. Varyant parça sırası değişince
+etiketin kaybolması gerçek GUI tekrarında yakalandı ve aynı varyant önbelleğiyle
+düzeltildi. DXF bütün iç içe referansları kendi değerlerinde sabitler; aynı
+çocuk varyantını paylaşır, kullanılmayan kitaplık tanımlarını tutar ve
+parametre/eylem kaybını ayrı uyarıyla bildirir. 315 çekirdek, 317 application,
+881 etkileşim, 82 headless, 54 MCP, 1603 masaüstü ve 431 Python testi;
+derleme ve Clippy geçti. DXF penceresinin birim açıklaması gerçek çıktı
+birimiyle eşitlendi. Gerçek GUI'de 900/1200 mm ve iki görünüş, korunmuş etiketler,
+DXF tekrar açılışı görüldü. GUI/Python DXF baytları ve aktarım öncesi/sonrası
+kaynak KCAD tam aynı; görünüş değişimi/tek Undo ayrıca kayıttan denetlendi.
+[ADR 0851](../docs/adr/0851-dynamic-block-default-visibility-and-nested-dxf.md),
+[aktarım/API rehberi](../docs/cad/block-static-dxf.md). Bu dilim aile/yayın
+sürümü veya kalıcı tip–örnek kapsamını tamamlamaz.
+
+**İlerleme — 2026-11-02, kitaplık güncellemesinde kaynak güvenliği:**
+Kitaplık veya dosyadan yeniden tanımlama, sahnedeki mevcut parametre ve
+özel öznitelik konumlarını da birleşik son tanımlara göre doğrular.
+Önceden başarılı görünüp sonraki kaydı bozan dinamik→düz değişim,
+daraltılmış değer aralığı ve artık taşınamayan özel konum atomik reddedilir.
+317 application, 55 MCP, 1603 masaüstü, 436 Python testi, Clippy ve derleme
+geçti. Gerçek GUI konsolundan iki import yolunun reddi, uyumlu geometri
+uygulama ve gerçek tek Undo denetlendi; ret/Undo kayıtları başlangıçla,
+uyumlu GUI kaydı bağımsız Python ile bayt düzeyinde aynı.
+[ADR 0852](../docs/adr/0852-block-library-replacement-validates-scene-inserts.md),
+[API rehberi](../docs/cad/block-library-update-safety.md). Değişen formül ve
+birim semantiği ayrıca ele alınacak; bu koruma aile/yayın yükseltmesi değildir.
+
+**İlerleme — 2026-11-02, bağlı kitaplık tanımlarını birlikte uygulama:**
+Var olan ana tanım yeni çocukla veya çocuktaki parametre adı değişimiyle
+aynı işlemde güncellenebilir. Ara tanımları tek tek doğrulayan sıra hatası
+kapatıldı; birleşik son grafik denetlenip tek Undo/Redo olarak yazılır.
+134 domain, 317 application, 56 MCP, 1603 masaüstü ve 440 Python testi,
+Clippy ve derleme geçti. Eski GUI'de hem konsol planı hem sağ tuş dosyadan
+yeniden tanımlama hatası üretildi; yeni GUI aynı dosya/menüyle geçti.
+Her iki GUI yolunun kayıtları Python ile, gerçek tek Undo kayıtları
+başlangıçla tam aynı. Araya farklı işlem giren tekrar kabul dışı bırakılıp
+temiz tekrar yapıldı. [ADR 0853](../docs/adr/0853-related-block-library-definitions-apply-together.md).
+Geçmiş kartının yalnız tanım değişince “değişiklik yok” özeti vermesi
+GUI'de tespit edildi ve ayrıca düzeltilecek; kayıt doğruluğu bununla karıştırılmadı.
+
+**İlerleme — 2026-11-02, geçmişte doğru sonuç:** Nesne listesi değişmeden
+blok tanımı değiştiğinde kart artık “Çizim güncellendi” der; gerçek no-op'un
+“değişiklik yok” ve Undo'nun durum eki korunur. Aynı dosyanın gerçek sağ tuş
+menüsüyle iki kez alınması ve tek Undo ekranlarıyla doğrulandı. 1604 masaüstü
+testi, Clippy ve derleme geçti. [ADR 0854](../docs/adr/0854-history-revision-fallback-for-definition-writes.md).
+
+**İlerleme — 2026-11-02, kitaplık formüllerinin güncellenmesi:** Yeni tanım
+mevcut örneklerin ve değişmeyen ana bloklardaki etkilenen iç yerleştirmelerin
+hesaplanan değerlerini kendi literal girdileriyle yeniden hesaplar. Tek
+örneğin hesabı tanımsızsa bütün güncelleme yazmadan reddedilir. Gerçek eski
+GUI'de kalan 450/500/450 mm önbelleği üretildi; yeni GUI aynı kitaplıkla
+300/333,333…/300 mm ve doğru geometri verdi. GUI/Python kayıtları tam aynı;
+gerçek tek Undo ve ret kayıtları başlangıçla tam aynı, gerçek yeniden açılış
+korundu. 318 application, 57 MCP, 1604 masaüstü ve 444 Python testi, Clippy
+ve derleme geçti. [ADR 0855](../docs/adr/0855-block-library-refreshes-formula-values.md).
+Birim semantiği ve aile/yayın yükseltmesi bu düzeltmeyle tamamlanmaz.
+
 Tür/sürüm ve seçilmiş yükseltme, kalıcı tip–örnek parametre kapsamı ve
 birleşik blok kabulü açıktır. Kullanıcı tanımlı grup metaverisi bu otomatik
 gruplarla tamamlanmış sayılmaz. Web öznitelik penceresinin native eşitleme kapsamıyla
@@ -704,6 +762,13 @@ ayrımı. [R04]
 oluştur. Kaynağı böl, blok tanımını değiştir ve bir referansı sil; teşhis
 ve yeniden bağlamayı dene. 1:20/1:50 paftalarda gerçek değer, kâğıt boyu,
 birim/tolerans ve metin konumu tutarlı olsun; zoom gerçek değeri etkilemesin.
+
+**Kodla doğrulanan ek açık — 2026-11-02:** `headless/query.rs::item`,
+`entity_bounds(Shape::Insert)` yoluyla sadece ekleme noktasını döndürüyor;
+`drawing.measure` blok kutusu görünen geometriyi kapsamıyor. İç içe, dönmüş
+ve farklı birimli blokta etkin varyant/kırpma/katman kapsamını esas alan
+kutuyu API ve GUI'de aynı kuralla doğrula. ADR 0851 aktarım testi bu eksik
+kutuyla değil gerçek parça uçlarıyla doğrulanmıştır.
 
 ### CAD-ADV-10 — Yazı ve field üretimini ekran ile çıktıda aynı hale getir [ ]
 

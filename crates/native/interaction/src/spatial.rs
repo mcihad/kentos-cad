@@ -1847,12 +1847,11 @@ impl Spatial {
         }
     }
 
-    /// Piece `place` of the insert `id`'s block, as its definition holds it.
+    /// Piece `place` of the insert `id`'s effective definition, as indexed by the label records.
     fn piece(&self, id: f64, place: f64) -> Option<kentos_geometry_core::block::Piece> {
         let it = self.store.get(id)?;
-        if let Shape::Insert { block, .. } = &it.shape {
-            let flat = self.store.blocks().get(block)?;
-            return flat.pieces.get(place as usize).cloned();
+        if matches!(&it.shape, Shape::Insert { .. }) {
+            return self.store.blocks().piece_for(&it.shape, place as usize);
         }
         // Another object drawn by its pieces (a space's label, docs/adr/0342 §2): the piece as the store placed it.
         let shape = it.expanded.as_deref()?.shapes.get(place as usize)?.clone();

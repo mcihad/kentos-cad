@@ -363,14 +363,16 @@ pub(crate) fn no_tables(named: &[(usize, Slot, &Entity, &String)]) -> Result<(),
 /// a name taken (`duplicate_block`), a definition holding itself (`block_cycle`),
 /// nesting too deep (`block_too_deep`), in the documents' words.
 pub(crate) fn block_rules(next: &[&BlockDefinition]) -> Result<(), Stop> {
-    let checked = rules::definitions(next).and_then(|index| {
-        for (i, block) in next.iter().enumerate() {
-            rules::inserts(&block.entities, Some(i), &index)?;
-            rules::places(next, &block.entities, Some(i), &index)?;
-        }
-        rules::nesting(next, &index).map(|_| ())
-    });
-    checked.map_err(|fault| {
+    block_rules_with_entities(next, &[])
+}
+
+/// A library replacement must also remain valid for the drawing's existing references, before any definition
+/// is written. Definition-only callers keep their existing validation order through `block_rules`.
+pub(crate) fn block_rules_with_entities(
+    next: &[&BlockDefinition],
+    entities: &[&Entity],
+) -> Result<(), Stop> {
+    rules::check_of(next, entities).map_err(|fault| {
         let message = fault.message(|i| next.get(i).map_or("", |b| b.name.as_str()));
         let (code, path) = match fault {
             rules::BlockFault::EmptyName { .. } => (codes::EMPTY_NAME, "name"),

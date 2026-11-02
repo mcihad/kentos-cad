@@ -51,6 +51,31 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ADR 0855: kitaplık/dosyadan blok güncellemesi formül önbelleğini her
+  mevcut örneğin girdileriyle yenilemeli; değişmeyen ana tanımın iç çocuğu da
+  kapsanmalı. Tek örneğin tanımsız hesabı atomik ret olmalı. Native'in salt
+  okunur plan, tek Undo ve kayıt kabulü web etkileşim kabulü sayılmaz.
+
+- ADR 0854: geçmişte nesne/proje parçası listesi boş olsa da revision değişmişse
+  “değişiklik yok” yazılmamalı. Native'in genel güncelleme, gerçek no-op ve Undo
+  ayrımı web geçmiş görünümünde ayrıca sınanacak; günlük biçimi değişmedi.
+
+- ADR 0853: bağlı blok kitaplığı güncellemeleri birleşik son grafik üzerinden
+  atomik uygulanmalı; yeni çocuk/var olan ana tanım ve eşzamanlı iç içe parametre
+  adı değişimi sıra yüzünden reddedilmemeli. Web'in alışveriş yazıcısı ayrıca
+  uyarlanıp salt okunur plan, kaynak koruması ve tek Undo/Redo ile sınanacak.
+
+- ADR 0852: kitaplık/dosyadan yeniden tanımlama mevcut sahne parametreleri ve
+  özel öznitelik konumlarını birleşik son tanımlarla doğrulamalı. Native'in
+  atomik reddi ve tek Undo'su web komut/etkileşim katmanında ayrıca sınanacak;
+  native GUI/Python/MCP kabulü web kabulü sayılmaz.
+
+- ADR 0851: ortak çekirdeğin varsayılan ilk görünüş düzeltmesi hazırdır;
+  web etiket okuyucusunun etkin varyantın parça sırasını kullandığı ayrıca
+  doğrulanmalı. İç içe statik DXF ve açık parametre/eylem kaybı bildirimi,
+  native Python/MCP/GUI kabulüyle aynı dosya/kapsam üzerinden sınanmalı.
+  Native etiket adapter'ı web etkileşim kabulü yerine geçmez.
+
 - ADR 0850: Bloklar değiştirme akışına açık seçili/tüm doğrudan kapsam,
   gerçek komut planı, kayıp raporu ve eski belge/plan koruması gelecek.
   İç içe tanım kapsamı genişletilmez; web kabulü henüz yapılmadı.

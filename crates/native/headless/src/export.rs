@@ -92,7 +92,7 @@ pub fn dxf_input(doc: &Document, chosen: &[(String, Vec<&Entity>)]) -> DxfWriteI
     entities.sort_by_key(|e| order.get(&e.base().id).copied().unwrap_or(usize::MAX));
     // A dynamic block's inserts as the plain blocks they draw (docs/adr/0319 §5): DXF has no place for KentOS's
     // parameters and actions.
-    let (variants, mut notes) =
+    let (blocks, mut notes) =
         kentos_native_application::block_variants::plain_for_export(doc.blocks(), &mut entities);
     let chosen_slots: std::collections::HashSet<_> = entities.iter().map(|e| e.base().id).collect();
     let recipe_count = doc
@@ -263,12 +263,7 @@ pub fn dxf_input(doc: &Document, chosen: &[(String, Vec<&Entity>)]) -> DxfWriteI
         grads: settings.angle_unit == AngleUnit::Grad,
         dimension_values,
         // The writer takes those the objects place (docs/adr/0144 §5).
-        blocks: doc
-            .blocks()
-            .iter()
-            .map(|b| (**b).clone())
-            .chain(variants)
-            .collect(),
+        blocks,
         // A local project's drawing goes out in its unit (docs/adr/0165 §2).
         unit: (!settings.has_system()).then(|| settings.unit()),
         // The project's styles as STYLE and DIMSTYLE records (docs/adr/0183 §7).

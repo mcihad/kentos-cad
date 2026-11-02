@@ -142,3 +142,31 @@ fn an_array_adds_a_copy_for_each_spacing_past_the_default() {
     );
     assert_eq!(at(0.6).len(), 1);
 }
+
+#[test]
+fn a_default_visibility_state_hides_its_pieces_directly_and_through_a_plain_parent() {
+    let mut doc: Value = serde_json::from_str(SAMPLE).unwrap();
+    let list = doc["blocks"].as_array_mut().unwrap();
+    let dynamic = &mut list[0]["dynamic"];
+    let params = dynamic["parameters"].as_array_mut().unwrap();
+    let visibility = params
+        .iter_mut()
+        .find(|p| p["kind"] == "visibility")
+        .unwrap();
+    visibility["states"].as_array_mut().unwrap().reverse();
+    let parent = "0192f5a1-2900-7000-8000-0000000000e1";
+    list.push(json!({"id":parent,"name":"Giriş","base":{"x":0.,"y":0.},"entities":[
+        {"kind":"insert","id":1,"layerId":"","attrs":{},"block":"0192f5a1-2900-7000-8000-0000000000c1","p":{"x":0.,"y":0.},"scale":1.,"rotation":0.}
+    ]}));
+    let blocks = Blocks::from_json(&parse(&Value::Array(list.clone()))).unwrap();
+    let default = drawn(&blocks, &insert(Value::Null));
+    assert_eq!(default.len(), 3);
+    assert!(!default.iter().any(|p| p.starts_with("yay")));
+    let open = drawn(&blocks, &insert(json!({"Görünüş":"Açılım"})));
+    assert_eq!(open.len(), 4);
+    assert!(open.iter().any(|p| p.starts_with("yay")));
+    let nested=Entity::from_json(&parse(&json!({"kind":"insert","id":1,"layerId":"kapilar","attrs":{},"block":parent,"p":{"x":10.,"y":0.},"scale":1.,"rotation":0.}))).unwrap();
+    assert_eq!(drawn(&blocks, &nested.shape), default);
+    // Returning to the default after another state cannot reuse the raw four-piece definition.
+    assert_eq!(drawn(&blocks, &insert(json!({"Görünüş":"Sade"}))), default);
+}

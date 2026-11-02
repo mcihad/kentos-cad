@@ -88,126 +88,197 @@ fn said(v: &ParamValue) -> String {
     }
 }
 
-/// A drawing's objects made fit for a reader that does not know dynamic blocks (docs/adr/0319 §5, DXF): each insert
-/// of a dynamic block keeping values points at a plain block of what it draws, one a block and values, named the
-/// block's name and “V1”, “V2” … past the names taken, its description the values; the blocks to add and what to
-/// say in the report. An insert at its defaults places its block as it is; a dynamic part is never written.
+/// The block graph made static for DXF, including unused library definitions. Every reference, including those
+/// inside definitions,
+/// keeps the geometry of its own parameter values. Source definitions and the drawing are never edited.
+/// Returned definitions replace (rather than append to) the input list.
 pub fn plain_for_export(
     blocks: &[std::sync::Arc<BlockDefinition>],
     entities: &mut [Entity],
 ) -> (Vec<BlockDefinition>, Vec<kentos_commands::ReportItem>) {
-    let mut taken: Vec<String> = blocks.iter().map(|b| name_key(&b.name)).collect();
-    let mut ids: Vec<BlockId> = blocks.iter().map(|b| b.id).collect();
-    let mut made: Vec<(BlockId, BTreeMap<String, ParamValue>, BlockDefinition)> = Vec::new();
-    // Each dynamic block's inserts: how many, how many varied.
-    let mut counts: Vec<(BlockId, u32, u32)> = Vec::new();
-    for e in entities.iter_mut() {
-        let Entity::Insert(ins) = e else { continue };
-        let Some(source) = blocks.iter().find(|b| b.id == ins.block) else {
-            continue;
-        };
-        if source.dynamic.is_none() {
-            continue;
+    let mut graph = ExportGraph {
+        sources: blocks.iter().map(|b| (b.id, &**b)).collect(),
+        taken: blocks.iter().map(|b| name_key(&b.name)).collect(),
+        ids: blocks.iter().map(|b| b.id).collect(),
+        cached: Default::default(),
+        out: Vec::new(),
+        variants: Vec::new(),
+        counts: Vec::new(),
+    };
+    graph.nodes(entities);
+    // Exporting a drawing must not silently purge its unused block library. Preserve every source definition at
+    // its default appearance, resolving nested values through the same cache as references in the scene.
+    for source in blocks {
+        graph.definition(source, &BTreeMap::new());
+        if source.dynamic.is_some() && !graph.counts.iter().any(|c| c.0 == source.id) {
+            graph.counts.push((source.id, 0, 0));
         }
-        match counts.iter_mut().find(|c| c.0 == source.id) {
-            Some(c) => c.1 += 1,
-            None => counts.push((source.id, 1, 0)),
-        }
-        if ins.parameters.is_empty() {
-            continue;
-        }
-        if let Some(c) = counts.iter_mut().find(|c| c.0 == source.id) {
-            c.2 += 1;
-        }
-        let id = match made
-            .iter()
-            .find(|(b, v, _)| *b == source.id && *v == ins.parameters)
-        {
-            Some((_, _, def)) => def.id,
-            None => {
-                let mut n = 1;
-                let name = loop {
-                    let name = format!("{} V{n}", source.name);
-                    if !taken.contains(&name_key(&name)) {
-                        break name;
-                    }
-                    n += 1;
-                };
-                taken.push(name_key(&name));
-                // An id of its own, made from its source's: the same drawing writes the same file.
-                let mut bytes = source.id.0;
-                let mut k: u16 = u16::try_from(made.len() + 1).unwrap_or(u16::MAX);
-                let id = loop {
-                    bytes[14] = source.id.0[14] ^ (k >> 8) as u8 ^ 0x5A;
-                    bytes[15] = source.id.0[15] ^ (k & 0xFF) as u8;
-                    let id = BlockId(bytes);
-                    if !ids.contains(&id) {
-                        break id;
-                    }
-                    k = k.wrapping_add(1);
-                };
-                ids.push(id);
-                let values: Vec<String> = ins
-                    .parameters
-                    .iter()
-                    .map(|(k, v)| format!("{k} {}", said(v)))
-                    .collect();
-                let def = BlockDefinition {
-                    id,
-                    name,
-                    base: source.base,
-                    entities: variant_entities(source, &ins.parameters),
-                    units: source.units,
-                    attributes: source.attributes.clone(),
-                    description: Some(format!(
-                        "KentOS dinamik bloğu “{}”, değerleri: {}",
-                        source.name,
-                        values.join("; ")
-                    )),
-                    card: source.card.clone(),
-                    dynamic: None,
-                    xref: None,
-                };
-                made.push((source.id, ins.parameters.clone(), def));
-                id
-            }
-        };
-        ins.block = id;
-        ins.parameters = BTreeMap::new();
     }
-    let notes = counts
-        .into_iter()
+    let notes = graph
+        .counts
+        .iter()
         .filter_map(|(id, all, varied)| {
-            let source = blocks.iter().find(|b| b.id == id)?;
-            let names: Vec<&str> = made
-                .iter()
-                .filter(|(b, ..)| *b == id)
-                .map(|(.., d)| d.name.as_str())
+            let source = graph.sources.get(id)?;
+            let names: Vec<_> = graph.variants.iter()
+                .filter(|(b, _)| b == id)
+                .filter_map(|(_, id)| graph.out.iter().find(|b| b.id == *id))
+                .map(|b| format!("“{}”", b.name))
                 .collect();
-            let drawn = if varied == 0 {
-                "hepsi varsayılan değerlerinde, blok olduğu gibi yazıldı".to_owned()
+            let drawn = if *varied == 0 {
+                "varsayılan görünüşü sabit geometri olarak yazıldı".to_owned()
             } else {
                 format!(
-                    "{varied} yerleştirme değerleriyle çizdiği hâliyle {} bloğu olarak yazıldı",
-                    names.iter().map(|n| format!("“{n}”")).collect::<Vec<_>>().join(", ")
+                    "{varied} yerleştirme kaydı değerleriyle çizdiği hâliyle {} bloğu olarak yazıldı",
+                    names.join(", ")
                 )
             };
             Some(kentos_commands::ReportItem {
-                severity: None,
+                severity: Some(kentos_commands::ReportSeverity::Warning),
                 details: Vec::new(),
                 what: "Dinamik blok".into(),
-                count: all,
+                count: *all,
                 reason: format!(
-                    "“{}”: parametreleri ve eylemleri DXF'e yazılmadı; {drawn}. AutoCAD'de dinamik blok olarak açılmaz, KentOS'ta yeniden alınınca düz bloklardır.",
+                    "“{}”: parametreleri ve eylemleri DXF'e yazılmadı; {drawn}. Sayı, çizimdeki ve yazılan tanımlardaki yerleştirme kayıtlarıdır. İç içe yerleştirmeler de kendi görünüş ve değerleriyle sabittir. AutoCAD'de dinamik blok olarak açılmaz, KentOS'ta yeniden alınınca düz bloklardır.",
                     source.name
                 ),
                 lines: Vec::new(),
             })
         })
         .collect();
-    (made.into_iter().map(|(.., d)| d).collect(), notes)
+    (graph.out, notes)
 }
 
+struct ExportGraph<'a> {
+    sources: std::collections::HashMap<BlockId, &'a BlockDefinition>,
+    taken: std::collections::HashSet<String>,
+    ids: std::collections::HashSet<BlockId>,
+    cached: std::collections::HashMap<ExportKey, usize>,
+    out: Vec<BlockDefinition>,
+    variants: Vec<(BlockId, BlockId)>,
+    counts: Vec<(BlockId, u32, u32)>,
+}
+
+#[derive(PartialEq, Eq, Hash)]
+struct ExportKey {
+    source: BlockId,
+    values: Vec<(String, ExportValue)>,
+}
+
+#[derive(PartialEq, Eq, Hash)]
+enum ExportValue {
+    Flag(bool),
+    Number(u64),
+    Text(String),
+    Point(u64, u64),
+}
+
+impl ExportKey {
+    fn of(source: BlockId, values: &BTreeMap<String, ParamValue>) -> Self {
+        // Values are finite in a valid document. Normalize signed zero to preserve ParamValue equality.
+        let bits = |n: f64| if n == 0.0 { 0 } else { n.to_bits() };
+        Self {
+            source,
+            values: values
+                .iter()
+                .map(|(name, value)| {
+                    (
+                        name.clone(),
+                        match value {
+                            ParamValue::Flag(v) => ExportValue::Flag(*v),
+                            ParamValue::Number(v) => ExportValue::Number(bits(*v)),
+                            ParamValue::Text(v) => ExportValue::Text(v.clone()),
+                            ParamValue::Point(v) => ExportValue::Point(bits(v.x), bits(v.y)),
+                        },
+                    )
+                })
+                .collect(),
+        }
+    }
+}
+
+impl ExportGraph<'_> {
+    fn nodes(&mut self, entities: &mut [Entity]) {
+        for e in entities {
+            let Entity::Insert(ins) = e else { continue };
+            let Some(source) = self.sources.get(&ins.block).copied() else {
+                continue;
+            };
+            let varied = source.dynamic.is_some() && !ins.parameters.is_empty();
+            if source.dynamic.is_some() {
+                if let Some(c) = self.counts.iter_mut().find(|c| c.0 == source.id) {
+                    c.1 = c.1.saturating_add(1);
+                    c.2 = c.2.saturating_add(u32::from(varied));
+                } else {
+                    self.counts.push((source.id, 1, u32::from(varied)));
+                }
+            }
+            ins.block = self.definition(source, &ins.parameters);
+            ins.parameters.clear();
+        }
+    }
+
+    fn definition(
+        &mut self,
+        source: &BlockDefinition,
+        values: &BTreeMap<String, ParamValue>,
+    ) -> BlockId {
+        let key = ExportKey::of(source.id, values);
+        if let Some(&index) = self.cached.get(&key) {
+            return self.out[index].id;
+        }
+        let mut plain = source.clone();
+        if source.dynamic.is_some() && !values.is_empty() {
+            plain.id = self.mint(source.id);
+            let mut n = 1u64;
+            loop {
+                let name = format!("{} V{n}", source.name);
+                if self.taken.insert(name_key(&name)) {
+                    plain.name = name;
+                    break;
+                }
+                n += 1;
+            }
+            let values = values
+                .iter()
+                .map(|(k, v)| format!("{k} {}", said(v)))
+                .collect::<Vec<_>>();
+            plain.description = Some(format!(
+                "KentOS dinamik bloğu “{}”, değerleri: {}",
+                source.name,
+                values.join("; ")
+            ));
+            self.variants.push((source.id, plain.id));
+        }
+        let mut pieces = variant_entities(source, values);
+        plain.dynamic = None;
+        plain.entities.clear();
+        let id = plain.id;
+        let index = self.out.len();
+        self.cached.insert(key, index);
+        self.out.push(plain);
+        // Cache before descent: shared child references reuse the same static variant.
+        self.nodes(&mut pieces);
+        self.out[index].entities = pieces;
+        id
+    }
+
+    fn mint(&mut self, source: BlockId) -> BlockId {
+        let mut n = self.cached.len() as u64 + 1;
+        loop {
+            let mut bytes = source.0;
+            for (i, mix) in n.to_be_bytes().into_iter().enumerate() {
+                bytes[8 + i] ^= mix;
+            }
+            bytes[14] ^= 0x5A;
+            bytes[8] = (bytes[8] & 0x3f) | 0x80;
+            let id = BlockId(bytes);
+            if self.ids.insert(id) {
+                return id;
+            }
+            n = n.wrapping_add(1);
+        }
+    }
+}
 /// The inserts the input names, each with where it names it.
 fn inserts<'a>(
     doc: &'a Document,
@@ -532,4 +603,102 @@ pub fn freeze_execute(
             }
         },
     )
+}
+
+#[cfg(test)]
+mod export_tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn nested_static_export_reuses_values_across_parents_and_preserves_unused_definitions() {
+        let snapshot = kentos_kcad::decode(include_bytes!(
+            "../../../../fixtures/kcad/v2/dynamic-blocks.kcad"
+        ))
+        .unwrap();
+        let source = snapshot.blocks[0].clone();
+        let mut defs = vec![source.clone()];
+        let placed = |block: BlockId, id: u32| -> Entity {
+            serde_json::from_value(json!({"kind":"insert","id":id,"layerId":"","attrs":{},"block":block,
+                "p":{"x":0.,"y":0.},"scale":1.,"rotation":0.,"parameters":{"Genişlik":1.2,"Görünüş":"Sade"}})).unwrap()
+        };
+        let mut roots = Vec::new();
+        for n in 1..=2 {
+            let mut parent = source.clone();
+            parent.id =
+                serde_json::from_value(json!(format!("0192f5a1-2900-7000-8000-0000000000e{n}")))
+                    .unwrap();
+            parent.name = format!("Modül {n}");
+            parent.dynamic = None;
+            parent.entities = vec![placed(source.id, 1)];
+            let mut root = placed(parent.id, n);
+            if let Entity::Insert(i) = &mut root {
+                i.parameters.clear();
+            }
+            roots.push(root);
+            defs.push(parent);
+        }
+        roots.push(placed(source.id, 3));
+        let mut unused = source.clone();
+        unused.id = serde_json::from_value(json!("0192f5a1-2900-7000-8000-0000000000ef")).unwrap();
+        unused.name = format!("{} V1", source.name);
+        for parameter in &mut unused.dynamic.as_mut().unwrap().parameters {
+            if let kentos_commands::BlockParameter::Visibility { states, .. } = parameter {
+                states.reverse();
+            }
+        }
+        defs.push(unused);
+        let original = defs.clone();
+        let before = roots.clone();
+        let blocks = defs
+            .into_iter()
+            .map(std::sync::Arc::new)
+            .collect::<Vec<_>>();
+        let (plain, notes) = plain_for_export(&blocks, &mut roots);
+        assert_eq!(
+            plain.len(),
+            5,
+            "two parents, a common child variant and both original library definitions"
+        );
+        let child = plain
+            .iter()
+            .find(|b| b.name == format!("{} V2", source.name))
+            .unwrap();
+        assert!(plain.iter().all(|b| b.dynamic.is_none()));
+        assert_eq!(child.entities.len(), 3, "Sade does not write the swing");
+        for def in plain.iter().filter(|b| b.name.starts_with("Modül")) {
+            let Entity::Insert(i) = &def.entities[0] else {
+                panic!("nested insert")
+            };
+            assert_eq!(i.block, child.id);
+            assert!(i.parameters.is_empty());
+        }
+        let Entity::Insert(i) = &roots[2] else {
+            panic!("direct insert")
+        };
+        assert_eq!(i.block, child.id);
+        assert!(i.parameters.is_empty());
+        let library = plain.iter().find(|b| b.id == original[3].id).unwrap();
+        assert_eq!(library.name, original[3].name);
+        assert_eq!(
+            library.entities.len(), 3,
+            "the unused definition also keeps its default Sade appearance"
+        );
+        assert_eq!(notes.len(), 2);
+        assert_eq!(
+            notes[1].count, 0,
+            "the unused dynamic library definition is also disclosed"
+        );
+        assert_eq!(
+            notes[0].count, 3,
+            "two definition records and one direct record"
+        );
+        assert_eq!(
+            blocks.iter().map(|b| (**b).clone()).collect::<Vec<_>>(),
+            original
+        );
+        let mut again = before;
+        assert_eq!(plain_for_export(&blocks, &mut again), (plain, notes));
+        assert_eq!(again, roots);
+    }
 }

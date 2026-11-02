@@ -78,3 +78,97 @@ fn a_nested_insert_explodes_in_turn() {
     assert_eq!(b.doc.undo().as_deref(), Some("Patlat"));
     assert!(matches!(b.doc.get(Slot(15)), Some(Entity::Insert(_))));
 }
+
+/// Label records index the varied pieces, whereas hiding a piece changes the attribute's position in that
+/// list. The same tag must remain readable before and after a visibility edit and its undo.
+#[test]
+fn visibility_changes_keep_attribute_labels_and_their_moved_positions() {
+    use kentos_geometry_core::store::placing::PlaceOptions;
+    use kentos_interaction::Vec2;
+    use kentos_interaction::spatial::{LabelSize, LabelSpot, shown_text};
+    use serde_json::{Value, json};
+
+    let mut raw: Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/kcad/v2/dynamic-blocks.json"
+    ))
+    .expect("the sample");
+    raw["version"] = json!(1);
+    let block = &mut raw["blocks"][0];
+    let visibility = block["dynamic"]["parameters"]
+        .as_array_mut()
+        .expect("parameters")
+        .iter_mut()
+        .find(|p| p["kind"] == "visibility")
+        .expect("visibility");
+    visibility["states"]
+        .as_array_mut()
+        .expect("states")
+        .reverse();
+    block["attributes"] = json!([{
+        "tag":"NO", "value":"DEFAULT", "p":{"x":0.05,"y":0.15},
+        "height":0.08, "rotation":0.0, "movable":true
+    }]);
+    raw["entities"][0]["attrs"] = json!({"NO":"K-1"});
+    raw["entities"][0]["attributePlaces"] = json!({"NO":{"x":0.25,"y":0.35}});
+    raw["entities"][1]["attrs"] = json!({"NO":"K-2"});
+    raw["entities"][2]["attrs"] = json!({"NO":"K-3"});
+    raw["entities"][2]["parameters"] = json!({"Görünüş":"Açılım"});
+    let mut b = Bench::on(&raw.to_string());
+    let labels = |b: &mut Bench| {
+        b.spatial.sync(&b.doc);
+        let mut found: Vec<_> = b
+            .spatial
+            .labels_shown(
+                Vec2::new(-10.0, -10.0),
+                Vec2::new(20.0, 20.0),
+                100.0,
+                LabelSize::Print,
+                PlaceOptions {
+                    unplaced: true,
+                    hidden: true,
+                },
+                false,
+            )
+            .into_iter()
+            .filter_map(|(label, _)| {
+                let LabelSpot::PieceText {
+                    slot,
+                    at,
+                    text,
+                    attribute,
+                    ..
+                } = label
+                else {
+                    return None;
+                };
+                let entity = b.doc.get(slot).expect("insert");
+                Some((
+                    slot.0,
+                    shown_text(&text, attribute.as_deref(), &entity.base().attrs).to_owned(),
+                    at,
+                ))
+            })
+            .collect();
+        found.sort_by_key(|v| v.0);
+        found
+    };
+    let before = labels(&mut b);
+    assert_eq!(
+        before.iter().map(|v| v.1.as_str()).collect::<Vec<_>>(),
+        ["K-1", "K-2", "K-3"]
+    );
+    assert!((before[0].2.x - 0.25).abs() < 1e-12);
+    assert!((before[0].2.y - 0.35).abs() < 1e-12);
+    let mut entity = b.doc.get(Slot(1)).expect("first").clone();
+    let Entity::Insert(insert) = &mut entity else {
+        panic!("insert");
+    };
+    insert.parameters.insert(
+        "Görünüş".into(),
+        kentos_commands::ParamValue::Text("Açılım".into()),
+    );
+    assert!(b.doc.update(Slot(1), entity));
+    assert_eq!(labels(&mut b), before);
+    assert!(b.doc.undo().is_some());
+    assert_eq!(labels(&mut b), before);
+}
