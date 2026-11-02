@@ -174,3 +174,68 @@ fn timing() {
         );
     }
 }
+
+#[test]
+fn a_library_formula_recomputes_each_scene_instance_and_refuses_an_invalid_instance() {
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_str(include_str!(
+        "../../../../../fixtures/kcad/v2/dynamic-blocks.json"
+    ))
+    .unwrap();
+    let mut doc = Document::from_snapshot_v2(snapshot).unwrap();
+    let id = doc.blocks()[0].id;
+    let mut dynamic = serde_json::to_value(doc.blocks()[0].dynamic.as_ref().unwrap()).unwrap();
+    dynamic["parameters"].as_array_mut().unwrap().push(json!({
+        "kind":"linear","name":"Yarım","from":{"x":0.,"y":0.},"to":{"x":0.45,"y":0.},
+        "rule":{"expression":"@Genişlik / 2"}
+    }));
+    run(
+        &mut doc,
+        "cad.blocks.edit",
+        json!({"operation":"dynamic","block":id,"dynamic":dynamic}),
+    );
+    let before = doc.to_snapshot_v2();
+    let exported = run(&mut doc, "cad.blocks.edit", json!({"operation":"export"}));
+    let mut library: Value = serde_json::from_str(exported["library"].as_str().unwrap()).unwrap();
+    library["blocks"][0]["dynamic"]["parameters"][4]["rule"]["expression"] = json!("@Genişlik / 3");
+    let args = json!({"operation":"import","replace":true,"library":library.to_string()});
+    let plan = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.blocks.edit",
+        CallOp::Plan,
+        args.clone(),
+    )
+    .unwrap();
+    assert_eq!(plan["status"], "completed", "{plan}");
+    assert_eq!(doc.to_snapshot_v2(), before);
+    run(&mut doc, "cad.blocks.edit", args);
+    for entity in doc.entities() {
+        let kentos_commands::Entity::Insert(insert) = entity else {
+            panic!("insert")
+        };
+        let width = insert.parameters.get("Genişlik").map_or(0.9, |p| match p {
+            kentos_commands::ParamValue::Number(n) => *n,
+            _ => panic!("number"),
+        });
+        assert_eq!(
+            insert.parameters.get("Yarım"),
+            Some(&kentos_commands::ParamValue::Number(width / 3.))
+        );
+    }
+    doc.undo().unwrap();
+    assert_eq!(doc.to_snapshot_v2(), before);
+    library["blocks"][0]["dynamic"]["parameters"][4]["rule"]["expression"] =
+        json!("@Genişlik / abs(@Genişlik - 1)");
+    for op in [CallOp::Validate, CallOp::Plan, CallOp::Execute] {
+        let answer = registry::run(
+            &mut ExecutionContext::new(&mut doc),
+            "cad.blocks.edit",
+            op,
+            json!({"operation":"import","replace":true,"library":library.to_string()}),
+        )
+        .unwrap();
+        assert_eq!(answer["status"], "failed", "{answer}");
+        assert_eq!(answer["error"]["code"], "invalid_parameter_value");
+        assert_eq!(answer["error"]["path"], "library");
+        assert_eq!(doc.to_snapshot_v2(), before);
+    }
+}

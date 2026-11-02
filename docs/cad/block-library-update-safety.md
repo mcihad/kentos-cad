@@ -29,3 +29,12 @@ yeni adla verilmelidir. Kitaplıkta ana/çocuk sırası nedeniyle geçerli bir s
 grafik reddedilmez. Bilinmeyen çocuk, döngü veya uyumsuz parametre yine reddedilir;
 kitaplığın bir kısmı sessizce atlanmaz. Hem kitaplık hem dosyadan güncelleme
 tek Undo/Redo'dur. [Birlikte uygulama kararı](../adr/0853-related-block-library-definitions-apply-together.md).
+
+Formül değiştiğinde hesaplanan değerler eski önbellekten alınmaz. Mevcut
+örneğin literal girdileriyle yeni formül hesaplanır; değişmeyen bir ana
+bloğun iç çocuğu da buna dahildir. Örneğin 900/1000 mm genişlikte
+`@Genişlik / 2` yerine `/ 3` alınınca sonuçlar 300/333,333… mm olur.
+Bir örnekte ifade tanımsızsa bütün güncelleme reddedilir. Plan çizimi
+değiştirmez; tanım ve hesaplanan örnek değerleri tek Undo ile birlikte
+geri alınır. Kullanıcının literal değerleri uyumsuzsa sessiz sıfırlama
+uygulanmaz. [Formül yenileme kararı](../adr/0855-block-library-refreshes-formula-values.md).

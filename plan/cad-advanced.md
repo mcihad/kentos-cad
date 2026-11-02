@@ -665,6 +665,17 @@ blok tanımı değiştiğinde kart artık “Çizim güncellendi” der; gerçek
 menüsüyle iki kez alınması ve tek Undo ekranlarıyla doğrulandı. 1604 masaüstü
 testi, Clippy ve derleme geçti. [ADR 0854](../docs/adr/0854-history-revision-fallback-for-definition-writes.md).
 
+**İlerleme — 2026-11-02, kitaplık formüllerinin güncellenmesi:** Yeni tanım
+mevcut örneklerin ve değişmeyen ana bloklardaki etkilenen iç yerleştirmelerin
+hesaplanan değerlerini kendi literal girdileriyle yeniden hesaplar. Tek
+örneğin hesabı tanımsızsa bütün güncelleme yazmadan reddedilir. Gerçek eski
+GUI'de kalan 450/500/450 mm önbelleği üretildi; yeni GUI aynı kitaplıkla
+300/333,333…/300 mm ve doğru geometri verdi. GUI/Python kayıtları tam aynı;
+gerçek tek Undo ve ret kayıtları başlangıçla tam aynı, gerçek yeniden açılış
+korundu. 318 application, 57 MCP, 1604 masaüstü ve 444 Python testi, Clippy
+ve derleme geçti. [ADR 0855](../docs/adr/0855-block-library-refreshes-formula-values.md).
+Birim semantiği ve aile/yayın yükseltmesi bu düzeltmeyle tamamlanmaz.
+
 Tür/sürüm ve seçilmiş yükseltme, kalıcı tip–örnek parametre kapsamı ve
 birleşik blok kabulü açıktır. Kullanıcı tanımlı grup metaverisi bu otomatik
 gruplarla tamamlanmış sayılmaz. Web öznitelik penceresinin native eşitleme kapsamıyla

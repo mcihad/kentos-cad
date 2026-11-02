@@ -51,6 +51,11 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ADR 0855: kitaplık/dosyadan blok güncellemesi formül önbelleğini her
+  mevcut örneğin girdileriyle yenilemeli; değişmeyen ana tanımın iç çocuğu da
+  kapsanmalı. Tek örneğin tanımsız hesabı atomik ret olmalı. Native'in salt
+  okunur plan, tek Undo ve kayıt kabulü web etkileşim kabulü sayılmaz.
+
 - ADR 0854: geçmişte nesne/proje parçası listesi boş olsa da revision değişmişse
   “değişiklik yok” yazılmamalı. Native'in genel güncelleme, gerçek no-op ve Undo
   ayrımı web geçmiş görünümünde ayrıca sınanacak; günlük biçimi değişmedi.

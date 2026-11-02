@@ -218,3 +218,98 @@ class BlockLibraryBatchUpdate(unittest.TestCase):
             self.assertEqual(doc.to_bytes(), before)
             doc.redo()
             self.assertEqual(doc.to_bytes(), after)
+
+
+class BlockLibraryFormulaUpdate(unittest.TestCase):
+    def formula_drawing(self):
+        doc, library = drawing()
+        dynamic = library["blocks"][0]["dynamic"]
+        dynamic["parameters"].append(dict(kind="linear", name="Yarım",
+                                          **{"from": dict(x=0, y=0), "to": dict(x=.45, y=0)},
+                                          rule=dict(expression="@Genişlik / 2")))
+        cad.blocks.edit(doc, operation="dynamic", block=doc.blocks()[0].id,
+                        dynamic=cad.DynamicBlock.from_json(dynamic))
+        return doc, json.loads(cad.blocks.edit(doc, operation="export").library)
+
+    def values(self, doc):
+        return cad.blocks.parameters(doc, operation="get", uids=[r.uid for r in doc.entities()]).to_json()["inserts"]
+
+    def test_library_formula_change_recomputes_each_existing_instance_without_resetting_inputs(self):
+        doc, library = self.formula_drawing()
+        before = doc.to_bytes()
+        inputs = [{k: v for k, v in row["values"].items() if k != "Yarım"} for row in self.values(doc)]
+        library["blocks"][0]["dynamic"]["parameters"][-1]["rule"]["expression"] = "@Genişlik / 3"
+        arguments = dict(operation="import", library=json.dumps(library), replace=True)
+        plan = cad.blocks.edit.answer(doc, **arguments, op="plan")
+        self.assertEqual(plan.status, "completed", str(plan.error))
+        self.assertEqual(doc.to_bytes(), before)
+        cad.blocks.edit(doc, **arguments, expected=cad.Expected(plan=plan.plan_id))
+        rows = self.values(doc)
+        for row, kept in zip(rows, inputs):
+            self.assertEqual({k: v for k, v in row["values"].items() if k != "Yarım"}, kept)
+            self.assertAlmostEqual(row["values"]["Yarım"], kept["Genişlik"] / 3)
+        after = doc.to_bytes()
+        self.assertEqual(cad.Document.from_bytes(after).to_bytes(), after)
+        doc.undo()
+        self.assertEqual(doc.to_bytes(), before)
+        doc.redo()
+        self.assertEqual(doc.to_bytes(), after)
+
+    def test_formula_change_refreshes_an_existing_parent_not_in_the_incoming_library(self):
+        doc, library = self.formula_drawing()
+        child = library["blocks"][0]
+        parent = dict(id="22222222-3333-4444-8555-666666666666", name="Taşıyıcı",
+                      base=dict(x=0, y=0), entities=[dict(kind="insert", id=1, layerId="", attrs={},
+                      block=child["id"], p=dict(x=0, y=0), scale=1, rotation=0,
+                      parameters={"Genişlik": 1.2, "Yarım": .6})])
+        library["blocks"].append(parent)
+        cad.blocks.edit(doc, operation="import", library=json.dumps(library))
+        before = doc.to_bytes()
+        child["dynamic"]["parameters"][-1]["rule"]["expression"] = "@Genişlik / 3"
+        library["blocks"] = [child]
+        cad.blocks.edit(doc, operation="import", library=json.dumps(library), replace=True)
+        exported = json.loads(cad.blocks.edit(doc, operation="export").library)
+        outer = next(b for b in exported["blocks"] if b["name"] == "Taşıyıcı")
+        values = outer["entities"][0]["parameters"]
+        self.assertEqual(values["Genişlik"], 1.2)
+        self.assertAlmostEqual(values["Yarım"], .4)
+        saved = doc.to_bytes()
+        self.assertEqual(cad.Document.from_bytes(saved).to_bytes(), saved)
+        doc.undo()
+        self.assertEqual(doc.to_bytes(), before)
+
+    def test_formula_invalid_for_one_existing_instance_refuses_all_phases_atomically(self):
+        doc, library = self.formula_drawing()
+        before = doc.to_bytes()
+        # Default .9 resolves to 9; the existing 1.0 instance divides by zero.
+        library["blocks"][0]["dynamic"]["parameters"][-1]["rule"]["expression"] = "@Genişlik / abs(@Genişlik - 1)"
+        for operation in ("validate", "plan", "execute"):
+            answer = cad.blocks.edit.answer(doc, operation="import", library=json.dumps(library),
+                                            replace=True, op=operation)
+            self.assertEqual(answer.status, "failed", operation)
+            self.assertEqual(answer.error.code, "invalid_parameter_value")
+            self.assertEqual(answer.error.path, "library")
+            self.assertEqual(doc.to_bytes(), before)
+
+    def test_file_redefinition_refreshes_formulas_and_keeps_one_undo(self):
+        doc, library = self.formula_drawing()
+        before = doc.to_bytes()
+        source = cad.Document.from_bytes(before)
+        dynamic = library["blocks"][0]["dynamic"]
+        dynamic["parameters"][-1]["rule"]["expression"] = "@Genişlik / 3"
+        cad.blocks.edit(source, operation="dynamic", block=source.blocks()[0].id,
+                        dynamic=cad.DynamicBlock.from_json(dynamic))
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "formulas.kcad"
+            source.save(path)
+            arguments = dict(path=str(path), mode="blocks", replace=True)
+            plan = cad.file.import_.block.answer(doc, **arguments, op="plan")
+            self.assertEqual(plan.status, "completed", str(plan.error))
+            self.assertEqual(doc.to_bytes(), before)
+            cad.file.import_.block(doc, **arguments, expected=cad.Expected(plan=plan.plan_id))
+            for row in self.values(doc):
+                self.assertAlmostEqual(row["values"]["Yarım"], row["values"]["Genişlik"] / 3)
+            saved = doc.to_bytes()
+            self.assertEqual(cad.Document.from_bytes(saved).to_bytes(), saved)
+            doc.undo()
+            self.assertEqual(doc.to_bytes(), before)

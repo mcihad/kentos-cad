@@ -4,16 +4,16 @@
 //! `replace` redefined in its place; inserts in the file's definitions point at the drawing's definitions of their
 //! names. Each write is one undo step; the block rules hold after it, or nothing is written.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use kentos_commands::{
     BLOCKS_FORMAT, BLOCKS_VERSION, BlockDefinition, BlockEditOperation, BlockId, BlocksEdit,
     BlocksEditPlan, BlocksEdited, CommandResult, Entity,
 };
-use kentos_domain::{Document, Uuid};
+use kentos_domain::{Document, Slot, Uuid};
 
 use crate::ExecutionContext;
-use crate::blocks_define::{block_rules, block_rules_with_entities, name};
+use crate::blocks_define::{block_rules, name};
 use crate::checks::{self, Stop, error};
 use crate::codes;
 
@@ -39,6 +39,7 @@ pub fn is_library(operation: BlockEditOperation) -> bool {
 struct Planned {
     added: Vec<BlockDefinition>,
     replaced: Vec<BlockDefinition>,
+    changes: Vec<(Slot, Entity)>,
     skipped: Vec<String>,
     library: Option<String>,
 }
@@ -94,6 +95,7 @@ fn check(
     let mut planned = Planned {
         added: Vec::new(),
         replaced: Vec::new(),
+        changes: Vec::new(),
         skipped: Vec::new(),
         library: None,
     };
@@ -240,7 +242,7 @@ fn take(
             }
         }
     }
-    let mut next: Vec<&BlockDefinition> = doc
+    let mut next: Vec<BlockDefinition> = doc
         .blocks()
         .iter()
         .map(|d| {
@@ -248,20 +250,29 @@ fn take(
                 .iter()
                 .find(|(b, put)| *put && b.id == d.id)
                 .map_or(&**d, |(b, _)| b)
+                .clone()
         })
         .collect();
-    next.extend(taken.iter().filter(|(_, put)| !put).map(|(b, _)| b));
-    let entities: Vec<_> = doc.entities().collect();
-    block_rules_with_entities(&next, &entities).map_err(|stop| {
-        let mut e = stop.into_error();
-        e.path = Some("library".into());
-        Stop::failed(e)
-    })?;
+    next.extend(taken.iter().filter(|(_, put)| !put).map(|(b, _)| b.clone()));
+    let incoming: HashSet<_> = taken.iter().map(|(b, _)| b.id).collect();
+    planned.changes = crate::block_params::refresh_definitions(doc, &mut next, &incoming)
+        .map_err(|stop| {
+            let mut e = stop.into_error();
+            e.path = Some("library".into());
+            Stop::failed(e)
+        })?;
+    let final_definitions: HashMap<_, _> = next.iter().map(|b| (b.id, b)).collect();
     for (b, put) in taken {
+        let b = final_definitions[&b.id].clone();
         if put {
             planned.replaced.push(b);
         } else {
             planned.added.push(b);
+        }
+    }
+    for b in next {
+        if !incoming.contains(&b.id) && doc.block(b.id).is_some_and(|old| old != &b) {
+            planned.replaced.push(b);
         }
     }
     Ok(())
@@ -311,6 +322,9 @@ pub fn write(cx: &mut ExecutionContext<'_>, input: &BlocksEdit) -> CommandResult
         let written = cx.doc.transact(label, |doc| {
             let blocks: Vec<_> = p.replaced.into_iter().chain(p.added).collect();
             doc.merge_blocks(&blocks).map_err(|r| r.to_string())?;
+            for (slot, entity) in p.changes {
+                doc.update(slot, entity);
+            }
             Ok::<(), String>(())
         });
         if let Err(message) = written {

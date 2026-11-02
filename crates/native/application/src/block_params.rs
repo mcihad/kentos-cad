@@ -13,11 +13,11 @@
 //! `invalid_parameter_value`); the expected revision; the inserts (`entity_not_found`, `not_insert`, `not_dynamic`);
 //! the names and values against each insert's block; those on a locked layer left out (every one: `layer_locked`).
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 use kentos_commands::block_dynamic::{number_problem, same_param_value, value_problem};
 use kentos_commands::{
-    BlockDefinition, BlockParameter, BlocksParameters, BlocksParametersOut, CommandResult,
+    BlockDefinition, BlockId, BlockParameter, BlocksParameters, BlocksParametersOut, CommandResult,
     CommandWarning, DynamicBlock, Entity, InsertParameters, ParamValue, ParametersOperation,
 };
 use kentos_domain::{Document, Slot};
@@ -216,6 +216,124 @@ pub fn resolve(
             .is_none_or(|default| !same_param_value(&default, v))
     });
     Ok(values)
+}
+
+/// Re-evaluates formula caches after a library replaces related definitions.
+/// Root inserts carry their old literal inputs; incoming nested inserts carry
+/// the library's explicit inputs. An unchanged parent carries its old inputs.
+/// Only temporary definitions are edited here; the document remains untouched
+/// until the complete definitions and scene pass the normal block rules.
+pub(crate) fn refresh_definitions(
+    doc: &Document,
+    blocks: &mut [BlockDefinition],
+    incoming: &HashSet<BlockId>,
+) -> Result<Vec<(Slot, Entity)>, Stop> {
+    fn has_formulas(d: Option<&DynamicBlock>) -> bool {
+        d.is_some_and(|d| {
+            d.parameters
+                .iter()
+                .any(|p| p.rule().is_some_and(|r| r.expression.is_some()))
+        })
+    }
+    fn refresh(
+        old: Option<&DynamicBlock>,
+        new: Option<&DynamicBlock>,
+        kept: &BTreeMap<String, ParamValue>,
+        existing: bool,
+    ) -> Result<BTreeMap<String, ParamValue>, Refusal> {
+        let calculated = if existing { old } else { new };
+        let inputs = kept
+            .iter()
+            .filter(|(name, _)| {
+                !calculated.is_some_and(|d| {
+                    d.parameters.iter().any(|p| {
+                        p.name() == name.as_str()
+                            && p.rule().is_some_and(|r| r.expression.is_some())
+                    })
+                })
+            })
+            .map(|(name, value)| (name.clone(), value.clone()))
+            .collect();
+        match new {
+            Some(d) => resolve(d, &BTreeMap::new(), &inputs),
+            None => Ok(inputs), // Normal block rules reject any remaining literal values.
+        }
+    }
+    let refused = |where_: String, why: String| {
+        Stop::failed(error(
+            codes::INVALID_PARAMETER_VALUE,
+            format!("{where_}: {why}"),
+            Some("blocks".into()),
+        ))
+    };
+    let dynamics: HashMap<_, _> = blocks.iter().map(|b| (b.id, b.dynamic.clone())).collect();
+    for b in blocks.iter().filter(|b| incoming.contains(&b.id)) {
+        if let Some((_, why)) = b.dynamic.as_ref().and_then(expressions_problem) {
+            return Err(refused(format!("“{}” bloğunun formülü", b.name), why));
+        }
+    }
+    let mut changes = Vec::new();
+    for entity in doc.entities() {
+        let Entity::Insert(insert) = entity else {
+            continue;
+        };
+        if !incoming.contains(&insert.block) {
+            continue;
+        }
+        let old = doc.block(insert.block).and_then(|b| b.dynamic.as_ref());
+        let new = dynamics.get(&insert.block).and_then(Option::as_ref);
+        if !has_formulas(old) && !has_formulas(new) {
+            continue;
+        }
+        let values = refresh(old, new, &insert.parameters, true).map_err(|(_, _, why)| {
+            refused(
+                format!("{} numaralı yerleştirmenin hesabı", insert.base.id),
+                why,
+            )
+        })?;
+        if values != insert.parameters {
+            let mut next = insert.clone();
+            next.parameters = values;
+            changes.push((Slot(insert.base.id), Entity::Insert(next)));
+        }
+    }
+    for parent in blocks.iter_mut() {
+        let explicit = incoming.contains(&parent.id);
+        for entity in &mut parent.entities {
+            let Entity::Insert(insert) = entity else {
+                continue;
+            };
+            if !explicit && !incoming.contains(&insert.block) {
+                continue;
+            }
+            let old = doc.block(insert.block).and_then(|b| b.dynamic.as_ref());
+            let new = dynamics.get(&insert.block).and_then(Option::as_ref);
+            if !has_formulas(old) && !has_formulas(new) {
+                continue;
+            }
+            insert.parameters =
+                refresh(old, new, &insert.parameters, !explicit).map_err(|(_, _, why)| {
+                    refused(
+                        format!(
+                            "“{}” bloğunun {} numaralı iç yerleştirmesinin hesabı",
+                            parent.name, insert.base.id
+                        ),
+                        why,
+                    )
+                })?;
+        }
+    }
+    let replacements: HashMap<_, _> = changes
+        .iter()
+        .map(|(slot, entity)| (*slot, entity))
+        .collect();
+    let entities: Vec<_> = doc
+        .entities()
+        .map(|e| replacements.get(&Slot(e.base().id)).copied().unwrap_or(e))
+        .collect();
+    let definitions: Vec<_> = blocks.iter().collect();
+    crate::blocks_define::block_rules_with_entities(&definitions, &entities)?;
+    Ok(changes)
 }
 
 /// Every parameter's value as an insert shows it: its kept value, else its default; a lookup's the label of the
