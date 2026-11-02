@@ -1407,6 +1407,7 @@ const ENTRIES: &[Entry] = &[
                 "not_insert",
                 "layer_locked",
                 "invalid_field",
+                "invalid_parameter_value",
             ],
         ],
         warnings: &["layer_locked"],

@@ -14831,10 +14831,12 @@ class BlocksReplace(_Model):
     step “Bloğu başkasıyla değiştir”; each keeps its place, scale, turn, layer and look, the values of `to`'s attributes
     (not constant) and the places of its movable ones; `to`'s fields are filled. With `purge`, `from` is deleted when
     no insert uses it any more.
+    Compatible same-name/type instance parameters are kept; the target recomputes expressions. Incompatible
+    instance inputs refuse the whole operation rather than leaving an unwritable drawing or silently dropping them.
 
     Refusals in order: `no_block` (`from` or `to` missing), `same_block`, `invalid_revision`, `revision_conflict`,
     `unknown_block` (`from`, `to`), `entity_not_found`, `not_insert` (an object named that is not an insert of
-    `from`), `layer_locked` (every one locked; some: a warning), `invalid_field`.
+    `from`), `layer_locked` (every one locked; some: a warning), `invalid_field`, `invalid_parameter_value`.
     Attributes:
         from_: The block whose inserts are replaced.
         purge: Deletes `from` when no insert uses it after.

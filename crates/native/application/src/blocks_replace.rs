@@ -9,7 +9,7 @@
 //! drawing's (`unknown_block`); the inserts named (`entity_not_found`, `not_insert`: not an insert of `from`); those on
 //! a locked layer left out (every one: `layer_locked`); the new block's fields (`invalid_field`).
 
-use std::collections::HashSet;
+use std::collections::{BTreeMap, HashSet};
 
 use kentos_commands::{
     BlockId, BlocksReplace, BlocksReplaced, CommandResult, CommandWarning, Entity,
@@ -169,9 +169,19 @@ fn check(doc: &Document, input: &BlocksReplace) -> Result<Checked, Stop> {
     let mut dropped: HashSet<String> = HashSet::new();
     let mut places = 0u32;
     let mut replaced: Vec<(Slot, kentos_commands::InsertEntity)> = Vec::with_capacity(open.len());
-    for (_, slot, e, _) in &open {
+    for (index, slot, e, _) in &open {
         let Entity::Insert(i) = e else { continue };
         let mut i = i.clone();
+        i.parameters = parameters(old, new, &i.parameters).map_err(|(name, why)| {
+            Stop::failed(error(
+                codes::INVALID_PARAMETER_VALUE,
+                format!(
+                    "“{}” bloğunun örnek değerleri “{}” bloğuna korunarak taşınamıyor: {why} Önce uyumsuz değeri açıkça sıfırlayın veya uyumlu bir hedef seçin. Hiçbir yerleştirme değiştirilmedi.",
+                    old.name, new.name
+                ),
+                Some(if name.is_empty() { format!("uids[{index}].parameters") } else { format!("uids[{index}].parameters.{name}") }),
+            ))
+        })?;
         i.block = to;
         for a in &old.attributes {
             if !kept.contains(a.tag.as_str()) && i.base.attrs.remove(&a.tag).is_some() {
@@ -232,4 +242,160 @@ fn check(doc: &Document, input: &BlocksReplace) -> Result<Checked, Stop> {
         purge: (input.purge == Some(true)).then_some(from),
         warnings: warning.into_iter().collect(),
     })
+}
+
+/// Instance inputs survive a compatible replacement; calculated values are recalculated by the target.
+/// Unlike a definition edit's explicit refit, replacement must not silently discard incompatible user inputs.
+fn parameters(
+    old: &kentos_commands::BlockDefinition,
+    new: &kentos_commands::BlockDefinition,
+    kept: &BTreeMap<String, kentos_commands::ParamValue>,
+) -> Result<BTreeMap<String, kentos_commands::ParamValue>, (String, String)> {
+    let mut inputs = BTreeMap::new();
+    for (name, value) in kept {
+        let source = old
+            .dynamic
+            .as_ref()
+            .and_then(|d| d.parameters.iter().find(|p| p.name() == name));
+        if source.is_some_and(|p| p.rule().is_some_and(|r| r.expression.is_some())) {
+            continue;
+        }
+        let target = new
+            .dynamic
+            .as_ref()
+            .and_then(|d| d.parameters.iter().find(|p| p.name() == name));
+        let Some(target) = target else {
+            return Err((name.clone(), format!("Hedefte “{name}” parametresi yok.")));
+        };
+        if source.is_none_or(|p| std::mem::discriminant(p) != std::mem::discriminant(target)) {
+            return Err((
+                name.clone(),
+                format!("“{name}” parametresinin türü aynı değil."),
+            ));
+        }
+        if matches!(
+            source,
+            Some(
+                kentos_commands::BlockParameter::Linear { .. }
+                    | kentos_commands::BlockParameter::Polar { .. }
+                    | kentos_commands::BlockParameter::Point { .. }
+            )
+        ) && (old.units == Some(kentos_commands::BlockUnits::Unitless))
+            != (new.units == Some(kentos_commands::BlockUnits::Unitless))
+        {
+            return Err((
+                name.clone(),
+                format!("“{name}” için birimsiz ve fiziksel tanım sayıları doğrudan eşlenemez."),
+            ));
+        }
+        inputs.insert(name.clone(), value.clone());
+    }
+    match &new.dynamic {
+        Some(d) => crate::block_params::resolve(d, &BTreeMap::new(), &inputs)
+            .map_err(|(_, path, why)| (path.strip_prefix("values.").unwrap_or("").to_owned(), why)),
+        None => Ok(BTreeMap::new()),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use kentos_commands::{BlocksParameters, ParametersOperation};
+    use serde_json::json;
+
+    #[test]
+    fn a_selected_version_keeps_overrides_and_nested_dimension_reference_and_roundtrips_undo() {
+        let mut snapshot = kentos_kcad::decode(include_bytes!(
+            "../../../../fixtures/kcad/v2/dynamic-blocks.kcad"
+        ))
+        .unwrap();
+        let from = snapshot.blocks[0].id;
+        let mut target = snapshot.blocks[0].clone();
+        target.id = serde_json::from_value(json!("0192f5a1-2900-7000-8000-0000000000e1")).unwrap();
+        target.name = "Yeni kapı".into();
+        target.card.as_mut().unwrap().version = 2;
+        target.entities.push(
+            serde_json::from_value(json!({
+                "kind":"line","id":5,"layerId":"","attrs":{},
+                "a":{"x":0.06,"y":0.45},"b":{"x":0.3,"y":0.45}
+            }))
+            .unwrap(),
+        );
+        let to = target.id;
+        snapshot.blocks.push(target);
+        let uid = snapshot.uids[0];
+        let mut doc = Document::from_snapshot_v2(snapshot).unwrap();
+        let set = crate::block_params::execute(
+            &mut ExecutionContext::new(&mut doc),
+            BlocksParameters {
+                operation: ParametersOperation::Set,
+                uids: vec![uid.to_text()],
+                values: Some(
+                    serde_json::from_value(json!({"Genişlik":1.05,"Görünüş":"Sade"})).unwrap(),
+                ),
+                names: None,
+                expected_revision: None,
+            },
+        );
+        assert!(matches!(set, CommandResult::Completed { .. }));
+        let dimension = doc
+            .add(
+                serde_json::from_value(json!({
+                    "kind":"dimension","id":0,"layerId":"duvar","attrs":{},
+                    "a":{"x":0.,"y":0.},"b":{"x":0.,"y":1.05},"offset":0.2,"height":0.1,
+            "refs":{"a":{"uid":uid,"path":[0],"place":{"kind":"start"}},
+                    "b":{"uid":uid,"path":[0],"place":{"kind":"end"}}}
+                }))
+                .unwrap(),
+            )
+            .unwrap();
+        // Reopen a clean baseline, exactly as a saved office drawing is opened.
+        let before = kentos_kcad::encode_verified(&doc.to_snapshot_v2()).unwrap();
+        let mut doc = Document::from_snapshot_v2(kentos_kcad::decode(&before).unwrap()).unwrap();
+        let input = BlocksReplace {
+            from: Some(from),
+            to: Some(to),
+            uids: Some(vec![uid.to_text()]),
+            purge: None,
+            expected_revision: None,
+        };
+        let answer = execute(&mut ExecutionContext::new(&mut doc), input);
+        assert!(
+            matches!(answer, CommandResult::Completed { .. }),
+            "{answer:?}"
+        );
+        let slot = doc.slot_of(kentos_domain::Uuid::from_bytes(uid.0)).unwrap();
+        let Entity::Insert(now) = doc.get(slot).unwrap() else {
+            panic!("insert")
+        };
+        assert_eq!(now.block, to);
+        assert_eq!(
+            now.parameters["Genişlik"],
+            kentos_commands::ParamValue::Number(1.05)
+        );
+        assert_eq!(
+            now.parameters["Görünüş"],
+            kentos_commands::ParamValue::Text("Sade".into())
+        );
+        let Entity::Dimension(dim) = doc.get(dimension).unwrap() else {
+            panic!("dimension")
+        };
+        let refs = dim.refs.as_ref().unwrap();
+        assert_eq!(refs.b.as_ref().unwrap().uid, uid);
+        assert_eq!(refs.b.as_ref().unwrap().path, vec![0]);
+        assert_eq!(refs.b.as_ref().unwrap().broken, None);
+        assert!((dim.b.y - 1.05).abs() < 1e-12, "{dim:?}");
+        assert_eq!(doc.block(from).unwrap().card.as_ref().unwrap().version, 1);
+        let saved = kentos_kcad::encode_verified(&doc.to_snapshot_v2()).unwrap();
+        let reopened = Document::from_snapshot_v2(kentos_kcad::decode(&saved).unwrap()).unwrap();
+        assert_eq!(
+            kentos_kcad::encode_verified(&reopened.to_snapshot_v2()).unwrap(),
+            saved
+        );
+        doc.undo();
+        assert_eq!(
+            kentos_kcad::encode_verified(&doc.to_snapshot_v2()).unwrap(),
+            before
+        );
+    }
 }

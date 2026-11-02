@@ -1343,9 +1343,12 @@ class _BlocksReplace(LocalCommand[BlocksReplace, BlocksReplaced, BlocksReplaced]
     adımı. Her yerleştirme yerini, ölçeğini, dönüşünü, katmanını ve görünüşünü korur;
     to'nun sabit olmayan özniteliklerinin değerleri ve taşınabilir özniteliklerinin
     yerleri kalır, öbürleri düşer ve söylenir (dropped, places); to'nun alanları
-    doldurulur. purge ile from artık hiçbir yerde yerleşmiyorsa silinir. Kilitli
-    katmandakiler atlanır ve söylenir. AutoCAD'in BLOCKREPLACE'i. expectedRevision
-    verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+    doldurulur. Aynı ad ve türdeki uyumlu örnek parametreleri korunur, hedef formülleri
+    yeniden hesaplanır; taşınamayan bir örnek değeri varsa invalid_parameter_value ile
+    tüm işlem reddedilir, sessizce sıfırlanmaz. purge ile from artık hiçbir yerde
+    yerleşmiyorsa silinir. Kilitli katmandakiler atlanır ve söylenir. AutoCAD'in
+    BLOCKREPLACE'i. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey
+    yazılmaz, sonuç conflict olur.
     """
     __slots__ = ()
     id = "cad.blocks.replace"
@@ -1373,10 +1376,12 @@ class _BlocksReplace(LocalCommand[BlocksReplace, BlocksReplaced, BlocksReplaced]
         verilenleri) to bloğuna geçirir; tek geri alma adımı. Her yerleştirme yerini,
         ölçeğini, dönüşünü, katmanını ve görünüşünü korur; to'nun sabit olmayan
         özniteliklerinin değerleri ve taşınabilir özniteliklerinin yerleri kalır, öbürleri
-        düşer ve söylenir (dropped, places); to'nun alanları doldurulur. purge ile from
-        artık hiçbir yerde yerleşmiyorsa silinir. Kilitli katmandakiler atlanır ve söylenir.
-        AutoCAD'in BLOCKREPLACE'i. expectedRevision verilmişse ve çizim o sürümde değilse
-        hiçbir şey yazılmaz, sonuç conflict olur.
+        düşer ve söylenir (dropped, places); to'nun alanları doldurulur. Aynı ad ve türdeki
+        uyumlu örnek parametreleri korunur, hedef formülleri yeniden hesaplanır; taşınamayan
+        bir örnek değeri varsa invalid_parameter_value ile tüm işlem reddedilir, sessizce
+        sıfırlanmaz. purge ile from artık hiçbir yerde yerleşmiyorsa silinir. Kilitli
+        katmandakiler atlanır ve söylenir. AutoCAD'in BLOCKREPLACE'i. expectedRevision
+        verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
 
         Args:
             doc: The drawing it works on.

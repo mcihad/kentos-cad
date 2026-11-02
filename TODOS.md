@@ -51,6 +51,11 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ADR 0849: web'in blok tanımı seçimi ayrı geometri yazarak örnek değerlerini
+  sıfırlamamalı; `cad.blocks.replace` kapsamı, uyumlu parametre koruması ve
+  `invalid_parameter_value` atomik reddiyle eşitlenmeli. Üretilen katalog
+  günceldir; web etkileşimi kabul edilmiş sayılmaz.
+
 - ADR 0821, 0822 (CAD-ADV-04): bağımsız yay/daire analitik yuvarlaması; ortak anlamsal offset komutunda
   elips/fit/NURBS için açık `approximation.tolerance`, bounded paralel ve kaynak/kopya raporu. Web'in eski doğrudan
   geometri yazan köşe/offset araçları bunlara taşınacak. Masaüstü değer kutusunun gerçek seçim/yapıştırma, sabit konum,

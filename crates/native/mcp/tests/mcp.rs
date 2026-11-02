@@ -3572,3 +3572,127 @@ fn a_named_block_parameter_reset_keeps_unrelated_visibility_in_mcp() {
     }
     std::fs::remove_dir_all(dir).unwrap();
 }
+
+#[test]
+fn block_replacement_refuses_incompatible_values_and_preserves_compatible_overrides_in_mcp() {
+    let dir = std::env::temp_dir().join(format!(
+        "kentos-mcp-block-replace-parameters-{}",
+        std::process::id()
+    ));
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join("door.kcad");
+    std::fs::write(
+        &path,
+        include_bytes!("../../../../fixtures/kcad/v2/dynamic-blocks.kcad"),
+    )
+    .unwrap();
+    let mut server = Server::new();
+    let drawing =
+        call(&mut server, "drawing.open", json!({"path":path}))["structuredContent"]["drawing"]
+            .clone();
+    let item=call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"][0].clone();
+    let uid = &item["uid"];
+    let source = &item["entity"]["block"];
+    let compatible = call(
+        &mut server,
+        "cad.blocks.edit",
+        json!({"drawing":drawing,"operation":"duplicate","block":source,"name":"Yeni kapı"}),
+    )["structuredContent"]["output"]["added"][0]
+        .clone();
+    let plain = call(
+        &mut server,
+        "cad.blocks.edit",
+        json!({"drawing":drawing,"operation":"duplicate","block":source,"name":"Düz kapı"}),
+    )["structuredContent"]["output"]["added"][0]
+        .clone();
+    let cleared = call(
+        &mut server,
+        "cad.blocks.edit",
+        json!({"drawing":drawing,"operation":"dynamic","block":plain,"dynamic":null}),
+    );
+    assert_eq!(
+        cleared["structuredContent"]["status"], "completed",
+        "{cleared}"
+    );
+    let set = call(
+        &mut server,
+        "cad.blocks.parameters",
+        json!({"drawing":drawing,"operation":"set","uids":[uid],"values":{"Genişlik":1.05,"Görünüş":"Sade"}}),
+    );
+    assert_eq!(set["structuredContent"]["status"], "completed", "{set}");
+    call(
+        &mut server,
+        "drawing.save",
+        json!({"drawing":drawing,"path":path}),
+    );
+    let before = std::fs::read(&path).unwrap();
+    for op in ["validate", "plan", "execute"] {
+        let refused = call(
+            &mut server,
+            "cad.blocks.replace",
+            json!({"drawing":drawing,"from":source,"to":plain,"uids":[uid],"op":op}),
+        );
+        assert_eq!(
+            refused["structuredContent"]["status"], "failed",
+            "{refused}"
+        );
+        assert_eq!(
+            refused["structuredContent"]["error"]["code"],
+            "invalid_parameter_value"
+        );
+        call(
+            &mut server,
+            "drawing.save",
+            json!({"drawing":drawing,"path":path}),
+        );
+        assert_eq!(std::fs::read(&path).unwrap(), before);
+    }
+    let mut input =
+        json!({"drawing":drawing,"from":source,"to":compatible,"uids":[uid],"op":"plan"});
+    let planned = call(&mut server, "cad.blocks.replace", input.clone());
+    assert_eq!(
+        planned["structuredContent"]["status"], "completed",
+        "{planned}"
+    );
+    input["op"] = json!("execute");
+    input["expected"] = json!({"plan":planned["structuredContent"]["planId"]});
+    let written = call(&mut server, "cad.blocks.replace", input);
+    assert_eq!(
+        written["structuredContent"]["status"], "completed",
+        "{written}"
+    );
+    let item = call(
+        &mut server,
+        "drawing.entity",
+        json!({"drawing":drawing,"uid":uid}),
+    )["structuredContent"]
+        .clone();
+    assert_eq!(item["entity"]["block"], compatible, "{item}");
+    assert_eq!(item["entity"]["parameters"]["Genişlik"], 1.05);
+    assert_eq!(item["entity"]["parameters"]["Görünüş"], "Sade");
+    call(
+        &mut server,
+        "drawing.save",
+        json!({"drawing":drawing,"path":path}),
+    );
+    let saved = std::fs::read(&path).unwrap();
+    let reopened =
+        call(&mut server, "drawing.open", json!({"path":path}))["structuredContent"]["drawing"]
+            .clone();
+    let read = call(
+        &mut server,
+        "drawing.entity",
+        json!({"drawing":reopened,"uid":uid}),
+    )["structuredContent"]
+        .clone();
+    assert_eq!(read, item);
+    assert_ne!(saved, before);
+    call(&mut server, "drawing.undo", json!({"drawing":drawing}));
+    call(
+        &mut server,
+        "drawing.save",
+        json!({"drawing":drawing,"path":path}),
+    );
+    assert_eq!(std::fs::read(&path).unwrap(), before);
+    std::fs::remove_dir_all(dir).unwrap();
+}

@@ -598,6 +598,16 @@ Gerçek GUI/Python önce–sonra dosyaları ve tek Undo tam aynı; dar pencere,
 açık/koyu tema, Büyük yazı ve menüler görüldü.
 [ADR 0848](../docs/adr/0848-block-parameter-groups-and-named-reset.md).
 
+**İlerleme — 2026-11-02, güvenli tanım değiştirme:** Panelin Blok alanı artık
+ortak `cad.blocks.replace` yolunu kullanır. Aynı ad/türdeki kullanıcı girdileri
+korunur, hedef formülleri hesaplanır; uyumsuz hedef atomik reddedilir. Eski
+başarılı görünüp kaydedilemeyen dinamik→düz blok hatası kapatıldı. 50 ortak
+durum, 317 application, 1599 masaüstü, 53 MCP, dokuz Python blok testi,
+derleme ve Clippy geçti. Gerçek GUI'de 1050 mm/Sade/K-1/bağlı ölçü korundu;
+GUI/Python kayıtları ve tek Undo tam aynı, yeniden açma geçti.
+[ADR 0849](../docs/adr/0849-block-replacement-keeps-compatible-parameters.md).
+Bu, aile/sürüm tanıyan kitaplık yükseltme arayüzünü tamamlamaz.
+
 Tür/sürüm ve seçilmiş yükseltme, kalıcı tip–örnek parametre kapsamı ve
 birleşik blok kabulü açıktır. Kullanıcı tanımlı grup metaverisi bu otomatik
 gruplarla tamamlanmış sayılmaz. Web öznitelik penceresinin native eşitleme kapsamıyla

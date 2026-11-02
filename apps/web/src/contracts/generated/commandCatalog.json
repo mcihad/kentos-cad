@@ -32022,7 +32022,7 @@
       "id": "cad.blocks.replace",
       "version": 1,
       "title": "Bloğu başkasıyla değiştir",
-      "summary": "from bloğunun çizimdeki yerleştirmelerini (ya da uids ile verilenleri) to bloğuna geçirir; tek geri alma adımı. Her yerleştirme yerini, ölçeğini, dönüşünü, katmanını ve görünüşünü korur; to'nun sabit olmayan özniteliklerinin değerleri ve taşınabilir özniteliklerinin yerleri kalır, öbürleri düşer ve söylenir (dropped, places); to'nun alanları doldurulur. purge ile from artık hiçbir yerde yerleşmiyorsa silinir. Kilitli katmandakiler atlanır ve söylenir. AutoCAD'in BLOCKREPLACE'i. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "summary": "from bloğunun çizimdeki yerleştirmelerini (ya da uids ile verilenleri) to bloğuna geçirir; tek geri alma adımı. Her yerleştirme yerini, ölçeğini, dönüşünü, katmanını ve görünüşünü korur; to'nun sabit olmayan özniteliklerinin değerleri ve taşınabilir özniteliklerinin yerleri kalır, öbürleri düşer ve söylenir (dropped, places); to'nun alanları doldurulur. Aynı ad ve türdeki uyumlu örnek parametreleri korunur, hedef formülleri yeniden hesaplanır; taşınamayan bir örnek değeri varsa invalid_parameter_value ile tüm işlem reddedilir, sessizce sıfırlanmaz. purge ile from artık hiçbir yerde yerleşmiyorsa silinir. Kilitli katmandakiler atlanır ve söylenir. AutoCAD'in BLOCKREPLACE'i. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
       "aliases": [
         "blockreplace",
         "blokdegistir"
@@ -32040,7 +32040,7 @@
       "cost": "instant",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.blocks.replace` v1: the drawing's inserts of `from` (or those named) place `to` instead, as one undo\nstep “Bloğu başkasıyla değiştir”; each keeps its place, scale, turn, layer and look, the values of `to`'s attributes\n(not constant) and the places of its movable ones; `to`'s fields are filled. With `purge`, `from` is deleted when\nno insert uses it any more.\n\nRefusals in order: `no_block` (`from` or `to` missing), `same_block`, `invalid_revision`, `revision_conflict`,\n`unknown_block` (`from`, `to`), `entity_not_found`, `not_insert` (an object named that is not an insert of\n`from`), `layer_locked` (every one locked; some: a warning), `invalid_field`.",
+        "description": "Input of `cad.blocks.replace` v1: the drawing's inserts of `from` (or those named) place `to` instead, as one undo\nstep “Bloğu başkasıyla değiştir”; each keeps its place, scale, turn, layer and look, the values of `to`'s attributes\n(not constant) and the places of its movable ones; `to`'s fields are filled. With `purge`, `from` is deleted when\nno insert uses it any more.\nCompatible same-name/type instance parameters are kept; the target recomputes expressions. Incompatible\ninstance inputs refuse the whole operation rather than leaving an unwritable drawing or silently dropping them.\n\nRefusals in order: `no_block` (`from` or `to` missing), `same_block`, `invalid_revision`, `revision_conflict`,\n`unknown_block` (`from`, `to`), `entity_not_found`, `not_insert` (an object named that is not an insert of\n`from`), `layer_locked` (every one locked; some: a warning), `invalid_field`, `invalid_parameter_value`.",
         "properties": {
           "expectedRevision": {
             "pattern": "^(0|[1-9][0-9]*)$",
@@ -32208,7 +32208,8 @@
           "entity_not_found",
           "not_insert",
           "layer_locked",
-          "invalid_field"
+          "invalid_field",
+          "invalid_parameter_value"
         ],
         "warnings": [
           "layer_locked"

@@ -628,6 +628,98 @@ replace.append({"name": "aynı kimlik iki kez verilirse bir kez sayılır", "ste
 ]})
 
 
+# CAD-ADV-06: independent parameter replacement cases. No KentOS evaluator is imported;
+# the exact expected maps below are hand-computed from the input contracts.
+def replacement_parameter_cases():
+    linear = {"kind": "linear", "name": "W", "from": P(0, 0), "to": P(1, 0),
+              "rule": {"min": .5, "max": 2, "step": .25}}
+    visible = {"kind": "visibility", "name": "V", "states": [{"name": "Open"}, {"name": "Closed"}]}
+    flip = {"kind": "flip", "name": "F", "a": P(0, 0), "b": P(0, 1)}
+    point = {"kind": "point", "name": "P", "at": P(1, 0)}
+    derived = {"kind": "linear", "name": "T", "from": P(0, 0), "to": P(2, 0), "rule": {"expression": "@W * 2"}}
+
+    def changed(p, **fields):
+        return {**copy.deepcopy(p), **fields}
+
+    def add(name, old, new, kept, expected=None, error=None, units=("m", "m"),
+            second=None, selected=None, locked=False):
+        setup = copy.deepcopy(SETUP)
+        setup["blocks"] = []
+        for bid, label, ps, unit in [(KAPI, "Eski", old, units[0]), (PENCERE, "Yeni", new, units[1])]:
+            block = {"id": bid, "name": label, "base": P(0, 0), "units": unit,
+                     "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": P(0, 0), "b": P(1, 0)}]}
+            if ps is not None:
+                block["dynamic"] = {"parameters": ps}
+            setup["blocks"].append(block)
+        setup["entities"] = []
+        for i, values in enumerate([kept] + ([] if second is None else [second]), 1):
+            e = {"kind": "insert", "id": i, "layerId": "kilitli" if locked and i == 2 else "kapilar",
+                 "attrs": {"ROOM": f"R-{i}"}, "block": KAPI, "p": P(i * 3, 4), "scale": 2,
+                 "rotation": .25, "mirror": True}
+            if values:
+                e["parameters"] = values
+            setup["entities"].append(e)
+        inp = {"from": KAPI, "to": PENCERE}
+        if selected is not None:
+            inp["uids"] = [uid(i) for i in selected]
+        nothing = {"ids": list(range(1, len(setup["entities"]) + 1)), "canUndo": False, "dirty": False, "revision": "same"}
+        if error:
+            steps = [{"op": op, "input": inp, "result": failed("invalid_parameter_value", "$any", error), "expect": nothing}
+                     for op in ("validate", "plan", "execute")]
+        else:
+            ids = selected if selected is not None else [i for i in range(1, len(setup["entities"]) + 1) if not (locked and i == 2)]
+            report = {"replaced": [uid(i) for i in ids], "dropped": [], "places": 0, "fields": 0, "purged": False, "revision": "$current"}
+            warnings = [LOCKED_SKIP] if locked else []
+            after = copy.deepcopy(setup["entities"])
+            for i in ids:
+                after[i - 1]["block"] = PENCERE
+                if expected:
+                    after[i - 1]["parameters"] = expected
+                else:
+                    after[i - 1].pop("parameters", None)
+            steps = [
+                {"op": "validate", "input": inp, "result": done(None, warnings), "expect": nothing},
+                {"op": "plan", "input": inp, "result": done(report, warnings), "expect": nothing},
+                {"op": "execute", "input": inp, "result": done(report, warnings),
+                 "expect": {"entities": {str(e["id"]): e for e in after}, "blocks": without_ids(setup["blocks"])}},
+                {"op": "undo", "returns": "Bloğu başkasıyla değiştir", "expect": {"entities": {str(e["id"]): e for e in setup["entities"]}}},
+            ]
+        replace.append({"name": f"parametre koruması: {name}", "setup": setup, "steps": steps})
+
+    add("aynı doğrusal girdiyi koru", [linear], [linear], {"W": 1.25}, {"W": 1.25})
+    add("yeni varsayılanla aynı değer depolanmaz", [linear], [changed(linear, to=P(1.25, 0))], {"W": 1.25}, {})
+    add("hedef formülü yeniden hesapla", [linear, derived], [linear, changed(derived, rule={"expression": "@W * 3"})],
+        {"W": 1.25, "T": 2.5}, {"W": 1.25, "T": 3.75})
+    constant = changed(derived, rule={"expression": "3"})
+    add("yalnız hesaplanan sonuç düz blokta kullanıcı girdisi sayılmaz", [constant], None, {"T": 3}, {})
+    add("düz örnekte hedef formülü hesapla", None, [constant], {}, {"T": 3})
+    add("varsayılan örnek düz hedefe geçer", [linear], None, {}, {})
+    add("görünüş girdisi korunur", [visible], [visible], {"V": "Closed"}, {"V": "Closed"})
+    add("çevirme girdisi korunur", [flip], [flip], {"F": True}, {"F": True})
+    add("yerel nokta korunur", [point], [point], {"P": P(1.5, .5)}, {"P": P(1.5, .5)})
+    add("iki bağımsız girdi korunur", [linear, visible], [linear, visible], {"W": 1.25, "V": "Closed"}, {"W": 1.25, "V": "Closed"})
+    add("yalnız seçilmiş örnek geçer", [linear], [linear], {"W": 1.25}, {"W": 1.25}, second={"W": 1.5}, selected=[1])
+    add("hedefte ek varsayılan değer yazılmaz", [linear], [linear, flip], {"W": 1.25}, {"W": 1.25})
+    add("kilitli uyumsuz örnek açık olanı engellemez", [linear], [changed(linear, rule={"max": 1.25})], {"W": 1.25}, {"W": 1.25}, second={"W": 1.5}, locked=True)
+    add("ikincisi uyumsuzsa ilki de yazılmaz", [linear], [changed(linear, rule={"max": 1.25})], {"W": 1.25}, second={"W": 1.5}, error="uids[1].parameters.W")
+    add("düz hedefte override kaybolmaz", [linear], None, {"W": 1.25}, error="uids[0].parameters.W")
+    add("hedefte ad yok", [linear], [changed(linear, name="Width")], {"W": 1.25}, error="uids[0].parameters.W")
+    add("ad büyük küçük harfe duyarlı", [linear], [changed(linear, name="w")], {"W": 1.25}, error="uids[0].parameters.W")
+    add("uzunluk açıya çevrilmez", [linear], [{"kind": "angle", "name": "W", "center": P(0, 0), "base": 0}], {"W": 1.25}, error="uids[0].parameters.W")
+    add("nokta kutupsala sessizce çevrilmez", [point], [{"kind": "polar", "name": "P", "from": P(0, 0), "to": P(1, 0)}], {"P": P(1.5, .5)}, error="uids[0].parameters.P")
+    add("üst sınır", [linear], [changed(linear, rule={"max": 1})], {"W": 1.25}, error="uids[0].parameters.W")
+    add("alt sınır", [linear], [changed(linear, to=P(1.5, 0), rule={"min": 1.5})], {"W": 1.25}, error="uids[0].parameters.W")
+    add("adım", [linear], [changed(linear, rule={"step": .5})], {"W": 1.25}, error="uids[0].parameters.W")
+    add("izinli liste", [linear], [changed(linear, rule={"list": [1, 1.5]})], {"W": 1.25}, error="uids[0].parameters.W")
+    add("görünürlük durumu yok", [visible], [changed(visible, states=[{"name": "Open"}])], {"V": "Closed"}, error="uids[0].parameters.V")
+    add("örnek değeri hedefte hesaplanan oldu", [linear], [changed(linear, rule={"expression": "1"})], {"W": 1.25}, error="uids[0].parameters.W")
+    add("birimsizden fiziksele örtülü sayı dönüşümü yok", [linear], [linear], {"W": 1.25}, units=("unitless", "m"), error="uids[0].parameters.W")
+    add("fizikselden birimsize örtülü sayı dönüşümü yok", [linear], [linear], {"W": 1.25}, units=("m", "unitless"), error="uids[0].parameters.W")
+    add("iki fiziksel birim de kanonik metre", [linear], [linear], {"W": 1.25}, {"W": 1.25}, units=("mm", "m"))
+
+
+replacement_parameter_cases()
+
 # ── cad.blocks.query ─────────────────────────────────────────────────────
 
 query = []

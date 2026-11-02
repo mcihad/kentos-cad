@@ -3328,6 +3328,90 @@ fn block_parameter_mm_input_uses_canonical_metres_rules_and_one_undo() {
 }
 
 #[test]
+fn a_block_definition_choice_preserves_instance_values_through_the_replacement_command() {
+    use kentos_commands::DrawingUnit;
+    let (mut app, slot) = parameter_drawing(DrawingUnit::Mm, false);
+    let mut snapshot = app.document.as_ref().unwrap().model.to_snapshot_v2();
+    let mut target = snapshot.blocks[0].clone();
+    let source = target.id;
+    target.id =
+        serde_json::from_value(serde_json::json!("0192f5a1-2900-7000-8000-0000000000e1")).unwrap();
+    target.name = "Düz kapı".into();
+    target.dynamic = None;
+    let plain = target.id;
+    snapshot.blocks.push(target);
+    let mut target = snapshot.blocks[0].clone();
+    target.id =
+        serde_json::from_value(serde_json::json!("0192f5a1-2900-7000-8000-0000000000e2")).unwrap();
+    target.name = "Yeni kapı".into();
+    let compatible = target.id;
+    snapshot.blocks.push(target);
+    let doc = crate::document::Document::from_v2(snapshot, None).unwrap();
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    app.selection.set([slot]);
+    event(
+        &mut app,
+        Event::Commit(Field::Parameter(slot, "Genişlik".into()), "1050".into()),
+    );
+    event(
+        &mut app,
+        Event::Parameter(
+            slot,
+            "Görünüş".into(),
+            kentos_commands::ParamValue::Text("Sade".into()),
+        ),
+    );
+    let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+    event(&mut app, Event::InsertBlock(slot, plain));
+    assert_eq!(
+        app.document.as_ref().unwrap().model.to_snapshot_v2(),
+        before,
+        "incompatible choice never silently drops overrides"
+    );
+    event(&mut app, Event::InsertBlock(slot, compatible));
+    let doc = app.document.as_ref().unwrap();
+    let Entity::Insert(now) = doc.model.get(slot).unwrap() else {
+        panic!("insert")
+    };
+    assert_eq!(now.block, compatible);
+    assert_eq!(
+        now.parameters["Genişlik"],
+        kentos_commands::ParamValue::Number(1.05)
+    );
+    assert_eq!(
+        now.parameters["Görünüş"],
+        kentos_commands::ParamValue::Text("Sade".into())
+    );
+    assert!(
+        doc.model
+            .entities()
+            .filter(|e| e.base().id != slot.0)
+            .all(|e| matches!(e,Entity::Insert(i) if i.block==source))
+    );
+    let call = doc.model.journal().last().unwrap();
+    assert_eq!(call.command.as_deref(), Some("cad.blocks.replace"));
+    assert_eq!(
+        call.input.as_ref().unwrap()["uids"]
+            .as_array()
+            .unwrap()
+            .len(),
+        1
+    );
+    assert!(kentos_kcad::encode_verified(&doc.model.to_snapshot_v2()).is_ok());
+    let _ = app.update(Message::Run("edit.undo"));
+    assert_eq!(
+        app.document.as_ref().unwrap().model.to_snapshot_v2(),
+        before
+    );
+    event(&mut app, Event::InsertBlock(slot, source));
+    assert_eq!(
+        app.document.as_ref().unwrap().model.to_snapshot_v2(),
+        before,
+        "choosing the same definition is a no-op"
+    );
+}
+
+#[test]
 fn block_parameter_groups_keep_definition_order_and_separate_catalog_appearance_and_computed() {
     use kentos_commands::{BlockParameter, DrawingUnit, NumberRule};
     let (mut app, slot) = parameter_drawing(DrawingUnit::Mm, false);

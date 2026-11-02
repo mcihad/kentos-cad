@@ -945,14 +945,7 @@ impl App {
                 }
                 _ => Vec::new(),
             },
-            Event::InsertBlock(slot, block) => match model.get(slot) {
-                Some(Entity::Insert(i)) => {
-                    let mut i = i.clone();
-                    i.block = block;
-                    properties::set_geometry(model, slot, &Entity::Insert(i))
-                }
-                _ => Vec::new(),
-            },
+            Event::InsertBlock(slot, block) => properties::replace_block(model, slot, block),
             Event::EmbedImage(slot) => crate::pictures::embed(model, slot, drawing.as_deref()),
             Event::EmbedRaster(slot) => crate::rasters::embed(model, slot, folder.as_deref()),
             Event::Wall(slot, change) => properties::edit_wall_kept(model, slot, change, wall_parts::keep()),

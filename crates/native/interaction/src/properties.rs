@@ -75,6 +75,30 @@ pub fn set_parameters(
     ))
 }
 
+/// Change only this insert's definition through the semantic replacement command, preserving compatible
+/// instance parameters and applying the same attribute/field rules as the block panel, Python and MCP.
+pub fn replace_block(doc: &mut Document, slot: Slot, to: kentos_commands::BlockId) -> Vec<String> {
+    let Some(kentos_commands::Entity::Insert(insert)) = doc.get(slot) else {
+        return Vec::new();
+    };
+    if insert.block == to {
+        return Vec::new();
+    }
+    let Some(uid) = doc.uid(slot) else {
+        return Vec::new();
+    };
+    let input = kentos_commands::BlocksReplace {
+        from: Some(insert.block),
+        to: Some(to),
+        uids: Some(vec![uid.to_string()]),
+        purge: None,
+        expected_revision: None,
+    };
+    said(kentos_native_application::blocks_replace::execute(
+        &mut ExecutionContext::new(doc), input,
+    ))
+}
+
 /// A wall's own fields from Öznitelikler (docs/adr/0339 §6) through `cad.walls.edit`'s `set`, one undo step “Duvarı
 /// düzenle”; what to say: the command's warnings or refusal.
 pub fn edit_wall(doc: &mut Document, slot: Slot, change: kentos_commands::WallChange) -> Vec<String> {

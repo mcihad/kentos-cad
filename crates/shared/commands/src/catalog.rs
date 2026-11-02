@@ -6123,6 +6123,7 @@ pub fn catalog() -> CommandCatalog {
             title: "Bloğu başkasıyla değiştir".into(),
             summary: "from bloğunun çizimdeki yerleştirmelerini (ya da uids ile verilenleri) to bloğuna geçirir; tek geri alma adımı. \
                       Her yerleştirme yerini, ölçeğini, dönüşünü, katmanını ve görünüşünü korur; to'nun sabit olmayan özniteliklerinin değerleri ve taşınabilir özniteliklerinin yerleri kalır, öbürleri düşer ve söylenir (dropped, places); to'nun alanları doldurulur. \
+                      Aynı ad ve türdeki uyumlu örnek parametreleri korunur, hedef formülleri yeniden hesaplanır; taşınamayan bir örnek değeri varsa invalid_parameter_value ile tüm işlem reddedilir, sessizce sıfırlanmaz. \
                       purge ile from artık hiçbir yerde yerleşmiyorsa silinir. Kilitli katmandakiler atlanır ve söylenir. \
                       AutoCAD'in BLOCKREPLACE'i. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
                 .into(),
