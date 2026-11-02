@@ -43,6 +43,8 @@ kentos-sheet = { path = "../../crates/shared/sheet", default-features = false }
 kentos-interaction = { path = "../../crates/native/interaction" }
 # Nokta editörü writes through the product commands themselves: it tells a refusal by its path (points/edit.rs, docs/adr/0153).
 kentos-native-application = { path = "../../crates/native/application" }
+# KentOS Yol's core: the terrain surfaces drawn over the drawing (plan/road.md Y2.4).
+kentos-road = { path = "../../crates/shared/road" }
 # İşlemler (docs/PROCESSING.md): the processing tools and models over the document, held to
 # the web's by fixtures/processing/v1 (docs/adr/0084).
 kentos-processing = { path = "../../crates/native/processing" }

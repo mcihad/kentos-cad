@@ -394,6 +394,8 @@
     "profile.window",
     "network.subnetworks",
     "linearRef.eventLinks",
+    "terrain.surfaces",
+    "terrain.new",
     "arch.program",
     "lineTypes.manage",
     "hatchPatterns.manage",

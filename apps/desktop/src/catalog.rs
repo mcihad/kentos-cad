@@ -579,6 +579,9 @@ pub const PORTED: &[&str] = &[
     "network.subnetworks",
     // docs/adr/0569: Olay bağları (event_links_window.rs).
     "linearRef.eventLinks",
+    // plan/road.md Y2.4: Arazi yüzeyleri and Yüzey oluştur (terrain_window.rs).
+    "terrain.surfaces",
+    "terrain.new",
     // docs/adr/0773: Bina programı (program_window.rs).
     "arch.program",
     // docs/adr/0313: Çizgi tipleri (line_types_window.rs).

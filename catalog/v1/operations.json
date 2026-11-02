@@ -2578,7 +2578,23 @@
       "via": [
         "cad.modules.edit"
       ],
-      "note": "Tıklanan nokta, açı, ayna, kat, evre, numaralar ve bölüm place'e verilir; nesneler ve bağları komutun hesabı, önizleme planından (ADR 0775 §2, ADR 0779 §4)."    }
+      "note": "Tıklanan nokta, açı, ayna, kat, evre, numaralar ve bölüm place'e verilir; nesneler ve bağları komutun hesabı, önizleme planından (ADR 0775 §2, ADR 0779 §4)."
+    },
+    "terrain.surfaces": {
+      "level": "semantic",
+      "via": [
+        "road.terrains.create",
+        "road.terrains.edit",
+        "road.terrains.query"
+      ],
+      "note": "Arazi yüzeyleri penceresi road.terrains.query ile okur, Kaydet ve Kabul et road.terrains.create ve .edit ile yazar (plan/road.md Y2.4)."
+    },
+    "terrain.new": {
+      "level": "semantic",
+      "via": [
+        "road.terrains.create"
+      ]
+    }
   },
   "tools": {
     "line": {

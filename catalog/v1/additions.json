@@ -3033,6 +3033,39 @@
       "status": "implemented"
     },
     {
+      "id": "terrain.surfaces",
+      "title": "Arazi yüzeyleri…",
+      "short": "Yüzeyler",
+      "icon": "terrainSurface",
+      "description": "Yol projesinin arazi yüzeyleri: her yüzeyin durumu (güncel, eskidi, kabul edilmedi, kurulamıyor), üçgen sayısı, alanı ve kot aralığı; tanımı (nokta ve kırık hat katmanları, seçimden sınır ve boşluklar, en uzun dış kenar, kot toleransı). Kaydet road.terrains.create ve road.terrains.edit ile yazar; Kabul et kaynakları değişen yüzeyi bugünkü hâliyle kabul eder. Yüzeyler çizimde üçgenleri ve kırık hatlarıyla görünür.",
+      "aliases": [
+        "YUZEY",
+        "YÜZEY",
+        "ARAZI",
+        "ARAZİ",
+        "TIN",
+        "SURFACES"
+      ],
+      "shortcuts": [],
+      "category": "Arazi",
+      "status": "implemented"
+    },
+    {
+      "id": "terrain.new",
+      "title": "Yüzey oluştur…",
+      "short": "Yüzey oluştur",
+      "icon": "terrainNew",
+      "description": "Çizimin kotlu noktalarından ve kırık hatlarından yeni bir arazi yüzeyi (kısıtlı Delaunay üçgenleri) kurar: Arazi yüzeyleri penceresini yeni bir yüzeyle açar; katmanları seçip Kaydet'e basınca road.terrains.create ile yazılır.",
+      "aliases": [
+        "YUZEYOLUSTUR",
+        "YÜZEYOLUŞTUR",
+        "CREATESURFACE"
+      ],
+      "shortcuts": [],
+      "category": "Arazi",
+      "status": "implemented"
+    },
+    {
       "id": "raster.mosaic",
       "title": "Sanal mozaik",
       "icon": "rasterMosaic",
@@ -4019,7 +4052,9 @@
     "moduleUpdate": "<rect x=\"2.5\" y=\"2.5\" width=\"6\" height=\"6\" rx=\"0.5\"/><rect x=\"11.5\" y=\"11.5\" width=\"6\" height=\"6\" rx=\"0.5\" stroke-dasharray=\"1.6 1.2\"/><path d=\"M8.5 5.5h5v4M11.5 7.5l2 2 2-2\" stroke-width=\"1.2\"/>",
     "moduleDetach": "<rect x=\"2.5\" y=\"2.5\" width=\"7\" height=\"7\" rx=\"0.5\"/><rect x=\"11\" y=\"11\" width=\"6.5\" height=\"6.5\" rx=\"0.5\"/><path d=\"M10.5 10.5l1-1M12.5 8.5l1-1\" stroke-width=\"1.2\"/>",
     "designOptions": "<rect x=\"2.5\" y=\"3\" width=\"7\" height=\"14\" rx=\"0.5\"/><rect x=\"10.5\" y=\"3\" width=\"7\" height=\"14\" rx=\"0.5\" stroke-dasharray=\"1.6 1.2\"/><path d=\"M5 7h2M13 11h2\" stroke-width=\"1.2\"/>",
-    "roomElevation": "<rect x=\"2.5\" y=\"4.5\" width=\"15\" height=\"11\" rx=\"0.5\"/><rect x=\"4.5\" y=\"8.5\" width=\"3\" height=\"7\" stroke-width=\"1\"/><rect x=\"10.5\" y=\"7.5\" width=\"5\" height=\"4\" stroke-width=\"1\"/><path d=\"M2.5 17.5h15\" stroke-width=\"0.9\" stroke-dasharray=\"1.6 1.2\"/>"
+    "roomElevation": "<rect x=\"2.5\" y=\"4.5\" width=\"15\" height=\"11\" rx=\"0.5\"/><rect x=\"4.5\" y=\"8.5\" width=\"3\" height=\"7\" stroke-width=\"1\"/><rect x=\"10.5\" y=\"7.5\" width=\"5\" height=\"4\" stroke-width=\"1\"/><path d=\"M2.5 17.5h15\" stroke-width=\"0.9\" stroke-dasharray=\"1.6 1.2\"/>",
+    "terrainSurface": "<path d=\"M2.5 15.5 8 4l9.5 3.5-2 9z\" stroke-width=\"1.1\"/><path d=\"M8 4l1 7.5 8.5-4M2.5 15.5 9 11.5l6.5 5\" stroke-width=\".8\"/><path d=\"M4.6 10.4 9 11.5l4.6 1.4\" stroke-width=\"1.9\"/>",
+    "terrainNew": "<path d=\"M2 13 6.8 3.5 14 6l-1.6 7z\" stroke-width=\"1.1\"/><path d=\"M6.8 3.5 8 9.2 14 6M2 13l6-3.8 4.4 3.8\" stroke-width=\".8\"/><path d=\"M15.5 12.2v6.3M12.4 15.4h6.3\" stroke-width=\"1.5\"/>"
   },
   "tabs": [
     {

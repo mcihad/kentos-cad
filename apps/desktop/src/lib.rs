@@ -251,6 +251,10 @@ mod leader_tools;
 mod layer_merge;
 mod joins_window;
 mod event_links_window;
+mod terrain_layer;
+mod terrain_window;
+#[cfg(test)]
+mod terrain_window_tests;
 mod program_window;
 mod layer_order;
 mod layer_purge;

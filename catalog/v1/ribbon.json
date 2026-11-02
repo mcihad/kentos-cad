@@ -440,6 +440,20 @@
     "label": "Arazi",
     "panels": [
      {
+      "label": "Yüzey",
+      "icon": "terrainSurface",
+      "items": [
+       {
+        "command": "terrain.surfaces",
+        "size": "large"
+       },
+       {
+        "command": "terrain.new",
+        "size": "large"
+       }
+      ]
+     },
+     {
       "label": "İşlemler",
       "icon": "processing",
       "items": [

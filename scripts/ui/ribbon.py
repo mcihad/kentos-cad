@@ -250,6 +250,8 @@ CAD = [
     # KentOS Yol's terrain (plan/road.md §25.1 Y1.2): its processing toolbox and the terrain's queries; the surface
     # (Y2), its TIN, contours and slopes, comes with its own commands. İşlemler's tools stay in the contextual tabs.
     T("terrain", "Arazi", [
+        # The terrain surfaces (plan/road.md Y2.4): their window and a new one.
+        P("Yüzey", "terrainSurface", [L("terrain.surfaces"), L("terrain.new")]),
         P("İşlemler", "processing", [L("processing.toolbox"), S("processing.newModel"), S("processing.history")]),
         P("Arazi", "contours", [L("tool.spot"), S("pointcloud.region"), S("pointcloud.profile")],
           overflow=["mesh.query"]),

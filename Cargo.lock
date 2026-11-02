@@ -2692,6 +2692,7 @@ dependencies = [
  "kentos-processing",
  "kentos-project",
  "kentos-render-wgpu",
+ "kentos-road",
  "kentos-services",
  "kentos-sheet",
  "kentos-sheet-ui",

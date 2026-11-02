@@ -1,6 +1,6 @@
 # ADR 0900 — Yol arazi yüzeyi: kısıtlı Delaunay ve kot sorgusu
 
-Tarih: 2026-11-02. plan/road.md Y2 (ROAD-TIN-01…11, ROAD-SURVEY-01/03/08, ROAD-NUM-10). Durum: Y2.1, Y2.2 ve Y2.3 uygulandı.
+Tarih: 2026-11-02. plan/road.md Y2 (ROAD-TIN-01…11, ROAD-SURVEY-01/03/08, ROAD-NUM-10). Durum: Y2.1–Y2.4 uygulandı.
 
 ## Dayanak
 
@@ -80,6 +80,17 @@ Tarih: 2026-11-02. plan/road.md Y2 (ROAD-TIN-01…11, ROAD-SURVEY-01/03/08, ROAD
     aynı tanımı yazmak çizimi kirletmez. 28 + 21 + 20 ortak durum (`scripts/fixtures/road_terrain_command_cases.py`:
     kaynaklar §10'un kuralıyla, yüzey Triangle'ın, ölçüler ve kesitler kesirlerle, özet kanonik JSON'un SHA-256'sı);
     Python `kentos.cad.road.terrains` ve kısa biçimi `kentos.road`, MCP aracı (masaüstü bağlantısında da `road.*`).
+
+12. **Masaüstü (Y2.4).** OpenRoads'un Create From Elements'ı (öğelerden kurala bağlı arazi, kenar yöntemi en uzun kenarla)
+    ve Civil 3D'nin yüzey tanımı gibi: Arazi sekmesinde Yüzeyler (`terrain.surfaces`) ve Yüzey oluştur (`terrain.new`).
+    Arazi yüzeyleri penceresi yüzeyleri durumlarıyla (güncel, eskidi, kabul edilmedi, kurulamıyor, değişti) listeler;
+    tanım: ad, nokta ve kırık hat katmanları, sınır ve boşluklar seçimden, en uzun dış kenar ve kot toleransı; altta
+    üçgen sayısı, alan, kot aralığı ve kullanılamayan kaynaklar. Kaydet silinenleri, değişenleri ve yenileri
+    `road.terrains.edit` ve `.create` ile yazar; Kabul et kaydedilmiş yüzeyi kabul eder. Yüzey çizimin üstünde,
+    etiketlerin altında önbellekli bir katmanda: üçgen kenarları çizimin mürekkebiyle ince ve yarı saydam, kısıt kenarları
+    (kırık hat, sınır, boşluk) tehlike renginde; görünüm ya da çizimin sürümü değişince yeniden çizilir, pencerenin
+    dışındaki ve iki pikselden kısa kenarlar çizilmez (`terrain_layer.rs`). Yüzeyin kendi görünüş şablonu ve proje ağacı
+    sonraki dilimlerdir.
 
 ## Sonra
 

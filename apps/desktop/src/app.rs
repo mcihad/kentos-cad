@@ -264,6 +264,8 @@ pub enum Dialog {
     Joins,
     /// Olay bağları (event_links_window.rs, docs/adr/0569); the window is `App::event_links_window`.
     EventLinks,
+    /// Arazi yüzeyleri (terrain_window.rs, plan/road.md Y2.4); the window is `App::terrain_window`.
+    Terrains,
     /// Bina programı (program_window.rs, docs/adr/0773); the window is `App::program_window`.
     Program,
     /// Mahalleri birleştir's decision, asked before writing (quantities.rs, docs/adr/0773 §4).
@@ -607,6 +609,8 @@ pub enum Message {
     Joins(crate::joins_window::Event),
     /// An event of Olay bağları (event_links_window.rs, docs/adr/0569).
     EventLinks(crate::event_links_window::Event),
+    /// An event of Arazi yüzeyleri (terrain_window.rs, plan/road.md Y2.4).
+    Terrains(crate::terrain_window::Event),
     /// An event of Bina programı (program_window.rs, docs/adr/0773).
     Program(crate::program_window::Event),
     TableStyles(crate::forms::table_styles::Event),
@@ -1159,6 +1163,8 @@ pub struct App {
     pub(crate) joins_window: Option<crate::joins_window::Window>,
     /// Olay bağları (event_links_window.rs, docs/adr/0569).
     pub(crate) event_links_window: Option<crate::event_links_window::Window>,
+    /// Arazi yüzeyleri (terrain_window.rs, plan/road.md Y2.4).
+    pub(crate) terrain_window: Option<crate::terrain_window::Window>,
     /// Bina programı (program_window.rs, docs/adr/0773).
     pub(crate) program_window: Option<crate::program_window::Window>,
     /// Mahalleri birleştir asked: its input and its decision's words (docs/adr/0773 §4).
@@ -1576,6 +1582,7 @@ impl App {
             relations_window: None,
             joins_window: None,
             event_links_window: None,
+            terrain_window: None,
             program_window: None,
             space_merging: None,
             table_styles: None,
@@ -2286,6 +2293,7 @@ impl App {
             Message::Relations(event) => return self.relations_event(event),
             Message::Joins(event) => return self.joins_event(event),
             Message::EventLinks(event) => return self.event_links_event(event),
+            Message::Terrains(event) => return self.terrain_event(event),
             Message::Program(event) => return self.program_event(event),
             Message::TableStyles(event) => return self.table_styles_event(event),
             Message::Subtypes(event) => return self.subtypes_event(event),
@@ -3298,6 +3306,9 @@ impl App {
             "network.subnetworks" => self.open_subnetworks(),
             // Olay bağları (event_links_window.rs, docs/adr/0569 §5).
             "linearRef.eventLinks" => self.open_event_links(),
+            // Arazi yüzeyleri and Yüzey oluştur (terrain_window.rs, plan/road.md Y2.4).
+            "terrain.surfaces" => self.open_terrains(),
+            "terrain.new" => self.new_terrain(),
             // Bina programı (program_window.rs, docs/adr/0773).
             "arch.program" => self.open_program(),
             // Çizgi tipleri (docs/adr/0313 §7).

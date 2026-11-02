@@ -854,6 +854,13 @@ impl App {
                 let writing = self.paragraph_view();
                 let active: Element<'_, Message> = ContextMenu::controlled(
                     stack![area]
+                        // A road project's terrain surfaces over the drawing (terrain_layer.rs, plan/road.md Y2.4).
+                        .extend(crate::terrain_layer::layer(
+                            &doc.model,
+                            &self.viewport.camera,
+                            mark_colors(self.canvas()).fg,
+                            Tokens::of(&self.theme()).danger,
+                        ))
                         .extend(service_labels)
                         .push(labels)
                         // Kaydırmalı karşılaştır: the other view right of the divider (split_view.rs, docs/adr/0523 §3).
@@ -1996,6 +2003,7 @@ impl App {
             Asking::Relations => self.relations_view(),
             Asking::Joins => self.joins_view(),
             Asking::EventLinks => self.event_links_view(),
+            Asking::Terrains => self.terrain_view(),
             Asking::Program => self.program_view(),
             Asking::SpaceMerge => self.space_merge_question(),
             Asking::TableStyles => self.table_styles_view(),

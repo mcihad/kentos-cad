@@ -184,3 +184,19 @@ pub(crate) fn with_surfaces(doc: &Document, list: Vec<TerrainSurfaceDef>) -> Pro
         ..doc.settings().clone()
     }
 }
+
+/// The road project's surfaces as their sources make them now, for the desktop's drawing and window (plan/road.md
+/// Y2.4): each definition, its report and its surface (none when none is made). None outside a road project.
+pub fn made_surfaces(doc: &Document) -> Vec<(TerrainSurfaceDef, TerrainReport, Option<Surface>)> {
+    if doc.settings().cad_work != Some(CadWork::Road) {
+        return Vec::new();
+    }
+    surfaces(doc)
+        .iter()
+        .map(|d| {
+            let made = make(doc, d);
+            let report = made.report(d);
+            (d.clone(), report, made.surface.ok())
+        })
+        .collect()
+}
