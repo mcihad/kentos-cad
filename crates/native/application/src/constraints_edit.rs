@@ -13,7 +13,7 @@
 //! (names, rounds, ranges); the solve: conflicting, singular, not converged, a constraint added that repeats the
 //! others, a shape turned.
 
-use std::collections::{BTreeSet, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 
 use kentos_commands::{
     CadElement, CadParameter, CommandResult, Constraint, ConstraintEdit, ConstraintId,
@@ -839,6 +839,9 @@ pub(crate) fn settle(
     }
     let ids = |list: &[ConstraintId]| list.iter().map(|id| id.to_string()).collect::<Vec<_>>();
     let d = &solved.diagnosis;
+    if !solved.outcome.status.holds() && !all_locked(doc, set, &d.conflicting) {
+        fixed_arc_radius_limits(doc, set, &values, stop)?;
+    }
     match d.status {
         SolveStatus::Inconsistent if all_locked(doc, set, &d.conflicting) => {
             return Err(refuse_ids(
@@ -909,6 +912,113 @@ pub(crate) fn settle(
         ));
     }
     Ok(solved)
+}
+
+/// Explain a failed solve using a proven chord limit. Successful solves are never vetoed by a display-unit
+/// comparison. Only two explicit permanent vertex Fix bonds establish the limit; a free endpoint may shorten it.
+fn fixed_arc_radius_limits(
+    doc: &Document,
+    set: &ConstraintSet,
+    values: &BTreeMap<String, f64>,
+    stop: &dyn Fn() -> bool,
+) -> Result<(), Stop> {
+    use kentos_commands::SubPlace;
+    use kentos_geometry_core::ops::subref::{Place, edge_vertex_indices, point};
+    let fixed: HashMap<_, _> = set
+        .constraints
+        .iter()
+        .filter(|c| !c.reference)
+        .filter_map(|c| {
+            let ConstraintRule::Fix { a } = &c.rule else {
+                return None;
+            };
+            let CadElement::Point {
+                place: SubPlace::Vertex { part, ring, index },
+            } = a.element
+            else {
+                return None;
+            };
+            Some(((a.uid, part, ring, index), c.id))
+        })
+        .collect();
+    if fixed.len() < 2 {
+        return Ok(());
+    }
+    let mut shapes = HashMap::new();
+    let unit = doc.settings().unit();
+    let word = |v: f64| {
+        let n = if v != 0.0 && !(1e-9..1e12).contains(&v.abs()) {
+            format!("{v:.11e}")
+        } else {
+            value_text(v)
+        };
+        format!("{n} {}", unit.mark())
+    };
+    for c in set.constraints.iter().filter(|c| !c.reference) {
+        if stop() {
+            return Err(Stop::Cancelled);
+        }
+        let (a, name, divisor, label) = match &c.rule {
+            ConstraintRule::Radius { a, parameter } => (a, parameter, 2.0, "yarıçap"),
+            ConstraintRule::Diameter { a, parameter } => (a, parameter, 1.0, "çap"),
+            _ => continue,
+        };
+        let CadElement::ArcEdge { part, ring, index } = a.element else {
+            continue;
+        };
+        let Some(shape) = shapes
+            .entry(a.uid)
+            .or_insert_with(|| {
+                doc.slot_of(Uuid::from_bytes(a.uid.0))
+                    .and_then(|s| doc.get(s))
+                    .and_then(core_shape)
+                    .map(kentos_geometry_core::entity::Entity::new)
+            })
+            .as_ref()
+        else {
+            continue;
+        };
+        let Some((i, j)) =
+            edge_vertex_indices(&shape.shape, part as usize, ring as usize, index as usize)
+        else {
+            continue;
+        };
+        let (Some(fi), Some(fj)) = (
+            fixed.get(&(a.uid, part, ring, i as u32)),
+            fixed.get(&(a.uid, part, ring, j as u32)),
+        ) else {
+            continue;
+        };
+        let at = |index| {
+            point(
+                shape,
+                Place::Vertex {
+                    part: part as usize,
+                    ring: ring as usize,
+                    index,
+                },
+            )
+        };
+        let (Some(p), Some(q), Some(&requested)) = (at(i), at(j), values.get(name)) else {
+            continue;
+        };
+        let chord = (q.x - p.x).hypot(q.y - p.y) * unit.per_metre();
+        let minimum = chord / divisor;
+        if minimum.is_finite() && requested < minimum {
+            return Err(refuse_ids(
+                codes::CONSTRAINT_CONFLICT,
+                format!(
+                    "“{name}” = {}: yayın sabit uçları {} uzaklıkta; {label} en az {} olmalı. Değeri büyütün veya uçların Sabit bağını kaldırın. Hiçbir şey yazılmadı.",
+                    word(requested),
+                    word(chord),
+                    word(minimum)
+                ),
+                "edit",
+                vec![c.id.to_string(), fi.to_string(), fj.to_string()],
+            ));
+        }
+    }
+    Ok(())
 }
 
 /// Whether every object of every one of these constraints is on a locked layer.

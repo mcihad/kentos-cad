@@ -80,3 +80,5 @@ Elips yayı uç grip hedefi, çözülmüş önizleme ve büyük koordinatta sakl
 Sahne kısıt etiketlerinin panel sınırına sığması, pencereyle ortak birimler ve çizim oturumuna bağlı önbellek: [ADR 0836](../adr/0836-constraint-label-viewport-and-units.md).
 
 Çoklu çizgi/alan dairesel kenarı, altı bağla büyük koordinat ve UI/Python/MCP/dosya/Undo kabulü: [ADR 0837](../adr/0837-variable-circular-path-edge-constraints.md). Saklanan f64 temsilde sahte çelişkiyi tolerans büyütmeden doğrulama: [ADR 0838](../adr/0838-stored-constraint-roundtrip-certificate.md).
+
+Sabit yay uçlarında imkânsız yarıçap/çap için birimli kiriş ve alt sınır açıklaması: [ADR 0839](../adr/0839-actionable-fixed-arc-radius-refusals.md). Uçlardan biri serbestse kirişin kısalmasına izin verilir.

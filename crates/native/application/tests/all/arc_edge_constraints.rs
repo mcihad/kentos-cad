@@ -199,3 +199,141 @@ fn the_stored_large_coordinate_tangent_and_length_hold_together_without_changing
     d.undo();
     assert_eq!(d.to_snapshot_v2(), before);
 }
+
+#[test]
+fn a_fixed_chord_refusal_explains_the_actual_project_units_and_preserves_the_exact_boundary() {
+    use kentos_commands::DrawingUnit;
+    for (unit, value, requested, chord, minimum) in [
+        (DrawingUnit::M, "1.5m", "1.5 m", "4 m", "2 m"),
+        (DrawingUnit::Mm, "1500mm", "1500 mm", "4000 mm", "2000 mm"),
+        (DrawingUnit::Cm, "150cm", "150 cm", "400 cm", "200 cm"),
+        (
+            DrawingUnit::In,
+            "60in",
+            "60 in",
+            "157.48031496063 in",
+            "78.740157480315 in",
+        ),
+        (
+            DrawingUnit::Ft,
+            "5ft",
+            "5 ft",
+            "13.123359580052 ft",
+            "6.561679790026 ft",
+        ),
+    ] {
+        let mut snap = setup().to_snapshot_v2();
+        snap.settings.drawing_unit = Some(unit);
+        let mut d = Document::from_snapshot_v2(snap.clone()).unwrap();
+        let input = set(value);
+        let CommandResult::Failed { error: planned } = parameters_edit::plan_in(&d, &input) else {
+            panic!("accepted impossible radius")
+        };
+        let CommandResult::Failed { error } =
+            parameters_edit::execute(&mut ExecutionContext::new(&mut d), input)
+        else {
+            panic!("accepted impossible radius")
+        };
+        assert_eq!(error, planned);
+        assert_eq!(error.code, "constraint_conflict");
+        for words in [
+            requested,
+            chord,
+            minimum,
+            "sabit uçları",
+            "yarıçap en az",
+            "Sabit bağını kaldırın",
+        ] {
+            assert!(
+                error.message.contains(words),
+                "{unit:?}: {} lacks {words}",
+                error.message
+            );
+        }
+        assert_eq!(error.uids.len(), 3);
+        for c in &snap.constraints.constraints {
+            assert!(error.uids.contains(&c.id.to_string()));
+        }
+        assert_eq!(d.to_snapshot_v2(), snap);
+        assert_eq!(d.undo(), None, "a rejected edit must not add history");
+        // Exactly half the chord is feasible in every unit, including in/ft conversion roundoff.
+        done(parameters_edit::execute(
+            &mut ExecutionContext::new(&mut d),
+            set("2m"),
+        ));
+        let Entity::Polyline(e) = d.get(Slot(1)).unwrap() else {
+            panic!("path")
+        };
+        assert!(e.bulges.as_ref().unwrap()[0] > 0.0 && e.bulges.as_ref().unwrap()[0] <= 1.0);
+        let query = done(constraints_query::read(&d, &ConstraintsQuery::default()));
+        assert!(query.constraints.iter().all(|c| c.holds));
+        assert!((query.constraints[2].measured.unwrap() - 2.0).abs() < 1e-9);
+        let Entity::Polyline(original) = &snap.entities[0] else { panic!("path") };
+        assert_eq!(e.pts, original.pts);
+        d.undo();
+        assert_eq!(d.to_snapshot_v2(), snap);
+    }
+}
+
+#[test]
+fn a_free_endpoint_is_allowed_to_shorten_the_chord_for_a_smaller_radius() {
+    let mut d = drawing();
+    let a = point(&d, 1, 0);
+    let arc = circle(&d);
+    add(
+        &mut d,
+        json!([{"rule":{"kind":"fix","a":a}}, {"rule":{"kind":"radius","a":arc,"parameter":"r1"},"value":"2.5m"}]),
+    );
+    let before = d.to_snapshot_v2();
+    done(parameters_edit::execute(
+        &mut ExecutionContext::new(&mut d),
+        set("1.5m"),
+    ));
+    let Entity::Polyline(p) = d.get(Slot(1)).unwrap() else {
+        panic!("path")
+    };
+    assert_eq!(p.pts[0], kentos_commands::Vec2 { x: 0.0, y: 0.0 });
+    assert!(p.pts[1].x.hypot(p.pts[1].y) <= 3.0 + 1e-8);
+    assert!(
+        done(constraints_query::read(&d, &ConstraintsQuery::default()))
+            .constraints
+            .iter()
+            .all(|c| c.holds)
+    );
+    d.undo();
+    assert_eq!(d.to_snapshot_v2(), before);
+}
+
+#[test]
+fn the_limit_uses_a_holes_closing_vertices_and_distinguishes_diameter_from_radius() {
+    let mut raw: Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/interaction/v1/constraint-arc-edge.kcad"
+    ))
+    .unwrap();
+    raw["entities"] = json!([{"kind":"polygon","id":1,"layerId":"cizim","attrs":{},
+        "pts":[{"x":0,"y":0},{"x":10,"y":0},{"x":10,"y":10},{"x":0,"y":10}],
+        "holes":[{"pts":[{"x":1,"y":1},{"x":4,"y":1},{"x":1,"y":5}],"bulges":[0,0,0.5]}]}]);
+    let mut d =
+        Document::from_snapshot(DocumentSnapshotV1::from_json(&raw.to_string()).unwrap()).unwrap();
+    let uid = d.uid(Slot(1)).unwrap().to_string();
+    let vertex = |index| json!({"uid":uid,"element":{"kind":"point","place":{"kind":"vertex","part":0,"ring":1,"index":index}}});
+    let arc = json!({"uid":uid,"element":{"kind":"arcEdge","part":0,"ring":1,"index":2}});
+    add(
+        &mut d,
+        json!([{"rule":{"kind":"fix","a":vertex(2)}},{"rule":{"kind":"fix","a":vertex(0)}},{"rule":{"kind":"diameter","a":arc,"parameter":"r1"},"value":"5m"}]),
+    );
+    let before = d.to_snapshot_v2();
+    let CommandResult::Failed { error } =
+        parameters_edit::execute(&mut ExecutionContext::new(&mut d), set("3m"))
+    else {
+        panic!("accepted impossible diameter")
+    };
+    assert!(
+        error
+            .message
+            .contains("sabit uçları 4 m uzaklıkta; çap en az 4 m olmalı"),
+        "{}",
+        error.message
+    );
+    assert_eq!(d.to_snapshot_v2(), before);
+}

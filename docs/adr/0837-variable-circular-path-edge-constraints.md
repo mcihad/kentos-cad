@@ -124,9 +124,9 @@ sınırlı salt okunur doğrulama alır; tolerans değiştirilmez.
   `114-arc-edge-reopened-six-green.png`. Sayısal kayıt
   `arc-edge-gui-acceptance.json`; çalışma dizini `/tmp/kentos-cad-adv04-2026-11-01/`.
 
-Açık UX: imkânsız yarıçap için genel tekillik iletisi atomik reddi
-bildirir; sabit kirişe göre asgari yarıçapı söyleyen daha özel açıklama
-henüz yok. Bu iş boyut cebirini, tam elips eksen grip'lerini veya
+Gerçek kabulde görülen genel tekillik açıklaması, daha sonra
+[ADR 0839](0839-actionable-fixed-arc-radius-refusals.md) ile iki açık
+köşe Fix'inde kiriş ve asgari yarıçap/çapı söyleyecek biçimde iyileştirildi. Bu iş boyut cebirini, tam elips eksen grip'lerini veya
 CAD-ADV-05'in bütün birleşik dal kabulünü tamamlamış sayılmaz.
 
 

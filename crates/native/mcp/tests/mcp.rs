@@ -2939,6 +2939,26 @@ fn a_circular_path_edge_radius_shares_mcp_plan_persistence_query_and_undo() {
             .iter()
             .all(|r| r["holds"] == true)
     );
+    let refused = call(
+        &mut server,
+        "cad.parameters.edit",
+        json!({"drawing":drawing,"edits":[{"kind":"set","name":"r1","expression":"1.5m"}]}),
+    );
+    assert_eq!(refused["structuredContent"]["status"], "failed");
+    assert_eq!(
+        refused["structuredContent"]["error"]["code"],
+        "constraint_conflict"
+    );
+    assert!(
+        refused["structuredContent"]["error"]["message"]
+            .as_str()
+            .unwrap()
+            .contains("sabit uçları 4 m uzaklıkta; yarıçap en az 2 m olmalı")
+    );
+    assert_eq!(
+        call(&mut server, "drawing.entities", json!({"drawing":drawing}))["structuredContent"]["items"],
+        after
+    );
     call(&mut server, "drawing.undo", json!({"drawing":drawing}));
     assert_eq!(
         call(&mut server, "drawing.entities", json!({"drawing":drawing}))["structuredContent"]["items"],

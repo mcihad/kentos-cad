@@ -35,7 +35,9 @@ class ArcEdgeConstraints(unittest.TestCase):
         d.undo();self.assertEqual(d.to_bytes(),before)
     def test_impossible_radius_is_atomic(self):
         d,_=drawing();before=d.to_bytes()
-        with self.assertRaises(cad.CommandFailed):cad.parameters.edit(d,edits=[cad.SetParameterEdit(name='r1',expression='1.5m')])
+        with self.assertRaises(cad.CommandFailed) as caught:cad.parameters.edit(d,edits=[cad.SetParameterEdit(name='r1',expression='1.5m')])
+        self.assertEqual(caught.exception.code,'constraint_conflict')
+        self.assertIn('sabit uçları 4 m uzaklıkta; yarıçap en az 2 m olmalı',str(caught.exception))
         self.assertEqual(d.to_bytes(),before)
 
     def test_large_coordinate_saved_tangent_and_length_share_a_readonly_roundtrip_certificate(self):

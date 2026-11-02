@@ -765,7 +765,7 @@ pub fn arc_edge_of(shape: &Shape, part: usize, ring: usize, index: usize) -> Opt
 }
 
 /// The actual vertices of an existing path edge, including a closing edge's wrap to zero.
-pub(crate) fn edge_vertex_indices(shape: &Shape, part: usize, ring: usize, index: usize) -> Option<(usize, usize)> {
+pub fn edge_vertex_indices(shape: &Shape, part: usize, ring: usize, index: usize) -> Option<(usize, usize)> {
     let r = ring_of(shape, part, ring)?;
     let n = r.pts.len();
     (index < n && (r.closed || index + 1 < n)).then(|| (index, (index + 1) % n))

@@ -48,7 +48,7 @@ komut işi/durdurma düzenini kullanır.
   `fix arcEdge`, alt dairenin merkezi ve yarıçapını tutar, iki köşenin
   tamamını dondurmaz. Bütün nesneyi geçici tutmak farklıdır.
 - Yayın işareti ve küçük/büyük yay dalı korunur. Kirişe göre imkânsız
-  yarıçapta işlem atomik reddedilir. Yarım dairede daha büyük yarıçap
+  yarıçapta işlem atomik reddedilir. İki uç açık köşe Fix bağıyla tutulmuşsa `constraint_conflict`, proje biriminde kiriş ve gerekli en küçük yarıçap/çapı açıklar; belge ve geçmiş değişmez. Yarım dairede daha büyük yarıçap
   istenince küçük yay dalı kullanılır; mevcut büyük dal korunur.
 - Geometri metre cinsindedir; değer ifadeleri proje birimini veya açık
   `mm/cm/m/in/ft` birimini kullanır. Bulge, boyutsuz `tan(sweep/4)`dür.
