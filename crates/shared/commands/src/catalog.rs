@@ -12550,6 +12550,9 @@ mod tests {
                     crate::CAD_ENTITIES_SELECT => {
                         serde_json::from_value::<crate::EntitiesSelect>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_ENTITIES_ISOLATE => {
+                        serde_json::from_value::<crate::EntitiesIsolate>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_POINTS_CONSTRUCT => {
                         serde_json::from_value::<crate::PointsConstruct>(e.input.clone())
                             .map(|_| ())

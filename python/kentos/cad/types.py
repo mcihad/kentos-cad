@@ -23754,8 +23754,8 @@ class EntitiesIsolate(_Model):
 class EntitiesIsolated(_Model):
     """
     Attributes:
-        hidden: Live objects hidden by isolation alone.
-        retained: Live objects passing isolation alone; layers and other visibility rules can still hide them.
+        hidden: Live objects hidden by isolation alone. Unit: count.
+        retained: Live objects passing isolation alone; layers and other visibility rules can still hide them. Unit: count.
     """
     active: bool
     hidden: int
@@ -43239,10 +43239,11 @@ class OffsetApproximationReport(_Model):
     """Trace of each approximated copy. This is provenance, not an associative
     constraint: subsequent source edits do not silently recompute the copy.
     Attributes:
-        copy_index: Index into output.created (execute) or output.entities (plan).
+        copy_index: Index into output.created (execute) or output.entities (plan). Unit: index.
         tolerance: Unit: length.
         error_bound: Parallel chord bound plus f64 allowance, metres, never screen LOD. Unit: length.
-        crossings: All non-neighbour output segments checked, including large results.
+        vertices: Unit: count.
+        crossings: All non-neighbour output segments checked, including large results. Unit: count.
     """
     source: str
     copy_index: int
@@ -58142,7 +58143,7 @@ class SelectProperties(_Model):
         assigned_color: Own CAD colour (hex or palette token), or "byLayer" for no explicit colour.
         block_path: Optional picked block-piece path (zero-based definition indexes, as cad.entities.pick returns).
             Colour criteria inspect that piece through each placement; the result is the owning insert UID.
-            Never edits a definition. Height/expression criteria cannot be combined with this path.
+            Never edits a definition. Height/expression criteria cannot be combined with this path. Unit: index.
         displayed_color: CAD paint after layer inheritance, before theme palette conversion. This is not a GIS thematic pixel colour.
         text_height_max: Unit: length.
         text_height_min: Unit: length.

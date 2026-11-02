@@ -85,8 +85,12 @@ MCP kabulü gerçek dosyayı sorgular, onarır ve Undo ile baytlarına döner.
   1582 geçti (mevcut 256 ignored). All-targets contracts/application/
   MCP/desktop Clippy ve masaüstü derlemesi geçti.
 - Python yeni boyut dosyası 3 test, mevcut kısıt dosyaları 14 test geçti.
-  MCP yaylı kenar, elips ve eski ifade kabulü üç test geçti. Eski dosya
+  MCP tam paket 46 test geçti; yaylı kenar, elips ve eski ifade kabulünü içerir. Eski dosya
   sorgusu dosyayı değiştirmez; açık onarım ve tek Undo baytları geri getirir.
+- Temiz kaynak tekrarında komut paketinin 1057 testi geçti. Tam katalog
+  denetiminin bulduğu seçim/offset raporlarındaki eksik count/index birimleri
+  ve isolation örneğinin tip kontrolü tamamlandı; katalog ve Python belgeleri
+  yeniden üretildi. SDK tutarlılık kontrolü de geçti.
 - Gerçek GUI: büyük koordinatlı, altı bağlı mm çizimde
   `2500mm + 45deg` tek Enter ile açıklamalı reddedildi. Saklanan yarıçap
   2500 mm kaldı; kaydedilen dosya başlangıçla baytları tam aynı.

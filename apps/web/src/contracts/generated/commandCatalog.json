@@ -57774,13 +57774,15 @@
             "description": "Live objects hidden by isolation alone.",
             "format": "uint",
             "minimum": 0,
-            "type": "integer"
+            "type": "integer",
+            "x-unit": "count"
           },
           "retained": {
             "description": "Live objects passing isolation alone; layers and other visibility rules can still hide them.",
             "format": "uint",
             "minimum": 0,
-            "type": "integer"
+            "type": "integer",
+            "x-unit": "count"
           }
         },
         "required": [
@@ -57801,13 +57803,15 @@
             "description": "Live objects hidden by isolation alone.",
             "format": "uint",
             "minimum": 0,
-            "type": "integer"
+            "type": "integer",
+            "x-unit": "count"
           },
           "retained": {
             "description": "Live objects passing isolation alone; layers and other visibility rules can still hide them.",
             "format": "uint",
             "minimum": 0,
-            "type": "integer"
+            "type": "integer",
+            "x-unit": "count"
           }
         },
         "required": [
@@ -109576,13 +109580,15 @@
           "description": "Index into output.created (execute) or output.entities (plan).",
           "format": "uint",
           "minimum": 0,
-          "type": "integer"
+          "type": "integer",
+          "x-unit": "index"
         },
         "crossings": {
           "description": "All non-neighbour output segments checked, including large results.",
           "format": "uint",
           "minimum": 0,
-          "type": "integer"
+          "type": "integer",
+          "x-unit": "count"
         },
         "errorBound": {
           "description": "Parallel chord bound plus f64 allowance, metres, never screen LOD.",
@@ -109602,7 +109608,8 @@
         "vertices": {
           "format": "uint",
           "minimum": 0,
-          "type": "integer"
+          "type": "integer",
+          "x-unit": "count"
         }
       },
       "required": [
@@ -128850,7 +128857,8 @@
             "minimum": 0,
             "type": "integer"
           },
-          "type": "array"
+          "type": "array",
+          "x-unit": "index"
         },
         "displayedColor": {
           "description": "CAD paint after layer inheritance, before theme palette conversion. This is not a GIS thematic pixel colour.",

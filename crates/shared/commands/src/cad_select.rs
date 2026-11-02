@@ -167,6 +167,7 @@ pub struct SelectProperties {
     /// Never edits a definition. Height/expression criteria cannot be combined with this path.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<u32>>"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub block_path: Vec<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -557,7 +558,9 @@ pub enum IsolationAction {
 pub struct EntitiesIsolated {
     pub active: bool,
     /// Live objects hidden by isolation alone.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub hidden: usize,
     /// Live objects passing isolation alone; layers and other visibility rules can still hide them.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub retained: usize,
 }

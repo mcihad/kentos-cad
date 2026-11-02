@@ -145,14 +145,17 @@ pub struct OffsetApproximationReport {
     #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
     pub source: String,
     /// Index into output.created (execute) or output.entities (plan).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub copy_index: usize,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub tolerance: f64,
     /// Parallel chord bound plus f64 allowance, metres, never screen LOD.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub error_bound: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub vertices: usize,
     /// All non-neighbour output segments checked, including large results.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub crossings: usize,
 }
 
