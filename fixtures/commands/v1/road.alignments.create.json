@@ -1,0 +1,5279 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "road.alignments.create",
+  "commandVersion": 1,
+  "title": "Aks oluştur (plan/road.md Y3, ADR 0901)",
+  "note": "scripts/fixtures/road_alignment_command_cases.py yazar; geometri road_alignment_cases.py'nin mpmath başvurusundandır, zemin boyu PROJ'un ölçeğinden; KentOS kodu yok. `expect.road` projenin yol ayarlarıdır. Aks geri alma geçmişinde tutulan bir proje ayarıdır.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Yol aksları",
+    "settings": {
+      "srid": 5254,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 1000.0,
+      "workspace": "cad",
+      "cadWork": "road",
+      "drawingFont": "barlow",
+      "road": {
+        "alignments": [
+          {
+            "id": "g-1",
+            "name": "Ana aks",
+            "revision": 1,
+            "pis": [
+              {
+                "id": "a",
+                "x": 485000.0,
+                "y": 4420000.0
+              },
+              {
+                "id": "p1",
+                "x": 485600.0,
+                "y": 4420000.0,
+                "radius": 400.0,
+                "spiralIn": 80.0,
+                "spiralOut": 80.0
+              },
+              {
+                "id": "b",
+                "x": 486100.0,
+                "y": 4420500.0
+              }
+            ],
+            "stationing": {
+              "start": 2000.0
+            }
+          }
+        ]
+      }
+    },
+    "origin": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "layers": [
+      {
+        "id": "0",
+        "name": "0",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "0",
+    "entities": [],
+    "uids": [],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "cases": [
+    {
+      "name": "Simetrik klotoidli kurp, km 2+000'den: kimliği ilk boş g-2",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Yan yol",
+            "pis": [
+              {
+                "id": "a",
+                "x": 485000.0,
+                "y": 4422000.0
+              },
+              {
+                "id": "p1",
+                "x": 485600.0,
+                "y": 4422000.0,
+                "radius": 400.0,
+                "spiralIn": 80.0,
+                "spiralOut": 80.0
+              },
+              {
+                "id": "b",
+                "x": 486100.0,
+                "y": 4422500.0
+              }
+            ],
+            "stationing": {
+              "start": 2000.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "mapping": [
+                {
+                  "element": "a/aliyman",
+                  "change": "added",
+                  "after": [
+                    0.0,
+                    394.05186090744627
+                  ]
+                },
+                {
+                  "element": "p1/giris",
+                  "change": "added",
+                  "after": [
+                    394.05186090744627,
+                    474.05186090744627
+                  ]
+                },
+                {
+                  "element": "p1/kurp",
+                  "change": "added",
+                  "after": [
+                    474.05186090744627,
+                    708.2111262664256
+                  ]
+                },
+                {
+                  "element": "p1/cikis",
+                  "change": "added",
+                  "after": [
+                    708.2111262664256,
+                    788.2111262664256
+                  ]
+                },
+                {
+                  "element": "p1/aliyman",
+                  "change": "added",
+                  "after": [
+                    788.2111262664256,
+                    1289.3697683604194
+                  ]
+                }
+              ],
+              "dependents": [],
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1
+                },
+                {
+                  "id": "g-2",
+                  "name": "Yan yol",
+                  "revision": 1
+                }
+              ],
+              "revision": "$current",
+              "alignment": {
+                "id": "g-2",
+                "name": "Yan yol",
+                "revision": 1,
+                "length": 1289.3697683604194,
+                "ground": "Zemin boyu için projenin ortalama elipsoit yüksekliği yazılmalı (Proje ayarları › Ölçme).",
+                "kmStart": 2000.0,
+                "kmEnd": 3289.3697683604196,
+                "elements": [
+                  {
+                    "id": "a/aliyman",
+                    "kind": "tangent",
+                    "station": 0.0,
+                    "length": 394.05186090744627,
+                    "km": 2000.0,
+                    "start": [
+                      485000.0,
+                      4422000.0
+                    ],
+                    "direction": 0.0,
+                    "k0": 0.0,
+                    "k1": 0.0
+                  },
+                  {
+                    "id": "p1/giris",
+                    "kind": "spiral",
+                    "station": 394.05186090744627,
+                    "length": 80.0,
+                    "km": 2394.051860907446,
+                    "start": [
+                      485394.05186090746,
+                      4422000.0
+                    ],
+                    "direction": 0.0,
+                    "k0": 0.0,
+                    "k1": 0.0025,
+                    "a": 178.88543819998318
+                  },
+                  {
+                    "id": "p1/kurp",
+                    "kind": "arc",
+                    "station": 474.05186090744627,
+                    "length": 234.15926535897933,
+                    "km": 2474.051860907446,
+                    "start": [
+                      485473.97189793596,
+                      4422002.664762511
+                    ],
+                    "direction": 0.1,
+                    "k0": 0.0025,
+                    "k1": 0.0025,
+                    "radius": 400.0
+                  },
+                  {
+                    "id": "p1/cikis",
+                    "kind": "spiral",
+                    "station": 708.2111262664256,
+                    "length": 80.0,
+                    "km": 2708.2111262664257,
+                    "start": [
+                      485687.231053948,
+                      4422090.999597231
+                    ],
+                    "direction": 0.6853981633974483,
+                    "k0": 0.0025,
+                    "k1": 0.0,
+                    "a": 178.88543819998318
+                  },
+                  {
+                    "id": "p1/aliyman",
+                    "kind": "tangent",
+                    "station": 788.2111262664256,
+                    "length": 501.1586420939938,
+                    "km": 2788.2111262664257,
+                    "start": [
+                      485745.6273257251,
+                      4422145.627325725
+                    ],
+                    "direction": 0.7853981633974483,
+                    "k0": 0.0,
+                    "k1": 0.0
+                  }
+                ],
+                "curves": [
+                  {
+                    "pi": "p1",
+                    "delta": 0.7853981633974483,
+                    "radius": 400.0,
+                    "spiralIn": 80.0,
+                    "spiralOut": 80.0,
+                    "tIn": 205.94813909255373,
+                    "tOut": 205.94813909255373,
+                    "arc": 234.15926535897933,
+                    "stations": [
+                      394.05186090744627,
+                      474.05186090744627,
+                      708.2111262664256,
+                      788.2111262664256
+                    ],
+                    "centre": [
+                      485434.0385312772,
+                      4422400.666428622
+                    ]
+                  }
+                ],
+                "joins": [],
+                "residual": 0.0,
+                "residualDirection": 0.0,
+                "algorithm": "kentos.alignment/1"
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Yan yol",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4422000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4422000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4422500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Kendi kimliğiyle",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Yan yol",
+            "id": "yan",
+            "pis": [
+              {
+                "id": "a",
+                "x": 485000.0,
+                "y": 4422000.0
+              },
+              {
+                "id": "p1",
+                "x": 485600.0,
+                "y": 4422000.0,
+                "radius": 400.0,
+                "spiralIn": 80.0,
+                "spiralOut": 80.0
+              },
+              {
+                "id": "b",
+                "x": 486100.0,
+                "y": 4422500.0
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "mapping": [
+                {
+                  "element": "a/aliyman",
+                  "change": "added",
+                  "after": [
+                    0.0,
+                    394.05186090744627
+                  ]
+                },
+                {
+                  "element": "p1/giris",
+                  "change": "added",
+                  "after": [
+                    394.05186090744627,
+                    474.05186090744627
+                  ]
+                },
+                {
+                  "element": "p1/kurp",
+                  "change": "added",
+                  "after": [
+                    474.05186090744627,
+                    708.2111262664256
+                  ]
+                },
+                {
+                  "element": "p1/cikis",
+                  "change": "added",
+                  "after": [
+                    708.2111262664256,
+                    788.2111262664256
+                  ]
+                },
+                {
+                  "element": "p1/aliyman",
+                  "change": "added",
+                  "after": [
+                    788.2111262664256,
+                    1289.3697683604194
+                  ]
+                }
+              ],
+              "dependents": [],
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1
+                },
+                {
+                  "id": "yan",
+                  "name": "Yan yol",
+                  "revision": 1
+                }
+              ],
+              "revision": "$current",
+              "alignment": {
+                "id": "yan",
+                "name": "Yan yol",
+                "revision": 1,
+                "length": 1289.3697683604194,
+                "ground": "Zemin boyu için projenin ortalama elipsoit yüksekliği yazılmalı (Proje ayarları › Ölçme).",
+                "kmStart": 0.0,
+                "kmEnd": 1289.3697683604194,
+                "elements": [
+                  {
+                    "id": "a/aliyman",
+                    "kind": "tangent",
+                    "station": 0.0,
+                    "length": 394.05186090744627,
+                    "km": 0.0,
+                    "start": [
+                      485000.0,
+                      4422000.0
+                    ],
+                    "direction": 0.0,
+                    "k0": 0.0,
+                    "k1": 0.0
+                  },
+                  {
+                    "id": "p1/giris",
+                    "kind": "spiral",
+                    "station": 394.05186090744627,
+                    "length": 80.0,
+                    "km": 394.05186090744627,
+                    "start": [
+                      485394.05186090746,
+                      4422000.0
+                    ],
+                    "direction": 0.0,
+                    "k0": 0.0,
+                    "k1": 0.0025,
+                    "a": 178.88543819998318
+                  },
+                  {
+                    "id": "p1/kurp",
+                    "kind": "arc",
+                    "station": 474.05186090744627,
+                    "length": 234.15926535897933,
+                    "km": 474.05186090744627,
+                    "start": [
+                      485473.97189793596,
+                      4422002.664762511
+                    ],
+                    "direction": 0.1,
+                    "k0": 0.0025,
+                    "k1": 0.0025,
+                    "radius": 400.0
+                  },
+                  {
+                    "id": "p1/cikis",
+                    "kind": "spiral",
+                    "station": 708.2111262664256,
+                    "length": 80.0,
+                    "km": 708.2111262664256,
+                    "start": [
+                      485687.231053948,
+                      4422090.999597231
+                    ],
+                    "direction": 0.6853981633974483,
+                    "k0": 0.0025,
+                    "k1": 0.0,
+                    "a": 178.88543819998318
+                  },
+                  {
+                    "id": "p1/aliyman",
+                    "kind": "tangent",
+                    "station": 788.2111262664256,
+                    "length": 501.1586420939938,
+                    "km": 788.2111262664256,
+                    "start": [
+                      485745.6273257251,
+                      4422145.627325725
+                    ],
+                    "direction": 0.7853981633974483,
+                    "k0": 0.0,
+                    "k1": 0.0
+                  }
+                ],
+                "curves": [
+                  {
+                    "pi": "p1",
+                    "delta": 0.7853981633974483,
+                    "radius": 400.0,
+                    "spiralIn": 80.0,
+                    "spiralOut": 80.0,
+                    "tIn": 205.94813909255373,
+                    "tOut": 205.94813909255373,
+                    "arc": 234.15926535897933,
+                    "stations": [
+                      394.05186090744627,
+                      474.05186090744627,
+                      708.2111262664256,
+                      788.2111262664256
+                    ],
+                    "centre": [
+                      485434.0385312772,
+                      4422400.666428622
+                    ]
+                  }
+                ],
+                "joins": [],
+                "residual": 0.0,
+                "residualDirection": 0.0,
+                "algorithm": "kentos.alignment/1"
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0
+                  }
+                },
+                {
+                  "id": "yan",
+                  "name": "Yan yol",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4422000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4422000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4422500.0
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Kurpsuz kırık nokta",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Kırık",
+            "pis": [
+              {
+                "id": "a",
+                "x": 485000.0,
+                "y": 4423000.0
+              },
+              {
+                "id": "p1",
+                "x": 485200.0,
+                "y": 4423000.0
+              },
+              {
+                "id": "b",
+                "x": 485200.0,
+                "y": 4423200.0
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "mapping": [
+                {
+                  "element": "a/aliyman",
+                  "change": "added",
+                  "after": [
+                    0.0,
+                    200.0
+                  ]
+                },
+                {
+                  "element": "p1/aliyman",
+                  "change": "added",
+                  "after": [
+                    200.0,
+                    400.0
+                  ]
+                }
+              ],
+              "dependents": [],
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1
+                },
+                {
+                  "id": "g-2",
+                  "name": "Kırık",
+                  "revision": 1
+                }
+              ],
+              "revision": "$current",
+              "alignment": {
+                "id": "g-2",
+                "name": "Kırık",
+                "revision": 1,
+                "length": 400.0,
+                "ground": "Zemin boyu için projenin ortalama elipsoit yüksekliği yazılmalı (Proje ayarları › Ölçme).",
+                "kmStart": 0.0,
+                "kmEnd": 400.0,
+                "elements": [
+                  {
+                    "id": "a/aliyman",
+                    "kind": "tangent",
+                    "station": 0.0,
+                    "length": 200.0,
+                    "km": 0.0,
+                    "start": [
+                      485000.0,
+                      4423000.0
+                    ],
+                    "direction": 0.0,
+                    "k0": 0.0,
+                    "k1": 0.0
+                  },
+                  {
+                    "id": "p1/aliyman",
+                    "kind": "tangent",
+                    "station": 200.0,
+                    "length": 200.0,
+                    "km": 200.0,
+                    "start": [
+                      485200.0,
+                      4423000.0
+                    ],
+                    "direction": 1.5707963267948966,
+                    "k0": 0.0,
+                    "k1": 0.0
+                  }
+                ],
+                "curves": [],
+                "joins": [],
+                "residual": 0.0,
+                "residualDirection": 0.0,
+                "algorithm": "kentos.alignment/1"
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Kırık",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4423000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485200.0,
+                      "y": 4423000.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 485200.0,
+                      "y": 4423200.0
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Eşit olmayan klotoidler",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Eşitsiz",
+            "pis": [
+              {
+                "id": "a",
+                "x": 485000.0,
+                "y": 4424000.0
+              },
+              {
+                "id": "p1",
+                "x": 485600.0,
+                "y": 4424100.0,
+                "radius": 350.0,
+                "spiralIn": 60.0,
+                "spiralOut": 120.0
+              },
+              {
+                "id": "b",
+                "x": 485900.0,
+                "y": 4424700.0
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "mapping": [
+                {
+                  "element": "a/aliyman",
+                  "change": "added",
+                  "after": [
+                    0.0,
+                    398.24911160578307
+                  ]
+                },
+                {
+                  "element": "p1/giris",
+                  "change": "added",
+                  "after": [
+                    398.24911160578307,
+                    458.24911160578307
+                  ]
+                },
+                {
+                  "element": "p1/kurp",
+                  "change": "added",
+                  "after": [
+                    458.24911160578307,
+                    697.9491257385953
+                  ]
+                },
+                {
+                  "element": "p1/cikis",
+                  "change": "added",
+                  "after": [
+                    697.9491257385953,
+                    817.9491257385953
+                  ]
+                },
+                {
+                  "element": "p1/aliyman",
+                  "change": "added",
+                  "after": [
+                    817.9491257385953,
+                    1251.3152965662352
+                  ]
+                }
+              ],
+              "dependents": [],
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1
+                },
+                {
+                  "id": "g-2",
+                  "name": "Eşitsiz",
+                  "revision": 1
+                }
+              ],
+              "revision": "$current",
+              "alignment": {
+                "id": "g-2",
+                "name": "Eşitsiz",
+                "revision": 1,
+                "length": 1251.3152965662352,
+                "ground": "Zemin boyu için projenin ortalama elipsoit yüksekliği yazılmalı (Proje ayarları › Ölçme).",
+                "kmStart": 0.0,
+                "kmEnd": 1251.3152965662352,
+                "elements": [
+                  {
+                    "id": "a/aliyman",
+                    "kind": "tangent",
+                    "station": 0.0,
+                    "length": 398.24911160578307,
+                    "km": 0.0,
+                    "start": [
+                      485000.0,
+                      4424000.0
+                    ],
+                    "direction": 0.16514867741462683,
+                    "k0": 0.0,
+                    "k1": 0.0
+                  },
+                  {
+                    "id": "p1/giris",
+                    "kind": "spiral",
+                    "station": 398.24911160578307,
+                    "length": 60.0,
+                    "km": 398.24911160578307,
+                    "start": [
+                      485392.8305038595,
+                      4424065.471750643
+                    ],
+                    "direction": 0.16514867741462683,
+                    "k0": 0.0,
+                    "k1": 0.002857142857142857,
+                    "a": 144.9137674618944
+                  },
+                  {
+                    "id": "p1/kurp",
+                    "kind": "arc",
+                    "station": 458.24911160578307,
+                    "length": 239.70001413281227,
+                    "km": 458.24911160578307,
+                    "start": [
+                      485451.68899324955,
+                      4424077.018519205
+                    ],
+                    "direction": 0.25086296312891254,
+                    "k0": 0.002857142857142857,
+                    "k1": 0.002857142857142857,
+                    "radius": 350.0
+                  },
+                  {
+                    "id": "p1/cikis",
+                    "kind": "spiral",
+                    "station": 697.9491257385953,
+                    "length": 120.0,
+                    "km": 697.9491257385953,
+                    "start": [
+                      485646.56426926295,
+                      4424208.429420198
+                    ],
+                    "direction": 0.935720146365519,
+                    "k0": 0.002857142857142857,
+                    "k1": 0.0,
+                    "a": 204.93901531919198
+                  },
+                  {
+                    "id": "p1/aliyman",
+                    "kind": "tangent",
+                    "station": 817.9491257385953,
+                    "length": 433.36617082764,
+                    "km": 817.9491257385953,
+                    "start": [
+                      485706.1927565761,
+                      4424312.385513152
+                    ],
+                    "direction": 1.1071487177940904,
+                    "k0": 0.0,
+                    "k1": 0.0
+                  }
+                ],
+                "curves": [
+                  {
+                    "pi": "p1",
+                    "delta": 0.9420000403794636,
+                    "radius": 350.0,
+                    "spiralIn": 60.0,
+                    "spiralOut": 120.0,
+                    "tIn": 210.02714142403892,
+                    "tOut": 237.45422242229688,
+                    "arc": 239.70001413281227,
+                    "stations": [
+                      398.24911160578307,
+                      458.24911160578307,
+                      697.9491257385953,
+                      817.9491257385953
+                    ],
+                    "centre": [
+                      485364.8049922961,
+                      4424416.063015368
+                    ]
+                  }
+                ],
+                "joins": [],
+                "residual": 0.0,
+                "residualDirection": 0.0,
+                "algorithm": "kentos.alignment/1"
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Eşitsiz",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4424000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4424100.0,
+                      "radius": 350.0,
+                      "spiralIn": 60.0,
+                      "spiralOut": 120.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 485900.0,
+                      "y": 4424700.0
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Yalnız giriş klotoidi",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Tek klotoid",
+            "pis": [
+              {
+                "id": "a",
+                "x": 485000.0,
+                "y": 4425000.0
+              },
+              {
+                "id": "p1",
+                "x": 485500.0,
+                "y": 4425000.0,
+                "radius": 300.0,
+                "spiralIn": 90.0
+              },
+              {
+                "id": "b",
+                "x": 485500.0,
+                "y": 4425600.0
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "mapping": [
+                {
+                  "element": "a/aliyman",
+                  "change": "added",
+                  "after": [
+                    0.0,
+                    155.03372891407136
+                  ]
+                },
+                {
+                  "element": "p1/giris",
+                  "change": "added",
+                  "after": [
+                    155.03372891407136,
+                    245.03372891407136
+                  ]
+                },
+                {
+                  "element": "p1/kurp",
+                  "change": "added",
+                  "after": [
+                    245.03372891407136,
+                    671.2726269525403
+                  ]
+                },
+                {
+                  "element": "p1/aliyman",
+                  "change": "added",
+                  "after": [
+                    671.2726269525403,
+                    970.1485305390615
+                  ]
+                }
+              ],
+              "dependents": [],
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1
+                },
+                {
+                  "id": "g-2",
+                  "name": "Tek klotoid",
+                  "revision": 1
+                }
+              ],
+              "revision": "$current",
+              "alignment": {
+                "id": "g-2",
+                "name": "Tek klotoid",
+                "revision": 1,
+                "length": 970.1485305390615,
+                "ground": "Zemin boyu için projenin ortalama elipsoit yüksekliği yazılmalı (Proje ayarları › Ölçme).",
+                "kmStart": 0.0,
+                "kmEnd": 970.1485305390615,
+                "elements": [
+                  {
+                    "id": "a/aliyman",
+                    "kind": "tangent",
+                    "station": 0.0,
+                    "length": 155.03372891407136,
+                    "km": 0.0,
+                    "start": [
+                      485000.0,
+                      4425000.0
+                    ],
+                    "direction": 0.0,
+                    "k0": 0.0,
+                    "k1": 0.0
+                  },
+                  {
+                    "id": "p1/giris",
+                    "kind": "spiral",
+                    "station": 155.03372891407136,
+                    "length": 90.0,
+                    "km": 155.03372891407136,
+                    "start": [
+                      485155.03372891404,
+                      4425000.0
+                    ],
+                    "direction": 0.0,
+                    "k0": 0.0,
+                    "k1": 0.0033333333333333335,
+                    "a": 164.31676725154983
+                  },
+                  {
+                    "id": "p1/kurp",
+                    "kind": "arc",
+                    "station": 245.03372891407136,
+                    "length": 426.23889803846896,
+                    "km": 245.03372891407136,
+                    "start": [
+                      485244.83143974206,
+                      4425004.492773033
+                    ],
+                    "direction": 0.15,
+                    "k0": 0.0033333333333333335,
+                    "k1": 0.0033333333333333335,
+                    "radius": 300.0
+                  },
+                  {
+                    "id": "p1/aliyman",
+                    "kind": "tangent",
+                    "station": 671.2726269525403,
+                    "length": 298.8759035865212,
+                    "km": 671.2726269525403,
+                    "start": [
+                      485500.0,
+                      4425301.124096413
+                    ],
+                    "direction": 1.5707963267948966,
+                    "k0": 0.0,
+                    "k1": 0.0
+                  }
+                ],
+                "curves": [
+                  {
+                    "pi": "p1",
+                    "delta": 1.5707963267948966,
+                    "radius": 300.0,
+                    "spiralIn": 90.0,
+                    "spiralOut": 0.0,
+                    "tIn": 344.9662710859286,
+                    "tOut": 301.1240964134788,
+                    "arc": 426.23889803846896,
+                    "stations": [
+                      155.03372891407136,
+                      245.03372891407136,
+                      671.2726269525403,
+                      671.2726269525403
+                    ],
+                    "centre": [
+                      485200.0,
+                      4425301.124096413
+                    ]
+                  }
+                ],
+                "joins": [],
+                "residual": 0.0,
+                "residualDirection": 0.0,
+                "algorithm": "kentos.alignment/1"
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Tek klotoid",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4425000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485500.0,
+                      "y": 4425000.0,
+                      "radius": 300.0,
+                      "spiralIn": 90.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 485500.0,
+                      "y": 4425600.0
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Beş PI, kırık nokta ve klotoidsiz kurp",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Uzun aks",
+            "pis": [
+              {
+                "id": "a",
+                "x": 485000.0,
+                "y": 4417000.0
+              },
+              {
+                "id": "p1",
+                "x": 485800.0,
+                "y": 4417120.0,
+                "radius": 500.0,
+                "spiralIn": 100.0,
+                "spiralOut": 100.0
+              },
+              {
+                "id": "p2",
+                "x": 486500.0,
+                "y": 4416700.0,
+                "radius": 350.0,
+                "spiralIn": 70.0,
+                "spiralOut": 90.0
+              },
+              {
+                "id": "p3",
+                "x": 487400.0,
+                "y": 4416750.0
+              },
+              {
+                "id": "p4",
+                "x": 488100.0,
+                "y": 4417400.0,
+                "radius": 600.0
+              },
+              {
+                "id": "b",
+                "x": 488900.0,
+                "y": 4417500.0
+              }
+            ],
+            "stationing": {
+              "start": 12000.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "mapping": [
+                {
+                  "element": "a/aliyman",
+                  "change": "added",
+                  "after": [
+                    0.0,
+                    579.1761922461017
+                  ]
+                },
+                {
+                  "element": "p1/giris",
+                  "change": "added",
+                  "after": [
+                    579.1761922461017,
+                    679.1761922461017
+                  ]
+                },
+                {
+                  "element": "p1/kurp",
+                  "change": "added",
+                  "after": [
+                    679.1761922461017,
+                    923.8309161861423
+                  ]
+                },
+                {
+                  "element": "p1/cikis",
+                  "change": "added",
+                  "after": [
+                    923.8309161861423,
+                    1023.8309161861423
+                  ]
+                },
+                {
+                  "element": "p1/aliyman",
+                  "change": "added",
+                  "after": [
+                    1023.8309161861423,
+                    1467.059454689234
+                  ]
+                },
+                {
+                  "element": "p2/giris",
+                  "change": "added",
+                  "after": [
+                    1467.059454689234,
+                    1537.059454689234
+                  ]
+                },
+                {
+                  "element": "p2/kurp",
+                  "change": "added",
+                  "after": [
+                    1537.059454689234,
+                    1665.6307566199393
+                  ]
+                },
+                {
+                  "element": "p2/cikis",
+                  "change": "added",
+                  "after": [
+                    1665.6307566199393,
+                    1755.6307566199393
+                  ]
+                },
+                {
+                  "element": "p2/aliyman",
+                  "change": "added",
+                  "after": [
+                    1755.6307566199393,
+                    2504.940017023146
+                  ]
+                },
+                {
+                  "element": "p3/aliyman",
+                  "change": "added",
+                  "after": [
+                    2504.940017023146,
+                    3266.660555700328
+                  ]
+                },
+                {
+                  "element": "p4/kurp",
+                  "change": "added",
+                  "after": [
+                    3266.660555700328,
+                    3641.0743874863824
+                  ]
+                },
+                {
+                  "element": "p4/aliyman",
+                  "change": "added",
+                  "after": [
+                    3641.0743874863824,
+                    4253.77204226628
+                  ]
+                }
+              ],
+              "dependents": [],
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1
+                },
+                {
+                  "id": "g-2",
+                  "name": "Uzun aks",
+                  "revision": 1
+                }
+              ],
+              "revision": "$current",
+              "alignment": {
+                "id": "g-2",
+                "name": "Uzun aks",
+                "revision": 1,
+                "length": 4253.77204226628,
+                "ground": "Zemin boyu için projenin ortalama elipsoit yüksekliği yazılmalı (Proje ayarları › Ölçme).",
+                "kmStart": 12000.0,
+                "kmEnd": 16253.77204226628,
+                "elements": [
+                  {
+                    "id": "a/aliyman",
+                    "kind": "tangent",
+                    "station": 0.0,
+                    "length": 579.1761922461017,
+                    "km": 12000.0,
+                    "start": [
+                      485000.0,
+                      4417000.0
+                    ],
+                    "direction": 0.14888994760949725,
+                    "k0": 0.0,
+                    "k1": 0.0
+                  },
+                  {
+                    "id": "p1/giris",
+                    "kind": "spiral",
+                    "station": 579.1761922461017,
+                    "length": 100.0,
+                    "km": 12579.176192246101,
+                    "start": [
+                      485572.768391228,
+                      4417085.915258684
+                    ],
+                    "direction": 0.14888994760949725,
+                    "k0": 0.0,
+                    "k1": -0.002,
+                    "a": 223.60679774997897
+                  },
+                  {
+                    "id": "p1/kurp",
+                    "kind": "arc",
+                    "station": 679.1761922461017,
+                    "length": 244.6547239400407,
+                    "km": 12679.176192246101,
+                    "start": [
+                      485672.0572937503,
+                      4417097.4403761495
+                    ],
+                    "direction": 0.04888994760949725,
+                    "k0": -0.002,
+                    "k1": -0.002,
+                    "radius": 500.0
+                  },
+                  {
+                    "id": "p1/cikis",
+                    "kind": "spiral",
+                    "station": 923.8309161861423,
+                    "length": 100.0,
+                    "km": 12923.830916186142,
+                    "start": [
+                      485909.6520161181,
+                      4417050.324264826
+                    ],
+                    "direction": -0.44041950027058413,
+                    "k0": -0.002,
+                    "k1": 0.0,
+                    "a": 223.60679774997897
+                  },
+                  {
+                    "id": "p1/aliyman",
+                    "kind": "tangent",
+                    "station": 1023.8309161861423,
+                    "length": 443.2285385030916,
+                    "km": 13023.830916186142,
+                    "start": [
+                      485997.02936033765,
+                      4417001.782383798
+                    ],
+                    "direction": -0.5404195002705842,
+                    "k0": 0.0,
+                    "k1": 0.0
+                  },
+                  {
+                    "id": "p2/giris",
+                    "kind": "spiral",
+                    "station": 1467.059454689234,
+                    "length": 70.0,
+                    "km": 13467.059454689233,
+                    "start": [
+                      486377.09469657793,
+                      4416773.743182053
+                    ],
+                    "direction": -0.5404195002705842,
+                    "k0": 0.0,
+                    "k1": 0.002857142857142857,
+                    "a": 156.52475842498527
+                  },
+                  {
+                    "id": "p2/kurp",
+                    "kind": "arc",
+                    "station": 1537.059454689234,
+                    "length": 128.57130193070535,
+                    "km": 13537.059454689233,
+                    "start": [
+                      486438.2588375316,
+                      4416739.763865333
+                    ],
+                    "direction": -0.44041950027058413,
+                    "k0": 0.002857142857142857,
+                    "k1": 0.002857142857142857,
+                    "radius": 350.0
+                  },
+                  {
+                    "id": "p2/cikis",
+                    "kind": "spiral",
+                    "station": 1665.6307566199393,
+                    "length": 90.0,
+                    "km": 13665.63075661994,
+                    "start": [
+                      486561.91770892474,
+                      4416707.298404394
+                    ],
+                    "direction": -0.07307292332571173,
+                    "k0": 0.002857142857142857,
+                    "k1": 0.0,
+                    "a": 177.48239349298848
+                  },
+                  {
+                    "id": "p2/aliyman",
+                    "kind": "tangent",
+                    "station": 1755.6307566199393,
+                    "length": 749.3092604032065,
+                    "km": 13755.63075661994,
+                    "start": [
+                      486651.8444111977,
+                      4416708.435800622
+                    ],
+                    "direction": 0.05549850524571683,
+                    "k0": 0.0,
+                    "k1": 0.0
+                  },
+                  {
+                    "id": "p3/aliyman",
+                    "kind": "tangent",
+                    "station": 2504.940017023146,
+                    "length": 761.7205386771825,
+                    "km": 14504.940017023146,
+                    "start": [
+                      487400.0,
+                      4416750.0
+                    ],
+                    "direction": 0.7483780475235183,
+                    "k0": 0.0,
+                    "k1": 0.0
+                  },
+                  {
+                    "id": "p4/kurp",
+                    "kind": "arc",
+                    "station": 3266.660555700328,
+                    "length": 374.4138317860541,
+                    "km": 15266.660555700328,
+                    "start": [
+                      487958.18385318073,
+                      4417268.313577954
+                    ],
+                    "direction": 0.7483780475235183,
+                    "k0": -0.0016666666666666668,
+                    "k1": -0.0016666666666666668,
+                    "radius": 600.0
+                  },
+                  {
+                    "id": "p4/aliyman",
+                    "kind": "tangent",
+                    "station": 3641.0743874863824,
+                    "length": 612.6976547798974,
+                    "km": 15641.074387486382,
+                    "start": [
+                      488292.03367204755,
+                      4417424.004209006
+                    ],
+                    "direction": 0.12435499454676144,
+                    "k0": 0.0,
+                    "k1": 0.0
+                  }
+                ],
+                "curves": [
+                  {
+                    "pi": "p1",
+                    "delta": -0.6893094478800814,
+                    "radius": 500.0,
+                    "spiralIn": 100.0,
+                    "spiralOut": 100.0,
+                    "tIn": 229.77374440016575,
+                    "tOut": 229.77374440016575,
+                    "arc": 244.6547239400407,
+                    "stations": [
+                      579.1761922461017,
+                      679.1761922461017,
+                      923.8309161861423,
+                      1023.8309161861423
+                    ],
+                    "centre": [
+                      485696.49253054615,
+                      4416598.037813879
+                    ]
+                  },
+                  {
+                    "pi": "p2",
+                    "delta": 0.595918005516301,
+                    "radius": 350.0,
+                    "spiralIn": 70.0,
+                    "spiralOut": 90.0,
+                    "tIn": 143.3309823750847,
+                    "tOut": 152.07855846279077,
+                    "arc": 128.57130193070535,
+                    "stations": [
+                      1467.059454689234,
+                      1537.059454689234,
+                      1665.6307566199393,
+                      1755.6307566199393
+                    ],
+                    "centre": [
+                      486587.47047743195,
+                      4417056.364380997
+                    ]
+                  },
+                  {
+                    "pi": "p4",
+                    "delta": -0.6240230529767569,
+                    "radius": 600.0,
+                    "spiralIn": 0.0,
+                    "spiralOut": 0.0,
+                    "tIn": 193.52812004995752,
+                    "tOut": 193.52812004995752,
+                    "arc": 374.4138317860541,
+                    "stations": [
+                      3266.660555700328,
+                      3266.660555700328,
+                      3641.0743874863824,
+                      3641.0743874863824
+                    ],
+                    "centre": [
+                      488366.4545128011,
+                      4416828.6374829775
+                    ]
+                  }
+                ],
+                "joins": [],
+                "residual": 0.0,
+                "residualDirection": 0.0,
+                "algorithm": "kentos.alignment/1"
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Uzun aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4417000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485800.0,
+                      "y": 4417120.0,
+                      "radius": 500.0,
+                      "spiralIn": 100.0,
+                      "spiralOut": 100.0
+                    },
+                    {
+                      "id": "p2",
+                      "x": 486500.0,
+                      "y": 4416700.0,
+                      "radius": 350.0,
+                      "spiralIn": 70.0,
+                      "spiralOut": 90.0
+                    },
+                    {
+                      "id": "p3",
+                      "x": 487400.0,
+                      "y": 4416750.0
+                    },
+                    {
+                      "id": "p4",
+                      "x": 488100.0,
+                      "y": 4417400.0,
+                      "radius": 600.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 488900.0,
+                      "y": 4417500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 12000.0
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Km eşitliğiyle",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Eşitlikli",
+            "pis": [
+              {
+                "id": "a",
+                "x": 485000.0,
+                "y": 4422000.0
+              },
+              {
+                "id": "p1",
+                "x": 485600.0,
+                "y": 4422000.0,
+                "radius": 400.0,
+                "spiralIn": 80.0,
+                "spiralOut": 80.0
+              },
+              {
+                "id": "b",
+                "x": 486100.0,
+                "y": 4422500.0
+              }
+            ],
+            "stationing": {
+              "start": 2000.0,
+              "equations": [
+                {
+                  "back": 2200.0,
+                  "ahead": 2500.0
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "mapping": [
+                {
+                  "element": "a/aliyman",
+                  "change": "added",
+                  "after": [
+                    0.0,
+                    394.05186090744627
+                  ]
+                },
+                {
+                  "element": "p1/giris",
+                  "change": "added",
+                  "after": [
+                    394.05186090744627,
+                    474.05186090744627
+                  ]
+                },
+                {
+                  "element": "p1/kurp",
+                  "change": "added",
+                  "after": [
+                    474.05186090744627,
+                    708.2111262664256
+                  ]
+                },
+                {
+                  "element": "p1/cikis",
+                  "change": "added",
+                  "after": [
+                    708.2111262664256,
+                    788.2111262664256
+                  ]
+                },
+                {
+                  "element": "p1/aliyman",
+                  "change": "added",
+                  "after": [
+                    788.2111262664256,
+                    1289.3697683604194
+                  ]
+                }
+              ],
+              "dependents": [],
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1
+                },
+                {
+                  "id": "g-2",
+                  "name": "Eşitlikli",
+                  "revision": 1
+                }
+              ],
+              "revision": "$current",
+              "alignment": {
+                "id": "g-2",
+                "name": "Eşitlikli",
+                "revision": 1,
+                "length": 1289.3697683604194,
+                "ground": "Zemin boyu için projenin ortalama elipsoit yüksekliği yazılmalı (Proje ayarları › Ölçme).",
+                "kmStart": 2000.0,
+                "kmEnd": 3589.3697683604196,
+                "elements": [
+                  {
+                    "id": "a/aliyman",
+                    "kind": "tangent",
+                    "station": 0.0,
+                    "length": 394.05186090744627,
+                    "km": 2000.0,
+                    "start": [
+                      485000.0,
+                      4422000.0
+                    ],
+                    "direction": 0.0,
+                    "k0": 0.0,
+                    "k1": 0.0
+                  },
+                  {
+                    "id": "p1/giris",
+                    "kind": "spiral",
+                    "station": 394.05186090744627,
+                    "length": 80.0,
+                    "km": 2694.051860907446,
+                    "start": [
+                      485394.05186090746,
+                      4422000.0
+                    ],
+                    "direction": 0.0,
+                    "k0": 0.0,
+                    "k1": 0.0025,
+                    "a": 178.88543819998318
+                  },
+                  {
+                    "id": "p1/kurp",
+                    "kind": "arc",
+                    "station": 474.05186090744627,
+                    "length": 234.15926535897933,
+                    "km": 2774.051860907446,
+                    "start": [
+                      485473.97189793596,
+                      4422002.664762511
+                    ],
+                    "direction": 0.1,
+                    "k0": 0.0025,
+                    "k1": 0.0025,
+                    "radius": 400.0
+                  },
+                  {
+                    "id": "p1/cikis",
+                    "kind": "spiral",
+                    "station": 708.2111262664256,
+                    "length": 80.0,
+                    "km": 3008.2111262664257,
+                    "start": [
+                      485687.231053948,
+                      4422090.999597231
+                    ],
+                    "direction": 0.6853981633974483,
+                    "k0": 0.0025,
+                    "k1": 0.0,
+                    "a": 178.88543819998318
+                  },
+                  {
+                    "id": "p1/aliyman",
+                    "kind": "tangent",
+                    "station": 788.2111262664256,
+                    "length": 501.1586420939938,
+                    "km": 3088.2111262664257,
+                    "start": [
+                      485745.6273257251,
+                      4422145.627325725
+                    ],
+                    "direction": 0.7853981633974483,
+                    "k0": 0.0,
+                    "k1": 0.0
+                  }
+                ],
+                "curves": [
+                  {
+                    "pi": "p1",
+                    "delta": 0.7853981633974483,
+                    "radius": 400.0,
+                    "spiralIn": 80.0,
+                    "spiralOut": 80.0,
+                    "tIn": 205.94813909255373,
+                    "tOut": 205.94813909255373,
+                    "arc": 234.15926535897933,
+                    "stations": [
+                      394.05186090744627,
+                      474.05186090744627,
+                      708.2111262664256,
+                      788.2111262664256
+                    ],
+                    "centre": [
+                      485434.0385312772,
+                      4422400.666428622
+                    ]
+                  }
+                ],
+                "joins": [],
+                "residual": 0.0,
+                "residualDirection": 0.0,
+                "algorithm": "kentos.alignment/1"
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Eşitlikli",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4422000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4422000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4422500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0,
+                    "equations": [
+                      {
+                        "back": 2200.0,
+                        "ahead": 2500.0
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Ters kurp: araya aliyman girmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Ters kurp",
+            "pis": [
+              {
+                "id": "a",
+                "x": 485000.0,
+                "y": 6000.0
+              },
+              {
+                "id": "p1",
+                "x": 485400.0,
+                "y": 6000.0,
+                "radius": 300.0,
+                "spiralIn": 60.0,
+                "spiralOut": 60.0
+              },
+              {
+                "id": "p2",
+                "x": 485615.3548585885,
+                "y": 6180.70418241383,
+                "radius": 250.0,
+                "spiralIn": 50.0,
+                "spiralOut": 50.0
+              },
+              {
+                "id": "b",
+                "x": 485910.79718449217,
+                "y": 6128.60972911375
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "mapping": [
+                {
+                  "element": "a/aliyman",
+                  "change": "added",
+                  "after": [
+                    0.0,
+                    260.6370068065878
+                  ]
+                },
+                {
+                  "element": "p1/giris",
+                  "change": "added",
+                  "after": [
+                    260.6370068065878,
+                    320.6370068065878
+                  ]
+                },
+                {
+                  "element": "p1/kurp",
+                  "change": "added",
+                  "after": [
+                    320.6370068065878,
+                    470.07651704590415
+                  ]
+                },
+                {
+                  "element": "p1/cikis",
+                  "change": "added",
+                  "after": [
+                    470.07651704590415,
+                    530.0765170459041
+                  ]
+                },
+                {
+                  "element": "p2/giris",
+                  "change": "added",
+                  "after": [
+                    530.0765170459041,
+                    580.0765170459041
+                  ]
+                },
+                {
+                  "element": "p2/kurp",
+                  "change": "added",
+                  "after": [
+                    580.0765170459041,
+                    748.2426735451896
+                  ]
+                },
+                {
+                  "element": "p2/cikis",
+                  "change": "added",
+                  "after": [
+                    748.2426735451896,
+                    798.2426735451896
+                  ]
+                },
+                {
+                  "element": "p2/aliyman",
+                  "change": "added",
+                  "after": [
+                    798.2426735451896,
+                    956.4798645441042
+                  ]
+                }
+              ],
+              "dependents": [],
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1
+                },
+                {
+                  "id": "g-2",
+                  "name": "Ters kurp",
+                  "revision": 1
+                }
+              ],
+              "revision": "$current",
+              "alignment": {
+                "id": "g-2",
+                "name": "Ters kurp",
+                "revision": 1,
+                "length": 956.4798645441042,
+                "ground": "Zemin boyu için projenin ortalama elipsoit yüksekliği yazılmalı (Proje ayarları › Ölçme).",
+                "kmStart": 0.0,
+                "kmEnd": 956.4798645441042,
+                "elements": [
+                  {
+                    "id": "a/aliyman",
+                    "kind": "tangent",
+                    "station": 0.0,
+                    "length": 260.6370068065878,
+                    "km": 0.0,
+                    "start": [
+                      485000.0,
+                      6000.0
+                    ],
+                    "direction": 0.0,
+                    "k0": 0.0,
+                    "k1": 0.0
+                  },
+                  {
+                    "id": "p1/giris",
+                    "kind": "spiral",
+                    "station": 260.6370068065878,
+                    "length": 60.0,
+                    "km": 260.6370068065878,
+                    "start": [
+                      485260.63700680656,
+                      6000.0
+                    ],
+                    "direction": 0.0,
+                    "k0": 0.0,
+                    "k1": 0.0033333333333333335,
+                    "a": 134.16407864998737
+                  },
+                  {
+                    "id": "p1/kurp",
+                    "kind": "arc",
+                    "station": 320.6370068065878,
+                    "length": 149.43951023931635,
+                    "km": 320.6370068065878,
+                    "start": [
+                      485320.57703457796,
+                      6001.998571883038
+                    ],
+                    "direction": 0.1,
+                    "k0": 0.0033333333333333335,
+                    "k1": 0.0033333333333333335,
+                    "radius": 300.0
+                  },
+                  {
+                    "id": "p1/cikis",
+                    "kind": "spiral",
+                    "station": 470.07651704590415,
+                    "length": 60.0,
+                    "km": 470.07651704590415,
+                    "start": [
+                      485459.5568640741,
+                      6052.583092983026
+                    ],
+                    "direction": 0.5981317007977212,
+                    "k0": 0.0033333333333333335,
+                    "k1": 0.0,
+                    "a": 134.16407864998737
+                  },
+                  {
+                    "id": "p2/giris",
+                    "kind": "spiral",
+                    "station": 530.0765170459041,
+                    "length": 50.0,
+                    "km": 530.0765170459041,
+                    "start": [
+                      485506.75824651227,
+                      6089.580805273559
+                    ],
+                    "direction": 0.6981317007977212,
+                    "k0": 0.0,
+                    "k1": -0.004,
+                    "a": 111.80339887498948
+                  },
+                  {
+                    "id": "p2/kurp",
+                    "kind": "arc",
+                    "station": 580.0765170459041,
+                    "length": 168.16615649928545,
+                    "km": 580.0765170459041,
+                    "start": [
+                      485546.09273187735,
+                      6120.412232182332
+                    ],
+                    "direction": 0.5981317007977212,
+                    "k0": -0.004,
+                    "k1": -0.004,
+                    "radius": 250.0
+                  },
+                  {
+                    "id": "p2/cikis",
+                    "kind": "spiral",
+                    "station": 748.2426735451896,
+                    "length": 50.0,
+                    "km": 748.2426735451896,
+                    "start": [
+                      485705.4835949562,
+                      6163.120885225207
+                    ],
+                    "direction": -0.0745329251994206,
+                    "k0": -0.004,
+                    "k1": 0.0,
+                    "a": 111.80339887498948
+                  },
+                  {
+                    "id": "p2/aliyman",
+                    "kind": "tangent",
+                    "station": 798.2426735451896,
+                    "length": 158.2371909989146,
+                    "km": 798.2426735451896,
+                    "start": [
+                      485754.96397198155,
+                      6156.087328969844
+                    ],
+                    "direction": -0.1745329251994206,
+                    "k0": 0.0,
+                    "k1": 0.0
+                  }
+                ],
+                "curves": [
+                  {
+                    "pi": "p1",
+                    "delta": 0.6981317007977212,
+                    "radius": 300.0,
+                    "spiralIn": 60.0,
+                    "spiralOut": 60.0,
+                    "tIn": 139.3629931934122,
+                    "tOut": 139.3629931934122,
+                    "arc": 149.43951023931635,
+                    "stations": [
+                      260.6370068065878,
+                      320.6370068065878,
+                      470.07651704590415,
+                      530.0765170459041
+                    ],
+                    "centre": [
+                      485290.6270095839,
+                      6300.499821466446
+                    ]
+                  },
+                  {
+                    "pi": "p2",
+                    "delta": -0.8726646259971418,
+                    "radius": 250.0,
+                    "spiralIn": 50.0,
+                    "spiralOut": 50.0,
+                    "tIn": 141.7628090011075,
+                    "tOut": 141.7628090011075,
+                    "arc": 168.16615649928545,
+                    "stations": [
+                      530.0765170459041,
+                      580.0765170459041,
+                      748.2426735451896,
+                      798.2426735451896
+                    ],
+                    "centre": [
+                      485686.86761061917,
+                      5913.81495844615
+                    ]
+                  }
+                ],
+                "joins": [
+                  {
+                    "between": [
+                      "p1",
+                      "p2"
+                    ],
+                    "reverse": true
+                  }
+                ],
+                "residual": 0.0,
+                "residualDirection": 0.0,
+                "algorithm": "kentos.alignment/1"
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Ters kurp",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 6000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485400.0,
+                      "y": 6000.0,
+                      "radius": 300.0,
+                      "spiralIn": 60.0,
+                      "spiralOut": 60.0
+                    },
+                    {
+                      "id": "p2",
+                      "x": 485615.3548585885,
+                      "y": 6180.70418241383,
+                      "radius": 250.0,
+                      "spiralIn": 50.0,
+                      "spiralOut": 50.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 485910.79718449217,
+                      "y": 6128.60972911375
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Paralel aks, sağda 7,5 m",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Sağ kenar",
+            "offsetOf": {
+              "alignment": "g-1",
+              "offset": 7.5
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "mapping": [],
+              "dependents": [],
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1
+                },
+                {
+                  "id": "g-2",
+                  "name": "Sağ kenar",
+                  "revision": 1,
+                  "offsetOf": "g-1"
+                }
+              ],
+              "revision": "$current",
+              "alignment": {
+                "id": "g-2",
+                "name": "Sağ kenar",
+                "revision": 1,
+                "length": 1295.2602545859002,
+                "ground": "Zemin boyu için projenin ortalama elipsoit yüksekliği yazılmalı (Proje ayarları › Ölçme).",
+                "kmStart": 2000.0,
+                "kmEnd": 3289.3697683604196,
+                "elements": [
+                  {
+                    "id": "a/aliyman",
+                    "kind": "tangent",
+                    "station": 0.0,
+                    "length": 394.05186090744627,
+                    "km": 2000.0,
+                    "start": [
+                      485000.0,
+                      4420000.0
+                    ],
+                    "direction": 0.0,
+                    "k0": 0.0,
+                    "k1": 0.0
+                  },
+                  {
+                    "id": "p1/giris",
+                    "kind": "spiral",
+                    "station": 394.05186090744627,
+                    "length": 80.0,
+                    "km": 2394.051860907446,
+                    "start": [
+                      485394.05186090746,
+                      4420000.0
+                    ],
+                    "direction": 0.0,
+                    "k0": 0.0,
+                    "k1": 0.0025,
+                    "a": 178.88543819998318
+                  },
+                  {
+                    "id": "p1/kurp",
+                    "kind": "arc",
+                    "station": 474.05186090744627,
+                    "length": 234.15926535897933,
+                    "km": 2474.051860907446,
+                    "start": [
+                      485473.97189793596,
+                      4420002.664762511
+                    ],
+                    "direction": 0.1,
+                    "k0": 0.0025,
+                    "k1": 0.0025,
+                    "radius": 400.0
+                  },
+                  {
+                    "id": "p1/cikis",
+                    "kind": "spiral",
+                    "station": 708.2111262664256,
+                    "length": 80.0,
+                    "km": 2708.2111262664257,
+                    "start": [
+                      485687.231053948,
+                      4420090.999597231
+                    ],
+                    "direction": 0.6853981633974483,
+                    "k0": 0.0025,
+                    "k1": 0.0,
+                    "a": 178.88543819998318
+                  },
+                  {
+                    "id": "p1/aliyman",
+                    "kind": "tangent",
+                    "station": 788.2111262664256,
+                    "length": 501.1586420939938,
+                    "km": 2788.2111262664257,
+                    "start": [
+                      485745.6273257251,
+                      4420145.627325725
+                    ],
+                    "direction": 0.7853981633974483,
+                    "k0": 0.0,
+                    "k1": 0.0
+                  }
+                ],
+                "curves": [
+                  {
+                    "pi": "p1",
+                    "delta": 0.7853981633974483,
+                    "radius": 400.0,
+                    "spiralIn": 80.0,
+                    "spiralOut": 80.0,
+                    "tIn": 205.94813909255373,
+                    "tOut": 205.94813909255373,
+                    "arc": 234.15926535897933,
+                    "stations": [
+                      394.05186090744627,
+                      474.05186090744627,
+                      708.2111262664256,
+                      788.2111262664256
+                    ],
+                    "centre": [
+                      485434.0385312772,
+                      4420400.666428622
+                    ]
+                  }
+                ],
+                "joins": [],
+                "residual": 0.0,
+                "residualDirection": 0.0,
+                "algorithm": "kentos.alignment/1",
+                "offsetOf": {
+                  "alignment": "g-1",
+                  "offset": 7.5
+                }
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Sağ kenar",
+                  "revision": 1,
+                  "offsetOf": {
+                    "alignment": "g-1",
+                    "offset": 7.5
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Paralel aks, solda 12 m, kaynağın adıyla değil kimliğiyle",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Sol kenar",
+            "offsetOf": {
+              "alignment": "g-1",
+              "offset": -12.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "mapping": [],
+              "dependents": [],
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1
+                },
+                {
+                  "id": "g-2",
+                  "name": "Sol kenar",
+                  "revision": 1,
+                  "offsetOf": "g-1"
+                }
+              ],
+              "revision": "$current",
+              "alignment": {
+                "id": "g-2",
+                "name": "Sol kenar",
+                "revision": 1,
+                "length": 1279.94499039965,
+                "ground": "Zemin boyu için projenin ortalama elipsoit yüksekliği yazılmalı (Proje ayarları › Ölçme).",
+                "kmStart": 2000.0,
+                "kmEnd": 3289.3697683604196,
+                "elements": [
+                  {
+                    "id": "a/aliyman",
+                    "kind": "tangent",
+                    "station": 0.0,
+                    "length": 394.05186090744627,
+                    "km": 2000.0,
+                    "start": [
+                      485000.0,
+                      4420000.0
+                    ],
+                    "direction": 0.0,
+                    "k0": 0.0,
+                    "k1": 0.0
+                  },
+                  {
+                    "id": "p1/giris",
+                    "kind": "spiral",
+                    "station": 394.05186090744627,
+                    "length": 80.0,
+                    "km": 2394.051860907446,
+                    "start": [
+                      485394.05186090746,
+                      4420000.0
+                    ],
+                    "direction": 0.0,
+                    "k0": 0.0,
+                    "k1": 0.0025,
+                    "a": 178.88543819998318
+                  },
+                  {
+                    "id": "p1/kurp",
+                    "kind": "arc",
+                    "station": 474.05186090744627,
+                    "length": 234.15926535897933,
+                    "km": 2474.051860907446,
+                    "start": [
+                      485473.97189793596,
+                      4420002.664762511
+                    ],
+                    "direction": 0.1,
+                    "k0": 0.0025,
+                    "k1": 0.0025,
+                    "radius": 400.0
+                  },
+                  {
+                    "id": "p1/cikis",
+                    "kind": "spiral",
+                    "station": 708.2111262664256,
+                    "length": 80.0,
+                    "km": 2708.2111262664257,
+                    "start": [
+                      485687.231053948,
+                      4420090.999597231
+                    ],
+                    "direction": 0.6853981633974483,
+                    "k0": 0.0025,
+                    "k1": 0.0,
+                    "a": 178.88543819998318
+                  },
+                  {
+                    "id": "p1/aliyman",
+                    "kind": "tangent",
+                    "station": 788.2111262664256,
+                    "length": 501.1586420939938,
+                    "km": 2788.2111262664257,
+                    "start": [
+                      485745.6273257251,
+                      4420145.627325725
+                    ],
+                    "direction": 0.7853981633974483,
+                    "k0": 0.0,
+                    "k1": 0.0
+                  }
+                ],
+                "curves": [
+                  {
+                    "pi": "p1",
+                    "delta": 0.7853981633974483,
+                    "radius": 400.0,
+                    "spiralIn": 80.0,
+                    "spiralOut": 80.0,
+                    "tIn": 205.94813909255373,
+                    "tOut": 205.94813909255373,
+                    "arc": 234.15926535897933,
+                    "stations": [
+                      394.05186090744627,
+                      474.05186090744627,
+                      708.2111262664256,
+                      788.2111262664256
+                    ],
+                    "centre": [
+                      485434.0385312772,
+                      4420400.666428622
+                    ]
+                  }
+                ],
+                "joins": [],
+                "residual": 0.0,
+                "residualDirection": 0.0,
+                "algorithm": "kentos.alignment/1",
+                "offsetOf": {
+                  "alignment": "g-1",
+                  "offset": -12.0
+                }
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Sol kenar",
+                  "revision": 1,
+                  "offsetOf": {
+                    "alignment": "g-1",
+                    "offset": -12.0
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Boş km yazılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Yan yol",
+            "pis": [
+              {
+                "id": "a",
+                "x": 485000.0,
+                "y": 4422000.0
+              },
+              {
+                "id": "p1",
+                "x": 485600.0,
+                "y": 4422000.0,
+                "radius": 400.0,
+                "spiralIn": 80.0,
+                "spiralOut": 80.0
+              },
+              {
+                "id": "b",
+                "x": 486100.0,
+                "y": 4422500.0
+              }
+            ],
+            "stationing": {}
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "mapping": [
+                {
+                  "element": "a/aliyman",
+                  "change": "added",
+                  "after": [
+                    0.0,
+                    394.05186090744627
+                  ]
+                },
+                {
+                  "element": "p1/giris",
+                  "change": "added",
+                  "after": [
+                    394.05186090744627,
+                    474.05186090744627
+                  ]
+                },
+                {
+                  "element": "p1/kurp",
+                  "change": "added",
+                  "after": [
+                    474.05186090744627,
+                    708.2111262664256
+                  ]
+                },
+                {
+                  "element": "p1/cikis",
+                  "change": "added",
+                  "after": [
+                    708.2111262664256,
+                    788.2111262664256
+                  ]
+                },
+                {
+                  "element": "p1/aliyman",
+                  "change": "added",
+                  "after": [
+                    788.2111262664256,
+                    1289.3697683604194
+                  ]
+                }
+              ],
+              "dependents": [],
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1
+                },
+                {
+                  "id": "g-2",
+                  "name": "Yan yol",
+                  "revision": 1
+                }
+              ],
+              "revision": "$current",
+              "alignment": {
+                "id": "g-2",
+                "name": "Yan yol",
+                "revision": 1,
+                "length": 1289.3697683604194,
+                "ground": "Zemin boyu için projenin ortalama elipsoit yüksekliği yazılmalı (Proje ayarları › Ölçme).",
+                "kmStart": 0.0,
+                "kmEnd": 1289.3697683604194,
+                "elements": [
+                  {
+                    "id": "a/aliyman",
+                    "kind": "tangent",
+                    "station": 0.0,
+                    "length": 394.05186090744627,
+                    "km": 0.0,
+                    "start": [
+                      485000.0,
+                      4422000.0
+                    ],
+                    "direction": 0.0,
+                    "k0": 0.0,
+                    "k1": 0.0
+                  },
+                  {
+                    "id": "p1/giris",
+                    "kind": "spiral",
+                    "station": 394.05186090744627,
+                    "length": 80.0,
+                    "km": 394.05186090744627,
+                    "start": [
+                      485394.05186090746,
+                      4422000.0
+                    ],
+                    "direction": 0.0,
+                    "k0": 0.0,
+                    "k1": 0.0025,
+                    "a": 178.88543819998318
+                  },
+                  {
+                    "id": "p1/kurp",
+                    "kind": "arc",
+                    "station": 474.05186090744627,
+                    "length": 234.15926535897933,
+                    "km": 474.05186090744627,
+                    "start": [
+                      485473.97189793596,
+                      4422002.664762511
+                    ],
+                    "direction": 0.1,
+                    "k0": 0.0025,
+                    "k1": 0.0025,
+                    "radius": 400.0
+                  },
+                  {
+                    "id": "p1/cikis",
+                    "kind": "spiral",
+                    "station": 708.2111262664256,
+                    "length": 80.0,
+                    "km": 708.2111262664256,
+                    "start": [
+                      485687.231053948,
+                      4422090.999597231
+                    ],
+                    "direction": 0.6853981633974483,
+                    "k0": 0.0025,
+                    "k1": 0.0,
+                    "a": 178.88543819998318
+                  },
+                  {
+                    "id": "p1/aliyman",
+                    "kind": "tangent",
+                    "station": 788.2111262664256,
+                    "length": 501.1586420939938,
+                    "km": 788.2111262664256,
+                    "start": [
+                      485745.6273257251,
+                      4422145.627325725
+                    ],
+                    "direction": 0.7853981633974483,
+                    "k0": 0.0,
+                    "k1": 0.0
+                  }
+                ],
+                "curves": [
+                  {
+                    "pi": "p1",
+                    "delta": 0.7853981633974483,
+                    "radius": 400.0,
+                    "spiralIn": 80.0,
+                    "spiralOut": 80.0,
+                    "tIn": 205.94813909255373,
+                    "tOut": 205.94813909255373,
+                    "arc": 234.15926535897933,
+                    "stations": [
+                      394.05186090744627,
+                      474.05186090744627,
+                      708.2111262664256,
+                      788.2111262664256
+                    ],
+                    "centre": [
+                      485434.0385312772,
+                      4422400.666428622
+                    ]
+                  }
+                ],
+                "joins": [],
+                "residual": 0.0,
+                "residualDirection": 0.0,
+                "algorithm": "kentos.alignment/1"
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Yan yol",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4422000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4422000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4422500.0
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Plan yazmaz",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "name": "Yan yol",
+            "pis": [
+              {
+                "id": "a",
+                "x": 485000.0,
+                "y": 4422000.0
+              },
+              {
+                "id": "p1",
+                "x": 485600.0,
+                "y": 4422000.0,
+                "radius": 400.0,
+                "spiralIn": 80.0,
+                "spiralOut": 80.0
+              },
+              {
+                "id": "b",
+                "x": 486100.0,
+                "y": 4422500.0
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "mapping": [
+                {
+                  "element": "a/aliyman",
+                  "change": "added",
+                  "after": [
+                    0.0,
+                    394.05186090744627
+                  ]
+                },
+                {
+                  "element": "p1/giris",
+                  "change": "added",
+                  "after": [
+                    394.05186090744627,
+                    474.05186090744627
+                  ]
+                },
+                {
+                  "element": "p1/kurp",
+                  "change": "added",
+                  "after": [
+                    474.05186090744627,
+                    708.2111262664256
+                  ]
+                },
+                {
+                  "element": "p1/cikis",
+                  "change": "added",
+                  "after": [
+                    708.2111262664256,
+                    788.2111262664256
+                  ]
+                },
+                {
+                  "element": "p1/aliyman",
+                  "change": "added",
+                  "after": [
+                    788.2111262664256,
+                    1289.3697683604194
+                  ]
+                }
+              ],
+              "dependents": [],
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1
+                },
+                {
+                  "id": "g-2",
+                  "name": "Yan yol",
+                  "revision": 1
+                }
+              ],
+              "revision": "$current",
+              "alignment": {
+                "id": "g-2",
+                "name": "Yan yol",
+                "revision": 1,
+                "length": 1289.3697683604194,
+                "ground": "Zemin boyu için projenin ortalama elipsoit yüksekliği yazılmalı (Proje ayarları › Ölçme).",
+                "kmStart": 0.0,
+                "kmEnd": 1289.3697683604194,
+                "elements": [
+                  {
+                    "id": "a/aliyman",
+                    "kind": "tangent",
+                    "station": 0.0,
+                    "length": 394.05186090744627,
+                    "km": 0.0,
+                    "start": [
+                      485000.0,
+                      4422000.0
+                    ],
+                    "direction": 0.0,
+                    "k0": 0.0,
+                    "k1": 0.0
+                  },
+                  {
+                    "id": "p1/giris",
+                    "kind": "spiral",
+                    "station": 394.05186090744627,
+                    "length": 80.0,
+                    "km": 394.05186090744627,
+                    "start": [
+                      485394.05186090746,
+                      4422000.0
+                    ],
+                    "direction": 0.0,
+                    "k0": 0.0,
+                    "k1": 0.0025,
+                    "a": 178.88543819998318
+                  },
+                  {
+                    "id": "p1/kurp",
+                    "kind": "arc",
+                    "station": 474.05186090744627,
+                    "length": 234.15926535897933,
+                    "km": 474.05186090744627,
+                    "start": [
+                      485473.97189793596,
+                      4422002.664762511
+                    ],
+                    "direction": 0.1,
+                    "k0": 0.0025,
+                    "k1": 0.0025,
+                    "radius": 400.0
+                  },
+                  {
+                    "id": "p1/cikis",
+                    "kind": "spiral",
+                    "station": 708.2111262664256,
+                    "length": 80.0,
+                    "km": 708.2111262664256,
+                    "start": [
+                      485687.231053948,
+                      4422090.999597231
+                    ],
+                    "direction": 0.6853981633974483,
+                    "k0": 0.0025,
+                    "k1": 0.0,
+                    "a": 178.88543819998318
+                  },
+                  {
+                    "id": "p1/aliyman",
+                    "kind": "tangent",
+                    "station": 788.2111262664256,
+                    "length": 501.1586420939938,
+                    "km": 788.2111262664256,
+                    "start": [
+                      485745.6273257251,
+                      4422145.627325725
+                    ],
+                    "direction": 0.7853981633974483,
+                    "k0": 0.0,
+                    "k1": 0.0
+                  }
+                ],
+                "curves": [
+                  {
+                    "pi": "p1",
+                    "delta": 0.7853981633974483,
+                    "radius": 400.0,
+                    "spiralIn": 80.0,
+                    "spiralOut": 80.0,
+                    "tIn": 205.94813909255373,
+                    "tOut": 205.94813909255373,
+                    "arc": 234.15926535897933,
+                    "stations": [
+                      394.05186090744627,
+                      474.05186090744627,
+                      708.2111262664256,
+                      788.2111262664256
+                    ],
+                    "centre": [
+                      485434.0385312772,
+                      4422400.666428622
+                    ]
+                  }
+                ],
+                "joins": [],
+                "residual": 0.0,
+                "residualDirection": 0.0,
+                "algorithm": "kentos.alignment/1"
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Doğrulama yazmaz",
+      "steps": [
+        {
+          "op": "validate",
+          "input": {
+            "name": "Yan yol",
+            "pis": [
+              {
+                "id": "a",
+                "x": 485000.0,
+                "y": 4422000.0
+              },
+              {
+                "id": "p1",
+                "x": 485600.0,
+                "y": 4422000.0,
+                "radius": 400.0,
+                "spiralIn": 80.0,
+                "spiralOut": 80.0
+              },
+              {
+                "id": "b",
+                "x": 486100.0,
+                "y": 4422500.0
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Geri alınır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Yan yol",
+            "pis": [
+              {
+                "id": "a",
+                "x": 485000.0,
+                "y": 4422000.0
+              },
+              {
+                "id": "p1",
+                "x": 485600.0,
+                "y": 4422000.0,
+                "radius": 400.0,
+                "spiralIn": 80.0,
+                "spiralOut": 80.0
+              },
+              {
+                "id": "b",
+                "x": 486100.0,
+                "y": 4422500.0
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "mapping": [
+                {
+                  "element": "a/aliyman",
+                  "change": "added",
+                  "after": [
+                    0.0,
+                    394.05186090744627
+                  ]
+                },
+                {
+                  "element": "p1/giris",
+                  "change": "added",
+                  "after": [
+                    394.05186090744627,
+                    474.05186090744627
+                  ]
+                },
+                {
+                  "element": "p1/kurp",
+                  "change": "added",
+                  "after": [
+                    474.05186090744627,
+                    708.2111262664256
+                  ]
+                },
+                {
+                  "element": "p1/cikis",
+                  "change": "added",
+                  "after": [
+                    708.2111262664256,
+                    788.2111262664256
+                  ]
+                },
+                {
+                  "element": "p1/aliyman",
+                  "change": "added",
+                  "after": [
+                    788.2111262664256,
+                    1289.3697683604194
+                  ]
+                }
+              ],
+              "dependents": [],
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1
+                },
+                {
+                  "id": "g-2",
+                  "name": "Yan yol",
+                  "revision": 1
+                }
+              ],
+              "revision": "$current",
+              "alignment": {
+                "id": "g-2",
+                "name": "Yan yol",
+                "revision": 1,
+                "length": 1289.3697683604194,
+                "ground": "Zemin boyu için projenin ortalama elipsoit yüksekliği yazılmalı (Proje ayarları › Ölçme).",
+                "kmStart": 0.0,
+                "kmEnd": 1289.3697683604194,
+                "elements": [
+                  {
+                    "id": "a/aliyman",
+                    "kind": "tangent",
+                    "station": 0.0,
+                    "length": 394.05186090744627,
+                    "km": 0.0,
+                    "start": [
+                      485000.0,
+                      4422000.0
+                    ],
+                    "direction": 0.0,
+                    "k0": 0.0,
+                    "k1": 0.0
+                  },
+                  {
+                    "id": "p1/giris",
+                    "kind": "spiral",
+                    "station": 394.05186090744627,
+                    "length": 80.0,
+                    "km": 394.05186090744627,
+                    "start": [
+                      485394.05186090746,
+                      4422000.0
+                    ],
+                    "direction": 0.0,
+                    "k0": 0.0,
+                    "k1": 0.0025,
+                    "a": 178.88543819998318
+                  },
+                  {
+                    "id": "p1/kurp",
+                    "kind": "arc",
+                    "station": 474.05186090744627,
+                    "length": 234.15926535897933,
+                    "km": 474.05186090744627,
+                    "start": [
+                      485473.97189793596,
+                      4422002.664762511
+                    ],
+                    "direction": 0.1,
+                    "k0": 0.0025,
+                    "k1": 0.0025,
+                    "radius": 400.0
+                  },
+                  {
+                    "id": "p1/cikis",
+                    "kind": "spiral",
+                    "station": 708.2111262664256,
+                    "length": 80.0,
+                    "km": 708.2111262664256,
+                    "start": [
+                      485687.231053948,
+                      4422090.999597231
+                    ],
+                    "direction": 0.6853981633974483,
+                    "k0": 0.0025,
+                    "k1": 0.0,
+                    "a": 178.88543819998318
+                  },
+                  {
+                    "id": "p1/aliyman",
+                    "kind": "tangent",
+                    "station": 788.2111262664256,
+                    "length": 501.1586420939938,
+                    "km": 788.2111262664256,
+                    "start": [
+                      485745.6273257251,
+                      4422145.627325725
+                    ],
+                    "direction": 0.7853981633974483,
+                    "k0": 0.0,
+                    "k1": 0.0
+                  }
+                ],
+                "curves": [
+                  {
+                    "pi": "p1",
+                    "delta": 0.7853981633974483,
+                    "radius": 400.0,
+                    "spiralIn": 80.0,
+                    "spiralOut": 80.0,
+                    "tIn": 205.94813909255373,
+                    "tOut": 205.94813909255373,
+                    "arc": 234.15926535897933,
+                    "stations": [
+                      394.05186090744627,
+                      474.05186090744627,
+                      708.2111262664256,
+                      788.2111262664256
+                    ],
+                    "centre": [
+                      485434.0385312772,
+                      4422400.666428622
+                    ]
+                  }
+                ],
+                "joins": [],
+                "residual": 0.0,
+                "residualDirection": 0.0,
+                "algorithm": "kentos.alignment/1"
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Yan yol",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4422000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4422000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4422500.0
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        },
+        {
+          "op": "undo",
+          "returns": "Aks oluştur",
+          "expect": {
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0
+                  }
+                }
+              ]
+            },
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yol projesi değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Yan yol",
+            "pis": [
+              {
+                "id": "a",
+                "x": 485000.0,
+                "y": 4422000.0
+              },
+              {
+                "id": "p1",
+                "x": 485600.0,
+                "y": 4422000.0,
+                "radius": 400.0,
+                "spiralIn": 80.0,
+                "spiralOut": 80.0
+              },
+              {
+                "id": "b",
+                "x": 486100.0,
+                "y": 4422500.0
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_road_project",
+              "message": "Aks yalnız yol projesinde (KentOS Yol) olur; bu çizim yol projesi değil."
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "road": null
+          },
+          "within": 1e-06
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Yol aksları",
+        "settings": {
+          "srid": 5254,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 1000.0,
+          "workspace": "cad",
+          "cadWork": "map",
+          "drawingFont": "barlow"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [],
+        "uids": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Boş ad",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "",
+            "pis": [
+              {
+                "id": "a",
+                "x": 485000.0,
+                "y": 4422000.0
+              },
+              {
+                "id": "p1",
+                "x": 485600.0,
+                "y": 4422000.0,
+                "radius": 400.0,
+                "spiralIn": 80.0,
+                "spiralOut": 80.0
+              },
+              {
+                "id": "b",
+                "x": 486100.0,
+                "y": 4422500.0
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_alignment",
+              "message": "Aks kurallarına uymuyor: aksın adı boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 120 karakter.",
+              "path": "name"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Aynı ad, büyük küçük harf ayrımsız",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "ANA aks",
+            "pis": [
+              {
+                "id": "a",
+                "x": 485000.0,
+                "y": 4422000.0
+              },
+              {
+                "id": "p1",
+                "x": 485600.0,
+                "y": 4422000.0,
+                "radius": 400.0,
+                "spiralIn": 80.0,
+                "spiralOut": 80.0
+              },
+              {
+                "id": "b",
+                "x": 486100.0,
+                "y": 4422500.0
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_alignment",
+              "message": "Aks kurallarına uymuyor: bu adda başka bir aks var.",
+              "path": "name"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Aynı kimlik",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Yan yol",
+            "id": "g-1",
+            "pis": [
+              {
+                "id": "a",
+                "x": 485000.0,
+                "y": 4422000.0
+              },
+              {
+                "id": "p1",
+                "x": 485600.0,
+                "y": 4422000.0,
+                "radius": 400.0,
+                "spiralIn": 80.0,
+                "spiralOut": 80.0
+              },
+              {
+                "id": "b",
+                "x": 486100.0,
+                "y": 4422500.0
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_alignment",
+              "message": "Aks kurallarına uymuyor: bu kimlikte başka bir aks var.",
+              "path": "id"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Tek nokta",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Yan yol",
+            "pis": [
+              {
+                "id": "a",
+                "x": 485000.0,
+                "y": 4422000.0
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_alignment",
+              "message": "Aks kurallarına uymuyor: aksın 2 ile 10000 arası noktası olur.",
+              "path": "pis"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Ne PI ne paralel",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Yan yol"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_alignment",
+              "message": "Aks kurallarına uymuyor: aks ya PI'larıyla ya bir aksa paralel kurulur, ikisi birden değil.",
+              "path": "pis"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Eksi yarıçap",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Yan yol",
+            "pis": [
+              {
+                "id": "a",
+                "x": 485000.0,
+                "y": 4422000.0
+              },
+              {
+                "id": "p1",
+                "x": 485600.0,
+                "y": 4422000.0,
+                "radius": -5.0,
+                "spiralIn": 80.0,
+                "spiralOut": 80.0
+              },
+              {
+                "id": "b",
+                "x": 486100.0,
+                "y": 4422500.0
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_alignment",
+              "message": "Aks kurallarına uymuyor: yarıçap ve klotoid boyları eksi olamaz.",
+              "path": "pis[1].radius"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Klotoidler sapmadan uzun",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Yan yol",
+            "pis": [
+              {
+                "id": "a",
+                "x": 485000.0,
+                "y": 4427000.0
+              },
+              {
+                "id": "p1",
+                "x": 485400.0,
+                "y": 4427000.0,
+                "radius": 200.0,
+                "spiralIn": 150.0,
+                "spiralOut": 150.0
+              },
+              {
+                "id": "b",
+                "x": 485800.0,
+                "y": 4427100.0
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "alignment_spirals_long",
+              "message": "p1 noktasında klotoidler 42.9718° dönüyor, sapma 14.0362°; klotoidleri kısaltın ya da yarıçapı büyütün.",
+              "path": "pis[1]"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Kurplar biniyor",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Yan yol",
+            "pis": [
+              {
+                "id": "a",
+                "x": 485000.0,
+                "y": 4428000.0
+              },
+              {
+                "id": "p1",
+                "x": 485300.0,
+                "y": 4428000.0,
+                "radius": 300.0,
+                "spiralIn": 50.0,
+                "spiralOut": 50.0
+              },
+              {
+                "id": "p2",
+                "x": 485450.0,
+                "y": 4428150.0,
+                "radius": 300.0,
+                "spiralIn": 50.0,
+                "spiralOut": 50.0
+              },
+              {
+                "id": "b",
+                "x": 485450.0,
+                "y": 4428500.0
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "alignment_curves_overlap",
+              "message": "p1 ve p2 noktalarının kurpları 86.672 m biniyor: teğet boyları aradaki aliymandan uzun. Yarıçapı ya da klotoidleri küçültün, PI'ları uzaklaştırın.",
+              "path": "pis[2]"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Aynı yerde iki PI",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Yan yol",
+            "pis": [
+              {
+                "id": "a",
+                "x": 485000.0,
+                "y": 4420000.0
+              },
+              {
+                "id": "p1",
+                "x": 485100.0,
+                "y": 4420000.0
+              },
+              {
+                "id": "p2",
+                "x": 485100.0,
+                "y": 4420000.0
+              },
+              {
+                "id": "b",
+                "x": 485200.0,
+                "y": 4420050.0
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_alignment",
+              "message": "p2 noktası bir öncekiyle aynı yerde; PI'lar ayrı yerlerde olmalı.",
+              "path": "pis[2]"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Geri dönen doğrultu",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Yan yol",
+            "pis": [
+              {
+                "id": "a",
+                "x": 485000.0,
+                "y": 4420000.0
+              },
+              {
+                "id": "p1",
+                "x": 485100.0,
+                "y": 4420000.0
+              },
+              {
+                "id": "b",
+                "x": 485050.0,
+                "y": 4420000.0
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_alignment",
+              "message": "p1 noktasında doğrultu geri dönüyor (180°); aks kendi üstüne dönemez.",
+              "path": "pis[1]"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Başlangıçta kurp",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Yan yol",
+            "pis": [
+              {
+                "id": "a",
+                "x": 485000.0,
+                "y": 4422000.0,
+                "radius": 100.0
+              },
+              {
+                "id": "p1",
+                "x": 485600.0,
+                "y": 4422000.0,
+                "radius": 400.0,
+                "spiralIn": 80.0,
+                "spiralOut": 80.0
+              },
+              {
+                "id": "b",
+                "x": 486100.0,
+                "y": 4422500.0
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_alignment",
+              "message": "a noktasının kurpu olamaz: başlangıç ve bitişte kurp yok, klotoid yarıçapla verilir, değerler eksi olmaz.",
+              "path": "pis[0]"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Km eşitliği aksın dışında",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Yan yol",
+            "pis": [
+              {
+                "id": "a",
+                "x": 485000.0,
+                "y": 4422000.0
+              },
+              {
+                "id": "p1",
+                "x": 485600.0,
+                "y": 4422000.0,
+                "radius": 400.0,
+                "spiralIn": 80.0,
+                "spiralOut": 80.0
+              },
+              {
+                "id": "b",
+                "x": 486100.0,
+                "y": 4422500.0
+              }
+            ],
+            "stationing": {
+              "start": 0.0,
+              "equations": [
+                {
+                  "back": 5000.0,
+                  "ahead": 6000.0
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_stationing",
+              "message": "1. km eşitliğinin geri km'si aksın üstünde, bir önceki eşitlikten sonra değil (aks 1289.370 m).",
+              "path": "stationing.equations[0]"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Paralel aks kurpun merkezini geçiyor",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "İç kenar",
+            "offsetOf": {
+              "alignment": "g-1",
+              "offset": -450.0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "offset_cusp",
+              "message": "“İç kenar” paralel aksı km 465.163–474.052 arasında kıvrılıyor: orada kurpun yarıçapı ötelemeden küçük. Ötelemeyi küçültün ya da kurpları genişletin.",
+              "path": "offsetOf.offset"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Paralel aksın kaynağı yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Kenar",
+            "offsetOf": {
+              "alignment": "g-9",
+              "offset": 5.0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_alignment",
+              "message": "Aks kurallarına uymuyor: kaynak aks projede yok.",
+              "path": "offsetOf.alignment"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Paralel aksa paralel",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Kenar 2",
+            "offsetOf": {
+              "alignment": "g-2",
+              "offset": 5.0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_alignment",
+              "message": "Aks kurallarına uymuyor: paralel aks yalnız PI'larıyla kurulan aksa bağlanır.",
+              "path": "offsetOf.alignment"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Sol kenar",
+                  "revision": 1,
+                  "offsetOf": {
+                    "alignment": "g-1",
+                    "offset": -7.5
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Yol aksları",
+        "settings": {
+          "srid": 5254,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 1000.0,
+          "workspace": "cad",
+          "cadWork": "road",
+          "drawingFont": "barlow",
+          "road": {
+            "alignments": [
+              {
+                "id": "g-1",
+                "name": "Ana aks",
+                "revision": 1,
+                "pis": [
+                  {
+                    "id": "a",
+                    "x": 485000.0,
+                    "y": 4420000.0
+                  },
+                  {
+                    "id": "p1",
+                    "x": 485600.0,
+                    "y": 4420000.0,
+                    "radius": 400.0,
+                    "spiralIn": 80.0,
+                    "spiralOut": 80.0
+                  },
+                  {
+                    "id": "b",
+                    "x": 486100.0,
+                    "y": 4420500.0
+                  }
+                ],
+                "stationing": {
+                  "start": 2000.0
+                }
+              },
+              {
+                "id": "g-2",
+                "name": "Sol kenar",
+                "revision": 1,
+                "offsetOf": {
+                  "alignment": "g-1",
+                  "offset": -7.5
+                }
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [],
+        "uids": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Öteleme sıfır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Kenar",
+            "offsetOf": {
+              "alignment": "g-1",
+              "offset": 0.0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_alignment",
+              "message": "Aks kurallarına uymuyor: öteleme 0 olmayan, en çok 1000 m bir sayı olmalı.",
+              "path": "offsetOf.offset"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Geçersiz beklenen sürüm",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Yan yol",
+            "pis": [
+              {
+                "id": "a",
+                "x": 485000.0,
+                "y": 4422000.0
+              },
+              {
+                "id": "p1",
+                "x": 485600.0,
+                "y": 4422000.0,
+                "radius": 400.0,
+                "spiralIn": 80.0,
+                "spiralOut": 80.0
+              },
+              {
+                "id": "b",
+                "x": 486100.0,
+                "y": 4422500.0
+              }
+            ],
+            "expectedRevision": "on"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "Beklenen sürüm “on” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Eski sürüme göre hazırlanmış",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Yan yol",
+            "pis": [
+              {
+                "id": "a",
+                "x": 485000.0,
+                "y": 4422000.0
+              },
+              {
+                "id": "p1",
+                "x": 485600.0,
+                "y": 4422000.0,
+                "radius": 400.0,
+                "spiralIn": 80.0,
+                "spiralOut": 80.0
+              },
+              {
+                "id": "b",
+                "x": 486100.0,
+                "y": 4422500.0
+              }
+            ],
+            "expectedRevision": "41"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    }
+  ]
+}

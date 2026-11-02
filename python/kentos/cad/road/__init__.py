@@ -6,7 +6,8 @@
 from __future__ import annotations
 
 
+from . import alignments
 from . import terrains
 
 
-__all__ = ["terrains"]
+__all__ = ["alignments", "terrains"]

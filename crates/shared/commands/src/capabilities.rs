@@ -1548,6 +1548,53 @@ const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: none,
     },
+    // KentOS Yol's horizontal alignments (plan/road.md Y3, docs/adr/0901).
+    Entry {
+        id: "road.alignments.create",
+        refusals: &[
+            &[
+                "not_a_road_project",
+                "invalid_alignment",
+                "alignment_spirals_long",
+                "alignment_curves_overlap",
+                "invalid_stationing",
+                "offset_cusp",
+            ],
+            REVISION,
+        ],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "road.alignments.edit",
+        refusals: &[
+            &[
+                "not_a_road_project",
+                "unknown_alignment",
+                "invalid_alignment",
+                "alignment_spirals_long",
+                "alignment_curves_overlap",
+                "invalid_stationing",
+                "offset_cusp",
+                "alignment_in_use",
+            ],
+            REVISION,
+        ],
+        warnings: &["equations_dropped"],
+        targets: none,
+    },
+    Entry {
+        id: "road.alignments.query",
+        refusals: &[&[
+            "not_a_road_project",
+            "unknown_alignment",
+            "invalid_places",
+            "station_outside",
+            "station_ambiguous",
+        ]],
+        warnings: &[],
+        targets: none,
+    },
     // Alt ağlar (docs/adr/0557 §2).
     Entry {
         id: "cad.subnetworks.find",

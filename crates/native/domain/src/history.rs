@@ -320,6 +320,12 @@ pub(crate) enum Op {
         before: crate::view_area::ViewArea,
         after: crate::view_area::ViewArea,
     },
+    /// A road project's horizontal alignments (docs/adr/0901 §10), before and after: a setting kept in the undo
+    /// history, so the Güzergâh editor's every write is one step.
+    RoadAlignments {
+        before: Vec<kentos_contracts::AlignmentDef>,
+        after: Vec<kentos_contracts::AlignmentDef>,
+    },
     /// The project's room modules (docs/adr/0775), before and after: a setting, written in the step with the objects
     /// placed or updated, so undo gives both back.
     ArchModules {
@@ -640,6 +646,10 @@ impl Op {
                 after: *before,
             },
             Op::ArchModules { before, after } => Op::ArchModules {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::RoadAlignments { before, after } => Op::RoadAlignments {
                 before: after.clone(),
                 after: before.clone(),
             },
@@ -1289,6 +1299,7 @@ impl Document {
                 | Op::Materials { .. }
                 | Op::BuildingProgram { .. }
                 | Op::ArchModules { .. }
+                | Op::RoadAlignments { .. }
                 | Op::ViewArea { .. }
                 | Op::ArchOptions { .. }
                 | Op::OptionCombos { .. }
@@ -1595,6 +1606,12 @@ impl Document {
                 let mut arch = self.settings.arch.take().unwrap_or_default();
                 arch.modules = after.clone();
                 self.settings.arch = (!arch.is_empty()).then_some(arch);
+                return;
+            }
+            Op::RoadAlignments { after, .. } => {
+                let mut road = self.settings.road.take().unwrap_or_default();
+                road.alignments = after.clone();
+                self.settings.road = (!road.is_empty()).then_some(road);
                 return;
             }
             Op::ArchOptions { after, .. } => {

@@ -1,6 +1,6 @@
 # ADR 0901 — Yatay güzergâh: aliyman, klotoid ve kurp; km ve km eşitliği
 
-Tarih: 2026-11-02. plan/road.md Y3 (ROAD-ALIGN-01…10, 15, 16; ROAD-NUM-05). Durum: Y3.1 uygulandı.
+Tarih: 2026-11-02. plan/road.md Y3 (ROAD-ALIGN-01…10, 15, 16; ROAD-NUM-05). Durum: Y3.1 (çekirdek) ve Y3.2 (`road.alignments.*` komutları, Python, MCP) uygulandı.
 
 ## Dayanak
 

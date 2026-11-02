@@ -9382,12 +9382,67 @@ class _Schema:
                 self.fail("bad_value", "boş boşluk listesi yazılmaz")
             return t
 
-        r = self.fields({"surfaces": (self.array(surface), False)})(v)
+        def finite(x):
+            f = self.float(x)
+            if not math.isfinite(f):
+                self.fail("bad_value", "sonlu bir sayı olmalı")
+            return f
+
+        def not_negative(x):
+            f = finite(x)
+            if f < 0:
+                self.fail("bad_value", "eksi olamaz")
+            return f
+
+        def pi(x):
+            return self.fields({"id": (word, True), "x": (finite, True), "y": (finite, True),
+                                "radius": (not_negative, False), "spiralIn": (not_negative, False),
+                                "spiralOut": (not_negative, False)})(x)
+
+        equation = self.fields({"back": (finite, True), "ahead": (finite, True), "increasing": (self.bool, False)})
+
+        def alignment(x):
+            # Docs/adr/0901: an alignment of its PIs or a parallel axis of one; its km; its revision.
+            t = self.fields({"id": (word, True), "name": (self.text, True), "revision": (self.uint(32), False),
+                             "pis": (self.array(pi), False),
+                             "offsetOf": (self.fields({"alignment": (word, True), "offset": (finite, True)}), False),
+                             "stationing": (self.fields({"start": (finite, False),
+                                                         "equations": (self.array(equation), False)}), False)})(x)
+            name = t["name"]
+            if not name or name.strip() != name or len(name) > 120:
+                self.fail("bad_value", "aksın adı boş, boşluklu ya da çok uzun")
+            pis = t.get("pis", [])
+            if ("offsetOf" in t) == bool(pis):
+                self.fail("bad_value", "aks ya PI'larıyla ya bir aksa paralel kurulur")
+            if pis and not 2 <= len(pis) <= 10000:
+                self.fail("bad_value", "aksın 2 ile 10000 arası noktası olur")
+            if len({p["id"] for p in pis}) != len(pis):
+                self.fail("bad_value", "aksta iki noktanın kimliği aynı")
+            if "offsetOf" in t:
+                if "stationing" in t:
+                    self.fail("bad_value", "paralel aksın km'si kaynağınındır")
+                if not (t["offsetOf"]["offset"] != 0 and abs(t["offsetOf"]["offset"]) <= 1000):
+                    self.fail("bad_value", "öteleme 0 olmayan, en çok 1000 m bir sayı olmalı")
+            return t
+
+        r = self.fields({"surfaces": (self.array(surface), False), "alignments": (self.array(alignment), False)})(v)
         got = r.get("surfaces", [])
-        if not got or len(got) > 64:
+        lines = r.get("alignments", [])
+        if not got and not lines:
+            self.fail("bad_value", "boş yol ayarı yazılmaz")
+        if len(got) > 64 or ("surfaces" in r and not got):
             self.fail("bad_value", "yol ayarında 1 ile 64 arası yüzey olur")
         if len({x["id"] for x in got}) != len(got) or len({x["name"].lower() for x in got}) != len(got):
             self.fail("bad_value", "iki yüzeyin kimliği ya da adı aynı")
+        if "alignments" in r and not lines or len(lines) > 256:
+            self.fail("bad_value", "yol ayarında 1 ile 256 arası aks olur")
+        if len({x["id"] for x in lines}) != len(lines) or len({x["name"].lower() for x in lines}) != len(lines):
+            self.fail("bad_value", "iki aksın kimliği ya da adı aynı")
+        for x in lines:
+            if "offsetOf" in x:
+                src = next((y for y in lines if y["id"] == x["offsetOf"]["alignment"]), None)
+                if src is None or "offsetOf" in src:
+                    self.fail("bad_value", "paralel aks yalnız PI'larıyla kurulan aksa bağlanır")
         return r
 
     def arch_(self, v):

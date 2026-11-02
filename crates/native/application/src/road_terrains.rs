@@ -39,6 +39,7 @@ pub(crate) fn surfaces(doc: &Document) -> &[TerrainSurfaceDef] {
 pub(crate) fn judged(list: &[TerrainSurfaceDef], at: usize, field: &str) -> Result<(), Stop> {
     let road = RoadSettings {
         surfaces: list.to_vec(),
+        ..RoadSettings::default()
     };
     if let Some((path, words)) = road.problem() {
         let prefix = format!("surfaces[{at}].");
@@ -179,8 +180,10 @@ fn why_words(why: &str) -> &'static str {
 
 /// The project's settings with these surfaces (none: no road settings).
 pub(crate) fn with_surfaces(doc: &Document, list: Vec<TerrainSurfaceDef>) -> ProjectSettings {
+    let mut road = doc.settings().road.clone().unwrap_or_default();
+    road.surfaces = list;
     ProjectSettings {
-        road: (!list.is_empty()).then_some(RoadSettings { surfaces: list }),
+        road: (!road.is_empty()).then_some(road),
         ..doc.settings().clone()
     }
 }

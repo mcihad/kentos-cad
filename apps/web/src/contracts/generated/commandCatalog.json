@@ -34893,6 +34893,636 @@
       ]
     },
     {
+      "id": "road.alignments.create",
+      "version": 1,
+      "title": "Aks oluştur",
+      "summary": "Yol projesinde (cadWork road) PI'lardan bir yatay güzergâh (aks) kurar ve tanımını projenin yol ayarlarına yazar: aliyman, kurp ve klotoid tek analitik biçimde (kentos.alignment/1). pis başlangıç, ara PI'lar ve bitiştir; her ara PI'da radius (yoksa kurp yok, kırık nokta), spiralIn ve spiralOut (giriş ve çıkış klotoidinin boyu, m; A² = R·L). Eşit olmayan klotoidlerde kurpun merkezi iki teğetin içe R+p kadar ötelenmiş doğrularının kesişimidir. offsetOf {alignment, offset} bir aksın paralelini kurar (sağa artı, sola eksi, m): kendi geometrisi saklanmaz, kaynağını izler, km'si kaynağınındır; bir kurpun yarıçapı ötelemeden küçükse ya da kendini keserse offset_cusp. stationing başlangıç km'si (start) ve km eşitlikleri (back: eşitliğin olduğu yerin önceki km'si, ahead: sonraki km, increasing: km sonra artar mı). Elemanların kimlikleri PI'larınkinden türer (p3/aliyman, p3/giris, p3/kurp, p3/cikis). Cevap aksın raporudur: boy (projenin düzleminde), zemin boyu (ölçek ve yükseklik çarpanıyla, sistem ve ortalama elipsoit yüksekliği varsa), km'ler, elemanlar, kurplar (sapma, teğet boyları, TS–SC–CS–ST km'leri), ters ve bileşik kurplar ve integralin PI geometrisine artığı. Tek geri alma adımı “Aks oluştur”. id verilmezse g-1, g-2 … ilk boş olanıdır. Retler: not_a_road_project, invalid_alignment, alignment_spirals_long, alignment_curves_overlap, invalid_stationing, offset_cusp, invalid_revision, revision_conflict.",
+      "aliases": [
+        "aksolustur",
+        "guzergah"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.alignments.create` v1: a new alignment from its PIs, or a parallel axis (`offsetOf`) of one; its id\nwhen not given is the first free of `g-1`, `g-2` …\n\nRefusals, in this order: `not_a_road_project`, `invalid_alignment` (the definition by `road_problem`, path the\nfield's; or PIs that make no alignment: two at one place, the direction turning back, a curve on the start or the\nend), `alignment_spirals_long` (a PI's clothoids turn more than its deflection), `alignment_curves_overlap` (two\ncurves' tangent lengths pass each other; the message names both PIs and by how much), `invalid_stationing` (an\nequation's back km is not after the one before it on the alignment), `offset_cusp` (the parallel axis folds where\na curve's radius is smaller than the offset, or crosses itself), `invalid_revision`, `revision_conflict`.",
+        "properties": {
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "offsetOf": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/AlignmentOffset"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "pis": {
+            "items": {
+              "$ref": "#/$defs/AlignmentPi"
+            },
+            "type": "array"
+          },
+          "stationing": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/AlignmentStationing"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "AlignmentsCreate",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.alignments.create` and `.edit` v1.",
+        "properties": {
+          "alignment": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/AlignmentReport"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The alignment written; absent when removed."
+          },
+          "alignments": {
+            "items": {
+              "$ref": "#/$defs/AlignmentListed"
+            },
+            "type": "array"
+          },
+          "dependents": {
+            "description": "The parallel axes that follow it.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "mapping": {
+            "description": "What the edit did to the stations, by element.",
+            "items": {
+              "$ref": "#/$defs/StationMapRow"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "mapping",
+          "dependents",
+          "alignments",
+          "revision"
+        ],
+        "title": "AlignmentsWritten",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.alignments.create` and `.edit` v1.",
+        "properties": {
+          "alignment": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/AlignmentReport"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The alignment written; absent when removed."
+          },
+          "alignments": {
+            "items": {
+              "$ref": "#/$defs/AlignmentListed"
+            },
+            "type": "array"
+          },
+          "dependents": {
+            "description": "The parallel axes that follow it.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "mapping": {
+            "description": "What the edit did to the stations, by element.",
+            "items": {
+              "$ref": "#/$defs/StationMapRow"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "mapping",
+          "dependents",
+          "alignments",
+          "revision"
+        ],
+        "title": "AlignmentsWritten",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "invalid_alignment",
+          "alignment_spirals_long",
+          "alignment_curves_overlap",
+          "invalid_stationing",
+          "offset_cusp",
+          "invalid_revision",
+          "revision_conflict"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Üç PI, ortadakinde 400 m kurp ve 80 m klotoidler, km 2+000'den",
+          "input": {
+            "name": "Ana aks",
+            "pis": [
+              {
+                "id": "a",
+                "x": 1000.0,
+                "y": 2000.0
+              },
+              {
+                "id": "p1",
+                "radius": 400.0,
+                "spiralIn": 80.0,
+                "spiralOut": 80.0,
+                "x": 1600.0,
+                "y": 2000.0
+              },
+              {
+                "id": "b",
+                "x": 2100.0,
+                "y": 2500.0
+              }
+            ],
+            "stationing": {
+              "start": 2000.0
+            }
+          }
+        },
+        {
+          "title": "Ana aksın 7,5 m sağında paralel aks",
+          "input": {
+            "name": "Sağ kenar",
+            "offsetOf": {
+              "alignment": "g-1",
+              "offset": 7.5
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "road.alignments.edit",
+      "version": 1,
+      "title": "Aksı düzenle",
+      "summary": "Yol projesinin bir aksını (alignment: kimliği ya da adı) düzenler. set: verilen alanlar (name, pis, stationing, paralel aksta offset) aksınkinin yerini alır; boş stationing km'yi sıfırlar. reverse: aks ters çevrilir (PI'lar ters sırada, her PI'nın giriş ve çıkış klotoidi yer değiştirir; başlangıç km'si kalır, eşitlikler gider: equations_dropped). remove: aks kalkar, onu izleyen paralel aks varken alignment_in_use. Cevabın mapping'i düzenlemenin km'lere ne yaptığıdır: her eleman kimliğiyle kept (aynı yerde aynı), moved (aynı ama km'si kaydı), changed (geometrisi değişti), added, removed ya da reversed; önceki ve sonraki km aralığıyla. dependents aksı izleyen paralel akslardır; düzenleme onlardan birini kıvırırsa offset_cusp ile reddedilir. Aksın revizyonu her değişiklikte bir artar. Tek geri alma adımı “Aksı düzenle”. Retler: not_a_road_project, unknown_alignment, invalid_alignment, alignment_spirals_long, alignment_curves_overlap, invalid_stationing, offset_cusp, alignment_in_use, invalid_revision, revision_conflict.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.alignments.edit` v1: the alignment by its id or name.\n\nRefusals, in this order: `not_a_road_project`, `unknown_alignment`, `invalid_alignment` (set with nothing to set, `pis`\non a parallel axis or `offset` on an alignment of its own, or the definition by `road_problem`), the geometry's as\n`road.alignments.create` (`alignment_spirals_long`, `alignment_curves_overlap`, `invalid_stationing`), `offset_cusp`\n(the edited alignment or a parallel axis following it folds), `alignment_in_use` (remove while a parallel axis\nfollows it), `invalid_revision`, `revision_conflict`.",
+        "properties": {
+          "alignment": {
+            "type": "string"
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "offset": {
+            "description": "A parallel axis's offset, m, right positive.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "operation": {
+            "$ref": "#/$defs/AlignmentsEditOperation"
+          },
+          "pis": {
+            "items": {
+              "$ref": "#/$defs/AlignmentPi"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "stationing": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/AlignmentStationing"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The km; an empty one (no start, no equation) clears it."
+          }
+        },
+        "required": [
+          "alignment",
+          "operation"
+        ],
+        "title": "AlignmentsEdit",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.alignments.create` and `.edit` v1.",
+        "properties": {
+          "alignment": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/AlignmentReport"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The alignment written; absent when removed."
+          },
+          "alignments": {
+            "items": {
+              "$ref": "#/$defs/AlignmentListed"
+            },
+            "type": "array"
+          },
+          "dependents": {
+            "description": "The parallel axes that follow it.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "mapping": {
+            "description": "What the edit did to the stations, by element.",
+            "items": {
+              "$ref": "#/$defs/StationMapRow"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "mapping",
+          "dependents",
+          "alignments",
+          "revision"
+        ],
+        "title": "AlignmentsWritten",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.alignments.create` and `.edit` v1.",
+        "properties": {
+          "alignment": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/AlignmentReport"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The alignment written; absent when removed."
+          },
+          "alignments": {
+            "items": {
+              "$ref": "#/$defs/AlignmentListed"
+            },
+            "type": "array"
+          },
+          "dependents": {
+            "description": "The parallel axes that follow it.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "mapping": {
+            "description": "What the edit did to the stations, by element.",
+            "items": {
+              "$ref": "#/$defs/StationMapRow"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "mapping",
+          "dependents",
+          "alignments",
+          "revision"
+        ],
+        "title": "AlignmentsWritten",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_alignment",
+          "invalid_alignment",
+          "alignment_spirals_long",
+          "alignment_curves_overlap",
+          "invalid_stationing",
+          "offset_cusp",
+          "alignment_in_use",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "equations_dropped"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Km eşitliği ekle: 2+200 geri, 2+500 ileri",
+          "input": {
+            "alignment": "Ana aks",
+            "operation": "set",
+            "stationing": {
+              "equations": [
+                {
+                  "ahead": 2500.0,
+                  "back": 2200.0
+                }
+              ],
+              "start": 2000.0
+            }
+          }
+        },
+        {
+          "title": "Aksı ters çevir",
+          "input": {
+            "alignment": "g-1",
+            "operation": "reverse"
+          }
+        }
+      ]
+    },
+    {
+      "id": "road.alignments.query",
+      "version": 1,
+      "title": "Aksı sorgula",
+      "summary": "Yol projesinin akslarını bugün kuruldukları gibi verir; hiçbir şey yazmaz. alignment verilmezse her aksın raporu; verilince yalnız onunki ve soruları: stations aksın kendi km'lerindeki (başından yatay uzunluk) yerler; kms km yazısındaki yerler (bir km birden çok yere düşerse region verilmezse station_ambiguous); every her every metrelik yuvarlak km'nin yeri (planın km işaretleri); points her noktanın km ve ötelemesi (sağa artı): en yakın ayak, bütün ayaklar uzaklık sırasıyla, eşit uzaklıkta küçük km önce; ayak yoksa beyond: start ya da end. Her yer: km, km yazısı (2+345.678), bölge, x, y, doğrultu (rad, doğudan saat yönü tersine), eğrilik (1/m, sola artı) ve eleman. Paralel aksın yerleri kaynağının km'lerindedir. Retler: not_a_road_project, unknown_alignment, invalid_places, station_outside, station_ambiguous ve aks artık kurulamıyorsa geometrinin retleri.",
+      "aliases": [
+        "kmsor"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.alignments.query` v1: every alignment's report, or one's (`alignment`: its id or name) with the\nplaces at its stations (`stations`, its own horizontal length from the start), at kms (`kms`), every `every` metres\nof km (`every`: the round kms, as a plan's km ticks), and points' stations and offsets (`points`).\n\nRefusals: `not_a_road_project`, `unknown_alignment`, `invalid_places` (a value not finite, `every` not above 0, more\nthan 100 000 places; or a question without `alignment`), `station_outside` (a station off the alignment, a km on no\nplace), `station_ambiguous` (a km on more than one place without `region`), and the geometry's when the alignment\nno longer builds.",
+        "properties": {
+          "alignment": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "every": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "kms": {
+            "items": {
+              "$ref": "#/$defs/KmAsk"
+            },
+            "type": "array"
+          },
+          "points": {
+            "items": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            },
+            "type": "array",
+            "x-unit": "m"
+          },
+          "stations": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "type": "array",
+            "x-unit": "m"
+          }
+        },
+        "title": "AlignmentsQuery",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.alignments.query` v1.",
+        "properties": {
+          "alignments": {
+            "description": "Every alignment's report, or the one asked's.",
+            "items": {
+              "$ref": "#/$defs/AlignmentReport"
+            },
+            "type": "array"
+          },
+          "at": {
+            "items": {
+              "$ref": "#/$defs/AlignmentPlace"
+            },
+            "type": "array"
+          },
+          "kms": {
+            "items": {
+              "$ref": "#/$defs/KmPlaces"
+            },
+            "type": "array"
+          },
+          "points": {
+            "items": {
+              "$ref": "#/$defs/PointStation"
+            },
+            "type": "array"
+          },
+          "ticks": {
+            "items": {
+              "$ref": "#/$defs/AlignmentPlace"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "alignments",
+          "at",
+          "kms",
+          "ticks",
+          "points"
+        ],
+        "title": "AlignmentsQueried",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.alignments.query` v1.",
+        "properties": {
+          "alignments": {
+            "description": "Every alignment's report, or the one asked's.",
+            "items": {
+              "$ref": "#/$defs/AlignmentReport"
+            },
+            "type": "array"
+          },
+          "at": {
+            "items": {
+              "$ref": "#/$defs/AlignmentPlace"
+            },
+            "type": "array"
+          },
+          "kms": {
+            "items": {
+              "$ref": "#/$defs/KmPlaces"
+            },
+            "type": "array"
+          },
+          "points": {
+            "items": {
+              "$ref": "#/$defs/PointStation"
+            },
+            "type": "array"
+          },
+          "ticks": {
+            "items": {
+              "$ref": "#/$defs/AlignmentPlace"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "alignments",
+          "at",
+          "kms",
+          "ticks",
+          "points"
+        ],
+        "title": "AlignmentsQueried",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_alignment",
+          "invalid_places",
+          "station_outside",
+          "station_ambiguous"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bir noktanın km ve ötelemesi",
+          "input": {
+            "alignment": "Ana aks",
+            "points": [
+              [
+                1520.0,
+                2030.0
+              ]
+            ]
+          }
+        },
+        {
+          "title": "Her 100 m'nin km işareti",
+          "input": {
+            "alignment": "Ana aks",
+            "every": 100.0
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.topology.check",
       "version": 1,
       "title": "Topolojiyi denetle",
@@ -68753,6 +69383,66 @@
       "meaning": "LandXML yüzeyinin bir kısmı alınmadı; ileti nedenini söyler."
     },
     {
+      "code": "invalid_alignment",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Aks tanımı ya da PI'ları geçerli değil; ileti nedenini ve yerini söyler."
+    },
+    {
+      "code": "unknown_alignment",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu kimlikte ya da adda aks yok."
+    },
+    {
+      "code": "alignment_spirals_long",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Klotoidlerin dönüşü PI'nın sapmasından büyük; klotoidleri kısaltın ya da yarıçapı büyütün."
+    },
+    {
+      "code": "alignment_curves_overlap",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "İki kurp birbirine biniyor; yarıçapı ya da klotoidleri küçültün, PI'ları uzaklaştırın."
+    },
+    {
+      "code": "invalid_stationing",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Km eşitliği aksın üstünde, bir öncekinden sonra olmalı."
+    },
+    {
+      "code": "offset_cusp",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Paralel aks bu ötelemede kıvrılıyor; ötelemeyi küçültün ya da kurpların yarıçapını büyütün."
+    },
+    {
+      "code": "alignment_in_use",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu aksı izleyen paralel aks var; önce onu silin."
+    },
+    {
+      "code": "station_outside",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu km aksın üstünde değil."
+    },
+    {
+      "code": "station_ambiguous",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu km aksın birden çok yerine düşüyor; km eşitliğinin bölgesini verin."
+    },
+    {
+      "code": "equations_dropped",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Ters çevrilen aksın km eşitlikleri kaldırıldı."
+    },
+    {
       "code": "terrain_source_left",
       "kind": "warning",
       "retryable": false,
@@ -74048,6 +74738,10 @@
     {
       "unit": "ms",
       "meaning": "Milisaniye: bir işin süresi."
+    },
+    {
+      "unit": "1/m",
+      "meaning": "Eğrilik: metrede dönüş (radyan bölü metre), 1/yarıçap; sola dönüş artı."
     }
   ],
   "effects": [
@@ -75183,6 +75877,574 @@
         "uids"
       ],
       "type": "object"
+    },
+    "AlignmentCurveRow": {
+      "description": "A curve on a PI.",
+      "properties": {
+        "arc": {
+          "description": "The circular part's length.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "centre": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array",
+          "x-unit": "length"
+        },
+        "delta": {
+          "description": "The deflection, left positive.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "rad"
+        },
+        "pi": {
+          "type": "string"
+        },
+        "radius": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "spiralIn": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "spiralOut": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "stations": {
+          "description": "The stations of TS, SC, CS, ST.",
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 4,
+          "minItems": 4,
+          "type": "array",
+          "x-unit": "m"
+        },
+        "tIn": {
+          "description": "Tangent lengths, PI to TS and PI to ST.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "tOut": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "pi",
+        "delta",
+        "radius",
+        "spiralIn",
+        "spiralOut",
+        "tIn",
+        "tOut",
+        "arc",
+        "stations",
+        "centre"
+      ],
+      "type": "object"
+    },
+    "AlignmentDef": {
+      "additionalProperties": false,
+      "description": "A horizontal alignment's definition (docs/adr/0901): its PIs, or the alignment it is parallel to; its km.",
+      "properties": {
+        "id": {
+          "description": "Unique in the project; what a profile, a corridor or a parallel axis names.",
+          "type": "string"
+        },
+        "name": {
+          "description": "Its name (“Ana aks”), unique in the project.",
+          "type": "string"
+        },
+        "offsetOf": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AlignmentOffset"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "A parallel axis's source; absent for an alignment of its own."
+        },
+        "pis": {
+          "description": "Its start, PIs and end; empty for a parallel axis.",
+          "items": {
+            "$ref": "#/$defs/AlignmentPi"
+          },
+          "type": "array"
+        },
+        "revision": {
+          "description": "Grows by one with every change of its geometry or km; absent: 0.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "stationing": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AlignmentStationing"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Its km; absent: from 0 with no equation. A parallel axis has its source's."
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ],
+      "type": "object"
+    },
+    "AlignmentElementRow": {
+      "description": "An element of an alignment.",
+      "properties": {
+        "a": {
+          "description": "A clothoid's parameter A.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "direction": {
+          "description": "Its start direction, radians from east counter-clockwise.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "rad"
+        },
+        "id": {
+          "description": "From its PI: `p3/aliyman`, `p3/giris`, `p3/kurp`, `p3/cikis`.",
+          "type": "string"
+        },
+        "k0": {
+          "description": "Curvatures at its start and end, 1/m, left turns positive.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "1/m"
+        },
+        "k1": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1/m"
+        },
+        "kind": {
+          "description": "`tangent`, `arc` or `spiral`.",
+          "type": "string"
+        },
+        "km": {
+          "description": "The km at its start.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "length": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "radius": {
+          "description": "A curve's radius.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "start": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array",
+          "x-unit": "length"
+        },
+        "station": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "station",
+        "length",
+        "km",
+        "start",
+        "direction",
+        "k0",
+        "k1"
+      ],
+      "type": "object"
+    },
+    "AlignmentFoot": {
+      "description": "A foot of a point.",
+      "properties": {
+        "at": {
+          "$ref": "#/$defs/AlignmentPlace"
+        },
+        "corner": {
+          "description": "At a kink between two elements.",
+          "type": "boolean"
+        },
+        "offset": {
+          "description": "Right positive.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "at",
+        "offset",
+        "corner"
+      ],
+      "type": "object"
+    },
+    "AlignmentJoinRow": {
+      "description": "Two curves with no tangent between them.",
+      "properties": {
+        "between": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array"
+        },
+        "reverse": {
+          "description": "A reverse curve (S) when true, a compound curve when false.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "between",
+        "reverse"
+      ],
+      "type": "object"
+    },
+    "AlignmentListed": {
+      "description": "An alignment in the project's list.",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "offsetOf": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "revision"
+      ],
+      "type": "object"
+    },
+    "AlignmentOffset": {
+      "additionalProperties": false,
+      "description": "A parallel axis's source (docs/adr/0901 §8): the alignment and how far right of it (left negative).",
+      "properties": {
+        "alignment": {
+          "type": "string"
+        },
+        "offset": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "alignment",
+        "offset"
+      ],
+      "type": "object"
+    },
+    "AlignmentPi": {
+      "additionalProperties": false,
+      "description": "A PI of an alignment (docs/adr/0901 §2): its persistent id, its place, and the curve on it. The first and the last\nare the alignment's start and end and carry no curve.",
+      "properties": {
+        "id": {
+          "description": "Unique in the alignment; the elements' ids come from it (`p3/kurp`).",
+          "type": "string"
+        },
+        "radius": {
+          "description": "The curve's radius; absent or 0: no curve (a kink).",
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "spiralIn": {
+          "description": "The entry clothoid's length; absent or 0: none.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "spiralOut": {
+          "description": "The exit clothoid's length; absent or 0: none.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "x": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "y": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "id",
+        "x",
+        "y"
+      ],
+      "type": "object"
+    },
+    "AlignmentPlace": {
+      "description": "A place on an alignment.",
+      "properties": {
+        "curvature": {
+          "description": "1/m, left turns positive.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "1/m"
+        },
+        "direction": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "rad"
+        },
+        "element": {
+          "type": "string"
+        },
+        "km": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "kmText": {
+          "description": "The km written `2+345.678`.",
+          "type": "string"
+        },
+        "region": {
+          "description": "The km region (0 before the first equation).",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "index"
+        },
+        "station": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "x": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "y": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "station",
+        "km",
+        "kmText",
+        "region",
+        "x",
+        "y",
+        "direction",
+        "curvature",
+        "element"
+      ],
+      "type": "object"
+    },
+    "AlignmentReport": {
+      "description": "An alignment as it builds now.",
+      "properties": {
+        "algorithm": {
+          "description": "`kentos.alignment/1`.",
+          "type": "string"
+        },
+        "curves": {
+          "items": {
+            "$ref": "#/$defs/AlignmentCurveRow"
+          },
+          "type": "array"
+        },
+        "elements": {
+          "items": {
+            "$ref": "#/$defs/AlignmentElementRow"
+          },
+          "type": "array"
+        },
+        "ground": {
+          "description": "How the ground length was had, or why it was not.",
+          "type": "string"
+        },
+        "groundLength": {
+          "description": "The length on the ground (the grid length over each piece's scale and height factor), m; absent without a\nsystem that has one scale at a point or without the project's mean ellipsoidal height.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "id": {
+          "type": "string"
+        },
+        "joins": {
+          "items": {
+            "$ref": "#/$defs/AlignmentJoinRow"
+          },
+          "type": "array"
+        },
+        "kmEnd": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "kmStart": {
+          "description": "The km at the start and at the end.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "length": {
+          "description": "The horizontal length on the project's plane (grid), m; a parallel axis's own.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "name": {
+          "type": "string"
+        },
+        "offsetOf": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AlignmentOffset"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "A parallel axis's source and offset."
+        },
+        "residual": {
+          "description": "Where the integral meets the PIs' geometry, the largest gap: place, m.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "residualDirection": {
+          "description": "… and direction, rad.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "rad"
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "revision",
+        "length",
+        "ground",
+        "kmStart",
+        "kmEnd",
+        "elements",
+        "curves",
+        "joins",
+        "residual",
+        "residualDirection",
+        "algorithm"
+      ],
+      "type": "object"
+    },
+    "AlignmentStationing": {
+      "additionalProperties": false,
+      "description": "An alignment's km: the km at its start and its equations in order.",
+      "properties": {
+        "equations": {
+          "items": {
+            "$ref": "#/$defs/StationEquationDef"
+          },
+          "type": "array"
+        },
+        "start": {
+          "description": "Absent: 0.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "type": "object"
+    },
+    "AlignmentsEditOperation": {
+      "description": "What `road.alignments.edit` does.",
+      "oneOf": [
+        {
+          "const": "set",
+          "description": "The given fields (`name`, `pis`, `stationing`, `offset`) replace the alignment's.",
+          "type": "string"
+        },
+        {
+          "const": "reverse",
+          "description": "The alignment runs the other way: its PIs in reverse order, each PI's clothoids swapped; its start km is kept and\nits equations go (the warning `equations_dropped`).",
+          "type": "string"
+        },
+        {
+          "const": "remove",
+          "description": "The alignment goes; refused while a parallel axis follows it (`alignment_in_use`).",
+          "type": "string"
+        }
+      ]
     },
     "AltUnits": {
       "additionalProperties": false,
@@ -100524,6 +101786,50 @@
         }
       ]
     },
+    "KmAsk": {
+      "description": "A km asked for: its value and, where the km falls on more than one place, its region (0 before the first equation).",
+      "properties": {
+        "km": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "region": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "index"
+        }
+      },
+      "required": [
+        "km"
+      ],
+      "type": "object"
+    },
+    "KmPlaces": {
+      "description": "The places of a km.",
+      "properties": {
+        "km": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "places": {
+          "items": {
+            "$ref": "#/$defs/AlignmentPlace"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "km",
+        "places"
+      ],
+      "type": "object"
+    },
     "KnownPoint": {
       "description": "A known point: a named point of the drawing (its label or its `Ad`, big and small letters alike), or coordinates.",
       "oneOf": [
@@ -122843,6 +124149,49 @@
         }
       ]
     },
+    "PointStation": {
+      "description": "A point's station and offset: the nearest foot, every foot by distance, or the end it lies beyond.",
+      "properties": {
+        "beyond": {
+          "description": "`start` or `end` when no foot falls on the alignment: the point lies beyond that end.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "feet": {
+          "items": {
+            "$ref": "#/$defs/AlignmentFoot"
+          },
+          "type": "array"
+        },
+        "nearest": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AlignmentFoot"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "point": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array",
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "point",
+        "feet"
+      ],
+      "type": "object"
+    },
     "PointStyle": {
       "properties": {
         "size": {
@@ -128945,6 +130294,13 @@
       "additionalProperties": false,
       "description": "A road project's settings; absent while it has none.",
       "properties": {
+        "alignments": {
+          "description": "The horizontal alignments (docs/adr/0901), in the order the project tree shows them.",
+          "items": {
+            "$ref": "#/$defs/AlignmentDef"
+          },
+          "type": "array"
+        },
         "surfaces": {
           "description": "The terrain surfaces, in the order the project tree shows them.",
           "items": {
@@ -136044,6 +137400,74 @@
       "required": [
         "name",
         "font"
+      ],
+      "type": "object"
+    },
+    "StationEquationDef": {
+      "additionalProperties": false,
+      "description": "A station equation (docs/adr/0901 §6): the km where it is (read before it), the km after it, and whether the km\ngrows after it.",
+      "properties": {
+        "ahead": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "back": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "increasing": {
+          "description": "Absent: true.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "back",
+        "ahead"
+      ],
+      "type": "object"
+    },
+    "StationMapRow": {
+      "description": "A row of what an edit did to the stations (docs/adr/0901 §9).",
+      "properties": {
+        "after": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "before": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "change": {
+          "description": "`kept`, `moved`, `changed`, `added`, `removed`, or `reversed` (the alignment turned round: `before` is where the\nstretch was, read from the old start).",
+          "type": "string"
+        },
+        "element": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "element",
+        "change"
       ],
       "type": "object"
     },

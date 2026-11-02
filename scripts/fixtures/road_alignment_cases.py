@@ -121,7 +121,7 @@ def build(pis):
         d = abs(delta)
         t1 = k1 + ((r + p2) - (r + p1) * mp.cos(d)) / mp.sin(d)
         t2 = k2 + ((r + p1) - (r + p2) * mp.cos(d)) / mp.sin(d)
-        curves[i] = dict(delta=delta, sign=mp.sign(delta), r=r, l1=l1, l2=l2, t1=t1, t2=t2, p1=p1, p2=p2)
+        curves[i] = dict(delta=delta, sign=mp.sign(delta), r=r, l1=l1, l2=l2, t1=t1, t2=t2, p1=p1, p2=p2, k1=k1)
     tin = lambda i: curves[i]["t1"] if i in curves else 0
     tout = lambda i: curves[i]["t2"] if i in curves else 0
     tangents = []
@@ -161,8 +161,14 @@ def build(pis):
             els.append(e)
             place, theta, station = e.end(), e.theta(e.length), station + e.length
         stations.append(station)
+        # The centre: the foot of the entry tangent's offset line, R + p1 inwards.
+        foot = [P[i + 1][0] - (c["t1"] - c["k1"]) * u[0], P[i + 1][1] - (c["t1"] - c["k1"]) * u[1]]
+        n = [-u[1] * c["sign"], u[0] * c["sign"]]
+        centre = [foot[0] + (c["r"] + c["p1"]) * n[0], foot[1] + (c["r"] + c["p1"]) * n[1]]
         reports.append({"pi": pid, "delta": fl(c["delta"]), "tIn": fl(c["t1"]), "tOut": fl(c["t2"]), "arc": fl(arc),
-                        "pIn": fl(c["p1"]), "pOut": fl(c["p2"]), "stations": [fl(s) for s in stations]})
+                        "pIn": fl(c["p1"]), "pOut": fl(c["p2"]), "stations": [fl(s) for s in stations],
+                        "radius": fl(c["r"]), "spiralIn": fl(c["l1"]), "spiralOut": fl(c["l2"]),
+                        "centre": [fl(centre[0]), fl(centre[1])]})
     joins = []
     for i in range(1, len(P) - 2):
         if i in curves and i + 1 in curves and tangents[i] == 0:

@@ -31,6 +31,56 @@
           "tolerance": 0.005,
           "maxEdge": 60.0
         }
+      ],
+      "alignments": [
+        {
+          "id": "g-1",
+          "name": "Ana aks",
+          "revision": 3,
+          "pis": [
+            {
+              "id": "a",
+              "x": 0.0,
+              "y": 0.0
+            },
+            {
+              "id": "p1",
+              "x": 600.0,
+              "y": 0.0,
+              "radius": 400.0,
+              "spiralIn": 80.0,
+              "spiralOut": 80.0
+            },
+            {
+              "id": "b",
+              "x": 1100.0,
+              "y": 500.0
+            }
+          ],
+          "stationing": {
+            "start": 2000.0,
+            "equations": [
+              {
+                "back": 2200.0,
+                "ahead": 2500.0
+              },
+              {
+                "back": 2650.0,
+                "ahead": 2700.0,
+                "increasing": false
+              }
+            ]
+          }
+        },
+        {
+          "id": "g-2",
+          "name": "Sol kenar",
+          "revision": 1,
+          "offsetOf": {
+            "alignment": "g-1",
+            "offset": -7.5
+          }
+        }
       ]
     }
   },

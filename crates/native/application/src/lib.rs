@@ -262,6 +262,10 @@ pub mod event_follow;
 pub mod linearref_define;
 pub mod file_import_landxml;
 pub mod road_terrains;
+pub mod road_alignments;
+pub mod road_alignments_create;
+pub mod road_alignments_edit;
+pub mod road_alignments_query;
 pub mod road_terrains_contours;
 pub mod road_terrains_create;
 pub mod road_terrains_edit;
@@ -1109,6 +1113,18 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::FILE_IMPORT_LANDXML,
         kentos_commands::FILE_IMPORT_LANDXML_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_ALIGNMENTS_CREATE,
+        kentos_commands::ROAD_ALIGNMENTS_CREATE_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_ALIGNMENTS_EDIT,
+        kentos_commands::ROAD_ALIGNMENTS_EDIT_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_ALIGNMENTS_QUERY,
+        kentos_commands::ROAD_ALIGNMENTS_QUERY_VERSION,
     ),
     // Alt ağlar ([`subnetworks`], [`subnetworks_update`], docs/adr/0557 §2).
     (

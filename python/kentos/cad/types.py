@@ -81,6 +81,7 @@ UNITS: dict[str, str] = {
     "size-unit": "Birimi yanındaki sizeUnit alanının söylediği: piksel ya da projenin uzunluğu.",
     "px/length": "Görünümün ölçeği: ekran pikseli bölü projenin uzunluk birimi (px/m).",
     "ms": "Milisaniye: bir işin süresi.",
+    "1/m": "Eğrilik: metrede dönüş (radyan bölü metre), 1/yarıçap; sola dönüş artı.",
 }
 
 
@@ -190,6 +191,22 @@ class AffectReason(_StrEnum):
 
 AffectReasonName = Literal["shows", "marked", "unknown"]
 """The names of :class:`AffectReason`, for a plain string."""
+
+
+class AlignmentsEditOperation(_StrEnum):
+    """What `road.alignments.edit` does.
+
+    - ``set``: The given fields (`name`, `pis`, `stationing`, `offset`) replace the alignment's.
+    - ``reverse``: The alignment runs the other way: its PIs in reverse order, each PI's clothoids swapped; its start km is kept and
+    - ``remove``: The alignment goes; refused while a parallel axis follows it (`alignment_in_use`).
+    """
+    SET = "set"
+    REVERSE = "reverse"
+    REMOVE = "remove"
+
+
+AlignmentsEditOperationName = Literal["set", "reverse", "remove"]
+"""The names of :class:`AlignmentsEditOperation`, for a plain string."""
 
 
 class AngleUnit(_StrEnum):
@@ -11222,6 +11239,673 @@ class AffectedFrame(_Model):
             item=data["item"],
             reasons=[_enum_in(AffectReason, e0) for e0 in data["reasons"]],
             uids=list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AlignmentCurveRow(_Model):
+    """A curve on a PI.
+    Attributes:
+        delta: The deflection, left positive. Unit: rad.
+        radius: Unit: m.
+        spiral_in: Unit: m.
+        spiral_out: Unit: m.
+        t_in: Tangent lengths, PI to TS and PI to ST. Unit: m.
+        t_out: Unit: m.
+        arc: The circular part's length. Unit: m.
+        stations: The stations of TS, SC, CS, ST. Unit: m.
+        centre: Unit: length.
+    """
+    pi: str
+    delta: float
+    radius: float
+    spiral_in: float
+    spiral_out: float
+    t_in: float
+    t_out: float
+    arc: float
+    stations: list[float]
+    centre: list[float]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["pi"] = self.pi
+        out["delta"] = float(self.delta)
+        out["radius"] = float(self.radius)
+        out["spiralIn"] = float(self.spiral_in)
+        out["spiralOut"] = float(self.spiral_out)
+        out["tIn"] = float(self.t_in)
+        out["tOut"] = float(self.t_out)
+        out["arc"] = float(self.arc)
+        out["stations"] = [float(e0) for e0 in self.stations]
+        out["centre"] = [float(e0) for e0 in self.centre]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AlignmentCurveRow:
+        return cls(
+            pi=data["pi"],
+            delta=float(data["delta"]),
+            radius=float(data["radius"]),
+            spiral_in=float(data["spiralIn"]),
+            spiral_out=float(data["spiralOut"]),
+            t_in=float(data["tIn"]),
+            t_out=float(data["tOut"]),
+            arc=float(data["arc"]),
+            stations=[float(e0) for e0 in data["stations"]],
+            centre=[float(e0) for e0 in data["centre"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AlignmentDef(_Model):
+    """A horizontal alignment's definition (docs/adr/0901): its PIs, or the alignment it is parallel to; its km.
+    Attributes:
+        id: Unique in the project; what a profile, a corridor or a parallel axis names.
+        name: Its name (“Ana aks”), unique in the project.
+        offset_of: A parallel axis's source; absent for an alignment of its own.
+        pis: Its start, PIs and end; empty for a parallel axis.
+        revision: Grows by one with every change of its geometry or km; absent: 0. Unit: version.
+        stationing: Its km; absent: from 0 with no equation. A parallel axis has its source's.
+    """
+    id: str
+    name: str
+    offset_of: AlignmentOffset | None | Unset = UNSET
+    pis: list[AlignmentPi] | Unset = UNSET
+    revision: int | Unset = UNSET
+    stationing: AlignmentStationing | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        if self.offset_of is not UNSET:
+            out["offsetOf"] = None if self.offset_of is None else self.offset_of.to_json()
+        if self.pis is not UNSET:
+            out["pis"] = [e0.to_json() for e0 in self.pis]
+        if self.revision is not UNSET:
+            out["revision"] = self.revision
+        if self.stationing is not UNSET:
+            out["stationing"] = None if self.stationing is None else self.stationing.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AlignmentDef:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            offset_of=UNSET if "offsetOf" not in data else None if data["offsetOf"] is None else AlignmentOffset.from_json(data["offsetOf"]),
+            pis=[AlignmentPi.from_json(e0) for e0 in data["pis"]] if "pis" in data else UNSET,
+            revision=data.get("revision", UNSET),
+            stationing=UNSET if "stationing" not in data else None if data["stationing"] is None else AlignmentStationing.from_json(data["stationing"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AlignmentElementRow(_Model):
+    """An element of an alignment.
+    Attributes:
+        id: From its PI: `p3/aliyman`, `p3/giris`, `p3/kurp`, `p3/cikis`.
+        kind: `tangent`, `arc` or `spiral`.
+        station: Unit: m.
+        length: Unit: m.
+        km: The km at its start. Unit: m.
+        start: Unit: length.
+        direction: Its start direction, radians from east counter-clockwise. Unit: rad.
+        k0: Curvatures at its start and end, 1/m, left turns positive. Unit: 1/m.
+        k1: Unit: 1/m.
+        a: A clothoid's parameter A. Unit: m.
+        radius: A curve's radius. Unit: m.
+    """
+    id: str
+    kind: str
+    station: float
+    length: float
+    km: float
+    start: list[float]
+    direction: float
+    k0: float
+    k1: float
+    a: float | None | Unset = UNSET
+    radius: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["kind"] = self.kind
+        out["station"] = float(self.station)
+        out["length"] = float(self.length)
+        out["km"] = float(self.km)
+        out["start"] = [float(e0) for e0 in self.start]
+        out["direction"] = float(self.direction)
+        out["k0"] = float(self.k0)
+        out["k1"] = float(self.k1)
+        if self.a is not UNSET:
+            out["a"] = None if self.a is None else float(self.a)
+        if self.radius is not UNSET:
+            out["radius"] = None if self.radius is None else float(self.radius)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AlignmentElementRow:
+        return cls(
+            id=data["id"],
+            kind=data["kind"],
+            station=float(data["station"]),
+            length=float(data["length"]),
+            km=float(data["km"]),
+            start=[float(e0) for e0 in data["start"]],
+            direction=float(data["direction"]),
+            k0=float(data["k0"]),
+            k1=float(data["k1"]),
+            a=UNSET if "a" not in data else None if data["a"] is None else float(data["a"]),
+            radius=UNSET if "radius" not in data else None if data["radius"] is None else float(data["radius"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AlignmentFoot(_Model):
+    """A foot of a point.
+    Attributes:
+        offset: Right positive. Unit: m.
+        corner: At a kink between two elements.
+    """
+    at: AlignmentPlace
+    offset: float
+    corner: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["at"] = self.at.to_json()
+        out["offset"] = float(self.offset)
+        out["corner"] = self.corner
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AlignmentFoot:
+        return cls(
+            at=AlignmentPlace.from_json(data["at"]),
+            offset=float(data["offset"]),
+            corner=data["corner"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AlignmentJoinRow(_Model):
+    """Two curves with no tangent between them.
+    Attributes:
+        reverse: A reverse curve (S) when true, a compound curve when false.
+    """
+    between: list[str]
+    reverse: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["between"] = list(self.between)
+        out["reverse"] = self.reverse
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AlignmentJoinRow:
+        return cls(
+            between=list(data["between"]),
+            reverse=data["reverse"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AlignmentListed(_Model):
+    """An alignment in the project's list.
+    Attributes:
+        revision: Unit: version.
+    """
+    id: str
+    name: str
+    revision: int
+    offset_of: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["revision"] = self.revision
+        if self.offset_of is not UNSET:
+            out["offsetOf"] = self.offset_of
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AlignmentListed:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            revision=data["revision"],
+            offset_of=data.get("offsetOf", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AlignmentOffset(_Model):
+    """A parallel axis's source (docs/adr/0901 §8): the alignment and how far right of it (left negative).
+    Attributes:
+        offset: Unit: m.
+    """
+    alignment: str
+    offset: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["alignment"] = self.alignment
+        out["offset"] = float(self.offset)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AlignmentOffset:
+        return cls(
+            alignment=data["alignment"],
+            offset=float(data["offset"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AlignmentPi(_Model):
+    """A PI of an alignment (docs/adr/0901 §2): its persistent id, its place, and the curve on it. The first and the last
+    are the alignment's start and end and carry no curve.
+    Attributes:
+        id: Unique in the alignment; the elements' ids come from it (`p3/kurp`).
+        x: Unit: m.
+        y: Unit: m.
+        radius: The curve's radius; absent or 0: no curve (a kink). Unit: m.
+        spiral_in: The entry clothoid's length; absent or 0: none. Unit: m.
+        spiral_out: The exit clothoid's length; absent or 0: none. Unit: m.
+    """
+    id: str
+    x: float
+    y: float
+    radius: float | Unset = UNSET
+    spiral_in: float | Unset = UNSET
+    spiral_out: float | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["x"] = float(self.x)
+        out["y"] = float(self.y)
+        if self.radius is not UNSET:
+            out["radius"] = float(self.radius)
+        if self.spiral_in is not UNSET:
+            out["spiralIn"] = float(self.spiral_in)
+        if self.spiral_out is not UNSET:
+            out["spiralOut"] = float(self.spiral_out)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AlignmentPi:
+        return cls(
+            id=data["id"],
+            x=float(data["x"]),
+            y=float(data["y"]),
+            radius=float(data["radius"]) if "radius" in data else UNSET,
+            spiral_in=float(data["spiralIn"]) if "spiralIn" in data else UNSET,
+            spiral_out=float(data["spiralOut"]) if "spiralOut" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AlignmentPlace(_Model):
+    """A place on an alignment.
+    Attributes:
+        station: Unit: m.
+        km: Unit: m.
+        km_text: The km written `2+345.678`.
+        region: The km region (0 before the first equation). Unit: index.
+        x: Unit: m.
+        y: Unit: m.
+        direction: Unit: rad.
+        curvature: 1/m, left turns positive. Unit: 1/m.
+    """
+    station: float
+    km: float
+    km_text: str
+    region: int
+    x: float
+    y: float
+    direction: float
+    curvature: float
+    element: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["station"] = float(self.station)
+        out["km"] = float(self.km)
+        out["kmText"] = self.km_text
+        out["region"] = self.region
+        out["x"] = float(self.x)
+        out["y"] = float(self.y)
+        out["direction"] = float(self.direction)
+        out["curvature"] = float(self.curvature)
+        out["element"] = self.element
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AlignmentPlace:
+        return cls(
+            station=float(data["station"]),
+            km=float(data["km"]),
+            km_text=data["kmText"],
+            region=data["region"],
+            x=float(data["x"]),
+            y=float(data["y"]),
+            direction=float(data["direction"]),
+            curvature=float(data["curvature"]),
+            element=data["element"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AlignmentReport(_Model):
+    """An alignment as it builds now.
+    Attributes:
+        revision: Unit: version.
+        length: The horizontal length on the project's plane (grid), m; a parallel axis's own. Unit: m.
+        ground: How the ground length was had, or why it was not.
+        km_start: The km at the start and at the end. Unit: m.
+        km_end: Unit: m.
+        residual: Where the integral meets the PIs' geometry, the largest gap: place, m. Unit: m.
+        residual_direction: … and direction, rad. Unit: rad.
+        algorithm: `kentos.alignment/1`.
+        ground_length: The length on the ground (the grid length over each piece's scale and height factor), m; absent without a
+            system that has one scale at a point or without the project's mean ellipsoidal height. Unit: m.
+        offset_of: A parallel axis's source and offset.
+    """
+    id: str
+    name: str
+    revision: int
+    length: float
+    ground: str
+    km_start: float
+    km_end: float
+    elements: list[AlignmentElementRow]
+    curves: list[AlignmentCurveRow]
+    joins: list[AlignmentJoinRow]
+    residual: float
+    residual_direction: float
+    algorithm: str
+    ground_length: float | None | Unset = UNSET
+    offset_of: AlignmentOffset | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["revision"] = self.revision
+        out["length"] = float(self.length)
+        out["ground"] = self.ground
+        out["kmStart"] = float(self.km_start)
+        out["kmEnd"] = float(self.km_end)
+        out["elements"] = [e0.to_json() for e0 in self.elements]
+        out["curves"] = [e0.to_json() for e0 in self.curves]
+        out["joins"] = [e0.to_json() for e0 in self.joins]
+        out["residual"] = float(self.residual)
+        out["residualDirection"] = float(self.residual_direction)
+        out["algorithm"] = self.algorithm
+        if self.ground_length is not UNSET:
+            out["groundLength"] = None if self.ground_length is None else float(self.ground_length)
+        if self.offset_of is not UNSET:
+            out["offsetOf"] = None if self.offset_of is None else self.offset_of.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AlignmentReport:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            revision=data["revision"],
+            length=float(data["length"]),
+            ground=data["ground"],
+            km_start=float(data["kmStart"]),
+            km_end=float(data["kmEnd"]),
+            elements=[AlignmentElementRow.from_json(e0) for e0 in data["elements"]],
+            curves=[AlignmentCurveRow.from_json(e0) for e0 in data["curves"]],
+            joins=[AlignmentJoinRow.from_json(e0) for e0 in data["joins"]],
+            residual=float(data["residual"]),
+            residual_direction=float(data["residualDirection"]),
+            algorithm=data["algorithm"],
+            ground_length=UNSET if "groundLength" not in data else None if data["groundLength"] is None else float(data["groundLength"]),
+            offset_of=UNSET if "offsetOf" not in data else None if data["offsetOf"] is None else AlignmentOffset.from_json(data["offsetOf"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AlignmentStationing(_Model):
+    """An alignment's km: the km at its start and its equations in order.
+    Attributes:
+        start: Absent: 0. Unit: m.
+    """
+    equations: list[StationEquationDef] | Unset = UNSET
+    start: float | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.equations is not UNSET:
+            out["equations"] = [e0.to_json() for e0 in self.equations]
+        if self.start is not UNSET:
+            out["start"] = float(self.start)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AlignmentStationing:
+        return cls(
+            equations=[StationEquationDef.from_json(e0) for e0 in data["equations"]] if "equations" in data else UNSET,
+            start=float(data["start"]) if "start" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AlignmentsCreate(_Model):
+    """Input of `road.alignments.create` v1: a new alignment from its PIs, or a parallel axis (`offsetOf`) of one; its id
+    when not given is the first free of `g-1`, `g-2` …
+
+    Refusals, in this order: `not_a_road_project`, `invalid_alignment` (the definition by `road_problem`, path the
+    field's; or PIs that make no alignment: two at one place, the direction turning back, a curve on the start or the
+    end), `alignment_spirals_long` (a PI's clothoids turn more than its deflection), `alignment_curves_overlap` (two
+    curves' tangent lengths pass each other; the message names both PIs and by how much), `invalid_stationing` (an
+    equation's back km is not after the one before it on the alignment), `offset_cusp` (the parallel axis folds where
+    a curve's radius is smaller than the offset, or crosses itself), `invalid_revision`, `revision_conflict`.
+    """
+    name: str
+    expected_revision: str | None | Unset = UNSET
+    id: str | None | Unset = UNSET
+    offset_of: AlignmentOffset | None | Unset = UNSET
+    pis: list[AlignmentPi] | Unset = UNSET
+    stationing: AlignmentStationing | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.id is not UNSET:
+            out["id"] = self.id
+        if self.offset_of is not UNSET:
+            out["offsetOf"] = None if self.offset_of is None else self.offset_of.to_json()
+        if self.pis is not UNSET:
+            out["pis"] = [e0.to_json() for e0 in self.pis]
+        if self.stationing is not UNSET:
+            out["stationing"] = None if self.stationing is None else self.stationing.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AlignmentsCreate:
+        return cls(
+            name=data["name"],
+            expected_revision=data.get("expectedRevision", UNSET),
+            id=data.get("id", UNSET),
+            offset_of=UNSET if "offsetOf" not in data else None if data["offsetOf"] is None else AlignmentOffset.from_json(data["offsetOf"]),
+            pis=[AlignmentPi.from_json(e0) for e0 in data["pis"]] if "pis" in data else UNSET,
+            stationing=UNSET if "stationing" not in data else None if data["stationing"] is None else AlignmentStationing.from_json(data["stationing"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AlignmentsEdit(_Model):
+    """Input of `road.alignments.edit` v1: the alignment by its id or name.
+
+    Refusals, in this order: `not_a_road_project`, `unknown_alignment`, `invalid_alignment` (set with nothing to set, `pis`
+    on a parallel axis or `offset` on an alignment of its own, or the definition by `road_problem`), the geometry's as
+    `road.alignments.create` (`alignment_spirals_long`, `alignment_curves_overlap`, `invalid_stationing`), `offset_cusp`
+    (the edited alignment or a parallel axis following it folds), `alignment_in_use` (remove while a parallel axis
+    follows it), `invalid_revision`, `revision_conflict`.
+    Attributes:
+        offset: A parallel axis's offset, m, right positive. Unit: m.
+        stationing: The km; an empty one (no start, no equation) clears it.
+    """
+    alignment: str
+    operation: AlignmentsEditOperation | AlignmentsEditOperationName
+    expected_revision: str | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    offset: float | None | Unset = UNSET
+    pis: list[AlignmentPi] | None | Unset = UNSET
+    stationing: AlignmentStationing | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["alignment"] = self.alignment
+        out["operation"] = _enum_out(self.operation)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.offset is not UNSET:
+            out["offset"] = None if self.offset is None else float(self.offset)
+        if self.pis is not UNSET:
+            out["pis"] = None if self.pis is None else [e0.to_json() for e0 in self.pis]
+        if self.stationing is not UNSET:
+            out["stationing"] = None if self.stationing is None else self.stationing.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AlignmentsEdit:
+        return cls(
+            alignment=data["alignment"],
+            operation=_enum_in(AlignmentsEditOperation, data["operation"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            name=data.get("name", UNSET),
+            offset=UNSET if "offset" not in data else None if data["offset"] is None else float(data["offset"]),
+            pis=UNSET if "pis" not in data else None if data["pis"] is None else [AlignmentPi.from_json(e0) for e0 in data["pis"]],
+            stationing=UNSET if "stationing" not in data else None if data["stationing"] is None else AlignmentStationing.from_json(data["stationing"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AlignmentsQueried(_Model):
+    """Output of `road.alignments.query` v1.
+    Attributes:
+        alignments: Every alignment's report, or the one asked's.
+    """
+    alignments: list[AlignmentReport]
+    at: list[AlignmentPlace]
+    kms: list[KmPlaces]
+    ticks: list[AlignmentPlace]
+    points: list[PointStation]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["alignments"] = [e0.to_json() for e0 in self.alignments]
+        out["at"] = [e0.to_json() for e0 in self.at]
+        out["kms"] = [e0.to_json() for e0 in self.kms]
+        out["ticks"] = [e0.to_json() for e0 in self.ticks]
+        out["points"] = [e0.to_json() for e0 in self.points]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AlignmentsQueried:
+        return cls(
+            alignments=[AlignmentReport.from_json(e0) for e0 in data["alignments"]],
+            at=[AlignmentPlace.from_json(e0) for e0 in data["at"]],
+            kms=[KmPlaces.from_json(e0) for e0 in data["kms"]],
+            ticks=[AlignmentPlace.from_json(e0) for e0 in data["ticks"]],
+            points=[PointStation.from_json(e0) for e0 in data["points"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AlignmentsQuery(_Model):
+    """Input of `road.alignments.query` v1: every alignment's report, or one's (`alignment`: its id or name) with the
+    places at its stations (`stations`, its own horizontal length from the start), at kms (`kms`), every `every` metres
+    of km (`every`: the round kms, as a plan's km ticks), and points' stations and offsets (`points`).
+
+    Refusals: `not_a_road_project`, `unknown_alignment`, `invalid_places` (a value not finite, `every` not above 0, more
+    than 100 000 places; or a question without `alignment`), `station_outside` (a station off the alignment, a km on no
+    place), `station_ambiguous` (a km on more than one place without `region`), and the geometry's when the alignment
+    no longer builds.
+    Attributes:
+        every: Unit: m.
+        points: Unit: m.
+        stations: Unit: m.
+    """
+    alignment: str | None | Unset = UNSET
+    every: float | None | Unset = UNSET
+    kms: list[KmAsk] | Unset = UNSET
+    points: list[list[float]] | Unset = UNSET
+    stations: list[float] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.alignment is not UNSET:
+            out["alignment"] = self.alignment
+        if self.every is not UNSET:
+            out["every"] = None if self.every is None else float(self.every)
+        if self.kms is not UNSET:
+            out["kms"] = [e0.to_json() for e0 in self.kms]
+        if self.points is not UNSET:
+            out["points"] = [[float(e1) for e1 in e0] for e0 in self.points]
+        if self.stations is not UNSET:
+            out["stations"] = [float(e0) for e0 in self.stations]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AlignmentsQuery:
+        return cls(
+            alignment=data.get("alignment", UNSET),
+            every=UNSET if "every" not in data else None if data["every"] is None else float(data["every"]),
+            kms=[KmAsk.from_json(e0) for e0 in data["kms"]] if "kms" in data else UNSET,
+            points=[[float(e1) for e1 in e0] for e0 in data["points"]] if "points" in data else UNSET,
+            stations=[float(e0) for e0 in data["stations"]] if "stations" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AlignmentsWritten(_Model):
+    """Output of `road.alignments.create` and `.edit` v1.
+    Attributes:
+        mapping: What the edit did to the stations, by element.
+        dependents: The parallel axes that follow it.
+        alignment: The alignment written; absent when removed.
+    """
+    mapping: list[StationMapRow]
+    dependents: list[str]
+    alignments: list[AlignmentListed]
+    revision: str
+    alignment: AlignmentReport | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["mapping"] = [e0.to_json() for e0 in self.mapping]
+        out["dependents"] = list(self.dependents)
+        out["alignments"] = [e0.to_json() for e0 in self.alignments]
+        out["revision"] = self.revision
+        if self.alignment is not UNSET:
+            out["alignment"] = None if self.alignment is None else self.alignment.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AlignmentsWritten:
+        return cls(
+            mapping=[StationMapRow.from_json(e0) for e0 in data["mapping"]],
+            dependents=list(data["dependents"]),
+            alignments=[AlignmentListed.from_json(e0) for e0 in data["alignments"]],
+            revision=data["revision"],
+            alignment=UNSET if "alignment" not in data else None if data["alignment"] is None else AlignmentReport.from_json(data["alignment"]),
         )
 
 
@@ -33686,6 +34370,54 @@ class JunctionLayer(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class KmAsk(_Model):
+    """A km asked for: its value and, where the km falls on more than one place, its region (0 before the first equation).
+    Attributes:
+        km: Unit: m.
+        region: Unit: index.
+    """
+    km: float
+    region: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["km"] = float(self.km)
+        if self.region is not UNSET:
+            out["region"] = self.region
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> KmAsk:
+        return cls(
+            km=float(data["km"]),
+            region=data.get("region", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class KmPlaces(_Model):
+    """The places of a km.
+    Attributes:
+        km: Unit: m.
+    """
+    km: float
+    places: list[AlignmentPlace]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["km"] = float(self.km)
+        out["places"] = [e0.to_json() for e0 in self.places]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> KmPlaces:
+        return cls(
+            km=float(data["km"]),
+            places=[AlignmentPlace.from_json(e0) for e0 in data["places"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LabelAbbreviate(_Model):
     """Shortening a label's words (kısaltma).
     Attributes:
@@ -49573,6 +50305,38 @@ class PointPlan(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class PointStation(_Model):
+    """A point's station and offset: the nearest foot, every foot by distance, or the end it lies beyond.
+    Attributes:
+        point: Unit: length.
+        beyond: `start` or `end` when no foot falls on the alignment: the point lies beyond that end.
+    """
+    point: list[float]
+    feet: list[AlignmentFoot]
+    beyond: str | None | Unset = UNSET
+    nearest: AlignmentFoot | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["point"] = [float(e0) for e0 in self.point]
+        out["feet"] = [e0.to_json() for e0 in self.feet]
+        if self.beyond is not UNSET:
+            out["beyond"] = self.beyond
+        if self.nearest is not UNSET:
+            out["nearest"] = None if self.nearest is None else self.nearest.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PointStation:
+        return cls(
+            point=[float(e0) for e0 in data["point"]],
+            feet=[AlignmentFoot.from_json(e0) for e0 in data["feet"]],
+            beyond=data.get("beyond", UNSET),
+            nearest=UNSET if "nearest" not in data else None if data["nearest"] is None else AlignmentFoot.from_json(data["nearest"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PointStyle(_Model):
     """
     Attributes:
@@ -57287,12 +58051,16 @@ class RingGeometry(_Model):
 class RoadSettings(_Model):
     """A road project's settings; absent while it has none.
     Attributes:
+        alignments: The horizontal alignments (docs/adr/0901), in the order the project tree shows them.
         surfaces: The terrain surfaces, in the order the project tree shows them.
     """
+    alignments: list[AlignmentDef] | Unset = UNSET
     surfaces: list[TerrainSurfaceDef] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
+        if self.alignments is not UNSET:
+            out["alignments"] = [e0.to_json() for e0 in self.alignments]
         if self.surfaces is not UNSET:
             out["surfaces"] = [e0.to_json() for e0 in self.surfaces]
         return out
@@ -57300,6 +58068,7 @@ class RoadSettings(_Model):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> RoadSettings:
         return cls(
+            alignments=[AlignmentDef.from_json(e0) for e0 in data["alignments"]] if "alignments" in data else UNSET,
             surfaces=[TerrainSurfaceDef.from_json(e0) for e0 in data["surfaces"]] if "surfaces" in data else UNSET,
         )
 
@@ -64695,6 +65464,70 @@ class StandardsReport(_Model):
             issues=[StandardIssue.from_json(e0) for e0 in data["issues"]],
             fixable=data["fixable"],
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StationEquationDef(_Model):
+    """A station equation (docs/adr/0901 §6): the km where it is (read before it), the km after it, and whether the km
+    grows after it.
+    Attributes:
+        back: Unit: m.
+        ahead: Unit: m.
+        increasing: Absent: true.
+    """
+    back: float
+    ahead: float
+    increasing: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["back"] = float(self.back)
+        out["ahead"] = float(self.ahead)
+        if self.increasing is not UNSET:
+            out["increasing"] = self.increasing
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StationEquationDef:
+        return cls(
+            back=float(data["back"]),
+            ahead=float(data["ahead"]),
+            increasing=data.get("increasing", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StationMapRow(_Model):
+    """A row of what an edit did to the stations (docs/adr/0901 §9).
+    Attributes:
+        change: `kept`, `moved`, `changed`, `added`, `removed`, or `reversed` (the alignment turned round: `before` is where the
+            stretch was, read from the old start).
+        after: Unit: m.
+        before: Unit: m.
+    """
+    element: str
+    change: str
+    after: list[float] | None | Unset = UNSET
+    before: list[float] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["element"] = self.element
+        out["change"] = self.change
+        if self.after is not UNSET:
+            out["after"] = None if self.after is None else [float(e0) for e0 in self.after]
+        if self.before is not UNSET:
+            out["before"] = None if self.before is None else [float(e0) for e0 in self.before]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StationMapRow:
+        return cls(
+            element=data["element"],
+            change=data["change"],
+            after=UNSET if "after" not in data else None if data["after"] is None else [float(e0) for e0 in data["after"]],
+            before=UNSET if "before" not in data else None if data["before"] is None else [float(e0) for e0 in data["before"]],
         )
 
 
@@ -90993,6 +91826,24 @@ __all__ = [
     "AlignPaperOp",
     "AlignTransform",
     "AlignedDimensionMeasure",
+    "AlignmentCurveRow",
+    "AlignmentDef",
+    "AlignmentElementRow",
+    "AlignmentFoot",
+    "AlignmentJoinRow",
+    "AlignmentListed",
+    "AlignmentOffset",
+    "AlignmentPi",
+    "AlignmentPlace",
+    "AlignmentReport",
+    "AlignmentStationing",
+    "AlignmentsCreate",
+    "AlignmentsEdit",
+    "AlignmentsEditOperation",
+    "AlignmentsEditOperationName",
+    "AlignmentsQueried",
+    "AlignmentsQuery",
+    "AlignmentsWritten",
     "AllCornerPick",
     "AllPaperMapLayers",
     "AllPaperMapLevelChoice",
@@ -92105,6 +92956,8 @@ __all__ = [
     "JunctionRoleName",
     "JunctionsRoadWork",
     "KeySourcesEditOp",
+    "KmAsk",
+    "KmPlaces",
     "KnownPoint",
     "LabelAbbreviate",
     "LabelAlign",
@@ -92900,6 +93753,7 @@ __all__ = [
     "PointShapeName",
     "PointSizeUnit",
     "PointSizeUnitName",
+    "PointStation",
     "PointStyle",
     "PointSymbol",
     "PointSymbolName",
@@ -93578,6 +94432,8 @@ __all__ = [
     "StandardsCheck",
     "StandardsReport",
     "StartSubPlace",
+    "StationEquationDef",
+    "StationMapRow",
     "StationText",
     "StationTextName",
     "StationsAnnotationWork",

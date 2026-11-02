@@ -113,6 +113,9 @@ fn every_case_is_what_the_reference_says() {
                 (r.arc, &w["arc"]),
                 (r.p_in, &w["pIn"]),
                 (r.p_out, &w["pOut"]),
+                (r.centre[0], &w["centre"][0]),
+                (r.centre[1], &w["centre"][1]),
+                (r.radius, &w["radius"]),
             ] {
                 near(a, n(b), PLACE, &what);
             }

@@ -1,0 +1,434 @@
+//! KentOS Yol's horizontal alignment commands (plan/road.md Y3, docs/adr/0901): `road.alignments.create` makes an
+//! alignment from PIs (tangents, curves and clothoids) or a parallel axis of one; `road.alignments.edit` changes its
+//! PIs, name, km or offset, reverses it, or removes it, and says what the edit did to its stations; and
+//! `road.alignments.query` reads its elements and curves, the place at a station or a km, a point's station and
+//! offset. The geometry is `kentos-road`'s (`kentos.alignment/1`); a definition is a project setting kept in the undo
+//! history: every write is one undo step. Only a road project (`cadWork: road`) has them. The desktop's handlers are
+//! `crates/native/application/src/road_alignments*.rs`; they and the Python SDK pass the shared cases in
+//! `fixtures/commands/v1/road.alignments.*.json`.
+
+use serde::{Deserialize, Serialize};
+#[cfg(feature = "ts")]
+use ts_rs::TS;
+
+#[cfg(feature = "schema")]
+use crate::cad::REVISION_TEXT;
+use crate::{AlignmentOffset, AlignmentPi, AlignmentStationing};
+
+pub const ROAD_ALIGNMENTS_CREATE: &str = "road.alignments.create";
+pub const ROAD_ALIGNMENTS_CREATE_VERSION: u32 = 1;
+pub const ROAD_ALIGNMENTS_EDIT: &str = "road.alignments.edit";
+pub const ROAD_ALIGNMENTS_EDIT_VERSION: u32 = 1;
+pub const ROAD_ALIGNMENTS_QUERY: &str = "road.alignments.query";
+pub const ROAD_ALIGNMENTS_QUERY_VERSION: u32 = 1;
+
+/// The most places one query asks (its stations, kms, points and ticks together).
+pub const MAX_ALIGNMENT_PLACES: usize = 100_000;
+
+/// Input of `road.alignments.create` v1: a new alignment from its PIs, or a parallel axis (`offsetOf`) of one; its id
+/// when not given is the first free of `g-1`, `g-2` …
+///
+/// Refusals, in this order: `not_a_road_project`, `invalid_alignment` (the definition by `road_problem`, path the
+/// field's; or PIs that make no alignment: two at one place, the direction turning back, a curve on the start or the
+/// end), `alignment_spirals_long` (a PI's clothoids turn more than its deflection), `alignment_curves_overlap` (two
+/// curves' tangent lengths pass each other; the message names both PIs and by how much), `invalid_stationing` (an
+/// equation's back km is not after the one before it on the alignment), `offset_cusp` (the parallel axis folds where
+/// a curve's radius is smaller than the offset, or crosses itself), `invalid_revision`, `revision_conflict`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AlignmentsCreate {
+    pub name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub id: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<AlignmentPi>>", optional))]
+    pub pis: Vec<AlignmentPi>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub offset_of: Option<AlignmentOffset>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub stationing: Option<AlignmentStationing>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
+/// What `road.alignments.edit` does.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum AlignmentsEditOperation {
+    /// The given fields (`name`, `pis`, `stationing`, `offset`) replace the alignment's.
+    Set,
+    /// The alignment runs the other way: its PIs in reverse order, each PI's clothoids swapped; its start km is kept and
+    /// its equations go (the warning `equations_dropped`).
+    Reverse,
+    /// The alignment goes; refused while a parallel axis follows it (`alignment_in_use`).
+    Remove,
+}
+
+/// Input of `road.alignments.edit` v1: the alignment by its id or name.
+///
+/// Refusals, in this order: `not_a_road_project`, `unknown_alignment`, `invalid_alignment` (set with nothing to set, `pis`
+/// on a parallel axis or `offset` on an alignment of its own, or the definition by `road_problem`), the geometry's as
+/// `road.alignments.create` (`alignment_spirals_long`, `alignment_curves_overlap`, `invalid_stationing`), `offset_cusp`
+/// (the edited alignment or a parallel axis following it folds), `alignment_in_use` (remove while a parallel axis
+/// follows it), `invalid_revision`, `revision_conflict`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AlignmentsEdit {
+    pub alignment: String,
+    pub operation: AlignmentsEditOperation,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub name: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub pis: Option<Vec<AlignmentPi>>,
+    /// The km; an empty one (no start, no equation) clears it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub stationing: Option<AlignmentStationing>,
+    /// A parallel axis's offset, m, right positive.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub offset: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
+/// A km asked for: its value and, where the km falls on more than one place, its region (0 before the first equation).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct KmAsk {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub km: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub region: Option<u32>,
+}
+
+/// Input of `road.alignments.query` v1: every alignment's report, or one's (`alignment`: its id or name) with the
+/// places at its stations (`stations`, its own horizontal length from the start), at kms (`kms`), every `every` metres
+/// of km (`every`: the round kms, as a plan's km ticks), and points' stations and offsets (`points`).
+///
+/// Refusals: `not_a_road_project`, `unknown_alignment`, `invalid_places` (a value not finite, `every` not above 0, more
+/// than 100 000 places; or a question without `alignment`), `station_outside` (a station off the alignment, a km on no
+/// place), `station_ambiguous` (a km on more than one place without `region`), and the geometry's when the alignment
+/// no longer builds.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AlignmentsQuery {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub alignment: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<f64>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub stations: Vec<f64>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<KmAsk>>", optional))]
+    pub kms: Vec<KmAsk>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub every: Option<f64>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<[f64; 2]>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub points: Vec<[f64; 2]>,
+}
+
+/// An element of an alignment.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AlignmentElementRow {
+    /// From its PI: `p3/aliyman`, `p3/giris`, `p3/kurp`, `p3/cikis`.
+    pub id: String,
+    /// `tangent`, `arc` or `spiral`.
+    pub kind: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub station: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub length: f64,
+    /// The km at its start.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub km: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub start: [f64; 2],
+    /// Its start direction, radians from east counter-clockwise.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
+    pub direction: f64,
+    /// Curvatures at its start and end, 1/m, left turns positive.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1/m")))]
+    pub k0: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1/m")))]
+    pub k1: f64,
+    /// A curve's radius.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub radius: Option<f64>,
+    /// A clothoid's parameter A.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub a: Option<f64>,
+}
+
+/// A curve on a PI.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AlignmentCurveRow {
+    pub pi: String,
+    /// The deflection, left positive.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
+    pub delta: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub radius: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub spiral_in: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub spiral_out: f64,
+    /// Tangent lengths, PI to TS and PI to ST.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub t_in: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub t_out: f64,
+    /// The circular part's length.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub arc: f64,
+    /// The stations of TS, SC, CS, ST.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub stations: [f64; 4],
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub centre: [f64; 2],
+}
+
+/// Two curves with no tangent between them.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AlignmentJoinRow {
+    pub between: [String; 2],
+    /// A reverse curve (S) when true, a compound curve when false.
+    pub reverse: bool,
+}
+
+/// An alignment as it builds now.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AlignmentReport {
+    pub id: String,
+    pub name: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub revision: u32,
+    /// A parallel axis's source and offset.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub offset_of: Option<AlignmentOffset>,
+    /// The horizontal length on the project's plane (grid), m; a parallel axis's own.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub length: f64,
+    /// The length on the ground (the grid length over each piece's scale and height factor), m; absent without a
+    /// system that has one scale at a point or without the project's mean ellipsoidal height.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub ground_length: Option<f64>,
+    /// How the ground length was had, or why it was not.
+    pub ground: String,
+    /// The km at the start and at the end.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub km_start: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub km_end: f64,
+    pub elements: Vec<AlignmentElementRow>,
+    pub curves: Vec<AlignmentCurveRow>,
+    pub joins: Vec<AlignmentJoinRow>,
+    /// Where the integral meets the PIs' geometry, the largest gap: place, m.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub residual: f64,
+    /// … and direction, rad.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
+    pub residual_direction: f64,
+    /// `kentos.alignment/1`.
+    pub algorithm: String,
+}
+
+/// A place on an alignment.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AlignmentPlace {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub station: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub km: f64,
+    /// The km written `2+345.678`.
+    pub km_text: String,
+    /// The km region (0 before the first equation).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub region: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub x: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub y: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
+    pub direction: f64,
+    /// 1/m, left turns positive.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1/m")))]
+    pub curvature: f64,
+    pub element: String,
+}
+
+/// A point's station and offset: the nearest foot, every foot by distance, or the end it lies beyond.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct PointStation {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub point: [f64; 2],
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub nearest: Option<AlignmentFoot>,
+    pub feet: Vec<AlignmentFoot>,
+    /// `start` or `end` when no foot falls on the alignment: the point lies beyond that end.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub beyond: Option<String>,
+}
+
+/// A foot of a point.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AlignmentFoot {
+    pub at: AlignmentPlace,
+    /// Right positive.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub offset: f64,
+    /// At a kink between two elements.
+    pub corner: bool,
+}
+
+/// The places of a km.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct KmPlaces {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub km: f64,
+    pub places: Vec<AlignmentPlace>,
+}
+
+/// A row of what an edit did to the stations (docs/adr/0901 §9).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct StationMapRow {
+    pub element: String,
+    /// `kept`, `moved`, `changed`, `added`, `removed`, or `reversed` (the alignment turned round: `before` is where the
+    /// stretch was, read from the old start).
+    pub change: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub before: Option<[f64; 2]>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub after: Option<[f64; 2]>,
+}
+
+/// An alignment in the project's list.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AlignmentListed {
+    pub id: String,
+    pub name: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub revision: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub offset_of: Option<String>,
+}
+
+/// Output of `road.alignments.create` and `.edit` v1.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AlignmentsWritten {
+    /// The alignment written; absent when removed.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub alignment: Option<AlignmentReport>,
+    /// What the edit did to the stations, by element.
+    pub mapping: Vec<StationMapRow>,
+    /// The parallel axes that follow it.
+    pub dependents: Vec<String>,
+    pub alignments: Vec<AlignmentListed>,
+    pub revision: String,
+}
+
+/// Output of `road.alignments.query` v1.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AlignmentsQueried {
+    /// Every alignment's report, or the one asked's.
+    pub alignments: Vec<AlignmentReport>,
+    pub at: Vec<AlignmentPlace>,
+    pub kms: Vec<KmPlaces>,
+    pub ticks: Vec<AlignmentPlace>,
+    pub points: Vec<PointStation>,
+}

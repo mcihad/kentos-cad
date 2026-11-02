@@ -608,6 +608,26 @@ codes! {
     /// A warning: what a LandXML surface says and is not taken (a face naming a missing point, a point id twice, a
     /// second outer boundary).
     LANDXML_LEFT = "landxml_left", Warning, false, "LandXML yüzeyinin bir kısmı alınmadı; ileti nedenini söyler.";
+    /// An alignment's definition, or PIs that make no alignment (docs/adr/0901 §3).
+    INVALID_ALIGNMENT = "invalid_alignment", Failed, false, "Aks tanımı ya da PI'ları geçerli değil; ileti nedenini ve yerini söyler.";
+    /// No alignment of the id or name.
+    UNKNOWN_ALIGNMENT = "unknown_alignment", Failed, false, "Bu kimlikte ya da adda aks yok.";
+    /// A PI's clothoids turn more than its deflection.
+    ALIGNMENT_SPIRALS_LONG = "alignment_spirals_long", Failed, false, "Klotoidlerin dönüşü PI'nın sapmasından büyük; klotoidleri kısaltın ya da yarıçapı büyütün.";
+    /// Two curves' tangent lengths pass each other.
+    ALIGNMENT_CURVES_OVERLAP = "alignment_curves_overlap", Failed, false, "İki kurp birbirine biniyor; yarıçapı ya da klotoidleri küçültün, PI'ları uzaklaştırın.";
+    /// A station equation's back km is not after the one before it on the alignment.
+    INVALID_STATIONING = "invalid_stationing", Failed, false, "Km eşitliği aksın üstünde, bir öncekinden sonra olmalı.";
+    /// A parallel axis folds where a curve's radius is smaller than the offset, or crosses itself.
+    OFFSET_CUSP = "offset_cusp", Failed, false, "Paralel aks bu ötelemede kıvrılıyor; ötelemeyi küçültün ya da kurpların yarıçapını büyütün.";
+    /// An alignment a parallel axis follows.
+    ALIGNMENT_IN_USE = "alignment_in_use", Failed, false, "Bu aksı izleyen paralel aks var; önce onu silin.";
+    /// A station off the alignment, a km on no place.
+    STATION_OUTSIDE = "station_outside", Failed, false, "Bu km aksın üstünde değil.";
+    /// A km on more than one place, asked without its region.
+    STATION_AMBIGUOUS = "station_ambiguous", Failed, false, "Bu km aksın birden çok yerine düşüyor; km eşitliğinin bölgesini verin.";
+    /// A reversed alignment's equations go.
+    EQUATIONS_DROPPED = "equations_dropped", Warning, false, "Ters çevrilen aksın km eşitlikleri kaldırıldı.";
     /// A warning: a surface names a source the drawing cannot give (missing, without heights, an arc edge …).
     TERRAIN_SOURCE_LEFT = "terrain_source_left", Warning, false, "Yüzeyin bir kaynağı kullanılamadı; yüzey onsuz kuruldu.";
     /// A warning: a network or a locator names a layer the drawing does not have.

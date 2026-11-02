@@ -6745,6 +6745,117 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        CommandDescriptor {
+            id: crate::ROAD_ALIGNMENTS_CREATE.into(),
+            version: crate::ROAD_ALIGNMENTS_CREATE_VERSION,
+            title: "Aks oluştur".into(),
+            summary: "Yol projesinde (cadWork road) PI'lardan bir yatay güzergâh (aks) kurar ve tanımını projenin yol ayarlarına yazar: aliyman, kurp ve klotoid tek analitik biçimde (kentos.alignment/1). \
+                      pis başlangıç, ara PI'lar ve bitiştir; her ara PI'da radius (yoksa kurp yok, kırık nokta), spiralIn ve spiralOut (giriş ve çıkış klotoidinin boyu, m; A² = R·L). Eşit olmayan klotoidlerde kurpun merkezi iki teğetin içe R+p kadar ötelenmiş doğrularının kesişimidir. \
+                      offsetOf {alignment, offset} bir aksın paralelini kurar (sağa artı, sola eksi, m): kendi geometrisi saklanmaz, kaynağını izler, km'si kaynağınındır; bir kurpun yarıçapı ötelemeden küçükse ya da kendini keserse offset_cusp. \
+                      stationing başlangıç km'si (start) ve km eşitlikleri (back: eşitliğin olduğu yerin önceki km'si, ahead: sonraki km, increasing: km sonra artar mı). Elemanların kimlikleri PI'larınkinden türer (p3/aliyman, p3/giris, p3/kurp, p3/cikis). \
+                      Cevap aksın raporudur: boy (projenin düzleminde), zemin boyu (ölçek ve yükseklik çarpanıyla, sistem ve ortalama elipsoit yüksekliği varsa), km'ler, elemanlar, kurplar (sapma, teğet boyları, TS–SC–CS–ST km'leri), ters ve bileşik kurplar ve integralin PI geometrisine artığı. \
+                      Tek geri alma adımı “Aks oluştur”. id verilmezse g-1, g-2 … ilk boş olanıdır. Retler: not_a_road_project, invalid_alignment, alignment_spirals_long, alignment_curves_overlap, invalid_stationing, offset_cusp, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["aksolustur".into(), "guzergah".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::AlignmentsCreate>(),
+            output: schema::<crate::AlignmentsWritten>(),
+            plan: Some(schema::<crate::AlignmentsWritten>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Üç PI, ortadakinde 400 m kurp ve 80 m klotoidler, km 2+000'den".into(),
+                    input: json!({
+                        "name": "Ana aks",
+                        "pis": [
+                            { "id": "a", "x": 1000.0, "y": 2000.0 },
+                            { "id": "p1", "x": 1600.0, "y": 2000.0, "radius": 400.0, "spiralIn": 80.0, "spiralOut": 80.0 },
+                            { "id": "b", "x": 2100.0, "y": 2500.0 }
+                        ],
+                        "stationing": { "start": 2000.0 }
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Ana aksın 7,5 m sağında paralel aks".into(),
+                    input: json!({ "name": "Sağ kenar", "offsetOf": { "alignment": "g-1", "offset": 7.5 } }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_ALIGNMENTS_EDIT.into(),
+            version: crate::ROAD_ALIGNMENTS_EDIT_VERSION,
+            title: "Aksı düzenle".into(),
+            summary: "Yol projesinin bir aksını (alignment: kimliği ya da adı) düzenler. set: verilen alanlar (name, pis, stationing, paralel aksta offset) aksınkinin yerini alır; boş stationing km'yi sıfırlar. reverse: aks ters çevrilir (PI'lar ters sırada, her PI'nın giriş ve çıkış klotoidi yer değiştirir; başlangıç km'si kalır, eşitlikler gider: equations_dropped). remove: aks kalkar, onu izleyen paralel aks varken alignment_in_use. \
+                      Cevabın mapping'i düzenlemenin km'lere ne yaptığıdır: her eleman kimliğiyle kept (aynı yerde aynı), moved (aynı ama km'si kaydı), changed (geometrisi değişti), added, removed ya da reversed; önceki ve sonraki km aralığıyla. dependents aksı izleyen paralel akslardır; düzenleme onlardan birini kıvırırsa offset_cusp ile reddedilir. Aksın revizyonu her değişiklikte bir artar. \
+                      Tek geri alma adımı “Aksı düzenle”. Retler: not_a_road_project, unknown_alignment, invalid_alignment, alignment_spirals_long, alignment_curves_overlap, invalid_stationing, offset_cusp, alignment_in_use, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::AlignmentsEdit>(),
+            output: schema::<crate::AlignmentsWritten>(),
+            plan: Some(schema::<crate::AlignmentsWritten>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Km eşitliği ekle: 2+200 geri, 2+500 ileri".into(),
+                    input: json!({ "alignment": "Ana aks", "operation": "set",
+                        "stationing": { "start": 2000.0, "equations": [{ "back": 2200.0, "ahead": 2500.0 }] } }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Aksı ters çevir".into(),
+                    input: json!({ "alignment": "g-1", "operation": "reverse" }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_ALIGNMENTS_QUERY.into(),
+            version: crate::ROAD_ALIGNMENTS_QUERY_VERSION,
+            title: "Aksı sorgula".into(),
+            summary: "Yol projesinin akslarını bugün kuruldukları gibi verir; hiçbir şey yazmaz. alignment verilmezse her aksın raporu; verilince yalnız onunki ve soruları: stations aksın kendi km'lerindeki (başından yatay uzunluk) yerler; kms km yazısındaki yerler (bir km birden çok yere düşerse region verilmezse station_ambiguous); every her every metrelik yuvarlak km'nin yeri (planın km işaretleri); points her noktanın km ve ötelemesi (sağa artı): en yakın ayak, bütün ayaklar uzaklık sırasıyla, eşit uzaklıkta küçük km önce; ayak yoksa beyond: start ya da end. \
+                      Her yer: km, km yazısı (2+345.678), bölge, x, y, doğrultu (rad, doğudan saat yönü tersine), eğrilik (1/m, sola artı) ve eleman. Paralel aksın yerleri kaynağının km'lerindedir. \
+                      Retler: not_a_road_project, unknown_alignment, invalid_places, station_outside, station_ambiguous ve aks artık kurulamıyorsa geometrinin retleri."
+                .into(),
+            aliases: vec!["kmsor".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::AlignmentsQuery>(),
+            output: schema::<crate::AlignmentsQueried>(),
+            plan: Some(schema::<crate::AlignmentsQueried>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Bir noktanın km ve ötelemesi".into(),
+                    input: json!({ "alignment": "Ana aks", "points": [[1520.0, 2030.0]] }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Her 100 m'nin km işareti".into(),
+                    input: json!({ "alignment": "Ana aks", "every": 100.0 }),
+                    output: None,
+                },
+            ],
+        },
         // Topolojiyi denetle (docs/adr/0589), held together by fixtures/commands/v1/cad.topology.check.json.
         CommandDescriptor {
             id: crate::CAD_TOPOLOGY_CHECK.into(),
@@ -12278,6 +12389,15 @@ mod tests {
                     crate::FILE_IMPORT_LANDXML => {
                         serde_json::from_value::<crate::ImportLandxml>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_ALIGNMENTS_CREATE => {
+                        serde_json::from_value::<crate::AlignmentsCreate>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_ALIGNMENTS_EDIT => {
+                        serde_json::from_value::<crate::AlignmentsEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_ALIGNMENTS_QUERY => {
+                        serde_json::from_value::<crate::AlignmentsQuery>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_SUBNETWORKS_FIND => {
                         serde_json::from_value::<crate::SubnetworksFind>(e.input.clone())
                             .map(|_| ())
@@ -12931,6 +13051,14 @@ mod tests {
                         }
                         crate::FILE_IMPORT_LANDXML => {
                             serde_json::from_value::<crate::LandxmlImported>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_ALIGNMENTS_CREATE | crate::ROAD_ALIGNMENTS_EDIT => {
+                            serde_json::from_value::<crate::AlignmentsWritten>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_ALIGNMENTS_QUERY => {
+                            serde_json::from_value::<crate::AlignmentsQueried>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_ADDRESSES_DEFINE => {
