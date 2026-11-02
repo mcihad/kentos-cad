@@ -64,6 +64,17 @@ yüzey, kurallar, sürüm. Takımın kullandığı tip kesit (`road_template_in_
 (`scripts/fixtures/road_section_command_cases.py`, KentOS kodu olmadan: arazi her üçgen kenarında 40 basamakta, platform
 ve alanlar kesirlerle); `.kcad` şema 159'un `templates` ve `sections`'ı, iki bozuk örnek.
 
+Y5.4 (yapıldı): `road.sections.draw` takımın enkesitlerini çizime görünüşler olarak yazar (tek adım “Enkesit çiz”):
+Civil 3D'nin çoklu enkesit görünüşü gibi satırlarda `columns` tane, soldan sağa sonra aşağı
+([Create Section Views](https://help.autodesk.com/cloudhelp/2024/ENG/Civil3D-UserGuide/files/GUID-1C864DFC-FC08-48C3-A057-010807B2C794.htm),
+[Section View Styles](https://help.autodesk.com/cloudhelp/2024/ENG/Civil3D-UserGuide/files/GUID-4C9F42B1-F1D5-4B3F-8692-8763C2B97781.htm));
+her görünüş şerit genişliğinde ve takımın en uzun kot aralığı boyunda, kıyas kotu en alçak kotun bir metre altı; çerçeve,
+kot ve öteleme ızgaraları, arazi, platform ve şevler, eksen, km, eksen kotu, yarma ve dolgu alanı. Km'si artık çıkmayan
+takım raporda km'siz görünür, öbürleri yine yazılır. 31 ortak durum. Masaüstünde Enkesit penceresi (`section.editor`,
+`section.new`, `section.template`; Güzergâh sekmesinde Enkesit paneli): tip kesitin yanları örnek bir eğik arazide yazıldıkça
+görünür, takımın kesitleri kaydedilmeden kurulur ve tek tek gezilir, açık yanlar ve eski takım söylenir; Kaydet önce tip
+kesitleri, sonra takımları yazar; Çizime yaz `road.sections.draw` ile.
+
 ## Sonra
 
 Dever ile enine eğimin değişmesi (Y6), koridor ve yüzeyleri (Y7), sıyırma ve kübaj (Y8), duvar ve bordür bileşenleri,

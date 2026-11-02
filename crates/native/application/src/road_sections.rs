@@ -277,6 +277,33 @@ pub(crate) fn sections(
     built: &Built,
     stations: &[f64],
 ) -> (Vec<SectionRow>, Vec<CommandWarning>) {
+    let template = def.template.as_ref().and_then(|t| doc.road_templates().iter().find(|q| q.id == *t));
+    sections_with(doc, def, built, stations, template)
+}
+
+/// A set (perhaps not written) and its sections now with `template` (perhaps not written either), for the desktop's
+/// Enkesit window: its stations and rows, or why they do not come out.
+pub fn preview(
+    doc: &Document,
+    def: &SectionSetDef,
+    template: Option<&TemplateDef>,
+) -> Result<(Vec<SectionRow>, Vec<CommandWarning>), String> {
+    let words = |stop: Stop| match stop {
+        Stop::Failed(e) | Stop::Conflict(e) => e.message,
+        Stop::Cancelled => String::new(),
+    };
+    let built = alignment_of(doc, def).map_err(words)?;
+    let stations = stations_of(doc, def, &built).map_err(words)?;
+    Ok(sections_with(doc, def, &built, &stations, template))
+}
+
+fn sections_with(
+    doc: &Document,
+    def: &SectionSetDef,
+    built: &Built,
+    stations: &[f64],
+    template: Option<&TemplateDef>,
+) -> (Vec<SectionRow>, Vec<CommandWarning>) {
     let mut warnings = Vec::new();
     let surface = match surface_of(doc, def) {
         Some(Ok(s)) => Some(s),
@@ -291,7 +318,7 @@ pub(crate) fn sections(
         .as_ref()
         .and_then(|p| doc.road_profiles().iter().find(|q| q.id == *p))
         .and_then(|p| kentos_road::profile::vertical::build(&crate::road_profiles::pvis_of(p)).ok());
-    let template = def.template.as_ref().and_then(|t| doc.road_templates().iter().find(|q| q.id == *t)).map(core_template);
+    let template = template.map(core_template);
     let mut open: Vec<String> = Vec::new();
     let mut rows = Vec::new();
     for &s in stations {

@@ -9,7 +9,7 @@ export type BlockCard = {
 /**
  * Stable library identity, independent of the drawing's local edit counter.
  */
-publication?: BlockPublication,
+publication?: BlockPublication, 
 /**
  * A path of categories by `/` (`Mimari/Kapılar`); absent: none.
  */

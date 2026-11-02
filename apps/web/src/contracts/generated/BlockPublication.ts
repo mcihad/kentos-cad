@@ -5,7 +5,7 @@ import type { BlockId } from "./BlockId";
  * The publisher-assigned identity of a 2D component type and its release.
  * This is metadata, not a signature or permission to update a drawing.
  */
-export type BlockPublication = { familyId: BlockId,
+export type BlockPublication = { familyId: BlockId, 
 /**
  * Stable across release and display-name changes, independent of the drawing's block id.
  */

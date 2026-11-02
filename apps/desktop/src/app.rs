@@ -270,6 +270,8 @@ pub enum Dialog {
     Alignments,
     /// Boykesit (profile_window.rs, plan/road.md Y4); the window is `App::profile_window`.
     Profiles,
+    /// Enkesit (section_window.rs, plan/road.md Y5); the window is `App::section_window`.
+    Sections,
     /// Bina programı (program_window.rs, docs/adr/0773); the window is `App::program_window`.
     Program,
     /// Mahalleri birleştir's decision, asked before writing (quantities.rs, docs/adr/0773 §4).
@@ -619,6 +621,8 @@ pub enum Message {
     Alignments(crate::alignment_window::Event),
     /// An event of Boykesit (profile_window.rs, plan/road.md Y4).
     Profiles(crate::profile_window::Event),
+    /// An event of Enkesit (section_window.rs, plan/road.md Y5).
+    Sections(crate::section_window::Event),
     /// An event of Bina programı (program_window.rs, docs/adr/0773).
     Program(crate::program_window::Event),
     TableStyles(crate::forms::table_styles::Event),
@@ -1177,6 +1181,8 @@ pub struct App {
     pub(crate) alignment_window: Option<crate::alignment_window::Window>,
     /// Boykesit (profile_window.rs, plan/road.md Y4).
     pub(crate) profile_window: Option<crate::profile_window::Window>,
+    /// Enkesit (section_window.rs, plan/road.md Y5).
+    pub(crate) section_window: Option<crate::section_window::Window>,
     /// Bina programı (program_window.rs, docs/adr/0773).
     pub(crate) program_window: Option<crate::program_window::Window>,
     /// Mahalleri birleştir asked: its input and its decision's words (docs/adr/0773 §4).
@@ -1597,6 +1603,7 @@ impl App {
             terrain_window: None,
             alignment_window: None,
             profile_window: None,
+            section_window: None,
             program_window: None,
             space_merging: None,
             table_styles: None,
@@ -2310,6 +2317,7 @@ impl App {
             Message::Terrains(event) => return self.terrain_event(event),
             Message::Alignments(event) => return self.alignment_event(event),
             Message::Profiles(event) => return self.profile_event(event),
+            Message::Sections(event) => return self.section_event(event),
             Message::Program(event) => return self.program_event(event),
             Message::TableStyles(event) => return self.table_styles_event(event),
             Message::Subtypes(event) => return self.subtypes_event(event),
@@ -3331,6 +3339,10 @@ impl App {
             // Boykesit and Boykesit oluştur (profile_window.rs, plan/road.md Y4).
             "profile.editor" => self.open_profiles(),
             "profile.new" => self.new_profile(),
+            // Enkesit, Kesit takımı oluştur and Tip kesit oluştur (section_window.rs, plan/road.md Y5).
+            "section.editor" => self.open_sections(),
+            "section.new" => self.new_section_set(),
+            "section.template" => self.new_template(),
             // Bina programı (program_window.rs, docs/adr/0773).
             "arch.program" => self.open_program(),
             // Çizgi tipleri (docs/adr/0313 §7).

@@ -2016,6 +2016,7 @@ impl App {
             Asking::Terrains => self.terrain_view(),
             Asking::Alignments => self.alignment_view(),
             Asking::Profiles => self.road_profile_view(),
+            Asking::Sections => self.road_section_view(),
             Asking::Program => self.program_view(),
             Asking::SpaceMerge => self.space_merge_question(),
             Asking::TableStyles => self.table_styles_view(),

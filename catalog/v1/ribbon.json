@@ -528,6 +528,24 @@
         "size": "large"
        }
       ]
+     },
+     {
+      "label": "Enkesit",
+      "icon": "sectionEditor",
+      "items": [
+       {
+        "command": "section.editor",
+        "size": "large"
+       },
+       {
+        "command": "section.new",
+        "size": "large"
+       },
+       {
+        "command": "section.template",
+        "size": "large"
+       }
+      ]
      }
     ],
     "works": [

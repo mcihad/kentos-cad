@@ -588,6 +588,10 @@ pub const PORTED: &[&str] = &[
     // plan/road.md Y4: Boykesit and Boykesit oluştur (profile_window.rs).
     "profile.editor",
     "profile.new",
+    // plan/road.md Y5: Enkesit, Kesit takımı oluştur and Tip kesit oluştur (section_window.rs).
+    "section.editor",
+    "section.new",
+    "section.template",
     // docs/adr/0773: Bina programı (program_window.rs).
     "arch.program",
     // docs/adr/0313: Çizgi tipleri (line_types_window.rs).

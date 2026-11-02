@@ -3115,6 +3115,52 @@
       "status": "implemented"
     },
     {
+      "id": "section.editor",
+      "title": "Enkesit…",
+      "short": "Enkesit",
+      "icon": "sectionEditor",
+      "description": "Yol projesinin tip kesitleri ve kesit hattı takımları: tip kesitin sol ve sağ yanı (şerit ve banket: genişlik ve enine eğim; yarma ve dolgu şevi, yarmada hendek) örnek bir arazide görünür; takım bir aksın km'lerinde (aralık, kurp noktaları ve PVI'ler ya da yazılan km'ler) kesit hatları kurar. Her kesitte arazi (siyah), boykesitin kotunda platform ve şevler (kırmızı), daylight ve yarma ile dolgu alanı; kesitler tek tek gezilir. Kaydet road.templates.edit ve road.sections.edit ile yazar, Çizime yaz road.sections.draw ile enkesit sayfası çizer; her yazma bir geri alma adımıdır.",
+      "aliases": [
+        "YOLENKESIT",
+        "YOLENKESİT",
+        "KESITHATTI",
+        "KESİTHATTI",
+        "SAMPLELINES"
+      ],
+      "shortcuts": [],
+      "category": "Enkesit",
+      "status": "implemented"
+    },
+    {
+      "id": "section.new",
+      "title": "Kesit takımı oluştur…",
+      "short": "Yeni takım",
+      "icon": "sectionNew",
+      "description": "Yeni bir kesit hattı takımı kurar: Enkesit penceresini ilk aksın üstünde, boykesiti, ilk tip kesiti ve yüzeyiyle, her 20 m'de ve kurp noktalarında km'lerle açar. Kaydet road.sections.edit ile yazar.",
+      "aliases": [
+        "KESITTAKIMI",
+        "KESİTTAKIMI"
+      ],
+      "shortcuts": [],
+      "category": "Enkesit",
+      "status": "implemented"
+    },
+    {
+      "id": "section.template",
+      "title": "Tip kesit oluştur…",
+      "short": "Yeni tip kesit",
+      "icon": "sectionTemplate",
+      "description": "Yeni bir tip kesit kurar: Enkesit penceresini boş bir tip kesitle açar; bileşenlerin genişliği ve eğimi, şevler ve hendek KGM'nin standardından ya da projeden yazılır, KentOS öntanımlı sayı vermez. Kaydet road.templates.edit ile yazar.",
+      "aliases": [
+        "TIPKESIT",
+        "TİPKESİT",
+        "TEMPLATE"
+      ],
+      "shortcuts": [],
+      "category": "Enkesit",
+      "status": "implemented"
+    },
+    {
       "id": "profile.new",
       "title": "Boykesit oluştur…",
       "short": "Yeni boykesit",
@@ -4119,6 +4165,9 @@
     "roomElevation": "<rect x=\"2.5\" y=\"4.5\" width=\"15\" height=\"11\" rx=\"0.5\"/><rect x=\"4.5\" y=\"8.5\" width=\"3\" height=\"7\" stroke-width=\"1\"/><rect x=\"10.5\" y=\"7.5\" width=\"5\" height=\"4\" stroke-width=\"1\"/><path d=\"M2.5 17.5h15\" stroke-width=\"0.9\" stroke-dasharray=\"1.6 1.2\"/>",
     "alignmentEditor": "<path d=\"M2 16.5 6.5 12c2.6-2.6 5.6-4 11.5-4\" stroke-width=\"1.5\"/><path d=\"M4.1 13l1.7 1.7M8.4 9.6l1.2 2.1M12.9 7.9l.5 2.3\" stroke-width=\"1\"/><path d=\"M2 16.5 9 4.5 18 8\" stroke-width=\".7\" stroke-dasharray=\"1.5 1.2\"/>",
     "alignmentNew": "<path d=\"M2 16 6 12c2.3-2.3 5-3.6 10-3.6\" stroke-width=\"1.5\"/><path d=\"M3.9 12.6l1.6 1.6M7.9 9.4l1.1 2\" stroke-width=\"1\"/><path d=\"M15.5 12.2v6.3M12.4 15.4h6.3\" stroke-width=\"1.5\"/>",
+    "sectionEditor": "<path d=\"M2 9.5 18 12.5\" stroke-width=\".8\"/><path d=\"M3 15.5 6.5 11h7l3.5 4.5\" stroke-width=\"1.5\"/><path d=\"M10 3.5v14\" stroke-width=\".7\" stroke-dasharray=\"1.5 1.2\"/>",
+    "sectionNew": "<path d=\"M2 8.5 12 10.5\" stroke-width=\".8\"/><path d=\"M2.5 13.5 5.5 10h5l2 2.5\" stroke-width=\"1.5\"/><path d=\"M15.5 12.2v6.3M12.4 15.4h6.3\" stroke-width=\"1.5\"/>",
+    "sectionTemplate": "<path d=\"M2 10.5h3.5l1.5-1h6l1.5 1H18\" stroke-width=\"1.5\"/><path d=\"M5.5 10.5 2 15M14.5 10.5 18 15\" stroke-width=\"1\"/><path d=\"M10 4v4\" stroke-width=\".7\" stroke-dasharray=\"1.2 1\"/>",
     "profileEditor": "<path d=\"M2.5 3v14.5H18\" stroke-width=\"1\"/><path d=\"M4 14l4-6 4 3 5-6\" stroke-width=\"1.5\"/>",
     "profileNew": "<path d=\"M2.5 3v14.5H11\" stroke-width=\"1\"/><path d=\"M4 12l3-5 3 2.5\" stroke-width=\"1.5\"/><path d=\"M15.5 10.2v6.3M12.4 13.4h6.3\" stroke-width=\"1.5\"/>",
     "terrainSurface": "<path d=\"M2.5 15.5 8 4l9.5 3.5-2 9z\" stroke-width=\"1.1\"/><path d=\"M8 4l1 7.5 8.5-4M2.5 15.5 9 11.5l6.5 5\" stroke-width=\".8\"/><path d=\"M4.6 10.4 9 11.5l4.6 1.4\" stroke-width=\"1.9\"/>",

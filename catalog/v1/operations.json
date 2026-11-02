@@ -2617,6 +2617,28 @@
       ],
       "note": "Boykesit penceresi PVI'leri yazdıkça çekirdekle kurar ve arazi boykesitini yüzeyden çizer; Kaydet ve Aksa yeniden bağla road.profiles.create ve .edit ile, Çizime yaz road.profiles.draw ile yazar (plan/road.md Y4, ADR 0902)."
     },
+    "section.editor": {
+      "level": "semantic",
+      "via": [
+        "road.templates.edit",
+        "road.sections.edit",
+        "road.sections.query",
+        "road.sections.draw"
+      ],
+      "note": "Enkesit penceresi tip kesiti ve takımı yazdıkça kesitleri çekirdekle kurar; Kaydet ve Aksa yeniden bağla road.templates.edit ve road.sections.edit ile, Çizime yaz road.sections.draw ile yazar (plan/road.md Y5, ADR 0903)."
+    },
+    "section.new": {
+      "level": "semantic",
+      "via": [
+        "road.sections.edit"
+      ]
+    },
+    "section.template": {
+      "level": "semantic",
+      "via": [
+        "road.templates.edit"
+      ]
+    },
     "profile.new": {
       "level": "semantic",
       "via": [

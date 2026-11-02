@@ -20,7 +20,7 @@ export type BlocksReplace = {
  * Imports a separate dependency graph, preserves the old definitions, and upgrades only the named root inserts.
  * Compatible instance inputs survive; local target edits or incompatible inputs refuse atomically.
  */
-library?: string,
+library?: string, 
 /**
  * The block whose inserts are replaced.
  */

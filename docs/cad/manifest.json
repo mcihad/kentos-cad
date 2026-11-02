@@ -7627,6 +7627,57 @@
    "tests": 1
   },
   {
+   "id": "section.editor",
+   "kind": "command",
+   "title": "Enkesit…",
+   "level": "semantic",
+   "via": [
+    "road.templates.edit",
+    "road.sections.edit",
+    "road.sections.query",
+    "road.sections.draw"
+   ],
+   "operation": null,
+   "python": "Connection: road.templates.edit, Connection: road.sections.edit, Connection: road.sections.query, Connection: road.sections.draw",
+   "mcp": "road.templates.edit, road.sections.edit, road.sections.query, road.sections.draw",
+   "note": "Enkesit penceresi tip kesiti ve takımı yazdıkça kesitleri çekirdekle kurar; Kaydet ve Aksa yeniden bağla road.templates.edit ve road.sections.edit ile, Çizime yaz road.sections.draw ile yazar (plan/road.md Y5, ADR 0903).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "section.new",
+   "kind": "command",
+   "title": "Kesit takımı oluştur…",
+   "level": "semantic",
+   "via": [
+    "road.sections.edit"
+   ],
+   "operation": null,
+   "python": "Connection: road.sections.edit",
+   "mcp": "road.sections.edit",
+   "note": null,
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "section.template",
+   "kind": "command",
+   "title": "Tip kesit oluştur…",
+   "level": "semantic",
+   "via": [
+    "road.templates.edit"
+   ],
+   "operation": null,
+   "python": "Connection: road.templates.edit",
+   "mcp": "road.templates.edit",
+   "note": null,
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "server.check",
    "kind": "command",
    "title": "Sunucu bağlantısını denetle",
