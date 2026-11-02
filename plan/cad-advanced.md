@@ -520,7 +520,7 @@ gerçek hover, dar pencere ve zoom kontrol edildi. Temiz adayda masaüstü
 Kabul destek matrisindeki aşamalı kapsama aittir; genel NURBS/G2 ve
 kalıcı bağımsız elips eksen başvurusu uygulanmış sayılmaz.
 
-### CAD-ADV-06 — Parametrik blokları sürdürülebilir 2B bileşenlere dönüştür [ ]
+### CAD-ADV-06 — Parametrik blokları sürdürülebilir 2B bileşenlere dönüştür [~]
 
 **Öncelik:** P1. **Kod:** [C11], [C12].
 **Dayanak:** Smart Blocks ve parametre/design-table düzeni; blok kaynağı
@@ -546,6 +546,21 @@ ile örnek değerinin ayrılması. [R02], [R13], [R22]
 2B bileşeni iç içe yerleştir. Bir özniteliği yeniden adlandırıp tip
 güncellemesi yap; örnek değerleri ve bağlı ölçü korunsun. Kaydet–aç,
 geri al ve desteklenmeyen hedefe raporlu statik aktarımı sınanabilsin.
+
+**İlerleme — 2026-11-02, tamamlanmadı:** Masaüstü öznitelik satırı
+kaynak etiketini korur; yeniden adlandırma mevcut `renames` komutuna geçer.
+R-1/R-2/R-3 değerlerini silen hata gerçek eski GUI'de üretildi ve düzeltildi.
+Tanım değişiminde başka hedef verisi korunur; eşzamanlı değer/özel konum
+swap'ı ve eski açık sync sözleşmesi geçti. Gerçek GUI/Python dosyaları
+tam aynı; tek Undo, yeniden açma, dar pencere ve çakışma/iptal kabul edildi.
+Temiz adayda 1584 masaüstü, 317 application, 50 MCP, dört Python testi,
+Clippy ve dosya doğrulaması geçti.
+[ADR 0844](../docs/adr/0844-block-attribute-rename-identity.md),
+[Python/MCP rehberi](../docs/cad/block-attribute-renames.md).
+Tür/sürüm ve seçilmiş yükseltme, okunur parametre grupları, tip–örnek
+ayrımı, iç içe etki önizlemesi, editörde test yerleştirmesi ve birleşik
+blok kabulü açıktır. Web öznitelik penceresinin native eşitleme kapsamıyla
+aynı olmadığı kodda görüldü; bu dilim web eşitliğini tamamlanmış saymaz.
 
 ### CAD-ADV-07 — Tekrarları tanı, blok ve ilişkili diziye kontrollü dönüştür [ ]
 

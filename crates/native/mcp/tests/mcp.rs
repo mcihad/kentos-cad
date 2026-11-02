@@ -3363,3 +3363,80 @@ fn technical_plate_parameters_grip_lock_and_explicit_relax_share_atomic_mcp_path
     assert_eq!(std::fs::read(&path).unwrap(), baseline);
     std::fs::remove_dir_all(dir).unwrap();
 }
+
+#[test]
+fn attribute_tag_rename_keeps_existing_values_in_mcp_plan_execute_save_and_undo() {
+    let dir = std::env::temp_dir().join(format!(
+        "kentos-mcp-block-attribute-identity-{}",
+        std::process::id()
+    ));
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join("block.kcad");
+    let baseline =
+        include_bytes!("../../../../fixtures/interaction/v1/block-attribute-identity.kcad");
+    std::fs::write(&path, baseline).unwrap();
+    let mut server = Server::new();
+    let drawing =
+        call(&mut server, "drawing.open", json!({"path":path}))["structuredContent"]["drawing"]
+            .clone();
+    let before=call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"].clone();
+    let block = before[0]["entity"]["block"].clone();
+    let input = json!({"drawing":drawing,"operation":"attributes","block":block,"renames":{"NO":"KOD"},"attributes":[
+        {"tag":"KOD","prompt":"Bileşen kodu","value":"YENİ VARSAYILAN","height":0.6,"rotation":0,"p":{"x":1,"y":0.2},"movable":true},
+        {"tag":"TIP","prompt":"Bileşen tipi","value":"Standart","height":0.35,"rotation":0,"p":{"x":1,"y":-0.5}}
+    ]});
+    for op in ["validate", "plan"] {
+        let mut p = input.clone();
+        p["op"] = json!(op);
+        let result = call(&mut server, "cad.blocks.edit", p);
+        assert_eq!(
+            result["structuredContent"]["status"], "completed",
+            "{result}"
+        );
+        assert_eq!(
+            call(&mut server, "drawing.entities", json!({"drawing":drawing}))["structuredContent"]
+                ["items"],
+            before
+        );
+    }
+    let written = call(&mut server, "cad.blocks.edit", input);
+    assert_eq!(
+        written["structuredContent"]["status"], "completed",
+        "{written}"
+    );
+    assert_eq!(written["structuredContent"]["output"]["sync"]["inserts"], 3);
+    let after=call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"].clone();
+    for (old, new) in before
+        .as_array()
+        .unwrap()
+        .iter()
+        .zip(after.as_array().unwrap())
+    {
+        assert_eq!(new["entity"]["attrs"]["KOD"], old["entity"]["attrs"]["NO"]);
+        assert!(new["entity"]["attrs"].get("NO").is_none());
+        assert_eq!(new["entity"]["attrs"]["TIP"], old["entity"]["attrs"]["TIP"]);
+        assert_eq!(new["uid"], old["uid"]);
+    }
+    call(
+        &mut server,
+        "drawing.save",
+        json!({"drawing":drawing,"path":path}),
+    );
+    let saved = std::fs::read(&path).unwrap();
+    assert_ne!(saved, baseline);
+    let reopened =
+        call(&mut server, "drawing.open", json!({"path":path}))["structuredContent"]["drawing"]
+            .clone();
+    assert_eq!(
+        call(&mut server, "drawing.entities", json!({"drawing":reopened}))["structuredContent"]["items"],
+        after
+    );
+    call(&mut server, "drawing.undo", json!({"drawing":drawing}));
+    call(
+        &mut server,
+        "drawing.save",
+        json!({"drawing":drawing,"path":path}),
+    );
+    assert_eq!(std::fs::read(&path).unwrap(), baseline);
+    std::fs::remove_dir_all(dir).unwrap();
+}

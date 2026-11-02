@@ -102,6 +102,9 @@ pub(crate) fn sync(
     let mut fitted: Vec<(Slot, InsertEntity, bool)> = Vec::new();
     let mut locked = 0;
     let layers = doc.layers();
+    // A definition edit must not silently replace another attribute's instance value. The existing explicit
+    // `sync` migration (old == next) intentionally allows its caller to replace a target and keeps that contract.
+    let protect_targets = old.attributes != next.attributes;
     for e in doc.entities() {
         let Entity::Insert(i) = e else { continue };
         if i.block != next.id {
@@ -117,16 +120,62 @@ pub(crate) fn sync(
             fitted.push((Slot(i.base.id), i, false));
             continue;
         }
+        // Read every source before writing any target: A→B, B→A and longer chains must not overwrite a value
+        // needed by the next rename. An unrelated existing target is not permission to destroy that value.
         for (from, to) in renames {
-            if let Some(v) = i.base.attrs.remove(from) {
-                i.base.attrs.insert(to.clone(), v);
-                changed = true;
-                renamed.insert(from.clone());
+            let value_conflict = i
+                .base
+                .attrs
+                .get(from)
+                .zip(i.base.attrs.get(to))
+                .is_some_and(|(a, b)| a != b);
+            let place_conflict = i
+                .attribute_places
+                .get(from)
+                .zip(i.attribute_places.get(to))
+                .is_some_and(|(a, b)| a != b);
+            if protect_targets && !renames.contains_key(to) && (value_conflict || place_conflict) {
+                return Err(Stop::failed(error(
+                    codes::DUPLICATE_TAG,
+                    format!(
+                        "“{from}” → “{to}”: {} numaralı yerleştirmede hedef etikette başka bir değer veya özel konum var. Değerin üzerine yazılmadı; farklı bir etiket seçin ya da mevcut değerleri önce düzenleyin.",
+                        i.base.id
+                    ),
+                    Some(format!("renames.{from}")),
+                )));
             }
-            if let Some(p) = i.attribute_places.remove(from) {
-                i.attribute_places.insert(to.clone(), p);
-                changed = true;
-            }
+        }
+        let values: Vec<_> = renames
+            .iter()
+            .filter_map(|(from, to)| {
+                i.base
+                    .attrs
+                    .get(from)
+                    .map(|v| (from.clone(), to.clone(), v.clone()))
+            })
+            .collect();
+        let places: Vec<_> = renames
+            .iter()
+            .filter_map(|(from, to)| {
+                i.attribute_places
+                    .get(from)
+                    .map(|p| (from.clone(), to.clone(), *p))
+            })
+            .collect();
+        for (from, _, _) in &values {
+            i.base.attrs.remove(from);
+        }
+        for (from, _, _) in &places {
+            i.attribute_places.remove(from);
+        }
+        for (from, to, v) in values {
+            i.base.attrs.insert(to, v);
+            changed = true;
+            renamed.insert(from);
+        }
+        for (_, to, p) in places {
+            i.attribute_places.insert(to, p);
+            changed = true;
         }
         for t in &gone {
             if i.base.attrs.remove(t).is_some() {

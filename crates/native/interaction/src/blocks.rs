@@ -221,8 +221,19 @@ pub fn check_attributes(
     id: BlockId,
     attributes: Vec<kentos_commands::AttributeDefinition>,
 ) -> Result<(), String> {
+    check_attributes_with_renames(doc, id, attributes, Default::default())
+}
+
+/// The attribute editor keeps a row's source tag: a changed tag migrates its existing instance value.
+pub fn check_attributes_with_renames(
+    doc: &mut Document,
+    id: BlockId,
+    attributes: Vec<kentos_commands::AttributeDefinition>,
+    renames: std::collections::BTreeMap<String, String>,
+) -> Result<(), String> {
     let input = BlocksEdit {
         attributes: Some(attributes),
+        renames: (!renames.is_empty()).then_some(renames),
         ..input(BlockEditOperation::Attributes, Some(id))
     };
     match blocks_edit::validate(&ExecutionContext::new(doc), &input) {
@@ -241,6 +252,16 @@ pub fn set_attributes(
     id: BlockId,
     attributes: Vec<kentos_commands::AttributeDefinition>,
 ) -> (Vec<Said>, bool) {
+    set_attributes_with_renames(doc, id, attributes, Default::default())
+}
+
+/// Saves the same explicit rename map checked in the editor, through the recorded public command.
+pub fn set_attributes_with_renames(
+    doc: &mut Document,
+    id: BlockId,
+    attributes: Vec<kentos_commands::AttributeDefinition>,
+    renames: std::collections::BTreeMap<String, String>,
+) -> (Vec<Said>, bool) {
     let name = name_of(doc, id);
     let n = attributes.len();
     let mut said = Vec::new();
@@ -248,6 +269,7 @@ pub fn set_attributes(
         doc,
         BlocksEdit {
             attributes: Some(attributes),
+            renames: (!renames.is_empty()).then_some(renames),
             ..input(BlockEditOperation::Attributes, Some(id))
         },
         &mut said,

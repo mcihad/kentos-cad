@@ -92,6 +92,9 @@ pub struct Exact {
 /// multiline one's box width as typed.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Row {
+    /// Identity of the existing attribute, carried with the row through insert/remove/pick and repeated edits.
+    /// A new row has none; its tag must not be guessed from its current position in the grid.
+    pub original_tag: Option<String>,
     pub cells: [String; 7],
     pub exact: Exact,
     pub options: kentos_commands::AttributeOptions,
@@ -116,6 +119,7 @@ pub fn number_text(n: f64) -> String {
 /// A row showing `a` of a block whose base point is `base`.
 pub fn row_of(a: &AttributeDefinition, base: Vec2) -> Row {
     Row {
+        original_tag: (!a.tag.is_empty()).then(|| a.tag.clone()),
         cells: [
             a.tag.clone(),
             a.prompt.clone().unwrap_or_default(),
@@ -235,6 +239,7 @@ pub fn new_row(above: &[Row], base: Vec2, extent: Option<Extent>, height: f64) -
         _ => base,
     };
     let row = Row {
+        original_tag: None,
         cells: [
             String::new(),
             String::new(),

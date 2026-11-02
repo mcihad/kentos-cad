@@ -195,6 +195,18 @@ impl Table for Window {
 }
 
 impl Window {
+    fn renames(&self) -> std::collections::BTreeMap<String, String> {
+        self.rows
+            .iter()
+            .filter_map(|r| {
+                let from = r.original_tag.as_ref()?;
+                let next = table::definition_of(r, self.base);
+                (!next.options.constant && !next.tag.is_empty() && *from != next.tag)
+                    .then(|| (from.clone(), next.tag))
+            })
+            .collect()
+    }
+
     fn definitions(&self) -> Vec<kentos_commands::AttributeDefinition> {
         self.rows
             .iter()
@@ -276,7 +288,12 @@ impl App {
         let (Some(w), Some(doc)) = (self.block_attributes.as_mut(), self.document.as_mut()) else {
             return;
         };
-        w.answer = actions::check_attributes(&mut doc.model, w.block, w.definitions());
+        w.answer = actions::check_attributes_with_renames(
+            &mut doc.model,
+            w.block,
+            w.definitions(),
+            w.renames(),
+        );
     }
 
     pub(crate) fn block_attributes_event(&mut self, event: Event) -> Task<Message> {
@@ -376,7 +393,12 @@ impl App {
         if w.answer.is_err() {
             return;
         }
-        let (said, done) = actions::set_attributes(&mut doc.model, w.block, w.definitions());
+        let (said, done) = actions::set_attributes_with_renames(
+            &mut doc.model,
+            w.block,
+            w.definitions(),
+            w.renames(),
+        );
         if !done {
             w.answer = Err(said
                 .last()
@@ -406,7 +428,7 @@ impl App {
             ),
             words::text_line(
                 Kind::Info,
-                "Yer taban noktasına göredir: Y doğuya, X kuzeye, bloğun kendi ölçüsünde."
+                "Etiketi aynı satırda değiştirince yerleştirmenin değeri yeni etikete taşınır. Yalnız çizimdeki doğrudan yerleştirmeler eşitlenir; iç içe blok tanımları ve kilitli yerleştirmeler değişmez."
                     .to_owned(),
             ),
         ]);
@@ -680,5 +702,49 @@ mod tests {
         );
         assert_eq!(app.dialog, None);
         assert!(attributes(&app, id).is_empty());
+    }
+    #[test]
+    fn renaming_a_row_keeps_existing_instance_values_through_repeated_typing_and_one_undo() {
+        let (mut app, id) = blocks();
+        let def=serde_json::from_value(serde_json::json!({"tag":"NO","value":"default","height":0.3,"rotation":0,"p":{"x":0,"y":0}})).unwrap();
+        assert!(
+            kentos_interaction::blocks::set_attributes(
+                &mut app.document.as_mut().unwrap().model,
+                id,
+                vec![def]
+            )
+            .1
+        );
+        let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+        app.open_block_attributes(id);
+        send(&mut app, Event::Cell(0, super::table::TAG, "GEÇİCİ".into()));
+        send(&mut app, Event::Cell(0, super::table::TAG, "KOD".into()));
+        send(
+            &mut app,
+            Event::Cell(0, super::table::VALUE, "new default".into()),
+        );
+        send(&mut app, Event::AddRow);
+        let w = app.block_attributes.as_ref().unwrap();
+        assert!(w.rows.last().unwrap().original_tag.is_none());
+        send(&mut app, Event::RemoveRow(1));
+        assert_eq!(
+            app.block_attributes.as_ref().unwrap().renames(),
+            std::collections::BTreeMap::from([("NO".into(), "KOD".into())])
+        );
+        assert_eq!(answer(&app), Some(Ok(())));
+        send(&mut app, Event::Save);
+        assert!(app.block_attributes.is_none());
+        let model = &mut app.document.as_mut().unwrap().model;
+        for (slot, value) in [(4, "R-1"), (5, "R-2"), (6, "R-3")] {
+            let e = model.get(Slot(slot)).unwrap();
+            assert_eq!(e.base().attrs.get("KOD").map(String::as_str), Some(value));
+            assert!(!e.base().attrs.contains_key("NO"));
+        }
+        assert_eq!(
+            model.block(id).unwrap().attributes[0].value.as_deref(),
+            Some("new default")
+        );
+        model.undo().unwrap();
+        assert_eq!(model.to_snapshot_v2(), before);
     }
 }
