@@ -618,6 +618,21 @@ Python ile tam kayıt eşitliği ve her iki kapsamın tam tek Undo'su geçti.
 Bu seçim mevcut çizim tanımları arasındadır; harici kitaplığın aile/yayın
 sürümünü izleyen yükseltme halen açıktır.
 
+**İlerleme — 2026-11-02, iç içe statik aktarım:** Varsayılan ilk görünüşün
+gizli parçaları özel değer yokken de gizlidir. Varyant parça sırası değişince
+etiketin kaybolması gerçek GUI tekrarında yakalandı ve aynı varyant önbelleğiyle
+düzeltildi. DXF bütün iç içe referansları kendi değerlerinde sabitler; aynı
+çocuk varyantını paylaşır, kullanılmayan kitaplık tanımlarını tutar ve
+parametre/eylem kaybını ayrı uyarıyla bildirir. 315 çekirdek, 317 application,
+881 etkileşim, 82 headless, 54 MCP, 1603 masaüstü ve 431 Python testi;
+derleme ve Clippy geçti. DXF penceresinin birim açıklaması gerçek çıktı
+birimiyle eşitlendi. Gerçek GUI'de 900/1200 mm ve iki görünüş, korunmuş etiketler,
+DXF tekrar açılışı görüldü. GUI/Python DXF baytları ve aktarım öncesi/sonrası
+kaynak KCAD tam aynı; görünüş değişimi/tek Undo ayrıca kayıttan denetlendi.
+[ADR 0851](../docs/adr/0851-dynamic-block-default-visibility-and-nested-dxf.md),
+[aktarım/API rehberi](../docs/cad/block-static-dxf.md). Bu dilim aile/yayın
+sürümü veya kalıcı tip–örnek kapsamını tamamlamaz.
+
 Tür/sürüm ve seçilmiş yükseltme, kalıcı tip–örnek parametre kapsamı ve
 birleşik blok kabulü açıktır. Kullanıcı tanımlı grup metaverisi bu otomatik
 gruplarla tamamlanmış sayılmaz. Web öznitelik penceresinin native eşitleme kapsamıyla
@@ -704,6 +719,13 @@ ayrımı. [R04]
 oluştur. Kaynağı böl, blok tanımını değiştir ve bir referansı sil; teşhis
 ve yeniden bağlamayı dene. 1:20/1:50 paftalarda gerçek değer, kâğıt boyu,
 birim/tolerans ve metin konumu tutarlı olsun; zoom gerçek değeri etkilemesin.
+
+**Kodla doğrulanan ek açık — 2026-11-02:** `headless/query.rs::item`,
+`entity_bounds(Shape::Insert)` yoluyla sadece ekleme noktasını döndürüyor;
+`drawing.measure` blok kutusu görünen geometriyi kapsamıyor. İç içe, dönmüş
+ve farklı birimli blokta etkin varyant/kırpma/katman kapsamını esas alan
+kutuyu API ve GUI'de aynı kuralla doğrula. ADR 0851 aktarım testi bu eksik
+kutuyla değil gerçek parça uçlarıyla doğrulanmıştır.
 
 ### CAD-ADV-10 — Yazı ve field üretimini ekran ile çıktıda aynı hale getir [ ]
 

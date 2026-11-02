@@ -51,6 +51,12 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ADR 0851: ortak çekirdeğin varsayılan ilk görünüş düzeltmesi hazırdır;
+  web etiket okuyucusunun etkin varyantın parça sırasını kullandığı ayrıca
+  doğrulanmalı. İç içe statik DXF ve açık parametre/eylem kaybı bildirimi,
+  native Python/MCP/GUI kabulüyle aynı dosya/kapsam üzerinden sınanmalı.
+  Native etiket adapter'ı web etkileşim kabulü yerine geçmez.
+
 - ADR 0850: Bloklar değiştirme akışına açık seçili/tüm doğrudan kapsam,
   gerçek komut planı, kayıp raporu ve eski belge/plan koruması gelecek.
   İç içe tanım kapsamı genişletilmez; web kabulü henüz yapılmadı.

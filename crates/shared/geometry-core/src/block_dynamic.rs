@@ -334,6 +334,14 @@ impl Dynamic {
 
     /// Whether the insert's values draw the definition as it is (every value its default, nothing hidden).
     pub fn is_default(&self, values: Option<&Params>) -> bool {
+        // The first visibility state is also applied when the insert stores no overrides.
+        // Its hidden pieces make the raw definition unsuitable for the fast path.
+        if self.parameters.iter().any(|p| {
+            matches!(p, Parameter::Visibility { states, .. }
+                if states.first().is_some_and(|(_, hidden)| !hidden.is_empty()))
+        }) {
+            return false;
+        }
         values.is_none_or(|v| {
             v.0.iter().all(|(name, value)| {
                 self.parameter(name)

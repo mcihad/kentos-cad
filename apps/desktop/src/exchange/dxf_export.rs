@@ -1,6 +1,6 @@
 //! DXF dışa aktar (the web's `ui/io/DxfExportDialog.ts`): the objects of the
 //! selection, of the visible layers or of the whole drawing, with their
-//! layers, as an AutoCAD 2007 DXF (UTF-8, metres; the shared writer, off the
+//! layers, as an AutoCAD 2007 DXF (UTF-8, the local drawing's unit or CRS metres; the shared writer, off the
 //! UI thread). Coordinates are written as the shortest decimal that reads
 //! back to the same float64 (CLAUDE.md §23). What DXF cannot hold (labels,
 //! attributes, symbols, theme colours, holes) rides along as KentOS data
@@ -437,6 +437,14 @@ impl App {
             |c| c.1 > 0,
         );
         let chosen = self.chosen(s);
+        let unit = self.document.as_ref().map_or(kentos_commands::DrawingUnit::M, |d| {
+            let settings = d.model.settings();
+            if settings.has_system() {
+                kentos_commands::DrawingUnit::M
+            } else {
+                settings.unit()
+            }
+        });
         let any = chosen.iter().any(|(_, list)| !list.is_empty())
             || (s.scope != Scope::Selection
                 && self
@@ -448,7 +456,11 @@ impl App {
             .push(words::field(
                 "Yazılacak nesneler",
                 scope,
-                Some(if s.dwg.is_some() { "Seçili DWG sürümüne dönüştürülür; sürüm ve aktarım kayıpları raporlanır." } else { "AutoCAD 2007 DXF (UTF-8, birim metre); koordinatlar yuvarlanmadan, tam yazılır." }.to_owned()),
+                Some(if s.dwg.is_some() {
+                    "Seçili DWG sürümüne dönüştürülür; sürüm ve aktarım kayıpları raporlanır.".to_owned()
+                } else {
+                    format!("AutoCAD 2007 DXF (UTF-8, birim {}); koordinatlar yuvarlanmadan, tam yazılır.", unit.mark())
+                }),
             ))
             .push(self.dxf_export_layers(s))
             .push(dxf_export_forms(s))

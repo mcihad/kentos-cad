@@ -2983,3 +2983,135 @@ mod flat_timing;
 
 #[path = "headless/flat_pieces.rs"]
 mod flat_pieces;
+#[test]
+fn nested_dynamic_exports_keep_default_visibility_values_transforms_and_reuse_static_variants() {
+    use kentos_commands::{BlockDefinition, DrawingUnit, DxfReadOptions, Entity};
+    for unit in [DrawingUnit::Mm, DrawingUnit::M] {
+        let mut raw: Value = serde_json::from_str(include_str!(
+            "../../../../fixtures/kcad/v2/dynamic-blocks.json"
+        ))
+        .unwrap();
+        raw["settings"]["drawingUnit"] = json!(unit);
+        let source = raw["blocks"][0]["id"].clone();
+        let visibility = raw["blocks"][0]["dynamic"]["parameters"]
+            .as_array_mut()
+            .unwrap()
+            .iter_mut()
+            .find(|p| p["kind"] == "visibility")
+            .unwrap();
+        visibility["states"].as_array_mut().unwrap().reverse();
+        let parent = "0192f5a1-2900-7000-8000-0000000000e1";
+        raw["blocks"].as_array_mut().unwrap().push(json!({
+            "id":parent,"name":"Giriş","base":{"x":0.,"y":0.},"units":"m","entities":[{
+                "kind":"insert","id":1,"layerId":"","attrs":{},"block":source,"p":{"x":0.,"y":0.},"scale":1.,"rotation":0.,"parameters":{"Genişlik":1.2}
+            }]
+        }));
+        raw["entities"] = json!([
+            {"kind":"insert","id":1,"layerId":"kapilar","attrs":{},"block":source,"p":{"x":0.,"y":0.},"scale":1.,"rotation":0.},
+            {"kind":"insert","id":2,"layerId":"kapilar","attrs":{},"block":parent,"p":{"x":10.,"y":20.},"scale":2.,"rotation":std::f64::consts::FRAC_PI_2},
+            {"kind":"insert","id":3,"layerId":"kapilar","attrs":{},"block":parent,"p":{"x":20.,"y":20.},"scale":1.,"rotation":0.},
+            {"kind":"insert","id":4,"layerId":"kapilar","attrs":{},"block":source,"p":{"x":4.,"y":0.},"scale":1.,"rotation":0.,"parameters":{"Görünüş":"Açılım"}}
+        ]);
+        raw["uids"] = json!(
+            (1..=4)
+                .map(|n| format!("0192f5a1-2900-7000-8000-{n:012x}"))
+                .collect::<Vec<_>>()
+        );
+        let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(raw).unwrap();
+        let mut session =
+            Session::from_bytes(&kentos_kcad::encode_verified(&snapshot).unwrap()).unwrap();
+        let before = session.to_bytes().unwrap();
+        let dir = scratch("nested-static-blocks");
+        let path = dir.join("nested.dxf");
+        let plan = session
+            .call(json!({"command":"file.export.dxf","op":"plan","input":{"path":path}}))
+            .unwrap();
+        assert_eq!(plan["status"], "completed", "{plan}");
+        assert!(!path.exists());
+        assert_eq!(session.to_bytes().unwrap(), before);
+        let result = session
+            .call(json!({"command":"file.export.dxf","input":{"path":path}}))
+            .unwrap();
+        assert_eq!(result["status"], "completed", "{result}");
+        assert_eq!(session.to_bytes().unwrap(), before);
+        let notes = result["output"]["report"]["notes"].as_array().unwrap();
+        assert!(
+            notes.iter().any(|n| n["what"] == "Dinamik blok"
+                && n["reason"].as_str().unwrap().contains("İç içe")
+                && n["severity"] == "warning"),
+            "{notes:?}"
+        );
+        let bytes = std::fs::read(&path).unwrap();
+        let read = kentos_formats::dxf::read(
+            &bytes,
+            &DxfReadOptions {
+                unit: Some(unit),
+                ..Default::default()
+            },
+        )
+        .unwrap();
+        assert!(read.blocks.iter().all(|b| b.dynamic.is_none()));
+        assert!(
+            read.entities
+                .iter()
+                .all(|e| !matches!(e,Entity::Insert(i) if !i.parameters.is_empty()))
+        );
+        assert!(
+            read.blocks
+                .iter()
+                .flat_map(|b| &b.entities)
+                .all(|e| !matches!(e,Entity::Insert(i) if !i.parameters.is_empty()))
+        );
+        let parent: &BlockDefinition = read.blocks.iter().find(|b| b.name == "Giriş").unwrap();
+        let Entity::Insert(child) = &parent.entities[0] else {
+            panic!("nested insert")
+        };
+        let nested = read.blocks.iter().find(|b| b.id == child.block).unwrap();
+        assert_eq!(
+            read.blocks.iter().filter(|b| b.name == nested.name).count(),
+            1,
+            "shared parent reuses one child variant"
+        );
+        let placing = kentos_formats::blocks::Placing::new(&read.blocks);
+        let inserts = read
+            .entities
+            .iter()
+            .filter_map(|e| {
+                if let Entity::Insert(i) = e {
+                    Some(i)
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(inserts.len(), 4);
+        let direct = placing.placed(inserts[0]);
+        assert_eq!(
+            direct
+                .iter()
+                .filter(|e| matches!(e, Entity::Line(_)))
+                .count(),
+            3
+        );
+        assert!(!direct.iter().any(|e| matches!(e, Entity::Arc(_))));
+        let transformed = placing.placed(inserts[1]);
+        assert_eq!(transformed.len(), 3);
+        assert!(transformed.iter().any(|e|matches!(e,Entity::Line(l) if (l.a.x-10.).abs()<1e-8&&(l.a.y-20.).abs()<1e-8&&(l.b.x-7.6).abs()<1e-8&&(l.b.y-20.).abs()<1e-8)),"{transformed:?}");
+        let alternative = placing.placed(inserts[3]);
+        assert!(
+            alternative
+                .iter()
+                .any(|e| matches!(e,Entity::Arc(a) if (a.r-0.9).abs()<1e-8))
+        );
+        let other = dir.join("same.dxf");
+        session
+            .call(json!({"command":"file.export.dxf","input":{"path":other}}))
+            .unwrap();
+        assert_eq!(
+            std::fs::read(other).unwrap(),
+            bytes,
+            "repeat export deterministic"
+        );
+        let _ = std::fs::remove_dir_all(dir);
+    }
+}

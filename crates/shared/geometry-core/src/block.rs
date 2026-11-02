@@ -320,6 +320,18 @@ impl Blocks {
         Some(variant)
     }
 
+    /// A piece of the insert's effective definition, before placement. Its index matches the expanded
+    /// geometry, including visibility and array actions; the unvaried definition's index may not.
+    pub fn piece_for(&self, insert: &Shape, index: usize) -> Option<Piece> {
+        let Shape::Insert { block, params, .. } = insert else {
+            return None;
+        };
+        self.flat_for(block, params.as_ref())?
+            .pieces
+            .get(index)
+            .cloned()
+    }
+
     /// The definitions read from their JSON: the contract's `BlockDefinition`
     /// list (`[{ id, base, entities, attributes?, … }]`; other fields are the documents').
     pub fn from_json(v: &Json) -> Result<Blocks, String> {
