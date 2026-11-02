@@ -129,9 +129,9 @@ fn open(app: &mut App, path: &Path) {
 fn ribbons() {
     let dir = scratch("moduller-serit");
     for (work, word, tabs) in [
-        (CadWork::Architecture, "mimari", ["arch", "view"]),
-        (CadWork::Map, "harita", ["plan", "survey"]),
-        (CadWork::Road, "yol", ["home", "view"]),
+        (CadWork::Architecture, "mimari", &["arch", "view"][..]),
+        (CadWork::Map, "harita", &["plan", "survey"][..]),
+        (CadWork::Road, "yol", &["terrain", "survey", "insert"][..]),
     ] {
         let path = saved_as(
             &dir,
@@ -140,7 +140,7 @@ fn ribbons() {
             Some(work),
         );
         for (size, theme, suffix) in frames() {
-            for tab in tabs {
+            for &tab in tabs {
                 let name = format!("moduller-serit-{word}-{tab}{suffix}");
                 if !wanted(&name) {
                     continue;

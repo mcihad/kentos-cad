@@ -274,7 +274,8 @@
        {
         "command": "tool.vertexPoints",
         "works": [
-         "map"
+         "map",
+         "road"
         ]
        },
        {
@@ -432,6 +433,54 @@
        "title": "Proje ayarları: birimler, hassasiyet ve çizim ölçeği"
       }
      }
+    ]
+   },
+   {
+    "id": "terrain",
+    "label": "Arazi",
+    "panels": [
+     {
+      "label": "İşlemler",
+      "icon": "processing",
+      "items": [
+       {
+        "command": "processing.toolbox",
+        "size": "large"
+       },
+       {
+        "command": "processing.newModel",
+        "size": "small"
+       },
+       {
+        "command": "processing.history",
+        "size": "small"
+       }
+      ]
+     },
+     {
+      "label": "Arazi",
+      "icon": "contours",
+      "items": [
+       {
+        "command": "tool.spot",
+        "size": "large"
+       },
+       {
+        "command": "pointcloud.region",
+        "size": "small"
+       },
+       {
+        "command": "pointcloud.profile",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "mesh.query"
+      ]
+     }
+    ],
+    "works": [
+     "road"
     ]
    },
    {
@@ -714,7 +763,8 @@
      }
     ],
     "works": [
-     "map"
+     "map",
+     "road"
     ]
    },
    {
@@ -803,7 +853,8 @@
         "command": "raster.add",
         "size": "small",
         "works": [
-         "map"
+         "map",
+         "road"
         ]
        },
        {
@@ -816,19 +867,22 @@
        {
         "command": "raster.georef",
         "works": [
-         "map"
+         "map",
+         "road"
         ]
        },
        {
         "command": "raster.mosaic",
         "works": [
-         "map"
+         "map",
+         "road"
         ]
        },
        {
         "command": "raster.gpkgRead",
         "works": [
-         "map"
+         "map",
+         "road"
         ]
        }
       ],
@@ -913,7 +967,8 @@
        "source.postgis"
       ],
       "works": [
-       "map"
+       "map",
+       "road"
       ]
      },
      {
@@ -1136,7 +1191,8 @@
         "command": "tool.northArrow",
         "size": "small",
         "works": [
-         "map"
+         "map",
+         "road"
         ]
        }
       ]
@@ -3905,7 +3961,8 @@
       }
      ],
      "works": [
-      "map"
+      "map",
+      "road"
      ]
     },
     {
@@ -4048,7 +4105,8 @@
       }
      ],
      "works": [
-      "map"
+      "map",
+      "road"
      ]
     }
    ]
@@ -4204,7 +4262,8 @@
        "command": "tool.vertexPoints",
        "size": "small",
        "works": [
-        "map"
+        "map",
+        "road"
        ]
       },
       {
@@ -4215,7 +4274,8 @@
        "command": "tool.stationLabels",
        "size": "small",
        "works": [
-        "map"
+        "map",
+        "road"
        ],
        "modes": [
         "cad"
@@ -4297,7 +4357,8 @@
       }
      ],
      "works": [
-      "map"
+      "map",
+      "road"
      ]
     }
    ]
@@ -4616,7 +4677,8 @@
       }
      ],
      "works": [
-      "map"
+      "map",
+      "road"
      ]
     }
    ]
@@ -5401,7 +5463,8 @@
       }
      ],
      "works": [
-      "map"
+      "map",
+      "road"
      ]
     },
     {
@@ -5453,8 +5516,8 @@
          ]
         }
        ],
-       "modes": [
-        "gis"
+       "works": [
+        "road"
        ]
       },
       {
@@ -5471,13 +5534,14 @@
          ]
         }
        ],
-       "modes": [
-        "gis"
+       "works": [
+        "road"
        ]
       }
      ],
      "works": [
-      "map"
+      "map",
+      "road"
      ]
     },
     {
@@ -5558,7 +5622,8 @@
       }
      ],
      "works": [
-      "map"
+      "map",
+      "road"
      ]
     },
     {
@@ -5744,7 +5809,8 @@
       }
      ],
      "works": [
-      "map"
+      "map",
+      "road"
      ]
     }
    ]

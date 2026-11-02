@@ -1556,7 +1556,12 @@ impl Catalog {
                 let mut ids: HashSet<&'static str> =
                     tabs.into_iter().flat_map(Tab::commands).collect();
                 ids.extend(everywhere.iter().copied());
-                if module == kentos_launch::Module::Map {
+                // KentOS Yol works on a map's coordinates and layers (plan/road.md ROAD-MOD): a layer's system,
+                // GIS files, sources, labels and typed layers are a road's too.
+                if matches!(
+                    module,
+                    kentos_launch::Module::Map | kentos_launch::Module::Road
+                ) {
                     ids.extend(map_only.iter().copied());
                 }
                 ids.extend(

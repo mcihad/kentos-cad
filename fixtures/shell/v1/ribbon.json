@@ -66,6 +66,10 @@
     "label": "Giriş"
    },
    {
+    "id": "terrain",
+    "label": "Arazi"
+   },
+   {
     "id": "plan",
     "label": "Plan"
    },

@@ -1011,7 +1011,7 @@ fn run_refuses_another_modules_command_and_says_which_program_has_it() {
     let said = last_said(&app);
     assert_eq!(
         said,
-        "“İşlem araç kutusu” KentOS Mimari'de yok; KentOS Harita'da ve KentOS GIS'te var."
+        "“İşlem araç kutusu” KentOS Mimari'de yok; KentOS Harita'da, KentOS GIS'te ve KentOS Yol'da var."
     );
     assert!(!app.available("processing.toolbox"));
     assert_eq!(app.why_disabled("processing.toolbox"), Some(said));
