@@ -794,6 +794,7 @@ fn module_word(module: Module) -> &'static str {
         Module::Architecture => "mimari",
         Module::Map => "harita",
         Module::Gis => "gis",
+        Module::Road => "yol",
     }
 }
 
@@ -874,7 +875,12 @@ mod tests {
 
     #[test]
     fn states_follow_what_is_found_and_the_summary_counts_them() {
-        let launcher = launcher(kentos(&["kentos-mimari", "kentos-harita", "kentos-gis"]));
+        let launcher = launcher(kentos(&[
+            "kentos-mimari",
+            "kentos-harita",
+            "kentos-gis",
+            "kentos-yol",
+        ]));
         let states: Vec<Status> = launcher
             .registry
             .apps
@@ -887,20 +893,20 @@ mod tests {
                 Status::Installed,
                 Status::Installed,
                 Status::Installed,
-                Status::Soon,
+                Status::Installed,
                 Status::Soon,
                 Status::Soon
             ]
         );
         assert_eq!(
             cards::Counts::of(states).parts(),
-            ["6 uygulama", "3 kurulu", "3 yakında"]
+            ["6 uygulama", "4 kurulu", "2 yakında"]
         );
         let none = super::tests::launcher(Fixed(HashMap::new()));
         assert_eq!(none.status(&none.registry.apps[0]), Status::Missing);
         // The one KentOS program alone makes every module installed (docs/adr/0802 §1): kentos-cad as each.
         let cad = super::tests::launcher(kentos(&["kentos-cad"]));
-        for i in 0..3 {
+        for i in 0..4 {
             assert_eq!(cad.status(&cad.registry.apps[i]), Status::Installed);
         }
     }
@@ -953,7 +959,7 @@ mod tests {
     #[test]
     fn the_arrows_move_the_selection_by_the_grid() {
         let mut launcher = launcher(kentos(&["kentos-cad"]));
-        launcher.columns.set(3);
+        launcher.columns.set(4);
         let _ = launcher.update(Message::Move(1, 0));
         assert_eq!(
             launcher.selected.as_deref(),
@@ -963,13 +969,13 @@ mod tests {
         let _ = launcher.update(Message::Move(0, 1));
         assert_eq!(
             launcher.selected.as_deref(),
-            Some("kentos-yol"),
-            "down a row of three"
+            Some("kentos-3d"),
+            "down from a row of four to the coming apps"
         );
         let _ = launcher.update(Message::Move(1, 0));
         assert_eq!(
             launcher.selected.as_deref(),
-            Some("kentos-3d"),
+            Some("kentos-afet"),
             "along the row"
         );
         let _ = launcher.update(Message::Move(0, -1));
@@ -1016,7 +1022,7 @@ mod tests {
             "{}",
             said[0]
         );
-        for soon in ["kentos-yol", "kentos-3d", "kentos-afet"] {
+        for soon in ["kentos-3d", "kentos-afet"] {
             let _ = launcher.update(Message::Launch(soon.into()));
         }
         assert_eq!(

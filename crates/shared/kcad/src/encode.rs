@@ -2089,6 +2089,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 158 (plan/road.md Y1.1): a road project's work.
+    if doc.settings.cad_work == Some(kentos_contracts::CadWork::Road) {
+        return crate::SCHEMA_WITH_ROAD_WORK;
+    }
     if doc.constraints.constraints.iter().any(|c| {
         c.rule.elements().iter().any(|r| {
             matches!(r.element, kentos_contracts::CadElement::ArcEdge { .. })

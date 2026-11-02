@@ -299,7 +299,7 @@ def settings(s):
                 "plotScale": (f64, True),
                 "workspace": (enum(("hybrid", "cad", "gis", "plan3d", "disaster")), False),
                 # Schema 135 (docs/adr/0801): what a CAD project is drawn for.
-                "cadWork": (enum(("architecture", "map")), False),
+                "cadWork": (enum(("architecture", "map", "road")), False),
                 "drawingFont": (enum(("barlow", "arimo", "overpass", "quicksand", "architects-daughter", "courier-prime", "plex-mono")), False),
                 # Schema 50 (docs/adr/0262 §1): inches and feet too, written only in schema 50.
                 "drawingUnit": (enum(("mm", "cm", "m", "in", "ft")), False),
@@ -2381,6 +2381,9 @@ def document(d):
     if "cadWork" in d["settings"]:
         # What a CAD project is drawn for (docs/adr/0801).
         schema = max(schema, 135)
+    if d["settings"].get("cadWork") == "road":
+        # A road project's work (plan/road.md Y1.1).
+        schema = max(schema, 158)
 
     def indexed(nodes):
         return any(n.get("indexes") or indexed(n.get("children", [])) for n in nodes)
@@ -3251,7 +3254,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-158.kcad"] = container(root(cmap(parts), version=uint(158)))
+    files["schema-version-159.kcad"] = container(root(cmap(parts), version=uint(159)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5491,6 +5494,11 @@ def build():
     untyped = copy.deepcopy(worked)
     del untyped["settings"]["workspace"]
     out["broken/cad-work-no-type.kcad"] = container(document(untyped))
+    # Schema 158 (plan/road.md Y1.1): a road project, KentOS Yol's; schema 157 refuses the work.
+    rd = document(load("road-work.json"))
+    assert rd.count(b"\x67version\x18\x9e") == 1, "the road work is schema 158"
+    out["road-work.kcad"] = container(rd)
+    out["broken/road-work-in-schema-157.kcad"] = container(rd.replace(b"\x67version\x18\x9e", b"\x67version\x18\x9d"))
     # Schema 136 (docs/adr/0758): a layer's indexes, a key over two fields, a plain one and a key taking empty values as
     # the same; schema 135 refuses them, an empty list, a group's, one over a field the layer lacks, empty values the
     # same on a plain index and a default written are refused too.

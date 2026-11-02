@@ -742,11 +742,14 @@ pub const SCHEMA_WITH_OPTION_COMBOS: u32 = 154;
 pub const SCHEMA_WITH_INSTANCE_STOREYS: u32 = 155;
 /// Schema 157 (docs/adr/0837): variable circular path edges in geometric constraints.
 pub const SCHEMA_WITH_ARC_EDGE_BONDS: u32 = 157;
+/// Schema 158 (plan/road.md Y1.1): a road project's work (the settings' `cadWork: road`, KentOS Yol); written only
+/// when a CAD project is drawn for a road. Renumbered when the road branch is merged.
+pub const SCHEMA_WITH_ROAD_WORK: u32 = 158;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 155] = [
+pub const SCHEMAS: [u32; 156] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -902,6 +905,7 @@ pub const SCHEMAS: [u32; 155] = [
     SCHEMA_WITH_OPTION_COMBOS,
     SCHEMA_WITH_INSTANCE_STOREYS,
     SCHEMA_WITH_ARC_EDGE_BONDS,
+    SCHEMA_WITH_ROAD_WORK,
 ];
 
 /// The file a drawing is saved as.

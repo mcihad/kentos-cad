@@ -172,6 +172,10 @@ impl App {
                 "Harita ya da imar planı, ilin koordinat sisteminde",
                 "KentOS Harita projesi, DWG, DXF veya NCZ çizimi",
             ),
+            Some(Module::Road) => (
+                "Yol projesi, ilin koordinat sisteminde",
+                "KentOS Yol projesi, DWG, DXF veya NCZ çizimi",
+            ),
             Some(Module::Gis) => (
                 "Koordinat sistemi ve ölçekle CBS projesi",
                 "KentOS GIS projesi; CAD çizimleri kendi programında açılır",

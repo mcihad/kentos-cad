@@ -71,8 +71,8 @@ fn names(app: &App) -> Vec<String> {
 
 #[test]
 fn every_catalog_type_is_one_modules_and_a_program_offers_its_own() {
-    // The server's seven types, each one module's: a building's KentOS Mimari's, the CBS type KentOS GIS's, every
-    // other (the map's and the general CAD's) KentOS Harita's.
+    // The server's seven types, each one module's: a building's KentOS Mimari's, the CBS type KentOS GIS's, a road's
+    // KentOS Yol's (plan/road.md), every other (the map's and the general CAD's) KentOS Harita's.
     for t in plan::PROJECT_TYPES {
         let owner = module_of_type(t).expect("a module");
         assert!(types_of(owner).contains(&t), "{t:?}");
@@ -85,9 +85,9 @@ fn every_catalog_type_is_one_modules_and_a_program_offers_its_own() {
             ProjectType::LandReadjustment,
             ProjectType::ZoningPlan,
             ProjectType::Subdivision,
-            ProjectType::Road,
         ]
     );
+    assert_eq!(types_of(Module::Road), [ProjectType::Road]);
     assert_eq!(types_of(Module::Gis), [ProjectType::Gis]);
     assert_eq!(signed_in_as(None).cloud_types(), plan::PROJECT_TYPES);
 
@@ -183,7 +183,7 @@ fn harita_leaves_other_modules_rows_out_and_goes_on_past_a_page_of_none() {
     answered(
         &mut app,
         true,
-        vec![row(PROJECT, "Ada 7", ProjectType::Road)],
+        vec![row(PROJECT, "Ada 7", ProjectType::Subdivision)],
         40,
         Some("daha"),
     );
@@ -200,7 +200,7 @@ fn harita_leaves_other_modules_rows_out_and_goes_on_past_a_page_of_none() {
         said.ends_with("Burada yalnız KentOS Harita projeleri listelenir; başka türdeki projeler kendi programlarında açılır."),
         "{said}"
     );
-    cloud(&mut app, Event::CatalogKind(Some(ProjectType::Road)));
+    cloud(&mut app, Event::CatalogKind(Some(ProjectType::Subdivision)));
     answered(&mut app, false, Vec::new(), 0, None);
     assert_eq!(
         crate::cloud::catalog::empty_text(catalog(&app), 1),

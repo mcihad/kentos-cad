@@ -193,6 +193,7 @@ impl NewRequest {
             // none, so a system is asked, never guessed.
             fallback_srid: LOCAL_SRID,
             annotation: None,
+            chosen_work: None,
         };
         if !local && draft.srid.or_else(|| draft.suggested_srid()).is_none() {
             return Err(invalid(
@@ -237,6 +238,7 @@ mod tests {
             font: DrawingFont::Barlow,
             fallback_srid: 5256,
             annotation: None,
+            chosen_work: None,
         };
         assert_eq!(p, d.options());
         assert_eq!(

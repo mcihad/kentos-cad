@@ -87,6 +87,7 @@ fn module_tile<'a>(module: Option<Module>, dim: bool, side: f32) -> Element<'a, 
         Some(Module::Architecture) => (Glyph::Mimari, Tone::Purple),
         Some(Module::Map) => (Glyph::Harita, Tone::Blue),
         Some(Module::Gis) => (Glyph::Cbs, Tone::Green),
+        Some(Module::Road) => (Glyph::Yol, Tone::Yellow),
         None => (Glyph::Klasor, Tone::Gray),
     };
     tile(glyph, if dim { Tone::Gray } else { tone }, side)

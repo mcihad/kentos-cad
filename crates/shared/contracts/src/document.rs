@@ -79,8 +79,9 @@ impl Workspace {
 /// What a CAD project is drawn for (docs/adr/0801, 0802; the Yeni proje
 /// wizard's works, docs/adr/0626 §1): a building or a map and zoning plan, the
 /// two CAD programs KentOS has (the owner: “bizde iki tür cad var mimari ve
-/// harita”). It decides the KentOS program the project belongs to (KentOS
-/// Mimari, KentOS Harita) and the ribbon's tabs and panels; it never changes
+/// harita”); and a road (plan/road.md), KentOS Yol's. It decides the KentOS
+/// program the project belongs to (KentOS Mimari, KentOS Harita, KentOS Yol)
+/// and the ribbon's tabs and panels; it never changes
 /// what the data means, and every command still runs. Only a CAD project has one; one written before works has none and the
 /// desktop asks it once. Like its type, a project keeps the work it has.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -93,17 +94,20 @@ pub enum CadWork {
     Architecture,
     /// Harita / imar planı: site plans, zoning, surveys and infrastructure.
     Map,
+    /// Yol projesi: terrain, alignments, profiles, sections and earthworks (plan/road.md; `.kcad` schema 158).
+    Road,
 }
 
 impl CadWork {
     /// Every work, in the wizard's order.
-    pub const ALL: [CadWork; 2] = [CadWork::Architecture, CadWork::Map];
+    pub const ALL: [CadWork; 3] = [CadWork::Architecture, CadWork::Map, CadWork::Road];
 
-    /// The id the file and the commands write (`architecture`, `map`).
+    /// The id the file and the commands write (`architecture`, `map`, `road`).
     pub const fn id(self) -> &'static str {
         match self {
             CadWork::Architecture => "architecture",
             CadWork::Map => "map",
+            CadWork::Road => "road",
         }
     }
 
@@ -117,6 +121,7 @@ impl CadWork {
         match self {
             CadWork::Architecture => "Mimari proje",
             CadWork::Map => "Harita / imar planı",
+            CadWork::Road => "Yol projesi",
         }
     }
 }

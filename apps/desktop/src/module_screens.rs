@@ -131,6 +131,7 @@ fn ribbons() {
     for (work, word, tabs) in [
         (CadWork::Architecture, "mimari", ["arch", "view"]),
         (CadWork::Map, "harita", ["plan", "survey"]),
+        (CadWork::Road, "yol", ["home", "view"]),
     ] {
         let path = saved_as(
             &dir,
@@ -187,6 +188,11 @@ fn start_screens() {
                     Some(Module::Architecture),
                 ),
                 (
+                    "/home/kullanici/Projeler/D-200 Sivas çevre yolu.kcad",
+                    "8.512 nesne · TUREF / TM36",
+                    Some(Module::Road),
+                ),
+                (
                     "/home/kullanici/Projeler/Merdiven detayı.kcad",
                     "96 nesne · Yerel (koordinat sistemi yok)",
                     Some(Module::Architecture),
@@ -215,7 +221,7 @@ fn wizards() {
                 }
                 let mut app = program(Some(m), theme);
                 update(&mut app, Message::Run("file.new"));
-                if m == Module::Map {
+                if matches!(m, Module::Map | Module::Road) {
                     update(
                         &mut app,
                         Message::Project(Box::new(crate::project::Event::New(W::Province(58)))),

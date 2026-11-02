@@ -1085,13 +1085,25 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             }
             // Schema 135 (docs/adr/0801): what a CAD project is drawn for.
             "cadWork" if has.cad_work => {
-                cad_work = Some(named(
-                    r,
-                    &[
-                        ("architecture", CadWork::Architecture),
-                        ("map", CadWork::Map),
-                    ],
-                )?)
+                // Schema 158 (plan/road.md Y1.1): a road project's work.
+                cad_work = Some(if has.road_work {
+                    named(
+                        r,
+                        &[
+                            ("architecture", CadWork::Architecture),
+                            ("map", CadWork::Map),
+                            ("road", CadWork::Road),
+                        ],
+                    )?
+                } else {
+                    named(
+                        r,
+                        &[
+                            ("architecture", CadWork::Architecture),
+                            ("map", CadWork::Map),
+                        ],
+                    )?
+                })
             }
             "workspace" => {
                 workspace = Some(named(

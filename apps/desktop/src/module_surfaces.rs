@@ -13,6 +13,9 @@
 //! - KentOS Harita, a map on real coordinates: every tab but Grafik and Denetim; every panel; the map system,
 //!   the second system, Topoloji and Çakışma; Kotlar ve epok and Ölçme; GIS files, sources and services; its
 //!   new projects in metres.
+//! - KentOS Yol, a road on real coordinates (plan/road.md ROAD-MOD): the map's survey and coordinate surfaces
+//!   (Koordinat listesi, Noktalar, İkinci sistem, Kotlar ve epok, Ölçme), no parcel rows, zoning legends,
+//!   addresses, topology or overlap lamps; its sheets and its cloud projects are a road's.
 //! - KentOS GIS: every tab but Denetim; every panel but Bloklar; Senaryo too; time, scenarios and typed layers;
 //!   Katman stili's thematic renderers; no blocks and no polyline widths in the tools (Böl's Blok, Çoklu
 //!   çizgi's Genişlik, the grip menu's Kenar genişliği…), nor a polyline's Genişlik and an area's Maske in
@@ -275,6 +278,49 @@ const MAP: Surfaces = Surfaces {
     library_hidden: &[],
 };
 
+/// KentOS Yol (plan/road.md ROAD-MOD): a road on real coordinates; the map's survey surfaces, no zoning,
+/// addresses, topology or overlap.
+const ROAD: Surfaces = Surfaces {
+    bottom: &[
+        BottomTab::History,
+        BottomTab::Coords,
+        BottomTab::Points,
+        BottomTab::Table,
+        BottomTab::Search,
+        BottomTab::Messages,
+        BottomTab::Python,
+    ],
+    panels: &[
+        Panel::Layers,
+        Panel::Processing,
+        Panel::Blocks,
+        Panel::Templates,
+        Panel::Sources,
+        Panel::Properties,
+    ],
+    cells: &[Cell::SecondCrs],
+    project: &[
+        ProjectSection::General,
+        ProjectSection::Units,
+        ProjectSection::Crs,
+        ProjectSection::Heights,
+        ProjectSection::Survey,
+    ],
+    settings: &[AppSetting::Geographic, AppSetting::NewProjects],
+    layer_menu: &[LayerEntry::Crs, LayerEntry::Service, LayerEntry::Source],
+    formats: Formats::All,
+    sources: &[SourceSection::Services],
+    rows: &[PropertyRows::Crs, PropertyRows::Services],
+    parcels: false,
+    sheet: ProjectType::Road,
+    cloud: Some(ProjectType::Road),
+    upload: ProjectType::Road,
+    hidden_calc: &[],
+    left_out: &[],
+    thematic: false,
+    library_hidden: &[],
+};
+
 /// KentOS GIS: no blocks and no architectural audit.
 const GIS: Surfaces = Surfaces {
     bottom: &[
@@ -350,6 +396,7 @@ pub(crate) fn surfaces(module: Module) -> &'static Surfaces {
         Module::Architecture => &ARCHITECTURE,
         Module::Map => &MAP,
         Module::Gis => &GIS,
+        Module::Road => &ROAD,
     }
 }
 
@@ -406,13 +453,13 @@ fn extension(path: &Path) -> String {
         .unwrap_or_default()
 }
 
-/// “KentOS Harita'da ve KentOS GIS'te”: where the programs are, in a sentence.
+/// “KentOS Harita'da, KentOS GIS'te ve KentOS Yol'da”: where the programs are, in a sentence.
 fn joined(modules: &[Module]) -> String {
-    modules
+    let places: Vec<&str> = modules
         .iter()
         .map(|m| crate::program::in_program(*m))
-        .collect::<Vec<_>>()
-        .join(" ve ")
+        .collect();
+    crate::program::and_list(&places)
 }
 
 impl App {

@@ -1,11 +1,10 @@
 {
   "format": "kentos.launcher-app/1",
   "id": "kentos-yol",
-  "name": "KentOS YOL",
-  "note": "Yol ve altyapı projeleri",
   "icon": "yol",
   "color": "yellow",
   "picture": "yol",
-  "state": "soon",
-  "order": 40
+  "launch": { "kind": "kentos", "module": "yol" },
+  "order": 40,
+  "files": ["kcad"]
 }

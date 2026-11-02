@@ -313,7 +313,7 @@ mod tests {
             .filter(|a| a.state == State::Soon)
             .map(|a| a.name.as_str())
             .collect();
-        assert_eq!(soon, ["KentOS YOL", "KentOS 3D", "KentOS Afet"]);
+        assert_eq!(soon, ["KentOS 3D", "KentOS Afet"]);
         // Each card has the picture and the glyph of its own, and a tone no other has.
         let mut tones = Vec::new();
         for app in &registry.apps {

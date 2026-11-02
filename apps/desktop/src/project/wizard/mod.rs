@@ -186,6 +186,8 @@ impl State {
 
     /// The step at `index`, if every step before it can be left.
     fn go(&mut self, index: usize) {
+        // A module's program has no type step (docs/adr/0802): nothing before its first step is gone to.
+        let index = index.max(self.first_step());
         let Some(to) = STEPS.get(index) else { return };
         for s in &STEPS[..index] {
             if let Some(why) = self.draft.blocked(*s) {
@@ -489,6 +491,7 @@ impl App {
         let title = match s.limit {
             Some(kentos_launch::Module::Map) => "Yeni harita projesi",
             Some(kentos_launch::Module::Gis) => "Yeni CBS projesi",
+            Some(kentos_launch::Module::Road) => "Yeni yol projesi",
             Some(kentos_launch::Module::Architecture) => "Yeni mimari proje",
             None => "Yeni proje",
         };
