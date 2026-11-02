@@ -604,6 +604,14 @@ Yukarıdaki fazlar hedef kapsamdır. Uygulama, 3B sahne beklenmeden, her biri ku
 | Y11 | Sanat yapıları ve güvenlik | ROAD-DRAIN-01, 02, 11; ROAD-JUNC-12 | Menfez ve duvar bileşenleri, otokorkuluk aralıkları, metraj |
 | Y12 | Ön güzergâh, kavşak, 3B | ROAD-ALIGN-13; ROAD-JUNC; 3d.md bağlantısı | Koridor analizi (yasak alanlar), kavşak, 3B sahne |
 
+**Y1'in aşamaları** (araştırma 2 Kasım 2026: OpenRoads'un iş akışı sekmeleri Home, Terrain, Geometry, Site, Corridors, Model Detailing, Drawing Production soldan sağa iş sırasıyla dizilir, [Bentley şerit yardımı](https://docs.bentley.com/LiveContent/web/OpenRoads%20Designer-v2024.0.2/Help/en/topics/1296840/GUID-40CF9525-AB56-47BF-AF51-63D75333BB61.html), [CTDOT giriş](https://portal.ct.gov/dot/engineering-applications/ctdot-connect-dde-ebook-volume-003---openroads-designer-roadway-modeling/section-1---introduction); Netpro editörleri tek pencereden ve proje ekranından yönetir):
+
+1. **Y1.1 Modül:** `CadWork::Road` (`.kcad`'de opt-in), `Module::Road` (`yol`, KentOS Yol, `kentos-yol`), bulut kataloğunun `road` türü Harita'dan Yol'a geçer, Launcher kartı açılır, sihirbazda “Yol projesi” (metre, 1:1000, ilin sisteminde). Ekran: Launcher ve boş `kentos-yol` penceresi.
+2. **Y1.2 Şerit:** CAD'in ortak sekmeleri (Dosya, Giriş, Ekle, Açıklama, Değiştir, Görünüm, Yönet, Çıktı) ve yolun ilk sekmesi Arazi (ölçüm, karne, GNSS, nokta bulutu, raster altlık); Harita'nın Plan sekmesi ve Mimari'nin sekmesi yolda yoktur; Ölçme Harita ile ortak. Yolun öbür sekmeleri kendi maddesiyle gelir; boş sekme ya da sessiz düğme konmaz. Ekran: dar ve geniş, açık ve koyu.
+3. **Y1.3 Yol projesinin ayarları:** sihirbazda ve Proje ayarları'nda düşey datum (mevcut `heights` ayarı, ADR 0519/0631) ve standart profili (yok ya da kataloğun profili); profil yokken “standart denetimi yok” sözü. Ekran: sihirbaz ve ayarlar.
+
+Proje ağacı (ROAD-MOD-04) ve bölünmüş plan–boykesit–enkesit görünüşü (ROAD-MOD-05) gösterecek kaynak oluşunca Y2–Y5'te gelir.
+
 Her maddenin kabulünde CLAUDE.md §9.2 geçerlidir: anlamsal komut, ortak durumlar (KentOS kodu olmadan yazılmış bağımsız başvuru), Python (`kentos.road`) ve MCP, manifest; aracın yazması kayıtta komutun adıyla; dar ve geniş pencerede, iki temada gerçek masaüstü görüntüleri (repo dışında `.run/gui-evidence/`).
 
 İlk 12 iş (taslak 0.1; 25.1'in Y1–Y10'u bunların yerini alır):
