@@ -217,6 +217,8 @@ pub enum Dialog {
     HatchPatterns,
     /// Değişikliğin etkisi (style_impact.rs, docs/adr/0314 §4); the window is `App::style_impact`.
     StyleImpact,
+    /// Read-only impact of the current block editor draft.
+    BlockReview,
     /// Alanlar (layer_fields.rs, docs/adr/0199 §3); the window is `App::layer_fields`.
     LayerFields,
     /// Katman süzgeci (layer_filters.rs, docs/adr/0211 §4); the window is `App::layer_filter`.

@@ -1968,6 +1968,7 @@ impl App {
             Asking::Parameters => self.parameters_view(),
             Asking::HatchPatterns => self.hatch_patterns_view(),
             Asking::StyleImpact => self.style_impact_view(),
+            Asking::BlockReview => self.block_editor_review_view(),
             Asking::LayerFields => self.layer_fields_view(),
             Asking::LayerFilter => self.layer_filter_view(),
             Asking::FieldsWrite => self.features_write_view(),

@@ -29,6 +29,9 @@ use crate::document::Document;
 use kentos_interaction::Level;
 use kentos_interaction::Selection;
 
+mod review;
+pub(crate) use review::TITLE as REVIEW_TITLE;
+
 /// The editor's layer for the block's own layer (`""`).
 pub const BLOCK_LAYER: &str = "__blok__";
 const BLOCK_LAYER_NAME: &str = "0 (blok)";
@@ -43,6 +46,7 @@ pub struct BlockEditor {
     camera: Camera,
     selection: Selection,
     test: Option<TestPlacement>,
+    review: Option<review::Pending>,
 }
 
 /// The editable draft put aside while an expendable insert is exercised. Its history is kept intact.
@@ -59,6 +63,9 @@ pub enum Event {
     Discard,
     Test,
     BackToEditor,
+    Review,
+    ReviewReady(u64, u64, u64, Box<Result<review::Review, String>>),
+    CloseReview,
 }
 
 fn msg(e: Event) -> Message {
@@ -198,6 +205,11 @@ impl App {
             Event::Discard => self.block_editor_close(false),
             Event::Test => self.block_editor_test(),
             Event::BackToEditor => self.block_editor_back_from_test(),
+            Event::Review => return self.block_editor_review(),
+            Event::ReviewReady(token, session, generation, result) => {
+                self.block_editor_review_ready(token, session, generation, *result)
+            }
+            Event::CloseReview => self.block_editor_review_close(),
         }
         Task::none()
     }
@@ -260,6 +272,7 @@ impl App {
                     camera,
                     selection,
                     test: None,
+                    review: None,
                 });
                 self.say(
                     Level::Info,
@@ -443,6 +456,7 @@ impl App {
                 text(format!("{count} nesne")).style(style::text::muted),
                 iced::widget::Space::new().width(iced::Fill),
                 crate::exchange::words::secondary("Test et", Some(msg(Event::Test))),
+                crate::exchange::words::secondary("Etkiyi gör", Some(msg(Event::Review))),
                 crate::exchange::words::secondary("Vazgeç", Some(msg(Event::Discard))),
                 crate::exchange::words::primary("Kaydet", Some(msg(Event::Save))),
             ]

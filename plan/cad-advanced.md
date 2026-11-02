@@ -579,8 +579,18 @@ Kaydet/Python dosya eşitliği, tam tek Undo ve iptal dosyası doğrulandı.
 örneği çalıştırıldı. [ADR 0846](../docs/adr/0846-block-editor-test-placement.md),
 [kullanım/API rehberi](../docs/cad/block-test-placement.md).
 
+**İlerleme — 2026-11-02, değişiklik etkisi:** Düzenleyicide **Etkiyi gör** güncel
+taslağın `cad.blocks.edit` ortak planını ayrı iş parçacığında çalıştırır;
+gerçek değişen/bağlı kayıtları, doğrudan/iç içe yerleştirmelerden ayrı gösterir.
+Kilitli katman, üst tanım adları ve bağlı ölçü/tarama/çizelge okuyucuları görünür.
+Kapat/Esc yazmaz; eski istek ve değişmiş taslak sonucu reddedilir. Gerçek GUI'de
+3 doğrudan/2 iç içe/2 kilitli, 1 ölçü/1 tablo kabulü ve dar pencere geçti;
+GUI/Python kayıtları tam aynı, GUI tek Undo başlangıçla tam aynı. 1595 masaüstü,
+51 MCP ve Python kabulü geçti. [ADR 0847](../docs/adr/0847-block-editor-update-impact.md),
+[kullanım/API](../docs/cad/block-update-review.md).
+
 Tür/sürüm ve seçilmiş yükseltme, okunur parametre grupları, tip–örnek
-ayrımı, iç içe etki önizlemesi ve birleşik blok kabulü açıktır. Web öznitelik penceresinin native eşitleme kapsamıyla
+ayrımı ve birleşik blok kabulü açıktır. Web öznitelik penceresinin native eşitleme kapsamıyla
 aynı olmadığı kodda görüldü; bu dilim web eşitliğini tamamlanmış saymaz.
 
 ### CAD-ADV-07 — Tekrarları tanı, blok ve ilişkili diziye kontrollü dönüştür [ ]

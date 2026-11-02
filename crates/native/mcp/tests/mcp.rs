@@ -3440,3 +3440,70 @@ fn attribute_tag_rename_keeps_existing_values_in_mcp_plan_execute_save_and_undo(
     assert_eq!(std::fs::read(&path).unwrap(), baseline);
     std::fs::remove_dir_all(dir).unwrap();
 }
+
+#[test]
+fn a_block_definition_review_is_read_only_and_its_plan_guards_the_same_write() {
+    let dir = std::env::temp_dir().join(format!("kentos-mcp-block-review-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join("door.kcad");
+    let baseline = include_bytes!("../../../../fixtures/kcad/v2/dynamic-blocks.kcad");
+    std::fs::write(&path, baseline).unwrap();
+    let raw: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/kcad/v2/dynamic-blocks.json"
+    ))
+    .unwrap();
+    let block = raw["blocks"][0]["id"].clone();
+    let mut pieces = raw["blocks"][0]["entities"].as_array().unwrap().clone();
+    pieces.push(json!({"kind":"line","id":5,"layerId":"","attrs":{},
+        "a":{"x":0.06,"y":0.45},"b":{"x":0.3,"y":0.45}}));
+    let mut server = Server::new();
+    let drawing =
+        call(&mut server, "drawing.open", json!({"path":path}))["structuredContent"]["drawing"]
+            .clone();
+    let before=call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"].clone();
+    let mut input =
+        json!({"drawing":drawing,"operation":"update","block":block,"entities":pieces,"op":"plan"});
+    let planned = call(&mut server, "cad.blocks.edit", input.clone());
+    let plan = &planned["structuredContent"];
+    assert_eq!(plan["status"], "completed", "{planned}");
+    assert_eq!(plan["summary"]["blocks"]["changed"], json!([block]));
+    assert_eq!(plan["summary"]["counts"]["changed"], 0);
+    assert!(plan["planId"].as_str().is_some_and(|s| !s.is_empty()));
+    assert_eq!(
+        call(&mut server, "drawing.entities", json!({"drawing":drawing}))["structuredContent"]["items"],
+        before
+    );
+    call(
+        &mut server,
+        "drawing.save",
+        json!({"drawing":drawing,"path":path}),
+    );
+    assert_eq!(std::fs::read(&path).unwrap(), baseline);
+    input["op"] = json!("execute");
+    input["expected"] = json!({"plan":plan["planId"]});
+    let written = call(&mut server, "cad.blocks.edit", input);
+    assert_eq!(
+        written["structuredContent"]["status"], "completed",
+        "{written}"
+    );
+    assert_eq!(
+        written["structuredContent"]["summary"]["counts"],
+        plan["summary"]["counts"]
+    );
+    assert_eq!(
+        plan["output"]["changed"][0]["entities"]
+            .as_array()
+            .unwrap()
+            .len(),
+        5
+    );
+    assert_eq!(written["structuredContent"]["output"]["changed"], json!([block]));
+    call(&mut server, "drawing.undo", json!({"drawing":drawing}));
+    call(
+        &mut server,
+        "drawing.save",
+        json!({"drawing":drawing,"path":path}),
+    );
+    assert_eq!(std::fs::read(&path).unwrap(), baseline);
+    std::fs::remove_dir_all(dir).unwrap();
+}
