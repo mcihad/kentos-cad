@@ -3177,6 +3177,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "kentos-road"
+version = "0.1.0"
+dependencies = [
+ "kentos-geometry-core",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "kentos-services"
 version = "0.1.0"
 dependencies = [

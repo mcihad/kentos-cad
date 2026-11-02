@@ -614,6 +614,14 @@ Proje ağacı (ROAD-MOD-04) ve bölünmüş plan–boykesit–enkesit görünü�
 
 **Y1'in durumu (2 Kasım 2026, dal `road-01-yuzey`):** Y1.1 `20b252b2e` (`CadWork::Road`, `.kcad` şema 158, `Module::Road`, Launcher kartı, sihirbazın Yol projesi kartı, bulut kataloğunun `road` türü Yol'da), Y1.2 `dec3c4e54` (şerit: Arazi sekmesi, Ölçme ve altlıklar Harita ile ortak, seçim sekmelerinde arazi işlemleri, hidroloji ve uzaklık/maliyet), Y1.3 `417bd05b2` (yeni yol projesi TUDKA-99 ortometrik kotlar ve TG-20 geoidiyle; sihirbazda Kotlar; Python `cad_work`, MCP `drawing.new` `cadWork`). ROAD-MOD-02'nin standart profili ROAD-DEC-01'i (resmî KTEK kopyası) bekler; ROAD-MOD-03'ün öbür sekmeleri kendi maddeleriyle gelir. Ajan bağlantısı testleri (`every_program_opens_a_link_of_its_own`, MCP `desktop_attach_names_the_program_whose_link_it_takes`) macOS'ta ana dalda da düşer: geçici soket yolu SUN_LEN'den uzun.
 
+**Y2'nin aşamaları** ([ADR 0900](../docs/adr/0900-road-terrain-surface.md); araştırma 2 Kasım 2026: OpenRoads'un nokta, kırık hat, sınır, boşluk ve kenar yöntemi; Civil 3D'nin kırık hat türleri; Netcad'in üçgen model akışı; Shewchuk–Brown ve Sloan'ın kısıt ekleme yöntemi):
+
+1. **Y2.1 Çekirdek:** `kentos-road` crate'i; kısıtlı Delaunay (noktalar, kırık hatlar, drape sınır ve boşluklar, en uzun dış kenar), aynı yer ve kot çelişkisi retleri, kot sorgusu; Triangle ve kesirli Python denetleyicisiyle ortak durumlar. Ekran: örnek yüzeylerin resmi.
+2. **Y2.2 Kayıt:** yüzeyin kaynakları (katmanlar, nesneler, ayarlar) ve sonucu `.kcad`'de; kaynak değişince yüzey “eskidi”.
+3. **Y2.3 Komutlar:** `road.terrains.create`, `.edit`, `.query` (kot, kesit), Python `kentos.road`, MCP; manifest.
+4. **Y2.4 Masaüstü:** Arazi sekmesinde Yüzey oluştur aracı, yüzeyin çizimi (üçgenler, kırık hatlar, sınır), Öznitelikler ve proje ağacının ilk hâli (ROAD-MOD-04).
+5. **Y2.5 Türevler:** TIN'den eş yükselti eğrileri (ROAD-TIN-15), eğim ve bakı (ROAD-TIN-16), LandXML yüzeyi okuma.
+
 Her maddenin kabulünde CLAUDE.md §9.2 geçerlidir: anlamsal komut, ortak durumlar (KentOS kodu olmadan yazılmış bağımsız başvuru), Python (`kentos.road`) ve MCP, manifest; aracın yazması kayıtta komutun adıyla; dar ve geniş pencerede, iki temada gerçek masaüstü görüntüleri (repo dışında `.run/gui-evidence/`).
 
 İlk 12 iş (taslak 0.1; 25.1'in Y1–Y10'u bunların yerini alır):
