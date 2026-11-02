@@ -1,0 +1,2178 @@
+{
+ "format": "kentos.road-superelevation-cases",
+ "version": 1,
+ "cases": [
+  {
+   "name": "Sağa dönen kurp, klotoidli, geçiş klotoidde",
+   "pis": [
+    {
+     "id": "a",
+     "x": 0,
+     "y": 0,
+     "radius": 0,
+     "spiralIn": 0,
+     "spiralOut": 0
+    },
+    {
+     "id": "p1",
+     "x": 400,
+     "y": 0,
+     "radius": 300,
+     "spiralIn": 60,
+     "spiralOut": 60
+    },
+    {
+     "id": "b",
+     "x": 800,
+     "y": -300,
+     "radius": 0,
+     "spiralIn": 0,
+     "spiralOut": 0
+    }
+   ],
+   "normal": [
+    -2.5,
+    -2.5
+   ],
+   "rules": [
+    {
+     "pi": "p1",
+     "rate": 6.0,
+     "runoff": 60.0,
+     "onTangent": 0.0,
+     "widening": 0.0
+    }
+   ],
+   "schedule": {
+    "left": [
+     [
+      244.8433900671983,
+      -2.5
+     ],
+     [
+      329.8433900671983,
+      6.0
+     ],
+     [
+      462.89372270518356,
+      6.0
+     ],
+     [
+      547.8937227051836,
+      -2.5
+     ]
+    ],
+    "right": [
+     [
+      294.8433900671983,
+      -2.5
+     ],
+     [
+      329.8433900671983,
+      -6.0
+     ],
+     [
+      462.89372270518356,
+      -6.0
+     ],
+     [
+      497.89372270518356,
+      -2.5
+     ]
+    ],
+    "leftWidening": [],
+    "rightWidening": []
+   },
+   "critical": [
+    {
+     "pi": "p1",
+     "mark": "normalCrown",
+     "station": 244.8433900671983,
+     "exit": false
+    },
+    {
+     "pi": "p1",
+     "mark": "levelCrown",
+     "station": 269.8433900671983,
+     "exit": false
+    },
+    {
+     "pi": "p1",
+     "mark": "reverseCrown",
+     "station": 294.8433900671983,
+     "exit": false
+    },
+    {
+     "pi": "p1",
+     "mark": "full",
+     "station": 329.8433900671983,
+     "exit": false
+    },
+    {
+     "pi": "p1",
+     "mark": "full",
+     "station": 462.89372270518356,
+     "exit": true
+    },
+    {
+     "pi": "p1",
+     "mark": "reverseCrown",
+     "station": 497.89372270518356,
+     "exit": true
+    },
+    {
+     "pi": "p1",
+     "mark": "levelCrown",
+     "station": 522.8937227051836,
+     "exit": true
+    },
+    {
+     "pi": "p1",
+     "mark": "normalCrown",
+     "station": 547.8937227051836,
+     "exit": true
+    }
+   ],
+   "at": [
+    {
+     "station": 0.0,
+     "left": -2.5,
+     "right": -2.5,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 150.0,
+     "left": -2.5,
+     "right": -2.5,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 300.0,
+     "left": 3.01566099328017,
+     "right": -3.01566099328017,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 330.0,
+     "left": 6.0,
+     "right": -6.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 345.0,
+     "left": 6.0,
+     "right": -6.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 360.0,
+     "left": 6.0,
+     "right": -6.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 400.0,
+     "left": 6.0,
+     "right": -6.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 450.0,
+     "left": 6.0,
+     "right": -6.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 500.0,
+     "left": 2.2893722705183563,
+     "right": -2.5,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 600.0,
+     "left": -2.5,
+     "right": -2.5,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 700.0,
+     "left": -2.5,
+     "right": -2.5,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    }
+   ]
+  },
+  {
+   "name": "Sola dönen kurp: sağ yan dışta",
+   "pis": [
+    {
+     "id": "a",
+     "x": 0,
+     "y": 0,
+     "radius": 0,
+     "spiralIn": 0,
+     "spiralOut": 0
+    },
+    {
+     "id": "p1",
+     "x": 400,
+     "y": 0,
+     "radius": 300,
+     "spiralIn": 60,
+     "spiralOut": 60
+    },
+    {
+     "id": "b",
+     "x": 800,
+     "y": 300,
+     "radius": 0,
+     "spiralIn": 0,
+     "spiralOut": 0
+    }
+   ],
+   "normal": [
+    -2.5,
+    -2.5
+   ],
+   "rules": [
+    {
+     "pi": "p1",
+     "rate": 6.0,
+     "runoff": 60.0,
+     "onTangent": 0.0,
+     "widening": 0.0
+    }
+   ],
+   "schedule": {
+    "left": [
+     [
+      294.8433900671983,
+      -2.5
+     ],
+     [
+      329.8433900671983,
+      -6.0
+     ],
+     [
+      462.89372270518356,
+      -6.0
+     ],
+     [
+      497.89372270518356,
+      -2.5
+     ]
+    ],
+    "right": [
+     [
+      244.8433900671983,
+      -2.5
+     ],
+     [
+      329.8433900671983,
+      6.0
+     ],
+     [
+      462.89372270518356,
+      6.0
+     ],
+     [
+      547.8937227051836,
+      -2.5
+     ]
+    ],
+    "leftWidening": [],
+    "rightWidening": []
+   },
+   "critical": [
+    {
+     "pi": "p1",
+     "mark": "normalCrown",
+     "station": 244.8433900671983,
+     "exit": false
+    },
+    {
+     "pi": "p1",
+     "mark": "levelCrown",
+     "station": 269.8433900671983,
+     "exit": false
+    },
+    {
+     "pi": "p1",
+     "mark": "reverseCrown",
+     "station": 294.8433900671983,
+     "exit": false
+    },
+    {
+     "pi": "p1",
+     "mark": "full",
+     "station": 329.8433900671983,
+     "exit": false
+    },
+    {
+     "pi": "p1",
+     "mark": "full",
+     "station": 462.89372270518356,
+     "exit": true
+    },
+    {
+     "pi": "p1",
+     "mark": "reverseCrown",
+     "station": 497.89372270518356,
+     "exit": true
+    },
+    {
+     "pi": "p1",
+     "mark": "levelCrown",
+     "station": 522.8937227051836,
+     "exit": true
+    },
+    {
+     "pi": "p1",
+     "mark": "normalCrown",
+     "station": 547.8937227051836,
+     "exit": true
+    }
+   ],
+   "at": [
+    {
+     "station": 0.0,
+     "left": -2.5,
+     "right": -2.5,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 150.0,
+     "left": -2.5,
+     "right": -2.5,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 300.0,
+     "left": -3.01566099328017,
+     "right": 3.01566099328017,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 330.0,
+     "left": -6.0,
+     "right": 6.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 345.0,
+     "left": -6.0,
+     "right": 6.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 360.0,
+     "left": -6.0,
+     "right": 6.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 400.0,
+     "left": -6.0,
+     "right": 6.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 450.0,
+     "left": -6.0,
+     "right": 6.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 500.0,
+     "left": -2.5,
+     "right": 2.2893722705183563,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 600.0,
+     "left": -2.5,
+     "right": -2.5,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 700.0,
+     "left": -2.5,
+     "right": -2.5,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    }
+   ]
+  },
+  {
+   "name": "Klotoidsiz kurp, geçişin 0,7'si teğette",
+   "pis": [
+    {
+     "id": "a",
+     "x": 0,
+     "y": 0,
+     "radius": 0,
+     "spiralIn": 0,
+     "spiralOut": 0
+    },
+    {
+     "id": "p1",
+     "x": 400,
+     "y": 0,
+     "radius": 350,
+     "spiralIn": 0,
+     "spiralOut": 0
+    },
+    {
+     "id": "b",
+     "x": 800,
+     "y": -250,
+     "radius": 0,
+     "spiralIn": 0,
+     "spiralOut": 0
+    }
+   ],
+   "normal": [
+    -2.5,
+    -2.5
+   ],
+   "rules": [
+    {
+     "pi": "p1",
+     "rate": 7.0,
+     "runoff": 50.0,
+     "onTangent": 0.7,
+     "widening": 0.0
+    }
+   ],
+   "schedule": {
+    "left": [
+     [
+      246.76417789889487,
+      -2.5
+     ],
+     [
+      314.62132075603773,
+      7.0
+     ],
+     [
+      480.1310811262846,
+      7.0
+     ],
+     [
+      547.9882239834275,
+      -2.5
+     ]
+    ],
+    "right": [
+     [
+      282.47846361318057,
+      -2.5
+     ],
+     [
+      314.62132075603773,
+      -7.0
+     ],
+     [
+      480.1310811262846,
+      -7.0
+     ],
+     [
+      512.2739382691417,
+      -2.5
+     ]
+    ],
+    "leftWidening": [],
+    "rightWidening": []
+   },
+   "critical": [
+    {
+     "pi": "p1",
+     "mark": "normalCrown",
+     "station": 246.76417789889487,
+     "exit": false
+    },
+    {
+     "pi": "p1",
+     "mark": "levelCrown",
+     "station": 264.62132075603773,
+     "exit": false
+    },
+    {
+     "pi": "p1",
+     "mark": "reverseCrown",
+     "station": 282.47846361318057,
+     "exit": false
+    },
+    {
+     "pi": "p1",
+     "mark": "full",
+     "station": 314.62132075603773,
+     "exit": false
+    },
+    {
+     "pi": "p1",
+     "mark": "full",
+     "station": 480.1310811262846,
+     "exit": true
+    },
+    {
+     "pi": "p1",
+     "mark": "reverseCrown",
+     "station": 512.2739382691417,
+     "exit": true
+    },
+    {
+     "pi": "p1",
+     "mark": "levelCrown",
+     "station": 530.1310811262846,
+     "exit": true
+    },
+    {
+     "pi": "p1",
+     "mark": "normalCrown",
+     "station": 547.9882239834275,
+     "exit": true
+    }
+   ],
+   "at": [
+    {
+     "station": 0.0,
+     "left": -2.5,
+     "right": -2.5,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 150.0,
+     "left": -2.5,
+     "right": -2.5,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 300.0,
+     "left": 4.9530150941547175,
+     "right": -4.9530150941547175,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 330.0,
+     "left": 7.0,
+     "right": -7.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 345.0,
+     "left": 7.0,
+     "right": -7.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 360.0,
+     "left": 7.0,
+     "right": -7.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 400.0,
+     "left": 7.0,
+     "right": -7.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 450.0,
+     "left": 7.0,
+     "right": -7.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 500.0,
+     "left": 4.2183513576798415,
+     "right": -4.2183513576798415,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 600.0,
+     "left": -2.5,
+     "right": -2.5,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 700.0,
+     "left": -2.5,
+     "right": -2.5,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    }
+   ]
+  },
+  {
+   "name": "İki kurp, aralarında teğet",
+   "pis": [
+    {
+     "id": "a",
+     "x": 0,
+     "y": 0,
+     "radius": 0,
+     "spiralIn": 0,
+     "spiralOut": 0
+    },
+    {
+     "id": "p1",
+     "x": 400,
+     "y": 0,
+     "radius": 250,
+     "spiralIn": 50,
+     "spiralOut": 50
+    },
+    {
+     "id": "p2",
+     "x": 900,
+     "y": 350,
+     "radius": 250,
+     "spiralIn": 50,
+     "spiralOut": 50
+    },
+    {
+     "id": "b",
+     "x": 1400,
+     "y": 350,
+     "radius": 0,
+     "spiralIn": 0,
+     "spiralOut": 0
+    }
+   ],
+   "normal": [
+    -2.0,
+    -2.0
+   ],
+   "rules": [
+    {
+     "pi": "p2",
+     "rate": 5.0,
+     "runoff": 50.0,
+     "onTangent": 0.0,
+     "widening": 0.0
+    },
+    {
+     "pi": "p1",
+     "rate": 5.0,
+     "runoff": 50.0,
+     "onTangent": 0.0,
+     "widening": 0.0
+    }
+   ],
+   "schedule": {
+    "left": [
+     [
+      316.0714776160715,
+      -2.0
+     ],
+     [
+      346.0714776160715,
+      -5.0
+     ],
+     [
+      448.7529687133736,
+      -5.0
+     ],
+     [
+      478.7529687133736,
+      -2.0
+     ],
+     [
+      881.2237047322018,
+      -2.0
+     ],
+     [
+      951.2237047322018,
+      5.0
+     ],
+     [
+      1053.9051958295038,
+      5.0
+     ],
+     [
+      1123.9051958295038,
+      -2.0
+     ]
+    ],
+    "right": [
+     [
+      276.0714776160715,
+      -2.0
+     ],
+     [
+      346.0714776160715,
+      5.0
+     ],
+     [
+      448.7529687133736,
+      5.0
+     ],
+     [
+      518.7529687133735,
+      -2.0
+     ],
+     [
+      921.2237047322018,
+      -2.0
+     ],
+     [
+      951.2237047322018,
+      -5.0
+     ],
+     [
+      1053.9051958295038,
+      -5.0
+     ],
+     [
+      1083.9051958295038,
+      -2.0
+     ]
+    ],
+    "leftWidening": [],
+    "rightWidening": []
+   },
+   "critical": [
+    {
+     "pi": "p1",
+     "mark": "normalCrown",
+     "station": 276.0714776160715,
+     "exit": false
+    },
+    {
+     "pi": "p1",
+     "mark": "levelCrown",
+     "station": 296.0714776160715,
+     "exit": false
+    },
+    {
+     "pi": "p1",
+     "mark": "reverseCrown",
+     "station": 316.0714776160715,
+     "exit": false
+    },
+    {
+     "pi": "p1",
+     "mark": "full",
+     "station": 346.0714776160715,
+     "exit": false
+    },
+    {
+     "pi": "p1",
+     "mark": "full",
+     "station": 448.7529687133736,
+     "exit": true
+    },
+    {
+     "pi": "p1",
+     "mark": "reverseCrown",
+     "station": 478.7529687133736,
+     "exit": true
+    },
+    {
+     "pi": "p1",
+     "mark": "levelCrown",
+     "station": 498.7529687133736,
+     "exit": true
+    },
+    {
+     "pi": "p1",
+     "mark": "normalCrown",
+     "station": 518.7529687133735,
+     "exit": true
+    },
+    {
+     "pi": "p2",
+     "mark": "normalCrown",
+     "station": 881.2237047322018,
+     "exit": false
+    },
+    {
+     "pi": "p2",
+     "mark": "levelCrown",
+     "station": 901.2237047322018,
+     "exit": false
+    },
+    {
+     "pi": "p2",
+     "mark": "reverseCrown",
+     "station": 921.2237047322018,
+     "exit": false
+    },
+    {
+     "pi": "p2",
+     "mark": "full",
+     "station": 951.2237047322018,
+     "exit": false
+    },
+    {
+     "pi": "p2",
+     "mark": "full",
+     "station": 1053.9051958295038,
+     "exit": true
+    },
+    {
+     "pi": "p2",
+     "mark": "reverseCrown",
+     "station": 1083.9051958295038,
+     "exit": true
+    },
+    {
+     "pi": "p2",
+     "mark": "levelCrown",
+     "station": 1103.9051958295038,
+     "exit": true
+    },
+    {
+     "pi": "p2",
+     "mark": "normalCrown",
+     "station": 1123.9051958295038,
+     "exit": true
+    }
+   ],
+   "at": [
+    {
+     "station": 0.0,
+     "left": -2.0,
+     "right": -2.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 300.0,
+     "left": -2.0,
+     "right": 0.39285223839285094,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 330.0,
+     "left": -3.3928522383928508,
+     "right": 3.3928522383928508,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 600.0,
+     "left": -2.0,
+     "right": -2.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 700.0,
+     "left": -2.0,
+     "right": -2.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 900.0,
+     "left": -0.12237047322017816,
+     "right": -2.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 1000.0,
+     "left": 5.0,
+     "right": -5.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 1200.0,
+     "left": -2.0,
+     "right": -2.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    }
+   ]
+  },
+  {
+   "name": "Genişleme iç yanda",
+   "pis": [
+    {
+     "id": "a",
+     "x": 0,
+     "y": 0,
+     "radius": 0,
+     "spiralIn": 0,
+     "spiralOut": 0
+    },
+    {
+     "id": "p1",
+     "x": 400,
+     "y": 0,
+     "radius": 300,
+     "spiralIn": 60,
+     "spiralOut": 60
+    },
+    {
+     "id": "b",
+     "x": 800,
+     "y": -300,
+     "radius": 0,
+     "spiralIn": 0,
+     "spiralOut": 0
+    }
+   ],
+   "normal": [
+    -2.5,
+    -2.5
+   ],
+   "rules": [
+    {
+     "pi": "p1",
+     "rate": 6.0,
+     "runoff": 60.0,
+     "onTangent": 0.0,
+     "widening": 0.8
+    }
+   ],
+   "schedule": {
+    "left": [
+     [
+      244.8433900671983,
+      -2.5
+     ],
+     [
+      329.8433900671983,
+      6.0
+     ],
+     [
+      462.89372270518356,
+      6.0
+     ],
+     [
+      547.8937227051836,
+      -2.5
+     ]
+    ],
+    "right": [
+     [
+      294.8433900671983,
+      -2.5
+     ],
+     [
+      329.8433900671983,
+      -6.0
+     ],
+     [
+      462.89372270518356,
+      -6.0
+     ],
+     [
+      497.89372270518356,
+      -2.5
+     ]
+    ],
+    "leftWidening": [],
+    "rightWidening": [
+     [
+      269.8433900671983,
+      0.0
+     ],
+     [
+      329.8433900671983,
+      0.8
+     ],
+     [
+      462.89372270518356,
+      0.8
+     ],
+     [
+      522.8937227051836,
+      0.0
+     ]
+    ]
+   },
+   "critical": [
+    {
+     "pi": "p1",
+     "mark": "normalCrown",
+     "station": 244.8433900671983,
+     "exit": false
+    },
+    {
+     "pi": "p1",
+     "mark": "levelCrown",
+     "station": 269.8433900671983,
+     "exit": false
+    },
+    {
+     "pi": "p1",
+     "mark": "reverseCrown",
+     "station": 294.8433900671983,
+     "exit": false
+    },
+    {
+     "pi": "p1",
+     "mark": "full",
+     "station": 329.8433900671983,
+     "exit": false
+    },
+    {
+     "pi": "p1",
+     "mark": "full",
+     "station": 462.89372270518356,
+     "exit": true
+    },
+    {
+     "pi": "p1",
+     "mark": "reverseCrown",
+     "station": 497.89372270518356,
+     "exit": true
+    },
+    {
+     "pi": "p1",
+     "mark": "levelCrown",
+     "station": 522.8937227051836,
+     "exit": true
+    },
+    {
+     "pi": "p1",
+     "mark": "normalCrown",
+     "station": 547.8937227051836,
+     "exit": true
+    }
+   ],
+   "at": [
+    {
+     "station": 0.0,
+     "left": -2.5,
+     "right": -2.5,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 150.0,
+     "left": -2.5,
+     "right": -2.5,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 300.0,
+     "left": 3.01566099328017,
+     "right": -3.01566099328017,
+     "leftWidening": 0.0,
+     "rightWidening": 0.402088132437356
+    },
+    {
+     "station": 330.0,
+     "left": 6.0,
+     "right": -6.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.8
+    },
+    {
+     "station": 345.0,
+     "left": 6.0,
+     "right": -6.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.8
+    },
+    {
+     "station": 360.0,
+     "left": 6.0,
+     "right": -6.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.8
+    },
+    {
+     "station": 400.0,
+     "left": 6.0,
+     "right": -6.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.8
+    },
+    {
+     "station": 450.0,
+     "left": 6.0,
+     "right": -6.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.8
+    },
+    {
+     "station": 500.0,
+     "left": 2.2893722705183563,
+     "right": -2.5,
+     "leftWidening": 0.0,
+     "rightWidening": 0.3052496360691142
+    },
+    {
+     "station": 600.0,
+     "left": -2.5,
+     "right": -2.5,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 700.0,
+     "left": -2.5,
+     "right": -2.5,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    }
+   ]
+  },
+  {
+   "name": "Tek yöne eğimli normal: dış yan zaten yükselir",
+   "pis": [
+    {
+     "id": "a",
+     "x": 0,
+     "y": 0,
+     "radius": 0,
+     "spiralIn": 0,
+     "spiralOut": 0
+    },
+    {
+     "id": "p1",
+     "x": 400,
+     "y": 0,
+     "radius": 300,
+     "spiralIn": 60,
+     "spiralOut": 60
+    },
+    {
+     "id": "b",
+     "x": 800,
+     "y": -300,
+     "radius": 0,
+     "spiralIn": 0,
+     "spiralOut": 0
+    }
+   ],
+   "normal": [
+    2.0,
+    -2.0
+   ],
+   "rules": [
+    {
+     "pi": "p1",
+     "rate": 4.0,
+     "runoff": 40.0,
+     "onTangent": 0.5,
+     "widening": 0.0
+    }
+   ],
+   "schedule": {
+    "left": [
+     [
+      269.8433900671983,
+      2.0
+     ],
+     [
+      289.8433900671983,
+      4.0
+     ],
+     [
+      502.89372270518356,
+      4.0
+     ],
+     [
+      522.8937227051836,
+      2.0
+     ]
+    ],
+    "right": [
+     [
+      269.8433900671983,
+      -2.0
+     ],
+     [
+      289.8433900671983,
+      -4.0
+     ],
+     [
+      502.89372270518356,
+      -4.0
+     ],
+     [
+      522.8937227051836,
+      -2.0
+     ]
+    ],
+    "leftWidening": [],
+    "rightWidening": []
+   },
+   "critical": [
+    {
+     "pi": "p1",
+     "mark": "normalCrown",
+     "station": 269.8433900671983,
+     "exit": false
+    },
+    {
+     "pi": "p1",
+     "mark": "full",
+     "station": 289.8433900671983,
+     "exit": false
+    },
+    {
+     "pi": "p1",
+     "mark": "full",
+     "station": 502.89372270518356,
+     "exit": true
+    },
+    {
+     "pi": "p1",
+     "mark": "normalCrown",
+     "station": 522.8937227051836,
+     "exit": true
+    }
+   ],
+   "at": [
+    {
+     "station": 0.0,
+     "left": 2.0,
+     "right": -2.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 150.0,
+     "left": 2.0,
+     "right": -2.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 300.0,
+     "left": 4.0,
+     "right": -4.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 330.0,
+     "left": 4.0,
+     "right": -4.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 345.0,
+     "left": 4.0,
+     "right": -4.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 360.0,
+     "left": 4.0,
+     "right": -4.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 400.0,
+     "left": 4.0,
+     "right": -4.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 450.0,
+     "left": 4.0,
+     "right": -4.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 500.0,
+     "left": 4.0,
+     "right": -4.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 600.0,
+     "left": 2.0,
+     "right": -2.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 700.0,
+     "left": 2.0,
+     "right": -2.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    }
+   ]
+  },
+  {
+   "name": "Normal eğimle aynı oran",
+   "pis": [
+    {
+     "id": "a",
+     "x": 0,
+     "y": 0,
+     "radius": 0,
+     "spiralIn": 0,
+     "spiralOut": 0
+    },
+    {
+     "id": "p1",
+     "x": 400,
+     "y": 0,
+     "radius": 350,
+     "spiralIn": 0,
+     "spiralOut": 0
+    },
+    {
+     "id": "b",
+     "x": 800,
+     "y": -250,
+     "radius": 0,
+     "spiralIn": 0,
+     "spiralOut": 0
+    }
+   ],
+   "normal": [
+    -3.0,
+    -3.0
+   ],
+   "rules": [
+    {
+     "pi": "p1",
+     "rate": 3.0,
+     "runoff": 30.0,
+     "onTangent": 0.6,
+     "widening": 0.0
+    }
+   ],
+   "schedule": {
+    "left": [
+     [
+      251.62132075603773,
+      -3.0
+     ],
+     [
+      311.62132075603773,
+      3.0
+     ],
+     [
+      483.1310811262846,
+      3.0
+     ],
+     [
+      543.1310811262846,
+      -3.0
+     ]
+    ],
+    "right": [
+     [
+      311.62132075603773,
+      -3.0
+     ],
+     [
+      311.62132075603773,
+      -3.0
+     ],
+     [
+      483.1310811262846,
+      -3.0
+     ],
+     [
+      483.1310811262846,
+      -3.0
+     ]
+    ],
+    "leftWidening": [],
+    "rightWidening": []
+   },
+   "critical": [
+    {
+     "pi": "p1",
+     "mark": "normalCrown",
+     "station": 251.62132075603773,
+     "exit": false
+    },
+    {
+     "pi": "p1",
+     "mark": "levelCrown",
+     "station": 281.62132075603773,
+     "exit": false
+    },
+    {
+     "pi": "p1",
+     "mark": "reverseCrown",
+     "station": 311.62132075603773,
+     "exit": false
+    },
+    {
+     "pi": "p1",
+     "mark": "full",
+     "station": 311.62132075603773,
+     "exit": false
+    },
+    {
+     "pi": "p1",
+     "mark": "full",
+     "station": 483.1310811262846,
+     "exit": true
+    },
+    {
+     "pi": "p1",
+     "mark": "reverseCrown",
+     "station": 483.1310811262846,
+     "exit": true
+    },
+    {
+     "pi": "p1",
+     "mark": "levelCrown",
+     "station": 513.1310811262846,
+     "exit": true
+    },
+    {
+     "pi": "p1",
+     "mark": "normalCrown",
+     "station": 543.1310811262846,
+     "exit": true
+    }
+   ],
+   "at": [
+    {
+     "station": 0.0,
+     "left": -3.0,
+     "right": -3.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 150.0,
+     "left": -3.0,
+     "right": -3.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 300.0,
+     "left": 1.8378679243962266,
+     "right": -3.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 330.0,
+     "left": 3.0,
+     "right": -3.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 345.0,
+     "left": 3.0,
+     "right": -3.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 360.0,
+     "left": 3.0,
+     "right": -3.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 400.0,
+     "left": 3.0,
+     "right": -3.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 450.0,
+     "left": 3.0,
+     "right": -3.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 500.0,
+     "left": 1.3131081126284583,
+     "right": -3.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 600.0,
+     "left": -3.0,
+     "right": -3.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 700.0,
+     "left": -3.0,
+     "right": -3.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    }
+   ]
+  },
+  {
+   "name": "Kurbu olmayan PI",
+   "pis": [
+    {
+     "id": "a",
+     "x": 0,
+     "y": 0,
+     "radius": 0,
+     "spiralIn": 0,
+     "spiralOut": 0
+    },
+    {
+     "id": "p1",
+     "x": 400,
+     "y": 0,
+     "radius": 300,
+     "spiralIn": 60,
+     "spiralOut": 60
+    },
+    {
+     "id": "b",
+     "x": 800,
+     "y": -300,
+     "radius": 0,
+     "spiralIn": 0,
+     "spiralOut": 0
+    }
+   ],
+   "normal": [
+    -2.5,
+    -2.5
+   ],
+   "rules": [
+    {
+     "pi": "b",
+     "rate": 6.0,
+     "runoff": 60.0,
+     "onTangent": 0.0,
+     "widening": 0.0
+    }
+   ],
+   "error": {
+    "kind": "NoCurve",
+    "pi": "b"
+   }
+  },
+  {
+   "name": "Sıfır oran",
+   "pis": [
+    {
+     "id": "a",
+     "x": 0,
+     "y": 0,
+     "radius": 0,
+     "spiralIn": 0,
+     "spiralOut": 0
+    },
+    {
+     "id": "p1",
+     "x": 400,
+     "y": 0,
+     "radius": 300,
+     "spiralIn": 60,
+     "spiralOut": 60
+    },
+    {
+     "id": "b",
+     "x": 800,
+     "y": -300,
+     "radius": 0,
+     "spiralIn": 0,
+     "spiralOut": 0
+    }
+   ],
+   "normal": [
+    -2.5,
+    -2.5
+   ],
+   "rules": [
+    {
+     "pi": "p1",
+     "rate": 0.0,
+     "runoff": 60.0,
+     "onTangent": 0.0,
+     "widening": 0.0
+    }
+   ],
+   "error": {
+    "kind": "Bad",
+    "pi": "p1"
+   }
+  },
+  {
+   "name": "Teğet payı 1'den büyük",
+   "pis": [
+    {
+     "id": "a",
+     "x": 0,
+     "y": 0,
+     "radius": 0,
+     "spiralIn": 0,
+     "spiralOut": 0
+    },
+    {
+     "id": "p1",
+     "x": 400,
+     "y": 0,
+     "radius": 300,
+     "spiralIn": 60,
+     "spiralOut": 60
+    },
+    {
+     "id": "b",
+     "x": 800,
+     "y": -300,
+     "radius": 0,
+     "spiralIn": 0,
+     "spiralOut": 0
+    }
+   ],
+   "normal": [
+    -2.5,
+    -2.5
+   ],
+   "rules": [
+    {
+     "pi": "p1",
+     "rate": 6.0,
+     "runoff": 60.0,
+     "onTangent": 1.2,
+     "widening": 0.0
+    }
+   ],
+   "error": {
+    "kind": "Bad",
+    "pi": "p1"
+   }
+  },
+  {
+   "name": "Oran normal eğimden küçük",
+   "pis": [
+    {
+     "id": "a",
+     "x": 0,
+     "y": 0,
+     "radius": 0,
+     "spiralIn": 0,
+     "spiralOut": 0
+    },
+    {
+     "id": "p1",
+     "x": 400,
+     "y": 0,
+     "radius": 300,
+     "spiralIn": 60,
+     "spiralOut": 60
+    },
+    {
+     "id": "b",
+     "x": 800,
+     "y": -300,
+     "radius": 0,
+     "spiralIn": 0,
+     "spiralOut": 0
+    }
+   ],
+   "normal": [
+    -2.5,
+    -2.5
+   ],
+   "rules": [
+    {
+     "pi": "p1",
+     "rate": 2.0,
+     "runoff": 60.0,
+     "onTangent": 0.0,
+     "widening": 0.0
+    }
+   ],
+   "error": {
+    "kind": "RateBelowNormal",
+    "pi": "p1"
+   }
+  },
+  {
+   "name": "Tam dever kurba sığmıyor",
+   "pis": [
+    {
+     "id": "a",
+     "x": 0,
+     "y": 0,
+     "radius": 0,
+     "spiralIn": 0,
+     "spiralOut": 0
+    },
+    {
+     "id": "p1",
+     "x": 400,
+     "y": 0,
+     "radius": 350,
+     "spiralIn": 0,
+     "spiralOut": 0
+    },
+    {
+     "id": "b",
+     "x": 800,
+     "y": -250,
+     "radius": 0,
+     "spiralIn": 0,
+     "spiralOut": 0
+    }
+   ],
+   "normal": [
+    -2.5,
+    -2.5
+   ],
+   "rules": [
+    {
+     "pi": "p1",
+     "rate": 6.0,
+     "runoff": 400.0,
+     "onTangent": 0.0,
+     "widening": 0.0
+    }
+   ],
+   "error": {
+    "kind": "TooShort",
+    "pi": "p1"
+   }
+  },
+  {
+   "name": "Ters kurplarda geçişler biniyor",
+   "pis": [
+    {
+     "id": "a",
+     "x": 0,
+     "y": 0,
+     "radius": 0,
+     "spiralIn": 0,
+     "spiralOut": 0
+    },
+    {
+     "id": "p1",
+     "x": 300,
+     "y": 0,
+     "radius": 200,
+     "spiralIn": 40,
+     "spiralOut": 40
+    },
+    {
+     "id": "p2",
+     "x": 520,
+     "y": 120,
+     "radius": 200,
+     "spiralIn": 40,
+     "spiralOut": 40
+    },
+    {
+     "id": "b",
+     "x": 800,
+     "y": 120,
+     "radius": 0,
+     "spiralIn": 0,
+     "spiralOut": 0
+    }
+   ],
+   "normal": [
+    -2.5,
+    -2.5
+   ],
+   "rules": [
+    {
+     "pi": "p1",
+     "rate": 6.0,
+     "runoff": 80.0,
+     "onTangent": 1.0,
+     "widening": 0.0
+    },
+    {
+     "pi": "p2",
+     "rate": 6.0,
+     "runoff": 80.0,
+     "onTangent": 1.0,
+     "widening": 0.0
+    }
+   ],
+   "error": {
+    "kind": "Overlap",
+    "a": "p1",
+    "b": "p2"
+   }
+  },
+  {
+   "name": "Geçiş aksın başından taşıyor",
+   "pis": [
+    {
+     "id": "a",
+     "x": 0,
+     "y": 0,
+     "radius": 0,
+     "spiralIn": 0,
+     "spiralOut": 0
+    },
+    {
+     "id": "p1",
+     "x": 400,
+     "y": 0,
+     "radius": 300,
+     "spiralIn": 60,
+     "spiralOut": 60
+    },
+    {
+     "id": "b",
+     "x": 800,
+     "y": -300,
+     "radius": 0,
+     "spiralIn": 0,
+     "spiralOut": 0
+    }
+   ],
+   "normal": [
+    -2.5,
+    -2.5
+   ],
+   "rules": [
+    {
+     "pi": "p1",
+     "rate": 6.0,
+     "runoff": 300.0,
+     "onTangent": 1.0,
+     "widening": 0.0
+    }
+   ],
+   "error": {
+    "kind": "OffAlignment",
+    "pi": "p1"
+   }
+  },
+  {
+   "name": "Aynı PI iki kez",
+   "pis": [
+    {
+     "id": "a",
+     "x": 0,
+     "y": 0,
+     "radius": 0,
+     "spiralIn": 0,
+     "spiralOut": 0
+    },
+    {
+     "id": "p1",
+     "x": 400,
+     "y": 0,
+     "radius": 300,
+     "spiralIn": 60,
+     "spiralOut": 60
+    },
+    {
+     "id": "b",
+     "x": 800,
+     "y": -300,
+     "radius": 0,
+     "spiralIn": 0,
+     "spiralOut": 0
+    }
+   ],
+   "normal": [
+    -2.5,
+    -2.5
+   ],
+   "rules": [
+    {
+     "pi": "p1",
+     "rate": 6.0,
+     "runoff": 60.0,
+     "onTangent": 0.0,
+     "widening": 0.0
+    },
+    {
+     "pi": "p1",
+     "rate": 5.0,
+     "runoff": 60.0,
+     "onTangent": 0.0,
+     "widening": 0.0
+    }
+   ],
+   "error": {
+    "kind": "Twice",
+    "pi": "p1"
+   }
+  },
+  {
+   "name": "Yazılan km satırları",
+   "pis": [
+    {
+     "id": "a",
+     "x": 0,
+     "y": 0,
+     "radius": 0,
+     "spiralIn": 0,
+     "spiralOut": 0
+    },
+    {
+     "id": "p1",
+     "x": 400,
+     "y": 0,
+     "radius": 300,
+     "spiralIn": 60,
+     "spiralOut": 60
+    },
+    {
+     "id": "b",
+     "x": 800,
+     "y": -300,
+     "radius": 0,
+     "spiralIn": 0,
+     "spiralOut": 0
+    }
+   ],
+   "normal": [
+    -2.5,
+    -2.5
+   ],
+   "rows": [
+    {
+     "station": 200.0,
+     "left": -2.5,
+     "right": -2.5
+    },
+    {
+     "station": 260.0,
+     "left": 0.0,
+     "right": -2.5
+    },
+    {
+     "station": 300.0,
+     "left": 6.0,
+     "right": -6.0
+    },
+    {
+     "station": 500.0,
+     "left": 6.0,
+     "right": -6.0
+    },
+    {
+     "station": 560.0,
+     "left": -2.5,
+     "right": -2.5
+    }
+   ],
+   "schedule": {
+    "left": [
+     [
+      200.0,
+      -2.5
+     ],
+     [
+      260.0,
+      0.0
+     ],
+     [
+      300.0,
+      6.0
+     ],
+     [
+      500.0,
+      6.0
+     ],
+     [
+      560.0,
+      -2.5
+     ]
+    ],
+    "right": [
+     [
+      200.0,
+      -2.5
+     ],
+     [
+      260.0,
+      -2.5
+     ],
+     [
+      300.0,
+      -6.0
+     ],
+     [
+      500.0,
+      -6.0
+     ],
+     [
+      560.0,
+      -2.5
+     ]
+    ],
+    "leftWidening": [],
+    "rightWidening": []
+   },
+   "critical": [],
+   "at": [
+    {
+     "station": 0.0,
+     "left": -2.5,
+     "right": -2.5,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 150.0,
+     "left": -2.5,
+     "right": -2.5,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 300.0,
+     "left": 6.0,
+     "right": -6.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 330.0,
+     "left": 6.0,
+     "right": -6.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 345.0,
+     "left": 6.0,
+     "right": -6.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 360.0,
+     "left": 6.0,
+     "right": -6.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 400.0,
+     "left": 6.0,
+     "right": -6.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 450.0,
+     "left": 6.0,
+     "right": -6.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 500.0,
+     "left": 6.0,
+     "right": -6.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 600.0,
+     "left": -2.5,
+     "right": -2.5,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 700.0,
+     "left": -2.5,
+     "right": -2.5,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    }
+   ]
+  },
+  {
+   "name": "Km satırları artmıyor",
+   "pis": [
+    {
+     "id": "a",
+     "x": 0,
+     "y": 0,
+     "radius": 0,
+     "spiralIn": 0,
+     "spiralOut": 0
+    },
+    {
+     "id": "p1",
+     "x": 400,
+     "y": 0,
+     "radius": 300,
+     "spiralIn": 60,
+     "spiralOut": 60
+    },
+    {
+     "id": "b",
+     "x": 800,
+     "y": -300,
+     "radius": 0,
+     "spiralIn": 0,
+     "spiralOut": 0
+    }
+   ],
+   "normal": [
+    -2.5,
+    -2.5
+   ],
+   "rows": [
+    {
+     "station": 200.0,
+     "left": -2.5,
+     "right": -2.5
+    },
+    {
+     "station": 200.0,
+     "left": 0.0,
+     "right": -2.5
+    }
+   ],
+   "error": {
+    "kind": "BadRow",
+    "row": 1
+   }
+  }
+ ]
+}
