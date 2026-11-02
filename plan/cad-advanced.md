@@ -470,8 +470,11 @@ Aynalı/dönük ve ayrı X/Y ölçekli blokta Node(0) yerleştirme adaptörü
 kabul edildi: gerçek GUI'de 6→8 m, izleyen çizgi, fare/ölçülü grip,
 öznitelik konumları, kapsam notu ve tek Undo; Python/MCP ortak komut
 kabulü geçti. [ADR 0833](../docs/adr/0833-block-insertion-anchor-constraints.md).
-Yaylı kenar adaptörü, boyut cebiri, elips grip hedefi, geçici hold
-teşhisi ve birleşik çözüm dalı kabulü bitmeden bu madde kapatılmaz.
+Geçici ilk-nesne/grip tutuşunun kalıcı Fix'i gereksiz sayması ve serbestlik
+sayısını azaltması düzeltildi. Gerçek hover/tek tıklama/query/Python/MCP
+ve tek Undo kabulü geçti. [ADR 0834](../docs/adr/0834-permanent-diagnosis-after-temporary-holds.md).
+Yaylı kenar adaptörü, boyut cebiri, elips grip hedefi ve birleşik çözüm
+dalı kabulü bitmeden bu madde kapatılmaz.
 
 ### CAD-ADV-06 — Parametrik blokları sürdürülebilir 2B bileşenlere dönüştür [ ]
 

@@ -93,5 +93,5 @@ geçici hold altında gereksiz bağ raporlanır. Aynı açık hold girdisiyle
 Python da aynı Over/2 sonucunu verdi; hold olmadan Under/2 verdi.
 Dolayısıyla geometri veya SDK ayrışması değildir, fakat kullanıcıya
 kalıcı çizimde olmayan bir gereksizlik gösterilir. Geçici hedef ve kalıcı
-teşhisin ayrılması CAD-ADV-05 içinde sonraki düzeltmedir. Bu adaptörün
+teşhisin ayrılması [ADR 0834](0834-permanent-diagnosis-after-temporary-holds.md) ile düzeltildi; gerçek GUI/Python/MCP kabulü geçti. Bu adaptörün
 kabulü bütün parametrik maddenin kapandığı anlamına gelmez.

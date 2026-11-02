@@ -134,6 +134,11 @@ fn a_hovered_anchor_previews_the_actual_affine_block_without_writing() {
         .session
         .preview(&kentos_interaction::Format::default())
         .unwrap();
+    assert_eq!(
+        preview.tag.as_ref().unwrap().lines[1],
+        "tam kısıtlı",
+        "a transient first-object hold must not call the saved Fix redundant"
+    );
     assert!(
         preview.strokes.len() >= 2,
         "the ghost must include the placed outline and circle, not just an anchor mark: {preview:?}"

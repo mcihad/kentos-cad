@@ -2718,3 +2718,61 @@ fn insert_anchor_constraints_share_mcp_plan_diagnosis_and_single_undo() {
     );
     std::fs::remove_dir_all(dir).unwrap();
 }
+#[test]
+fn temporary_first_object_hold_diagnoses_saved_constraints_in_mcp() {
+    let dir =
+        std::env::temp_dir().join(format!("kentos-mcp-temporary-hold-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join("block.json");
+    std::fs::write(
+        &path,
+        include_str!("../../../../fixtures/interaction/v1/constraint-block-anchors.kcad"),
+    )
+    .unwrap();
+    let mut server = Server::new();
+    let drawing =
+        call(&mut server, "drawing.open", json!({"path":path}))["structuredContent"]["drawing"]
+            .clone();
+    let items = call(&mut server, "drawing.entities", json!({"drawing":drawing}))["structuredContent"]["items"].clone();
+    let part = |i: usize| json!({"uid":items[i]["uid"],"element":{"kind":"point","place":{"kind":"node","part":0}}});
+    let result = call(
+        &mut server,
+        "cad.constraints.edit",
+        json!({"drawing":drawing,"edit":{"kind":"add","constraints":[{"rule":{"kind":"fix","a":part(0)}}]}}),
+    );
+    assert_eq!(
+        result["structuredContent"]["status"], "completed",
+        "{result}"
+    );
+    let input = json!({"drawing":drawing,"hold":[items[0]["uid"]],"edit":{"kind":"add","constraints":[{"rule":{"kind":"coincident","a":part(0),"b":part(1)}}]}});
+    let mut plan_input = input.clone();
+    plan_input["op"] = json!("plan");
+    let planned = call(&mut server, "cad.constraints.edit", plan_input);
+    assert_eq!(
+        call(&mut server, "drawing.entities", json!({"drawing":drawing}))["structuredContent"]["items"],
+        items
+    );
+    let written = call(&mut server, "cad.constraints.edit", input);
+    assert_eq!(
+        written["structuredContent"]["status"], "completed",
+        "{written}"
+    );
+    let w = &written["structuredContent"]["output"]["diagnosis"];
+    assert_eq!(planned["structuredContent"]["output"]["diagnosis"], *w);
+    assert_eq!(w["status"], "fully");
+    assert!(w.get("redundant").is_none());
+    let mut q = call(
+        &mut server,
+        "cad.constraints.query",
+        json!({"drawing":drawing}),
+    )["structuredContent"]["output"]["diagnosis"]
+        .clone();
+    q["iterations"] = w["iterations"].clone();
+    assert_eq!(q, *w);
+    call(&mut server, "drawing.undo", json!({"drawing":drawing}));
+    assert_eq!(
+        call(&mut server, "drawing.entities", json!({"drawing":drawing}))["structuredContent"]["items"],
+        items
+    );
+    std::fs::remove_dir_all(dir).unwrap();
+}

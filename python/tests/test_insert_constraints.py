@@ -49,6 +49,26 @@ class InsertConstraints(unittest.TestCase):
         d.undo()
         self.assertEqual(d.to_bytes(), before)
 
+    def test_temporary_first_object_hold_matches_the_persistent_query(self):
+        d = cad.Document.from_bytes((ROOT / 'fixtures/interaction/v1/constraint-block-anchors.kcad').read_bytes())
+        uids = [r.uid for r in d.entities()]
+        def part(i):
+            return dict(uid=uids[i], element=dict(kind='point', place=dict(kind='node', part=0)))
+        cad.constraints.edit(d, edit=cad.AddConstraintEdit.from_json(dict(kind='add', constraints=[dict(rule=dict(kind='fix', a=part(0)))])))
+        before = d.to_bytes()
+        edit = cad.AddConstraintEdit.from_json(dict(kind='add', constraints=[dict(rule=dict(kind='coincident', a=part(0), b=part(1)))]))
+        planned = cad.constraints.edit.plan(d, edit=edit, hold=[uids[0]])
+        self.assertEqual(d.to_bytes(), before)
+        written = cad.constraints.edit(d, edit=edit, hold=[uids[0]])
+        self.assertEqual(planned.diagnosis.to_json(), written.diagnosis.to_json())
+        q = cad.constraints.query(d).diagnosis.to_json()
+        q['iterations'] = written.diagnosis.iterations
+        self.assertEqual(q, written.diagnosis.to_json())
+        self.assertEqual(q['status'], 'fully')
+        self.assertNotIn('redundant', q)
+        d.undo()
+        self.assertEqual(d.to_bytes(), before)
+
     def test_geometry_update_keeps_moved_attribute_places_and_undo(self):
         d = cad.Document.from_bytes((ROOT / 'fixtures/interaction/v1/constraint-block-anchors.kcad').read_bytes())
         uid = list(d.entities())[1].uid

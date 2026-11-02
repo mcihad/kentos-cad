@@ -73,4 +73,4 @@ Elipsin kendi merkez–uç yönünde ekseni çökertmeden çeyrek dönüşü, ki
 
 Açık NURBS uçlarının 6→8 m, bağlı çizgi, kapsam notu, dosya/Undo ve UI/Python/MCP kabulü: [ADR 0832](../adr/0832-bounded-nurbs-endpoint-constraints.md), [Python/MCP kullanımı](nurbs-constraints-python.md).
 
-Aynalı/dönük blok yerleştirme noktası ve gerçek grip kabulü: [ADR 0833](../adr/0833-block-insertion-anchor-constraints.md), [Python/MCP kullanımı](block-anchor-constraints-python.md). İlk seçilen sabit nesnenin geçici hold altında gereksiz raporlanması ayrıca düzeltilecek.
+Aynalı/dönük blok yerleştirme noktası ve gerçek grip kabulü: [ADR 0833](../adr/0833-block-insertion-anchor-constraints.md), [Python/MCP kullanımı](block-anchor-constraints-python.md). İlk seçilen sabit nesnenin geçici hold altında gereksiz raporlanması [ADR 0834](../adr/0834-permanent-diagnosis-after-temporary-holds.md) ile düzeltildi; geçici tutuş başarılı hareketi seçer, teşhis kalıcı bağları gösterir.

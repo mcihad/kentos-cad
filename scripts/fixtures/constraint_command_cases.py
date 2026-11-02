@@ -661,7 +661,14 @@ def edit(d, edit_input, allow_flip=False, hold=()):
         return failed("constraint_singular", "edit", refused_ids(out["singular"]))
     if out["status"] == "nonConvergent":
         return failed("not_converged", "edit")
-    repeats = [k for k in out["redundant"] if constraints[k]["id"] in added]
+    # Temporary holds choose the edit's motion, not the saved drawing's rank (ADR 0834).
+    diagnostic = out
+    if held_slots:
+        permanent, _ = d.cc_case(constraints, {n: to_base(next(p["kind"] for p in params if p["name"] == n), v) for n, v in values.items()})
+        permanent["fixFrom"] = case["shapes"]
+        permanent["shapes"] = out["solved"]
+        diagnostic = cc.reference(permanent)
+    repeats = [k for k in diagnostic["redundant"] if constraints[k]["id"] in added]
     if repeats:
         return failed("constraint_redundant", "edit.constraints", ["$any"] * len(repeats))
     changed, flipped = [], []
@@ -681,12 +688,12 @@ def edit(d, edit_input, allow_flip=False, hold=()):
             d.entities[s] = entity(d.entities[s], out["solved"][i])
     d.constraints = constraints
     d.parameters = params
-    diagnosis = {"status": out["status"], "dof": out["dof"]}
+    diagnosis = {"status": diagnostic["status"], "dof": diagnostic["dof"]}
     for key in ("redundant", "conflicting", "singular", "broken"):
-        if out[key]:
-            diagnosis[key] = [f"$constraint:{k}" for k in out[key]]
-    if out["free"]:
-        diagnosis["free"] = [f"$uidOf:{order[i]}" for i in out["free"]]
+        if diagnostic[key]:
+            diagnosis[key] = [f"$constraint:{k}" for k in diagnostic[key]]
+    if diagnostic["free"]:
+        diagnosis["free"] = [f"$uidOf:{order[i]}" for i in diagnostic["free"]]
     diagnosis["iterations"] = "$any"
     output = {
         "added": ["$any"] * len(added),

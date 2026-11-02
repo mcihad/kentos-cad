@@ -210,3 +210,93 @@ fn same_definition_geometry_updates_preserve_local_instance_data_without_transfe
     assert!(now.parameters.is_empty() && now.attribute_places.is_empty() && now.clipping.is_none());
     assert!(!now.arch.is_empty());
 }
+
+#[test]
+fn a_temporary_first_object_hold_does_not_report_a_permanent_fix_as_redundant() {
+    let mut d = drawing();
+    let a = part(&d, 1, json!({"kind":"node","part":0}));
+    let b = part(&d, 2, json!({"kind":"node","part":0}));
+    done(constraints_edit::execute(
+        &mut ExecutionContext::new(&mut d),
+        serde_json::from_value(
+            json!({"edit":{"kind":"add","constraints":[{"rule":{"kind":"fix","a":a}}]}}),
+        )
+        .unwrap(),
+    ));
+    let before = d.to_snapshot_v2();
+    let input: ConstraintsEdit = serde_json::from_value(json!({"hold":[d.uid(Slot(1)).unwrap().to_string()],"edit":{"kind":"add","constraints":[{"rule":{"kind":"coincident","a":a,"b":b}}]}})).unwrap();
+    let planned = done(constraints_edit::plan(
+        &ExecutionContext::new(&mut d),
+        &input,
+    ));
+    assert_eq!(d.to_snapshot_v2(), before);
+    assert_eq!(planned.diagnosis.status, SolveStatus::Fully);
+    assert!(planned.diagnosis.redundant.is_empty());
+    let written = done(constraints_edit::execute(
+        &mut ExecutionContext::new(&mut d),
+        input,
+    ));
+    let queried = done(constraints_query::read(&d, &ConstraintsQuery::default()));
+    let mut expected = queried.diagnosis;
+    expected.iterations = written.diagnosis.iterations;
+    assert_eq!(written.diagnosis, expected);
+    assert_eq!(planned.diagnosis, written.diagnosis);
+    assert_eq!(d.get(Slot(1)).unwrap().clone(), before.entities[0]);
+    d.undo().unwrap();
+    assert_eq!(d.to_snapshot_v2(), before);
+}
+
+#[test]
+fn a_temporary_hold_preserves_first_object_without_hiding_persistent_freedoms_or_duplicates() {
+    let mut d = drawing();
+    let a = part(&d, 1, json!({"kind":"node","part":0}));
+    let b = part(&d, 2, json!({"kind":"node","part":0}));
+    let input: ConstraintsEdit = serde_json::from_value(json!({"hold":[d.uid(Slot(1)).unwrap().to_string()],"edit":{"kind":"add","constraints":[{"rule":{"kind":"coincident","a":a,"b":b}}]}})).unwrap();
+    let written = done(constraints_edit::execute(
+        &mut ExecutionContext::new(&mut d),
+        input.clone(),
+    ));
+    assert_eq!(written.diagnosis.status, SolveStatus::Under);
+    assert_eq!(
+        written.diagnosis.dof, 2,
+        "the first object is only held during this operation"
+    );
+    let Some(Entity::Point(p)) = d.get(Slot(1)) else {
+        panic!()
+    };
+    let Some(Entity::Insert(b)) = d.get(Slot(2)) else {
+        panic!()
+    };
+    assert_eq!((p.p.x, p.p.y, b.p.x, b.p.y), (0., 0., 0., 0.));
+    let before = d.to_snapshot_v2();
+    let result = constraints_edit::execute(&mut ExecutionContext::new(&mut d), input);
+    let CommandResult::Failed { error } = result else {
+        panic!("{result:?}")
+    };
+    assert_eq!(error.code, "constraint_redundant");
+    assert_eq!(d.to_snapshot_v2(), before);
+}
+
+#[test]
+fn an_unsatisfied_temporary_hold_is_not_released_to_make_an_invalid_edit_succeed() {
+    let mut d = drawing();
+    let a = part(&d, 1, json!({"kind":"node","part":0}));
+    let b = part(&d, 2, json!({"kind":"node","part":0}));
+    let before = d.to_snapshot_v2();
+    let input: ConstraintsEdit = serde_json::from_value(json!({"hold":[d.uid(Slot(1)).unwrap().to_string(),d.uid(Slot(2)).unwrap().to_string()],"edit":{"kind":"add","constraints":[{"rule":{"kind":"coincident","a":a,"b":b}}]}})).unwrap();
+    fn conflict<T: std::fmt::Debug>(r: CommandResult<T>) {
+        let CommandResult::Failed { error } = r else {
+            panic!("{r:?}")
+        };
+        assert_eq!(error.code, "constraint_conflict");
+    }
+    conflict(constraints_edit::plan(
+        &ExecutionContext::new(&mut d),
+        &input,
+    ));
+    conflict(constraints_edit::execute(
+        &mut ExecutionContext::new(&mut d),
+        input,
+    ));
+    assert_eq!(d.to_snapshot_v2(), before);
+}

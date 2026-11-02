@@ -1331,8 +1331,9 @@
        ],
        "diagnosis": {
         "status": "under",
-        "dof": 2,
+        "dof": 6,
         "free": [
+         "$uidOf:6",
          "$uidOf:5"
         ],
         "iterations": "$any"
@@ -1412,8 +1413,9 @@
        ],
        "diagnosis": {
         "status": "under",
-        "dof": 3,
+        "dof": 7,
         "free": [
+         "$uidOf:3",
          "$uidOf:1"
         ],
         "iterations": "$any"

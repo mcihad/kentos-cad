@@ -359,6 +359,7 @@ pub fn solve_set(
             });
         }
     }
+    let permanent_hold_count = holds.len();
     for h in held {
         if let Some(i) = mapped.index_of(h.uid) {
             holds.push(Hold {
@@ -390,6 +391,28 @@ pub fn solve_set(
         },
         stop,
     );
+    // Temporary grips/first-object holds choose the motion; they are not constraints saved in the drawing.
+    // Diagnose the accepted placement with only persistent layer locks. Reuse the same core equations and
+    // fix targets, without writing or replacing the chosen geometry. In particular an existing Fix must not
+    // become a reported duplicate just because this operation also holds that object.
+    if holds.len() > permanent_hold_count && outcome.status.holds() {
+        let diagnosis = solve(
+            &Problem {
+                shapes: &outcome.shapes,
+                constraints: &constraints,
+                held: &holds[..permanent_hold_count],
+                fix_from: fix_shapes.as_deref(),
+            },
+            stop,
+        );
+        outcome.status = diagnosis.status;
+        outcome.dof = diagnosis.dof;
+        outcome.redundant = diagnosis.redundant;
+        outcome.conflicting = diagnosis.conflicting;
+        outcome.singular = diagnosis.singular;
+        outcome.broken = diagnosis.broken;
+        outcome.free = diagnosis.free;
+    }
     for list in [
         &mut outcome.redundant,
         &mut outcome.conflicting,
