@@ -61,6 +61,15 @@ fn check(doc: &kentos_domain::Document, input: &ProfilesEdit) -> Result<Checked,
             Some(list[at].id.clone())
         }
         ProfilesEditOperation::Remove => {
+            let sets: Vec<&str> =
+                doc.road_sections().iter().filter(|s| s.profile.as_deref() == Some(&old.id)).map(|s| s.name.as_str()).collect();
+            if !sets.is_empty() {
+                return Err(fail(
+                    codes::PROFILE_IN_USE,
+                    format!("“{}” boykesitini şu kesit takımları kullanıyor: {}. Önce takımlardan kaldırın.", old.name, sets.join(", ")),
+                    "profile",
+                ));
+            }
             list.remove(at);
             None
         }

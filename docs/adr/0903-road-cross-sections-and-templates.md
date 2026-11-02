@@ -56,6 +56,14 @@ Tarih: 2026-11-02. plan/road.md Y5 (ROAD-SEC-01…08, 13; ROAD-COR-01…04, 10).
 Y5.1 kesit hattı ve arazi kesiti çekirdeği; Y5.2 tip kesit, daylight ve alanlar çekirdeği; Y5.3 komutlar
 (`road.templates.*`, `road.sections.*`), `.kcad`, Python, MCP; Y5.4 Enkesit penceresi ve çizime enkesit.
 
+Y5.3 (yapıldı): `road.templates.edit` (set, remove; tek adım “Tip kesit”), `road.sections.edit` (set, rebind, remove; tek
+adım “Kesit takımı”) ve salt okunur `road.sections.query`. Ret sırası: proje, bilinmeyen takım, aks, boykesit, tip kesit,
+yüzey, kurallar, sürüm. Takımın kullandığı tip kesit (`road_template_in_use`), boykesit (`profile_in_use`) ve aks
+(`alignment_in_use`) silinmez. Çizgiler yönteminde km çizginin aksı ilk kestiği yerdir (60 yarılamayla). Uyarılar:
+`section_set_stale`, `section_surface_gone`, `section_open`. 32 + 36 + 21 ortak durum
+(`scripts/fixtures/road_section_command_cases.py`, KentOS kodu olmadan: arazi her üçgen kenarında 40 basamakta, platform
+ve alanlar kesirlerle); `.kcad` şema 159'un `templates` ve `sections`'ı, iki bozuk örnek.
+
 ## Sonra
 
 Dever ile enine eğimin değişmesi (Y6), koridor ve yüzeyleri (Y7), sıyırma ve kübaj (Y8), duvar ve bordür bileşenleri,

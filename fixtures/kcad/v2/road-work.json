@@ -122,6 +122,105 @@
           ],
           "surface": "t-zemin"
         }
+      ],
+      "templates": [
+        {
+          "id": "tk-1",
+          "name": "Tip 1",
+          "revision": 1,
+          "left": {
+            "components": [
+              {
+                "kind": "lane",
+                "width": 3.5,
+                "slope": -2.5
+              },
+              {
+                "kind": "shoulder",
+                "width": 1.0,
+                "slope": -4.0
+              }
+            ],
+            "cut": 1.0,
+            "fill": 1.5,
+            "ditch": {
+              "fore": 2.0,
+              "depth": 0.5,
+              "bottom": 0.5
+            }
+          }
+        },
+        {
+          "id": "tk-2",
+          "name": "Tip 2",
+          "left": {
+            "cut": 1.5,
+            "fill": 2.0
+          },
+          "right": {
+            "components": [
+              {
+                "kind": "lane",
+                "width": 3.0,
+                "slope": 2.0
+              }
+            ],
+            "cut": 1.0,
+            "fill": 1.5,
+            "ditch": {
+              "fore": 3.0,
+              "depth": 0.6
+            }
+          }
+        }
+      ],
+      "sections": [
+        {
+          "id": "k-1",
+          "name": "Enkesitler",
+          "alignment": "g-1",
+          "alignmentRevision": 3,
+          "revision": 1,
+          "profile": "b-1",
+          "template": "tk-1",
+          "surface": "t-zemin",
+          "left": 30.0,
+          "right": 30.0,
+          "stations": {
+            "method": "range",
+            "from": 0.0,
+            "to": 1000.0,
+            "every": 20.0,
+            "geometry": true
+          }
+        },
+        {
+          "id": "k-2",
+          "name": "Seçili",
+          "alignment": "g-1",
+          "left": 15.0,
+          "right": 20.0,
+          "stations": {
+            "method": "stations",
+            "stations": [
+              120.0,
+              480.5
+            ]
+          }
+        },
+        {
+          "id": "k-3",
+          "name": "Çizgilerden",
+          "alignment": "g-1",
+          "left": 10.0,
+          "right": 10.0,
+          "stations": {
+            "method": "lines",
+            "uids": [
+              "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11"
+            ]
+          }
+        }
       ]
     }
   },

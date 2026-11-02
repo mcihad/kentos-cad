@@ -9461,12 +9461,73 @@ class _Schema:
                 self.fail("bad_value", "boykesitte iki PVI'nin kimliği aynı")
             return t
 
+        def side(x):
+            # Docs/adr/0903 §3: a template's side, its components outward from the axis and its end condition.
+            comp = self.fields({"kind": (self.enum(("lane", "shoulder")), True), "width": (finite, True),
+                                "slope": (finite, True)})
+            ditch = self.fields({"fore": (finite, True), "depth": (finite, True), "bottom": (finite, False)})
+            t = self.fields({"components": (self.array(comp), False), "cut": (finite, True), "fill": (finite, True),
+                             "ditch": (ditch, False)})(x)
+            if len(t.get("components", [])) > 32:
+                self.fail("bad_value", "bir yanda en çok 32 bileşen olur")
+            for c in t.get("components", []):
+                if not c["width"] > 0 or abs(c["slope"]) > 100:
+                    self.fail("bad_value", "bileşenin genişliği 0'dan büyük, enine eğimi en çok %100 olur")
+            d = t.get("ditch")
+            if not (t["cut"] > 0 and t["fill"] > 0) or (d and not (d["fore"] > 0 and d["depth"] > 0 and d.get("bottom", 0) >= 0)):
+                self.fail("bad_value", "şevler ve hendeğin iç şevi ile derinliği 0'dan büyük, tabanı eksi olmamalı")
+            return t
+
+        def template(x):
+            t = self.fields({"id": (word, True), "name": (self.text, True), "revision": (self.uint(32), False),
+                             "left": (side, True), "right": (side, False)})(x)
+            name = t["name"]
+            if not name or name.strip() != name or len(name) > 120:
+                self.fail("bad_value", "tip kesitin adı boş, boşluklu ya da çok uzun")
+            return t
+
+        def stations(x):
+            # Docs/adr/0903 §2: a range, the stations written, or the lines crossing the alignment.
+            if not isinstance(x, dict) or x.get("method") not in ("range", "stations", "lines"):
+                self.fail("bad_value", "kesit takımının km yöntemi range, stations ya da lines olur")
+            m = x["method"]
+            if m == "range":
+                t = self.fields({"method": (self.text, True), "from": (finite, True), "to": (finite, True),
+                                 "every": (finite, True), "geometry": (self.bool, False)})(x)
+                if not (t["from"] < t["to"] and t["every"] > 0):
+                    self.fail("bad_value", "km aralığının başı sonundan küçük, aralığı 0'dan büyük olmalı")
+                return t
+            if m == "stations":
+                t = self.fields({"method": (self.text, True), "stations": (self.array(finite), True)})(x)
+                if not 1 <= len(t["stations"]) <= 10000:
+                    self.fail("bad_value", "1 ile 10000 arası km olur")
+                return t
+            t = self.fields({"method": (self.text, True), "uids": (self.array(self.text), True)})(x)
+            if not 1 <= len(t["uids"]) <= 10000:
+                self.fail("bad_value", "1 ile 10000 arası çizgi olur")
+            return t
+
+        def section_set(x):
+            t = self.fields({"id": (word, True), "name": (self.text, True), "alignment": (word, True),
+                             "alignmentRevision": (self.uint(32), False), "revision": (self.uint(32), False),
+                             "profile": (word, False), "template": (word, False), "surface": (word, False),
+                             "left": (finite, True), "right": (finite, True), "stations": (stations, True)})(x)
+            name = t["name"]
+            if not name or name.strip() != name or len(name) > 120:
+                self.fail("bad_value", "kesit takımının adı boş, boşluklu ya da çok uzun")
+            if not (0 < t["left"] <= 1000 and 0 < t["right"] <= 1000):
+                self.fail("bad_value", "şerit genişliği 0'dan büyük, en çok 1000 m olmalı")
+            return t
+
         r = self.fields({"surfaces": (self.array(surface), False), "alignments": (self.array(alignment), False),
-                         "profiles": (self.array(profile), False)})(v)
+                         "profiles": (self.array(profile), False), "templates": (self.array(template), False),
+                         "sections": (self.array(section_set), False)})(v)
         got = r.get("surfaces", [])
         lines = r.get("alignments", [])
         profiles = r.get("profiles", [])
-        if not got and not lines and not profiles:
+        templates = r.get("templates", [])
+        sets = r.get("sections", [])
+        if not got and not lines and not profiles and not templates and not sets:
             self.fail("bad_value", "boş yol ayarı yazılmaz")
         if len(got) > 64 or ("surfaces" in r and not got):
             self.fail("bad_value", "yol ayarında 1 ile 64 arası yüzey olur")
@@ -9489,6 +9550,23 @@ class _Schema:
             src = next((y for y in lines if y["id"] == x["alignment"]), None)
             if src is None or "offsetOf" in src:
                 self.fail("bad_value", "boykesit yalnız PI'larıyla kurulan aksa bağlanır")
+        if "templates" in r and not templates or len(templates) > 256:
+            self.fail("bad_value", "yol ayarında 1 ile 256 arası tip kesit olur")
+        if len({x["id"] for x in templates}) != len(templates) or len({x["name"].lower() for x in templates}) != len(templates):
+            self.fail("bad_value", "iki tip kesitin kimliği ya da adı aynı")
+        if "sections" in r and not sets or len(sets) > 256:
+            self.fail("bad_value", "yol ayarında 1 ile 256 arası kesit takımı olur")
+        if len({x["id"] for x in sets}) != len(sets) or len({x["name"].lower() for x in sets}) != len(sets):
+            self.fail("bad_value", "iki kesit takımının kimliği ya da adı aynı")
+        for x in sets:
+            src = next((y for y in lines if y["id"] == x["alignment"]), None)
+            if src is None or "offsetOf" in src:
+                self.fail("bad_value", "kesit takımı yalnız PI'larıyla kurulan aksa bağlanır")
+            prof = next((y for y in profiles if y["id"] == x.get("profile")), None) if "profile" in x else None
+            if "profile" in x and (prof is None or prof["alignment"] != x["alignment"]):
+                self.fail("bad_value", "kesit takımının boykesiti projede yok ya da takımın aksında değil")
+            if "template" in x and all(y["id"] != x["template"] for y in templates):
+                self.fail("bad_value", "kesit takımının tip kesiti projede yok")
         return r
 
     def arch_(self, v):

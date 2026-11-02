@@ -5319,6 +5319,22 @@ ResourceKindName = Literal["layer", "group", "block", "textStyle", "dimensionSty
 """The names of :class:`ResourceKind`, for a plain string."""
 
 
+class RoadEditOperation(_StrEnum):
+    """What an edit of a template or a set does.
+
+    - ``set``: Writes it: a new one when none of the id or name is in the project (its id the given one, else the first free),
+    - ``rebind``: A set takes its alignment's present revision (no longer stale).
+    - ``remove``: It goes.
+    """
+    SET = "set"
+    REBIND = "rebind"
+    REMOVE = "remove"
+
+
+RoadEditOperationName = Literal["set", "rebind", "remove"]
+"""The names of :class:`RoadEditOperation`, for a plain string."""
+
+
 class RoadKind(_StrEnum):
     """The kind of road Plan yolu draws: its `Tür`.
 
@@ -6280,6 +6296,16 @@ class TakebackPart(_StrEnum):
 
 TakebackPartName = Literal["attributes", "geometry"]
 """The names of :class:`TakebackPart`, for a plain string."""
+
+
+class TemplateComponentKind(_StrEnum):
+    """A template component's kind."""
+    LANE = "lane"
+    SHOULDER = "shoulder"
+
+
+TemplateComponentKindName = Literal["lane", "shoulder"]
+"""The names of :class:`TemplateComponentKind`, for a plain string."""
 
 
 class TemplateSettingsMode(_StrEnum):
@@ -9584,6 +9610,28 @@ class ScheduleOperation(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> ScheduleOperation:
         return _variant(_SCHEDULE_OPERATION, "ScheduleOperation", "kind", data).from_json(data)
+
+
+class SectionStations(_Union):
+    """How a sample line set's stations are had (docs/adr/0903 §2).
+
+    One of:
+
+    - :class:`RangeSectionStations` (``method: range``)
+    - :class:`StationsSectionStations` (``method: stations``)
+    - :class:`LinesSectionStations` (``method: lines``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "method"
+
+    @property
+    def method(self) -> str:
+        """The name of the variant (``method`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SectionStations:
+        return _variant(_SECTION_STATIONS, "SectionStations", "method", data).from_json(data)
 
 
 class SelectRegion(_Union):
@@ -58920,11 +58968,15 @@ class RoadSettings(_Model):
     Attributes:
         alignments: The horizontal alignments (docs/adr/0901), in the order the project tree shows them.
         profiles: The vertical alignments (docs/adr/0902), each on an alignment, in the order the project tree shows them.
+        sections: The sample line sets (docs/adr/0903 §2), in the order the project tree shows them.
         surfaces: The terrain surfaces, in the order the project tree shows them.
+        templates: The templates (docs/adr/0903 §3), in the order the project tree shows them.
     """
     alignments: list[AlignmentDef] | Unset = UNSET
     profiles: list[ProfileDef] | Unset = UNSET
+    sections: list[SectionSetDef] | Unset = UNSET
     surfaces: list[TerrainSurfaceDef] | Unset = UNSET
+    templates: list[TemplateDef] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -58932,8 +58984,12 @@ class RoadSettings(_Model):
             out["alignments"] = [e0.to_json() for e0 in self.alignments]
         if self.profiles is not UNSET:
             out["profiles"] = [e0.to_json() for e0 in self.profiles]
+        if self.sections is not UNSET:
+            out["sections"] = [e0.to_json() for e0 in self.sections]
         if self.surfaces is not UNSET:
             out["surfaces"] = [e0.to_json() for e0 in self.surfaces]
+        if self.templates is not UNSET:
+            out["templates"] = [e0.to_json() for e0 in self.templates]
         return out
 
     @classmethod
@@ -58941,7 +58997,9 @@ class RoadSettings(_Model):
         return cls(
             alignments=[AlignmentDef.from_json(e0) for e0 in data["alignments"]] if "alignments" in data else UNSET,
             profiles=[ProfileDef.from_json(e0) for e0 in data["profiles"]] if "profiles" in data else UNSET,
+            sections=[SectionSetDef.from_json(e0) for e0 in data["sections"]] if "sections" in data else UNSET,
             surfaces=[TerrainSurfaceDef.from_json(e0) for e0 in data["surfaces"]] if "surfaces" in data else UNSET,
+            templates=[TemplateDef.from_json(e0) for e0 in data["templates"]] if "templates" in data else UNSET,
         )
 
 
@@ -59867,6 +59925,383 @@ class SchemaItem(_Model):
             detail=data.get("detail", UNSET),
             layer=data.get("layer", UNSET),
             version=data.get("version", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SectionGround(_Model):
+    """A place of the terrain along a sample line: offset (right positive), height (none off the surface), whether the
+    stretch before it is off the surface.
+    Attributes:
+        offset: Unit: m.
+        z: Unit: elevation.
+    """
+    offset: float
+    gap: bool
+    z: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["offset"] = float(self.offset)
+        out["gap"] = self.gap
+        if self.z is not UNSET:
+            out["z"] = None if self.z is None else float(self.z)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SectionGround:
+        return cls(
+            offset=float(data["offset"]),
+            gap=data["gap"],
+            z=UNSET if "z" not in data else None if data["z"] is None else float(data["z"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SectionRow(_Model):
+    """A cross section: where it is, the terrain along it and, with a profile, a template and a surface, the platform
+    built on it and its cut and fill areas (m²).
+    Attributes:
+        station: Unit: m.
+        km: Unit: m.
+        ends: The sample line's left and right ends. Unit: length.
+        axis: The axis' design elevation; absent without a profile or outside it. Unit: elevation.
+        cut: Unit: area.
+        fill: Unit: area.
+    """
+    station: float
+    km: float
+    km_text: str
+    ends: list[list[float]]
+    ground: list[SectionGround]
+    axis: float | None | Unset = UNSET
+    cut: float | None | Unset = UNSET
+    fill: float | None | Unset = UNSET
+    left: SectionSide | None | Unset = UNSET
+    right: SectionSide | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["station"] = float(self.station)
+        out["km"] = float(self.km)
+        out["kmText"] = self.km_text
+        out["ends"] = [[float(e1) for e1 in e0] for e0 in self.ends]
+        out["ground"] = [e0.to_json() for e0 in self.ground]
+        if self.axis is not UNSET:
+            out["axis"] = None if self.axis is None else float(self.axis)
+        if self.cut is not UNSET:
+            out["cut"] = None if self.cut is None else float(self.cut)
+        if self.fill is not UNSET:
+            out["fill"] = None if self.fill is None else float(self.fill)
+        if self.left is not UNSET:
+            out["left"] = None if self.left is None else self.left.to_json()
+        if self.right is not UNSET:
+            out["right"] = None if self.right is None else self.right.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SectionRow:
+        return cls(
+            station=float(data["station"]),
+            km=float(data["km"]),
+            km_text=data["kmText"],
+            ends=[[float(e1) for e1 in e0] for e0 in data["ends"]],
+            ground=[SectionGround.from_json(e0) for e0 in data["ground"]],
+            axis=UNSET if "axis" not in data else None if data["axis"] is None else float(data["axis"]),
+            cut=UNSET if "cut" not in data else None if data["cut"] is None else float(data["cut"]),
+            fill=UNSET if "fill" not in data else None if data["fill"] is None else float(data["fill"]),
+            left=UNSET if "left" not in data else None if data["left"] is None else SectionSide.from_json(data["left"]),
+            right=UNSET if "right" not in data else None if data["right"] is None else SectionSide.from_json(data["right"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SectionSetDef(_Model):
+    """A sample line set (docs/adr/0903 §1–§2): on an alignment of its own PIs (its revision held), with an optional profile
+    on it, template and surface; its swath widths and how its stations are had.
+    Attributes:
+        left: Unit: m.
+        right: Unit: m.
+        alignment_revision: Unit: version.
+        revision: Unit: version.
+    """
+    id: str
+    name: str
+    alignment: str
+    left: float
+    right: float
+    stations: SectionStations
+    alignment_revision: int | Unset = UNSET
+    profile: str | None | Unset = UNSET
+    revision: int | Unset = UNSET
+    surface: str | None | Unset = UNSET
+    template: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["alignment"] = self.alignment
+        out["left"] = float(self.left)
+        out["right"] = float(self.right)
+        out["stations"] = self.stations.to_json()
+        if self.alignment_revision is not UNSET:
+            out["alignmentRevision"] = self.alignment_revision
+        if self.profile is not UNSET:
+            out["profile"] = self.profile
+        if self.revision is not UNSET:
+            out["revision"] = self.revision
+        if self.surface is not UNSET:
+            out["surface"] = self.surface
+        if self.template is not UNSET:
+            out["template"] = self.template
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SectionSetDef:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            alignment=data["alignment"],
+            left=float(data["left"]),
+            right=float(data["right"]),
+            stations=SectionStations.from_json(data["stations"]),
+            alignment_revision=data.get("alignmentRevision", UNSET),
+            profile=data.get("profile", UNSET),
+            revision=data.get("revision", UNSET),
+            surface=data.get("surface", UNSET),
+            template=data.get("template", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SectionSetReport(_Model):
+    """A sample line set as it is now: its definition's names and its stations (none when they no longer come out: its line
+    erased or no longer crossing, its alignment shortened; the set's own query says why).
+    Attributes:
+        revision: Unit: version.
+        stale: The alignment changed since it was made or rebound.
+        stations: Unit: m.
+    """
+    id: str
+    name: str
+    revision: int
+    alignment: str
+    stale: bool
+    stations: list[float]
+    profile: str | None | Unset = UNSET
+    surface: str | None | Unset = UNSET
+    template: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["revision"] = self.revision
+        out["alignment"] = self.alignment
+        out["stale"] = self.stale
+        out["stations"] = [float(e0) for e0 in self.stations]
+        if self.profile is not UNSET:
+            out["profile"] = self.profile
+        if self.surface is not UNSET:
+            out["surface"] = self.surface
+        if self.template is not UNSET:
+            out["template"] = self.template
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SectionSetReport:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            revision=data["revision"],
+            alignment=data["alignment"],
+            stale=data["stale"],
+            stations=[float(e0) for e0 in data["stations"]],
+            profile=data.get("profile", UNSET),
+            surface=data.get("surface", UNSET),
+            template=data.get("template", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SectionSide(_Model):
+    """A side of a section as built: `cut`, `fill` or `open`, its hinge, its daylight point and its points outward from
+    the axis (offset, elevation).
+    Attributes:
+        hinge: Unit: m.
+        points: Unit: m.
+        daylight: Unit: m.
+    """
+    kind: str
+    hinge: list[float]
+    points: list[list[float]]
+    daylight: list[float] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = self.kind
+        out["hinge"] = [float(e0) for e0 in self.hinge]
+        out["points"] = [[float(e1) for e1 in e0] for e0 in self.points]
+        if self.daylight is not UNSET:
+            out["daylight"] = None if self.daylight is None else [float(e0) for e0 in self.daylight]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SectionSide:
+        return cls(
+            kind=data["kind"],
+            hinge=[float(e0) for e0 in data["hinge"]],
+            points=[[float(e1) for e1 in e0] for e0 in data["points"]],
+            daylight=UNSET if "daylight" not in data else None if data["daylight"] is None else [float(e0) for e0 in data["daylight"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SectionsEdit(_Model):
+    """Input of `road.sections.edit` v1: the set by its id or name (absent: a new one). A new set needs `name`,
+    `alignment`, `left`, `right` and `stations`; it holds its alignment's present revision. `profile`, `template` and
+    `surface` take an id or a name; empty clears.
+
+    Refusals, in this order: `not_a_road_project`, `unknown_section_set` (remove or rebind one not in the project),
+    `unknown_alignment`, `unknown_road_profile`, `unknown_road_template`, `unknown_terrain`, `invalid_section_set` (a new one
+    without its fields, set with nothing to set, the definition by `road_problem`; a station off the alignment, a range
+    not on it, a line that is not a line or polyline or does not cross the alignment, no station at all),
+    `invalid_revision`, `revision_conflict`.
+    Attributes:
+        left: Unit: m.
+        right: Unit: m.
+    """
+    operation: RoadEditOperation | RoadEditOperationName
+    alignment: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    left: float | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    profile: str | None | Unset = UNSET
+    right: float | None | Unset = UNSET
+    set: str | None | Unset = UNSET
+    stations: SectionStations | None | Unset = UNSET
+    surface: str | None | Unset = UNSET
+    template: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = _enum_out(self.operation)
+        if self.alignment is not UNSET:
+            out["alignment"] = self.alignment
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.left is not UNSET:
+            out["left"] = None if self.left is None else float(self.left)
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.profile is not UNSET:
+            out["profile"] = self.profile
+        if self.right is not UNSET:
+            out["right"] = None if self.right is None else float(self.right)
+        if self.set is not UNSET:
+            out["set"] = self.set
+        if self.stations is not UNSET:
+            out["stations"] = None if self.stations is None else self.stations.to_json()
+        if self.surface is not UNSET:
+            out["surface"] = self.surface
+        if self.template is not UNSET:
+            out["template"] = self.template
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SectionsEdit:
+        return cls(
+            operation=_enum_in(RoadEditOperation, data["operation"]),
+            alignment=data.get("alignment", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            left=UNSET if "left" not in data else None if data["left"] is None else float(data["left"]),
+            name=data.get("name", UNSET),
+            profile=data.get("profile", UNSET),
+            right=UNSET if "right" not in data else None if data["right"] is None else float(data["right"]),
+            set=data.get("set", UNSET),
+            stations=UNSET if "stations" not in data else None if data["stations"] is None else SectionStations.from_json(data["stations"]),
+            surface=data.get("surface", UNSET),
+            template=data.get("template", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SectionsQueried(_Model):
+    """Output of `road.sections.query` v1."""
+    sets: list[SectionSetReport]
+    sections: list[SectionRow]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["sets"] = [e0.to_json() for e0 in self.sets]
+        out["sections"] = [e0.to_json() for e0 in self.sections]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SectionsQueried:
+        return cls(
+            sets=[SectionSetReport.from_json(e0) for e0 in data["sets"]],
+            sections=[SectionRow.from_json(e0) for e0 in data["sections"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SectionsQuery(_Model):
+    """Input of `road.sections.query` v1: every set's report, or one's (`set`: its id or name) with its sections; only
+    those at `stations` (among the set's) when given.
+
+    Refusals: `not_a_road_project`, `unknown_section_set`, `invalid_section_set` (the set's stations no longer come out),
+    `invalid_places` (a station not among the set's, or a question
+    without `set`), the geometry's when the alignment or the profile no longer builds. Warnings: `section_set_stale`
+    (the alignment changed since), `section_surface_gone` (the surface is not in the project or makes no surface),
+    `section_open` (a side whose slope meets the terrain nowhere on the swath).
+    Attributes:
+        stations: Unit: m.
+    """
+    set: str | None | Unset = UNSET
+    stations: list[float] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.set is not UNSET:
+            out["set"] = self.set
+        if self.stations is not UNSET:
+            out["stations"] = [float(e0) for e0 in self.stations]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SectionsQuery:
+        return cls(
+            set=data.get("set", UNSET),
+            stations=[float(e0) for e0 in data["stations"]] if "stations" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SectionsWritten(_Model):
+    """Output of `road.sections.edit` v1.
+    Attributes:
+        set: The set written; absent when removed.
+    """
+    sets: list[SectionSetReport]
+    revision: str
+    set: SectionSetReport | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["sets"] = [e0.to_json() for e0 in self.sets]
+        out["revision"] = self.revision
+        if self.set is not UNSET:
+            out["set"] = None if self.set is None else self.set.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SectionsWritten:
+        return cls(
+            sets=[SectionSetReport.from_json(e0) for e0 in data["sets"]],
+            revision=data["revision"],
+            set=UNSET if "set" not in data else None if data["set"] is None else SectionSetReport.from_json(data["set"]),
         )
 
 
@@ -68692,6 +69127,127 @@ class TargetReference(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class TemplateComponentDef(_Model):
+    """A component of a template's side, outward from the axis: its width and cross slope (percent, falling outward
+    negative).
+    Attributes:
+        width: Unit: m.
+        slope: Unit: percent.
+    """
+    kind: TemplateComponentKind | TemplateComponentKindName
+    width: float
+    slope: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        out["width"] = float(self.width)
+        out["slope"] = float(self.slope)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TemplateComponentDef:
+        return cls(
+            kind=_enum_in(TemplateComponentKind, data["kind"]),
+            width=float(data["width"]),
+            slope=float(data["slope"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TemplateDef(_Model):
+    """A template (docs/adr/0903 §3): its left side and its right; absent right: the left's mirror.
+    Attributes:
+        revision: Unit: version.
+    """
+    id: str
+    name: str
+    left: TemplateSideDef
+    revision: int | Unset = UNSET
+    right: TemplateSideDef | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["left"] = self.left.to_json()
+        if self.revision is not UNSET:
+            out["revision"] = self.revision
+        if self.right is not UNSET:
+            out["right"] = None if self.right is None else self.right.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TemplateDef:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            left=TemplateSideDef.from_json(data["left"]),
+            revision=data.get("revision", UNSET),
+            right=UNSET if "right" not in data else None if data["right"] is None else TemplateSideDef.from_json(data["right"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TemplateDitchDef(_Model):
+    """A ditch in a cut: its fore slope (horizontal per one vertical), its depth under the hinge and its bottom's width.
+    Attributes:
+        fore: Unit: 1.
+        depth: Unit: m.
+        bottom: Absent: 0 (a V ditch). Unit: m.
+    """
+    fore: float
+    depth: float
+    bottom: float | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["fore"] = float(self.fore)
+        out["depth"] = float(self.depth)
+        if self.bottom is not UNSET:
+            out["bottom"] = float(self.bottom)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TemplateDitchDef:
+        return cls(
+            fore=float(data["fore"]),
+            depth=float(data["depth"]),
+            bottom=float(data["bottom"]) if "bottom" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TemplateListed(_Model):
+    """A template in the project's list.
+    Attributes:
+        revision: Unit: version.
+        used_by: The sample line sets that use it.
+    """
+    id: str
+    name: str
+    revision: int
+    used_by: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["revision"] = self.revision
+        out["usedBy"] = list(self.used_by)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TemplateListed:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            revision=data["revision"],
+            used_by=list(data["usedBy"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class TemplatePreserved(_Model):
     """A package part kept because the drawing already defines its identity or name.
     Attributes:
@@ -68759,6 +69315,39 @@ class TemplateReview(_Model):
             space_method=_enum_in(SpaceMethod, data["spaceMethod"]),
             preserved=[TemplatePreserved.from_json(e0) for e0 in data["preserved"]],
             previous_space_method=UNSET if "previousSpaceMethod" not in data else None if data["previousSpaceMethod"] is None else _enum_in(SpaceMethod, data["previousSpaceMethod"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TemplateSideDef(_Model):
+    """A template's side: its components outward from the axis and its end condition: the cut and fill slopes (horizontal
+    per one vertical, 1.5 is 3/2) and an optional ditch in the cut.
+    Attributes:
+        cut: Unit: 1.
+        fill: Unit: 1.
+    """
+    cut: float
+    fill: float
+    components: list[TemplateComponentDef] | Unset = UNSET
+    ditch: TemplateDitchDef | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["cut"] = float(self.cut)
+        out["fill"] = float(self.fill)
+        if self.components is not UNSET:
+            out["components"] = [e0.to_json() for e0 in self.components]
+        if self.ditch is not UNSET:
+            out["ditch"] = None if self.ditch is None else self.ditch.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TemplateSideDef:
+        return cls(
+            cut=float(data["cut"]),
+            fill=float(data["fill"]),
+            components=[TemplateComponentDef.from_json(e0) for e0 in data["components"]] if "components" in data else UNSET,
+            ditch=UNSET if "ditch" not in data else None if data["ditch"] is None else TemplateDitchDef.from_json(data["ditch"]),
         )
 
 
@@ -68854,6 +69443,82 @@ class TemplatesApply(_Model):
             expected_revision=data.get("expectedRevision", UNSET),
             settings_mode=UNSET if "settingsMode" not in data else None if data["settingsMode"] is None else _enum_in(TemplateSettingsMode, data["settingsMode"]),
             unit=UNSET if "unit" not in data else None if data["unit"] is None else _enum_in(DrawingUnit, data["unit"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TemplatesEdit(_Model):
+    """Input of `road.templates.edit` v1: the template by its id or name (absent: a new one).
+
+    Refusals, in this order: `not_a_road_project`, `unknown_road_template` (remove or rebind one not in the project),
+    `invalid_road_template` (a new one without `name` or `left`, set with nothing to set, rebind, or the definition by
+    `road_problem`, path the field's), `road_template_in_use` (remove while a sample line set uses it), `invalid_revision`,
+    `revision_conflict`.
+    Attributes:
+        mirror: The right side mirrors the left (its own goes).
+    """
+    operation: RoadEditOperation | RoadEditOperationName
+    expected_revision: str | None | Unset = UNSET
+    left: TemplateSideDef | None | Unset = UNSET
+    mirror: bool | Unset = UNSET
+    name: str | None | Unset = UNSET
+    right: TemplateSideDef | None | Unset = UNSET
+    template: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = _enum_out(self.operation)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.left is not UNSET:
+            out["left"] = None if self.left is None else self.left.to_json()
+        if self.mirror is not UNSET:
+            out["mirror"] = self.mirror
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.right is not UNSET:
+            out["right"] = None if self.right is None else self.right.to_json()
+        if self.template is not UNSET:
+            out["template"] = self.template
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TemplatesEdit:
+        return cls(
+            operation=_enum_in(RoadEditOperation, data["operation"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            left=UNSET if "left" not in data else None if data["left"] is None else TemplateSideDef.from_json(data["left"]),
+            mirror=data.get("mirror", UNSET),
+            name=data.get("name", UNSET),
+            right=UNSET if "right" not in data else None if data["right"] is None else TemplateSideDef.from_json(data["right"]),
+            template=data.get("template", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TemplatesWritten(_Model):
+    """Output of `road.templates.edit` v1.
+    Attributes:
+        template: The template written; absent when removed.
+    """
+    templates: list[TemplateListed]
+    revision: str
+    template: TemplateDef | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["templates"] = [e0.to_json() for e0 in self.templates]
+        out["revision"] = self.revision
+        if self.template is not UNSET:
+            out["template"] = None if self.template is None else self.template.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TemplatesWritten:
+        return cls(
+            templates=[TemplateListed.from_json(e0) for e0 in data["templates"]],
+            revision=data["revision"],
+            template=UNSET if "template" not in data else None if data["template"] is None else TemplateDef.from_json(data["template"]),
         )
 
 
@@ -88314,6 +88979,79 @@ class SetScheduleOperation(ScheduleOperation):
 
 
 @dataclass(kw_only=True, slots=True)
+class RangeSectionStations(SectionStations):
+    """Every round `every` metres of km from `from` to `to` (the alignment's own stations) and both of them, with the
+    curves' points and the profile's PVIs when `geometry`.
+    Attributes:
+        from_: Unit: m.
+        to: Unit: m.
+        every: Unit: m.
+    """
+    TAG_VALUE: ClassVar[str] = "range"
+    from_: float
+    to: float
+    every: float
+    geometry: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"method": "range"}
+        out["from"] = float(self.from_)
+        out["to"] = float(self.to)
+        out["every"] = float(self.every)
+        if self.geometry is not UNSET:
+            out["geometry"] = self.geometry
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RangeSectionStations:
+        return cls(
+            from_=float(data["from"]),
+            to=float(data["to"]),
+            every=float(data["every"]),
+            geometry=data.get("geometry", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StationsSectionStations(SectionStations):
+    """The stations written.
+    Attributes:
+        stations: Unit: m.
+    """
+    TAG_VALUE: ClassVar[str] = "stations"
+    stations: list[float]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"method": "stations"}
+        out["stations"] = [float(e0) for e0 in self.stations]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StationsSectionStations:
+        return cls(
+            stations=[float(e0) for e0 in data["stations"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LinesSectionStations(SectionStations):
+    """Where lines and polylines of the drawing (their persistent ids) first cross the alignment."""
+    TAG_VALUE: ClassVar[str] = "lines"
+    uids: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"method": "lines"}
+        out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LinesSectionStations:
+        return cls(
+            uids=list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PropertiesSelectRegion(SelectRegion):
     """Refine a geometric/list scope with CAD properties and the existing expression language.
     Targets are drawing objects (inserts, not their definition members). Filters cannot be nested.
@@ -92558,6 +93296,9 @@ _ROAD_WORK: dict[str, type[RoadWork]] = {"plan": PlanRoadWork, "junctions": Junc
 _SCHEDULE_OPERATION: dict[str, type[ScheduleOperation]] = {"cell": CellScheduleOperation, "set": SetScheduleOperation}
 
 
+_SECTION_STATIONS: dict[str, type[SectionStations]] = {"range": RangeSectionStations, "stations": StationsSectionStations, "lines": LinesSectionStations}
+
+
 _SELECT_REGION: dict[str, type[SelectRegion]] = {"properties": PropertiesSelectRegion, "window": WindowSelectRegion, "crossing": CrossingSelectRegion, "fence": FenceSelectRegion, "polygon": PolygonSelectRegion, "circle": CircleSelectRegion, "containing": ContainingSelectRegion, "point": PointSelectRegion, "all": AllSelectRegion, "objects": ObjectsSelectRegion, "invert": InvertSelectRegion, "similar": SimilarSelectRegion}
 
 
@@ -94023,6 +94764,7 @@ __all__ = [
     "LinearRefDefined",
     "LinesCornerPick",
     "LinesMeeting",
+    "LinesSectionStations",
     "LinkDomainsOp",
     "LinkSourcesEditOp",
     "LinkTablesOperation",
@@ -94817,6 +95559,7 @@ __all__ = [
     "RampsCreated",
     "RampsPlan",
     "RangeRingsConstruction",
+    "RangeSectionStations",
     "RasterDataset",
     "RasterEntity",
     "RasterEntityGeometry",
@@ -95001,6 +95744,8 @@ __all__ = [
     "RevisionPlan",
     "RevisionsMark",
     "RingGeometry",
+    "RoadEditOperation",
+    "RoadEditOperationName",
     "RoadKind",
     "RoadKindName",
     "RoadProfileListed",
@@ -95062,6 +95807,16 @@ __all__ = [
     "SchemaItem",
     "SchemaKind",
     "SchemaKindName",
+    "SectionGround",
+    "SectionRow",
+    "SectionSetDef",
+    "SectionSetReport",
+    "SectionSide",
+    "SectionStations",
+    "SectionsEdit",
+    "SectionsQueried",
+    "SectionsQuery",
+    "SectionsWritten",
     "SectorCreate",
     "SegmentCadElement",
     "SelectKind",
@@ -95330,6 +96085,7 @@ __all__ = [
     "StationText",
     "StationTextName",
     "StationsAnnotationWork",
+    "StationsSectionStations",
     "StepDivision",
     "StepExplodeDensity",
     "StepKind",
@@ -95432,14 +96188,23 @@ __all__ = [
     "TangentLineConstruction",
     "TangentsCurveEdit",
     "TargetReference",
+    "TemplateComponentDef",
+    "TemplateComponentKind",
+    "TemplateComponentKindName",
+    "TemplateDef",
+    "TemplateDitchDef",
+    "TemplateListed",
     "TemplatePreserved",
     "TemplateRenameViewsOp",
     "TemplateReview",
     "TemplateSettingsMode",
     "TemplateSettingsModeName",
+    "TemplateSideDef",
     "TemplateViewsOp",
     "TemplatesApplied",
     "TemplatesApply",
+    "TemplatesEdit",
+    "TemplatesWritten",
     "TenantKind",
     "TenantKindName",
     "TerminalConfig",

@@ -157,6 +157,15 @@ fn check(doc: &kentos_domain::Document, input: &AlignmentsEdit) -> Result<Checke
                     "alignment",
                 ));
             }
+            let sets: Vec<&str> =
+                doc.road_sections().iter().filter(|s| s.alignment == old.id).map(|s| s.name.as_str()).collect();
+            if !sets.is_empty() {
+                return Err(fail(
+                    codes::ALIGNMENT_IN_USE,
+                    format!("“{}” aksına şu kesit takımları bağlı: {}. Önce onları silin.", old.name, sets.join(", ")),
+                    "alignment",
+                ));
+            }
             mapping = common::mapping_rows(old_core.as_ref(), None);
             list.remove(at);
             None

@@ -6983,6 +6983,93 @@ pub fn catalog() -> CommandCatalog {
             ],
         },
         CommandDescriptor {
+            id: crate::ROAD_TEMPLATES_EDIT.into(),
+            version: crate::ROAD_TEMPLATES_EDIT_VERSION,
+            title: "Tip kesiti düzenle".into(),
+            summary: "Yol projesinin tip kesitini (template: kimliği ya da adı; yoksa yeni) yazar ya da kaldırır. Bir yan eksenden dışa bileşenlerdir: şerit (lane) ve banket (shoulder), her biri genişlik (m) ve enine eğim (yüzde, dışa düşen eksi); uç koşulu yarma şevi cut ve dolgu şevi fill (bir düşeye yatay, 1,5 = 3/2) ve isteğe bağlı hendek (ditch: iç şev fore, derinlik depth, taban bottom) yalnız yarmada. \
+                      right verilmezse ya da mirror ile sağ yan solun aynısıdır. Değerleri KGM'nin standardından ya da projeden kullanıcı yazar; öntanımlı sayı yoktur. set: yeni tip kesitin kimliği verilen ya da ilk boş tk-n, adı ve sol yanı gerekir; var olanın verilen alanları onunkinin yerini alır, revizyonu bir artar. remove: tip kesit kalkar. \
+                      Tek geri alma adımı “Tip kesit”. Retler: not_a_road_project, unknown_road_template, invalid_road_template, road_template_in_use, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["tipkesit".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::TemplatesEdit>(),
+            output: schema::<crate::TemplatesWritten>(),
+            plan: Some(schema::<crate::TemplatesWritten>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "İki şeritli tip kesit, simetrik, yarmada hendekli".into(),
+                input: json!({ "operation": "set", "name": "Tip 1", "left": {
+                    "components": [
+                        { "kind": "lane", "width": 3.5, "slope": -2.5 },
+                        { "kind": "shoulder", "width": 1.0, "slope": -4.0 }
+                    ],
+                    "cut": 1.0, "fill": 1.5,
+                    "ditch": { "fore": 2.0, "depth": 0.5, "bottom": 0.5 }
+                } }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_SECTIONS_EDIT.into(),
+            version: crate::ROAD_SECTIONS_EDIT_VERSION,
+            title: "Kesit takımını düzenle".into(),
+            summary: "Yol projesinin kesit hattı takımını (set: kimliği ya da adı; yoksa yeni) yazar, aksına yeniden bağlar ya da kaldırır. Bir kesit hattı aksın bir km'sinde aksa diktir, sola left, sağa right metre. Km'ler: range (from, to, her every metrelik yuvarlak km, uçlar ve geometry ile kurp noktaları ve boykesitin PVI'leri), stations (yazılan km'ler) ya da lines (çizimdeki çizgi ve çoklu çizgilerin aksı ilk kestiği yer); 1 mm içindekiler bir. \
+                      Takım bir aksın, isteğe bağlı boykesitinin (profile), tip kesitinin (template) ve yüzeyinin (surface) kesitleridir; adlarla da verilir, boş değer kaldırır. Yeni takımın kimliği verilen ya da ilk boş k-n; name, alignment, left, right ve stations gerekir; aksının bugünkü revizyonunu tutar. rebind: aksın bugünkü revizyonunu alır. Kesitler saklanmaz, road.sections.query ile her seferinde çıkar. \
+                      Tek geri alma adımı “Kesit takımı”. Retler: not_a_road_project, unknown_section_set, unknown_alignment, unknown_road_profile, unknown_road_template, unknown_terrain, invalid_section_set, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["kesithatti".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::SectionsEdit>(),
+            output: schema::<crate::SectionsWritten>(),
+            plan: Some(schema::<crate::SectionsWritten>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana aksın 0–600 m arasında her 20 m'sinde, kurp noktalarında, 30 m şeritli takım".into(),
+                input: json!({ "operation": "set", "name": "Enkesitler", "alignment": "Ana aks", "profile": "Proje kotu",
+                    "template": "Tip 1", "surface": "Mevcut zemin", "left": 30.0, "right": 30.0,
+                    "stations": { "method": "range", "from": 0.0, "to": 600.0, "every": 20.0, "geometry": true } }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_SECTIONS_QUERY.into(),
+            version: crate::ROAD_SECTIONS_QUERY_VERSION,
+            title: "Enkesitleri sorgula".into(),
+            summary: "Yol projesinin kesit hattı takımlarını ve enkesitlerini bugün kuruldukları gibi verir; hiçbir şey yazmaz. set verilmezse her takımın raporu; verilince yalnız onunki ve kesitleri (stations ile yalnız takımın o km'lerindekiler): kesit hattının uçları, arazi (yüzeyin üçgen kenarlarını kestiği her yer, kesin; yüzeyin dışı gap), boykesitin kırmızı kotunda tip kesitin platformu ve şevleri. \
+                      Menteşede arazi üstteyse yarma (hendek, yarma şevi yukarı), değilse dolgu (dolgu şevi aşağı); şevin araziyle ilk buluştuğu yer daylight, kesin. Yarma ve dolgu alanı (m²) iki uç arasında proje ile arazi arasındaki alanın kapalı biçimde integrali. Şerit içinde araziyle buluşmayan yan open'dır, kot uydurulmaz. \
+                      Raporda km'si artık çıkmayan (çizgisi silinmiş ya da aksı kesmeyen) takımın km listesi boştur; kesitleri sorulunca neden söylenir. Uyarılar: section_set_stale, section_surface_gone, section_open. Retler: not_a_road_project, unknown_section_set, invalid_section_set, invalid_places ve aks ya da boykesit artık kurulamıyorsa geometrinin retleri."
+                .into(),
+            aliases: vec!["enkesitsor".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::SectionsQuery>(),
+            output: schema::<crate::SectionsQueried>(),
+            plan: Some(schema::<crate::SectionsQueried>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bir takımın iki km'deki enkesiti".into(),
+                input: json!({ "set": "Enkesitler", "stations": [100.0, 120.0] }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::ROAD_ALIGNMENTS_QUERY.into(),
             version: crate::ROAD_ALIGNMENTS_QUERY_VERSION,
             title: "Aksı sorgula".into(),
@@ -12572,6 +12659,15 @@ mod tests {
                     crate::ROAD_PROFILES_DRAW => {
                         serde_json::from_value::<crate::ProfilesDraw>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_TEMPLATES_EDIT => {
+                        serde_json::from_value::<crate::TemplatesEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_SECTIONS_EDIT => {
+                        serde_json::from_value::<crate::SectionsEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_SECTIONS_QUERY => {
+                        serde_json::from_value::<crate::SectionsQuery>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_SUBNETWORKS_FIND => {
                         serde_json::from_value::<crate::SubnetworksFind>(e.input.clone())
                             .map(|_| ())
@@ -13249,6 +13345,18 @@ mod tests {
                         }
                         crate::ROAD_PROFILES_DRAW => {
                             serde_json::from_value::<crate::ProfilesDrawn>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_TEMPLATES_EDIT => {
+                            serde_json::from_value::<crate::TemplatesWritten>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_SECTIONS_EDIT => {
+                            serde_json::from_value::<crate::SectionsWritten>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_SECTIONS_QUERY => {
+                            serde_json::from_value::<crate::SectionsQueried>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_ADDRESSES_DEFINE => {

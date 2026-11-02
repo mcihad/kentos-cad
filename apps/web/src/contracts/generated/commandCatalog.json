@@ -35860,6 +35860,7 @@
           "unknown_terrain",
           "invalid_road_profile",
           "profile_curves_overlap",
+          "profile_in_use",
           "invalid_revision",
           "revision_conflict"
         ]
@@ -36318,6 +36319,504 @@
           "input": {
             "profile": "b-1",
             "terrain": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "road.templates.edit",
+      "version": 1,
+      "title": "Tip kesiti düzenle",
+      "summary": "Yol projesinin tip kesitini (template: kimliği ya da adı; yoksa yeni) yazar ya da kaldırır. Bir yan eksenden dışa bileşenlerdir: şerit (lane) ve banket (shoulder), her biri genişlik (m) ve enine eğim (yüzde, dışa düşen eksi); uç koşulu yarma şevi cut ve dolgu şevi fill (bir düşeye yatay, 1,5 = 3/2) ve isteğe bağlı hendek (ditch: iç şev fore, derinlik depth, taban bottom) yalnız yarmada. right verilmezse ya da mirror ile sağ yan solun aynısıdır. Değerleri KGM'nin standardından ya da projeden kullanıcı yazar; öntanımlı sayı yoktur. set: yeni tip kesitin kimliği verilen ya da ilk boş tk-n, adı ve sol yanı gerekir; var olanın verilen alanları onunkinin yerini alır, revizyonu bir artar. remove: tip kesit kalkar. Tek geri alma adımı “Tip kesit”. Retler: not_a_road_project, unknown_road_template, invalid_road_template, road_template_in_use, invalid_revision, revision_conflict.",
+      "aliases": [
+        "tipkesit"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.templates.edit` v1: the template by its id or name (absent: a new one).\n\nRefusals, in this order: `not_a_road_project`, `unknown_road_template` (remove or rebind one not in the project),\n`invalid_road_template` (a new one without `name` or `left`, set with nothing to set, rebind, or the definition by\n`road_problem`, path the field's), `road_template_in_use` (remove while a sample line set uses it), `invalid_revision`,\n`revision_conflict`.",
+        "properties": {
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "left": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TemplateSideDef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "mirror": {
+            "description": "The right side mirrors the left (its own goes).",
+            "type": "boolean"
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "operation": {
+            "$ref": "#/$defs/RoadEditOperation"
+          },
+          "right": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TemplateSideDef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "template": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "operation"
+        ],
+        "title": "TemplatesEdit",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.templates.edit` v1.",
+        "properties": {
+          "revision": {
+            "type": "string"
+          },
+          "template": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TemplateDef"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The template written; absent when removed."
+          },
+          "templates": {
+            "items": {
+              "$ref": "#/$defs/TemplateListed"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "templates",
+          "revision"
+        ],
+        "title": "TemplatesWritten",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.templates.edit` v1.",
+        "properties": {
+          "revision": {
+            "type": "string"
+          },
+          "template": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TemplateDef"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The template written; absent when removed."
+          },
+          "templates": {
+            "items": {
+              "$ref": "#/$defs/TemplateListed"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "templates",
+          "revision"
+        ],
+        "title": "TemplatesWritten",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_road_template",
+          "invalid_road_template",
+          "road_template_in_use",
+          "invalid_revision",
+          "revision_conflict"
+        ]
+      },
+      "examples": [
+        {
+          "title": "İki şeritli tip kesit, simetrik, yarmada hendekli",
+          "input": {
+            "left": {
+              "components": [
+                {
+                  "kind": "lane",
+                  "slope": -2.5,
+                  "width": 3.5
+                },
+                {
+                  "kind": "shoulder",
+                  "slope": -4.0,
+                  "width": 1.0
+                }
+              ],
+              "cut": 1.0,
+              "ditch": {
+                "bottom": 0.5,
+                "depth": 0.5,
+                "fore": 2.0
+              },
+              "fill": 1.5
+            },
+            "name": "Tip 1",
+            "operation": "set"
+          }
+        }
+      ]
+    },
+    {
+      "id": "road.sections.edit",
+      "version": 1,
+      "title": "Kesit takımını düzenle",
+      "summary": "Yol projesinin kesit hattı takımını (set: kimliği ya da adı; yoksa yeni) yazar, aksına yeniden bağlar ya da kaldırır. Bir kesit hattı aksın bir km'sinde aksa diktir, sola left, sağa right metre. Km'ler: range (from, to, her every metrelik yuvarlak km, uçlar ve geometry ile kurp noktaları ve boykesitin PVI'leri), stations (yazılan km'ler) ya da lines (çizimdeki çizgi ve çoklu çizgilerin aksı ilk kestiği yer); 1 mm içindekiler bir. Takım bir aksın, isteğe bağlı boykesitinin (profile), tip kesitinin (template) ve yüzeyinin (surface) kesitleridir; adlarla da verilir, boş değer kaldırır. Yeni takımın kimliği verilen ya da ilk boş k-n; name, alignment, left, right ve stations gerekir; aksının bugünkü revizyonunu tutar. rebind: aksın bugünkü revizyonunu alır. Kesitler saklanmaz, road.sections.query ile her seferinde çıkar. Tek geri alma adımı “Kesit takımı”. Retler: not_a_road_project, unknown_section_set, unknown_alignment, unknown_road_profile, unknown_road_template, unknown_terrain, invalid_section_set, invalid_revision, revision_conflict.",
+      "aliases": [
+        "kesithatti"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.sections.edit` v1: the set by its id or name (absent: a new one). A new set needs `name`,\n`alignment`, `left`, `right` and `stations`; it holds its alignment's present revision. `profile`, `template` and\n`surface` take an id or a name; empty clears.\n\nRefusals, in this order: `not_a_road_project`, `unknown_section_set` (remove or rebind one not in the project),\n`unknown_alignment`, `unknown_road_profile`, `unknown_road_template`, `unknown_terrain`, `invalid_section_set` (a new one\nwithout its fields, set with nothing to set, the definition by `road_problem`; a station off the alignment, a range\nnot on it, a line that is not a line or polyline or does not cross the alignment, no station at all),\n`invalid_revision`, `revision_conflict`.",
+        "properties": {
+          "alignment": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "left": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "operation": {
+            "$ref": "#/$defs/RoadEditOperation"
+          },
+          "profile": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "right": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "set": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "stations": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SectionStations"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "surface": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "template": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "operation"
+        ],
+        "title": "SectionsEdit",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.sections.edit` v1.",
+        "properties": {
+          "revision": {
+            "type": "string"
+          },
+          "set": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SectionSetReport"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The set written; absent when removed."
+          },
+          "sets": {
+            "items": {
+              "$ref": "#/$defs/SectionSetReport"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "sets",
+          "revision"
+        ],
+        "title": "SectionsWritten",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.sections.edit` v1.",
+        "properties": {
+          "revision": {
+            "type": "string"
+          },
+          "set": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SectionSetReport"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The set written; absent when removed."
+          },
+          "sets": {
+            "items": {
+              "$ref": "#/$defs/SectionSetReport"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "sets",
+          "revision"
+        ],
+        "title": "SectionsWritten",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_section_set",
+          "unknown_alignment",
+          "unknown_road_profile",
+          "unknown_road_template",
+          "unknown_terrain",
+          "invalid_section_set",
+          "invalid_revision",
+          "revision_conflict"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Ana aksın 0–600 m arasında her 20 m'sinde, kurp noktalarında, 30 m şeritli takım",
+          "input": {
+            "alignment": "Ana aks",
+            "left": 30.0,
+            "name": "Enkesitler",
+            "operation": "set",
+            "profile": "Proje kotu",
+            "right": 30.0,
+            "stations": {
+              "every": 20.0,
+              "from": 0.0,
+              "geometry": true,
+              "method": "range",
+              "to": 600.0
+            },
+            "surface": "Mevcut zemin",
+            "template": "Tip 1"
+          }
+        }
+      ]
+    },
+    {
+      "id": "road.sections.query",
+      "version": 1,
+      "title": "Enkesitleri sorgula",
+      "summary": "Yol projesinin kesit hattı takımlarını ve enkesitlerini bugün kuruldukları gibi verir; hiçbir şey yazmaz. set verilmezse her takımın raporu; verilince yalnız onunki ve kesitleri (stations ile yalnız takımın o km'lerindekiler): kesit hattının uçları, arazi (yüzeyin üçgen kenarlarını kestiği her yer, kesin; yüzeyin dışı gap), boykesitin kırmızı kotunda tip kesitin platformu ve şevleri. Menteşede arazi üstteyse yarma (hendek, yarma şevi yukarı), değilse dolgu (dolgu şevi aşağı); şevin araziyle ilk buluştuğu yer daylight, kesin. Yarma ve dolgu alanı (m²) iki uç arasında proje ile arazi arasındaki alanın kapalı biçimde integrali. Şerit içinde araziyle buluşmayan yan open'dır, kot uydurulmaz. Raporda km'si artık çıkmayan (çizgisi silinmiş ya da aksı kesmeyen) takımın km listesi boştur; kesitleri sorulunca neden söylenir. Uyarılar: section_set_stale, section_surface_gone, section_open. Retler: not_a_road_project, unknown_section_set, invalid_section_set, invalid_places ve aks ya da boykesit artık kurulamıyorsa geometrinin retleri.",
+      "aliases": [
+        "enkesitsor"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.sections.query` v1: every set's report, or one's (`set`: its id or name) with its sections; only\nthose at `stations` (among the set's) when given.\n\nRefusals: `not_a_road_project`, `unknown_section_set`, `invalid_section_set` (the set's stations no longer come out),\n`invalid_places` (a station not among the set's, or a question\nwithout `set`), the geometry's when the alignment or the profile no longer builds. Warnings: `section_set_stale`\n(the alignment changed since), `section_surface_gone` (the surface is not in the project or makes no surface),\n`section_open` (a side whose slope meets the terrain nowhere on the swath).",
+        "properties": {
+          "set": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "stations": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "type": "array",
+            "x-unit": "m"
+          }
+        },
+        "title": "SectionsQuery",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.sections.query` v1.",
+        "properties": {
+          "sections": {
+            "items": {
+              "$ref": "#/$defs/SectionRow"
+            },
+            "type": "array"
+          },
+          "sets": {
+            "items": {
+              "$ref": "#/$defs/SectionSetReport"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "sets",
+          "sections"
+        ],
+        "title": "SectionsQueried",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.sections.query` v1.",
+        "properties": {
+          "sections": {
+            "items": {
+              "$ref": "#/$defs/SectionRow"
+            },
+            "type": "array"
+          },
+          "sets": {
+            "items": {
+              "$ref": "#/$defs/SectionSetReport"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "sets",
+          "sections"
+        ],
+        "title": "SectionsQueried",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_section_set",
+          "invalid_section_set",
+          "invalid_places"
+        ],
+        "warnings": [
+          "section_set_stale",
+          "section_surface_gone",
+          "section_open"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bir takımın iki km'deki enkesiti",
+          "input": {
+            "set": "Enkesitler",
+            "stations": [
+              100.0,
+              120.0
+            ]
           }
         }
       ]
@@ -70413,7 +70912,7 @@
       "code": "alignment_in_use",
       "kind": "failed",
       "retryable": false,
-      "meaning": "Bu aksı izleyen paralel aks ya da ona bağlı boykesit var; önce onu silin."
+      "meaning": "Bu aksı izleyen paralel aks ya da ona bağlı boykesit ya da kesit takımı var; önce onu silin."
     },
     {
       "code": "station_outside",
@@ -70450,6 +70949,60 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "İki düşey kurp birbirine biniyor; kurp boyunu ya da yarıçapı küçültün, PVI'ları uzaklaştırın."
+    },
+    {
+      "code": "unknown_road_template",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu kimlikte ya da adda tip kesit yok."
+    },
+    {
+      "code": "invalid_road_template",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Tip kesitin tanımı geçerli değil; ileti nedenini ve yerini söyler."
+    },
+    {
+      "code": "road_template_in_use",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu tip kesiti bir kesit takımı kullanıyor; önce takımdan kaldırın."
+    },
+    {
+      "code": "unknown_section_set",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu kimlikte ya da adda kesit takımı yok."
+    },
+    {
+      "code": "invalid_section_set",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kesit takımının tanımı ya da km'leri geçerli değil; ileti nedenini ve yerini söyler."
+    },
+    {
+      "code": "profile_in_use",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu boykesiti bir kesit takımı kullanıyor; önce takımdan kaldırın."
+    },
+    {
+      "code": "section_set_stale",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Kesit takımının aksı takım kurulduktan sonra değişti; km'leri denetleyip aksa yeniden bağlayın."
+    },
+    {
+      "code": "section_surface_gone",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Kesit takımının yüzeyi projede yok ya da kurulamıyor; arazi kesiti verilmedi."
+    },
+    {
+      "code": "section_open",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bir yanın şevi şerit genişliği içinde araziyle buluşmuyor; şeridi genişletin."
     },
     {
       "code": "profile_stale",
@@ -131832,6 +132385,26 @@
       ],
       "type": "object"
     },
+    "RoadEditOperation": {
+      "description": "What an edit of a template or a set does.",
+      "oneOf": [
+        {
+          "const": "set",
+          "description": "Writes it: a new one when none of the id or name is in the project (its id the given one, else the first free),\nelse the given fields replace its.",
+          "type": "string"
+        },
+        {
+          "const": "rebind",
+          "description": "A set takes its alignment's present revision (no longer stale).",
+          "type": "string"
+        },
+        {
+          "const": "remove",
+          "description": "It goes.",
+          "type": "string"
+        }
+      ]
+    },
     "RoadKind": {
       "description": "The kind of road Plan yolu draws: its `Tür`.",
       "oneOf": [
@@ -131901,10 +132474,24 @@
           },
           "type": "array"
         },
+        "sections": {
+          "description": "The sample line sets (docs/adr/0903 §2), in the order the project tree shows them.",
+          "items": {
+            "$ref": "#/$defs/SectionSetDef"
+          },
+          "type": "array"
+        },
         "surfaces": {
           "description": "The terrain surfaces, in the order the project tree shows them.",
           "items": {
             "$ref": "#/$defs/TerrainSurfaceDef"
+          },
+          "type": "array"
+        },
+        "templates": {
+          "description": "The templates (docs/adr/0903 §3), in the order the project tree shows them.",
+          "items": {
+            "$ref": "#/$defs/TemplateDef"
           },
           "type": "array"
         }
@@ -132734,6 +133321,385 @@
         "relations"
       ],
       "type": "string"
+    },
+    "SectionGround": {
+      "description": "A place of the terrain along a sample line: offset (right positive), height (none off the surface), whether the\nstretch before it is off the surface.",
+      "properties": {
+        "gap": {
+          "type": "boolean"
+        },
+        "offset": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "z": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "elevation"
+        }
+      },
+      "required": [
+        "offset",
+        "gap"
+      ],
+      "type": "object"
+    },
+    "SectionRow": {
+      "description": "A cross section: where it is, the terrain along it and, with a profile, a template and a surface, the platform\nbuilt on it and its cut and fill areas (m²).",
+      "properties": {
+        "axis": {
+          "description": "The axis' design elevation; absent without a profile or outside it.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "elevation"
+        },
+        "cut": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "area"
+        },
+        "ends": {
+          "description": "The sample line's left and right ends.",
+          "items": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array",
+          "x-unit": "length"
+        },
+        "fill": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "area"
+        },
+        "ground": {
+          "items": {
+            "$ref": "#/$defs/SectionGround"
+          },
+          "type": "array"
+        },
+        "km": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "kmText": {
+          "type": "string"
+        },
+        "left": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SectionSide"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "right": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SectionSide"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "station": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "station",
+        "km",
+        "kmText",
+        "ends",
+        "ground"
+      ],
+      "type": "object"
+    },
+    "SectionSetDef": {
+      "additionalProperties": false,
+      "description": "A sample line set (docs/adr/0903 §1–§2): on an alignment of its own PIs (its revision held), with an optional profile\non it, template and surface; its swath widths and how its stations are had.",
+      "properties": {
+        "alignment": {
+          "type": "string"
+        },
+        "alignmentRevision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "id": {
+          "type": "string"
+        },
+        "left": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "name": {
+          "type": "string"
+        },
+        "profile": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "right": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "stations": {
+          "$ref": "#/$defs/SectionStations"
+        },
+        "surface": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "template": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "alignment",
+        "left",
+        "right",
+        "stations"
+      ],
+      "type": "object"
+    },
+    "SectionSetReport": {
+      "description": "A sample line set as it is now: its definition's names and its stations (none when they no longer come out: its line\nerased or no longer crossing, its alignment shortened; the set's own query says why).",
+      "properties": {
+        "alignment": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "profile": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "stale": {
+          "description": "The alignment changed since it was made or rebound.",
+          "type": "boolean"
+        },
+        "stations": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "type": "array",
+          "x-unit": "m"
+        },
+        "surface": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "template": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "revision",
+        "alignment",
+        "stale",
+        "stations"
+      ],
+      "type": "object"
+    },
+    "SectionSide": {
+      "description": "A side of a section as built: `cut`, `fill` or `open`, its hinge, its daylight point and its points outward from\nthe axis (offset, elevation).",
+      "properties": {
+        "daylight": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "hinge": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array",
+          "x-unit": "m"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "points": {
+          "items": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "type": "array",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "kind",
+        "hinge",
+        "points"
+      ],
+      "type": "object"
+    },
+    "SectionStations": {
+      "description": "How a sample line set's stations are had (docs/adr/0903 §2).",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "description": "Every round `every` metres of km from `from` to `to` (the alignment's own stations) and both of them, with the\ncurves' points and the profile's PVIs when `geometry`.",
+          "properties": {
+            "every": {
+              "format": "double",
+              "type": "number",
+              "x-unit": "m"
+            },
+            "from": {
+              "format": "double",
+              "type": "number",
+              "x-unit": "m"
+            },
+            "geometry": {
+              "type": "boolean"
+            },
+            "method": {
+              "const": "range",
+              "type": "string"
+            },
+            "to": {
+              "format": "double",
+              "type": "number",
+              "x-unit": "m"
+            }
+          },
+          "required": [
+            "method",
+            "from",
+            "to",
+            "every"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "The stations written.",
+          "properties": {
+            "method": {
+              "const": "stations",
+              "type": "string"
+            },
+            "stations": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "type": "array",
+              "x-unit": "m"
+            }
+          },
+          "required": [
+            "method",
+            "stations"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Where lines and polylines of the drawing (their persistent ids) first cross the alignment.",
+          "properties": {
+            "method": {
+              "const": "lines",
+              "type": "string"
+            },
+            "uids": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "method",
+            "uids"
+          ],
+          "type": "object"
+        }
+      ]
     },
     "SelectKind": {
       "description": "A kind the selection filter holds (docs/adr/0187 §5): a NURBS curve is an Eğri (`spline`).",
@@ -142274,6 +143240,134 @@
       ],
       "type": "object"
     },
+    "TemplateComponentDef": {
+      "additionalProperties": false,
+      "description": "A component of a template's side, outward from the axis: its width and cross slope (percent, falling outward\nnegative).",
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/TemplateComponentKind"
+        },
+        "slope": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "percent"
+        },
+        "width": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "kind",
+        "width",
+        "slope"
+      ],
+      "type": "object"
+    },
+    "TemplateComponentKind": {
+      "description": "A template component's kind.",
+      "enum": [
+        "lane",
+        "shoulder"
+      ],
+      "type": "string"
+    },
+    "TemplateDef": {
+      "additionalProperties": false,
+      "description": "A template (docs/adr/0903 §3): its left side and its right; absent right: the left's mirror.",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "left": {
+          "$ref": "#/$defs/TemplateSideDef"
+        },
+        "name": {
+          "type": "string"
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "right": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TemplateSideDef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "left"
+      ],
+      "type": "object"
+    },
+    "TemplateDitchDef": {
+      "additionalProperties": false,
+      "description": "A ditch in a cut: its fore slope (horizontal per one vertical), its depth under the hinge and its bottom's width.",
+      "properties": {
+        "bottom": {
+          "description": "Absent: 0 (a V ditch).",
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "depth": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "fore": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        }
+      },
+      "required": [
+        "fore",
+        "depth"
+      ],
+      "type": "object"
+    },
+    "TemplateListed": {
+      "description": "A template in the project's list.",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "usedBy": {
+          "description": "The sample line sets that use it.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "revision",
+        "usedBy"
+      ],
+      "type": "object"
+    },
     "TemplatePreserved": {
       "description": "A package part kept because the drawing already defines its identity or name.",
       "properties": {
@@ -142359,6 +143453,43 @@
         "template"
       ],
       "type": "string"
+    },
+    "TemplateSideDef": {
+      "additionalProperties": false,
+      "description": "A template's side: its components outward from the axis and its end condition: the cut and fill slopes (horizontal\nper one vertical, 1.5 is 3/2) and an optional ditch in the cut.",
+      "properties": {
+        "components": {
+          "items": {
+            "$ref": "#/$defs/TemplateComponentDef"
+          },
+          "type": "array"
+        },
+        "cut": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "ditch": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TemplateDitchDef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fill": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        }
+      },
+      "required": [
+        "cut",
+        "fill"
+      ],
+      "type": "object"
     },
     "TenantKind": {
       "description": "A tenant is an organisation or a person's personal space (docs/adr/0015).",

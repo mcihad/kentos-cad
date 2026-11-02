@@ -621,7 +621,7 @@ codes! {
     /// A parallel axis folds where a curve's radius is smaller than the offset, or crosses itself.
     OFFSET_CUSP = "offset_cusp", Failed, false, "Paralel aks bu ötelemede kıvrılıyor; ötelemeyi küçültün ya da kurpların yarıçapını büyütün.";
     /// An alignment a parallel axis follows or a profile lies on.
-    ALIGNMENT_IN_USE = "alignment_in_use", Failed, false, "Bu aksı izleyen paralel aks ya da ona bağlı boykesit var; önce onu silin.";
+    ALIGNMENT_IN_USE = "alignment_in_use", Failed, false, "Bu aksı izleyen paralel aks ya da ona bağlı boykesit ya da kesit takımı var; önce onu silin.";
     /// A station off the alignment, a km on no place.
     STATION_OUTSIDE = "station_outside", Failed, false, "Bu km aksın üstünde değil.";
     /// A km on more than one place, asked without its region.
@@ -634,6 +634,24 @@ codes! {
     INVALID_ROAD_PROFILE = "invalid_road_profile", Failed, false, "Boykesitin tanımı ya da PVI'ları geçerli değil; ileti nedenini ve yerini söyler.";
     /// Two vertical curves, or a curve and an end of the profile, pass each other.
     PROFILE_CURVES_OVERLAP = "profile_curves_overlap", Failed, false, "İki düşey kurp birbirine biniyor; kurp boyunu ya da yarıçapı küçültün, PVI'ları uzaklaştırın.";
+    /// No road template (tip kesit) of the id or name (docs/adr/0903).
+    UNKNOWN_ROAD_TEMPLATE = "unknown_road_template", Failed, false, "Bu kimlikte ya da adda tip kesit yok.";
+    /// A road template's definition, or an edit that gives too little (docs/adr/0903 §3).
+    INVALID_ROAD_TEMPLATE = "invalid_road_template", Failed, false, "Tip kesitin tanımı geçerli değil; ileti nedenini ve yerini söyler.";
+    /// A road template a sample line set uses.
+    ROAD_TEMPLATE_IN_USE = "road_template_in_use", Failed, false, "Bu tip kesiti bir kesit takımı kullanıyor; önce takımdan kaldırın.";
+    /// No sample line set of the id or name.
+    UNKNOWN_SECTION_SET = "unknown_section_set", Failed, false, "Bu kimlikte ya da adda kesit takımı yok.";
+    /// A sample line set's definition or its stations (docs/adr/0903 §1–§2).
+    INVALID_SECTION_SET = "invalid_section_set", Failed, false, "Kesit takımının tanımı ya da km'leri geçerli değil; ileti nedenini ve yerini söyler.";
+    /// A profile a sample line set reads.
+    PROFILE_IN_USE = "profile_in_use", Failed, false, "Bu boykesiti bir kesit takımı kullanıyor; önce takımdan kaldırın.";
+    /// A warning: the sample line set's alignment changed since it was made or rebound.
+    SECTION_SET_STALE = "section_set_stale", Warning, false, "Kesit takımının aksı takım kurulduktan sonra değişti; km'leri denetleyip aksa yeniden bağlayın.";
+    /// A warning: the set's surface is not in the project or makes no surface; no terrain, no platform.
+    SECTION_SURFACE_GONE = "section_surface_gone", Warning, false, "Kesit takımının yüzeyi projede yok ya da kurulamıyor; arazi kesiti verilmedi.";
+    /// A warning: a side's slope meets the terrain nowhere on the swath (docs/adr/0903 §4).
+    SECTION_OPEN = "section_open", Warning, false, "Bir yanın şevi şerit genişliği içinde araziyle buluşmuyor; şeridi genişletin.";
     /// A warning: the profile's alignment changed since it was made or rebound.
     PROFILE_STALE = "profile_stale", Warning, false, "Boykesitin aksı boykesit kurulduktan sonra değişti; PVI'ları denetleyip aksa yeniden bağlayın.";
     /// A warning: the profile's surface is not in the project or makes no surface; no black elevations.

@@ -19,8 +19,7 @@ impl Document {
     pub fn set_road_alignments(&mut self, next: Vec<AlignmentDef>, label: &str) -> Result<bool, Refusal> {
         let judged = RoadSettings {
             alignments: next.clone(),
-            profiles: self.road_profiles().to_vec(),
-            ..RoadSettings::default()
+            ..self.settings.road.clone().unwrap_or_default()
         };
         if let Some((path, problem)) = judged.problem() {
             return Err(Refusal(format!("{path}: {problem}")));

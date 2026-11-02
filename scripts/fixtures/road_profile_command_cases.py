@@ -458,6 +458,16 @@ def edit_cases():
        put(1, {**SIDE, "alignmentRevision": 3, "revision": 5}), "b-2", op="validate")
 
     no("Yol projesi değil", {"profile": "b-1", "operation": "remove"}, NOT_ROAD, setup(work="map"), before=None)
+    # A sample line set uses the profile (docs/adr/0903 §6): it goes first.
+    kset = {"id": "k-1", "name": "Enkesitler", "alignment": "g-1", "alignmentRevision": 1, "revision": 1,
+            "profile": "b-1", "left": 25.0, "right": 25.0, "stations": {"method": "stations", "stations": [100.0]}}
+    used = setup(start)
+    used["settings"]["road"]["sections"] = [kset]
+    cases.append(case("Kesit takımının kullandığı boykesit silinmez", [step(
+        "execute", {"profile": "b-1", "operation": "remove"},
+        failed("profile_in_use", "“Proje kotu” boykesitini şu kesit takımları kullanıyor: Enkesitler. Önce takımlardan "
+                                 "kaldırın.", "profile"),
+        {**UNCHANGED, "road": {**road_of(start), "sections": [kset]}})], used))
     no("Olmayan boykesit", {"profile": "yok", "operation": "remove"},
        failed("unknown_road_profile", "“yok” kimlikli ya da adlı boykesit projede yok.", "profile"))
     no("Değiştirilecek bir şey yok", {"profile": "b-1", "operation": "set"},

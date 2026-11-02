@@ -1631,6 +1631,7 @@ const ENTRIES: &[Entry] = &[
                 "unknown_terrain",
                 "invalid_road_profile",
                 "profile_curves_overlap",
+                "profile_in_use",
             ],
             REVISION,
         ],
@@ -1653,6 +1654,39 @@ const ENTRIES: &[Entry] = &[
             "no_terrain",
         ]],
         warnings: &["profile_stale", "profile_surface_gone"],
+        targets: none,
+    },
+    // KentOS Yol's cross sections and templates (plan/road.md Y5, docs/adr/0903).
+    Entry {
+        id: "road.templates.edit",
+        refusals: &[
+            &["not_a_road_project", "unknown_road_template", "invalid_road_template", "road_template_in_use"],
+            REVISION,
+        ],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "road.sections.edit",
+        refusals: &[
+            &[
+                "not_a_road_project",
+                "unknown_section_set",
+                "unknown_alignment",
+                "unknown_road_profile",
+                "unknown_road_template",
+                "unknown_terrain",
+                "invalid_section_set",
+            ],
+            REVISION,
+        ],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "road.sections.query",
+        refusals: &[&["not_a_road_project", "unknown_section_set", "invalid_section_set", "invalid_places"]],
+        warnings: &["section_set_stale", "section_surface_gone", "section_open"],
         targets: none,
     },
     // Alt ağlar (docs/adr/0557 §2).

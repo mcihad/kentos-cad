@@ -4433,6 +4433,307 @@
       ]
     },
     {
+      "name": "Kesit takımı olan aks silinmez",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Yol aksları",
+        "settings": {
+          "srid": 5254,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 1000.0,
+          "workspace": "cad",
+          "cadWork": "road",
+          "drawingFont": "barlow",
+          "road": {
+            "alignments": [
+              {
+                "id": "g-1",
+                "name": "Ana aks",
+                "revision": 1,
+                "pis": [
+                  {
+                    "id": "a",
+                    "x": 485000.0,
+                    "y": 4420000.0
+                  },
+                  {
+                    "id": "p1",
+                    "x": 485600.0,
+                    "y": 4420000.0,
+                    "radius": 400.0,
+                    "spiralIn": 80.0,
+                    "spiralOut": 80.0
+                  },
+                  {
+                    "id": "b",
+                    "x": 486100.0,
+                    "y": 4420500.0
+                  }
+                ],
+                "stationing": {
+                  "start": 2000.0
+                }
+              },
+              {
+                "id": "g-2",
+                "name": "Sol kenar",
+                "revision": 1,
+                "offsetOf": {
+                  "alignment": "g-1",
+                  "offset": -7.5
+                }
+              },
+              {
+                "id": "g-3",
+                "name": "Bağlantı",
+                "revision": 1,
+                "pis": [
+                  {
+                    "id": "a",
+                    "x": 484000.0,
+                    "y": 4419000.0
+                  },
+                  {
+                    "id": "p1",
+                    "x": 484100.0,
+                    "y": 4419000.0
+                  },
+                  {
+                    "id": "b",
+                    "x": 484100.0,
+                    "y": 4419100.0
+                  }
+                ]
+              }
+            ],
+            "sections": [
+              {
+                "id": "k-1",
+                "name": "Bağlantı kesitleri",
+                "alignment": "g-3",
+                "alignmentRevision": 1,
+                "revision": 1,
+                "left": 10.0,
+                "right": 10.0,
+                "stations": {
+                  "method": "stations",
+                  "stations": [
+                    50.0
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "km",
+            "name": "Km",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "grup",
+            "name": "Yol",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "yol-km",
+                "name": "Yol km",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [],
+        "uids": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "alignment": "g-3",
+            "operation": "remove"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "alignment_in_use",
+              "message": "“Bağlantı” aksına şu kesit takımları bağlı: Bağlantı kesitleri. Önce onları silin.",
+              "path": "alignment"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Sol kenar",
+                  "revision": 1,
+                  "offsetOf": {
+                    "alignment": "g-1",
+                    "offset": -7.5
+                  }
+                },
+                {
+                  "id": "g-3",
+                  "name": "Bağlantı",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 484000.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 484100.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 484100.0,
+                      "y": 4419100.0
+                    }
+                  ]
+                }
+              ],
+              "sections": [
+                {
+                  "id": "k-1",
+                  "name": "Bağlantı kesitleri",
+                  "alignment": "g-3",
+                  "alignmentRevision": 1,
+                  "revision": 1,
+                  "left": 10.0,
+                  "right": 10.0,
+                  "stations": {
+                    "method": "stations",
+                    "stations": [
+                      50.0
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
       "name": "Paralel aks ters çevrilmez",
       "steps": [
         {

@@ -331,6 +331,15 @@ pub(crate) enum Op {
         before: Vec<kentos_contracts::ProfileDef>,
         after: Vec<kentos_contracts::ProfileDef>,
     },
+    /// A road project's templates and sample line sets (docs/adr/0903 §6), before and after.
+    RoadTemplates {
+        before: Vec<kentos_contracts::TemplateDef>,
+        after: Vec<kentos_contracts::TemplateDef>,
+    },
+    RoadSections {
+        before: Vec<kentos_contracts::SectionSetDef>,
+        after: Vec<kentos_contracts::SectionSetDef>,
+    },
     /// The project's room modules (docs/adr/0775), before and after: a setting, written in the step with the objects
     /// placed or updated, so undo gives both back.
     ArchModules {
@@ -659,6 +668,14 @@ impl Op {
                 after: before.clone(),
             },
             Op::RoadProfiles { before, after } => Op::RoadProfiles {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::RoadTemplates { before, after } => Op::RoadTemplates {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::RoadSections { before, after } => Op::RoadSections {
                 before: after.clone(),
                 after: before.clone(),
             },
@@ -1310,6 +1327,8 @@ impl Document {
                 | Op::ArchModules { .. }
                 | Op::RoadAlignments { .. }
                 | Op::RoadProfiles { .. }
+                | Op::RoadTemplates { .. }
+                | Op::RoadSections { .. }
                 | Op::ViewArea { .. }
                 | Op::ArchOptions { .. }
                 | Op::OptionCombos { .. }
@@ -1627,6 +1646,18 @@ impl Document {
             Op::RoadProfiles { after, .. } => {
                 let mut road = self.settings.road.take().unwrap_or_default();
                 road.profiles = after.clone();
+                self.settings.road = (!road.is_empty()).then_some(road);
+                return;
+            }
+            Op::RoadTemplates { after, .. } => {
+                let mut road = self.settings.road.take().unwrap_or_default();
+                road.templates = after.clone();
+                self.settings.road = (!road.is_empty()).then_some(road);
+                return;
+            }
+            Op::RoadSections { after, .. } => {
+                let mut road = self.settings.road.take().unwrap_or_default();
+                road.sections = after.clone();
                 self.settings.road = (!road.is_empty()).then_some(road);
                 return;
             }

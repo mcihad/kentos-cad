@@ -5535,6 +5535,14 @@ def build():
     onp = load("road-work.json")
     onp["settings"]["road"]["profiles"][0]["alignment"] = "g-2"
     out["broken/road-profile-on-parallel-axis.kcad"] = container(document(onp))
+    # Schema 159 (plan/road.md Y5, docs/adr/0903): a sample line set lies on an alignment of its own PIs and names a
+    # template of the project.
+    snp = load("road-work.json")
+    snp["settings"]["road"]["sections"][1]["alignment"] = "g-2"
+    out["broken/road-section-on-parallel-axis.kcad"] = container(document(snp))
+    sut = load("road-work.json")
+    sut["settings"]["road"]["sections"][0]["template"] = "tk-yok"
+    out["broken/road-section-unknown-template.kcad"] = container(document(sut))
     # Schema 136 (docs/adr/0758): a layer's indexes, a key over two fields, a plain one and a key taking empty values as
     # the same; schema 135 refuses them, an empty list, a group's, one over a field the layer lacks, empty values the
     # same on a plain index and a default written are refused too.

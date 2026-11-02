@@ -741,6 +741,8 @@ fn command_tool(c: &Value) -> Value {
             // Its set and reverse change an alignment, its remove takes one away (docs/adr/0901).
             | "road.alignments.edit"
             | "road.profiles.edit"
+            | "road.templates.edit"
+            | "road.sections.edit"
             // It overwrites the attribute's values and takes them away from what no subnetwork reaches (docs/adr/0557 §2).
             | "cad.subnetworks.update"
             // Its remove takes address data's definition away (docs/adr/0229 §14).

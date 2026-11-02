@@ -569,6 +569,16 @@ def edit_cases():
         "execute", {"alignment": "g-3", "operation": "remove"},
         failed("alignment_in_use", "“Bağlantı” aksına şu boykesitler bağlı: Bağlantı kotu. Önce onları silin.", "alignment"),
         {**UNCHANGED, "road": {"alignments": copy.deepcopy(start), "profiles": [prof]}})]})
+    # A sample line set lies on the alignment (docs/adr/0903 §6): it goes first.
+    kset = {"id": "k-1", "name": "Bağlantı kesitleri", "alignment": "g-3", "alignmentRevision": 1, "revision": 1,
+            "left": 10.0, "right": 10.0, "stations": {"method": "stations", "stations": [50.0]}}
+    with_set = setup(start)
+    with_set["settings"]["road"]["sections"] = [kset]
+    cases.append({"name": "Kesit takımı olan aks silinmez", "setup": with_set, "steps": [step(
+        "execute", {"alignment": "g-3", "operation": "remove"},
+        failed("alignment_in_use", "“Bağlantı” aksına şu kesit takımları bağlı: Bağlantı kesitleri. Önce onları silin.",
+               "alignment"),
+        {**UNCHANGED, "road": {"alignments": copy.deepcopy(start), "sections": [kset]}})]})
     no("Paralel aks ters çevrilmez", {"alignment": "g-2", "operation": "reverse"},
        failed("invalid_alignment", "Paralel aks ters çevrilmez: kaynağını izler; kaynağı ters çevirin.", "alignment"))
     tight = {**MAIN, "pis": [MAIN_PIS[0], {"id": "p1", "x": X0 + 600, "y": Y0, "radius": 7.0}, MAIN_PIS[2]]}

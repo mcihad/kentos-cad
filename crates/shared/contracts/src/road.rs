@@ -26,6 +26,14 @@ pub const MAX_ALIGNMENT_OFFSET: f64 = 1000.0;
 pub const MAX_PROFILES: usize = 256;
 /// The most PVIs a profile has.
 pub const MAX_PROFILE_PVIS: usize = 10_000;
+/// The most templates a project holds, and components a template's side has.
+pub const MAX_TEMPLATES: usize = 256;
+pub const MAX_TEMPLATE_COMPONENTS: usize = 32;
+/// The most sample line sets a project holds, and stations or lines a set names.
+pub const MAX_SECTION_SETS: usize = 256;
+pub const MAX_SECTION_STATIONS: usize = 10_000;
+/// The widest a sample line reaches on a side, m.
+pub const MAX_SWATH: f64 = 1000.0;
 
 /// A road project's settings; absent while it has none.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -46,12 +54,24 @@ pub struct RoadSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ProfileDef>>", optional))]
     pub profiles: Vec<ProfileDef>,
+    /// The templates (docs/adr/0903 §3), in the order the project tree shows them.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<TemplateDef>>", optional))]
+    pub templates: Vec<TemplateDef>,
+    /// The sample line sets (docs/adr/0903 §2), in the order the project tree shows them.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<SectionSetDef>>", optional))]
+    pub sections: Vec<SectionSetDef>,
 }
 
 impl RoadSettings {
     /// Whether it says nothing (and is not written).
     pub fn is_empty(&self) -> bool {
-        self.surfaces.is_empty() && self.alignments.is_empty() && self.profiles.is_empty()
+        self.surfaces.is_empty()
+            && self.alignments.is_empty()
+            && self.profiles.is_empty()
+            && self.templates.is_empty()
+            && self.sections.is_empty()
     }
 
     /// What is wrong with it, by the field's path and in words; none when it is right.
@@ -325,6 +345,154 @@ pub struct ProfileDef {
     pub surface: Option<String>,
 }
 
+/// A template component's kind.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum TemplateComponentKind {
+    Lane,
+    Shoulder,
+}
+
+/// A component of a template's side, outward from the axis: its width and cross slope (percent, falling outward
+/// negative).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TemplateComponentDef {
+    pub kind: TemplateComponentKind,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub width: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    pub slope: f64,
+}
+
+/// A ditch in a cut: its fore slope (horizontal per one vertical), its depth under the hinge and its bottom's width.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TemplateDitchDef {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub fore: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub depth: f64,
+    /// Absent: 0 (a V ditch).
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub bottom: f64,
+}
+
+/// A template's side: its components outward from the axis and its end condition: the cut and fill slopes (horizontal
+/// per one vertical, 1.5 is 3/2) and an optional ditch in the cut.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TemplateSideDef {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<TemplateComponentDef>>", optional))]
+    pub components: Vec<TemplateComponentDef>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub cut: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub fill: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub ditch: Option<TemplateDitchDef>,
+}
+
+/// A template (docs/adr/0903 §3): its left side and its right; absent right: the left's mirror.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TemplateDef {
+    pub id: String,
+    pub name: String,
+    #[serde(default, skip_serializing_if = "is_zero_u32")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub revision: u32,
+    pub left: TemplateSideDef,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub right: Option<TemplateSideDef>,
+}
+
+/// How a sample line set's stations are had (docs/adr/0903 §2).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(tag = "method", rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum SectionStations {
+    /// Every round `every` metres of km from `from` to `to` (the alignment's own stations) and both of them, with the
+    /// curves' points and the profile's PVIs when `geometry`.
+    #[serde(rename_all = "camelCase")]
+    Range {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+        from: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+        to: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+        every: f64,
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+        geometry: bool,
+    },
+    /// The stations written.
+    Stations {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+        stations: Vec<f64>,
+    },
+    /// Where lines and polylines of the drawing (their persistent ids) first cross the alignment.
+    Lines { uids: Vec<String> },
+}
+
+/// A sample line set (docs/adr/0903 §1–§2): on an alignment of its own PIs (its revision held), with an optional profile
+/// on it, template and surface; its swath widths and how its stations are had.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SectionSetDef {
+    pub id: String,
+    pub name: String,
+    pub alignment: String,
+    #[serde(default, skip_serializing_if = "is_zero_u32")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub alignment_revision: u32,
+    #[serde(default, skip_serializing_if = "is_zero_u32")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub revision: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub profile: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub template: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub surface: Option<String>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub left: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub right: f64,
+    pub stations: SectionStations,
+}
+
 /// What is wrong with a road project's settings, by the field's path and in words.
 pub fn road_problem(road: &RoadSettings) -> Option<(String, String)> {
     let fail = |path: String, words: &str| Some((path, words.to_string()));
@@ -379,7 +547,153 @@ pub fn road_problem(road: &RoadSettings) -> Option<(String, String)> {
             return fail(at("built"), "özet 64 küçük onaltılık rakam olmalı");
         }
     }
-    alignments_problem(&road.alignments).or_else(|| profiles_problem(&road.profiles, &road.alignments))
+    alignments_problem(&road.alignments)
+        .or_else(|| profiles_problem(&road.profiles, &road.alignments))
+        .or_else(|| templates_problem(&road.templates))
+        .or_else(|| sections_problem(road))
+}
+
+fn side_problem(s: &TemplateSideDef, at: &str) -> Option<(String, String)> {
+    let fail = |path: String, words: &str| Some((path, words.to_string()));
+    if s.components.len() > MAX_TEMPLATE_COMPONENTS {
+        return fail(format!("{at}.components"), &format!("bir yanda en çok {MAX_TEMPLATE_COMPONENTS} bileşen olur"));
+    }
+    for (j, c) in s.components.iter().enumerate() {
+        if !(c.width.is_finite() && c.width > 0.0) {
+            return fail(format!("{at}.components[{j}].width"), "bileşenin genişliği 0'dan büyük olmalı");
+        }
+        if !c.slope.is_finite() || c.slope.abs() > 100.0 {
+            return fail(format!("{at}.components[{j}].slope"), "enine eğim en çok %100 olur");
+        }
+    }
+    let positive = |v: f64| v.is_finite() && v > 0.0;
+    if !positive(s.cut) {
+        return fail(format!("{at}.cut"), "yarma şevi 0'dan büyük olmalı (bir düşeye yatay)");
+    }
+    if !positive(s.fill) {
+        return fail(format!("{at}.fill"), "dolgu şevi 0'dan büyük olmalı (bir düşeye yatay)");
+    }
+    if let Some(d) = &s.ditch
+        && !(positive(d.fore) && positive(d.depth) && d.bottom.is_finite() && d.bottom >= 0.0)
+    {
+        return fail(format!("{at}.ditch"), "hendeğin iç şevi ve derinliği 0'dan büyük, tabanı eksi olmamalı");
+    }
+    None
+}
+
+/// What is wrong with the templates.
+fn templates_problem(list: &[TemplateDef]) -> Option<(String, String)> {
+    let fail = |path: String, words: &str| Some((path, words.to_string()));
+    if list.len() > MAX_TEMPLATES {
+        return fail("templates".into(), &format!("en çok {MAX_TEMPLATES} tip kesit olur"));
+    }
+    let mut ids = std::collections::BTreeSet::new();
+    let mut names = std::collections::BTreeSet::new();
+    for (i, t) in list.iter().enumerate() {
+        let at = |field: &str| format!("templates[{i}].{field}");
+        if !word_ok(&t.id) {
+            return fail(at("id"), "tip kesitin kimliği boş olmayan, en çok 64 karakterlik bir sözcük olmalı");
+        }
+        if !ids.insert(t.id.as_str()) {
+            return fail(at("id"), "bu kimlikte başka bir tip kesit var");
+        }
+        let name = t.name.trim();
+        if name.is_empty() || name != t.name || t.name.chars().count() > 120 {
+            return fail(at("name"), "tip kesitin adı boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 120 karakter");
+        }
+        if !names.insert(name.to_lowercase()) {
+            return fail(at("name"), "bu adda başka bir tip kesit var");
+        }
+        if let Some(p) = side_problem(&t.left, &at("left")) {
+            return Some(p);
+        }
+        if let Some(p) = t.right.as_ref().and_then(|r| side_problem(r, &at("right"))) {
+            return Some(p);
+        }
+    }
+    None
+}
+
+/// What is wrong with the sample line sets: each on an alignment of its own PIs, its profile on the same alignment,
+/// its template in the project.
+fn sections_problem(road: &RoadSettings) -> Option<(String, String)> {
+    let fail = |path: String, words: &str| Some((path, words.to_string()));
+    let list = &road.sections;
+    if list.len() > MAX_SECTION_SETS {
+        return fail("sections".into(), &format!("en çok {MAX_SECTION_SETS} kesit takımı olur"));
+    }
+    let mut ids = std::collections::BTreeSet::new();
+    let mut names = std::collections::BTreeSet::new();
+    for (i, s) in list.iter().enumerate() {
+        let at = |field: &str| format!("sections[{i}].{field}");
+        if !word_ok(&s.id) {
+            return fail(at("id"), "kesit takımının kimliği boş olmayan, en çok 64 karakterlik bir sözcük olmalı");
+        }
+        if !ids.insert(s.id.as_str()) {
+            return fail(at("id"), "bu kimlikte başka bir kesit takımı var");
+        }
+        let name = s.name.trim();
+        if name.is_empty() || name != s.name || s.name.chars().count() > 120 {
+            return fail(at("name"), "kesit takımının adı boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 120 karakter");
+        }
+        if !names.insert(name.to_lowercase()) {
+            return fail(at("name"), "bu adda başka bir kesit takımı var");
+        }
+        match road.alignments.iter().find(|a| a.id == s.alignment) {
+            None => return fail(at("alignment"), "kesit takımının aksı projede yok"),
+            Some(a) if a.offset_of.is_some() => {
+                return fail(at("alignment"), "kesit takımı yalnız PI'larıyla kurulan aksa bağlanır");
+            }
+            _ => {}
+        }
+        if let Some(p) = &s.profile {
+            match road.profiles.iter().find(|q| q.id == *p) {
+                None => return fail(at("profile"), "kesit takımının boykesiti projede yok"),
+                Some(q) if q.alignment != s.alignment => {
+                    return fail(at("profile"), "boykesit kesit takımının aksında değil");
+                }
+                _ => {}
+            }
+        }
+        if s.template.as_ref().is_some_and(|t| road.templates.iter().all(|q| q.id != *t)) {
+            return fail(at("template"), "kesit takımının tip kesiti projede yok");
+        }
+        if s.surface.as_deref().is_some_and(|v| !word_ok(v)) {
+            return fail(at("surface"), "yüzey bir yüzeyin kimliği olmalı");
+        }
+        for (field, v) in [("left", s.left), ("right", s.right)] {
+            if !(v.is_finite() && v > 0.0 && v <= MAX_SWATH) {
+                return fail(at(field), &format!("şerit genişliği 0'dan büyük, en çok {MAX_SWATH} m olmalı"));
+            }
+        }
+        match &s.stations {
+            SectionStations::Range { from, to, every, .. } => {
+                if !(from.is_finite() && to.is_finite() && from < to) {
+                    return fail(at("stations.from"), "km aralığının başı sonundan küçük olmalı");
+                }
+                if !(every.is_finite() && *every > 0.0) {
+                    return fail(at("stations.every"), "km aralığı 0'dan büyük olmalı");
+                }
+            }
+            SectionStations::Stations { stations } => {
+                if stations.is_empty() || stations.len() > MAX_SECTION_STATIONS {
+                    return fail(at("stations.stations"), &format!("1 ile {MAX_SECTION_STATIONS} arası km olur"));
+                }
+                if !stations.iter().all(|v| v.is_finite()) {
+                    return fail(at("stations.stations"), "km'ler sonlu olmalı");
+                }
+            }
+            SectionStations::Lines { uids } => {
+                if uids.is_empty() || uids.len() > MAX_SECTION_STATIONS {
+                    return fail(at("stations.uids"), &format!("1 ile {MAX_SECTION_STATIONS} arası çizgi olur"));
+                }
+                if let Some(words) = list_problem(uids) {
+                    return fail(at("stations.uids"), &words);
+                }
+            }
+        }
+    }
+    None
 }
 
 /// What is wrong with the profiles, by the field's path and in words; each lies on an alignment of its own PIs. Their
