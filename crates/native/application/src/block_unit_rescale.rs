@@ -9,10 +9,7 @@ use serde::{Serialize, de::DeserializeOwned};
 use crate::checks::{Stop, error};
 use crate::codes;
 
-pub(super) struct Changes {
-    pub blocks: Vec<BlockDefinition>,
-    pub entities: Vec<(Slot, Entity)>,
-}
+use super::DefinitionChanges;
 
 fn refused(code: &'static str, message: String) -> Stop {
     Stop::failed(error(code, message, Some("rescale".into())))
@@ -72,7 +69,7 @@ pub(super) fn check(
     old: &BlockDefinition,
     next: &BlockDefinition,
     scale: Scale,
-) -> Result<Changes, Stop> {
+) -> Result<DefinitionChanges, Stop> {
     // A locked placement of an ancestor is affected too. Unrelated locked
     // objects do not prevent this scoped correction.
     let mut affected = HashSet::from([old.id]);
@@ -160,5 +157,5 @@ pub(super) fn check(
         .map(|e| replacements.get(&Slot(e.base().id)).copied().unwrap_or(e))
         .collect();
     crate::blocks_define::block_rules_with_entities(&definitions, &scene)?;
-    Ok(Changes { blocks, entities })
+    Ok(DefinitionChanges { blocks, entities })
 }

@@ -51,6 +51,11 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ADR 0860: kutupsal uzaklık formülünden nokta sonucu üretimi ve doğrudan
+  dinamik tanım düzenlemesinde boş kök/iç yerleştirme hesaplarının birlikte
+  yenilenmesi; uyumsuz örnekte literal girdileri silmeden atomik ret.
+  Native/Python/MCP kabulü ayrı web handler'ını tamamlanmış saymaz.
+
 - ADR 0859: blok birimi düzeltmesinde dinamik koordinat/kural/formüllerin,
   kök ve iç yerleştirme girdilerinin, taşınmış öznitelik yerleri ve kırpmanın
   birlikte dönüşmesi; etkilenen kilitli kullanımda atomik ret. Native

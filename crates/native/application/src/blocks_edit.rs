@@ -66,7 +66,7 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &BlocksEdit) -> CommandResult<Bloc
                 added: Vec::new(),
                 removed: in_drawing_order(cx.doc, &checked.removed),
                 changed: checked.changed.into_iter()
-                    .chain(checked.unit_changes.into_iter().flat_map(|u| u.blocks)).collect(),
+                    .chain(checked.definition_changes.into_iter().flat_map(|u| u.blocks)).collect(),
                 insert: checked.insert,
                 deleted: checked.deleted.into_iter().map(|(_, uid)| uid).collect(),
                 revision: cx.doc.revision().to_string(),
@@ -100,7 +100,7 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: BlocksEdit) -> CommandRes
         Err(stop) => return stop.into(),
     };
     let changed: Vec<BlockId> = checked.changed.iter().map(|b| b.id)
-        .chain(checked.unit_changes.iter().flat_map(|u| u.blocks.iter().map(|b| b.id)))
+        .chain(checked.definition_changes.iter().flat_map(|u| u.blocks.iter().map(|b| b.id)))
         .collect();
     let removed = in_drawing_order(cx.doc, &checked.removed);
     let mut slot = None;
@@ -122,11 +122,11 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: BlocksEdit) -> CommandRes
         if let Err(stop) = remove(cx.doc, label(input.operation), &checked.removed) {
             return stop.into();
         }
-    } else if let Some(units) = checked.unit_changes {
-        let blocks: Vec<_> = checked.changed.into_iter().chain(units.blocks).collect();
+    } else if let Some(related) = checked.definition_changes {
+        let blocks: Vec<_> = checked.changed.into_iter().chain(related.blocks).collect();
         let written = cx.doc.transact(labels::BLOCK_CHANGE, |doc| {
             doc.merge_blocks(&blocks).map_err(|r| r.to_string())?;
-            for (slot, entity) in units.entities {
+            for (slot, entity) in related.entities {
                 doc.update(slot, entity);
             }
             Ok::<(), String>(())
@@ -213,11 +213,16 @@ fn done(
     }
 }
 
-/// What may be written: the definition as it will be (when it changes), the
-/// definitions to delete (the order they go in), and with `replace` the
-/// objects to delete and the insert.
+/// Related definitions and reference-local records validated with the primary
+/// definition, then written in the same transaction.
+pub(crate) struct DefinitionChanges {
+    pub blocks: Vec<BlockDefinition>,
+    pub entities: Vec<(Slot, Entity)>,
+}
+
+/// What may be written: definitions, replaced objects, inserts and fitted values.
 struct Checked {
-    unit_changes: Option<unit_rescale::Changes>,
+    definition_changes: Option<DefinitionChanges>,
     changed: Option<BlockDefinition>,
     removed: Vec<BlockId>,
     deleted: Vec<(Slot, String)>,
@@ -230,7 +235,7 @@ struct Checked {
 impl Checked {
     fn nothing() -> Checked {
         Checked {
-            unit_changes: None,
+            definition_changes: None,
             changed: None,
             removed: Vec::new(),
             deleted: Vec::new(),
@@ -481,7 +486,16 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
         // Its parameters and actions (docs/adr/0318 §1): the rules, the expressions, then its inserts' values refitted.
         BlockEditOperation::Dynamic => {
             next.dynamic = input.dynamic.clone();
-            rules_with(doc, &next)?;
+            let formula_edit = next.dynamic.is_some()
+                && crate::block_params::formula_inputs_changed(old.dynamic.as_ref(), next.dynamic.as_ref());
+            if !formula_edit {
+                rules_with(doc, &next)?;
+            } else if let Some((_, why)) = next.dynamic.as_ref().and_then(|d|
+                kentos_commands::block_dynamic::dynamic_problem(d, &kentos_commands::block_dynamic::local_ids(&next)))
+            {
+                return Err(Stop::failed(error(codes::INVALID_DYNAMIC_BLOCK,
+                    format!("“{}” bloğunun dinamik parametreleri: {why}.", old.name), Some("dynamic".into()))));
+            }
             if let Some((path, words)) = next.dynamic.as_ref().and_then(crate::block_params::expressions_problem) {
                 return Err(Stop::failed(error(
                     codes::INVALID_DYNAMIC_BLOCK,
@@ -489,7 +503,18 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
                     Some(path),
                 )));
             }
-            if dynamic_draws(&next) != dynamic_draws(old) {
+            if formula_edit {
+                let (applied, changes) = crate::block_params::prepare_formula_edit(doc, &next)?;
+                next = applied;
+                checked.sync = Some(crate::blocks_sync::Synced {
+                    report: kentos_commands::AttributeSync {
+                        inserts: u32::try_from(changes.entities.len()).unwrap_or(u32::MAX),
+                        ..Default::default()
+                    },
+                    changes: Vec::new(), locked: 0,
+                });
+                checked.definition_changes = Some(changes);
+            } else if dynamic_draws(&next) != dynamic_draws(old) {
                 checked.sync = Some(crate::block_params::refit_inserts(doc, &next));
             }
         }
@@ -531,7 +556,7 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
         )?);
     }
     if let Some(scale) = unit_scale {
-        checked.unit_changes = Some(unit_rescale::check(doc, old, &next, scale)?);
+        checked.definition_changes = Some(unit_rescale::check(doc, old, &next, scale)?);
     }
     if next != *old {
         checked.changed = Some(next);

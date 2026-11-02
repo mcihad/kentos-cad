@@ -733,6 +733,21 @@ bu hata düzeltmesiyle tamamlanmış sayılmaz.
 [ADR 0859](../docs/adr/0859-scoped-dynamic-block-unit-correction.md),
 [kullanım/API](../docs/cad/block-unit-correction.md).
 
+**İlerleme — 2026-11-03, formül ve kayıt güvenliği:** Kutupsal uzaklık
+formülünün sayı saklayıp gerçek Kaydet/Kurtarma işlemini bozduğu hata
+giderildi; sonuç başlangıç ve yönü koruyan noktadır. Formül veya okuduğu
+varsayılan değişince boş kökler ve üst tanımların iç kullanımları da
+hesaplanır. Eski hesap önbelleği girdi sayılmaz; bir örneğin hesabı
+geçersizse literal genişlik/yön silinmeden bütün işlem reddedilir. Gerçek
+GUI'de 2.1→2.2 m hesap, 1.05→1.10 m tek Enter, kaydet–aç, tek Undo/Redo ve
+sıfıra bölen formülde yazısız ret doğrulandı. GUI/korumalı Python dosyaları
+ve geri alma kayıtları bayt düzeyinde aynı; 10 dosya bağımsız okuyucudan
+geçti. 339 application + ayrı çekirdek çizim, 1612 masaüstü, 62 MCP,
+462 Python testi, paylaşılan 14801 komut senaryosu, Clippy ve derleme geçti.
+Bu dilim kalıcı tip–örnek kapsamının yerine geçmez.
+[ADR 0860](../docs/adr/0860-polar-formulas-and-complete-reference-refresh.md),
+[formül/API rehberi](../docs/cad/block-parameter-formulas.md).
+
 Kalıcı tip–örnek parametre kapsamı ve birleşik blok kabulü açıktır. Web öznitelik penceresinin native eşitleme kapsamıyla
 aynı olmadığı kodda görüldü; bu dilim web eşitliğini tamamlanmış saymaz.
 
