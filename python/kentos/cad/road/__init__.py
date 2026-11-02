@@ -7,7 +7,8 @@ from __future__ import annotations
 
 
 from . import alignments
+from . import profiles
 from . import terrains
 
 
-__all__ = ["alignments", "terrains"]
+__all__ = ["alignments", "profiles", "terrains"]

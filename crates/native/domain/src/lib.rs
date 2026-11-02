@@ -97,6 +97,7 @@ mod opening_types;
 mod materials;
 mod arch_modules;
 mod road_alignments;
+mod road_profiles;
 mod view_area;
 pub use view_area::ViewArea;
 pub mod arch_options;

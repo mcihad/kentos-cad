@@ -148,6 +148,15 @@ fn check(doc: &kentos_domain::Document, input: &AlignmentsEdit) -> Result<Checke
                     "alignment",
                 ));
             }
+            let profiles: Vec<&str> =
+                doc.road_profiles().iter().filter(|p| p.alignment == old.id).map(|p| p.name.as_str()).collect();
+            if !profiles.is_empty() {
+                return Err(fail(
+                    codes::ALIGNMENT_IN_USE,
+                    format!("“{}” aksına şu boykesitler bağlı: {}. Önce onları silin.", old.name, profiles.join(", ")),
+                    "alignment",
+                ));
+            }
             mapping = common::mapping_rows(old_core.as_ref(), None);
             list.remove(at);
             None

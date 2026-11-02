@@ -35514,6 +35514,508 @@
       ]
     },
     {
+      "id": "road.profiles.create",
+      "version": 1,
+      "title": "Boykesit oluştur",
+      "summary": "Yol projesinde (cadWork road) bir aksın (alignment: kimliği ya da adı; PI'larıyla kurulan aks, paralel aks değil) üstünde PVI'lerden bir düşey güzergâh (boykesit) kurar ve tanımını projenin yol ayarlarına yazar (kentos.profile/1). pvis başlangıç, ara PVI'ler ve bitiştir; station aksın kendi km'si (başından yatay uzunluk, km yazısı değil), elevation kot. Her ara PVI'de tek kurp: length simetrik parabol (yatay boy), lengthIn ve lengthOut birlikte asimetrik parabol (PVI'den önceki ve sonraki kol), radius km–kot düzleminde gerçek çember (teğet boyu R·tan(Δθ/2)); hiçbiri yoksa kırık PVI. surface (kimliği ya da adı) siyah kotların okunacağı arazi yüzeyidir. Boykesit kurulduğu andaki aks revizyonunu tutar; aks sonra değişirse boykesit eskir (profile_stale), PVI'ler kendiliğinden kaydırılmaz. Cevap boykesitin raporudur: eğimler (oran), kurplar (tür, giriş ve çıkış eğimi, başı ve sonu, boyu, A yüzde, K = L/|A| m/%, tepe ya da çukur, en yüksek ya da en alçak noktası). Tek geri alma adımı “Boykesit oluştur”. id verilmezse b-1, b-2 … ilk boş olanıdır. Retler: not_a_road_project, unknown_alignment, unknown_terrain, invalid_road_profile, profile_curves_overlap, invalid_revision, revision_conflict.",
+      "aliases": [
+        "boykesit",
+        "duseyguzergah"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.profiles.create` v1: a vertical alignment on an alignment (its id or name; one of its own PIs, not a\nparallel axis), through PVIs whose stations are the alignment's own (horizontal length from its start, not km);\noptionally read against a terrain surface (its id or name). Its id when not given is the first free of `b-1`, `b-2`\n… It holds the alignment's present revision.\n\nRefusals, in this order: `not_a_road_project`, `unknown_alignment`, `unknown_terrain`, `invalid_road_profile` (the\ndefinition by `road_problem`, path the field's; PVIs that make no vertical alignment: too few, an id twice, a station\nnot after the one before, a curve on the start or the end, a curve where the grade does not change; or a PVI off\nthe alignment), `profile_curves_overlap` (two curves, or a curve and an end, pass each other; the message names both\nPVIs and by how much), `invalid_revision`, `revision_conflict`.",
+        "properties": {
+          "alignment": {
+            "type": "string"
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "pvis": {
+            "items": {
+              "$ref": "#/$defs/ProfilePvi"
+            },
+            "type": "array"
+          },
+          "surface": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "alignment",
+          "pvis"
+        ],
+        "title": "ProfilesCreate",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.profiles.create` and `.edit` v1.",
+        "properties": {
+          "profile": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ProfileReport"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The profile written; absent when removed."
+          },
+          "profiles": {
+            "items": {
+              "$ref": "#/$defs/RoadProfileListed"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "profiles",
+          "revision"
+        ],
+        "title": "ProfilesWritten",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.profiles.create` and `.edit` v1.",
+        "properties": {
+          "profile": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ProfileReport"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The profile written; absent when removed."
+          },
+          "profiles": {
+            "items": {
+              "$ref": "#/$defs/RoadProfileListed"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "profiles",
+          "revision"
+        ],
+        "title": "ProfilesWritten",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_alignment",
+          "unknown_terrain",
+          "invalid_road_profile",
+          "profile_curves_overlap",
+          "invalid_revision",
+          "revision_conflict"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Ana aksta üç PVI, ortadakinde 160 m parabol, mevcut zeminle",
+          "input": {
+            "alignment": "Ana aks",
+            "name": "Proje kotu",
+            "pvis": [
+              {
+                "elevation": 100.0,
+                "id": "a",
+                "station": 0.0
+              },
+              {
+                "elevation": 94.0,
+                "id": "v1",
+                "length": 160.0,
+                "station": 300.0
+              },
+              {
+                "elevation": 106.0,
+                "id": "b",
+                "station": 700.0
+              }
+            ],
+            "surface": "Mevcut zemin"
+          }
+        }
+      ]
+    },
+    {
+      "id": "road.profiles.edit",
+      "version": 1,
+      "title": "Boykesiti düzenle",
+      "summary": "Yol projesinin bir boykesitini (profile: kimliği ya da adı) düzenler. set: verilen alanlar (name, pvis, surface; boş surface yüzeyi kaldırır) boykesitinkinin yerini alır. rebind: boykesit aksının bugünkü revizyonunu alır, eskimiş olmaktan çıkar; PVI'ler kaydırılmaz. remove: boykesit kalkar. Boykesitin revizyonu her değişiklikte bir artar. Tek geri alma adımı “Boykesiti düzenle”. Retler: not_a_road_project, unknown_road_profile, unknown_terrain, invalid_road_profile, profile_curves_overlap, invalid_revision, revision_conflict.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.profiles.edit` v1: the profile by its id or name.\n\nRefusals, in this order: `not_a_road_project`, `unknown_road_profile`, `unknown_terrain`, `invalid_road_profile`\n(set with nothing to set, or the definition and the PVIs as `road.profiles.create`), `profile_curves_overlap`,\n`invalid_revision`, `revision_conflict`.",
+        "properties": {
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "operation": {
+            "$ref": "#/$defs/ProfilesEditOperation"
+          },
+          "profile": {
+            "type": "string"
+          },
+          "pvis": {
+            "items": {
+              "$ref": "#/$defs/ProfilePvi"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "surface": {
+            "description": "The surface's id or name; empty: none.",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "profile",
+          "operation"
+        ],
+        "title": "ProfilesEdit",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.profiles.create` and `.edit` v1.",
+        "properties": {
+          "profile": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ProfileReport"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The profile written; absent when removed."
+          },
+          "profiles": {
+            "items": {
+              "$ref": "#/$defs/RoadProfileListed"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "profiles",
+          "revision"
+        ],
+        "title": "ProfilesWritten",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.profiles.create` and `.edit` v1.",
+        "properties": {
+          "profile": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ProfileReport"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The profile written; absent when removed."
+          },
+          "profiles": {
+            "items": {
+              "$ref": "#/$defs/RoadProfileListed"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "profiles",
+          "revision"
+        ],
+        "title": "ProfilesWritten",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_road_profile",
+          "unknown_terrain",
+          "invalid_road_profile",
+          "profile_curves_overlap",
+          "invalid_revision",
+          "revision_conflict"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Ortadaki PVI'yi 1 m indir, kurbu 4000 m yarıçaplı çember yap",
+          "input": {
+            "operation": "set",
+            "profile": "Proje kotu",
+            "pvis": [
+              {
+                "elevation": 100.0,
+                "id": "a",
+                "station": 0.0
+              },
+              {
+                "elevation": 93.0,
+                "id": "v1",
+                "radius": 4000.0,
+                "station": 300.0
+              },
+              {
+                "elevation": 106.0,
+                "id": "b",
+                "station": 700.0
+              }
+            ]
+          }
+        },
+        {
+          "title": "Değişen aksa yeniden bağla",
+          "input": {
+            "operation": "rebind",
+            "profile": "b-1"
+          }
+        }
+      ]
+    },
+    {
+      "id": "road.profiles.query",
+      "version": 1,
+      "title": "Boykesiti sorgula",
+      "summary": "Yol projesinin boykesitlerini bugün kuruldukları gibi verir; hiçbir şey yazmaz. profile verilmezse her boykesitin raporu; verilince yalnız onunki ve soruları: stations aksın kendi km'lerinde, every her every metrelik yuvarlak km'de kırmızı kot (proje kotu), eğim, siyah kot (yüzeyden; yüzeyin dışında ya da yüzey yoksa yok) ve fark (kırmızı − siyah: dolgu artı, yarma eksi); kırmızı kot boykesitin ilk ve son PVI'si arasında vardır. terrain aksın yüzeydeki arazi boykesitini verir: aksın üçgen kenarlarını kestiği her yer (kesin, kenarın kotuyla), elemanların uçları ve aksın uçları; yüzeyin dışı gap'tir, kot uydurulmaz. Kurp boyunca iki nokta arası doğrusal okunmaz: ara km'ler stations ile sorulur. Uyarılar: profile_stale (aks boykesitten sonra değişti), profile_surface_gone (yüzey yok ya da kurulamıyor). Retler: not_a_road_project, unknown_road_profile, invalid_places, station_outside, no_terrain ve aks ya da boykesit artık kurulamıyorsa geometrinin retleri.",
+      "aliases": [
+        "kotsor"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.profiles.query` v1: every profile's report, or one's (`profile`: its id or name) with the elevations\nat its alignment's stations (`stations`), at every round `every` metres of km (`every`), and, with `terrain`, the\nterrain profile along its alignment on its surface.\n\nRefusals: `not_a_road_project`, `unknown_road_profile`, `invalid_places` (a value not finite, `every` not above 0,\nmore than 100 000 places; or a question without `profile`), `station_outside` (a station off the alignment),\n`no_terrain` (`terrain` for a profile with no surface), the geometry's when the alignment or the profile no longer\nbuilds. Warnings: `profile_stale` (its alignment changed since), `profile_surface_gone` (its surface is not in the\nproject or makes no surface: no black elevation).",
+        "properties": {
+          "every": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "profile": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "stations": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "type": "array",
+            "x-unit": "m"
+          },
+          "terrain": {
+            "type": "boolean"
+          }
+        },
+        "title": "ProfilesQuery",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.profiles.query` v1.",
+        "properties": {
+          "at": {
+            "items": {
+              "$ref": "#/$defs/ProfileAt"
+            },
+            "type": "array"
+          },
+          "profiles": {
+            "description": "Every profile's report, or the one asked's.",
+            "items": {
+              "$ref": "#/$defs/ProfileReport"
+            },
+            "type": "array"
+          },
+          "terrain": {
+            "items": {
+              "$ref": "#/$defs/ProfileGroundRow"
+            },
+            "type": "array"
+          },
+          "ticks": {
+            "items": {
+              "$ref": "#/$defs/ProfileAt"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "profiles",
+          "at",
+          "ticks",
+          "terrain"
+        ],
+        "title": "ProfilesQueried",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.profiles.query` v1.",
+        "properties": {
+          "at": {
+            "items": {
+              "$ref": "#/$defs/ProfileAt"
+            },
+            "type": "array"
+          },
+          "profiles": {
+            "description": "Every profile's report, or the one asked's.",
+            "items": {
+              "$ref": "#/$defs/ProfileReport"
+            },
+            "type": "array"
+          },
+          "terrain": {
+            "items": {
+              "$ref": "#/$defs/ProfileGroundRow"
+            },
+            "type": "array"
+          },
+          "ticks": {
+            "items": {
+              "$ref": "#/$defs/ProfileAt"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "profiles",
+          "at",
+          "ticks",
+          "terrain"
+        ],
+        "title": "ProfilesQueried",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_road_profile",
+          "invalid_places",
+          "station_outside",
+          "no_terrain"
+        ],
+        "warnings": [
+          "profile_stale",
+          "profile_surface_gone"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Her 20 m'de kırmızı ve siyah kot",
+          "input": {
+            "every": 20.0,
+            "profile": "Proje kotu"
+          }
+        },
+        {
+          "title": "Arazi boykesiti",
+          "input": {
+            "profile": "b-1",
+            "terrain": true
+          }
+        }
+      ]
+    },
+    {
       "id": "road.alignments.query",
       "version": 1,
       "title": "Aksı sorgula",
@@ -69604,7 +70106,7 @@
       "code": "alignment_in_use",
       "kind": "failed",
       "retryable": false,
-      "meaning": "Bu aksı izleyen paralel aks var; önce onu silin."
+      "meaning": "Bu aksı izleyen paralel aks ya da ona bağlı boykesit var; önce onu silin."
     },
     {
       "code": "station_outside",
@@ -69623,6 +70125,36 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "İşaret aralığı ve yazı yüksekliği 0'dan büyük, km yazılan aralık işaret aralığının tam katı olmalı."
+    },
+    {
+      "code": "unknown_road_profile",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu kimlikte ya da adda boykesit yok."
+    },
+    {
+      "code": "invalid_road_profile",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Boykesitin tanımı ya da PVI'ları geçerli değil; ileti nedenini ve yerini söyler."
+    },
+    {
+      "code": "profile_curves_overlap",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "İki düşey kurp birbirine biniyor; kurp boyunu ya da yarıçapı küçültün, PVI'ları uzaklaştırın."
+    },
+    {
+      "code": "profile_stale",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Boykesitin aksı boykesit kurulduktan sonra değişti; PVI'ları denetleyip aksa yeniden bağlayın."
+    },
+    {
+      "code": "profile_surface_gone",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Boykesitin yüzeyi projede yok ya da kurulamıyor; siyah kot verilmedi."
     },
     {
       "code": "equations_dropped",
@@ -74930,6 +75462,10 @@
     {
       "unit": "1/m",
       "meaning": "Eğrilik: metrede dönüş (radyan bölü metre), 1/yarıçap; sola dönüş artı."
+    },
+    {
+      "unit": "m/%",
+      "meaning": "Düşey kurbun K değeri: yatay metre bölü yüzde eğim farkı."
     }
   ],
   "effects": [
@@ -124863,6 +125399,66 @@
       ],
       "type": "object"
     },
+    "ProfileAt": {
+      "description": "The elevations at a station of the alignment.",
+      "properties": {
+        "black": {
+          "description": "The terrain (black) elevation; absent off the surface or without one.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "elevation"
+        },
+        "difference": {
+          "description": "Red − black: fill positive, cut negative; absent without both.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "elevation"
+        },
+        "grade": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        },
+        "km": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "kmText": {
+          "description": "The km written `2+345.678`.",
+          "type": "string"
+        },
+        "red": {
+          "description": "The design (red) elevation and grade; absent outside the profile's first and last PVI.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "elevation"
+        },
+        "station": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "station",
+        "km",
+        "kmText"
+      ],
+      "type": "object"
+    },
     "ProfileBin": {
       "description": "One station of a profile: the points whose station lies in [`from`, `to`) (the last includes the path's end).",
       "properties": {
@@ -124999,6 +125595,159 @@
         "title",
         "objects",
         "findings"
+      ],
+      "type": "object"
+    },
+    "ProfileCurveRow": {
+      "description": "A vertical curve on a PVI.",
+      "properties": {
+        "a": {
+          "description": "A = 100·(gOut − gIn), percent.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "percent"
+        },
+        "crest": {
+          "description": "A crest (the grade falls) or a sag.",
+          "type": "boolean"
+        },
+        "end": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array",
+          "x-unit": "m"
+        },
+        "extreme": {
+          "description": "Its highest (crest) or lowest (sag) point when it falls inside: station and elevation.",
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "gIn": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "gOut": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "k": {
+          "description": "K = length / |A|, metres per percent.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "m/%"
+        },
+        "kind": {
+          "description": "`parabola`, `asymmetric` or `circle`.",
+          "type": "string"
+        },
+        "length": {
+          "description": "Its horizontal length (end − start), m.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "pvi": {
+          "type": "string"
+        },
+        "radius": {
+          "description": "A circle's radius.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "start": {
+          "description": "Its start and end: station and elevation.",
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "pvi",
+        "kind",
+        "gIn",
+        "gOut",
+        "start",
+        "end",
+        "length",
+        "a",
+        "k",
+        "crest"
+      ],
+      "type": "object"
+    },
+    "ProfileDef": {
+      "additionalProperties": false,
+      "description": "A vertical alignment's definition (docs/adr/0902): the alignment it lies on and that alignment's revision when it\nwas last made or rebound (a newer one makes it stale), its PVIs, and the surface whose terrain profile it is read\nagainst.",
+      "properties": {
+        "alignment": {
+          "description": "The alignment's id.",
+          "type": "string"
+        },
+        "alignmentRevision": {
+          "description": "The alignment's revision it was made or rebound against; absent: 0.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "id": {
+          "description": "Unique in the project.",
+          "type": "string"
+        },
+        "name": {
+          "description": "Its name (“Proje kotu”), unique in the project.",
+          "type": "string"
+        },
+        "pvis": {
+          "items": {
+            "$ref": "#/$defs/ProfilePvi"
+          },
+          "type": "array"
+        },
+        "revision": {
+          "description": "Grows by one with every change; absent: 0.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "surface": {
+          "description": "The terrain surface's id; absent: none.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "alignment",
+        "pvis"
       ],
       "type": "object"
     },
@@ -125200,6 +125949,76 @@
           "type": "string"
         }
       ]
+    },
+    "ProfileGradeRow": {
+      "description": "A grade between two PVIs.",
+      "properties": {
+        "between": {
+          "description": "The PVIs it runs between.",
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array"
+        },
+        "grade": {
+          "description": "Rise over run (0.025 is 2.5 %).",
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "stations": {
+          "description": "Their stations.",
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "between",
+        "stations",
+        "grade"
+      ],
+      "type": "object"
+    },
+    "ProfileGroundRow": {
+      "description": "A point of the terrain profile: where the alignment crosses a triangle's edge, an element's end, the alignment's\nends.",
+      "properties": {
+        "crossing": {
+          "description": "Where the alignment crosses a triangle's edge.",
+          "type": "boolean"
+        },
+        "gap": {
+          "description": "The stretch from the point before to this one is off the surface.",
+          "type": "boolean"
+        },
+        "station": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "z": {
+          "description": "Absent off the surface.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "elevation"
+        }
+      },
+      "required": [
+        "station",
+        "gap",
+        "crossing"
+      ],
+      "type": "object"
     },
     "ProfileLimit": {
       "description": "A profile's limit: the vehicle's value (tonnes, metres …) against the edge field's: closed where the field reads\na number below it; an empty field, no limit.",
@@ -125437,6 +126256,56 @@
       ],
       "type": "object"
     },
+    "ProfilePvi": {
+      "additionalProperties": false,
+      "description": "A PVI of a vertical alignment (docs/adr/0902 §2): its persistent id, its station along the alignment (its own\nhorizontal length from the start, not its km), its elevation, and the curve on it: a symmetric parabola (`length`),\nan asymmetric one (`lengthIn` and `lengthOut` together) or a circle (`radius`); none of them: no curve. The first\nand the last carry none.",
+      "properties": {
+        "elevation": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "elevation"
+        },
+        "id": {
+          "description": "Unique in the profile.",
+          "type": "string"
+        },
+        "length": {
+          "description": "A symmetric parabola's horizontal length; absent or 0: none.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "lengthIn": {
+          "description": "An asymmetric parabola's horizontal length before the PVI; absent or 0: none.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "lengthOut": {
+          "description": "… and after it.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "radius": {
+          "description": "A circular curve's radius in the station–elevation plane; absent or 0: none.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "station": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "id",
+        "station",
+        "elevation"
+      ],
+      "type": "object"
+    },
     "ProfileRelation": {
       "additionalProperties": false,
       "description": "A relation between two classes: the child class's field holds a parent object's persistent id.",
@@ -125466,6 +126335,102 @@
         "parent",
         "child",
         "field"
+      ],
+      "type": "object"
+    },
+    "ProfileReport": {
+      "description": "A profile as it builds now.",
+      "properties": {
+        "algorithm": {
+          "description": "`kentos.profile/1`.",
+          "type": "string"
+        },
+        "alignment": {
+          "description": "The alignment's id.",
+          "type": "string"
+        },
+        "alignmentNow": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "alignmentRevision": {
+          "description": "The alignment's revision it was made or rebound against, and its present one.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "curves": {
+          "items": {
+            "$ref": "#/$defs/ProfileCurveRow"
+          },
+          "type": "array"
+        },
+        "grades": {
+          "items": {
+            "$ref": "#/$defs/ProfileGradeRow"
+          },
+          "type": "array"
+        },
+        "id": {
+          "type": "string"
+        },
+        "kms": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array",
+          "x-unit": "m"
+        },
+        "name": {
+          "type": "string"
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "stale": {
+          "description": "The alignment changed since.",
+          "type": "boolean"
+        },
+        "stations": {
+          "description": "Its first and last PVI's stations and kms.",
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array",
+          "x-unit": "m"
+        },
+        "surface": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "revision",
+        "alignment",
+        "alignmentRevision",
+        "alignmentNow",
+        "stale",
+        "stations",
+        "kms",
+        "grades",
+        "curves",
+        "algorithm"
       ],
       "type": "object"
     },
@@ -125500,6 +126465,26 @@
         {
           "const": "drawing",
           "description": "Inside the drawing's own file: it goes wherever the drawing goes, a cloud project's too.",
+          "type": "string"
+        }
+      ]
+    },
+    "ProfilesEditOperation": {
+      "description": "What `road.profiles.edit` does.",
+      "oneOf": [
+        {
+          "const": "set",
+          "description": "The given fields (`name`, `pvis`, `surface`; an empty `surface` clears it) replace the profile's.",
+          "type": "string"
+        },
+        {
+          "const": "rebind",
+          "description": "The profile takes its alignment's present revision: no longer stale. Its PVIs are not moved (docs/adr/0902 §6).",
+          "type": "string"
+        },
+        {
+          "const": "remove",
+          "description": "The profile goes.",
           "type": "string"
         }
       ]
@@ -130555,6 +131540,37 @@
         }
       ]
     },
+    "RoadProfileListed": {
+      "description": "A profile in the project's list.",
+      "properties": {
+        "alignment": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "stale": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "alignment",
+        "revision",
+        "stale"
+      ],
+      "type": "object"
+    },
     "RoadSettings": {
       "additionalProperties": false,
       "description": "A road project's settings; absent while it has none.",
@@ -130563,6 +131579,13 @@
           "description": "The horizontal alignments (docs/adr/0901), in the order the project tree shows them.",
           "items": {
             "$ref": "#/$defs/AlignmentDef"
+          },
+          "type": "array"
+        },
+        "profiles": {
+          "description": "The vertical alignments (docs/adr/0902), each on an alignment, in the order the project tree shows them.",
+          "items": {
+            "$ref": "#/$defs/ProfileDef"
           },
           "type": "array"
         },

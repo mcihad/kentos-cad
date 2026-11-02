@@ -1,6 +1,6 @@
 # ADR 0902 — Düşey güzergâh ve boykesit: arazi boykesiti, PVI'li parabolik ve dairesel kurplar
 
-Tarih: 2026-11-02. plan/road.md Y4 (ROAD-PROFILE-01…06, 09, 10, 12, 13). Durum: taslak, aşamalar aşağıda.
+Tarih: 2026-11-02. plan/road.md Y4 (ROAD-PROFILE-01…06, 09, 10, 12, 13). Durum: Y4.1–Y4.3 tamam, Y4.4 sürüyor.
 
 ## Dayanak
 
@@ -26,14 +26,16 @@ Tarih: 2026-11-02. plan/road.md Y4 (ROAD-PROFILE-01…06, 09, 10, 12, 13). Durum
    Bir üçgenin içinde kot düzlemdir ama eğri boyunca km'ye göre doğrusal değildir: iki kesişim arası, kirişin sapması ile
    üçgenin eğiminin çarpımı 1 mm'yi aşmayana dek bölünür (hata sınırı kanıtlı). Yüzeyin dışı ve boşluklar `gap`'tır: kot
    uydurulmaz. Algoritmanın kimliği `kentos.profile/1`. Kaydedilmez; yüzey ya da aks değişince yeniden çıkar.
-2. **Düşey güzergâh (ROAD-PROFILE-01, 02).** Bir aksa bağlı, kendi kimliği ve revizyonuyla; PVI'ler (km — aksın kendi
-   km'si, kot) ve her ara PVI'de kurp: yok, simetrik parabol (`length`), asimetrik parabol (`lengthIn`, `lengthOut`), daire
+2. **Düşey güzergâh (ROAD-PROFILE-01, 02).** PI'larıyla kurulan bir aksa bağlı (paralel aksa değil), kendi kimliği ve
+   revizyonuyla; PVI'ler (`station`: aksın kendi km'si, yani başından yatay uzunluk; km yazısı değil, çünkü km eşitliğiyle
+   bir km iki yere düşebilir; kot) ve her ara PVI'de kurp: yok, simetrik parabol (`length`), asimetrik parabol (`lengthIn`, `lengthOut`), daire
    (`radius`). Eğim oran (g), uzunluk yatay metre. Parabol z(t) = z0 + g1·t + (g2 − g1)·t²/(2L); asimetrikte iki parabol PVI'nin
    km'sinde aynı kot ve eğimle birleşir: kotların eşitliği r1·L1² = r2·L2², eğimlerin eşitliği
    r1 = (g2 − g1)·L2 / (L1·(L1 + L2)) verir; birleşmedeki eğim g_m = (L1·g1 + L2·g2)/(L1 + L2). Daire km–kot düzleminde gerçek çemberdir: teğet boyu
    T = R·tan(|θ2 − θ1|/2), θ = atan g; yaklaşık T = R·|g2 − g1|/2 kullanılmaz.
 3. **Retler (ROAD-PROFILE-03).** PVI'lerin km'si artmalı ve aksın içinde kalmalı; iki komşu kurbun kolları aradaki eğimi
-   aşarsa `profile_curves_overlap`; sıfır uzunluk ya da yarıçap, eğimi değişmeyen PVI'de kurp `invalid_profile`. Artık
+   aşarsa `profile_curves_overlap` (yol, sığmayan kurbu taşıyan PVI); sıfır uzunluk ya da yarıçap, eğimi değişmeyen PVI'de
+   kurp, bir PVI'de iki kurp türü, asimetrik kurbun tek kolu `invalid_road_profile` (`invalid_profile` veri profillerinindir). Artık
    (kurbun sonunda kot ve eğim, teğete göre) raporlanır.
 4. **K (ROAD-PROFILE-04).** Her kurpta A = 100·(g2 − g1) yüzde, K = L / |A| (m/%), tepe ya da çukur, en yüksek ya da en
    alçak noktasının km'si ve kotu. Dairede L yay boyu değil yatay uzunluktur (2T'nin yatayı) ve R ayrıca verilir.
@@ -46,7 +48,13 @@ Tarih: 2026-11-02. plan/road.md Y4 (ROAD-PROFILE-01…06, 09, 10, 12, 13). Durum
    yazılır. KGM'nin sayıları ikincil kaynaklardan alınmaz.
 8. **Görünüş (ROAD-PROFILE-06).** Boykesit penceresi ve çizime yazılan boykesit yatay ve düşey ölçeği ayrı tutar; abartma
    veriye dokunmaz. Bantlar: km, aralık mesafe, siyah kot, kırmızı kot, fark, eğim.
-9. **Saklama.** Düşey güzergâhlar `settings.road.profiles`, geri alma geçmişinde (`Op::RoadProfiles`).
+9. **Saklama.** Düşey güzergâhlar `settings.road.profiles`, geri alma geçmişinde (`Op::RoadProfiles`). Boykesiti olan aks
+   silinmez (`alignment_in_use`); yüzeyi silinen boykesit kalır, sorgusu `profile_surface_gone` ile siyah kotsuz cevap verir.
+10. **Komutlar (Y4.3).** `road.profiles.create`, `.edit` (`set`, `rebind`: aksın bugünkü revizyonu, PVI'ler kaydırılmaz;
+   `remove`) ve `.query` (rapor; `stations` ve `every` ile kırmızı kot, eğim, siyah kot, fark; `terrain` ile arazi
+   boykesiti). Sorgunun arazi satırları kesişimler, eleman uçları ve aksın uçlarıdır (§1'in `kept` noktaları): bağımsız
+   başvurudan birebir çıkarılabilenler. Kurp boyunca çizim için bölünen ara noktalar yalnız masaüstünün çizimindedir;
+   ara km'ler `stations` ile sorulur. 34 + 24 + 23 ortak durum (`scripts/fixtures/road_profile_command_cases.py`).
 
 ## Aşamalar
 

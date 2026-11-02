@@ -9436,10 +9436,37 @@ class _Schema:
                     self.fail("bad_value", "öteleme 0 olmayan, en çok 1000 m bir sayı olmalı")
             return t
 
-        r = self.fields({"surfaces": (self.array(surface), False), "alignments": (self.array(alignment), False)})(v)
+        def pvi(x):
+            t = self.fields({"id": (word, True), "station": (finite, True), "elevation": (finite, True),
+                             "length": (not_negative, False), "lengthIn": (not_negative, False),
+                             "lengthOut": (not_negative, False), "radius": (not_negative, False)})(x)
+            asym = t.get("lengthIn", 0) > 0 or t.get("lengthOut", 0) > 0
+            if sum([t.get("length", 0) > 0, asym, t.get("radius", 0) > 0]) > 1:
+                self.fail("bad_value", "bir PVI'de tek kurp olur")
+            if asym and not (t.get("lengthIn", 0) > 0 and t.get("lengthOut", 0) > 0):
+                self.fail("bad_value", "asimetrik kurbun iki kolu birlikte verilir")
+            return t
+
+        def profile(x):
+            # Docs/adr/0902: a vertical alignment's PVIs on an alignment, the revision it was made against, a surface.
+            t = self.fields({"id": (word, True), "name": (self.text, True), "alignment": (word, True),
+                             "alignmentRevision": (self.uint(32), False), "revision": (self.uint(32), False),
+                             "pvis": (self.array(pvi), True), "surface": (word, False)})(x)
+            name = t["name"]
+            if not name or name.strip() != name or len(name) > 120:
+                self.fail("bad_value", "boykesitin adı boş, boşluklu ya da çok uzun")
+            if not 2 <= len(t["pvis"]) <= 10000:
+                self.fail("bad_value", "boykesitin 2 ile 10000 arası PVI'si olur")
+            if len({p["id"] for p in t["pvis"]}) != len(t["pvis"]):
+                self.fail("bad_value", "boykesitte iki PVI'nin kimliği aynı")
+            return t
+
+        r = self.fields({"surfaces": (self.array(surface), False), "alignments": (self.array(alignment), False),
+                         "profiles": (self.array(profile), False)})(v)
         got = r.get("surfaces", [])
         lines = r.get("alignments", [])
-        if not got and not lines:
+        profiles = r.get("profiles", [])
+        if not got and not lines and not profiles:
             self.fail("bad_value", "boş yol ayarı yazılmaz")
         if len(got) > 64 or ("surfaces" in r and not got):
             self.fail("bad_value", "yol ayarında 1 ile 64 arası yüzey olur")
@@ -9454,6 +9481,14 @@ class _Schema:
                 src = next((y for y in lines if y["id"] == x["offsetOf"]["alignment"]), None)
                 if src is None or "offsetOf" in src:
                     self.fail("bad_value", "paralel aks yalnız PI'larıyla kurulan aksa bağlanır")
+        if "profiles" in r and not profiles or len(profiles) > 256:
+            self.fail("bad_value", "yol ayarında 1 ile 256 arası boykesit olur")
+        if len({x["id"] for x in profiles}) != len(profiles) or len({x["name"].lower() for x in profiles}) != len(profiles):
+            self.fail("bad_value", "iki boykesitin kimliği ya da adı aynı")
+        for x in profiles:
+            src = next((y for y in lines if y["id"] == x["alignment"]), None)
+            if src is None or "offsetOf" in src:
+                self.fail("bad_value", "boykesit yalnız PI'larıyla kurulan aksa bağlanır")
         return r
 
     def arch_(self, v):

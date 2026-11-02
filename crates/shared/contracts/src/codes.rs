@@ -620,14 +620,24 @@ codes! {
     INVALID_STATIONING = "invalid_stationing", Failed, false, "Km eşitliği aksın üstünde, bir öncekinden sonra olmalı.";
     /// A parallel axis folds where a curve's radius is smaller than the offset, or crosses itself.
     OFFSET_CUSP = "offset_cusp", Failed, false, "Paralel aks bu ötelemede kıvrılıyor; ötelemeyi küçültün ya da kurpların yarıçapını büyütün.";
-    /// An alignment a parallel axis follows.
-    ALIGNMENT_IN_USE = "alignment_in_use", Failed, false, "Bu aksı izleyen paralel aks var; önce onu silin.";
+    /// An alignment a parallel axis follows or a profile lies on.
+    ALIGNMENT_IN_USE = "alignment_in_use", Failed, false, "Bu aksı izleyen paralel aks ya da ona bağlı boykesit var; önce onu silin.";
     /// A station off the alignment, a km on no place.
     STATION_OUTSIDE = "station_outside", Failed, false, "Bu km aksın üstünde değil.";
     /// A km on more than one place, asked without its region.
     STATION_AMBIGUOUS = "station_ambiguous", Failed, false, "Bu km aksın birden çok yerine düşüyor; km eşitliğinin bölgesini verin.";
     /// An alignment's km labels asked with a step not above 0, a major step not a multiple of it, too many ticks.
     INVALID_LABEL = "invalid_label", Failed, false, "İşaret aralığı ve yazı yüksekliği 0'dan büyük, km yazılan aralık işaret aralığının tam katı olmalı.";
+    /// No profile (vertical alignment) of the id or name (docs/adr/0902).
+    UNKNOWN_ROAD_PROFILE = "unknown_road_profile", Failed, false, "Bu kimlikte ya da adda boykesit yok.";
+    /// A profile's definition, or PVIs that make no vertical alignment (docs/adr/0902 §3).
+    INVALID_ROAD_PROFILE = "invalid_road_profile", Failed, false, "Boykesitin tanımı ya da PVI'ları geçerli değil; ileti nedenini ve yerini söyler.";
+    /// Two vertical curves, or a curve and an end of the profile, pass each other.
+    PROFILE_CURVES_OVERLAP = "profile_curves_overlap", Failed, false, "İki düşey kurp birbirine biniyor; kurp boyunu ya da yarıçapı küçültün, PVI'ları uzaklaştırın.";
+    /// A warning: the profile's alignment changed since it was made or rebound.
+    PROFILE_STALE = "profile_stale", Warning, false, "Boykesitin aksı boykesit kurulduktan sonra değişti; PVI'ları denetleyip aksa yeniden bağlayın.";
+    /// A warning: the profile's surface is not in the project or makes no surface; no black elevations.
+    PROFILE_SURFACE_GONE = "profile_surface_gone", Warning, false, "Boykesitin yüzeyi projede yok ya da kurulamıyor; siyah kot verilmedi.";
     /// A reversed alignment's equations go.
     EQUATIONS_DROPPED = "equations_dropped", Warning, false, "Ters çevrilen aksın km eşitlikleri kaldırıldı.";
     /// A warning: a surface names a source the drawing cannot give (missing, without heights, an arc edge …).

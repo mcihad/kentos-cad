@@ -82,6 +82,7 @@ UNITS: dict[str, str] = {
     "px/length": "Görünümün ölçeği: ekran pikseli bölü projenin uzunluk birimi (px/m).",
     "ms": "Milisaniye: bir işin süresi.",
     "1/m": "Eğrilik: metrede dönüş (radyan bölü metre), 1/yarıçap; sola dönüş artı.",
+    "m/%": "Düşey kurbun K değeri: yatay metre bölü yüzde eğim farkı.",
 }
 
 
@@ -4817,6 +4818,22 @@ class ProfileStore(_StrEnum):
 
 ProfileStoreName = Literal["folder", "drawing"]
 """The names of :class:`ProfileStore`, for a plain string."""
+
+
+class ProfilesEditOperation(_StrEnum):
+    """What `road.profiles.edit` does.
+
+    - ``set``: The given fields (`name`, `pvis`, `surface`; an empty `surface` clears it) replace the profile's.
+    - ``rebind``: The profile takes its alignment's present revision: no longer stale. Its PVIs are not moved (docs/adr/0902 §6).
+    - ``remove``: The profile goes.
+    """
+    SET = "set"
+    REBIND = "rebind"
+    REMOVE = "remove"
+
+
+ProfilesEditOperationName = Literal["set", "rebind", "remove"]
+"""The names of :class:`ProfilesEditOperation`, for a plain string."""
 
 
 class ProjectPermission(_StrEnum):
@@ -51432,6 +51449,54 @@ class ProfileAddress(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ProfileAt(_Model):
+    """The elevations at a station of the alignment.
+    Attributes:
+        station: Unit: m.
+        km: Unit: m.
+        km_text: The km written `2+345.678`.
+        black: The terrain (black) elevation; absent off the surface or without one. Unit: elevation.
+        difference: Red − black: fill positive, cut negative; absent without both. Unit: elevation.
+        grade: Unit: 1.
+        red: The design (red) elevation and grade; absent outside the profile's first and last PVI. Unit: elevation.
+    """
+    station: float
+    km: float
+    km_text: str
+    black: float | None | Unset = UNSET
+    difference: float | None | Unset = UNSET
+    grade: float | None | Unset = UNSET
+    red: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["station"] = float(self.station)
+        out["km"] = float(self.km)
+        out["kmText"] = self.km_text
+        if self.black is not UNSET:
+            out["black"] = None if self.black is None else float(self.black)
+        if self.difference is not UNSET:
+            out["difference"] = None if self.difference is None else float(self.difference)
+        if self.grade is not UNSET:
+            out["grade"] = None if self.grade is None else float(self.grade)
+        if self.red is not UNSET:
+            out["red"] = None if self.red is None else float(self.red)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfileAt:
+        return cls(
+            station=float(data["station"]),
+            km=float(data["km"]),
+            km_text=data["kmText"],
+            black=UNSET if "black" not in data else None if data["black"] is None else float(data["black"]),
+            difference=UNSET if "difference" not in data else None if data["difference"] is None else float(data["difference"]),
+            grade=UNSET if "grade" not in data else None if data["grade"] is None else float(data["grade"]),
+            red=UNSET if "red" not in data else None if data["red"] is None else float(data["red"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ProfileBin(_Model):
     """One station of a profile: the points whose station lies in [`from`, `to`) (the last includes the path's end).
     Attributes:
@@ -51550,6 +51615,119 @@ class ProfileClassSummary(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ProfileCurveRow(_Model):
+    """A vertical curve on a PVI.
+    Attributes:
+        kind: `parabola`, `asymmetric` or `circle`.
+        g_in: Unit: 1.
+        g_out: Unit: 1.
+        start: Its start and end: station and elevation. Unit: m.
+        end: Unit: m.
+        length: Its horizontal length (end − start), m. Unit: m.
+        a: A = 100·(gOut − gIn), percent. Unit: percent.
+        k: K = length / |A|, metres per percent. Unit: m/%.
+        crest: A crest (the grade falls) or a sag.
+        extreme: Its highest (crest) or lowest (sag) point when it falls inside: station and elevation. Unit: m.
+        radius: A circle's radius. Unit: m.
+    """
+    pvi: str
+    kind: str
+    g_in: float
+    g_out: float
+    start: list[float]
+    end: list[float]
+    length: float
+    a: float
+    k: float
+    crest: bool
+    extreme: list[float] | None | Unset = UNSET
+    radius: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["pvi"] = self.pvi
+        out["kind"] = self.kind
+        out["gIn"] = float(self.g_in)
+        out["gOut"] = float(self.g_out)
+        out["start"] = [float(e0) for e0 in self.start]
+        out["end"] = [float(e0) for e0 in self.end]
+        out["length"] = float(self.length)
+        out["a"] = float(self.a)
+        out["k"] = float(self.k)
+        out["crest"] = self.crest
+        if self.extreme is not UNSET:
+            out["extreme"] = None if self.extreme is None else [float(e0) for e0 in self.extreme]
+        if self.radius is not UNSET:
+            out["radius"] = None if self.radius is None else float(self.radius)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfileCurveRow:
+        return cls(
+            pvi=data["pvi"],
+            kind=data["kind"],
+            g_in=float(data["gIn"]),
+            g_out=float(data["gOut"]),
+            start=[float(e0) for e0 in data["start"]],
+            end=[float(e0) for e0 in data["end"]],
+            length=float(data["length"]),
+            a=float(data["a"]),
+            k=float(data["k"]),
+            crest=data["crest"],
+            extreme=UNSET if "extreme" not in data else None if data["extreme"] is None else [float(e0) for e0 in data["extreme"]],
+            radius=UNSET if "radius" not in data else None if data["radius"] is None else float(data["radius"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProfileDef(_Model):
+    """A vertical alignment's definition (docs/adr/0902): the alignment it lies on and that alignment's revision when it
+    was last made or rebound (a newer one makes it stale), its PVIs, and the surface whose terrain profile it is read
+    against.
+    Attributes:
+        id: Unique in the project.
+        name: Its name (“Proje kotu”), unique in the project.
+        alignment: The alignment's id.
+        alignment_revision: The alignment's revision it was made or rebound against; absent: 0. Unit: version.
+        revision: Grows by one with every change; absent: 0. Unit: version.
+        surface: The terrain surface's id; absent: none.
+    """
+    id: str
+    name: str
+    alignment: str
+    pvis: list[ProfilePvi]
+    alignment_revision: int | Unset = UNSET
+    revision: int | Unset = UNSET
+    surface: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["alignment"] = self.alignment
+        out["pvis"] = [e0.to_json() for e0 in self.pvis]
+        if self.alignment_revision is not UNSET:
+            out["alignmentRevision"] = self.alignment_revision
+        if self.revision is not UNSET:
+            out["revision"] = self.revision
+        if self.surface is not UNSET:
+            out["surface"] = self.surface
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfileDef:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            alignment=data["alignment"],
+            pvis=[ProfilePvi.from_json(e0) for e0 in data["pvis"]],
+            alignment_revision=data.get("alignmentRevision", UNSET),
+            revision=data.get("revision", UNSET),
+            surface=data.get("surface", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ProfileFinding(_Model):
     """One finding of `cad.profiles.check`.
     Attributes:
@@ -51630,6 +51808,68 @@ class ProfileForbid(_Model):
         return cls(
             field=data["field"],
             values=list(data["values"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProfileGradeRow(_Model):
+    """A grade between two PVIs.
+    Attributes:
+        between: The PVIs it runs between.
+        stations: Their stations. Unit: m.
+        grade: Rise over run (0.025 is 2.5 %). Unit: 1.
+    """
+    between: list[str]
+    stations: list[float]
+    grade: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["between"] = list(self.between)
+        out["stations"] = [float(e0) for e0 in self.stations]
+        out["grade"] = float(self.grade)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfileGradeRow:
+        return cls(
+            between=list(data["between"]),
+            stations=[float(e0) for e0 in data["stations"]],
+            grade=float(data["grade"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProfileGroundRow(_Model):
+    """A point of the terrain profile: where the alignment crosses a triangle's edge, an element's end, the alignment's
+    ends.
+    Attributes:
+        station: Unit: m.
+        gap: The stretch from the point before to this one is off the surface.
+        crossing: Where the alignment crosses a triangle's edge.
+        z: Absent off the surface. Unit: elevation.
+    """
+    station: float
+    gap: bool
+    crossing: bool
+    z: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["station"] = float(self.station)
+        out["gap"] = self.gap
+        out["crossing"] = self.crossing
+        if self.z is not UNSET:
+            out["z"] = None if self.z is None else float(self.z)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfileGroundRow:
+        return cls(
+            station=float(data["station"]),
+            gap=data["gap"],
+            crossing=data["crossing"],
+            z=UNSET if "z" not in data else None if data["z"] is None else float(data["z"]),
         )
 
 
@@ -51902,6 +52142,57 @@ class ProfilePoint(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ProfilePvi(_Model):
+    """A PVI of a vertical alignment (docs/adr/0902 §2): its persistent id, its station along the alignment (its own
+    horizontal length from the start, not its km), its elevation, and the curve on it: a symmetric parabola (`length`),
+    an asymmetric one (`lengthIn` and `lengthOut` together) or a circle (`radius`); none of them: no curve. The first
+    and the last carry none.
+    Attributes:
+        id: Unique in the profile.
+        station: Unit: m.
+        elevation: Unit: elevation.
+        length: A symmetric parabola's horizontal length; absent or 0: none. Unit: m.
+        length_in: An asymmetric parabola's horizontal length before the PVI; absent or 0: none. Unit: m.
+        length_out: … and after it. Unit: m.
+        radius: A circular curve's radius in the station–elevation plane; absent or 0: none. Unit: m.
+    """
+    id: str
+    station: float
+    elevation: float
+    length: float | Unset = UNSET
+    length_in: float | Unset = UNSET
+    length_out: float | Unset = UNSET
+    radius: float | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["station"] = float(self.station)
+        out["elevation"] = float(self.elevation)
+        if self.length is not UNSET:
+            out["length"] = float(self.length)
+        if self.length_in is not UNSET:
+            out["lengthIn"] = float(self.length_in)
+        if self.length_out is not UNSET:
+            out["lengthOut"] = float(self.length_out)
+        if self.radius is not UNSET:
+            out["radius"] = float(self.radius)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfilePvi:
+        return cls(
+            id=data["id"],
+            station=float(data["station"]),
+            elevation=float(data["elevation"]),
+            length=float(data["length"]) if "length" in data else UNSET,
+            length_in=float(data["lengthIn"]) if "lengthIn" in data else UNSET,
+            length_out=float(data["lengthOut"]) if "lengthOut" in data else UNSET,
+            radius=float(data["radius"]) if "radius" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ProfileRelation(_Model):
     """A relation between two classes: the child class's field holds a parent object's persistent id.
     Attributes:
@@ -51963,6 +52254,70 @@ class ProfileRemoved(_Model):
             name=data["name"],
             bytes=data["bytes"],
             folder_path=data.get("folderPath", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProfileReport(_Model):
+    """A profile as it builds now.
+    Attributes:
+        revision: Unit: version.
+        alignment: The alignment's id.
+        alignment_revision: The alignment's revision it was made or rebound against, and its present one. Unit: version.
+        alignment_now: Unit: version.
+        stale: The alignment changed since.
+        stations: Its first and last PVI's stations and kms. Unit: m.
+        kms: Unit: m.
+        algorithm: `kentos.profile/1`.
+    """
+    id: str
+    name: str
+    revision: int
+    alignment: str
+    alignment_revision: int
+    alignment_now: int
+    stale: bool
+    stations: list[float]
+    kms: list[float]
+    grades: list[ProfileGradeRow]
+    curves: list[ProfileCurveRow]
+    algorithm: str
+    surface: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["revision"] = self.revision
+        out["alignment"] = self.alignment
+        out["alignmentRevision"] = self.alignment_revision
+        out["alignmentNow"] = self.alignment_now
+        out["stale"] = self.stale
+        out["stations"] = [float(e0) for e0 in self.stations]
+        out["kms"] = [float(e0) for e0 in self.kms]
+        out["grades"] = [e0.to_json() for e0 in self.grades]
+        out["curves"] = [e0.to_json() for e0 in self.curves]
+        out["algorithm"] = self.algorithm
+        if self.surface is not UNSET:
+            out["surface"] = self.surface
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfileReport:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            revision=data["revision"],
+            alignment=data["alignment"],
+            alignment_revision=data["alignmentRevision"],
+            alignment_now=data["alignmentNow"],
+            stale=data["stale"],
+            stations=[float(e0) for e0 in data["stations"]],
+            kms=[float(e0) for e0 in data["kms"]],
+            grades=[ProfileGradeRow.from_json(e0) for e0 in data["grades"]],
+            curves=[ProfileCurveRow.from_json(e0) for e0 in data["curves"]],
+            algorithm=data["algorithm"],
+            surface=data.get("surface", UNSET),
         )
 
 
@@ -52099,6 +52454,94 @@ class ProfilesCheck(_Model):
             mapping_name=data.get("mappingName", UNSET),
             name=data.get("name", UNSET),
             profile=UNSET if "profile" not in data else None if data["profile"] is None else DataProfile.from_json(data["profile"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProfilesCreate(_Model):
+    """Input of `road.profiles.create` v1: a vertical alignment on an alignment (its id or name; one of its own PIs, not a
+    parallel axis), through PVIs whose stations are the alignment's own (horizontal length from its start, not km);
+    optionally read against a terrain surface (its id or name). Its id when not given is the first free of `b-1`, `b-2`
+    … It holds the alignment's present revision.
+
+    Refusals, in this order: `not_a_road_project`, `unknown_alignment`, `unknown_terrain`, `invalid_road_profile` (the
+    definition by `road_problem`, path the field's; PVIs that make no vertical alignment: too few, an id twice, a station
+    not after the one before, a curve on the start or the end, a curve where the grade does not change; or a PVI off
+    the alignment), `profile_curves_overlap` (two curves, or a curve and an end, pass each other; the message names both
+    PVIs and by how much), `invalid_revision`, `revision_conflict`.
+    """
+    name: str
+    alignment: str
+    pvis: list[ProfilePvi]
+    expected_revision: str | None | Unset = UNSET
+    id: str | None | Unset = UNSET
+    surface: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["alignment"] = self.alignment
+        out["pvis"] = [e0.to_json() for e0 in self.pvis]
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.id is not UNSET:
+            out["id"] = self.id
+        if self.surface is not UNSET:
+            out["surface"] = self.surface
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfilesCreate:
+        return cls(
+            name=data["name"],
+            alignment=data["alignment"],
+            pvis=[ProfilePvi.from_json(e0) for e0 in data["pvis"]],
+            expected_revision=data.get("expectedRevision", UNSET),
+            id=data.get("id", UNSET),
+            surface=data.get("surface", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProfilesEdit(_Model):
+    """Input of `road.profiles.edit` v1: the profile by its id or name.
+
+    Refusals, in this order: `not_a_road_project`, `unknown_road_profile`, `unknown_terrain`, `invalid_road_profile`
+    (set with nothing to set, or the definition and the PVIs as `road.profiles.create`), `profile_curves_overlap`,
+    `invalid_revision`, `revision_conflict`.
+    Attributes:
+        surface: The surface's id or name; empty: none.
+    """
+    profile: str
+    operation: ProfilesEditOperation | ProfilesEditOperationName
+    expected_revision: str | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    pvis: list[ProfilePvi] | None | Unset = UNSET
+    surface: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["profile"] = self.profile
+        out["operation"] = _enum_out(self.operation)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.pvis is not UNSET:
+            out["pvis"] = None if self.pvis is None else [e0.to_json() for e0 in self.pvis]
+        if self.surface is not UNSET:
+            out["surface"] = self.surface
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfilesEdit:
+        return cls(
+            profile=data["profile"],
+            operation=_enum_in(ProfilesEditOperation, data["operation"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            name=data.get("name", UNSET),
+            pvis=UNSET if "pvis" not in data else None if data["pvis"] is None else [ProfilePvi.from_json(e0) for e0 in data["pvis"]],
+            surface=data.get("surface", UNSET),
         )
 
 
@@ -52322,6 +52765,77 @@ class ProfilesMigrated(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ProfilesQueried(_Model):
+    """Output of `road.profiles.query` v1.
+    Attributes:
+        profiles: Every profile's report, or the one asked's.
+    """
+    profiles: list[ProfileReport]
+    at: list[ProfileAt]
+    ticks: list[ProfileAt]
+    terrain: list[ProfileGroundRow]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["profiles"] = [e0.to_json() for e0 in self.profiles]
+        out["at"] = [e0.to_json() for e0 in self.at]
+        out["ticks"] = [e0.to_json() for e0 in self.ticks]
+        out["terrain"] = [e0.to_json() for e0 in self.terrain]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfilesQueried:
+        return cls(
+            profiles=[ProfileReport.from_json(e0) for e0 in data["profiles"]],
+            at=[ProfileAt.from_json(e0) for e0 in data["at"]],
+            ticks=[ProfileAt.from_json(e0) for e0 in data["ticks"]],
+            terrain=[ProfileGroundRow.from_json(e0) for e0 in data["terrain"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProfilesQuery(_Model):
+    """Input of `road.profiles.query` v1: every profile's report, or one's (`profile`: its id or name) with the elevations
+    at its alignment's stations (`stations`), at every round `every` metres of km (`every`), and, with `terrain`, the
+    terrain profile along its alignment on its surface.
+
+    Refusals: `not_a_road_project`, `unknown_road_profile`, `invalid_places` (a value not finite, `every` not above 0,
+    more than 100 000 places; or a question without `profile`), `station_outside` (a station off the alignment),
+    `no_terrain` (`terrain` for a profile with no surface), the geometry's when the alignment or the profile no longer
+    builds. Warnings: `profile_stale` (its alignment changed since), `profile_surface_gone` (its surface is not in the
+    project or makes no surface: no black elevation).
+    Attributes:
+        every: Unit: m.
+        stations: Unit: m.
+    """
+    every: float | None | Unset = UNSET
+    profile: str | None | Unset = UNSET
+    stations: list[float] | Unset = UNSET
+    terrain: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.every is not UNSET:
+            out["every"] = None if self.every is None else float(self.every)
+        if self.profile is not UNSET:
+            out["profile"] = self.profile
+        if self.stations is not UNSET:
+            out["stations"] = [float(e0) for e0 in self.stations]
+        if self.terrain is not UNSET:
+            out["terrain"] = self.terrain
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfilesQuery:
+        return cls(
+            every=UNSET if "every" not in data else None if data["every"] is None else float(data["every"]),
+            profile=data.get("profile", UNSET),
+            stations=[float(e0) for e0 in data["stations"]] if "stations" in data else UNSET,
+            terrain=data.get("terrain", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ProfilesRemove(_Model):
     """Input of `cad.profiles.remove` v1 (“Veri profilini çizimden kaldır”): a profile or a mapping the drawing carries inside
     its file (docs/adr/0735) taken out of it; a settings edit, not an undo step. A file of the `profiller` folder is not
@@ -52403,6 +52917,33 @@ class ProfilesReport(_Model):
             findings=[ProfileFinding.from_json(e0) for e0 in data["findings"]],
             clean=data["clean"],
             mapping=data.get("mapping", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProfilesWritten(_Model):
+    """Output of `road.profiles.create` and `.edit` v1.
+    Attributes:
+        profile: The profile written; absent when removed.
+    """
+    profiles: list[RoadProfileListed]
+    revision: str
+    profile: ProfileReport | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["profiles"] = [e0.to_json() for e0 in self.profiles]
+        out["revision"] = self.revision
+        if self.profile is not UNSET:
+            out["profile"] = None if self.profile is None else self.profile.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfilesWritten:
+        return cls(
+            profiles=[RoadProfileListed.from_json(e0) for e0 in data["profiles"]],
+            revision=data["revision"],
+            profile=UNSET if "profile" not in data else None if data["profile"] is None else ProfileReport.from_json(data["profile"]),
         )
 
 
@@ -58210,19 +58751,55 @@ class RingGeometry(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class RoadProfileListed(_Model):
+    """A profile in the project's list.
+    Attributes:
+        revision: Unit: version.
+    """
+    id: str
+    name: str
+    alignment: str
+    revision: int
+    stale: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["alignment"] = self.alignment
+        out["revision"] = self.revision
+        out["stale"] = self.stale
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoadProfileListed:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            alignment=data["alignment"],
+            revision=data["revision"],
+            stale=data["stale"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class RoadSettings(_Model):
     """A road project's settings; absent while it has none.
     Attributes:
         alignments: The horizontal alignments (docs/adr/0901), in the order the project tree shows them.
+        profiles: The vertical alignments (docs/adr/0902), each on an alignment, in the order the project tree shows them.
         surfaces: The terrain surfaces, in the order the project tree shows them.
     """
     alignments: list[AlignmentDef] | Unset = UNSET
+    profiles: list[ProfileDef] | Unset = UNSET
     surfaces: list[TerrainSurfaceDef] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         if self.alignments is not UNSET:
             out["alignments"] = [e0.to_json() for e0 in self.alignments]
+        if self.profiles is not UNSET:
+            out["profiles"] = [e0.to_json() for e0 in self.profiles]
         if self.surfaces is not UNSET:
             out["surfaces"] = [e0.to_json() for e0 in self.surfaces]
         return out
@@ -58231,6 +58808,7 @@ class RoadSettings(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> RoadSettings:
         return cls(
             alignments=[AlignmentDef.from_json(e0) for e0 in data["alignments"]] if "alignments" in data else UNSET,
+            profiles=[ProfileDef.from_json(e0) for e0 in data["profiles"]] if "profiles" in data else UNSET,
             surfaces=[TerrainSurfaceDef.from_json(e0) for e0 in data["surfaces"]] if "surfaces" in data else UNSET,
         )
 
@@ -93964,9 +94542,12 @@ __all__ = [
     "ProcessingTools",
     "ProcessingToolsListed",
     "ProfileAddress",
+    "ProfileAt",
     "ProfileBin",
     "ProfileClass",
     "ProfileClassSummary",
+    "ProfileCurveRow",
+    "ProfileDef",
     "ProfileFileKind",
     "ProfileFileKindName",
     "ProfileFinding",
@@ -93975,14 +94556,18 @@ __all__ = [
     "ProfileForbid",
     "ProfileGeometry",
     "ProfileGeometryName",
+    "ProfileGradeRow",
+    "ProfileGroundRow",
     "ProfileImported",
     "ProfileLimit",
     "ProfileListed",
     "ProfileMapping",
     "ProfileMigration",
     "ProfilePoint",
+    "ProfilePvi",
     "ProfileRelation",
     "ProfileRemoved",
+    "ProfileReport",
     "ProfileSource",
     "ProfileSourceName",
     "ProfileStore",
@@ -93990,13 +94575,20 @@ __all__ = [
     "ProfilesApplied",
     "ProfilesApply",
     "ProfilesCheck",
+    "ProfilesCreate",
+    "ProfilesEdit",
+    "ProfilesEditOperation",
+    "ProfilesEditOperationName",
     "ProfilesImport",
     "ProfilesList",
     "ProfilesListed",
     "ProfilesMigrate",
     "ProfilesMigrated",
+    "ProfilesQueried",
+    "ProfilesQuery",
     "ProfilesRemove",
     "ProfilesReport",
+    "ProfilesWritten",
     "ProgramAssign",
     "ProgramBuilding",
     "ProgramCheck",
@@ -94277,6 +94869,7 @@ __all__ = [
     "RingGeometry",
     "RoadKind",
     "RoadKindName",
+    "RoadProfileListed",
     "RoadSettings",
     "RoadWork",
     "RoadsEdit",

@@ -755,6 +755,7 @@ fn report_of_ops(ops: &[Op]) -> StepReport {
             | Op::BuildingProgram { .. }
             | Op::ArchModules { .. }
             | Op::RoadAlignments { .. }
+            | Op::RoadProfiles { .. }
             | Op::ViewArea { .. }
             | Op::ArchOptions { .. }
             | Op::OptionCombos { .. }

@@ -5531,6 +5531,10 @@ def build():
     mpd = document(mp)
     assert mpd.count(b"\x67version\x18\x87") == 1, "a map project with a road's settings would be schema 135"
     out["broken/road-settings-of-a-map-project.kcad"] = container(mpd.replace(b"\x67version\x18\x87", b"\x67version\x18\x9f"))
+    # Schema 159 (plan/road.md Y4, docs/adr/0902): a profile lies on an alignment of its own PIs, not a parallel axis.
+    onp = load("road-work.json")
+    onp["settings"]["road"]["profiles"][0]["alignment"] = "g-2"
+    out["broken/road-profile-on-parallel-axis.kcad"] = container(document(onp))
     # Schema 136 (docs/adr/0758): a layer's indexes, a key over two fields, a plain one and a key taking empty values as
     # the same; schema 135 refuses them, an empty list, a group's, one over a field the layer lacks, empty values the
     # same on a plain index and a default written are refused too.

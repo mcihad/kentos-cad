@@ -22,6 +22,10 @@ pub const MAX_ALIGNMENT_PIS: usize = 10_000;
 pub const MAX_STATION_EQUATIONS: usize = 100;
 /// The farthest a parallel axis lies from its source, m.
 pub const MAX_ALIGNMENT_OFFSET: f64 = 1000.0;
+/// The most vertical alignments (profiles) a project holds.
+pub const MAX_PROFILES: usize = 256;
+/// The most PVIs a profile has.
+pub const MAX_PROFILE_PVIS: usize = 10_000;
 
 /// A road project's settings; absent while it has none.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -38,12 +42,16 @@ pub struct RoadSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<AlignmentDef>>", optional))]
     pub alignments: Vec<AlignmentDef>,
+    /// The vertical alignments (docs/adr/0902), each on an alignment, in the order the project tree shows them.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ProfileDef>>", optional))]
+    pub profiles: Vec<ProfileDef>,
 }
 
 impl RoadSettings {
     /// Whether it says nothing (and is not written).
     pub fn is_empty(&self) -> bool {
-        self.surfaces.is_empty() && self.alignments.is_empty()
+        self.surfaces.is_empty() && self.alignments.is_empty() && self.profiles.is_empty()
     }
 
     /// What is wrong with it, by the field's path and in words; none when it is right.
@@ -247,6 +255,76 @@ pub struct AlignmentDef {
     pub stationing: Option<AlignmentStationing>,
 }
 
+/// A PVI of a vertical alignment (docs/adr/0902 §2): its persistent id, its station along the alignment (its own
+/// horizontal length from the start, not its km), its elevation, and the curve on it: a symmetric parabola (`length`),
+/// an asymmetric one (`lengthIn` and `lengthOut` together) or a circle (`radius`); none of them: no curve. The first
+/// and the last carry none.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ProfilePvi {
+    /// Unique in the profile.
+    pub id: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub station: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub elevation: f64,
+    /// A symmetric parabola's horizontal length; absent or 0: none.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub length: f64,
+    /// An asymmetric parabola's horizontal length before the PVI; absent or 0: none.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub length_in: f64,
+    /// … and after it.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub length_out: f64,
+    /// A circular curve's radius in the station–elevation plane; absent or 0: none.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub radius: f64,
+}
+
+/// A vertical alignment's definition (docs/adr/0902): the alignment it lies on and that alignment's revision when it
+/// was last made or rebound (a newer one makes it stale), its PVIs, and the surface whose terrain profile it is read
+/// against.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ProfileDef {
+    /// Unique in the project.
+    pub id: String,
+    /// Its name (“Proje kotu”), unique in the project.
+    pub name: String,
+    /// The alignment's id.
+    pub alignment: String,
+    /// The alignment's revision it was made or rebound against; absent: 0.
+    #[serde(default, skip_serializing_if = "is_zero_u32")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub alignment_revision: u32,
+    /// Grows by one with every change; absent: 0.
+    #[serde(default, skip_serializing_if = "is_zero_u32")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub revision: u32,
+    pub pvis: Vec<ProfilePvi>,
+    /// The terrain surface's id; absent: none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub surface: Option<String>,
+}
+
 /// What is wrong with a road project's settings, by the field's path and in words.
 pub fn road_problem(road: &RoadSettings) -> Option<(String, String)> {
     let fail = |path: String, words: &str| Some((path, words.to_string()));
@@ -301,7 +379,69 @@ pub fn road_problem(road: &RoadSettings) -> Option<(String, String)> {
             return fail(at("built"), "özet 64 küçük onaltılık rakam olmalı");
         }
     }
-    alignments_problem(&road.alignments)
+    alignments_problem(&road.alignments).or_else(|| profiles_problem(&road.profiles, &road.alignments))
+}
+
+/// What is wrong with the profiles, by the field's path and in words; each lies on an alignment of its own PIs. Their
+/// geometry is judged where it is built.
+fn profiles_problem(list: &[ProfileDef], alignments: &[AlignmentDef]) -> Option<(String, String)> {
+    let fail = |path: String, words: &str| Some((path, words.to_string()));
+    if list.len() > MAX_PROFILES {
+        return fail("profiles".into(), &format!("en çok {MAX_PROFILES} boykesit olur"));
+    }
+    let mut ids = std::collections::BTreeSet::new();
+    let mut names = std::collections::BTreeSet::new();
+    for (i, p) in list.iter().enumerate() {
+        let at = |field: &str| format!("profiles[{i}].{field}");
+        if !word_ok(&p.id) {
+            return fail(at("id"), "boykesitin kimliği boş olmayan, en çok 64 karakterlik bir sözcük olmalı");
+        }
+        if !ids.insert(p.id.as_str()) {
+            return fail(at("id"), "bu kimlikte başka bir boykesit var");
+        }
+        let name = p.name.trim();
+        if name.is_empty() || name != p.name || p.name.chars().count() > 120 {
+            return fail(at("name"), "boykesitin adı boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 120 karakter");
+        }
+        if !names.insert(name.to_lowercase()) {
+            return fail(at("name"), "bu adda başka bir boykesit var");
+        }
+        match alignments.iter().find(|a| a.id == p.alignment) {
+            None => return fail(at("alignment"), "boykesitin aksı projede yok"),
+            Some(a) if a.offset_of.is_some() => {
+                return fail(at("alignment"), "boykesit yalnız PI'larıyla kurulan aksa bağlanır");
+            }
+            _ => {}
+        }
+        if p.surface.as_deref().is_some_and(|s| !word_ok(s)) {
+            return fail(at("surface"), "yüzey bir yüzeyin kimliği olmalı");
+        }
+        if p.pvis.len() < 2 || p.pvis.len() > MAX_PROFILE_PVIS {
+            return fail(at("pvis"), &format!("boykesitin 2 ile {MAX_PROFILE_PVIS} arası PVI'si olur"));
+        }
+        let mut pvis = std::collections::BTreeSet::new();
+        for (j, v) in p.pvis.iter().enumerate() {
+            let vat = |field: &str| format!("profiles[{i}].pvis[{j}].{field}");
+            if !word_ok(&v.id) || !pvis.insert(v.id.as_str()) {
+                return fail(vat("id"), "PVI'nin kimliği boykesitte tek ve boşluksuz olmalı");
+            }
+            if ![v.station, v.elevation, v.length, v.length_in, v.length_out, v.radius].iter().all(|x| x.is_finite()) {
+                return fail(vat("station"), "sayılar sonlu olmalı");
+            }
+            if v.length < 0.0 || v.length_in < 0.0 || v.length_out < 0.0 || v.radius < 0.0 {
+                return fail(vat("length"), "kurp boyu ve yarıçap eksi olamaz");
+            }
+            let asymmetric = v.length_in > 0.0 || v.length_out > 0.0;
+            let kinds = [v.length > 0.0, asymmetric, v.radius > 0.0].iter().filter(|k| **k).count();
+            if kinds > 1 {
+                return fail(vat("length"), "bir PVI'de tek kurp olur: length, lengthIn ile lengthOut ya da radius");
+            }
+            if asymmetric && (v.length_in <= 0.0 || v.length_out <= 0.0) {
+                return fail(vat("lengthIn"), "asimetrik kurbun iki kolu birlikte verilir");
+            }
+        }
+    }
+    None
 }
 
 /// What is wrong with the alignments, by the field's path and in words; their geometry is judged where it is built.
@@ -456,4 +596,69 @@ mod tests {
         };
         assert_eq!(road_problem(&two).map(|p| p.0).as_deref(), Some("surfaces[1].name"));
     }
+
+    #[test]
+    fn a_profile_lies_on_an_alignment_of_its_own_pis() {
+        let pvi = |id: &str, station: f64| ProfilePvi {
+            id: id.into(),
+            station,
+            elevation: 100.0,
+            length: 0.0,
+            length_in: 0.0,
+            length_out: 0.0,
+            radius: 0.0,
+        };
+        let line = AlignmentDef {
+            id: "g-1".into(),
+            name: "Ana aks".into(),
+            revision: 1,
+            pis: vec![
+                AlignmentPi { id: "a".into(), x: 0.0, y: 0.0, radius: 0.0, spiral_in: 0.0, spiral_out: 0.0 },
+                AlignmentPi { id: "b".into(), x: 100.0, y: 0.0, radius: 0.0, spiral_in: 0.0, spiral_out: 0.0 },
+            ],
+            offset_of: None,
+            stationing: None,
+        };
+        let side = AlignmentDef {
+            id: "g-2".into(),
+            name: "Kenar".into(),
+            pis: vec![],
+            offset_of: Some(AlignmentOffset { alignment: "g-1".into(), offset: 3.0 }),
+            ..line.clone()
+        };
+        let profile = ProfileDef {
+            id: "b-1".into(),
+            name: "Proje kotu".into(),
+            alignment: "g-1".into(),
+            alignment_revision: 1,
+            revision: 1,
+            pvis: vec![pvi("a", 0.0), pvi("b", 100.0)],
+            surface: None,
+        };
+        let judge = |f: fn(&mut ProfileDef)| {
+            let mut p = profile.clone();
+            f(&mut p);
+            road_problem(&RoadSettings {
+                alignments: vec![line.clone(), side.clone()],
+                profiles: vec![p],
+                ..RoadSettings::default()
+            })
+            .map(|p| p.0)
+        };
+        assert_eq!(judge(|_| {}), None);
+        assert_eq!(judge(|p| p.alignment = "g-2".into()).as_deref(), Some("profiles[0].alignment"));
+        assert_eq!(judge(|p| p.alignment = "yok".into()).as_deref(), Some("profiles[0].alignment"));
+        assert_eq!(judge(|p| p.pvis.truncate(1)).as_deref(), Some("profiles[0].pvis"));
+        assert_eq!(judge(|p| p.pvis[1].radius = -1.0).as_deref(), Some("profiles[0].pvis[1].length"));
+        assert_eq!(judge(|p| p.pvis[1].length_in = 5.0).as_deref(), Some("profiles[0].pvis[1].lengthIn"));
+        assert_eq!(
+            judge(|p| {
+                p.pvis[1].length = 5.0;
+                p.pvis[1].radius = 5.0;
+            })
+            .as_deref(),
+            Some("profiles[0].pvis[1].length")
+        );
+    }
+
 }

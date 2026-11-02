@@ -560,6 +560,15 @@ def edit_cases():
        failed("invalid_alignment", "Öteleme yalnız paralel aksın olur.", "offset"))
     no("İzlenen aks silinmez", {"alignment": "g-1", "operation": "remove"},
        failed("alignment_in_use", "“Ana aks” aksını şu paralel akslar izliyor: g-2. Önce onları silin.", "alignment"))
+    # A profile lies on the alignment (docs/adr/0902 §6): it goes first.
+    prof = {"id": "b-1", "name": "Bağlantı kotu", "alignment": "g-3", "alignmentRevision": 1, "revision": 1,
+            "pvis": [{"id": "a", "station": 0.0, "elevation": 100.0}, {"id": "b", "station": 150.0, "elevation": 103.0}]}
+    with_profile = setup(start)
+    with_profile["settings"]["road"]["profiles"] = [prof]
+    cases.append({"name": "Boykesiti olan aks silinmez", "setup": with_profile, "steps": [step(
+        "execute", {"alignment": "g-3", "operation": "remove"},
+        failed("alignment_in_use", "“Bağlantı” aksına şu boykesitler bağlı: Bağlantı kotu. Önce onları silin.", "alignment"),
+        {**UNCHANGED, "road": {"alignments": copy.deepcopy(start), "profiles": [prof]}})]})
     no("Paralel aks ters çevrilmez", {"alignment": "g-2", "operation": "reverse"},
        failed("invalid_alignment", "Paralel aks ters çevrilmez: kaynağını izler; kaynağı ters çevirin.", "alignment"))
     tight = {**MAIN, "pis": [MAIN_PIS[0], {"id": "p1", "x": X0 + 600, "y": Y0, "radius": 7.0}, MAIN_PIS[2]]}

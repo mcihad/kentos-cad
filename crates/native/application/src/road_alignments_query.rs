@@ -13,9 +13,6 @@ use crate::codes;
 use crate::road_alignments::{self as common, Built};
 use crate::road_terrains::fail;
 
-/// The most ticks `every` makes.
-const MOST_TICKS: usize = 100_000;
-
 fn place_at(built: &Built, station: f64, path: &str) -> Result<kentos_commands::AlignmentPlace, Stop> {
     built.place(station).ok_or_else(|| {
         fail(
@@ -111,32 +108,8 @@ fn answer(doc: &kentos_domain::Document, input: &AlignmentsQuery) -> Result<Alig
     }
     let mut ticks = Vec::new();
     if let Some(step) = input.every {
-        for r in &built.regions {
-            // The round kms of the region, in the order they fall along the alignment.
-            let (lo, hi) = (r.at, r.until);
-            let (ka, kb) = (r.ahead, r.ahead + r.dir * (hi - r.at));
-            let (from, to) = (ka.min(kb), ka.max(kb));
-            let mut k = (from / step).ceil() * step;
-            let mut here = Vec::new();
-            while k <= to + 1e-9 {
-                let s = r.at + r.dir * (k - r.ahead);
-                let last = std::ptr::eq(r, built.regions.last().unwrap_or(r));
-                if s >= lo - 1e-9 && (s < hi - 1e-9 || (last && s <= hi + 1e-9)) {
-                    here.push(s.clamp(lo, hi));
-                }
-                if here.len() + ticks.len() > MOST_TICKS {
-                    return Err(fail(
-                        codes::INVALID_PLACES,
-                        format!("Bu aralıkla {MOST_TICKS}'den çok işaret çıkar; every'yi büyütün."),
-                        "every",
-                    ));
-                }
-                k += step;
-            }
-            here.sort_by(f64::total_cmp);
-            for s in here {
-                ticks.push(place_at(&built, s, "every")?);
-            }
+        for s in common::tick_stations(&built, step)? {
+            ticks.push(place_at(&built, s, "every")?);
         }
     }
     let points = input

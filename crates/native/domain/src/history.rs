@@ -326,6 +326,11 @@ pub(crate) enum Op {
         before: Vec<kentos_contracts::AlignmentDef>,
         after: Vec<kentos_contracts::AlignmentDef>,
     },
+    /// A road project's vertical alignments (docs/adr/0902 §9), before and after.
+    RoadProfiles {
+        before: Vec<kentos_contracts::ProfileDef>,
+        after: Vec<kentos_contracts::ProfileDef>,
+    },
     /// The project's room modules (docs/adr/0775), before and after: a setting, written in the step with the objects
     /// placed or updated, so undo gives both back.
     ArchModules {
@@ -650,6 +655,10 @@ impl Op {
                 after: before.clone(),
             },
             Op::RoadAlignments { before, after } => Op::RoadAlignments {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::RoadProfiles { before, after } => Op::RoadProfiles {
                 before: after.clone(),
                 after: before.clone(),
             },
@@ -1300,6 +1309,7 @@ impl Document {
                 | Op::BuildingProgram { .. }
                 | Op::ArchModules { .. }
                 | Op::RoadAlignments { .. }
+                | Op::RoadProfiles { .. }
                 | Op::ViewArea { .. }
                 | Op::ArchOptions { .. }
                 | Op::OptionCombos { .. }
@@ -1611,6 +1621,12 @@ impl Document {
             Op::RoadAlignments { after, .. } => {
                 let mut road = self.settings.road.take().unwrap_or_default();
                 road.alignments = after.clone();
+                self.settings.road = (!road.is_empty()).then_some(road);
+                return;
+            }
+            Op::RoadProfiles { after, .. } => {
+                let mut road = self.settings.road.take().unwrap_or_default();
+                road.profiles = after.clone();
                 self.settings.road = (!road.is_empty()).then_some(road);
                 return;
             }

@@ -81,6 +81,47 @@
             "offset": -7.5
           }
         }
+      ],
+      "profiles": [
+        {
+          "id": "b-1",
+          "name": "Proje kotu",
+          "alignment": "g-1",
+          "alignmentRevision": 3,
+          "revision": 2,
+          "pvis": [
+            {
+              "id": "a",
+              "station": 0.0,
+              "elevation": 100.0
+            },
+            {
+              "id": "v1",
+              "station": 400.0,
+              "elevation": 104.0,
+              "length": 120.0
+            },
+            {
+              "id": "v2",
+              "station": 700.0,
+              "elevation": 101.0,
+              "radius": 3000.0
+            },
+            {
+              "id": "v3",
+              "station": 950.0,
+              "elevation": 106.0,
+              "lengthIn": 60.0,
+              "lengthOut": 40.0
+            },
+            {
+              "id": "b",
+              "station": 1150.0,
+              "elevation": 103.0
+            }
+          ],
+          "surface": "t-zemin"
+        }
       ]
     }
   },

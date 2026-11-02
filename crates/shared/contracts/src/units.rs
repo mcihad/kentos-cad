@@ -131,6 +131,10 @@ pub const UNITS: &[(&str, &str)] = &[
         "1/m",
         "Eğrilik: metrede dönüş (radyan bölü metre), 1/yarıçap; sola dönüş artı.",
     ),
+    (
+        "m/%",
+        "Düşey kurbun K değeri: yatay metre bölü yüzde eğim farkı.",
+    ),
 ];
 
 /// Whether `unit` is one of [`UNITS`].

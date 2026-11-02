@@ -6850,6 +6850,112 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::ROAD_PROFILES_CREATE.into(),
+            version: crate::ROAD_PROFILES_CREATE_VERSION,
+            title: "Boykesit oluştur".into(),
+            summary: "Yol projesinde (cadWork road) bir aksın (alignment: kimliği ya da adı; PI'larıyla kurulan aks, paralel aks değil) üstünde PVI'lerden bir düşey güzergâh (boykesit) kurar ve tanımını projenin yol ayarlarına yazar (kentos.profile/1). \
+                      pvis başlangıç, ara PVI'ler ve bitiştir; station aksın kendi km'si (başından yatay uzunluk, km yazısı değil), elevation kot. Her ara PVI'de tek kurp: length simetrik parabol (yatay boy), lengthIn ve lengthOut birlikte asimetrik parabol (PVI'den önceki ve sonraki kol), radius km–kot düzleminde gerçek çember (teğet boyu R·tan(Δθ/2)); hiçbiri yoksa kırık PVI. \
+                      surface (kimliği ya da adı) siyah kotların okunacağı arazi yüzeyidir. Boykesit kurulduğu andaki aks revizyonunu tutar; aks sonra değişirse boykesit eskir (profile_stale), PVI'ler kendiliğinden kaydırılmaz. \
+                      Cevap boykesitin raporudur: eğimler (oran), kurplar (tür, giriş ve çıkış eğimi, başı ve sonu, boyu, A yüzde, K = L/|A| m/%, tepe ya da çukur, en yüksek ya da en alçak noktası). \
+                      Tek geri alma adımı “Boykesit oluştur”. id verilmezse b-1, b-2 … ilk boş olanıdır. Retler: not_a_road_project, unknown_alignment, unknown_terrain, invalid_road_profile, profile_curves_overlap, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["boykesit".into(), "duseyguzergah".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ProfilesCreate>(),
+            output: schema::<crate::ProfilesWritten>(),
+            plan: Some(schema::<crate::ProfilesWritten>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana aksta üç PVI, ortadakinde 160 m parabol, mevcut zeminle".into(),
+                input: json!({
+                    "name": "Proje kotu",
+                    "alignment": "Ana aks",
+                    "surface": "Mevcut zemin",
+                    "pvis": [
+                        { "id": "a", "station": 0.0, "elevation": 100.0 },
+                        { "id": "v1", "station": 300.0, "elevation": 94.0, "length": 160.0 },
+                        { "id": "b", "station": 700.0, "elevation": 106.0 }
+                    ]
+                }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_PROFILES_EDIT.into(),
+            version: crate::ROAD_PROFILES_EDIT_VERSION,
+            title: "Boykesiti düzenle".into(),
+            summary: "Yol projesinin bir boykesitini (profile: kimliği ya da adı) düzenler. set: verilen alanlar (name, pvis, surface; boş surface yüzeyi kaldırır) boykesitinkinin yerini alır. rebind: boykesit aksının bugünkü revizyonunu alır, eskimiş olmaktan çıkar; PVI'ler kaydırılmaz. remove: boykesit kalkar. \
+                      Boykesitin revizyonu her değişiklikte bir artar. Tek geri alma adımı “Boykesiti düzenle”. Retler: not_a_road_project, unknown_road_profile, unknown_terrain, invalid_road_profile, profile_curves_overlap, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ProfilesEdit>(),
+            output: schema::<crate::ProfilesWritten>(),
+            plan: Some(schema::<crate::ProfilesWritten>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Ortadaki PVI'yi 1 m indir, kurbu 4000 m yarıçaplı çember yap".into(),
+                    input: json!({ "profile": "Proje kotu", "operation": "set", "pvis": [
+                        { "id": "a", "station": 0.0, "elevation": 100.0 },
+                        { "id": "v1", "station": 300.0, "elevation": 93.0, "radius": 4000.0 },
+                        { "id": "b", "station": 700.0, "elevation": 106.0 }
+                    ] }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Değişen aksa yeniden bağla".into(),
+                    input: json!({ "profile": "b-1", "operation": "rebind" }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_PROFILES_QUERY.into(),
+            version: crate::ROAD_PROFILES_QUERY_VERSION,
+            title: "Boykesiti sorgula".into(),
+            summary: "Yol projesinin boykesitlerini bugün kuruldukları gibi verir; hiçbir şey yazmaz. profile verilmezse her boykesitin raporu; verilince yalnız onunki ve soruları: stations aksın kendi km'lerinde, every her every metrelik yuvarlak km'de kırmızı kot (proje kotu), eğim, siyah kot (yüzeyden; yüzeyin dışında ya da yüzey yoksa yok) ve fark (kırmızı − siyah: dolgu artı, yarma eksi); kırmızı kot boykesitin ilk ve son PVI'si arasında vardır. \
+                      terrain aksın yüzeydeki arazi boykesitini verir: aksın üçgen kenarlarını kestiği her yer (kesin, kenarın kotuyla), elemanların uçları ve aksın uçları; yüzeyin dışı gap'tir, kot uydurulmaz. Kurp boyunca iki nokta arası doğrusal okunmaz: ara km'ler stations ile sorulur. \
+                      Uyarılar: profile_stale (aks boykesitten sonra değişti), profile_surface_gone (yüzey yok ya da kurulamıyor). Retler: not_a_road_project, unknown_road_profile, invalid_places, station_outside, no_terrain ve aks ya da boykesit artık kurulamıyorsa geometrinin retleri."
+                .into(),
+            aliases: vec!["kotsor".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ProfilesQuery>(),
+            output: schema::<crate::ProfilesQueried>(),
+            plan: Some(schema::<crate::ProfilesQueried>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Her 20 m'de kırmızı ve siyah kot".into(),
+                    input: json!({ "profile": "Proje kotu", "every": 20.0 }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Arazi boykesiti".into(),
+                    input: json!({ "profile": "b-1", "terrain": true }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
             id: crate::ROAD_ALIGNMENTS_QUERY.into(),
             version: crate::ROAD_ALIGNMENTS_QUERY_VERSION,
             title: "Aksı sorgula".into(),
@@ -12427,6 +12533,15 @@ mod tests {
                     crate::ROAD_ALIGNMENTS_LABEL => {
                         serde_json::from_value::<crate::AlignmentsLabel>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_PROFILES_CREATE => {
+                        serde_json::from_value::<crate::ProfilesCreate>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_PROFILES_EDIT => {
+                        serde_json::from_value::<crate::ProfilesEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_PROFILES_QUERY => {
+                        serde_json::from_value::<crate::ProfilesQuery>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_SUBNETWORKS_FIND => {
                         serde_json::from_value::<crate::SubnetworksFind>(e.input.clone())
                             .map(|_| ())
@@ -13092,6 +13207,14 @@ mod tests {
                         }
                         crate::ROAD_ALIGNMENTS_LABEL => {
                             serde_json::from_value::<crate::AlignmentsLabelled>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_PROFILES_CREATE | crate::ROAD_PROFILES_EDIT => {
+                            serde_json::from_value::<crate::ProfilesWritten>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_PROFILES_QUERY => {
+                            serde_json::from_value::<crate::ProfilesQueried>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_ADDRESSES_DEFINE => {

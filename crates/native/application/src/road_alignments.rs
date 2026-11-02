@@ -252,6 +252,41 @@ pub fn report_of(doc: &Document, def: &AlignmentDef, built: &Built) -> Alignment
     report(doc, def, built)
 }
 
+/// The most ticks `every` makes.
+const MOST_TICKS: usize = 100_000;
+
+/// The stations of every round `step` metres of km, region by region in the order they fall along the alignment (a
+/// region's end belongs to the next region, the alignment's end to the last); refused (`invalid_places`, path `every`)
+/// beyond [`MOST_TICKS`].
+pub(crate) fn tick_stations(built: &Built, step: f64) -> Result<Vec<f64>, Stop> {
+    let mut ticks = Vec::new();
+    for r in &built.regions {
+        let (lo, hi) = (r.at, r.until);
+        let (ka, kb) = (r.ahead, r.ahead + r.dir * (hi - r.at));
+        let (from, to) = (ka.min(kb), ka.max(kb));
+        let mut k = (from / step).ceil() * step;
+        let mut here = Vec::new();
+        while k <= to + 1e-9 {
+            let s = r.at + r.dir * (k - r.ahead);
+            let last = std::ptr::eq(r, built.regions.last().unwrap_or(r));
+            if s >= lo - 1e-9 && (s < hi - 1e-9 || (last && s <= hi + 1e-9)) {
+                here.push(s.clamp(lo, hi));
+            }
+            if here.len() + ticks.len() > MOST_TICKS {
+                return Err(fail(
+                    codes::INVALID_PLACES,
+                    format!("Bu aralıkla {MOST_TICKS}'den çok işaret çıkar; every'yi büyütün."),
+                    "every",
+                ));
+            }
+            k += step;
+        }
+        here.sort_by(f64::total_cmp);
+        ticks.extend(here);
+    }
+    Ok(ticks)
+}
+
 /// The ground length (ROAD-NUM-05): each piece of at most 50 m (and 0.05 rad), its grid length over its chord's scale
 /// and height factor (docs/adr/0171 §3); none without the project's mean height and a system with one scale at a point.
 fn ground(doc: &Document, built: &Built) -> (Option<f64>, String) {

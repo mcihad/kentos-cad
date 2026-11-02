@@ -267,6 +267,10 @@ pub mod road_alignments_create;
 pub mod road_alignments_edit;
 pub mod road_alignments_label;
 pub mod road_alignments_query;
+pub mod road_profiles;
+pub mod road_profiles_create;
+pub mod road_profiles_edit;
+pub mod road_profiles_query;
 pub mod road_terrains_contours;
 pub mod road_terrains_create;
 pub mod road_terrains_edit;
@@ -1130,6 +1134,18 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::ROAD_ALIGNMENTS_QUERY,
         kentos_commands::ROAD_ALIGNMENTS_QUERY_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_PROFILES_CREATE,
+        kentos_commands::ROAD_PROFILES_CREATE_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_PROFILES_EDIT,
+        kentos_commands::ROAD_PROFILES_EDIT_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_PROFILES_QUERY,
+        kentos_commands::ROAD_PROFILES_QUERY_VERSION,
     ),
     // Alt ağlar ([`subnetworks`], [`subnetworks_update`], docs/adr/0557 §2).
     (
