@@ -5,9 +5,11 @@
 //!   boundary and voids, and the height of a place on it (docs/adr/0900).
 //! - [`alignment`]: the horizontal alignment, tangents, curves and clothoids from PIs, its km and a point's
 //!   station and offset (docs/adr/0901).
+//! - [`profile`]: an alignment's terrain profile on a surface and its vertical alignment (docs/adr/0902).
 //! - [`sources`]: a surface's input gathered from the drawing by its definition, and the digest that says whether
 //!   it is out of date (plan/road.md Y2.2).
 
 pub mod alignment;
+pub mod profile;
 pub mod sources;
 pub mod surface;
