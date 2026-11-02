@@ -24,6 +24,7 @@ static NEXT: AtomicU64 = AtomicU64::new(1);
 pub(super) struct Window {
     from: BlockId,
     to: BlockId,
+    library: Option<String>,
     selected: Vec<String>,
     all: Vec<String>,
     only_selected: bool,
@@ -76,6 +77,7 @@ fn refusal(answer: &CallAnswer) -> Option<&str> {
 impl Window {
     fn input(&self) -> BlocksReplace {
         BlocksReplace {
+            library: self.library.clone(),
             from: Some(self.from),
             to: Some(self.to),
             uids: Some(if self.only_selected {
@@ -90,12 +92,17 @@ impl Window {
 }
 impl App {
     pub(super) fn blocks_replace(&mut self, from: BlockId, to: BlockId) -> Task<Message> {
+        self.blocks_replace_review(from, to, None)
+    }
+    /// A frozen library snapshot is part of the common command input, never a background document update.
+    pub(crate) fn blocks_upgrade(&mut self, from: BlockId, to: BlockId, library: String, label: String) -> Task<Message> {
+        self.blocks_replace_review(from, to, Some((library, label)))
+    }
+    fn blocks_replace_review(&mut self, from: BlockId, to: BlockId, source: Option<(String, String)>) -> Task<Message> {
         let Some(doc) = self.document.as_ref() else {
             return Task::none();
         };
-        let (Some(a), Some(b)) = (doc.model.block(from), doc.model.block(to)) else {
-            return Task::none();
-        };
+        let Some(a) = doc.model.block(from) else { return Task::none(); };
         let selected = self
             .selection
             .ids()
@@ -112,16 +119,24 @@ impl App {
         let name = |b: &kentos_commands::BlockDefinition| {
             b.card.as_ref().map_or_else(
                 || format!("{} · kartı yok", b.name),
-                |c| format!("{} · sürüm {}", b.name, c.version),
+                |c| c.publication.as_ref().map_or_else(
+                    || format!("{} · yerel {}", b.name, c.version),
+                    |p| format!("{} · {} · Yayın {}", b.name, p.type_name, p.release)),
             )
         };
+        let (library, target_name) = if let Some((library, label)) = source {
+            (Some(library), label)
+        } else if let Some(b) = doc.model.block(to) {
+            (None, name(b))
+        } else { return Task::none(); };
         self.blocks_panel.replacement = Some(Window {
             from,
             to,
+            library,
             only_selected: !selected.is_empty(),
             selected,
             all,
-            names: (name(a), name(b)),
+            names: (name(a), target_name),
             session: doc.session,
             generation: doc.model.generation(),
             token: 0,
@@ -256,7 +271,10 @@ impl App {
         let Some(w) = self.blocks_panel.replacement.as_ref() else {
             return text("").into();
         };
-        let mut body=Column::new().spacing(12).push(label::body(format!("{} → {}",w.names.0,w.names.1)))
+        let mut body=Column::new().spacing(12)
+            .push(label::caption(if w.library.is_some() { "Kitaplık yayını · aynı aile ve tip" } else { "Çizimdeki tanımlar" }).style(style::text::muted))
+            .push(label::body(format!("Mevcut: {}",w.names.0)))
+            .push(label::body(format!("Hedef: {}",w.names.1)))
             .push(words::check(w.only_selected,"Yalnız seçili yerleştirmeler",(!w.selected.is_empty()).then(||msg(Event::Scope(!w.only_selected)))))
             .push(label::caption(format!("Açılıştaki seçim: {}. Kapsam: {} yerleştirme. Çizimde toplam {} doğrudan yerleştirme var.",w.selected.len(),if w.only_selected{w.selected.len()}else{w.all.len()},w.all.len())))
             .push(label::caption(format!("Tanımların içindeki {} yerleştirme değişmez. Eski tanım tutulur; dosya açılışında otomatik güncelleme yapılmaz.",w.nested)).style(style::text::muted));
@@ -294,6 +312,13 @@ impl App {
                     ));
                 }
                 if let CommandResult::Completed { output, .. } = &a.result {
+                    if w.library.is_some() {
+                        let n = output["added"].as_array().map_or(0, Vec::len);
+                        let taking = if n > 0 { format!("{n} blok tanımı ayrı alınacak.") }
+                            else if s.counts.changed > 0 { "Çizimdeki yayın tanımı yeniden kullanılacak.".into() }
+                            else { "Yeni tanım eklenmeyecek.".into() };
+                        body = body.push(label::caption(format!("{taking} Eski tanım ve iç içe eski kullanımları korunur; yerel tanımlar ezilmez.")));
+                    }
                     if let Some(n) = output["places"].as_u64().filter(|n| *n > 0) {
                         body = body.push(words::text_line(words::Kind::Warn, format!(
                             "Hedefte taşınabilir karşılığı olmayan {n} özel öznitelik konumu kaldırılacak."
@@ -355,6 +380,35 @@ mod tests {
     fn bytes(app: &App) -> Vec<u8> {
         kentos_kcad::encode_verified(&app.document.as_ref().unwrap().model.to_snapshot_v2())
             .unwrap()
+    }
+
+    #[test]
+    fn publication_review_keeps_source_frozen_labels_release_separately_and_upgrades_only_the_selection() {
+        let mut snapshot = kentos_kcad::decode(include_bytes!("../../../../fixtures/kcad/v2/block-publication.kcad")).unwrap();
+        let from = snapshot.blocks[0].id;
+        snapshot.settings.cad_work = Some(kentos_commands::CadWork::Architecture);
+        let mut next = snapshot.blocks[0].clone();
+        next.card.as_mut().unwrap().publication.as_mut().unwrap().release = 3;
+        let library = json!({"format":"kentos.blocks","version":2,"blocks":[next]}).to_string();
+        let (mut a, _) = App::start(None, crate::settings::Settings::memory());
+        a.document=Some(crate::document::Document::from_v2(snapshot,None).unwrap());
+        a.selection.set([Slot(2)]);
+        let before=bytes(&a);
+        let _=a.blocks_upgrade(from,from,library.clone(),"Kapı · Standart tek kanat · Yayın 3".into());
+        ready(&mut a);
+        let w=a.blocks_panel.replacement.as_ref().unwrap();
+        assert_eq!(w.library.as_deref(),Some(library.as_str()));
+        assert!(w.names.0.contains("Yayın 2"));
+        assert!(w.names.1.contains("Yayın 3"));
+        assert!(!w.names.0.contains("sürüm 7"));
+        assert_eq!(w.selected.len(),1);
+        assert_eq!(bytes(&a),before);
+        let _=a.block_replace_event(Event::Apply);
+        let model=&mut a.document.as_mut().unwrap().model;
+        assert_eq!(model.blocks().len(),2);
+        assert_eq!(model.entities().filter(|e|matches!(e,Entity::Insert(i) if i.block!=from)).count(),1);
+        model.undo().unwrap();
+        assert_eq!(bytes(&a),before);
     }
 
     #[test]

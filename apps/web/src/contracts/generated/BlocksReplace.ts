@@ -15,6 +15,13 @@ import type { BlockId } from "./BlockId";
  */
 export type BlocksReplace = { 
 /**
+ * Optional `kentos.blocks` version 2 text: `to` is its source block id.
+ * Requires the same publication family/type and a strictly newer release than `from`.
+ * Imports a separate dependency graph, preserves the old definitions, and upgrades only the named root inserts.
+ * Compatible instance inputs survive; local target edits or incompatible inputs refuse atomically.
+ */
+library?: string,
+/**
  * The block whose inserts are replaced.
  */
 from?: BlockId, 

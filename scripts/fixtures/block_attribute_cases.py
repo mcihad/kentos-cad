@@ -628,6 +628,12 @@ replace.append({"name": "aynı kimlik iki kez verilirse bir kez sayılır", "ste
 ]})
 
 
+replace.append({"name": "yayın yükseltme kaynağı bozuksa plan ve uygulama hiçbir şey yazmaz", "steps": [
+    {"op": op, "input": {"from": KAPI, "to": PENCERE, "library": "{"},
+     "result": failed("invalid_library", "Yayın kaynağı geçerli bir kentos.blocks JSON dosyası olmalı.", "library"), "expect": NOTHING}
+    for op in ("validate", "plan", "execute")
+]})
+
 # CAD-ADV-06: independent parameter replacement cases. No KentOS evaluator is imported;
 # the exact expected maps below are hand-computed from the input contracts.
 def replacement_parameter_cases():

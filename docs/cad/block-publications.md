@@ -68,5 +68,5 @@ okunmaya devam eder. Kimlik alanını sürüm 1 dosyaya eklemek reddedilir;
 eski uygulama sürüm 2 dosyayı kimliği sessizce kaybetmek yerine reddeder. Eski çizimlerde kimlik
 kendiliğinden üretilmez; yeni alan yoksa önceki dosya baytları korunur. Bu
 bilgi bir imza veya yayın içeriğinin değişmediği garantisi değildir.
-Aileye göre seçilmiş yükseltme ve tip–örnek parametre politikası ayrıca
-uygulanacaktır. [Karar ve kabul kapsamı](../adr/0856-block-component-publication-identity.md).
+Seçilmiş yayın yükseltmesi [kitaplık yükseltme rehberinde](block-publication-upgrade.md)
+anlatılır; tip–örnek parametre politikası ayrıca uygulanacaktır. [Karar ve kabul kapsamı](../adr/0856-block-component-publication-identity.md).

@@ -51,6 +51,12 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ADR 0857: kitaplık yayınını aynı aile/tipin seçilmiş yerleştirmelerine
+  yükseltme menüsü ve korumalı etki penceresi; eski tanımları koruma,
+  uyumsuz kaynak/girdi reddi, iptal ve tek Undo kabulü. Ortak
+  `cad.blocks.replace.library/target/added` sözleşmesi hazırdır; native
+  arayüz kabulü web kabulü değildir.
+
 - ADR 0856: isteğe bağlı blok aile/tip/yayın kimliği kartta ve kitaplıkta
   düzenlenip gösterilecek; yerel sayaç yayın numarası sayılmayacak. Ortak
   KCAD şema 158 ve kitaplık 1/2 sözleşmesi hazırdır; web'in ayrı belge,

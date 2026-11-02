@@ -1401,6 +1401,7 @@ const ENTRIES: &[Entry] = &[
             REVISION,
             &[
                 "unknown_block",
+                "invalid_library",
                 "no_entities",
                 "invalid_uid",
                 "entity_not_found",

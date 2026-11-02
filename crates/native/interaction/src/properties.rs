@@ -88,6 +88,7 @@ pub fn replace_block(doc: &mut Document, slot: Slot, to: kentos_commands::BlockI
         return Vec::new();
     };
     let input = kentos_commands::BlocksReplace {
+        library: None,
         from: Some(insert.block),
         to: Some(to),
         uids: Some(vec![uid.to_string()]),

@@ -725,6 +725,13 @@ pub const CAD_BLOCKS_REPLACE_VERSION: u32 = 1;
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct BlocksReplace {
+    /// Optional `kentos.blocks` version 2 text: `to` is its source block id.
+    /// Requires the same publication family/type and a strictly newer release than `from`.
+    /// Imports a separate dependency graph, preserves the old definitions, and upgrades only the named root inserts.
+    /// Compatible instance inputs survive; local target edits or incompatible inputs refuse atomically.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub library: Option<String>,
     /// The block whose inserts are replaced.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -754,6 +761,14 @@ pub struct BlocksReplace {
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct BlocksReplaced {
+    /// With a publication library: the resolved drawing target, distinct from the library's source id.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub target: Option<BlockId>,
+    /// With a publication library: definitions actually added, including nested dependencies.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<BlockId>>", optional))]
+    pub added: Vec<BlockId>,
     /// The inserts that place `to` now, in the drawing's order.
     pub replaced: Vec<String>,
     /// `from`'s attribute tags whose values were taken off: `to` has no such attribute, or a constant one.

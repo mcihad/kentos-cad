@@ -689,8 +689,22 @@ Python testi, Clippy ve derleme geçti. [ADR 0856](../docs/adr/0856-block-compon
 [kimlik/API rehberi](../docs/cad/block-publications.md). Bu kimlik temeli
 seçilmiş yayın yükseltmesini veya tip kapsamındaki parametreyi uygulamaz.
 
-Seçilmiş yayın yükseltmesi, kalıcı tip–örnek parametre kapsamı ve
-birleşik blok kabulü açıktır. Kullanıcı tanımlı grup metaverisi bu otomatik
+**İlerleme — 2026-11-02, seçilmiş kitaplık yayını yükseltmesi:** Kitaplık
+sağ menüsündeki karşılaştırma aynı aile/tipin daha yeni yayınını, bağımlılık
+grafiğiyle ayrı alır. Eski tanımlar korunur; aynı yayının ikinci kapsamı
+mevcut hedefi kullanır. Ortak `cad.blocks.replace.library` korumalı planı
+Python ve MCP'de de aynı işlemi yürütür. Gerçek GUI'de 1/3 ve 3/3 önizleme,
+Esc, tek tıkla yalnız ortadaki kapı, eski/yeni sayıları 2/1, gerçek yeniden
+açılış, minimum pencere ve ikinci kapsamın aynı hedefi kullanması doğrulandı.
+GUI/Python kayıtları tam aynı; gerçek tek Undo/Redo ve ret sonrası kayıtlar
+tam eşit. Uyumsuz yayın 4 gerçek menüde genişlik girdisini kaybetmek yerine
+reddedildi; Değiştir pasifti. 319 application, 59 MCP, 1606 masaüstü, 452
+Python testi, ilgili çekirdek/pencere testleri, Clippy ve derleme geçti.
+[ADR 0857](../docs/adr/0857-selected-block-publication-upgrade.md),
+[kullanım ve API](../docs/cad/block-publication-upgrade.md). Bu dilim etiket
+veya parametre yeniden adlandırmasını kendiliğinden tahmin etmez.
+
+Kalıcı tip–örnek parametre kapsamı ve birleşik blok kabulü açıktır. Kullanıcı tanımlı grup metaverisi bu otomatik
 gruplarla tamamlanmış sayılmaz. Web öznitelik penceresinin native eşitleme kapsamıyla
 aynı olmadığı kodda görüldü; bu dilim web eşitliğini tamamlanmış saymaz.
 

@@ -20,10 +20,13 @@ use crate::ExecutionContext;
 use crate::checks::{self, Stop, error};
 use crate::codes;
 
+mod upgrade;
+
 /// The undo step's name.
 pub const STEP: &str = "Bloğu başkasıyla değiştir";
 
 struct Checked {
+    added: Vec<kentos_commands::BlockDefinition>,
     changes: Vec<(Slot, Entity)>,
     output: BlocksReplaced,
     purge: Option<BlockId>,
@@ -72,6 +75,11 @@ fn write(doc: &mut Document, input: &BlocksReplace) -> CommandResult<BlocksRepla
         Err(stop) => return stop.into(),
     };
     let mut output = c.output;
+    if !c.added.is_empty()
+        && let Err(why) = doc.merge_blocks(&c.added)
+    {
+        return Stop::failed(error(codes::INVALID_LIBRARY, why.to_string(), Some("library".into()))).into();
+    }
     if !c.changes.is_empty() {
         doc.update_many(c.changes, STEP);
     }
@@ -101,6 +109,9 @@ fn unknown(id: BlockId, path: &str) -> Stop {
 }
 
 fn check(doc: &Document, input: &BlocksReplace) -> Result<Checked, Stop> {
+    if let Some(library) = &input.library {
+        return upgrade::check(doc, input, library);
+    }
     let (Some(from), Some(to)) = (input.from, input.to) else {
         let path = if input.from.is_none() { "from" } else { "to" };
         return Err(Stop::failed(error(
@@ -221,6 +232,8 @@ fn check(doc: &Document, input: &BlocksReplace) -> Result<Checked, Stop> {
         .filter_map(|(slot, _)| doc.uid(*slot).map(|u| u.to_string()))
         .collect();
     let output = BlocksReplaced {
+        target: None,
+        added: Vec::new(),
         replaced: uids_out,
         dropped: old
             .attributes
@@ -234,6 +247,7 @@ fn check(doc: &Document, input: &BlocksReplace) -> Result<Checked, Stop> {
         revision: doc.revision().to_string(),
     };
     Ok(Checked {
+        added: Vec::new(),
         changes: replaced
             .into_iter()
             .map(|(slot, i)| (slot, Entity::Insert(i)))
@@ -353,6 +367,7 @@ mod tests {
         let before = kentos_kcad::encode_verified(&doc.to_snapshot_v2()).unwrap();
         let mut doc = Document::from_snapshot_v2(kentos_kcad::decode(&before).unwrap()).unwrap();
         let input = BlocksReplace {
+            library: None,
             from: Some(from),
             to: Some(to),
             uids: Some(vec![uid.to_text()]),
