@@ -9892,6 +9892,27 @@ class SubPlace(_Union):
         return _variant(_SUB_PLACE, "SubPlace", "kind", data).from_json(data)
 
 
+class SuperelevationMethod(_Union):
+    """How a superelevation schedule is had (docs/adr/0904 §2).
+
+    One of:
+
+    - :class:`CurvesSuperelevationMethod` (``method: curves``)
+    - :class:`StationsSuperelevationMethod` (``method: stations``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "method"
+
+    @property
+    def method(self) -> str:
+        """The name of the variant (``method`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SuperelevationMethod:
+        return _variant(_SUPERELEVATION_METHOD, "SuperelevationMethod", "method", data).from_json(data)
+
+
 class SurveyWork(_Union):
     """What is computed.
 
@@ -58997,12 +59018,14 @@ class RoadSettings(_Model):
         alignments: The horizontal alignments (docs/adr/0901), in the order the project tree shows them.
         profiles: The vertical alignments (docs/adr/0902), each on an alignment, in the order the project tree shows them.
         sections: The sample line sets (docs/adr/0903 §2), in the order the project tree shows them.
+        superelevations: The superelevation schedules (docs/adr/0904), each on an alignment, in the order the project tree shows them.
         surfaces: The terrain surfaces, in the order the project tree shows them.
         templates: The templates (docs/adr/0903 §3), in the order the project tree shows them.
     """
     alignments: list[AlignmentDef] | Unset = UNSET
     profiles: list[ProfileDef] | Unset = UNSET
     sections: list[SectionSetDef] | Unset = UNSET
+    superelevations: list[SuperelevationDef] | Unset = UNSET
     surfaces: list[TerrainSurfaceDef] | Unset = UNSET
     templates: list[TemplateDef] | Unset = UNSET
 
@@ -59014,6 +59037,8 @@ class RoadSettings(_Model):
             out["profiles"] = [e0.to_json() for e0 in self.profiles]
         if self.sections is not UNSET:
             out["sections"] = [e0.to_json() for e0 in self.sections]
+        if self.superelevations is not UNSET:
+            out["superelevations"] = [e0.to_json() for e0 in self.superelevations]
         if self.surfaces is not UNSET:
             out["surfaces"] = [e0.to_json() for e0 in self.surfaces]
         if self.templates is not UNSET:
@@ -59026,6 +59051,7 @@ class RoadSettings(_Model):
             alignments=[AlignmentDef.from_json(e0) for e0 in data["alignments"]] if "alignments" in data else UNSET,
             profiles=[ProfileDef.from_json(e0) for e0 in data["profiles"]] if "profiles" in data else UNSET,
             sections=[SectionSetDef.from_json(e0) for e0 in data["sections"]] if "sections" in data else UNSET,
+            superelevations=[SuperelevationDef.from_json(e0) for e0 in data["superelevations"]] if "superelevations" in data else UNSET,
             surfaces=[TerrainSurfaceDef.from_json(e0) for e0 in data["surfaces"]] if "surfaces" in data else UNSET,
             templates=[TemplateDef.from_json(e0) for e0 in data["templates"]] if "templates" in data else UNSET,
         )
@@ -60052,6 +60078,7 @@ class SectionSetDef(_Model):
         right: Unit: m.
         alignment_revision: Unit: version.
         revision: Unit: version.
+        superelevation: The superelevation schedule on the same alignment its lanes take their cross slopes from (docs/adr/0904 §3).
     """
     id: str
     name: str
@@ -60062,6 +60089,7 @@ class SectionSetDef(_Model):
     alignment_revision: int | Unset = UNSET
     profile: str | None | Unset = UNSET
     revision: int | Unset = UNSET
+    superelevation: str | None | Unset = UNSET
     surface: str | None | Unset = UNSET
     template: str | None | Unset = UNSET
 
@@ -60079,6 +60107,8 @@ class SectionSetDef(_Model):
             out["profile"] = self.profile
         if self.revision is not UNSET:
             out["revision"] = self.revision
+        if self.superelevation is not UNSET:
+            out["superelevation"] = self.superelevation
         if self.surface is not UNSET:
             out["surface"] = self.surface
         if self.template is not UNSET:
@@ -60097,6 +60127,7 @@ class SectionSetDef(_Model):
             alignment_revision=data.get("alignmentRevision", UNSET),
             profile=data.get("profile", UNSET),
             revision=data.get("revision", UNSET),
+            superelevation=data.get("superelevation", UNSET),
             surface=data.get("surface", UNSET),
             template=data.get("template", UNSET),
         )
@@ -60118,6 +60149,7 @@ class SectionSetReport(_Model):
     stale: bool
     stations: list[float]
     profile: str | None | Unset = UNSET
+    superelevation: str | None | Unset = UNSET
     surface: str | None | Unset = UNSET
     template: str | None | Unset = UNSET
 
@@ -60131,6 +60163,8 @@ class SectionSetReport(_Model):
         out["stations"] = [float(e0) for e0 in self.stations]
         if self.profile is not UNSET:
             out["profile"] = self.profile
+        if self.superelevation is not UNSET:
+            out["superelevation"] = self.superelevation
         if self.surface is not UNSET:
             out["surface"] = self.surface
         if self.template is not UNSET:
@@ -60147,6 +60181,7 @@ class SectionSetReport(_Model):
             stale=data["stale"],
             stations=[float(e0) for e0 in data["stations"]],
             profile=data.get("profile", UNSET),
+            superelevation=data.get("superelevation", UNSET),
             surface=data.get("surface", UNSET),
             template=data.get("template", UNSET),
         )
@@ -60353,6 +60388,8 @@ class SectionsEdit(_Model):
     Attributes:
         left: Unit: m.
         right: Unit: m.
+        superelevation: The superelevation schedule on the same alignment the lanes take their cross slopes from (docs/adr/0904 §3);
+            its id or name, empty clears.
     """
     operation: RoadEditOperation | RoadEditOperationName
     alignment: str | None | Unset = UNSET
@@ -60363,6 +60400,7 @@ class SectionsEdit(_Model):
     right: float | None | Unset = UNSET
     set: str | None | Unset = UNSET
     stations: SectionStations | None | Unset = UNSET
+    superelevation: str | None | Unset = UNSET
     surface: str | None | Unset = UNSET
     template: str | None | Unset = UNSET
 
@@ -60385,6 +60423,8 @@ class SectionsEdit(_Model):
             out["set"] = self.set
         if self.stations is not UNSET:
             out["stations"] = None if self.stations is None else self.stations.to_json()
+        if self.superelevation is not UNSET:
+            out["superelevation"] = self.superelevation
         if self.surface is not UNSET:
             out["surface"] = self.surface
         if self.template is not UNSET:
@@ -60403,6 +60443,7 @@ class SectionsEdit(_Model):
             right=UNSET if "right" not in data else None if data["right"] is None else float(data["right"]),
             set=data.get("set", UNSET),
             stations=UNSET if "stations" not in data else None if data["stations"] is None else SectionStations.from_json(data["stations"]),
+            superelevation=data.get("superelevation", UNSET),
             surface=data.get("surface", UNSET),
             template=data.get("template", UNSET),
         )
@@ -67764,6 +67805,397 @@ class SubtypeField(_Model):
             default=data.get("default", UNSET),
             required=data.get("required", UNSET),
             values=UNSET if "values" not in data else None if data["values"] is None else list(data["values"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SuperAt(_Model):
+    """The cross slopes (percent) and widening (metres) of both sides at a station.
+    Attributes:
+        station: Unit: m.
+        km: Unit: m.
+        left: Unit: percent.
+        right: Unit: percent.
+        left_widening: Unit: m.
+        right_widening: Unit: m.
+    """
+    station: float
+    km: float
+    km_text: str
+    left: float
+    right: float
+    left_widening: float
+    right_widening: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["station"] = float(self.station)
+        out["km"] = float(self.km)
+        out["kmText"] = self.km_text
+        out["left"] = float(self.left)
+        out["right"] = float(self.right)
+        out["leftWidening"] = float(self.left_widening)
+        out["rightWidening"] = float(self.right_widening)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SuperAt:
+        return cls(
+            station=float(data["station"]),
+            km=float(data["km"]),
+            km_text=data["kmText"],
+            left=float(data["left"]),
+            right=float(data["right"]),
+            left_widening=float(data["leftWidening"]),
+            right_widening=float(data["rightWidening"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SuperCritical(_Model):
+    """A critical station of a curve's transition: `normalCrown`, `levelCrown`, `reverseCrown` or `full`, on the way in or
+    out (`exit`).
+    Attributes:
+        station: Unit: m.
+        km: Unit: m.
+    """
+    pi: str
+    mark: str
+    station: float
+    km: float
+    km_text: str
+    exit: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["pi"] = self.pi
+        out["mark"] = self.mark
+        out["station"] = float(self.station)
+        out["km"] = float(self.km)
+        out["kmText"] = self.km_text
+        out["exit"] = self.exit
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SuperCritical:
+        return cls(
+            pi=data["pi"],
+            mark=data["mark"],
+            station=float(data["station"]),
+            km=float(data["km"]),
+            km_text=data["kmText"],
+            exit=data["exit"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SuperCurveDef(_Model):
+    """A curve's superelevation (docs/adr/0904 §2): its PI, the full rate (percent), the runoff length (level crown to full
+    rate), the share of the runoff before the curve (0–1) and the extra width on its inside.
+    Attributes:
+        rate: Unit: percent.
+        runoff: Unit: m.
+        on_tangent: Unit: 1.
+        widening: Absent: none. Unit: m.
+    """
+    pi: str
+    rate: float
+    runoff: float
+    on_tangent: float
+    widening: float | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["pi"] = self.pi
+        out["rate"] = float(self.rate)
+        out["runoff"] = float(self.runoff)
+        out["onTangent"] = float(self.on_tangent)
+        if self.widening is not UNSET:
+            out["widening"] = float(self.widening)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SuperCurveDef:
+        return cls(
+            pi=data["pi"],
+            rate=float(data["rate"]),
+            runoff=float(data["runoff"]),
+            on_tangent=float(data["onTangent"]),
+            widening=float(data["widening"]) if "widening" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SuperRowDef(_Model):
+    """A row of a superelevation schedule written by station: the alignment's own station and each side's slope.
+    Attributes:
+        station: Unit: m.
+        left: Unit: percent.
+        right: Unit: percent.
+    """
+    station: float
+    left: float
+    right: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["station"] = float(self.station)
+        out["left"] = float(self.left)
+        out["right"] = float(self.right)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SuperRowDef:
+        return cls(
+            station=float(data["station"]),
+            left=float(data["left"]),
+            right=float(data["right"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SuperelevationDef(_Model):
+    """A superelevation schedule (docs/adr/0904): on an alignment of its own PIs (its revision held), the normal cross
+    slopes of the left and the right side (percent, outward; falling outward negative) and how it is had.
+    Attributes:
+        normal_left: Unit: percent.
+        normal_right: Unit: percent.
+        alignment_revision: Unit: version.
+        revision: Unit: version.
+    """
+    id: str
+    name: str
+    alignment: str
+    normal_left: float
+    normal_right: float
+    method: SuperelevationMethod
+    alignment_revision: int | Unset = UNSET
+    revision: int | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["alignment"] = self.alignment
+        out["normalLeft"] = float(self.normal_left)
+        out["normalRight"] = float(self.normal_right)
+        out["method"] = self.method.to_json()
+        if self.alignment_revision is not UNSET:
+            out["alignmentRevision"] = self.alignment_revision
+        if self.revision is not UNSET:
+            out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SuperelevationDef:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            alignment=data["alignment"],
+            normal_left=float(data["normalLeft"]),
+            normal_right=float(data["normalRight"]),
+            method=SuperelevationMethod.from_json(data["method"]),
+            alignment_revision=data.get("alignmentRevision", UNSET),
+            revision=data.get("revision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SuperelevationReport(_Model):
+    """A superelevation schedule as it is now: each side's break points (station, slope percent) and widening (station,
+    metres), the critical stations; why it no longer builds when it does not.
+    Attributes:
+        revision: Unit: version.
+        stale: The alignment changed since it was made or rebound.
+        normal_left: Unit: percent.
+        normal_right: Unit: percent.
+        left: (station, slope percent) pairs. Unit: m/%.
+        right: Unit: m/%.
+        left_widening: (station, width) pairs, metres. Unit: m.
+        right_widening: Unit: m.
+    """
+    id: str
+    name: str
+    revision: int
+    alignment: str
+    stale: bool
+    normal_left: float
+    normal_right: float
+    left: list[list[float]]
+    right: list[list[float]]
+    left_widening: list[list[float]]
+    right_widening: list[list[float]]
+    critical: list[SuperCritical]
+    problem: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["revision"] = self.revision
+        out["alignment"] = self.alignment
+        out["stale"] = self.stale
+        out["normalLeft"] = float(self.normal_left)
+        out["normalRight"] = float(self.normal_right)
+        out["left"] = [[float(e1) for e1 in e0] for e0 in self.left]
+        out["right"] = [[float(e1) for e1 in e0] for e0 in self.right]
+        out["leftWidening"] = [[float(e1) for e1 in e0] for e0 in self.left_widening]
+        out["rightWidening"] = [[float(e1) for e1 in e0] for e0 in self.right_widening]
+        out["critical"] = [e0.to_json() for e0 in self.critical]
+        if self.problem is not UNSET:
+            out["problem"] = self.problem
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SuperelevationReport:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            revision=data["revision"],
+            alignment=data["alignment"],
+            stale=data["stale"],
+            normal_left=float(data["normalLeft"]),
+            normal_right=float(data["normalRight"]),
+            left=[[float(e1) for e1 in e0] for e0 in data["left"]],
+            right=[[float(e1) for e1 in e0] for e0 in data["right"]],
+            left_widening=[[float(e1) for e1 in e0] for e0 in data["leftWidening"]],
+            right_widening=[[float(e1) for e1 in e0] for e0 in data["rightWidening"]],
+            critical=[SuperCritical.from_json(e0) for e0 in data["critical"]],
+            problem=data.get("problem", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SuperelevationsEdit(_Model):
+    """Input of `road.superelevations.edit` v1: the schedule by its id or name (absent: a new one). A new one needs `name`,
+    `alignment`, `normalLeft`, `normalRight` and `method`; it holds its alignment's present revision. Slopes are percent,
+    outward from the axis, falling outward negative.
+
+    Refusals, in this order: `not_a_road_project`, `unknown_superelevation` (remove or rebind one not in the project),
+    `unknown_alignment`, `invalid_superelevation` (a new one without its fields, set with nothing to set, the definition
+    by `road_problem`, a schedule that does not build: a PI without a curve, a rate, runoff, share or width out of range,
+    a rate below the normal slope, a full rate that does not fit on its curve, two curves' transitions overlapping, a
+    transition off the alignment, a PI twice, rows not in increasing station or off the alignment),
+    `superelevation_in_use` (remove while a sample line set uses it), `invalid_revision`, `revision_conflict`.
+    Attributes:
+        normal_left: Unit: percent.
+        normal_right: Unit: percent.
+    """
+    operation: RoadEditOperation | RoadEditOperationName
+    alignment: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    method: SuperelevationMethod | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    normal_left: float | None | Unset = UNSET
+    normal_right: float | None | Unset = UNSET
+    superelevation: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = _enum_out(self.operation)
+        if self.alignment is not UNSET:
+            out["alignment"] = self.alignment
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.method is not UNSET:
+            out["method"] = None if self.method is None else self.method.to_json()
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.normal_left is not UNSET:
+            out["normalLeft"] = None if self.normal_left is None else float(self.normal_left)
+        if self.normal_right is not UNSET:
+            out["normalRight"] = None if self.normal_right is None else float(self.normal_right)
+        if self.superelevation is not UNSET:
+            out["superelevation"] = self.superelevation
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SuperelevationsEdit:
+        return cls(
+            operation=_enum_in(RoadEditOperation, data["operation"]),
+            alignment=data.get("alignment", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            method=UNSET if "method" not in data else None if data["method"] is None else SuperelevationMethod.from_json(data["method"]),
+            name=data.get("name", UNSET),
+            normal_left=UNSET if "normalLeft" not in data else None if data["normalLeft"] is None else float(data["normalLeft"]),
+            normal_right=UNSET if "normalRight" not in data else None if data["normalRight"] is None else float(data["normalRight"]),
+            superelevation=data.get("superelevation", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SuperelevationsQueried(_Model):
+    """Output of `road.superelevations.query` v1."""
+    superelevations: list[SuperelevationReport]
+    at: list[SuperAt]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["superelevations"] = [e0.to_json() for e0 in self.superelevations]
+        out["at"] = [e0.to_json() for e0 in self.at]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SuperelevationsQueried:
+        return cls(
+            superelevations=[SuperelevationReport.from_json(e0) for e0 in data["superelevations"]],
+            at=[SuperAt.from_json(e0) for e0 in data["at"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SuperelevationsQuery(_Model):
+    """Input of `road.superelevations.query` v1: every schedule's report, or one's (`superelevation`: its id or name) with
+    its cross slopes and widening at `stations` (the alignment's own stations).
+
+    Refusals: `not_a_road_project`, `unknown_superelevation`, `invalid_places` (stations without a schedule),
+    `station_outside`, `invalid_superelevation` (the schedule no longer builds). Warnings: `superelevation_stale`.
+    Attributes:
+        stations: Unit: m.
+    """
+    stations: list[float] | Unset = UNSET
+    superelevation: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.stations is not UNSET:
+            out["stations"] = [float(e0) for e0 in self.stations]
+        if self.superelevation is not UNSET:
+            out["superelevation"] = self.superelevation
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SuperelevationsQuery:
+        return cls(
+            stations=[float(e0) for e0 in data["stations"]] if "stations" in data else UNSET,
+            superelevation=data.get("superelevation", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SuperelevationsWritten(_Model):
+    """Output of `road.superelevations.edit` v1.
+    Attributes:
+        superelevation: The schedule written; absent when removed.
+    """
+    superelevations: list[SuperelevationReport]
+    revision: str
+    superelevation: SuperelevationReport | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["superelevations"] = [e0.to_json() for e0 in self.superelevations]
+        out["revision"] = self.revision
+        if self.superelevation is not UNSET:
+            out["superelevation"] = None if self.superelevation is None else self.superelevation.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SuperelevationsWritten:
+        return cls(
+            superelevations=[SuperelevationReport.from_json(e0) for e0 in data["superelevations"]],
+            revision=data["revision"],
+            superelevation=UNSET if "superelevation" not in data else None if data["superelevation"] is None else SuperelevationReport.from_json(data["superelevation"]),
         )
 
 
@@ -90605,6 +91037,42 @@ class AlongSubPlace(SubPlace):
 
 
 @dataclass(kw_only=True, slots=True)
+class CurvesSuperelevationMethod(SuperelevationMethod):
+    """From the curves, rotating about the centreline."""
+    TAG_VALUE: ClassVar[str] = "curves"
+    curves: list[SuperCurveDef]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"method": "curves"}
+        out["curves"] = [e0.to_json() for e0 in self.curves]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CurvesSuperelevationMethod:
+        return cls(
+            curves=[SuperCurveDef.from_json(e0) for e0 in data["curves"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StationsSuperelevationMethod(SuperelevationMethod):
+    """The rows written."""
+    TAG_VALUE: ClassVar[str] = "stations"
+    rows: list[SuperRowDef]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"method": "stations"}
+        out["rows"] = [e0.to_json() for e0 in self.rows]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StationsSuperelevationMethod:
+        return cls(
+            rows=[SuperRowDef.from_json(e0) for e0 in data["rows"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class TraverseSurveyWork(SurveyWork):
     """Poligon hesabı (docs/adr/0070): from `start` oriented on `back`, the angles (at the start, at every new point
     and, oriented at the end, at the end) and the legs' lengths; a connected traverse ends on `end` (oriented on
@@ -93514,6 +93982,9 @@ _STAC_MASK: dict[str, type[StacMask]] = {"values": ValuesStacMask, "bits": BitsS
 _SUB_PLACE: dict[str, type[SubPlace]] = {"node": NodeSubPlace, "start": StartSubPlace, "end": EndSubPlace, "center": CenterSubPlace, "vertex": VertexSubPlace, "mid": MidSubPlace, "along": AlongSubPlace}
 
 
+_SUPERELEVATION_METHOD: dict[str, type[SuperelevationMethod]] = {"curves": CurvesSuperelevationMethod, "stations": StationsSuperelevationMethod}
+
+
 _SURVEY_WORK: dict[str, type[SurveyWork]] = {"traverse": TraverseSurveyWork, "polar": PolarSurveyWork, "forward": ForwardSurveyWork, "resection": ResectionSurveyWork}
 
 
@@ -94097,6 +94568,7 @@ __all__ = [
     "CurvesConstruct",
     "CurvesConstructed",
     "CurvesEdit",
+    "CurvesSuperelevationMethod",
     "CustomDatum",
     "CustomPaperLegendEntries",
     "CustomSheetTemplateSource",
@@ -96272,6 +96744,7 @@ __all__ = [
     "StationTextName",
     "StationsAnnotationWork",
     "StationsSectionStations",
+    "StationsSuperelevationMethod",
     "StepDivision",
     "StepExplodeDensity",
     "StepKind",
@@ -96306,6 +96779,17 @@ __all__ = [
     "SubtractSlabsOperation",
     "Subtype",
     "SubtypeField",
+    "SuperAt",
+    "SuperCritical",
+    "SuperCurveDef",
+    "SuperRowDef",
+    "SuperelevationDef",
+    "SuperelevationMethod",
+    "SuperelevationReport",
+    "SuperelevationsEdit",
+    "SuperelevationsQueried",
+    "SuperelevationsQuery",
+    "SuperelevationsWritten",
     "SurfaceSources",
     "SurveyAdjust",
     "SurveyAdjusted",

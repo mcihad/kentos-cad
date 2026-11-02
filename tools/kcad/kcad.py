@@ -9520,6 +9520,7 @@ class _Schema:
             t = self.fields({"id": (word, True), "name": (self.text, True), "alignment": (word, True),
                              "alignmentRevision": (self.uint(32), False), "revision": (self.uint(32), False),
                              "profile": (word, False), "template": (word, False), "surface": (word, False),
+                             "superelevation": (word, False),
                              "left": (finite, True), "right": (finite, True), "stations": (stations, True)})(x)
             name = t["name"]
             if not name or name.strip() != name or len(name) > 120:
@@ -9528,15 +9529,46 @@ class _Schema:
                 self.fail("bad_value", "şerit genişliği 0'dan büyük, en çok 1000 m olmalı")
             return t
 
+        def super_method(x):
+            # Docs/adr/0904 §2: from the curves or from rows of stations.
+            if not isinstance(x, dict) or x.get("method") not in ("curves", "stations"):
+                self.fail("bad_value", "dever çizelgesinin yöntemi curves ya da stations olur")
+            if x["method"] == "curves":
+                curve = self.fields({"pi": (word, True), "rate": (finite, True), "runoff": (finite, True),
+                                     "onTangent": (finite, True), "widening": (finite, False)})
+                t = self.fields({"method": (self.text, True), "curves": (self.array(curve), True)})(x)
+                if not 1 <= len(t["curves"]) <= 10000:
+                    self.fail("bad_value", "1 ile 10000 arası kurp olur")
+                return t
+            row = self.fields({"station": (finite, True), "left": (finite, True), "right": (finite, True)})
+            t = self.fields({"method": (self.text, True), "rows": (self.array(row), True)})(x)
+            if not 1 <= len(t["rows"]) <= 10000:
+                self.fail("bad_value", "1 ile 10000 arası satır olur")
+            return t
+
+        def superelevation(x):
+            t = self.fields({"id": (word, True), "name": (self.text, True), "alignment": (word, True),
+                             "alignmentRevision": (self.uint(32), False), "revision": (self.uint(32), False),
+                             "normalLeft": (finite, True), "normalRight": (finite, True),
+                             "method": (super_method, True)})(x)
+            name = t["name"]
+            if not name or name.strip() != name or len(name) > 120:
+                self.fail("bad_value", "dever çizelgesinin adı boş, boşluklu ya da çok uzun")
+            if abs(t["normalLeft"]) > 100 or abs(t["normalRight"]) > 100:
+                self.fail("bad_value", "normal enine eğim en çok %100 olur")
+            return t
+
         r = self.fields({"surfaces": (self.array(surface), False), "alignments": (self.array(alignment), False),
                          "profiles": (self.array(profile), False), "templates": (self.array(template), False),
-                         "sections": (self.array(section_set), False)})(v)
+                         "sections": (self.array(section_set), False),
+                         "superelevations": (self.array(superelevation), False)})(v)
         got = r.get("surfaces", [])
         lines = r.get("alignments", [])
         profiles = r.get("profiles", [])
         templates = r.get("templates", [])
         sets = r.get("sections", [])
-        if not got and not lines and not profiles and not templates and not sets:
+        supers = r.get("superelevations", [])
+        if not got and not lines and not profiles and not templates and not sets and not supers:
             self.fail("bad_value", "boş yol ayarı yazılmaz")
         if len(got) > 64 or ("surfaces" in r and not got):
             self.fail("bad_value", "yol ayarında 1 ile 64 arası yüzey olur")
@@ -9576,6 +9608,17 @@ class _Schema:
                 self.fail("bad_value", "kesit takımının boykesiti projede yok ya da takımın aksında değil")
             if "template" in x and all(y["id"] != x["template"] for y in templates):
                 self.fail("bad_value", "kesit takımının tip kesiti projede yok")
+            sup = next((y for y in supers if y["id"] == x.get("superelevation")), None) if "superelevation" in x else None
+            if "superelevation" in x and (sup is None or sup["alignment"] != x["alignment"]):
+                self.fail("bad_value", "kesit takımının dever çizelgesi projede yok ya da takımın aksında değil")
+        if "superelevations" in r and not supers or len(supers) > 256:
+            self.fail("bad_value", "yol ayarında 1 ile 256 arası dever çizelgesi olur")
+        if len({x["id"] for x in supers}) != len(supers) or len({x["name"].lower() for x in supers}) != len(supers):
+            self.fail("bad_value", "iki dever çizelgesinin kimliği ya da adı aynı")
+        for x in supers:
+            src = next((y for y in lines if y["id"] == x["alignment"]), None)
+            if src is None or "offsetOf" in src:
+                self.fail("bad_value", "dever çizelgesi yalnız PI'larıyla kurulan aksa bağlanır")
         return r
 
     def arch_(self, v):

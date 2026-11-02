@@ -340,6 +340,11 @@ pub(crate) enum Op {
         before: Vec<kentos_contracts::SectionSetDef>,
         after: Vec<kentos_contracts::SectionSetDef>,
     },
+    /// A road project's superelevation schedules (docs/adr/0904 §5), before and after.
+    RoadSuperelevations {
+        before: Vec<kentos_contracts::SuperelevationDef>,
+        after: Vec<kentos_contracts::SuperelevationDef>,
+    },
     /// The project's room modules (docs/adr/0775), before and after: a setting, written in the step with the objects
     /// placed or updated, so undo gives both back.
     ArchModules {
@@ -676,6 +681,10 @@ impl Op {
                 after: before.clone(),
             },
             Op::RoadSections { before, after } => Op::RoadSections {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::RoadSuperelevations { before, after } => Op::RoadSuperelevations {
                 before: after.clone(),
                 after: before.clone(),
             },
@@ -1329,6 +1338,7 @@ impl Document {
                 | Op::RoadProfiles { .. }
                 | Op::RoadTemplates { .. }
                 | Op::RoadSections { .. }
+                | Op::RoadSuperelevations { .. }
                 | Op::ViewArea { .. }
                 | Op::ArchOptions { .. }
                 | Op::OptionCombos { .. }
@@ -1658,6 +1668,12 @@ impl Document {
             Op::RoadSections { after, .. } => {
                 let mut road = self.settings.road.take().unwrap_or_default();
                 road.sections = after.clone();
+                self.settings.road = (!road.is_empty()).then_some(road);
+                return;
+            }
+            Op::RoadSuperelevations { after, .. } => {
+                let mut road = self.settings.road.take().unwrap_or_default();
+                road.superelevations = after.clone();
                 self.settings.road = (!road.is_empty()).then_some(road);
                 return;
             }

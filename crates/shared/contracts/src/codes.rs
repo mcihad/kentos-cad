@@ -652,6 +652,16 @@ codes! {
     SECTION_SURFACE_GONE = "section_surface_gone", Warning, false, "Kesit takımının yüzeyi projede yok ya da kurulamıyor; arazi kesiti verilmedi.";
     /// A warning: a side's slope meets the terrain nowhere on the swath (docs/adr/0903 §4).
     SECTION_OPEN = "section_open", Warning, false, "Bir yanın şevi şerit genişliği içinde araziyle buluşmuyor; şeridi genişletin.";
+    /// No superelevation schedule of the id or name.
+    UNKNOWN_SUPERELEVATION = "unknown_superelevation", Failed, false, "Bu kimlikte ya da adda dever çizelgesi yok.";
+    /// A superelevation schedule's definition, or a schedule that does not build (docs/adr/0904 §2).
+    INVALID_SUPERELEVATION = "invalid_superelevation", Failed, false, "Dever çizelgesi kurallarına uymuyor ya da kurulamıyor.";
+    /// A superelevation schedule a sample line set uses.
+    SUPERELEVATION_IN_USE = "superelevation_in_use", Failed, false, "Bu dever çizelgesini bir kesit takımı kullanıyor; önce takımdan kaldırın.";
+    /// A warning: the set's superelevation schedule does not build; its lanes keep the template's slopes.
+    SECTION_SUPERELEVATION_GONE = "section_superelevation_gone", Warning, false, "Kesit takımının dever çizelgesi kurulamıyor; şeritler tip kesitin eğimiyle verildi.";
+    /// A warning: the schedule's alignment changed since it was made or rebound.
+    SUPERELEVATION_STALE = "superelevation_stale", Warning, false, "Dever çizelgesinin aksı değişti; km'leri denetleyip aksa yeniden bağlayın.";
     /// A warning: the profile's alignment changed since it was made or rebound.
     PROFILE_STALE = "profile_stale", Warning, false, "Boykesitin aksı boykesit kurulduktan sonra değişti; PVI'ları denetleyip aksa yeniden bağlayın.";
     /// A warning: the profile's surface is not in the project or makes no surface; no black elevations.

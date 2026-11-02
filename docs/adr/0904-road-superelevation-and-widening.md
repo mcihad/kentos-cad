@@ -51,6 +51,13 @@ Y6.1 çekirdek (`kentos_road::superelevation`: çizelge, kurplardan dever, kriti
 Y6.2 komutlar (`road.superelevations.*`), kesitte şeritlerin eğimi, `.kcad`, Python, MCP; Y6.3 Dever penceresi (çizelge
 ve diyagram), enkesitte görünüş.
 
+Y6.1 (yapıldı): `kentos_road::superelevation`; 17 ortak durum kesirlerle (`road_superelevation_cases.py`). Y6.2
+(yapıldı): `road.superelevations.edit` (set, rebind, remove; tek adım “Dever”) ve `.query` (rapor, kritik km'ler ve km'leri,
+km'lerde eğim ve genişleme); kesit takımının `superelevation`'ı, kesitte şeritler eğimini ve iç yan genişlemesini alır,
+çizelge kurulamazsa `section_superelevation_gone` ile tip kesitin eğimi; takımın kullandığı çizelge ve çizelgesi olan aks
+silinmez; 33 + 20 ortak durum (`road_superelevation_command_cases.py`), kesit dosyalarına üç durum; `.kcad` şema 160'ın
+`superelevations`'ı, bozuk örnek; Python, MCP.
+
 ## Sonra
 
 İç ya da dış kenar etrafında dönme, banketin kırılma kuralı (*rollover*), standart profilinden oran ve geçiş boyu önerisi,

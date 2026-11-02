@@ -1675,6 +1675,7 @@ const ENTRIES: &[Entry] = &[
                 "unknown_alignment",
                 "unknown_road_profile",
                 "unknown_road_template",
+                "unknown_superelevation",
                 "unknown_terrain",
                 "invalid_section_set",
             ],
@@ -1686,7 +1687,7 @@ const ENTRIES: &[Entry] = &[
     Entry {
         id: "road.sections.query",
         refusals: &[&["not_a_road_project", "unknown_section_set", "invalid_section_set", "invalid_places"]],
-        warnings: &["section_set_stale", "section_surface_gone", "section_open"],
+        warnings: &["section_set_stale", "section_surface_gone", "section_open", "section_superelevation_gone"],
         targets: none,
     },
     Entry {
@@ -1704,6 +1705,34 @@ const ENTRIES: &[Entry] = &[
             REVISION,
         ],
         warnings: &["layer_hidden", "section_set_stale", "section_open"],
+        targets: none,
+    },
+    // KentOS Yol's superelevation (plan/road.md Y6, docs/adr/0904).
+    Entry {
+        id: "road.superelevations.edit",
+        refusals: &[
+            &[
+                "not_a_road_project",
+                "unknown_superelevation",
+                "unknown_alignment",
+                "invalid_superelevation",
+                "superelevation_in_use",
+            ],
+            REVISION,
+        ],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "road.superelevations.query",
+        refusals: &[&[
+            "not_a_road_project",
+            "unknown_superelevation",
+            "invalid_places",
+            "station_outside",
+            "invalid_superelevation",
+        ]],
+        warnings: &["superelevation_stale"],
         targets: none,
     },
     // Alt ağlar (docs/adr/0557 §2).

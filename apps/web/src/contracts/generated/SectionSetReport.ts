@@ -4,7 +4,7 @@
  * A sample line set as it is now: its definition's names and its stations (none when they no longer come out: its line
  * erased or no longer crossing, its alignment shortened; the set's own query says why).
  */
-export type SectionSetReport = { id: string, name: string, revision: number, alignment: string, profile?: string, template?: string, surface?: string, 
+export type SectionSetReport = { id: string, name: string, revision: number, alignment: string, profile?: string, template?: string, surface?: string, superelevation?: string, 
 /**
  * The alignment changed since it was made or rebound.
  */

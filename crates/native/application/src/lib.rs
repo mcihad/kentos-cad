@@ -276,6 +276,9 @@ pub mod road_sections;
 pub mod road_sections_draw;
 pub mod road_sections_edit;
 pub mod road_sections_query;
+pub mod road_superelevations;
+pub mod road_superelevations_edit;
+pub mod road_superelevations_query;
 pub mod road_templates_edit;
 pub mod road_terrains_contours;
 pub mod road_terrains_create;
@@ -1172,6 +1175,14 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::ROAD_SECTIONS_DRAW,
         kentos_commands::ROAD_SECTIONS_DRAW_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_SUPERELEVATIONS_EDIT,
+        kentos_commands::ROAD_SUPERELEVATIONS_EDIT_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_SUPERELEVATIONS_QUERY,
+        kentos_commands::ROAD_SUPERELEVATIONS_QUERY_VERSION,
     ),
     // Alt ağlar ([`subnetworks`], [`subnetworks_update`], docs/adr/0557 §2).
     (

@@ -579,6 +579,17 @@ def edit_cases():
         failed("alignment_in_use", "“Bağlantı” aksına şu kesit takımları bağlı: Bağlantı kesitleri. Önce onları silin.",
                "alignment"),
         {**UNCHANGED, "road": {"alignments": copy.deepcopy(start), "sections": [kset]}})]})
+    # A superelevation schedule lies on the alignment (docs/adr/0904 §5): it goes first.
+    dsup = {"id": "d-1", "name": "Bağlantı deveri", "alignment": "g-3", "alignmentRevision": 1, "revision": 1,
+            "normalLeft": -2.5, "normalRight": -2.5,
+            "method": {"method": "stations", "rows": [{"station": 10.0, "left": -2.5, "right": -2.5}]}}
+    with_super = setup(start)
+    with_super["settings"]["road"]["superelevations"] = [dsup]
+    cases.append({"name": "Dever çizelgesi olan aks silinmez", "setup": with_super, "steps": [step(
+        "execute", {"alignment": "g-3", "operation": "remove"},
+        failed("alignment_in_use", "“Bağlantı” aksına şu dever çizelgeleri bağlı: Bağlantı deveri. Önce onları silin.",
+               "alignment"),
+        {**UNCHANGED, "road": {"alignments": copy.deepcopy(start), "superelevations": [dsup]}})]})
     no("Paralel aks ters çevrilmez", {"alignment": "g-2", "operation": "reverse"},
        failed("invalid_alignment", "Paralel aks ters çevrilmez: kaynağını izler; kaynağı ters çevirin.", "alignment"))
     tight = {**MAIN, "pis": [MAIN_PIS[0], {"id": "p1", "x": X0 + 600, "y": Y0, "radius": 7.0}, MAIN_PIS[2]]}

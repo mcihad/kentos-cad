@@ -36587,6 +36587,13 @@
               }
             ]
           },
+          "superelevation": {
+            "description": "The superelevation schedule on the same alignment the lanes take their cross slopes from (docs/adr/0904 §3);\nits id or name, empty clears.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "surface": {
             "type": [
               "string",
@@ -36677,6 +36684,7 @@
           "unknown_alignment",
           "unknown_road_profile",
           "unknown_road_template",
+          "unknown_superelevation",
           "unknown_terrain",
           "invalid_section_set",
           "invalid_revision",
@@ -36805,7 +36813,8 @@
         "warnings": [
           "section_set_stale",
           "section_surface_gone",
-          "section_open"
+          "section_open",
+          "section_superelevation_gone"
         ]
       },
       "examples": [
@@ -37040,6 +37049,303 @@
             "columns": 4,
             "layerId": "enkesit",
             "set": "Enkesitler"
+          }
+        }
+      ]
+    },
+    {
+      "id": "road.superelevations.edit",
+      "version": 1,
+      "title": "Deveri düzenle",
+      "summary": "Yol projesinin dever çizelgesini (superelevation: kimliği ya da adı; yoksa yeni) yazar, aksına yeniden bağlar ya da kaldırır. Enine eğim her yanda eksenden dışa yüzdedir, dışa düşen eksi; normalLeft ve normalRight normal eğimdir. method curves: her kurp için oran rate (yüzde), geçiş boyu runoff (m, düz taçtan tam devere), teğet payı onTangent (0–1, geçişin kurptan önce kalan payı) ve iç yanda genişleme widening (m); orta eksen etrafında döndürülür: dış yan normalden (NC) düz taca (LC), iç yanla aynı eğime (RC), sonra ikisi birlikte tam devere (FS). method stations: km, sol ve sağ eğim satırları; aralarında doğrusal. Değerleri KGM'nin standardından ya da projeden kullanıcı yazar; öntanımlı sayı yoktur. Kurbu olmayan PI, normal eğimden küçük oran, kurba sığmayan tam dever, binen geçişler ve aksın dışına taşan geçiş reddedilir; sessiz çözüm yoktur. Yeni çizelgenin kimliği verilen ya da ilk boş d-n. Tek geri alma adımı “Dever”. Retler: not_a_road_project, unknown_superelevation, unknown_alignment, invalid_superelevation, superelevation_in_use, invalid_revision, revision_conflict.",
+      "aliases": [
+        "dever"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.superelevations.edit` v1: the schedule by its id or name (absent: a new one). A new one needs `name`,\n`alignment`, `normalLeft`, `normalRight` and `method`; it holds its alignment's present revision. Slopes are percent,\noutward from the axis, falling outward negative.\n\nRefusals, in this order: `not_a_road_project`, `unknown_superelevation` (remove or rebind one not in the project),\n`unknown_alignment`, `invalid_superelevation` (a new one without its fields, set with nothing to set, the definition\nby `road_problem`, a schedule that does not build: a PI without a curve, a rate, runoff, share or width out of range,\na rate below the normal slope, a full rate that does not fit on its curve, two curves' transitions overlapping, a\ntransition off the alignment, a PI twice, rows not in increasing station or off the alignment),\n`superelevation_in_use` (remove while a sample line set uses it), `invalid_revision`, `revision_conflict`.",
+        "properties": {
+          "alignment": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "method": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SuperelevationMethod"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "normalLeft": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "percent"
+          },
+          "normalRight": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "percent"
+          },
+          "operation": {
+            "$ref": "#/$defs/RoadEditOperation"
+          },
+          "superelevation": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "operation"
+        ],
+        "title": "SuperelevationsEdit",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.superelevations.edit` v1.",
+        "properties": {
+          "revision": {
+            "type": "string"
+          },
+          "superelevation": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SuperelevationReport"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The schedule written; absent when removed."
+          },
+          "superelevations": {
+            "items": {
+              "$ref": "#/$defs/SuperelevationReport"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "superelevations",
+          "revision"
+        ],
+        "title": "SuperelevationsWritten",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.superelevations.edit` v1.",
+        "properties": {
+          "revision": {
+            "type": "string"
+          },
+          "superelevation": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SuperelevationReport"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The schedule written; absent when removed."
+          },
+          "superelevations": {
+            "items": {
+              "$ref": "#/$defs/SuperelevationReport"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "superelevations",
+          "revision"
+        ],
+        "title": "SuperelevationsWritten",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_superelevation",
+          "unknown_alignment",
+          "invalid_superelevation",
+          "superelevation_in_use",
+          "invalid_revision",
+          "revision_conflict"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Ana aksın p1 kurbunda %6 dever, 60 m geçiş klotoidde",
+          "input": {
+            "alignment": "Ana aks",
+            "method": {
+              "curves": [
+                {
+                  "onTangent": 0.0,
+                  "pi": "p1",
+                  "rate": 6.0,
+                  "runoff": 60.0
+                }
+              ],
+              "method": "curves"
+            },
+            "name": "Ana aks deveri",
+            "normalLeft": -2.5,
+            "normalRight": -2.5,
+            "operation": "set"
+          }
+        }
+      ]
+    },
+    {
+      "id": "road.superelevations.query",
+      "version": 1,
+      "title": "Deveri sorgula",
+      "summary": "Yol projesinin dever çizelgelerini bugün kuruldukları gibi verir; hiçbir şey yazmaz. superelevation verilmezse her çizelgenin raporu (her yanın kırılma noktaları ve genişlemesi, kurpların kritik km'leri NC, LC, RC, FS; kurulamıyorsa nedeni); verilince yalnız onunki ve stations ile o km'lerde sol ve sağ eğim ve genişleme. Uyarı: superelevation_stale (aks çizelgeden sonra değişti). Retler: not_a_road_project, unknown_superelevation, invalid_places, station_outside, invalid_superelevation.",
+      "aliases": [
+        "deversor"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.superelevations.query` v1: every schedule's report, or one's (`superelevation`: its id or name) with\nits cross slopes and widening at `stations` (the alignment's own stations).\n\nRefusals: `not_a_road_project`, `unknown_superelevation`, `invalid_places` (stations without a schedule),\n`station_outside`, `invalid_superelevation` (the schedule no longer builds). Warnings: `superelevation_stale`.",
+        "properties": {
+          "stations": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "type": "array",
+            "x-unit": "m"
+          },
+          "superelevation": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "title": "SuperelevationsQuery",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.superelevations.query` v1.",
+        "properties": {
+          "at": {
+            "items": {
+              "$ref": "#/$defs/SuperAt"
+            },
+            "type": "array"
+          },
+          "superelevations": {
+            "items": {
+              "$ref": "#/$defs/SuperelevationReport"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "superelevations",
+          "at"
+        ],
+        "title": "SuperelevationsQueried",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.superelevations.query` v1.",
+        "properties": {
+          "at": {
+            "items": {
+              "$ref": "#/$defs/SuperAt"
+            },
+            "type": "array"
+          },
+          "superelevations": {
+            "items": {
+              "$ref": "#/$defs/SuperelevationReport"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "superelevations",
+          "at"
+        ],
+        "title": "SuperelevationsQueried",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_superelevation",
+          "invalid_places",
+          "station_outside",
+          "invalid_superelevation"
+        ],
+        "warnings": [
+          "superelevation_stale"
+        ]
+      },
+      "examples": [
+        {
+          "title": "İki km'de eğimler",
+          "input": {
+            "stations": [
+              300.0,
+              400.0
+            ],
+            "superelevation": "Ana aks deveri"
           }
         }
       ]
@@ -71226,6 +71532,36 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Bir yanın şevi şerit genişliği içinde araziyle buluşmuyor; şeridi genişletin."
+    },
+    {
+      "code": "unknown_superelevation",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu kimlikte ya da adda dever çizelgesi yok."
+    },
+    {
+      "code": "invalid_superelevation",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Dever çizelgesi kurallarına uymuyor ya da kurulamıyor."
+    },
+    {
+      "code": "superelevation_in_use",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu dever çizelgesini bir kesit takımı kullanıyor; önce takımdan kaldırın."
+    },
+    {
+      "code": "section_superelevation_gone",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Kesit takımının dever çizelgesi kurulamıyor; şeritler tip kesitin eğimiyle verildi."
+    },
+    {
+      "code": "superelevation_stale",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Dever çizelgesinin aksı değişti; km'leri denetleyip aksa yeniden bağlayın."
     },
     {
       "code": "profile_stale",
@@ -132736,6 +133072,13 @@
           },
           "type": "array"
         },
+        "superelevations": {
+          "description": "The superelevation schedules (docs/adr/0904), each on an alignment, in the order the project tree shows them.",
+          "items": {
+            "$ref": "#/$defs/SuperelevationDef"
+          },
+          "type": "array"
+        },
         "surfaces": {
           "description": "The terrain surfaces, in the order the project tree shows them.",
           "items": {
@@ -133740,6 +134083,13 @@
         "stations": {
           "$ref": "#/$defs/SectionStations"
         },
+        "superelevation": {
+          "description": "The superelevation schedule on the same alignment its lanes take their cross slopes from (docs/adr/0904 §3).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "surface": {
           "type": [
             "string",
@@ -133798,6 +134148,12 @@
           },
           "type": "array",
           "x-unit": "m"
+        },
+        "superelevation": {
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "surface": {
           "type": [
@@ -140962,6 +141318,365 @@
       },
       "required": [
         "field"
+      ],
+      "type": "object"
+    },
+    "SuperAt": {
+      "description": "The cross slopes (percent) and widening (metres) of both sides at a station.",
+      "properties": {
+        "km": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "kmText": {
+          "type": "string"
+        },
+        "left": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "percent"
+        },
+        "leftWidening": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "right": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "percent"
+        },
+        "rightWidening": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "station": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "station",
+        "km",
+        "kmText",
+        "left",
+        "right",
+        "leftWidening",
+        "rightWidening"
+      ],
+      "type": "object"
+    },
+    "SuperCritical": {
+      "description": "A critical station of a curve's transition: `normalCrown`, `levelCrown`, `reverseCrown` or `full`, on the way in or\nout (`exit`).",
+      "properties": {
+        "exit": {
+          "type": "boolean"
+        },
+        "km": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "kmText": {
+          "type": "string"
+        },
+        "mark": {
+          "type": "string"
+        },
+        "pi": {
+          "type": "string"
+        },
+        "station": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "pi",
+        "mark",
+        "station",
+        "km",
+        "kmText",
+        "exit"
+      ],
+      "type": "object"
+    },
+    "SuperCurveDef": {
+      "additionalProperties": false,
+      "description": "A curve's superelevation (docs/adr/0904 §2): its PI, the full rate (percent), the runoff length (level crown to full\nrate), the share of the runoff before the curve (0–1) and the extra width on its inside.",
+      "properties": {
+        "onTangent": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "pi": {
+          "type": "string"
+        },
+        "rate": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "percent"
+        },
+        "runoff": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "widening": {
+          "description": "Absent: none.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "pi",
+        "rate",
+        "runoff",
+        "onTangent"
+      ],
+      "type": "object"
+    },
+    "SuperRowDef": {
+      "additionalProperties": false,
+      "description": "A row of a superelevation schedule written by station: the alignment's own station and each side's slope.",
+      "properties": {
+        "left": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "percent"
+        },
+        "right": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "percent"
+        },
+        "station": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "station",
+        "left",
+        "right"
+      ],
+      "type": "object"
+    },
+    "SuperelevationDef": {
+      "additionalProperties": false,
+      "description": "A superelevation schedule (docs/adr/0904): on an alignment of its own PIs (its revision held), the normal cross\nslopes of the left and the right side (percent, outward; falling outward negative) and how it is had.",
+      "properties": {
+        "alignment": {
+          "type": "string"
+        },
+        "alignmentRevision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "id": {
+          "type": "string"
+        },
+        "method": {
+          "$ref": "#/$defs/SuperelevationMethod"
+        },
+        "name": {
+          "type": "string"
+        },
+        "normalLeft": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "percent"
+        },
+        "normalRight": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "percent"
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "alignment",
+        "normalLeft",
+        "normalRight",
+        "method"
+      ],
+      "type": "object"
+    },
+    "SuperelevationMethod": {
+      "description": "How a superelevation schedule is had (docs/adr/0904 §2).",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "description": "From the curves, rotating about the centreline.",
+          "properties": {
+            "curves": {
+              "items": {
+                "$ref": "#/$defs/SuperCurveDef"
+              },
+              "type": "array"
+            },
+            "method": {
+              "const": "curves",
+              "type": "string"
+            }
+          },
+          "required": [
+            "method",
+            "curves"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "The rows written.",
+          "properties": {
+            "method": {
+              "const": "stations",
+              "type": "string"
+            },
+            "rows": {
+              "items": {
+                "$ref": "#/$defs/SuperRowDef"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "method",
+            "rows"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "SuperelevationReport": {
+      "description": "A superelevation schedule as it is now: each side's break points (station, slope percent) and widening (station,\nmetres), the critical stations; why it no longer builds when it does not.",
+      "properties": {
+        "alignment": {
+          "type": "string"
+        },
+        "critical": {
+          "items": {
+            "$ref": "#/$defs/SuperCritical"
+          },
+          "type": "array"
+        },
+        "id": {
+          "type": "string"
+        },
+        "left": {
+          "description": "(station, slope percent) pairs.",
+          "items": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "type": "array",
+          "x-unit": "m/%"
+        },
+        "leftWidening": {
+          "description": "(station, width) pairs, metres.",
+          "items": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "type": "array",
+          "x-unit": "m"
+        },
+        "name": {
+          "type": "string"
+        },
+        "normalLeft": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "percent"
+        },
+        "normalRight": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "percent"
+        },
+        "problem": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "right": {
+          "items": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "type": "array",
+          "x-unit": "m/%"
+        },
+        "rightWidening": {
+          "items": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "type": "array",
+          "x-unit": "m"
+        },
+        "stale": {
+          "description": "The alignment changed since it was made or rebound.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "revision",
+        "alignment",
+        "stale",
+        "normalLeft",
+        "normalRight",
+        "left",
+        "right",
+        "leftWidening",
+        "rightWidening",
+        "critical"
       ],
       "type": "object"
     },

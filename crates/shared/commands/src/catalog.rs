@@ -7096,6 +7096,59 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::ROAD_SUPERELEVATIONS_EDIT.into(),
+            version: crate::ROAD_SUPERELEVATIONS_EDIT_VERSION,
+            title: "Deveri düzenle".into(),
+            summary: "Yol projesinin dever çizelgesini (superelevation: kimliği ya da adı; yoksa yeni) yazar, aksına yeniden bağlar ya da kaldırır. Enine eğim her yanda eksenden dışa yüzdedir, dışa düşen eksi; normalLeft ve normalRight normal eğimdir. method curves: her kurp için oran rate (yüzde), geçiş boyu runoff (m, düz taçtan tam devere), teğet payı onTangent (0–1, geçişin kurptan önce kalan payı) ve iç yanda genişleme widening (m); orta eksen etrafında döndürülür: dış yan normalden (NC) düz taca (LC), iç yanla aynı eğime (RC), sonra ikisi birlikte tam devere (FS). method stations: km, sol ve sağ eğim satırları; aralarında doğrusal. \
+                      Değerleri KGM'nin standardından ya da projeden kullanıcı yazar; öntanımlı sayı yoktur. Kurbu olmayan PI, normal eğimden küçük oran, kurba sığmayan tam dever, binen geçişler ve aksın dışına taşan geçiş reddedilir; sessiz çözüm yoktur. Yeni çizelgenin kimliği verilen ya da ilk boş d-n. \
+                      Tek geri alma adımı “Dever”. Retler: not_a_road_project, unknown_superelevation, unknown_alignment, invalid_superelevation, superelevation_in_use, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["dever".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::SuperelevationsEdit>(),
+            output: schema::<crate::SuperelevationsWritten>(),
+            plan: Some(schema::<crate::SuperelevationsWritten>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana aksın p1 kurbunda %6 dever, 60 m geçiş klotoidde".into(),
+                input: json!({ "operation": "set", "name": "Ana aks deveri", "alignment": "Ana aks", "normalLeft": -2.5,
+                    "normalRight": -2.5, "method": { "method": "curves", "curves": [
+                        { "pi": "p1", "rate": 6.0, "runoff": 60.0, "onTangent": 0.0 } ] } }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_SUPERELEVATIONS_QUERY.into(),
+            version: crate::ROAD_SUPERELEVATIONS_QUERY_VERSION,
+            title: "Deveri sorgula".into(),
+            summary: "Yol projesinin dever çizelgelerini bugün kuruldukları gibi verir; hiçbir şey yazmaz. superelevation verilmezse her çizelgenin raporu (her yanın kırılma noktaları ve genişlemesi, kurpların kritik km'leri NC, LC, RC, FS; kurulamıyorsa nedeni); verilince yalnız onunki ve stations ile o km'lerde sol ve sağ eğim ve genişleme. \
+                      Uyarı: superelevation_stale (aks çizelgeden sonra değişti). Retler: not_a_road_project, unknown_superelevation, invalid_places, station_outside, invalid_superelevation."
+                .into(),
+            aliases: vec!["deversor".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::SuperelevationsQuery>(),
+            output: schema::<crate::SuperelevationsQueried>(),
+            plan: Some(schema::<crate::SuperelevationsQueried>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "İki km'de eğimler".into(),
+                input: json!({ "superelevation": "Ana aks deveri", "stations": [300.0, 400.0] }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::ROAD_ALIGNMENTS_QUERY.into(),
             version: crate::ROAD_ALIGNMENTS_QUERY_VERSION,
             title: "Aksı sorgula".into(),
@@ -12697,6 +12750,12 @@ mod tests {
                     crate::ROAD_SECTIONS_DRAW => {
                         serde_json::from_value::<crate::SectionsDraw>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_SUPERELEVATIONS_EDIT => {
+                        serde_json::from_value::<crate::SuperelevationsEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_SUPERELEVATIONS_QUERY => {
+                        serde_json::from_value::<crate::SuperelevationsQuery>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_SUBNETWORKS_FIND => {
                         serde_json::from_value::<crate::SubnetworksFind>(e.input.clone())
                             .map(|_| ())
@@ -13390,6 +13449,14 @@ mod tests {
                         }
                         crate::ROAD_SECTIONS_DRAW => {
                             serde_json::from_value::<crate::SectionsDrawn>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_SUPERELEVATIONS_EDIT => {
+                            serde_json::from_value::<crate::SuperelevationsWritten>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_SUPERELEVATIONS_QUERY => {
+                            serde_json::from_value::<crate::SuperelevationsQueried>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_ADDRESSES_DEFINE => {

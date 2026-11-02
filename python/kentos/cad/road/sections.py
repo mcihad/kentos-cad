@@ -251,6 +251,7 @@ class _RoadSectionsEdit(LocalCommand[SectionsEdit, SectionsWritten, SectionsWrit
         right: float | None | Unset = UNSET,
         set: str | None | Unset = UNSET,
         stations: SectionStations | None | Unset = UNSET,
+        superelevation: str | None | Unset = UNSET,
         surface: str | None | Unset = UNSET,
         template: str | None | Unset = UNSET,
         request_id: str | None = None,
@@ -282,6 +283,8 @@ class _RoadSectionsEdit(LocalCommand[SectionsEdit, SectionsWritten, SectionsWrit
             right: Unit: m.
             set:
             stations:
+            superelevation: The superelevation schedule on the same alignment the lanes take their cross slopes from (docs/adr/0904 §3);
+                its id or name, empty clears.
             surface:
             template:
             request_id: Names this write: sent again with the same call it is answered as
@@ -306,6 +309,7 @@ class _RoadSectionsEdit(LocalCommand[SectionsEdit, SectionsWritten, SectionsWrit
             right=right,
             set=set,
             stations=stations,
+            superelevation=superelevation,
             surface=surface,
             template=template,
         ), request_id=request_id, expected=expected)
@@ -324,6 +328,7 @@ class _RoadSectionsEdit(LocalCommand[SectionsEdit, SectionsWritten, SectionsWrit
         right: float | None | Unset = UNSET,
         set: str | None | Unset = UNSET,
         stations: SectionStations | None | Unset = UNSET,
+        superelevation: str | None | Unset = UNSET,
         surface: str | None | Unset = UNSET,
         template: str | None | Unset = UNSET,
     ) -> SectionsWritten:
@@ -340,6 +345,7 @@ class _RoadSectionsEdit(LocalCommand[SectionsEdit, SectionsWritten, SectionsWrit
             right=right,
             set=set,
             stations=stations,
+            superelevation=superelevation,
             surface=surface,
             template=template,
         ))
@@ -358,6 +364,7 @@ class _RoadSectionsEdit(LocalCommand[SectionsEdit, SectionsWritten, SectionsWrit
         right: float | None | Unset = UNSET,
         set: str | None | Unset = UNSET,
         stations: SectionStations | None | Unset = UNSET,
+        superelevation: str | None | Unset = UNSET,
         surface: str | None | Unset = UNSET,
         template: str | None | Unset = UNSET,
     ) -> list[CommandNote]:
@@ -374,6 +381,7 @@ class _RoadSectionsEdit(LocalCommand[SectionsEdit, SectionsWritten, SectionsWrit
             right=right,
             set=set,
             stations=stations,
+            superelevation=superelevation,
             surface=surface,
             template=template,
         ))
@@ -392,6 +400,7 @@ class _RoadSectionsEdit(LocalCommand[SectionsEdit, SectionsWritten, SectionsWrit
         right: float | None | Unset = UNSET,
         set: str | None | Unset = UNSET,
         stations: SectionStations | None | Unset = UNSET,
+        superelevation: str | None | Unset = UNSET,
         surface: str | None | Unset = UNSET,
         template: str | None | Unset = UNSET,
         op: str = "execute",
@@ -413,6 +422,7 @@ class _RoadSectionsEdit(LocalCommand[SectionsEdit, SectionsWritten, SectionsWrit
             right=right,
             set=set,
             stations=stations,
+            superelevation=superelevation,
             surface=surface,
             template=template,
         ), op=op, request_id=request_id, expected=expected)

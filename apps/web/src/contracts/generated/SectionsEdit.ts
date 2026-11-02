@@ -13,4 +13,9 @@ import type { SectionStations } from "./SectionStations";
  * not on it, a line that is not a line or polyline or does not cross the alignment, no station at all),
  * `invalid_revision`, `revision_conflict`.
  */
-export type SectionsEdit = { operation: RoadEditOperation, set?: string, name?: string, alignment?: string, profile?: string, template?: string, surface?: string, left?: number, right?: number, stations?: SectionStations, expectedRevision?: string, };
+export type SectionsEdit = { operation: RoadEditOperation, set?: string, name?: string, alignment?: string, profile?: string, template?: string, surface?: string, 
+/**
+ * The superelevation schedule on the same alignment the lanes take their cross slopes from (docs/adr/0904 §3);
+ * its id or name, empty clears.
+ */
+superelevation?: string, left?: number, right?: number, stations?: SectionStations, expectedRevision?: string, };

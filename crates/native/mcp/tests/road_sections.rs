@@ -70,3 +70,27 @@ fn a_set_is_made_asked_and_keeps_what_it_uses() {
     assert_eq!(kept["isError"], true, "{kept}");
     assert!(kept.to_string().contains("road_template_in_use"), "{kept}");
 }
+
+/// The sample drawing's superelevation (docs/adr/0904): asked at a station on the curve, made anew, kept while a set
+/// uses it.
+#[test]
+fn a_superelevation_is_asked_made_and_kept() {
+    let mut server = Server::new();
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/kcad/v2/road-work.kcad");
+    let opened = call(&mut server, "drawing.open", json!({"path":path}));
+    let drawing = opened["structuredContent"]["drawing"].clone();
+    let asked = call(&mut server, "road.superelevations.query", json!({"drawing":drawing,"superelevation":"d-1","stations":[0.0]}));
+    assert_eq!(asked["isError"], false, "{asked}");
+    let out = &asked["structuredContent"]["output"];
+    assert_eq!(out["at"][0]["left"], -2.5, "{out}");
+    assert!(out["superelevations"][0]["critical"].as_array().is_some_and(|c| c.len() == 8), "{out}");
+    let made = call(
+        &mut server,
+        "road.superelevations.edit",
+        json!({"drawing":drawing,"operation":"set","name":"Yeni","alignment":"g-1","normalLeft":-2.5,"normalRight":-2.5,
+            "method":{"method":"stations","rows":[{"station":10.0,"left":-2.5,"right":-2.5}]}}),
+    );
+    assert_eq!(made["structuredContent"]["output"]["superelevation"]["id"], "d-3", "{made}");
+    let kept = call(&mut server, "road.superelevations.edit", json!({"drawing":drawing,"superelevation":"d-1","operation":"remove"}));
+    assert!(kept.to_string().contains("superelevation_in_use"), "{kept}");
+}

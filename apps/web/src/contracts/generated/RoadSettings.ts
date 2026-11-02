@@ -2,6 +2,7 @@
 import type { AlignmentDef } from "./AlignmentDef";
 import type { ProfileDef } from "./ProfileDef";
 import type { SectionSetDef } from "./SectionSetDef";
+import type { SuperelevationDef } from "./SuperelevationDef";
 import type { TemplateDef } from "./TemplateDef";
 import type { TerrainSurfaceDef } from "./TerrainSurfaceDef";
 
@@ -28,4 +29,8 @@ templates?: Array<TemplateDef>,
 /**
  * The sample line sets (docs/adr/0903 §2), in the order the project tree shows them.
  */
-sections?: Array<SectionSetDef>, };
+sections?: Array<SectionSetDef>, 
+/**
+ * The superelevation schedules (docs/adr/0904), each on an alignment, in the order the project tree shows them.
+ */
+superelevations?: Array<SuperelevationDef>, };

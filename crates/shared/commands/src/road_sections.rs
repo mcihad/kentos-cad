@@ -139,6 +139,11 @@ pub struct SectionsEdit {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub surface: Option<String>,
+    /// The superelevation schedule on the same alignment the lanes take their cross slopes from (docs/adr/0904 §3);
+    /// its id or name, empty clears.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub superelevation: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
@@ -178,6 +183,9 @@ pub struct SectionSetReport {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub surface: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub superelevation: Option<String>,
     /// The alignment changed since it was made or rebound.
     pub stale: bool,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]

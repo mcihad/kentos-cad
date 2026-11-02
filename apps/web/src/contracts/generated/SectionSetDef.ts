@@ -5,4 +5,8 @@ import type { SectionStations } from "./SectionStations";
  * A sample line set (docs/adr/0903 §1–§2): on an alignment of its own PIs (its revision held), with an optional profile
  * on it, template and surface; its swath widths and how its stations are had.
  */
-export type SectionSetDef = { id: string, name: string, alignment: string, alignmentRevision?: number, revision?: number, profile?: string, template?: string, surface?: string, left: number, right: number, stations: SectionStations, };
+export type SectionSetDef = { id: string, name: string, alignment: string, alignmentRevision?: number, revision?: number, profile?: string, template?: string, surface?: string, 
+/**
+ * The superelevation schedule on the same alignment its lanes take their cross slopes from (docs/adr/0904 §3).
+ */
+superelevation?: string, left: number, right: number, stations: SectionStations, };

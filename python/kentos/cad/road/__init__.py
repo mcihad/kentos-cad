@@ -9,8 +9,9 @@ from __future__ import annotations
 from . import alignments
 from . import profiles
 from . import sections
+from . import superelevations
 from . import templates
 from . import terrains
 
 
-__all__ = ["alignments", "profiles", "sections", "templates", "terrains"]
+__all__ = ["alignments", "profiles", "sections", "superelevations", "templates", "terrains"]

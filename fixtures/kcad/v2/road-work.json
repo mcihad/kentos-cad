@@ -192,7 +192,8 @@
             "to": 1000.0,
             "every": 20.0,
             "geometry": true
-          }
+          },
+          "superelevation": "d-1"
         },
         {
           "id": "k-2",
@@ -218,6 +219,51 @@
             "method": "lines",
             "uids": [
               "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11"
+            ]
+          }
+        }
+      ],
+      "superelevations": [
+        {
+          "id": "d-1",
+          "name": "Ana aks deveri",
+          "alignment": "g-1",
+          "alignmentRevision": 3,
+          "revision": 1,
+          "normalLeft": -2.5,
+          "normalRight": -2.5,
+          "method": {
+            "method": "curves",
+            "curves": [
+              {
+                "pi": "p1",
+                "rate": 6.0,
+                "runoff": 80.0,
+                "onTangent": 0.0,
+                "widening": 0.6
+              }
+            ]
+          }
+        },
+        {
+          "id": "d-2",
+          "name": "Satırlarla",
+          "alignment": "g-1",
+          "normalLeft": -2.0,
+          "normalRight": -2.0,
+          "method": {
+            "method": "stations",
+            "rows": [
+              {
+                "station": 100.0,
+                "left": -2.0,
+                "right": -2.0
+              },
+              {
+                "station": 200.0,
+                "left": 4.0,
+                "right": -4.0
+              }
             ]
           }
         }

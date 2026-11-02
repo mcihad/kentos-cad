@@ -226,6 +226,7 @@ pub(crate) fn report(doc: &Document, def: &SectionSetDef, stations: Vec<f64>) ->
         profile: def.profile.clone(),
         template: def.template.clone(),
         surface: def.surface.clone(),
+        superelevation: def.superelevation.clone(),
         stale: stale(doc, def),
         stations,
     }
@@ -268,6 +269,32 @@ fn side_row(s: &tpl::SideSection) -> SectionSide {
         daylight: s.daylight,
         points: s.points.clone(),
     }
+}
+
+/// The template at station `s` of a schedule: every lane takes its side's cross slope there, the side's outermost lane
+/// its widening; the shoulders keep theirs (docs/adr/0904 §3–§4).
+pub fn superelevated(
+    t: &Template,
+    schedule: &kentos_road::superelevation::Schedule,
+    normal: kentos_road::superelevation::Crossfall,
+    s: f64,
+) -> Template {
+    let c = schedule.at(s, normal);
+    let (wl, wr) = schedule.widening(s);
+    let side = |side: &Side, slope: f64, wide: f64| {
+        let mut out = side.clone();
+        let last = out.components.iter().rposition(|c| matches!(c, Component::Lane { .. }));
+        for (i, comp) in out.components.iter_mut().enumerate() {
+            if let Component::Lane { width, slope: sl } = comp {
+                *sl = slope;
+                if Some(i) == last {
+                    *width += wide;
+                }
+            }
+        }
+        out
+    };
+    Template { left: side(&t.left, c.left, wl), right: side(&t.right, c.right, wr) }
 }
 
 /// A set's sections at `stations`, and the warnings they give (the surface gone, the open sides).
@@ -319,6 +346,15 @@ fn sections_with(
         .and_then(|p| doc.road_profiles().iter().find(|q| q.id == *p))
         .and_then(|p| kentos_road::profile::vertical::build(&crate::road_profiles::pvis_of(p)).ok());
     let template = template.map(core_template);
+    // The lanes' cross slopes and the inside widening from the set's superelevation schedule (docs/adr/0904 §3).
+    let schedule = match def.superelevation.as_deref().map(|id| crate::road_superelevations::schedule_of(doc, id, &def.name)) {
+        Some(Ok(s)) => Some(s),
+        Some(Err(w)) => {
+            warnings.push(w);
+            None
+        }
+        None => None,
+    };
     let mut open: Vec<String> = Vec::new();
     let mut rows = Vec::new();
     for &s in stations {
@@ -327,7 +363,10 @@ fn sections_with(
         let g = surface.as_ref().map(|surf| ground(surf, &line)).unwrap_or_default();
         let axis = vertical.as_ref().and_then(|v| v.at(s)).map(|r| r.0);
         let built_section = match (&template, axis, surface.is_some()) {
-            (Some(t), Some(z), true) => tpl::build(t, z, &g).ok(),
+            (Some(t), Some(z), true) => match &schedule {
+                Some((sch, normal)) => tpl::build(&superelevated(t, sch, *normal, s), z, &g).ok(),
+                None => tpl::build(t, z, &g).ok(),
+            },
             _ => None,
         };
         if let Some(sec) = &built_section {

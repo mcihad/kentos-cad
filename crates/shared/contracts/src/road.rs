@@ -31,6 +31,9 @@ pub const MAX_TEMPLATES: usize = 256;
 pub const MAX_TEMPLATE_COMPONENTS: usize = 32;
 /// The most sample line sets a project holds, and stations or lines a set names.
 pub const MAX_SECTION_SETS: usize = 256;
+/// The most superelevation schedules a road project holds, curves or rows one holds.
+pub const MAX_SUPERELEVATIONS: usize = 256;
+pub const MAX_SUPERELEVATION_ROWS: usize = 10_000;
 pub const MAX_SECTION_STATIONS: usize = 10_000;
 /// The widest a sample line reaches on a side, m.
 pub const MAX_SWATH: f64 = 1000.0;
@@ -62,6 +65,10 @@ pub struct RoadSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<SectionSetDef>>", optional))]
     pub sections: Vec<SectionSetDef>,
+    /// The superelevation schedules (docs/adr/0904), each on an alignment, in the order the project tree shows them.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<SuperelevationDef>>", optional))]
+    pub superelevations: Vec<SuperelevationDef>,
 }
 
 impl RoadSettings {
@@ -72,6 +79,7 @@ impl RoadSettings {
             && self.profiles.is_empty()
             && self.templates.is_empty()
             && self.sections.is_empty()
+            && self.superelevations.is_empty()
     }
 
     /// What is wrong with it, by the field's path and in words; none when it is right.
@@ -486,11 +494,91 @@ pub struct SectionSetDef {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub surface: Option<String>,
+    /// The superelevation schedule on the same alignment its lanes take their cross slopes from (docs/adr/0904 §3).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub superelevation: Option<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub left: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub right: f64,
     pub stations: SectionStations,
+}
+
+/// A curve's superelevation (docs/adr/0904 §2): its PI, the full rate (percent), the runoff length (level crown to full
+/// rate), the share of the runoff before the curve (0–1) and the extra width on its inside.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SuperCurveDef {
+    pub pi: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    pub rate: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub runoff: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub on_tangent: f64,
+    /// Absent: none.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub widening: f64,
+}
+
+/// A row of a superelevation schedule written by station: the alignment's own station and each side's slope.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SuperRowDef {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub station: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    pub left: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    pub right: f64,
+}
+
+/// How a superelevation schedule is had (docs/adr/0904 §2).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(tag = "method", rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum SuperelevationMethod {
+    /// From the curves, rotating about the centreline.
+    Curves { curves: Vec<SuperCurveDef> },
+    /// The rows written.
+    Stations { rows: Vec<SuperRowDef> },
+}
+
+/// A superelevation schedule (docs/adr/0904): on an alignment of its own PIs (its revision held), the normal cross
+/// slopes of the left and the right side (percent, outward; falling outward negative) and how it is had.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SuperelevationDef {
+    pub id: String,
+    pub name: String,
+    pub alignment: String,
+    #[serde(default, skip_serializing_if = "is_zero_u32")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub alignment_revision: u32,
+    #[serde(default, skip_serializing_if = "is_zero_u32")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub revision: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    pub normal_left: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    pub normal_right: f64,
+    pub method: SuperelevationMethod,
 }
 
 /// What is wrong with a road project's settings, by the field's path and in words.
@@ -551,6 +639,7 @@ pub fn road_problem(road: &RoadSettings) -> Option<(String, String)> {
         .or_else(|| profiles_problem(&road.profiles, &road.alignments))
         .or_else(|| templates_problem(&road.templates))
         .or_else(|| sections_problem(road))
+        .or_else(|| superelevations_problem(road))
 }
 
 fn side_problem(s: &TemplateSideDef, at: &str) -> Option<(String, String)> {
@@ -658,6 +747,15 @@ fn sections_problem(road: &RoadSettings) -> Option<(String, String)> {
         if s.template.as_ref().is_some_and(|t| road.templates.iter().all(|q| q.id != *t)) {
             return fail(at("template"), "kesit takımının tip kesiti projede yok");
         }
+        if let Some(e) = &s.superelevation {
+            match road.superelevations.iter().find(|q| q.id == *e) {
+                None => return fail(at("superelevation"), "kesit takımının dever çizelgesi projede yok"),
+                Some(q) if q.alignment != s.alignment => {
+                    return fail(at("superelevation"), "dever çizelgesi kesit takımının aksında değil");
+                }
+                _ => {}
+            }
+        }
         if s.surface.as_deref().is_some_and(|v| !word_ok(v)) {
             return fail(at("surface"), "yüzey bir yüzeyin kimliği olmalı");
         }
@@ -689,6 +787,68 @@ fn sections_problem(road: &RoadSettings) -> Option<(String, String)> {
                 }
                 if let Some(words) = list_problem(uids) {
                     return fail(at("stations.uids"), &words);
+                }
+            }
+        }
+    }
+    None
+}
+
+/// What is wrong with the superelevation schedules: each on an alignment of its own PIs, its normal slopes and its
+/// values finite. Their geometry is judged where it is built.
+fn superelevations_problem(road: &RoadSettings) -> Option<(String, String)> {
+    let fail = |path: String, words: &str| Some((path, words.to_string()));
+    let list = &road.superelevations;
+    if list.len() > MAX_SUPERELEVATIONS {
+        return fail("superelevations".into(), &format!("en çok {MAX_SUPERELEVATIONS} dever çizelgesi olur"));
+    }
+    let mut ids = std::collections::BTreeSet::new();
+    let mut names = std::collections::BTreeSet::new();
+    for (i, d) in list.iter().enumerate() {
+        let at = |field: &str| format!("superelevations[{i}].{field}");
+        if !word_ok(&d.id) {
+            return fail(at("id"), "dever çizelgesinin kimliği boş olmayan, en çok 64 karakterlik bir sözcük olmalı");
+        }
+        if !ids.insert(d.id.as_str()) {
+            return fail(at("id"), "bu kimlikte başka bir dever çizelgesi var");
+        }
+        let name = d.name.trim();
+        if name.is_empty() || name != d.name || d.name.chars().count() > 120 {
+            return fail(at("name"), "dever çizelgesinin adı boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 120 karakter");
+        }
+        if !names.insert(name.to_lowercase()) {
+            return fail(at("name"), "bu adda başka bir dever çizelgesi var");
+        }
+        match road.alignments.iter().find(|a| a.id == d.alignment) {
+            None => return fail(at("alignment"), "dever çizelgesinin aksı projede yok"),
+            Some(a) if a.offset_of.is_some() => {
+                return fail(at("alignment"), "dever çizelgesi yalnız PI'larıyla kurulan aksa bağlanır");
+            }
+            _ => {}
+        }
+        for (field, v) in [("normalLeft", d.normal_left), ("normalRight", d.normal_right)] {
+            if !(v.is_finite() && v.abs() <= 100.0) {
+                return fail(at(field), "normal enine eğim en çok %100 olur");
+            }
+        }
+        match &d.method {
+            SuperelevationMethod::Curves { curves } => {
+                if curves.is_empty() || curves.len() > MAX_SUPERELEVATION_ROWS {
+                    return fail(at("method.curves"), &format!("1 ile {MAX_SUPERELEVATION_ROWS} arası kurp olur"));
+                }
+                for (j, c) in curves.iter().enumerate() {
+                    let ok = [c.rate, c.runoff, c.on_tangent, c.widening].iter().all(|v| v.is_finite());
+                    if !word_ok(&c.pi) || !ok {
+                        return fail(at(&format!("method.curves[{j}]")), "kurbun PI'si bir sözcük, değerleri sonlu sayılar olmalı");
+                    }
+                }
+            }
+            SuperelevationMethod::Stations { rows } => {
+                if rows.is_empty() || rows.len() > MAX_SUPERELEVATION_ROWS {
+                    return fail(at("method.rows"), &format!("1 ile {MAX_SUPERELEVATION_ROWS} arası satır olur"));
+                }
+                if !rows.iter().all(|r| r.station.is_finite() && r.left.is_finite() && r.right.is_finite()) {
+                    return fail(at("method.rows"), "satırların km'si ve eğimleri sonlu sayılar olmalı");
                 }
             }
         }

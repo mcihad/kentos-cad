@@ -340,6 +340,8 @@ COMMANDS: dict[str, Any] = {
     "road.sections.draw": road.sections.draw,
     "road.sections.edit": road.sections.edit,
     "road.sections.query": road.sections.query,
+    "road.superelevations.edit": road.superelevations.edit,
+    "road.superelevations.query": road.superelevations.query,
     "road.templates.edit": road.templates.edit,
     "road.terrains.contours": road.terrains.contours,
     "road.terrains.create": road.terrains.create,

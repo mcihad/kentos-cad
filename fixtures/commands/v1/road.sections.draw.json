@@ -292,6 +292,63 @@
               ]
             }
           }
+        ],
+        "superelevations": [
+          {
+            "id": "d-1",
+            "name": "Ana aks deveri",
+            "alignment": "g-1",
+            "alignmentRevision": 1,
+            "revision": 1,
+            "normalLeft": -2.5,
+            "normalRight": -2.5,
+            "method": {
+              "method": "curves",
+              "curves": [
+                {
+                  "pi": "p1",
+                  "rate": 6.0,
+                  "runoff": 40.0,
+                  "onTangent": 0.0,
+                  "widening": 0.5
+                }
+              ]
+            }
+          },
+          {
+            "id": "d-2",
+            "name": "Yan aks deveri",
+            "alignment": "g-2",
+            "alignmentRevision": 2,
+            "revision": 2,
+            "normalLeft": -2.0,
+            "normalRight": -2.0,
+            "method": {
+              "method": "stations",
+              "rows": [
+                {
+                  "station": 100.0,
+                  "left": -2.0,
+                  "right": -2.0
+                },
+                {
+                  "station": 200.0,
+                  "left": 3.0,
+                  "right": -3.0
+                },
+                {
+                  "station": 400.0,
+                  "left": 3.0,
+                  "right": -3.0
+                },
+                {
+                  "station": 500.0,
+                  "left": -2.0,
+                  "right": -2.0
+                }
+              ]
+            }
+          }
         ]
       }
     },
@@ -2359,6 +2416,63 @@
                     ]
                   }
                 }
+              ],
+              "superelevations": [
+                {
+                  "id": "d-1",
+                  "name": "Ana aks deveri",
+                  "alignment": "g-1",
+                  "alignmentRevision": 1,
+                  "revision": 1,
+                  "normalLeft": -2.5,
+                  "normalRight": -2.5,
+                  "method": {
+                    "method": "curves",
+                    "curves": [
+                      {
+                        "pi": "p1",
+                        "rate": 6.0,
+                        "runoff": 40.0,
+                        "onTangent": 0.0,
+                        "widening": 0.5
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "d-2",
+                  "name": "Yan aks deveri",
+                  "alignment": "g-2",
+                  "alignmentRevision": 2,
+                  "revision": 2,
+                  "normalLeft": -2.0,
+                  "normalRight": -2.0,
+                  "method": {
+                    "method": "stations",
+                    "rows": [
+                      {
+                        "station": 100.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      },
+                      {
+                        "station": 200.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 400.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 500.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      }
+                    ]
+                  }
+                }
               ]
             },
             "ids": [
@@ -3277,6 +3391,63 @@
                     ]
                   }
                 }
+              ],
+              "superelevations": [
+                {
+                  "id": "d-1",
+                  "name": "Ana aks deveri",
+                  "alignment": "g-1",
+                  "alignmentRevision": 1,
+                  "revision": 1,
+                  "normalLeft": -2.5,
+                  "normalRight": -2.5,
+                  "method": {
+                    "method": "curves",
+                    "curves": [
+                      {
+                        "pi": "p1",
+                        "rate": 6.0,
+                        "runoff": 40.0,
+                        "onTangent": 0.0,
+                        "widening": 0.5
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "d-2",
+                  "name": "Yan aks deveri",
+                  "alignment": "g-2",
+                  "alignmentRevision": 2,
+                  "revision": 2,
+                  "normalLeft": -2.0,
+                  "normalRight": -2.0,
+                  "method": {
+                    "method": "stations",
+                    "rows": [
+                      {
+                        "station": 100.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      },
+                      {
+                        "station": 200.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 400.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 500.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      }
+                    ]
+                  }
+                }
               ]
             },
             "ids": [
@@ -4084,6 +4255,63 @@
                     ]
                   }
                 }
+              ],
+              "superelevations": [
+                {
+                  "id": "d-1",
+                  "name": "Ana aks deveri",
+                  "alignment": "g-1",
+                  "alignmentRevision": 1,
+                  "revision": 1,
+                  "normalLeft": -2.5,
+                  "normalRight": -2.5,
+                  "method": {
+                    "method": "curves",
+                    "curves": [
+                      {
+                        "pi": "p1",
+                        "rate": 6.0,
+                        "runoff": 40.0,
+                        "onTangent": 0.0,
+                        "widening": 0.5
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "d-2",
+                  "name": "Yan aks deveri",
+                  "alignment": "g-2",
+                  "alignmentRevision": 2,
+                  "revision": 2,
+                  "normalLeft": -2.0,
+                  "normalRight": -2.0,
+                  "method": {
+                    "method": "stations",
+                    "rows": [
+                      {
+                        "station": 100.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      },
+                      {
+                        "station": 200.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 400.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 500.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      }
+                    ]
+                  }
+                }
               ]
             },
             "ids": [
@@ -4754,6 +4982,63 @@
                       50.0,
                       200.0,
                       400.0
+                    ]
+                  }
+                }
+              ],
+              "superelevations": [
+                {
+                  "id": "d-1",
+                  "name": "Ana aks deveri",
+                  "alignment": "g-1",
+                  "alignmentRevision": 1,
+                  "revision": 1,
+                  "normalLeft": -2.5,
+                  "normalRight": -2.5,
+                  "method": {
+                    "method": "curves",
+                    "curves": [
+                      {
+                        "pi": "p1",
+                        "rate": 6.0,
+                        "runoff": 40.0,
+                        "onTangent": 0.0,
+                        "widening": 0.5
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "d-2",
+                  "name": "Yan aks deveri",
+                  "alignment": "g-2",
+                  "alignmentRevision": 2,
+                  "revision": 2,
+                  "normalLeft": -2.0,
+                  "normalRight": -2.0,
+                  "method": {
+                    "method": "stations",
+                    "rows": [
+                      {
+                        "station": 100.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      },
+                      {
+                        "station": 200.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 400.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 500.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      }
                     ]
                   }
                 }
@@ -5675,6 +5960,63 @@
                     ]
                   }
                 }
+              ],
+              "superelevations": [
+                {
+                  "id": "d-1",
+                  "name": "Ana aks deveri",
+                  "alignment": "g-1",
+                  "alignmentRevision": 1,
+                  "revision": 1,
+                  "normalLeft": -2.5,
+                  "normalRight": -2.5,
+                  "method": {
+                    "method": "curves",
+                    "curves": [
+                      {
+                        "pi": "p1",
+                        "rate": 6.0,
+                        "runoff": 40.0,
+                        "onTangent": 0.0,
+                        "widening": 0.5
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "d-2",
+                  "name": "Yan aks deveri",
+                  "alignment": "g-2",
+                  "alignmentRevision": 2,
+                  "revision": 2,
+                  "normalLeft": -2.0,
+                  "normalRight": -2.0,
+                  "method": {
+                    "method": "stations",
+                    "rows": [
+                      {
+                        "station": 100.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      },
+                      {
+                        "station": 200.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 400.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 500.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      }
+                    ]
+                  }
+                }
               ]
             },
             "ids": [
@@ -6592,6 +6934,63 @@
                     ]
                   }
                 }
+              ],
+              "superelevations": [
+                {
+                  "id": "d-1",
+                  "name": "Ana aks deveri",
+                  "alignment": "g-1",
+                  "alignmentRevision": 1,
+                  "revision": 1,
+                  "normalLeft": -2.5,
+                  "normalRight": -2.5,
+                  "method": {
+                    "method": "curves",
+                    "curves": [
+                      {
+                        "pi": "p1",
+                        "rate": 6.0,
+                        "runoff": 40.0,
+                        "onTangent": 0.0,
+                        "widening": 0.5
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "d-2",
+                  "name": "Yan aks deveri",
+                  "alignment": "g-2",
+                  "alignmentRevision": 2,
+                  "revision": 2,
+                  "normalLeft": -2.0,
+                  "normalRight": -2.0,
+                  "method": {
+                    "method": "stations",
+                    "rows": [
+                      {
+                        "station": 100.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      },
+                      {
+                        "station": 200.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 400.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 500.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      }
+                    ]
+                  }
+                }
               ]
             },
             "ids": [
@@ -7425,6 +7824,63 @@
                     ]
                   }
                 }
+              ],
+              "superelevations": [
+                {
+                  "id": "d-1",
+                  "name": "Ana aks deveri",
+                  "alignment": "g-1",
+                  "alignmentRevision": 1,
+                  "revision": 1,
+                  "normalLeft": -2.5,
+                  "normalRight": -2.5,
+                  "method": {
+                    "method": "curves",
+                    "curves": [
+                      {
+                        "pi": "p1",
+                        "rate": 6.0,
+                        "runoff": 40.0,
+                        "onTangent": 0.0,
+                        "widening": 0.5
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "d-2",
+                  "name": "Yan aks deveri",
+                  "alignment": "g-2",
+                  "alignmentRevision": 2,
+                  "revision": 2,
+                  "normalLeft": -2.0,
+                  "normalRight": -2.0,
+                  "method": {
+                    "method": "stations",
+                    "rows": [
+                      {
+                        "station": 100.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      },
+                      {
+                        "station": 200.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 400.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 500.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      }
+                    ]
+                  }
+                }
               ]
             },
             "ids": [
@@ -8134,6 +8590,63 @@
                       50.0,
                       200.0,
                       400.0
+                    ]
+                  }
+                }
+              ],
+              "superelevations": [
+                {
+                  "id": "d-1",
+                  "name": "Ana aks deveri",
+                  "alignment": "g-1",
+                  "alignmentRevision": 1,
+                  "revision": 1,
+                  "normalLeft": -2.5,
+                  "normalRight": -2.5,
+                  "method": {
+                    "method": "curves",
+                    "curves": [
+                      {
+                        "pi": "p1",
+                        "rate": 6.0,
+                        "runoff": 40.0,
+                        "onTangent": 0.0,
+                        "widening": 0.5
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "d-2",
+                  "name": "Yan aks deveri",
+                  "alignment": "g-2",
+                  "alignmentRevision": 2,
+                  "revision": 2,
+                  "normalLeft": -2.0,
+                  "normalRight": -2.0,
+                  "method": {
+                    "method": "stations",
+                    "rows": [
+                      {
+                        "station": 100.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      },
+                      {
+                        "station": 200.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 400.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 500.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      }
                     ]
                   }
                 }
@@ -8880,6 +9393,63 @@
                     50.0,
                     200.0,
                     400.0
+                  ]
+                }
+              }
+            ],
+            "superelevations": [
+              {
+                "id": "d-1",
+                "name": "Ana aks deveri",
+                "alignment": "g-1",
+                "alignmentRevision": 1,
+                "revision": 1,
+                "normalLeft": -2.5,
+                "normalRight": -2.5,
+                "method": {
+                  "method": "curves",
+                  "curves": [
+                    {
+                      "pi": "p1",
+                      "rate": 6.0,
+                      "runoff": 40.0,
+                      "onTangent": 0.0,
+                      "widening": 0.5
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "d-2",
+                "name": "Yan aks deveri",
+                "alignment": "g-2",
+                "alignmentRevision": 2,
+                "revision": 2,
+                "normalLeft": -2.0,
+                "normalRight": -2.0,
+                "method": {
+                  "method": "stations",
+                  "rows": [
+                    {
+                      "station": 100.0,
+                      "left": -2.0,
+                      "right": -2.0
+                    },
+                    {
+                      "station": 200.0,
+                      "left": 3.0,
+                      "right": -3.0
+                    },
+                    {
+                      "station": 400.0,
+                      "left": 3.0,
+                      "right": -3.0
+                    },
+                    {
+                      "station": 500.0,
+                      "left": -2.0,
+                      "right": -2.0
+                    }
                   ]
                 }
               }
@@ -10933,6 +11503,63 @@
                     ]
                   }
                 }
+              ],
+              "superelevations": [
+                {
+                  "id": "d-1",
+                  "name": "Ana aks deveri",
+                  "alignment": "g-1",
+                  "alignmentRevision": 1,
+                  "revision": 1,
+                  "normalLeft": -2.5,
+                  "normalRight": -2.5,
+                  "method": {
+                    "method": "curves",
+                    "curves": [
+                      {
+                        "pi": "p1",
+                        "rate": 6.0,
+                        "runoff": 40.0,
+                        "onTangent": 0.0,
+                        "widening": 0.5
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "d-2",
+                  "name": "Yan aks deveri",
+                  "alignment": "g-2",
+                  "alignmentRevision": 2,
+                  "revision": 2,
+                  "normalLeft": -2.0,
+                  "normalRight": -2.0,
+                  "method": {
+                    "method": "stations",
+                    "rows": [
+                      {
+                        "station": 100.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      },
+                      {
+                        "station": 200.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 400.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 500.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      }
+                    ]
+                  }
+                }
               ]
             },
             "ids": [
@@ -11659,6 +12286,63 @@
                     50.0,
                     200.0,
                     400.0
+                  ]
+                }
+              }
+            ],
+            "superelevations": [
+              {
+                "id": "d-1",
+                "name": "Ana aks deveri",
+                "alignment": "g-1",
+                "alignmentRevision": 1,
+                "revision": 1,
+                "normalLeft": -2.5,
+                "normalRight": -2.5,
+                "method": {
+                  "method": "curves",
+                  "curves": [
+                    {
+                      "pi": "p1",
+                      "rate": 6.0,
+                      "runoff": 40.0,
+                      "onTangent": 0.0,
+                      "widening": 0.5
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "d-2",
+                "name": "Yan aks deveri",
+                "alignment": "g-2",
+                "alignmentRevision": 2,
+                "revision": 2,
+                "normalLeft": -2.0,
+                "normalRight": -2.0,
+                "method": {
+                  "method": "stations",
+                  "rows": [
+                    {
+                      "station": 100.0,
+                      "left": -2.0,
+                      "right": -2.0
+                    },
+                    {
+                      "station": 200.0,
+                      "left": 3.0,
+                      "right": -3.0
+                    },
+                    {
+                      "station": 400.0,
+                      "left": 3.0,
+                      "right": -3.0
+                    },
+                    {
+                      "station": 500.0,
+                      "left": -2.0,
+                      "right": -2.0
+                    }
                   ]
                 }
               }
@@ -13695,6 +14379,63 @@
                     ]
                   }
                 }
+              ],
+              "superelevations": [
+                {
+                  "id": "d-1",
+                  "name": "Ana aks deveri",
+                  "alignment": "g-1",
+                  "alignmentRevision": 1,
+                  "revision": 1,
+                  "normalLeft": -2.5,
+                  "normalRight": -2.5,
+                  "method": {
+                    "method": "curves",
+                    "curves": [
+                      {
+                        "pi": "p1",
+                        "rate": 6.0,
+                        "runoff": 40.0,
+                        "onTangent": 0.0,
+                        "widening": 0.5
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "d-2",
+                  "name": "Yan aks deveri",
+                  "alignment": "g-2",
+                  "alignmentRevision": 2,
+                  "revision": 2,
+                  "normalLeft": -2.0,
+                  "normalRight": -2.0,
+                  "method": {
+                    "method": "stations",
+                    "rows": [
+                      {
+                        "station": 100.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      },
+                      {
+                        "station": 200.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 400.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 500.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      }
+                    ]
+                  }
+                }
               ]
             },
             "ids": [
@@ -14333,6 +15074,63 @@
                     50.0,
                     200.0,
                     400.0
+                  ]
+                }
+              }
+            ],
+            "superelevations": [
+              {
+                "id": "d-1",
+                "name": "Ana aks deveri",
+                "alignment": "g-1",
+                "alignmentRevision": 1,
+                "revision": 1,
+                "normalLeft": -2.5,
+                "normalRight": -2.5,
+                "method": {
+                  "method": "curves",
+                  "curves": [
+                    {
+                      "pi": "p1",
+                      "rate": 6.0,
+                      "runoff": 40.0,
+                      "onTangent": 0.0,
+                      "widening": 0.5
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "d-2",
+                "name": "Yan aks deveri",
+                "alignment": "g-2",
+                "alignmentRevision": 2,
+                "revision": 2,
+                "normalLeft": -2.0,
+                "normalRight": -2.0,
+                "method": {
+                  "method": "stations",
+                  "rows": [
+                    {
+                      "station": 100.0,
+                      "left": -2.0,
+                      "right": -2.0
+                    },
+                    {
+                      "station": 200.0,
+                      "left": 3.0,
+                      "right": -3.0
+                    },
+                    {
+                      "station": 400.0,
+                      "left": 3.0,
+                      "right": -3.0
+                    },
+                    {
+                      "station": 500.0,
+                      "left": -2.0,
+                      "right": -2.0
+                    }
                   ]
                 }
               }
@@ -16309,6 +17107,63 @@
                     ]
                   }
                 }
+              ],
+              "superelevations": [
+                {
+                  "id": "d-1",
+                  "name": "Ana aks deveri",
+                  "alignment": "g-1",
+                  "alignmentRevision": 1,
+                  "revision": 1,
+                  "normalLeft": -2.5,
+                  "normalRight": -2.5,
+                  "method": {
+                    "method": "curves",
+                    "curves": [
+                      {
+                        "pi": "p1",
+                        "rate": 6.0,
+                        "runoff": 40.0,
+                        "onTangent": 0.0,
+                        "widening": 0.5
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "d-2",
+                  "name": "Yan aks deveri",
+                  "alignment": "g-2",
+                  "alignmentRevision": 2,
+                  "revision": 2,
+                  "normalLeft": -2.0,
+                  "normalRight": -2.0,
+                  "method": {
+                    "method": "stations",
+                    "rows": [
+                      {
+                        "station": 100.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      },
+                      {
+                        "station": 200.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 400.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 500.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      }
+                    ]
+                  }
+                }
               ]
             },
             "ids": [
@@ -16815,6 +17670,63 @@
                     50.0,
                     200.0,
                     400.0
+                  ]
+                }
+              }
+            ],
+            "superelevations": [
+              {
+                "id": "d-1",
+                "name": "Ana aks deveri",
+                "alignment": "g-1",
+                "alignmentRevision": 1,
+                "revision": 1,
+                "normalLeft": -2.5,
+                "normalRight": -2.5,
+                "method": {
+                  "method": "curves",
+                  "curves": [
+                    {
+                      "pi": "p1",
+                      "rate": 6.0,
+                      "runoff": 40.0,
+                      "onTangent": 0.0,
+                      "widening": 0.5
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "d-2",
+                "name": "Yan aks deveri",
+                "alignment": "g-2",
+                "alignmentRevision": 2,
+                "revision": 2,
+                "normalLeft": -2.0,
+                "normalRight": -2.0,
+                "method": {
+                  "method": "stations",
+                  "rows": [
+                    {
+                      "station": 100.0,
+                      "left": -2.0,
+                      "right": -2.0
+                    },
+                    {
+                      "station": 200.0,
+                      "left": 3.0,
+                      "right": -3.0
+                    },
+                    {
+                      "station": 400.0,
+                      "left": 3.0,
+                      "right": -3.0
+                    },
+                    {
+                      "station": 500.0,
+                      "left": -2.0,
+                      "right": -2.0
+                    }
                   ]
                 }
               }
@@ -18885,6 +19797,63 @@
                     ]
                   }
                 }
+              ],
+              "superelevations": [
+                {
+                  "id": "d-1",
+                  "name": "Ana aks deveri",
+                  "alignment": "g-1",
+                  "alignmentRevision": 1,
+                  "revision": 1,
+                  "normalLeft": -2.5,
+                  "normalRight": -2.5,
+                  "method": {
+                    "method": "curves",
+                    "curves": [
+                      {
+                        "pi": "p1",
+                        "rate": 6.0,
+                        "runoff": 40.0,
+                        "onTangent": 0.0,
+                        "widening": 0.5
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "d-2",
+                  "name": "Yan aks deveri",
+                  "alignment": "g-2",
+                  "alignmentRevision": 2,
+                  "revision": 2,
+                  "normalLeft": -2.0,
+                  "normalRight": -2.0,
+                  "method": {
+                    "method": "stations",
+                    "rows": [
+                      {
+                        "station": 100.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      },
+                      {
+                        "station": 200.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 400.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 500.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      }
+                    ]
+                  }
+                }
               ]
             },
             "ids": [
@@ -19808,6 +20777,63 @@
                     ]
                   }
                 }
+              ],
+              "superelevations": [
+                {
+                  "id": "d-1",
+                  "name": "Ana aks deveri",
+                  "alignment": "g-1",
+                  "alignmentRevision": 1,
+                  "revision": 1,
+                  "normalLeft": -2.5,
+                  "normalRight": -2.5,
+                  "method": {
+                    "method": "curves",
+                    "curves": [
+                      {
+                        "pi": "p1",
+                        "rate": 6.0,
+                        "runoff": 40.0,
+                        "onTangent": 0.0,
+                        "widening": 0.5
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "d-2",
+                  "name": "Yan aks deveri",
+                  "alignment": "g-2",
+                  "alignmentRevision": 2,
+                  "revision": 2,
+                  "normalLeft": -2.0,
+                  "normalRight": -2.0,
+                  "method": {
+                    "method": "stations",
+                    "rows": [
+                      {
+                        "station": 100.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      },
+                      {
+                        "station": 200.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 400.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 500.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      }
+                    ]
+                  }
+                }
               ]
             },
             "ids": [
@@ -20725,6 +21751,63 @@
                     ]
                   }
                 }
+              ],
+              "superelevations": [
+                {
+                  "id": "d-1",
+                  "name": "Ana aks deveri",
+                  "alignment": "g-1",
+                  "alignmentRevision": 1,
+                  "revision": 1,
+                  "normalLeft": -2.5,
+                  "normalRight": -2.5,
+                  "method": {
+                    "method": "curves",
+                    "curves": [
+                      {
+                        "pi": "p1",
+                        "rate": 6.0,
+                        "runoff": 40.0,
+                        "onTangent": 0.0,
+                        "widening": 0.5
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "d-2",
+                  "name": "Yan aks deveri",
+                  "alignment": "g-2",
+                  "alignmentRevision": 2,
+                  "revision": 2,
+                  "normalLeft": -2.0,
+                  "normalRight": -2.0,
+                  "method": {
+                    "method": "stations",
+                    "rows": [
+                      {
+                        "station": 100.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      },
+                      {
+                        "station": 200.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 400.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 500.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      }
+                    ]
+                  }
+                }
               ]
             }
           },
@@ -21036,6 +22119,63 @@
                       50.0,
                       200.0,
                       400.0
+                    ]
+                  }
+                }
+              ],
+              "superelevations": [
+                {
+                  "id": "d-1",
+                  "name": "Ana aks deveri",
+                  "alignment": "g-1",
+                  "alignmentRevision": 1,
+                  "revision": 1,
+                  "normalLeft": -2.5,
+                  "normalRight": -2.5,
+                  "method": {
+                    "method": "curves",
+                    "curves": [
+                      {
+                        "pi": "p1",
+                        "rate": 6.0,
+                        "runoff": 40.0,
+                        "onTangent": 0.0,
+                        "widening": 0.5
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "d-2",
+                  "name": "Yan aks deveri",
+                  "alignment": "g-2",
+                  "alignmentRevision": 2,
+                  "revision": 2,
+                  "normalLeft": -2.0,
+                  "normalRight": -2.0,
+                  "method": {
+                    "method": "stations",
+                    "rows": [
+                      {
+                        "station": 100.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      },
+                      {
+                        "station": 200.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 400.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 500.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      }
                     ]
                   }
                 }
@@ -21370,6 +22510,63 @@
                       50.0,
                       200.0,
                       400.0
+                    ]
+                  }
+                }
+              ],
+              "superelevations": [
+                {
+                  "id": "d-1",
+                  "name": "Ana aks deveri",
+                  "alignment": "g-1",
+                  "alignmentRevision": 1,
+                  "revision": 1,
+                  "normalLeft": -2.5,
+                  "normalRight": -2.5,
+                  "method": {
+                    "method": "curves",
+                    "curves": [
+                      {
+                        "pi": "p1",
+                        "rate": 6.0,
+                        "runoff": 40.0,
+                        "onTangent": 0.0,
+                        "widening": 0.5
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "d-2",
+                  "name": "Yan aks deveri",
+                  "alignment": "g-2",
+                  "alignmentRevision": 2,
+                  "revision": 2,
+                  "normalLeft": -2.0,
+                  "normalRight": -2.0,
+                  "method": {
+                    "method": "stations",
+                    "rows": [
+                      {
+                        "station": 100.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      },
+                      {
+                        "station": 200.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 400.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 500.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      }
                     ]
                   }
                 }
@@ -23625,6 +24822,63 @@
                     ]
                   }
                 }
+              ],
+              "superelevations": [
+                {
+                  "id": "d-1",
+                  "name": "Ana aks deveri",
+                  "alignment": "g-1",
+                  "alignmentRevision": 1,
+                  "revision": 1,
+                  "normalLeft": -2.5,
+                  "normalRight": -2.5,
+                  "method": {
+                    "method": "curves",
+                    "curves": [
+                      {
+                        "pi": "p1",
+                        "rate": 6.0,
+                        "runoff": 40.0,
+                        "onTangent": 0.0,
+                        "widening": 0.5
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "d-2",
+                  "name": "Yan aks deveri",
+                  "alignment": "g-2",
+                  "alignmentRevision": 2,
+                  "revision": 2,
+                  "normalLeft": -2.0,
+                  "normalRight": -2.0,
+                  "method": {
+                    "method": "stations",
+                    "rows": [
+                      {
+                        "station": 100.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      },
+                      {
+                        "station": 200.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 400.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 500.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      }
+                    ]
+                  }
+                }
               ]
             }
           },
@@ -23929,6 +25183,63 @@
                       50.0,
                       200.0,
                       400.0
+                    ]
+                  }
+                }
+              ],
+              "superelevations": [
+                {
+                  "id": "d-1",
+                  "name": "Ana aks deveri",
+                  "alignment": "g-1",
+                  "alignmentRevision": 1,
+                  "revision": 1,
+                  "normalLeft": -2.5,
+                  "normalRight": -2.5,
+                  "method": {
+                    "method": "curves",
+                    "curves": [
+                      {
+                        "pi": "p1",
+                        "rate": 6.0,
+                        "runoff": 40.0,
+                        "onTangent": 0.0,
+                        "widening": 0.5
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "d-2",
+                  "name": "Yan aks deveri",
+                  "alignment": "g-2",
+                  "alignmentRevision": 2,
+                  "revision": 2,
+                  "normalLeft": -2.0,
+                  "normalRight": -2.0,
+                  "method": {
+                    "method": "stations",
+                    "rows": [
+                      {
+                        "station": 100.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      },
+                      {
+                        "station": 200.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 400.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 500.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      }
                     ]
                   }
                 }
@@ -24239,6 +25550,63 @@
                     ]
                   }
                 }
+              ],
+              "superelevations": [
+                {
+                  "id": "d-1",
+                  "name": "Ana aks deveri",
+                  "alignment": "g-1",
+                  "alignmentRevision": 1,
+                  "revision": 1,
+                  "normalLeft": -2.5,
+                  "normalRight": -2.5,
+                  "method": {
+                    "method": "curves",
+                    "curves": [
+                      {
+                        "pi": "p1",
+                        "rate": 6.0,
+                        "runoff": 40.0,
+                        "onTangent": 0.0,
+                        "widening": 0.5
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "d-2",
+                  "name": "Yan aks deveri",
+                  "alignment": "g-2",
+                  "alignmentRevision": 2,
+                  "revision": 2,
+                  "normalLeft": -2.0,
+                  "normalRight": -2.0,
+                  "method": {
+                    "method": "stations",
+                    "rows": [
+                      {
+                        "station": 100.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      },
+                      {
+                        "station": 200.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 400.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 500.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      }
+                    ]
+                  }
+                }
               ]
             }
           },
@@ -24543,6 +25911,63 @@
                       50.0,
                       200.0,
                       400.0
+                    ]
+                  }
+                }
+              ],
+              "superelevations": [
+                {
+                  "id": "d-1",
+                  "name": "Ana aks deveri",
+                  "alignment": "g-1",
+                  "alignmentRevision": 1,
+                  "revision": 1,
+                  "normalLeft": -2.5,
+                  "normalRight": -2.5,
+                  "method": {
+                    "method": "curves",
+                    "curves": [
+                      {
+                        "pi": "p1",
+                        "rate": 6.0,
+                        "runoff": 40.0,
+                        "onTangent": 0.0,
+                        "widening": 0.5
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "d-2",
+                  "name": "Yan aks deveri",
+                  "alignment": "g-2",
+                  "alignmentRevision": 2,
+                  "revision": 2,
+                  "normalLeft": -2.0,
+                  "normalRight": -2.0,
+                  "method": {
+                    "method": "stations",
+                    "rows": [
+                      {
+                        "station": 100.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      },
+                      {
+                        "station": 200.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 400.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 500.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      }
                     ]
                   }
                 }
@@ -24853,6 +26278,63 @@
                     ]
                   }
                 }
+              ],
+              "superelevations": [
+                {
+                  "id": "d-1",
+                  "name": "Ana aks deveri",
+                  "alignment": "g-1",
+                  "alignmentRevision": 1,
+                  "revision": 1,
+                  "normalLeft": -2.5,
+                  "normalRight": -2.5,
+                  "method": {
+                    "method": "curves",
+                    "curves": [
+                      {
+                        "pi": "p1",
+                        "rate": 6.0,
+                        "runoff": 40.0,
+                        "onTangent": 0.0,
+                        "widening": 0.5
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "d-2",
+                  "name": "Yan aks deveri",
+                  "alignment": "g-2",
+                  "alignmentRevision": 2,
+                  "revision": 2,
+                  "normalLeft": -2.0,
+                  "normalRight": -2.0,
+                  "method": {
+                    "method": "stations",
+                    "rows": [
+                      {
+                        "station": 100.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      },
+                      {
+                        "station": 200.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 400.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 500.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      }
+                    ]
+                  }
+                }
               ]
             }
           },
@@ -25158,6 +26640,63 @@
                     ]
                   }
                 }
+              ],
+              "superelevations": [
+                {
+                  "id": "d-1",
+                  "name": "Ana aks deveri",
+                  "alignment": "g-1",
+                  "alignmentRevision": 1,
+                  "revision": 1,
+                  "normalLeft": -2.5,
+                  "normalRight": -2.5,
+                  "method": {
+                    "method": "curves",
+                    "curves": [
+                      {
+                        "pi": "p1",
+                        "rate": 6.0,
+                        "runoff": 40.0,
+                        "onTangent": 0.0,
+                        "widening": 0.5
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "d-2",
+                  "name": "Yan aks deveri",
+                  "alignment": "g-2",
+                  "alignmentRevision": 2,
+                  "revision": 2,
+                  "normalLeft": -2.0,
+                  "normalRight": -2.0,
+                  "method": {
+                    "method": "stations",
+                    "rows": [
+                      {
+                        "station": 100.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      },
+                      {
+                        "station": 200.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 400.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 500.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      }
+                    ]
+                  }
+                }
               ]
             }
           },
@@ -25447,6 +26986,63 @@
                     50.0,
                     200.0,
                     400.0
+                  ]
+                }
+              }
+            ],
+            "superelevations": [
+              {
+                "id": "d-1",
+                "name": "Ana aks deveri",
+                "alignment": "g-1",
+                "alignmentRevision": 1,
+                "revision": 1,
+                "normalLeft": -2.5,
+                "normalRight": -2.5,
+                "method": {
+                  "method": "curves",
+                  "curves": [
+                    {
+                      "pi": "p1",
+                      "rate": 6.0,
+                      "runoff": 40.0,
+                      "onTangent": 0.0,
+                      "widening": 0.5
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "d-2",
+                "name": "Yan aks deveri",
+                "alignment": "g-2",
+                "alignmentRevision": 2,
+                "revision": 2,
+                "normalLeft": -2.0,
+                "normalRight": -2.0,
+                "method": {
+                  "method": "stations",
+                  "rows": [
+                    {
+                      "station": 100.0,
+                      "left": -2.0,
+                      "right": -2.0
+                    },
+                    {
+                      "station": 200.0,
+                      "left": 3.0,
+                      "right": -3.0
+                    },
+                    {
+                      "station": 400.0,
+                      "left": 3.0,
+                      "right": -3.0
+                    },
+                    {
+                      "station": 500.0,
+                      "left": -2.0,
+                      "right": -2.0
+                    }
                   ]
                 }
               }
@@ -27363,6 +28959,63 @@
                     ]
                   }
                 }
+              ],
+              "superelevations": [
+                {
+                  "id": "d-1",
+                  "name": "Ana aks deveri",
+                  "alignment": "g-1",
+                  "alignmentRevision": 1,
+                  "revision": 1,
+                  "normalLeft": -2.5,
+                  "normalRight": -2.5,
+                  "method": {
+                    "method": "curves",
+                    "curves": [
+                      {
+                        "pi": "p1",
+                        "rate": 6.0,
+                        "runoff": 40.0,
+                        "onTangent": 0.0,
+                        "widening": 0.5
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "d-2",
+                  "name": "Yan aks deveri",
+                  "alignment": "g-2",
+                  "alignmentRevision": 2,
+                  "revision": 2,
+                  "normalLeft": -2.0,
+                  "normalRight": -2.0,
+                  "method": {
+                    "method": "stations",
+                    "rows": [
+                      {
+                        "station": 100.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      },
+                      {
+                        "station": 200.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 400.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 500.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      }
+                    ]
+                  }
+                }
               ]
             }
           },
@@ -27668,6 +29321,63 @@
                     ]
                   }
                 }
+              ],
+              "superelevations": [
+                {
+                  "id": "d-1",
+                  "name": "Ana aks deveri",
+                  "alignment": "g-1",
+                  "alignmentRevision": 1,
+                  "revision": 1,
+                  "normalLeft": -2.5,
+                  "normalRight": -2.5,
+                  "method": {
+                    "method": "curves",
+                    "curves": [
+                      {
+                        "pi": "p1",
+                        "rate": 6.0,
+                        "runoff": 40.0,
+                        "onTangent": 0.0,
+                        "widening": 0.5
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "d-2",
+                  "name": "Yan aks deveri",
+                  "alignment": "g-2",
+                  "alignmentRevision": 2,
+                  "revision": 2,
+                  "normalLeft": -2.0,
+                  "normalRight": -2.0,
+                  "method": {
+                    "method": "stations",
+                    "rows": [
+                      {
+                        "station": 100.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      },
+                      {
+                        "station": 200.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 400.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 500.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      }
+                    ]
+                  }
+                }
               ]
             }
           },
@@ -27957,6 +29667,63 @@
                     50.0,
                     200.0,
                     400.0
+                  ]
+                }
+              }
+            ],
+            "superelevations": [
+              {
+                "id": "d-1",
+                "name": "Ana aks deveri",
+                "alignment": "g-1",
+                "alignmentRevision": 1,
+                "revision": 1,
+                "normalLeft": -2.5,
+                "normalRight": -2.5,
+                "method": {
+                  "method": "curves",
+                  "curves": [
+                    {
+                      "pi": "p1",
+                      "rate": 6.0,
+                      "runoff": 40.0,
+                      "onTangent": 0.0,
+                      "widening": 0.5
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "d-2",
+                "name": "Yan aks deveri",
+                "alignment": "g-2",
+                "alignmentRevision": 2,
+                "revision": 2,
+                "normalLeft": -2.0,
+                "normalRight": -2.0,
+                "method": {
+                  "method": "stations",
+                  "rows": [
+                    {
+                      "station": 100.0,
+                      "left": -2.0,
+                      "right": -2.0
+                    },
+                    {
+                      "station": 200.0,
+                      "left": 3.0,
+                      "right": -3.0
+                    },
+                    {
+                      "station": 400.0,
+                      "left": 3.0,
+                      "right": -3.0
+                    },
+                    {
+                      "station": 500.0,
+                      "left": -2.0,
+                      "right": -2.0
+                    }
                   ]
                 }
               }
@@ -29869,6 +31636,63 @@
                     ]
                   }
                 }
+              ],
+              "superelevations": [
+                {
+                  "id": "d-1",
+                  "name": "Ana aks deveri",
+                  "alignment": "g-1",
+                  "alignmentRevision": 1,
+                  "revision": 1,
+                  "normalLeft": -2.5,
+                  "normalRight": -2.5,
+                  "method": {
+                    "method": "curves",
+                    "curves": [
+                      {
+                        "pi": "p1",
+                        "rate": 6.0,
+                        "runoff": 40.0,
+                        "onTangent": 0.0,
+                        "widening": 0.5
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "d-2",
+                  "name": "Yan aks deveri",
+                  "alignment": "g-2",
+                  "alignmentRevision": 2,
+                  "revision": 2,
+                  "normalLeft": -2.0,
+                  "normalRight": -2.0,
+                  "method": {
+                    "method": "stations",
+                    "rows": [
+                      {
+                        "station": 100.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      },
+                      {
+                        "station": 200.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 400.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 500.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      }
+                    ]
+                  }
+                }
               ]
             }
           },
@@ -30159,6 +31983,63 @@
                     50.0,
                     200.0,
                     400.0
+                  ]
+                }
+              }
+            ],
+            "superelevations": [
+              {
+                "id": "d-1",
+                "name": "Ana aks deveri",
+                "alignment": "g-1",
+                "alignmentRevision": 1,
+                "revision": 1,
+                "normalLeft": -2.5,
+                "normalRight": -2.5,
+                "method": {
+                  "method": "curves",
+                  "curves": [
+                    {
+                      "pi": "p1",
+                      "rate": 6.0,
+                      "runoff": 40.0,
+                      "onTangent": 0.0,
+                      "widening": 0.5
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "d-2",
+                "name": "Yan aks deveri",
+                "alignment": "g-2",
+                "alignmentRevision": 2,
+                "revision": 2,
+                "normalLeft": -2.0,
+                "normalRight": -2.0,
+                "method": {
+                  "method": "stations",
+                  "rows": [
+                    {
+                      "station": 100.0,
+                      "left": -2.0,
+                      "right": -2.0
+                    },
+                    {
+                      "station": 200.0,
+                      "left": 3.0,
+                      "right": -3.0
+                    },
+                    {
+                      "station": 400.0,
+                      "left": 3.0,
+                      "right": -3.0
+                    },
+                    {
+                      "station": 500.0,
+                      "left": -2.0,
+                      "right": -2.0
+                    }
                   ]
                 }
               }
@@ -32071,6 +33952,63 @@
                     ]
                   }
                 }
+              ],
+              "superelevations": [
+                {
+                  "id": "d-1",
+                  "name": "Ana aks deveri",
+                  "alignment": "g-1",
+                  "alignmentRevision": 1,
+                  "revision": 1,
+                  "normalLeft": -2.5,
+                  "normalRight": -2.5,
+                  "method": {
+                    "method": "curves",
+                    "curves": [
+                      {
+                        "pi": "p1",
+                        "rate": 6.0,
+                        "runoff": 40.0,
+                        "onTangent": 0.0,
+                        "widening": 0.5
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "d-2",
+                  "name": "Yan aks deveri",
+                  "alignment": "g-2",
+                  "alignmentRevision": 2,
+                  "revision": 2,
+                  "normalLeft": -2.0,
+                  "normalRight": -2.0,
+                  "method": {
+                    "method": "stations",
+                    "rows": [
+                      {
+                        "station": 100.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      },
+                      {
+                        "station": 200.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 400.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 500.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      }
+                    ]
+                  }
+                }
               ]
             }
           },
@@ -32377,6 +34315,63 @@
                     ]
                   }
                 }
+              ],
+              "superelevations": [
+                {
+                  "id": "d-1",
+                  "name": "Ana aks deveri",
+                  "alignment": "g-1",
+                  "alignmentRevision": 1,
+                  "revision": 1,
+                  "normalLeft": -2.5,
+                  "normalRight": -2.5,
+                  "method": {
+                    "method": "curves",
+                    "curves": [
+                      {
+                        "pi": "p1",
+                        "rate": 6.0,
+                        "runoff": 40.0,
+                        "onTangent": 0.0,
+                        "widening": 0.5
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "d-2",
+                  "name": "Yan aks deveri",
+                  "alignment": "g-2",
+                  "alignmentRevision": 2,
+                  "revision": 2,
+                  "normalLeft": -2.0,
+                  "normalRight": -2.0,
+                  "method": {
+                    "method": "stations",
+                    "rows": [
+                      {
+                        "station": 100.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      },
+                      {
+                        "station": 200.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 400.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 500.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      }
+                    ]
+                  }
+                }
               ]
             }
           },
@@ -32680,6 +34675,63 @@
                       50.0,
                       200.0,
                       400.0
+                    ]
+                  }
+                }
+              ],
+              "superelevations": [
+                {
+                  "id": "d-1",
+                  "name": "Ana aks deveri",
+                  "alignment": "g-1",
+                  "alignmentRevision": 1,
+                  "revision": 1,
+                  "normalLeft": -2.5,
+                  "normalRight": -2.5,
+                  "method": {
+                    "method": "curves",
+                    "curves": [
+                      {
+                        "pi": "p1",
+                        "rate": 6.0,
+                        "runoff": 40.0,
+                        "onTangent": 0.0,
+                        "widening": 0.5
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "d-2",
+                  "name": "Yan aks deveri",
+                  "alignment": "g-2",
+                  "alignmentRevision": 2,
+                  "revision": 2,
+                  "normalLeft": -2.0,
+                  "normalRight": -2.0,
+                  "method": {
+                    "method": "stations",
+                    "rows": [
+                      {
+                        "station": 100.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      },
+                      {
+                        "station": 200.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 400.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 500.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      }
                     ]
                   }
                 }
@@ -32990,6 +35042,63 @@
                     ]
                   }
                 }
+              ],
+              "superelevations": [
+                {
+                  "id": "d-1",
+                  "name": "Ana aks deveri",
+                  "alignment": "g-1",
+                  "alignmentRevision": 1,
+                  "revision": 1,
+                  "normalLeft": -2.5,
+                  "normalRight": -2.5,
+                  "method": {
+                    "method": "curves",
+                    "curves": [
+                      {
+                        "pi": "p1",
+                        "rate": 6.0,
+                        "runoff": 40.0,
+                        "onTangent": 0.0,
+                        "widening": 0.5
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "d-2",
+                  "name": "Yan aks deveri",
+                  "alignment": "g-2",
+                  "alignmentRevision": 2,
+                  "revision": 2,
+                  "normalLeft": -2.0,
+                  "normalRight": -2.0,
+                  "method": {
+                    "method": "stations",
+                    "rows": [
+                      {
+                        "station": 100.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      },
+                      {
+                        "station": 200.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 400.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 500.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      }
+                    ]
+                  }
+                }
               ]
             }
           },
@@ -33295,6 +35404,63 @@
                       50.0,
                       200.0,
                       400.0
+                    ]
+                  }
+                }
+              ],
+              "superelevations": [
+                {
+                  "id": "d-1",
+                  "name": "Ana aks deveri",
+                  "alignment": "g-1",
+                  "alignmentRevision": 1,
+                  "revision": 1,
+                  "normalLeft": -2.5,
+                  "normalRight": -2.5,
+                  "method": {
+                    "method": "curves",
+                    "curves": [
+                      {
+                        "pi": "p1",
+                        "rate": 6.0,
+                        "runoff": 40.0,
+                        "onTangent": 0.0,
+                        "widening": 0.5
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "d-2",
+                  "name": "Yan aks deveri",
+                  "alignment": "g-2",
+                  "alignmentRevision": 2,
+                  "revision": 2,
+                  "normalLeft": -2.0,
+                  "normalRight": -2.0,
+                  "method": {
+                    "method": "stations",
+                    "rows": [
+                      {
+                        "station": 100.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      },
+                      {
+                        "station": 200.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 400.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 500.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      }
                     ]
                   }
                 }

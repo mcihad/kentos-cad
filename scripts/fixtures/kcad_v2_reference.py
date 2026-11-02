@@ -5567,6 +5567,10 @@ def build():
     sut = load("road-work.json")
     sut["settings"]["road"]["sections"][0]["template"] = "tk-yok"
     out["broken/road-section-unknown-template.kcad"] = container(document(sut))
+    # Schema 160 (plan/road.md Y6, docs/adr/0904): a superelevation schedule lies on an alignment of its own PIs.
+    sup = load("road-work.json")
+    sup["settings"]["road"]["superelevations"][1]["alignment"] = "g-2"
+    out["broken/road-superelevation-on-parallel-axis.kcad"] = container(document(sup))
     # Schema 136 (docs/adr/0758): a layer's indexes, a key over two fields, a plain one and a key taking empty values as
     # the same; schema 135 refuses them, an empty list, a group's, one over a field the layer lacks, empty values the
     # same on a plain index and a default written are refused too.

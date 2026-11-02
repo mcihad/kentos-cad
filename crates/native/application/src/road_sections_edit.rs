@@ -32,6 +32,7 @@ fn named(
     let id = match kind {
         "profile" => profiles::find(doc.road_profiles(), name, "profile")?.1.id.clone(),
         "template" => common::find_template(doc.road_templates(), name, "template")?.1.id.clone(),
+        "superelevation" => crate::road_superelevations::find(doc.road_superelevations(), name, "superelevation")?.1.id.clone(),
         _ => crate::road_profiles::surface_id(doc, name, "surface")?,
     };
     Ok(Some(Some(id)))
@@ -52,6 +53,7 @@ fn check(doc: &kentos_domain::Document, input: &SectionsEdit) -> Result<Checked,
     };
     let profile = named(doc, input.profile.as_deref(), "profile")?;
     let template = named(doc, input.template.as_deref(), "template")?;
+    let superelevation = named(doc, input.superelevation.as_deref(), "superelevation")?;
     let surface = named(doc, input.surface.as_deref(), "surface")?;
     let target = match (input.operation, found) {
         (RoadEditOperation::Remove | RoadEditOperation::Rebind, None) => {
@@ -78,6 +80,7 @@ fn check(doc: &kentos_domain::Document, input: &SectionsEdit) -> Result<Checked,
                 || profile.is_some()
                 || template.is_some()
                 || surface.is_some()
+                || superelevation.is_some()
                 || input.left.is_some()
                 || input.right.is_some()
                 || input.stations.is_some();
@@ -86,7 +89,7 @@ fn check(doc: &kentos_domain::Document, input: &SectionsEdit) -> Result<Checked,
                     if !given {
                         return Err(fail(
                             codes::INVALID_SECTION_SET,
-                            "Değiştirilecek bir şey yok: name, alignment, profile, template, surface, left, right ya da stations verin."
+                            "Değiştirilecek bir şey yok: name, alignment, profile, template, surface, superelevation, left, right ya da stations verin."
                                 .into(),
                             "",
                         ));
@@ -107,6 +110,9 @@ fn check(doc: &kentos_domain::Document, input: &SectionsEdit) -> Result<Checked,
                     }
                     if let Some(s) = surface {
                         d.surface = s;
+                    }
+                    if let Some(e) = superelevation {
+                        d.superelevation = e;
                     }
                     if let Some(l) = input.left {
                         d.left = l;
@@ -155,6 +161,7 @@ fn check(doc: &kentos_domain::Document, input: &SectionsEdit) -> Result<Checked,
                         profile: profile.flatten(),
                         template: template.flatten(),
                         surface: surface.flatten(),
+                        superelevation: superelevation.flatten(),
                         left: input.left.unwrap_or_default(),
                         right: input.right.unwrap_or_default(),
                         stations,

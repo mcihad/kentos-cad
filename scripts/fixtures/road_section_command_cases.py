@@ -26,6 +26,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import road_alignment_cases as aref  # noqa: E402
 import road_profile_command_cases as pcmd  # noqa: E402
 import road_section_cases as sref  # noqa: E402
+import road_superelevation_cases as supref  # noqa: E402
 import road_template_cases as tref  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -75,7 +76,25 @@ S2 = {"id": "k-2", "name": "Yan kesitler", "alignment": "g-2", "alignmentRevisio
       "stations": {"method": "stations", "stations": [50.0, 200.0, 400.0]}}
 
 
-def road_of(templates, sets, surfaces=pcmd.SURFACES):
+# The superelevation schedules (docs/adr/0904): the main alignment's from its curve, the side one's from rows.
+D1 = {"id": "d-1", "name": "Ana aks deveri", "alignment": "g-1", "alignmentRevision": 1, "revision": 1,
+      "normalLeft": -2.5, "normalRight": -2.5,
+      "method": {"method": "curves", "curves": [{"pi": "p1", "rate": 6.0, "runoff": 40.0, "onTangent": 0.0,
+                                                 "widening": 0.5}]}}
+D2 = {"id": "d-2", "name": "Yan aks deveri", "alignment": "g-2", "alignmentRevision": 2, "revision": 2,
+      "normalLeft": -2.0, "normalRight": -2.0,
+      "method": {"method": "stations", "rows": [{"station": 100.0, "left": -2.0, "right": -2.0},
+                                                {"station": 200.0, "left": 3.0, "right": -3.0},
+                                                {"station": 400.0, "left": 3.0, "right": -3.0},
+                                                {"station": 500.0, "left": -2.0, "right": -2.0}]}}
+SUPERS = [D1, D2]
+# A schedule on a PI without a curve: it does not build.
+D_BAD = {"id": "d-3", "name": "Kurulamaz dever", "alignment": "g-1", "alignmentRevision": 1, "revision": 1,
+         "normalLeft": -2.5, "normalRight": -2.5,
+         "method": {"method": "curves", "curves": [{"pi": "p9", "rate": 6.0, "runoff": 40.0, "onTangent": 0.0}]}}
+
+
+def road_of(templates, sets, surfaces=pcmd.SURFACES, supers=None):
     if templates is None:
         return None
     out = {"surfaces": copy.deepcopy(surfaces), "alignments": copy.deepcopy(pcmd.ALIGNMENTS),
@@ -84,16 +103,50 @@ def road_of(templates, sets, surfaces=pcmd.SURFACES):
         out["templates"] = copy.deepcopy(templates)
     if sets:
         out["sections"] = copy.deepcopy(sets)
+    supers = SUPERS if supers is None else supers
+    if supers:
+        out["superelevations"] = copy.deepcopy(supers)
     return out
 
 
-def setup(templates=(TK1, TK2), sets=(S1, S2), work="road", surfaces=pcmd.SURFACES, layers=None):
+def super_schedule(d):
+    """A schedule by the superelevation reference: its sides' break points (exact fractions) and the normal slopes."""
+    if d["method"]["method"] == "stations":
+        rows = d["method"]["rows"]
+        sch = {"left": [[F(r["station"]), F(r["left"])] for r in rows],
+               "right": [[F(r["station"]), F(r["right"])] for r in rows], "leftWidening": [], "rightWidening": []}
+        return sch
+    pis = [pcmd.acmd.full(p) for p in next(a for a in pcmd.ALIGNMENTS if a["id"] == d["alignment"])["pis"]]
+    got = supref.curves(pis, [d["normalLeft"], d["normalRight"]],
+                        [{"widening": 0.0, **c} for c in d["method"]["curves"]])
+    return got["schedule"]
+
+
+def superelevated(template, d, s):
+    sch = super_schedule(d)
+    s = F(s)
+    def side(sd, key, wide):
+        slope = supref.along(sch[key], s)
+        slope = F(d["normalLeft" if key == "left" else "normalRight"]) if slope is None else slope
+        w = supref.along(sch[wide], s) or F(0)
+        comps = [dict(c) for c in sd["components"]]
+        last = max((i for i, c in enumerate(comps) if c["kind"] == "lane"), default=None)
+        for i, c in enumerate(comps):
+            if c["kind"] == "lane":
+                c["slope"] = slope
+                if i == last:
+                    c["width"] = F(c["width"]) + w
+        return {**sd, "components": comps}
+    return {"left": side(template["left"], "left", "leftWidening"), "right": side(template["right"], "right", "rightWidening")}
+
+
+def setup(templates=(TK1, TK2), sets=(S1, S2), work="road", surfaces=pcmd.SURFACES, layers=None, supers=None):
     base = pcmd.setup(PROFILES, work, surfaces, layers)
     base["name"] = "Yol enkesitleri"
     base["entities"] += copy.deepcopy(LINES)
     base["uids"] += [U(e["id"]) for e in LINES]
     if work == "road":
-        base["settings"]["road"] = road_of(list(templates), list(sets), surfaces)
+        base["settings"]["road"] = road_of(list(templates), list(sets), surfaces, supers)
     return base
 
 
@@ -191,7 +244,7 @@ def report(d):
         st = []
     out = {"id": d["id"], "name": d["name"], "revision": d.get("revision", 0), "alignment": d["alignment"],
            "stale": stale(d), "stations": st}
-    for k in ("profile", "template", "surface"):
+    for k in ("profile", "template", "surface", "superelevation"):
         if d.get(k):
             out[k] = d[k]
     return out
@@ -225,6 +278,12 @@ def sections(d, at, templates):
     ev = pcmd.solve(prof)[1] if prof else None
     t = next((x for x in templates if x["id"] == d.get("template")), None) if d.get("template") else None
     template = None if t is None else {"left": t["left"], "right": t.get("right") or t["left"]}
+    sup = next((x for x in SUPERS + [D_BAD] if x["id"] == d.get("superelevation")), None) if d.get("superelevation") else None
+    if sup is D_BAD:
+        warnings.append({"code": "section_superelevation_gone",
+                         "message": f"“{d['name']}” kesit takımının dever çizelgesi kurulamıyor (“p9” PI'sinde kurp yok); "
+                                    "şeritler tip kesitin eğimiyle verildi.", "path": "set"})
+        sup = None
     rows, open_ = [], []
     for s in at:
         e, (x, y) = aref.place_at(b.els, mp.mpf(s))
@@ -247,8 +306,9 @@ def sections(d, at, templates):
             row["axis"] = red[0]
         if template and red is not None and surf_ok:
             gr = [{"offset": g["offset"], "z": g["z"], "gap": g["gap"]} for g in ground]
-            lside = tref.build_side(template["left"], red[0], gr, False)
-            rside = tref.build_side(template["right"], red[0], gr, True)
+            here = superelevated(template, sup, s) if sup else template
+            lside = tref.build_side(here["left"], red[0], gr, False)
+            rside = tref.build_side(here["right"], red[0], gr, True)
             cut, fill = tref.areas(list(reversed(lside["points"])) + rside["points"][1:], gr)
             row["left"], row["right"] = side_row(lside), side_row(rside)
             row["cut"], row["fill"] = float(cut), float(fill)
@@ -471,7 +531,13 @@ def sections_cases():
     ok("Doğrulama yazmaz", {"operation": "rebind", "set": "k-2"},
        put(1, {**S2, "alignmentRevision": 3, "revision": 4}), "k-2", op="validate")
 
+    ok("Takıma dever çizelgesi adıyla bağlanır", {"operation": "set", "set": "k-1", "superelevation": "ana AKS deveri"},
+       put(0, {**S1, "superelevation": "d-1", "revision": 2}), "k-1")
     L = length("g-1")
+    no("Olmayan dever çizelgesi", {"operation": "set", "set": "k-1", "superelevation": "yok"},
+       failed("unknown_superelevation", "“yok” kimlikli ya da adlı dever çizelgesi projede yok.", "superelevation"))
+    no("Dever çizelgesi takımın aksında değil", {"operation": "set", "set": "k-1", "superelevation": "d-2"},
+       rule("dever çizelgesi kesit takımının aksında değil", "superelevation"))
     no("Yol projesi değil", {"operation": "remove", "set": "k-1"}, NOT_ROAD, setup(work="map"), before=None)
     no("Olmayan takım silinmez", {"operation": "remove", "set": "yok"},
        failed("unknown_section_set", "“yok” kimlikli ya da adlı kesit takımı projede yok.", "set"))
@@ -487,8 +553,8 @@ def sections_cases():
        failed("invalid_section_set", "Yeni kesit takımı için name, alignment, left, right ve stations verilmeli.",
               "stations"))
     no("Değiştirilecek bir şey yok", {"operation": "set", "set": "k-1"},
-       failed("invalid_section_set", "Değiştirilecek bir şey yok: name, alignment, profile, template, surface, left, "
-                                     "right ya da stations verin."))
+       failed("invalid_section_set", "Değiştirilecek bir şey yok: name, alignment, profile, template, surface, superelevation, "
+                                     "left, right ya da stations verin."))
     no("Paralel aksa bağlanmaz",
        {"operation": "set", "name": "x", "alignment": "g-3", "left": 10.0, "right": 10.0, "stations": rng},
        rule("kesit takımı yalnız PI'larıyla kurulan aksa bağlanır", "alignment"))
@@ -526,9 +592,10 @@ def query_cases():
     templates, start = [TK1, TK2], [S1, S2]
     cases = []
 
-    def q(name, input_, out, warns=(), setup_=None, sets=start, op="execute"):
+    def q(name, input_, out, warns=(), setup_=None, sets=start, op="execute", supers=None):
         result = completed(None, warns) if op == "validate" else completed(out, warns)
-        cases.append(case(name, [step(op, input_, result, {**UNCHANGED, "road": road_of(templates, sets)})], setup_))
+        road = road_of(templates, sets, supers=supers)
+        cases.append(case(name, [step(op, input_, result, {**UNCHANGED, "road": road})], setup_))
 
     def no(name, input_, result, setup_=None, sets=start):
         road = None if sets is None else road_of(templates, sets)
@@ -569,6 +636,14 @@ def query_cases():
     ask("Geniş şerit yüzeyin dışına taşar", wide, {"set": "k-1"}, sets=[wide, S2])
     ends = {**S1, "stations": {"method": "stations", "stations": [0.0, length("g-1")]}}
     ask("Aksın başı ve sonu: boykesitin dışında platform yok", ends, {"set": "k-1"}, sets=[ends, S2])
+    sup = {**S1, "superelevation": "d-1", "stations": {"method": "stations", "stations": [150.0, 194.0, 220.0, 260.0, 330.0]}}
+    ask("Dever çizelgeli takım: şeritler o km'nin eğimini alır, iç yan genişler", sup, {"set": "k-1"}, sets=[sup, S2])
+    gone = {**S1, "superelevation": "d-3", "stations": {"method": "stations", "stations": [200.0]}}
+    out, warns = one(gone)
+    q("Kurulamayan dever çizelgesi: şeritler tip kesitin eğimiyle, uyarı", {"set": "k-1"}, out, warns,
+      setup(sets=[gone, S2], supers=SUPERS + [D_BAD]), [gone, S2], supers=SUPERS + [D_BAD])
+    rows = {**S2, "superelevation": "d-2"}
+    ask("Km satırlarından dever, eskiyen takım", rows, {"set": "k-2"}, sets=[S1, rows])
     flat = {**S1, "template": "tk-2", "stations": {"method": "range", "from": 300.0, "to": 600.0, "every": 100.0}}
     ask("Hendeksiz tip kesit, aralığın her 100 m'si", flat, {"set": "k-1"}, sets=[flat, S2])
     out, warns = one(S1, [200.0])

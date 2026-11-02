@@ -166,6 +166,15 @@ fn check(doc: &kentos_domain::Document, input: &AlignmentsEdit) -> Result<Checke
                     "alignment",
                 ));
             }
+            let supers: Vec<&str> =
+                doc.road_superelevations().iter().filter(|s| s.alignment == old.id).map(|s| s.name.as_str()).collect();
+            if !supers.is_empty() {
+                return Err(fail(
+                    codes::ALIGNMENT_IN_USE,
+                    format!("“{}” aksına şu dever çizelgeleri bağlı: {}. Önce onları silin.", old.name, supers.join(", ")),
+                    "alignment",
+                ));
+            }
             mapping = common::mapping_rows(old_core.as_ref(), None);
             list.remove(at);
             None
