@@ -4323,3 +4323,41 @@ fn guarded_polar_formula_refreshes_empty_inserts_and_saves_points_through_mcp() 
     call(&mut server,"drawing.undo",json!({"drawing":drawing}));call(&mut server,"drawing.save",json!({"drawing":drawing,"path":path}));
     assert_eq!(std::fs::read(&path).unwrap(),before);std::fs::remove_dir_all(dir).unwrap();
 }
+
+#[test]
+fn guarded_formula_chain_orders_dependencies_and_refuses_cycles_through_mcp() {
+    let dir = std::env::temp_dir().join(format!("kentos-mcp-formula-chain-{}",std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap(); let path=dir.join("chain.kcad");
+    let before=include_bytes!("../../../../fixtures/kcad/v2/block-parameter-groups.kcad");
+    std::fs::write(&path,before).unwrap();
+    let source=kentos_native_application::file_import_block::read_drawing(before).unwrap();
+    let mut dynamic=serde_json::to_value(&source.blocks[0].dynamic).unwrap();
+    let first=dynamic["parameters"].as_array().unwrap().len();
+    dynamic["parameters"].as_array_mut().unwrap().extend([
+        json!({"kind":"linear","name":"Nihai","from":{"x":0.,"y":0.},"to":{"x":0.6,"y":0.},"rule":{"expression":"@Ara + 1"}}),
+        json!({"kind":"linear","name":"Ara","from":{"x":0.,"y":0.},"to":{"x":0.1,"y":0.},"rule":{"expression":"@Nihai + 1"}}),
+    ]);
+    let mut server=Server::new();
+    let drawing=call(&mut server,"drawing.open",json!({"path":path}))["structuredContent"]["drawing"].clone();
+    let mut input=json!({"drawing":drawing,"operation":"dynamic","block":source.blocks[0].id,"dynamic":dynamic,"op":"plan"});
+    let a=call(&mut server,"cad.blocks.edit",input.clone())["structuredContent"].clone();
+    assert_eq!(a["error"]["code"],"invalid_dynamic_block","{a}");
+    assert!(a["error"]["message"].as_str().unwrap().contains("“Nihai” → “Ara” → “Nihai”"),"{a}");
+    call(&mut server,"drawing.save",json!({"drawing":drawing,"path":path}));
+    assert_eq!(std::fs::read(&path).unwrap(),before);
+    input["dynamic"]["parameters"][first]["rule"]=json!({"expression":"1 / @Ara","min":0.4,"max":1.2});
+    input["dynamic"]["parameters"][first+1]["rule"]=json!({"expression":"@genislik * 2"});
+    let plan=call(&mut server,"cad.blocks.edit",input.clone())["structuredContent"].clone();
+    assert_eq!(plan["status"],"completed","{plan}");
+    input["op"]=json!("execute"); input["expected"]=json!({"plan":plan["planId"]});
+    let a=call(&mut server,"cad.blocks.edit",input); assert_eq!(a["structuredContent"]["status"],"completed","{a}");
+    call(&mut server,"drawing.save",json!({"drawing":drawing,"path":path}));
+    let after=kentos_native_application::file_import_block::read_drawing(&std::fs::read(&path).unwrap()).unwrap();
+    let entities=serde_json::to_value(&after.entities).unwrap();
+    assert_eq!(entities[1]["parameters"]["Nihai"],json!(0.5));
+    assert_eq!(entities[1]["parameters"]["Ara"],json!(2.));
+    call(&mut server,"drawing.undo",json!({"drawing":drawing}));
+    call(&mut server,"drawing.save",json!({"drawing":drawing,"path":path}));
+    assert_eq!(std::fs::read(&path).unwrap(),before);
+    std::fs::remove_dir_all(dir).unwrap();
+}

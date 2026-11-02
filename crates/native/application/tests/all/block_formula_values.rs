@@ -300,3 +300,250 @@ fn calculated_polar_point_drives_real_core_geometry_and_has_no_edit_grip() {
             .any(|g| g.name == "Uç")
     );
 }
+
+fn linear_formula(name: &str, reference: f64, expression: &str) -> Value {
+    json!({"kind":"linear","name":name,"from":{"x":0.,"y":0.},"to":{"x":reference,"y":0.},"rule":{"expression":expression}})
+}
+fn forward_chain(mut dynamic: Value) -> Value {
+    let mut final_value = linear_formula("Nihai", 0.6, "1 / @Ara");
+    final_value["rule"]["min"] = json!(0.4);
+    final_value["rule"]["max"] = json!(1.2);
+    dynamic["parameters"]
+        .as_array_mut()
+        .unwrap()
+        .extend([final_value, linear_formula("Ara", 0.1, "@Genişlik * 2")]);
+    dynamic
+}
+#[test]
+fn a_forward_dependency_uses_final_values_before_checking_rules_in_either_parameter_order() {
+    let original = source();
+    let d = forward_chain(original["blocks"][0]["dynamic"].clone());
+    let mut values = Vec::new();
+    for reverse in [false, true] {
+        let mut doc = open(original.clone());
+        let mut next = d.clone();
+        if reverse {
+            next["parameters"].as_array_mut().unwrap().reverse();
+        }
+        let before = snap(&doc);
+        let a = run(&mut doc, CallOp::Plan, next.clone());
+        assert_eq!(a["status"], "completed", "{a}");
+        assert_eq!(snap(&doc), before);
+        let a = run(&mut doc, CallOp::Execute, next);
+        assert_eq!(a["status"], "completed", "{a}");
+        let after = snap(&doc);
+        assert!(
+            (after["entities"][0]["parameters"]["Nihai"]
+                .as_f64()
+                .unwrap()
+                - 1. / 1.8)
+                .abs()
+                < 1e-12
+        );
+        assert_eq!(after["entities"][1]["parameters"]["Nihai"], json!(0.5));
+        assert_eq!(after["entities"][1]["parameters"]["Ara"], json!(2.));
+        values.push(after["entities"].clone());
+        let bytes = kentos_kcad::encode(&doc.to_snapshot_v2()).unwrap();
+        assert_eq!(kentos_kcad::decode(&bytes).unwrap(), doc.to_snapshot_v2());
+        doc.undo();
+        assert_eq!(snap(&doc), before);
+        doc.redo();
+        assert_eq!(snap(&doc), after);
+    }
+    assert_eq!(values[0], values[1]);
+}
+#[test]
+fn formula_cycles_refuse_atomically_and_report_the_cycle_not_its_downstream_reader() {
+    let mut doc = open(source());
+    let before = snap(&doc);
+    let revision = doc.revision();
+    let mut d = before["blocks"][0]["dynamic"].clone();
+    d["parameters"].as_array_mut().unwrap().extend([
+        linear_formula("Okur", 0.5, "@Nihai / 2"),
+        linear_formula("Nihai", 0.5, "@Ara + 1"),
+        linear_formula("Ara", 0.1, "@Nihai + 1"),
+    ]);
+    for op in [CallOp::Validate, CallOp::Plan, CallOp::Execute] {
+        let a = run(&mut doc, op, d.clone());
+        assert_eq!(a["error"]["code"], "invalid_dynamic_block", "{a}");
+        let message = a["error"]["message"].as_str().unwrap();
+        assert!(message.contains("“Nihai” → “Ara” → “Nihai”"), "{a}");
+        assert!(!message.contains("Okur"), "{a}");
+        assert_eq!(snap(&doc), before);
+        assert_eq!(doc.revision(), revision);
+    }
+}
+#[test]
+fn a_case_and_turkish_accent_variant_self_reference_is_still_a_cycle() {
+    let mut doc = open(source());
+    let before = snap(&doc);
+    let mut d = before["blocks"][0]["dynamic"].clone();
+    d["parameters"]
+        .as_array_mut()
+        .unwrap()
+        .push(linear_formula("Çizgi", 0.5, "@cizgi"));
+    let a = run(&mut doc, CallOp::Execute, d);
+    assert_eq!(a["error"]["code"], "invalid_dynamic_block", "{a}");
+    assert!(
+        a["error"]["message"]
+            .as_str()
+            .unwrap()
+            .contains("“Çizgi” → “Çizgi”"),
+        "{a}"
+    );
+    assert_eq!(snap(&doc), before);
+}
+#[test]
+fn repeated_and_folded_references_are_one_dependency_and_quoted_names_are_not_edges() {
+    let mut doc = open(source());
+    let before = snap(&doc);
+    let mut d = before["blocks"][0]["dynamic"].clone();
+    d["parameters"].as_array_mut().unwrap().extend([
+        linear_formula("Nihai", 0.5, "@Ara + @ara + if(1 = 1, 0, '@Nihai')"),
+        linear_formula("Ara", 0.1, "@genislik * 2"),
+    ]);
+    let a = run(&mut doc, CallOp::Execute, d);
+    assert_eq!(a["status"], "completed", "{a}");
+    assert_eq!(snap(&doc)["entities"][1]["parameters"]["Nihai"], json!(4.));
+}
+#[test]
+fn changing_a_folded_formula_input_default_refreshes_empty_roots_and_nested_references() {
+    let mut v = source();
+    nested(&mut v);
+    let mut doc = open(v);
+    let mut d = snap(&doc)["blocks"][0]["dynamic"].clone();
+    d["parameters"]
+        .as_array_mut()
+        .unwrap()
+        .push(linear_formula("Kat", 0.1, "@genislik * 2"));
+    let a = run(&mut doc, CallOp::Execute, d.clone());
+    assert_eq!(a["status"], "completed", "{a}");
+    let before = snap(&doc);
+    d["parameters"][0]["to"]["x"] = json!(0.95);
+    let a = run(&mut doc, CallOp::Execute, d);
+    assert_eq!(a["status"], "completed", "{a}");
+    let after = snap(&doc);
+    assert_eq!(after["entities"][0]["parameters"]["Kat"], json!(1.9));
+    assert_eq!(
+        after["blocks"][1]["entities"][0]["parameters"]["Kat"],
+        json!(2.)
+    );
+    assert_eq!(
+        after["blocks"][1]["entities"][0]["parameters"]["Genişlik"],
+        json!(1.)
+    );
+    doc.undo();
+    assert_eq!(snap(&doc), before);
+}
+#[test]
+fn recomputation_ignores_stale_derived_caches_and_updates_the_whole_chain_once() {
+    let mut doc = open(source());
+    let d = forward_chain(snap(&doc)["blocks"][0]["dynamic"].clone());
+    let a = run(&mut doc, CallOp::Execute, d);
+    assert_eq!(a["status"], "completed", "{a}");
+    let mut v = snap(&doc);
+    v["entities"][1]["parameters"]["Ara"] = json!(0.1);
+    v["entities"][1]["parameters"]["Nihai"] = json!(0.4);
+    let mut doc = open(v);
+    let before = snap(&doc);
+    let a = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.blocks.parameters",
+        CallOp::Execute,
+        json!({"operation":"set","uids":[before["uids"][1]],"values":{"Genişlik":1.05}}),
+    )
+    .unwrap();
+    assert_eq!(a["status"], "completed", "{a}");
+    let after = snap(&doc);
+    assert_eq!(after["entities"][1]["parameters"]["Ara"], json!(2.1));
+    assert!(
+        (after["entities"][1]["parameters"]["Nihai"]
+            .as_f64()
+            .unwrap()
+            - 1. / 2.1)
+            .abs()
+            < 1e-12
+    );
+    doc.undo();
+    assert_eq!(snap(&doc), before);
+}
+#[test]
+fn a_reversed_chain_near_the_contract_limit_finishes_without_recursive_evaluation() {
+    let mut doc = open(source());
+    let before = snap(&doc);
+    let mut d = before["blocks"][0]["dynamic"].clone();
+    let start = d["parameters"].as_array().unwrap().len();
+    let count = kentos_commands::block_dynamic::MAX_DYNAMIC_ITEMS - start;
+    for i in (0..count).rev() {
+        let expr = if i == 0 {
+            "@Genişlik + 1".into()
+        } else {
+            format!("@P{} + 1", i - 1)
+        };
+        d["parameters"]
+            .as_array_mut()
+            .unwrap()
+            .push(linear_formula(&format!("P{i}"), 0.1, &expr));
+    }
+    let a = run(&mut doc, CallOp::Execute, d);
+    assert_eq!(a["status"], "completed", "{a}");
+    assert_eq!(
+        snap(&doc)["entities"][1]["parameters"][format!("P{}", count - 1)],
+        json!(count as f64 + 1.)
+    );
+}
+
+#[test]
+fn folded_formula_inputs_keep_their_meaning_after_scoped_and_project_unit_rescale() {
+    for project in [false, true] {
+        let mut doc = open(source());
+        let mut d = forward_chain(snap(&doc)["blocks"][0]["dynamic"].clone());
+        d["parameters"].as_array_mut().unwrap().last_mut().unwrap()["rule"]["expression"] =
+            json!("@genislik * 2");
+        let a = run(&mut doc, CallOp::Execute, d);
+        assert_eq!(a["status"], "completed", "{a}");
+        let before = snap(&doc);
+        let (command, input) = if project {
+            (
+                "cad.units.change",
+                json!({"from":"m","to":"mm","geometry":"scale"}),
+            )
+        } else {
+            (
+                "cad.blocks.edit",
+                json!({"operation":"units","block":BLOCK,"units":"mm","rescale":true}),
+            )
+        };
+        let a = registry::run(
+            &mut ExecutionContext::new(&mut doc),
+            command,
+            CallOp::Execute,
+            input,
+        )
+        .unwrap();
+        assert_eq!(a["status"], "completed", "{a}");
+        let after = snap(&doc);
+        assert_eq!(after["entities"][1]["parameters"]["Ara"], json!(0.002));
+        assert_eq!(after["entities"][1]["parameters"]["Nihai"], json!(0.0005));
+        let a = registry::run(
+            &mut ExecutionContext::new(&mut doc),
+            "cad.blocks.parameters",
+            CallOp::Execute,
+            json!({"operation":"set","uids":[after["uids"][1]],"values":{"Genişlik":0.00105}}),
+        )
+        .unwrap();
+        assert_eq!(a["status"], "completed", "{a}");
+        let now = snap(&doc);
+        assert!((now["entities"][1]["parameters"]["Ara"].as_f64().unwrap() - 0.0021).abs() < 1e-15);
+        assert!(
+            (now["entities"][1]["parameters"]["Nihai"].as_f64().unwrap() - 0.001 / 2.1).abs()
+                < 1e-15
+        );
+        let bytes = kentos_kcad::encode(&doc.to_snapshot_v2()).unwrap();
+        assert_eq!(kentos_kcad::decode(&bytes).unwrap(), doc.to_snapshot_v2());
+        doc.undo();
+        assert_eq!(snap(&doc), after);
+        doc.undo();
+        assert_eq!(snap(&doc), before);
+    }
+}

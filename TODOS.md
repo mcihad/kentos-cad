@@ -51,6 +51,10 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ADR 0861: blok formüllerinin gerçek bağımlılık sırasıyla hesaplanması,
+  Unicode/harf eşlemesi ve döngünün adlarıyla yazısız reddi. Native ortak
+  yolun kabulü web'in ayrı parametre değerlendiricisini tamamlamaz.
+
 - ADR 0860: kutupsal uzaklık formülünden nokta sonucu üretimi ve doğrudan
   dinamik tanım düzenlemesinde boş kök/iç yerleştirme hesaplarının birlikte
   yenilenmesi; uyumsuz örnekte literal girdileri silmeden atomik ret.
