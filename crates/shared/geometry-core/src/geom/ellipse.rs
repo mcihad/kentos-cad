@@ -45,9 +45,11 @@ pub fn ellipse_point(e: &EllipseGeom, t: f64) -> Vec2 {
     let m = minor_axis(e);
     let c = cos(t);
     let s = sin(t);
+    // Accumulate the local offset before adding the map origin once. Separate world additions
+    // can lose an extra ULP and disagree with an endpoint written by the locally solved constraints.
     Vec2::new(
-        e.c.x + e.major.x * c + m.x * s,
-        e.c.y + e.major.y * c + m.y * s,
+        e.c.x + (e.major.x * c + m.x * s),
+        e.c.y + (e.major.y * c + m.y * s),
     )
 }
 

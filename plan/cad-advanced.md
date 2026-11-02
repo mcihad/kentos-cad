@@ -473,8 +473,12 @@ kabulü geçti. [ADR 0833](../docs/adr/0833-block-insertion-anchor-constraints.m
 Geçici ilk-nesne/grip tutuşunun kalıcı Fix'i gereksiz sayması ve serbestlik
 sayısını azaltması düzeltildi. Gerçek hover/tek tıklama/query/Python/MCP
 ve tek Undo kabulü geçti. [ADR 0834](../docs/adr/0834-permanent-diagnosis-after-temporary-holds.md).
-Yaylı kenar adaptörü, boyut cebiri, elips grip hedefi ve birleşik çözüm
-dalı kabulü bitmeden bu madde kapatılmaz.
+Elips yayı Start/End grip hedefi, çözülmüş yay/izleyen çizgi önizlemesi,
+büyük koordinat doğruluğu ve kalıcı Fix çatışması gerçek Mac arayüzünde
+kabul edildi; ölçülü tek Enter, dosya/Python/MCP ve tek Undo geçti.
+[ADR 0835](../docs/adr/0835-elliptical-endpoint-grip-targets.md).
+Yaylı kenar adaptörü, boyut cebiri, tam elips eksen grip'leri ve birleşik
+çözüm dalı kabulü bitmeden bu madde kapatılmaz.
 
 ### CAD-ADV-06 — Parametrik blokları sürdürülebilir 2B bileşenlere dönüştür [ ]
 

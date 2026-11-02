@@ -31,7 +31,7 @@
 //! (`neighbours`): they are drawn dashed while the grip moves.
 
 use kentos_commands::{EditOperation, EntitiesEdit, EntityEdit};
-use kentos_domain::{Slot, Uuid};
+use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geometry::dist;
 use kentos_geometry_core::jsmath::js_hypot;
@@ -127,6 +127,8 @@ pub struct Select {
     current: Option<At>,
     dragging: bool,
     grip: Option<GripEdit>,
+    /// Baseline entity identity, source generation and reusable cancelled preview copy (CAD-ADV-05).
+    grip_plan: Option<(usize, u64, Document)>,
     /// Where the grip would go: the pointer, snapped, ortho and polar tracking applied.
     grip_point: Option<Vec2>,
     tracking: Option<Tracking>,
@@ -638,6 +640,7 @@ impl Select {
 
     fn end_grip(&mut self) {
         self.grip = None;
+        self.grip_plan = None;
         self.grip_point = None;
         self.tracking = None;
         self.moved = None;
@@ -795,30 +798,113 @@ impl Select {
                 crate::wall_dimensions::append_followers(&mut self.followers, &followers, cx);
                 return;
             }
-            let moved = stretched(cx.doc, &grips, dx, dy);
+            let mut moved = stretched(cx.doc, &grips, dx, dy);
+            let mut settled = false;
             // The bonds refuse a drag as they refuse its write: they are marked as the grip moves (docs/adr/0790 §1).
             if !g.modes.copy
                 && let Some((input, _)) = grip_input(&moved, false, cx)
             {
-                self.refused = crate::bond_refusal::Refused::of_result(
-                    &kentos_native_application::edit::plan_in(cx.doc, &input),
-                    cx,
-                );
+                settled = kentos_native_application::edit::updates_need_settlement(cx.doc, &input);
+                let (planned, followers) = if settled {
+                    // The baseline Arc stays alive in the scratch drawing, so this identity cannot be reused
+                    // by a newly opened document. Source edits/Undo refresh by generation; ending the grip drops it.
+                    let identity = cx
+                        .doc
+                        .get_shared(g.slot)
+                        .map_or(0, |e| std::sync::Arc::as_ptr(e) as usize);
+                    let generation = cx.doc.generation();
+                    if !self
+                        .grip_plan
+                        .as_ref()
+                        .is_some_and(|(id, at, _)| *id == identity && *at == generation)
+                    {
+                        self.grip_plan = Some((identity, generation, cx.doc.reading_copy()));
+                    }
+                    if let Some((_, _, copy)) = self.grip_plan.as_mut() {
+                        kentos_native_application::edit::preview_update_in(copy, &input)
+                    } else {
+                        (
+                            kentos_native_application::edit::plan_in(cx.doc, &input),
+                            Default::default(),
+                        )
+                    }
+                } else {
+                    self.grip_plan = None;
+                    (
+                        kentos_native_application::edit::plan_in(cx.doc, &input),
+                        Default::default(),
+                    )
+                };
+                self.refused = crate::bond_refusal::Refused::of_result(&planned, cx);
+                match planned {
+                    kentos_commands::CommandResult::Completed { output, .. } if settled => {
+                        for (slot, _, after) in &mut moved {
+                            if let Some(actual) =
+                                output.changed.iter().find(|e| e.base().id == slot.0)
+                            {
+                                *after = actual.clone();
+                            }
+                        }
+                        crate::wall_dimensions::append_followers(
+                            &mut self.followers,
+                            &followers,
+                            cx,
+                        );
+                    }
+                    kentos_commands::CommandResult::Failed { error }
+                        if self.refused.is_none()
+                            && matches!(
+                                error.code.as_str(),
+                                "constraint_conflict"
+                                    | "constraint_singular"
+                                    | "not_converged"
+                                    | "shape_flipped"
+                            ) =>
+                    {
+                        let mut lines = vec![error.message];
+                        lines.extend(
+                            cx.doc
+                                .constraints()
+                                .constraints
+                                .iter()
+                                .enumerate()
+                                .filter(|(_, c)| {
+                                    error.uids.iter().any(|id| *id == c.id.to_string())
+                                })
+                                .map(|(i, c)| {
+                                    format!("{}. {}", i + 1, kentos_commands::rule_label(&c.rule))
+                                }),
+                        );
+                        self.refused = Some(crate::bond_refusal::Refused {
+                            lines,
+                            ..Default::default()
+                        });
+                    }
+                    _ => {}
+                }
             }
             let edits: Vec<(Slot, Shape, Shape)> = moved
                 .iter()
                 .map(|(slot, before, after)| (*slot, shape(before), shape(after)))
                 .collect();
             if !g.modes.copy {
-                self.follow = neighbours::neighbours_of(cx, &edits)
-                    .map(|n| n.shapes)
-                    .unwrap_or_default();
+                self.follow = if settled {
+                    Vec::new()
+                } else {
+                    neighbours::neighbours_of(cx, &edits)
+                        .map(|n| n.shapes)
+                        .unwrap_or_default()
+                };
                 // A wall's dimension rows, openings and spaces follow it in the same step: shown before it is written.
                 let updates: Vec<(Slot, kentos_commands::Entity)> = moved
                     .iter()
                     .map(|(slot, _, after)| (*slot, after.clone()))
                     .collect();
-                let delta = cx.doc.preview_followers(&updates, &[], &[]);
+                let delta = if settled {
+                    Default::default()
+                } else {
+                    cx.doc.preview_followers(&updates, &[], &[])
+                };
                 let followers = kentos_commands::DerivedEntitiesPlan {
                     added: delta.added.into_iter().map(|(_, e)| e).collect(),
                     updated: delta.updated.into_iter().map(|(_, e)| e).collect(),

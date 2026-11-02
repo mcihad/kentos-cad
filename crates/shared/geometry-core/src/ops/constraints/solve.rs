@@ -25,7 +25,8 @@ const FIXED: f64 = 1e-8;
 
 /// One constraint's equations: the unknowns its parts are built from (each part's slice), and its rule.
 struct Eq {
-    constraint: usize,
+    /// None for an internal dragged-point target; never exposed as a saved constraint ID.
+    constraint: Option<usize>,
     rule: Rule,
     value: f64,
     /// Every unknown it reads, each once, in first-seen order: the dual numbers' slots.
@@ -57,6 +58,121 @@ fn ellipse_ray_end(rule: &Rule, shapes: &[Shape]) -> Option<usize> {
 
 fn element_of(r: &Ref) -> &Element {
     &r.element
+}
+
+/// A held elliptic endpoint is checked at the actual stored geometry's world point, just as snaps and
+/// associative dimensions read it. Adding a local origin after an analytic evaluation and subtracting it
+/// before one round differently at map coordinates; equal stored world points must not become a false gap.
+/// This is a verification of an immovable point pair, never a relaxed Newton step or a larger tolerance.
+fn stored_point_pair_holds(eq: &Eq, shapes: &[Shape], tol: f64) -> bool {
+    let Rule::Coincident { a, b } = eq.rule else {
+        return false;
+    };
+    if ![a, b].iter().any(|r| {
+        matches!(shapes.get(r.object), Some(Shape::Ellipse { .. }))
+            && matches!(r.element, Element::Point(PointAt::Start | PointAt::End))
+    }) {
+        return false;
+    }
+
+    match (stored_point(shapes, a), stored_point(shapes, b)) {
+        (Some(a), Some(b)) => (a.x - b.x).abs() <= tol && (a.y - b.y).abs() <= tol,
+        _ => false,
+    }
+}
+
+fn stored_point(shapes: &[Shape], r: Ref) -> Option<crate::vec2::Vec2> {
+    use crate::ops::subref::{Place, point};
+    let place = match r.element {
+        Element::Point(PointAt::Start) => Place::Start,
+        Element::Point(PointAt::End) => Place::End,
+        Element::Point(PointAt::Center) => Place::Center,
+        Element::Point(PointAt::Node(part)) => Place::Node {
+            part: part as usize,
+        },
+        Element::Point(PointAt::Vertex { part, ring, index }) => Place::Vertex {
+            part: part as usize,
+            ring: ring as usize,
+            index: index as usize,
+        },
+        _ => return None,
+    };
+    point(
+        &crate::entity::Entity::new(shapes.get(r.object)?.clone()),
+        place,
+    )
+}
+
+/// Write a free directly stored follower at the canonical world point of the accepted analytic endpoint.
+/// The locally solved position can round to its neighbouring f64 after the curve's polar fields are encoded.
+/// Holds and permanent Fix parts remain untouched; the final stored constraints are verified by the caller.
+fn canonical_followers(
+    p: &Problem<'_>,
+    model: &Model,
+    free: &[bool],
+    out_x: &mut [f64],
+    shapes: &mut [Shape],
+    changed: &mut Vec<usize>,
+) -> bool {
+    let fixed: BTreeSet<usize> = p
+        .constraints
+        .iter()
+        .filter(|c| !c.reference)
+        .filter_map(|c| match c.rule {
+            Rule::Fix { a } => Some(a),
+            _ => None,
+        })
+        .flat_map(|r| {
+            model
+                .element_vars(p.shapes, r.object, &r.element)
+                .unwrap_or_default()
+        })
+        .collect();
+    let mut wrote = false;
+    for c in p.constraints.iter().filter(|c| !c.reference) {
+        let Rule::Coincident { a, b } = c.rule else {
+            continue;
+        };
+        let elliptic = |r: Ref| {
+            matches!(shapes.get(r.object), Some(Shape::Ellipse { .. }))
+                && matches!(r.element, Element::Point(PointAt::Start | PointAt::End))
+        };
+        let (curve, follower) = if elliptic(a) {
+            (a, b)
+        } else if elliptic(b) {
+            (b, a)
+        } else {
+            continue;
+        };
+        let Some(vars) = model.element_vars(p.shapes, follower.object, &follower.element) else {
+            continue;
+        };
+        if vars.len() != 2
+            || model.kinds[vars[0]] != VarKind::East
+            || model.kinds[vars[1]] != VarKind::North
+            || vars.iter().any(|&j| !free[j] || fixed.contains(&j))
+        {
+            continue;
+        }
+        let Some(at) = stored_point(shapes, curve) else {
+            continue;
+        };
+        if out_x[vars[0]] == at.x && out_x[vars[1]] == at.y {
+            continue;
+        }
+        let Some(slot) = &model.slots[follower.object] else {
+            continue;
+        };
+        out_x[vars[0]] = at.x;
+        out_x[vars[1]] = at.y;
+        write_back(&mut shapes[follower.object], slot, out_x);
+        if !changed.contains(&follower.object) {
+            changed.push(follower.object);
+        }
+        wrote = true;
+    }
+    changed.sort_unstable();
+    wrote
 }
 
 /// The residuals of `eq` at `x`, with derivatives by its slots when `exact`; unknowns `free` says are not are constant.
@@ -262,7 +378,18 @@ pub(super) fn run(p: &Problem<'_>, stop: &dyn Fn() -> bool) -> Outcome {
 
     // The unknowns held.
     let mut free = vec![true; model.x.len()];
+    let mut point_targets = Vec::new();
     for h in p.held {
+        if matches!(shapes.get(h.object), Some(Shape::Ellipse { .. }))
+            && let Some(element @ Element::Point(PointAt::Start | PointAt::End)) = h.element
+        {
+            // An elliptic endpoint reads all axes/angles, but a dragged endpoint holds only its position.
+            point_targets.push(Ref {
+                object: h.object,
+                element,
+            });
+            continue;
+        }
         let vars = match h.element {
             None => model
                 .slots
@@ -282,6 +409,28 @@ pub(super) fn run(p: &Problem<'_>, stop: &dyn Fn() -> bool) -> Outcome {
 
     // The equations.
     let mut eqs: Vec<Eq> = Vec::new();
+    // Put explicit drag targets first, so a permanent bond that prevents the target is named by the diagnosis.
+    // Their positions come from the post-edit shape; persistent Fix rules below still use fix_from.
+    for a in point_targets {
+        let Some(vars) = model.element_vars(shapes, a.object, &a.element) else {
+            continue;
+        };
+        let rule = Rule::Fix { a };
+        let Some(at) = built_parts(&model, shapes, &model.x, &rule) else {
+            continue;
+        };
+        let parts = vec![(0..vars.len()).collect()];
+        eqs.push(Eq {
+            constraint: None,
+            rule,
+            value: 0.,
+            vars,
+            parts,
+            at,
+            end: None,
+            ellipse_ray_end: None,
+        });
+    }
     let mut reference: Vec<(usize, Rule)> = Vec::new();
     let mut out_of_range = vec![false; p.constraints.len()];
     for &i in &broken {
@@ -342,7 +491,7 @@ pub(super) fn run(p: &Problem<'_>, stop: &dyn Fn() -> bool) -> Outcome {
             Vec::new()
         };
         eqs.push(Eq {
-            constraint: i,
+            constraint: Some(i),
             rule: c.rule,
             value: c.value,
             vars,
@@ -416,7 +565,7 @@ pub(super) fn run(p: &Problem<'_>, stop: &dyn Fn() -> bool) -> Outcome {
     let mut cancelled = false;
     // Constraints whose rows lost their meaning on a full step (a segment pulled to nothing): the solve can only
     // creep towards that, so it says them singular rather than the conflict it would stop short at.
-    let mut blew: BTreeSet<usize> = BTreeSet::new();
+    let mut blew: BTreeSet<Option<usize>> = BTreeSet::new();
 
     for g in &groups {
         let col_of: HashMap<usize, usize> =
@@ -576,6 +725,7 @@ pub(super) fn run(p: &Problem<'_>, stop: &dyn Fn() -> bool) -> Outcome {
         if eval(eq, shapes, &x, &free, s)
             .iter()
             .any(|d| !d.v.is_finite() || d.v.abs() > tol)
+            && !stored_point_pair_holds(eq, shapes, tol)
         {
             lone_unmet = true;
             conflicting.insert(eq.constraint);
@@ -606,7 +756,7 @@ pub(super) fn run(p: &Problem<'_>, stop: &dyn Fn() -> bool) -> Outcome {
         singular.extend(blew);
         conflicting.clear();
     }
-    let status = if cancelled {
+    let mut status = if cancelled {
         Status::Cancelled
     } else if !conflicting.is_empty() {
         Status::Inconsistent
@@ -614,7 +764,7 @@ pub(super) fn run(p: &Problem<'_>, stop: &dyn Fn() -> bool) -> Outcome {
         Status::Singular
     } else if !all_hold {
         Status::NonConvergent
-    } else if !redundant.is_empty() {
+    } else if redundant.iter().any(Option::is_some) {
         Status::Over
     } else if dof == 0 {
         Status::Fully
@@ -644,6 +794,43 @@ pub(super) fn run(p: &Problem<'_>, stop: &dyn Fn() -> bool) -> Outcome {
             changed.push(i);
         }
     }
+    if status.holds()
+        && free.iter().any(|f| *f)
+        && canonical_followers(p, &model, &free, &mut out_x, &mut shapes_out, &mut changed)
+    {
+        // Only a successful final representation may be written. Verification holds every object, so it
+        // cannot move anything or recurse into canonicalisation; other dimensions are never relaxed.
+        let held: Vec<_> = (0..shapes.len())
+            .map(|object| super::Hold {
+                object,
+                element: None,
+            })
+            .collect();
+        let verified = run(
+            &Problem {
+                shapes: &shapes_out,
+                constraints: p.constraints,
+                held: &held,
+                fix_from: Some(p.fix_from.unwrap_or(shapes)),
+            },
+            stop,
+        );
+        if !verified.status.holds() {
+            status = verified.status;
+            conflicting = verified.conflicting.into_iter().map(Some).collect();
+            singular = verified.singular.into_iter().map(Some).collect();
+            broken = verified.broken;
+            shapes_out = shapes.to_vec();
+            changed.clear();
+        }
+    }
+    // A final read-only/roundtrip verification may contain only held equations and no iterative group.
+    // A stop arriving in that phase still cancels the result before any caller can write it.
+    if stop() {
+        status = Status::Cancelled;
+        shapes_out = shapes.to_vec();
+        changed.clear();
+    }
     let free_objects: Vec<usize> = (0..shapes.len()).filter(|&i| loose[i]).collect();
     let final_x = if status.holds() { &out_x } else { &start_x };
     let measured_out = reference
@@ -658,9 +845,9 @@ pub(super) fn run(p: &Problem<'_>, stop: &dyn Fn() -> bool) -> Outcome {
         shapes: shapes_out,
         status,
         dof,
-        redundant: redundant.into_iter().collect(),
-        conflicting: conflicting.into_iter().collect(),
-        singular: singular.into_iter().collect(),
+        redundant: redundant.into_iter().flatten().collect(),
+        conflicting: conflicting.into_iter().flatten().collect(),
+        singular: singular.into_iter().flatten().collect(),
         broken,
         free: free_objects,
         changed,

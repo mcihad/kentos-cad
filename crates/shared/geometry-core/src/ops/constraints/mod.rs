@@ -320,6 +320,22 @@ pub fn moved_parts(before: &Shape, after: &Shape) -> Option<Vec<Element>> {
         }
     }
     parts.retain(|el| {
+        if matches!(after, Shape::Ellipse { .. }) {
+            let point = |shapes: &[Shape], m: &model::Model| {
+                let vars = m.element_vars(shapes, 0, el)?;
+                let v: Vec<_> = vars.iter().map(|&j| dual::D::c(m.x[j])).collect();
+                let model::Built::Point(p) = model::build(&shapes[0], el, &v) else {
+                    return None;
+                };
+                Some((p.x.v, p.y.v))
+            };
+            return match (point(b, &mb), point(a, &ma)) {
+                (Some((x0, y0)), Some((x1, y1))) => {
+                    (x1 - x0).abs() > MOVED || (y1 - y0).abs() > MOVED
+                }
+                _ => false,
+            };
+        }
         ma.element_vars(a, 0, el).is_some_and(|vars| {
             vars.iter()
                 .any(|&j| changed.get(j).copied().unwrap_or(true))
@@ -337,8 +353,8 @@ pub fn measure(shapes: &[Shape], rule: &Rule) -> Option<f64> {
 #[cfg(test)]
 mod ellipse_tests;
 #[cfg(test)]
-mod nurbs_tests;
-#[cfg(test)]
 mod insert_tests;
+#[cfg(test)]
+mod nurbs_tests;
 #[cfg(test)]
 mod tests;

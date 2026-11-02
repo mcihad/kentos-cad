@@ -915,6 +915,14 @@ impl Document {
             .map_or(0, |open| open.step.ops.len())
     }
 
+    /// The current group's net object changes, without closing or recording it. Preview callers can
+    /// inspect a command's settled result and cancel the group; only touched objects are visited.
+    pub fn group_report(&self) -> Option<crate::StepReport> {
+        self.history
+            .group
+            .as_ref()
+            .map(|open| crate::step::report_of(&open.step.ops))
+    }
     /// Whether a transaction or a group is open.
     pub fn is_busy(&self) -> bool {
         self.history.pending.is_some() || self.history.group.is_some()

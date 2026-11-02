@@ -65,6 +65,12 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &EntitiesEdit) -> CommandResult<En
 /// context to write through (`cad.entities.offset`, docs/adr/0246).
 pub fn plan_in(doc: &Document, input: &EntitiesEdit) -> CommandResult<EntitiesEditPlan> {
     let checked = check(doc, input);
+    // A constrained update may reshape the edited object and move other objects. Return that actual settled
+    // result, rather than only the raw requested geometry. Add/replace/delete retain their existing plan policy.
+    if let Ok(checked) = &checked && updates_need_settlement(doc, input) {
+        let mut copy = doc.reading_copy();
+        return settled_update_plan(&mut copy, input, checked).0;
+    }
     // The bonds refuse the plan as they refuse execute (docs/adr/0790 §1): a grip's drag shows them.
     if checked.is_ok() {
         let edited = input.changes.iter().filter_map(|c| match c {
@@ -89,6 +95,124 @@ pub fn plan_in(doc: &Document, input: &EntitiesEdit) -> CommandResult<EntitiesEd
         },
         Err(stop) => stop.into(),
     }
+}
+
+/// Whether an update-only edit touches a constrained object. The tool uses the same decision to avoid
+/// independently drawing unsolved followers on top of a complete settled plan.
+pub fn updates_need_settlement(doc: &Document, input: &EntitiesEdit) -> bool {
+    // Cutting/rewriting tools run their own outer command and may deliberately drop broken bonds.
+    // Keep their existing follow policy; only grip/property updates use this settled preview lane.
+    if !matches!(
+        input.operation,
+        EditOperation::Grip | EditOperation::Properties
+    ) {
+        return false;
+    }
+    if !input
+        .changes
+        .iter()
+        .all(|c| matches!(c, EntityEdit::Update { .. }))
+    {
+        return false;
+    }
+    let uids: HashSet<_> = input
+        .changes
+        .iter()
+        .filter_map(|c| match c {
+            EntityEdit::Update { uid, .. } => Uuid::parse_str(uid).ok(),
+            _ => None,
+        })
+        .collect();
+    doc.constraints().constraints.iter().any(|c| {
+        c.rule
+            .elements()
+            .iter()
+            .any(|r| uids.contains(&Uuid::from_bytes(r.uid.0)))
+    })
+}
+
+/// Update preview on the tool's reusable reading copy. Every result cancels its temporary group, including
+/// journal rows; repeated pointer frames start from the same baseline without cloning the whole drawing again.
+pub fn preview_update_in(
+    copy: &mut Document,
+    input: &EntitiesEdit,
+) -> (
+    CommandResult<EntitiesEditPlan>,
+    kentos_commands::DerivedEntitiesPlan,
+) {
+    if copy.is_busy() {
+        return preview_update_in(&mut copy.reading_copy(), input);
+    }
+    if !updates_need_settlement(copy, input) {
+        return (plan_in(copy, input), Default::default());
+    }
+    match check(copy, input) {
+        Ok(checked) => settled_update_plan(copy, input, &checked),
+        Err(stop) => (stop.into(), Default::default()),
+    }
+}
+
+/// Run the same product command on a reading copy. A group keeps its complete net change report available
+/// before cancellation, including constraint followers; neither source history nor source journal is touched.
+fn settled_update_plan(
+    copy: &mut Document,
+    input: &EntitiesEdit,
+    checked: &Checked,
+) -> (
+    CommandResult<EntitiesEditPlan>,
+    kentos_commands::DerivedEntitiesPlan,
+) {
+    let revision = copy.revision().to_string();
+    let mut followers = kentos_commands::DerivedEntitiesPlan::default();
+    let group = copy.begin_group("Düzenleme önizlemesi");
+    let result = execute(&mut ExecutionContext::new(copy), input.clone());
+    let planned = match result {
+        CommandResult::Completed { warnings, .. } => {
+            let report = copy.group_report().unwrap_or_default();
+            let changed: Vec<Entity> = checked
+                .changed
+                .iter()
+                .filter_map(|e| copy.get(e.slot).cloned())
+                .collect();
+            for c in &report.objects {
+                if c.changed()
+                    && !changed.iter().any(|e| e.base().id == c.slot.0)
+                    && let Some(after) = &c.after
+                {
+                    followers.updated.push((**after).clone());
+                }
+            }
+            followers.added = report
+                .objects
+                .iter()
+                .filter(|c| c.added())
+                .filter_map(|c| c.after.as_ref())
+                .map(|e| (**e).clone())
+                .collect();
+            followers.removed = report
+                .objects
+                .iter()
+                .filter(|c| c.removed())
+                .map(|c| c.uid.to_string())
+                .collect();
+            CommandResult::Completed {
+                output: EntitiesEditPlan {
+                    changed,
+                    created: Vec::new(),
+                    removed: Vec::new(),
+                    revision,
+                },
+                warnings,
+            }
+        }
+        CommandResult::Failed { error } => CommandResult::Failed { error },
+        CommandResult::Conflict { error } => CommandResult::Conflict { error },
+        CommandResult::NeedsInput { error } => CommandResult::NeedsInput { error },
+        CommandResult::Cancelled => CommandResult::Cancelled,
+        CommandResult::Queued { job_id } => CommandResult::Queued { job_id },
+    };
+    copy.cancel_group(group);
+    (planned, followers)
 }
 
 /// Checks `input` again and writes it as one undo step named after the

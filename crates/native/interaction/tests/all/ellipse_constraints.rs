@@ -132,9 +132,17 @@ fn a_successful_single_point_constraint_does_not_immediately_preview_its_own_dup
             .tag
             .is_some()
     );
-    assert_eq!(
-        b.session.preview(&Default::default()).unwrap().tag_tone,
-        kentos_interaction::Tone::Danger
+    let refused = b.session.preview(&Default::default()).unwrap();
+    assert_eq!(refused.tag_tone, kentos_interaction::Tone::Danger);
+    assert!(
+        refused
+            .tag
+            .as_ref()
+            .unwrap()
+            .lines
+            .iter()
+            .any(|s| s.contains("Sabit")),
+        "{refused:?}"
     );
     b.click(0., 0.); // Explicit repetition is still refused, not silently accepted.
     assert_eq!(b.doc.constraints().constraints.len(), 1);
@@ -191,4 +199,112 @@ fn quarter_turn_hover_is_read_only_then_two_clicks_apply_one_undoable_constraint
     assert!((e.ratio - 0.5).abs() < 1e-8);
     b.doc.undo().unwrap();
     assert_eq!(b.doc.to_snapshot_v2(), before);
+}
+
+fn arc_drag_bench(fixed_start: bool) -> Bench {
+    use kentos_commands::CommandResult;
+    use kentos_native_application::{ExecutionContext, constraints_edit};
+    let mut raw: Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/interaction/v1/constraint-ellipse-drag.kcad"
+    ))
+    .unwrap();
+    raw["origin"] = json!({"x":E,"y":N});
+    for e in raw["entities"].as_array_mut().unwrap() {
+        for key in ["c", "a", "b"] {
+            if let Some(p) = e.get_mut(key) {
+                p["x"] = json!(p["x"].as_f64().unwrap() + E);
+                p["y"] = json!(p["y"].as_f64().unwrap() + N);
+            }
+        }
+    }
+    let mut b = Bench::on(&raw.to_string());
+    b.draft.snap = false;
+    let part = |slot, place: &str| json!({"uid":b.doc.uid(Slot(slot)).unwrap().to_string(),"element":{"kind":"point","place":{"kind":place}}});
+    let a = part(1, "start");
+    let end = part(1, "end");
+    let mut rules = json!([{"rule":{"kind":"fix","a":part(1,"center")}},{"rule":{"kind":"distance","a":a,"b":end,"parameter":"kiris"},"value":"4.47213595499958m"},{"rule":{"kind":"coincident","a":end,"b":part(2,"start")}}]);
+    if fixed_start {
+        rules
+            .as_array_mut()
+            .unwrap()
+            .push(json!({"rule":{"kind":"fix","a":a}}));
+    }
+    let r = constraints_edit::execute(
+        &mut ExecutionContext::new(&mut b.doc),
+        serde_json::from_value(json!({"edit":{"kind":"add","constraints":rules}})).unwrap(),
+    );
+    assert!(matches!(r, CommandResult::Completed { .. }), "{r:?}");
+    b.selection.set([Slot(1)]);
+    b
+}
+#[test]
+fn an_elliptical_arc_end_grip_previews_readonly_and_follows_its_dimension_in_one_undo() {
+    use kentos_commands::{CommandResult, ConstraintsQuery, Entity};
+    let mut b = arc_drag_bench(false);
+    let before = b.doc.to_snapshot_v2();
+    let target = [4. * 0.3f64.cos(), 2. * 0.3f64.sin()];
+    b.click(4., 0.);
+    assert!(b.session.grip_active());
+    b.move_to(target[0], target[1]);
+    let preview = b.session.preview(&Default::default()).unwrap();
+    assert_ne!(
+        preview.tag_tone,
+        kentos_interaction::Tone::Danger,
+        "{preview:?}"
+    );
+    assert!(preview.strokes.len() >= 2, "{preview:?}");
+    assert_eq!(b.doc.to_snapshot_v2(), before);
+    b.click(target[0], target[1]);
+    let Some(Entity::Ellipse(e)) = b.doc.get(Slot(1)) else {
+        panic!()
+    };
+    let g = kentos_geometry_core::geom::ellipse::EllipseGeom {
+        c: kentos_interaction::Vec2::new(e.c.x, e.c.y),
+        major: kentos_interaction::Vec2::new(e.major.x, e.major.y),
+        ratio: e.ratio,
+        t0: e.t0,
+        t1: e.t1,
+    };
+    let start = kentos_geometry_core::geom::ellipse::ellipse_point(&g, e.t0);
+    let end = kentos_geometry_core::geom::ellipse::ellipse_point(&g, e.t1);
+    assert!(
+        (start.x - E - target[0]).hypot(start.y - N - target[1]) < 1e-8,
+        "{:?}",
+        b.log
+    );
+    let Some(Entity::Line(l)) = b.doc.get(Slot(2)) else {
+        panic!()
+    };
+    assert!((l.a.x - end.x).hypot(l.a.y - end.y) < 1e-8);
+    assert!(
+        preview
+            .strokes
+            .iter()
+            .flat_map(|s| &s.pts)
+            .any(|p| (p.x - end.x).hypot(p.y - end.y) < 1e-8),
+        "the hover must show the same solved endpoint as commit: {preview:?}"
+    );
+
+    let CommandResult::Completed { output: q, .. } =
+        kentos_native_application::constraints_query::read(&b.doc, &ConstraintsQuery::default())
+    else {
+        panic!()
+    };
+    assert!(q.constraints.iter().all(|c| c.holds), "{q:?}");
+    b.doc.undo().unwrap();
+    assert_eq!(b.doc.to_snapshot_v2(), before);
+}
+#[test]
+fn an_elliptical_arc_grip_conflict_keeps_the_last_valid_drawing() {
+    let mut b = arc_drag_bench(true);
+    let before = b.doc.to_snapshot_v2();
+    b.click(4., 0.);
+    b.move_to(4. * 0.3f64.cos(), 2. * 0.3f64.sin());
+    assert_eq!(
+        b.session.preview(&Default::default()).unwrap().tag_tone,
+        kentos_interaction::Tone::Danger
+    );
+    assert_eq!(b.doc.to_snapshot_v2(), before);
+    b.click(4. * 0.3f64.cos(), 2. * 0.3f64.sin());
+    assert_eq!(b.doc.to_snapshot_v2(), before, "{:?}", b.log);
 }

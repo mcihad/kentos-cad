@@ -372,3 +372,240 @@ fn ellipse_ray_alignment_uses_the_true_partial_end_and_nearest_direction() {
         assert!(t1 > t0 && t1 - t0 < TAU);
     }
 }
+
+#[test]
+fn changing_only_an_elliptical_arc_start_does_not_hold_its_unchanged_end() {
+    let before = ellipse(Vec2::new(0., 0.), 4., 2., 0., 0., PI / 2.);
+    let after = ellipse(Vec2::new(0., 0.), 4., 2., 0., 0.3, PI / 2.);
+    assert_eq!(moved_parts(&before, &after), Some(vec![START]));
+}
+
+#[test]
+fn a_dragged_ellipse_start_is_a_point_target_not_a_lock_on_all_seven_parameters() {
+    let before = [ellipse(Vec2::new(0., 0.), 4., 2., 0., 0., PI / 2.)];
+    let after = [ellipse(Vec2::new(0., 0.), 4., 2., 0., 0.3, PI / 2.)];
+    let target = at(&after[0], 0.3);
+    let constraints = [
+        c(Rule::Fix { a: r(0, CENTER) }),
+        dim(
+            Rule::Distance {
+                a: r(0, START),
+                b: r(0, END),
+                axis: Axis::Aligned,
+                left: false,
+            },
+            20f64.sqrt(),
+        ),
+    ];
+    let out = solve(
+        &Problem {
+            shapes: &after,
+            constraints: &constraints,
+            held: &[Hold {
+                object: 0,
+                element: Some(START),
+            }],
+            fix_from: Some(&before),
+        },
+        &|| false,
+    );
+    assert!(out.status.holds(), "{out:?}");
+    let Shape::Ellipse { c, t0, t1, .. } = out.shapes[0] else {
+        panic!()
+    };
+    close(c, Vec2::new(0., 0.));
+    close(at(&out.shapes[0], t0), target);
+    let end = at(&out.shapes[0], t1);
+    assert!((js_hypot(target.x - end.x, target.y - end.y) - 20f64.sqrt()).abs() < 1e-8);
+    assert!(
+        js_hypot(end.x, end.y - 2.) > 1e-3,
+        "the unchanged endpoint must be free to satisfy the dimension"
+    );
+    assert_eq!(
+        out.dof, 2,
+        "only the dragged point's two coordinates are held"
+    );
+}
+
+#[test]
+fn an_ellipse_drag_target_that_conflicts_with_a_permanent_fix_is_not_silently_released() {
+    let before = [ellipse(Vec2::new(0., 0.), 4., 2., 0., 0., PI / 2.)];
+    let after = [ellipse(Vec2::new(0., 0.), 4., 2., 0., 0.3, PI / 2.)];
+    let constraints = [
+        c(Rule::Fix { a: r(0, CENTER) }),
+        c(Rule::Fix { a: r(0, START) }),
+    ];
+    let out = solve(
+        &Problem {
+            shapes: &after,
+            constraints: &constraints,
+            held: &[Hold {
+                object: 0,
+                element: Some(START),
+            }],
+            fix_from: Some(&before),
+        },
+        &|| false,
+    );
+    assert!(!out.status.holds(), "{out:?}");
+    assert_eq!(out.shapes, after);
+    assert!(
+        out.conflicting.contains(&1),
+        "the permanent Fix preventing this drag must be named: {out:?}"
+    );
+}
+
+#[test]
+fn holding_the_full_ellipse_seam_leaves_the_minor_axis_free() {
+    let shapes = [ellipse(Vec2::new(0., 0.), 5., 2., 0., 0., 0.)];
+    let constraints = [c(Rule::Fix { a: r(0, CENTER) })];
+    let out = solve(
+        &Problem {
+            shapes: &shapes,
+            constraints: &constraints,
+            held: &[Hold {
+                object: 0,
+                element: Some(START),
+            }],
+            fix_from: None,
+        },
+        &|| false,
+    );
+    assert_eq!(out.status, Status::Under, "{out:?}");
+    assert_eq!(out.dof, 1);
+    assert_eq!(out.shapes, shapes);
+}
+
+#[test]
+fn stored_world_endpoint_coincidence_survives_local_origin_rounding_but_a_real_gap_is_not_relaxed()
+{
+    // Saved result of the actual grip test at map coordinates; the canonical endpoint and follower match bits.
+    let e = Shape::Ellipse {
+        c: Vec2::new(487000., 4420000.),
+        major: Vec2::new(3.975923693455719, 0.008856974324449825),
+        ratio: 0.5328000117676391,
+        t0: 0.2785762202467755,
+        t1: 1.6667796983056156,
+    };
+    let p = at(&e, 1.6667796983056156);
+    let constraints = [c(Rule::Coincident {
+        a: r(0, END),
+        b: r(1, Element::Point(PointAt::Node(0))),
+    })];
+    let held = [
+        Hold {
+            object: 0,
+            element: None,
+        },
+        Hold {
+            object: 1,
+            element: None,
+        },
+    ];
+    for (gap, holds) in [(0., true), (p.y.next_up() - p.y, false), (1e-6, false)] {
+        let shapes = [e.clone(), point(Vec2::new(p.x, p.y + gap))];
+        let out = solve(
+            &Problem {
+                shapes: &shapes,
+                constraints: &constraints,
+                held: &held,
+                fix_from: None,
+            },
+            &|| false,
+        );
+        assert_eq!(out.status.holds(), holds, "gap {gap}: {out:?}");
+        assert_eq!(out.shapes, shapes);
+    }
+    let e = ellipse(Vec2::new(0., 0.), 4., 2., 0., 0., PI / 2.);
+    let p = at(&e, PI / 2.);
+    let shapes = [e, point(Vec2::new(p.x, p.y + 5e-10))];
+    let out = solve(
+        &Problem {
+            shapes: &shapes,
+            constraints: &constraints,
+            held: &held,
+            fix_from: None,
+        },
+        &|| false,
+    );
+    assert!(
+        !out.status.holds(),
+        "a near-origin physical gap keeps the original tolerance: {out:?}"
+    );
+}
+
+#[test]
+fn a_real_mouse_drag_endpoint_uses_the_independently_rounded_map_coordinate() {
+    let e = ellipse(Vec2::new(487000., 4420000.), 4., 2., 0., 0., PI / 2.);
+    assert_eq!(at(&e, 0.), Vec2::new(487004., 4420000.));
+    // Parameters saved by the real GUI drag. mpmath at 100 digits, from the exact f64 inputs,
+    // independently rounds this analytic point to the same two numbers as the stored follower.
+    let e = Shape::Ellipse {
+        c: Vec2::new(487000., 4420000.),
+        major: Vec2::new(3.9758045793195307, 0.008850533012778335),
+        ratio: 0.5328630330147123,
+        t0: 0.27910843737677354,
+        t1: 1.6670507904458485,
+    };
+    let expected = Vec2::new(486999.61320742796, 4420002.10790213);
+    assert_eq!(at(&e, 1.6670507904458485), expected);
+    let shapes = [e, point(expected)];
+    let constraints = [c(Rule::Coincident {
+        a: r(0, END),
+        b: r(1, Element::Point(PointAt::Node(0))),
+    })];
+    let held = [
+        Hold {
+            object: 0,
+            element: None,
+        },
+        Hold {
+            object: 1,
+            element: None,
+        },
+    ];
+    let out = solve(
+        &Problem {
+            shapes: &shapes,
+            constraints: &constraints,
+            held: &held,
+            fix_from: None,
+        },
+        &|| false,
+    );
+    assert!(out.status.holds(), "{out:?}");
+    assert_eq!(out.shapes, shapes);
+}
+
+#[test]
+fn cancellation_of_a_held_endpoint_verification_returns_no_changes() {
+    let e = ellipse(Vec2::new(487000., 4420000.), 4., 2., 0., 0., PI / 2.);
+    let end = at(&e, PI / 2.);
+    let shapes = [e, point(end)];
+    let constraints = [c(Rule::Coincident {
+        a: r(0, END),
+        b: r(1, Element::Point(PointAt::Node(0))),
+    })];
+    let held = [
+        Hold {
+            object: 0,
+            element: None,
+        },
+        Hold {
+            object: 1,
+            element: None,
+        },
+    ];
+    let out = solve(
+        &Problem {
+            shapes: &shapes,
+            constraints: &constraints,
+            held: &held,
+            fix_from: None,
+        },
+        &|| true,
+    );
+    assert_eq!(out.status, Status::Cancelled);
+    assert!(out.changed.is_empty());
+    assert_eq!(out.shapes, shapes);
+}

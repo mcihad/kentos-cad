@@ -378,8 +378,8 @@ pub(super) fn build(shape: &Shape, element: &Element, v: &[D]) -> Built {
                 }
                 let (ct, st, co, so) = (t.cos(), t.sin(), v[4].cos(), v[4].sin());
                 Built::Point(P {
-                    x: v[0] + v[2] * co * ct - v[3] * so * st,
-                    y: v[1] + v[2] * so * ct + v[3] * co * st,
+                    x: v[0] + (v[2] * co * ct - v[3] * so * st),
+                    y: v[1] + (v[2] * so * ct + v[3] * co * st),
                 })
             }
             _ => Built::Point(P { x: v[0], y: v[1] }),

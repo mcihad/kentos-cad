@@ -2776,3 +2776,81 @@ fn temporary_first_object_hold_diagnoses_saved_constraints_in_mcp() {
     );
     std::fs::remove_dir_all(dir).unwrap();
 }
+#[test]
+fn an_elliptical_arc_grip_target_and_follower_share_mcp_plan_query_and_undo() {
+    let dir =
+        std::env::temp_dir().join(format!("kentos-mcp-ellipse-target-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join("arc.json");
+    std::fs::write(
+        &path,
+        include_str!("../../../../fixtures/interaction/v1/constraint-ellipse-drag.kcad"),
+    )
+    .unwrap();
+    let mut server = Server::new();
+    let drawing =
+        call(&mut server, "drawing.open", json!({"path":path}))["structuredContent"]["drawing"]
+            .clone();
+    let original=call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"].clone();
+    let part = |i: usize, p: &str| json!({"uid":original[i]["uid"],"element":{"kind":"point","place":{"kind":p}}});
+    let r = call(
+        &mut server,
+        "cad.constraints.edit",
+        json!({"drawing":drawing,"edit":{"kind":"add","constraints":[{"rule":{"kind":"fix","a":part(0,"center")}},{"rule":{"kind":"distance","a":part(0,"start"),"b":part(0,"end"),"parameter":"kiris"},"value":"4.47213595499958m"},{"rule":{"kind":"coincident","a":part(0,"end"),"b":part(1,"start")}}]}}),
+    );
+    assert_eq!(r["structuredContent"]["status"], "completed", "{r}");
+    let before=call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"].clone();
+    let mut g = json!({});
+    for key in ["kind", "c", "major", "ratio", "t0", "t1"] {
+        g[key] = before[0]["entity"][key].clone();
+    }
+    g["t0"] = json!(0.3);
+    let input = json!({"drawing":drawing,"operation":"grip","changes":[{"kind":"update","uid":before[0]["uid"],"geometry":g}]});
+    let mut p = input.clone();
+    p["op"] = json!("plan");
+    let planned = call(&mut server, "cad.entities.edit", p);
+    assert_eq!(
+        planned["structuredContent"]["status"], "completed",
+        "{planned}"
+    );
+    assert_eq!(
+        call(&mut server, "drawing.entities", json!({"drawing":drawing}))["structuredContent"]["items"],
+        before
+    );
+    assert_eq!(planned["structuredContent"]["summary"]["changed"].as_array().unwrap().len(), 2, "{planned}");
+    assert_eq!(planned["structuredContent"]["summary"]["dependents"], json!([before[1]["uid"]]));
+    let r = call(&mut server, "cad.entities.edit", input);
+    assert_eq!(r["structuredContent"]["status"], "completed", "{r}");
+    let after=call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"].clone();
+    assert_eq!(planned["structuredContent"]["output"]["changed"], json!([after[0]["entity"]]));
+    let e = &after[0]["entity"];
+    let t = e["t0"].as_f64().unwrap();
+    let a = e["major"]["x"].as_f64().unwrap();
+    let b = e["major"]["y"].as_f64().unwrap();
+    let ratio = e["ratio"].as_f64().unwrap();
+    let x = e["c"]["x"].as_f64().unwrap() + a * t.cos() - b * ratio * t.sin();
+    let y = e["c"]["y"].as_f64().unwrap() + b * t.cos() + a * ratio * t.sin();
+    assert!((x - 4. * 0.3f64.cos()).hypot(y - 2. * 0.3f64.sin()) < 1e-8);
+    assert_eq!(e["attrs"], before[0]["entity"]["attrs"]);
+    assert_eq!(after[0]["uid"], before[0]["uid"]);
+    assert_ne!(after[1]["entity"]["a"], before[1]["entity"]["a"]);
+    let q = call(
+        &mut server,
+        "cad.constraints.query",
+        json!({"drawing":drawing}),
+    );
+    assert_eq!(q["structuredContent"]["output"]["diagnosis"]["dof"], 6);
+    assert!(
+        q["structuredContent"]["output"]["constraints"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|c| c["holds"] == true)
+    );
+    call(&mut server, "drawing.undo", json!({"drawing":drawing}));
+    assert_eq!(
+        call(&mut server, "drawing.entities", json!({"drawing":drawing}))["structuredContent"]["items"],
+        before
+    );
+    std::fs::remove_dir_all(dir).unwrap();
+}

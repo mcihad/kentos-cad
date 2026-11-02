@@ -8,7 +8,7 @@ doğrulanan ilk arayüz dilimini ve kalan gerçek geometri işlerini ayırır.
 | Nokta / çizgi | Konum, düz kenar, uzaklık, yön ve geometrik bağlar | Birleşik sürükleme/dal kabulünü genişlet |
 | Daire / bağımsız yay | Merkez/yarıçap, yay uç açıları; teğet/eşitlik/ölçüler | Büyük koordinat ve kilitli referans birleşik kabulü |
 | Çoklu çizgi / alan | Her halka/parçanın köşeleri bilinmeyen; düz kenarlar Segment | Yaylı kenarın bulge/yarıçapı sabit, henüz değişken değil |
-| Elips | Merkez ve mevcut Start/End (tam elipste dikiş); gerçek yarı eksen/açı bilinmeyenleri, dual türevler | Genel teğet, ayrı eksen noktaları, gripte kısmi tutuş kabulü |
+| Elips | Merkez ve mevcut Start/End (tam elipste dikiş); gerçek yarı eksen/açı bilinmeyenleri, dual türevler | Genel teğet ve ayrı eksen noktaları açık; kısmi yay Start/End grip hedefi, izleyen çizgi, plan/önizleme ve Undo kabulü geçti |
 | NURBS | Açık/periyodik olmayan ve iki ucu tam clamped eğride Start/End; dört uç koordinatı, iç kontrol noktaları sabit | Genel kontrol/teğet/G2 ve diğer uç yapıları bu adaptörde yok |
 | Blok yerleştirmesi / iç nesne | Yerleştirme noktası Node(0), yalnız iki konum bilinmeyeni; ayna/açı/ölçek ve kaynak korunur | İç parça, dönme ve ölçek bilinmeyenleri bu adaptörde yok; birleşik GUI/Python/MCP ve grip/Undo kabulü geçti |
 | Parametre ifadeleri | Uzunluk/açı/sayı, ad değiştirme, token bağımlılığı, döngü, sıfıra bölme | Boyut cebiri ve uygunsuz birim karışımı ayrıca denetlenmeli |
@@ -74,3 +74,5 @@ Elipsin kendi merkez–uç yönünde ekseni çökertmeden çeyrek dönüşü, ki
 Açık NURBS uçlarının 6→8 m, bağlı çizgi, kapsam notu, dosya/Undo ve UI/Python/MCP kabulü: [ADR 0832](../adr/0832-bounded-nurbs-endpoint-constraints.md), [Python/MCP kullanımı](nurbs-constraints-python.md).
 
 Aynalı/dönük blok yerleştirme noktası ve gerçek grip kabulü: [ADR 0833](../adr/0833-block-insertion-anchor-constraints.md), [Python/MCP kullanımı](block-anchor-constraints-python.md). İlk seçilen sabit nesnenin geçici hold altında gereksiz raporlanması [ADR 0834](../adr/0834-permanent-diagnosis-after-temporary-holds.md) ile düzeltildi; geçici tutuş başarılı hareketi seçer, teşhis kalıcı bağları gösterir.
+
+Elips yayı uç grip hedefi, çözülmüş önizleme ve büyük koordinatta saklanan uç/izleyen nokta kabulü: [ADR 0835](../adr/0835-elliptical-endpoint-grip-targets.md). Tam elips eksen grip'leri bu kabulün kapsamında değildir.

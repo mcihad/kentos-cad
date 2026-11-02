@@ -1,5 +1,6 @@
 """CAD-ADV-05: ellipse constraints share the desktop's command/diagnosis path."""
 import json
+import math
 import unittest
 from pathlib import Path
 from kentos import cad
@@ -56,5 +57,51 @@ class EllipseConstraints(unittest.TestCase):
         self.assertEqual(e['t0'],e['t1'])
         self.assertFalse(cad.constraints.query(d).diagnosis.conflicting)
         d.undo();self.assertEqual(d.to_bytes(),before)
+
+def arc_drawing(fixed_start=False):
+    d = cad.Document.from_bytes((ROOT/'fixtures/interaction/v1/constraint-ellipse-drag.kcad').read_bytes())
+    uids = [r.uid for r in d.entities()]
+    part = lambda i,p: dict(uid=uids[i],element=dict(kind='point',place=dict(kind=p)))
+    a,b,c,l = part(0,'start'),part(0,'end'),part(0,'center'),part(1,'start')
+    cs = [dict(rule=dict(kind='fix',a=c)),dict(rule=dict(kind='distance',a=a,b=b,parameter='kiris'),value='4.47213595499958m'),dict(rule=dict(kind='coincident',a=b,b=l))]
+    if fixed_start:
+        cs.append(dict(rule=dict(kind='fix',a=a)))
+    cad.constraints.edit(d,edit=cad.AddConstraintEdit.from_json(dict(kind='add',constraints=cs)))
+    return d,uids
+
+
+def ellipse_point(e,t):
+    a=e['major']; c=e['c']; r=e['ratio']
+    return (c['x']+a['x']*math.cos(t)-a['y']*r*math.sin(t),c['y']+a['y']*math.cos(t)+a['x']*r*math.sin(t))
+
+
+class EllipticalArcTargets(unittest.TestCase):
+    def test_grip_holds_the_point_and_solves_the_other_end_then_undoes(self):
+        d,uids=arc_drawing(); before=d.to_bytes(); old=d.entity(uids[0]).entity.to_json()
+        g={k:old[k] for k in ['kind','c','major','ratio','t0','t1']};g['t0']=.3
+        changes=[cad.UpdateEntityEdit(uid=uids[0],geometry=cad.EllipseEntityGeometry.from_json(g))]
+        planned=cad.entities.edit.plan(d,operation='grip',changes=changes);self.assertEqual(d.to_bytes(),before)
+        self.assertEqual(len(planned.changed),1)
+        cad.entities.edit(d,operation='grip',changes=changes)
+        e=d.entity(uids[0]).entity.to_json();l=d.entity(uids[1]).entity.to_json()
+        self.assertEqual([e.to_json() for e in planned.changed],[e])
+        a,b=ellipse_point(e,e['t0']),ellipse_point(e,e['t1'])
+        self.assertLess(math.dist(a,(4*math.cos(.3),2*math.sin(.3))),1e-8)
+        self.assertAlmostEqual(math.dist(a,b),math.sqrt(20),places=8)
+        self.assertGreater(math.dist(b,(0,2)),1e-3)
+        self.assertLess(math.dist(b,(l['a']['x'],l['a']['y'])),1e-8)
+        self.assertEqual(e['attrs'],old['attrs']);q=cad.constraints.query(d).to_json()
+        self.assertTrue(all(r['holds'] for r in q['constraints']));self.assertEqual(q['diagnosis']['dof'],6)
+        saved=d.to_bytes();self.assertEqual(cad.Document.from_bytes(saved).to_bytes(),saved)
+        d.undo();self.assertEqual(d.to_bytes(),before)
+
+    def test_fixed_start_conflict_is_atomic(self):
+        d,uids=arc_drawing(True);before=d.to_bytes();old=d.entity(uids[0]).entity.to_json()
+        g={k:old[k] for k in ['kind','c','major','ratio','t0','t1']};g['t0']=.3
+        with self.assertRaises(cad.CommandFailed) as refused:
+            cad.entities.edit(d,operation='grip',changes=[cad.UpdateEntityEdit(uid=uids[0],geometry=cad.EllipseEntityGeometry.from_json(g))])
+        self.assertEqual(refused.exception.code, 'constraint_conflict')
+        self.assertEqual(d.to_bytes(),before)
+
 
 if __name__=='__main__':unittest.main()
