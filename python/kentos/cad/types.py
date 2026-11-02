@@ -1252,6 +1252,7 @@ class CreateOperation(_StrEnum):
     - ``landXml``: LandXML al (plan/road.md Y2.5): a LandXML surface's points, breaklines and boundaries.
     - ``alignmentLabels``: `road.alignments.label` (plan/road.md Y3): an alignment's km ticks and words, “Aks km yazısı”.
     - ``profileDrawing``: `road.profiles.draw` (plan/road.md Y4): a profile's frame, grid, terrain, design line and bands, “Boykesit çiz”.
+    - ``sectionDrawing``: `road.sections.draw` (plan/road.md Y5): a sample line set's section views, “Enkesit çiz”.
     """
     PARALLEL = "parallel"
     PERPENDICULAR_IN = "perpendicularIn"
@@ -1292,9 +1293,10 @@ class CreateOperation(_StrEnum):
     LAND_XML = "landXml"
     ALIGNMENT_LABELS = "alignmentLabels"
     PROFILE_DRAWING = "profileDrawing"
+    SECTION_DRAWING = "sectionDrawing"
 
 
-CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions", "terrainContours", "landXml", "alignmentLabels", "profileDrawing"]
+CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions", "terrainContours", "landXml", "alignmentLabels", "profileDrawing", "sectionDrawing"]
 """The names of :class:`CreateOperation`, for a plain string."""
 
 
@@ -60158,6 +60160,160 @@ class SectionSide(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SectionView(_Model):
+    """A section view drawn: its station and km, its frame's lower left and upper right, its datum and top elevations, its
+    cut and fill areas (m²) when the platform was built.
+    Attributes:
+        station: Unit: m.
+        km: Unit: m.
+        frame: Unit: length.
+        datum: Unit: elevation.
+        top: Unit: elevation.
+        cut: Unit: area.
+        fill: Unit: area.
+    """
+    station: float
+    km: float
+    km_text: str
+    frame: list[list[float]]
+    datum: float
+    top: float
+    cut: float | None | Unset = UNSET
+    fill: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["station"] = float(self.station)
+        out["km"] = float(self.km)
+        out["kmText"] = self.km_text
+        out["frame"] = [[float(e1) for e1 in e0] for e0 in self.frame]
+        out["datum"] = float(self.datum)
+        out["top"] = float(self.top)
+        if self.cut is not UNSET:
+            out["cut"] = None if self.cut is None else float(self.cut)
+        if self.fill is not UNSET:
+            out["fill"] = None if self.fill is None else float(self.fill)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SectionView:
+        return cls(
+            station=float(data["station"]),
+            km=float(data["km"]),
+            km_text=data["kmText"],
+            frame=[[float(e1) for e1 in e0] for e0 in data["frame"]],
+            datum=float(data["datum"]),
+            top=float(data["top"]),
+            cut=UNSET if "cut" not in data else None if data["cut"] is None else float(data["cut"]),
+            fill=UNSET if "fill" not in data else None if data["fill"] is None else float(data["fill"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SectionsDraw(_Model):
+    """Input of `road.sections.draw` v1: a sample line set's sections (`set`: its id or name; only those at `stations`,
+    among the set's, when given) drawn on a layer as section views in a grid, lines and texts that go to sheets and
+    DXF (docs/adr/0903 §7). The views lie in rows of `columns` (5 when absent) from `at`, the sheet's upper left, left to
+    right then down; a view is the swath wide (a metre of offset a drawing unit) and the set's tallest elevation range
+    high (a metre of elevation `exaggeration` units, 1 when absent), its own datum a metre under its lowest elevation,
+    floored. Each view: its frame, the elevation and offset grids with their numbers, the terrain (black, off the
+    surface left out), the platform and slopes (red), the axis, the km over it and the axis elevation, cut and fill
+    areas under it. Texts are `height` paper millimetres high (2.5 when absent).
+
+    Refusals, in this order: `not_a_road_project`, `unknown_section_set`, `invalid_label` (`columns` not 1–100,
+    `height` or `exaggeration` not above 0), `invalid_section_set` (its stations no longer come out), `invalid_places`
+    (a station not among the set's), `no_terrain` (the set has no surface or it makes none), the layer's
+    (`layer_not_found`, `not_a_layer`, `service_layer`, `layer_locked`), `invalid_revision`, `revision_conflict`.
+    Warnings: `layer_hidden`, `section_set_stale`, `section_open`.
+    Attributes:
+        at: Unit: length.
+        columns: Unit: count.
+        exaggeration: Unit: 1.
+        height: Unit: paper-mm.
+        stations: Unit: m.
+    """
+    set: str
+    layer_id: str
+    at: list[float]
+    columns: int | None | Unset = UNSET
+    exaggeration: float | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    height: float | None | Unset = UNSET
+    stations: list[float] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["set"] = self.set
+        out["layerId"] = self.layer_id
+        out["at"] = [float(e0) for e0 in self.at]
+        if self.columns is not UNSET:
+            out["columns"] = self.columns
+        if self.exaggeration is not UNSET:
+            out["exaggeration"] = None if self.exaggeration is None else float(self.exaggeration)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.height is not UNSET:
+            out["height"] = None if self.height is None else float(self.height)
+        if self.stations is not UNSET:
+            out["stations"] = [float(e0) for e0 in self.stations]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SectionsDraw:
+        return cls(
+            set=data["set"],
+            layer_id=data["layerId"],
+            at=[float(e0) for e0 in data["at"]],
+            columns=data.get("columns", UNSET),
+            exaggeration=UNSET if "exaggeration" not in data else None if data["exaggeration"] is None else float(data["exaggeration"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+            stations=[float(e0) for e0 in data["stations"]] if "stations" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SectionsDrawn(_Model):
+    """Output of `road.sections.draw` v1, and its plan: the views in order, the elevation grid's and the offset grid's
+    steps, the exaggeration, the objects written (none in a plan).
+    Attributes:
+        grid: Unit: m.
+        offsets: Unit: m.
+        exaggeration: Unit: 1.
+    """
+    set: str
+    views: list[SectionView]
+    grid: float
+    offsets: float
+    exaggeration: float
+    uids: list[str]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["set"] = self.set
+        out["views"] = [e0.to_json() for e0 in self.views]
+        out["grid"] = float(self.grid)
+        out["offsets"] = float(self.offsets)
+        out["exaggeration"] = float(self.exaggeration)
+        out["uids"] = list(self.uids)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SectionsDrawn:
+        return cls(
+            set=data["set"],
+            views=[SectionView.from_json(e0) for e0 in data["views"]],
+            grid=float(data["grid"]),
+            offsets=float(data["offsets"]),
+            exaggeration=float(data["exaggeration"]),
+            uids=list(data["uids"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SectionsEdit(_Model):
     """Input of `road.sections.edit` v1: the set by its id or name (absent: a new one). A new set needs `name`,
     `alignment`, `left`, `right` and `stations`; it holds its alignment's present revision. `profile`, `template` and
@@ -95813,6 +95969,9 @@ __all__ = [
     "SectionSetReport",
     "SectionSide",
     "SectionStations",
+    "SectionView",
+    "SectionsDraw",
+    "SectionsDrawn",
     "SectionsEdit",
     "SectionsQueried",
     "SectionsQuery",

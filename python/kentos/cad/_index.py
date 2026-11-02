@@ -337,6 +337,7 @@ COMMANDS: dict[str, Any] = {
     "road.profiles.draw": road.profiles.draw,
     "road.profiles.edit": road.profiles.edit,
     "road.profiles.query": road.profiles.query,
+    "road.sections.draw": road.sections.draw,
     "road.sections.edit": road.sections.edit,
     "road.sections.query": road.sections.query,
     "road.templates.edit": road.templates.edit,

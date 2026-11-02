@@ -119,6 +119,8 @@ pub enum CreateOperation {
     AlignmentLabels,
     /// `road.profiles.draw` (plan/road.md Y4): a profile's frame, grid, terrain, design line and bands, “Boykesit çiz”.
     ProfileDrawing,
+    /// `road.sections.draw` (plan/road.md Y5): a sample line set's section views, “Enkesit çiz”.
+    SectionDrawing,
 }
 
 /// One new object: its geometry and what else it carries. The layer is the

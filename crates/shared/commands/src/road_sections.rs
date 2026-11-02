@@ -21,6 +21,8 @@ pub const ROAD_SECTIONS_EDIT: &str = "road.sections.edit";
 pub const ROAD_SECTIONS_EDIT_VERSION: u32 = 1;
 pub const ROAD_SECTIONS_QUERY: &str = "road.sections.query";
 pub const ROAD_SECTIONS_QUERY_VERSION: u32 = 1;
+pub const ROAD_SECTIONS_DRAW: &str = "road.sections.draw";
+pub const ROAD_SECTIONS_DRAW_VERSION: u32 = 1;
 
 /// What an edit of a template or a set does.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -303,4 +305,99 @@ pub struct SectionRow {
 pub struct SectionsQueried {
     pub sets: Vec<SectionSetReport>,
     pub sections: Vec<SectionRow>,
+}
+
+/// Input of `road.sections.draw` v1: a sample line set's sections (`set`: its id or name; only those at `stations`,
+/// among the set's, when given) drawn on a layer as section views in a grid, lines and texts that go to sheets and
+/// DXF (docs/adr/0903 §7). The views lie in rows of `columns` (5 when absent) from `at`, the sheet's upper left, left to
+/// right then down; a view is the swath wide (a metre of offset a drawing unit) and the set's tallest elevation range
+/// high (a metre of elevation `exaggeration` units, 1 when absent), its own datum a metre under its lowest elevation,
+/// floored. Each view: its frame, the elevation and offset grids with their numbers, the terrain (black, off the
+/// surface left out), the platform and slopes (red), the axis, the km over it and the axis elevation, cut and fill
+/// areas under it. Texts are `height` paper millimetres high (2.5 when absent).
+///
+/// Refusals, in this order: `not_a_road_project`, `unknown_section_set`, `invalid_label` (`columns` not 1–100,
+/// `height` or `exaggeration` not above 0), `invalid_section_set` (its stations no longer come out), `invalid_places`
+/// (a station not among the set's), `no_terrain` (the set has no surface or it makes none), the layer's
+/// (`layer_not_found`, `not_a_layer`, `service_layer`, `layer_locked`), `invalid_revision`, `revision_conflict`.
+/// Warnings: `layer_hidden`, `section_set_stale`, `section_open`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SectionsDraw {
+    pub set: String,
+    pub layer_id: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub at: [f64; 2],
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<f64>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub stations: Vec<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub columns: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub exaggeration: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
+    pub height: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
+/// A section view drawn: its station and km, its frame's lower left and upper right, its datum and top elevations, its
+/// cut and fill areas (m²) when the platform was built.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SectionView {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub station: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub km: f64,
+    pub km_text: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub frame: [[f64; 2]; 2],
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub datum: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub top: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub cut: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub fill: Option<f64>,
+}
+
+/// Output of `road.sections.draw` v1, and its plan: the views in order, the elevation grid's and the offset grid's
+/// steps, the exaggeration, the objects written (none in a plan).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SectionsDrawn {
+    pub set: String,
+    pub views: Vec<SectionView>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub grid: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub offsets: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub exaggeration: f64,
+    pub uids: Vec<String>,
+    pub revision: String,
 }

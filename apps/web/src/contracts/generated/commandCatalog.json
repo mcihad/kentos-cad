@@ -36822,6 +36822,229 @@
       ]
     },
     {
+      "id": "road.sections.draw",
+      "version": 1,
+      "title": "Enkesit çiz",
+      "summary": "Yol projesinin bir kesit takımının enkesitlerini (set: kimliği ya da adı; stations ile yalnız takımın o km'lerindekiler) bir katmana çizgi ve yazı nesneleri olarak yazar, paftaya ve DXF'e gider: görünüşler at'tan (sayfanın sol üstü) başlayarak satırlarda columns tane (yoksa 5), soldan sağa sonra aşağı. Bir görünüş şerit genişliğinde (ötelemenin bir metresi bir çizim birimi) ve takımın en uzun kot aralığı boyunda (kotun bir metresi exaggeration birim, yoksa 1); kıyas kotu en alçak kotun bir metre altı, aşağı yuvarlanmış. Her görünüşte çerçeve, kot ve öteleme ızgaraları ve sayıları, arazi (siyah; yüzeyin dışı çizilmez), platform ve şevler (kırmızı), eksen, üstünde km, altında eksen kotu ile yarma ve dolgu alanı. Yazılar height mm (yoksa 2,5) yüksekliğinde, çizim ölçeğiyle. Cevap her görünüşün km'si, çerçevesi, kıyas ve tepe kotu, alanları ile ızgara aralıklarıdır. Tek geri alma adımı “Enkesit çiz”. Retler: not_a_road_project, unknown_section_set, invalid_label, invalid_section_set, invalid_places, no_terrain, layer_not_found, not_a_layer, service_layer, layer_locked, invalid_revision, revision_conflict; uyarılar layer_hidden, section_set_stale, section_open.",
+      "aliases": [
+        "enkesitciz"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.sections.draw` v1: a sample line set's sections (`set`: its id or name; only those at `stations`,\namong the set's, when given) drawn on a layer as section views in a grid, lines and texts that go to sheets and\nDXF (docs/adr/0903 §7). The views lie in rows of `columns` (5 when absent) from `at`, the sheet's upper left, left to\nright then down; a view is the swath wide (a metre of offset a drawing unit) and the set's tallest elevation range\nhigh (a metre of elevation `exaggeration` units, 1 when absent), its own datum a metre under its lowest elevation,\nfloored. Each view: its frame, the elevation and offset grids with their numbers, the terrain (black, off the\nsurface left out), the platform and slopes (red), the axis, the km over it and the axis elevation, cut and fill\nareas under it. Texts are `height` paper millimetres high (2.5 when absent).\n\nRefusals, in this order: `not_a_road_project`, `unknown_section_set`, `invalid_label` (`columns` not 1–100,\n`height` or `exaggeration` not above 0), `invalid_section_set` (its stations no longer come out), `invalid_places`\n(a station not among the set's), `no_terrain` (the set has no surface or it makes none), the layer's\n(`layer_not_found`, `not_a_layer`, `service_layer`, `layer_locked`), `invalid_revision`, `revision_conflict`.\nWarnings: `layer_hidden`, `section_set_stale`, `section_open`.",
+        "properties": {
+          "at": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array",
+            "x-unit": "length"
+          },
+          "columns": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "exaggeration": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1"
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "height": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "paper-mm"
+          },
+          "layerId": {
+            "type": "string"
+          },
+          "set": {
+            "type": "string"
+          },
+          "stations": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "type": "array",
+            "x-unit": "m"
+          }
+        },
+        "required": [
+          "set",
+          "layerId",
+          "at"
+        ],
+        "title": "SectionsDraw",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.sections.draw` v1, and its plan: the views in order, the elevation grid's and the offset grid's\nsteps, the exaggeration, the objects written (none in a plan).",
+        "properties": {
+          "exaggeration": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "1"
+          },
+          "grid": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "offsets": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "set": {
+            "type": "string"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "views": {
+            "items": {
+              "$ref": "#/$defs/SectionView"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "set",
+          "views",
+          "grid",
+          "offsets",
+          "exaggeration",
+          "uids",
+          "revision"
+        ],
+        "title": "SectionsDrawn",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.sections.draw` v1, and its plan: the views in order, the elevation grid's and the offset grid's\nsteps, the exaggeration, the objects written (none in a plan).",
+        "properties": {
+          "exaggeration": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "1"
+          },
+          "grid": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "offsets": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "set": {
+            "type": "string"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "views": {
+            "items": {
+              "$ref": "#/$defs/SectionView"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "set",
+          "views",
+          "grid",
+          "offsets",
+          "exaggeration",
+          "uids",
+          "revision"
+        ],
+        "title": "SectionsDrawn",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_section_set",
+          "invalid_label",
+          "invalid_section_set",
+          "invalid_places",
+          "no_terrain",
+          "layer_not_found",
+          "not_a_layer",
+          "layer_locked",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "layer_hidden",
+          "section_set_stale",
+          "section_open"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Enkesitleri 2000, -500'den başlayarak satırda 4 görünüşle çiz",
+          "input": {
+            "at": [
+              2000.0,
+              -500.0
+            ],
+            "columns": 4,
+            "layerId": "enkesit",
+            "set": "Enkesitler"
+          }
+        }
+      ]
+    },
+    {
       "id": "road.alignments.query",
       "version": 1,
       "title": "Aksı sorgula",
@@ -87606,6 +87829,11 @@
           "const": "profileDrawing",
           "description": "`road.profiles.draw` (plan/road.md Y4): a profile's frame, grid, terrain, design line and bands, “Boykesit çiz”.",
           "type": "string"
+        },
+        {
+          "const": "sectionDrawing",
+          "description": "`road.sections.draw` (plan/road.md Y5): a sample line set's section views, “Enkesit çiz”.",
+          "type": "string"
         }
       ]
     },
@@ -133700,6 +133928,74 @@
           "type": "object"
         }
       ]
+    },
+    "SectionView": {
+      "description": "A section view drawn: its station and km, its frame's lower left and upper right, its datum and top elevations, its\ncut and fill areas (m²) when the platform was built.",
+      "properties": {
+        "cut": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "area"
+        },
+        "datum": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "elevation"
+        },
+        "fill": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "area"
+        },
+        "frame": {
+          "items": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array",
+          "x-unit": "length"
+        },
+        "km": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "kmText": {
+          "type": "string"
+        },
+        "station": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "top": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "elevation"
+        }
+      },
+      "required": [
+        "station",
+        "km",
+        "kmText",
+        "frame",
+        "datum",
+        "top"
+      ],
+      "type": "object"
     },
     "SelectKind": {
       "description": "A kind the selection filter holds (docs/adr/0187 §5): a NURBS curve is an Eğri (`spline`).",

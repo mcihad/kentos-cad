@@ -1689,6 +1689,23 @@ const ENTRIES: &[Entry] = &[
         warnings: &["section_set_stale", "section_surface_gone", "section_open"],
         targets: none,
     },
+    Entry {
+        id: "road.sections.draw",
+        refusals: &[
+            &[
+                "not_a_road_project",
+                "unknown_section_set",
+                "invalid_label",
+                "invalid_section_set",
+                "invalid_places",
+                "no_terrain",
+            ],
+            LAYER,
+            REVISION,
+        ],
+        warnings: &["layer_hidden", "section_set_stale", "section_open"],
+        targets: none,
+    },
     // Alt ağlar (docs/adr/0557 §2).
     Entry {
         id: "cad.subnetworks.find",

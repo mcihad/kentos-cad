@@ -7070,6 +7070,32 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::ROAD_SECTIONS_DRAW.into(),
+            version: crate::ROAD_SECTIONS_DRAW_VERSION,
+            title: "Enkesit çiz".into(),
+            summary: "Yol projesinin bir kesit takımının enkesitlerini (set: kimliği ya da adı; stations ile yalnız takımın o km'lerindekiler) bir katmana çizgi ve yazı nesneleri olarak yazar, paftaya ve DXF'e gider: görünüşler at'tan (sayfanın sol üstü) başlayarak satırlarda columns tane (yoksa 5), soldan sağa sonra aşağı. Bir görünüş şerit genişliğinde (ötelemenin bir metresi bir çizim birimi) ve takımın en uzun kot aralığı boyunda (kotun bir metresi exaggeration birim, yoksa 1); kıyas kotu en alçak kotun bir metre altı, aşağı yuvarlanmış. \
+                      Her görünüşte çerçeve, kot ve öteleme ızgaraları ve sayıları, arazi (siyah; yüzeyin dışı çizilmez), platform ve şevler (kırmızı), eksen, üstünde km, altında eksen kotu ile yarma ve dolgu alanı. Yazılar height mm (yoksa 2,5) yüksekliğinde, çizim ölçeğiyle. \
+                      Cevap her görünüşün km'si, çerçevesi, kıyas ve tepe kotu, alanları ile ızgara aralıklarıdır. Tek geri alma adımı “Enkesit çiz”. Retler: not_a_road_project, unknown_section_set, invalid_label, invalid_section_set, invalid_places, no_terrain, layer_not_found, not_a_layer, service_layer, layer_locked, invalid_revision, revision_conflict; uyarılar layer_hidden, section_set_stale, section_open."
+                .into(),
+            aliases: vec!["enkesitciz".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::SectionsDraw>(),
+            output: schema::<crate::SectionsDrawn>(),
+            plan: Some(schema::<crate::SectionsDrawn>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Enkesitleri 2000, -500'den başlayarak satırda 4 görünüşle çiz".into(),
+                input: json!({ "set": "Enkesitler", "layerId": "enkesit", "at": [2000.0, -500.0], "columns": 4 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::ROAD_ALIGNMENTS_QUERY.into(),
             version: crate::ROAD_ALIGNMENTS_QUERY_VERSION,
             title: "Aksı sorgula".into(),
@@ -12668,6 +12694,9 @@ mod tests {
                     crate::ROAD_SECTIONS_QUERY => {
                         serde_json::from_value::<crate::SectionsQuery>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_SECTIONS_DRAW => {
+                        serde_json::from_value::<crate::SectionsDraw>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_SUBNETWORKS_FIND => {
                         serde_json::from_value::<crate::SubnetworksFind>(e.input.clone())
                             .map(|_| ())
@@ -13357,6 +13386,10 @@ mod tests {
                         }
                         crate::ROAD_SECTIONS_QUERY => {
                             serde_json::from_value::<crate::SectionsQueried>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_SECTIONS_DRAW => {
+                            serde_json::from_value::<crate::SectionsDrawn>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_ADDRESSES_DEFINE => {

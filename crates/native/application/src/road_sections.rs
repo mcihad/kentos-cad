@@ -243,7 +243,7 @@ pub(crate) fn reports(doc: &Document, list: &[SectionSetDef]) -> Vec<SectionSetR
 }
 
 /// The set's surface made now, or the warning `section_surface_gone`; none for a set without one.
-fn surface_of(doc: &Document, def: &SectionSetDef) -> Option<Result<Surface, CommandWarning>> {
+pub(crate) fn surface_of(doc: &Document, def: &SectionSetDef) -> Option<Result<Surface, CommandWarning>> {
     let id = def.surface.as_deref()?;
     let gone = |why: String| CommandWarning {
         code: codes::SECTION_SURFACE_GONE.into(),

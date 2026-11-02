@@ -15,6 +15,7 @@ tangent is two lines' crossing in fractions. The desktop (crates/native/applicat
 
 import copy
 import json
+import math
 import sys
 from fractions import Fraction as F
 from pathlib import Path
@@ -86,8 +87,8 @@ def road_of(templates, sets, surfaces=pcmd.SURFACES):
     return out
 
 
-def setup(templates=(TK1, TK2), sets=(S1, S2), work="road", surfaces=pcmd.SURFACES):
-    base = pcmd.setup(PROFILES, work, surfaces)
+def setup(templates=(TK1, TK2), sets=(S1, S2), work="road", surfaces=pcmd.SURFACES, layers=None):
+    base = pcmd.setup(PROFILES, work, surfaces, layers)
     base["name"] = "Yol enkesitleri"
     base["entities"] += copy.deepcopy(LINES)
     base["uids"] += [U(e["id"]) for e in LINES]
@@ -590,9 +591,151 @@ def query_cases():
     return file("road.sections.query", "Enkesitleri sorgula", setup(), cases)
 
 
+# ── road.sections.draw ─────────────────────────────────────────────────────────────────────────────────────────────
+
+def step_of(span, steps=(1, 2, 5, 10, 20, 50, 100, 200, 500, 1000)):
+    return float(next((g for g in steps if span / g <= 10), 1000))
+
+
+def design_line(r):
+    if "left" not in r:
+        return []
+    return list(reversed(r["left"]["points"])) + r["right"]["points"][1:]
+
+
+def drawing(d, at, stations=None, columns=5, ex=1.0, height=2.5):
+    """What the drawing says (each view's frame, datum, top, areas; the grid steps) and how many objects it writes."""
+    rows, _ = sections(d, stations or stations_of(d), [TK1, TK2])
+    h = height * 1000.0 / 1000.0
+    row = 2.4 * h
+    ranges = []
+    for r in rows:
+        zs = [g["z"] for g in r["ground"] if "z" in g] + [p[1] for p in design_line(r)] + ([r["axis"]] if "axis" in r else [])
+        ranges.append((float(math.floor(min(zs))) - 1.0, float(math.ceil(max(zs))) + 1.0) if zs else None)
+    lowest = min(x[0] for x in ranges if x)
+    span = max(x[1] - x[0] for x in ranges if x)
+    datums = [x[0] if x else lowest for x in ranges]
+    width = d["left"] + d["right"]
+    tall = span * ex
+    px, py = 8 * h + width + 4 * h, row + tall + 3 * row + 4 * h
+    grid, step = step_of(span), step_of(width)
+    views, n = [], 0
+    for i, (r, datum) in enumerate(zip(rows, datums)):
+        col, line = i % columns, i // columns
+        x0 = at[0] + col * px + 8 * h
+        y1 = at[1] - line * py - row
+        top = datum + span
+        levels = [k * grid for k in range(math.ceil(datum / grid), math.floor(top / grid + 1e-9) + 1)]
+        offs = [k * step for k in range(math.ceil(-d["left"] / step), math.floor(d["right"] / step + 1e-9) + 1)]
+        runs, drawn = 0, False
+        for a, b in zip(r["ground"], r["ground"][1:]):
+            if "z" in a and "z" in b and not b["gap"]:
+                runs += 0 if drawn else 1
+                drawn = True
+            else:
+                drawn = False
+        n += (1 + len(levels) + sum(datum + 1e-9 < v < top - 1e-9 for v in levels)
+              + len(offs) + sum(-d["left"] + 1e-9 < o < d["right"] - 1e-9 for o in offs) + 1 + runs
+              + (1 if "left" in r else 0) + 1 + ("axis" in r) + ("cut" in r))
+        v = {"station": r["station"], "km": r["km"], "kmText": r["kmText"],
+             "frame": [[x0, y1 - tall], [x0 + width, y1]], "datum": datum, "top": top}
+        if "cut" in r:
+            v["cut"], v["fill"] = r["cut"], r["fill"]
+        views.append(v)
+    return {"set": d["id"], "views": views, "grid": grid, "offsets": step, "exaggeration": ex}, n
+
+
+def draw_cases():
+    templates, start = [TK1, TK2], [S1, S2]
+    layers = pcmd.DRAW_LAYERS
+    cases = []
+    first = len(pcmd.ENTITIES) + len(LINES) + 1
+
+    def ok(name, input_, d, op="execute", warns=(), undo=False, sets=start, **kw):
+        out, n = drawing(d, input_["at"], **kw)
+        out = {**out, "uids": "$any" if op == "execute" else [], "revision": "$current"}
+        road = road_of(templates, sets)
+        if op == "validate":
+            result, expect = completed(None, warns), {**UNCHANGED, "road": road}
+        elif op == "plan":
+            result, expect = completed(out, warns), {**UNCHANGED, "road": road}
+        else:
+            result = completed(out, warns)
+            expect = {**STEPPED, "road": road, "ids": list(range(1, first + n))}
+        steps = [step(op, input_, result, expect)]
+        if undo:
+            steps.append({"op": "undo", "returns": "Enkesit çiz", "expect": {"ids": list(range(1, first)), "canRedo": True}})
+        cases.append(case(name, steps, None if sets is start else setup(sets=sets, layers=layers)))
+
+    def no(name, input_, result, sets=start, setup_=None):
+        road = None if sets is None else road_of(templates, sets)
+        cases.append(case(name, [step("execute", input_, result, {**UNCHANGED, "road": road})],
+                          setup_ or (None if sets is start else setup(sets=sets, layers=layers))))
+
+    def opens(d, at):
+        return [w for w in sections(d, at, templates)[1] if w["code"] == "section_open"]
+
+    hidden = {"code": "layer_hidden", "message": "“Gizli” katmanı gizli; çizilen nesne görünmeyecek.", "path": "layerId"}
+    base = {"set": "k-1", "layerId": "0", "at": [0.0, -100.0]}
+    ok("Takımın bütün enkesitleri, satırda beş görünüş", base, S1)
+    ok("Satırda üç görünüş", {**base, "columns": 3}, S1, columns=3)
+    ok("Yalnız iki km", {**base, "stations": [250.0, 150.0]}, S1, stations=[250.0, 150.0])
+    ok("İki kat abartma, satırda dört", {**base, "exaggeration": 2.0, "columns": 4}, S1, ex=2.0, columns=4)
+    ok("Büyük yazı: aynı nesneler, geniş aralık", {**base, "height": 3.5}, S1, height=3.5)
+    ok("Takım adıyla", {**base, "set": "enkesitler"}, S1)
+    ok("Eskiyen takım uyarıyla, asimetrik tip kesit", {**base, "set": "k-2"}, S2,
+       warns=[stale_warning(S2)] + opens(S2, stations_of(S2)))
+    narrow = {**S1, "left": 4.0, "right": 6.0}
+    ok("Dar şerit: açık yanlar uyarılır", base, narrow, warns=opens(narrow, stations_of(narrow)), sets=[narrow, S2])
+    nt = {k: v for k, v in S1.items() if k != "template"}
+    ok("Tip kesitsiz: arazi ve eksen kotu", base, nt, sets=[nt, S2])
+    npf = {k: v for k, v in S1.items() if k != "profile"}
+    ok("Boykesitsiz: yalnız arazi", base, npf, sets=[npf, S2])
+    wide = {**S1, "left": 60.0, "right": 60.0, "stations": {"method": "stations", "stations": [30.0, 400.0, 600.0]}}
+    ok("Yüzeyin dışına taşan şerit", base, wide, sets=[wide, S2])
+    ok("Grubun içindeki katmana", {**base, "layerId": "yol-boykesit"}, S1)
+    ok("Gizli katmana uyarıyla", {**base, "layerId": "gizli"}, S1, warns=[hidden])
+    ok("Plan yazmaz", base, S1, op="plan")
+    ok("Doğrulama yazmaz", {**base, "set": "k-2"}, S2, op="validate",
+       warns=[stale_warning(S2)] + opens(S2, stations_of(S2)))
+    ok("Tek geri alma adımı", {**base, "stations": [200.0]}, S1, undo=True, stations=[200.0])
+
+    no("Yol projesi değil", base, NOT_ROAD, None, setup(work="map", layers=layers))
+    no("Olmayan takım", {**base, "set": "yok"},
+       failed("unknown_section_set", "“yok” kimlikli ya da adlı kesit takımı projede yok.", "set"))
+    no("Sıfır görünüş", {**base, "columns": 0},
+       failed("invalid_label", "Bir satırda 1 ile 100 arası görünüş (columns) olur.", "columns"))
+    no("Çok görünüş", {**base, "columns": 101},
+       failed("invalid_label", "Bir satırda 1 ile 100 arası görünüş (columns) olur.", "columns"))
+    no("Eksi yazı yüksekliği", {**base, "height": -1.0},
+       failed("invalid_label", "Yazı yüksekliği (height) 0'dan büyük olmalı.", "height"))
+    no("Sıfır abartma", {**base, "exaggeration": 0.0},
+       failed("invalid_label", "Düşey abartma (exaggeration) 0'dan büyük olmalı.", "exaggeration"))
+    dead = {**S1, "stations": {"method": "lines", "uids": [MISSING_LINE]}}
+    no("Km'si çıkmayan takım", base,
+       failed("invalid_section_set", f"“{MISSING_LINE}” aksı kesmiyor.", "stations.uids[0]"), [dead, S2])
+    no("Takımın km'si olmayan", {**base, "stations": [150.0, 160.0]},
+       failed("invalid_places", "160 m “Enkesitler” kesit takımının km'lerinden biri değil.", "stations[1]"))
+    bare = {k: v for k, v in S1.items() if k != "surface"}
+    no("Yüzeysiz takım", base, failed("no_terrain", "“Enkesitler” kesit takımının yüzeyi yok: enkesit çizmek için önce "
+                                                    "bir yüzey verin.", "set"), [bare, S2])
+    broken = {**S1, "surface": "t-2"}
+    no("Kurulamayan yüzey", base, failed("no_terrain", "“Enkesitler” kesit takımının yüzeyi projede yok ya da "
+                                                       "kurulamıyor: önce yüzeyi düzeltin.", "set"), [broken, S2])
+    no("Olmayan katman", {**base, "layerId": "yok"},
+       failed("layer_not_found", "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.", "layerId"))
+    no("Katman grubu", {**base, "layerId": "grup"},
+       failed("not_a_layer", "“Yol” bir katman grubu; nesne yalnız katmana eklenir. Grubun içinden bir katman seçin.", "layerId"))
+    no("Kilitli katman", {**base, "layerId": "kilitli"},
+       failed("layer_locked", "“Kilitli” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.", "layerId"))
+    no("Geçersiz beklenen sürüm", {**base, "expectedRevision": "on"}, BAD_REVISION)
+    no("Eski sürüme göre hazırlanmış", {**base, "expectedRevision": "41"}, CONFLICT)
+    return file("road.sections.draw", "Enkesit çiz", setup(layers=layers), cases)
+
+
 def main():
     files = {"road.templates.edit.json": templates_cases(), "road.sections.edit.json": sections_cases(),
-             "road.sections.query.json": query_cases()}
+             "road.sections.query.json": query_cases(), "road.sections.draw.json": draw_cases()}
     check = "--check" in sys.argv[1:]
     bad = False
     for name, data in files.items():

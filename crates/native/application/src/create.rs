@@ -193,6 +193,7 @@ pub fn label(operation: Option<CreateOperation>) -> &'static str {
         Some(CreateOperation::LandXml) => "LandXML al",
         Some(CreateOperation::AlignmentLabels) => "Aks km yazısı",
         Some(CreateOperation::ProfileDrawing) => "Boykesit çiz",
+        Some(CreateOperation::SectionDrawing) => "Enkesit çiz",
     }
 }
 

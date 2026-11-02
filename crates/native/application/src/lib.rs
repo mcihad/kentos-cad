@@ -273,6 +273,7 @@ pub mod road_profiles_draw;
 pub mod road_profiles_edit;
 pub mod road_profiles_query;
 pub mod road_sections;
+pub mod road_sections_draw;
 pub mod road_sections_edit;
 pub mod road_sections_query;
 pub mod road_templates_edit;
@@ -1167,6 +1168,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::ROAD_SECTIONS_QUERY,
         kentos_commands::ROAD_SECTIONS_QUERY_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_SECTIONS_DRAW,
+        kentos_commands::ROAD_SECTIONS_DRAW_VERSION,
     ),
     // Alt ağlar ([`subnetworks`], [`subnetworks_update`], docs/adr/0557 §2).
     (
