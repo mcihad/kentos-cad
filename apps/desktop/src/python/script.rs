@@ -525,7 +525,7 @@ fn keys(kp: KeyPress) -> Option<Binding<Message>> {
         return None;
     }
     let custom = |e: Event| Some(Binding::Custom(ev(e)));
-    let control = kp.modifiers.control();
+    let control = kp.modifiers.control() || kp.modifiers.command();
     let shift = kp.modifiers.shift();
     match kp.key.as_ref() {
         Key::Named(Named::F5) => custom(Event::RunAll),
@@ -544,7 +544,7 @@ fn keys(kp: KeyPress) -> Option<Binding<Message>> {
             custom(if shift { Event::Redo } else { Event::Undo })
         }
         Key::Character(c) if control && c.eq_ignore_ascii_case("y") => custom(Event::Redo),
-        _ => Binding::from_key_press(kp),
+        _ => kentos_ui::widget::python::default_key_binding(kp),
     }
 }
 
@@ -566,5 +566,68 @@ mod tests {
             "a = 1\nif a:\n    b = 2"
         );
         assert_eq!(dedent("x"), "x");
+    }
+
+    fn key_press(
+        letter: &str,
+        modifiers: iced::keyboard::Modifiers,
+    ) -> iced::widget::text_editor::KeyPress {
+        use iced::keyboard::{
+            Key,
+            key::{Code, Physical},
+        };
+        iced::widget::text_editor::KeyPress {
+            key: Key::Character(letter.into()),
+            modified_key: Key::Character(letter.into()),
+            physical_key: Physical::Code(Code::KeyS),
+            modifiers,
+            text: Some(letter.into()),
+            status: iced::widget::text_editor::Status::Focused { is_hovered: false },
+        }
+    }
+
+    #[test]
+    fn platform_command_save_and_undo_are_script_actions_instead_of_source_letters() {
+        use crate::{
+            app::Message,
+            python::{Event as PythonEvent, script::Event},
+        };
+        use iced::{keyboard::Modifiers, widget::text_editor::Binding};
+        for modifiers in [Modifiers::COMMAND, Modifiers::CTRL] {
+            assert!(matches!(
+                super::keys(key_press("s", modifiers)),
+                Some(Binding::Custom(Message::Python(PythonEvent::Script(
+                    Event::Save
+                ))))
+            ));
+            assert!(matches!(
+                super::keys(key_press("z", modifiers)),
+                Some(Binding::Custom(Message::Python(PythonEvent::Script(
+                    Event::Undo
+                ))))
+            ));
+            assert!(matches!(
+                super::keys(key_press("z", modifiers | Modifiers::SHIFT)),
+                Some(Binding::Custom(Message::Python(PythonEvent::Script(
+                    Event::Redo
+                ))))
+            ));
+            assert!(matches!(
+                super::keys(key_press("s", modifiers | Modifiers::SHIFT)),
+                Some(Binding::Custom(Message::Python(PythonEvent::Script(
+                    Event::SaveAs
+                ))))
+            ));
+        }
+    }
+
+    #[test]
+    fn script_leaves_open_to_the_host_and_keeps_plain_typing_local() {
+        use iced::{keyboard::Modifiers, widget::text_editor::Binding};
+        assert!(super::keys(key_press("o", Modifiers::COMMAND)).is_none());
+        assert!(matches!(
+            super::keys(key_press("o", Modifiers::NONE)),
+            Some(Binding::Insert('o'))
+        ));
     }
 }
