@@ -622,6 +622,8 @@ Proje ağacı (ROAD-MOD-04) ve bölünmüş plan–boykesit–enkesit görünü�
 4. **Y2.4 Masaüstü:** Arazi sekmesinde Yüzey oluştur aracı, yüzeyin çizimi (üçgenler, kırık hatlar, sınır), Öznitelikler ve proje ağacının ilk hâli (ROAD-MOD-04).
 5. **Y2.5 Türevler:** TIN'den eş yükselti eğrileri (ROAD-TIN-15), eğim ve bakı (ROAD-TIN-16), LandXML yüzeyi okuma.
 
+**Y2'nin durumu:** Y2.1 `e5dacbad0`: `kentos-road` crate'i, `kentos.cdt/1`; 14 ortak durum Triangle ve kesirlerle, 400 rastgele durum Triangle'la üçgen üçgen aynı; 104 000 köşe 98 ms, 100 000 profil kotu 1,4 ms (release). Y2.2 kararı: yüzeyin tanımı (kaynak katmanlar ve nesneler, sınır, boşluklar, tolerans, kenar yöntemi) projede saklanır, üçgenleri kaynaklardan açılışta yeniden kurulur (kesin ve hızlı); kaynakların özeti tutulur, özet değişince yüzey “eskidi”; `.kcad` şema 158 (henüz birleşmedi) yol projesinin bu ayarlarını da kapsar.
+
 Her maddenin kabulünde CLAUDE.md §9.2 geçerlidir: anlamsal komut, ortak durumlar (KentOS kodu olmadan yazılmış bağımsız başvuru), Python (`kentos.road`) ve MCP, manifest; aracın yazması kayıtta komutun adıyla; dar ve geniş pencerede, iki temada gerçek masaüstü görüntüleri (repo dışında `.run/gui-evidence/`).
 
 İlk 12 iş (taslak 0.1; 25.1'in Y1–Y10'u bunların yerini alır):
