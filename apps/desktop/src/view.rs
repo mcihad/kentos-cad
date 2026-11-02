@@ -861,6 +861,16 @@ impl App {
                             mark_colors(self.canvas()).fg,
                             Tokens::of(&self.theme()).danger,
                         ))
+                        // A road project's alignments, km and curve points (alignment_layer.rs, plan/road.md Y3).
+                        .extend(crate::alignment_layer::layer(
+                            &doc.model,
+                            &self.viewport.camera,
+                            crate::alignment_layer::Colors {
+                                ink: mark_colors(self.canvas()).fg,
+                                accent: Tokens::of(&self.theme()).accent,
+                                warning: Tokens::of(&self.theme()).warning,
+                            },
+                        ))
                         .extend(service_labels)
                         .push(labels)
                         // Kaydırmalı karşılaştır: the other view right of the divider (split_view.rs, docs/adr/0523 §3).
@@ -2004,6 +2014,7 @@ impl App {
             Asking::Joins => self.joins_view(),
             Asking::EventLinks => self.event_links_view(),
             Asking::Terrains => self.terrain_view(),
+            Asking::Alignments => self.alignment_view(),
             Asking::Program => self.program_view(),
             Asking::SpaceMerge => self.space_merge_question(),
             Asking::TableStyles => self.table_styles_view(),

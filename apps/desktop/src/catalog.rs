@@ -582,6 +582,9 @@ pub const PORTED: &[&str] = &[
     // plan/road.md Y2.4: Arazi yüzeyleri and Yüzey oluştur (terrain_window.rs).
     "terrain.surfaces",
     "terrain.new",
+    // plan/road.md Y3: Güzergâh and Yeni aks (alignment_window.rs).
+    "alignment.editor",
+    "alignment.new",
     // docs/adr/0773: Bina programı (program_window.rs).
     "arch.program",
     // docs/adr/0313: Çizgi tipleri (line_types_window.rs).

@@ -498,6 +498,29 @@
     ]
    },
    {
+    "id": "alignment",
+    "label": "Güzergâh",
+    "panels": [
+     {
+      "label": "Güzergâh",
+      "icon": "alignmentEditor",
+      "items": [
+       {
+        "command": "alignment.editor",
+        "size": "large"
+       },
+       {
+        "command": "alignment.new",
+        "size": "large"
+       }
+      ]
+     }
+    ],
+    "works": [
+     "road"
+    ]
+   },
+   {
     "id": "plan",
     "label": "Plan",
     "panels": [

@@ -266,6 +266,8 @@ pub enum Dialog {
     EventLinks,
     /// Arazi yüzeyleri (terrain_window.rs, plan/road.md Y2.4); the window is `App::terrain_window`.
     Terrains,
+    /// Güzergâh (alignment_window.rs, plan/road.md Y3); the window is `App::alignment_window`.
+    Alignments,
     /// Bina programı (program_window.rs, docs/adr/0773); the window is `App::program_window`.
     Program,
     /// Mahalleri birleştir's decision, asked before writing (quantities.rs, docs/adr/0773 §4).
@@ -611,6 +613,8 @@ pub enum Message {
     EventLinks(crate::event_links_window::Event),
     /// An event of Arazi yüzeyleri (terrain_window.rs, plan/road.md Y2.4).
     Terrains(crate::terrain_window::Event),
+    /// An event of Güzergâh (alignment_window.rs, plan/road.md Y3).
+    Alignments(crate::alignment_window::Event),
     /// An event of Bina programı (program_window.rs, docs/adr/0773).
     Program(crate::program_window::Event),
     TableStyles(crate::forms::table_styles::Event),
@@ -1165,6 +1169,8 @@ pub struct App {
     pub(crate) event_links_window: Option<crate::event_links_window::Window>,
     /// Arazi yüzeyleri (terrain_window.rs, plan/road.md Y2.4).
     pub(crate) terrain_window: Option<crate::terrain_window::Window>,
+    /// Güzergâh (alignment_window.rs, plan/road.md Y3).
+    pub(crate) alignment_window: Option<crate::alignment_window::Window>,
     /// Bina programı (program_window.rs, docs/adr/0773).
     pub(crate) program_window: Option<crate::program_window::Window>,
     /// Mahalleri birleştir asked: its input and its decision's words (docs/adr/0773 §4).
@@ -1583,6 +1589,7 @@ impl App {
             joins_window: None,
             event_links_window: None,
             terrain_window: None,
+            alignment_window: None,
             program_window: None,
             space_merging: None,
             table_styles: None,
@@ -2294,6 +2301,7 @@ impl App {
             Message::Joins(event) => return self.joins_event(event),
             Message::EventLinks(event) => return self.event_links_event(event),
             Message::Terrains(event) => return self.terrain_event(event),
+            Message::Alignments(event) => return self.alignment_event(event),
             Message::Program(event) => return self.program_event(event),
             Message::TableStyles(event) => return self.table_styles_event(event),
             Message::Subtypes(event) => return self.subtypes_event(event),
@@ -3309,6 +3317,9 @@ impl App {
             // Arazi yüzeyleri and Yüzey oluştur (terrain_window.rs, plan/road.md Y2.4).
             "terrain.surfaces" => self.open_terrains(),
             "terrain.new" => self.new_terrain(),
+            // Güzergâh and Yeni aks (alignment_window.rs, plan/road.md Y3).
+            "alignment.editor" => self.open_alignments(),
+            "alignment.new" => self.new_alignment(),
             // Bina programı (program_window.rs, docs/adr/0773).
             "arch.program" => self.open_program(),
             // Çizgi tipleri (docs/adr/0313 §7).

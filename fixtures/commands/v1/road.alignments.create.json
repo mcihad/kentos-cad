@@ -4408,7 +4408,7 @@
             "status": "failed",
             "error": {
               "code": "alignment_curves_overlap",
-              "message": "p1 ve p2 noktalarının kurpları 86.672 m biniyor: teğet boyları aradaki aliymandan uzun. Yarıçapı ya da klotoidleri küçültün, PI'ları uzaklaştırın.",
+              "message": "p1–p2 aliymanına kurplar sığmıyor: teğet boyları aliymandan 86.672 m uzun. Yarıçapı ya da klotoidleri küçültün, PI'ları uzaklaştırın.",
               "path": "pis[2]"
             }
           },

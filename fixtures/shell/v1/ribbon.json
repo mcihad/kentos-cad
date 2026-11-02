@@ -70,6 +70,10 @@
     "label": "Arazi"
    },
    {
+    "id": "alignment",
+    "label": "Güzergâh"
+   },
+   {
     "id": "plan",
     "label": "Plan"
    },

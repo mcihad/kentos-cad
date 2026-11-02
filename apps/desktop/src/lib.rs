@@ -251,6 +251,10 @@ mod leader_tools;
 mod layer_merge;
 mod joins_window;
 mod event_links_window;
+mod alignment_layer;
+mod alignment_window;
+#[cfg(test)]
+mod alignment_window_tests;
 mod terrain_layer;
 mod terrain_window;
 #[cfg(test)]

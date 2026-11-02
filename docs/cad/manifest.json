@@ -95,6 +95,40 @@
    "tests": 0
   },
   {
+   "id": "alignment.editor",
+   "kind": "command",
+   "title": "Güzergâh…",
+   "level": "semantic",
+   "via": [
+    "road.alignments.create",
+    "road.alignments.edit",
+    "road.alignments.query"
+   ],
+   "operation": null,
+   "python": "Connection: road.alignments.create, Connection: road.alignments.edit, Connection: road.alignments.query",
+   "mcp": "road.alignments.create, road.alignments.edit, road.alignments.query",
+   "note": "Güzergâh penceresi PI'ları ve km'yi yazdıkça çekirdekle kurar; Kaydet ve Ters çevir road.alignments.create ve .edit ile yazar, Noktanın km'si road.alignments.query ile sorar (plan/road.md Y3, ADR 0901).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "alignment.new",
+   "kind": "command",
+   "title": "Aks oluştur…",
+   "level": "semantic",
+   "via": [
+    "road.alignments.create"
+   ],
+   "operation": null,
+   "python": "Connection: road.alignments.create",
+   "mcp": "road.alignments.create",
+   "note": null,
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "analysis.slope",
    "kind": "command",
    "title": "Eğim analizi…",

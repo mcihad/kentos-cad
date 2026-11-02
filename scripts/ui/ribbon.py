@@ -256,6 +256,10 @@ CAD = [
         P("Arazi", "contours", [L("tool.spot"), S("pointcloud.region"), S("pointcloud.profile")],
           overflow=["mesh.query"]),
     ], works=ROAD),
+    # KentOS Yol's horizontal alignments (plan/road.md Y3, docs/adr/0901): the Güzergâh window and a new alignment.
+    T("alignment", "Güzergâh", [
+        P("Güzergâh", "alignmentEditor", [L("alignment.editor"), L("alignment.new")]),
+    ], works=ROAD),
     T("plan", "Plan", [
         P("Yol", "planRoad", [L("tool.planRoad"), S("tool.roadJunctions"), S("tool.medianClose"), S("tool.centerline")]),
         P("Ada ve parsel", "parcel", [L("tool.parcel"), L("tool.boundary"), S("tool.polygonize"), S("tool.adjoin"),

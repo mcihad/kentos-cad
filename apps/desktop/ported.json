@@ -396,6 +396,8 @@
     "linearRef.eventLinks",
     "terrain.surfaces",
     "terrain.new",
+    "alignment.editor",
+    "alignment.new",
     "arch.program",
     "lineTypes.manage",
     "hatchPatterns.manage",

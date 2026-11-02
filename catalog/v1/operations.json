@@ -2591,6 +2591,21 @@
       ],
       "note": "Arazi yüzeyleri penceresi road.terrains.query ile okur; Kaydet, Kabul et, Eğrileri çiz ve LandXML al road.terrains.create, .edit, .contours ve file.import.landxml ile yazar (plan/road.md Y2.4, Y2.5)."
     },
+    "alignment.editor": {
+      "level": "semantic",
+      "via": [
+        "road.alignments.create",
+        "road.alignments.edit",
+        "road.alignments.query"
+      ],
+      "note": "Güzergâh penceresi PI'ları ve km'yi yazdıkça çekirdekle kurar; Kaydet ve Ters çevir road.alignments.create ve .edit ile yazar, Noktanın km'si road.alignments.query ile sorar (plan/road.md Y3, ADR 0901)."
+    },
+    "alignment.new": {
+      "level": "semantic",
+      "via": [
+        "road.alignments.create"
+      ]
+    },
     "terrain.new": {
       "level": "semantic",
       "via": [

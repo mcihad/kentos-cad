@@ -59,7 +59,7 @@ pub(crate) fn judged(list: &[AlignmentDef], at: usize, field: &str) -> Result<()
 }
 
 /// An alignment as built: its core geometry (a parallel axis's source's), its km regions, and its offset.
-pub(crate) struct Built {
+pub struct Built {
     pub core: Alignment,
     pub regions: Vec<Region>,
     pub offset: f64,
@@ -110,7 +110,7 @@ fn chain_stop(e: ChainError, field: &str, pis: &[PiInput]) -> Stop {
         ChainError::CurvesOverlap { a, b, excess } => fail(
             codes::ALIGNMENT_CURVES_OVERLAP,
             format!(
-                "{a} ve {b} noktalarının kurpları {excess:.3} m biniyor: teğet boyları aradaki aliymandan uzun. Yarıçapı ya da klotoidleri küçültün, PI'ları uzaklaştırın."
+                "{a}–{b} aliymanına kurplar sığmıyor: teğet boyları aliymandan {excess:.3} m uzun. Yarıçapı ya da klotoidleri küçültün, PI'ları uzaklaştırın."
             ),
             &at(&b),
         ),
@@ -131,7 +131,7 @@ pub(crate) fn pis_of(def: &AlignmentDef) -> Vec<PiInput> {
         .collect()
 }
 
-pub(crate) fn stationing_of(st: Option<&AlignmentStationing>) -> Stationing {
+pub fn stationing_of(st: Option<&AlignmentStationing>) -> Stationing {
     st.map_or_else(Stationing::default, |s| Stationing {
         start: s.start,
         equations: s
@@ -199,12 +199,12 @@ pub(crate) fn cusp_stop(name: &str, e: offset::OffsetError, path: &str) -> Stop 
 
 impl Built {
     /// The km at a station.
-    pub(crate) fn km(&self, station: f64) -> f64 {
+    pub fn km(&self, station: f64) -> f64 {
         Stationing::km(&self.regions, station)
     }
 
     /// The place at a station (offset for a parallel axis).
-    pub(crate) fn place(&self, station: f64) -> Option<AlignmentPlace> {
+    pub fn place(&self, station: f64) -> Option<AlignmentPlace> {
         let at = self.core.at(station)?;
         let d = self.offset;
         let (x, y) = (at.x + d * at.direction.sin(), at.y - d * at.direction.cos());
@@ -224,9 +224,32 @@ impl Built {
     }
 
     /// The length: the source's, or the parallel axis's own.
-    pub(crate) fn length(&self) -> f64 {
+    pub fn length(&self) -> f64 {
         if self.offset == 0.0 { self.core.length } else { offset::length(&self.core, self.offset) }
     }
+}
+
+/// The road project's alignments as they build now, for the desktop's drawing and window (plan/road.md Y3): each
+/// definition and its alignment, or why it does not build. None outside a road project.
+pub fn made_alignments(doc: &Document) -> Vec<(AlignmentDef, Result<Built, String>)> {
+    if road_project(doc).is_err() {
+        return Vec::new();
+    }
+    let list = alignments(doc);
+    list.iter()
+        .map(|d| {
+            let built = build(list, d, "").map_err(|stop| match stop {
+                Stop::Failed(e) | Stop::Conflict(e) => e.message,
+                Stop::Cancelled => String::new(),
+            });
+            (d.clone(), built)
+        })
+        .collect()
+}
+
+/// The report of a built alignment, as `road.alignments.query` gives it.
+pub fn report_of(doc: &Document, def: &AlignmentDef, built: &Built) -> AlignmentReport {
+    report(doc, def, built)
 }
 
 /// The ground length (ROAD-NUM-05): each piece of at most 50 m (and 0.05 rad), its grid length over its chord's scale

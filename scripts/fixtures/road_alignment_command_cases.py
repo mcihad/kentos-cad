@@ -303,8 +303,8 @@ def chain_message(e, pis):
                       f"{math.degrees(e['delta']):.4f}°; klotoidleri kısaltın ya da yarıçapı büyütün.", at(e["pi"]))
     if k == "CurvesOverlap":
         return failed("alignment_curves_overlap",
-                      f"{e['a']} ve {e['b']} noktalarının kurpları {e['excess']:.3f} m biniyor: teğet boyları aradaki "
-                      "aliymandan uzun. Yarıçapı ya da klotoidleri küçültün, PI'ları uzaklaştırın.", at(e["b"]))
+                      f"{e['a']}–{e['b']} aliymanına kurplar sığmıyor: teğet boyları aliymandan {e['excess']:.3f} m "
+                      "uzun. Yarıçapı ya da klotoidleri küçültün, PI'ları uzaklaştırın.", at(e["b"]))
     if k == "SamePlace":
         return failed("invalid_alignment",
                       f"{e['pi']} noktası bir öncekiyle aynı yerde; PI'lar ayrı yerlerde olmalı.", at(e["pi"]))

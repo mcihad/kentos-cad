@@ -3066,6 +3066,38 @@
       "status": "implemented"
     },
     {
+      "id": "alignment.editor",
+      "title": "Güzergâh…",
+      "short": "Güzergâh",
+      "icon": "alignmentEditor",
+      "description": "Yol projesinin yatay güzergâhları: PI tablosu (Y, X, kurpun yarıçapı, giriş ve çıkış klotoidinin boyu), başlangıç km'si ve km eşitlikleri; paralel aks kaynağı ve ötelemesiyle. Aks yazıldıkça kurulur: boyu, km aralığı, kurpları ya da neden kurulamadığı görünür; Noktanın km'si bir yerin km ve ötelemesini söyler. Kaydet road.alignments.create ve road.alignments.edit ile yazar, her yazma bir geri alma adımıdır; Ters çevir aksı ters çevirir. Akslar çizimde eleman türüne göre renkli, km işaretleri ve kurp noktalarıyla görünür.",
+      "aliases": [
+        "GUZERGAH",
+        "GÜZERGÂH",
+        "GÜZERGAH",
+        "YOLAKSI",
+        "ALIGNMENT"
+      ],
+      "shortcuts": [],
+      "category": "Güzergâh",
+      "status": "implemented"
+    },
+    {
+      "id": "alignment.new",
+      "title": "Aks oluştur…",
+      "short": "Yeni aks",
+      "icon": "alignmentNew",
+      "description": "Yeni bir yatay güzergâh (aliyman, kurp, klotoid) kurar: Güzergâh penceresini yeni bir aksla açar; çizimde bir çoklu çizgi seçiliyse köşeleri PI olur. Kurpların yarıçapı ve klotoidler tabloda yazılır, Kaydet road.alignments.create ile yazar.",
+      "aliases": [
+        "AKSOLUSTUR",
+        "AKSOLUŞTUR",
+        "CREATEALIGNMENT"
+      ],
+      "shortcuts": [],
+      "category": "Güzergâh",
+      "status": "implemented"
+    },
+    {
       "id": "raster.mosaic",
       "title": "Sanal mozaik",
       "icon": "rasterMosaic",
@@ -4053,6 +4085,8 @@
     "moduleDetach": "<rect x=\"2.5\" y=\"2.5\" width=\"7\" height=\"7\" rx=\"0.5\"/><rect x=\"11\" y=\"11\" width=\"6.5\" height=\"6.5\" rx=\"0.5\"/><path d=\"M10.5 10.5l1-1M12.5 8.5l1-1\" stroke-width=\"1.2\"/>",
     "designOptions": "<rect x=\"2.5\" y=\"3\" width=\"7\" height=\"14\" rx=\"0.5\"/><rect x=\"10.5\" y=\"3\" width=\"7\" height=\"14\" rx=\"0.5\" stroke-dasharray=\"1.6 1.2\"/><path d=\"M5 7h2M13 11h2\" stroke-width=\"1.2\"/>",
     "roomElevation": "<rect x=\"2.5\" y=\"4.5\" width=\"15\" height=\"11\" rx=\"0.5\"/><rect x=\"4.5\" y=\"8.5\" width=\"3\" height=\"7\" stroke-width=\"1\"/><rect x=\"10.5\" y=\"7.5\" width=\"5\" height=\"4\" stroke-width=\"1\"/><path d=\"M2.5 17.5h15\" stroke-width=\"0.9\" stroke-dasharray=\"1.6 1.2\"/>",
+    "alignmentEditor": "<path d=\"M2 16.5 6.5 12c2.6-2.6 5.6-4 11.5-4\" stroke-width=\"1.5\"/><path d=\"M4.1 13l1.7 1.7M8.4 9.6l1.2 2.1M12.9 7.9l.5 2.3\" stroke-width=\"1\"/><path d=\"M2 16.5 9 4.5 18 8\" stroke-width=\".7\" stroke-dasharray=\"1.5 1.2\"/>",
+    "alignmentNew": "<path d=\"M2 16 6 12c2.3-2.3 5-3.6 10-3.6\" stroke-width=\"1.5\"/><path d=\"M3.9 12.6l1.6 1.6M7.9 9.4l1.1 2\" stroke-width=\"1\"/><path d=\"M15.5 12.2v6.3M12.4 15.4h6.3\" stroke-width=\"1.5\"/>",
     "terrainSurface": "<path d=\"M2.5 15.5 8 4l9.5 3.5-2 9z\" stroke-width=\"1.1\"/><path d=\"M8 4l1 7.5 8.5-4M2.5 15.5 9 11.5l6.5 5\" stroke-width=\".8\"/><path d=\"M4.6 10.4 9 11.5l4.6 1.4\" stroke-width=\"1.9\"/>",
     "terrainNew": "<path d=\"M2 13 6.8 3.5 14 6l-1.6 7z\" stroke-width=\"1.1\"/><path d=\"M6.8 3.5 8 9.2 14 6M2 13l6-3.8 4.4 3.8\" stroke-width=\".8\"/><path d=\"M15.5 12.2v6.3M12.4 15.4h6.3\" stroke-width=\"1.5\"/>"
   },
