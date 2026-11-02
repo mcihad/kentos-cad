@@ -1,6 +1,13 @@
 # KentOS Road — 3D yol projelendirme, arazi, nokta bulutu ve kazı/dolgu
 
-Araştırma ve kaynak inceleme tarihi: **13 Ekim 2026**. Belge sürümü: **taslak 0.1**. Bu belge mevcut CAD/GIS'in üzerine kurulacak yol mühendisliği ürününün araştırma, mimari ve uygulama planıdır. Uygulama yapılmış, GPU benchmark'ı alınmış veya rakip ürünlerde karşılaştırmalı test koşulmuş değildir.
+Araştırma ve kaynak inceleme tarihi: **13 Ekim 2026**, gözden geçirme **2 Kasım 2026**. Belge sürümü: **taslak 0.2**. Bu belge mevcut CAD/GIS'in üzerine kurulacak yol mühendisliği ürününün araştırma, mimari ve uygulama planıdır. Uygulama yapılmış, GPU benchmark'ı alınmış veya rakip ürünlerde karşılaştırmalı test koşulmuş değildir.
+
+**2 Kasım 2026 gözden geçirmesi (sahibin kararları):**
+
+- **Ayrı modül ve program.** Mimari CAD, Harita CAD ve GIS gibi yol da ayrı bir KentOS modülüdür: **KentOS Yol** (`kentos-yol`, `--modul yol`). Kendi şeridi, kendi komut kümesi, kendi pencere kimliği ve Launcher'da şimdiki “Yakında” kartının açılmasıyla gelir ([ADR 0800](../docs/adr/0800-kentos-launcher.md), [ADR 0801](../docs/adr/0801-kentos-modules-and-their-programs.md), [ADR 0802](../docs/adr/0802-strict-module-separation.md)). Yol projesi bir CAD çizimi değil, kendi kaynak grafı olan projedir; modülün komutları başka modülde aranmaz ve çalışmaz (§2a).
+- **Ortak çekirdek.** Hesap (arazi yüzeyi, güzergâh, istasyon, profil, kesit, hacim) modülün arayüzünden ayrı, ortak Rust çekirdeğinde kurulur. İleride Harita CAD'deki imar planı çizimi (imar yolu ekseni, km, enkesit, kot) ve Mimari'nin vaziyet planı aynı hesabı kullanabilir; çekirdek yol modülünün ekranlarına bağlanmaz.
+- **Çalışma düzeni.** Her madde için önce güncel internet araştırması yapılır (üreticinin resmî belgesi önce), madde aşamalara bölünür, her aşamadan sonra masaüstünün gerçek ekran görüntüsü alınıp incelenir ve sahibe gönderilir. Alt ajan yoktur; işi tek ajan yapar. Bu dalda ADR numaraları 0900'den başlar; `.kcad` şema numarası birleştirmede ana dalın son numarasına göre yeniden verilir.
+- **Standart kaynağı.** KGM'nin *Karayolu Tasarım El Kitabı* (KTEK) 2022 baskısı ve *Karayolları Teknik Şartnamesi* 2023 baskısı ücretli basılı yayınlardır ([KGM Yayınlar](https://www.kgm.gov.tr/Sayfalar/KGM/SiteTr/Yayinlar/Yayinlar.aspx), 2 Kasım 2026'da görüldü); serbestçe indirilebilen resmî metin bulunamadı. İkincil ders notu ve web tablolarından sınır değeri alınmaz. Standart profili (hız–yarıçap, dever, klotoid A aralıkları, görüş mesafeleri, kurp genişlemesi, şev eğimleri) resmî kitaptan, sahibin sağladığı kopyadan ve onayıyla girilir; o zamana dek denetimler “standart profili yok” der, uydurma sayı kullanmaz (ROAD-DEC-01).
 
 **Hedef:** Ölçme ve nokta bulutundan doğrulanmış arazi üret; yatay/düşey güzergâh, dever, tip enkesit ve koridor tasarla; kazı/dolgu, malzeme ve taşıma hesabını izlenebilir yöntemlerle yap; aynı kaynaktan 2D plan/profil/kesit, gerçek 3D sahne, aplikasyon ve teslim dosyaları üret. Görselleştirme ve uygun büyük veri hesapları GPU'dan yararlanacak; mühendislik doğruluğu ayrıca ölçülecek.
 
@@ -20,6 +27,8 @@ Araştırma ve kaynak inceleme tarihi: **13 Ekim 2026**. Belge sürümü: **tasl
 - Önizleme/LOD/seyreltilmiş veri ile hesaplanan tahmini sonuç etiketlenir; kaynak çözünürlükte doğrulanmış miktarla karışmaz.
 - Donanım veya veri yeteneği yoksa hangi işin desteklenmediği açıklanır; GPU'ya gönderilmiş olması bir işlemin doğru veya hızlı olduğunun kanıtı değildir.
 - İlk odak karayoludur. Demiryolu, tünel, köprü ve ileri kavşak bileşenleri sürümlü genişletmelerdir; bütün uzman disiplinlerini ilk dilime zorunlu bağlama.
+- **Dinamik revizyon temel davranıştır.** Netpro 12'nin ana yeniliği gibi ([Netcad NETPRO](https://wiki.netcad.com.tr/display/HELP/NETPRO)) arazi, yatay güzergâh (eleman, yön, ripaj, km eşitliği), düşey güzergâh, kesit, şevli kotlu plan, sıyırma/diş kazısı ve kübaj kuralları değişince bağlı her şey yeniden üretilir. KentOS'ta bu bağımlılık grafı (§5) ve etkilenen km aralığıyla yapılır; onaylanmış miktar sessizce değişmez, yeni hesap ve fark üretilir (ROAD-VOL-17).
+- **2B önce, 3B sonra.** İlk aşamalar plan, boykesit ve enkesit görünüşleriyle tamamlanır; gerçek 3B sahne [3d.md](3d.md)'nin kamerası ve derinlik hattı geldiğinde bağlanır. 3B'nin olmaması yüzey, güzergâh, kesit ve kübajın doğruluğunu ve kabulünü bekletmez.
 
 ## 2. KentOS’ta mevcut temel ve gerçek boşluklar
 
@@ -40,7 +49,29 @@ Araştırma ve kaynak inceleme tarihi: **13 Ekim 2026**. Belge sürümü: **tasl
 | R-E13 | [Sözleşme kataloğu](../crates/shared/contracts/src/catalog.rs), [headless](../crates/native/headless/src/dispatch.rs) | UI/SDK/AI işlemleri tek katalog yaklaşımına eklenir |
 | R-E14 | [Genel yol haritası](../TODOS.md) `CIVIL-01…14` | Arazi, aks/profil, koridor, hacim ve LandXML/IFC işleri açık; bu belge ayrıntılı karşılığıdır |
 
+| R-E15 | [Launcher](../apps/launcher/src/registry.rs), [modüller](../crates/native/launch/src/module.rs), [modül yüzeyleri](../apps/desktop/src) (ADR 0800–0802) | `kentos-yol` kartı “Yakında” durumunda; `Module` yalnız Mimari, Harita, GIS. Yol modülü buraya dördüncü modül olarak eklenir |
+| R-E16 | [Km yaz](../docs/adr/0189-stationing.md), [orta hat](../docs/adr/0190-centerline.md), [nokta hesaplayıcının km'si](../docs/adr/0188-point-calculator-extras.md) | Çizgi boyunca km ve sapma var; analitik aks ve km eşitliğiyle değil, çizilmiş yolla çalışır. Aks gelince bu araçlar aksı da kaynak olarak alır |
+| R-E17 | [Uzaklık ve maliyet](../docs/adr/0236-distance-and-cost.md), [hidroloji](../docs/adr/0235-hydrology.md) | Netpro'nun Koridor Analizi'nin karşılığı olacak ön güzergâh (en düşük maliyetli yol, yasak alanlar) ve drenajın raster temeli var (ROAD-ALIGN-13, ROAD-DRAIN-03) |
+| R-E18 | [Ağ dengelemesi](../docs/adr/0203-network-adjustment.md), [saha verisi](../docs/adr/0169-field-data.md), [zemin–düzlem](../docs/adr/0171-ground-ellipsoid-plane.md), [geoit](../docs/adr/0631-geoid-velocity-and-vertical-statements.md) | Karne, GSI/SDR/JobXML, GNSS, zemin ve düzlem uzunluğu, geoit ızgarası ve cihaza gönderme var; aplikasyon ve ölçüm kaynağı bunlara bağlanır |
+
 Bu envanter ürün dosyalarına bakılarak hazırlanmıştır. Mühendislik koridorunun, doğrulanmış kazı/dolgu sisteminin veya 3D viewport'un bugün tamam olduğu sonucuna varılmaz. Geliştirmeye başlamadan önce devam eden ajanın son değişiklikleriyle kaynak envanteri yeniden eşleştirilmelidir.
+
+## 2a. ROAD-MOD — KentOS Yol modülü, programı ve çalışma yüzeyi — P0
+
+Yol, Mimari ve Harita'dan ayrı bir iştir; kullanıcı yol programını açtığında yalnız yol işinin araçlarını görür. Modülün sınırı ADR 0802'nin kurallarıyla aynıdır: komut arama, komut satırı, kısayollar, F1, menüler, paneller ve ayar bölümleri modüle göre süzülür; başka modülün komutu `not_offered` ile reddedilir. Çekirdek ortak kalır (§1, 2 Kasım kararı).
+
+**Netpro ve OpenRoads'dan alınan çalışma yüzeyi.** Netpro tek pencereden yönetilen editörlerle (Güzergah Editörü, profil, Tip Kesit Editörü, kesit editörü, otokorkuluk ve duvar editörleri) ve projenin dosyalarını (*.KTB, *.KSE, *.KSP, *.PRJ, *.EKT) gösteren proje ekranıyla çalışır; editör açıkken çizim sürer. OpenRoads, çalışma alanında araziyi, geometriyi, şablonu ve koridoru “sivil veri” olarak tutar ve yapılan değişiklik bağlı modele yansır. KentOS'ta karşılığı: proje ağacı (ayrı dosyalar değil, tek projenin kalıcı kaynakları), yan yana plan–boykesit–enkesit görünüşleri ve seçili kaynağın düzenleyicisi.
+
+- [ ] **ROAD-MOD-01:** `Module::Road` (`yol`), `kentos-yol` program bağlantısı (`scripts/desktop/module_links.py`), kendi pencere kimliği, `.desktop` kaydı, ajan soketi (`masaustu-yol.sock`), yerleşim dosyası (`yerlesim-yol.json`); Launcher'da `kentos-yol` kartı “Yakında”dan çıkar ve modülü başlatır.
+- [ ] **ROAD-MOD-02:** Yol projesinin türü: yeni proje sihirbazında koordinat sistemi (yerel değil; il ve dilim), düşey datum (ortometrik, geoit modeli), birim (metre) ve standart profili sorulur. `.kcad`'de projenin işi `road` (ADR 0800'in `cadWork`'ü gibi opt-in alan); başka modülün dosyası o modülün programına devredilir.
+- [ ] **ROAD-MOD-03:** Şerit: **Dosya, Arazi, Güzergâh, Boykesit, Enkesit, Koridor, Kübaj, Aplikasyon, Çıktı, Görünüm**. Her düğme 1440 px'te yazılı, 1100 px'te kademeli daralır; bir komut ana sekmelerde bir kez geçer; seçili kaynağa göre bağlamsal sekme (Yüzey, Aks, Profil, Tip kesit, Koridor) açılır (ADR 0622'nin kuralları; `catalog/v1/ribbon.json`'da modülün `modules`'ü).
+- [ ] **ROAD-MOD-04:** Proje ağacı paneli: Arazi yüzeyleri, Ölçüm ve bulutlar, Güzergâhlar (her birinin altında profilleri, kesit hattı takımları, dever çizelgesi), Tip kesitler, Koridorlar, Kübaj hesapları, Paftalar. Her satır kaynağın durumunu söyler: güncel, eskimiş (kaynağı değişti), çözülemeyen aralık var, onaylı. Satırdan seç, göster, düzenleyiciyi aç, yeniden üret.
+- [ ] **ROAD-MOD-05:** Görünüşler: plan (ana çizim alanı), boykesit ve enkesit görünüşü aynı pencerede bölünmüş görünüm olarak (ADR 0523/0637'nin görünüm yerleri); km kaydırıcısı seçili istasyonu üç görünüşte birlikte gösterir; boykesitte düşey abartma yalnız görünüştür (ROAD-PROFILE-06).
+- [ ] **ROAD-MOD-06:** Dinamik revizyonun kullanıcıya görünen yüzü: değişiklikten sonra etkilenen km aralıkları, kesitler, şevli kotlu plan ve kübaj “eskidi” olur; “Yeniden üret” tek geri alma adımıdır; isteğe bağlı “Kendiliğinden yeniden üret” (Netpro 12'deki seçenek gibi) yalnız taslak hesaplarda çalışır, onaylı kübajı yeni hesap ve fark olmadan değiştirmez.
+- [ ] **ROAD-MOD-07:** Modülün komutları `road.*` ailesindedir (§21); her biri ürün komutu, Python (`kentos.road`) ve MCP aracıdır; manifestte (`catalog/v1/operations.json`) `semantic` düzeyindedir (CLAUDE.md §9.2).
+- [ ] **ROAD-MOD-08:** Ortak çekirdek sınırı: `crates/shared` altında yol hesabı (yüzey, güzergâh, profil, kesit, hacim) DOM, Iced ve modül bilmez; Harita CAD (imar yolu ekseni ve kesiti) ile Mimari (vaziyet planı kotu) aynı çekirdeği komut üzerinden kullanabilir. Modülün arayüzü `apps/desktop` içinde kendi klasöründe (`apps/desktop/src/road/`) durur.
+
+**Kabul:** `kentos-yol` açılır, yalnız yol şeridini ve komutlarını sunar; Mimari ve Harita'nın komutları aramada çıkmaz; Launcher kartı programı başlatır; boş yol projesi kaydedilip açılır; dar (1100×650) ve geniş pencerede, açık ve koyu temada şerit yazıları kesilmez.
 
 ## 3. Netcad, Bentley ve diğer yazılımlar: doğrulanan yaklaşım
 
@@ -56,6 +87,53 @@ Bu envanter ürün dosyalarına bakılarak hazırlanmıştır. Mühendislik kori
 Kaynaklar: [Netpro](https://www.netcad.com/tr/urunler/netpro), [MicroStation](https://www.bentley.com/products/microstation), [OpenRoads](https://www.bentley.com/en/products/openroads-designer/), [Civil 3D miktar eğitimi](https://www.autodesk.com/learn/ondemand/module/create-preliminary-road-quantities-and-schedules-in-civil-3d), [Civil 3D hacim yöntemleri](https://help.autodesk.com/cloudhelp/2018/ENU/Civil3D-UserGuide/files/GUID-1E3A9CD9-DFD6-4455-9EB1-D8E46721A0B4.htm), [12d alignment](https://12d.com/product/12d_model_alignment.html), [Trimble mass-haul](https://help.fieldsystems.trimble.com/tbc/10433.htm).
 
 **Önemli araştırma sınırı:** Netpro ve MicroStation/OpenRoads'un kapalı render motorlarında hangi shader hesabının FP32/FP64 olduğu, bütün hacim/üçgenleme işlemlerinin GPU'da çalıştığı veya private bellek/cache düzeni bu kaynaklardan doğrulanmadı. Pazarlama performans ifadesinden algoritma çıkarılmaz. KentOS için aşağıdaki GPU mimarisi kendi önerimizdir. Bentley'nin açık [iTwin.js display belgesi](https://www.itwinjs.org/learning/display/) backend tile üretimi ve frontend tile renderer ayrımını doğrular; iTwin.js renderer'ı MicroStation'ın renderer'ıyla aynı kabul edilmez.
+
+### 3.1 2 Kasım 2026'da doğrulananlar
+
+**Netcad Netpro 12** (resmî [genel özellikler](https://wiki.netcad.com.tr/pages/viewpage.action?pageId=275350930), son düzenleme 26 Eylül 2025, ve [yenilikler sayfası](https://wiki.netcad.com.tr/display/HELP/NETPRO)):
+
+- Kapsam yalnız karayolu değil: orman yolu, kent geçişi, demiryolu, kavşak, tünel, alt geçit, havaalanı, liman; gölet, baraj, taşkın koruma, dere ıslahı; açık maden ve hafriyat. KentOS'un ilk teslimi karayoludur, kaynak modeli bu kapsamı kapatmayacak biçimde genel koridor olarak kurulur.
+- Yatay güzergâh: doğru, yay, spiral; klotoid, ters kurp ve ove spiral; paralel güzergâh; RL değerlerine göre sabitlenen yay ve doğrular; kesişen en kesit kollarının dar kurpta kırpılması.
+- Kesit alma: güzergâha dik ya da km esaslı; **sabit aralıklarla** ya da **üçgen kenarlarını kesen noktalarla**; kurp ve spiralde sıklaştırma; kesit km'lerinde kırmızı kotun düşey güzergâhtan hesabı.
+- Düşey güzergâh: parabolik ve dairesel düşey kurp; kurp boyu bisektris, açık/kapalı kurp katsayısı, Duruş Görüş Mesafesi (DGM) ve Geçiş Görüş Mesafesi (GGM) ölçütleriyle; km ve offset sorgusu.
+- Kübaj yöntemleri adlı kurallardır: **Yol–Zemin, Formasyon–Zemin, Yol–Bitkisel Toprak, Formasyon–Bitkisel Toprak, Sıyırma Kazısı**; kabarma ve sıkışma katsayıları; Excel'e aktarma. Sıyırma ve **diş kazısı** kesitleri ayrı tanımlanır.
+- Şevli kotlu plan: şev taramaları kullanıcı aralığıyla, yarma/dolgu renklendirmesi, eğim ve akış yönü; “3 boyutlu kırmızı kot hesabı” ile en az kazı/dolguyu veren düşey güzergâh önerisi.
+- Dinamik proje (Netpro 12): arazi, yatay ve düşey güzergâh, **ripaj** ve **km eşitliği**, sıyırma/diş kazısı, kesit ve profil çizimleri, şevli kotlu plan ve kübaj kuralları değişince güncellenir; bu bir seçenektir. Yatay ve düşey düzenleme fare hareketiyle eşzamanlı önizlenir.
+- KTEK 2022: tanımlı standartlar, dever uygulamaları, yatay ve düşey kurp oluşturma ve denetimi, fmax sürtünme katsayısı, ağırlık duvarı kalınlıkları ve kurp genişleme katsayıları güncellenmiş; TCK ve AASHTO profilleri; Brükner dengelemesi.
+- Sanat yapıları ve güvenlik: menfez, kutu menfez, istinat duvarı, palye hendeği; duvar türleri (betonarme iksa, betonarme istinat, toprakarme, harçlı istinat ve iksa, banket altı); metrajın KGM pozlarıyla raporu; **otokorkuluk** aralıklarının dolgu yüksekliğine göre bulunması.
+- Koridor analizi: arazi modeli üzerinde eğim ölçütüyle en uygun güzergâh ve alternatifleri, tünel/köprü/viyadük, yasak alanlar (askerî, sit), maliyet–eğim–uzunluk karşılaştırması.
+- Proje dosyaları sürümlenir (numara, açıklama); yatay, düşey ve kesit bilgisi ölçüm cihazlarına (Leica, Topcon, Trimble, Nikon) tek işlemle aktarılır; DWG/DGN ve LandXML alışverişi.
+
+**Bentley OpenRoads Designer** ([ürün sayfası](https://www.bentley.com/software/openroads-designer/), [CONNECT yardımı](https://docs.bentley.com/LiveContent/web/OpenRoads%20Designer%20CONNECT-v11/en/GUID-44A992C7-08A8-4C17-9BF0-496E675D0315.html), FHWA ve eyalet DOT eğitim belgeleri): ham ölçme biçimleri, karmaşık ve fark (delta) arazi modelleri; yatay geometri yay ya da kiriş tanımlı, düşey parabolik ya da dairesel; dever (superelevation/cant) yatay geometriden kural dosyasıyla hesaplanır ve koridora atanır, şablonda dever alacak kaplama noktaları işaretlenir; şablon nokta ve bileşenlerden oluşan enkesittir ve kitaplıkta saklanır; koridor yatay + düşey + şablon ister; dinamik enkesitler, kesit ve plan–profil paftası üretimi; üçgenlemeli ve uç alan (end-area) hacim, özelleştirilebilir kübaj raporu; menfez tasarımı ve hidrolik analiz; nokta bulutu bağlama ve ölçeklenebilir arazi; iTwin'e yayın. [FHWA şablon kitaplığı](https://highways.dot.gov/sites/fhwa.dot.gov/files/docs/federal-lands/cadd-support/ord-user-manual/13331/ord-manual08-template-library_2.pdf), [FHWA dever](https://highways.fhwa.dot.gov/sites/fhwa.dot.gov/files/docs/federal-lands/cadd-support/ord-user-manual/13266/ord-manual10-superelevation.pdf)
+
+**Autodesk Civil 3D 2026.2** ([yenilikler](https://help.autodesk.com/cloudhelp/2026/ENG/Civil3D-WhatsNew/files/GUID-1777B37B-2DDA-459B-8CDF-AD17B9331C75.htm)): LandXML dışa aktarmada desteklenmeyen eğri türü için uyarı ve spiral örnekleme ayarı eklendi. KentOS için ders: desteklenmeyen spirali sessizce örneklemek yerine ROAD-ALIGN-14'teki kayıp raporu doğru yoldur. [Geçiş eğrisi türleri](https://help.autodesk.com/cloudhelp/2024/ENG/Civil3D-UserGuide/files/GUID-DD7C0EA1-8465-45BA-9A39-FC05106FD822.htm): klotoid, Bloss, kübik parabol, sinüs eğrisi; Trimble'ın [geçiş türleri](https://help.fieldsystems.trimble.com/trimble-access/2023.10/en/RXLroad-transitions.htm) sahadaki karşılıklarıdır.
+
+**IFC 4.3** ([IfcAlignment](https://standards.buildingsmart.org/IFC/RELEASE/IFC4_3/HTML/lexical/IfcAlignment.htm), [güzergâh geometrisi kavramı](https://ifc43-docs.standards.buildingsmart.org/IFC/RELEASE/IFC4x3/HTML/concepts/Product_Shape/Product_Geometric_Representation/Alignment_Geometry/content.html)): yatay düzen bileşik eğri (`IfcCompositeCurve`), yatay+düşey 3B güzergâh `IfcGradientCurve`, dever/cant ise ona göre tanımlı `IfcSegmentedReferenceCurve` ile temsil edilir; semantik düzen (`IfcAlignmentHorizontal`, `…Vertical`, `…Cant` segmentleri) geometriden ayrıdır. KentOS'un kaynak modeli de semantik segment ile çizim geometrisini ayırır (§5), bu eşleme ROAD-IO-06'nın temelidir.
+
+**LandXML 1.2:** `Alignment` içinde `StaEquation`, `CoordGeom` (Line, Curve, `Spiral spiType="clothoid"` …) ve `Profile/ProfAlign` (PVI); Japonya NILIM profili ve DOT örnek dosyaları ([NILIM LandXML 1.2 tabanlı şema](https://www.nilim.go.jp/lab/qbg/researchfields/pdf/h28_basedLandXML1.2.v1.0_English.pdf)) bağımsız sınama girdisi olarak kullanılabilir.
+
+**Ulusal standart:** KTEK 2022 ve KTŞ 2023 ücretli basılıdır (başlıktaki not). Ders notlarında geçen ifadeler (klotoid için A² = R·L; A için R/3 ≤ A ≤ R aralığı; KGM dever bağıntısı ve %8 üst sınır) yalnız formül ve terim kaynağıdır; sayısal sınır olarak kullanılmaz, resmî kitapla doğrulanır.
+
+### 3.2 Terimler (arayüz Türkçesi)
+
+| Arayüz | Anlamı ve KentOS kaynağı |
+|---|---|
+| Güzergâh, aks | Yatay güzergâh (`HorizontalAlignment`); elemanları **aliyman** (doğru), **kurp** (dairesel yay), **geçiş eğrisi** (klotoid; ove spiral iki kurp arası, ters kurp zıt yönlü ardışık kurplar) |
+| Klotoid parametresi A | A² = R·L; eğrilik boy boyunca doğrusal değişir |
+| Km, km eşitliği | İstasyon (0+000,00 biçimi); geri/ileri km eşitliği (station equation) |
+| Ripaj | Güzergâhın yatay kaydırılması/yeniden konumlandırılması; dinamik revizyon olayı |
+| Düşey güzergâh, düşey some, düşey kurp | Profil; some = PVI; parabolik ya da dairesel kurp; bisektris (some ile kurp arası düşey uzaklık) |
+| Kırmızı kot, siyah kot | Proje (tasarım) kotu ve arazi kotu |
+| Dever, dever rakortmanı, kurp genişlemesi | Enine eğim (superelevation), geçiş boyu (runoff), kurpta şerit genişletmesi |
+| Tip enkesit, platform, formasyon | Şablon (template); platform tasarım yüzeyi, formasyon üst yapı altındaki taban (subgrade) yüzeyi |
+| Şev, yarma, dolgu, banket, hendek | Yan eğimler; yarma kazı tarafı; daylight hedefi araziye çarpan şev |
+| Sıyırma kazısı, diş kazısı, bitkisel toprak | Bitkisel toprağın sıyrılması; dolgunun eğimli zemine oturması için basamaklı kazı |
+| Kübaj, kabarma, sıkışma | Hacim hesabı; gevşek ve sıkıştırılmış hacim katsayıları (bank/loose/compacted) |
+| Brükner diyagramı | Birikimli kütle (mass-haul) eğrisi |
+| Şevli kotlu plan | Şev taramalı, kotlu, yarma/dolgu renkli plan paftası |
+| Aplikasyon | Saha işaretleme (stakeout) |
+| DGM, GGM | Duruş görüş mesafesi, geçiş görüş mesafesi |
+| Otokorkuluk, menfez, istinat duvarı | Güvenlik bariyeri; kutu/borulu menfez (culvert); dayanma duvarı |
 
 KentOS'un hedeflediği farklar: kaynak kalitesiyle birlikte doğruluk raporu; donanıma göre bütçeli 3D; değişen station aralığını yeniden hesaplama; ortak UI/Python/AI; offline/merkezi saha bağlantısı ve Digital Twin'e kalıcı kimliklerle geçiş. Bunlar hedeflerdir, mevcut ürüne veya rakiplere karşı ölçülmüş üstünlük iddiası değildir.
 
@@ -175,6 +253,8 @@ OpenRoads'un kamuya açık yetenek listesi birden çok spiral türü ve yatay/d�
 - [ ] **ROAD-ALIGN-12:** Alternative alignment ve compare için parent/source digest ve değişen kilometre aralığı korunsun.
 - [ ] **ROAD-ALIGN-13:** Ön tasarım için mevcut GIS suitability/cost path kullanılabilir; ortaya çıkan raster path teknik aks olarak ayrıca fit/QA/onaydan geçsin.
 - [ ] **ROAD-ALIGN-14:** LandXML/IFC'den gelen unsupported spiral türlerini analitik kayıpla düz spline'a sessiz dönüştürme; source preserve ve loss report üret.
+- [ ] **ROAD-ALIGN-15:** Ove spiral (iki kurp arası klotoid parçası), ters kurp (zıt yönlü ardışık kurplar, araya aliyman konmadan) ve kesişen kurpların çakışma denetimi ayrı eleman ve kural olsun; Netpro'nun AASHTO hız–yarıçap ile kurp çakışmasını kaldırması gibi öneri ayrı taslaktır, kaynak aksı sessiz değiştirmez.
+- [ ] **ROAD-ALIGN-16:** Ripaj (aksı yatay kaydırma/yeniden konumlandırma) ve km eşitliği ekleme kayıtlı düzenleme olayıdır; profil, kesit hattı takımı, dever çizelgesi ve kübaj km'leri eşleme tablosuyla izler ya da çözülemeyen aralık olarak işaretlenir (ROAD-MOD-06).
 
 ## 10. ROAD-PROFILE — Düşey güzergâh ve boykesit — P1
 
@@ -190,6 +270,8 @@ OpenRoads'un kamuya açık yetenek listesi birden çok spiral türü ve yatay/d�
 - [ ] **ROAD-PROFILE-10:** Terrain missing region, gap, override ve measured/proposed profile ayrı görünüş/provenance taşısın.
 - [ ] **ROAD-PROFILE-11:** Profil edit/drag için responsive GPU preview ile authoritative solve farklı durum olsun; final save exact validator'dan geçsin.
 - [ ] **ROAD-PROFILE-12:** Analitik point/grade/curvature query, profile report ve sheet üretimi aynı komutlardan çalışsın.
+- [ ] **ROAD-PROFILE-13:** Düşey kurp boyu bisektris, açık/kapalı kurp katsayısı, DGM ve GGM ölçütlerinden önerilsin; ölçütün kaynağı standart profilidir (ROAD-DEC-01), profil yoksa öneri yapılmaz, yalnız elle boy girilir.
+- [ ] **ROAD-PROFILE-14:** Kırmızı kot önerisi (en az kazı/dolgu ya da dengeli kütle veren düşey güzergâh) ayrı taslak alternatif olsun; amaç işlevi, kısıtlar (en büyük/en küçük eğim, kontrol kotları, köprü/menfez açıklığı) ve çözücünün durumu raporlansın (ROAD-GRADE-08/09 ile aynı kural).
 
 ## 11. ROAD-DEVER — Dever, enine eğim, genişletme ve geçişler — P1
 
@@ -243,6 +325,7 @@ OpenRoads'un kamuya açık yetenek listesi birden çok spiral türü ve yatay/d�
 - [ ] **ROAD-SEC-10:** Machine control/as-built çıktısında valid vertical datum, project localization ve quality acceptance şartları olsun.
 - [ ] **ROAD-SEC-11:** Plan/profile/section sheet set [cad.md](cad.md) pafta motoruna bağlı kaynaklarla üretilsin; cache görseli yerine kaynak revision saklansın.
 - [ ] **ROAD-SEC-12:** Form/twin'den gelen saha ölçüsünü station/source point lineage ile eşle; yanlış aks branch'ına otomatik kabul yapma.
+- [ ] **ROAD-SEC-13:** Kesit hattı takımı üç yöntemle üretilsin: sabit aralık, km esaslı liste ve **üçgen kenarlarını kesen noktalar** (arazinin her kırığında kesit); kurp, spiral ve tasarım olaylarında sıklaştırma; dar kurpta komşu kesit kollarının kesişmesi kırpma ya da çarpık kesitle açıkça çözülsün.
 
 ## 14. ROAD-GRADE — Şev, platform, saha ve arazi düzenleme — P1/P2
 
@@ -283,6 +366,9 @@ Kesit yöntemleri: `V_AEA=L(A0+A1)/2`; gerçek orta kesit alınırsa `V_prismoid
 - [ ] **ROAD-VOL-16:** Raporu oluştururken yuvarlama sona bırakılsın; kesit başına gösterim yuvarlamasını tekrar toplayıp final hacim yapma.
 - [ ] **ROAD-VOL-17:** Approved quantity revision immutable olsun; kaynak değişince yeni run ve diff üret, önceki hesap/audit silinmesin.
 - [ ] **ROAD-VOL-18:** Hesap kaynak parçaları ve contribution ledger drill-down ile incelenebilsin; station/material/AOI bazında büyük toplamın nedeni görülsün.
+- [ ] **ROAD-VOL-19:** Kübaj kuralları adlı ve sürümlü olsun: Yol–Zemin, Formasyon–Zemin, Yol–Bitkisel Toprak, Formasyon–Bitkisel Toprak, Sıyırma Kazısı (Netpro'nun adları); her kural hangi iki yüzeyi, hangi sınırları (yatay ve düşey) ve hangi malzeme durumunu kullandığını söylesin.
+- [ ] **ROAD-VOL-20:** Sıyırma kazısı (bitkisel toprak kalınlığı) ve diş kazısı (eğimli zeminde dolgu oturma basamakları) ayrı kesit kaynakları olsun; kalınlık, basamak boyu ve eşik eğim parametreleri ölçme ya da zemin raporundan gelir, örnek değer saha kararı sayılmaz.
+- [ ] **ROAD-VOL-21:** Km aralıklarına göre kabarma ve sıkışma katsayıları tablo olarak verilebilsin; hangi katsayının hangi aralıkta hangi hacme uygulandığı defterde görünsün; XLSX/ODS/CSV kübaj cetveli ADR 0223'ün yazıcısıyla.
 
 **Kabul:** Düz prizma, eğik düzlem, işaret değiştiren yüzey, hole/no-data ve material katman örnekleri bağımsız analitik sonuçlarla geçer; kamera/LOD/GPU tier değişimi final miktarı değiştirmez.
 
@@ -316,6 +402,7 @@ Trimble'ın resmi mass-haul iş akışı borrow/waste kapasitesi, malzeme ve eng
 - [ ] **ROAD-JUNC-09:** Cover/clearance/checks ana terrain datum ve ilgili corridor/utility revisions ile bağlı olsun.
 - [ ] **ROAD-JUNC-10:** Kavşak editinden sonra bağlı approach bölgelerini incremental rebuild et; bütün ağı gerekmeden yeniden çözme.
 - [ ] **ROAD-JUNC-11:** İleri traffic capacity/operational simulation ayrı provider ve modeldir; yol geometrisinin doğru görünmesi trafik analizinin doğruluğu sayılmasın.
+- [ ] **ROAD-JUNC-12:** Otokorkuluk: dolgu yüksekliği, şev ve engel mesafesine göre giriş–çıkış uzunlukları ve korkuluklar arası en az aralık standart profilinden hesaplansın; sonuç km aralıkları tablosu, şevli kotlu plana ve enkesite işlenen bileşen olsun.
 
 ## 18. ROAD-DRAIN — Drenaj, altyapı ve afet bağlantısı — P1/P2
 
@@ -329,6 +416,7 @@ Trimble'ın resmi mass-haul iş akışı borrow/waste kapasitesi, malzeme ve eng
 - [ ] **ROAD-DRAIN-08:** Taşkın nedeniyle yol kapanması karar kuralı depth/velocity/time/vehicle class ve uncertainty'yi açık alsın.
 - [ ] **ROAD-DRAIN-09:** Subsurface network clash için gerçek 3D nearest/clearance query kullan; plan kesişimini çakışma kabul etme.
 - [ ] **ROAD-DRAIN-10:** Saha bakım, culvert kontrol ve as-built ölçülerini [form.md](form.md) task/asset/row izinleriyle ilişkilendir.
+- [ ] **ROAD-DRAIN-11:** Standart menfez tipleri (borulu, kutu, palye hendeği) ve istinat/iksa duvarı türleri parametreli bileşen kitaplığı olsun; boyutlandırma ve metraj kuralı (KGM pozları) sürümlü ve kaynaklı tablodan gelir; menfezin değişmesi bağlı kesit ve metrajı eskitir.
 
 Hidrolik model kapsamı ve gerekli fiziksel denklemler ayrı doğrulanır. [HEC-RAS equation selection](https://www.hec.usace.army.mil/confluence/rasdocs/r2dum/6.4/running-a-model-with-2d-flow-areas/shallow-water-or-diffusion-wave-equations), [EPA SWMM](https://www.epa.gov/water-research/storm-water-management-model-swmm)
 
@@ -433,6 +521,8 @@ IFC 4.3 resmi şeması yol ve alignment nesnelerini kapsar; reader/exporter prof
 - [ ] **ROAD-IO-10:** Asset dependency ledger ve missing-source repair/remap akışı olsun; proje adı/dosya adı gerçek source digest'in yerine geçmesin.
 - [ ] **ROAD-IO-11:** Staged files, atomic replace, job checkpoints ve resume source-revision kontrolüyle kurtarma yap.
 - [ ] **ROAD-IO-12:** Şantiye/aplikasyon raporunda template/alignment/terrain/quantity revisions ve üretim zamanı bulunmalı.
+- [ ] **ROAD-IO-13:** Aplikasyon için güzergâh, profil ve kesit bilgisini ölçüm cihazlarına (Leica, Topcon, Trimble, Nikon) yazmak mevcut Cihaza gönder yolunu (ADR 0169) genişletsin; her biçimin desteklediği eleman türleri belgeden çıkarılsın, taşınamayan eleman (ör. ove spiral) neden ile söylensin.
+- [ ] **ROAD-IO-14:** DWG/DGN'deki yol projelerinin (polyline aks, profil çizimi) KentOS aksına dönüştürülmesi ayrı araçtır: aliyman ve kurplar uydurularak çıkarılır, sapma raporlanır; Netpro'nun bu yönde bir aracı vardır, KentOS'ta kaynak çizgi korunur.
 
 ## 23. ROAD-QA — Bağımsız doğruluk ve performans kapıları — P0/P1
 
@@ -495,7 +585,28 @@ IFC 4.3 resmi şeması yol ve alignment nesnelerini kapsar; reader/exporter prof
 
 GPU render ve source precision RD1'den itibaren vardır; RD5 hızlandırma genişlemesidir. Robust CPU baseline'ı olmadan speculative GPU TIN veya final volume ilk teslimin önkoşulu yapılmaz.
 
-İlk 12 iş:
+### 25.1 Uygulama sırası (2 Kasım 2026)
+
+Yukarıdaki fazlar hedef kapsamdır. Uygulama, 3B sahne beklenmeden, her biri kullanıcının masaüstünde gördüğü bir sonuçla biten maddelerle yürür. Her madde ayrı ADR'dir (0900'den), kendi aşamalarına bölünür, her aşama kendi commit'i ve ekran görüntüsüyle biter. Madde başlamadan o konunun güncel resmî belgeleri yeniden araştırılır ve bu tabloya not düşülür.
+
+| Sıra | Madde | Kapsadığı işler | Görünen sonuç |
+|---|---|---|---|
+| Y1 | Modül ve proje | ROAD-MOD-01…05, 08; ROAD-NUM-01…04 ve 11'in sözleşmesi | `kentos-yol` açılır, kendi şeridi ve proje ağacıyla; yeni yol projesi sihirbazı (sistem, düşey datum, standart profili yok/var); Launcher kartı |
+| Y2 | Arazi yüzeyi | ROAD-TIN-01…11, 15, 16; ROAD-SURVEY-01, 03, 08; ROAD-NUM-10 | Noktalardan, kırık hatlardan, sınır ve boşluklardan kısıtlı Delaunay yüzey; nokta kotu sorgusu, eş yükselti eğrileri, eğim; LandXML/CSV/XYZ/nokta bulutundan girdi |
+| Y3 | Yatay güzergâh | ROAD-ALIGN-01…10, 15, 16; ROAD-NUM-05 | Aliyman–klotoid–kurp zinciri, PI'dan ya da elemandan; km, km eşitliği, km ve offset sorgusu, paralel aks; Güzergah editörü ve planda km yazısı |
+| Y4 | Düşey güzergâh ve boykesit | ROAD-PROFILE-01…06, 09, 10, 12, 13 | Arazi boykesiti (üçgen kenarlarıyla kesin), some'lerle parabolik ve dairesel düşey kurplar, kırmızı/siyah kot, boykesit görünüşü |
+| Y5 | Enkesit ve tip kesit | ROAD-SEC-01…08, 13; ROAD-COR-01…04, 10 | Kesit hattı takımı (üç yöntem), arazi ve platform kesiti, şerit–banket–hendek–şev tip kesiti, daylight; enkesit görünüşü |
+| Y6 | Dever ve genişleme | ROAD-DEVER-01…12 | Dever çizelgesi ve diyagramı, kesitlerde enine eğim, kurp genişlemesi (standart profili varsa önerili) |
+| Y7 | Koridor | ROAD-COR-05…17; ROAD-MOD-06 | Koridor, platform ve formasyon yüzeyi, şevli kotlu plan, dinamik yeniden üretim |
+| Y8 | Kübaj | ROAD-VOL-01…21 | Kübaj kuralları, kesit (AEA/prismoidal) ve yüzey (TIN bindirme) hacmi, sıyırma ve diş kazısı, kabarma/sıkışma, kübaj cetveli |
+| Y9 | Brükner ve taşıma | ROAD-HAUL-01…12 | Brükner diyagramı, ödünç/döküm alanları, taşıma planı |
+| Y10 | Pafta ve alışveriş | ROAD-SEC-09…11; ROAD-IO-05, 06, 13, 14 | Plan–profil ve enkesit paftaları, aplikasyon cetveli, LandXML ve IFC 4.3 güzergâh, cihaza gönderme |
+| Y11 | Sanat yapıları ve güvenlik | ROAD-DRAIN-01, 02, 11; ROAD-JUNC-12 | Menfez ve duvar bileşenleri, otokorkuluk aralıkları, metraj |
+| Y12 | Ön güzergâh, kavşak, 3B | ROAD-ALIGN-13; ROAD-JUNC; 3d.md bağlantısı | Koridor analizi (yasak alanlar), kavşak, 3B sahne |
+
+Her maddenin kabulünde CLAUDE.md §9.2 geçerlidir: anlamsal komut, ortak durumlar (KentOS kodu olmadan yazılmış bağımsız başvuru), Python (`kentos.road`) ve MCP, manifest; aracın yazması kayıtta komutun adıyla; dar ve geniş pencerede, iki temada gerçek masaüstü görüntüleri (repo dışında `.run/gui-evidence/`).
+
+İlk 12 iş (taslak 0.1; 25.1'in Y1–Y10'u bunların yerini alır):
 
 1. Mevcut Delaunay/predicates/cloud/raster/renderer kaynaklarına ADR ve source ownership eşlemesi çıkar.
 2. Coordinate/vertical datum/quality ve Surface/Alignment/Job source contracts'ını kesinleştir.
@@ -512,7 +623,7 @@ GPU render ve source precision RD1'den itibaren vardır; RD5 hızlandırma geni�
 
 ## 26. ROAD-DEC — Açık kararlar ve araştırma denemeleri
 
-- [ ] **ROAD-DEC-01:** MVP veri türleri ve karayolu kapsamı; ilk yerel DesignStandard kaynağı/baskısı/onay sahibi seçilsin.
+- [ ] **ROAD-DEC-01:** MVP veri türleri ve karayolu kapsamı; ilk yerel DesignStandard kaynağı/baskısı/onay sahibi seçilsin. — **2 Kasım 2026:** ilk kapsam karayolu; ilk standart kaynağı KGM KTEK 2022 (ve KTŞ 2023), ücretli basılı olduğu için değerler sahibin sağladığı resmî kopyadan girilir. Standart profili dosyası `catalog/v1/road-standards/` altında kaynak, baskı, sayfa ve onaylayanla tutulur; profil yokken araçlar çalışır, standart denetimi “profil yok” der.
 - [ ] **ROAD-DEC-02:** Persistent terrain asset/topology/block storage ve constrained triangulation genişletme yöntemi/lisansı kararlaştırılsın.
 - [ ] **ROAD-DEC-03:** 2.5D terrain ile multi-surface/solid ayrımı ve bridge/vertical-wall source politikası seçilsin.
 - [ ] **ROAD-DEC-04:** Clothoid/numeric integration ve station-equation mapping policy bağımsız prototiple doğrulansın.
@@ -534,6 +645,12 @@ Aşağıdaki resmi kaynaklar 13 Ekim 2026'da incelendi; ürün destekleri/modül
 | Kaynak | Kullanım |
 |---|---|
 | [Netcad Netpro](https://www.netcad.com/tr/urunler/netpro) | Yerel civil iş akışı, dinamik tasarım/kesit/çıktı |
+| [Netcad NETPRO yardım ve yenilikler](https://wiki.netcad.com.tr/display/HELP/NETPRO), [Netpro genel özellikler](https://wiki.netcad.com.tr/pages/viewpage.action?pageId=275350930) | Netpro 12: KTEK 2022, dinamik revizyon, kübaj kuralları, sıyırma/diş kazısı, otokorkuluk, menfez ve duvar, koridor analizi (2 Kasım 2026) |
+| [KGM Yayınlar](https://www.kgm.gov.tr/Sayfalar/KGM/SiteTr/Yayinlar/Yayinlar.aspx) | KTEK 2022 ve KTŞ 2023 ücretli basılı yayın (2 Kasım 2026) |
+| [Civil 3D 2026 yenilikler](https://help.autodesk.com/cloudhelp/2026/ENG/Civil3D-WhatsNew/files/GUID-1777B37B-2DDA-459B-8CDF-AD17B9331C75.htm), [geçiş eğrileri](https://help.autodesk.com/cloudhelp/2024/ENG/Civil3D-UserGuide/files/GUID-DD7C0EA1-8465-45BA-9A39-FC05106FD822.htm) | LandXML'de desteklenmeyen eğri uyarısı; spiral türleri |
+| [FHWA ORD şablon kitaplığı](https://highways.dot.gov/sites/fhwa.dot.gov/files/docs/federal-lands/cadd-support/ord-user-manual/13331/ord-manual08-template-library_2.pdf), [FHWA ORD dever](https://highways.fhwa.dot.gov/sites/fhwa.dot.gov/files/docs/federal-lands/cadd-support/ord-user-manual/13266/ord-manual10-superelevation.pdf) | OpenRoads'un şablon ve dever iş akışı |
+| [IFC 4.3 güzergâh geometrisi](https://ifc43-docs.standards.buildingsmart.org/IFC/RELEASE/IFC4x3/HTML/concepts/Product_Shape/Product_Geometric_Representation/Alignment_Geometry/content.html) | Yatay bileşik eğri, IfcGradientCurve, IfcSegmentedReferenceCurve (cant) |
+| [Trimble Access geçiş türleri](https://help.fieldsystems.trimble.com/trimble-access/2023.10/en/RXLroad-transitions.htm), [NILIM LandXML 1.2](https://www.nilim.go.jp/lab/qbg/researchfields/pdf/h28_basedLandXML1.2.v1.0_English.pdf) | Saha cihazının spiral türleri; LandXML örnek yapısı |
 | [Netcad nokta bulutu](https://www.netcad.com/tr/nokta-bulutu) | Netcad ekosisteminde cloud/3D/ölçme uygulamaları |
 | [Bentley MicroStation](https://www.bentley.com/products/microstation) | CAD/3D platform rolü |
 | [Bentley OpenRoads](https://www.bentley.com/en/products/openroads-designer/) | Terrain/template/corridor/dever/earthworks kapsamı |
