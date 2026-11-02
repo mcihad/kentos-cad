@@ -3008,3 +3008,101 @@ fn parameter_units_mcp_legacy_audit_is_readonly_and_repair_is_explicit() {
     assert_eq!(std::fs::read(&path).unwrap(), before);
     std::fs::remove_dir_all(dir).unwrap();
 }
+
+#[test]
+fn full_ellipse_seam_survives_axis_swap_plan_save_and_undo_through_mcp() {
+    let dir = std::env::temp_dir().join(format!(
+        "kentos-mcp-full-ellipse-seam-{}",
+        std::process::id()
+    ));
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join("ellipse.kcad");
+    let mut raw: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/interaction/v1/objects.kcad"
+    ))
+    .unwrap();
+    raw["settings"]["workspace"] = json!("cad");
+    raw["entities"] = json!([
+        {"kind":"ellipse","id":1,"layerId":"cizim","attrs":{"QA":"full-phase"},
+         "c":{"x":487000,"y":4420000},"major":{"x":4,"y":0},"ratio":0.5,"t0":0.6,"t1":0.6},
+        {"kind":"line","id":2,"layerId":"cizim","attrs":{},
+         "a":{"x":487000. + 4.*0.6f64.cos(),"y":4420000. + 2.*0.6f64.sin()},"b":{"x":487008,"y":4420003}}
+    ]);
+    std::fs::write(&path, raw.to_string()).unwrap();
+    let mut server = Server::new();
+    let drawing =
+        call(&mut server, "drawing.open", json!({"path":path}))["structuredContent"]["drawing"]
+            .clone();
+    let items = call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"].clone();
+    let part = |i: usize, p: &str| json!({"uid":items[i]["uid"],"element":{"kind":"point","place":{"kind":p}}});
+    let r = call(
+        &mut server,
+        "cad.constraints.edit",
+        json!({"drawing":drawing,"edit":{"kind":"add","constraints":[
+            {"rule":{"kind":"fix","a":part(0,"center")}},
+            {"rule":{"kind":"coincident","a":part(0,"start"),"b":part(1,"start")}}
+        ]}}),
+    );
+    assert_eq!(r["structuredContent"]["status"], "completed", "{r}");
+    call(
+        &mut server,
+        "drawing.save",
+        json!({"drawing":drawing,"path":path}),
+    );
+    let before = std::fs::read(&path).unwrap();
+    let phase = 0.6 - std::f64::consts::FRAC_PI_2;
+    let input = json!({"drawing":drawing,"operation":"grip","changes":[{"kind":"update","uid":items[0]["uid"],
+        "geometry":{"kind":"ellipse","c":{"x":487000,"y":4420000},"major":{"x":0,"y":2},"ratio":0.75,"t0":phase,"t1":phase}}]});
+    let mut plan = input.clone();
+    plan["op"] = json!("plan");
+    let planned = call(&mut server, "cad.entities.edit", plan);
+    assert_eq!(
+        planned["structuredContent"]["status"], "completed",
+        "{planned}"
+    );
+    let written = call(&mut server, "cad.entities.edit", input);
+    assert_eq!(
+        written["structuredContent"]["status"], "completed",
+        "{written}"
+    );
+    let after = call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"].clone();
+    assert_eq!(
+        planned["structuredContent"]["output"]["changed"],
+        json!([after[0]["entity"]])
+    );
+    assert_eq!(after[0]["uid"], items[0]["uid"]);
+    assert_eq!(after[0]["entity"]["attrs"]["QA"], "full-phase");
+    let p = &after[1]["entity"]["a"];
+    assert!(
+        (p["x"].as_f64().unwrap() - (487000. + 1.5 * 0.6f64.cos()))
+            .hypot(p["y"].as_f64().unwrap() - (4420000. + 2. * 0.6f64.sin()))
+            < 3e-9
+    );
+    let q = call(
+        &mut server,
+        "cad.constraints.query",
+        json!({"drawing":drawing}),
+    );
+    assert!(
+        q["structuredContent"]["output"]["constraints"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|c| c["holds"] == true)
+    );
+    assert_eq!(q["structuredContent"]["output"]["diagnosis"]["dof"], 5);
+    call(
+        &mut server,
+        "drawing.save",
+        json!({"drawing":drawing,"path":path}),
+    );
+    assert_ne!(std::fs::read(&path).unwrap(), before);
+    call(&mut server, "drawing.undo", json!({"drawing":drawing}));
+    call(
+        &mut server,
+        "drawing.save",
+        json!({"drawing":drawing,"path":path}),
+    );
+    assert_eq!(std::fs::read(&path).unwrap(), before);
+    std::fs::remove_dir_all(dir).unwrap();
+}

@@ -497,7 +497,12 @@ Eski pi yarım tur değerini korur; ortak query ve arayüz uyumsuzluğu
 açıklar. Gerçek mm GUI'de yanlış tür reddi, 2500→3000 mm, altı geçerli
 bağ, tam tek Undo, dar pencere, açık pi onarımı ve yeniden açma geçti;
 UI/Python dosyaları tam aynı. [ADR 0840](../docs/adr/0840-parameter-dimensions-without-legacy-reinterpretation.md).
-Tam elips eksen grip'leri ve birleşik çözüm dalı kabulü bitmeden bu
+Tam elips eksen tutamacının kaynak dikiş açısını sıfırlaması düzeltildi;
+eksen sırası değiştiğinde aynı bağlı nokta yeni baza taşınır. Gerçek
+arayüzde 4→6 ve 4→1.5 m, bağlı çizginin doğru koordinatı, iki geçerli
+bağ, beş serbestlik, tek Undo, yeniden açma ve tam GUI/Python dosya
+eşitliği doğrulandı. [ADR 0841](../docs/adr/0841-full-ellipse-seam-through-axis-grips.md).
+Bağımsız eksen hedefleri ve birleşik çözüm dalı kabulü bitmeden bu
 madde kapatılmaz.
 
 ### CAD-ADV-06 — Parametrik blokları sürdürülebilir 2B bileşenlere dönüştür [ ]

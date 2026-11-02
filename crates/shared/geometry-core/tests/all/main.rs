@@ -23,6 +23,7 @@ mod dimensions;
 mod display;
 mod drawing_extras;
 mod edge_shift;
+mod ellipse_grips;
 mod feature_table;
 mod field_reduce;
 mod field_traverse;

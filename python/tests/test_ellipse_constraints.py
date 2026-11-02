@@ -104,4 +104,48 @@ class EllipticalArcTargets(unittest.TestCase):
         self.assertEqual(d.to_bytes(),before)
 
 
+
+class FullEllipseSeam(unittest.TestCase):
+    def test_axis_order_changes_keep_nonzero_seam_and_follower_then_undo(self):
+        for origin in [(0, 0), (487000, 4420000)]:
+            for major_axis in [True, False]:
+                for length in [1.5, 6.0]:
+                    with self.subTest(origin=origin, major_axis=major_axis, length=length):
+                        raw = json.loads((ROOT/'fixtures/interaction/v1/objects.kcad').read_text())
+                        raw['settings'].update(workspace='cad', cadWork='architecture')
+                        x,y = origin
+                        raw['entities'] = [
+                            dict(kind='ellipse',id=1,layerId='cizim',attrs={'QA':'phase'},
+                                 c=dict(x=x,y=y),major=dict(x=4,y=0),ratio=.5,t0=.6,t1=.6),
+                            dict(kind='line',id=2,layerId='cizim',attrs={},
+                                 a=dict(x=x+4*math.cos(.6),y=y+2*math.sin(.6)),
+                                 b=dict(x=x+8,y=y+3))]
+                        d = cad.Document.from_bytes(json.dumps(raw).encode())
+                        uids = [r.uid for r in d.entities()]
+                        part = lambda i,p:dict(uid=uids[i],element=dict(kind='point',place=dict(kind=p)))
+                        cad.constraints.edit(d, edit=cad.AddConstraintEdit.from_json(dict(kind='add',constraints=[
+                            dict(rule=dict(kind='fix',a=part(0,'center'))),
+                            dict(rule=dict(kind='coincident',a=part(0,'start'),b=part(1,'start')))])))
+                        before=d.to_bytes()
+                        # Independent authored axes -> canonical ellipse basis, including +90° swap.
+                        a,b=(length,2) if major_axis else (4,length)
+                        phase=.6 if a>=b else .6-math.pi/2
+                        g=dict(kind='ellipse',c=dict(x=x,y=y),
+                               major=dict(x=a,y=0) if a>=b else dict(x=0,y=b),
+                               ratio=min(a,b)/max(a,b),t0=phase,t1=phase)
+                        changes=[cad.UpdateEntityEdit(uid=uids[0],geometry=cad.EllipseEntityGeometry.from_json(g))]
+                        planned=cad.entities.edit.plan(d,operation='grip',changes=changes)
+                        self.assertEqual(d.to_bytes(),before)
+                        cad.entities.edit(d,operation='grip',changes=changes)
+                        e=d.entity(uids[0]).entity.to_json();l=d.entity(uids[1]).entity.to_json()
+                        self.assertEqual(planned.changed[0].to_json(),e)
+                        self.assertLess(math.dist((l['a']['x'],l['a']['y']),
+                                                 (x+a*math.cos(.6),y+b*math.sin(.6))),3e-9)
+                        self.assertEqual(e['t0'],e['t1']);self.assertEqual(e['attrs'],{'QA':'phase'})
+                        q=cad.constraints.query(d)
+                        self.assertTrue(all(c.holds for c in q.constraints));self.assertEqual(q.diagnosis.dof,5)
+                        saved=d.to_bytes();self.assertEqual(cad.Document.from_bytes(saved).to_bytes(),saved)
+                        d.undo();self.assertEqual(d.to_bytes(),before)
+
+
 if __name__=='__main__':unittest.main()

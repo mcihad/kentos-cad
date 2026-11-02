@@ -620,9 +620,8 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
             let b = a * ratio;
             let d = js_hypot(p.x - c.x, p.y - c.y);
             // Axis ends: 1/3 re-aim and resize the major axis, 2/4 resize the minor one.
-            let g = if index == 1 || index == 3 {
-                ellipse_from_center(
-                    *c,
+            let (axis_end, other_half) = if index == 1 || index == 3 {
+                (
                     if index == 1 {
                         p
                     } else {
@@ -631,14 +630,23 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
                     b,
                 )
             } else {
-                ellipse_from_center(*c, Vec2::new(c.x + major.x, c.y + major.y), d)
-            }?;
+                (Vec2::new(c.x + major.x, c.y + major.y), d)
+            };
+            let g = ellipse_from_center(*c, axis_end, other_half)?;
+            // The constructor canonicalises the longer radius onto the major axis.
+            // Its +90° basis change needs a -90° parameter change, otherwise an
+            // existing Start/End bond jumps to a different point on this closed curve.
+            let shift = if other_half.abs() > js_hypot(axis_end.x - c.x, axis_end.y - c.y) {
+                PI / 2.0
+            } else {
+                0.0
+            };
             Shape::Ellipse {
                 c: g.c,
                 major: g.major,
                 ratio: g.ratio,
-                t0: g.t0,
-                t1: g.t1,
+                t0: t0 - shift,
+                t1: t1 - shift,
             }
         }
         Shape::Xline { p: base, dir } | Shape::Ray { p: base, dir } => {

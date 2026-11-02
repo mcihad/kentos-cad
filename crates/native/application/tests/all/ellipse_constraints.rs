@@ -347,3 +347,93 @@ fn thirty_two_endpoint_placements_at_map_coordinates_remain_valid_after_writebac
         assert_eq!(d.to_snapshot_v2(), before);
     }
 }
+
+#[test]
+fn full_ellipse_axis_grips_keep_nonzero_seam_and_followers_across_axis_swaps() {
+    use kentos_geometry_core::{Vec2 as V, entity::Entity as CoreEntity, ops::grips::move_grip};
+    use kentos_native_application::{edit, geometry};
+    for origin in [(0., 0.), (487000., 4420000.)] {
+        for index in 1..=4 {
+            for length in [1.5, 6.] {
+                let mut d = drawing();
+                // Prepare a true full ellipse whose seam is deliberately not an axis end.
+                let mut raw = d.to_snapshot_v2();
+                if let Entity::Ellipse(e) = &mut raw.entities[0] {
+                    e.c = Vec2 {
+                        x: origin.0,
+                        y: origin.1,
+                    };
+                    e.t0 = 0.6;
+                    e.t1 = 0.6;
+                }
+                if let Entity::Line(l) = &mut raw.entities[1] {
+                    l.a = Vec2 {
+                        x: origin.0 + 4. * 0.6f64.cos(),
+                        y: origin.1 + 2. * 0.6f64.sin(),
+                    };
+                    l.b = Vec2 {
+                        x: origin.0 + 8.,
+                        y: origin.1 + 3.,
+                    };
+                }
+                d = Document::from_snapshot_v2(raw).unwrap();
+                let center = part(&d, 1, "center");
+                let start = part(&d, 1, "start");
+                let follower = part(&d, 2, "start");
+                add(
+                    &mut d,
+                    json!([{"rule":{"kind":"fix","a":center}},
+                    {"rule":{"kind":"coincident","a":start,"b":follower}}]),
+                );
+                let before = d.to_snapshot_v2();
+                let major = index == 1 || index == 3;
+                let sign = if index <= 2 { 1. } else { -1. };
+                let target = if major {
+                    V::new(origin.0 + sign * length, origin.1)
+                } else {
+                    V::new(origin.0, origin.1 + sign * length)
+                };
+                let moved = move_grip(
+                    &CoreEntity::new(geometry::shape(d.get(Slot(1)).unwrap())),
+                    index,
+                    target,
+                )
+                .unwrap();
+                let input: EntitiesEdit =
+                    serde_json::from_value(json!({"operation":"grip","changes":[{
+                    "kind":"update","uid":d.uid(Slot(1)).unwrap().to_string(),
+                    "geometry":geometry::edit_geometry(moved.shape).unwrap()}]}))
+                    .unwrap();
+                let planned = done(edit::plan(&ExecutionContext::new(&mut d), &input));
+                assert_eq!(d.to_snapshot_v2(), before);
+                done(edit::execute(&mut ExecutionContext::new(&mut d), input));
+                assert_eq!(planned.changed[0], *d.get(Slot(1)).unwrap());
+                let (a, b) = if major { (length, 2.) } else { (4., length) };
+                let Some(Entity::Line(l)) = d.get(Slot(2)) else {
+                    panic!()
+                };
+                assert!(
+                    (l.a.x - (origin.0 + a * 0.6f64.cos()))
+                        .hypot(l.a.y - (origin.1 + b * 0.6f64.sin()))
+                        < 3e-9,
+                    "{index} {length} {l:?}"
+                );
+                let e = ellipse(&d);
+                assert_eq!(e.t0, e.t1);
+                assert_eq!(e.base.attrs, before.entities[0].base().attrs);
+                let q = done(constraints_query::read(&d, &ConstraintsQuery::default()));
+                assert!(q.constraints.iter().all(|c| c.holds));
+                assert_eq!(q.diagnosis.dof, 5);
+                let saved = d.to_snapshot_v2();
+                assert_eq!(
+                    Document::from_snapshot_v2(saved.clone())
+                        .unwrap()
+                        .to_snapshot_v2(),
+                    saved
+                );
+                d.undo().unwrap();
+                assert_eq!(d.to_snapshot_v2(), before);
+            }
+        }
+    }
+}

@@ -84,3 +84,5 @@ Sahne kısıt etiketlerinin panel sınırına sığması, pencereyle ortak birim
 Sabit yay uçlarında imkânsız yarıçap/çap için birimli kiriş ve alt sınır açıklaması: [ADR 0839](../adr/0839-actionable-fixed-arc-radius-refusals.md). Uçlardan biri serbestse kirişin kısalmasına izin verilir.
 
 Boyut cebiri, yeni/değişen ifadelerin atomik denetimi ve eski pi'nin sessizce yeniden yorumlanmadan denetlenmesi: [ADR 0840](../adr/0840-parameter-dimensions-without-legacy-reinterpretation.md), [Python/MCP birim rehberi](parameter-units-python.md). Gerçek GUI'de altı bağlı mm çizimde yanlış tür reddi, karekök ifadesiyle 2500→3000 mm, tek Undo, dar pencere, açık pi onarımı ve yeniden açma doğrulandı; UI/Python dosyaları tam aynı.
+
+Tam elipsin sıfır olmayan dikişini eksen tutamaçlarında ve eksen sırası değişiminde koruma; gerçek büyük koordinat GUI/Python dosya eşitliği, tek Undo ve yeniden açma kabulü: [ADR 0841](../adr/0841-full-ellipse-seam-through-axis-grips.md). Bu düzeltme kalıcı bağımsız eksen başvurusu eklemez.
