@@ -2,5 +2,6 @@
 //! terrain along it, and (in [`template`]) the platform a template builds on it and its slopes tied to the terrain.
 
 pub mod sample;
+pub mod template;
 
 pub use sample::{GroundPoint, SampleLine, ground, sample_line};

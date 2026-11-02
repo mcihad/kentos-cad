@@ -3,6 +3,7 @@
 mod alignments;
 mod profiles;
 mod sections;
+mod templates;
 mod verticals;
 mod surfaces;
 mod sources;
