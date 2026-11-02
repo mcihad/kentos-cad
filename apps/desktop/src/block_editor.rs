@@ -42,6 +42,14 @@ pub struct BlockEditor {
     pub name: String,
     camera: Camera,
     selection: Selection,
+    test: Option<TestPlacement>,
+}
+
+/// The editable draft put aside while an expendable insert is exercised. Its history is kept intact.
+struct TestPlacement {
+    draft: Document,
+    camera: Camera,
+    selection: Selection,
 }
 
 #[derive(Debug, Clone)]
@@ -49,6 +57,8 @@ pub enum Event {
     Open(BlockId),
     Save,
     Discard,
+    Test,
+    BackToEditor,
 }
 
 fn msg(e: Event) -> Message {
@@ -132,12 +142,62 @@ fn definition_objects(doc: &Document) -> Vec<Entity> {
         .collect()
 }
 
+fn update_input(doc: &Document, block: BlockId) -> BlocksEdit {
+    BlocksEdit {
+        entities: Some(definition_objects(doc)),
+        ..kentos_interaction::blocks::input(BlockEditOperation::Update, Some(block))
+    }
+}
+
+/// Current, unsaved geometry becomes a definition in a separate document. Normal insertion applies the existing
+/// block-unit, attribute and dynamic rules; nothing is recorded in the original or the editable draft.
+fn test_document(draft: &Document, editor: &BlockEditor) -> Result<Document, String> {
+    let input = update_input(draft, editor.block);
+    let mut probe = editor.original.model.clone();
+    match blocks_edit::validate(&ExecutionContext::new(&mut probe), &input) {
+        CommandResult::Completed { .. } => {}
+        CommandResult::Failed { error }
+        | CommandResult::Conflict { error }
+        | CommandResult::NeedsInput { error } => return Err(error.message),
+        _ => return Err("Blok doğrulanamadı.".into()),
+    }
+    let mut snapshot = draft.model.to_snapshot_v2_of(|_| false);
+    let def = snapshot
+        .blocks
+        .iter_mut()
+        .find(|b| b.id == editor.block)
+        .ok_or("Blok tanımı bulunamadı.")?;
+    def.entities = input.entities.unwrap_or_default();
+    snapshot.name = format!("Blok testi: {}", editor.name);
+    let mut doc = Document::from_v2(snapshot, None)?;
+    let result = kentos_native_application::registry::run(
+        &mut ExecutionContext::new(&mut doc.model),
+        "cad.blocks.insert",
+        kentos_commands::CallOp::Execute,
+        serde_json::json!({"block":editor.block,"at":{"x":0.,"y":0.},"layerId":BLOCK_LAYER}),
+    )
+    .map_err(|e| format!("Test yerleştirmesi yapılamadı: {e:?}"))?;
+    if result["status"] != "completed" {
+        return Err(result["error"]["message"]
+            .as_str()
+            .unwrap_or("Test yerleştirmesi yapılamadı.")
+            .to_owned());
+    }
+    // Inserting the sample is setup, not the first user undo step. Reopen in memory for a fresh history.
+    Document::from_v2(doc.model.to_snapshot_v2(), None)
+}
+
 impl App {
     pub(crate) fn block_editor_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Open(block) => self.block_editor_open(block),
             Event::Save => self.block_editor_save(),
+            Event::Discard if self.block_editor.as_ref().is_some_and(|e| e.test.is_some()) => {
+                self.block_editor_back_from_test()
+            }
             Event::Discard => self.block_editor_close(false),
+            Event::Test => self.block_editor_test(),
+            Event::BackToEditor => self.block_editor_back_from_test(),
         }
         Task::none()
     }
@@ -199,6 +259,7 @@ impl App {
                     name: name.clone(),
                     camera,
                     selection,
+                    test: None,
                 });
                 self.say(
                     Level::Info,
@@ -214,6 +275,62 @@ impl App {
         }
     }
 
+    fn block_editor_test(&mut self) {
+        let (Some(draft), Some(editor)) = (self.document.as_ref(), self.block_editor.as_ref())
+        else {
+            return;
+        };
+        if editor.test.is_some() {
+            return;
+        }
+        let doc = match test_document(draft, editor) {
+            Ok(doc) => doc,
+            Err(why) => {
+                self.warn(format!("Blok denenemedi: {why}"));
+                return;
+            }
+        };
+        let selection = std::mem::replace(&mut self.selection, Selection::new());
+        self.cancel();
+        self.session.exit();
+        let camera = self.viewport.camera;
+        self.spatial.reload(&doc.model);
+        self.viewport.opened(&doc, self.spatial.extent());
+        self.followed = Some((doc.session, doc.model.generation()));
+        self.selection.set(
+            doc.model
+                .entities()
+                .map(|e| kentos_domain::Slot(e.base().id)),
+        );
+        let draft = self.document.replace(doc).expect("the editor draft");
+        self.block_editor.as_mut().expect("the editor").test = Some(TestPlacement {
+            draft,
+            camera,
+            selection,
+        });
+        self.say(Level::Info, "Blok testi: boyut, görünürlük ve tutamaçları deneyin. Denemedeki değişiklikler çizime ya da tanıma kaydedilmez; Düzenleyiciye dön taslağınızı geri getirir.");
+    }
+
+    fn block_editor_back_from_test(&mut self) {
+        let Some(test) = self.block_editor.as_mut().and_then(|e| e.test.take()) else {
+            return;
+        };
+        self.cancel();
+        self.session.exit();
+        self.spatial.reload(&test.draft.model);
+        self.followed = Some((test.draft.session, test.draft.model.generation()));
+        self.document = Some(test.draft);
+        self.viewport.camera = test.camera;
+        if self.viewport.bounds.width > 0.0 && self.viewport.bounds.height > 0.0 {
+            self.viewport.camera.set_size(
+                f64::from(self.viewport.bounds.width),
+                f64::from(self.viewport.bounds.height),
+            );
+        }
+        self.selection = test.selection;
+        self.say(Level::Info, "Blok düzenleyiciye dönüldü; test değişiklikleri bırakıldı, kaydedilmemiş taslak korundu.");
+    }
+
     /// Kaydet: the drawing back, its block updated as one step; a refusal keeps the editor open.
     fn block_editor_save(&mut self) {
         let Some(doc) = self.document.as_ref() else {
@@ -222,32 +339,11 @@ impl App {
         let Some(editor) = self.block_editor.as_ref() else {
             return;
         };
-        let entities = definition_objects(doc);
-        let input = BlocksEdit {
-            dynamic: None,
-            sync: None,
-            renames: None,
-            remove_tags: None,
-            tag: None,
-            at: None,
-            category: None,
-            tags: None,
-            description: None,
-            operation: BlockEditOperation::Update,
-            block: Some(editor.block),
-            name: None,
-            uids: None,
-            base: None,
-            replace: None,
-            layer_id: None,
-            attributes: None,
-            blocks: None,
-            library: None,
-            units: None,
-            rescale: None,
-            entities: Some(entities),
-            expected_revision: None,
-        };
+        if editor.test.is_some() {
+            self.warn("Test yerleştirmesi kaydedilmez. Önce Düzenleyiciye dön ile taslağa dönün.");
+            return;
+        }
+        let input = update_input(doc, editor.block);
         // Checked against the drawing first: a refusal leaves the editor as it is.
         let mut probe = editor.original.model.clone();
         let plan = blocks_edit::validate(&ExecutionContext::new(&mut probe), &input);
@@ -305,6 +401,12 @@ impl App {
         self.followed = Some((original.session, original.model.generation()));
         self.document = Some(original);
         self.viewport.camera = camera;
+        if self.viewport.bounds.width > 0.0 && self.viewport.bounds.height > 0.0 {
+            self.viewport.camera.set_size(
+                f64::from(self.viewport.bounds.width),
+                f64::from(self.viewport.bounds.height),
+            );
+        }
         self.selection = selection;
         if !saving {
             self.say(
@@ -317,12 +419,30 @@ impl App {
     /// The bar under the drawing while the editor is open: the block, its objects, Kaydet and Vazgeç.
     pub(crate) fn block_editor_bar(&self) -> Option<Element<'_, Message>> {
         let editor = self.block_editor.as_ref()?;
+        if editor.test.is_some() {
+            return Some(
+                row![
+                    label::body(format!("Blok testi: {}", editor.name)),
+                    text("Deneme değişiklikleri kaydedilmez").style(style::text::muted),
+                    iced::widget::Space::new().width(iced::Fill),
+                    crate::exchange::words::primary(
+                        "Düzenleyiciye dön",
+                        Some(msg(Event::BackToEditor))
+                    ),
+                ]
+                .spacing(12)
+                .padding([4, 12])
+                .align_y(iced::Center)
+                .into(),
+            );
+        }
         let count = self.document.as_ref().map_or(0, |d| d.entity_count());
         Some(
             row![
                 label::body(format!("Blok düzenleyici: {}", editor.name)),
                 text(format!("{count} nesne")).style(style::text::muted),
                 iced::widget::Space::new().width(iced::Fill),
+                crate::exchange::words::secondary("Test et", Some(msg(Event::Test))),
                 crate::exchange::words::secondary("Vazgeç", Some(msg(Event::Discard))),
                 crate::exchange::words::primary("Kaydet", Some(msg(Event::Save))),
             ]
@@ -378,5 +498,182 @@ mod tests {
         let _ = app.update(Message::BlockEditor(Event::Discard));
         assert!(app.block_editor.is_none());
         assert_eq!(pieces(&app), 4);
+    }
+
+    #[test]
+    fn test_placement_uses_unsaved_geometry_and_restores_draft_history_exactly() {
+        let (mut app, _) = App::boot(None);
+        editing(&mut app);
+        let original = app
+            .block_editor
+            .as_ref()
+            .unwrap()
+            .original
+            .model
+            .to_snapshot_v2();
+        handle(&mut app);
+        let draft_slot = kentos_domain::Slot(
+            app.document
+                .as_ref()
+                .unwrap()
+                .model
+                .entities()
+                .next()
+                .unwrap()
+                .base()
+                .id,
+        );
+        app.selection.set([draft_slot]);
+        let draft = app.document.as_ref().unwrap().model.to_snapshot_v2();
+        let draft_history: Vec<_> = app
+            .document
+            .as_ref()
+            .unwrap()
+            .model
+            .journal()
+            .cloned()
+            .collect();
+        let camera = app.viewport.camera;
+        let _ = app.update(Message::BlockEditor(Event::Test));
+        assert!(app.block_editor.as_ref().unwrap().test.is_some());
+        assert_eq!(app.document.as_ref().unwrap().entity_count(), 1);
+        assert!(!app.document.as_ref().unwrap().model.can_undo());
+        assert_eq!(
+            pieces(&app),
+            5,
+            "the unsaved handle is in the tested definition"
+        );
+        assert_eq!(
+            app.block_editor
+                .as_ref()
+                .unwrap()
+                .original
+                .model
+                .to_snapshot_v2(),
+            original
+        );
+        handle(&mut app); // a change in the expendable document only
+        assert_eq!(app.document.as_ref().unwrap().entity_count(), 2);
+        let _ = app.update(Message::Run("edit.undo"));
+        assert_eq!(app.document.as_ref().unwrap().entity_count(), 1);
+        assert!(
+            !app.document.as_ref().unwrap().model.can_undo(),
+            "setup cannot be undone"
+        );
+        let _ = app.update(Message::BlockEditor(Event::Save));
+        assert!(
+            app.block_editor.as_ref().unwrap().test.is_some(),
+            "test is never saved into the original"
+        );
+        let _ = app.update(Message::Run("file.save"));
+        assert!(app.saving.is_none());
+        // The window can be resized during a test. Returning preserves the view, not stale canvas dimensions.
+        let bounds = iced::Rectangle::new(iced::Point::ORIGIN, iced::Size::new(640., 360.));
+        app.viewport.update(
+            crate::viewport::Event::Resized(bounds),
+            app.document.as_ref(),
+        );
+        let mut expected_camera = camera;
+        expected_camera.set_size(640., 360.);
+        let _ = app.update(Message::BlockEditor(Event::BackToEditor));
+        assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(), draft);
+        assert_eq!(
+            app.document
+                .as_ref()
+                .unwrap()
+                .model
+                .journal()
+                .cloned()
+                .collect::<Vec<_>>(),
+            draft_history
+        );
+        assert_eq!(app.viewport.camera, expected_camera);
+        assert_eq!(app.selection.ids(), &[draft_slot]);
+        // Saving after return applies just the draft, in the original drawing's single Undo step.
+        let _ = app.update(Message::BlockEditor(Event::Save));
+        assert!(app.block_editor.is_none());
+        assert_eq!(pieces(&app), 5);
+        let _ = app.update(Message::Run("edit.undo"));
+        assert_eq!(
+            app.document.as_ref().unwrap().model.to_snapshot_v2(),
+            original
+        );
+    }
+
+    #[test]
+    fn dynamic_test_changes_parameters_and_visibility_without_changing_definition_or_draft() {
+        use crate::properties::{Event as Property, Field};
+        use kentos_commands::{DrawingUnit, ParamValue};
+        let mut snapshot = kentos_kcad::decode(include_bytes!(
+            "../../../fixtures/kcad/v2/dynamic-blocks.kcad"
+        ))
+        .unwrap();
+        snapshot.settings.drawing_unit = Some(DrawingUnit::Mm);
+        let id = snapshot.blocks[0].id;
+        let doc = crate::document::Document::from_v2(snapshot, None).unwrap();
+        let (mut app, _) = App::boot(None);
+        let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+        let original = app.document.as_ref().unwrap().model.to_snapshot_v2();
+        let _ = app.update(Message::BlockEditor(Event::Open(id)));
+        let draft = app.document.as_ref().unwrap().model.to_snapshot_v2();
+        for _ in 0..2 {
+            let _ = app.update(Message::BlockEditor(Event::Test));
+            let model = &app.document.as_ref().unwrap().model;
+            let slot = kentos_domain::Slot(model.entities().next().unwrap().base().id);
+            let kentos_commands::Entity::Insert(i) = model.get(slot).unwrap() else {
+                panic!()
+            };
+            assert!(i.parameters.is_empty(), "each test starts at the defaults");
+            let _ = app.update(Message::Properties(Property::Commit(
+                Field::Parameter(slot, "Genişlik".into()),
+                "1050".into(),
+            )));
+            let _ = app.update(Message::Properties(Property::Parameter(
+                slot,
+                "Görünüş".into(),
+                ParamValue::Text("Sade".into()),
+            )));
+            let model = &app.document.as_ref().unwrap().model;
+            let kentos_commands::Entity::Insert(i) = model.get(slot).unwrap() else {
+                panic!()
+            };
+            assert_eq!(i.parameters["Genişlik"], ParamValue::Number(1.05));
+            assert_eq!(i.parameters["Görünüş"], ParamValue::Text("Sade".into()));
+            assert_eq!(
+                app.block_editor
+                    .as_ref()
+                    .unwrap()
+                    .original
+                    .model
+                    .to_snapshot_v2(),
+                original
+            );
+            let _ = app.update(Message::BlockEditor(Event::BackToEditor));
+            assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(), draft);
+        }
+        let _ = app.update(Message::BlockEditor(Event::Discard));
+        assert_eq!(
+            app.document.as_ref().unwrap().model.to_snapshot_v2(),
+            original
+        );
+    }
+
+    #[test]
+    fn invalid_self_reference_refuses_test_without_leaving_or_altering_the_draft() {
+        let (mut app, _) = App::boot(None);
+        editing(&mut app);
+        let model = &mut app.document.as_mut().unwrap().model;
+        let result = kentos_native_application::registry::run(
+            &mut kentos_native_application::ExecutionContext::new(model),
+            "cad.blocks.insert",
+            kentos_commands::CallOp::Execute,
+            serde_json::json!({"block":door(),"at":{"x":0.,"y":0.},"layerId":super::BLOCK_LAYER}),
+        )
+        .unwrap();
+        assert_eq!(result["status"], "completed");
+        let draft = app.document.as_ref().unwrap().model.to_snapshot_v2();
+        let _ = app.update(Message::BlockEditor(Event::Test));
+        assert!(app.block_editor.as_ref().unwrap().test.is_none());
+        assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(), draft);
     }
 }

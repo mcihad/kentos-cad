@@ -3283,12 +3283,14 @@ fn block_parameter_mm_input_uses_canonical_metres_rules_and_one_undo() {
     use kentos_commands::DrawingUnit;
     let (mut app, slot) = parameter_drawing(DrawingUnit::Mm, false);
     assert_eq!(value(&app, "Blok parametreleri", "Genişlik"), "900 mm");
+    assert!(rows(&app).iter().flat_map(|(_, rows)| rows).any(|r| r.note && r.value == "Tanım varsayılanı · En az 600 mm · En çok 1200 mm · Adım 50 mm"));
     let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
     event(
         &mut app,
         Event::Commit(Field::Parameter(slot, "Genişlik".into()), "1050".into()),
     );
     assert_eq!(value(&app, "Blok parametreleri", "Genişlik"), "1050 mm");
+    assert!(rows(&app).iter().flat_map(|(_, rows)| rows).any(|r| r.note && r.value.starts_with("Örneğe özel · En az 600 mm")));
     let model = &app.document.as_ref().unwrap().model;
     let Entity::Insert(i) = model.get(slot).unwrap() else {
         panic!()
@@ -3409,6 +3411,7 @@ fn block_parameter_angles_local_points_and_derived_values_follow_project_units()
             .editor
             .is_none()
     );
+    assert!(rows(&app).iter().flat_map(|(_, rows)| rows).any(|r| r.note && r.value == "Hesaplanan · @Genişlik * 2"));
     event(
         &mut app,
         Event::Commit(Field::Parameter(slot, "Dönüş".into()), "50".into()),

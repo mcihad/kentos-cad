@@ -25,6 +25,47 @@ fn shown(p: &BlockParameter, v: &ParamValue, f: Format, factor: f64) -> String {
     }
 }
 
+/// Show the existing constraints in the same units as the edited value; never reimplement their validation.
+fn bounds(p: &BlockParameter, f: Format, factor: f64) -> Vec<String> {
+    let Some(rule) = p.rule() else {
+        return Vec::new();
+    };
+    let number = |n| {
+        let unit = if matches!(p, BlockParameter::Angle { .. }) {
+            f.angle_unit_label()
+        } else {
+            f.length_unit_label()
+        };
+        format!("{} {unit}", shown(p, &ParamValue::Number(n), f, factor))
+    };
+    let mut parts = Vec::new();
+    if let Some(n) = rule.min {
+        parts.push(format!("En az {}", number(n)));
+    }
+    if let Some(n) = rule.max {
+        parts.push(format!("En çok {}", number(n)));
+    }
+    if let Some(n) = rule.step {
+        parts.push(format!("Adım {}", number(n)));
+    }
+    if !rule.list.is_empty() {
+        let values = rule
+            .list
+            .iter()
+            .take(6)
+            .map(|n| number(*n))
+            .collect::<Vec<_>>()
+            .join(", ");
+        let more = if rule.list.len() > 6 {
+            format!(" (+{} değer)", rule.list.len() - 6)
+        } else {
+            String::new()
+        };
+        parts.push(format!("İzin verilen: {values}{more}"));
+    }
+    parts
+}
+
 /// Project-unit input, converted back to definition-local values. A unitless definition uses raw drawing-unit
 /// coordinates; physical definitions use metres (`blocks_insert::unit_factor`). The insert's extra scale is not
 /// part of its parameter. Public commands keep their canonical contract.
@@ -155,7 +196,26 @@ pub(super) fn rows(doc: &Document, slot: Slot, i: &InsertEntity, locked: bool) -
         };
         out.push(row.editor(editor).editor_if(!locked));
         if derived {
-            out.push(Row::note("ifadeyle hesaplanır"));
+            let expression = p
+                .rule()
+                .and_then(|r| r.expression.as_deref())
+                .unwrap_or_default();
+            out.push(Row::note(&format!("Hesaplanan · {expression}")));
+        } else {
+            let source = if matches!(p, BlockParameter::Lookup { .. }) {
+                if value.is_some() {
+                    "Eşleşen katalog satırı"
+                } else {
+                    "Eşleşen katalog satırı yok"
+                }
+            } else if i.parameters.contains_key(name) {
+                "Örneğe özel"
+            } else {
+                "Tanım varsayılanı"
+            };
+            let mut details = vec![source.to_owned()];
+            details.extend(bounds(p, f, factor));
+            out.push(Row::note(&details.join(" · ")));
         }
     }
     let changed = i.parameters.len();

@@ -567,9 +567,20 @@ Undo dosyası ilk durumla tam aynı; geniş ve dar pencere görüldü.
 [ADR 0845](../docs/adr/0845-block-parameter-project-units.md).
 Bu, aşağıdaki ileri kapsamın bittiği anlamına gelmez.
 
+**İlerleme — 2026-11-02, kayıt öncesi test:** Blok düzenleyicide **Test et**,
+kaydedilmemiş güncel geometriyi ayrı yerleştirmede dener. **Düzenleyiciye dön**
+taslak/geçmiş/seçimi korur; deneme parametreleri asıl çizime sızmaz. Panelde
+varsayılan–örneğe özel–hesaplanan ayrımı ve birimli min/max/adım görünür;
+uzun açıklamalar tam genişlikte satıra yayılır. Testte pencere küçültülüp
+dönüldüğünde kamera güncel alan boyutuna uyar. Gerçek GUI'de çizilen kol,
+1050 mm ve Sade denemesi, dar pencere, tekrar test, kayıt engeli, normal
+Kaydet/Python dosya eşitliği, tam tek Undo ve iptal dosyası doğrulandı.
+1591 masaüstü testi, derleme ve Clippy geçti; belgeli bağımsız Python test
+örneği çalıştırıldı. [ADR 0846](../docs/adr/0846-block-editor-test-placement.md),
+[kullanım/API rehberi](../docs/cad/block-test-placement.md).
+
 Tür/sürüm ve seçilmiş yükseltme, okunur parametre grupları, tip–örnek
-ayrımı, iç içe etki önizlemesi, editörde test yerleştirmesi ve birleşik
-blok kabulü açıktır. Web öznitelik penceresinin native eşitleme kapsamıyla
+ayrımı, iç içe etki önizlemesi ve birleşik blok kabulü açıktır. Web öznitelik penceresinin native eşitleme kapsamıyla
 aynı olmadığı kodda görüldü; bu dilim web eşitliğini tamamlanmış saymaz.
 
 ### CAD-ADV-07 — Tekrarları tanı, blok ve ilişkili diziye kontrollü dönüştür [ ]

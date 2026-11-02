@@ -605,7 +605,7 @@ impl App {
                 continue;
             }
             for mut row in section.rows {
-                if row.note && row.warn {
+                if row.note && (row.warn || section.id == "blockParams") {
                     sheet = sheet.note(self.cell(row));
                     continue;
                 }
