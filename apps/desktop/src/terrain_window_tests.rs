@@ -79,6 +79,20 @@ fn the_window_makes_a_surface_and_accepts_it_again() {
 }
 
 #[test]
+fn landxml_comes_in_as_a_surface() {
+    let mut app = app("road");
+    let _ = app.update(Message::Run("terrain.surfaces"));
+    send(&mut app, W::ContourLayer("esyukselti".into()));
+    let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/landxml/v1/kirikli.xml");
+    send(&mut app, W::LandXmlChosen(Some(path)));
+    let doc = &app.document.as_ref().expect("doc").model;
+    let road = doc.settings().road.clone().expect("road settings");
+    assert_eq!(road.surfaces[0].name, "Zemin");
+    assert!(road.surfaces[0].boundary.is_some() && road.surfaces[0].voids.len() == 1);
+    assert!(doc.can_undo(), "the objects are one undo step");
+}
+
+#[test]
 fn a_map_project_has_no_surfaces() {
     let mut app = app("map");
     let _ = app.update(Message::Run("terrain.surfaces"));
@@ -137,6 +151,16 @@ fn screens() {
         send(&mut app, W::MaxEdge("25".into()));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("y2-4-yuzey-penceresi-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+        // LandXML al: a file's surface beside the drawing's, on its own layer.
+        send(&mut app, W::Cancel);
+        let _ = app.update(Message::Run("terrain.surfaces"));
+        send(&mut app, W::ContourLayer("0".into()));
+        let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/landxml/v1/kirikli.xml");
+        send(&mut app, W::LandXmlChosen(Some(path)));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("y2-5-landxml-penceresi-{name}.png"));
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
         println!("{}", file.display());
     }

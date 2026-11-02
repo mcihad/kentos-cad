@@ -2585,9 +2585,11 @@
       "via": [
         "road.terrains.create",
         "road.terrains.edit",
-        "road.terrains.query"
+        "road.terrains.query",
+        "road.terrains.contours",
+        "file.import.landxml"
       ],
-      "note": "Arazi yüzeyleri penceresi road.terrains.query ile okur, Kaydet ve Kabul et road.terrains.create ve .edit ile yazar (plan/road.md Y2.4)."
+      "note": "Arazi yüzeyleri penceresi road.terrains.query ile okur; Kaydet, Kabul et, Eğrileri çiz ve LandXML al road.terrains.create, .edit, .contours ve file.import.landxml ile yazar (plan/road.md Y2.4, Y2.5)."
     },
     "terrain.new": {
       "level": "semantic",

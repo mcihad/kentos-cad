@@ -260,6 +260,7 @@ pub mod match_props;
 pub mod network_define;
 pub mod event_follow;
 pub mod linearref_define;
+pub mod file_import_landxml;
 pub mod road_terrains;
 pub mod road_terrains_contours;
 pub mod road_terrains_create;
@@ -1104,6 +1105,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::ROAD_TERRAINS_CONTOURS,
         kentos_commands::ROAD_TERRAINS_CONTOURS_VERSION,
+    ),
+    (
+        kentos_commands::FILE_IMPORT_LANDXML,
+        kentos_commands::FILE_IMPORT_LANDXML_VERSION,
     ),
     // Alt ağlar ([`subnetworks`], [`subnetworks_update`], docs/adr/0557 §2).
     (

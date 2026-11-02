@@ -1531,6 +1531,18 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "file.import.landxml",
+        refusals: &[
+            &["not_a_road_project", "file_not_found", "import_unreadable", "landxml_no_surface"],
+            LAYER,
+            &["invalid_terrain"],
+            REVISION,
+            &["terrain_unbuildable"],
+        ],
+        warnings: &["landxml_left", "layer_hidden"],
+        targets: none,
+    },
+    Entry {
         id: "road.terrains.query",
         refusals: &[&["not_a_road_project", "unknown_terrain", "no_terrain", "invalid_places"]],
         warnings: &[],

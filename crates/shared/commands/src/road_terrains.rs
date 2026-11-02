@@ -25,6 +25,8 @@ pub const ROAD_TERRAINS_QUERY: &str = "road.terrains.query";
 pub const ROAD_TERRAINS_QUERY_VERSION: u32 = 1;
 pub const ROAD_TERRAINS_CONTOURS: &str = "road.terrains.contours";
 pub const ROAD_TERRAINS_CONTOURS_VERSION: u32 = 1;
+pub const FILE_IMPORT_LANDXML: &str = "file.import.landxml";
+pub const FILE_IMPORT_LANDXML_VERSION: u32 = 1;
 
 /// The most places a query names (its `at` and `along` together).
 pub const MAX_TERRAIN_PLACES: usize = 100_000;
@@ -404,4 +406,78 @@ pub struct TerrainsQueried {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<TerrainSectionPoint>>", optional))]
     pub section: Vec<TerrainSectionPoint>,
+}
+
+/// Input of `file.import.landxml` v1 (plan/road.md Y2.5, docs/adr/0900 §14): a LandXML file's TIN surface taken into a
+/// road project: its points as point objects, its breaklines as 3D polylines, its outer boundary and voids as areas on
+/// one layer (one undo step “LandXML al”), and a terrain surface of them (`road.terrains.create`'s definition, a project
+/// setting). The file's faces are not kept: the surface is made again from its points and breaklines, and the answer
+/// says how far the two differ. Coordinates turn from the file's unit into metres, “northing easting” into (x, y).
+///
+/// Refusals: `not_a_road_project`, `file_not_found`, `import_unreadable` (not LandXML, a number that does not read),
+/// `landxml_no_surface` (no surface, or none of `surface`'s name, or one without points), `layer_not_found`,
+/// `not_a_layer`, `layer_locked`, `invalid_terrain` (the surface's name), `invalid_revision`, `revision_conflict`,
+/// `terrain_unbuildable`. Warnings: `landxml_left` (faces naming a missing point, a point id twice, a second outer
+/// boundary), `layer_hidden`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ImportLandxml {
+    /// The file's path.
+    pub path: String,
+    /// The layer the objects go on.
+    pub layer_id: String,
+    /// The file's surface by its name; absent: its first.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub surface: Option<String>,
+    /// The terrain surface's name; absent: the file's surface's (or “LandXML”).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub name: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
+/// Output of `file.import.landxml` v1, and its plan.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct LandxmlImported {
+    /// The file's surface taken.
+    pub surface: String,
+    /// The file's linear unit as it writes it (empty: none said, metres taken).
+    pub unit: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub points: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub breaklines: u32,
+    pub boundary: bool,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub voids: u32,
+    /// The file's faces it does not ignore, and those it ignores.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub faces: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub ignored: u32,
+    /// The greatest height difference at the file's faces' centroids between the file's face and the surface made
+    /// again (m); none without faces or with no centroid on the surface.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub differs: Option<f64>,
+    /// The terrain surface as its sources give it.
+    pub terrain: TerrainReport,
+    /// The objects written (a plan: none).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub uids: Vec<String>,
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub revision: String,
 }

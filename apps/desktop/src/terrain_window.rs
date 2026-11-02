@@ -48,6 +48,7 @@ const ACCEPT: &str = "Kabul et";
 const BOUNDARY: &str = "Sınırı seçimden al";
 const VOIDS: &str = "Boşlukları seçimden ekle";
 const CONTOURS: &str = "Eğrileri çiz";
+const LANDXML: &str = "LandXML al…";
 
 /// A definition being edited, its numbers as the text the user typed (empty: none).
 #[derive(Debug, Clone, PartialEq)]
@@ -105,6 +106,9 @@ pub enum Event {
     Major(String),
     ContourLayer(String),
     Contours,
+    /// LandXML al…: the file to take, asked; then the file chosen (none: given up).
+    LandXml,
+    LandXmlChosen(Option<std::path::PathBuf>),
     Accept,
     Save,
     Cancel,
@@ -306,6 +310,25 @@ impl App {
                 self.dialog = None;
             }
             Event::Contours => return self.draw_contours(),
+            Event::LandXml => {
+                return Task::perform(
+                    async move {
+                        let file = rfd::AsyncFileDialog::new()
+                            .set_title("LandXML al")
+                            .add_filter("LandXML (.xml)", &["xml", "landxml"])
+                            .pick_file()
+                            .await?;
+                        Some(file.path().to_path_buf())
+                    },
+                    |path| msg(Event::LandXmlChosen(path)),
+                );
+            }
+            Event::LandXmlChosen(path) => {
+                if let Some(path) = path {
+                    self.import_landxml(&path);
+                }
+                return Task::none();
+            }
             Event::Accept => return self.accept_terrain(),
             Event::Save => return self.save_terrains(),
         }
@@ -388,6 +411,44 @@ impl App {
             self.say(Level::Success, format!("{} eş yükselti eğrisi çizildi.", out.lines.len()));
         }
         Task::none()
+    }
+
+    /// LandXML al: the file's first surface on the window's layer, its terrain surface defined and accepted
+    /// (`file.import.landxml`); the window then lists it.
+    pub(crate) fn import_landxml(&mut self, path: &std::path::Path) {
+        let layer = self.terrain_window.as_ref().and_then(|w| w.layer.clone()).unwrap_or_default();
+        let input = kentos_commands::ImportLandxml {
+            path: path.to_string_lossy().into_owned(),
+            layer_id: layer,
+            surface: None,
+            name: None,
+            expected_revision: None,
+        };
+        let Some(doc) = self.document.as_mut() else { return };
+        let result = kentos_native_application::file_import_landxml::execute(
+            &mut ExecutionContext::new(&mut doc.model),
+            input,
+        );
+        if let Some(out) = self.answered(result) {
+            self.refresh_terrains();
+            if let Some(w) = self.terrain_window.as_mut() {
+                w.rows = w.kept.iter().cloned().map(Row::of).collect();
+                w.chosen = (!w.rows.is_empty()).then(|| w.rows.len() - 1);
+            }
+            let differs = out.differs.map_or(String::new(), |d| {
+                format!("; dosyanın üçgenleriyle en büyük kot farkı {} m", format!("{d:.3}").replace('.', ","))
+            });
+            self.say(
+                Level::Success,
+                format!(
+                    "LandXML “{}”: {} nokta, {} kırık hat alındı, {} üçgenli yüzey kuruldu{differs}.",
+                    out.surface,
+                    out.points,
+                    out.breaklines,
+                    out.terrain.figures.as_ref().map_or(0, |f| f.triangles)
+                ),
+            );
+        }
     }
 
     /// Kaydet: what changed, the removed first, then the changed, then the new.
@@ -520,7 +581,11 @@ impl App {
             container(scrollable(list).height(typography::scaled(260.0)))
                 .style(style::container::field_box)
                 .width(Fill),
-            words::secondary(NEW, Some(msg(Event::New))),
+            row![
+                words::secondary(NEW, Some(msg(Event::New))),
+                words::secondary(LANDXML, Some(msg(Event::LandXml))),
+            ]
+            .spacing(8),
         ]
         .spacing(8);
         let chosen = w.chosen.and_then(|i| w.rows.get(i));
@@ -618,7 +683,13 @@ impl App {
             .padding(iced::Padding::default().right(14))
             .push(words::field("Ad", name, None))
             .push(words::field("Nokta katmanları", checks(&d.points.layers, Event::PointLayer), None))
+            .extend((!d.points.uids.is_empty()).then(|| {
+                label::caption(format!("ve kimliğiyle {} nokta nesnesi", d.points.uids.len())).style(muted).into()
+            }))
             .push(words::field("Kırık hat katmanları", checks(&d.breaklines.layers, Event::BreaklineLayer), None))
+            .extend((!d.breaklines.uids.is_empty()).then(|| {
+                label::caption(format!("ve kimliğiyle {} kırık hat nesnesi", d.breaklines.uids.len())).style(muted).into()
+            }))
             .push(words::field("Sınır", boundary, None))
             .push(words::field("Boşluklar", voids, None))
             .push(row![
@@ -652,6 +723,7 @@ impl App {
             Control::Press(BOUNDARY) => Some(msg(Event::Boundary)),
             Control::Press(VOIDS) => Some(msg(Event::Voids)),
             Control::Press(CONTOURS) => Some(msg(Event::Contours)),
+            Control::Press(LANDXML) => Some(msg(Event::LandXml)),
             Control::Press(words) => match w.rows.iter().position(|r| r.def.name == words) {
                 Some(i) => Some(msg(Event::Choose(i))),
                 None => return Err(format!("“{TITLE}” penceresinde “{words}” düğmesi yok")),

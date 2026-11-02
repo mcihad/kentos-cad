@@ -6719,6 +6719,32 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        CommandDescriptor {
+            id: crate::FILE_IMPORT_LANDXML.into(),
+            version: crate::FILE_IMPORT_LANDXML_VERSION,
+            title: "LandXML al".into(),
+            summary: "Bir LandXML dosyasının TIN yüzeyini yol projesine alır (surface: dosyadaki adı; yoksa ilki): noktaları (P, “kuzey doğu kot”) nokta, kırık hatları 3B çoklu çizgi, ilk dış sınırı ve boşlukları alan olarak bir katmana (layerId) tek geri alma adımında “LandXML al”; sonra bunlardan bir arazi yüzeyi tanımlar ve kabul eder (road.terrains.create'in tanımı, name: adı; proje ayarı). \
+                      Koordinatlar dosyanın birimiyle (Units linearUnit: meter, foot, USSurveyFoot …) metreye çevrilir. Dosyanın üçgenleri (Faces) saklanmaz: yüzey kentos.cdt/1 ile noktalardan ve kırık hatlardan yeniden kurulur; cevabın differs'i dosyanın yok sayılmayan üçgenlerinin ağırlık merkezlerinde iki yüzeyin en büyük kot farkıdır. Kurulamayan yüzey hiçbir şey almaz. \
+                      Uyarılar: landxml_left (olmayan noktayı anan üçgen, iki kez yazılmış nokta kimliği, ikinci dış sınır). Retler: not_a_road_project, file_not_found, import_unreadable, landxml_no_surface, layer_not_found, not_a_layer, layer_locked, invalid_terrain, invalid_revision, revision_conflict, terrain_unbuildable."
+                .into(),
+            aliases: vec!["landxml".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ImportLandxml>(),
+            output: schema::<crate::LandxmlImported>(),
+            plan: Some(schema::<crate::LandxmlImported>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Mevcut zemin yüzeyini zemin katmanına al".into(),
+                input: json!({ "path": "/proje/zemin.xml", "layerId": "zemin", "name": "Mevcut zemin" }),
+                output: None,
+            }],
+        },
         // Topolojiyi denetle (docs/adr/0589), held together by fixtures/commands/v1/cad.topology.check.json.
         CommandDescriptor {
             id: crate::CAD_TOPOLOGY_CHECK.into(),
@@ -12249,6 +12275,9 @@ mod tests {
                     crate::ROAD_TERRAINS_CONTOURS => {
                         serde_json::from_value::<crate::TerrainsContours>(e.input.clone()).map(|_| ())
                     }
+                    crate::FILE_IMPORT_LANDXML => {
+                        serde_json::from_value::<crate::ImportLandxml>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_SUBNETWORKS_FIND => {
                         serde_json::from_value::<crate::SubnetworksFind>(e.input.clone())
                             .map(|_| ())
@@ -12898,6 +12927,10 @@ mod tests {
                         }
                         crate::ROAD_TERRAINS_CONTOURS => {
                             serde_json::from_value::<crate::TerrainsContoured>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::FILE_IMPORT_LANDXML => {
+                            serde_json::from_value::<crate::LandxmlImported>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_ADDRESSES_DEFINE => {

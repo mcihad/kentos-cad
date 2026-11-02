@@ -892,9 +892,254 @@ def contour_cases():
                 setup(start), cases)
 
 
+# ── file.import.landxml ─────────────────────────────────────────────────────────────────────────────────────────
+
+LX = ROOT / "fixtures/landxml/v1"
+NS = "http://www.landxml.org/schema/LandXML-1.2"
+
+
+def lx_points(seed, n, spread=40.0):
+    import random
+    r = random.Random(seed)
+    pts = [(0.0, 0.0), (spread, 0.0), (spread, spread * 0.75), (0.0, spread * 0.75)]
+    while len(pts) < n:
+        p = (round(r.uniform(1, spread - 1), 2), round(r.uniform(1, spread * 0.75 - 1), 2))
+        if p not in pts:
+            pts.append(p)
+    return [(x, y, round(100 + 0.05 * x + 0.03 * y + 0.4 * ((x - 20) / 20) ** 2, 3)) for x, y in pts]
+
+
+def lx_text(surfaces, unit="meter", system="Metric", root="LandXML"):
+    """A LandXML 1.2 file: each surface (name, points [(id, x, y, z)], faces [(ids, ignored)], breaklines
+    [[(x, y, z)]], boundaries [(kind, [(x, y)])]); coordinates written northing first."""
+    import xml.etree.ElementTree as ET
+    def num(v):
+        return repr(float(v))
+    land = ET.Element(root, {"xmlns": NS, "version": "1.2"})
+    ET.SubElement(ET.SubElement(land, "Units"), system, {"linearUnit": unit})
+    ss = ET.SubElement(land, "Surfaces")
+    for sf in surfaces:
+        el = ET.SubElement(ss, "Surface", {"name": sf["name"]})
+        if sf.get("breaklines") or sf.get("boundaries"):
+            src = ET.SubElement(el, "SourceData")
+            if sf.get("boundaries"):
+                bs = ET.SubElement(src, "Boundaries")
+                for kind, ring in sf["boundaries"]:
+                    b = ET.SubElement(bs, "Boundary", {"bndType": kind})
+                    closed = ring + [ring[0]]
+                    ET.SubElement(b, "PntList2D").text = " ".join(f"{num(y)} {num(x)}" for x, y in closed)
+            if sf.get("breaklines"):
+                bl = ET.SubElement(src, "Breaklines")
+                for line in sf["breaklines"]:
+                    b = ET.SubElement(bl, "Breakline")
+                    ET.SubElement(b, "PntList3D").text = " ".join(f"{num(y)} {num(x)} {num(z)}" for x, y, z in line)
+        d = ET.SubElement(el, "Definition", {"surfType": "TIN"})
+        if sf.get("points") is not None:
+            pn = ET.SubElement(d, "Pnts")
+            for pid, x, y, z in sf["points"]:
+                ET.SubElement(pn, "P", {"id": str(pid)}).text = sf.get("raw", {}).get(pid, f"{num(y)} {num(x)} {num(z)}")
+        if sf.get("faces"):
+            fc = ET.SubElement(d, "Faces")
+            for ids, ignored in sf["faces"]:
+                ET.SubElement(fc, "F", {"i": "1"} if ignored else {}).text = " ".join(str(i) for i in ids)
+    return '<?xml version="1.0" encoding="UTF-8"?>\n' + ET.tostring(land, encoding="unicode") + "\n"
+
+
+def lx_faces(points):
+    """The points' own Delaunay (Triangle), the file's TIN."""
+    xy = [(x, y) for _, x, y, _ in points]
+    return [([points[i][0] for i in t], False) for t in tri.triangulate(xy, [])]
+
+
+def lx_files():
+    """The fixture files: name → (text, its surfaces as KentOS reads them: metres, x east)."""
+    base = [(i + 1, x, y, z) for i, (x, y, z) in enumerate(lx_points(7, 14))]
+    files = {}
+    files["zemin.xml"] = [{"name": "Mevcut zemin", "points": base, "faces": lx_faces(base)}]
+    bl = [(5.0, 15.0, 101.2), (35.0, 15.0, 102.9)]
+    # No point of the base on the breakline's line (y = 15): its height would be checked against the line's.
+    pts = [p for p in base if p[2] != 15.0]
+    files["kirikli.xml"] = [{"name": "Zemin", "points": pts, "faces": lx_faces(pts),
+                             "breaklines": [bl],
+                             "boundaries": [("outer", [(2.0, 2.0), (38.0, 2.0), (38.0, 28.0), (2.0, 28.0)]),
+                                            ("void", [(18.0, 20.0), (24.0, 20.0), (24.0, 24.0), (18.0, 24.0)])]}]
+    files["iki-yuzey.xml"] = [{"name": "EG", "points": base, "faces": lx_faces(base)},
+                              {"name": "FG", "points": base[:8], "faces": lx_faces(base[:8])}]
+    ign = lx_faces(base)
+    files["gizli-ucgen.xml"] = [{"name": "Zemin", "points": base, "faces": [(f, k % 3 == 0) for k, (f, _) in enumerate(ign)]}]
+    files["eksik.xml"] = [{"name": "Zemin", "points": base + [(3, 1.0, 1.0, 1.0)],
+                           "faces": lx_faces(base) + [([1, 2, 99], False)],
+                           "boundaries": [("outer", [(2.0, 2.0), (38.0, 2.0), (38.0, 28.0), (2.0, 28.0)]),
+                                          ("outer", [(3.0, 3.0), (30.0, 3.0), (30.0, 20.0)])]}]
+    files["cift-kot.xml"] = [{"name": "Zemin", "points": base + [(99, base[5][1], base[5][2], base[5][3] + 1.0)]}]
+    files["az.xml"] = [{"name": "Zemin", "points": base[:2]}]
+    files["noktasiz.xml"] = [{"name": "Zemin", "points": []}]
+    files["bos.xml"] = []
+    files["bozuk-sayi.xml"] = [{"name": "Zemin", "points": base[:3], "raw": {2: "on iki"}}]
+    return files, base
+
+
+def lx_write(check):
+    files, _ = lx_files()
+    texts = {name: lx_text(sfs) for name, sfs in files.items()}
+    files_ft = [{"name": "Zemin", "points": [(i, x, y, z) for i, x, y, z in lx_files()[1]], "faces": []}]
+    texts["fit.xml"] = lx_text(files_ft, unit="foot", system="Imperial")
+    texts["kok.xml"] = lx_text([], root="Kok")
+    texts["bozuk.xml"] = "<LandXML><Surfaces>\n"
+    bad = False
+    for name, text in texts.items():
+        path = LX / name
+        if check:
+            if not path.exists() or path.read_text("utf-8") != text:
+                print(f"güncel değil: {path.relative_to(ROOT)}")
+                bad = True
+        else:
+            LX.mkdir(parents=True, exist_ok=True)
+            path.write_text(text, "utf-8")
+    return bad
+
+
+def lx_import(sf, metres=1.0):
+    """The answer's output and the definition's shape for a file surface sf (file units), as file.import.landxml
+    takes it: points, breaklines, the first outer boundary, the voids; the surface made again; the faces compared."""
+    k = metres
+    seen, kept_pts = set(), []
+    for pid, x, y, z in sf["points"]:
+        if pid in seen:
+            continue
+        seen.add(pid)
+        kept_pts.append((pid, x * k, y * k, z * k))
+    lines = [[(x * k, y * k, z * k) for x, y, z in l] for l in sf.get("breaklines", [])]
+    outers = [r for kind, r in sf.get("boundaries", []) if kind == "outer"]
+    voids = [r for kind, r in sf.get("boundaries", []) if kind == "void"]
+    outer = [(x * k, y * k) for x, y in outers[0]] if outers else None
+    voids = [[(x * k, y * k) for x, y in r] for r in voids]
+    g = {"points": [(x, y, z, None) for _, x, y, z in kept_pts], "breaklines": [(l, False, None) for l in lines],
+         "boundary": (outer, None) if outer else None, "voids": [(r, None) for r in voids], "tolerance": None,
+         "maxEdge": None}
+    surf = build(g)
+    at = {pid: (x, y, z) for pid, x, y, z in kept_pts}
+    faces = [f for f in sf.get("faces", []) if all(i in at for i in f[0])]
+    kept = [f for f in faces if not f[1]]
+    differs = None
+    for ids, _ in kept:
+        a, b, c = [at[i] for i in ids]
+        cx, cy, cz = (a[0] + b[0] + c[0]) / 3.0, (a[1] + b[1] + c[1]) / 3.0, (a[2] + b[2] + c[2]) / 3.0
+        h = tri.barycentric(surf["xy"], surf["z"], surf["tris"], (cx, cy))
+        if h is not None:
+            differs = abs(h - cz) if differs is None else max(differs, abs(h - cz))
+    return {"points": len(kept_pts), "breaklines": len(lines), "boundary": outer is not None, "voids": len(voids),
+            "faces": len(kept), "ignored": len(faces) - len(kept), "differs": differs, "figures": figures(surf),
+            "objects": len(kept_pts) + len(lines) + (1 if outer else 0) + len(voids)}
+
+
+def landxml_cases():
+    files, base = lx_files()
+    n = len(ENTITIES)
+    start = [OLD]
+    cases = []
+
+    def taken(name, input_, sf, unit="meter", metres=1.0, kentos_name=None, warns=(), op="execute", layer="zemin",
+              note=None):
+        r = lx_import(sf, metres)
+        terrain = {"id": "t-2", "name": kentos_name or sf["name"], "state": "current", "digest": "$any", "built": "$any",
+                   "figures": r["figures"]}
+        out = {"surface": sf["name"], "unit": unit, "points": r["points"], "breaklines": r["breaklines"],
+               "boundary": r["boundary"], "voids": r["voids"], "faces": r["faces"], "ignored": r["ignored"],
+               "terrain": terrain, "revision": "$current"}
+        if r["differs"] is not None:
+            out["differs"] = r["differs"]
+        definition = {"id": "t-2", "name": kentos_name or sf["name"], "points": {"uids": "$any"}, "built": "$any"}
+        if r["breaklines"]:
+            definition["breaklines"] = {"uids": "$any"}
+        if r["boundary"]:
+            definition["boundary"] = "$any"
+        if r["voids"]:
+            definition["voids"] = "$any"
+        if op == "execute":
+            out["uids"] = "$any"
+            expect = {"canUndo": True, "canRedo": False, "dirty": True, "revision": "changed",
+                      "ids": list(range(1, n + r["objects"] + 1)), "road": road_of([OLD, definition])}
+        else:
+            expect = {**UNCHANGED, "ids": list(range(1, n + 1)), "road": road_of(start)}
+        result = completed(out, warns) if op != "validate" else completed(None, warns)
+        cases.append({"name": name, **({"note": note} if note else {}),
+                      "steps": [step(op, {"layerId": layer, **input_}, result, expect, W)]})
+
+    def refused(name, input_, result, setup_=None, road=start):
+        c = {"name": name, "steps": [step("execute", {"layerId": "zemin", **input_}, result,
+                                          {**UNCHANGED, "ids": list(range(1, n + 1)), "road": road_of(road)})]}
+        if setup_ is not None:
+            c["setup"] = setup_
+        cases.append(c)
+
+    f = lambda name: f"$fixture:landxml/v1/{name}"
+    taken("Noktaları ve üçgenleriyle bir yüzey", {"path": f("zemin.xml")}, files["zemin.xml"][0],
+          note="dosyanın üçgenleri noktaların Delaunay'ı: yeniden kurulan yüzey aynı, fark sıfıra yakın")
+    taken("Kırık hat, dış sınır ve boşluk; kendi adıyla", {"path": f("kirikli.xml"), "name": "Arazi"},
+          files["kirikli.xml"][0], kentos_name="Arazi",
+          note="dosyanın üçgenleri kırık hatsız: yeniden kurulan yüzey kırık hatta ondan ayrılır")
+    taken("Ayak birimli dosya metreye çevrilir", {"path": f("fit.xml")},
+          {"name": "Zemin", "points": base, "faces": []}, unit="foot", metres=0.3048)
+    taken("İki yüzeyden adı verilen", {"path": f("iki-yuzey.xml"), "surface": "FG"}, files["iki-yuzey.xml"][1])
+    taken("İki yüzeyden ilki", {"path": f("iki-yuzey.xml")}, files["iki-yuzey.xml"][0])
+    taken("Yok sayılan üçgenler karşılaştırılmaz", {"path": f("gizli-ucgen.xml")}, files["gizli-ucgen.xml"][0])
+    eksik = files["eksik.xml"][0]
+    taken("Eksik nokta, iki kez yazılmış kimlik, ikinci dış sınır: uyarıyla", {"path": f("eksik.xml")}, eksik,
+          warns=[{"code": "landxml_left", "message": "1 üçgen dosyada olmayan bir noktayı anıyor; alınmadı.", "path": "path"},
+                 {"code": "landxml_left", "message": "1 nokta kimliği iki kez yazılmış; ikincisi alınmadı.", "path": "path"},
+                 {"code": "landxml_left", "message": "Dosyada birden çok dış sınır var; yalnız ilki alındı.", "path": "path"}])
+    taken("Gizli katmana uyarıyla", {"path": f("zemin.xml")}, files["zemin.xml"][0], layer="gizli",
+          warns=[{"code": "layer_hidden", "message": "“Gizli” katmanı gizli; çizilen nesne görünmeyecek.", "path": "layerId"}])
+    taken("Plan yazmaz", {"path": f("zemin.xml")}, files["zemin.xml"][0], op="plan")
+    taken("Doğrulama yazmaz", {"path": f("kirikli.xml")}, files["kirikli.xml"][0], op="validate")
+    refused("Yol projesi değil", {"path": f("zemin.xml")}, NOT_ROAD, setup(work="map"), None)
+    refused("Dosya yok", {"path": f("yok.xml")},
+            failed("file_not_found", f("yok.xml") + " yok; dosyanın yolunu denetleyin.", "path"))
+    for name, words in [("bozuk.xml", "XML olarak okunamadı"), ("kok.xml", "kökü LandXML değil"),
+                        ("bozuk-sayi.xml", "bir koordinat sayı olarak okunamadı")]:
+        refused(f"Okunamayan dosya: {words}", {"path": f(name)},
+                failed("import_unreadable", f"{f(name)} LandXML olarak okunamadı: {words}.", "path"))
+    refused("Yüzeysiz dosya", {"path": f("bos.xml")}, failed("landxml_no_surface", "Dosyada yüzey yok.", "path"))
+    refused("Dosyada olmayan yüzey adı", {"path": f("iki-yuzey.xml"), "surface": "XG"},
+            failed("landxml_no_surface", "“XG” adlı yüzey dosyada yok; dosyanın yüzeyleri: “EG”, “FG”.", "surface"))
+    refused("Noktasız yüzey", {"path": f("noktasiz.xml")},
+            failed("landxml_no_surface", "“Zemin” yüzeyinin noktası yok.", "surface"))
+    refused("Olmayan katman", {"path": f("zemin.xml"), "layerId": "yok"},
+            failed("layer_not_found", "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.", "layerId"))
+    refused("Grup katman değil", {"path": f("zemin.xml"), "layerId": "arazi"},
+            failed("not_a_layer", "“Arazi” bir katman grubu; nesne yalnız katmana eklenir. Grubun içinden bir katman seçin.", "layerId"))
+    refused("Geçersiz beklenen sürüm", {"path": f("zemin.xml"), "expectedRevision": "?"},
+            failed("invalid_revision", "Beklenen sürüm “?” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.", "expectedRevision"))
+    refused("Kilitli katman", {"path": f("zemin.xml"), "layerId": "kilitli"},
+            failed("layer_locked", "“Kilitli” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.", "layerId"))
+    refused("Aynı adlı yüzey var", {"path": f("zemin.xml"), "name": "eski zemin"},
+            failed("invalid_terrain", "Yüzey kurallarına uymuyor: bu adda başka bir yüzey var.", "name"))
+    refused("Eski sürüme göre hazırlanmış", {"path": f("zemin.xml"), "expectedRevision": "41"}, CONFLICT)
+    for name, d in [("Bir yerde iki kot", "cift-kot.xml"), ("İki nokta yüzey olmaz", "az.xml")]:
+        sf = files[d][0]
+        g = {"points": [(x, y, z, None) for _, x, y, z in sf["points"]], "breaklines": [], "boundary": None,
+             "voids": [], "tolerance": None, "maxEdge": None}
+        try:
+            build(g)
+            raise AssertionError(d)
+        except Unbuildable as e:
+            place = f" (yer: {rust_float(e.at[0])}, {rust_float(e.at[1])})" if e.at else ""
+            refused(f"Kurulamıyor: {name.lower()}", {"path": f(d)},
+                    failed("terrain_unbuildable", f"Kaynaklardan yüzey kurulamıyor: {PROBLEM[e.code]}{place}."))
+    return file("file.import.landxml", "LandXML al (plan/road.md Y2.5, ADR 0900 §14)",
+                "scripts/fixtures/road_terrain_command_cases.py yazar; LandXML dosyalarını (fixtures/landxml/v1) "
+                "ElementTree ile yazar, yüzeyi Triangle ile yeniden kurar, üçgenlerin ağırlık merkezlerindeki farkı "
+                "kesirlerle hesaplar; KentOS kodu yok. Nesneler tek geri alma adımı, yüzey tanımı proje ayarıdır.",
+                setup(start), cases)
+
+
 def main():
+    if lx_write("--check" in sys.argv[1:]):
+        sys.exit(1)
     files = {"road.terrains.create.json": create_cases(), "road.terrains.edit.json": edit_cases(),
-             "road.terrains.query.json": query_cases(), "road.terrains.contours.json": contour_cases()}
+             "road.terrains.query.json": query_cases(), "road.terrains.contours.json": contour_cases(),
+             "file.import.landxml.json": landxml_cases()}
     check = "--check" in sys.argv[1:]
     bad = False
     for name, data in files.items():

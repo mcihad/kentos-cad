@@ -1231,6 +1231,7 @@ class CreateOperation(_StrEnum):
     - ``quickDimensions``: Hızlı ölçü (docs/adr/0147 §7): the selection's edges measured at once.
     - ``interiorDimensions``: İç ölçü zinciri (docs/adr/0711): the faces a cut crosses, measured as a chain.
     - ``terrainContours``: Eş yükselti eğrileri (plan/road.md Y2.5): a terrain surface's contour lines.
+    - ``landXml``: LandXML al (plan/road.md Y2.5): a LandXML surface's points, breaklines and boundaries.
     """
     PARALLEL = "parallel"
     PERPENDICULAR_IN = "perpendicularIn"
@@ -1268,9 +1269,10 @@ class CreateOperation(_StrEnum):
     QUICK_DIMENSIONS = "quickDimensions"
     INTERIOR_DIMENSIONS = "interiorDimensions"
     TERRAIN_CONTOURS = "terrainContours"
+    LAND_XML = "landXml"
 
 
-CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions", "terrainContours"]
+CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions", "terrainContours", "landXml"]
 """The names of :class:`CreateOperation`, for a plain string."""
 
 
@@ -32308,6 +32310,54 @@ class ImportKml(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ImportLandxml(_Model):
+    """Input of `file.import.landxml` v1 (plan/road.md Y2.5, docs/adr/0900 §14): a LandXML file's TIN surface taken into a
+    road project: its points as point objects, its breaklines as 3D polylines, its outer boundary and voids as areas on
+    one layer (one undo step “LandXML al”), and a terrain surface of them (`road.terrains.create`'s definition, a project
+    setting). The file's faces are not kept: the surface is made again from its points and breaklines, and the answer
+    says how far the two differ. Coordinates turn from the file's unit into metres, “northing easting” into (x, y).
+
+    Refusals: `not_a_road_project`, `file_not_found`, `import_unreadable` (not LandXML, a number that does not read),
+    `landxml_no_surface` (no surface, or none of `surface`'s name, or one without points), `layer_not_found`,
+    `not_a_layer`, `layer_locked`, `invalid_terrain` (the surface's name), `invalid_revision`, `revision_conflict`,
+    `terrain_unbuildable`. Warnings: `landxml_left` (faces naming a missing point, a point id twice, a second outer
+    boundary), `layer_hidden`.
+    Attributes:
+        path: The file's path.
+        layer_id: The layer the objects go on.
+        name: The terrain surface's name; absent: the file's surface's (or “LandXML”).
+        surface: The file's surface by its name; absent: its first.
+    """
+    path: str
+    layer_id: str
+    expected_revision: str | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    surface: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["layerId"] = self.layer_id
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.surface is not UNSET:
+            out["surface"] = self.surface
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImportLandxml:
+        return cls(
+            path=data["path"],
+            layer_id=data["layerId"],
+            expected_revision=data.get("expectedRevision", UNSET),
+            name=data.get("name", UNSET),
+            surface=data.get("surface", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ImportMaplibre(_Model):
     """Input of `file.import.maplibre` v1: the look of the style at `path` (or its `text`) made the renderer of the
     layers it is for, one undo step “Katman stili”. A style layer is for a KentOS layer when its `metadata`
@@ -34356,6 +34406,71 @@ class LabelsReported(_Model):
             totals=LabelCounts.from_json(data["totals"]),
             layers=[LayerLabelReport.from_json(e0) for e0 in data["layers"]],
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LandxmlImported(_Model):
+    """Output of `file.import.landxml` v1, and its plan.
+    Attributes:
+        surface: The file's surface taken.
+        unit: The file's linear unit as it writes it (empty: none said, metres taken).
+        points: Unit: count.
+        breaklines: Unit: count.
+        voids: Unit: count.
+        faces: The file's faces it does not ignore, and those it ignores. Unit: count.
+        ignored: Unit: count.
+        terrain: The terrain surface as its sources give it.
+        differs: The greatest height difference at the file's faces' centroids between the file's face and the surface made
+            again (m); none without faces or with no centroid on the surface. Unit: m.
+        uids: The objects written (a plan: none).
+    """
+    surface: str
+    unit: str
+    points: int
+    breaklines: int
+    boundary: bool
+    voids: int
+    faces: int
+    ignored: int
+    terrain: TerrainReport
+    revision: str
+    differs: float | None | Unset = UNSET
+    uids: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["surface"] = self.surface
+        out["unit"] = self.unit
+        out["points"] = self.points
+        out["breaklines"] = self.breaklines
+        out["boundary"] = self.boundary
+        out["voids"] = self.voids
+        out["faces"] = self.faces
+        out["ignored"] = self.ignored
+        out["terrain"] = self.terrain.to_json()
+        out["revision"] = self.revision
+        if self.differs is not UNSET:
+            out["differs"] = None if self.differs is None else float(self.differs)
+        if self.uids is not UNSET:
+            out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LandxmlImported:
+        return cls(
+            surface=data["surface"],
+            unit=data["unit"],
+            points=data["points"],
+            breaklines=data["breaklines"],
+            boundary=data["boundary"],
+            voids=data["voids"],
+            faces=data["faces"],
+            ignored=data["ignored"],
+            terrain=TerrainReport.from_json(data["terrain"]),
+            revision=data["revision"],
+            differs=UNSET if "differs" not in data else None if data["differs"] is None else float(data["differs"]),
+            uids=list(data["uids"]) if "uids" in data else UNSET,
         )
 
 
@@ -91913,6 +92028,7 @@ __all__ = [
     "ImportGml",
     "ImportGpkg",
     "ImportKml",
+    "ImportLandxml",
     "ImportMaplibre",
     "ImportMaterialsOperation",
     "ImportMerge",
@@ -92025,6 +92141,7 @@ __all__ = [
     "LabelsPinned",
     "LabelsReport",
     "LabelsReported",
+    "LandxmlImported",
     "LatePolicy",
     "LatePolicyName",
     "LayerAction",

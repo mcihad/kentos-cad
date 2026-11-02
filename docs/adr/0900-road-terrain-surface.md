@@ -1,6 +1,6 @@
 # ADR 0900 — Yol arazi yüzeyi: kısıtlı Delaunay ve kot sorgusu
 
-Tarih: 2026-11-02. plan/road.md Y2 (ROAD-TIN-01…11, ROAD-SURVEY-01/03/08, ROAD-NUM-10). Durum: Y2.1–Y2.4 ve Y2.5'in eş yükselti, eğim ve bakısı uygulandı; LandXML açık.
+Tarih: 2026-11-02. plan/road.md Y2 (ROAD-TIN-01…11, ROAD-SURVEY-01/03/08, ROAD-NUM-10). Durum: Y2.1–Y2.5 uygulandı.
 
 ## Dayanak
 
@@ -104,6 +104,18 @@ Tarih: 2026-11-02. plan/road.md Y2 (ROAD-TIN-01…11, ROAD-SURVEY-01/03/08, ROAD
     köşede iki düzlem buluştuğu için yok (`Surface::slope_at`, kesin `orient2d`). Arazi yüzeyleri penceresinde Eş yükselti
     eğrileri (aralık, ana eğri sıklığı, katman, Eğrileri çiz). 23 ortak durum ve sorgunun eğim ve bakıları aynı Python
     başvurusundan (Triangle, kesirler).
+
+14. **LandXML yüzeyi (Y2.5).** LandXML 1.x yüzeyi (Civil 3D, OpenRoads ve Netcad'in alışveriş biçimi): `Definition`'ın
+    `Pnts/P`'si (“kuzey doğu kot”) ve `Faces/F`'si (`i="1"` yok sayılan), `SourceData`'nın `Breaklines/Breakline/PntList3D`'si
+    ve `Boundaries/Boundary`'si (`bndType` outer ya da void); sayılar `Units`'in `linearUnit`'iyle metreye, ad alanı
+    dışında eşleşerek (`kentos_formats::landxml`). `file.import.landxml` noktaları nokta, kırık hatları 3B çoklu çizgi, ilk
+    dış sınırı ve boşlukları alan olarak bir katmana yazar ve onlardan bir yüzey tanımlayıp kabul eder; nesneler ve tanım
+    tek adımda, bütün ya da hiç (kurulamayan yüzey hiçbir şey almaz). Dosyanın üçgenleri saklanmaz: yüzey `kentos.cdt/1`
+    ile yeniden kurulur ve cevabın `differs`'i dosyanın yok sayılmayan üçgenlerinin ağırlık merkezlerinde iki yüzeyin en
+    büyük kot farkıdır. Olmayan noktayı anan üçgen, iki kez yazılmış kimlik ve ikinci dış sınır `landxml_left` uyarısıdır.
+    Nesneler geri alma adımıdır, yüzey tanımı (Yüzey oluştur gibi) proje ayarıdır: geri alınan içe aktarmanın tanımı
+    kalır ve kaynaklarının eksikliğini söyler. Arazi yüzeyleri penceresinde LandXML al… 26 ortak durum: LandXML dosyalarını
+    başvuru ElementTree ile yazar, yüzey Triangle'ın, fark kesirlerle.
 
 ## Sonra
 

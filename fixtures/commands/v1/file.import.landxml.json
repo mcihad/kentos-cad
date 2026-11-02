@@ -1,0 +1,3035 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "file.import.landxml",
+  "commandVersion": 1,
+  "title": "LandXML al (plan/road.md Y2.5, ADR 0900 §14)",
+  "note": "scripts/fixtures/road_terrain_command_cases.py yazar; LandXML dosyalarını (fixtures/landxml/v1) ElementTree ile yazar, yüzeyi Triangle ile yeniden kurar, üçgenlerin ağırlık merkezlerindeki farkı kesirlerle hesaplar; KentOS kodu yok. Nesneler tek geri alma adımı, yüzey tanımı proje ayarıdır.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Yol yüzeyleri",
+    "settings": {
+      "srid": 5254,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 1000.0,
+      "workspace": "cad",
+      "cadWork": "road",
+      "drawingFont": "barlow",
+      "road": {
+        "surfaces": [
+          {
+            "id": "t-1",
+            "name": "Eski zemin",
+            "points": {
+              "uids": [
+                "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+              ]
+            },
+            "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+          }
+        ]
+      }
+    },
+    "origin": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "layers": [
+      {
+        "id": "0",
+        "name": "0",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "zemin",
+        "name": "Zemin",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kirik",
+        "name": "Kırık hatlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "sinir",
+        "name": "Sınırlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "arazi",
+        "name": "Arazi",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "ek",
+            "name": "Ek noktalar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "esyukselti",
+        "name": "Eş yükselti",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "gizli",
+        "name": "Gizli",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "0",
+    "entities": [
+      {
+        "kind": "point",
+        "id": 1,
+        "layerId": "zemin",
+        "attrs": {},
+        "p": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "z": 100.0
+      },
+      {
+        "kind": "point",
+        "id": 2,
+        "layerId": "zemin",
+        "attrs": {},
+        "p": {
+          "x": 40.0,
+          "y": 0.0
+        },
+        "z": 101.5
+      },
+      {
+        "kind": "point",
+        "id": 3,
+        "layerId": "zemin",
+        "attrs": {},
+        "p": {
+          "x": 40.0,
+          "y": 30.0
+        },
+        "z": 103.25
+      },
+      {
+        "kind": "point",
+        "id": 4,
+        "layerId": "zemin",
+        "attrs": {},
+        "p": {
+          "x": 0.0,
+          "y": 30.0
+        },
+        "z": 102.0
+      },
+      {
+        "kind": "point",
+        "id": 5,
+        "layerId": "zemin",
+        "attrs": {},
+        "p": {
+          "x": 21.0,
+          "y": 24.0
+        },
+        "z": 102.75
+      },
+      {
+        "kind": "point",
+        "id": 6,
+        "layerId": "zemin",
+        "attrs": {},
+        "p": {
+          "x": 10.0,
+          "y": 26.0
+        }
+      },
+      {
+        "kind": "line",
+        "id": 7,
+        "layerId": "zemin",
+        "attrs": {},
+        "a": {
+          "x": 1.0,
+          "y": 29.0
+        },
+        "b": {
+          "x": 3.0,
+          "y": 29.0
+        }
+      },
+      {
+        "kind": "polyline",
+        "id": 8,
+        "layerId": "kirik",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 5.0,
+            "y": 15.0
+          },
+          {
+            "x": 35.0,
+            "y": 15.0
+          }
+        ],
+        "zs": [
+          101.0,
+          102.5
+        ]
+      },
+      {
+        "kind": "line",
+        "id": 9,
+        "layerId": "kirik",
+        "attrs": {},
+        "a": {
+          "x": 10.0,
+          "y": 5.0
+        },
+        "b": {
+          "x": 30.0,
+          "y": 5.0
+        },
+        "za": 100.5,
+        "zb": 101.25
+      },
+      {
+        "kind": "polygon",
+        "id": 10,
+        "layerId": "sinir",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 2.0,
+            "y": 2.0
+          },
+          {
+            "x": 38.0,
+            "y": 2.0
+          },
+          {
+            "x": 38.0,
+            "y": 28.0
+          },
+          {
+            "x": 2.0,
+            "y": 28.0
+          }
+        ]
+      },
+      {
+        "kind": "polygon",
+        "id": 11,
+        "layerId": "sinir",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 18.0,
+            "y": 8.0
+          },
+          {
+            "x": 24.0,
+            "y": 8.0
+          },
+          {
+            "x": 24.0,
+            "y": 12.0
+          },
+          {
+            "x": 18.0,
+            "y": 12.0
+          }
+        ]
+      },
+      {
+        "kind": "polyline",
+        "id": 12,
+        "layerId": "sinir",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 28.0,
+            "y": 19.0
+          },
+          {
+            "x": 32.0,
+            "y": 19.0
+          },
+          {
+            "x": 32.0,
+            "y": 22.0
+          },
+          {
+            "x": 28.0,
+            "y": 22.0
+          }
+        ],
+        "closed": true
+      },
+      {
+        "kind": "polyline",
+        "id": 13,
+        "layerId": "0",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 6.0,
+            "y": 25.0
+          },
+          {
+            "x": 14.0,
+            "y": 27.0
+          }
+        ],
+        "zs": [
+          102.0,
+          102.5
+        ],
+        "bulges": [
+          0.25,
+          0.0
+        ]
+      },
+      {
+        "kind": "polyline",
+        "id": 14,
+        "layerId": "0",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 26.0,
+            "y": 24.0
+          },
+          {
+            "x": 30.0,
+            "y": 24.0
+          },
+          {
+            "x": 30.0,
+            "y": 27.0
+          }
+        ]
+      },
+      {
+        "kind": "point",
+        "id": 15,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+          "x": 40.0,
+          "y": 30.0
+        },
+        "z": 103.75
+      },
+      {
+        "kind": "point",
+        "id": 16,
+        "layerId": "ek",
+        "attrs": {},
+        "p": {
+          "x": 31.0,
+          "y": 10.0
+        },
+        "z": 101.75
+      },
+      {
+        "kind": "polygon",
+        "id": 17,
+        "layerId": "0",
+        "attrs": {},
+        "pts": [
+          {
+            "x": -5.0,
+            "y": -5.0
+          },
+          {
+            "x": 45.0,
+            "y": -5.0
+          },
+          {
+            "x": 45.0,
+            "y": 35.0
+          },
+          {
+            "x": -5.0,
+            "y": 35.0
+          }
+        ]
+      },
+      {
+        "kind": "point",
+        "id": 18,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+          "x": 20.0,
+          "y": 15.0
+        },
+        "z": 104.0
+      }
+    ],
+    "uids": [
+      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+      "0192f5a0-7c3e-7d4a-9b1e-000000000004",
+      "0192f5a0-7c3e-7d4a-9b1e-000000000005",
+      "0192f5a0-7c3e-7d4a-9b1e-000000000006",
+      "0192f5a0-7c3e-7d4a-9b1e-000000000007",
+      "0192f5a0-7c3e-7d4a-9b1e-000000000008",
+      "0192f5a0-7c3e-7d4a-9b1e-000000000009",
+      "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+      "0192f5a0-7c3e-7d4a-9b1e-00000000000b",
+      "0192f5a0-7c3e-7d4a-9b1e-00000000000c",
+      "0192f5a0-7c3e-7d4a-9b1e-00000000000d",
+      "0192f5a0-7c3e-7d4a-9b1e-00000000000e",
+      "0192f5a0-7c3e-7d4a-9b1e-00000000000f",
+      "0192f5a0-7c3e-7d4a-9b1e-000000000010",
+      "0192f5a0-7c3e-7d4a-9b1e-000000000011",
+      "0192f5a0-7c3e-7d4a-9b1e-000000000012"
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "cases": [
+    {
+      "name": "Noktaları ve üçgenleriyle bir yüzey",
+      "note": "dosyanın üçgenleri noktaların Delaunay'ı: yeniden kurulan yüzey aynı, fark sıfıra yakın",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "zemin",
+            "path": "$fixture:landxml/v1/zemin.xml"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "surface": "Mevcut zemin",
+              "unit": "meter",
+              "points": 14,
+              "breaklines": 0,
+              "boundary": false,
+              "voids": 0,
+              "faces": 22,
+              "ignored": 0,
+              "terrain": {
+                "id": "t-2",
+                "name": "Mevcut zemin",
+                "state": "current",
+                "digest": "$any",
+                "built": "$any",
+                "figures": {
+                  "vertices": 14,
+                  "triangles": 22,
+                  "constrained": 0,
+                  "area": 1200.0,
+                  "merged": 0,
+                  "split": 0,
+                  "trimmed": 0,
+                  "minZ": 100.4,
+                  "maxZ": 103.3
+                }
+              },
+              "revision": "$current",
+              "differs": 1.4210854715202004e-14,
+              "uids": "$any"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32
+            ],
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Mevcut zemin",
+                  "points": {
+                    "uids": "$any"
+                  },
+                  "built": "$any"
+                }
+              ]
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Kırık hat, dış sınır ve boşluk; kendi adıyla",
+      "note": "dosyanın üçgenleri kırık hatsız: yeniden kurulan yüzey kırık hatta ondan ayrılır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "zemin",
+            "path": "$fixture:landxml/v1/kirikli.xml",
+            "name": "Arazi"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "surface": "Zemin",
+              "unit": "meter",
+              "points": 14,
+              "breaklines": 1,
+              "boundary": true,
+              "voids": 1,
+              "faces": 22,
+              "ignored": 0,
+              "terrain": {
+                "id": "t-2",
+                "name": "Arazi",
+                "state": "current",
+                "digest": "$any",
+                "built": "$any",
+                "figures": {
+                  "vertices": 24,
+                  "triangles": 32,
+                  "constrained": 9,
+                  "area": 912.0,
+                  "merged": 0,
+                  "split": 0,
+                  "trimmed": 0,
+                  "minZ": 100.48726969960045,
+                  "maxZ": 103.14044630404463
+                }
+              },
+              "revision": "$current",
+              "differs": 0.544981906496659,
+              "uids": "$any"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35
+            ],
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Arazi",
+                  "points": {
+                    "uids": "$any"
+                  },
+                  "built": "$any",
+                  "breaklines": {
+                    "uids": "$any"
+                  },
+                  "boundary": "$any",
+                  "voids": "$any"
+                }
+              ]
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Ayak birimli dosya metreye çevrilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "zemin",
+            "path": "$fixture:landxml/v1/fit.xml"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "surface": "Zemin",
+              "unit": "foot",
+              "points": 14,
+              "breaklines": 0,
+              "boundary": false,
+              "voids": 0,
+              "faces": 0,
+              "ignored": 0,
+              "terrain": {
+                "id": "t-2",
+                "name": "Zemin",
+                "state": "current",
+                "digest": "$any",
+                "built": "$any",
+                "figures": {
+                  "vertices": 14,
+                  "triangles": 22,
+                  "constrained": 0,
+                  "area": 111.483648,
+                  "merged": 0,
+                  "split": 0,
+                  "trimmed": 0,
+                  "minZ": 30.601920000000003,
+                  "maxZ": 31.48584
+                }
+              },
+              "revision": "$current",
+              "uids": "$any"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32
+            ],
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "uids": "$any"
+                  },
+                  "built": "$any"
+                }
+              ]
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "İki yüzeyden adı verilen",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "zemin",
+            "path": "$fixture:landxml/v1/iki-yuzey.xml",
+            "surface": "FG"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "surface": "FG",
+              "unit": "meter",
+              "points": 8,
+              "breaklines": 0,
+              "boundary": false,
+              "voids": 0,
+              "faces": 10,
+              "ignored": 0,
+              "terrain": {
+                "id": "t-2",
+                "name": "FG",
+                "state": "current",
+                "digest": "$any",
+                "built": "$any",
+                "figures": {
+                  "vertices": 8,
+                  "triangles": 10,
+                  "constrained": 0,
+                  "area": 1200.0,
+                  "merged": 0,
+                  "split": 0,
+                  "trimmed": 0,
+                  "minZ": 100.4,
+                  "maxZ": 103.3
+                }
+              },
+              "revision": "$current",
+              "differs": 1.4210854715202004e-14,
+              "uids": "$any"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26
+            ],
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "FG",
+                  "points": {
+                    "uids": "$any"
+                  },
+                  "built": "$any"
+                }
+              ]
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "İki yüzeyden ilki",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "zemin",
+            "path": "$fixture:landxml/v1/iki-yuzey.xml"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "surface": "EG",
+              "unit": "meter",
+              "points": 14,
+              "breaklines": 0,
+              "boundary": false,
+              "voids": 0,
+              "faces": 22,
+              "ignored": 0,
+              "terrain": {
+                "id": "t-2",
+                "name": "EG",
+                "state": "current",
+                "digest": "$any",
+                "built": "$any",
+                "figures": {
+                  "vertices": 14,
+                  "triangles": 22,
+                  "constrained": 0,
+                  "area": 1200.0,
+                  "merged": 0,
+                  "split": 0,
+                  "trimmed": 0,
+                  "minZ": 100.4,
+                  "maxZ": 103.3
+                }
+              },
+              "revision": "$current",
+              "differs": 1.4210854715202004e-14,
+              "uids": "$any"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32
+            ],
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "EG",
+                  "points": {
+                    "uids": "$any"
+                  },
+                  "built": "$any"
+                }
+              ]
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Yok sayılan üçgenler karşılaştırılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "zemin",
+            "path": "$fixture:landxml/v1/gizli-ucgen.xml"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "surface": "Zemin",
+              "unit": "meter",
+              "points": 14,
+              "breaklines": 0,
+              "boundary": false,
+              "voids": 0,
+              "faces": 14,
+              "ignored": 8,
+              "terrain": {
+                "id": "t-2",
+                "name": "Zemin",
+                "state": "current",
+                "digest": "$any",
+                "built": "$any",
+                "figures": {
+                  "vertices": 14,
+                  "triangles": 22,
+                  "constrained": 0,
+                  "area": 1200.0,
+                  "merged": 0,
+                  "split": 0,
+                  "trimmed": 0,
+                  "minZ": 100.4,
+                  "maxZ": 103.3
+                }
+              },
+              "revision": "$current",
+              "differs": 1.4210854715202004e-14,
+              "uids": "$any"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32
+            ],
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "uids": "$any"
+                  },
+                  "built": "$any"
+                }
+              ]
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Eksik nokta, iki kez yazılmış kimlik, ikinci dış sınır: uyarıyla",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "zemin",
+            "path": "$fixture:landxml/v1/eksik.xml"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "surface": "Zemin",
+              "unit": "meter",
+              "points": 14,
+              "breaklines": 0,
+              "boundary": true,
+              "voids": 0,
+              "faces": 22,
+              "ignored": 0,
+              "terrain": {
+                "id": "t-2",
+                "name": "Zemin",
+                "state": "current",
+                "digest": "$any",
+                "built": "$any",
+                "figures": {
+                  "vertices": 18,
+                  "triangles": 22,
+                  "constrained": 4,
+                  "area": 936.0,
+                  "merged": 0,
+                  "split": 0,
+                  "trimmed": 0,
+                  "minZ": 100.48726969960045,
+                  "maxZ": 103.09389285935532
+                }
+              },
+              "revision": "$current",
+              "differs": 0.01725026583108047,
+              "uids": "$any"
+            },
+            "warnings": [
+              {
+                "code": "landxml_left",
+                "message": "1 üçgen dosyada olmayan bir noktayı anıyor; alınmadı.",
+                "path": "path"
+              },
+              {
+                "code": "landxml_left",
+                "message": "1 nokta kimliği iki kez yazılmış; ikincisi alınmadı.",
+                "path": "path"
+              },
+              {
+                "code": "landxml_left",
+                "message": "Dosyada birden çok dış sınır var; yalnız ilki alındı.",
+                "path": "path"
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
+            ],
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "uids": "$any"
+                  },
+                  "built": "$any",
+                  "boundary": "$any"
+                }
+              ]
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Gizli katmana uyarıyla",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "gizli",
+            "path": "$fixture:landxml/v1/zemin.xml"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "surface": "Mevcut zemin",
+              "unit": "meter",
+              "points": 14,
+              "breaklines": 0,
+              "boundary": false,
+              "voids": 0,
+              "faces": 22,
+              "ignored": 0,
+              "terrain": {
+                "id": "t-2",
+                "name": "Mevcut zemin",
+                "state": "current",
+                "digest": "$any",
+                "built": "$any",
+                "figures": {
+                  "vertices": 14,
+                  "triangles": 22,
+                  "constrained": 0,
+                  "area": 1200.0,
+                  "merged": 0,
+                  "split": 0,
+                  "trimmed": 0,
+                  "minZ": 100.4,
+                  "maxZ": 103.3
+                }
+              },
+              "revision": "$current",
+              "differs": 1.4210854715202004e-14,
+              "uids": "$any"
+            },
+            "warnings": [
+              {
+                "code": "layer_hidden",
+                "message": "“Gizli” katmanı gizli; çizilen nesne görünmeyecek.",
+                "path": "layerId"
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32
+            ],
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Mevcut zemin",
+                  "points": {
+                    "uids": "$any"
+                  },
+                  "built": "$any"
+                }
+              ]
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Plan yazmaz",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "zemin",
+            "path": "$fixture:landxml/v1/zemin.xml"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "surface": "Mevcut zemin",
+              "unit": "meter",
+              "points": 14,
+              "breaklines": 0,
+              "boundary": false,
+              "voids": 0,
+              "faces": 22,
+              "ignored": 0,
+              "terrain": {
+                "id": "t-2",
+                "name": "Mevcut zemin",
+                "state": "current",
+                "digest": "$any",
+                "built": "$any",
+                "figures": {
+                  "vertices": 14,
+                  "triangles": 22,
+                  "constrained": 0,
+                  "area": 1200.0,
+                  "merged": 0,
+                  "split": 0,
+                  "trimmed": 0,
+                  "minZ": 100.4,
+                  "maxZ": 103.3
+                }
+              },
+              "revision": "$current",
+              "differs": 1.4210854715202004e-14
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                }
+              ]
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Doğrulama yazmaz",
+      "steps": [
+        {
+          "op": "validate",
+          "input": {
+            "layerId": "zemin",
+            "path": "$fixture:landxml/v1/kirikli.xml"
+          },
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                }
+              ]
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Yol projesi değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "zemin",
+            "path": "$fixture:landxml/v1/zemin.xml"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_road_project",
+              "message": "Arazi yüzeyi yalnız yol projesinde (KentOS Yol) olur; bu çizim yol projesi değil."
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "road": null
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Yol yüzeyleri",
+        "settings": {
+          "srid": 5254,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 1000.0,
+          "workspace": "cad",
+          "cadWork": "map",
+          "drawingFont": "barlow"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "zemin",
+            "name": "Zemin",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kirik",
+            "name": "Kırık hatlar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "sinir",
+            "name": "Sınırlar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "arazi",
+            "name": "Arazi",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "ek",
+                "name": "Ek noktalar",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "esyukselti",
+            "name": "Eş yükselti",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "zemin",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "z": 100.0
+          },
+          {
+            "kind": "point",
+            "id": 2,
+            "layerId": "zemin",
+            "attrs": {},
+            "p": {
+              "x": 40.0,
+              "y": 0.0
+            },
+            "z": 101.5
+          },
+          {
+            "kind": "point",
+            "id": 3,
+            "layerId": "zemin",
+            "attrs": {},
+            "p": {
+              "x": 40.0,
+              "y": 30.0
+            },
+            "z": 103.25
+          },
+          {
+            "kind": "point",
+            "id": 4,
+            "layerId": "zemin",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 30.0
+            },
+            "z": 102.0
+          },
+          {
+            "kind": "point",
+            "id": 5,
+            "layerId": "zemin",
+            "attrs": {},
+            "p": {
+              "x": 21.0,
+              "y": 24.0
+            },
+            "z": 102.75
+          },
+          {
+            "kind": "point",
+            "id": 6,
+            "layerId": "zemin",
+            "attrs": {},
+            "p": {
+              "x": 10.0,
+              "y": 26.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 7,
+            "layerId": "zemin",
+            "attrs": {},
+            "a": {
+              "x": 1.0,
+              "y": 29.0
+            },
+            "b": {
+              "x": 3.0,
+              "y": 29.0
+            }
+          },
+          {
+            "kind": "polyline",
+            "id": 8,
+            "layerId": "kirik",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 5.0,
+                "y": 15.0
+              },
+              {
+                "x": 35.0,
+                "y": 15.0
+              }
+            ],
+            "zs": [
+              101.0,
+              102.5
+            ]
+          },
+          {
+            "kind": "line",
+            "id": 9,
+            "layerId": "kirik",
+            "attrs": {},
+            "a": {
+              "x": 10.0,
+              "y": 5.0
+            },
+            "b": {
+              "x": 30.0,
+              "y": 5.0
+            },
+            "za": 100.5,
+            "zb": 101.25
+          },
+          {
+            "kind": "polygon",
+            "id": 10,
+            "layerId": "sinir",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 2.0,
+                "y": 2.0
+              },
+              {
+                "x": 38.0,
+                "y": 2.0
+              },
+              {
+                "x": 38.0,
+                "y": 28.0
+              },
+              {
+                "x": 2.0,
+                "y": 28.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 11,
+            "layerId": "sinir",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 18.0,
+                "y": 8.0
+              },
+              {
+                "x": 24.0,
+                "y": 8.0
+              },
+              {
+                "x": 24.0,
+                "y": 12.0
+              },
+              {
+                "x": 18.0,
+                "y": 12.0
+              }
+            ]
+          },
+          {
+            "kind": "polyline",
+            "id": 12,
+            "layerId": "sinir",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 28.0,
+                "y": 19.0
+              },
+              {
+                "x": 32.0,
+                "y": 19.0
+              },
+              {
+                "x": 32.0,
+                "y": 22.0
+              },
+              {
+                "x": 28.0,
+                "y": 22.0
+              }
+            ],
+            "closed": true
+          },
+          {
+            "kind": "polyline",
+            "id": 13,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 6.0,
+                "y": 25.0
+              },
+              {
+                "x": 14.0,
+                "y": 27.0
+              }
+            ],
+            "zs": [
+              102.0,
+              102.5
+            ],
+            "bulges": [
+              0.25,
+              0.0
+            ]
+          },
+          {
+            "kind": "polyline",
+            "id": 14,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 26.0,
+                "y": 24.0
+              },
+              {
+                "x": 30.0,
+                "y": 24.0
+              },
+              {
+                "x": 30.0,
+                "y": 27.0
+              }
+            ]
+          },
+          {
+            "kind": "point",
+            "id": 15,
+            "layerId": "0",
+            "attrs": {},
+            "p": {
+              "x": 40.0,
+              "y": 30.0
+            },
+            "z": 103.75
+          },
+          {
+            "kind": "point",
+            "id": 16,
+            "layerId": "ek",
+            "attrs": {},
+            "p": {
+              "x": 31.0,
+              "y": 10.0
+            },
+            "z": 101.75
+          },
+          {
+            "kind": "polygon",
+            "id": 17,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": -5.0,
+                "y": -5.0
+              },
+              {
+                "x": 45.0,
+                "y": -5.0
+              },
+              {
+                "x": 45.0,
+                "y": 35.0
+              },
+              {
+                "x": -5.0,
+                "y": 35.0
+              }
+            ]
+          },
+          {
+            "kind": "point",
+            "id": 18,
+            "layerId": "0",
+            "attrs": {},
+            "p": {
+              "x": 20.0,
+              "y": 15.0
+            },
+            "z": 104.0
+          }
+        ],
+        "uids": [
+          "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000004",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000005",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000006",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000007",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000008",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000009",
+          "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+          "0192f5a0-7c3e-7d4a-9b1e-00000000000b",
+          "0192f5a0-7c3e-7d4a-9b1e-00000000000c",
+          "0192f5a0-7c3e-7d4a-9b1e-00000000000d",
+          "0192f5a0-7c3e-7d4a-9b1e-00000000000e",
+          "0192f5a0-7c3e-7d4a-9b1e-00000000000f",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000010",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000011",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000012"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Dosya yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "zemin",
+            "path": "$fixture:landxml/v1/yok.xml"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "file_not_found",
+              "message": "$fixture:landxml/v1/yok.xml yok; dosyanın yolunu denetleyin.",
+              "path": "path"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Okunamayan dosya: XML olarak okunamadı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "zemin",
+            "path": "$fixture:landxml/v1/bozuk.xml"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "import_unreadable",
+              "message": "$fixture:landxml/v1/bozuk.xml LandXML olarak okunamadı: XML olarak okunamadı.",
+              "path": "path"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Okunamayan dosya: kökü LandXML değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "zemin",
+            "path": "$fixture:landxml/v1/kok.xml"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "import_unreadable",
+              "message": "$fixture:landxml/v1/kok.xml LandXML olarak okunamadı: kökü LandXML değil.",
+              "path": "path"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Okunamayan dosya: bir koordinat sayı olarak okunamadı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "zemin",
+            "path": "$fixture:landxml/v1/bozuk-sayi.xml"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "import_unreadable",
+              "message": "$fixture:landxml/v1/bozuk-sayi.xml LandXML olarak okunamadı: bir koordinat sayı olarak okunamadı.",
+              "path": "path"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yüzeysiz dosya",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "zemin",
+            "path": "$fixture:landxml/v1/bos.xml"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "landxml_no_surface",
+              "message": "Dosyada yüzey yok.",
+              "path": "path"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dosyada olmayan yüzey adı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "zemin",
+            "path": "$fixture:landxml/v1/iki-yuzey.xml",
+            "surface": "XG"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "landxml_no_surface",
+              "message": "“XG” adlı yüzey dosyada yok; dosyanın yüzeyleri: “EG”, “FG”.",
+              "path": "surface"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Noktasız yüzey",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "zemin",
+            "path": "$fixture:landxml/v1/noktasiz.xml"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "landxml_no_surface",
+              "message": "“Zemin” yüzeyinin noktası yok.",
+              "path": "surface"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Olmayan katman",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yok",
+            "path": "$fixture:landxml/v1/zemin.xml"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_not_found",
+              "message": "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Grup katman değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "arazi",
+            "path": "$fixture:landxml/v1/zemin.xml"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_layer",
+              "message": "“Arazi” bir katman grubu; nesne yalnız katmana eklenir. Grubun içinden bir katman seçin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Geçersiz beklenen sürüm",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "zemin",
+            "path": "$fixture:landxml/v1/zemin.xml",
+            "expectedRevision": "?"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "Beklenen sürüm “?” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kilitli katman",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kilitli",
+            "path": "$fixture:landxml/v1/zemin.xml"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_locked",
+              "message": "“Kilitli” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Aynı adlı yüzey var",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "zemin",
+            "path": "$fixture:landxml/v1/zemin.xml",
+            "name": "eski zemin"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_terrain",
+              "message": "Yüzey kurallarına uymuyor: bu adda başka bir yüzey var.",
+              "path": "name"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eski sürüme göre hazırlanmış",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "zemin",
+            "path": "$fixture:landxml/v1/zemin.xml",
+            "expectedRevision": "41"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kurulamıyor: bir yerde iki kot",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "zemin",
+            "path": "$fixture:landxml/v1/cift-kot.xml"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "terrain_unbuildable",
+              "message": "Kaynaklardan yüzey kurulamıyor: bir yerde iki farklı kot var (yer: 25.74, 3.03)."
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kurulamıyor: i̇ki nokta yüzey olmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "zemin",
+            "path": "$fixture:landxml/v1/az.xml"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "terrain_unbuildable",
+              "message": "Kaynaklardan yüzey kurulamıyor: kotlu yer üçten az ya da hepsi bir doğru üstünde."
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

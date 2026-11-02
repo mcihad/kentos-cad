@@ -113,6 +113,8 @@ pub enum CreateOperation {
     InteriorDimensions,
     /// Eş yükselti eğrileri (plan/road.md Y2.5): a terrain surface's contour lines.
     TerrainContours,
+    /// LandXML al (plan/road.md Y2.5): a LandXML surface's points, breaklines and boundaries.
+    LandXml,
 }
 
 /// One new object: its geometry and what else it carries. The layer is the

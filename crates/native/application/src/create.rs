@@ -190,6 +190,7 @@ pub fn label(operation: Option<CreateOperation>) -> &'static str {
         Some(CreateOperation::InteriorDimensions) => "İç ölçü zinciri",
         // Eş yükselti eğrileri (plan/road.md Y2.5).
         Some(CreateOperation::TerrainContours) => "Eş yükselti eğrileri",
+        Some(CreateOperation::LandXml) => "LandXML al",
     }
 }
 

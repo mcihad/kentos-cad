@@ -9065,12 +9065,14 @@
    "via": [
     "road.terrains.create",
     "road.terrains.edit",
-    "road.terrains.query"
+    "road.terrains.query",
+    "road.terrains.contours",
+    "file.import.landxml"
    ],
    "operation": null,
-   "python": "Connection: road.terrains.create, Connection: road.terrains.edit, Connection: road.terrains.query",
-   "mcp": "road.terrains.create, road.terrains.edit, road.terrains.query",
-   "note": "Arazi yüzeyleri penceresi road.terrains.query ile okur, Kaydet ve Kabul et road.terrains.create ve .edit ile yazar (plan/road.md Y2.4).",
+   "python": "Connection: road.terrains.create, Connection: road.terrains.edit, Connection: road.terrains.query, Connection: road.terrains.contours, kentos.cad.file.import_.landxml",
+   "mcp": "road.terrains.create, road.terrains.edit, road.terrains.query, road.terrains.contours, file.import.landxml",
+   "note": "Arazi yüzeyleri penceresi road.terrains.query ile okur; Kaydet, Kabul et, Eğrileri çiz ve LandXML al road.terrains.create, .edit, .contours ve file.import.landxml ile yazar (plan/road.md Y2.4, Y2.5).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0

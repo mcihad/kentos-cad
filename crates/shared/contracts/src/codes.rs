@@ -603,6 +603,11 @@ codes! {
     INVALID_CONTOURS = "invalid_contours", Failed, false, "Eş yükselti aralığı 0'dan büyük olmalı; yüzeyi en çok 10 000 düzey keser.";
     /// No level of the interval crosses the surface.
     NO_CONTOURS = "no_contours", Failed, false, "Bu aralıkla yüzeyi kesen eş yükselti eğrisi yok.";
+    /// A LandXML file with no surface, none of the name asked, or one without points (plan/road.md Y2.5).
+    LANDXML_NO_SURFACE = "landxml_no_surface", Failed, false, "LandXML dosyasında alınacak yüzey yok.";
+    /// A warning: what a LandXML surface says and is not taken (a face naming a missing point, a point id twice, a
+    /// second outer boundary).
+    LANDXML_LEFT = "landxml_left", Warning, false, "LandXML yüzeyinin bir kısmı alınmadı; ileti nedenini söyler.";
     /// A warning: a surface names a source the drawing cannot give (missing, without heights, an arc edge …).
     TERRAIN_SOURCE_LEFT = "terrain_source_left", Warning, false, "Yüzeyin bir kaynağı kullanılamadı; yüzey onsuz kuruldu.";
     /// A warning: a network or a locator names a layer the drawing does not have.

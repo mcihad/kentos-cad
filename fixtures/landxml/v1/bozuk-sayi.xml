@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LandXML xmlns="http://www.landxml.org/schema/LandXML-1.2" version="1.2"><Units><Metric linearUnit="meter" /></Units><Surfaces><Surface name="Zemin"><Definition surfType="TIN"><Pnts><P id="1">0.0 0.0 100.4</P><P id="2">on iki</P><P id="3">30.0 40.0 103.3</P></Pnts></Definition></Surface></Surfaces></LandXML>

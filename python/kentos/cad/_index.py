@@ -298,6 +298,7 @@ COMMANDS: dict[str, Any] = {
     "file.import.gml": file.import_.gml,
     "file.import.gpkg": file.import_.gpkg,
     "file.import.kml": file.import_.kml,
+    "file.import.landxml": file.import_.landxml,
     "file.import.maplibre": file.import_.maplibre,
     "file.import.parquet": file.import_.parquet,
     "file.import.pdf": file.import_.pdf,
