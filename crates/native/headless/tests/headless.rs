@@ -84,6 +84,7 @@ fn new_drawing() -> Session {
         drawing_unit: None,
         annotation: None,
         cad_work: None,
+        heights: None,
     })
     .expect("a new project")
 }
@@ -328,6 +329,7 @@ fn a_drawing_another_host_owns_answers_the_same_requests_by_name() {
         drawing_unit: None,
         annotation: None,
         cad_work: None,
+        heights: None,
     })
     .expect("a new project");
     let mut doc = kentos_domain::Document::from_snapshot(snapshot).expect("a document");
@@ -1032,6 +1034,7 @@ fn dxf_hatches_go_round() {
             drawing_unit: None,
             annotation: None,
             cad_work: None,
+            heights: None,
         })
         .expect("a new project");
         let input = root.join("in").join(format!("{name}.dxf"));
@@ -1636,6 +1639,7 @@ fn arch_room() -> Session {
         drawing_unit: None,
         annotation: None,
         cad_work: None,
+        heights: None,
     })
     .expect("a new project");
     let layer = s.summary()["activeLayer"].as_str().expect("a layer").to_owned();
@@ -1706,6 +1710,7 @@ fn arch_dxf_goes_round() {
         drawing_unit: None,
         annotation: None,
         cad_work: None,
+        heights: None,
     })
     .expect("a new project");
     let answer = back
@@ -2629,6 +2634,7 @@ fn wgs_drawing() -> Session {
         drawing_unit: None,
         annotation: None,
         cad_work: None,
+        heights: None,
     })
     .expect("a project")
 }

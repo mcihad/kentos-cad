@@ -142,6 +142,10 @@ pub struct Draft {
     /// card says which; none: the work its coordinates say.
     #[serde(default)]
     pub chosen_work: Option<CadWork>,
+    /// A road's elevations are a GNSS receiver's ellipsoidal heights, not TUDKA-99's orthometric ones (plan/road.md
+    /// ROAD-NUM-03): the wizard's Kotlar.
+    #[serde(default)]
+    pub ellipsoidal_heights: bool,
 }
 
 /// Map scales for a CBS project, drawing scales for a CAD one (1:N).
@@ -325,6 +329,7 @@ impl Draft {
             },
             annotation: None,
             chosen_work: None,
+            ellipsoidal_heights: false,
         }
     }
 
@@ -344,6 +349,22 @@ impl Draft {
     /// The CAD work the project is made for (docs/adr/0801, 0802): its work's, none for a CBS draft.
     pub fn cad_work(&self) -> Option<CadWork> {
         self.work().map(|w| w.work)
+    }
+
+    /// What a new road's elevations rest on (plan/road.md ROAD-NUM-02/03): TUDKA-99's orthometric heights with the
+    /// TG-20 geoid, or ellipsoidal heights; none for any other work, whose heights are not asked.
+    pub fn heights(&self) -> Option<kentos_contracts::HeightReference> {
+        (self.cad_work() == Some(CadWork::Road)).then(|| {
+            if self.ellipsoidal_heights {
+                kentos_contracts::HeightReference {
+                    kind: kentos_contracts::HeightKind::Ellipsoidal,
+                    vertical_srid: None,
+                    geoid: None,
+                }
+            } else {
+                crate::new_project::road_heights()
+            }
+        })
     }
 
     /// The draft made for `work`: its coordinates and unit, the scale its own.
@@ -498,6 +519,9 @@ impl Draft {
         if let (false, Some(p)) = (local, p) {
             lines.push(("İl", p.name.clone()));
         }
+        if let Some(h) = self.heights() {
+            lines.push(("Kotlar", h.title()));
+        }
         lines.push(("Birim", lower_tr(unit_choice(self.unit()).name)));
         lines.push((
             match self.kind {
@@ -547,6 +571,7 @@ impl Draft {
             drawing_unit: local.then_some(self.unit),
             annotation: self.annotation.clone().and_then(AnnotationHeights::sanitized),
             cad_work: self.cad_work(),
+            heights: self.heights(),
         }
     }
 }

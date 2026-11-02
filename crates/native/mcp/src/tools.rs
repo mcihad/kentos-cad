@@ -85,6 +85,7 @@ pub fn list(catalog: &Value) -> Vec<Value> {
                 json!({
                     "name": { "type": "string", "description": "Projenin adı; verilmezse “Yeni proje”." },
                     "workspace": { "type": "string", "enum": ["cad", "gis"], "description": "Proje türü (docs/adr/0165): cad ya da gis; verilmezse gis." },
+                    "cadWork": { "type": "string", "enum": ["architecture", "map", "road"], "description": "CAD projesinin işi (docs/adr/0801): architecture (Mimari, yerel), map (Harita) ya da road (KentOS Yol); map ve road koordinat sistemlidir, srid ya da province ister. Yol projesinin kotları TUDKA-99 ortometrik (EPSG:5775) ve TG-20 geoidiyle başlar. Verilmezse koordinatlardan: yerel Mimari, sistemli Harita." },
                     "coords": { "type": "string", "enum": ["local", "real"], "description": "CAD projesinin koordinatları: local (sistem yok, SRID 0) ya da real. Verilmezse srid'den: srid yok ya da 0 ise local; CBS projesi her zaman real." },
                     "srid": { "type": "integer", "minimum": 0, "description": "Koordinat sistemi (5254…5259 TUREF/TM, 32635…32638 UTM …; 0 yerel). Koordinat sistemli projede srid ya da province gerekir." },
                     "province": { "type": "integer", "minimum": 1, "maximum": 81, "description": "İlin plaka kodu: proje onun merkezinde açılır; srid yoksa ilin TUREF dilimi alınır. Yerel projede verilmez." },

@@ -214,7 +214,7 @@ fn wizards() {
     use crate::project::wizard::Event as W;
     for m in Module::ALL {
         for (size, theme, suffix) in frames_and_large() {
-            for (step, word) in [(None, ""), (Some(0), "-tur")] {
+            for (step, word) in [(None, ""), (Some(0), "-tur"), (Some(2), "-ozet")] {
                 let name = format!("moduller-sihirbaz-{}{word}{suffix}", m.id());
                 if !wanted(&name) {
                     continue;

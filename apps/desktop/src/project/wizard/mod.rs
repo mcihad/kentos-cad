@@ -106,6 +106,8 @@ pub enum Event {
     Choose(Workspace),
     /// What a CAD drawing is for: a work's card, by its place in [`WORKS`] (docs/adr/0626 §1).
     Work(usize),
+    /// A road's Kotlar (plan/road.md ROAD-NUM-03): ellipsoidal heights, or TUDKA-99's orthometric ones.
+    Heights(bool),
     /// A province's row; the chosen one again chooses none.
     Province(u32),
     Search(String),
@@ -306,6 +308,7 @@ impl App {
                 s.status = None;
                 return focus(s);
             }
+            Event::Heights(ellipsoidal) => d.ellipsoidal_heights = ellipsoidal,
             Event::Province(code) => {
                 d.province = (d.province != Some(code)).then_some(code);
                 // Another province suggests its own zone: a system chosen before follows it again.

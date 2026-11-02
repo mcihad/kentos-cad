@@ -222,6 +222,7 @@ fn scale_probe() {
             drawing_unit: Some(kentos_commands::DrawingUnit::M),
             annotation: None,
             cad_work: None,
+            heights: None,
         })
         .expect("a new project");
         let (mut app, _) = App::boot(None);

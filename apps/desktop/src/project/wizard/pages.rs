@@ -383,6 +383,10 @@ pub(super) fn coords(s: &State) -> Element<'_, Message> {
     )
     .spacing(10);
     let mut parts = vec![works.into()];
+    // A road's heights (plan/road.md ROAD-NUM-03): what its terrain, profiles and earthworks are measured in.
+    if d.cad_work() == Some(kentos_commands::CadWork::Road) {
+        parts.push(heights(d.ellipsoidal_heights));
+    }
     // A plan is on a real coordinate system: the province and the system chosen here.
     if d.coords == Coords::Real {
         parts.extend(place(s));
@@ -393,6 +397,39 @@ pub(super) fn coords(s: &State) -> Element<'_, Message> {
             "Seçiminiz projenin birimini, çizim ölçeğini ve koordinatlarını belirler; hepsi sonradan Proje ayarları’ndan değiştirilebilir.",
         ),
         parts,
+    )
+}
+
+/// A road's Kotlar as the segmented control writes it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct HeightsWay(bool);
+
+impl std::fmt::Display for HeightsWay {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(if self.0 {
+            "Elipsoit yüksekliği"
+        } else {
+            "Ortometrik (TUDKA-99)"
+        })
+    }
+}
+
+/// A road's Kotlar: Türkiye's levelling heights with the TG-20 geoid, or a GNSS receiver's ellipsoidal heights;
+/// Proje ayarları › Kotlar ve epok changes it later.
+fn heights<'a>(ellipsoidal: bool) -> Element<'a, Message> {
+    let ways = kentos_ui::widget::Segmented::new(
+        [HeightsWay(false), HeightsWay(true)],
+        HeightsWay(ellipsoidal),
+        |w: HeightsWay| event(Event::Heights(w.0)),
+    );
+    let note = if ellipsoidal {
+        "Kotlar GNSS alıcısının elipsoit yükseklikleridir; nivelmanla karşılaştırmak için geoit modeli gerekir."
+    } else {
+        "Kotlar Antalya datumlu ortometrik yüksekliklerdir (EPSG:5775); GNSS yükseklikleri HGM'nin TG-20 geoidiyle çevrilir."
+    };
+    section(
+        "Kotlar",
+        column![ways, label::caption(note)].spacing(6),
     )
 }
 
