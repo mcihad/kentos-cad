@@ -2,7 +2,8 @@
 //! surface from the drawing's points, breaklines, boundary and voids and keeps its definition in the road project's
 //! settings; `road.terrains.edit` changes a definition, accepts a surface made again from its sources, or removes
 //! one; `road.terrains.query` reads a surface's state, figures, heights at places and section along a line (Civil
-//! 3D's `FindElevationAtXY` and `SampleElevations`, OpenRoads' Analyze Point and profile of a line). The surface's
+//! 3D's `FindElevationAtXY` and `SampleElevations`, OpenRoads' Analyze Point and profile of a line), with the slope and
+//! aspect; `road.terrains.contours` writes its contour lines (plan/road.md Y2.5). The surface's
 //! triangles are made by `kentos-road` (`kentos.cdt/1`) from the drawing every time; a definition is a project
 //! setting, as a network is: writing it makes the drawing dirty and is no undo step. Only a road project
 //! (`cadWork: road`) has them. The desktop's handlers are `crates/native/application/src/road_terrains.rs`; they and
@@ -22,6 +23,8 @@ pub const ROAD_TERRAINS_EDIT: &str = "road.terrains.edit";
 pub const ROAD_TERRAINS_EDIT_VERSION: u32 = 1;
 pub const ROAD_TERRAINS_QUERY: &str = "road.terrains.query";
 pub const ROAD_TERRAINS_QUERY_VERSION: u32 = 1;
+pub const ROAD_TERRAINS_CONTOURS: &str = "road.terrains.contours";
+pub const ROAD_TERRAINS_CONTOURS_VERSION: u32 = 1;
 
 /// The most places a query names (its `at` and `along` together).
 pub const MAX_TERRAIN_PLACES: usize = 100_000;
@@ -227,6 +230,71 @@ pub enum TerrainPlace {
     Void,
 }
 
+/// Input of `road.terrains.contours` v1 (plan/road.md Y2.5): a surface's contour lines written as 3D polylines on a
+/// layer, every `interval` metres from `base` (0 when absent), every `majorEvery`-th level from the base a major line
+/// (thicker; 5 when absent, 0: none), as Civil 3D extracts a surface's major and minor contours. A line through a
+/// corner is drawn once; a closed line is a closed polyline. One undo step “Eş yükselti eğrileri”.
+///
+/// Refusals, in this order: `not_a_road_project`, `invalid_contours` (an interval not above zero, a base not finite),
+/// `layer_not_found`, `not_a_layer`, `layer_locked`, `invalid_revision`, `revision_conflict`, `unknown_terrain`,
+/// `terrain_unbuildable`, `invalid_contours` (more than 10 000 levels cross the surface), `no_contours` (none does).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TerrainsContours {
+    /// The surface's id or name.
+    pub surface: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub interval: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub base: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub major_every: Option<u32>,
+    /// The layer they go on.
+    pub layer_id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
+/// A contour line as written: its level, whether major and closed, its places.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TerrainContour {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub z: f64,
+    pub major: bool,
+    pub closed: bool,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub points: Vec<[f64; 2]>,
+}
+
+/// Output of `road.terrains.contours` v1, and its plan: the lines in their order (by level, then by their first
+/// place), the objects written (a plan: none) and the revision after it (a plan: before).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TerrainsContoured {
+    pub lines: Vec<TerrainContour>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub uids: Vec<String>,
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub revision: String,
+}
+
 /// A place's height: none outside and in a void.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -243,6 +311,16 @@ pub struct TerrainHeight {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub z: Option<f64>,
     pub place: TerrainPlace,
+    /// The plane's rise over run, inside one triangle only (on an edge or a corner two planes meet).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub slope: Option<f64>,
+    /// The azimuth it falls towards, radians clockwise from north; none on a flat triangle.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
+    pub aspect: Option<f64>,
 }
 
 /// A place of a section: its distance from the line's start, where it is, its height (none off the surface), and

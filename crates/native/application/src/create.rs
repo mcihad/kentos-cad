@@ -188,6 +188,8 @@ pub fn label(operation: Option<CreateOperation>) -> &'static str {
         Some(CreateOperation::QuickDimensions) => "Hızlı ölçü",
         // İç ölçü zinciri (docs/adr/0711).
         Some(CreateOperation::InteriorDimensions) => "İç ölçü zinciri",
+        // Eş yükselti eğrileri (plan/road.md Y2.5).
+        Some(CreateOperation::TerrainContours) => "Eş yükselti eğrileri",
     }
 }
 

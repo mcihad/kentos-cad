@@ -10,7 +10,8 @@ time they are asked for, so a surface never disagrees with its sources. The comm
 - :func:`create`: a new surface (Yüzey oluştur), accepted;
 - :func:`accept`: a surface made again from its changed sources, accepted;
 - :func:`heights`: the heights at places (none outside and in a void, never extrapolated);
-- :func:`section`: the ground line along a line: where it crosses the triangles' edges, with stations.
+- :func:`section`: the ground line along a line: where it crosses the triangles' edges, with stations;
+- :func:`contours`: the contour lines every ``interval`` metres written on a layer (Eş yükselti eğrileri).
 
 Points are ``(east, north)`` in metres in the project's plane. A refusal raises the SDK's command errors in the apps'
 words (``not_a_road_project``, ``terrain_unbuildable`` …).
@@ -28,6 +29,7 @@ from .cad.types import (
     TerrainHeight,
     TerrainReport,
     TerrainSectionPoint,
+    TerrainsContoured,
     TerrainsWritten,
 )
 
@@ -89,4 +91,16 @@ def section(doc: Document, surface: str, line: Sequence[Point]) -> list[TerrainS
     return list(_terrains.query(doc, surface=surface, along=[(float(p[0]), float(p[1])) for p in line]).section or [])
 
 
-__all__ = ["accept", "create", "heights", "remove", "section", "surfaces"]
+def contours(
+    doc: Document, surface: str, interval: float, layer: str, *, base: float | None = None, major_every: int | None = None
+) -> TerrainsContoured:
+    """Writes ``surface``'s contour lines every ``interval`` metres on ``layer`` (one undo step)."""
+    args: dict[str, Any] = {"surface": surface, "interval": float(interval), "layer_id": layer}
+    if base is not None:
+        args["base"] = float(base)
+    if major_every is not None:
+        args["major_every"] = int(major_every)
+    return _terrains.contours(doc, **args)
+
+
+__all__ = ["accept", "contours", "create", "heights", "remove", "section", "surfaces"]

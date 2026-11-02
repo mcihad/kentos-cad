@@ -34476,6 +34476,161 @@
       ]
     },
     {
+      "id": "road.terrains.contours",
+      "version": 1,
+      "title": "Eş yükselti eğrileri",
+      "summary": "Yol projesinin bir arazi yüzeyinin (surface: kimliği ya da adı) eş yükselti eğrilerini bir katmana 3B çoklu çizgi olarak yazar: base'ten (yoksa 0) her interval metrede (m) bir düzey, base'ten sayılan her majorEvery'inci düzey (yoksa 5, 0: hiçbiri) kalın ana eğri; Civil 3D'nin yüzeyden ana ve ara eğri çıkarması gibi. Düzey bir üçgenin köşeleri iki yanında olan kenarını keser (düzeydeki köşe üstte sayılır: köşeden geçen eğri bir kez çizilir); kesişim kenarın kendi doğrusundan, iki üçgende aynı yerde; parçalar kenarlarından zincirlenir, kapanan eğri kapalı çoklu çizgidir. Eğriler düzeye, sonra ilk yerlerine göre sıralıdır; açık eğri küçük ucundan, kapalı eğri en küçük yerinden başlar. Tek geri alma adımı “Eş yükselti eğrileri”. Retler: not_a_road_project, invalid_contours, layer_not_found, not_a_layer, layer_locked, invalid_revision, revision_conflict, unknown_terrain, terrain_unbuildable, no_contours.",
+      "aliases": [
+        "esyukselti",
+        "contours"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.terrains.contours` v1 (plan/road.md Y2.5): a surface's contour lines written as 3D polylines on a\nlayer, every `interval` metres from `base` (0 when absent), every `majorEvery`-th level from the base a major line\n(thicker; 5 when absent, 0: none), as Civil 3D extracts a surface's major and minor contours. A line through a\ncorner is drawn once; a closed line is a closed polyline. One undo step “Eş yükselti eğrileri”.\n\nRefusals, in this order: `not_a_road_project`, `invalid_contours` (an interval not above zero, a base not finite),\n`layer_not_found`, `not_a_layer`, `layer_locked`, `invalid_revision`, `revision_conflict`, `unknown_terrain`,\n`terrain_unbuildable`, `invalid_contours` (more than 10 000 levels cross the surface), `no_contours` (none does).",
+        "properties": {
+          "base": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "elevation"
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "interval": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "layerId": {
+            "description": "The layer they go on.",
+            "type": "string"
+          },
+          "majorEvery": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "surface": {
+            "description": "The surface's id or name.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "surface",
+          "interval",
+          "layerId"
+        ],
+        "title": "TerrainsContours",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.terrains.contours` v1, and its plan: the lines in their order (by level, then by their first\nplace), the objects written (a plan: none) and the revision after it (a plan: before).",
+        "properties": {
+          "lines": {
+            "items": {
+              "$ref": "#/$defs/TerrainContour"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "lines",
+          "revision"
+        ],
+        "title": "TerrainsContoured",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.terrains.contours` v1, and its plan: the lines in their order (by level, then by their first\nplace), the objects written (a plan: none) and the revision after it (a plan: before).",
+        "properties": {
+          "lines": {
+            "items": {
+              "$ref": "#/$defs/TerrainContour"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "lines",
+          "revision"
+        ],
+        "title": "TerrainsContoured",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "invalid_contours",
+          "layer_not_found",
+          "not_a_layer",
+          "layer_locked",
+          "invalid_revision",
+          "revision_conflict",
+          "unknown_terrain",
+          "terrain_unbuildable",
+          "no_contours"
+        ],
+        "warnings": [
+          "layer_hidden"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Mevcut zeminin 0,5 m'lik eğrileri, her 2 m'de bir ana eğri",
+          "input": {
+            "interval": 0.5,
+            "layerId": "esyukselti",
+            "majorEvery": 4,
+            "surface": "Mevcut zemin"
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.topology.check",
       "version": 1,
       "title": "Topolojiyi denetle",
@@ -68312,6 +68467,18 @@
       "meaning": "Yerler sonlu sayılar olmalı; hat en az iki yerden oluşur, en çok 100 000 yer."
     },
     {
+      "code": "invalid_contours",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Eş yükselti aralığı 0'dan büyük olmalı; yüzeyi en çok 10 000 düzey keser."
+    },
+    {
+      "code": "no_contours",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu aralıkla yüzeyi kesen eş yükselti eğrisi yok."
+    },
+    {
       "code": "terrain_source_left",
       "kind": "warning",
       "retryable": false,
@@ -84226,6 +84393,11 @@
         {
           "const": "interiorDimensions",
           "description": "İç ölçü zinciri (docs/adr/0711): the faces a cut crosses, measured as a chain.",
+          "type": "string"
+        },
+        {
+          "const": "terrainContours",
+          "description": "Eş yükselti eğrileri (plan/road.md Y2.5): a terrain surface's contour lines.",
           "type": "string"
         }
       ]
@@ -138978,6 +139150,42 @@
       ],
       "type": "object"
     },
+    "TerrainContour": {
+      "description": "A contour line as written: its level, whether major and closed, its places.",
+      "properties": {
+        "closed": {
+          "type": "boolean"
+        },
+        "major": {
+          "type": "boolean"
+        },
+        "points": {
+          "items": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "type": "array",
+          "x-unit": "length"
+        },
+        "z": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "elevation"
+        }
+      },
+      "required": [
+        "z",
+        "major",
+        "closed",
+        "points"
+      ],
+      "type": "object"
+    },
     "TerrainFigures": {
       "description": "A surface's figures: corners, kept triangles, constrained edges (breaklines' and rings' pieces), plan area and the\nkept corners' lowest and highest heights.",
       "properties": {
@@ -139056,8 +139264,26 @@
     "TerrainHeight": {
       "description": "A place's height: none outside and in a void.",
       "properties": {
+        "aspect": {
+          "description": "The azimuth it falls towards, radians clockwise from north; none on a flat triangle.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "rad"
+        },
         "place": {
           "$ref": "#/$defs/TerrainPlace"
+        },
+        "slope": {
+          "description": "The plane's rise over run, inside one triangle only (on an edge or a corner two planes meet).",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
         },
         "x": {
           "format": "double",

@@ -111,6 +111,8 @@ pub enum CreateOperation {
     QuickDimensions,
     /// İç ölçü zinciri (docs/adr/0711): the faces a cut crosses, measured as a chain.
     InteriorDimensions,
+    /// Eş yükselti eğrileri (plan/road.md Y2.5): a terrain surface's contour lines.
+    TerrainContours,
 }
 
 /// One new object: its geometry and what else it carries. The layer is the

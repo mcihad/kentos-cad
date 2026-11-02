@@ -189,6 +189,48 @@
             "children": []
           }
         ]
+      },
+      {
+        "id": "esyukselti",
+        "name": "Eş yükselti",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "gizli",
+        "name": "Gizli",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
       }
     ],
     "activeLayer": "0",
@@ -1082,7 +1124,9 @@
                   "x": 10.0,
                   "y": 10.0,
                   "z": 100.8586956521739,
-                  "place": "inside"
+                  "place": "inside",
+                  "slope": 0.08388600600684622,
+                  "aspect": 3.6864565690413333
                 },
                 {
                   "x": 21.0,
@@ -1108,7 +1152,9 @@
                   "x": 12.5,
                   "y": 7.25,
                   "z": 100.77010869565217,
-                  "place": "inside"
+                  "place": "inside",
+                  "slope": 0.08388600600684622,
+                  "aspect": 3.6864565690413333
                 }
               ]
             },
@@ -2859,7 +2905,9 @@
                   "x": 20.0,
                   "y": 15.0,
                   "z": 101.90543071161049,
-                  "place": "inside"
+                  "place": "inside",
+                  "slope": 0.09479614574586417,
+                  "aspect": 3.432103374556167
                 }
               ],
               "section": [
@@ -3399,6 +3447,48 @@
                 "children": []
               }
             ]
+          },
+          {
+            "id": "esyukselti",
+            "name": "Eş yükselti",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
           }
         ],
         "activeLayer": "0",

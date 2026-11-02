@@ -4,4 +4,12 @@ import type { TerrainPlace } from "./TerrainPlace";
 /**
  * A place's height: none outside and in a void.
  */
-export type TerrainHeight = { x: number, y: number, z?: number, place: TerrainPlace, };
+export type TerrainHeight = { x: number, y: number, z?: number, place: TerrainPlace, 
+/**
+ * The plane's rise over run, inside one triangle only (on an edge or a corner two planes meet).
+ */
+slope?: number, 
+/**
+ * The azimuth it falls towards, radians clockwise from north; none on a flat triangle.
+ */
+aspect?: number, };

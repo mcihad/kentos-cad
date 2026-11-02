@@ -328,6 +328,7 @@ COMMANDS: dict[str, Any] = {
     "project.share": project.share,
     "project.trash": project.trash,
     "project.unarchive": project.unarchive,
+    "road.terrains.contours": road.terrains.contours,
     "road.terrains.create": road.terrains.create,
     "road.terrains.edit": road.terrains.edit,
     "road.terrains.query": road.terrains.query,

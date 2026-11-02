@@ -599,6 +599,10 @@ codes! {
     TERRAIN_UNBUILDABLE = "terrain_unbuildable", Failed, false, "Kaynaklardan yüzey kurulamıyor; ileti nedenini ve yerini söyler.";
     /// A query's places: not finite, a line of one place, too many.
     INVALID_PLACES = "invalid_places", Failed, false, "Yerler sonlu sayılar olmalı; hat en az iki yerden oluşur, en çok 100 000 yer.";
+    /// Contour lines of an interval not above zero, a base not finite, or too many levels (plan/road.md Y2.5).
+    INVALID_CONTOURS = "invalid_contours", Failed, false, "Eş yükselti aralığı 0'dan büyük olmalı; yüzeyi en çok 10 000 düzey keser.";
+    /// No level of the interval crosses the surface.
+    NO_CONTOURS = "no_contours", Failed, false, "Bu aralıkla yüzeyi kesen eş yükselti eğrisi yok.";
     /// A warning: a surface names a source the drawing cannot give (missing, without heights, an arc edge …).
     TERRAIN_SOURCE_LEFT = "terrain_source_left", Warning, false, "Yüzeyin bir kaynağı kullanılamadı; yüzey onsuz kuruldu.";
     /// A warning: a network or a locator names a layer the drawing does not have.

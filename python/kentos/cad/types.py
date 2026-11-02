@@ -1230,6 +1230,7 @@ class CreateOperation(_StrEnum):
     - ``pointCloud``: Nokta bulutu ekle (docs/adr/0207 §9): a point cloud added.
     - ``quickDimensions``: Hızlı ölçü (docs/adr/0147 §7): the selection's edges measured at once.
     - ``interiorDimensions``: İç ölçü zinciri (docs/adr/0711): the faces a cut crosses, measured as a chain.
+    - ``terrainContours``: Eş yükselti eğrileri (plan/road.md Y2.5): a terrain surface's contour lines.
     """
     PARALLEL = "parallel"
     PERPENDICULAR_IN = "perpendicularIn"
@@ -1266,9 +1267,10 @@ class CreateOperation(_StrEnum):
     POINT_CLOUD = "pointCloud"
     QUICK_DIMENSIONS = "quickDimensions"
     INTERIOR_DIMENSIONS = "interiorDimensions"
+    TERRAIN_CONTOURS = "terrainContours"
 
 
-CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions"]
+CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions", "terrainContours"]
 """The names of :class:`CreateOperation`, for a plain string."""
 
 
@@ -67106,6 +67108,36 @@ class TerminalDevice(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class TerrainContour(_Model):
+    """A contour line as written: its level, whether major and closed, its places.
+    Attributes:
+        z: Unit: elevation.
+        points: Unit: length.
+    """
+    z: float
+    major: bool
+    closed: bool
+    points: list[list[float]]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["z"] = float(self.z)
+        out["major"] = self.major
+        out["closed"] = self.closed
+        out["points"] = [[float(e1) for e1 in e0] for e0 in self.points]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainContour:
+        return cls(
+            z=float(data["z"]),
+            major=data["major"],
+            closed=data["closed"],
+            points=[[float(e1) for e1 in e0] for e0 in data["points"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class TerrainFigures(_Model):
     """A surface's figures: corners, kept triangles, constrained edges (breaklines' and rings' pieces), plan area and the
     kept corners' lowest and highest heights.
@@ -67166,11 +67198,15 @@ class TerrainHeight(_Model):
     Attributes:
         x: Unit: length.
         y: Unit: length.
+        aspect: The azimuth it falls towards, radians clockwise from north; none on a flat triangle. Unit: rad.
+        slope: The plane's rise over run, inside one triangle only (on an edge or a corner two planes meet). Unit: 1.
         z: Unit: elevation.
     """
     x: float
     y: float
     place: TerrainPlace | TerrainPlaceName
+    aspect: float | None | Unset = UNSET
+    slope: float | None | Unset = UNSET
     z: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -67178,6 +67214,10 @@ class TerrainHeight(_Model):
         out["x"] = float(self.x)
         out["y"] = float(self.y)
         out["place"] = _enum_out(self.place)
+        if self.aspect is not UNSET:
+            out["aspect"] = None if self.aspect is None else float(self.aspect)
+        if self.slope is not UNSET:
+            out["slope"] = None if self.slope is None else float(self.slope)
         if self.z is not UNSET:
             out["z"] = None if self.z is None else float(self.z)
         return out
@@ -67188,6 +67228,8 @@ class TerrainHeight(_Model):
             x=float(data["x"]),
             y=float(data["y"]),
             place=_enum_in(TerrainPlace, data["place"]),
+            aspect=UNSET if "aspect" not in data else None if data["aspect"] is None else float(data["aspect"]),
+            slope=UNSET if "slope" not in data else None if data["slope"] is None else float(data["slope"]),
             z=UNSET if "z" not in data else None if data["z"] is None else float(data["z"]),
         )
 
@@ -67388,6 +67430,81 @@ class TerrainSurfaceDef(_Model):
             points=SurfaceSources.from_json(data["points"]) if "points" in data else UNSET,
             tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
             voids=list(data["voids"]) if "voids" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TerrainsContoured(_Model):
+    """Output of `road.terrains.contours` v1, and its plan: the lines in their order (by level, then by their first
+    place), the objects written (a plan: none) and the revision after it (a plan: before).
+    """
+    lines: list[TerrainContour]
+    revision: str
+    uids: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["lines"] = [e0.to_json() for e0 in self.lines]
+        out["revision"] = self.revision
+        if self.uids is not UNSET:
+            out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainsContoured:
+        return cls(
+            lines=[TerrainContour.from_json(e0) for e0 in data["lines"]],
+            revision=data["revision"],
+            uids=list(data["uids"]) if "uids" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TerrainsContours(_Model):
+    """Input of `road.terrains.contours` v1 (plan/road.md Y2.5): a surface's contour lines written as 3D polylines on a
+    layer, every `interval` metres from `base` (0 when absent), every `majorEvery`-th level from the base a major line
+    (thicker; 5 when absent, 0: none), as Civil 3D extracts a surface's major and minor contours. A line through a
+    corner is drawn once; a closed line is a closed polyline. One undo step “Eş yükselti eğrileri”.
+
+    Refusals, in this order: `not_a_road_project`, `invalid_contours` (an interval not above zero, a base not finite),
+    `layer_not_found`, `not_a_layer`, `layer_locked`, `invalid_revision`, `revision_conflict`, `unknown_terrain`,
+    `terrain_unbuildable`, `invalid_contours` (more than 10 000 levels cross the surface), `no_contours` (none does).
+    Attributes:
+        surface: The surface's id or name.
+        interval: Unit: m.
+        layer_id: The layer they go on.
+        base: Unit: elevation.
+        major_every: Unit: count.
+    """
+    surface: str
+    interval: float
+    layer_id: str
+    base: float | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    major_every: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["surface"] = self.surface
+        out["interval"] = float(self.interval)
+        out["layerId"] = self.layer_id
+        if self.base is not UNSET:
+            out["base"] = None if self.base is None else float(self.base)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.major_every is not UNSET:
+            out["majorEvery"] = self.major_every
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainsContours:
+        return cls(
+            surface=data["surface"],
+            interval=float(data["interval"]),
+            layer_id=data["layerId"],
+            base=UNSET if "base" not in data else None if data["base"] is None else float(data["base"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            major_every=data.get("majorEvery", UNSET),
         )
 
 
@@ -93461,6 +93578,7 @@ __all__ = [
     "TenantKindName",
     "TerminalConfig",
     "TerminalDevice",
+    "TerrainContour",
     "TerrainFigures",
     "TerrainHeight",
     "TerrainLeft",
@@ -93472,6 +93590,8 @@ __all__ = [
     "TerrainState",
     "TerrainStateName",
     "TerrainSurfaceDef",
+    "TerrainsContoured",
+    "TerrainsContours",
     "TerrainsCreate",
     "TerrainsEdit",
     "TerrainsEditOperation",

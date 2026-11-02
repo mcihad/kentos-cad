@@ -69,7 +69,8 @@ UIDS = [U(i + 1) for i in range(len(ENTITIES))]
 (Z1, Z2, Z3, Z4, Z5, ZNONE, ZLINE, BL1, BL2, BOUND, VOID1, VOID2, ARC, OPEN, DUP, EK, BIG, ZCONF) = UIDS
 
 LAYERS = [node("0", "0"), node("zemin", "Zemin"), node("kirik", "Kırık hatlar"), node("sinir", "Sınırlar"),
-          node("arazi", "Arazi", [node("ek", "Ek noktalar")])]
+          node("arazi", "Arazi", [node("ek", "Ek noktalar")]), node("esyukselti", "Eş yükselti"),
+          {**node("kilitli", "Kilitli"), "locked": True}, {**node("gizli", "Gizli"), "visible": False}]
 
 
 def entity_json(slot, kind, layer, geo):
@@ -323,10 +324,44 @@ def inside_ring(ring, q):
     return c
 
 
+def strictly_in(s, q):
+    """The kept triangle q lies strictly inside, or None (on an edge or a corner two planes meet)."""
+    qx, qy = F(q[0]), F(q[1])
+    for t in s["tris"]:
+        (ax, ay), (bx, by), (cx, cy) = [(F(s["xy"][i][0]), F(s["xy"][i][1])) for i in t]
+        d = (bx - ax) * (cy - ay) - (by - ay) * (cx - ax)
+        wa = ((bx - qx) * (cy - qy) - (by - qy) * (cx - qx)) / d
+        wb = ((cx - qx) * (ay - qy) - (cy - qy) * (ax - qx)) / d
+        if wa > 0 and wb > 0 and 1 - wa - wb > 0:
+            return t
+    return None
+
+
+def slope_of(s, t):
+    """The plane's rise over run and the azimuth it falls towards (clockwise from north), exact then rounded."""
+    import math
+    (ax, ay, az), (bx, by, bz), (cx, cy, cz) = [[F(c) for c in (*s["xy"][i], s["z"][i])] for i in t]
+    ux, uy, uz, vx, vy, vz = bx - ax, by - ay, bz - az, cx - ax, cy - ay, cz - az
+    d = ux * vy - uy * vx
+    gx, gy = (uz * vy - uy * vz) / d, (ux * vz - uz * vx) / d
+    slope = math.hypot(float(gx), float(gy))
+    if slope == 0:
+        return slope, None
+    az_ = math.atan2(float(-gx), float(-gy))
+    return slope, az_ + 2 * math.pi if az_ < 0 else az_
+
+
 def height(s, q):
     h = tri.barycentric(s["xy"], s["z"], s["tris"], q)
     if h is not None:
-        return {"x": float(q[0]), "y": float(q[1]), "z": h, "place": "inside"}
+        out = {"x": float(q[0]), "y": float(q[1]), "z": h, "place": "inside"}
+        t = strictly_in(s, q)
+        if t is not None:
+            slope, aspect = slope_of(s, t)
+            out["slope"] = slope
+            if aspect is not None:
+                out["aspect"] = aspect
+        return out
     place = "void" if any(inside_ring(v, q) for v in s["voids"]) else "outside"
     return {"x": float(q[0]), "y": float(q[1]), "place": place}
 
@@ -721,9 +756,145 @@ def query_cases():
                 setup(start), cases)
 
 
+# ── road.terrains.contours ──────────────────────────────────────────────────────────────────────────────────────
+
+def contours(s, interval, base, major):
+    """Each level from base by interval within the kept corners' heights; a level crosses an edge whose corners lie on
+    its two sides (a corner on it counts above); pieces chained by their edges; a line from its fixed place."""
+    import math
+    used = {i for t in s["tris"] for i in t}
+    lo, hi = min(s["z"][i] for i in used), max(s["z"][i] for i in used)
+    first, last = math.ceil((lo - base) / interval), math.floor((hi - base) / interval)
+    out = []
+    for k in range(first, last + 1):
+        z = base + k * interval
+        above = lambda i: s["z"][i] >= z
+        def cross(a, b):
+            (ax, ay), (bx, by) = s["xy"][a], s["xy"][b]
+            t = (F(z) - F(s["z"][a])) / (F(s["z"][b]) - F(s["z"][a]))
+            return (float(F(ax) + t * (F(bx) - F(ax))), float(F(ay) + t * (F(by) - F(ay))))
+        pieces = []
+        for t in s["tris"]:
+            e = [tuple(sorted((a, b))) for a, b in ((t[0], t[1]), (t[1], t[2]), (t[2], t[0])) if above(a) != above(b)]
+            if len(e) == 2:
+                pieces.append(e)
+        at = {}
+        for i, p in enumerate(pieces):
+            for e in p:
+                at.setdefault(e, []).append(i)
+        used_p = [False] * len(pieces)
+        order = sorted(range(len(pieces)), key=lambda i: min(len(at[e]) for e in pieces[i]))
+        lines = []
+        for start in order:
+            if used_p[start]:
+                continue
+            e0, e1 = pieces[start]
+            frm = e0 if len(at[e0]) == 1 else e1 if len(at[e1]) == 1 else e0
+            chain, piece, edge = [frm], start, frm
+            while True:
+                used_p[piece] = True
+                edge = pieces[piece][1] if pieces[piece][0] == edge else pieces[piece][0]
+                chain.append(edge)
+                nxt = [i for i in at[edge] if not used_p[i]]
+                if not nxt:
+                    break
+                piece = nxt[0]
+            pts = [cross(*e) for e in chain]
+            closed = len(chain) > 2 and chain[0] == chain[-1]
+            # A line through a corner on the level meets it twice: one place.
+            pts = [p for i, p in enumerate(pts) if i == 0 or p != pts[i - 1]]
+            if closed and len(pts) > 1 and pts[0] == pts[-1]:
+                pts = pts[:-1]
+            # A level touching the surface at a corner only draws no line.
+            if len(pts) < (3 if closed else 2):
+                continue
+            if closed:
+                n = len(pts)
+                s0 = min(range(n), key=lambda i: pts[i])
+                fwd = pts[(s0 + 1) % n] < pts[(s0 - 1) % n]
+                pts = [pts[(s0 + j) % n] if fwd else pts[(s0 - j) % n] for j in range(n)]
+            elif pts[-1] < pts[0]:
+                pts.reverse()
+            lines.append({"z": z, "major": major > 0 and k % major == 0, "closed": closed, "points": [list(p) for p in pts]})
+        lines.sort(key=lambda l: tuple(l["points"][0]))
+        out += lines
+    return out
+
+
+def contour_cases():
+    full = accepted({"id": "t-2", "name": "Zemin", "points": {"layers": ["zemin"]}, "breaklines": {"layers": ["kirik"]},
+                     "boundary": BOUND, "voids": [VOID1, VOID2]})
+    open_ = accepted({"id": "t-3", "name": "Açık zemin", "points": {"layers": ["zemin", "arazi"]}, "maxEdge": 35.0})
+    weak = {"id": "t-5", "name": "Az nokta", "points": {"uids": [Z1, Z2]}}
+    start = [OLD, full, open_, weak]
+    s_full, s_open = build(gather(full)[0]), build(gather(open_)[0])
+    n = len(ENTITIES)
+    cases = []
+
+    def drawn(name, input_, s, interval, base=0.0, major=5, warns=(), op="execute", layer="esyukselti", note=None):
+        lines = contours(s, interval, base, major)
+        written = op == "execute"
+        out = {"lines": lines, "revision": "$current"}
+        if written:
+            out["uids"] = "$any"
+        expect = ({"canUndo": True, "canRedo": False, "dirty": True, "revision": "changed",
+                   "ids": list(range(1, n + len(lines) + 1)), "road": road_of(start)}
+                  if written else {**UNCHANGED, "ids": list(range(1, n + 1))})
+        result = completed(out, warns) if op != "validate" else completed(None, warns)
+        cases.append({"name": name, **({"note": note} if note else {}),
+                      "steps": [step(op, {"layerId": layer, **input_}, result, expect, W)]})
+
+    def refused(name, input_, result, setup_=None):
+        c = {"name": name, "steps": [step("execute", {"layerId": "esyukselti", **input_}, result,
+                                          {**UNCHANGED, "ids": list(range(1, n + 1))})]}
+        if setup_ is not None:
+            c["setup"] = setup_
+        cases.append(c)
+
+    drawn("Yarım metrede bir, her beşinci ana eğri", {"surface": "t-2", "interval": 0.5}, s_full, 0.5,
+          note="sınır ve boşluklar yüzeyin dışında: eğri onlarda kesilir")
+    drawn("Çeyrek metre: köşelerden geçen düzeyler", {"surface": "t-3", "interval": 0.25}, s_open, 0.25)
+    drawn("Metrede bir, ana eğri yok", {"surface": "t-2", "interval": 1.0, "majorEvery": 0}, s_full, 1.0, major=0)
+    drawn("Taban kotu 100,25", {"surface": "t-3", "interval": 0.5, "base": 100.25}, s_open, 0.5, base=100.25)
+    drawn("Her ikinci düzey ana", {"surface": "t-2", "interval": 0.25, "majorEvery": 2}, s_full, 0.25, major=2)
+    drawn("Adıyla, büyük küçük harf ayrımsız", {"surface": "AÇIk zemin".lower().replace("açik", "açık"), "interval": 0.5},
+          s_open, 0.5)
+    drawn("Eksi taban kotu", {"surface": "t-2", "interval": 0.5, "base": -0.5, "majorEvery": 3}, s_full, 0.5, base=-0.5,
+          major=3)
+    drawn("Geniş aralık: tek düzey", {"surface": "t-3", "interval": 2.0}, s_open, 2.0)
+    drawn("Plan yazmaz", {"surface": "t-2", "interval": 0.5}, s_full, 0.5, op="plan")
+    drawn("Doğrulama yazmaz", {"surface": "t-3", "interval": 1.0}, s_open, 1.0, op="validate")
+    drawn("Gizli katmana uyarıyla", {"surface": "t-3", "interval": 1.0}, s_open, 1.0, layer="gizli",
+          warns=[{"code": "layer_hidden", "message": "“Gizli” katmanı gizli; çizilen nesne görünmeyecek.", "path": "layerId"}])
+    bad = failed("invalid_contours", "Eş yükselti aralığı 0'dan büyük bir sayı, taban kotu sonlu bir sayı olmalı.", "interval")
+    refused("Yol projesi değil", {"surface": "t-2", "interval": 0.5}, NOT_ROAD, setup(work="map"))
+    refused("Sıfır aralık", {"surface": "t-2", "interval": 0.0}, bad)
+    refused("Eksi aralık", {"surface": "t-2", "interval": -1.0}, bad)
+    refused("Çok sık düzey", {"surface": "t-3", "interval": 0.0001},
+            failed("invalid_contours", "Bu aralıkla yüzeyi 10 000'den çok düzey keser; aralığı büyütün.", "interval"))
+    refused("Kesen düzey yok", {"surface": "t-2", "interval": 10.0},
+            failed("no_contours", "Bu aralıkla yüzeyi kesen eş yükselti eğrisi yok; aralığı ya da taban kotunu değiştirin.", "interval"))
+    refused("Olmayan katman", {"surface": "t-2", "interval": 0.5, "layerId": "yok"},
+            failed("layer_not_found", "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.", "layerId"))
+    refused("Grup katman değil", {"surface": "t-2", "interval": 0.5, "layerId": "arazi"},
+            failed("not_a_layer", "“Arazi” bir katman grubu; nesne yalnız katmana eklenir. Grubun içinden bir katman seçin.", "layerId"))
+    refused("Kilitli katman", {"surface": "t-2", "interval": 0.5, "layerId": "kilitli"},
+            failed("layer_locked", "“Kilitli” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.", "layerId"))
+    refused("Olmayan yüzey", {"surface": "yok", "interval": 0.5},
+            failed("unknown_terrain", "“yok” kimlikli ya da adlı yüzey projede yok.", "surface"))
+    refused("Kurulamayan yüzey", {"surface": "t-5", "interval": 0.5}, unbuildable_error(weak))
+    refused("Eski sürüme göre hazırlanmış", {"surface": "t-2", "interval": 0.5, "expectedRevision": "41"}, CONFLICT)
+    refused("Geçersiz beklenen sürüm", {"surface": "t-2", "interval": 0.5, "expectedRevision": "x"},
+            failed("invalid_revision", "Beklenen sürüm “x” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.", "expectedRevision"))
+    return file("road.terrains.contours", "Eş yükselti eğrileri (plan/road.md Y2.5, ADR 0900 §13)",
+                "scripts/fixtures/road_terrain_command_cases.py yazar; eğriler Triangle'ın üçgenleri üstünde kesirlerle, "
+                "zincirler ve sıraları ADR'nin kuralıyla; KentOS kodu yok. Yazma tek geri alma adımıdır.",
+                setup(start), cases)
+
+
 def main():
     files = {"road.terrains.create.json": create_cases(), "road.terrains.edit.json": edit_cases(),
-             "road.terrains.query.json": query_cases()}
+             "road.terrains.query.json": query_cases(), "road.terrains.contours.json": contour_cases()}
     check = "--check" in sys.argv[1:]
     bad = False
     for name, data in files.items():

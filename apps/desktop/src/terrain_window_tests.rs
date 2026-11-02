@@ -64,6 +64,14 @@ fn the_window_makes_a_surface_and_accepts_it_again() {
     send(&mut app, W::Accept);
     let made = kentos_native_application::road_terrains::made_surfaces(&app.document.as_ref().expect("doc").model);
     assert_eq!(made[0].1.state, kentos_commands::TerrainState::Current);
+    // Eğrileri çiz: the saved surface's contour lines on a layer, one undo step.
+    let before = app.document.as_ref().expect("doc").model.entities().count();
+    send(&mut app, W::Interval("0,5".into()));
+    send(&mut app, W::ContourLayer("esyukselti".into()));
+    send(&mut app, W::Contours);
+    let doc = &app.document.as_ref().expect("doc").model;
+    assert!(doc.entities().count() > before, "the lines are drawn");
+    assert!(doc.can_undo());
     // Removed and saved: the road settings go.
     send(&mut app, W::Remove);
     send(&mut app, W::Save);
@@ -110,6 +118,19 @@ fn screens() {
         let _ = app.update(Message::Run("view.zoomExtents"));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("y2-4-yuzey-cizimde-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+        let _ = app.update(Message::Run("terrain.surfaces"));
+        send(&mut app, W::Interval("0,25".into()));
+        send(&mut app, W::ContourLayer("esyukselti".into()));
+        send(&mut app, W::Contours);
+        let file = out.join(format!("y2-5-esyukselti-penceresi-{name}.png"));
+        snapshot.settle(&mut app, App::view, &mut update);
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+        send(&mut app, W::Cancel);
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("y2-5-esyukselti-{name}.png"));
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
         println!("{}", file.display());
         let _ = app.update(Message::Run("terrain.surfaces"));

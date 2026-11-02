@@ -27,12 +27,19 @@ class RoadTerrains(unittest.TestCase):
         line = road.section(doc, "t-1", [(0.0, 15.0), (40.0, 15.0)])
         self.assertEqual((line[0].station, line[-1].station), (0.0, 40.0))
         self.assertEqual(line[-1].z, 102.375)  # Z2 and Z3 halfway
+        # Inside one triangle the plane's slope and the way it falls; on the breakline (an edge) none.
+        inside, edge = road.heights(doc, "t-1", [(12.0, 9.0), (20.0, 15.0)])
+        self.assertIsInstance(inside.slope, float)
+        self.assertIs(edge.slope, UNSET)
 
         # A changed definition keeps the digest it was accepted from: out of date until accepted.
         defined = next(d for d in made.surfaces if d.id == "t-1")
         changed = cad.road.terrains.edit(doc, operation="set", surface=dataclasses.replace(defined, max_edge=35.0, built=UNSET))
         self.assertEqual(changed.surface.state, "stale")
         self.assertEqual(road.accept(doc, "t-1").surface.state, "current")
+        lines = road.contours(doc, "t-1", 0.5, "zemin", major_every=2)
+        self.assertTrue(lines.lines and all(len(l.points) >= 2 for l in lines.lines))
+        self.assertEqual(len(lines.uids), len(lines.lines))
         with self.assertRaises(cad.CommandError) as refused:
             road.remove(doc, "yok")
         self.assertEqual(refused.exception.code, "unknown_terrain")

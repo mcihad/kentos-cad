@@ -6693,6 +6693,32 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        CommandDescriptor {
+            id: crate::ROAD_TERRAINS_CONTOURS.into(),
+            version: crate::ROAD_TERRAINS_CONTOURS_VERSION,
+            title: "Eş yükselti eğrileri".into(),
+            summary: "Yol projesinin bir arazi yüzeyinin (surface: kimliği ya da adı) eş yükselti eğrilerini bir katmana 3B çoklu çizgi olarak yazar: base'ten (yoksa 0) her interval metrede (m) bir düzey, base'ten sayılan her majorEvery'inci düzey (yoksa 5, 0: hiçbiri) kalın ana eğri; Civil 3D'nin yüzeyden ana ve ara eğri çıkarması gibi. \
+                      Düzey bir üçgenin köşeleri iki yanında olan kenarını keser (düzeydeki köşe üstte sayılır: köşeden geçen eğri bir kez çizilir); kesişim kenarın kendi doğrusundan, iki üçgende aynı yerde; parçalar kenarlarından zincirlenir, kapanan eğri kapalı çoklu çizgidir. Eğriler düzeye, sonra ilk yerlerine göre sıralıdır; açık eğri küçük ucundan, kapalı eğri en küçük yerinden başlar. \
+                      Tek geri alma adımı “Eş yükselti eğrileri”. Retler: not_a_road_project, invalid_contours, layer_not_found, not_a_layer, layer_locked, invalid_revision, revision_conflict, unknown_terrain, terrain_unbuildable, no_contours."
+                .into(),
+            aliases: vec!["esyukselti".into(), "contours".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::TerrainsContours>(),
+            output: schema::<crate::TerrainsContoured>(),
+            plan: Some(schema::<crate::TerrainsContoured>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Mevcut zeminin 0,5 m'lik eğrileri, her 2 m'de bir ana eğri".into(),
+                input: json!({ "surface": "Mevcut zemin", "interval": 0.5, "majorEvery": 4, "layerId": "esyukselti" }),
+                output: None,
+            }],
+        },
         // Topolojiyi denetle (docs/adr/0589), held together by fixtures/commands/v1/cad.topology.check.json.
         CommandDescriptor {
             id: crate::CAD_TOPOLOGY_CHECK.into(),
@@ -12220,6 +12246,9 @@ mod tests {
                     crate::ROAD_TERRAINS_QUERY => {
                         serde_json::from_value::<crate::TerrainsQuery>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_TERRAINS_CONTOURS => {
+                        serde_json::from_value::<crate::TerrainsContours>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_SUBNETWORKS_FIND => {
                         serde_json::from_value::<crate::SubnetworksFind>(e.input.clone())
                             .map(|_| ())
@@ -12865,6 +12894,10 @@ mod tests {
                         }
                         crate::ROAD_TERRAINS_QUERY => {
                             serde_json::from_value::<crate::TerrainsQueried>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_TERRAINS_CONTOURS => {
+                            serde_json::from_value::<crate::TerrainsContoured>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_ADDRESSES_DEFINE => {

@@ -62,6 +62,8 @@ fn answer(doc: &kentos_domain::Document, input: &TerrainsQuery) -> Result<Terrai
                 .into_iter()
                 .zip(&input.at)
                 .map(|(h, p)| TerrainHeight {
+                    slope: s.slope_at(p[0], p[1]).map(|v| v.slope),
+                    aspect: s.slope_at(p[0], p[1]).and_then(|v| v.aspect),
                     x: p[0],
                     y: p[1],
                     z: h.z,

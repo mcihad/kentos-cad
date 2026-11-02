@@ -17,7 +17,8 @@
 //!
 //! The window edits a copy of the definitions; Kaydet writes what changed through `road.terrains.edit` (removes,
 //! sets) and `road.terrains.create` (the new ones) and closes the window. Kabul et accepts a saved surface whose
-//! sources changed (`road.terrains.edit accept`). A definition is a project setting, not an undo step.
+//! sources changed (`road.terrains.edit accept`). A definition is a project setting, not an undo step. Eğrileri çiz
+//! writes a saved surface's contour lines on a layer (`road.terrains.contours`, one undo step).
 
 use iced::widget::{Column, column, container, row, scrollable, space};
 use iced::{Center, Element, Fill, Task};
@@ -26,7 +27,9 @@ use kentos_commands::{
     TerrainsEditOperation,
 };
 use kentos_interaction::Level;
-use kentos_native_application::{ExecutionContext, road_terrains, road_terrains_create, road_terrains_edit};
+use kentos_native_application::{
+    ExecutionContext, road_terrains, road_terrains_contours, road_terrains_create, road_terrains_edit,
+};
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::{Dialog as Frame, Elided};
 use kentos_ui::{label, style};
@@ -44,6 +47,7 @@ const REMOVE: &str = "Yüzeyi sil";
 const ACCEPT: &str = "Kabul et";
 const BOUNDARY: &str = "Sınırı seçimden al";
 const VOIDS: &str = "Boşlukları seçimden ekle";
+const CONTOURS: &str = "Eğrileri çiz";
 
 /// A definition being edited, its numbers as the text the user typed (empty: none).
 #[derive(Debug, Clone, PartialEq)]
@@ -77,6 +81,10 @@ pub struct Window {
     kept: Vec<TerrainSurfaceDef>,
     reports: Vec<TerrainReport>,
     chosen: Option<usize>,
+    /// Eş yükselti eğrileri: the interval, every how many a major line, the layer they go on.
+    interval: String,
+    major: String,
+    layer: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -93,6 +101,10 @@ pub enum Event {
     VoidsClear,
     MaxEdge(String),
     Tolerance(String),
+    Interval(String),
+    Major(String),
+    ContourLayer(String),
+    Contours,
     Accept,
     Save,
     Cancel,
@@ -163,11 +175,15 @@ impl App {
         }
         let made = road_terrains::made_surfaces(&doc.model);
         let kept: Vec<TerrainSurfaceDef> = made.iter().map(|(d, _, _)| d.clone()).collect();
+        let layer = self.relation_layers().into_iter().next().map(|(id, _)| id);
         self.terrain_window = Some(Window {
             chosen: (!kept.is_empty()).then_some(0),
             rows: kept.iter().cloned().map(Row::of).collect(),
             reports: made.into_iter().map(|(_, r, _)| r).collect(),
             kept,
+            interval: "1".to_owned(),
+            major: "5".to_owned(),
+            layer,
         });
         self.dialog = Some(Dialog::Terrains);
     }
@@ -282,10 +298,14 @@ impl App {
                     r.tolerance = text;
                 }
             }
+            Event::Interval(text) => w.interval = text,
+            Event::Major(text) => w.major = text,
+            Event::ContourLayer(id) => w.layer = Some(id),
             Event::Cancel => {
                 self.terrain_window = None;
                 self.dialog = None;
             }
+            Event::Contours => return self.draw_contours(),
             Event::Accept => return self.accept_terrain(),
             Event::Save => return self.save_terrains(),
         }
@@ -331,6 +351,41 @@ impl App {
                 }
             }
             self.say(Level::Success, "Yüzey kabul edildi.");
+        }
+        Task::none()
+    }
+
+    /// Eğrileri çiz: the chosen saved surface's contour lines on the chosen layer, one undo step
+    /// (`road.terrains.contours`).
+    fn draw_contours(&mut self) -> Task<Message> {
+        let Some(w) = &self.terrain_window else {
+            return Task::none();
+        };
+        let Some(r) = w.chosen.and_then(|i| w.rows.get(i)) else {
+            return Task::none();
+        };
+        if !r.saved(&w.kept) {
+            self.warn("Önce yüzeyi kaydedin; eğriler kaydedilmiş yüzeyden çizilir.".to_owned());
+            return Task::none();
+        }
+        let (Ok(Some(interval)), Ok(major)) = (number(&w.interval), number(&w.major)) else {
+            self.warn("Eş yükselti aralığı ve ana eğri sıklığı sayı olmalı.".to_owned());
+            return Task::none();
+        };
+        let input = kentos_commands::TerrainsContours {
+            surface: r.def.id.clone(),
+            interval,
+            base: None,
+            major_every: major.map(|m| m.max(0.0) as u32),
+            layer_id: w.layer.clone().unwrap_or_default(),
+            expected_revision: None,
+        };
+        let Some(doc) = self.document.as_mut() else {
+            return Task::none();
+        };
+        let result = road_terrains_contours::execute(&mut ExecutionContext::new(&mut doc.model), input);
+        if let Some(out) = self.answered(result) {
+            self.say(Level::Success, format!("{} eş yükselti eğrisi çizildi.", out.lines.len()));
         }
         Task::none()
     }
@@ -479,8 +534,35 @@ impl App {
             r.saved(&w.kept)
                 && report_of(&r.def.id).is_some_and(|rep| matches!(rep.state, TerrainState::Stale | TerrainState::New))
         });
+        let ids: Vec<String> = self.relation_layers().into_iter().map(|(id, _)| id).collect();
+        let names: Vec<String> = self.relation_layers().into_iter().map(|(_, n)| n).collect();
+        let layer = kentos_ui::widget::select::Select::new(
+            names.iter().map(|n| kentos_ui::widget::select::Choice::new(n.clone())),
+            w.layer.as_ref().and_then(|l| ids.iter().position(|id| id == l)),
+            move |i| msg(Event::ContourLayer(ids[i].clone())),
+        )
+        .placeholder("Katman");
+        let saved = chosen.is_some_and(|r| r.saved(&w.kept));
+        let contours = row![
+            label::strong("Eş yükselti eğrileri"),
+            words::field(
+                "Aralık (m)",
+                kentos_ui::widget::text_field("1", &w.interval).on_input(|t| msg(Event::Interval(t))),
+                None
+            ),
+            words::field(
+                "Ana eğri her",
+                kentos_ui::widget::text_field("5", &w.major).on_input(|t| msg(Event::Major(t))),
+                None
+            ),
+            words::field("Katman", layer, None),
+            words::secondary(CONTOURS, saved.then(|| msg(Event::Contours))),
+        ]
+        .spacing(10)
+        .align_y(iced::alignment::Vertical::Bottom);
         let body = column![
             row![container(left).width(230), container(right).width(Fill)].spacing(16),
+            contours,
             row![
                 words::ghost(REMOVE, w.chosen.map(|_| msg(Event::Remove))),
                 words::secondary(ACCEPT, can_accept.then(|| msg(Event::Accept))),
@@ -569,6 +651,7 @@ impl App {
             Control::Press(ACCEPT) => Some(msg(Event::Accept)),
             Control::Press(BOUNDARY) => Some(msg(Event::Boundary)),
             Control::Press(VOIDS) => Some(msg(Event::Voids)),
+            Control::Press(CONTOURS) => Some(msg(Event::Contours)),
             Control::Press(words) => match w.rows.iter().position(|r| r.def.name == words) {
                 Some(i) => Some(msg(Event::Choose(i))),
                 None => return Err(format!("“{TITLE}” penceresinde “{words}” düğmesi yok")),
@@ -576,6 +659,8 @@ impl App {
             Control::Fill("Ad", text) => Some(msg(Event::Name(text.to_owned()))),
             Control::Fill("En uzun dış kenar (m)", text) => Some(msg(Event::MaxEdge(text.to_owned()))),
             Control::Fill("Kot toleransı (m)", text) => Some(msg(Event::Tolerance(text.to_owned()))),
+            Control::Fill("Aralık (m)", text) => Some(msg(Event::Interval(text.to_owned()))),
+            Control::Fill("Ana eğri her", text) => Some(msg(Event::Major(text.to_owned()))),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }

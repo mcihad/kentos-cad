@@ -1,6 +1,6 @@
 # ADR 0900 — Yol arazi yüzeyi: kısıtlı Delaunay ve kot sorgusu
 
-Tarih: 2026-11-02. plan/road.md Y2 (ROAD-TIN-01…11, ROAD-SURVEY-01/03/08, ROAD-NUM-10). Durum: Y2.1–Y2.4 uygulandı.
+Tarih: 2026-11-02. plan/road.md Y2 (ROAD-TIN-01…11, ROAD-SURVEY-01/03/08, ROAD-NUM-10). Durum: Y2.1–Y2.4 ve Y2.5'in eş yükselti, eğim ve bakısı uygulandı; LandXML açık.
 
 ## Dayanak
 
@@ -91,6 +91,19 @@ Tarih: 2026-11-02. plan/road.md Y2 (ROAD-TIN-01…11, ROAD-SURVEY-01/03/08, ROAD
     (kırık hat, sınır, boşluk) tehlike renginde; görünüm ya da çizimin sürümü değişince yeniden çizilir, pencerenin
     dışındaki ve iki pikselden kısa kenarlar çizilmez (`terrain_layer.rs`). Yüzeyin kendi görünüş şablonu ve proje ağacı
     sonraki dilimlerdir.
+
+13. **Eş yükselti, eğim ve bakı (Y2.5).** Civil 3D'nin yüzeyden ana ve ara eğri çıkarması
+    ([Extracting Surface Data](https://help.autodesk.com/cloudhelp/2024/ENG/Civil3D-UserGuide/files/GUID-37B2BD7A-B34A-44D7-8090-EF641BEEA28C.htm))
+    gibi `road.terrains.contours`: tabandan (yoksa 0) her aralıkta bir düzey, tabandan sayılan her n'inci düzey ana eğri
+    (0,35 mm), eğriler katmana 3B çoklu çizgi, tek geri alma adımı “Eş yükselti eğrileri”. Düzey bir kept üçgenin
+    köşeleri iki yanında olan kenarını keser, düzeydeki köşe üstte sayılır; kesişim kenarın kendi doğrusundan, ucuna denk
+    gelirse ucun kendisi; parçalar kenarlarından zincirlenir, kapalılık kenar zincirinden okunur, art arda aynı yerler
+    teke iner, yalnız bir köşeye değen düzey eğri çizmez; açık eğri küçük ucundan, kapalı eğri en küçük yerinden ve küçük
+    komşusuna doğru, bir düzeyin eğrileri ilk yerlerine göre sıralı (`Surface::contours`). Sorgunun kotlarına eğim (yükselti
+    bölü yatay) ve bakı (düştüğü yön, kuzeyden saat yönünde radyan); yalnız tek bir üçgenin içindeki yerde, kenarda ve
+    köşede iki düzlem buluştuğu için yok (`Surface::slope_at`, kesin `orient2d`). Arazi yüzeyleri penceresinde Eş yükselti
+    eğrileri (aralık, ana eğri sıklığı, katman, Eğrileri çiz). 23 ortak durum ve sorgunun eğim ve bakıları aynı Python
+    başvurusundan (Triangle, kesirler).
 
 ## Sonra
 

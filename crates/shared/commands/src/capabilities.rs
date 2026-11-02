@@ -1520,6 +1520,17 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "road.terrains.contours",
+        refusals: &[
+            &["not_a_road_project", "invalid_contours"],
+            LAYER,
+            REVISION,
+            &["unknown_terrain", "terrain_unbuildable", "no_contours"],
+        ],
+        warnings: &["layer_hidden"],
+        targets: none,
+    },
+    Entry {
         id: "road.terrains.query",
         refusals: &[&["not_a_road_project", "unknown_terrain", "no_terrain", "invalid_places"]],
         warnings: &[],

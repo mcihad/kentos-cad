@@ -1,0 +1,4648 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "road.terrains.contours",
+  "commandVersion": 1,
+  "title": "Eş yükselti eğrileri (plan/road.md Y2.5, ADR 0900 §13)",
+  "note": "scripts/fixtures/road_terrain_command_cases.py yazar; eğriler Triangle'ın üçgenleri üstünde kesirlerle, zincirler ve sıraları ADR'nin kuralıyla; KentOS kodu yok. Yazma tek geri alma adımıdır.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Yol yüzeyleri",
+    "settings": {
+      "srid": 5254,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 1000.0,
+      "workspace": "cad",
+      "cadWork": "road",
+      "drawingFont": "barlow",
+      "road": {
+        "surfaces": [
+          {
+            "id": "t-1",
+            "name": "Eski zemin",
+            "points": {
+              "uids": [
+                "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+              ]
+            },
+            "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+          },
+          {
+            "id": "t-2",
+            "name": "Zemin",
+            "points": {
+              "layers": [
+                "zemin"
+              ]
+            },
+            "breaklines": {
+              "layers": [
+                "kirik"
+              ]
+            },
+            "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+            "voids": [
+              "0192f5a0-7c3e-7d4a-9b1e-00000000000b",
+              "0192f5a0-7c3e-7d4a-9b1e-00000000000c"
+            ],
+            "built": "c2f560a84d12cf459d770ba05daeda0ae00075647c1986deb2666ee497a30065"
+          },
+          {
+            "id": "t-3",
+            "name": "Açık zemin",
+            "points": {
+              "layers": [
+                "zemin",
+                "arazi"
+              ]
+            },
+            "maxEdge": 35.0,
+            "built": "75fdb116e8cfb439b55f1367f6d9573b599785663dce1f74564988b12ecce81c"
+          },
+          {
+            "id": "t-5",
+            "name": "Az nokta",
+            "points": {
+              "uids": [
+                "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "origin": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "layers": [
+      {
+        "id": "0",
+        "name": "0",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "zemin",
+        "name": "Zemin",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kirik",
+        "name": "Kırık hatlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "sinir",
+        "name": "Sınırlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "arazi",
+        "name": "Arazi",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "ek",
+            "name": "Ek noktalar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "esyukselti",
+        "name": "Eş yükselti",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "gizli",
+        "name": "Gizli",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "0",
+    "entities": [
+      {
+        "kind": "point",
+        "id": 1,
+        "layerId": "zemin",
+        "attrs": {},
+        "p": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "z": 100.0
+      },
+      {
+        "kind": "point",
+        "id": 2,
+        "layerId": "zemin",
+        "attrs": {},
+        "p": {
+          "x": 40.0,
+          "y": 0.0
+        },
+        "z": 101.5
+      },
+      {
+        "kind": "point",
+        "id": 3,
+        "layerId": "zemin",
+        "attrs": {},
+        "p": {
+          "x": 40.0,
+          "y": 30.0
+        },
+        "z": 103.25
+      },
+      {
+        "kind": "point",
+        "id": 4,
+        "layerId": "zemin",
+        "attrs": {},
+        "p": {
+          "x": 0.0,
+          "y": 30.0
+        },
+        "z": 102.0
+      },
+      {
+        "kind": "point",
+        "id": 5,
+        "layerId": "zemin",
+        "attrs": {},
+        "p": {
+          "x": 21.0,
+          "y": 24.0
+        },
+        "z": 102.75
+      },
+      {
+        "kind": "point",
+        "id": 6,
+        "layerId": "zemin",
+        "attrs": {},
+        "p": {
+          "x": 10.0,
+          "y": 26.0
+        }
+      },
+      {
+        "kind": "line",
+        "id": 7,
+        "layerId": "zemin",
+        "attrs": {},
+        "a": {
+          "x": 1.0,
+          "y": 29.0
+        },
+        "b": {
+          "x": 3.0,
+          "y": 29.0
+        }
+      },
+      {
+        "kind": "polyline",
+        "id": 8,
+        "layerId": "kirik",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 5.0,
+            "y": 15.0
+          },
+          {
+            "x": 35.0,
+            "y": 15.0
+          }
+        ],
+        "zs": [
+          101.0,
+          102.5
+        ]
+      },
+      {
+        "kind": "line",
+        "id": 9,
+        "layerId": "kirik",
+        "attrs": {},
+        "a": {
+          "x": 10.0,
+          "y": 5.0
+        },
+        "b": {
+          "x": 30.0,
+          "y": 5.0
+        },
+        "za": 100.5,
+        "zb": 101.25
+      },
+      {
+        "kind": "polygon",
+        "id": 10,
+        "layerId": "sinir",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 2.0,
+            "y": 2.0
+          },
+          {
+            "x": 38.0,
+            "y": 2.0
+          },
+          {
+            "x": 38.0,
+            "y": 28.0
+          },
+          {
+            "x": 2.0,
+            "y": 28.0
+          }
+        ]
+      },
+      {
+        "kind": "polygon",
+        "id": 11,
+        "layerId": "sinir",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 18.0,
+            "y": 8.0
+          },
+          {
+            "x": 24.0,
+            "y": 8.0
+          },
+          {
+            "x": 24.0,
+            "y": 12.0
+          },
+          {
+            "x": 18.0,
+            "y": 12.0
+          }
+        ]
+      },
+      {
+        "kind": "polyline",
+        "id": 12,
+        "layerId": "sinir",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 28.0,
+            "y": 19.0
+          },
+          {
+            "x": 32.0,
+            "y": 19.0
+          },
+          {
+            "x": 32.0,
+            "y": 22.0
+          },
+          {
+            "x": 28.0,
+            "y": 22.0
+          }
+        ],
+        "closed": true
+      },
+      {
+        "kind": "polyline",
+        "id": 13,
+        "layerId": "0",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 6.0,
+            "y": 25.0
+          },
+          {
+            "x": 14.0,
+            "y": 27.0
+          }
+        ],
+        "zs": [
+          102.0,
+          102.5
+        ],
+        "bulges": [
+          0.25,
+          0.0
+        ]
+      },
+      {
+        "kind": "polyline",
+        "id": 14,
+        "layerId": "0",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 26.0,
+            "y": 24.0
+          },
+          {
+            "x": 30.0,
+            "y": 24.0
+          },
+          {
+            "x": 30.0,
+            "y": 27.0
+          }
+        ]
+      },
+      {
+        "kind": "point",
+        "id": 15,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+          "x": 40.0,
+          "y": 30.0
+        },
+        "z": 103.75
+      },
+      {
+        "kind": "point",
+        "id": 16,
+        "layerId": "ek",
+        "attrs": {},
+        "p": {
+          "x": 31.0,
+          "y": 10.0
+        },
+        "z": 101.75
+      },
+      {
+        "kind": "polygon",
+        "id": 17,
+        "layerId": "0",
+        "attrs": {},
+        "pts": [
+          {
+            "x": -5.0,
+            "y": -5.0
+          },
+          {
+            "x": 45.0,
+            "y": -5.0
+          },
+          {
+            "x": 45.0,
+            "y": 35.0
+          },
+          {
+            "x": -5.0,
+            "y": 35.0
+          }
+        ]
+      },
+      {
+        "kind": "point",
+        "id": 18,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+          "x": 20.0,
+          "y": 15.0
+        },
+        "z": 104.0
+      }
+    ],
+    "uids": [
+      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+      "0192f5a0-7c3e-7d4a-9b1e-000000000004",
+      "0192f5a0-7c3e-7d4a-9b1e-000000000005",
+      "0192f5a0-7c3e-7d4a-9b1e-000000000006",
+      "0192f5a0-7c3e-7d4a-9b1e-000000000007",
+      "0192f5a0-7c3e-7d4a-9b1e-000000000008",
+      "0192f5a0-7c3e-7d4a-9b1e-000000000009",
+      "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+      "0192f5a0-7c3e-7d4a-9b1e-00000000000b",
+      "0192f5a0-7c3e-7d4a-9b1e-00000000000c",
+      "0192f5a0-7c3e-7d4a-9b1e-00000000000d",
+      "0192f5a0-7c3e-7d4a-9b1e-00000000000e",
+      "0192f5a0-7c3e-7d4a-9b1e-00000000000f",
+      "0192f5a0-7c3e-7d4a-9b1e-000000000010",
+      "0192f5a0-7c3e-7d4a-9b1e-000000000011",
+      "0192f5a0-7c3e-7d4a-9b1e-000000000012"
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "cases": [
+    {
+      "name": "Yarım metrede bir, her beşinci ana eğri",
+      "note": "sınır ve boşluklar yüzeyin dışında: eğri onlarda kesilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "esyukselti",
+            "surface": "t-2",
+            "interval": 0.5
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "lines": [
+                {
+                  "z": 100.5,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      2.0,
+                      6.945818610129608
+                    ],
+                    [
+                      3.2142857142857215,
+                      7.261904761904793
+                    ],
+                    [
+                      10.0,
+                      5.0
+                    ],
+                    [
+                      10.7339449541285,
+                      2.935779816513768
+                    ],
+                    [
+                      10.869565217391331,
+                      2.0
+                    ]
+                  ]
+                },
+                {
+                  "z": 101.0,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      2.0,
+                      14.219081272084843
+                    ],
+                    [
+                      5.0,
+                      15.0
+                    ],
+                    [
+                      14.705882352941208,
+                      9.117647058823557
+                    ],
+                    [
+                      17.901234567901323,
+                      7.9629629629629965
+                    ],
+                    [
+                      23.333333333333332,
+                      5.0
+                    ],
+                    [
+                      23.577981651376167,
+                      4.311926605504589
+                    ],
+                    [
+                      23.913043478260803,
+                      2.0
+                    ]
+                  ]
+                },
+                {
+                  "z": 101.5,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      2.0,
+                      21.492343934040075
+                    ],
+                    [
+                      3.4166666666666643,
+                      21.86111111111112
+                    ],
+                    [
+                      9.571428571428571,
+                      17.571428571428573
+                    ],
+                    [
+                      12.31448763250883,
+                      16.27208480565371
+                    ],
+                    [
+                      15.0,
+                      15.0
+                    ],
+                    [
+                      20.2173913043479,
+                      12.3913043478261
+                    ],
+                    [
+                      21.0,
+                      12.0
+                    ]
+                  ]
+                },
+                {
+                  "z": 101.5,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      24.0,
+                      10.499999999999964
+                    ],
+                    [
+                      26.250000000000053,
+                      9.374999999999938
+                    ],
+                    [
+                      31.0,
+                      7.0
+                    ],
+                    [
+                      36.89655172413778,
+                      2.4137931034483318
+                    ],
+                    [
+                      36.95652173913028,
+                      2.0
+                    ]
+                  ]
+                },
+                {
+                  "z": 102.0,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      3.5963135243229503,
+                      28.0
+                    ],
+                    [
+                      3.245901639344295,
+                      27.73770491803278
+                    ],
+                    [
+                      14.142857142857142,
+                      20.142857142857142
+                    ],
+                    [
+                      19.62897526501766,
+                      17.54416961130742
+                    ],
+                    [
+                      25.0,
+                      15.0
+                    ],
+                    [
+                      27.60869565217395,
+                      13.69565217391305
+                    ],
+                    [
+                      28.529411764705838,
+                      13.235294117647047
+                    ],
+                    [
+                      33.0,
+                      11.0
+                    ],
+                    [
+                      36.56250000000001,
+                      8.229166666666623
+                    ],
+                    [
+                      38.0,
+                      9.501660312384601
+                    ]
+                  ]
+                },
+                {
+                  "z": 102.5,
+                  "major": true,
+                  "closed": false,
+                  "points": [
+                    [
+                      18.761292005390544,
+                      28.0
+                    ],
+                    [
+                      15.081967213114766,
+                      25.24590163934426
+                    ],
+                    [
+                      18.714285714285715,
+                      22.714285714285715
+                    ],
+                    [
+                      26.943462897526494,
+                      18.81625441696113
+                    ],
+                    [
+                      35.0,
+                      15.0
+                    ],
+                    [
+                      38.0,
+                      17.655638912802758
+                    ]
+                  ]
+                },
+                {
+                  "z": 103.0,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      33.92627048645814,
+                      28.0
+                    ],
+                    [
+                      32.05867346938759,
+                      26.602040816326493
+                    ],
+                    [
+                      34.592039800994975,
+                      25.955223880596986
+                    ],
+                    [
+                      35.67796610169489,
+                      25.677966101694892
+                    ],
+                    [
+                      37.364760432766595,
+                      25.24729520865524
+                    ],
+                    [
+                      38.0,
+                      25.80961751322091
+                    ]
+                  ]
+                }
+              ],
+              "revision": "$current",
+              "uids": "$any"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25
+            ],
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "voids": [
+                    "0192f5a0-7c3e-7d4a-9b1e-00000000000b",
+                    "0192f5a0-7c3e-7d4a-9b1e-00000000000c"
+                  ],
+                  "built": "c2f560a84d12cf459d770ba05daeda0ae00075647c1986deb2666ee497a30065"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Açık zemin",
+                  "points": {
+                    "layers": [
+                      "zemin",
+                      "arazi"
+                    ]
+                  },
+                  "maxEdge": 35.0,
+                  "built": "75fdb116e8cfb439b55f1367f6d9573b599785663dce1f74564988b12ecce81c"
+                },
+                {
+                  "id": "t-5",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Çeyrek metre: köşelerden geçen düzeyler",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "esyukselti",
+            "surface": "t-3",
+            "interval": 0.25
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "lines": [
+                {
+                  "z": 100.25,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      0.0,
+                      3.75
+                    ],
+                    [
+                      1.9090909090909092,
+                      2.1818181818181817
+                    ],
+                    [
+                      4.428571428571429,
+                      1.4285714285714286
+                    ]
+                  ]
+                },
+                {
+                  "z": 100.5,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      0.0,
+                      7.5
+                    ],
+                    [
+                      3.8181818181818183,
+                      4.363636363636363
+                    ],
+                    [
+                      8.857142857142858,
+                      2.857142857142857
+                    ]
+                  ]
+                },
+                {
+                  "z": 100.75,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      0.0,
+                      11.25
+                    ],
+                    [
+                      5.7272727272727275,
+                      6.545454545454546
+                    ],
+                    [
+                      13.285714285714286,
+                      4.285714285714286
+                    ]
+                  ]
+                },
+                {
+                  "z": 101.0,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      0.0,
+                      15.0
+                    ],
+                    [
+                      7.636363636363637,
+                      8.727272727272727
+                    ],
+                    [
+                      17.714285714285715,
+                      5.714285714285714
+                    ]
+                  ]
+                },
+                {
+                  "z": 101.25,
+                  "major": true,
+                  "closed": false,
+                  "points": [
+                    [
+                      0.0,
+                      18.75
+                    ],
+                    [
+                      9.545454545454545,
+                      10.909090909090908
+                    ],
+                    [
+                      22.142857142857142,
+                      7.142857142857143
+                    ]
+                  ]
+                },
+                {
+                  "z": 101.5,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      0.0,
+                      22.5
+                    ],
+                    [
+                      11.454545454545455,
+                      13.090909090909092
+                    ],
+                    [
+                      26.571428571428573,
+                      8.571428571428571
+                    ]
+                  ]
+                },
+                {
+                  "z": 101.75,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      0.0,
+                      26.25
+                    ],
+                    [
+                      13.363636363636363,
+                      15.272727272727273
+                    ],
+                    [
+                      31.0,
+                      10.0
+                    ]
+                  ]
+                },
+                {
+                  "z": 101.75,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      31.0,
+                      10.0
+                    ],
+                    [
+                      40.0,
+                      4.285714285714286
+                    ]
+                  ]
+                },
+                {
+                  "z": 102.0,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      0.0,
+                      30.0
+                    ],
+                    [
+                      15.272727272727273,
+                      17.454545454545453
+                    ],
+                    [
+                      28.5,
+                      13.5
+                    ],
+                    [
+                      32.5,
+                      13.333333333333334
+                    ],
+                    [
+                      40.0,
+                      8.571428571428571
+                    ]
+                  ]
+                },
+                {
+                  "z": 102.25,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      7.0,
+                      28.0
+                    ],
+                    [
+                      17.181818181818183,
+                      19.636363636363637
+                    ],
+                    [
+                      26.0,
+                      17.0
+                    ],
+                    [
+                      34.0,
+                      16.666666666666668
+                    ],
+                    [
+                      40.0,
+                      12.857142857142858
+                    ]
+                  ]
+                },
+                {
+                  "z": 102.5,
+                  "major": true,
+                  "closed": false,
+                  "points": [
+                    [
+                      14.0,
+                      26.0
+                    ],
+                    [
+                      19.09090909090909,
+                      21.818181818181817
+                    ],
+                    [
+                      23.5,
+                      20.5
+                    ],
+                    [
+                      35.5,
+                      20.0
+                    ],
+                    [
+                      40.0,
+                      17.142857142857142
+                    ]
+                  ]
+                },
+                {
+                  "z": 102.75,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      21.0,
+                      24.0
+                    ],
+                    [
+                      37.0,
+                      23.333333333333332
+                    ],
+                    [
+                      40.0,
+                      21.428571428571427
+                    ]
+                  ]
+                },
+                {
+                  "z": 103.0,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      30.5,
+                      27.0
+                    ],
+                    [
+                      38.5,
+                      26.666666666666668
+                    ],
+                    [
+                      40.0,
+                      25.714285714285715
+                    ]
+                  ]
+                }
+              ],
+              "revision": "$current",
+              "uids": "$any"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31
+            ],
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "voids": [
+                    "0192f5a0-7c3e-7d4a-9b1e-00000000000b",
+                    "0192f5a0-7c3e-7d4a-9b1e-00000000000c"
+                  ],
+                  "built": "c2f560a84d12cf459d770ba05daeda0ae00075647c1986deb2666ee497a30065"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Açık zemin",
+                  "points": {
+                    "layers": [
+                      "zemin",
+                      "arazi"
+                    ]
+                  },
+                  "maxEdge": 35.0,
+                  "built": "75fdb116e8cfb439b55f1367f6d9573b599785663dce1f74564988b12ecce81c"
+                },
+                {
+                  "id": "t-5",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Metrede bir, ana eğri yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "esyukselti",
+            "surface": "t-2",
+            "interval": 1.0,
+            "majorEvery": 0
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "lines": [
+                {
+                  "z": 101.0,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      2.0,
+                      14.219081272084843
+                    ],
+                    [
+                      5.0,
+                      15.0
+                    ],
+                    [
+                      14.705882352941208,
+                      9.117647058823557
+                    ],
+                    [
+                      17.901234567901323,
+                      7.9629629629629965
+                    ],
+                    [
+                      23.333333333333332,
+                      5.0
+                    ],
+                    [
+                      23.577981651376167,
+                      4.311926605504589
+                    ],
+                    [
+                      23.913043478260803,
+                      2.0
+                    ]
+                  ]
+                },
+                {
+                  "z": 102.0,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      3.5963135243229503,
+                      28.0
+                    ],
+                    [
+                      3.245901639344295,
+                      27.73770491803278
+                    ],
+                    [
+                      14.142857142857142,
+                      20.142857142857142
+                    ],
+                    [
+                      19.62897526501766,
+                      17.54416961130742
+                    ],
+                    [
+                      25.0,
+                      15.0
+                    ],
+                    [
+                      27.60869565217395,
+                      13.69565217391305
+                    ],
+                    [
+                      28.529411764705838,
+                      13.235294117647047
+                    ],
+                    [
+                      33.0,
+                      11.0
+                    ],
+                    [
+                      36.56250000000001,
+                      8.229166666666623
+                    ],
+                    [
+                      38.0,
+                      9.501660312384601
+                    ]
+                  ]
+                },
+                {
+                  "z": 103.0,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      33.92627048645814,
+                      28.0
+                    ],
+                    [
+                      32.05867346938759,
+                      26.602040816326493
+                    ],
+                    [
+                      34.592039800994975,
+                      25.955223880596986
+                    ],
+                    [
+                      35.67796610169489,
+                      25.677966101694892
+                    ],
+                    [
+                      37.364760432766595,
+                      25.24729520865524
+                    ],
+                    [
+                      38.0,
+                      25.80961751322091
+                    ]
+                  ]
+                }
+              ],
+              "revision": "$current",
+              "uids": "$any"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "voids": [
+                    "0192f5a0-7c3e-7d4a-9b1e-00000000000b",
+                    "0192f5a0-7c3e-7d4a-9b1e-00000000000c"
+                  ],
+                  "built": "c2f560a84d12cf459d770ba05daeda0ae00075647c1986deb2666ee497a30065"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Açık zemin",
+                  "points": {
+                    "layers": [
+                      "zemin",
+                      "arazi"
+                    ]
+                  },
+                  "maxEdge": 35.0,
+                  "built": "75fdb116e8cfb439b55f1367f6d9573b599785663dce1f74564988b12ecce81c"
+                },
+                {
+                  "id": "t-5",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Taban kotu 100,25",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "esyukselti",
+            "surface": "t-3",
+            "interval": 0.5,
+            "base": 100.25
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "lines": [
+                {
+                  "z": 100.25,
+                  "major": true,
+                  "closed": false,
+                  "points": [
+                    [
+                      0.0,
+                      3.75
+                    ],
+                    [
+                      1.9090909090909092,
+                      2.1818181818181817
+                    ],
+                    [
+                      4.428571428571429,
+                      1.4285714285714286
+                    ]
+                  ]
+                },
+                {
+                  "z": 100.75,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      0.0,
+                      11.25
+                    ],
+                    [
+                      5.7272727272727275,
+                      6.545454545454546
+                    ],
+                    [
+                      13.285714285714286,
+                      4.285714285714286
+                    ]
+                  ]
+                },
+                {
+                  "z": 101.25,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      0.0,
+                      18.75
+                    ],
+                    [
+                      9.545454545454545,
+                      10.909090909090908
+                    ],
+                    [
+                      22.142857142857142,
+                      7.142857142857143
+                    ]
+                  ]
+                },
+                {
+                  "z": 101.75,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      0.0,
+                      26.25
+                    ],
+                    [
+                      13.363636363636363,
+                      15.272727272727273
+                    ],
+                    [
+                      31.0,
+                      10.0
+                    ]
+                  ]
+                },
+                {
+                  "z": 101.75,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      31.0,
+                      10.0
+                    ],
+                    [
+                      40.0,
+                      4.285714285714286
+                    ]
+                  ]
+                },
+                {
+                  "z": 102.25,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      7.0,
+                      28.0
+                    ],
+                    [
+                      17.181818181818183,
+                      19.636363636363637
+                    ],
+                    [
+                      26.0,
+                      17.0
+                    ],
+                    [
+                      34.0,
+                      16.666666666666668
+                    ],
+                    [
+                      40.0,
+                      12.857142857142858
+                    ]
+                  ]
+                },
+                {
+                  "z": 102.75,
+                  "major": true,
+                  "closed": false,
+                  "points": [
+                    [
+                      21.0,
+                      24.0
+                    ],
+                    [
+                      37.0,
+                      23.333333333333332
+                    ],
+                    [
+                      40.0,
+                      21.428571428571427
+                    ]
+                  ]
+                }
+              ],
+              "revision": "$current",
+              "uids": "$any"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25
+            ],
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "voids": [
+                    "0192f5a0-7c3e-7d4a-9b1e-00000000000b",
+                    "0192f5a0-7c3e-7d4a-9b1e-00000000000c"
+                  ],
+                  "built": "c2f560a84d12cf459d770ba05daeda0ae00075647c1986deb2666ee497a30065"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Açık zemin",
+                  "points": {
+                    "layers": [
+                      "zemin",
+                      "arazi"
+                    ]
+                  },
+                  "maxEdge": 35.0,
+                  "built": "75fdb116e8cfb439b55f1367f6d9573b599785663dce1f74564988b12ecce81c"
+                },
+                {
+                  "id": "t-5",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Her ikinci düzey ana",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "esyukselti",
+            "surface": "t-2",
+            "interval": 0.25,
+            "majorEvery": 2
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "lines": [
+                {
+                  "z": 100.25,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      2.0,
+                      3.309187279151992
+                    ],
+                    [
+                      2.3214285714285823,
+                      3.39285714285719
+                    ],
+                    [
+                      4.1176470588235885,
+                      2.7941176470588456
+                    ],
+                    [
+                      4.311926605504667,
+                      2.247706422018357
+                    ],
+                    [
+                      4.347826086956594,
+                      2.0
+                    ]
+                  ]
+                },
+                {
+                  "z": 100.5,
+                  "major": true,
+                  "closed": false,
+                  "points": [
+                    [
+                      2.0,
+                      6.945818610129608
+                    ],
+                    [
+                      3.2142857142857215,
+                      7.261904761904793
+                    ],
+                    [
+                      10.0,
+                      5.0
+                    ],
+                    [
+                      10.7339449541285,
+                      2.935779816513768
+                    ],
+                    [
+                      10.869565217391331,
+                      2.0
+                    ]
+                  ]
+                },
+                {
+                  "z": 100.75,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      2.0,
+                      10.582449941107225
+                    ],
+                    [
+                      4.107142857142861,
+                      11.130952380952397
+                    ],
+                    [
+                      7.5,
+                      10.0
+                    ],
+                    [
+                      12.352941176470605,
+                      7.058823529411779
+                    ],
+                    [
+                      13.950617283950661,
+                      6.481481481481498
+                    ],
+                    [
+                      16.666666666666668,
+                      5.0
+                    ],
+                    [
+                      17.155963302752333,
+                      3.6238532110091786
+                    ],
+                    [
+                      17.39130434782607,
+                      2.0
+                    ]
+                  ]
+                },
+                {
+                  "z": 101.0,
+                  "major": true,
+                  "closed": false,
+                  "points": [
+                    [
+                      2.0,
+                      14.219081272084843
+                    ],
+                    [
+                      5.0,
+                      15.0
+                    ],
+                    [
+                      14.705882352941208,
+                      9.117647058823557
+                    ],
+                    [
+                      17.901234567901323,
+                      7.9629629629629965
+                    ],
+                    [
+                      23.333333333333332,
+                      5.0
+                    ],
+                    [
+                      23.577981651376167,
+                      4.311926605504589
+                    ],
+                    [
+                      23.913043478260803,
+                      2.0
+                    ]
+                  ]
+                },
+                {
+                  "z": 101.25,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      2.0,
+                      17.855712603062457
+                    ],
+                    [
+                      4.208333333333332,
+                      18.43055555555556
+                    ],
+                    [
+                      7.285714285714286,
+                      16.285714285714285
+                    ],
+                    [
+                      8.657243816254416,
+                      15.636042402826854
+                    ],
+                    [
+                      10.0,
+                      15.0
+                    ],
+                    [
+                      14.285714285714436,
+                      12.857142857142822
+                    ],
+                    [
+                      17.05882352941181,
+                      11.176470588235336
+                    ],
+                    [
+                      18.0,
+                      10.836363636363702
+                    ]
+                  ]
+                },
+                {
+                  "z": 101.25,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      24.0,
+                      8.0
+                    ],
+                    [
+                      30.0,
+                      5.0
+                    ],
+                    [
+                      30.434782608695542,
+                      2.0
+                    ]
+                  ]
+                },
+                {
+                  "z": 101.5,
+                  "major": true,
+                  "closed": false,
+                  "points": [
+                    [
+                      2.0,
+                      21.492343934040075
+                    ],
+                    [
+                      3.4166666666666643,
+                      21.86111111111112
+                    ],
+                    [
+                      9.571428571428571,
+                      17.571428571428573
+                    ],
+                    [
+                      12.31448763250883,
+                      16.27208480565371
+                    ],
+                    [
+                      15.0,
+                      15.0
+                    ],
+                    [
+                      20.2173913043479,
+                      12.3913043478261
+                    ],
+                    [
+                      21.0,
+                      12.0
+                    ]
+                  ]
+                },
+                {
+                  "z": 101.5,
+                  "major": true,
+                  "closed": false,
+                  "points": [
+                    [
+                      24.0,
+                      10.499999999999964
+                    ],
+                    [
+                      26.250000000000053,
+                      9.374999999999938
+                    ],
+                    [
+                      31.0,
+                      7.0
+                    ],
+                    [
+                      36.89655172413778,
+                      2.4137931034483318
+                    ],
+                    [
+                      36.95652173913028,
+                      2.0
+                    ]
+                  ]
+                },
+                {
+                  "z": 101.75,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      2.0,
+                      25.128975265017694
+                    ],
+                    [
+                      2.6249999999999964,
+                      25.291666666666682
+                    ],
+                    [
+                      11.857142857142858,
+                      18.857142857142858
+                    ],
+                    [
+                      15.971731448763247,
+                      16.908127208480565
+                    ],
+                    [
+                      20.0,
+                      15.0
+                    ],
+                    [
+                      23.913043478260924,
+                      13.043478260869575
+                    ],
+                    [
+                      25.29411764705876,
+                      12.352941176470571
+                    ],
+                    [
+                      32.0,
+                      9.0
+                    ],
+                    [
+                      37.343750000000014,
+                      4.843749999999934
+                    ],
+                    [
+                      38.0,
+                      5.424671012175524
+                    ]
+                  ]
+                },
+                {
+                  "z": 102.0,
+                  "major": true,
+                  "closed": false,
+                  "points": [
+                    [
+                      3.5963135243229503,
+                      28.0
+                    ],
+                    [
+                      3.245901639344295,
+                      27.73770491803278
+                    ],
+                    [
+                      14.142857142857142,
+                      20.142857142857142
+                    ],
+                    [
+                      19.62897526501766,
+                      17.54416961130742
+                    ],
+                    [
+                      25.0,
+                      15.0
+                    ],
+                    [
+                      27.60869565217395,
+                      13.69565217391305
+                    ],
+                    [
+                      28.529411764705838,
+                      13.235294117647047
+                    ],
+                    [
+                      33.0,
+                      11.0
+                    ],
+                    [
+                      36.56250000000001,
+                      8.229166666666623
+                    ],
+                    [
+                      38.0,
+                      9.501660312384601
+                    ]
+                  ]
+                },
+                {
+                  "z": 102.25,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      11.178802764856748,
+                      28.0
+                    ],
+                    [
+                      9.163934426229531,
+                      26.49180327868852
+                    ],
+                    [
+                      16.428571428571427,
+                      21.428571428571427
+                    ],
+                    [
+                      23.286219081272076,
+                      18.180212014134273
+                    ],
+                    [
+                      30.0,
+                      15.0
+                    ],
+                    [
+                      31.304347826086975,
+                      14.347826086956525
+                    ],
+                    [
+                      31.76470588235292,
+                      14.117647058823524
+                    ],
+                    [
+                      34.0,
+                      13.0
+                    ],
+                    [
+                      35.78125000000001,
+                      11.61458333333331
+                    ],
+                    [
+                      38.0,
+                      13.57864961259368
+                    ]
+                  ]
+                },
+                {
+                  "z": 102.5,
+                  "major": true,
+                  "closed": false,
+                  "points": [
+                    [
+                      18.761292005390544,
+                      28.0
+                    ],
+                    [
+                      15.081967213114766,
+                      25.24590163934426
+                    ],
+                    [
+                      18.714285714285715,
+                      22.714285714285715
+                    ],
+                    [
+                      26.943462897526494,
+                      18.81625441696113
+                    ],
+                    [
+                      35.0,
+                      15.0
+                    ],
+                    [
+                      38.0,
+                      17.655638912802758
+                    ]
+                  ]
+                },
+                {
+                  "z": 102.75,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      26.34378124592434,
+                      28.0
+                    ],
+                    [
+                      21.0,
+                      24.0
+                    ],
+                    [
+                      28.2487562189056,
+                      22.14925373134336
+                    ],
+                    [
+                      28.833333333333787,
+                      22.0
+                    ]
+                  ]
+                },
+                {
+                  "z": 102.75,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      32.0,
+                      21.191489361702175
+                    ],
+                    [
+                      32.389078498293465,
+                      21.09215017064858
+                    ],
+                    [
+                      36.182380216383294,
+                      20.12364760432762
+                    ],
+                    [
+                      38.0,
+                      21.732628213011836
+                    ]
+                  ]
+                },
+                {
+                  "z": 103.0,
+                  "major": true,
+                  "closed": false,
+                  "points": [
+                    [
+                      33.92627048645814,
+                      28.0
+                    ],
+                    [
+                      32.05867346938759,
+                      26.602040816326493
+                    ],
+                    [
+                      34.592039800994975,
+                      25.955223880596986
+                    ],
+                    [
+                      35.67796610169489,
+                      25.677966101694892
+                    ],
+                    [
+                      37.364760432766595,
+                      25.24729520865524
+                    ],
+                    [
+                      38.0,
+                      25.80961751322091
+                    ]
+                  ]
+                }
+              ],
+              "revision": "$current",
+              "uids": "$any"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
+            ],
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "voids": [
+                    "0192f5a0-7c3e-7d4a-9b1e-00000000000b",
+                    "0192f5a0-7c3e-7d4a-9b1e-00000000000c"
+                  ],
+                  "built": "c2f560a84d12cf459d770ba05daeda0ae00075647c1986deb2666ee497a30065"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Açık zemin",
+                  "points": {
+                    "layers": [
+                      "zemin",
+                      "arazi"
+                    ]
+                  },
+                  "maxEdge": 35.0,
+                  "built": "75fdb116e8cfb439b55f1367f6d9573b599785663dce1f74564988b12ecce81c"
+                },
+                {
+                  "id": "t-5",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Adıyla, büyük küçük harf ayrımsız",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "esyukselti",
+            "surface": "açık zemin",
+            "interval": 0.5
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "lines": [
+                {
+                  "z": 100.5,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      0.0,
+                      7.5
+                    ],
+                    [
+                      3.8181818181818183,
+                      4.363636363636363
+                    ],
+                    [
+                      8.857142857142858,
+                      2.857142857142857
+                    ]
+                  ]
+                },
+                {
+                  "z": 101.0,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      0.0,
+                      15.0
+                    ],
+                    [
+                      7.636363636363637,
+                      8.727272727272727
+                    ],
+                    [
+                      17.714285714285715,
+                      5.714285714285714
+                    ]
+                  ]
+                },
+                {
+                  "z": 101.5,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      0.0,
+                      22.5
+                    ],
+                    [
+                      11.454545454545455,
+                      13.090909090909092
+                    ],
+                    [
+                      26.571428571428573,
+                      8.571428571428571
+                    ]
+                  ]
+                },
+                {
+                  "z": 102.0,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      0.0,
+                      30.0
+                    ],
+                    [
+                      15.272727272727273,
+                      17.454545454545453
+                    ],
+                    [
+                      28.5,
+                      13.5
+                    ],
+                    [
+                      32.5,
+                      13.333333333333334
+                    ],
+                    [
+                      40.0,
+                      8.571428571428571
+                    ]
+                  ]
+                },
+                {
+                  "z": 102.5,
+                  "major": true,
+                  "closed": false,
+                  "points": [
+                    [
+                      14.0,
+                      26.0
+                    ],
+                    [
+                      19.09090909090909,
+                      21.818181818181817
+                    ],
+                    [
+                      23.5,
+                      20.5
+                    ],
+                    [
+                      35.5,
+                      20.0
+                    ],
+                    [
+                      40.0,
+                      17.142857142857142
+                    ]
+                  ]
+                },
+                {
+                  "z": 103.0,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      30.5,
+                      27.0
+                    ],
+                    [
+                      38.5,
+                      26.666666666666668
+                    ],
+                    [
+                      40.0,
+                      25.714285714285715
+                    ]
+                  ]
+                }
+              ],
+              "revision": "$current",
+              "uids": "$any"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24
+            ],
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "voids": [
+                    "0192f5a0-7c3e-7d4a-9b1e-00000000000b",
+                    "0192f5a0-7c3e-7d4a-9b1e-00000000000c"
+                  ],
+                  "built": "c2f560a84d12cf459d770ba05daeda0ae00075647c1986deb2666ee497a30065"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Açık zemin",
+                  "points": {
+                    "layers": [
+                      "zemin",
+                      "arazi"
+                    ]
+                  },
+                  "maxEdge": 35.0,
+                  "built": "75fdb116e8cfb439b55f1367f6d9573b599785663dce1f74564988b12ecce81c"
+                },
+                {
+                  "id": "t-5",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Eksi taban kotu",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "esyukselti",
+            "surface": "t-2",
+            "interval": 0.5,
+            "base": -0.5,
+            "majorEvery": 3
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "lines": [
+                {
+                  "z": 100.5,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      2.0,
+                      6.945818610129608
+                    ],
+                    [
+                      3.2142857142857215,
+                      7.261904761904793
+                    ],
+                    [
+                      10.0,
+                      5.0
+                    ],
+                    [
+                      10.7339449541285,
+                      2.935779816513768
+                    ],
+                    [
+                      10.869565217391331,
+                      2.0
+                    ]
+                  ]
+                },
+                {
+                  "z": 101.0,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      2.0,
+                      14.219081272084843
+                    ],
+                    [
+                      5.0,
+                      15.0
+                    ],
+                    [
+                      14.705882352941208,
+                      9.117647058823557
+                    ],
+                    [
+                      17.901234567901323,
+                      7.9629629629629965
+                    ],
+                    [
+                      23.333333333333332,
+                      5.0
+                    ],
+                    [
+                      23.577981651376167,
+                      4.311926605504589
+                    ],
+                    [
+                      23.913043478260803,
+                      2.0
+                    ]
+                  ]
+                },
+                {
+                  "z": 101.5,
+                  "major": true,
+                  "closed": false,
+                  "points": [
+                    [
+                      2.0,
+                      21.492343934040075
+                    ],
+                    [
+                      3.4166666666666643,
+                      21.86111111111112
+                    ],
+                    [
+                      9.571428571428571,
+                      17.571428571428573
+                    ],
+                    [
+                      12.31448763250883,
+                      16.27208480565371
+                    ],
+                    [
+                      15.0,
+                      15.0
+                    ],
+                    [
+                      20.2173913043479,
+                      12.3913043478261
+                    ],
+                    [
+                      21.0,
+                      12.0
+                    ]
+                  ]
+                },
+                {
+                  "z": 101.5,
+                  "major": true,
+                  "closed": false,
+                  "points": [
+                    [
+                      24.0,
+                      10.499999999999964
+                    ],
+                    [
+                      26.250000000000053,
+                      9.374999999999938
+                    ],
+                    [
+                      31.0,
+                      7.0
+                    ],
+                    [
+                      36.89655172413778,
+                      2.4137931034483318
+                    ],
+                    [
+                      36.95652173913028,
+                      2.0
+                    ]
+                  ]
+                },
+                {
+                  "z": 102.0,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      3.5963135243229503,
+                      28.0
+                    ],
+                    [
+                      3.245901639344295,
+                      27.73770491803278
+                    ],
+                    [
+                      14.142857142857142,
+                      20.142857142857142
+                    ],
+                    [
+                      19.62897526501766,
+                      17.54416961130742
+                    ],
+                    [
+                      25.0,
+                      15.0
+                    ],
+                    [
+                      27.60869565217395,
+                      13.69565217391305
+                    ],
+                    [
+                      28.529411764705838,
+                      13.235294117647047
+                    ],
+                    [
+                      33.0,
+                      11.0
+                    ],
+                    [
+                      36.56250000000001,
+                      8.229166666666623
+                    ],
+                    [
+                      38.0,
+                      9.501660312384601
+                    ]
+                  ]
+                },
+                {
+                  "z": 102.5,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      18.761292005390544,
+                      28.0
+                    ],
+                    [
+                      15.081967213114766,
+                      25.24590163934426
+                    ],
+                    [
+                      18.714285714285715,
+                      22.714285714285715
+                    ],
+                    [
+                      26.943462897526494,
+                      18.81625441696113
+                    ],
+                    [
+                      35.0,
+                      15.0
+                    ],
+                    [
+                      38.0,
+                      17.655638912802758
+                    ]
+                  ]
+                },
+                {
+                  "z": 103.0,
+                  "major": true,
+                  "closed": false,
+                  "points": [
+                    [
+                      33.92627048645814,
+                      28.0
+                    ],
+                    [
+                      32.05867346938759,
+                      26.602040816326493
+                    ],
+                    [
+                      34.592039800994975,
+                      25.955223880596986
+                    ],
+                    [
+                      35.67796610169489,
+                      25.677966101694892
+                    ],
+                    [
+                      37.364760432766595,
+                      25.24729520865524
+                    ],
+                    [
+                      38.0,
+                      25.80961751322091
+                    ]
+                  ]
+                }
+              ],
+              "revision": "$current",
+              "uids": "$any"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25
+            ],
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "voids": [
+                    "0192f5a0-7c3e-7d4a-9b1e-00000000000b",
+                    "0192f5a0-7c3e-7d4a-9b1e-00000000000c"
+                  ],
+                  "built": "c2f560a84d12cf459d770ba05daeda0ae00075647c1986deb2666ee497a30065"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Açık zemin",
+                  "points": {
+                    "layers": [
+                      "zemin",
+                      "arazi"
+                    ]
+                  },
+                  "maxEdge": 35.0,
+                  "built": "75fdb116e8cfb439b55f1367f6d9573b599785663dce1f74564988b12ecce81c"
+                },
+                {
+                  "id": "t-5",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Geniş aralık: tek düzey",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "esyukselti",
+            "surface": "t-3",
+            "interval": 2.0
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "lines": [
+                {
+                  "z": 102.0,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      0.0,
+                      30.0
+                    ],
+                    [
+                      15.272727272727273,
+                      17.454545454545453
+                    ],
+                    [
+                      28.5,
+                      13.5
+                    ],
+                    [
+                      32.5,
+                      13.333333333333334
+                    ],
+                    [
+                      40.0,
+                      8.571428571428571
+                    ]
+                  ]
+                }
+              ],
+              "revision": "$current",
+              "uids": "$any"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19
+            ],
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "voids": [
+                    "0192f5a0-7c3e-7d4a-9b1e-00000000000b",
+                    "0192f5a0-7c3e-7d4a-9b1e-00000000000c"
+                  ],
+                  "built": "c2f560a84d12cf459d770ba05daeda0ae00075647c1986deb2666ee497a30065"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Açık zemin",
+                  "points": {
+                    "layers": [
+                      "zemin",
+                      "arazi"
+                    ]
+                  },
+                  "maxEdge": 35.0,
+                  "built": "75fdb116e8cfb439b55f1367f6d9573b599785663dce1f74564988b12ecce81c"
+                },
+                {
+                  "id": "t-5",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Plan yazmaz",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "esyukselti",
+            "surface": "t-2",
+            "interval": 0.5
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "lines": [
+                {
+                  "z": 100.5,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      2.0,
+                      6.945818610129608
+                    ],
+                    [
+                      3.2142857142857215,
+                      7.261904761904793
+                    ],
+                    [
+                      10.0,
+                      5.0
+                    ],
+                    [
+                      10.7339449541285,
+                      2.935779816513768
+                    ],
+                    [
+                      10.869565217391331,
+                      2.0
+                    ]
+                  ]
+                },
+                {
+                  "z": 101.0,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      2.0,
+                      14.219081272084843
+                    ],
+                    [
+                      5.0,
+                      15.0
+                    ],
+                    [
+                      14.705882352941208,
+                      9.117647058823557
+                    ],
+                    [
+                      17.901234567901323,
+                      7.9629629629629965
+                    ],
+                    [
+                      23.333333333333332,
+                      5.0
+                    ],
+                    [
+                      23.577981651376167,
+                      4.311926605504589
+                    ],
+                    [
+                      23.913043478260803,
+                      2.0
+                    ]
+                  ]
+                },
+                {
+                  "z": 101.5,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      2.0,
+                      21.492343934040075
+                    ],
+                    [
+                      3.4166666666666643,
+                      21.86111111111112
+                    ],
+                    [
+                      9.571428571428571,
+                      17.571428571428573
+                    ],
+                    [
+                      12.31448763250883,
+                      16.27208480565371
+                    ],
+                    [
+                      15.0,
+                      15.0
+                    ],
+                    [
+                      20.2173913043479,
+                      12.3913043478261
+                    ],
+                    [
+                      21.0,
+                      12.0
+                    ]
+                  ]
+                },
+                {
+                  "z": 101.5,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      24.0,
+                      10.499999999999964
+                    ],
+                    [
+                      26.250000000000053,
+                      9.374999999999938
+                    ],
+                    [
+                      31.0,
+                      7.0
+                    ],
+                    [
+                      36.89655172413778,
+                      2.4137931034483318
+                    ],
+                    [
+                      36.95652173913028,
+                      2.0
+                    ]
+                  ]
+                },
+                {
+                  "z": 102.0,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      3.5963135243229503,
+                      28.0
+                    ],
+                    [
+                      3.245901639344295,
+                      27.73770491803278
+                    ],
+                    [
+                      14.142857142857142,
+                      20.142857142857142
+                    ],
+                    [
+                      19.62897526501766,
+                      17.54416961130742
+                    ],
+                    [
+                      25.0,
+                      15.0
+                    ],
+                    [
+                      27.60869565217395,
+                      13.69565217391305
+                    ],
+                    [
+                      28.529411764705838,
+                      13.235294117647047
+                    ],
+                    [
+                      33.0,
+                      11.0
+                    ],
+                    [
+                      36.56250000000001,
+                      8.229166666666623
+                    ],
+                    [
+                      38.0,
+                      9.501660312384601
+                    ]
+                  ]
+                },
+                {
+                  "z": 102.5,
+                  "major": true,
+                  "closed": false,
+                  "points": [
+                    [
+                      18.761292005390544,
+                      28.0
+                    ],
+                    [
+                      15.081967213114766,
+                      25.24590163934426
+                    ],
+                    [
+                      18.714285714285715,
+                      22.714285714285715
+                    ],
+                    [
+                      26.943462897526494,
+                      18.81625441696113
+                    ],
+                    [
+                      35.0,
+                      15.0
+                    ],
+                    [
+                      38.0,
+                      17.655638912802758
+                    ]
+                  ]
+                },
+                {
+                  "z": 103.0,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      33.92627048645814,
+                      28.0
+                    ],
+                    [
+                      32.05867346938759,
+                      26.602040816326493
+                    ],
+                    [
+                      34.592039800994975,
+                      25.955223880596986
+                    ],
+                    [
+                      35.67796610169489,
+                      25.677966101694892
+                    ],
+                    [
+                      37.364760432766595,
+                      25.24729520865524
+                    ],
+                    [
+                      38.0,
+                      25.80961751322091
+                    ]
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ]
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Doğrulama yazmaz",
+      "steps": [
+        {
+          "op": "validate",
+          "input": {
+            "layerId": "esyukselti",
+            "surface": "t-3",
+            "interval": 1.0
+          },
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ]
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Gizli katmana uyarıyla",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "gizli",
+            "surface": "t-3",
+            "interval": 1.0
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "lines": [
+                {
+                  "z": 101.0,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      0.0,
+                      15.0
+                    ],
+                    [
+                      7.636363636363637,
+                      8.727272727272727
+                    ],
+                    [
+                      17.714285714285715,
+                      5.714285714285714
+                    ]
+                  ]
+                },
+                {
+                  "z": 102.0,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      0.0,
+                      30.0
+                    ],
+                    [
+                      15.272727272727273,
+                      17.454545454545453
+                    ],
+                    [
+                      28.5,
+                      13.5
+                    ],
+                    [
+                      32.5,
+                      13.333333333333334
+                    ],
+                    [
+                      40.0,
+                      8.571428571428571
+                    ]
+                  ]
+                },
+                {
+                  "z": 103.0,
+                  "major": false,
+                  "closed": false,
+                  "points": [
+                    [
+                      30.5,
+                      27.0
+                    ],
+                    [
+                      38.5,
+                      26.666666666666668
+                    ],
+                    [
+                      40.0,
+                      25.714285714285715
+                    ]
+                  ]
+                }
+              ],
+              "revision": "$current",
+              "uids": "$any"
+            },
+            "warnings": [
+              {
+                "code": "layer_hidden",
+                "message": "“Gizli” katmanı gizli; çizilen nesne görünmeyecek.",
+                "path": "layerId"
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "voids": [
+                    "0192f5a0-7c3e-7d4a-9b1e-00000000000b",
+                    "0192f5a0-7c3e-7d4a-9b1e-00000000000c"
+                  ],
+                  "built": "c2f560a84d12cf459d770ba05daeda0ae00075647c1986deb2666ee497a30065"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Açık zemin",
+                  "points": {
+                    "layers": [
+                      "zemin",
+                      "arazi"
+                    ]
+                  },
+                  "maxEdge": 35.0,
+                  "built": "75fdb116e8cfb439b55f1367f6d9573b599785663dce1f74564988b12ecce81c"
+                },
+                {
+                  "id": "t-5",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Yol projesi değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "esyukselti",
+            "surface": "t-2",
+            "interval": 0.5
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_road_project",
+              "message": "Arazi yüzeyi yalnız yol projesinde (KentOS Yol) olur; bu çizim yol projesi değil."
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ]
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Yol yüzeyleri",
+        "settings": {
+          "srid": 5254,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 1000.0,
+          "workspace": "cad",
+          "cadWork": "map",
+          "drawingFont": "barlow"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "zemin",
+            "name": "Zemin",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kirik",
+            "name": "Kırık hatlar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "sinir",
+            "name": "Sınırlar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "arazi",
+            "name": "Arazi",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "ek",
+                "name": "Ek noktalar",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "esyukselti",
+            "name": "Eş yükselti",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "zemin",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "z": 100.0
+          },
+          {
+            "kind": "point",
+            "id": 2,
+            "layerId": "zemin",
+            "attrs": {},
+            "p": {
+              "x": 40.0,
+              "y": 0.0
+            },
+            "z": 101.5
+          },
+          {
+            "kind": "point",
+            "id": 3,
+            "layerId": "zemin",
+            "attrs": {},
+            "p": {
+              "x": 40.0,
+              "y": 30.0
+            },
+            "z": 103.25
+          },
+          {
+            "kind": "point",
+            "id": 4,
+            "layerId": "zemin",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 30.0
+            },
+            "z": 102.0
+          },
+          {
+            "kind": "point",
+            "id": 5,
+            "layerId": "zemin",
+            "attrs": {},
+            "p": {
+              "x": 21.0,
+              "y": 24.0
+            },
+            "z": 102.75
+          },
+          {
+            "kind": "point",
+            "id": 6,
+            "layerId": "zemin",
+            "attrs": {},
+            "p": {
+              "x": 10.0,
+              "y": 26.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 7,
+            "layerId": "zemin",
+            "attrs": {},
+            "a": {
+              "x": 1.0,
+              "y": 29.0
+            },
+            "b": {
+              "x": 3.0,
+              "y": 29.0
+            }
+          },
+          {
+            "kind": "polyline",
+            "id": 8,
+            "layerId": "kirik",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 5.0,
+                "y": 15.0
+              },
+              {
+                "x": 35.0,
+                "y": 15.0
+              }
+            ],
+            "zs": [
+              101.0,
+              102.5
+            ]
+          },
+          {
+            "kind": "line",
+            "id": 9,
+            "layerId": "kirik",
+            "attrs": {},
+            "a": {
+              "x": 10.0,
+              "y": 5.0
+            },
+            "b": {
+              "x": 30.0,
+              "y": 5.0
+            },
+            "za": 100.5,
+            "zb": 101.25
+          },
+          {
+            "kind": "polygon",
+            "id": 10,
+            "layerId": "sinir",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 2.0,
+                "y": 2.0
+              },
+              {
+                "x": 38.0,
+                "y": 2.0
+              },
+              {
+                "x": 38.0,
+                "y": 28.0
+              },
+              {
+                "x": 2.0,
+                "y": 28.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 11,
+            "layerId": "sinir",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 18.0,
+                "y": 8.0
+              },
+              {
+                "x": 24.0,
+                "y": 8.0
+              },
+              {
+                "x": 24.0,
+                "y": 12.0
+              },
+              {
+                "x": 18.0,
+                "y": 12.0
+              }
+            ]
+          },
+          {
+            "kind": "polyline",
+            "id": 12,
+            "layerId": "sinir",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 28.0,
+                "y": 19.0
+              },
+              {
+                "x": 32.0,
+                "y": 19.0
+              },
+              {
+                "x": 32.0,
+                "y": 22.0
+              },
+              {
+                "x": 28.0,
+                "y": 22.0
+              }
+            ],
+            "closed": true
+          },
+          {
+            "kind": "polyline",
+            "id": 13,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 6.0,
+                "y": 25.0
+              },
+              {
+                "x": 14.0,
+                "y": 27.0
+              }
+            ],
+            "zs": [
+              102.0,
+              102.5
+            ],
+            "bulges": [
+              0.25,
+              0.0
+            ]
+          },
+          {
+            "kind": "polyline",
+            "id": 14,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 26.0,
+                "y": 24.0
+              },
+              {
+                "x": 30.0,
+                "y": 24.0
+              },
+              {
+                "x": 30.0,
+                "y": 27.0
+              }
+            ]
+          },
+          {
+            "kind": "point",
+            "id": 15,
+            "layerId": "0",
+            "attrs": {},
+            "p": {
+              "x": 40.0,
+              "y": 30.0
+            },
+            "z": 103.75
+          },
+          {
+            "kind": "point",
+            "id": 16,
+            "layerId": "ek",
+            "attrs": {},
+            "p": {
+              "x": 31.0,
+              "y": 10.0
+            },
+            "z": 101.75
+          },
+          {
+            "kind": "polygon",
+            "id": 17,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": -5.0,
+                "y": -5.0
+              },
+              {
+                "x": 45.0,
+                "y": -5.0
+              },
+              {
+                "x": 45.0,
+                "y": 35.0
+              },
+              {
+                "x": -5.0,
+                "y": 35.0
+              }
+            ]
+          },
+          {
+            "kind": "point",
+            "id": 18,
+            "layerId": "0",
+            "attrs": {},
+            "p": {
+              "x": 20.0,
+              "y": 15.0
+            },
+            "z": 104.0
+          }
+        ],
+        "uids": [
+          "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000004",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000005",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000006",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000007",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000008",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000009",
+          "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+          "0192f5a0-7c3e-7d4a-9b1e-00000000000b",
+          "0192f5a0-7c3e-7d4a-9b1e-00000000000c",
+          "0192f5a0-7c3e-7d4a-9b1e-00000000000d",
+          "0192f5a0-7c3e-7d4a-9b1e-00000000000e",
+          "0192f5a0-7c3e-7d4a-9b1e-00000000000f",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000010",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000011",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000012"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Sıfır aralık",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "esyukselti",
+            "surface": "t-2",
+            "interval": 0.0
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_contours",
+              "message": "Eş yükselti aralığı 0'dan büyük bir sayı, taban kotu sonlu bir sayı olmalı.",
+              "path": "interval"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eksi aralık",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "esyukselti",
+            "surface": "t-2",
+            "interval": -1.0
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_contours",
+              "message": "Eş yükselti aralığı 0'dan büyük bir sayı, taban kotu sonlu bir sayı olmalı.",
+              "path": "interval"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çok sık düzey",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "esyukselti",
+            "surface": "t-3",
+            "interval": 0.0001
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_contours",
+              "message": "Bu aralıkla yüzeyi 10 000'den çok düzey keser; aralığı büyütün.",
+              "path": "interval"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kesen düzey yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "esyukselti",
+            "surface": "t-2",
+            "interval": 10.0
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_contours",
+              "message": "Bu aralıkla yüzeyi kesen eş yükselti eğrisi yok; aralığı ya da taban kotunu değiştirin.",
+              "path": "interval"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Olmayan katman",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yok",
+            "surface": "t-2",
+            "interval": 0.5
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_not_found",
+              "message": "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Grup katman değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "arazi",
+            "surface": "t-2",
+            "interval": 0.5
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_layer",
+              "message": "“Arazi” bir katman grubu; nesne yalnız katmana eklenir. Grubun içinden bir katman seçin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kilitli katman",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kilitli",
+            "surface": "t-2",
+            "interval": 0.5
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_locked",
+              "message": "“Kilitli” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Olmayan yüzey",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "esyukselti",
+            "surface": "yok",
+            "interval": 0.5
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "unknown_terrain",
+              "message": "“yok” kimlikli ya da adlı yüzey projede yok.",
+              "path": "surface"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kurulamayan yüzey",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "esyukselti",
+            "surface": "t-5",
+            "interval": 0.5
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "terrain_unbuildable",
+              "message": "Kaynaklardan yüzey kurulamıyor: kotlu yer üçten az ya da hepsi bir doğru üstünde."
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eski sürüme göre hazırlanmış",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "esyukselti",
+            "surface": "t-2",
+            "interval": 0.5,
+            "expectedRevision": "41"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Geçersiz beklenen sürüm",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "esyukselti",
+            "surface": "t-2",
+            "interval": 0.5,
+            "expectedRevision": "x"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "Beklenen sürüm “x” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
