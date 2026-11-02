@@ -83,6 +83,7 @@ pub struct FileBlocks {
 #[derive(Debug, Clone, Default)]
 pub struct Item {
     pub name: String,
+    pub publication: Option<kentos_commands::BlockPublication>,
     pub size: Option<(f64, f64)>,
     pub units: Option<BlockUnits>,
     pub paths: Vec<f64>,
@@ -201,6 +202,7 @@ pub fn read_file(path: &Path, unit: Option<DrawingUnit>) -> Result<FileBlocks, S
         .filter(|b| !b.name.starts_with('*') && b.xref.is_none())
         .map(|b| Item {
             name: b.name.clone(),
+            publication: b.card.as_ref().and_then(|c| c.publication.clone()),
             size: known
                 .then(|| kentos_native_application::blocks::definition_box(&doc, b.id, None))
                 .flatten()
@@ -225,6 +227,7 @@ pub fn read_file(path: &Path, unit: Option<DrawingUnit>) -> Result<FileBlocks, S
                 .file_stem()
                 .map_or_else(String::new, |s| s.to_string_lossy().into_owned()),
             size: known.then_some((x1 - x0, y1 - y0)),
+            publication: None,
             units: None,
             paths: Vec::new(),
         });
@@ -727,7 +730,9 @@ impl App {
         items.extend(
             read.blocks
                 .iter()
-                .filter(|b| query.is_empty() || name_key(&b.name).contains(&query))
+                .filter(|b| query.is_empty() || name_key(&b.name).contains(&query)
+                    || b.publication.as_ref().is_some_and(|p| name_key(&p.type_name).contains(&query)
+                        || p.family_id.to_text().contains(&query)))
                 .map(|b| (Some(b.name.clone()), b.clone())),
         );
         let can_place = read.unit.is_some();
@@ -768,19 +773,25 @@ impl App {
                 (Some(_), None) => "Boyu birim seçilince".to_owned(),
             };
             let name = item.name.clone();
+            let publication = item.publication.as_ref().map(|p| {
+                format!("{} · Yayın {} · Aile {}", p.type_name, p.release, p.family_id.to_text())
+            });
+            let caption = item.publication.as_ref().map_or_else(|| meta.clone(), |p| {
+                format!("{} · Yayın {} · {meta}", p.type_name, p.release)
+            });
             let words = column![
                 text(name.clone())
                     .font(typography::ui())
                     .size(typography::body())
                     .wrapping(text::Wrapping::None),
-                label::caption(meta)
+                label::caption(caption)
                     .wrapping(text::Wrapping::None)
                     .style(|t: &Theme| text::Style {
                         color: Some(Tokens::of(t).faint),
                     }),
             ]
             .spacing(1)
-            .width(Fill);
+            .width(Fill).clip(true);
             let place = msg(Event::Place(file_path.clone(), block.clone()));
             let face = button(
                 row![picture, words]
@@ -797,8 +808,8 @@ impl App {
             let face = tip(
                 face,
                 Tip::new(name).body(if can_place {
-                    "Basın: çizime alınır ve Blok ekle başlar; kategorisi kitaplığın klasörleri."
-                        .to_owned()
+                    format!("{}{meta}\nBasın: çizime alınır ve Blok ekle başlar; kategorisi kitaplığın klasörleri.",
+                        publication.map_or(String::new(), |p| format!("{p}\n")))
                 } else {
                     "Önce dosyanın birimini seçin.".to_owned()
                 }),

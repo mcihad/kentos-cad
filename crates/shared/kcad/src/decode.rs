@@ -1086,7 +1086,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             }
             // Schema 135 (docs/adr/0801): what a CAD project is drawn for.
             "cadWork" if has.cad_work => {
-                // Schema 158 (plan/road.md Y1.1): a road project's work.
+                // Schema 159 (plan/road.md Y1.1): a road project's work.
                 cad_work = Some(if has.road_work {
                     named(
                         r,
@@ -1249,7 +1249,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 }
                 wall_styles = l;
             }
-            // Schema 158 (plan/road.md Y2.2): a road project's terrain surfaces' definitions.
+            // Schema 159 (plan/road.md Y2.2): a road project's terrain surfaces' definitions.
             "road" if has.road_work => {
                 let (v, at): (kentos_contracts::RoadSettings, usize) = objects::json_part(r, "yol ayarları")?;
                 if v.is_empty() {

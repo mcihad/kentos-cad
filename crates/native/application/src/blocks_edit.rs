@@ -414,6 +414,18 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
             return Ok(checked);
         }
         BlockEditOperation::Card => {
+            if input.publication.is_some() && input.clear_publication == Some(true) {
+                return Err(Stop::failed(error(
+                    codes::INVALID_BLOCK_CARD,
+                    "Bileşen kimliğini aynı işlemde hem verip hem kaldıramazsınız.".into(),
+                    Some("publication".into()),
+                )));
+            }
+            let publication = if input.clear_publication == Some(true) {
+                None
+            } else {
+                input.publication.clone().or_else(|| old.card.as_ref().and_then(|c| c.publication.clone()))
+            };
             let version = old.card.as_ref().map_or(1, |c| c.version);
             let category = input.category.clone().or_else(|| old.card.as_ref().and_then(|c| c.category.clone()));
             let tags = input
@@ -421,6 +433,7 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
                 .clone()
                 .unwrap_or_else(|| old.card.as_ref().map(|c| c.tags.clone()).unwrap_or_default());
             next.card = Some(kentos_commands::BlockCard {
+                publication,
                 category: category.filter(|c| !checks::is_blank(c)),
                 tags,
                 version,
@@ -432,7 +445,7 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
                 return Err(Stop::failed(error(
                     codes::INVALID_BLOCK_CARD,
                     format!("“{}” bloğunun kartı: {problem}", old.name),
-                    Some(if input.tags.is_some() { "tags" } else { "category" }.into()),
+                    Some(if input.publication.is_some() { "publication" } else if input.tags.is_some() { "tags" } else { "category" }.into()),
                 )));
             }
         }

@@ -538,7 +538,7 @@ impl<'d> Encoder<'d> {
                 e.json(&serde_json::to_value(a).unwrap_or_default())
             })?;
         }
-        // Schema 158 (plan/road.md Y2.2): a road project's terrain surfaces' definitions, as their JSON (after `arch`,
+        // Schema 159 (plan/road.md Y2.2): a road project's terrain surfaces' definitions, as their JSON (after `arch`,
         // before `srid`); a road project's only.
         if let Some(v) = &s.road {
             self.key("road");
@@ -2107,9 +2107,12 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
-    // Schema 158 (plan/road.md Y1.1): a road project's work.
+    // Schema 159 (plan/road.md Y1.1): a road project's work.
     if doc.settings.cad_work == Some(kentos_contracts::CadWork::Road) {
         return crate::SCHEMA_WITH_ROAD_WORK;
+    }
+    if doc.blocks.iter().any(|b| b.card.as_ref().is_some_and(|c| c.publication.is_some())) {
+        return crate::SCHEMA_WITH_BLOCK_PUBLICATIONS;
     }
     if doc.constraints.constraints.iter().any(|c| {
         c.rule.elements().iter().any(|r| {

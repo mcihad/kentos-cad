@@ -7,7 +7,7 @@
 use std::collections::{HashMap, HashSet};
 
 use kentos_commands::{
-    BLOCKS_FORMAT, BLOCKS_VERSION, BlockDefinition, BlockEditOperation, BlockId, BlocksEdit,
+    BLOCKS_FORMAT, BLOCKS_PUBLICATION_VERSION, BLOCKS_VERSION, BlockDefinition, BlockEditOperation, BlockId, BlocksEdit,
     BlocksEditPlan, BlocksEdited, CommandResult, Entity,
 };
 use kentos_domain::{Document, Slot, Uuid};
@@ -133,7 +133,12 @@ fn check(
                 None => doc.blocks().iter().map(|b| b.id).collect(),
             };
             let blocks = with_inserted(doc, &ids);
-            let file = serde_json::json!({ "format": BLOCKS_FORMAT, "version": BLOCKS_VERSION, "blocks": blocks });
+            let version = if blocks.iter().any(|b| b.card.as_ref().is_some_and(|c| c.publication.is_some())) {
+                BLOCKS_PUBLICATION_VERSION
+            } else {
+                BLOCKS_VERSION
+            };
+            let file = serde_json::json!({ "format": BLOCKS_FORMAT, "version": version, "blocks": blocks });
             planned.library = Some(kentos_commands::canonical::canonical_json(&file));
         }
         BlockEditOperation::Import => {
@@ -164,21 +169,26 @@ fn check(
             if file.get("format").and_then(serde_json::Value::as_str) != Some(BLOCKS_FORMAT) {
                 return Err(invalid("biçimi kentos.blocks değil".into()));
             }
-            match file.get("version").and_then(serde_json::Value::as_u64) {
-                Some(v) if v == u64::from(BLOCKS_VERSION) => {}
+            let version = match file.get("version").and_then(serde_json::Value::as_u64) {
+                Some(v) if v == u64::from(BLOCKS_VERSION) || v == u64::from(BLOCKS_PUBLICATION_VERSION) => v,
                 Some(v) => {
                     return Err(invalid(format!(
-                        "sürümü {v}; bu KentOS {BLOCKS_VERSION}. sürümü okur"
+                        "sürümü {v}; bu KentOS {BLOCKS_VERSION} ve {BLOCKS_PUBLICATION_VERSION}. sürümleri okur"
                     )));
                 }
                 None => return Err(invalid("sürümü yok".into())),
-            }
+            };
             let blocks: Vec<BlockDefinition> = serde_json::from_value(
                 file.get("blocks")
                     .cloned()
                     .unwrap_or(serde_json::Value::Null),
             )
             .map_err(|e| invalid(format!("blokları okunmuyor ({e})")))?;
+            if version == u64::from(BLOCKS_VERSION)
+                && blocks.iter().any(|b| b.card.as_ref().is_some_and(|c| c.publication.is_some()))
+            {
+                return Err(invalid("bileşen yayın kimliği içeren kitaplık 2. sürüm olmalı".into()));
+            }
             checks::revision(doc, input.expected_revision.as_deref())?;
             take(
                 doc,

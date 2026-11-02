@@ -193,6 +193,9 @@ impl App {
                             .as_deref()
                             .is_some_and(|c| name_key(c).contains(&query))
                             || k.tags.iter().any(|t| name_key(t).contains(&query))
+                            || k.publication.as_ref().is_some_and(|p| {
+                                name_key(&p.type_name).contains(&query) || p.family_id.to_text().contains(&query)
+                            })
                     })
                     || b.attributes
                         .iter()
@@ -201,7 +204,11 @@ impl App {
             .map(|(b, placed)| Listed {
                 id: b.id,
                 name: b.name.clone(),
-                about: b.description.clone(),
+                about: match b.card.as_ref().and_then(|c| c.publication.as_ref()) {
+                    Some(p) => Some(format!("{} · Yayın {}{}", p.type_name, p.release,
+                        b.description.as_ref().map_or(String::new(), |d| format!(" · {d}")))),
+                    None => b.description.clone(),
+                },
                 placed,
             })
             .collect()
@@ -638,7 +645,7 @@ impl App {
                     .into()
             }
         };
-        let mut words = Column::new().spacing(1).width(Fill).push(name);
+        let mut words = Column::new().spacing(1).width(Fill).clip(true).push(name);
         if let Some(about) = &r.about {
             words = words.push(
                 label::caption(about.clone())
@@ -811,7 +818,9 @@ impl App {
         let category = card
             .and_then(|c| c.category.as_deref())
             .map_or_else(|| "Kategorisiz".to_owned(), |c| c.replace('/', " › "));
-        let version = card.map_or_else(|| "Kartsız".to_owned(), |c| format!("Sürüm {}", c.version));
+        let version = card.map_or_else(|| "Kartsız".to_owned(), |c| {
+            c.publication.as_ref().map_or_else(|| format!("Yerel {}", c.version), |p| format!("Yayın {}", p.release))
+        });
         let words = column![
             text(r.name.clone())
                 .font(font)
@@ -834,6 +843,9 @@ impl App {
             .height(Fill)
             .style(style::button::row(chosen));
         let mut body = Vec::new();
+        if let Some(p) = card.and_then(|c| c.publication.as_ref()) {
+            body.push(format!("Tip: {} · Yayın {} · Aile: {}", p.type_name, p.release, p.family_id.to_text()));
+        }
         if let Some(about) = &r.about {
             body.push(about.clone());
         }

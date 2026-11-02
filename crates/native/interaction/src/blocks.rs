@@ -26,6 +26,8 @@ fn name_of(doc: &Document, id: BlockId) -> String {
 /// A `cad.blocks.edit` input of `operation` on `block`, nothing else given.
 pub fn input(operation: BlockEditOperation, block: Option<BlockId>) -> BlocksEdit {
     BlocksEdit {
+        publication: None,
+        clear_publication: None,
         dynamic: None,
         sync: None,
         renames: None,

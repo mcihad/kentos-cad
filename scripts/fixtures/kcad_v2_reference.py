@@ -300,7 +300,7 @@ def settings(s):
                 "workspace": (enum(("hybrid", "cad", "gis", "plan3d", "disaster")), False),
                 # Schema 135 (docs/adr/0801): what a CAD project is drawn for.
                 "cadWork": (enum(("architecture", "map", "road")), False),
-                # Schema 158 (plan/road.md Y2.2): a road project's terrain surfaces' definitions, as their JSON.
+                # Schema 159 (plan/road.md Y2.2): a road project's terrain surfaces' definitions, as their JSON.
                 "road": (opaque, False),
                 "drawingFont": (enum(("barlow", "arimo", "overpass", "quicksand", "architects-daughter", "courier-prime", "plex-mono")), False),
                 # Schema 50 (docs/adr/0262 §1): inches and feet too, written only in schema 50.
@@ -2134,10 +2134,15 @@ def attribute(a):
     return cmap(fields(a, table, "öznitelik"))
 
 
+def block_publication(p):
+    return cmap(fields(p, {"familyId": (lambda u: blob(uid_bytes(u)), True),
+                           "typeId": (lambda u: blob(uid_bytes(u)), True), "typeName": (text, True), "release": (uint, True)}, "blok yayını"))
+
+
 def card(c):
     """A block's card (schema 58, docs/adr/0317 §4): its version, a category and its tags."""
     assert c.get("tags", [None]), "boş etiket listesi yazılmaz"
-    return cmap(fields(c, {"category": (text, False), "tags": (lambda ts: array([text(t) for t in ts]), False), "version": (uint, True)}, "kart"))
+    return cmap(fields(c, {"category": (text, False), "tags": (lambda ts: array([text(t) for t in ts]), False), "version": (uint, True), "publication": (block_publication, False)}, "kart"))
 
 
 def definition(b):
@@ -2345,6 +2350,8 @@ def document(d):
     has_sets = 114 if any("edge" in item for item in sets) else bool(sets)
     assert d.get("casework", [None]), "boş mutfak dizisi listesi yazılmaz"
     schema = schema_of(d["entities"], d.get("blocks"), d["layers"], d["settings"], "sheets" in d, "requests" in d, "arrays" in d, "constraints" in d, has_sets)
+    if any(b.get("card", {}).get("publication") is not None for b in d.get("blocks", [])):
+        schema = max(schema, 158)
     if d.get("casework"):
         # A kitchen run (docs/adr/0727 §5).
         schema = max(schema, 127)
@@ -2385,7 +2392,7 @@ def document(d):
         schema = max(schema, 135)
     if d["settings"].get("cadWork") == "road":
         # A road project's work (plan/road.md Y1.1).
-        schema = max(schema, 158)
+        schema = max(schema, 159)
 
     def indexed(nodes):
         return any(n.get("indexes") or indexed(n.get("children", [])) for n in nodes)
@@ -3256,7 +3263,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-159.kcad"] = container(root(cmap(parts), version=uint(159)))
+    files["schema-version-160.kcad"] = container(root(cmap(parts), version=uint(160)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4834,6 +4841,19 @@ def build():
     payload = document(load("wipeouts.json"))
     assert payload.count(b"\x67version\x18\x36") == 1
     out["broken/wipeouts-in-schema-53.kcad"] = container(payload.replace(b"\x67version\x18\x36", b"\x67version\x18\x35"))
+    publication = document(load("block-publication.json"))
+    out["block-publication.kcad"] = container(publication)
+    type_prefix = b"\x6bpublication\xa4\x66typeId\x50" + uid_bytes(load("block-publication.json")["blocks"][0]["card"]["publication"]["typeId"])
+    assert publication.count(type_prefix) == 1
+    out["broken/block-publication-missing-type-id.kcad"] = container(publication.replace(type_prefix, b"\x6bpublication\xa3"))
+    out["broken/block-publication-in-schema-157.kcad"] = container(publication.replace(b"\x67version\x18\x9e", b"\x67version\x18\x9d"))
+    out["broken/block-publication-unknown-key.kcad"] = container(publication.replace(b"typeName", b"typeNamu"))
+    for suffix, value in (("release-zero", {"release": 0}), ("type-blank", {"typeName": " "}),
+                          ("family-zero", {"familyId": "00000000-0000-0000-0000-000000000000"}),
+                          ("type-id-zero", {"typeId": "00000000-0000-0000-0000-000000000000"})):
+        one = copy.deepcopy(load("block-publication.json"))
+        one["blocks"][0]["card"]["publication"].update(value)
+        out[f"broken/block-publication-{suffix}.kcad"] = container(document(one))
     out["dynamic-blocks.kcad"] = container(document(load("dynamic-blocks.json")))
     payload = document(load("dynamic-blocks.json"))
     assert payload.count(b"\x67version\x18\x3b") == 1
@@ -5496,21 +5516,21 @@ def build():
     untyped = copy.deepcopy(worked)
     del untyped["settings"]["workspace"]
     out["broken/cad-work-no-type.kcad"] = container(document(untyped))
-    # Schema 158 (plan/road.md Y1.1): a road project, KentOS Yol's; schema 157 refuses the work.
+    # Schema 159 (plan/road.md Y1.1): a road project, KentOS Yol's; schema 158 refuses the work.
     rd = document(load("road-work.json"))
-    assert rd.count(b"\x67version\x18\x9e") == 1, "the road work is schema 158"
+    assert rd.count(b"\x67version\x18\x9f") == 1, "the road work is schema 159"
     out["road-work.kcad"] = container(rd)
     # The work alone: the surfaces would be refused first (their key sorts before `cadWork`).
     bare = load("road-work.json")
     del bare["settings"]["road"]
-    out["broken/road-work-in-schema-157.kcad"] = container(
-        document(bare).replace(b"\x67version\x18\x9e", b"\x67version\x18\x9d"))
-    # Schema 158 (plan/road.md Y2.2): the terrain surfaces are a road project's only; a map project's are refused.
+    out["broken/road-work-in-schema-158.kcad"] = container(
+        document(bare).replace(b"\x67version\x18\x9f", b"\x67version\x18\x9e"))
+    # Schema 159 (plan/road.md Y2.2): the terrain surfaces are a road project's only; a map project's are refused.
     mp = load("road-work.json")
     mp["settings"]["cadWork"] = "map"
     mpd = document(mp)
     assert mpd.count(b"\x67version\x18\x87") == 1, "a map project with a road's settings would be schema 135"
-    out["broken/road-settings-of-a-map-project.kcad"] = container(mpd.replace(b"\x67version\x18\x87", b"\x67version\x18\x9e"))
+    out["broken/road-settings-of-a-map-project.kcad"] = container(mpd.replace(b"\x67version\x18\x87", b"\x67version\x18\x9f"))
     # Schema 136 (docs/adr/0758): a layer's indexes, a key over two fields, a plain one and a key taking empty values as
     # the same; schema 135 refuses them, an empty list, a group's, one over a field the layer lacks, empty values the
     # same on a plain index and a default written are refused too.

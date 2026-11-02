@@ -204,6 +204,8 @@ pub enum BlockEditOperation {
 pub const BLOCKS_FORMAT: &str = "kentos.blocks";
 /// Its version.
 pub const BLOCKS_VERSION: u32 = 1;
+/// A library carrying stable publication identities; older readers must refuse rather than drop them.
+pub const BLOCKS_PUBLICATION_VERSION: u32 = 2;
 
 /// Input of `cad.blocks.edit` v1: one change of the drawing's definitions, as
 /// one undo step named after the operation. A definition is named by its id.
@@ -247,6 +249,14 @@ pub const BLOCKS_VERSION: u32 = 1;
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct BlocksEdit {
+    /// `card`: publisher-assigned family/type/release; absent keeps it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub publication: Option<crate::BlockPublication>,
+    /// `card`: explicitly detach the publication identity; incompatible with `publication`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub clear_publication: Option<bool>,
     pub operation: BlockEditOperation,
     /// The definition; every operation but `purge`.
     #[serde(default, skip_serializing_if = "Option::is_none")]

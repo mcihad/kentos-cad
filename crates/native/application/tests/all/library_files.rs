@@ -239,3 +239,33 @@ fn a_library_formula_recomputes_each_scene_instance_and_refuses_an_invalid_insta
         assert_eq!(doc.to_snapshot_v2(), before);
     }
 }
+
+#[test]
+fn publication_metadata_is_independent_of_local_revision_and_atomic() {
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_str(include_str!(
+        "../../../../../fixtures/kcad/v2/block-publication.json"
+    )).unwrap();
+    let mut doc = Document::from_snapshot_v2(snapshot).unwrap();
+    let before = doc.to_snapshot_v2();
+    let block = doc.blocks()[0].id;
+    let mut publication = serde_json::to_value(doc.blocks()[0].card.as_ref().unwrap().publication.as_ref().unwrap()).unwrap();
+    publication["release"] = json!(3);
+    let input = json!({"operation":"card","block":block,"publication":publication});
+    let plan = registry::run(&mut ExecutionContext::new(&mut doc), "cad.blocks.edit", CallOp::Plan, input.clone()).unwrap();
+    assert_eq!(plan["status"], "completed", "{plan}");
+    assert_eq!(doc.to_snapshot_v2(), before);
+    run(&mut doc, "cad.blocks.edit", input);
+    let card = doc.blocks()[0].card.as_ref().unwrap();
+    assert_eq!(card.version, 7);
+    assert_eq!(card.publication.as_ref().unwrap().release, 3);
+    assert_eq!(doc.to_snapshot_v2().entities, before.entities);
+    doc.undo().unwrap();
+    assert_eq!(doc.to_snapshot_v2(), before);
+    publication["release"] = json!(0);
+    for op in [CallOp::Validate, CallOp::Plan, CallOp::Execute] {
+        let answer = registry::run(&mut ExecutionContext::new(&mut doc), "cad.blocks.edit", op,
+            json!({"operation":"card","block":block,"publication":publication})).unwrap();
+        assert_eq!(answer["error"]["code"], "invalid_block_card", "{answer}");
+        assert_eq!(doc.to_snapshot_v2(), before);
+    }
+}
