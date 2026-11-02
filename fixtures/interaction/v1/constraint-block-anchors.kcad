@@ -1,0 +1,221 @@
+{
+  "format": "kentos.document",
+  "version": 1,
+  "name": "CAD-ADV-05 — Aynalı ve dönük blok yerleşimi",
+  "settings": {
+    "srid": 0,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "deg",
+    "plotScale": 50,
+    "workspace": "cad",
+    "drawingFont": "barlow",
+    "drawingUnit": "mm",
+    "cadWork": "architecture"
+  },
+  "origin": {
+    "x": 0,
+    "y": 0
+  },
+  "layers": [
+    {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#E5484D",
+        "lineType": "continuous",
+        "lineWeight": 0.35,
+        "fill": "#E5484D1F"
+      },
+      "children": []
+    },
+    {
+      "id": "nokta",
+      "name": "Nokta",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#3E9BF0",
+        "lineType": "continuous",
+        "lineWeight": 0.25,
+        "point": {
+          "symbol": "ring",
+          "size": 9
+        }
+      },
+      "children": []
+    },
+    {
+      "id": "kilitli",
+      "name": "Kilitli katman",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+        "color": "fg-dim",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "gizli",
+      "name": "Gizli katman",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "cizim",
+  "entities": [
+    {
+      "kind": "point",
+      "id": 1,
+      "layerId": "cizim",
+      "attrs": {
+        "QA": "reference"
+      },
+      "p": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "kind": "insert",
+      "id": 2,
+      "layerId": "cizim",
+      "attrs": {
+        "NO": "A-01",
+        "QA": "affine"
+      },
+      "block": "018f3a2b-0000-7000-8000-0000000000d1",
+      "p": {
+        "x": 6,
+        "y": 0
+      },
+      "scale": 1.5,
+      "yScale": 0.75,
+      "rotation": 0.5235987755982988,
+      "mirror": true,
+      "attributePlaces": {
+        "NO": {
+          "x": 2,
+          "y": 1.5
+        }
+      }
+    },
+    {
+      "kind": "line",
+      "id": 3,
+      "layerId": "cizim",
+      "attrs": {
+        "QA": "follower"
+      },
+      "a": {
+        "x": 7,
+        "y": 0
+      },
+      "b": {
+        "x": 10,
+        "y": 0
+      }
+    }
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  },
+  "blocks": [
+    {
+      "id": "018f3a2b-0000-7000-8000-0000000000d1",
+      "name": "Asimetrik bağlantı",
+      "base": {
+        "x": 1,
+        "y": 1
+      },
+      "entities": [
+        {
+          "kind": "polyline",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "pts": [
+            {
+              "x": 2,
+              "y": 1.5
+            },
+            {
+              "x": 4,
+              "y": 1.5
+            },
+            {
+              "x": 4,
+              "y": 2.5
+            },
+            {
+              "x": 3,
+              "y": 3
+            },
+            {
+              "x": 2,
+              "y": 1.5
+            }
+          ]
+        },
+        {
+          "kind": "circle",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+            "x": 3,
+            "y": 2
+          },
+          "r": 0.2
+        }
+      ],
+      "attributes": [
+        {
+          "tag": "NO",
+          "value": "A",
+          "p": {
+            "x": 2.5,
+            "y": 1.5
+          },
+          "height": 0.15,
+          "rotation": 0,
+          "movable": true
+        }
+      ]
+    }
+  ]
+}

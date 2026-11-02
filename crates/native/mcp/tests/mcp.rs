@@ -2617,3 +2617,104 @@ fn bounded_nurbs_end_constraints_share_mcp_plan_diagnosis_and_undo() {
     );
     std::fs::remove_dir_all(dir).unwrap();
 }
+
+#[test]
+fn insert_anchor_constraints_share_mcp_plan_diagnosis_and_single_undo() {
+    let dir = std::env::temp_dir().join(format!(
+        "kentos-mcp-insert-constraints-{}",
+        std::process::id()
+    ));
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join("block.json");
+    std::fs::write(
+        &path,
+        include_str!("../../../../fixtures/interaction/v1/constraint-block-anchors.kcad"),
+    )
+    .unwrap();
+    let mut server = Server::new();
+    let drawing =
+        call(&mut server, "drawing.open", json!({"path":path}))["structuredContent"]["drawing"]
+            .clone();
+    let items=call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"].clone();
+    let mut geometry = json!({});
+    for key in [
+        "kind", "block", "p", "scale", "yScale", "rotation", "mirror",
+    ] {
+        geometry[key] = items[1]["entity"][key].clone();
+    }
+    geometry["p"] = json!({"x":6.,"y":2.});
+    let input = json!({"drawing":drawing,"operation":"grip","changes":[{"kind":"update","uid":items[1]["uid"],"geometry":geometry}]});
+    let mut plan = input.clone();
+    plan["op"] = json!("plan");
+    let p = call(&mut server, "cad.entities.edit", plan);
+    assert_eq!(p["structuredContent"]["status"], "completed", "{p}");
+    assert_eq!(
+        call(&mut server, "drawing.entities", json!({"drawing":drawing}))["structuredContent"]["items"],
+        items
+    );
+    let written = call(&mut server, "cad.entities.edit", input);
+    assert_eq!(
+        written["structuredContent"]["status"], "completed",
+        "{written}"
+    );
+    let changed=call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"].clone();
+    let mut expected = items[1]["entity"].clone();
+    expected["p"] = json!({"x":6.,"y":2.});
+    assert_eq!(changed[1]["entity"], expected);
+    call(&mut server, "drawing.undo", json!({"drawing":drawing}));
+    assert_eq!(
+        call(&mut server, "drawing.entities", json!({"drawing":drawing}))["structuredContent"]["items"],
+        items
+    );
+    let part = |i: usize, place: Value| json!({"uid":items[i]["uid"],"element":{"kind":"point","place":place}});
+    let a = part(0, json!({"kind":"node","part":0}));
+    let b = part(1, json!({"kind":"node","part":0}));
+    let l = part(2, json!({"kind":"start"}));
+    let added = call(
+        &mut server,
+        "cad.constraints.edit",
+        json!({"drawing":drawing,"edit":{"kind":"add","constraints":[{"rule":{"kind":"fix","a":a}},{"rule":{"kind":"horizontal","a":a,"b":b}},{"rule":{"kind":"distance","a":a,"b":b,"parameter":"yerlesim"},"value":"6m"},{"rule":{"kind":"coincident","a":b,"b":l}}]}}),
+    );
+    assert_eq!(added["structuredContent"]["status"], "completed", "{added}");
+    let before=call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"].clone();
+    let input =
+        json!({"drawing":drawing,"edits":[{"kind":"set","name":"yerlesim","expression":"8m"}]});
+    let mut plan_input = input.clone();
+    plan_input["op"] = json!("plan");
+    let planned = call(&mut server, "cad.parameters.edit", plan_input);
+    assert_eq!(
+        planned["structuredContent"]["status"], "completed",
+        "{planned}"
+    );
+    assert_eq!(
+        call(&mut server, "drawing.entities", json!({"drawing":drawing}))["structuredContent"]["items"],
+        before
+    );
+    let written = call(&mut server, "cad.parameters.edit", input);
+    assert_eq!(
+        written["structuredContent"]["status"], "completed",
+        "{written}"
+    );
+    let after=call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"].clone();
+    let mut expected = before[1]["entity"].clone();
+    expected["p"] = json!({"x":8.,"y":0.});
+    assert_eq!(after[1]["entity"], expected);
+    assert_eq!(after[1]["uid"], before[1]["uid"]);
+    assert_eq!(after[2]["entity"]["a"], json!({"x":8.,"y":0.}));
+    let queried = call(
+        &mut server,
+        "cad.constraints.query",
+        json!({"drawing":drawing}),
+    );
+    let mut q = queried["structuredContent"]["output"]["diagnosis"].clone();
+    let mut w = written["structuredContent"]["output"]["diagnosis"].clone();
+    q.as_object_mut().unwrap().remove("iterations");
+    w.as_object_mut().unwrap().remove("iterations");
+    assert_eq!(q, w);
+    call(&mut server, "drawing.undo", json!({"drawing":drawing}));
+    assert_eq!(
+        call(&mut server, "drawing.entities", json!({"drawing":drawing}))["structuredContent"]["items"],
+        before
+    );
+    std::fs::remove_dir_all(dir).unwrap();
+}

@@ -536,6 +536,10 @@ fn check_parts(doc: &Document, rule: &ConstraintRule, at: &str) -> Result<(), St
                 format!(
                     "{uid} kimlikli NURBS'te bu kısıt parçası desteklenmiyor: yalnız uygun uç yapısına sahip açık, periyodik olmayan eğrilerin başlangıç/bitiş uçları kısıtlanabilir; iç noktalar korunur."
                 )
+            } else if matches!(entity, kentos_commands::Entity::Insert(_)) {
+                format!(
+                    "{uid} kimlikli blokta yalnız yerleştirme noktası kısıtlanabilir (point/node, part: 0). İç parçalar, dönme açısı ve ölçek bu adaptörün kapsamında değil; korunur."
+                )
             } else {
                 format!(
                     "{uid} kimlikli nesnede kısıtın andığı parça yok: köşe numarası, düz kenar (yaylı kenar kısıt almaz) ya da daire olarak yeniden seçin."

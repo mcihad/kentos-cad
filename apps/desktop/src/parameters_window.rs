@@ -608,6 +608,11 @@ impl App {
                 "NURBS için yalnız uç kısıtları hesaplanır. İç kontrol noktaları bu serbestlik sayısına dahil değildir; düzenlenebilir kalır.",
             ));
         }
+        if readout.block_anchors {
+            body = body.push(label::caption(
+                "Blokların yalnız yerleştirme noktaları hesaplanır. Dönme açısı, ayna, ölçek ve iç parçalar korunur; bu serbestlik sayısına dahil değildir.",
+            ));
+        }
         if let Some((kind, said)) = &w.said {
             body = body.push(words::summary(vec![words::text_line(*kind, said.clone())]));
         }

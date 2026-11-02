@@ -5,6 +5,7 @@
 //! semi-axis lengths and orientation; an elliptical arc also has two unwrapped end parameters.
 //! The bounded NURBS adapter varies only the two endpoint poles of an open, nonperiodic, doubly clamped curve.
 //! Its interior poles, degree, knots and weights remain source constants.
+//! A block placement contributes only its insertion point; rotation, mirror and scale remain source constants.
 
 use crate::entity::Shape;
 use crate::geom::arc::sweep;
@@ -156,6 +157,10 @@ impl Model {
                 rings: Vec::new(),
             };
             match shape {
+                Shape::Insert { p, .. } => {
+                    push(&mut m, p.x, VarKind::East);
+                    push(&mut m, p.y, VarKind::North);
+                }
                 Shape::Point { p, parts, .. } => {
                     push(&mut m, p.x, VarKind::East);
                     push(&mut m, p.y, VarKind::North);
@@ -294,6 +299,7 @@ impl Model {
                 let count = 1 + parts.as_ref().map_or(0, Vec::len);
                 ((k as usize) < count).then(|| vec![s + 2 * k as usize, s + 2 * k as usize + 1])
             }
+            (PointAt::Node(0), Shape::Insert { .. }) => Some(vec![s, s + 1]),
             (PointAt::Start, Shape::Line { .. } | Shape::Nurbs { .. }) => Some(vec![s, s + 1]),
             (PointAt::End, Shape::Line { .. } | Shape::Nurbs { .. }) => Some(vec![s + 2, s + 3]),
             (PointAt::Center, Shape::Circle { .. } | Shape::Arc { .. } | Shape::Ellipse { .. }) => {
@@ -387,6 +393,7 @@ pub(super) fn build(shape: &Shape, element: &Element, v: &[D]) -> Built {
 pub(super) fn write_back(shape: &mut Shape, slot: &Slot, x: &[f64]) {
     let s = slot.start;
     match shape {
+        Shape::Insert { p, .. } => *p = Vec2::new(x[s], x[s + 1]),
         Shape::Point { p, parts, .. } => {
             *p = Vec2::new(x[s], x[s + 1]);
             for (k, q) in parts.iter_mut().flatten().enumerate() {

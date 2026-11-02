@@ -466,8 +466,12 @@ iç kontrol noktaları, derece, düğüm ve ağırlıklar korunur. Gerçek GUI�
 dört bağ, 6→8 m ve izleyen çizgi, kapsam notu dar/geniş pencere, açıklamalı
 destek dışı ret, dosya/Python eşitliği ve tek Undo doğrulandı.
 [ADR 0832](../docs/adr/0832-bounded-nurbs-endpoint-constraints.md).
-Yaylı kenar adaptörü, boyut cebiri, elips grip hedefi ve aynalı
-blok/sürükleme/dal birleşik kabulü bitmeden bu madde kapatılmaz.
+Aynalı/dönük ve ayrı X/Y ölçekli blokta Node(0) yerleştirme adaptörü
+kabul edildi: gerçek GUI'de 6→8 m, izleyen çizgi, fare/ölçülü grip,
+öznitelik konumları, kapsam notu ve tek Undo; Python/MCP ortak komut
+kabulü geçti. [ADR 0833](../docs/adr/0833-block-insertion-anchor-constraints.md).
+Yaylı kenar adaptörü, boyut cebiri, elips grip hedefi, geçici hold
+teşhisi ve birleşik çözüm dalı kabulü bitmeden bu madde kapatılmaz.
 
 ### CAD-ADV-06 — Parametrik blokları sürdürülebilir 2B bileşenlere dönüştür [ ]
 

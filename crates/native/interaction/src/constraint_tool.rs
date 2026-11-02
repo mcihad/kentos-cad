@@ -304,7 +304,7 @@ fn part_at(p: &Pointer, cx: &Context<'_>, want: Want) -> Option<Picked> {
 /// What the click asks for, as the prompt says it.
 fn want_words(w: Want) -> &'static str {
     match w {
-        Want::Point => "bir noktaya (uç, köşe, merkez)",
+        Want::Point => "bir noktaya (uç, köşe, merkez, yerleştirme)",
         Want::Segment => "bir düz kenara",
         Want::Circle => "bir daireye ya da yaya",
         Want::PointOrCurve => "bir noktaya ya da kenara",
@@ -327,6 +327,7 @@ pub struct ConstraintTool {
     /// A successful click is not a request to preview adding the same constraint again.
     completed_at: Option<(Vec2, u64)>,
     nurbs_endpoints: bool,
+    block_anchors: bool,
 }
 
 impl ConstraintTool {
@@ -465,6 +466,7 @@ impl ConstraintTool {
         self.drawn = Preview::default();
         self.completed_at = None;
         self.nurbs_endpoints = false;
+        self.block_anchors = false;
     }
 
     /// Writes the constraint; the solver's word or its refusal said.
@@ -512,7 +514,29 @@ impl ConstraintTool {
             match constraints_edit::plan_in(cx.doc, &input) {
                 CommandResult::Completed { output, .. } => {
                     for e in &output.changed {
-                        let o = Outline::of(&shape(e), Some([6.0, 4.0]), 2.0, Tone::Accent);
+                        let o = if let Entity::Insert(now) = e
+                            && let Some(Entity::Insert(was)) = cx.doc.get(Slot(now.base.id))
+                        {
+                            // The anchor adapter only translates. Reuse the actual expanded instance so the
+                            // ghost includes its definition, dynamic values, moved attributes and clipping.
+                            let paths = cx.spatial.store().transform_outlines(
+                                &[f64::from(now.base.id)],
+                                &[kentos_geometry_core::geom::affine::translation(
+                                    now.p.x - was.p.x,
+                                    now.p.y - was.p.y,
+                                )],
+                                1,
+                            );
+                            let (strokes, marks) = crate::outlines::read(&paths, |pts, closed| {
+                                let mut stroke =
+                                    Stroke::solid(pts, closed).width(2.0).tone(Tone::Accent);
+                                stroke.dash = Some([6.0, 4.0]);
+                                stroke
+                            });
+                            Outline { strokes, marks }
+                        } else {
+                            Outline::of(&shape(e), Some([6.0, 4.0]), 2.0, Tone::Accent)
+                        };
                         drawn.strokes.extend(o.strokes);
                         drawn.marks.extend(o.marks);
                     }
@@ -607,6 +631,9 @@ impl Tool for ConstraintTool {
         if self.nurbs_endpoints {
             prompt = prompt.note("NURBS: yalnız uçlar değişir; iç noktalar korunur");
         }
+        if self.block_anchors {
+            prompt = prompt.note("Blok: yalnız yerleşim değişir; açı, ayna ve ölçek korunur");
+        }
         prompt
     }
 
@@ -666,6 +693,23 @@ impl Tool for ConstraintTool {
                 );
                 return;
             }
+            if cx
+                .spatial
+                .hits(p.raw, cx.pick_tolerance())
+                .iter()
+                .any(|slot| {
+                    cx.doc.get(*slot).is_some_and(|e| {
+                        matches!(e, Entity::Insert(_))
+                            && crate::selectable::entity_allowed(cx.draft.select_kinds, e)
+                    })
+                })
+            {
+                cx.say(
+                    Level::Warn,
+                    "Blokta yalnız yerleştirme noktasına kısıt bağlanabilir; iç parça, açı ve ölçek korunur. Çizim değiştirilmedi.",
+                );
+                return;
+            }
             cx.say(
                 Level::Warn,
                 format!(
@@ -678,6 +722,7 @@ impl Tool for ConstraintTool {
             return;
         };
         self.nurbs_endpoints |= matches!(cx.doc.get(part.slot), Some(Entity::Nurbs(_)));
+        self.block_anchors |= matches!(cx.doc.get(part.slot), Some(Entity::Insert(_)));
         self.picked.push(part);
         if !self.complete_with(0) {
             return;
@@ -735,6 +780,10 @@ impl Tool for ConstraintTool {
                 .picked
                 .iter()
                 .any(|p| matches!(cx.doc.get(p.slot), Some(Entity::Nurbs(_))));
+            self.block_anchors = self
+                .picked
+                .iter()
+                .any(|p| matches!(cx.doc.get(p.slot), Some(Entity::Insert(_))));
             return true;
         }
         false

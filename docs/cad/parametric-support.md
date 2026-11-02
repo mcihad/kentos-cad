@@ -10,7 +10,7 @@ doğrulanan ilk arayüz dilimini ve kalan gerçek geometri işlerini ayırır.
 | Çoklu çizgi / alan | Her halka/parçanın köşeleri bilinmeyen; düz kenarlar Segment | Yaylı kenarın bulge/yarıçapı sabit, henüz değişken değil |
 | Elips | Merkez ve mevcut Start/End (tam elipste dikiş); gerçek yarı eksen/açı bilinmeyenleri, dual türevler | Genel teğet, ayrı eksen noktaları, gripte kısmi tutuş kabulü |
 | NURBS | Açık/periyodik olmayan ve iki ucu tam clamped eğride Start/End; dört uç koordinatı, iç kontrol noktaları sabit | Genel kontrol/teğet/G2 ve diğer uç yapıları bu adaptörde yok |
-| Blok / iç nesne | Genel çözücü Insert bilinmeyeni ve dönüşüm yolu almıyor | Aynalı/dönük yerleştirme ve kilitli referans politikası |
+| Blok yerleştirmesi / iç nesne | Yerleştirme noktası Node(0), yalnız iki konum bilinmeyeni; ayna/açı/ölçek ve kaynak korunur | İç parça, dönme ve ölçek bilinmeyenleri bu adaptörde yok; birleşik GUI/Python/MCP ve grip/Undo kabulü geçti |
 | Parametre ifadeleri | Uzunluk/açı/sayı, ad değiştirme, token bağımlılığı, döngü, sıfıra bölme | Boyut cebiri ve uygunsuz birim karışımı ayrıca denetlenmeli |
 | Teşhis | `cad.constraints.query`: serbestlik, hareket edebilenler, fazla/çelişen/tekil/kopuk | Sahnedeki serbest yönlerin gösterimi ve büyük problemde durdurma |
 
@@ -39,7 +39,7 @@ doğrulanan ilk arayüz dilimini ve kalan gerçek geometri işlerini ayırır.
 ## Kod kanıtı
 
 - `geometry-core/src/ops/constraints/model.rs`: bilinmeyen düzeni;
-  `element_vars` yaylı Segment'i reddeder; elips 5/7, sınırlı NURBS uç modeli 4 bilinmeyen alır; Insert slotu yoktur.
+  `element_vars` yaylı Segment'i reddeder; elips 5/7, sınırlı NURBS uç modeli 4, Insert yerleşimi 2 bilinmeyen alır.
 - Aynı dizindeki `rules.rs`, `solve.rs`: dual türevler, bağımsız gruplar,
   teşhis ve en az değişim çözümü. Yeni bir motor kurulmayacak.
 - `native/domain/src/constraints.rs`: kalıcı başvuruların adaptörü;
@@ -72,3 +72,5 @@ Başarı sonrası durağan imleç ve birimli sonuç kabulü: [ADR 0830](../adr/0
 Elipsin kendi merkez–uç yönünde ekseni çökertmeden çeyrek dönüşü, kilit/çelişki ve UI/Python/MCP/Undo kabulü: [ADR 0831](../adr/0831-ellipse-ray-direction-without-axis-collapse.md).
 
 Açık NURBS uçlarının 6→8 m, bağlı çizgi, kapsam notu, dosya/Undo ve UI/Python/MCP kabulü: [ADR 0832](../adr/0832-bounded-nurbs-endpoint-constraints.md), [Python/MCP kullanımı](nurbs-constraints-python.md).
+
+Aynalı/dönük blok yerleştirme noktası ve gerçek grip kabulü: [ADR 0833](../adr/0833-block-insertion-anchor-constraints.md), [Python/MCP kullanımı](block-anchor-constraints-python.md). İlk seçilen sabit nesnenin geçici hold altında gereksiz raporlanması ayrıca düzeltilecek.

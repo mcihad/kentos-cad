@@ -13,6 +13,7 @@ pub(super) struct Analysis {
     pub error: Option<String>,
     pub dependencies: Dependencies,
     pub nurbs_endpoints: bool,
+    pub block_anchors: bool,
 }
 impl Analysis {
     pub fn read(doc: &kentos_domain::Document) -> Self {
@@ -25,6 +26,13 @@ impl Analysis {
             _ => (None, Some("Kısıt teşhisi alınamadı.".into())),
         };
         Self {
+            block_anchors: doc.constraints().constraints.iter().any(|c| {
+                c.rule.elements().iter().any(|e| {
+                    doc.slot_of(kentos_domain::Uuid::from_bytes(e.uid.0))
+                        .and_then(|slot| doc.get(slot))
+                        .is_some_and(|entity| matches!(entity, kentos_commands::Entity::Insert(_)))
+                })
+            }),
             nurbs_endpoints: doc.constraints().constraints.iter().any(|c| {
                 c.rule.elements().iter().any(|e| {
                     doc.slot_of(kentos_domain::Uuid::from_bytes(e.uid.0))
@@ -169,5 +177,32 @@ mod tests {
         assert_eq!(a.listed.unwrap().diagnosis.dof, 2);
         d.undo().unwrap();
         assert!(!Analysis::read(&d).nurbs_endpoints);
+    }
+    #[test]
+    fn constrained_block_scope_does_not_claim_rotation_or_scale_as_degrees_of_freedom() {
+        use kentos_commands::{CommandResult, ConstraintsEdit, DocumentSnapshotV1};
+        use kentos_domain::{Document, Slot};
+        use kentos_native_application::{ExecutionContext, constraints_edit};
+        use serde_json::json;
+        let mut d = Document::from_snapshot(
+            DocumentSnapshotV1::from_json(include_str!(
+                "../../../../fixtures/interaction/v1/constraint-block-anchors.kcad"
+            ))
+            .unwrap(),
+        )
+        .unwrap();
+        assert!(!Analysis::read(&d).block_anchors);
+        let uid = d.uid(Slot(2)).unwrap().to_string();
+        let input:ConstraintsEdit=serde_json::from_value(json!({"edit":{"kind":"add","constraints":[{"rule":{"kind":"fix","a":{"uid":uid,"element":{"kind":"point","place":{"kind":"node","part":0}}}}}]}})).unwrap();
+        let result = constraints_edit::execute(&mut ExecutionContext::new(&mut d), input);
+        assert!(
+            matches!(result, CommandResult::Completed { .. }),
+            "{result:?}"
+        );
+        let a = Analysis::read(&d);
+        assert!(a.block_anchors);
+        assert_eq!(a.listed.unwrap().diagnosis.dof, 0);
+        d.undo().unwrap();
+        assert!(!Analysis::read(&d).block_anchors);
     }
 }

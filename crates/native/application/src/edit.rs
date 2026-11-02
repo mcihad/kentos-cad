@@ -551,6 +551,16 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
         match change {
             EntityEdit::Update { uid, geometry } => {
                 let mut next = entity_of(geometry, base.clone());
+                // Placement geometry does not carry the instance's local data. A grip/property update of
+                // the same definition must retain it; changing the definition uses its own replacement policy.
+                if let (Entity::Insert(was), Entity::Insert(now)) = (entity, &mut next) {
+                    if was.block == now.block {
+                        now.attribute_places = was.attribute_places.clone();
+                        now.parameters = was.parameters.clone();
+                        now.clipping = was.clipping.clone();
+                    }
+                    now.arch = was.arch.clone();
+                }
                 // A text keeps its link (docs/adr/0175 §4); the document breaks
                 // it when the text's place, text, height, turn or alignment changed.
                 if let (Entity::Text(was), Entity::Text(now)) = (entity, &mut next) {
