@@ -13699,10 +13699,12 @@ class BlockCard(_Model):
         version: How many times its definition has changed since it was made: 1 when made; each change of its objects, base,
             attributes or unit adds one. Unit: version.
         category: A path of categories by `/` (`Mimari/Kapılar`); absent: none.
+        publication: Stable library identity, independent of the drawing's local edit counter.
         tags: Words it is found by, each once, Turkish case folded.
     """
     version: int
     category: str | None | Unset = UNSET
+    publication: BlockPublication | None | Unset = UNSET
     tags: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -13710,6 +13712,8 @@ class BlockCard(_Model):
         out["version"] = self.version
         if self.category is not UNSET:
             out["category"] = self.category
+        if self.publication is not UNSET:
+            out["publication"] = None if self.publication is None else self.publication.to_json()
         if self.tags is not UNSET:
             out["tags"] = list(self.tags)
         return out
@@ -13719,6 +13723,7 @@ class BlockCard(_Model):
         return cls(
             version=data["version"],
             category=data.get("category", UNSET),
+            publication=UNSET if "publication" not in data else None if data["publication"] is None else BlockPublication.from_json(data["publication"]),
             tags=list(data["tags"]) if "tags" in data else UNSET,
         )
 
@@ -13991,6 +13996,37 @@ class BlockInserted(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class BlockPublication(_Model):
+    """The publisher-assigned identity of a 2D component type and its release.
+    This is metadata, not a signature or permission to update a drawing.
+    Attributes:
+        type_id: Stable across release and display-name changes, independent of the drawing's block id.
+        release: Unit: version.
+    """
+    family_id: str
+    type_id: str
+    type_name: str
+    release: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["familyId"] = self.family_id
+        out["typeId"] = self.type_id
+        out["typeName"] = self.type_name
+        out["release"] = self.release
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BlockPublication:
+        return cls(
+            family_id=data["familyId"],
+            type_id=data["typeId"],
+            type_name=data["typeName"],
+            release=data["release"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class BlockRecord(_Model):
     """One stored block definition (docs/adr/0144 §5) and its version."""
     version: str
@@ -14229,6 +14265,7 @@ class BlocksEdit(_Model):
         block: The definition; every operation but `purge`.
         blocks: `export`: the definitions, by id (absent: every one).
         category: `card`: its category (empty: none).
+        clear_publication: `card`: explicitly detach the publication identity; incompatible with `publication`.
         description: `card`: its description (empty: none).
         dynamic: `dynamic`: the parameters and actions (absent: none, a plain block).
         entities: `update`: the definition's objects, in its own coordinates, each with its local id (0: a new one;
@@ -14237,6 +14274,7 @@ class BlocksEdit(_Model):
         layer_id: `redefine` with `replace`: the layer the insert goes on.
         library: `import`: a `kentos.blocks` file's text.
         name: `rename`: the new name.
+        publication: `card`: publisher-assigned family/type/release; absent keeps it.
         remove_tags: `sync`: tags whose values are taken off the inserts though no attribute has them.
         renames: `attributes`, `sync`: an insert's value under an old tag moved to the new one (old → new).
         replace: `redefine`: true, the objects are replaced by an insert of the block.
@@ -14256,6 +14294,7 @@ class BlocksEdit(_Model):
     block: str | None | Unset = UNSET
     blocks: list[str] | None | Unset = UNSET
     category: str | None | Unset = UNSET
+    clear_publication: bool | None | Unset = UNSET
     description: str | None | Unset = UNSET
     dynamic: DynamicBlock | None | Unset = UNSET
     entities: list[Entity] | None | Unset = UNSET
@@ -14263,6 +14302,7 @@ class BlocksEdit(_Model):
     layer_id: str | None | Unset = UNSET
     library: str | None | Unset = UNSET
     name: str | None | Unset = UNSET
+    publication: BlockPublication | None | Unset = UNSET
     remove_tags: list[str] | None | Unset = UNSET
     renames: dict[str, str] | None | Unset = UNSET
     replace: bool | None | Unset = UNSET
@@ -14288,6 +14328,8 @@ class BlocksEdit(_Model):
             out["blocks"] = None if self.blocks is None else list(self.blocks)
         if self.category is not UNSET:
             out["category"] = self.category
+        if self.clear_publication is not UNSET:
+            out["clearPublication"] = self.clear_publication
         if self.description is not UNSET:
             out["description"] = self.description
         if self.dynamic is not UNSET:
@@ -14302,6 +14344,8 @@ class BlocksEdit(_Model):
             out["library"] = self.library
         if self.name is not UNSET:
             out["name"] = self.name
+        if self.publication is not UNSET:
+            out["publication"] = None if self.publication is None else self.publication.to_json()
         if self.remove_tags is not UNSET:
             out["removeTags"] = None if self.remove_tags is None else list(self.remove_tags)
         if self.renames is not UNSET:
@@ -14332,6 +14376,7 @@ class BlocksEdit(_Model):
             block=data.get("block", UNSET),
             blocks=UNSET if "blocks" not in data else None if data["blocks"] is None else list(data["blocks"]),
             category=data.get("category", UNSET),
+            clear_publication=data.get("clearPublication", UNSET),
             description=data.get("description", UNSET),
             dynamic=UNSET if "dynamic" not in data else None if data["dynamic"] is None else DynamicBlock.from_json(data["dynamic"]),
             entities=UNSET if "entities" not in data else None if data["entities"] is None else [Entity.from_json(e0) for e0 in data["entities"]],
@@ -14339,6 +14384,7 @@ class BlocksEdit(_Model):
             layer_id=data.get("layerId", UNSET),
             library=data.get("library", UNSET),
             name=data.get("name", UNSET),
+            publication=UNSET if "publication" not in data else None if data["publication"] is None else BlockPublication.from_json(data["publication"]),
             remove_tags=UNSET if "removeTags" not in data else None if data["removeTags"] is None else list(data["removeTags"]),
             renames=UNSET if "renames" not in data else None if data["renames"] is None else dict(data["renames"]),
             replace=data.get("replace", UNSET),
@@ -90386,6 +90432,7 @@ __all__ = [
     "BlockFileModeName",
     "BlockInserted",
     "BlockParameter",
+    "BlockPublication",
     "BlockRecord",
     "BlockReport",
     "BlockReportName",

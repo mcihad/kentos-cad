@@ -2,6 +2,7 @@
 import type { AttributeDefinition } from "./AttributeDefinition";
 import type { BlockEditOperation } from "./BlockEditOperation";
 import type { BlockId } from "./BlockId";
+import type { BlockPublication } from "./BlockPublication";
 import type { BlockUnits } from "./BlockUnits";
 import type { DynamicBlock } from "./DynamicBlock";
 import type { Entity } from "./Entity";
@@ -45,7 +46,15 @@ import type { Vec2 } from "./Vec2";
  * `replace` the layer checks of `cad.blocks.define`; `remove`: `block_in_use`
  * (inserts of it in the drawing or in another definition).
  */
-export type BlocksEdit = { operation: BlockEditOperation, 
+export type BlocksEdit = {
+/**
+ * `card`: publisher-assigned family/type/release; absent keeps it.
+ */
+publication?: BlockPublication,
+/**
+ * `card`: explicitly detach the publication identity; incompatible with `publication`.
+ */
+clearPublication?: boolean, operation: BlockEditOperation,
 /**
  * The definition; every operation but `purge`.
  */

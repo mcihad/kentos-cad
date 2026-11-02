@@ -1569,6 +1569,17 @@ Motor anahtarı olan stil bütün kurallarıyla denetlenir (`kentos_contracts::l
 
 ### 6.9 Bloklar
 
+**Şema 158 (ADR 0856):** `card.publication` varsa yazıcı 158 seçer. Bu
+isteğe bağlı harita `release` (uint32, en az 1), `familyId` ve `typeId` (16 bayt UUID,
+sıfır olamaz), `typeName` (1–128 Unicode skaler, başında/sonunda boşluk ve
+kontrol karakteri yok) taşır. Harita anahtarları kanonik CBOR sırasındadır:
+`typeId`, `release`, `familyId`, `typeName`. Bilinmeyen/eksik alan reddedilir; önceki
+şemada `publication` bilinmeyen alandır. Kartın var olan `version` yerel
+çizim değişikliği sayacıdır; `release` ile birbirine dönüştürülmez. Metaveri
+yoksa önceki en küçük şema ve baytlar korunur. Bu kimlik bir imza, çevrimiçi
+yayın veya kendiliğinden güncelleme izni değildir.
+
+
 Şema 6'da belgenin `blocks` alanı blok tanımlarının dizisidir (ADR 0144). Her tanım bir haritadır (anahtarlar kodlanmış sırasıyla):
 
 | Anahtar | Tür | Zorunlu | Anlamı |

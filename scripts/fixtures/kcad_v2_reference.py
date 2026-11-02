@@ -2132,10 +2132,15 @@ def attribute(a):
     return cmap(fields(a, table, "öznitelik"))
 
 
+def block_publication(p):
+    return cmap(fields(p, {"familyId": (lambda u: blob(uid_bytes(u)), True),
+                           "typeId": (lambda u: blob(uid_bytes(u)), True), "typeName": (text, True), "release": (uint, True)}, "blok yayını"))
+
+
 def card(c):
     """A block's card (schema 58, docs/adr/0317 §4): its version, a category and its tags."""
     assert c.get("tags", [None]), "boş etiket listesi yazılmaz"
-    return cmap(fields(c, {"category": (text, False), "tags": (lambda ts: array([text(t) for t in ts]), False), "version": (uint, True)}, "kart"))
+    return cmap(fields(c, {"category": (text, False), "tags": (lambda ts: array([text(t) for t in ts]), False), "version": (uint, True), "publication": (block_publication, False)}, "kart"))
 
 
 def definition(b):
@@ -2343,6 +2348,8 @@ def document(d):
     has_sets = 114 if any("edge" in item for item in sets) else bool(sets)
     assert d.get("casework", [None]), "boş mutfak dizisi listesi yazılmaz"
     schema = schema_of(d["entities"], d.get("blocks"), d["layers"], d["settings"], "sheets" in d, "requests" in d, "arrays" in d, "constraints" in d, has_sets)
+    if any(b.get("card", {}).get("publication") is not None for b in d.get("blocks", [])):
+        schema = max(schema, 158)
     if d.get("casework"):
         # A kitchen run (docs/adr/0727 §5).
         schema = max(schema, 127)
@@ -3251,7 +3258,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-158.kcad"] = container(root(cmap(parts), version=uint(158)))
+    files["schema-version-159.kcad"] = container(root(cmap(parts), version=uint(159)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4829,6 +4836,19 @@ def build():
     payload = document(load("wipeouts.json"))
     assert payload.count(b"\x67version\x18\x36") == 1
     out["broken/wipeouts-in-schema-53.kcad"] = container(payload.replace(b"\x67version\x18\x36", b"\x67version\x18\x35"))
+    publication = document(load("block-publication.json"))
+    out["block-publication.kcad"] = container(publication)
+    type_prefix = b"\x6bpublication\xa4\x66typeId\x50" + uid_bytes(load("block-publication.json")["blocks"][0]["card"]["publication"]["typeId"])
+    assert publication.count(type_prefix) == 1
+    out["broken/block-publication-missing-type-id.kcad"] = container(publication.replace(type_prefix, b"\x6bpublication\xa3"))
+    out["broken/block-publication-in-schema-157.kcad"] = container(publication.replace(b"\x67version\x18\x9e", b"\x67version\x18\x9d"))
+    out["broken/block-publication-unknown-key.kcad"] = container(publication.replace(b"typeName", b"typeNamu"))
+    for suffix, value in (("release-zero", {"release": 0}), ("type-blank", {"typeName": " "}),
+                          ("family-zero", {"familyId": "00000000-0000-0000-0000-000000000000"}),
+                          ("type-id-zero", {"typeId": "00000000-0000-0000-0000-000000000000"})):
+        one = copy.deepcopy(load("block-publication.json"))
+        one["blocks"][0]["card"]["publication"].update(value)
+        out[f"broken/block-publication-{suffix}.kcad"] = container(document(one))
     out["dynamic-blocks.kcad"] = container(document(load("dynamic-blocks.json")))
     payload = document(load("dynamic-blocks.json"))
     assert payload.count(b"\x67version\x18\x3b") == 1

@@ -1160,6 +1160,10 @@ pub struct BlockDefinition {
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct BlockCard {
+    /// Stable library identity, independent of the drawing's local edit counter.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub publication: Option<BlockPublication>,
     /// A path of categories by `/` (`Mimari/Kapılar`); absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -1173,6 +1177,24 @@ pub struct BlockCard {
     #[cfg_attr(feature = "schema", schemars(range(min = 1)))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub version: u32,
+}
+
+/// The publisher-assigned identity of a 2D component type and its release.
+/// This is metadata, not a signature or permission to update a drawing.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct BlockPublication {
+    pub family_id: crate::BlockId,
+    /// Stable across release and display-name changes, independent of the drawing's block id.
+    pub type_id: crate::BlockId,
+    #[cfg_attr(feature = "schema", schemars(length(min = 1, max = 128)))]
+    pub type_name: String,
+    #[cfg_attr(feature = "schema", schemars(range(min = 1)))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub release: u32,
 }
 
 /// The unit a block was drawn in (docs/adr/0315 §4).

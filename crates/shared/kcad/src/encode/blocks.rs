@@ -113,7 +113,8 @@ impl<'d> Encoder<'d> {
         if let Some(problem) = kentos_contracts::blocks::card_problem(card) {
             return Err(self.fail(Code::BadValue, &problem));
         }
-        let n = 1 + usize::from(!card.tags.is_empty()) + usize::from(card.category.is_some());
+        let n = 1 + usize::from(!card.tags.is_empty()) + usize::from(card.category.is_some())
+            + usize::from(card.publication.is_some());
         self.open(n, true)?;
         if !card.tags.is_empty() {
             self.key("tags");
@@ -134,6 +135,22 @@ impl<'d> Encoder<'d> {
         if let Some(c) = &card.category {
             self.key("category");
             self.at(Seg::Name("category"), |e| e.text(c))?;
+        }
+        if let Some(p) = &card.publication {
+            self.key("publication");
+            self.at(Seg::Name("publication"), |e| {
+                e.open(4, true)?;
+                e.key("typeId");
+                e.id(&p.type_id.0)?;
+                e.key("release");
+                e.w.uint(u64::from(p.release));
+                e.key("familyId");
+                e.id(&p.family_id.0)?;
+                e.key("typeName");
+                e.text(&p.type_name)?;
+                e.close();
+                Ok(())
+            })?;
         }
         self.close();
         Ok(())

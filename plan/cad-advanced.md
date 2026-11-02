@@ -676,7 +676,20 @@ korundu. 318 application, 57 MCP, 1604 masaüstü ve 444 Python testi, Clippy
 ve derleme geçti. [ADR 0855](../docs/adr/0855-block-library-refreshes-formula-values.md).
 Birim semantiği ve aile/yayın yükseltmesi bu düzeltmeyle tamamlanmaz.
 
-Tür/sürüm ve seçilmiş yükseltme, kalıcı tip–örnek parametre kapsamı ve
+**İlerleme — 2026-11-02, aile/tip/yayın kimliği:** Blok kartı isteğe bağlı
+kalıcı aile ve tip UUID'si, okunabilir tip adı ve yayın numarası taşır;
+yerel değişiklik sayacından ayrıdır. KCAD 158, kitaplık sürüm 2, Python ve
+MCP aynı kimliği korur; kimliksiz eski dosya/kitaplık davranışı korunur.
+Gerçek GUI'de tip/yayın düzenleme, sıfır numara reddi, minimum pencerede
+ayrıntılar ve sabit alt düğmeler, kitaplıkta tip/aile araması doğrulandı.
+GUI/Python kayıtları tam aynı; tek Undo başlangıçla, Redo/Vazgeç yeni
+kayıtla tam aynı, gerçek yeniden açılışta yayın 3/yerel sayaç 7 korundu.
+1163 contracts, 234 KCAD, 319 application, 58 MCP, 1605 masaüstü ve 448
+Python testi, Clippy ve derleme geçti. [ADR 0856](../docs/adr/0856-block-component-publication-identity.md),
+[kimlik/API rehberi](../docs/cad/block-publications.md). Bu kimlik temeli
+seçilmiş yayın yükseltmesini veya tip kapsamındaki parametreyi uygulamaz.
+
+Seçilmiş yayın yükseltmesi, kalıcı tip–örnek parametre kapsamı ve
 birleşik blok kabulü açıktır. Kullanıcı tanımlı grup metaverisi bu otomatik
 gruplarla tamamlanmış sayılmaz. Web öznitelik penceresinin native eşitleme kapsamıyla
 aynı olmadığı kodda görüldü; bu dilim web eşitliğini tamamlanmış saymaz.

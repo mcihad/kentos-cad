@@ -51,6 +51,12 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ADR 0856: isteğe bağlı blok aile/tip/yayın kimliği kartta ve kitaplıkta
+  düzenlenip gösterilecek; yerel sayaç yayın numarası sayılmayacak. Ortak
+  KCAD şema 158 ve kitaplık 1/2 sözleşmesi hazırdır; web'in ayrı belge,
+  komut ve arayüz katmanı kimliği koruma, iptal, ret ve tek Undo kabulünü
+  ayrıca tamamlamalı. Native kabulü web kabulü yerine geçmez.
+
 - ADR 0855: kitaplık/dosyadan blok güncellemesi formül önbelleğini her
   mevcut örneğin girdileriyle yenilemeli; değişmeyen ana tanımın iç çocuğu da
   kapsanmalı. Tek örneğin tanımsız hesabı atomik ret olmalı. Native'in salt

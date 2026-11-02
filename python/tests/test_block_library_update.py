@@ -313,3 +313,101 @@ class BlockLibraryFormulaUpdate(unittest.TestCase):
             self.assertEqual(cad.Document.from_bytes(saved).to_bytes(), saved)
             doc.undo()
             self.assertEqual(doc.to_bytes(), before)
+
+
+class BlockPublicationMetadata(unittest.TestCase):
+    def published(self):
+        return cad.Document.open(ROOT / "fixtures/kcad/v2/block-publication.kcad")
+
+    def test_publication_plan_and_single_undo_keep_geometry_and_local_counter(self):
+        doc = self.published()
+        block = doc.blocks()[0]
+        before = doc.to_bytes()
+        entities = [r.entity.to_json() for r in doc.entities()]
+        identity = block.card.publication.to_json()
+        identity["release"] = 3
+        identity["typeName"] = "Güncel tek kanat"
+        args = dict(operation="card", block=block.id,
+                    publication=cad.BlockPublication.from_json(identity))
+        plan = cad.blocks.edit.answer(doc, **args, op="plan")
+        self.assertEqual(plan.status, "completed")
+        self.assertEqual(doc.to_bytes(), before)
+        answer = cad.blocks.edit.answer(doc, **args, expected=cad.Expected(plan=plan.plan_id))
+        self.assertEqual(answer.status, "completed")
+        self.assertEqual(doc.blocks()[0].card.version, 7)
+        self.assertEqual(doc.blocks()[0].card.publication.to_json(), identity)
+        self.assertEqual([r.entity.to_json() for r in doc.entities()], entities)
+        saved = doc.to_bytes()
+        self.assertEqual(cad.Document.from_bytes(saved).to_bytes(), saved)
+        doc.undo()
+        self.assertEqual(doc.to_bytes(), before)
+        doc.redo()
+        self.assertEqual(doc.to_bytes(), saved)
+
+    def test_edit_counter_and_library_transfer_do_not_rewrite_publication_identity(self):
+        doc = self.published()
+        block = doc.blocks()[0]
+        identity = block.card.publication.to_json()
+        geometry = [e.to_json() for e in block.entities]
+        geometry.append(dict(kind="line", id=5, layerId="", attrs={},
+                             a=dict(x=.06, y=.45), b=dict(x=.3, y=.45)))
+        cad.blocks.edit(doc, operation="update", block=block.id,
+                        entities=[cad.Entity.from_json(e) for e in geometry])
+        cad.blocks.edit(doc, operation="card", block=block.id, category="Ofis/Kapılar")
+        self.assertEqual(doc.blocks()[0].card.version, 8)
+        self.assertEqual(doc.blocks()[0].card.publication.to_json(), identity)
+        library = cad.blocks.edit(doc, operation="export").library
+        other, _ = drawing()
+        cad.blocks.edit(other, operation="import", library=library, replace=True)
+        self.assertEqual(other.blocks()[0].card.publication.to_json(), identity)
+        self.assertEqual(other.blocks()[0].card.version, 8)
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "published.kcad"
+            doc.save(path)
+            target, _ = drawing()
+            cad.file.import_.block(target, path=str(path), mode="blocks", replace=True)
+            self.assertEqual(target.blocks()[0].card.publication.to_json(), identity)
+        before = doc.to_bytes()
+        cad.blocks.edit(doc, operation="card", block=block.id, clear_publication=True)
+        self.assertNotIn("publication", doc.blocks()[0].card.to_json())
+        self.assertEqual(doc.blocks()[0].card.category, "Ofis/Kapılar")
+        self.assertEqual(doc.blocks()[0].card.version, 8)
+        doc.undo()
+        self.assertEqual(doc.to_bytes(), before)
+
+    def test_invalid_publication_and_conflicting_detach_are_atomic_in_every_phase(self):
+        doc = self.published()
+        before = doc.to_bytes()
+        block = doc.blocks()[0]
+        original = block.card.publication.to_json()
+        changes = [dict(release=0), dict(typeName=" "), dict(typeName="a"*129),
+                   dict(typeName="Kapı\nStandart"), dict(familyId="00000000-0000-0000-0000-000000000000"),
+                   dict(typeId="00000000-0000-0000-0000-000000000000")]
+        for change in changes + [None]:
+            identity = dict(original, **(change or {}))
+            for phase in ("validate", "plan", "execute"):
+                with self.subTest(change=change, phase=phase):
+                    answer = cad.blocks.edit.answer(doc, operation="card", block=block.id,
+                        publication=cad.BlockPublication.from_json(identity),
+                        clear_publication=True if change is None else None, op=phase)
+                    self.assertEqual(answer.status, "failed")
+                    self.assertEqual(answer.error.code, "invalid_block_card")
+                    self.assertEqual(answer.error.path, "publication")
+                    self.assertEqual(doc.to_bytes(), before)
+
+
+    def test_publication_libraries_require_version_two_and_old_libraries_stay_version_one(self):
+        plain, library = drawing()
+        self.assertEqual(library["version"], 1)
+        doc = self.published()
+        before = doc.to_bytes()
+        exported = json.loads(cad.blocks.edit(doc, operation="export").library)
+        self.assertEqual(exported["version"], 2)
+        exported["version"] = 1
+        for phase in ("validate", "plan", "execute"):
+            answer = cad.blocks.edit.answer(doc, operation="import", library=json.dumps(exported),
+                                            replace=True, op=phase)
+            self.assertEqual(answer.status, "failed")
+            self.assertEqual(answer.error.code, "invalid_library")
+            self.assertEqual(doc.to_bytes(), before)
+        cad.blocks.edit(plain, operation="import", library=json.dumps(library), replace=True)

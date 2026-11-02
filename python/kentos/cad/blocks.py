@@ -18,6 +18,7 @@ from .types import (  # noqa: F401
     BlockEditOperation,
     BlockEditOperationName,
     BlockInserted,
+    BlockPublication,
     BlockReport,
     BlockReportName,
     BlockUnits,
@@ -271,6 +272,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
         block: str | None | Unset = UNSET,
         blocks: Sequence[str] | None | Unset = UNSET,
         category: str | None | Unset = UNSET,
+        clear_publication: bool | None | Unset = UNSET,
         description: str | None | Unset = UNSET,
         dynamic: DynamicBlock | None | Unset = UNSET,
         entities: Sequence[Entity] | None | Unset = UNSET,
@@ -278,6 +280,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
         layer_id: str | None | Unset = UNSET,
         library: str | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
+        publication: BlockPublication | None | Unset = UNSET,
         remove_tags: Sequence[str] | None | Unset = UNSET,
         renames: Mapping[str, str] | None | Unset = UNSET,
         replace: bool | None | Unset = UNSET,
@@ -314,6 +317,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
             block: The definition; every operation but `purge`.
             blocks: `export`: the definitions, by id (absent: every one).
             category: `card`: its category (empty: none).
+            clear_publication: `card`: explicitly detach the publication identity; incompatible with `publication`.
             description: `card`: its description (empty: none).
             dynamic: `dynamic`: the parameters and actions (absent: none, a plain block).
             entities: `update`: the definition's objects, in its own coordinates, each with its local id (0: a new one;
@@ -322,6 +326,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
             layer_id: `redefine` with `replace`: the layer the insert goes on.
             library: `import`: a `kentos.blocks` file's text.
             name: `rename`: the new name.
+            publication: `card`: publisher-assigned family/type/release; absent keeps it.
             remove_tags: `sync`: tags whose values are taken off the inserts though no attribute has them.
             renames: `attributes`, `sync`: an insert's value under an old tag moved to the new one (old → new).
             replace: `redefine`: true, the objects are replaced by an insert of the block.
@@ -353,6 +358,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
             block=block,
             blocks=_opt(blocks, lambda x: list(x)),
             category=category,
+            clear_publication=clear_publication,
             description=description,
             dynamic=dynamic,
             entities=_opt(entities, lambda x: list(x)),
@@ -360,6 +366,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
             layer_id=layer_id,
             library=library,
             name=name,
+            publication=publication,
             remove_tags=_opt(remove_tags, lambda x: list(x)),
             renames=_opt(renames, lambda x: dict(x)),
             replace=replace,
@@ -383,6 +390,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
         block: str | None | Unset = UNSET,
         blocks: Sequence[str] | None | Unset = UNSET,
         category: str | None | Unset = UNSET,
+        clear_publication: bool | None | Unset = UNSET,
         description: str | None | Unset = UNSET,
         dynamic: DynamicBlock | None | Unset = UNSET,
         entities: Sequence[Entity] | None | Unset = UNSET,
@@ -390,6 +398,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
         layer_id: str | None | Unset = UNSET,
         library: str | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
+        publication: BlockPublication | None | Unset = UNSET,
         remove_tags: Sequence[str] | None | Unset = UNSET,
         renames: Mapping[str, str] | None | Unset = UNSET,
         replace: bool | None | Unset = UNSET,
@@ -411,6 +420,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
             block=block,
             blocks=_opt(blocks, lambda x: list(x)),
             category=category,
+            clear_publication=clear_publication,
             description=description,
             dynamic=dynamic,
             entities=_opt(entities, lambda x: list(x)),
@@ -418,6 +428,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
             layer_id=layer_id,
             library=library,
             name=name,
+            publication=publication,
             remove_tags=_opt(remove_tags, lambda x: list(x)),
             renames=_opt(renames, lambda x: dict(x)),
             replace=replace,
@@ -441,6 +452,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
         block: str | None | Unset = UNSET,
         blocks: Sequence[str] | None | Unset = UNSET,
         category: str | None | Unset = UNSET,
+        clear_publication: bool | None | Unset = UNSET,
         description: str | None | Unset = UNSET,
         dynamic: DynamicBlock | None | Unset = UNSET,
         entities: Sequence[Entity] | None | Unset = UNSET,
@@ -448,6 +460,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
         layer_id: str | None | Unset = UNSET,
         library: str | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
+        publication: BlockPublication | None | Unset = UNSET,
         remove_tags: Sequence[str] | None | Unset = UNSET,
         renames: Mapping[str, str] | None | Unset = UNSET,
         replace: bool | None | Unset = UNSET,
@@ -469,6 +482,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
             block=block,
             blocks=_opt(blocks, lambda x: list(x)),
             category=category,
+            clear_publication=clear_publication,
             description=description,
             dynamic=dynamic,
             entities=_opt(entities, lambda x: list(x)),
@@ -476,6 +490,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
             layer_id=layer_id,
             library=library,
             name=name,
+            publication=publication,
             remove_tags=_opt(remove_tags, lambda x: list(x)),
             renames=_opt(renames, lambda x: dict(x)),
             replace=replace,
@@ -499,6 +514,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
         block: str | None | Unset = UNSET,
         blocks: Sequence[str] | None | Unset = UNSET,
         category: str | None | Unset = UNSET,
+        clear_publication: bool | None | Unset = UNSET,
         description: str | None | Unset = UNSET,
         dynamic: DynamicBlock | None | Unset = UNSET,
         entities: Sequence[Entity] | None | Unset = UNSET,
@@ -506,6 +522,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
         layer_id: str | None | Unset = UNSET,
         library: str | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
+        publication: BlockPublication | None | Unset = UNSET,
         remove_tags: Sequence[str] | None | Unset = UNSET,
         renames: Mapping[str, str] | None | Unset = UNSET,
         replace: bool | None | Unset = UNSET,
@@ -532,6 +549,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
             block=block,
             blocks=_opt(blocks, lambda x: list(x)),
             category=category,
+            clear_publication=clear_publication,
             description=description,
             dynamic=dynamic,
             entities=_opt(entities, lambda x: list(x)),
@@ -539,6 +557,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
             layer_id=layer_id,
             library=library,
             name=name,
+            publication=publication,
             remove_tags=_opt(remove_tags, lambda x: list(x)),
             renames=_opt(renames, lambda x: dict(x)),
             replace=replace,

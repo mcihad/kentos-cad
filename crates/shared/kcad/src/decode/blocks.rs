@@ -122,7 +122,7 @@ fn definition(
             }
             "description" => description = Some(text(r)?),
             // Schema 58 (docs/adr/0317 §4).
-            "card" if has.block_cards => card = Some(block_card(r)?),
+            "card" if has.block_cards => card = Some(block_card(r, has.block_publications)?),
             // Schema 59 (docs/adr/0318): its JSON, read back exactly as the writer writes it.
             "dynamic" if has.dynamic_blocks => {
                 let at = r.position();
@@ -237,10 +237,30 @@ fn definition(
 }
 
 /// A block's card (docs/adr/0317 §4); its rules are the definitions' (`blocks::card_problem`).
-fn block_card(r: &mut Reader<'_>) -> Result<kentos_contracts::BlockCard, KcadError> {
+fn block_card(r: &mut Reader<'_>, publications: bool) -> Result<kentos_contracts::BlockCard, KcadError> {
     let (mut category, mut tags, mut version) = (None, None, None);
+    let mut publication = None;
     map(r, |r, key| {
         match key {
+            "publication" if publications => {
+                let (mut family_id, mut type_id, mut type_name, mut release) = (None, None, None, None);
+                map(r, |r, key| {
+                    match key {
+                        "familyId" => family_id = Some(BlockId(id16(r)?)),
+                        "typeId" => type_id = Some(BlockId(id16(r)?)),
+                        "typeName" => type_name = Some(text(r)?),
+                        "release" => release = Some(r.uint(u64::from(u32::MAX))? as u32),
+                        _ => return Err(unknown(r)),
+                    }
+                    Ok(())
+                })?;
+                publication = Some(kentos_contracts::BlockPublication {
+                    family_id: required(r, family_id, "familyId")?,
+                    type_id: required(r, type_id, "typeId")?,
+                    type_name: required(r, type_name, "typeName")?,
+                    release: required(r, release, "release")?,
+                });
+            }
             "category" => category = Some(text(r)?),
             "tags" => {
                 let list = list(r, |r, _| text(r))?;
@@ -259,6 +279,7 @@ fn block_card(r: &mut Reader<'_>) -> Result<kentos_contracts::BlockCard, KcadErr
         Ok(())
     })?;
     Ok(kentos_contracts::BlockCard {
+        publication,
         category,
         tags: tags.unwrap_or_default(),
         version: required(r, version, "version")?,

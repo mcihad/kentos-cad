@@ -201,6 +201,17 @@ pub fn options_problem(o: &crate::entity::AttributeOptions) -> Option<String> {
 /// What is wrong with a block's card (docs/adr/0317 §4), or none: its version at least 1, its category not blank and
 /// trimmed, each tag not blank, trimmed and once (Turkish case folded).
 pub fn card_problem(card: &crate::entity::BlockCard) -> Option<String> {
+    if let Some(p) = &card.publication {
+        if p.family_id.0 == [0; 16] || p.type_id.0 == [0; 16] {
+            return Some("bileşen ailesinin ve tipinin kimliği sıfır olamaz.".into());
+        }
+        if p.type_name.trim().is_empty() || p.type_name.trim() != p.type_name || p.type_name.chars().count() > 128 || p.type_name.chars().any(char::is_control) {
+            return Some("bileşen tipi 1–128 karakter olmalı; başında/sonunda boşluk bulunmamalı.".into());
+        }
+        if p.release == 0 {
+            return Some("yayın numarası en az 1 olmalı.".into());
+        }
+    }
     if card.version == 0 {
         return Some("sürüm en az 1 olmalı.".into());
     }

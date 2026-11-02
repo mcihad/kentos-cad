@@ -107,6 +107,7 @@ fn input_checks(input: &ImportBlock) -> Result<(), Stop> {
     }
     if let Some(c) = &input.category {
         let card = BlockCard {
+            publication: None,
             category: Some(c.clone()),
             tags: Vec::new(),
             version: 1,
@@ -224,6 +225,7 @@ fn categorised(ours: &DocumentSnapshotV2, drawing: &mut DocumentSnapshotV2, cate
             continue;
         }
         let card = b.card.get_or_insert_with(|| BlockCard {
+            publication: None,
             category: None,
             tags: Vec::new(),
             version: 1,

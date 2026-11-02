@@ -31336,6 +31336,13 @@
               "null"
             ]
           },
+          "clearPublication": {
+            "description": "`card`: explicitly detach the publication identity; incompatible with `publication`.",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
           "description": {
             "description": "`card`: its description (empty: none).",
             "type": [
@@ -31395,6 +31402,17 @@
           },
           "operation": {
             "$ref": "#/$defs/BlockEditOperation"
+          },
+          "publication": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/BlockPublication"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "`card`: publisher-assigned family/type/release; absent keeps it."
           },
           "removeTags": {
             "description": "`sync`: tags whose values are taken off the inserts though no attribute has them.",
@@ -78154,6 +78172,17 @@
             "null"
           ]
         },
+        "publication": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BlockPublication"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Stable library identity, independent of the drawing's local edit counter."
+        },
         "tags": {
           "description": "Words it is found by, each once, Turkish case folded.",
           "items": {
@@ -78655,6 +78684,37 @@
           "type": "object"
         }
       ]
+    },
+    "BlockPublication": {
+      "additionalProperties": false,
+      "description": "The publisher-assigned identity of a 2D component type and its release.\nThis is metadata, not a signature or permission to update a drawing.",
+      "properties": {
+        "familyId": {
+          "$ref": "#/$defs/BlockId"
+        },
+        "release": {
+          "format": "uint32",
+          "minimum": 1,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "typeId": {
+          "$ref": "#/$defs/BlockId",
+          "description": "Stable across release and display-name changes, independent of the drawing's block id."
+        },
+        "typeName": {
+          "maxLength": 128,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "familyId",
+        "typeId",
+        "typeName",
+        "release"
+      ],
+      "type": "object"
     },
     "BlockRecord": {
       "description": "One stored block definition (docs/adr/0144 §5) and its version.",
