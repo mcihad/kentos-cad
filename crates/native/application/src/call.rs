@@ -39,6 +39,8 @@ pub const CORE: &str = concat!("kentos-native-application/", env!("CARGO_PKG_VER
 /// (`ExecutionContext::call`); the write's outcome comes back in it.
 #[derive(Clone, Debug, Default)]
 pub struct CallState {
+    /// Explicit, transient full-ellipse axis intents, including writes nested in an outer command.
+    pub(crate) ellipse_axes: Vec<(kentos_commands::EntityId, u8)>,
     /// The request's id and the call's fingerprint.
     pub(crate) request: Option<(String, String)>,
     /// The plan the write must equal.
@@ -153,7 +155,13 @@ where
                 } => {
                     // The constraints of the objects the write changed (docs/adr/0337).
                     let stop = || job.is_some_and(crate::jobs::Progress::stopped);
-                    match crate::constraint_follow::follow(inner.doc, command, relax, &stop) {
+                    let axes = inner.call.as_ref().map(|s|s.ellipse_axes.as_slice()).unwrap_or(&[]);
+                    let followed = if axes.is_empty() {
+                        crate::constraint_follow::follow(inner.doc,command,relax,&stop)
+                    } else {
+                        crate::constraint_follow::follow_with_axes(inner.doc, command, relax, axes, &stop)
+                    };
+                    match followed {
                         Ok(followed) => {
                             warnings.extend(followed.warnings);
                             // The subnetwork names of the networks that keep them (docs/adr/0562 §3).

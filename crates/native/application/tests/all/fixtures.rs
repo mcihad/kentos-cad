@@ -3767,7 +3767,7 @@ impl Input for EntitiesEdit {
             EntityEdit::Update { geometry, .. }
             | EntityEdit::Replace { geometry, .. }
             | EntityEdit::Add { geometry, .. } => geometry,
-            EntityEdit::Remove { .. } => return None,
+            EntityEdit::Remove { .. } | EntityEdit::EllipseAxis { .. } => return None,
         };
         geometry_number(geometry, rest)
     }

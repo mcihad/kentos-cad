@@ -3106,3 +3106,82 @@ fn full_ellipse_seam_survives_axis_swap_plan_save_and_undo_through_mcp() {
     assert_eq!(std::fs::read(&path).unwrap(), before);
     std::fs::remove_dir_all(dir).unwrap();
 }
+
+#[test]
+fn named_ellipse_axis_grip_keeps_measure_follower_save_and_single_undo_through_mcp() {
+    let dir = std::env::temp_dir().join(format!(
+        "kentos-mcp-ellipse-axis-intent-{}",
+        std::process::id()
+    ));
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join("ellipse.kcad");
+    std::fs::write(
+        &path,
+        include_bytes!("../../../../fixtures/interaction/v1/constraint-ellipse-axis.kcad"),
+    )
+    .unwrap();
+    let mut server = Server::new();
+    let drawing =
+        call(&mut server, "drawing.open", json!({"path":path}))["structuredContent"]["drawing"]
+            .clone();
+    let before = std::fs::read(&path).unwrap();
+    let items=call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"].clone();
+    let input = json!({"drawing":drawing,"operation":"grip","changes":[{"kind":"ellipseAxis","uid":items[0]["uid"],"index":1,"at":{"x":487000,"y":4420003}}]});
+    let mut plan = input.clone();
+    plan["op"] = json!("plan");
+    let planned = call(&mut server, "cad.entities.edit", plan);
+    assert_eq!(
+        planned["structuredContent"]["status"], "completed",
+        "{planned}"
+    );
+    assert_eq!(
+        call(&mut server, "drawing.entities", json!({"drawing":drawing}))["structuredContent"]["items"],
+        items
+    );
+    let result = call(&mut server, "cad.entities.edit", input);
+    assert_eq!(
+        result["structuredContent"]["status"], "completed",
+        "{result}"
+    );
+    let after=call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"].clone();
+    assert_eq!(
+        planned["structuredContent"]["output"]["changed"],
+        json!([after[0]["entity"]])
+    );
+    assert_eq!(after[0]["uid"], items[0]["uid"]);
+    assert_ne!(after[1]["entity"]["a"], items[1]["entity"]["a"]);
+    let e = &after[0]["entity"];
+    let a = e["major"]["x"]
+        .as_f64()
+        .unwrap()
+        .hypot(e["major"]["y"].as_f64().unwrap());
+    assert!((a * e["ratio"].as_f64().unwrap() - 3.).abs() < 1e-8);
+    let q = call(
+        &mut server,
+        "cad.constraints.query",
+        json!({"drawing":drawing}),
+    )["structuredContent"]["output"]
+        .clone();
+    assert!(
+        q["constraints"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|c| c["holds"] == true)
+    );
+    assert_eq!(q["diagnosis"]["dof"], 4);
+    call(
+        &mut server,
+        "drawing.save",
+        json!({"drawing":drawing,"path":path}),
+    );
+    assert_ne!(std::fs::read(&path).unwrap(), before);
+    call(&mut server, "drawing.undo", json!({"drawing":drawing}));
+    call(
+        &mut server,
+        "drawing.save",
+        json!({"drawing":drawing,"path":path}),
+    );
+    assert_eq!(std::fs::read(&path).unwrap(), before);
+    std::fs::remove_dir_all(dir).unwrap();
+}

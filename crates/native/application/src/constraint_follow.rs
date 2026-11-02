@@ -18,7 +18,7 @@ use kentos_geometry_core::ops::constraints::{Status, moved_parts};
 
 use crate::checks::{self, Stop};
 use crate::codes;
-use crate::constraint_solve::{Held, solve_set, unmet};
+use crate::constraint_solve::{Held, unmet};
 use crate::geometry::shape;
 
 /// The commands that cut, join or turn objects round: their parts are not the ones the constraints were written for,
@@ -64,6 +64,16 @@ pub(crate) fn follow(
     doc: &mut Document,
     command: &str,
     relax: bool,
+    stop: &dyn Fn() -> bool,
+) -> Result<Followed, Stop> {
+    follow_with_axes(doc, command, relax, &[], stop)
+}
+
+pub(crate) fn follow_with_axes(
+    doc: &mut Document,
+    command: &str,
+    relax: bool,
+    axes: &[(EntityId, u8)],
     stop: &dyn Fn() -> bool,
 ) -> Result<Followed, Stop> {
     let mut out = Followed::default();
@@ -112,6 +122,11 @@ pub(crate) fn follow(
         } else {
             let mut held = Vec::new();
             for (uid, before) in &edited {
+                // This explicit source grip holds its axis point. Holding its incidental seam
+                // would prevent the undragged radius from satisfying an existing dimension.
+                if axes.iter().any(|(id, _)| id == uid) {
+                    continue;
+                }
                 let Some(now) = doc
                     .slot_of(kentos_domain::Uuid::from_bytes(uid.0))
                     .and_then(|s| doc.get(s))
@@ -126,9 +141,15 @@ pub(crate) fn follow(
                     });
                 }
             }
-            let solved = solve_set(doc, &set, &held, Some(&fix), stop).map_err(|u| {
-                Stop::failed(checks::error(codes::PARAMETER_RANGE, u.words, u.path))
-            })?;
+            let solved = crate::constraint_solve::solve_set_with_axes(
+                doc,
+                &set,
+                &held,
+                axes,
+                Some(&fix),
+                stop,
+            )
+            .map_err(|u| Stop::failed(checks::error(codes::PARAMETER_RANGE, u.words, u.path)))?;
             if solved.outcome.status == Status::Cancelled {
                 return Err(Stop::Cancelled);
             }
@@ -206,7 +227,8 @@ pub(crate) fn bonds_refusal<'u, T>(
         .collect();
     if named.is_empty()
         || !uids.into_iter().any(|u| {
-            kentos_domain::Uuid::parse_str(u).is_ok_and(|u| named.contains(&EntityId(u.into_bytes())))
+            kentos_domain::Uuid::parse_str(u)
+                .is_ok_and(|u| named.contains(&EntityId(u.into_bytes())))
         })
     {
         return None;

@@ -308,3 +308,61 @@ fn an_elliptical_arc_grip_conflict_keeps_the_last_valid_drawing() {
     b.click(4. * 0.3f64.cos(), 2. * 0.3f64.sin());
     assert_eq!(b.doc.to_snapshot_v2(), before, "{:?}", b.log);
 }
+
+#[test]
+fn a_named_full_axis_previews_and_commits_without_freezing_its_other_radius() {
+    use kentos_commands::{CommandResult, ConstraintsQuery, Entity};
+    use kentos_native_application::{ExecutionContext, constraints_edit, constraints_query};
+    let mut raw: Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/interaction/v1/empty.kcad"
+    ))
+    .unwrap();
+    raw["settings"]["workspace"] = json!("cad");
+    raw["entities"] = json!([
+        {"kind":"ellipse","id":1,"layerId":"cizim","attrs":{},"c":{"x":E,"y":N},"major":{"x":4,"y":0},"ratio":0.5,"t0":0.6,"t1":0.6},
+        {"kind":"line","id":2,"layerId":"cizim","attrs":{},"a":{"x":E+4.*0.6f64.cos(),"y":N+2.*0.6f64.sin()},"b":{"x":E+8.,"y":N+3.}}
+    ]);
+    let mut b = Bench::on(&raw.to_string());
+    b.draft.snap = false;
+    let part = |slot, p: &str| json!({"uid":b.doc.uid(Slot(slot)).unwrap().to_string(),"element":{"kind":"point","place":{"kind":p}}});
+    let c = part(1, "center");
+    let s = part(1, "start");
+    let f = part(2, "start");
+    let distance = (4. * 0.6f64.cos()).hypot(2. * 0.6f64.sin());
+    let result=constraints_edit::execute(&mut ExecutionContext::new(&mut b.doc),serde_json::from_value(json!({"edit":{"kind":"add","constraints":[
+        {"rule":{"kind":"fix","a":c}},{"rule":{"kind":"distance","a":c,"b":s,"parameter":"uzaklik"},"value":format!("{distance:.17}m")},
+        {"rule":{"kind":"coincident","a":s,"b":f}}]}})).unwrap());
+    assert!(
+        matches!(result, CommandResult::Completed { .. }),
+        "{result:?}"
+    );
+    b.selection.set([Slot(1)]);
+    let before = b.doc.to_snapshot_v2();
+    b.click(0., 2.);
+    assert!(b.session.grip_active());
+    b.move_to(0., 3.);
+    let preview = b.session.preview(&Default::default()).unwrap();
+    assert_ne!(
+        preview.tag_tone,
+        kentos_interaction::Tone::Danger,
+        "{preview:?}"
+    );
+    assert!(preview.strokes.len() >= 2);
+    assert_eq!(b.doc.to_snapshot_v2(), before);
+    assert!(b.type_text(&format!("{E},{}", N + 3.)));
+    assert!(!b.session.grip_active());
+    let Some(Entity::Ellipse(e)) = b.doc.get(Slot(1)) else {
+        panic!()
+    };
+    let a = e.major.x.hypot(e.major.y);
+    assert!((a * e.ratio - 3.).abs() < 1e-8);
+    assert!(a < 4. && a > 3.);
+    let q = constraints_query::read(&b.doc, &ConstraintsQuery::default());
+    let CommandResult::Completed { output: q, .. } = q else {
+        panic!("{q:?}")
+    };
+    assert!(q.constraints.iter().all(|c| c.holds));
+    assert_eq!(q.diagnosis.dof, 4);
+    b.doc.undo().unwrap();
+    assert_eq!(b.doc.to_snapshot_v2(), before);
+}

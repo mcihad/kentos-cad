@@ -437,3 +437,172 @@ fn full_ellipse_axis_grips_keep_nonzero_seam_and_followers_across_axis_swaps() {
         }
     }
 }
+
+fn axis_dimension_drawing(origin: (f64, f64)) -> Document {
+    let mut raw = drawing().to_snapshot_v2();
+    if let Entity::Ellipse(e) = &mut raw.entities[0] {
+        e.c = Vec2 {
+            x: origin.0,
+            y: origin.1,
+        };
+        e.t0 = 0.6;
+        e.t1 = 0.6;
+    }
+    let p = Vec2 {
+        x: origin.0 + 4. * 0.6f64.cos(),
+        y: origin.1 + 2. * 0.6f64.sin(),
+    };
+    if let Entity::Line(l) = &mut raw.entities[1] {
+        l.a = p;
+        l.b = Vec2 {
+            x: origin.0 + 8.,
+            y: origin.1 + 3.,
+        };
+    }
+    let mut d = Document::from_snapshot_v2(raw).unwrap();
+    let c = part(&d, 1, "center");
+    let s = part(&d, 1, "start");
+    let f = part(&d, 2, "start");
+    let length = (p.x - origin.0).hypot(p.y - origin.1);
+    add(
+        &mut d,
+        json!([{"rule":{"kind":"fix","a":c}},
+        {"rule":{"kind":"distance","a":c,"b":s,"parameter":"uzaklik"},"value":format!("{length:.17}m")},
+        {"rule":{"kind":"coincident","a":s,"b":f}}]),
+    );
+    d
+}
+
+#[test]
+fn named_axis_grips_keep_the_axis_target_and_let_the_other_radius_satisfy_its_dimension() {
+    use kentos_geometry_core::ops::grips::{ellipse_axis_after_grip, ellipse_axis_point};
+    use kentos_native_application::{edit, geometry};
+    for origin in [(0., 0.), (487000., 4420000.)] {
+        for (index, delta) in [
+            (0, (1.5, 0.)),
+            (1, (0., 3.)),
+            (2, (-1.5, 0.)),
+            (3, (0., -3.)),
+        ] {
+            let mut d = axis_dimension_drawing(origin);
+            let before = d.to_snapshot_v2();
+            let uid = d.uid(Slot(1)).unwrap().to_string();
+            let at = Vec2 {
+                x: origin.0 + delta.0,
+                y: origin.1 + delta.1,
+            };
+            let shape = geometry::shape(d.get(Slot(1)).unwrap());
+            let axis =
+                ellipse_axis_after_grip(&shape, index, kentos_geometry_core::Vec2::new(at.x, at.y))
+                    .unwrap();
+            let input:EntitiesEdit=serde_json::from_value(json!({"operation":"grip","changes":[{"kind":"ellipseAxis","uid":uid,"index":index,"at":at}]})).unwrap();
+            done(edit::validate(&ExecutionContext::new(&mut d), &input));
+            let planned = done(edit::plan(&ExecutionContext::new(&mut d), &input));
+            assert_eq!(d.to_snapshot_v2(), before);
+            done(edit::execute(&mut ExecutionContext::new(&mut d), input));
+            assert_eq!(planned.changed[0], *d.get(Slot(1)).unwrap());
+            let point =
+                ellipse_axis_point(&geometry::shape(d.get(Slot(1)).unwrap()), axis).unwrap();
+            assert!(
+                (point.x - at.x).hypot(point.y - at.y) < 3e-9,
+                "{index}: {point:?} != {at:?}"
+            );
+            let Some(Entity::Line(line)) = d.get(Slot(2)) else {
+                panic!()
+            };
+            let old = before.entities[1].clone();
+            let Entity::Line(old) = old else { panic!() };
+            assert!(
+                (line.a.x - old.a.x).hypot(line.a.y - old.a.y) > 0.1,
+                "the seam must be free to follow its dimension"
+            );
+            let q = done(constraints_query::read(&d, &ConstraintsQuery::default()));
+            assert!(q.constraints.iter().all(|c| c.holds));
+            assert_eq!(q.diagnosis.dof, 4);
+            assert_eq!(ellipse(&d).base.attrs, before.entities[0].base().attrs);
+            let saved = d.to_snapshot_v2();
+            assert_eq!(
+                Document::from_snapshot_v2(saved.clone())
+                    .unwrap()
+                    .to_snapshot_v2(),
+                saved
+            );
+            d.undo().unwrap();
+            assert_eq!(d.to_snapshot_v2(), before);
+        }
+    }
+}
+
+#[test]
+fn invalid_named_axis_grips_and_a_fixed_seam_are_atomic() {
+    use kentos_native_application::edit;
+    let mut d = axis_dimension_drawing((0., 0.));
+    let uid = d.uid(Slot(1)).unwrap().to_string();
+    for value in [
+        json!({"operation":"properties","changes":[{"kind":"ellipseAxis","uid":uid,"index":1,"at":{"x":0,"y":3}}]}),
+        json!({"operation":"grip","changes":[{"kind":"ellipseAxis","uid":uid,"index":4,"at":{"x":0,"y":3}}]}),
+        json!({"operation":"grip","changes":[{"kind":"ellipseAxis","uid":uid,"index":0,"at":{"x":0,"y":0}}]}),
+    ] {
+        let before = d.to_snapshot_v2();
+        let input: EntitiesEdit = serde_json::from_value(value).unwrap();
+        assert!(!matches!(
+            edit::execute(&mut ExecutionContext::new(&mut d), input),
+            CommandResult::Completed { .. }
+        ));
+        assert_eq!(d.to_snapshot_v2(), before);
+    }
+    let query = done(constraints_query::read(&d, &ConstraintsQuery::default()));
+    let ids: Vec<_> = query
+        .constraints
+        .iter()
+        .filter(|r| matches!(r.constraint.rule, ConstraintRule::Distance { .. }))
+        .map(|r| r.constraint.id)
+        .collect();
+    done(constraints_edit::execute(
+        &mut ExecutionContext::new(&mut d),
+        serde_json::from_value(json!({"edit":{"kind":"remove","ids":ids}})).unwrap(),
+    ));
+    let start = part(&d, 1, "start");
+    add(&mut d, json!([{"rule":{"kind":"fix","a":start}}]));
+    let before = d.to_snapshot_v2();
+    let input:EntitiesEdit=serde_json::from_value(json!({"operation":"grip","changes":[{"kind":"ellipseAxis","uid":uid,"index":1,"at":{"x":0,"y":3}}]})).unwrap();
+    let validated = edit::validate(&ExecutionContext::new(&mut d), &input);
+    assert!(
+        matches!(validated,CommandResult::Failed{ref error} if error.code=="constraint_conflict"),
+        "{validated:?}"
+    );
+    assert_eq!(d.to_snapshot_v2(), before);
+    let planned = edit::plan(&ExecutionContext::new(&mut d), &input);
+    assert!(
+        matches!(planned,CommandResult::Failed{ref error} if error.code=="constraint_conflict"),
+        "{planned:?}"
+    );
+    assert_eq!(d.to_snapshot_v2(), before);
+    let written = edit::execute(&mut ExecutionContext::new(&mut d), input);
+    assert!(
+        matches!(written,CommandResult::Failed{ref error} if error.code=="constraint_conflict"),
+        "{written:?}"
+    );
+    assert_eq!(d.to_snapshot_v2(), before);
+}
+
+#[test]
+fn named_axis_grips_in_a_changeset_keep_the_same_target_diagnosis_and_undo() {
+    use kentos_native_application::{changeset, edit};
+    let mut d = axis_dimension_drawing((487000., 4420000.));
+    let before = d.to_snapshot_v2();
+    let input = json!({"operation":"grip","changes":[{"kind":"ellipseAxis","uid":d.uid(Slot(1)).unwrap().to_string(),"index":1,"at":{"x":487000,"y":4420003}}]});
+    let direct: EntitiesEdit = serde_json::from_value(input.clone()).unwrap();
+    let planned = done(edit::plan(&ExecutionContext::new(&mut d), &direct));
+    done(changeset::execute(
+        &mut ExecutionContext::new(&mut d),
+        serde_json::from_value(json!({"steps":[{"command":"cad.entities.edit","input":input}]}))
+            .unwrap(),
+    ));
+    assert_eq!(planned.changed[0], *d.get(Slot(1)).unwrap());
+    let q = done(constraints_query::read(&d, &ConstraintsQuery::default()));
+    assert!(q.constraints.iter().all(|c| c.holds));
+    assert_eq!(q.diagnosis.dof, 4);
+    d.undo().unwrap();
+    assert_eq!(d.to_snapshot_v2(), before);
+}

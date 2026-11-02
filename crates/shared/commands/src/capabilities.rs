@@ -862,6 +862,7 @@ const ENTRIES: &[Entry] = &[
             &["invalid_space_separator"],
             &[
                 "no_changes",
+                "edit_not_applicable",
                 "invalid_uid",
                 "entity_not_found",
                 "repeated_entity",

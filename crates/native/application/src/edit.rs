@@ -46,6 +46,24 @@ use crate::widths;
 
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &EntitiesEdit) -> CommandResult<()> {
+    if input
+        .changes
+        .iter()
+        .any(|c| matches!(c, EntityEdit::EllipseAxis { .. }))
+        && updates_need_settlement(cx.doc, input)
+    {
+        return match plan(cx, input) {
+            CommandResult::Completed { warnings, .. } => CommandResult::Completed {
+                output: (),
+                warnings,
+            },
+            CommandResult::Failed { error } => CommandResult::Failed { error },
+            CommandResult::Conflict { error } => CommandResult::Conflict { error },
+            CommandResult::NeedsInput { error } => CommandResult::NeedsInput { error },
+            CommandResult::Cancelled => CommandResult::Cancelled,
+            CommandResult::Queued { job_id } => CommandResult::Queued { job_id },
+        };
+    }
     match check(cx.doc, input) {
         Ok(_) => CommandResult::Completed {
             output: (),
@@ -67,14 +85,18 @@ pub fn plan_in(doc: &Document, input: &EntitiesEdit) -> CommandResult<EntitiesEd
     let checked = check(doc, input);
     // A constrained update may reshape the edited object and move other objects. Return that actual settled
     // result, rather than only the raw requested geometry. Add/replace/delete retain their existing plan policy.
-    if let Ok(checked) = &checked && updates_need_settlement(doc, input) {
+    if let Ok(checked) = &checked
+        && updates_need_settlement(doc, input)
+    {
         let mut copy = doc.reading_copy();
         return settled_update_plan(&mut copy, input, checked).0;
     }
     // The bonds refuse the plan as they refuse execute (docs/adr/0790 §1): a grip's drag shows them.
     if checked.is_ok() {
         let edited = input.changes.iter().filter_map(|c| match c {
-            EntityEdit::Update { uid, .. } | EntityEdit::Replace { uid, .. } => Some(uid.as_str()),
+            EntityEdit::Update { uid, .. }
+            | EntityEdit::EllipseAxis { uid, .. }
+            | EntityEdit::Replace { uid, .. } => Some(uid.as_str()),
             _ => None,
         });
         if let Some(error) =
@@ -108,18 +130,21 @@ pub fn updates_need_settlement(doc: &Document, input: &EntitiesEdit) -> bool {
     ) {
         return false;
     }
-    if !input
-        .changes
-        .iter()
-        .all(|c| matches!(c, EntityEdit::Update { .. }))
-    {
+    if !input.changes.iter().all(|c| {
+        matches!(
+            c,
+            EntityEdit::Update { .. } | EntityEdit::EllipseAxis { .. }
+        )
+    }) {
         return false;
     }
     let uids: HashSet<_> = input
         .changes
         .iter()
         .filter_map(|c| match c {
-            EntityEdit::Update { uid, .. } => Uuid::parse_str(uid).ok(),
+            EntityEdit::Update { uid, .. } | EntityEdit::EllipseAxis { uid, .. } => {
+                Uuid::parse_str(uid).ok()
+            }
             _ => None,
         })
         .collect();
@@ -251,6 +276,15 @@ fn write_execute(
         Err(stop) => return stop.into(),
     };
     let label = label(input.operation);
+    if !checked.ellipse_axes.is_empty()
+        || cx.call.as_ref().is_some_and(|s| !s.ellipse_axes.is_empty())
+    {
+        let state = cx.call.get_or_insert_with(Default::default);
+        state
+            .ellipse_axes
+            .retain(|(uid, _)| !checked.changed.iter().any(|c| c.uid == uid.to_string()));
+        state.ellipse_axes.extend(&checked.ellipse_axes);
+    }
     let warnings = checked.warnings;
     let changed_uids: Vec<String> = checked.changed.iter().map(|c| c.uid.clone()).collect();
     let removed_uids: Vec<String> = checked.removed.iter().map(|(_, uid)| uid.clone()).collect();
@@ -392,6 +426,7 @@ struct Changed {
 /// What may be written: the objects changed in place, the new ones (slot 0)
 /// and the ones to delete, each in the input's order.
 struct Checked {
+    ellipse_axes: Vec<(kentos_commands::EntityId, u8)>,
     changed: Vec<Changed>,
     created: Vec<Entity>,
     removed: Vec<(Slot, String)>,
@@ -405,6 +440,7 @@ struct Checked {
 fn named(change: &EntityEdit) -> (&str, &'static str) {
     match change {
         EntityEdit::Update { uid, .. }
+        | EntityEdit::EllipseAxis { uid, .. }
         | EntityEdit::Replace { uid, .. }
         | EntityEdit::Remove { uid } => (uid, "uid"),
         EntityEdit::Add { from, .. } => (from, "from"),
@@ -416,12 +452,78 @@ fn geometry_of(change: &EntityEdit) -> Option<&EntityGeometry> {
         EntityEdit::Update { geometry, .. }
         | EntityEdit::Replace { geometry, .. }
         | EntityEdit::Add { geometry, .. } => Some(geometry),
-        EntityEdit::Remove { .. } => None,
+        EntityEdit::Remove { .. } | EntityEdit::EllipseAxis { .. } => None,
     }
 }
 
 /// The checks in the contract's order.
 fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
+    if input
+        .changes
+        .iter()
+        .any(|c| matches!(c, EntityEdit::EllipseAxis { .. }))
+    {
+        return resolve_axes(doc, input);
+    }
+    check_resolved(doc, input)
+}
+
+fn resolve_axes(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
+    use kentos_geometry_core::entity::Entity as CoreEntity;
+    use kentos_geometry_core::ops::grips::{ellipse_axis_after_grip, move_grip};
+    let mut resolved = input.clone();
+    let mut axes = Vec::new();
+    for (i, c) in resolved.changes.iter_mut().enumerate() {
+        let EntityEdit::EllipseAxis { uid, index, at } = c else {
+            continue;
+        };
+        let refuse = |words: &str| {
+            Stop::failed(error(
+                codes::EDIT_NOT_APPLICABLE,
+                words.into(),
+                Some(format!("changes[{i}]")),
+            ))
+        };
+        if input.operation != EditOperation::Grip {
+            return Err(refuse(
+                "Elips eksen tutamacı yalnız grip düzenlemesinde kullanılır.",
+            ));
+        }
+        if !checks::is_uid_text(uid) {
+            return Err(Stop::failed(error(
+                codes::INVALID_UID,
+                "Geçerli bir nesne UUID'si verin.".into(),
+                Some(format!("changes[{i}].uid")),
+            )));
+        }
+        checks::point(*at, "Tutamaç hedefi", &format!("changes[{i}].at"))?;
+        let uuid = Uuid::parse_str(uid).map_err(|_| refuse("Geçerli bir nesne UUID'si verin."))?;
+        let entity = doc.slot_of(uuid).and_then(|s| doc.get(s)).ok_or_else(|| {
+            Stop::failed(error(
+                codes::ENTITY_NOT_FOUND,
+                "Elips çizimde bulunamadı.".into(),
+                Some(format!("changes[{i}].uid")),
+            ))
+        })?;
+        let shape = crate::geometry::shape(entity);
+        let p = kentos_geometry_core::Vec2::new(at.x, at.y);
+        let axis = ellipse_axis_after_grip(&shape,*index,p).ok_or_else(||refuse("Tam elipsin dört ekseninden birini (0..3) ve sıfırdan büyük eksen üreten bir hedef verin."))?;
+        let moved = move_grip(&CoreEntity::new(shape), *index as usize + 1, p)
+            .ok_or_else(|| refuse("Elipsin ekseni sıfır olamaz."))?;
+        let geometry = crate::geometry::edit_geometry(moved.shape)
+            .ok_or_else(|| refuse("Elips eksen geometrisi oluşturulamadı."))?;
+        axes.push((kentos_commands::EntityId(uuid.into_bytes()), axis));
+        *c = EntityEdit::Update {
+            uid: uid.clone(),
+            geometry,
+        };
+    }
+    let mut checked = check_resolved(doc, &resolved)?;
+    checked.ellipse_axes = axes;
+    Ok(checked)
+}
+
+fn check_resolved(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
     if input.changes.is_empty() {
         return Err(Stop::failed(error(
             codes::NO_CHANGES,
@@ -556,6 +658,7 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
         "changes",
     )?;
     let mut checked = Checked {
+        ellipse_axes: Vec::new(),
         changed: Vec::new(),
         created: Vec::new(),
         removed: Vec::new(),
@@ -608,7 +711,7 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
     // Elevations written with the geometry are written as they are (Kot ver,
     // Öznitelikler, a script): `entity_of` already holds them. Measures alike
     // (docs/adr/0224 §2).
-    let mut separator_error=None;
+    let mut separator_error = None;
     let mut elevate = |mut entity: Entity, from: &Entity, geometry: &EntityGeometry| -> Entity {
         if !written(geometry) && !sources.is_empty() {
             let before = elevation::paths(from);
@@ -643,8 +746,12 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
                 lost_w.insert(from.base().id);
             }
         }
-        match crate::geometry::carry_space_separator(from,entity) {
-            Ok(entity)=>entity,Err(why)=>{separator_error=Some(why);from.clone()}
+        match crate::geometry::carry_space_separator(from, entity) {
+            Ok(entity) => entity,
+            Err(why) => {
+                separator_error = Some(why);
+                from.clone()
+            }
         }
     };
     // Kır's pieces and Birleştir's joined object keep their look and symbol too (docs/adr/0296).
@@ -813,9 +920,22 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
                     .push(elevate(entity_of(geometry, own), entity, geometry));
             }
             EntityEdit::Remove { uid } => checked.removed.push((slot, uid.clone())),
+            EntityEdit::EllipseAxis { .. } => {
+                return Err(Stop::failed(error(
+                    codes::EDIT_NOT_APPLICABLE,
+                    "Elips eksen isteği çözülemedi.".into(),
+                    None,
+                )));
+            }
         }
     }
-    if let Some(why)=separator_error {return Err(Stop::failed(error(codes::INVALID_SPACE_SEPARATOR,why,Some("changes".into()))));}
+    if let Some(why) = separator_error {
+        return Err(Stop::failed(error(
+            codes::INVALID_SPACE_SEPARATOR,
+            why,
+            Some("changes".into()),
+        )));
+    }
     follow_policies(doc, input.operation, &mut checked, &pieces, &gone, &before);
     checked.lineage = lineage_of(doc, input.operation, &checked, &pieces, &gone);
     if lost > 0 {
@@ -974,7 +1094,10 @@ fn lineage_of(
     let mut out = Vec::new();
     if matches!(
         operation,
-        EditOperation::AreaSplit | EditOperation::Split | EditOperation::Break | EditOperation::PartsSplit
+        EditOperation::AreaSplit
+            | EditOperation::Split
+            | EditOperation::Break
+            | EditOperation::PartsSplit
     ) {
         let mut sources: Vec<Slot> = Vec::new();
         for (_, s) in pieces {
@@ -983,7 +1106,11 @@ fn lineage_of(
             }
         }
         for source in sources {
-            let at: Vec<Piece> = pieces.iter().filter(|(_, s)| *s == source).map(|(p, _)| *p).collect();
+            let at: Vec<Piece> = pieces
+                .iter()
+                .filter(|(_, s)| *s == source)
+                .map(|(p, _)| *p)
+                .collect();
             let Some(parent) = uid_of(source).filter(|_| at.len() >= 2) else {
                 continue;
             };
@@ -994,8 +1121,10 @@ fn lineage_of(
             }
         }
     }
-    if matches!(operation, EditOperation::AreaUnion | EditOperation::Join | EditOperation::PartsJoin)
-        && !gone.is_empty()
+    if matches!(
+        operation,
+        EditOperation::AreaUnion | EditOperation::Join | EditOperation::PartsJoin
+    ) && !gone.is_empty()
         && let [(piece, source)] = pieces
     {
         let child = child_uid(*piece);
@@ -1030,7 +1159,11 @@ fn lineage_records(
                 Piece::Changed(i) => id(changed.get(*i)?)?,
                 Piece::Created(i) => id(&doc.uid(*created.get(*i)?)?.to_string())?,
             };
-            let parents: Vec<_> = parents.iter().filter_map(|p| id(p)).filter(|p| *p != child).collect();
+            let parents: Vec<_> = parents
+                .iter()
+                .filter_map(|p| id(p))
+                .filter(|p| *p != child)
+                .collect();
             (!parents.is_empty()).then(|| kentos_commands::LineageRecord {
                 child,
                 parents,
@@ -2061,7 +2194,9 @@ fn finite(g: &EntityGeometry) -> bool {
                 && pattern.angle.is_finite()
                 && pattern.spacing.is_finite()
                 && pattern.scale.is_none_or(f64::is_finite)
-                && pattern.origin.is_none_or(|o| o.x.is_finite() && o.y.is_finite())
+                && pattern
+                    .origin
+                    .is_none_or(|o| o.x.is_finite() && o.y.is_finite())
                 && pattern.lines.iter().flatten().all(|l| {
                     [l.angle, l.origin[0], l.origin[1], l.offset[0], l.offset[1]]
                         .iter()

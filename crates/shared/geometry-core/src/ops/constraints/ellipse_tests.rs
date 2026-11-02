@@ -609,3 +609,92 @@ fn cancellation_of_a_held_endpoint_verification_returns_no_changes() {
     assert!(out.changed.is_empty());
     assert_eq!(out.shapes, shapes);
 }
+
+#[test]
+fn explicit_axis_targets_leave_other_radius_free_instead_of_holding_the_seam() {
+    use crate::entity::Entity;
+    use crate::ops::grips::{ellipse_axis_after_grip, ellipse_axis_point, move_grip};
+    let before = ellipse(Vec2::new(0., 0.), 4., 2., 0., 0.6, 0.6);
+    let original = at(&before, 0.6);
+    let distance = js_hypot(original.x, original.y);
+    let cs = [
+        c(Rule::Fix { a: r(0, CENTER) }),
+        dim(
+            Rule::Distance {
+                a: r(0, CENTER),
+                b: r(0, START),
+                axis: Axis::Aligned,
+                left: false,
+            },
+            distance,
+        ),
+    ];
+    for (index, target) in [(1, Vec2::new(0., 3.)), (0, Vec2::new(1.5, 0.))] {
+        let shape = move_grip(&Entity::new(before.clone()), index as usize + 1, target)
+            .unwrap()
+            .shape;
+        let axis = ellipse_axis_after_grip(&before, index, target).unwrap();
+        let requested = ellipse_axis_point(&shape, axis).unwrap();
+        let out = solve_with_ellipse_axes(
+            &Problem {
+                shapes: &[shape],
+                constraints: &cs,
+                held: &[],
+                fix_from: Some(std::slice::from_ref(&before)),
+            },
+            &[EllipseAxisTarget {
+                object: 0,
+                index: axis,
+                point: requested,
+            }],
+            &|| false,
+        );
+        assert!(out.status.holds(), "{out:?}");
+        close(ellipse_axis_point(&out.shapes[0], axis).unwrap(), requested);
+        let Shape::Ellipse { t0, .. } = out.shapes[0] else {
+            panic!()
+        };
+        let p = at(&out.shapes[0], t0);
+        assert!((js_hypot(p.x, p.y) - distance).abs() < 1e-9);
+        assert!(
+            (p.x - original.x).abs() > 0.1,
+            "the undragged seam must be free to follow its own bond"
+        );
+    }
+}
+
+#[test]
+fn invalid_transient_axis_targets_return_original_shapes_without_panicking() {
+    let shapes = [ellipse(Vec2::new(0., 0.), 4., 2., 0., 0.6, 0.6)];
+    for target in [
+        EllipseAxisTarget {
+            object: 0,
+            index: 4,
+            point: Vec2::new(1., 0.),
+        },
+        EllipseAxisTarget {
+            object: 1,
+            index: 0,
+            point: Vec2::new(1., 0.),
+        },
+        EllipseAxisTarget {
+            object: 0,
+            index: 0,
+            point: Vec2::new(f64::NAN, 0.),
+        },
+    ] {
+        let result = solve_with_ellipse_axes(
+            &Problem {
+                shapes: &shapes,
+                constraints: &[],
+                held: &[],
+                fix_from: None,
+            },
+            &[target],
+            &|| false,
+        );
+        assert_eq!(result.status, Status::Singular);
+        assert_eq!(result.shapes, shapes);
+        assert!(result.changed.is_empty());
+    }
+}

@@ -770,6 +770,7 @@ __all__ = [
     "ElevationsQueried",
     "ElevationsQuery",
     "EllipseAxisCurveConstruction",
+    "EllipseAxisEntityEdit",
     "EllipseCentreCurveConstruction",
     "EllipseConstructedCurve",
     "EllipseEntity",

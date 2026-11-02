@@ -15,7 +15,7 @@ use super::dual::D;
 use super::model::{Built, Model, VarKind, build, write_back};
 use super::rules::{measured, rows};
 use super::sparse::{Factor, Row};
-use super::{Element, Outcome, PointAt, Problem, Ref, Rule, Status};
+use super::{Element, EllipseAxisTarget, Outcome, PointAt, Problem, Ref, Rule, Status};
 
 /// The most steps one group takes.
 const STEPS: u32 = 64;
@@ -40,6 +40,7 @@ struct Eq {
     end: Option<Ref>,
     /// An ellipse's own centre-to-end ray: its point-part index, independent of pick order.
     ellipse_ray_end: Option<usize>,
+    ellipse_axis: Option<u8>,
 }
 
 fn ellipse_ray_end(rule: &Rule, shapes: &[Shape]) -> Option<usize> {
@@ -195,7 +196,10 @@ fn eval(eq: &Eq, shapes: &[Shape], x: &[f64], free: &[bool], s: f64) -> Vec<D> {
         .zip(&eq.parts)
         .map(|(r, slots)| {
             let v: Vec<D> = slots.iter().map(|&k| duals[k]).collect();
-            build(&shapes[r.object], element_of(r), &v)
+            match eq.ellipse_axis {
+                Some(axis) => super::model::ellipse_axis(&v, axis),
+                None => build(&shapes[r.object], element_of(r), &v),
+            }
         })
         .collect();
     rows(&eq.rule, &parts, eq.value, &eq.at, s, eq.ellipse_ray_end)
@@ -315,13 +319,48 @@ struct Rows {
 }
 
 pub(super) fn run(p: &Problem<'_>, stop: &dyn Fn() -> bool) -> Outcome {
-    run_checked(p, stop, None)
+    run_axes(p, &[], stop)
+}
+
+pub(super) fn run_axes(
+    p: &Problem<'_>,
+    targets: &[EllipseAxisTarget],
+    stop: &dyn Fn() -> bool,
+) -> Outcome {
+    if targets.iter().any(|t| {
+        !t.point.x.is_finite()
+            || !t.point.y.is_finite()
+            || p.shapes
+                .get(t.object)
+                .and_then(|s| crate::ops::grips::ellipse_axis_point(s, t.index))
+                .is_none()
+    }) {
+        return invalid_axis_target(p);
+    }
+    run_checked(p, targets, stop, None)
+}
+
+fn invalid_axis_target(p: &Problem<'_>) -> Outcome {
+    Outcome {
+        shapes: p.shapes.to_vec(),
+        status: Status::Singular,
+        dof: 0,
+        redundant: vec![],
+        conflicting: vec![],
+        singular: vec![],
+        broken: vec![],
+        free: vec![],
+        changed: vec![],
+        measured: vec![],
+        iterations: 0,
+    }
 }
 
 /// A failed stored nonlinear relation may be a rounded image of a strict local solution. A certificate run
 /// varies world-coordinate numbers only and must round back to the entire unchanged source, without recursion.
 fn run_checked(
     p: &Problem<'_>,
+    targets: &[EllipseAxisTarget],
     stop: &dyn Fn() -> bool,
     mut roundtrip: Option<&mut bool>,
 ) -> Outcome {
@@ -340,6 +379,9 @@ fn run_checked(
         for r in refs {
             used[r.object] = true;
         }
+    }
+    for t in targets {
+        used[t.object] = true;
     }
     let mut model = Model::new(shapes, &used);
     // A local origin: the coordinates' middle, so the steps work on small numbers.
@@ -455,6 +497,30 @@ fn run_checked(
 
     // The equations.
     let mut eqs: Vec<Eq> = Vec::new();
+    for target in targets {
+        let a = Ref {
+            object: target.object,
+            element: Element::Point(PointAt::Start),
+        };
+        let Some(vars) = model.element_vars(shapes, a.object, &a.element) else {
+            return invalid_axis_target(p);
+        };
+        let parts = vec![(0..vars.len()).collect()];
+        eqs.push(Eq {
+            constraint: None,
+            rule: Rule::Fix { a },
+            value: 0.,
+            vars,
+            parts,
+            at: vec![Built::Point(super::dual::P {
+                x: D::c(target.point.x - origin.0),
+                y: D::c(target.point.y - origin.1),
+            })],
+            end: None,
+            ellipse_ray_end: None,
+            ellipse_axis: Some(target.index),
+        });
+    }
     // Put explicit drag targets first, so a permanent bond that prevents the target is named by the diagnosis.
     // Their positions come from the post-edit shape; persistent Fix rules below still use fix_from.
     for a in point_targets {
@@ -475,6 +541,7 @@ fn run_checked(
             at,
             end: None,
             ellipse_ray_end: None,
+            ellipse_axis: None,
         });
     }
     let mut reference: Vec<(usize, Rule)> = Vec::new();
@@ -550,6 +617,7 @@ fn run_checked(
             at,
             end,
             ellipse_ray_end: ellipse_ray_end(&c.rule, shapes),
+            ellipse_axis: None,
         });
     }
 
@@ -866,6 +934,7 @@ fn run_checked(
                 held: &[],
                 fix_from: p.fix_from,
             },
+            targets,
             stop,
             Some(&mut same),
         );
@@ -957,13 +1026,14 @@ fn run_checked(
                 element: None,
             })
             .collect();
-        let verified = run(
+        let verified = run_axes(
             &Problem {
                 shapes: &shapes_out,
                 constraints: p.constraints,
                 held: &held,
                 fix_from: Some(p.fix_from.unwrap_or(shapes)),
             },
+            targets,
             stop,
         );
         if !verified.status.holds() {

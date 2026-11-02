@@ -719,7 +719,7 @@ impl Select {
             );
             return;
         }
-        if let Some((input, follow)) = grip_input(&moved, copy, cx) {
+        if let Some((input, follow)) = grip_input(&moved, copy, &grips, dx, dy, cx) {
             let result = edit::execute(&mut ExecutionContext::new(cx.doc), input);
             if points::written(result, cx).is_some() {
                 neighbours::say(follow.as_ref(), cx);
@@ -802,7 +802,7 @@ impl Select {
             let mut settled = false;
             // The bonds refuse a drag as they refuse its write: they are marked as the grip moves (docs/adr/0790 §1).
             if !g.modes.copy
-                && let Some((input, _)) = grip_input(&moved, false, cx)
+                && let Some((input, _)) = grip_input(&moved, false, &grips, dx, dy, cx)
             {
                 settled = kentos_native_application::edit::updates_need_settlement(cx.doc, &input);
                 let (planned, followers) = if settled {
@@ -1168,14 +1168,36 @@ pub fn sub_line(doc: &kentos_domain::Document, selection: &crate::Selection) -> 
 fn grip_input(
     moved: &[(Slot, kentos_commands::Entity, kentos_commands::Entity)],
     copy: bool,
+    grips: &[HotGrip],
+    dx: f64,
+    dy: f64,
     cx: &Context<'_>,
 ) -> Option<(EntitiesEdit, Option<neighbours::Neighbours>)> {
     let mut changes = Vec::with_capacity(moved.len());
-    for (slot, _, after) in moved {
+    for (slot, before, after) in moved {
         let (Some(uid), Some(geometry)) = (cx.doc.uid(*slot), edit_geometry(shape(after))) else {
             continue;
         };
-        changes.push(if copy {
+        let own: Vec<_> = grips.iter().filter(|g| g.slot == *slot).collect();
+        let axis = match own.as_slice() {
+            [g] if !copy && (1..=4).contains(&g.index) => {
+                let at = Vec2::new(g.origin.x + dx, g.origin.y + dy);
+                kentos_geometry_core::ops::grips::ellipse_axis_after_grip(
+                    &shape(before),
+                    g.index as u8 - 1,
+                    at,
+                )
+                .map(|_| EntityEdit::EllipseAxis {
+                    uid: uid.to_string(),
+                    index: g.index as u8 - 1,
+                    at: points::wire(at),
+                })
+            }
+            _ => None,
+        };
+        changes.push(if let Some(axis) = axis {
+            axis
+        } else if copy {
             EntityEdit::add(uid.to_string(), geometry, Some(true))
         } else {
             EntityEdit::Update {

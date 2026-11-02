@@ -2521,6 +2521,18 @@ cases.append({
     ],
 })
 
+# ADR 0842: explicit ellipse-axis intent is only a grip operation, before any write.
+cases.append({
+    "name": "Elips eksen isteği başka işlem adıyla çalışmaz; doğrulama, plan ve yazma aynı reddi verir",
+    "steps": [
+        {"op": op, "input": {"operation": "properties", "changes": [
+            {"kind": "ellipseAxis", "uid": uid(1), "index": 0, "at": {"x": 487004, "y": 4420000}}
+        ]}, "result": failed("edit_not_applicable", "Elips eksen tutamacı yalnız grip düzenlemesinde kullanılır.", "changes[0]"),
+         "expect": {"ids": list(range(1, 9)), "canUndo": False, "dirty": False, "revision": "same"}}
+        for op in ["validate", "plan", "execute"]
+    ],
+})
+
 write(
     "cad.entities.edit",
     "Nesneleri düzenle: doğrulama, plan, yazma, geri alma",

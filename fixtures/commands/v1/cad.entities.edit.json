@@ -2732,6 +2732,14 @@
       "steps": [
         {"op": "execute", "input": {"operation": "properties", "changes": [{"kind": "update", "uid": "$uidOf:1", "geometry": {"kind": "nurbs", "degree": 1, "ctrl": [{"x": 487000, "y": 4420080}, {"x": 487010, "y": 4420080}, {"x": 487010, "y": 4420090}], "knots": [0, 0, 1, 2, 2], "weights": [1, -1, 1]}}]}, "result": {"status": "failed", "error": {"code": "invalid_nurbs", "message": "Ağırlıklar sonlu ve sıfırdan büyük olmalı.", "path": "changes[0].geometry"}}, "expect": {"ids": [1, 2], "canUndo": false, "dirty": false, "revision": "same"}}
       ]
+    },
+    {
+      "name": "Elips eksen isteği başka işlem adıyla çalışmaz; doğrulama, plan ve yazma aynı reddi verir",
+      "steps": [
+        {"op": "validate", "input": {"operation": "properties", "changes": [{"kind": "ellipseAxis", "uid": "$uidOf:1", "index": 0, "at": {"x": 487004, "y": 4420000}}]}, "result": {"status": "failed", "error": {"code": "edit_not_applicable", "message": "Elips eksen tutamacı yalnız grip düzenlemesinde kullanılır.", "path": "changes[0]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "dirty": false, "revision": "same"}},
+        {"op": "plan", "input": {"operation": "properties", "changes": [{"kind": "ellipseAxis", "uid": "$uidOf:1", "index": 0, "at": {"x": 487004, "y": 4420000}}]}, "result": {"status": "failed", "error": {"code": "edit_not_applicable", "message": "Elips eksen tutamacı yalnız grip düzenlemesinde kullanılır.", "path": "changes[0]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"operation": "properties", "changes": [{"kind": "ellipseAxis", "uid": "$uidOf:1", "index": 0, "at": {"x": 487004, "y": 4420000}}]}, "result": {"status": "failed", "error": {"code": "edit_not_applicable", "message": "Elips eksen tutamacı yalnız grip düzenlemesinde kullanılır.", "path": "changes[0]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "dirty": false, "revision": "same"}}
+      ]
     }
   ]
 }

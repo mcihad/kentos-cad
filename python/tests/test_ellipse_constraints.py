@@ -148,4 +148,32 @@ class FullEllipseSeam(unittest.TestCase):
                         d.undo();self.assertEqual(d.to_bytes(),before)
 
 
+class FullEllipseAxisIntent(unittest.TestCase):
+    def test_named_axis_keeps_existing_measure_and_undo_is_exact(self):
+        for index,at in [(0,dict(x=487001.5,y=4420000)),(1,dict(x=487000,y=4420003)),
+                         (2,dict(x=486998.5,y=4420000)),(3,dict(x=487000,y=4419997))]:
+            with self.subTest(index=index):
+                d=cad.Document.from_bytes((ROOT/'fixtures/interaction/v1/constraint-ellipse-axis.kcad').read_bytes())
+                before=d.to_bytes();uid=list(d.entities())[0].uid
+                change=cad.EllipseAxisEntityEdit(uid=uid,index=index,at=cad.Vec2(**at))
+                plan=cad.entities.edit.plan(d,operation='grip',changes=[change])
+                self.assertEqual(d.to_bytes(),before)
+                cad.entities.edit(d,operation='grip',changes=[change])
+                e=d.entity(uid).entity.to_json();self.assertEqual(plan.changed[0].to_json(),e)
+                a=math.hypot(e['major']['x'],e['major']['y']);b=a*e['ratio']
+                # Physical radii are independent of canonical axis ordering.
+                if index%2:self.assertAlmostEqual(b,3.,places=8)
+                else:self.assertAlmostEqual(b,1.5,places=8)
+                p=ellipse_point(e,e['t0']);distance=math.dist(p,(487000,4420000))
+                self.assertAlmostEqual(distance,3.4891469627504486,places=8)
+                self.assertGreater(a,b)
+                q=cad.constraints.query(d);self.assertTrue(all(c.holds for c in q.constraints));self.assertEqual(q.diagnosis.dof,4)
+                saved=d.to_bytes();self.assertEqual(cad.Document.from_bytes(saved).to_bytes(),saved)
+                replay=cad.Document.from_bytes(before)
+                recorded=cad.entities.edit.input_type.from_json(dict(operation='grip',changes=[change.to_json()]))
+                cad.entities.edit.execute_input(replay,recorded)
+                self.assertEqual(replay.to_bytes(),saved)
+                d.undo();self.assertEqual(d.to_bytes(),before)
+
+
 if __name__=='__main__':unittest.main()

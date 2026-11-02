@@ -7779,6 +7779,7 @@ class EntityEdit(_Union):
 
     One of:
 
+    - :class:`EllipseAxisEntityEdit` (``kind: ellipseAxis``)
     - :class:`UpdateEntityEdit` (``kind: update``)
     - :class:`ReplaceEntityEdit` (``kind: replace``)
     - :class:`AddEntityEdit` (``kind: add``)
@@ -76482,6 +76483,36 @@ class ViewmarkEntity(ViewMarkEntity, Entity):
 
 
 @dataclass(kw_only=True, slots=True)
+class EllipseAxisEntityEdit(EntityEdit):
+    """A full ellipse's named source axis grip: +major, +minor, -major, -minor (0..3).
+    Only operation=grip. The shared core computes the new geometry; constraints hold this
+    actual axis point, leaving the other radius free. This is not a persistent axis reference.
+    Attributes:
+        index: Unit: index.
+        at: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "ellipseAxis"
+    uid: str
+    index: int
+    at: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "ellipseAxis"}
+        out["uid"] = self.uid
+        out["index"] = self.index
+        out["at"] = _vec2_out(self.at)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EllipseAxisEntityEdit:
+        return cls(
+            uid=data["uid"],
+            index=data["index"],
+            at=Vec2.from_json(data["at"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class UpdateEntityEdit(EntityEdit):
     """The object takes a new geometry and keeps everything else: its slot,
     persistent id, layer, colour, attributes, label and symbol (an end
@@ -89803,7 +89834,7 @@ _ELEVATIONS_OPERATION: dict[str, type[ElevationsOperation]] = {"derive": DeriveE
 _ENTITY: dict[str, type[Entity]] = {"point": PointEntity, "line": LineEntity, "polyline": PolylineEntity, "polygon": PolygonEntity, "circle": CircleEntity, "arc": ArcEntity, "ellipse": EllipseEntity, "spline": SplineEntity, "nurbs": NurbsEntity, "xline": XlineEntity, "ray": RayEntity, "text": TextEntity, "dimension": DimensionEntity, "hatch": HatchEntity, "insert": InsertEntity, "leader": LeaderEntity, "table": TableEntity, "image": ImageEntity, "raster": RasterEntity, "pointcloud": PointcloudEntity, "wall": WallEntity, "opening": OpeningEntity, "space": SpaceEntity, "slab": SlabEntity, "grid": GridEntity, "column": ColumnEntity, "stair": StairEntity, "ramp": RampEntity, "tag": TagEntity, "viewmark": ViewmarkEntity, "record": RecordEntity}
 
 
-_ENTITY_EDIT: dict[str, type[EntityEdit]] = {"update": UpdateEntityEdit, "replace": ReplaceEntityEdit, "add": AddEntityEdit, "remove": RemoveEntityEdit}
+_ENTITY_EDIT: dict[str, type[EntityEdit]] = {"ellipseAxis": EllipseAxisEntityEdit, "update": UpdateEntityEdit, "replace": ReplaceEntityEdit, "add": AddEntityEdit, "remove": RemoveEntityEdit}
 
 
 _ENTITY_GEOMETRY: dict[str, type[EntityGeometry]] = {"point": PointEntityGeometry, "line": LineEntityGeometry, "polyline": PolylineEntityGeometry, "polygon": PolygonEntityGeometry, "circle": CircleEntityGeometry, "arc": ArcEntityGeometry, "ellipse": EllipseEntityGeometry, "spline": SplineEntityGeometry, "nurbs": NurbsEntityGeometry, "xline": XlineEntityGeometry, "ray": RayEntityGeometry, "text": TextEntityGeometry, "dimension": DimensionEntityGeometry, "hatch": HatchEntityGeometry, "insert": InsertEntityGeometry, "leader": LeaderEntityGeometry, "table": TableEntityGeometry, "image": ImageEntityGeometry, "raster": RasterEntityGeometry, "pointcloud": PointcloudEntityGeometry, "wall": WallEntityGeometry}
@@ -90808,6 +90839,7 @@ __all__ = [
     "ElevationsQueried",
     "ElevationsQuery",
     "EllipseAxisCurveConstruction",
+    "EllipseAxisEntityEdit",
     "EllipseCentreCurveConstruction",
     "EllipseConstructedCurve",
     "EllipseEntity",

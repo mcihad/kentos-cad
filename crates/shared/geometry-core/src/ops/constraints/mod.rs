@@ -193,6 +193,15 @@ pub struct Problem<'a> {
     pub fix_from: Option<&'a [Shape]>,
 }
 
+/// An explicitly dragged full-ellipse axis, in the post-edit canonical basis.
+/// This is a temporary solve target, never a persistent indexed constraint reference.
+#[derive(Clone, Copy, Debug)]
+pub struct EllipseAxisTarget {
+    pub object: usize,
+    pub index: u8,
+    pub point: crate::vec2::Vec2,
+}
+
 /// How a solve ended (the contract's `SolveStatus`, and `Cancelled`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Status {
@@ -236,6 +245,14 @@ impl Status {
 /// Solves `problem`, asking `stop` between steps (a long solve run as a job, docs/adr/0334 §6).
 pub fn solve(problem: &Problem<'_>, stop: &dyn Fn() -> bool) -> Outcome {
     solve::run(problem, stop)
+}
+
+pub fn solve_with_ellipse_axes(
+    problem: &Problem<'_>,
+    targets: &[EllipseAxisTarget],
+    stop: &dyn Fn() -> bool,
+) -> Outcome {
+    solve::run_axes(problem, targets, stop)
 }
 
 /// Whether `shape` has the part `element` (a straight edge, not a bulged one; a point it has).

@@ -391,6 +391,27 @@ pub(super) enum Built {
     Circle(P, D),
 }
 
+/// A temporary full-ellipse axis uses the same five unknowns as its seam.
+pub(super) fn ellipse_axis(v: &[D], index: u8) -> Built {
+    let (co, so) = (v[4].cos(), v[4].sin());
+    let (x, y) = match index {
+        0 => (v[2] * co, v[2] * so),
+        1 => (-v[3] * so, v[3] * co),
+        2 => (-v[2] * co, -v[2] * so),
+        _ => (v[3] * so, -v[3] * co),
+    };
+    if v[2].v <= 0. || v[3].v <= 0. || v[3].v > v[2].v {
+        return Built::Point(P {
+            x: D::c(f64::NAN),
+            y: D::c(f64::NAN),
+        });
+    }
+    Built::Point(P {
+        x: v[0] + x,
+        y: v[1] + y,
+    })
+}
+
 /// Builds an element from its unknowns' duals, in [`Model::element_vars`]' order.
 pub(super) fn build(shape: &Shape, element: &Element, v: &[D]) -> Built {
     match element {

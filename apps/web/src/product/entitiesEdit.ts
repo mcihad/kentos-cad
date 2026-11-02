@@ -15,6 +15,8 @@ import { assocProblem, patternProblem } from '../model/hatchRules';
 import { imageProblem } from '../model/imageRules';
 import { cleanRasterStyle, rasterProblem } from '../model/rasterRules';
 import { pointCloudProblem } from '../model/pointCloudRules';
+import { moveGrip } from '../model/ops/grips';
+import { isFullEllipse } from '../model/geom/ellipse';
 import { geometryIsFinite, SHAPE_FIELDS } from '../model/ops/transform';
 import { checkLayer, checkLineWeight, checkRevision, error, failed, isBlank, validated, type Stop } from './checks';
 import { checkDimension } from './dimension';
@@ -604,6 +606,26 @@ function heldMeasures(init: NewEntity): NewEntity {
 
 /** The checks in the contract's order: why nothing may be written, or what may. */
 function check(doc: CadDocument, input: EntitiesEdit): Stop | Checked {
+  type Resolved = Exclude<EntityEdit, { kind: 'ellipseAxis' }>;
+  const changes: Resolved[] = [];
+  for (const [i, c] of input.changes.entries()) {
+    if (c.kind !== 'ellipseAxis') { changes.push(c); continue; }
+    const path = `changes[${i}]`;
+    if (input.operation !== 'grip') return failed(error('edit_not_applicable', 'Elips eksen tutamacı yalnız grip düzenlemesinde kullanılır.', path));
+    if (!isUuid(c.uid)) return failed(error('invalid_uid', 'Geçerli bir nesne UUID’si verin.', `${path}.uid`));
+    const e = doc.byUid(c.uid);
+    if (!e) return failed(error('entity_not_found', 'Elips çizimde bulunamadı.', `${path}.uid`));
+    if (!Number.isFinite(c.at.x) || !Number.isFinite(c.at.y)) return failed(error('not_finite', 'Tutamaç hedefi sonlu olmalı.', `${path}.at`));
+    if (e.kind !== 'ellipse' || !isFullEllipse(e) || !Number.isInteger(c.index) || c.index < 0 || c.index > 3)
+      return failed(error('edit_not_applicable', 'Tam elipsin dört ekseninden birini (0..3) verin.', path));
+    const moved = moveGrip(e, c.index + 1, c.at);
+    if (!moved) return failed(error('edit_not_applicable', 'Elipsin ekseni sıfır olamaz.', path));
+    changes.push({ kind: 'update', uid: c.uid, geometry: { kind:'ellipse', c:moved.c, major:moved.major, ratio:moved.ratio, t0:moved.t0, t1:moved.t1 } });
+  }
+  return checkResolved(doc, { ...input, changes });
+}
+
+function checkResolved(doc: CadDocument, input: Omit<EntitiesEdit, 'changes'> & { changes: Exclude<EntityEdit, { kind:'ellipseAxis' }>[] }): Stop | Checked {
   if (!input.changes.length) return failed(error('no_changes', 'Yapılacak değişiklik verilmedi. En az bir değişiklik verin.', 'changes'));
   for (const [i, c] of input.changes.entries()) {
     const [uid, field] = named(c);

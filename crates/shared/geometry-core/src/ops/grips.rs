@@ -20,6 +20,69 @@ use crate::vec2::Vec2;
 /// Construction lines show their direction grip this far (m) from the base point.
 const DIRECTION_GRIP: f64 = 10.0;
 
+/// Canonical axis of a full ellipse after the explicitly named source axis grip.
+/// Source/target axes are +major, +minor, -major, -minor (0..3).
+pub fn ellipse_axis_after_grip(shape: &Shape, index: u8, at: Vec2) -> Option<u8> {
+    let Shape::Ellipse {
+        c,
+        major,
+        ratio,
+        t0,
+        t1,
+    } = shape
+    else {
+        return None;
+    };
+    if index > 3 || !is_full_ellipse(&ellipse_geom(*c, *major, *ratio, *t0, *t1)) {
+        return None;
+    }
+    let (end, other) = if index == 0 || index == 2 {
+        (
+            if index == 0 {
+                at
+            } else {
+                Vec2::new(2. * c.x - at.x, 2. * c.y - at.y)
+            },
+            js_hypot(major.x, major.y) * ratio,
+        )
+    } else {
+        (
+            Vec2::new(c.x + major.x, c.y + major.y),
+            js_hypot(at.x - c.x, at.y - c.y),
+        )
+    };
+    ellipse_from_center(*c, end, other)?;
+    Some(if other.abs() > js_hypot(end.x - c.x, end.y - c.y) {
+        [3, 0, 1, 2][index as usize]
+    } else {
+        index
+    })
+}
+
+/// Actual stored axis point, without quarter-turn trigonometric round-off.
+pub fn ellipse_axis_point(shape: &Shape, index: u8) -> Option<Vec2> {
+    let Shape::Ellipse {
+        c,
+        major,
+        ratio,
+        t0,
+        t1,
+    } = shape
+    else {
+        return None;
+    };
+    if index > 3 || !is_full_ellipse(&ellipse_geom(*c, *major, *ratio, *t0, *t1)) {
+        return None;
+    }
+    let (x, y) = match index {
+        0 => (major.x, major.y),
+        1 => (-major.y * ratio, major.x * ratio),
+        2 => (-major.x, -major.y),
+        _ => (major.y * ratio, -major.x * ratio),
+    };
+    Some(Vec2::new(c.x + x, c.y + y))
+}
+
 pub fn entity_grips(e: &Shape) -> Vec<Vec2> {
     // A multi-part object's grips are its parts', part after part (docs/adr/0143, 0174).
     if is_multi_part(e) {

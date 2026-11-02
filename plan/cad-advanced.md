@@ -502,7 +502,13 @@ eksen sırası değiştiğinde aynı bağlı nokta yeni baza taşınır. Gerçek
 arayüzde 4→6 ve 4→1.5 m, bağlı çizginin doğru koordinatı, iki geçerli
 bağ, beş serbestlik, tek Undo, yeniden açma ve tam GUI/Python dosya
 eşitliği doğrulandı. [ADR 0841](../docs/adr/0841-full-ellipse-seam-through-axis-grips.md).
-Bağımsız eksen hedefleri ve birleşik çözüm dalı kabulü bitmeden bu
+Tam elipste sürüklenen eksen artık açık geçici hedeftir; diğer serbest
+boyutlar kalıcı ölçüye uyum sağlar. Gerçek GUI'de 2→3 m, eksen sırası
+değişimi, üç geçerli bağ/dört serbestlik, önizleme iptali, açıklamalı Fix
+çatışması, yeniden açma, tam GUI/Python dosya eşitliği ve tek Undo geçti.
+[ADR 0842](../docs/adr/0842-explicit-full-ellipse-axis-grip-targets.md),
+[Python/MCP rehberi](../docs/cad/ellipse-axis-grips-python.md).
+Birleşik teknik plaka, kilit/gevşetme ve çözüm dalı kabulü bitmeden bu
 madde kapatılmaz.
 
 ### CAD-ADV-06 — Parametrik blokları sürdürülebilir 2B bileşenlere dönüştür [ ]

@@ -509,7 +509,10 @@ pub enum EntityGeometry {
         text_shift: Option<crate::TextShift>,
         /// The gaps in its lines (docs/adr/0321 §1).
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::DimensionBreak>>", optional))]
+        #[cfg_attr(
+            feature = "ts",
+            ts(as = "Option<Vec<crate::DimensionBreak>>", optional)
+        )]
         breaks: Vec<crate::DimensionBreak>,
         /// The style it follows, its arrowheads, sizes and value's writing (docs/adr/0183 §3).
         #[serde(flatten)]
@@ -715,6 +718,17 @@ impl EntityGeometry {
 #[serde(tag = "kind", rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum EntityEdit {
+    /// A full ellipse's named source axis grip: +major, +minor, -major, -minor (0..3).
+    /// Only operation=grip. The shared core computes the new geometry; constraints hold this
+    /// actual axis point, leaving the other radius free. This is not a persistent axis reference.
+    EllipseAxis {
+        #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
+        uid: String,
+        #[cfg_attr(feature = "schema", schemars(range(min = 0, max = 3), extend("x-unit" = "index")))]
+        index: u8,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        at: Vec2,
+    },
     /// The object takes a new geometry and keeps everything else: its slot,
     /// persistent id, layer, colour, attributes, label and symbol (an end
     /// extended, a corner rounded, a vertex added).

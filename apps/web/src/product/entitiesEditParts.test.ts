@@ -114,3 +114,26 @@ describe('the elevations of an edit’s new vertices, part by part', () => {
     expect(h.doc.undo()).toBe('Yönü çevir');
   });
 });
+
+// The same explicit source-axis input is accepted by the browser command.
+describe('a full ellipse source axis grip', () => {
+  it('keeps the seam through an axis-order change and undoes as one edit', () => {
+    const h = toolHarness();
+    const e = h.add({ kind:'ellipse', c:pt(487000,4420000), major:pt(4,0), ratio:.5, t0:.6, t1:.6, attrs:{ QA:'axis' } });
+    const uid = h.doc.uidOf(e.id)!;
+    const input = { operation:'grip' as const, changes:[{kind:'ellipseAxis' as const,uid,index:0,at:pt(487001.5,4420000)}] };
+    const planned = entitiesEdit.plan({doc:h.doc},input);
+    expect(planned.status).toBe('completed');expect(h.doc.get(e.id)).toEqual(e);
+    expect(entitiesEdit.execute({doc:h.doc},input).status).toBe('completed');
+    const after = h.doc.get(e.id)!;
+    expect(after).toMatchObject({kind:'ellipse',ratio:.75,t0:.6-Math.PI/2,t1:.6-Math.PI/2,attrs:{QA:'axis'}});
+    if (after.kind !== 'ellipse') throw new Error('expected ellipse');
+    expect(Math.abs(after.major.x)).toBe(0); expect(after.major.y).toBe(2);
+    expect(h.doc.uidOf(e.id)).toBe(uid);h.doc.undo();expect(h.doc.get(e.id)).toEqual(e);
+  });
+  it('refuses a source index outside the four axes without writing', () => {
+    const h=toolHarness();const e=h.add({kind:'ellipse',c:pt(0,0),major:pt(4,0),ratio:.5,t0:0,t1:0});
+    const result=entitiesEdit.execute({doc:h.doc},{operation:'grip',changes:[{kind:'ellipseAxis',uid:h.doc.uidOf(e.id)!,index:4,at:pt(0,3)}]});
+    expect(result).toMatchObject({status:'failed',error:{code:'edit_not_applicable'}});expect(h.doc.get(e.id)).toEqual(e);
+  });
+});

@@ -12,9 +12,9 @@
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 use kentos_commands::{
-    BondInTheWay, CadElement, CadParameter, ConstraintDiagnosis, ConstraintId, ConstraintRule, ConstraintSet,
-    Entity, EntityId, ParamUnits, ParameterKind, SolveStatus, eval_param_expr, param_expr_names,
-    param_order, parse_param_expr, rule_label,
+    BondInTheWay, CadElement, CadParameter, ConstraintDiagnosis, ConstraintId, ConstraintRule,
+    ConstraintSet, Entity, EntityId, ParamUnits, ParameterKind, SolveStatus, eval_param_expr,
+    param_expr_names, param_order, parse_param_expr, rule_label,
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::entity::Shape;
@@ -25,8 +25,8 @@ use kentos_geometry_core::ops::constraints::{
 use crate::geometry::{shape, with_shape};
 
 mod dimensions;
-pub use dimensions::parameter_dimension_issues;
 pub(crate) use dimensions::check_dimension_writes;
+pub use dimensions::parameter_dimension_issues;
 
 /// Why the set cannot be solved before the solver is asked: a code of `codes.rs`, the words, and the parameter or
 /// constraint it is about.
@@ -310,6 +310,17 @@ pub fn solve_set(
     fix_from: Option<&HashMap<EntityId, Shape>>,
     stop: &dyn Fn() -> bool,
 ) -> Result<Solved, Unsolvable> {
+    solve_set_with_axes(doc, set, held, &[], fix_from, stop)
+}
+
+pub(crate) fn solve_set_with_axes(
+    doc: &Document,
+    set: &ConstraintSet,
+    held: &[Held],
+    axes: &[(EntityId, u8)],
+    fix_from: Option<&HashMap<EntityId, Shape>>,
+    stop: &dyn Fn() -> bool,
+) -> Result<Solved, Unsolvable> {
     let values = parameter_values(doc, set)?;
     let units = units(doc);
     let mut mapped = Mapped {
@@ -386,20 +397,36 @@ pub fn solve_set(
                 out
             })
     });
-    let mut outcome = solve(
+    let targets: Vec<_> = axes
+        .iter()
+        .filter_map(|(uid, index)| {
+            let object = mapped.index_of(*uid)?;
+            let point = kentos_geometry_core::ops::grips::ellipse_axis_point(
+                &mapped.shapes[object],
+                *index,
+            )?;
+            Some(kentos_geometry_core::ops::constraints::EllipseAxisTarget {
+                object,
+                index: *index,
+                point,
+            })
+        })
+        .collect();
+    let mut outcome = kentos_geometry_core::ops::constraints::solve_with_ellipse_axes(
         &Problem {
             shapes: &mapped.shapes,
             constraints: &constraints,
             held: &holds,
             fix_from: fix_shapes.as_deref(),
         },
+        &targets,
         stop,
     );
     // Temporary grips/first-object holds choose the motion; they are not constraints saved in the drawing.
     // Diagnose the accepted placement with only persistent layer locks. Reuse the same core equations and
     // fix targets, without writing or replacing the chosen geometry. In particular an existing Fix must not
     // become a reported duplicate just because this operation also holds that object.
-    if holds.len() > permanent_hold_count && outcome.status.holds() {
+    if (holds.len() > permanent_hold_count || !targets.is_empty()) && outcome.status.holds() {
         let diagnosis = solve(
             &Problem {
                 shapes: &outcome.shapes,
@@ -481,7 +508,11 @@ pub fn solve_set(
     let kept = metres(doc, set);
     // The conflicting bonds, then those of the smallest freeing set outside them (docs/adr/0790 §2).
     let mut named = arch.conflicting.clone();
-    named.extend(arch.frees_with.iter().filter(|k| !arch.conflicting.contains(k)));
+    named.extend(
+        arch.frees_with
+            .iter()
+            .filter(|k| !arch.conflicting.contains(k)),
+    );
     let id_of = |k: &usize| set.constraints.get(*k).map(|c| c.id);
     let arch_bonds = named
         .iter()
