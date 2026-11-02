@@ -192,7 +192,8 @@ class _ConstraintsQuery(LocalCommand[ConstraintsQuery, ConstraintsListed, Constr
     bugünkü değeri (measured: metre ya da radyan), tuttuğu değer (kept) ve tutup
     tutmadığıyla (holds), parametreleri ve çizimin çözücüdeki teşhisini (durum,
     serbestlik, fazla, çelişen, tekil, kopuk kısıtlar, serbest nesneler) verir; hiçbir
-    şey yazmaz.
+    şey yazmaz. Eski ifadelerin boyut uyuşmazlıkları parameter_units_legacy uyarısında
+    parametre yolu ile bildirilir; saklanan ifade ve sayısal anlamı korunur.
     """
     __slots__ = ()
     id = "cad.constraints.query"
@@ -219,7 +220,9 @@ class _ConstraintsQuery(LocalCommand[ConstraintsQuery, ConstraintsListed, Constr
         bağlarını: Bağı göster) Türkçe adları, ölçü kısıtının bugünkü değeri (measured:
         metre ya da radyan), tuttuğu değer (kept) ve tutup tutmadığıyla (holds),
         parametreleri ve çizimin çözücüdeki teşhisini (durum, serbestlik, fazla, çelişen,
-        tekil, kopuk kısıtlar, serbest nesneler) verir; hiçbir şey yazmaz.
+        tekil, kopuk kısıtlar, serbest nesneler) verir; hiçbir şey yazmaz. Eski ifadelerin
+        boyut uyuşmazlıkları parameter_units_legacy uyarısında parametre yolu ile
+        bildirilir; saklanan ifade ve sayısal anlamı korunur.
 
         Args:
             doc: The drawing it works on.

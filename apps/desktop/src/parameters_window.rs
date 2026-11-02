@@ -572,13 +572,18 @@ impl App {
                 "Blokların yalnız yerleştirme noktaları hesaplanır. Dönme açısı, ayna, ölçek ve iç parçalar korunur; bu serbestlik sayısına dahil değildir.",
             ));
         }
+        if !readout.unit_issues.is_empty() {
+            body = body.push(words::text_line(Kind::Warn, format!(
+                "{} eski ifadede birim uyuşmazlığı var. Değerler korundu; ayrıntı için parametre adını seçin.", readout.unit_issues.len()
+            )));
+        }
         if let Some((kind, said)) = &w.said {
             body = body.push(words::summary(vec![words::text_line(*kind, said.clone())]));
         }
         body = body .push(words::field(
                 "Parametreler",
                 table,
-                Some("Adı seçerek bağımlılıkları inceleyin. İfade uzunlukta çizim, açıda proje birimindedir; Enter uygular.".to_owned()),
+                Some("Adı seçerek bağımlılıkları inceleyin. Birimsiz yazılan ölçü proje birimindedir; farklı türler toplanamaz. pi yarım turdur; birimsiz π için pi / 1rad. Enter uygular.".to_owned()),
             ))
             ;
         if let Some(p) = w.inspected.as_ref().and_then(|name| set.parameter(name)) {
@@ -609,7 +614,7 @@ impl App {
             } else {
                 "Kullanıcı parametresi"
             };
-            let detail = iced::widget::column![
+            let mut detail = iced::widget::column![
                 label::body(format!("{} · {what}", p.name)),
                 label::caption(format!(
                     "Tanımlayan: {} · Etkilediği: {} · {count} ölçü bağı",
@@ -646,6 +651,14 @@ impl App {
                 .align_y(Center)
             ]
             .spacing(8);
+            if let Some(issue) = readout.unit_issues.get(&p.name) {
+                detail = detail.push(words::text_line(
+                    Kind::Warn,
+                    format!(
+                        "Eski değer korundu. {issue} Bu ifadeyi düzenlerken birimleri düzeltin."
+                    ),
+                ));
+            }
             body = body.push(
                 container(detail)
                     .padding(10)

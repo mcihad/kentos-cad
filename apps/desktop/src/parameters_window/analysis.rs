@@ -3,7 +3,10 @@ use kentos_commands::{
     CommandResult, ConstraintSet, ConstraintsListed, ConstraintsQuery, SolveStatus,
     param_expr_names, parse_param_expr,
 };
-use kentos_native_application::{constraint_solve::parameter_values, constraints_query};
+use kentos_native_application::{
+    constraint_solve::{parameter_dimension_issues, parameter_values},
+    constraints_query,
+};
 use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(Debug)]
@@ -14,6 +17,7 @@ pub(super) struct Analysis {
     pub dependencies: Dependencies,
     pub nurbs_endpoints: bool,
     pub block_anchors: bool,
+    pub unit_issues: BTreeMap<String, String>,
 }
 impl Analysis {
     pub fn read(doc: &kentos_domain::Document) -> Self {
@@ -26,6 +30,10 @@ impl Analysis {
             _ => (None, Some("Kısıt teşhisi alınamadı.".into())),
         };
         Self {
+            unit_issues: values
+                .as_ref()
+                .map(|values| parameter_dimension_issues(doc, doc.constraints(), values))
+                .unwrap_or_default(),
             block_anchors: doc.constraints().constraints.iter().any(|c| {
                 c.rule.elements().iter().any(|e| {
                     doc.slot_of(kentos_domain::Uuid::from_bytes(e.uid.0))

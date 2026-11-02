@@ -11,7 +11,7 @@ doğrulanan ilk arayüz dilimini ve kalan gerçek geometri işlerini ayırır.
 | Elips | Merkez ve mevcut Start/End (tam elipste dikiş); gerçek yarı eksen/açı bilinmeyenleri, dual türevler | Genel teğet ve ayrı eksen noktaları açık; kısmi yay Start/End grip hedefi, izleyen çizgi, plan/önizleme ve Undo kabulü geçti |
 | NURBS | Açık/periyodik olmayan ve iki ucu tam clamped eğride Start/End; dört uç koordinatı, iç kontrol noktaları sabit | Genel kontrol/teğet/G2 ve diğer uç yapıları bu adaptörde yok |
 | Blok yerleştirmesi / iç nesne | Yerleştirme noktası Node(0), yalnız iki konum bilinmeyeni; ayna/açı/ölçek ve kaynak korunur | İç parça, dönme ve ölçek bilinmeyenleri bu adaptörde yok; birleşik GUI/Python/MCP ve grip/Undo kabulü geçti |
-| Parametre ifadeleri | Uzunluk/açı/sayı, ad değiştirme, token bağımlılığı, döngü, sıfıra bölme | Boyut cebiri ve uygunsuz birim karışımı ayrıca denetlenmeli |
+| Parametre ifadeleri | Uzunluk/açı/sayı, ad değiştirme, token bağımlılığı, döngü, sıfıra bölme; yeni ifadede boyut cebiri, değişken üs bağımlısı, eski dosyada salt okunur birim uyarısı | Eski pi yarım tur anlamındadır; açık onarım dışında değer değiştirilmez. Birleşik teknik detay kabulü açık |
 | Teşhis | `cad.constraints.query`: serbestlik, hareket edebilenler, fazla/çelişen/tekil/kopuk | Sahnedeki serbest yönlerin gösterimi ve büyük problemde durdurma |
 
 ## Doğrulanan ilk arayüz dilimi
@@ -82,3 +82,5 @@ Sahne kısıt etiketlerinin panel sınırına sığması, pencereyle ortak birim
 Çoklu çizgi/alan dairesel kenarı, altı bağla büyük koordinat ve UI/Python/MCP/dosya/Undo kabulü: [ADR 0837](../adr/0837-variable-circular-path-edge-constraints.md). Saklanan f64 temsilde sahte çelişkiyi tolerans büyütmeden doğrulama: [ADR 0838](../adr/0838-stored-constraint-roundtrip-certificate.md).
 
 Sabit yay uçlarında imkânsız yarıçap/çap için birimli kiriş ve alt sınır açıklaması: [ADR 0839](../adr/0839-actionable-fixed-arc-radius-refusals.md). Uçlardan biri serbestse kirişin kısalmasına izin verilir.
+
+Boyut cebiri, yeni/değişen ifadelerin atomik denetimi ve eski pi'nin sessizce yeniden yorumlanmadan denetlenmesi: [ADR 0840](../adr/0840-parameter-dimensions-without-legacy-reinterpretation.md), [Python/MCP birim rehberi](parameter-units-python.md). Gerçek GUI'de altı bağlı mm çizimde yanlış tür reddi, karekök ifadesiyle 2500→3000 mm, tek Undo, dar pencere, açık pi onarımı ve yeniden açma doğrulandı; UI/Python dosyaları tam aynı.

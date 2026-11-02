@@ -31,7 +31,8 @@ use crate::ExecutionContext;
 use crate::checks::{self, Stop};
 use crate::codes;
 use crate::constraint_solve::{
-    Held, Solved, Unsolvable, kind_of, next_name, parameter_values, solve_set, units,
+    Held, Solved, Unsolvable, check_dimension_writes, kind_of, next_name, parameter_values,
+    solve_set, units,
 };
 
 /// The undo step's name.
@@ -566,11 +567,12 @@ fn positions(set: &ConstraintSet, ids: &[String], path: &str) -> Result<Vec<usiz
         .collect()
 }
 
-fn unsolvable(u: Unsolvable) -> Stop {
+pub(crate) fn unsolvable(u: Unsolvable) -> Stop {
     let code = match u.code {
         "invalid_expression" | "not_finite" => codes::PARAMETER_EXPRESSION,
         "unknown_parameter" => codes::PARAMETER_MISSING,
         "parameter_cycle" => codes::PARAMETER_CYCLE,
+        "parameter_kind" => codes::PARAMETER_KIND,
         _ => codes::PARAMETER_RANGE,
     };
     Stop::failed(checks::error(code, u.words, u.path))
@@ -652,6 +654,12 @@ pub(crate) fn check(
         })
         .collect();
     let mut set = doc.constraints().clone();
+    let origins = set
+        .parameters
+        .iter()
+        .map(|p| (p.name.clone(), p.name.clone()))
+        .collect();
+    let mut authored = BTreeSet::new();
     let mut added = Vec::new();
     let mut removed = Vec::new();
     match &input.edit {
@@ -670,6 +678,9 @@ pub(crate) fn check(
                         *name = next_name(&set.parameters, &c.rule);
                     }
                     let name = name.clone();
+                    if c.value.is_some() || set.parameter(&name).is_none() {
+                        authored.insert(name.clone());
+                    }
                     if set
                         .constraints
                         .iter()
@@ -779,6 +790,7 @@ pub(crate) fn check(
         }
         ConstraintEdit::Solve => {}
     }
+    check_dimension_writes(doc, &set, &authored, &origins, stop)?;
     let solved = settle(doc, &set, &held, &added, input.allow_flip, stop)?;
     Ok(Planned {
         set,

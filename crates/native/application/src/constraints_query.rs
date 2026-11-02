@@ -10,15 +10,17 @@
 use std::collections::HashSet;
 
 use kentos_commands::{
-    CommandResult, ConstraintId, ConstraintsListed, ConstraintsQuery, EntityId, ListedConstraint,
-    rule_is_architectural, rule_label,
+    CommandResult, CommandWarning, ConstraintId, ConstraintsListed, ConstraintsQuery, EntityId,
+    ListedConstraint, rule_is_architectural, rule_label,
 };
 use kentos_domain::{Document, Uuid};
 
 use crate::ExecutionContext;
 use crate::checks::{self, Stop};
 use crate::codes;
-use crate::constraint_solve::{Held, measured_now, metres, solve_set};
+use crate::constraint_solve::{
+    Held, measured_now, metres, parameter_dimension_issues, parameter_values, solve_set,
+};
 
 /// Checks `input`, writing nothing.
 pub fn validate(_cx: &ExecutionContext<'_>, input: &ConstraintsQuery) -> CommandResult<()> {
@@ -90,15 +92,18 @@ pub fn read(doc: &Document, input: &ConstraintsQuery) -> CommandResult<Constrain
     };
     let set = doc.constraints();
     // Every asked id is a constraint of the drawing (docs/adr/0780 §2).
-    if let Some((i, text)) = input.ids.iter().enumerate().find(|(_, t)| {
-        !set.constraints
-            .iter()
-            .any(|c| c.id.to_string() == **t)
-    }) {
+    if let Some((i, text)) = input
+        .ids
+        .iter()
+        .enumerate()
+        .find(|(_, t)| !set.constraints.iter().any(|c| c.id.to_string() == **t))
+    {
         return CommandResult::Failed {
             error: checks::error(
                 codes::CONSTRAINT_NOT_FOUND,
-                format!("“{text}” kimlikli kısıt çizimde yok; kaldırılmış olabilir. Kısıtları kimliksiz sorun."),
+                format!(
+                    "“{text}” kimlikli kısıt çizimde yok; kaldırılmış olabilir. Kısıtları kimliksiz sorun."
+                ),
                 Some(format!("ids[{i}]")),
             ),
         };
@@ -144,7 +149,10 @@ pub fn read(doc: &Document, input: &ConstraintsQuery) -> CommandResult<Constrain
         .iter()
         .filter(|c| {
             asked.objects.is_empty()
-                || c.rule.elements().iter().any(|e| asked.objects.contains(&e.uid))
+                || c.rule
+                    .elements()
+                    .iter()
+                    .any(|e| asked.objects.contains(&e.uid))
         })
         .filter(|c| asked.ids.is_empty() || asked.ids.contains(&c.id))
         .filter(|c| !input.architectural || rule_is_architectural(&c.rule))
@@ -164,6 +172,16 @@ pub fn read(doc: &Document, input: &ConstraintsQuery) -> CommandResult<Constrain
             constraint: c.clone(),
         })
         .collect();
+    let issues = parameter_values(doc, set)
+        .map(|values| parameter_dimension_issues(doc, set, &values))
+        .unwrap_or_default();
+    let warnings = set.parameters.iter().enumerate().filter_map(|(i, p)| {
+        Some(CommandWarning {
+            code: codes::PARAMETER_UNITS_LEGACY.into(),
+            message: format!("“{}” eski ifadesinin sayısal değeri korundu; birim denetimi: {} İfadeyi değiştirirseniz bu uyumsuzluğu düzeltin.", p.name, issues.get(&p.name)?),
+            path: Some(format!("parameters[{i}].expression")),
+        })
+    }).collect();
     CommandResult::Completed {
         output: ConstraintsListed {
             constraints,
@@ -171,6 +189,6 @@ pub fn read(doc: &Document, input: &ConstraintsQuery) -> CommandResult<Constrain
             diagnosis: solved.diagnosis,
             revision: doc.revision().to_string(),
         },
-        warnings: Vec::new(),
+        warnings,
     }
 }

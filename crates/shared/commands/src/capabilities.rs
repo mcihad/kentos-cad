@@ -1144,6 +1144,7 @@ const ENTRIES: &[Entry] = &[
                 "parameter_expression",
                 "parameter_not_found",
                 "parameter_exists",
+                "parameter_kind",
                 "parameter_measured",
                 "parameter_read",
                 "parameter_missing",
@@ -1164,7 +1165,7 @@ const ENTRIES: &[Entry] = &[
     Entry {
         id: "cad.constraints.query",
         refusals: &[&["invalid_uid", "constraint_not_found"]],
-        warnings: &[],
+        warnings: &["parameter_units_legacy"],
         targets: none,
     },
     Entry {

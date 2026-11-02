@@ -491,8 +491,14 @@ UI/Python geometri farkı 0. [ADR 0837](../docs/adr/0837-variable-circular-path-
 ölçüyle açıklanır. Gerçek mm GUI'de hata/üç ilgili bağ, geçerli değere
 dönüş, UI/Python eşitliği ve tam tek Undo kabulü geçti.
 [ADR 0839](../docs/adr/0839-actionable-fixed-arc-radius-refusals.md).
-Boyut cebiri, tam elips eksen grip'leri ve birleşik çözüm dalı kabulü
-bitmeden bu madde kapatılmaz.
+Boyut cebiri ve eski ifade uyumluluğu eklendi: yeni/açıkça değişen ifadede
+uzunluk/açı/sayı, çarpım/üs/karekök ve değişen üs bağımlısı denetlenir.
+Eski pi yarım tur değerini korur; ortak query ve arayüz uyumsuzluğu
+açıklar. Gerçek mm GUI'de yanlış tür reddi, 2500→3000 mm, altı geçerli
+bağ, tam tek Undo, dar pencere, açık pi onarımı ve yeniden açma geçti;
+UI/Python dosyaları tam aynı. [ADR 0840](../docs/adr/0840-parameter-dimensions-without-legacy-reinterpretation.md).
+Tam elips eksen grip'leri ve birleşik çözüm dalı kabulü bitmeden bu
+madde kapatılmaz.
 
 ### CAD-ADV-06 — Parametrik blokları sürdürülebilir 2B bileşenlere dönüştür [ ]
 

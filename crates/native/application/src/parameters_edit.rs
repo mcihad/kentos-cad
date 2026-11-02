@@ -7,7 +7,7 @@
 //! dimension that only measures, a parameter read or a dimension's taken away); then what `cad.constraints.edit`
 //! checks of the set and its solve (`constraints_edit::settle`).
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use kentos_commands::{
     BoundChange, CadParameter, CommandResult, ConstraintRule, ConstraintSet, ParameterEdit,
@@ -19,7 +19,7 @@ use kentos_domain::Document;
 use crate::ExecutionContext;
 use crate::checks::{self, Stop};
 use crate::codes;
-use crate::constraint_solve::{Solved, parameter_values};
+use crate::constraint_solve::{Solved, check_dimension_writes, parameter_values};
 use crate::constraints_edit::settle;
 
 /// The undo step's name.
@@ -243,6 +243,12 @@ fn check_with(
     check_shape(input)?;
     checks::revision(doc, input.expected_revision.as_deref())?;
     let mut set = doc.constraints().clone();
+    let mut authored = BTreeSet::new();
+    let mut origins: BTreeMap<String, String> = set
+        .parameters
+        .iter()
+        .map(|p| (p.name.clone(), p.name.clone()))
+        .collect();
     for (i, e) in input.edits.iter().enumerate() {
         let at = |field: &str| format!("edits[{i}].{field}");
         match e {
@@ -258,6 +264,8 @@ fn check_with(
                     ));
                 }
                 set.parameters.push(parameter.clone());
+                authored.insert(parameter.name.clone());
+                origins.remove(&parameter.name);
             }
             ParameterEdit::Set {
                 name,
@@ -282,6 +290,7 @@ fn check_with(
                 let p = find(&mut set, name, at("name"))?;
                 if let Some(text) = expression {
                     p.expression.clone_from(text);
+                    authored.insert(name.clone());
                 }
                 p.min = bound(*min, p.min);
                 p.max = bound(*max, p.max);
@@ -314,6 +323,12 @@ fn check_with(
                         parameter.clone_from(to);
                     }
                 }
+                if let Some(origin) = origins.remove(name) {
+                    origins.insert(to.clone(), origin);
+                }
+                if authored.remove(name) {
+                    authored.insert(to.clone());
+                }
             }
             ParameterEdit::Remove { name } => {
                 find(&mut set, name, at("name"))?;
@@ -337,9 +352,12 @@ fn check_with(
                     ));
                 }
                 set.parameters.retain(|p| p.name != *name);
+                origins.remove(name);
+                authored.remove(name);
             }
         }
     }
+    check_dimension_writes(doc, &set, &authored, &origins, stop)?;
     let solved = settle(doc, &set, &[], &[], input.allow_flip, stop)?;
     Ok((set, solved))
 }

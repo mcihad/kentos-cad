@@ -1634,8 +1634,10 @@ codes! {
     PARAMETER_MISSING = "parameter_missing", Failed, false, "İfadenin okuduğu adda parametre yok.";
     /// Parameters that read each other round.
     PARAMETER_CYCLE = "parameter_cycle", Failed, false, "Parametreler birbirini döngüyle okuyor.";
-    /// A dimension named a parameter of another kind (an angle's a length …).
-    PARAMETER_KIND = "parameter_kind", Failed, false, "Parametrenin türü ölçü kısıtına uymuyor (açıya açı, diğerlerine uzunluk).";
+    /// A dimension or an authored expression has an incompatible length, angle or number dimension.
+    PARAMETER_KIND = "parameter_kind", Failed, false, "Parametrenin türü ölçü kısıtına veya ifadenin uzunluk/açı/sayı boyutuna uymuyor. Birimleri ve başvurulan parametre türlerini düzeltin.";
+    /// A stored expression keeps its old numeric meaning until explicitly repaired (ADR0840).
+    PARAMETER_UNITS_LEGACY = "parameter_units_legacy", Warning, false, "Eski parametre ifadesinin sayısal anlamı korundu; birim boyutu uyuşmuyor. İfadeyi açıkça onarmadan değeri yeniden yorumlamayın.";
     /// A parameter another dimension already has.
     PARAMETER_IN_USE = "parameter_in_use", Failed, false, "Bu parametre başka bir ölçü kısıtının.";
     /// A value outside its parameter's range, or a radius or diameter not above nought.

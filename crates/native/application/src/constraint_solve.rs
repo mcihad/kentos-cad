@@ -24,6 +24,10 @@ use kentos_geometry_core::ops::constraints::{
 
 use crate::geometry::{shape, with_shape};
 
+mod dimensions;
+pub use dimensions::parameter_dimension_issues;
+pub(crate) use dimensions::check_dimension_writes;
+
 /// Why the set cannot be solved before the solver is asked: a code of `codes.rs`, the words, and the parameter or
 /// constraint it is about.
 #[derive(Clone, Debug, PartialEq)]

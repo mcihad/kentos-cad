@@ -87,6 +87,8 @@ fn reached() -> BTreeMap<String, BTreeSet<String>> {
 
 /// The listed codes no shared case reaches, and why.
 const UNREACHED: &[(&str, &str, &str)] = &[
+    ("cad.parameters.edit", "parameter_kind", "Birim boyutu ön denetimi parameter_dimensions.rs içinde validate/plan/execute eşitliği, bağımlı üs, eski pi, atomiklik ve Undo ile sınanır; ortak ADR0336 durumları eski sayısal grameri korur (ADR0840)."),
+    ("cad.constraints.query", "parameter_units_legacy", "Eski pi ifadesi Number türünde olan V2 dosyası parameter_dimensions.rs içinde salt okunur uyarı, yeniden adlandırma, açık onarım ve Undo ile sınanır; yeni komutlar bu uyumsuz ifadeyi oluşturamaz (ADR0840)."),
     (
         "cad.entities.isolate", "invalid_input",
         "MAX_SELECT_ITEMS sınırından bir fazla UID, entities_select/isolation.rs içindeki isolation_limit_is_atomic testinde; büyük tekrarlı liste ortak JSON durumuna yazılmaz (ADR 0820).",

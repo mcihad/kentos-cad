@@ -6,6 +6,9 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
+mod dimensions;
+pub use dimensions::check_param_expr_dimension;
+
 /// The longest expression kept.
 pub const EXPRESSION_MAX: usize = 1_000;
 

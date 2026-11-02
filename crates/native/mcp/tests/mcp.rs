@@ -2445,6 +2445,17 @@ fn ellipse_axis_constraints_use_the_same_mcp_diagnosis_and_keep_analytic_geometr
     );
     assert_eq!(added["structuredContent"]["status"], "completed", "{added}");
     let before=call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"].clone();
+    for expression in ["45deg", "2m + 45deg", "2m / 1m"] {
+        let input = json!({"drawing":drawing,"edits":[{"kind":"set","name":"eksen","expression":expression}]});
+        let mut preview = input.clone();
+        preview["op"] = json!("plan");
+        let planned = call(&mut server, "cad.parameters.edit", preview);
+        let actual = call(&mut server, "cad.parameters.edit", input);
+        assert_eq!(actual["structuredContent"]["status"], "failed", "{actual}");
+        assert_eq!(actual["structuredContent"]["error"]["code"], "parameter_kind");
+        assert_eq!(actual["structuredContent"]["error"], planned["structuredContent"]["error"]);
+        assert_eq!(call(&mut server, "drawing.entities", json!({"drawing":drawing}))["structuredContent"]["items"], before);
+    }
     let input = json!({"drawing":drawing,"edits":[{"kind":"set","name":"eksen","expression":"6"}]});
     let mut plan_input = input.clone();
     plan_input["op"] = json!("plan");
@@ -2964,5 +2975,36 @@ fn a_circular_path_edge_radius_shares_mcp_plan_persistence_query_and_undo() {
         call(&mut server, "drawing.entities", json!({"drawing":drawing}))["structuredContent"]["items"],
         before
     );
+    std::fs::remove_dir_all(dir).unwrap();
+}
+
+#[test]
+fn parameter_units_mcp_legacy_audit_is_readonly_and_repair_is_explicit() {
+    let mut snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_str(include_str!("../../../../fixtures/kcad/v2/constraints.json")).unwrap();
+    snapshot.settings.angle_unit = kentos_commands::AngleUnit::Grad;
+    snapshot.constraints = serde_json::from_value(json!({"constraints":[],"parameters":[{"name":"legacy","kind":"number","expression":"pi"}]})).unwrap();
+    let doc = kentos_domain::Document::from_snapshot_v2(snapshot).unwrap();
+    let dir = std::env::temp_dir().join(format!("kentos-mcp-unit-legacy-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join("legacy.kcad");
+    kentos_headless::files::write(&doc, &path).unwrap();
+    let before = std::fs::read(&path).unwrap();
+    let mut server = Server::new();
+    let drawing = call(&mut server, "drawing.open", json!({"path":path}))["structuredContent"]["drawing"].clone();
+    let query = call(&mut server, "cad.constraints.query", json!({"drawing":drawing}));
+    assert_eq!(query["structuredContent"]["status"], "completed", "{query}");
+    assert_eq!(query["structuredContent"]["warnings"][0]["code"], "parameter_units_legacy");
+    assert_eq!(query["structuredContent"]["warnings"][0]["path"], "parameters[0].expression");
+    let saved = call(&mut server, "drawing.save", json!({"drawing":drawing,"path":path}));
+    assert!(!saved["isError"].as_bool().unwrap_or(false), "{saved}");
+    assert_eq!(std::fs::read(&path).unwrap(), before);
+    let repaired = call(&mut server, "cad.parameters.edit", json!({"drawing":drawing,"edits":[{"kind":"set","name":"legacy","expression":"pi / 1rad"}]}));
+    assert_eq!(repaired["structuredContent"]["status"], "completed", "{repaired}");
+    assert!((repaired["structuredContent"]["output"]["values"][0]["value"].as_f64().unwrap() - std::f64::consts::PI).abs() < 1e-12);
+    let query = call(&mut server, "cad.constraints.query", json!({"drawing":drawing}));
+    assert!(query["structuredContent"]["warnings"].as_array().is_none_or(Vec::is_empty), "{query}");
+    call(&mut server, "drawing.undo", json!({"drawing":drawing}));
+    call(&mut server, "drawing.save", json!({"drawing":drawing,"path":path}));
+    assert_eq!(std::fs::read(&path).unwrap(), before);
     std::fs::remove_dir_all(dir).unwrap();
 }

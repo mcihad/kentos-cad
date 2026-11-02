@@ -29,11 +29,15 @@ class _ParametersEdit(LocalCommand[ParametersEdit, ParametersEdited, ParametersE
     isteğe bağlı min, max, açıklama); set ifade, sınırlar (clear kaldırır) ve açıklama,
     verilmeyenler kalır; rename yeni ad, onu okuyan ifadeler ve ölçü kısıtı izler;
     remove başka parametrenin okumadığı kullanıcı parametresi. Değerler parametrenin
-    biriminde: uzunluk çizim biriminde, açı projenin açı biriminde. Yalnız ölçen ölçünün
-    parametresine ifade verilmez (parameter_measured). Döngü, aralık dışı değer,
-    çelişki, tekillik ve ters dönme cad.constraints.edit'teki gibi reddedilir, hiçbir
-    şey yazılmaz. Çıktı her parametrenin değerini, oynayan nesneleri ve çözücünün
-    teşhisini verir.
+    biriminde: uzunluk çizim biriminde, açı projenin açı biriminde. Yeni/değiştirilen
+    ifadelerde uzunluk/açı/sayı boyutu uyuşmalıdır (parameter_kind); çarpım, oran, üs ve
+    sqrt ara boyutları izlenir, değişen üssün bağımlıları denetlenir. pi eski anlamıyla
+    yarım turdur; birimsiz matematiksel π, pi / 1rad ile yazılır. Eski uyumsuz ifadeler
+    sessizce dönüştürülmez; cad.constraints.query parameter_units_legacy uyarısıyla
+    bildirir. Yalnız ölçen ölçünün parametresine ifade verilmez (parameter_measured).
+    Döngü, aralık dışı değer, çelişki, tekillik ve ters dönme cad.constraints.edit'teki
+    gibi reddedilir, hiçbir şey yazılmaz. Çıktı her parametrenin değerini, oynayan
+    nesneleri ve çözücünün teşhisini verir.
     """
     __slots__ = ()
     id = "cad.parameters.edit"
@@ -62,10 +66,15 @@ class _ParametersEdit(LocalCommand[ParametersEdit, ParametersEdited, ParametersE
         açıklama); set ifade, sınırlar (clear kaldırır) ve açıklama, verilmeyenler kalır;
         rename yeni ad, onu okuyan ifadeler ve ölçü kısıtı izler; remove başka parametrenin
         okumadığı kullanıcı parametresi. Değerler parametrenin biriminde: uzunluk çizim
-        biriminde, açı projenin açı biriminde. Yalnız ölçen ölçünün parametresine ifade
-        verilmez (parameter_measured). Döngü, aralık dışı değer, çelişki, tekillik ve ters
-        dönme cad.constraints.edit'teki gibi reddedilir, hiçbir şey yazılmaz. Çıktı her
-        parametrenin değerini, oynayan nesneleri ve çözücünün teşhisini verir.
+        biriminde, açı projenin açı biriminde. Yeni/değiştirilen ifadelerde uzunluk/açı/sayı
+        boyutu uyuşmalıdır (parameter_kind); çarpım, oran, üs ve sqrt ara boyutları izlenir,
+        değişen üssün bağımlıları denetlenir. pi eski anlamıyla yarım turdur; birimsiz
+        matematiksel π, pi / 1rad ile yazılır. Eski uyumsuz ifadeler sessizce dönüştürülmez;
+        cad.constraints.query parameter_units_legacy uyarısıyla bildirir. Yalnız ölçen
+        ölçünün parametresine ifade verilmez (parameter_measured). Döngü, aralık dışı değer,
+        çelişki, tekillik ve ters dönme cad.constraints.edit'teki gibi reddedilir, hiçbir
+        şey yazılmaz. Çıktı her parametrenin değerini, oynayan nesneleri ve çözücünün
+        teşhisini verir.
 
         Args:
             doc: The drawing it works on.
