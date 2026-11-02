@@ -51,6 +51,11 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ADR 0852: kitaplık/dosyadan yeniden tanımlama mevcut sahne parametreleri ve
+  özel öznitelik konumlarını birleşik son tanımlarla doğrulamalı. Native'in
+  atomik reddi ve tek Undo'su web komut/etkileşim katmanında ayrıca sınanacak;
+  native GUI/Python/MCP kabulü web kabulü sayılmaz.
+
 - ADR 0851: ortak çekirdeğin varsayılan ilk görünüş düzeltmesi hazırdır;
   web etiket okuyucusunun etkin varyantın parça sırasını kullandığı ayrıca
   doğrulanmalı. İç içe statik DXF ve açık parametre/eylem kaybı bildirimi,

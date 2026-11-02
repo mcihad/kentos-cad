@@ -13,7 +13,7 @@ use kentos_commands::{
 use kentos_domain::{Document, Uuid};
 
 use crate::ExecutionContext;
-use crate::blocks_define::{block_rules, name};
+use crate::blocks_define::{block_rules, block_rules_with_entities, name};
 use crate::checks::{self, Stop, error};
 use crate::codes;
 
@@ -251,7 +251,8 @@ fn take(
         })
         .collect();
     next.extend(taken.iter().filter(|(_, put)| !put).map(|(b, _)| b));
-    block_rules(&next).map_err(|stop| {
+    let entities: Vec<_> = doc.entities().collect();
+    block_rules_with_entities(&next, &entities).map_err(|stop| {
         let mut e = stop.into_error();
         e.path = Some("library".into());
         Stop::failed(e)

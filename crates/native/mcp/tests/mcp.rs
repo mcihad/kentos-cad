@@ -3827,3 +3827,129 @@ fn default_visibility_and_nested_static_export_share_the_mcp_command_path() {
     assert!(child["entities"].as_array().unwrap().iter().any(|e|e["kind"]=="line"&&(e["b"]["y"].as_f64().unwrap()-1.2).abs()<1e-9));
     std::fs::remove_dir_all(dir).unwrap();
 }
+
+#[test]
+fn library_replacement_refuses_invalid_scene_values_before_writing_through_mcp() {
+    let dir =
+        std::env::temp_dir().join(format!("kentos-mcp-library-safety-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join("doors.kcad");
+    std::fs::write(
+        &path,
+        include_bytes!("../../../../fixtures/kcad/v2/dynamic-blocks.kcad"),
+    )
+    .unwrap();
+    let mut server = Server::new();
+    let drawing =
+        call(&mut server, "drawing.open", json!({"path":path}))["structuredContent"]["drawing"]
+            .clone();
+    call(
+        &mut server,
+        "drawing.save",
+        json!({"drawing":drawing,"path":path}),
+    );
+    let before = std::fs::read(&path).unwrap();
+    let entities =
+        call(&mut server, "drawing.entities", json!({"drawing":drawing}))["structuredContent"]
+            .clone();
+    let exported = call(
+        &mut server,
+        "cad.blocks.edit",
+        json!({"drawing":drawing,"operation":"export"}),
+    );
+    let mut library: Value = serde_json::from_str(
+        exported["structuredContent"]["output"]["library"]
+            .as_str()
+            .unwrap(),
+    )
+    .unwrap();
+    let valid = library.clone();
+    library["blocks"][0]
+        .as_object_mut()
+        .unwrap()
+        .remove("dynamic");
+    for op in ["validate", "plan", "execute"] {
+        let answer = call(
+            &mut server,
+            "cad.blocks.edit",
+            json!({"drawing":drawing,"operation":"import","replace":true,"library":library.to_string(),"op":op}),
+        );
+        assert_eq!(answer["structuredContent"]["status"], "failed", "{answer}");
+        assert_eq!(
+            answer["structuredContent"]["error"]["code"],
+            "invalid_parameter_value"
+        );
+        assert_eq!(answer["structuredContent"]["error"]["path"], "library");
+        call(
+            &mut server,
+            "drawing.save",
+            json!({"drawing":drawing,"path":path}),
+        );
+        assert_eq!(std::fs::read(&path).unwrap(), before);
+        assert_eq!(
+            call(&mut server, "drawing.entities", json!({"drawing":drawing}))["structuredContent"],
+            entities
+        );
+    }
+    let plain_path = dir.join("plain.kcad");
+    std::fs::write(&plain_path, &before).unwrap();
+    let plain_drawing = call(&mut server, "drawing.open", json!({"path":plain_path}))["structuredContent"]["drawing"].clone();
+    let plain = call(
+        &mut server,
+        "cad.blocks.edit",
+        json!({
+            "drawing":plain_drawing,"operation":"dynamic","block":valid["blocks"][0]["id"],"dynamic":null
+        }),
+    );
+    assert_eq!(plain["structuredContent"]["status"], "completed", "{plain}");
+    call(
+        &mut server,
+        "drawing.save",
+        json!({"drawing":plain_drawing,"path":plain_path}),
+    );
+    for op in ["validate", "plan", "execute"] {
+        let answer = call(
+            &mut server,
+            "file.import.block",
+            json!({
+                "drawing":drawing,"path":plain_path,"mode":"blocks","replace":true,"op":op
+            }),
+        );
+        assert_eq!(answer["structuredContent"]["status"], "failed", "{answer}");
+        assert_eq!(
+            answer["structuredContent"]["error"]["code"],
+            "block_refused"
+        );
+        assert_eq!(answer["structuredContent"]["error"]["path"], "path");
+        call(
+            &mut server,
+            "drawing.save",
+            json!({"drawing":drawing,"path":path}),
+        );
+        assert_eq!(std::fs::read(&path).unwrap(), before);
+    }
+    let mut compatible = valid;
+    compatible["blocks"][0]["entities"].as_array_mut().unwrap().push(json!({"kind":"line","id":5,"layerId":"","attrs":{},"a":{"x":0.06,"y":0.45},"b":{"x":0.3,"y":0.45}}));
+    let mut input = json!({"drawing":drawing,"operation":"import","replace":true,"library":compatible.to_string(),"op":"plan"});
+    let plan = call(&mut server, "cad.blocks.edit", input.clone())["structuredContent"].clone();
+    assert_eq!(plan["status"], "completed", "{plan}");
+    input["op"] = json!("execute");
+    input["expected"] = json!({"plan":plan["planId"]});
+    let answer = call(&mut server, "cad.blocks.edit", input);
+    assert_eq!(
+        answer["structuredContent"]["status"], "completed",
+        "{answer}"
+    );
+    assert_eq!(
+        call(&mut server, "drawing.entities", json!({"drawing":drawing}))["structuredContent"],
+        entities
+    );
+    call(&mut server, "drawing.undo", json!({"drawing":drawing}));
+    call(
+        &mut server,
+        "drawing.save",
+        json!({"drawing":drawing,"path":path}),
+    );
+    assert_eq!(std::fs::read(&path).unwrap(), before);
+    std::fs::remove_dir_all(dir).unwrap();
+}

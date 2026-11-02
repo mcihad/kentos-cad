@@ -267,6 +267,14 @@ fn check(doc: &Document, input: &ImportBlock) -> Result<Checked, Stop> {
         let ours = doc.to_snapshot_v2();
         categorised(&ours, &mut checked.drawing, category);
     }
+    let blocks: Vec<_> = checked.drawing.blocks.iter().collect();
+    let entities: Vec<_> = doc.entities().collect();
+    crate::blocks_define::block_rules_with_entities(&blocks, &entities).map_err(|stop| {
+        let mut fault = stop.into_error();
+        fault.code = codes::BLOCK_REFUSED.into();
+        fault.path = Some("path".into());
+        Stop::failed(fault)
+    })?;
     Ok(checked)
 }
 

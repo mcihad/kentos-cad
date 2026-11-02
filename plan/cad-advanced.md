@@ -633,6 +633,19 @@ kaynak KCAD tam aynı; görünüş değişimi/tek Undo ayrıca kayıttan denetle
 [aktarım/API rehberi](../docs/cad/block-static-dxf.md). Bu dilim aile/yayın
 sürümü veya kalıcı tip–örnek kapsamını tamamlamaz.
 
+**İlerleme — 2026-11-02, kitaplık güncellemesinde kaynak güvenliği:**
+Kitaplık veya dosyadan yeniden tanımlama, sahnedeki mevcut parametre ve
+özel öznitelik konumlarını da birleşik son tanımlara göre doğrular.
+Önceden başarılı görünüp sonraki kaydı bozan dinamik→düz değişim,
+daraltılmış değer aralığı ve artık taşınamayan özel konum atomik reddedilir.
+317 application, 55 MCP, 1603 masaüstü, 436 Python testi, Clippy ve derleme
+geçti. Gerçek GUI konsolundan iki import yolunun reddi, uyumlu geometri
+uygulama ve gerçek tek Undo denetlendi; ret/Undo kayıtları başlangıçla,
+uyumlu GUI kaydı bağımsız Python ile bayt düzeyinde aynı.
+[ADR 0852](../docs/adr/0852-block-library-replacement-validates-scene-inserts.md),
+[API rehberi](../docs/cad/block-library-update-safety.md). Değişen formül ve
+birim semantiği ayrıca ele alınacak; bu koruma aile/yayın yükseltmesi değildir.
+
 Tür/sürüm ve seçilmiş yükseltme, kalıcı tip–örnek parametre kapsamı ve
 birleşik blok kabulü açıktır. Kullanıcı tanımlı grup metaverisi bu otomatik
 gruplarla tamamlanmış sayılmaz. Web öznitelik penceresinin native eşitleme kapsamıyla
