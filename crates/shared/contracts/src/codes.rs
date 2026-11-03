@@ -803,6 +803,11 @@ codes! {
     JUNCTION_STALE = "junction_stale", Warning, false, "Kavşağın bir kolunun aksı değişti; kavşağı denetleyip yeniden bağlayın.";
     /// A warning: a leg curves within the curb returns' reach; the returns take it straight (docs/adr/0910 §2).
     JUNCTION_ON_CURVE = "junction_on_curve", Warning, false, "Bir kol dönüş yaylarının erimi içinde kurpta; yaylar kolu düz kabul eder.";
+    /// A vertical clearance asked that is not right: not two profiles, a profile off its leg, depth or minimum
+    /// negative, step not positive, too many samples, the roads not overlapping or not covered (docs/adr/0917 §3).
+    INVALID_CLEARANCE = "invalid_clearance", Failed, false, "Düşey açıklık sorusu geçerli değil; ileti nedenini söyler.";
+    /// A warning: the least vertical clearance falls short of the minimum asked (docs/adr/0917 §3).
+    JUNCTION_CLEARANCE_SHORT = "junction_clearance_short", Warning, false, "En küçük düşey açıklık istenen açıklıktan az.";
     /// A pay item book that is not right: no source or version, items or rules out of bounds (docs/adr/0909 §4).
     INVALID_PAY_BOOK = "invalid_pay_book", Failed, false, "Poz defteri geçerli değil; ileti nedenini söyler.";
     /// The project has no pay item book (docs/adr/0909 §4).

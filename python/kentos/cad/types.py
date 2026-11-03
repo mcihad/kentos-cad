@@ -38301,6 +38301,59 @@ class JoinsQuery(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class JunctionClearanceAt(_Model):
+    """A clearance at a place: the place, its station and offset (right positive) on the upper and the lower road, the
+    two profiles' elevations there and the clearance (upper elevation less the depth, less the lower elevation).
+    Attributes:
+        x: Unit: length.
+        y: Unit: length.
+        upper_station: Unit: m.
+        upper_offset: Unit: m.
+        lower_station: Unit: m.
+        lower_offset: Unit: m.
+        upper_elevation: Unit: elevation.
+        lower_elevation: Unit: elevation.
+        clearance: Unit: m.
+    """
+    x: float
+    y: float
+    upper_station: float
+    upper_offset: float
+    lower_station: float
+    lower_offset: float
+    upper_elevation: float
+    lower_elevation: float
+    clearance: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["x"] = float(self.x)
+        out["y"] = float(self.y)
+        out["upperStation"] = float(self.upper_station)
+        out["upperOffset"] = float(self.upper_offset)
+        out["lowerStation"] = float(self.lower_station)
+        out["lowerOffset"] = float(self.lower_offset)
+        out["upperElevation"] = float(self.upper_elevation)
+        out["lowerElevation"] = float(self.lower_elevation)
+        out["clearance"] = float(self.clearance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JunctionClearanceAt:
+        return cls(
+            x=float(data["x"]),
+            y=float(data["y"]),
+            upper_station=float(data["upperStation"]),
+            upper_offset=float(data["upperOffset"]),
+            lower_station=float(data["lowerStation"]),
+            lower_offset=float(data["lowerOffset"]),
+            upper_elevation=float(data["upperElevation"]),
+            lower_elevation=float(data["lowerElevation"]),
+            clearance=float(data["clearance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class JunctionDef(_Model):
     """A junction of two alignments (docs/adr/0910 §2): its legs, which of their crossings (`at`, 0 the first along the
     first leg), how they meet, and at grade the curb returns' radius (`radius`, every quadrant) and, when given, each
@@ -38608,6 +38661,112 @@ class JunctionReturn(_Model):
             on_b=JunctionPlace.from_json(data["onB"]),
             sweep=float(data["sweep"]),
             length=float(data["length"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JunctionsClearance(_Model):
+    """Input of `road.junctions.clearance` v1 (docs/adr/0917): a separated junction's vertical clearance, the upper road's
+    profile less its deck's `depth` over the lower road's profile, sampled where the roads overlap in plan. `profiles`
+    are the legs' profiles in the legs' order (by id or name); absent, each leg's alignment's only profile. `depth`
+    (the deck from its profile grade to its underside) and `minimum` (the clearance asked) are the user's; KentOS
+    gives no number. Reads only.
+
+    Refusals, in this order: `not_a_road_project`, `unknown_junction`, `invalid_junction` (it does not read, or it is at
+    grade), `unknown_road_profile`, `invalid_road_profile`, `invalid_clearance` (not two profiles, a profile not on its
+    leg's alignment, a leg with no profile or more than one, depth negative, step not positive, minimum negative, more
+    than `MOST_CLEARANCE_SAMPLES` grid places, both legs at one height at the crossing, the roads not overlapping, a
+    profile not covering the overlap). Warnings: `junction_stale`, `profile_stale`, `junction_clearance_short`.
+    Attributes:
+        depth: Unit: m.
+        step: Unit: m.
+        minimum: Unit: m.
+    """
+    junction: str
+    depth: float
+    step: float
+    minimum: float | None | Unset = UNSET
+    profiles: list[str] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["junction"] = self.junction
+        out["depth"] = float(self.depth)
+        out["step"] = float(self.step)
+        if self.minimum is not UNSET:
+            out["minimum"] = None if self.minimum is None else float(self.minimum)
+        if self.profiles is not UNSET:
+            out["profiles"] = None if self.profiles is None else list(self.profiles)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JunctionsClearance:
+        return cls(
+            junction=data["junction"],
+            depth=float(data["depth"]),
+            step=float(data["step"]),
+            minimum=UNSET if "minimum" not in data else None if data["minimum"] is None else float(data["minimum"]),
+            profiles=UNSET if "profiles" not in data else None if data["profiles"] is None else list(data["profiles"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JunctionsCleared(_Model):
+    """Output of `road.junctions.clearance` v1: the junction, which leg is upper (0 or 1), the two profiles used, the
+    depth and step, how many places were sampled, the least and largest clearance and the one where the alignments
+    cross, the minimum asked and whether the least falls short of it.
+    Attributes:
+        upper: Unit: index.
+        depth: Unit: m.
+        step: Unit: m.
+        samples: Unit: count.
+        minimum: Unit: m.
+    """
+    junction: str
+    upper: int
+    upper_profile: str
+    lower_profile: str
+    depth: float
+    step: float
+    samples: int
+    least: JunctionClearanceAt
+    largest: JunctionClearanceAt
+    crossing: JunctionClearanceAt
+    short: bool
+    minimum: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["junction"] = self.junction
+        out["upper"] = self.upper
+        out["upperProfile"] = self.upper_profile
+        out["lowerProfile"] = self.lower_profile
+        out["depth"] = float(self.depth)
+        out["step"] = float(self.step)
+        out["samples"] = self.samples
+        out["least"] = self.least.to_json()
+        out["largest"] = self.largest.to_json()
+        out["crossing"] = self.crossing.to_json()
+        out["short"] = self.short
+        if self.minimum is not UNSET:
+            out["minimum"] = None if self.minimum is None else float(self.minimum)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JunctionsCleared:
+        return cls(
+            junction=data["junction"],
+            upper=data["upper"],
+            upper_profile=data["upperProfile"],
+            lower_profile=data["lowerProfile"],
+            depth=float(data["depth"]),
+            step=float(data["step"]),
+            samples=data["samples"],
+            least=JunctionClearanceAt.from_json(data["least"]),
+            largest=JunctionClearanceAt.from_json(data["largest"]),
+            crossing=JunctionClearanceAt.from_json(data["crossing"]),
+            short=data["short"],
+            minimum=UNSET if "minimum" not in data else None if data["minimum"] is None else float(data["minimum"]),
         )
 
 
@@ -104630,6 +104789,7 @@ __all__ = [
     "JoinsOp",
     "JoinsQuery",
     "JoinsWallsOperation",
+    "JunctionClearanceAt",
     "JunctionDef",
     "JunctionKind",
     "JunctionKindName",
@@ -104642,6 +104802,8 @@ __all__ = [
     "JunctionReturn",
     "JunctionRole",
     "JunctionRoleName",
+    "JunctionsClearance",
+    "JunctionsCleared",
     "JunctionsDraw",
     "JunctionsDrawn",
     "JunctionsEdit",

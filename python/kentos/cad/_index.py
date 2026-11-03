@@ -355,6 +355,7 @@ COMMANDS: dict[str, Any] = {
     "road.guardrails.query": road.guardrails.query,
     "road.hauls.edit": road.hauls.edit,
     "road.hauls.query": road.hauls.query,
+    "road.junctions.clearance": road.junctions.clearance,
     "road.junctions.draw": road.junctions.draw,
     "road.junctions.edit": road.junctions.edit,
     "road.junctions.query": road.junctions.query,

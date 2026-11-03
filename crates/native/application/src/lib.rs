@@ -297,6 +297,7 @@ pub mod road_culverts_draw;
 pub mod road_culverts_edit;
 pub mod road_culverts_query;
 pub mod road_junctions;
+pub mod road_junctions_clearance;
 pub mod road_junctions_draw;
 pub mod road_junctions_edit;
 pub mod road_junctions_query;
@@ -1285,6 +1286,7 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (kentos_commands::ROAD_JUNCTIONS_EDIT, kentos_commands::ROAD_JUNCTIONS_EDIT_VERSION),
     (kentos_commands::ROAD_JUNCTIONS_QUERY, kentos_commands::ROAD_JUNCTIONS_QUERY_VERSION),
     (kentos_commands::ROAD_JUNCTIONS_DRAW, kentos_commands::ROAD_JUNCTIONS_DRAW_VERSION),
+    (kentos_commands::ROAD_JUNCTIONS_CLEARANCE, kentos_commands::ROAD_JUNCTIONS_CLEARANCE_VERSION),
     (kentos_commands::ROAD_PROJECT_QUERY, kentos_commands::ROAD_PROJECT_QUERY_VERSION),
     (kentos_commands::ROAD_PROJECT_REBUILD, kentos_commands::ROAD_PROJECT_REBUILD_VERSION),
     (kentos_commands::ROAD_PROJECT_EDIT, kentos_commands::ROAD_PROJECT_EDIT_VERSION),

@@ -44697,6 +44697,240 @@
       ]
     },
     {
+      "id": "road.junctions.clearance",
+      "version": 1,
+      "title": "Kavşağın düşey açıklığı",
+      "summary": "Ayrı seviyeli kavşakta üst yolun altındaki düşey açıklığı okur; hiçbir şey yazmaz. Kesişimde boykesit kotu yüksek kol üst yoldur. Alt yolun genişliği ve kesişimin iki yanındaki km'leri step'ten uzun olmayan eşit aralıklarla bölünür; her ızgara noktası üst yolun aksına izdüşürülür, üst yolun genişliğine düşenler örnektir; her ızgara çizgisinde üst yolun kenarı ikiye bölmeyle bulunur. Açıklık = üst boykesit kotu − depth − alt boykesit kotu. profiles kolların sırasıyla iki boykesit (yoksa her kolun aksının tek boykesiti); depth tabliye derinliği ve minimum gerekli açıklık kullanıcınındır, KentOS sayı vermez. Cevap: üst kol, boykesitler, örnek sayısı, en küçük ve en büyük açıklık yerleriyle (x, y, iki km, iki öteleme, iki kot), aksların kesişimindeki açıklık, short. Boykesit kotu aks kotudur; enine eğim alınmaz. Uyarılar: junction_stale, profile_stale, junction_clearance_short. Retler: not_a_road_project, unknown_junction, invalid_junction, unknown_road_profile, invalid_road_profile, invalid_clearance.",
+      "aliases": [
+        "dusayaciklik",
+        "kopruaciklik"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.junctions.clearance` v1 (docs/adr/0917): a separated junction's vertical clearance, the upper road's\nprofile less its deck's `depth` over the lower road's profile, sampled where the roads overlap in plan. `profiles`\nare the legs' profiles in the legs' order (by id or name); absent, each leg's alignment's only profile. `depth`\n(the deck from its profile grade to its underside) and `minimum` (the clearance asked) are the user's; KentOS\ngives no number. Reads only.\n\nRefusals, in this order: `not_a_road_project`, `unknown_junction`, `invalid_junction` (it does not read, or it is at\ngrade), `unknown_road_profile`, `invalid_road_profile`, `invalid_clearance` (not two profiles, a profile not on its\nleg's alignment, a leg with no profile or more than one, depth negative, step not positive, minimum negative, more\nthan `MOST_CLEARANCE_SAMPLES` grid places, both legs at one height at the crossing, the roads not overlapping, a\nprofile not covering the overlap). Warnings: `junction_stale`, `profile_stale`, `junction_clearance_short`.",
+        "properties": {
+          "depth": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "junction": {
+            "type": "string"
+          },
+          "minimum": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "profiles": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "step": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          }
+        },
+        "required": [
+          "junction",
+          "depth",
+          "step"
+        ],
+        "title": "JunctionsClearance",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.junctions.clearance` v1: the junction, which leg is upper (0 or 1), the two profiles used, the\ndepth and step, how many places were sampled, the least and largest clearance and the one where the alignments\ncross, the minimum asked and whether the least falls short of it.",
+        "properties": {
+          "crossing": {
+            "$ref": "#/$defs/JunctionClearanceAt"
+          },
+          "depth": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "junction": {
+            "type": "string"
+          },
+          "largest": {
+            "$ref": "#/$defs/JunctionClearanceAt"
+          },
+          "least": {
+            "$ref": "#/$defs/JunctionClearanceAt"
+          },
+          "lowerProfile": {
+            "type": "string"
+          },
+          "minimum": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "samples": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "short": {
+            "type": "boolean"
+          },
+          "step": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "upper": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "index"
+          },
+          "upperProfile": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "junction",
+          "upper",
+          "upperProfile",
+          "lowerProfile",
+          "depth",
+          "step",
+          "samples",
+          "least",
+          "largest",
+          "crossing",
+          "short"
+        ],
+        "title": "JunctionsCleared",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.junctions.clearance` v1: the junction, which leg is upper (0 or 1), the two profiles used, the\ndepth and step, how many places were sampled, the least and largest clearance and the one where the alignments\ncross, the minimum asked and whether the least falls short of it.",
+        "properties": {
+          "crossing": {
+            "$ref": "#/$defs/JunctionClearanceAt"
+          },
+          "depth": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "junction": {
+            "type": "string"
+          },
+          "largest": {
+            "$ref": "#/$defs/JunctionClearanceAt"
+          },
+          "least": {
+            "$ref": "#/$defs/JunctionClearanceAt"
+          },
+          "lowerProfile": {
+            "type": "string"
+          },
+          "minimum": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "samples": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "short": {
+            "type": "boolean"
+          },
+          "step": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "upper": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "index"
+          },
+          "upperProfile": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "junction",
+          "upper",
+          "upperProfile",
+          "lowerProfile",
+          "depth",
+          "step",
+          "samples",
+          "least",
+          "largest",
+          "crossing",
+          "short"
+        ],
+        "title": "JunctionsCleared",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_junction",
+          "invalid_junction",
+          "unknown_road_profile",
+          "invalid_road_profile",
+          "invalid_clearance"
+        ],
+        "warnings": [
+          "junction_stale",
+          "profile_stale",
+          "junction_clearance_short"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Üst geçidin altı, 1,2 m tabliye",
+          "input": {
+            "depth": 1.2,
+            "junction": "Üst geçit",
+            "minimum": 4.5,
+            "step": 0.5
+          }
+        }
+      ]
+    },
+    {
       "id": "road.project.query",
       "version": 1,
       "title": "Yol projesini sorgula",
@@ -81976,6 +82210,18 @@
       "meaning": "Bir kol dönüş yaylarının erimi içinde kurpta; yaylar kolu düz kabul eder."
     },
     {
+      "code": "invalid_clearance",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Düşey açıklık sorusu geçerli değil; ileti nedenini söyler."
+    },
+    {
+      "code": "junction_clearance_short",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "En küçük düşey açıklık istenen açıklıktan az."
+    },
+    {
       "code": "invalid_pay_book",
       "kind": "failed",
       "retryable": false,
@@ -116793,6 +117039,68 @@
           "type": "object"
         }
       ]
+    },
+    "JunctionClearanceAt": {
+      "description": "A clearance at a place: the place, its station and offset (right positive) on the upper and the lower road, the\ntwo profiles' elevations there and the clearance (upper elevation less the depth, less the lower elevation).",
+      "properties": {
+        "clearance": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "lowerElevation": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "elevation"
+        },
+        "lowerOffset": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "lowerStation": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "upperElevation": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "elevation"
+        },
+        "upperOffset": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "upperStation": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "x": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "y": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "upperStation",
+        "upperOffset",
+        "lowerStation",
+        "lowerOffset",
+        "upperElevation",
+        "lowerElevation",
+        "clearance"
+      ],
+      "type": "object"
     },
     "JunctionDef": {
       "additionalProperties": false,

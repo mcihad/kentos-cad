@@ -240,3 +240,97 @@ pub struct JunctionsDrawn {
     pub uids: Vec<String>,
     pub revision: String,
 }
+
+pub const ROAD_JUNCTIONS_CLEARANCE: &str = "road.junctions.clearance";
+pub const ROAD_JUNCTIONS_CLEARANCE_VERSION: u32 = 1;
+/// The most grid places a clearance samples.
+pub const MOST_CLEARANCE_SAMPLES: usize = 1_000_000;
+
+/// Input of `road.junctions.clearance` v1 (docs/adr/0917): a separated junction's vertical clearance, the upper road's
+/// profile less its deck's `depth` over the lower road's profile, sampled where the roads overlap in plan. `profiles`
+/// are the legs' profiles in the legs' order (by id or name); absent, each leg's alignment's only profile. `depth`
+/// (the deck from its profile grade to its underside) and `minimum` (the clearance asked) are the user's; KentOS
+/// gives no number. Reads only.
+///
+/// Refusals, in this order: `not_a_road_project`, `unknown_junction`, `invalid_junction` (it does not read, or it is at
+/// grade), `unknown_road_profile`, `invalid_road_profile`, `invalid_clearance` (not two profiles, a profile not on its
+/// leg's alignment, a leg with no profile or more than one, depth negative, step not positive, minimum negative, more
+/// than `MOST_CLEARANCE_SAMPLES` grid places, both legs at one height at the crossing, the roads not overlapping, a
+/// profile not covering the overlap). Warnings: `junction_stale`, `profile_stale`, `junction_clearance_short`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct JunctionsClearance {
+    pub junction: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub profiles: Option<Vec<String>>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub depth: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub step: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub minimum: Option<f64>,
+}
+
+/// A clearance at a place: the place, its station and offset (right positive) on the upper and the lower road, the
+/// two profiles' elevations there and the clearance (upper elevation less the depth, less the lower elevation).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct JunctionClearanceAt {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub x: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub y: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub upper_station: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub upper_offset: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub lower_station: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub lower_offset: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub upper_elevation: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub lower_elevation: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub clearance: f64,
+}
+
+/// Output of `road.junctions.clearance` v1: the junction, which leg is upper (0 or 1), the two profiles used, the
+/// depth and step, how many places were sampled, the least and largest clearance and the one where the alignments
+/// cross, the minimum asked and whether the least falls short of it.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct JunctionsCleared {
+    pub junction: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub upper: u32,
+    pub upper_profile: String,
+    pub lower_profile: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub depth: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub step: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub samples: u32,
+    pub least: JunctionClearanceAt,
+    pub largest: JunctionClearanceAt,
+    pub crossing: JunctionClearanceAt,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub minimum: Option<f64>,
+    pub short: bool,
+}

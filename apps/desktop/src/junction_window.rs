@@ -2,7 +2,9 @@
 //! legs' edges and the curb returns' radii are the project's; KentOS fills in none. The junction is read as it is typed
 //! (`road.junctions.edit`'s plan on a reading copy): the crossing, the legs' km and the angle, and at grade the four
 //! curb returns drawn around the crossing. Kaydet writes it (one undo step “Kavşak”), Planda çiz draws the returns on a
-//! layer (one step “Kavşak çiz”).
+//! layer (one step “Kavşak çiz”). A saved separated junction's vertical clearance is read as it is typed
+//! (`road.junctions.clearance`, docs/adr/0917): the legs' profiles, the deck's depth and the minimum are the user's;
+//! the least and the largest clearance and the one at the crossing, marked in plan.
 //!
 //! ```text
 //! ┌ Kavşak ─────────────────────────────────────────────────────────────────────────────────────┐
@@ -11,6 +13,7 @@
 //! │ km … × km … · açı …° · bağlı · warnings                                                       │
 //! │ ┌ the crossing in plan ┐  Çeyrek  R  Uzunluk  1. kol km  2. kol km                              │
 //! │ └──────────────────────┘                                                                       │
+//! │ Düşey açıklık: 1. kol [boykesit ▾] 2. kol [▾] Tabliye [ ] Aralık [ ] Gerekli [ ] → en az … │
 //! │ [Sil]                         Katman [▾] [Planda çiz]                     [Kapat] [Kaydet]     │
 //! └─────────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
@@ -19,10 +22,11 @@ use iced::widget::canvas::{self, Path, Stroke};
 use iced::widget::{Column, container, row, scrollable, space};
 use iced::{Element, Fill, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{
-    CommandWarning, JunctionKind, JunctionLegDef, JunctionReport, JunctionsDraw, JunctionsEdit, RoadEditOperation,
+    CommandWarning, JunctionKind, JunctionLegDef, JunctionReport, JunctionsClearance, JunctionsCleared, JunctionsDraw,
+    JunctionsEdit, RoadEditOperation,
 };
 use kentos_interaction::Level;
-use kentos_native_application::{ExecutionContext, road_junctions_draw, road_junctions_edit};
+use kentos_native_application::{ExecutionContext, road_junctions_clearance, road_junctions_draw, road_junctions_edit};
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::select::{Choice, Select};
@@ -53,6 +57,12 @@ pub(crate) const FIELDS: [&str; 11] = [
     "Sol–sağ (m)",
 ];
 
+/// The clearance's typed fields: the deck's depth, the sampling step, the minimum asked.
+pub(crate) const CLEAR_FIELDS: [&str; 3] = ["Tabliye derinliği (m)", "Aralık (m)", "Gerekli açıklık (m)"];
+
+/// The clearance as last read.
+pub(crate) type Cleared = Result<(JunctionsCleared, Vec<CommandWarning>), String>;
+
 /// The junction as last read.
 #[derive(Debug, Clone, Default)]
 pub(crate) struct Preview {
@@ -69,6 +79,10 @@ pub struct Window {
     pub(crate) fields: [String; 11],
     pub(crate) layer: Option<String>,
     pub(crate) preview: Preview,
+    /// The clearance's profiles (none: the leg's alignment's only one) and fields.
+    pub(crate) clear_profiles: [Option<String>; 2],
+    pub(crate) clear_fields: [String; 3],
+    pub(crate) clearance: Option<Cleared>,
 }
 
 #[derive(Debug, Clone)]
@@ -78,6 +92,8 @@ pub enum Event {
     Leg(usize, String),
     Field(usize, String),
     Layer(String),
+    ClearProfile(usize, Option<String>),
+    ClearField(usize, String),
     Save,
     Draw,
     Remove,
@@ -139,6 +155,26 @@ impl Window {
     }
 }
 
+impl Window {
+    /// The clearance asked of the saved junction, or why not.
+    pub(crate) fn clearance_input(&self) -> Result<JunctionsClearance, String> {
+        let junction = self.chosen.clone().ok_or_else(|| "Kaydedince düşey açıklık okunur.".to_owned())?;
+        let need = |k: usize| number(&self.clear_fields[k], CLEAR_FIELDS[k])?.ok_or_else(|| format!("{} yazılmalı.", CLEAR_FIELDS[k]));
+        let profiles = match &self.clear_profiles {
+            [None, None] => None,
+            [Some(a), Some(b)] => Some(vec![a.clone(), b.clone()]),
+            _ => return Err("İki kolun boykesitini birlikte seçin.".into()),
+        };
+        Ok(JunctionsClearance {
+            junction,
+            profiles,
+            depth: need(0)?,
+            step: need(1)?,
+            minimum: number(&self.clear_fields[2], CLEAR_FIELDS[2])?,
+        })
+    }
+}
+
 impl App {
     /// Kavşak: the window on the road project's first junction, or a new one on its first two alignments.
     pub(crate) fn open_junctions(&mut self) {
@@ -164,6 +200,9 @@ impl App {
             fields: Default::default(),
             layer,
             preview: Preview::default(),
+            clear_profiles: [None, None],
+            clear_fields: Default::default(),
+            clearance: None,
         }));
         self.dialog = Some(Dialog::Junctions);
         let _ = self.junction_event(Event::Choose(chosen));
@@ -176,6 +215,10 @@ impl App {
             Err(why) => Preview { why: Some(why), ..Preview::default() },
             Ok((report, warnings)) => Preview { report: Some(report), warnings, why: None },
         };
+        let saved_separated = w.kind == JunctionKind::Separated
+            && w.chosen.as_ref().is_some_and(|id| doc.model.road_junctions().iter().any(|j| &j.id == id && j.kind == JunctionKind::Separated));
+        w.clearance = saved_separated
+            .then(|| w.clearance_input().and_then(|q| road_junctions_clearance::preview(&doc.model, &q)));
     }
 
     pub(crate) fn junction_event(&mut self, event: Event) -> Task<Message> {
@@ -208,11 +251,14 @@ impl App {
                     }
                 }
                 w.fields = f;
+                w.clear_profiles = [None, None];
             }
             Event::Kind(k) => w.kind = k,
             Event::Leg(i, a) => w.legs[i.min(1)] = Some(a),
             Event::Field(k, t) => w.fields[k.min(10)] = t,
             Event::Layer(l) => w.layer = Some(l),
+            Event::ClearProfile(i, p) => w.clear_profiles[i.min(1)] = p,
+            Event::ClearField(k, t) => w.clear_fields[k.min(2)] = t,
             Event::Save => return self.save_junction(),
             Event::Draw => return self.draw_junction(),
             Event::Remove => return self.remove_junction(),
@@ -349,6 +395,37 @@ impl App {
         .spacing(10)
         .align_y(iced::alignment::Vertical::Bottom);
         let mut body = Column::new().spacing(10).push(top).push(legs);
+        if !at_grade {
+            let profile = |i: usize| {
+                let on = w.legs[i].clone();
+                let mut ids: Vec<Option<String>> = vec![None];
+                let mut names = vec!["Aksın tek boykesiti".to_owned()];
+                for p in model.map_or(&[][..], |m| m.road_profiles()).iter().filter(|p| Some(&p.alignment) == on.as_ref()) {
+                    ids.push(Some(p.id.clone()));
+                    names.push(p.name.clone());
+                }
+                let at = ids.iter().position(|x| *x == w.clear_profiles[i]);
+                Select::new(names.into_iter().map(Choice::new), at, move |k| msg(Event::ClearProfile(i, ids[k].clone())))
+            };
+            let clear = |k: usize, hint: &'static str| {
+                words::field(
+                    CLEAR_FIELDS[k],
+                    kentos_ui::widget::text_field(hint, &w.clear_fields[k]).on_input(move |t| msg(Event::ClearField(k, t))).width(130),
+                    None,
+                )
+            };
+            body = body.push(
+                row![
+                    words::field("1. kolun boykesiti", container(profile(0)).width(170), None),
+                    words::field("2. kolun boykesiti", container(profile(1)).width(170), None),
+                    clear(0, "m"),
+                    clear(1, "m"),
+                    clear(2, "isteğe bağlı"),
+                ]
+                .spacing(10)
+                .align_y(iced::alignment::Vertical::Bottom),
+            );
+        }
         match (&w.preview.why, &w.preview.report) {
             (Some(e), _) => body = body.push(label::caption(e.clone()).style(danger)),
             (None, Some(r)) => {
@@ -367,8 +444,9 @@ impl App {
                     [w.legs_edge(3), w.legs_edge(4)],
                     [w.legs_edge(5), w.legs_edge(6)],
                 ];
+                let cleared = w.clearance.as_ref().and_then(|c| c.as_ref().ok()).map(|c| &c.0);
                 let picture = container(
-                    iced::widget::canvas(Crossing { report: r, edges }).width(420).height(typography::scaled(220.0)),
+                    iced::widget::canvas(Crossing { report: r, edges, cleared }).width(420).height(typography::scaled(220.0)),
                 )
                 .style(style::container::field_box);
                 let head = |t: &'static str, wd: f32| label::caption(t).style(muted).width(wd);
@@ -390,6 +468,34 @@ impl App {
                 }
                 if r.returns.is_empty() {
                     list = list.push(label::caption("Katlı kavşağın dönüş yayı yok.").style(muted));
+                }
+                if let Some(c) = &w.clearance {
+                    list = list.push(space::vertical().height(8)).push(label::caption("Düşey açıklık").style(muted));
+                    match c {
+                        Err(why) => list = list.push(label::caption(why.clone()).style(danger)),
+                        Ok((c, warnings)) => {
+                            let at = |t: &str, a: &kentos_commands::JunctionClearanceAt, short: bool| {
+                                let value = label::caption(format!("{:.3} m", a.clearance)).width(80);
+                                row![
+                                    label::caption(t.to_owned()).width(80),
+                                    if short { value.style(danger) } else { value },
+                                    label::caption(format!("üst km {:.2} ({:+.2})", a.upper_station, a.upper_offset)).width(140),
+                                    label::caption(format!("alt km {:.2} ({:+.2})", a.lower_station, a.lower_offset)),
+                                ]
+                                .spacing(6)
+                            };
+                            let upper = r.legs.get(c.upper as usize).map_or(String::new(), |l| l.alignment.clone());
+                            list = list
+                                .push(label::caption(format!("Üst yol {}. kol ({upper}) · {} örnek", c.upper + 1, c.samples)).style(muted))
+                                .push(at("En az", &c.least, c.short))
+                                .push(at("En çok", &c.largest, false))
+                                .push(at("Kesişimde", &c.crossing, false));
+                            if !warnings.is_empty() {
+                                let all = warnings.iter().map(|x| x.message.as_str()).collect::<Vec<_>>().join(" ");
+                                list = list.push(label::caption(all).style(warn));
+                            }
+                        }
+                    }
                 }
                 body = body.push(
                     row![picture, container(scrollable(list).height(typography::scaled(220.0))).width(Fill).padding([6, 8])]
@@ -437,6 +543,10 @@ impl App {
                 let k = FIELDS.iter().position(|f| *f == name).unwrap_or(0);
                 Some(msg(Event::Field(k, t.to_owned())))
             }
+            Control::Fill(name, t) if CLEAR_FIELDS.contains(&name) => {
+                let k = CLEAR_FIELDS.iter().position(|f| *f == name).unwrap_or(0);
+                Some(msg(Event::ClearField(k, t.to_owned())))
+            }
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }
@@ -452,6 +562,8 @@ impl Window {
 struct Crossing<'a> {
     report: &'a JunctionReport,
     edges: [[f64; 2]; 2],
+    /// The clearance read: its least (accent, danger when short) and largest (success) places marked.
+    cleared: Option<&'a JunctionsCleared>,
 }
 
 impl canvas::Program<Message> for Crossing<'_> {
@@ -502,6 +614,20 @@ impl canvas::Program<Message> for Crossing<'_> {
             frame.stroke(&arc, Stroke::default().with_width(2.2).with_color(tk.accent));
         }
         frame.fill(&Path::circle(at(r.x, r.y), 3.0), tk.success);
+        if let Some(c) = self.cleared {
+            let least = if c.short { tk.danger } else { tk.accent };
+            for (a, color) in [(&c.largest, tk.success), (&c.least, least)] {
+                let p = at(a.x, a.y);
+                frame.stroke(&Path::circle(p, 6.0), Stroke::default().with_width(2.0).with_color(color));
+                frame.fill_text(canvas::Text {
+                    content: format!("{:.2}", a.clearance),
+                    position: Point::new(p.x + 8.0, p.y - 14.0),
+                    color,
+                    size: 12.0.into(),
+                    ..canvas::Text::default()
+                });
+            }
+        }
         vec![frame.into_geometry()]
     }
 }

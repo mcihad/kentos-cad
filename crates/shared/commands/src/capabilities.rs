@@ -2056,6 +2056,19 @@ const ENTRIES: &[Entry] = &[
         warnings: &["layer_hidden", "junction_stale", "junction_on_curve"],
         targets: none,
     },
+    Entry {
+        id: "road.junctions.clearance",
+        refusals: &[&[
+            "not_a_road_project",
+            "unknown_junction",
+            "invalid_junction",
+            "unknown_road_profile",
+            "invalid_road_profile",
+            "invalid_clearance",
+        ]],
+        warnings: &["junction_stale", "profile_stale", "junction_clearance_short"],
+        targets: none,
+    },
     // KentOS Yol's project tree (plan/road.md Y13, docs/adr/0911 §2).
     Entry {
         id: "road.project.query",

@@ -104,6 +104,105 @@ pub fn fillet(p: [f64; 2], a: Edge, b: Edge, r: f64) -> Option<Return> {
     Some(Return { center, on_a, on_b, sweep, length: r * sweep.abs() })
 }
 
+/// A road's deck over or under a separated junction: its alignment and its edges, left and right of it (positive).
+#[derive(Clone, Copy, Debug)]
+pub struct Deck<'a> {
+    pub alignment: &'a Alignment,
+    pub left: f64,
+    pub right: f64,
+}
+
+/// A place where the two decks overlap in plan: its place, and its station and offset (right positive) on the upper
+/// and the lower road.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Overlap {
+    pub x: f64,
+    pub y: f64,
+    pub upper_station: f64,
+    pub upper_offset: f64,
+    pub lower_station: f64,
+    pub lower_offset: f64,
+}
+
+/// How many lower stations and offsets the overlap is sampled at around `crossing`: `(stations, offsets)` lines,
+/// and the stations' range (docs/adr/0917 §2).
+pub fn overlap_grid(upper: Deck<'_>, lower: Deck<'_>, crossing: f64, sine: f64, step: f64) -> (usize, usize, f64, f64) {
+    let reach = (upper.left + upper.right + lower.left + lower.right) / sine.abs() + step;
+    let (s0, s1) = ((crossing - reach).max(0.0), (crossing + reach).min(lower.alignment.length));
+    let n = ((s1 - s0) / step).ceil().max(1.0) as usize;
+    let m = ((lower.left + lower.right) / step).ceil().max(1.0) as usize;
+    (n + 1, m + 1, s0, s1)
+}
+
+/// The places where `upper` lies over `lower` in plan around the lower road's `crossing` station (docs/adr/0917 §2):
+/// the lower road's width and stations each side of the crossing cut into equal steps no longer than `step`, every
+/// grid place stationed on the upper road (its nearest foot) and kept when within its edges; and on every grid line,
+/// along and across, the upper road's edges found by bisection where the line crosses them. `sine` is the sine of
+/// the angle between the roads at the crossing.
+#[allow(clippy::needless_range_loop)] // the grid's columns, along each line
+pub fn overlap(upper: Deck<'_>, lower: Deck<'_>, crossing: f64, sine: f64, step: f64) -> Vec<Overlap> {
+    let (n, m, s0, s1) = overlap_grid(upper, lower, crossing, sine, step);
+    let station = |i: usize| if i + 1 == n { s1 } else { s0 + (s1 - s0) * i as f64 / (n - 1) as f64 };
+    let width = lower.left + lower.right;
+    let offset = |j: usize| if j + 1 == m { lower.right } else { -lower.left + width * j as f64 / (m - 1) as f64 };
+    let on_upper = |s: f64, o: f64| -> Option<Overlap> {
+        let q = crate::alignment::offset::place(lower.alignment, s, o)?;
+        let foot = upper.alignment.locate(q).nearest?;
+        Some(Overlap {
+            x: q[0],
+            y: q[1],
+            upper_station: foot.at.station,
+            upper_offset: foot.offset,
+            lower_station: s,
+            lower_offset: o,
+        })
+    };
+    let inside = |p: &Overlap| p.upper_offset >= -upper.left - 1e-9 && p.upper_offset <= upper.right + 1e-9;
+    let grid: Vec<Vec<Option<Overlap>>> = (0..n).map(|i| (0..m).map(|j| on_upper(station(i), offset(j))).collect()).collect();
+    let mut out: Vec<Overlap> = grid.iter().flatten().flatten().filter(|p| inside(p)).copied().collect();
+    let edges = [-upper.left, upper.right];
+    // Where the upper offset passes an edge between two grid places: bisected along the line between them.
+    let mut cross = |a: (f64, f64, &Option<Overlap>), b: (f64, f64, &Option<Overlap>)| {
+        let (Some(pa), Some(pb)) = (a.2, b.2) else { return };
+        for e in edges {
+            if (pa.upper_offset - e) * (pb.upper_offset - e) >= 0.0 {
+                continue;
+            }
+            let (mut lo, mut hi) = (0.0_f64, 1.0_f64);
+            let below = pa.upper_offset < e;
+            let mut found = None;
+            for _ in 0..200 {
+                let t = 0.5 * (lo + hi);
+                let Some(p) = on_upper(a.0 + t * (b.0 - a.0), a.1 + t * (b.1 - a.1)) else { break };
+                found = Some(p);
+                if (p.upper_offset < e) == below {
+                    lo = t;
+                } else {
+                    hi = t;
+                }
+                let span = (hi - lo) * ((b.0 - a.0).abs() + (b.1 - a.1).abs());
+                if span < 1e-12 {
+                    break;
+                }
+            }
+            if let Some(p) = found {
+                out.push(p);
+            }
+        }
+    };
+    for j in 0..m {
+        for i in 0..n - 1 {
+            cross((station(i), offset(j), &grid[i][j]), (station(i + 1), offset(j), &grid[i + 1][j]));
+        }
+    }
+    for (i, row) in grid.iter().enumerate() {
+        for j in 0..m - 1 {
+            cross((station(i), offset(j), &row[j]), (station(i), offset(j + 1), &row[j + 1]));
+        }
+    }
+    out
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
