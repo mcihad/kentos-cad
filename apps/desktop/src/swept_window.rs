@@ -550,7 +550,7 @@ impl canvas::Program<Message> for Plan<'_> {
         let units = q.corners.len() / 4;
         let n = q.front.len();
         let colors = [tk.accent, tk.info];
-        for k in (0..n).filter(|k| *k as u32 % self.every.max(1) == 0 || *k + 1 == n) {
+        for k in (0..n).filter(|k| (*k as u32).is_multiple_of(self.every.max(1)) || *k + 1 == n) {
             for j in 0..units {
                 let b: Vec<[f64; 2]> = (0..4).map(|i| q.corners[4 * j + i][k]).collect();
                 let shape = line(&b, true);

@@ -149,8 +149,11 @@ pub fn obstacle_lines(doc: &Document, uid: &str, step: f64) -> Option<Vec<Vec<[f
     obstacle_of(doc, uid, 0, step).ok()
 }
 
+/// A junction's id, the quadrant's path and its curb.
+type Quadrant = (String, Vec<[f64; 2]>, Vec<[f64; 2]>);
+
 /// A junction quadrant's path and curb.
-fn quadrant(doc: &Document, j: &kentos_commands::SweptJunctionPath, step: f64) -> Result<(String, Vec<[f64; 2]>, Vec<[f64; 2]>), Stop> {
+fn quadrant(doc: &Document, j: &kentos_commands::SweptJunctionPath, step: f64) -> Result<Quadrant, Stop> {
     crate::road_junctions::road_project(doc)?;
     let (_, def) = crate::road_junctions::find(doc.road_junctions(), &j.junction, "junction.junction")?;
     let (report, _) = crate::road_junctions::read(doc, def)?;

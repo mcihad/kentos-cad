@@ -84,9 +84,7 @@ fn an_area_comes_from_the_selection() {
     let _ = app.update(Message::Run("terrain.cloud"));
     let w = app.terrain_cloud_window.as_ref().expect("open");
     assert_eq!(w.area.as_ref().map(|a| a.1), Some(5));
-    for (k, v) in [(0, "2")] {
-        send(&mut app, W::Field(k, v.into()));
-    }
+    send(&mut app, W::Field(0, "2".into()));
     send(&mut app, W::Class(2));
     send(&mut app, W::Layer("zemin".into()));
     send(&mut app, W::Preview);
