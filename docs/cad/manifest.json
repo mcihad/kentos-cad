@@ -693,6 +693,23 @@
    "tests": 0
   },
   {
+   "id": "array.find",
+   "kind": "command",
+   "title": "Doğrusal dizileri bul…",
+   "level": "semantic",
+   "via": [
+    "cad.arrays.find",
+    "cad.arrays.adopt"
+   ],
+   "operation": null,
+   "python": "kentos.cad.arrays.find, kentos.cad.arrays.adopt",
+   "mcp": "cad.arrays.find, cad.arrays.adopt",
+   "note": "Yazısız doğrusal aday araması, sahnede gösterme, açık korunan yer eşlemesi ve ayrı inceleme. Mevcut kökleri değiştirmeden tek Undo adımıyla dizi kaydı eklenir; sorgu ve bağlama durdurulabilir (ADR0874/0875).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "attachment.add",
    "kind": "command",
    "title": "Dosya ekle…",
@@ -1064,14 +1081,15 @@
    "id": "block.find",
    "kind": "command",
    "title": "Tekrarlanan bileşenleri bul…",
-   "level": "query",
+   "level": "semantic",
    "via": [
-    "cad.blocks.find"
+    "cad.blocks.find",
+    "cad.blocks.convert"
    ],
    "operation": null,
-   "python": "kentos.cad.blocks.find",
-   "mcp": "cad.blocks.find",
-   "note": "Yazısız ve durdurulabilir eşleşme arama; sonuç seçimi ayrı kullanıcı eylemidir (ADR 0866).",
+   "python": "kentos.cad.blocks.find, kentos.cad.blocks.convert",
+   "mcp": "cad.blocks.find, cad.blocks.convert",
+   "note": "Arama yazısız ve durdurulabilir; seçilmiş adaylar ayrı ilişki/görünüş incelemesi ve tek onayla bir blok tanımına dönüştürülür. Kök→parça ve ölçü eşlemesi ortak komutta, tek Undo adımındadır (ADR 0871).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0

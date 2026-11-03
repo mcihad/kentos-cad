@@ -694,6 +694,25 @@ pub struct Entity {
 }
 
 impl Entity {
+    /// Canonical native document geometry, including a polyline's typed-host fields.
+    /// The legacy `FromJson`/Shape boundary keeps its existing defaults (ADR 0870).
+    pub fn from_document_json(v: &Json) -> Result<Entity, String> {
+        let mut entity = Self::from_json(v)?;
+        if let Shape::Polyline { closed, widths, .. } = &mut entity.shape {
+            *closed = match v.get("closed") {
+                Json::Null => false,
+                value => bool::from_json(value)?,
+            };
+            *widths = json::read_field(v, "widths")?;
+            if widths.as_ref().is_some_and(|ws| {
+                ws.iter().flatten().any(|w| !w.is_finite() || *w < 0.0)
+            }) {
+                return Err("widths: sonlu, negatif olmayan kenar genişlikleri bekleniyordu".into());
+            }
+        }
+        Ok(entity)
+    }
+
     pub fn new(shape: Shape) -> Entity {
         Entity {
             shape,

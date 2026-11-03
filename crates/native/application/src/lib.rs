@@ -47,6 +47,8 @@ pub mod arc;
 pub mod array;
 mod array_assoc;
 pub mod arrays_edit;
+pub mod arrays_adopt;
+pub mod arrays_find;
 pub mod constraint_copy;
 pub(crate) mod dimension_set_copy;
 pub mod constraint_follow;
@@ -68,6 +70,7 @@ pub mod blocks_freeze;
 pub mod blocks_proxy;
 pub mod blocks_query;
 pub mod blocks_find;
+pub mod blocks_convert;
 pub mod blocks_replace;
 pub mod blocks_sync;
 pub mod file_import_block;
@@ -1361,6 +1364,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
         kentos_commands::CAD_ENTITIES_LENGTHEN,
         kentos_commands::CAD_ENTITIES_LENGTHEN_VERSION,
     ),
+    (kentos_commands::CAD_ARRAYS_FIND, kentos_commands::CAD_ARRAYS_FIND_VERSION),
+    (
+        kentos_commands::CAD_ARRAYS_ADOPT,
+        kentos_commands::CAD_ARRAYS_ADOPT_VERSION,
+    ),
     (
         kentos_commands::CAD_ARRAYS_EDIT,
         kentos_commands::CAD_ARRAYS_EDIT_VERSION,
@@ -1525,6 +1533,7 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     ),
     // A dynamic block's inserts' parameter values ([`block_params`], docs/adr/0318 §3).
     (kentos_commands::CAD_BLOCKS_FIND, kentos_commands::CAD_BLOCKS_FIND_VERSION),
+    (kentos_commands::CAD_BLOCKS_CONVERT, kentos_commands::CAD_BLOCKS_CONVERT_VERSION),
     (
         kentos_commands::CAD_BLOCKS_PARAMETERS,
         kentos_commands::CAD_BLOCKS_PARAMETERS_VERSION,

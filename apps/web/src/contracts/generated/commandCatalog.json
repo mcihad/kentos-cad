@@ -4345,6 +4345,358 @@
       ]
     },
     {
+      "id": "cad.arrays.find",
+      "version": 1,
+      "title": "Doğrusal blok dizilerini bul",
+      "summary": "Kaynak statik blok yerleştirmesini içeren doğrusal örüntüleri yazısız bulur. İlk sürüm aynı blok tanımı, katman, görünüş, ayna, yön ve ölçekli verisiz yerleştirmeler içindir; grid/kutupsal/yol araması içermez. En az üç dolu yer ve gözlenen bir komşu çift gerekir. Her ikinci yer doluysa gizli ara yer varsayılmaz. Aday adoption girdisi cad.arrays.adopt ile yeniden incelenip açıkça uygulanabilir; arama hiçbir nesne, seçim veya dizi kaydı değiştirmez. Eksik yerler boş kalır; eşleşmeyen öğe kendiliğinden kept olmaz. eligible ve UUID→ret nedeni excluded listeleri kapsamı açıklar. Birbiriyle çakışan adaylar overlaps ile belirtilir. uids yoksa belge, boşsa yalnız kaynak aranır; en çok 2048 nesne. Tolerans metre, varsayılan 0.000001, en çok 0.001; limit 1..100. İki milyon karşılaştırma veya aday sınırı kısmi arama truncated üretir. Uzun arama native Job ile durdurulabilir. expectedRevision eskiyse yazısız ret.",
+      "aliases": [],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Finds linear patterns containing the seed insert. First delivery: static, data-free inserts\nof the same block, appearance, mirror, rotation and scale. No rotation of the items is inferred.\nAt least three occupied places and an observed adjacent pair are required. Every second\nplace being occupied is indistinguishable from twice the spacing: no hidden places are invented.\nGrid, polar and path detection are not implemented by this version.",
+        "properties": {
+          "expectedRevision": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "limit": {
+            "description": "Candidate limit, 1 to 100; absent: 100. Work/result limits report `truncated`.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "source": {
+            "description": "Existing seed insert UUID. May be an interior place of a candidate.",
+            "type": "string"
+          },
+          "tolerance": {
+            "description": "Absolute position tolerance in metres, above zero to 0.001; absent: 0.000001.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "uids": {
+            "description": "Absent searches the document; empty searches only the seed. At most 2048 objects.",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "source"
+        ],
+        "title": "ArraysFind",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "comparisons": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "eligible": {
+            "description": "Compatible scope members, sorted by UUID. Not being in a proposal means unmatched, not kept.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "excluded": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Scope UUID -> explicit exclusion reason: not_insert, template_differs, layer_locked or array_member.",
+            "type": "object"
+          },
+          "matches": {
+            "items": {
+              "$ref": "#/$defs/ArrayPattern"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "truncated": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "matches",
+          "eligible",
+          "excluded",
+          "truncated",
+          "comparisons",
+          "revision"
+        ],
+        "title": "ArraysFound",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "comparisons": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "eligible": {
+            "description": "Compatible scope members, sorted by UUID. Not being in a proposal means unmatched, not kept.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "excluded": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Scope UUID -> explicit exclusion reason: not_insert, template_differs, layer_locked or array_member.",
+            "type": "object"
+          },
+          "matches": {
+            "items": {
+              "$ref": "#/$defs/ArrayPattern"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "truncated": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "matches",
+          "eligible",
+          "excluded",
+          "truncated",
+          "comparisons",
+          "revision"
+        ],
+        "title": "ArraysFound",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_uid",
+          "entity_not_found",
+          "invalid_tolerance",
+          "invalid_limit",
+          "recognition_scope_limit",
+          "array_adoption_refused",
+          "layer_locked",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "recognition_truncated"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Seçili bloğun doğrusal tekrarlarını incele",
+          "input": {
+            "source": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.arrays.adopt",
+      "version": 1,
+      "title": "Mevcut blokları diziye bağla",
+      "summary": "İncelenen mevcut blok yerleştirmelerini verilen grid, doğru, kutupsal veya yol düzenine bağlar. Örüntü tahmin etmez: source sıfır numaralı normal öğe, items her yer için bir kayıt olmalı. Boş kayıt eksik öğe; kept açıkça korunan elle değiştirilmiş öğedir. En az iki normal öğe gereklidir. Yalnız ilişkili dizi kaydı eklenir; geometri, UUID, çizim sırası, blok tanımı ve mevcut bağlar değişmez. Normal öğelerin bloğu, aynası, ölçeği ve yönü düzene uymalıdır; konum toleransı metre (varsayılan 0.000001), açı toleransı 1e-10 rad, ölçek toleransı 1e-12 bağıl. Sapma kendiliğinden düzeltilmez. İlk kapsam ortak görünüşlü, verisiz, tekdüze ölçekli statik blok yerleştirmeleri; dinamik/dış referanslı/öznitelik tanımlı blok, mimari kayıt, kırpma, farklı katman/görünüş veya başka dizinin öğesi açıkça reddedilir. Mevcut cad.arrays.edit sayı/aralık/korunan/silinmiş/reset semantiği kullanılır. İnceleme yazısız, uygulama tek geri alma adımıdır. expectedRevision eskiyse hiçbir şey yazılmaz.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Explicit, reviewed layout and slot membership; this command does not infer a pattern.\nOnly metadata is added. Missing slots stay missing; overrides must be explicitly kept.",
+        "properties": {
+          "expectedRevision": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "items": {
+            "description": "Exactly one entry per layout place, in layout order. Empty entries are missing places.\nAt least two entries must be present and not kept. A UID may occur only once.",
+            "items": {
+              "$ref": "#/$defs/ArrayItem"
+            },
+            "type": "array"
+          },
+          "layout": {
+            "$ref": "#/$defs/ArrayLayout"
+          },
+          "source": {
+            "description": "Existing prototype insert UUID. Must occupy slot zero and must not be kept.",
+            "type": "string"
+          },
+          "tolerance": {
+            "description": "Maximum position discrepancy in model metres; absent: 0.000001 (0.001 mm).\nAdoption never moves an insert to hide a discrepancy. Angles compare modulo a full turn\nwithin 1e-10 rad; scales within 1e-12 relative, independently of position tolerance.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          }
+        },
+        "required": [
+          "source",
+          "layout",
+          "items"
+        ],
+        "title": "ArraysAdopt",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "array": {
+            "$ref": "#/$defs/ArrayId"
+          },
+          "retained": {
+            "description": "Existing insert UUIDs, in layout order, excluding missing places. No UUID is allocated here.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "array",
+          "retained",
+          "revision"
+        ],
+        "title": "ArraysAdopted",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "array": {
+            "$ref": "#/$defs/AssocArray",
+            "description": "Proposed existing array model, with nil ID in a read-only plan."
+          },
+          "deviation": {
+            "description": "Maximum position discrepancy among the regular items, model metres.",
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "kept": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "missing": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "array",
+          "deviation",
+          "missing",
+          "kept",
+          "revision"
+        ],
+        "title": "ArraysAdoptPlan",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "array_adoption_refused",
+          "invalid_uid",
+          "not_finite",
+          "invalid_count",
+          "invalid_spacing",
+          "invalid_fill",
+          "invalid_tolerance",
+          "entity_not_found",
+          "layer_locked",
+          "invalid_path",
+          "invalid_revision",
+          "revision_conflict"
+        ]
+      },
+      "examples": [
+        {
+          "title": "İki mevcut blok ve bir eksik yeri bağla",
+          "input": {
+            "items": [
+              {
+                "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
+              },
+              {},
+              {
+                "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e60"
+              }
+            ],
+            "layout": {
+              "count": 3,
+              "dx": 2.0,
+              "dy": 0.0,
+              "fit": false,
+              "kind": "line"
+            },
+            "source": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.arrays.edit",
       "version": 1,
       "title": "Diziyi düzenle",
@@ -31235,6 +31587,225 @@
           "title": "Seçilen bir teknik sembolün döndürülmüş ve aynalanmış eşlerini bul",
           "input": {
             "mirrors": true,
+            "source": [
+              "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.blocks.convert",
+      "version": 1,
+      "title": "Tekrarları bloğa dönüştür",
+      "summary": "Seçilmiş, nesne paylaşmayan tekrarları bir blok tanımına dönüştürür. Geometri ve katman/görünüş yeniden doğrulanır; geometryOnly aramasının sonucu veri kaybına izin değildir. Her adayın ilk nesnesi UUID ve çizim yerini blok yerleştirmesi olarak korur; diğer kökler sıfır tabanlı blok parçasına açık mapping ile gider. Sıradan bağlı ölçülerin köşe/kenar/oran yerleri ters ve döngüsel yönleriyle taşınır; belirsiz eşleme reddedilir. Plan tanımı, yerleştirmeleri, eski/yeni bağları, sapmaları ve silinecek kökleri yazmadan gösterir. İlk kapsam tek, görünür, veri/şema içermeyen CAD katmanındaki sürekli çizgili analitik çizgi/çember/yay/2B çoklu çizgilerdir; öznitelik/sembol, özel çizgi fazı, interleaved çizim sırası, tablo ve taşınamayan kök ilişkisi yazmadan açıklanır. Her seçilmiş aday yeniden tam doğrulanır; istemcinin matrisine güvenilmez. En çok 1000 grup ve 50000 çizim nesnesi; arama ve bağ eşleme durdurulabilir, iş sınırı atomik ret verir. units=m tanımı metre modelini korur; proje gösterim birimi değişmez. Tek geri alma adımı. expectedRevision eskiyse hiçbir şey yazılmaz.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Converts only the chosen, non-overlapping groups after re-verifying their geometry and relations.\nFirst scope: plain analytic 2D CAD objects on one untyped, data-free layer, with ordinary bound\ndimensions. Unsupported appearance/data/relations are refused before any write, never detached.",
+        "properties": {
+          "expectedRevision": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "groups": {
+            "description": "Chosen candidate member sets, at most 1000. Order within a set is immaterial.\nEach must have exactly as many distinct objects as the source. Sets cannot share objects.",
+            "items": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "array"
+          },
+          "mirrors": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "rotations": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "scales": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "source": {
+            "description": "Source UUIDs. Definition pieces follow their document drawing order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "tolerance": {
+            "description": "Absolute model tolerance in metres, as cad.blocks.find; absent: 0.000001.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          }
+        },
+        "required": [
+          "name",
+          "source",
+          "groups"
+        ],
+        "title": "BlocksConvert",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "block": {
+            "$ref": "#/$defs/BlockId"
+          },
+          "dimensions": {
+            "items": {
+              "$ref": "#/$defs/RepeatDimensionMap"
+            },
+            "type": "array"
+          },
+          "inserts": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "mapping": {
+            "items": {
+              "$ref": "#/$defs/RepeatMemberMap"
+            },
+            "type": "array"
+          },
+          "removed": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "block",
+          "inserts",
+          "mapping",
+          "dimensions",
+          "removed",
+          "revision"
+        ],
+        "title": "BlocksConverted",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "block": {
+            "$ref": "#/$defs/BlockDefinition",
+            "description": "Nil block UUID in a read-only plan; allocated only at execution."
+          },
+          "dimensions": {
+            "items": {
+              "$ref": "#/$defs/RepeatDimensionMap"
+            },
+            "type": "array"
+          },
+          "mapping": {
+            "items": {
+              "$ref": "#/$defs/RepeatMemberMap"
+            },
+            "type": "array"
+          },
+          "placements": {
+            "items": {
+              "$ref": "#/$defs/RepeatPlacement"
+            },
+            "type": "array"
+          },
+          "rebound": {
+            "description": "Complete proposed dimension records for review; execution follows the same geometry.",
+            "items": {
+              "$ref": "#/$defs/Entity"
+            },
+            "type": "array"
+          },
+          "removed": {
+            "description": "Removed roots, excluding the identities retained as inserts.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "block",
+          "placements",
+          "mapping",
+          "dimensions",
+          "rebound",
+          "removed",
+          "revision"
+        ],
+        "title": "BlocksConvertPlan",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "empty_name",
+          "recognition_conversion_refused",
+          "invalid_uid",
+          "entity_not_found",
+          "invalid_tolerance",
+          "recognition_unsupported",
+          "recognition_scope_limit",
+          "duplicate_block",
+          "block_refused",
+          "layer_locked",
+          "layer_not_found",
+          "not_a_layer",
+          "invalid_revision",
+          "revision_conflict"
+        ]
+      },
+      "examples": [
+        {
+          "title": "İncelenen tek bir teknik sembol grubunu dönüştür",
+          "input": {
+            "groups": [
+              [
+                "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
+              ]
+            ],
+            "name": "Teknik sembol",
             "source": [
               "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
             ]
@@ -74686,6 +75257,12 @@
       "meaning": "Nokta bulutunun yeri dosyalarınındır; taşınmaz, döndürülmez, ölçeklenmez, kopyalanmaz."
     },
     {
+      "code": "recognition_conversion_refused",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Seçilen tekrarların alt nesne eşlemesi veya ilişki/görünüş koruması doğrulanamadı; hiçbir şey yazılmadı."
+    },
+    {
       "code": "recognition_unsupported",
       "kind": "failed",
       "retryable": false,
@@ -75842,6 +76419,12 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Nokta sıklığı geçersiz: bölüm sayısı 1 ile 100 000 arasında, aralık ve sapma sıfırdan büyük olmalı."
+    },
+    {
+      "code": "array_adoption_refused",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Mevcut yerleştirmelerin örüntüye, ortak şablona veya tekil öğe kimliğine uygunluğu doğrulanamadı; çizim değiştirilmedi."
     },
     {
       "code": "array_not_found",
@@ -85161,6 +85744,84 @@
           "type": "object"
         }
       ]
+    },
+    "ArrayPattern": {
+      "properties": {
+        "adoption": {
+          "$ref": "#/$defs/ArraysAdopt",
+          "description": "Review this exact proposal before calling cad.arrays.adopt. Never executed by the search.\nThe first occupied endpoint becomes source; missing places stay empty, kept is never inferred."
+        },
+        "deviation": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "missing": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "overlaps": {
+          "description": "Shares an existing insert with another returned proposal. They cannot both be adopted.",
+          "type": "boolean"
+        },
+        "present": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        }
+      },
+      "required": [
+        "adoption",
+        "present",
+        "missing",
+        "deviation",
+        "overlaps"
+      ],
+      "type": "object"
+    },
+    "ArraysAdopt": {
+      "additionalProperties": false,
+      "description": "Explicit, reviewed layout and slot membership; this command does not infer a pattern.\nOnly metadata is added. Missing slots stay missing; overrides must be explicitly kept.",
+      "properties": {
+        "expectedRevision": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "items": {
+          "description": "Exactly one entry per layout place, in layout order. Empty entries are missing places.\nAt least two entries must be present and not kept. A UID may occur only once.",
+          "items": {
+            "$ref": "#/$defs/ArrayItem"
+          },
+          "type": "array"
+        },
+        "layout": {
+          "$ref": "#/$defs/ArrayLayout"
+        },
+        "source": {
+          "description": "Existing prototype insert UUID. Must occupy slot zero and must not be kept.",
+          "type": "string"
+        },
+        "tolerance": {
+          "description": "Maximum position discrepancy in model metres; absent: 0.000001 (0.001 mm).\nAdoption never moves an insert to hide a discrepancy. Angles compare modulo a full turn\nwithin 1e-10 rad; scales within 1e-12 relative, independently of position tolerance.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "source",
+        "layout",
+        "items"
+      ],
+      "type": "object"
     },
     "AssetCounts": {
       "description": "How many of each state.",
@@ -137767,6 +138428,79 @@
       "required": [
         "from",
         "to"
+      ],
+      "type": "object"
+    },
+    "RepeatDimensionMap": {
+      "properties": {
+        "after": {
+          "$ref": "#/$defs/SubRef"
+        },
+        "before": {
+          "$ref": "#/$defs/SubRef"
+        },
+        "deviation": {
+          "description": "Displacement caused by the chosen absolute matching tolerance, metres.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "point": {
+          "description": "a, b or c.",
+          "type": "string"
+        },
+        "uid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "point",
+        "before",
+        "after",
+        "deviation"
+      ],
+      "type": "object"
+    },
+    "RepeatMemberMap": {
+      "properties": {
+        "from": {
+          "type": "string"
+        },
+        "insert": {
+          "description": "The first member in drawing order retains its root UUID as the insert.",
+          "type": "string"
+        },
+        "path": {
+          "description": "Zero-based definition-piece path, NOT the definition's one-based local object id.",
+          "items": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": "array",
+          "x-unit": "index"
+        }
+      },
+      "required": [
+        "from",
+        "insert",
+        "path"
+      ],
+      "type": "object"
+    },
+    "RepeatPlacement": {
+      "properties": {
+        "entity": {
+          "$ref": "#/$defs/Entity"
+        },
+        "uid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "entity"
       ],
       "type": "object"
     },

@@ -305,13 +305,47 @@ def cases():
     steps.append({**helper("cad.entities.delete", {"uids": [U(s) for s in slots[:3]]}),
                   "expect": {"arrays": [record([CIRCLE], "Dizi 1", GRID, slots, removed=(0, 1, 2))]}})
     out.append({"name": "Bir satırın öğeleri birlikte silinir, üç öğe boş kalır", "steps": steps})
+
+    # ADR 0872: independent perimeter stations, including the implicit fourth edge.
+    # The read-only preview and committed associative inserts must describe the same places.
+    closed_setup = setup()
+    circle = {**CIRCLE, "c": p(0, 0), "r": .12}
+    square = {"kind": "polyline", **base(2), "pts": [p(0, 0), p(4, 0), p(4, 4), p(0, 4)], "closed": True}
+    closed_setup["entities"] = [circle, square]
+    closed_setup["settings"]["drawingUnit"] = "mm"
+    layout = {"kind": "path", "path": U(2), "count": 8, "align": False}
+    slots = list(range(3, 11))
+    closed_places = [(0, 0), (2, 0), (4, 0), (4, 2), (4, 4), (2, 4), (0, 4), (0, 2)]
+    inserts = {str(s): insert(s, "Dizi 1", at) for s, at in zip(slots, closed_places)}
+    state = {"ids": [2] + slots, "entities": inserts,
+             "arrays": [record([circle], "Dizi 1", layout, slots)], "blocks": [block_of([circle], "Dizi 1")]}
+    steps = [{"op": "plan", "input": assoc([1], layout),
+              "result": {"status": "completed", "warnings": [], "output": {"sources": [U(1)],
+                  "entities": [{**circle, "id": 0, "c": p(*at)} for at in closed_places[1:]],
+                  "locked": [], "revision": "$current"}},
+              "expect": {"ids": [1, 2], "blocks": [], "arrays": [], "revision": "same", "canUndo": False}},
+             {"op": "execute", "input": assoc([1], layout), "result": written(slots), "expect": state},
+             {"op": "undo", "returns": "Yol boyunca dizi", "expect": {"ids": [1, 2], "blocks": [], "arrays": []}},
+             {"op": "redo", "returns": "Yol boyunca dizi", "expect": state}]
+    opened_places = []
+    for k in range(8):
+        station = 12 * k / 7
+        opened_places.append((station, 0) if station <= 4 else (4, station-4) if station <= 8 else (12-station, 4))
+    steps.append({**helper("cad.curves.edit", {"uid": U(2), "edit": {"kind": "open"}}),
+                  "expect": {"entities": {str(s): insert(s, "Dizi 1", at) for s, at in zip(slots, opened_places)}}})
+    steps.append({**helper("cad.curves.edit", {"uid": U(2), "edit": {"kind": "close"}}), "expect": state})
+    spaced = {**layout, "spacing": 2}
+    steps.append({**helper("cad.arrays.edit", {"array": "$array:0", "edit": {"kind": "layout", "layout": spaced}}),
+                  "expect": {**state, "arrays": [record([circle], "Dizi 1", spaced, slots)]}})
+    out.append({"name": "Kapalı yol: önizleme ve sekiz ilişkili öğe dört kenarda aynıdır; aç/kapat, aralık ve Undo/Redo kimlikleri korur",
+                "setup": closed_setup, "steps": steps})
     return out
 
 
 def build():
     return {"format": "kentos.command-cases", "version": 1, "command": "cad.entities.array", "commandVersion": 1,
             "title": "İlişkili diziler: kaynak blok, yerleşim, öğeler ve izleme",
-            "note": "ADR 0300. Bağımsız başvuru: scripts/fixtures/array_assoc_cases.py.",
+            "note": "ADR 0300, ADR 0872. Bağımsız başvuru: scripts/fixtures/array_assoc_cases.py.",
             "setup": setup(), "cases": cases()}
 
 

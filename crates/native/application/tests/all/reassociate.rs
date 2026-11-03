@@ -128,6 +128,117 @@ fn a_copy_of_a_bound_dimension_is_free() {
     assert!(d.refs.is_none());
 }
 
+#[test]
+fn public_commands_rebind_a_replacement_insert_inside_one_outer_step() {
+    use kentos_native_application::{blocks_define, edit};
+    let (mut doc, wall, dim) = drawing();
+    bind(
+        &mut doc,
+        wall,
+        dim,
+        &[(DimensionPoint::A, 0), (DimensionPoint::B, 1)],
+    );
+    let before = doc.to_snapshot_v2();
+    let steps = doc.undo_labels().len();
+    let uid = doc.uid(wall).unwrap().to_string();
+    doc.transact("Blok ve ölçü bağı", |doc| -> Result<(), ()> {
+        let input = serde_json::from_value(json!({"name":"Bağlı parça","base":{"x":0,"y":0},
+            "uids":[uid],"units":"m"})).unwrap();
+        let CommandResult::Completed { output: block, .. } =
+            blocks_define::execute(&mut ExecutionContext::new(doc), input) else { panic!() };
+        let input = serde_json::from_value(json!({"operation":"properties","changes":[
+            {"kind":"replace","uid":uid,"keepData":true,"geometry":{"kind":"insert",
+             "block":block.block,"p":{"x":0,"y":0},"scale":1,"rotation":0}}
+        ]})).unwrap();
+        assert!(matches!(edit::execute(&mut ExecutionContext::new(doc), input), CommandResult::Completed { .. }));
+        let input = serde_json::from_value(json!({"uid":doc.uid(dim).unwrap().to_string(),"points":[
+            {"point":"a","to":{"uid":uid,"path":[0],"place":{"kind":"vertex","part":0,"ring":0,"index":0}}},
+            {"point":"b","to":{"uid":uid,"path":[0],"place":{"kind":"vertex","part":0,"ring":0,"index":1}}}
+        ]})).unwrap();
+        let CommandResult::Completed { output, .. } =
+            dimensions_reassociate::execute(&mut ExecutionContext::new(doc), input) else { panic!() };
+        assert_eq!(output.value, 10.0);
+        Ok(())
+    }).unwrap();
+    assert!(
+        dimension(&doc, dim)
+            .refs
+            .unwrap()
+            .each()
+            .all(|(_, r)| r.live())
+    );
+    assert_eq!(dimension(&doc, dim).b, Vec2 { x: 10.0, y: 0.0 });
+    let after = doc.to_snapshot_v2();
+    assert_eq!(doc.undo_labels().len(), steps + 1);
+    doc.undo().unwrap();
+    assert_eq!(doc.to_snapshot_v2(), before);
+    doc.redo().unwrap();
+    assert_eq!(doc.to_snapshot_v2(), after);
+}
+
+#[test]
+fn public_plan_and_execute_accept_a_closing_arc_inside_a_block() {
+    use kentos_native_application::{blocks_define, blocks_insert};
+    let (mut doc, wall, dim) = drawing();
+    let mut path = doc.get(wall).unwrap().clone();
+    if let Entity::Polyline(p) = &mut path {
+        p.pts = vec![
+            Vec2 { x: 0.0, y: 0.0 },
+            Vec2 { x: 4.0, y: 0.0 },
+            Vec2 { x: 0.0, y: 4.0 },
+        ];
+        p.bulges = Some(vec![0.0, 0.0, 0.25]);
+        p.closed = true;
+    }
+    doc.update(wall, path);
+    let input = serde_json::from_value(json!({"name":"Kapalı yay","base":{"x":0,"y":0},
+        "uids":[doc.uid(wall).unwrap().to_string()],"units":"m"}))
+    .unwrap();
+    let CommandResult::Completed { output: block, .. } =
+        blocks_define::execute(&mut ExecutionContext::new(&mut doc), input)
+    else {
+        panic!()
+    };
+    let input =
+        serde_json::from_value(json!({"block":block.block,"at":{"x":0,"y":0},"layerId":"a"}))
+            .unwrap();
+    let CommandResult::Completed { output: insert, .. } =
+        blocks_insert::execute(&mut ExecutionContext::new(&mut doc), input)
+    else {
+        panic!()
+    };
+    let input = serde_json::from_value(json!({"uid":doc.uid(dim).unwrap().to_string(),"points":[
+        {"point":"a","to":{"uid":insert.uid,"path":[0],"place":{"kind":"vertex","part":0,"ring":0,"index":0}}},
+        {"point":"b","to":{"uid":insert.uid,"path":[0],"place":{"kind":"mid","part":0,"ring":0,"index":2}}}
+    ]})).unwrap();
+    let before = doc.to_snapshot_v2();
+    let CommandResult::Completed { output: plan, .. } =
+        dimensions_reassociate::plan(&ExecutionContext::new(&mut doc), &input)
+    else {
+        panic!()
+    };
+    assert!((plan.value - 4.25_f64.sqrt()).abs() < 1e-12);
+    assert_eq!(doc.to_snapshot_v2(), before);
+    let CommandResult::Completed { output, .. } =
+        dimensions_reassociate::execute(&mut ExecutionContext::new(&mut doc), input)
+    else {
+        panic!()
+    };
+    assert_eq!(output.value, plan.value);
+    assert!(
+        dimension(&doc, dim)
+            .refs
+            .unwrap()
+            .each()
+            .all(|(_, r)| r.live())
+    );
+    let after = doc.to_snapshot_v2();
+    doc.undo().unwrap();
+    assert_eq!(doc.to_snapshot_v2(), before);
+    doc.redo().unwrap();
+    assert_eq!(doc.to_snapshot_v2(), after);
+}
+
 /// Öznitelikler writes a dimension's Zemin through `cad.entities.edit`'s
 /// update, its geometry from the core's shape (no references): the
 /// references stay; a grip that moves a bound point lets that point go.

@@ -887,10 +887,12 @@ kimlik eşlemesi, bağlı ölçü ve tek Undo doğrulansın.
   Köşe yapısı sadeleştirilmez; bir çizgi 4 096, toplam kapsam 200 000 köşedir.
 - [ ] Kaynak türlerini metin/öznitelik varyantı, iç içe blok ve
   diğer üretim geometrilerine aynı doğruluk kapısıyla genişletme.
-- [ ] Seçili adayları bloklaştırma; eski UUID→yeni yerleştirme/alt nesne
-  eşlemesi, ilişkileri koruma veya kaybı önceden açıklayıp atomik ret,
-  gerçek GUI/Python/MCP ve tek Undo/Redo kabulü.
-- [ ] Grid/kutupsal/yol örüntüsünü mevcut `AssocArray` modeline benimsetme;
+- [x] İlk analitik kapsamda seçili adayları bloklaştırma; eski UUID→yeni
+  yerleştirme/alt nesne eşlemesi, sıradan ölçü bağlarını koruma ve desteklenmeyen
+  veri/görünüş/ilişkide gerekçeli atomik ret. Gerçek GUI/Python/MCP ve tek
+  Undo/Redo kabulü. Metin/öznitelik, iç blok ve diğer geometri/ilişki türleri
+  tamamlanmış sayılmaz; kaynak genişletme maddesi açık kalır (ADR 0871).
+- [~] Grid/kutupsal/yol örüntüsünü mevcut `AssocArray` modeline benimsetme;
   iki eksik öğe, elle değişen öğe, koru/sil/reset ve sayı/aralık değişikliğinde
   bağların ve kimliklerin korunması. Bütün CAD-ADV-07 bu kabulden önce kapanmaz.
 
@@ -928,6 +930,182 @@ Durdur üzerinden iptal edildi; iki nesnelik seçim korundu. İptal çizimi ve
 çoklu çizgi kabulü arayüzden kaydedilip kendi başlangıç dosyalarıyla bayt bayt
 karşılaştırıldı: ikisi de aynıdır. Ham görüntüler ve kabul kayıtları depo
 dışındadır. Bu kabul bloklaştırma veya ilişkili dizi dönüşümünü kapatmaz.
+
+**Bloklaştırma önkoşulu — [ADR 0868](../docs/adr/0868-explicit-dimension-rebind-uses-current-geometry.md):**
+yeni blok alt nesnesine aynı işlemde açıkça geçirilen ölçü bağı eski geometri
+üzerinden izlenip kopmuyor. Aynı/yeni yerleştirme kimliği, yeni ölçü, geçersiz
+yer ve tek Undo/Redo domain testlerinde; üç public komutun dış işlemde
+birleşmesi uygulama testinde doğrulandı. Gerçek konsolda önce kopma tekrarlandı,
+yeni sürümde iki bağ canlı kaldı; taşıma ile 2 000 mm ölçü izledi. GUI'den
+kaydedilen taşıma Undo, blok+bağ Undo ve Redo dosyaları karşılaştırıldığında
+beklenen dosyalarla bayt bayt aynı çıktı. Genel dönüştürme hâlâ açık;
+geniş çizginin blok içi dolgu farkı ayrı ADR 0869 kapsamında giderildi.
+Bu dilimde 136 domain, 370 native uygulama ve 1 628 masaüstü testi geçti;
+294 isteğe bağlı test atlandı. İlgili paketlerin Clippy kontrolü ve masaüstü
+derlemesi başarılıdır.
+
+**Blokta görünüş koruma — [ADR 0869](../docs/adr/0869-wide-polyline-ink-inside-blocks.md):**
+geniş çoklu çizgi blok alt nesnesi olunca katmanın alan dolgusu yerine kendi
+rengindeki dolgusunu korur. İç içe/ayna/ölçek, farklı katman dolgusu,
+alan dolgusu görünümü ve fiziksel çıktı hassasiyetiyle 32 karşılaştırmada
+kök çizgiyle çizim verisi eşittir. Stil paketinde 77, son masaüstü tekrarında
+1 628 test geçti; 259 isteğe bağlı test atlandı. Gerçek son GUI'de seçili ve
+seçimsiz dolgu, zoom ve 2 000 mm ölçü doğrulandı; kaydedilen dosya önceki
+veriyle bayt bayt aynı. Ölçü bağı diliminin tam Python tekrarı da 481 testle
+başarılıdır. Genel aday dönüştürme ve ilişkili dizi işleri açık kalır.
+
+**Kapalı çizginin son kenarı — [ADR 0870](../docs/adr/0870-closed-polyline-dimension-geometry.md):**
+ölçüye verilen native geometri kapalı durum ve genişlikleri korur; kökte veya
+iç içe blokta son yay kenarı artık açık çizgi gibi okunmaz. Eski JSON/WASM
+varsayılanı ayrı kalır. 605 çekirdek birim, 316 çekirdek entegrasyon, 137 belge,
+371 uygulama, 1 628 masaüstü ve 68 MCP testi; 62 Python blok ve 6 çıktı testi geçti.
+Clippy ve masaüstü derlemesi başarılıdır. Gerçek konsolda önce ret tekrarlandı,
+sonra kapanış yayının orta noktası (800,425) mm olarak bağlandı, canlı kaldı
+ve blokla taşındı. Taşıma Undo, bağlama Undo ve Redo kayıtları ilgili başlangıç
+ve son dosyalarıyla bayt bayt aynıdır. Çizgi gerçekten açılınca yalnız kapanış
+kenarı bağının kopması Python testindedir. Genel dönüştürme işi açık kalır.
+
+**Seçilmiş aday dönüşümü — [ADR 0871](../docs/adr/0871-selected-repeat-conversion-and-topological-maps.md):**
+`cad.blocks.convert` ve Bloklar panelindeki **Bloğa dönüştür…**, yalnız işaretli
+adayları yeniden doğrulayıp tek blok tanımına geçirir. İnceleme; ad, aday/parça
+sayısı, kök→alt nesne eşlemesi, ölçü bağı ve gerçek nokta sapmasını açıklar.
+Her adayın ilk UUID/slot'u yerleştirme olarak korunur; kalan kökler tanımın
+parçalarına eşlenir. Döndürülmüş/aynalanmış yaylarda dünya geometrisi, ters ve
+döngüsel çoklu çizgide köşe/kenar topolojisi esas alınır. Belirsiz kenar,
+güncel olmayan ölçü noktası, türetilmiş ölçü kuralı, field/grup/tarama/dizi
+ve diğer taşınamayan ilişkiler sessizce koparılmaz. İlk kapsam aynı veri
+davranışsız CAD katmanındaki sürekli çizgili analitik nesnelerdir; öznitelik,
+kural tabanlı görünüş, kesikli çizgi fazı, araya başka nesne giren parça sırası
+ve tablo bulunan çizim gerekçeli ret alır. Daha geniş destek açık iştir.
+
+İnceleme/yazma arka plandadır; iptal ve değişen belge/geç sonuç koruması
+masaüstü testlerindedir. Kaynak 128, grup 1 000, ilişki denetimi yapılan çizim
+50 000 nesneyle sınırlıdır; eksik tarama doğrulanmış başarı sayılmaz.
+50 000 nesneli bağımsız kabul çiziminde 1 000 tek parçalı adayın dönüşümü
+bu makinenin debug derlemesinde yaklaşık 0,36 saniye sürdü; tek Undo başlangıç
+verisini tam geri getirdi. Bu ölçüm genel performans garantisi değildir.
+
+Gerçek arayüzde 40 yaylı/genişlikli adayın toplu dönüşümü ve yalnız bir adayın
+seçilmesi denendi. Diğer 39 aday tekli dönüşümde değişmedi; bütün kök UUID'leri
+korundu. Kaynak 2 000 mm ölçü canlı kaldı, fareyle taşınan blokla birlikte
+yer değiştirdi. Toplu/tekli dönüşümün Undo/Redo dosyaları ve taşıma Undo'su
+ilgili başlangıç/son dosyalarına bayt bayt eşittir. Boş ad, ad değiştirince
+yeniden inceleme, ayrıntı aç/kapat, Esc ile vazgeçme ve küçük pencerede büyük
+yazı kontrol edildi. Geçmişte komutun Türkçe adı ve toleransın metre girdi
+yerine okunur mm özeti bulunur; public Python tekrar girdisi değişmez.
+
+Çekirdeğin 610 birim ve 316 ana entegrasyon, uygulamanın 99 birim ve 378 ana
+entegrasyon, MCP ana yüzeyinin 69 ve Python'un 487 testi geçti; dönüşümün
+ortak komut dosyası 30 bağımsız durum içerir. Masaüstünün 1 632 testi 8 MiB
+test yığını/dört paralel iş ile geçti; önceki varsayılan turdaki yığın taşması
+ve GeoPackage yazma hatası gizlenmez. Son Geçmiş birim özeti değişikliğinde
+11 odak testi yeniden geçti. Derleme ve Clippy sonuçları teslim kaydında
+tutulur. Ekranlar, gerçek GUI dosyaları ve ayrıntılı kayıtlar depo dışındadır.
+İlişkili diziye benimsetme ve kaynak/ilişki genişletme tamamlanmadan
+CAD-ADV-07 bütünü kapatılmaz.
+
+**Mevcut dizi önkoşulu — [ADR 0872](../docs/adr/0872-associative-array-closed-path-geometry.md):**
+kapalı çoklu çizgiyi ilişkili dizi hesabında açık okuyan native okuyucu
+düzeltildi. Önizlemede dört kenara dağılan öğelerin onaydan sonra üç kenara
+kayması gerçek eski GUI'de tekrarlandı. Aynı fare/klavye adımları son
+derlemede dört kenarda aynı sekiz yerleşimi verdi. **Diziyi düzenle** ile
+8→12 adet değişimi dört kenarı kullanır ve ilk sekiz öğenin UUID'sini korur.
+Dizi oluşturma ve adet değişiminin gerçek Undo/Redo kayıtları başlangıç,
+sekizli ve on ikili dosyalara bayt bayt eşittir. Proje mm gösterimi ve
+metre model koordinatları değişmedi. Üç regresyon testi önce başarısız olup
+düzeltmeyle geçti; domain paketinin toplam 140 testi, native/Python'da 136
+ortak dizi durumu, dört Python dizi testi ve 70 MCP testi başarılıdır.
+Masaüstü derlemesi ve ilgili paketlerin Clippy kontrolü geçti. İki yönde
+kapanış yayı istasyonu/teğeti, yol aç/kapat izleme, iki silinmiş öğe,
+elle taşınmış istisna ve açık reset otomatik kabulde vardır; bunların
+tamamı fareyle denenmiş gibi sayılmaz. Ham ekranlar ve dosyalar depo
+dışındadır. Bu önkoşul, bağımsız öğelerden örüntü tanıma/benimsetme
+maddesini kapatmaz.
+
+**Mevcut yerleştirmeleri bağlama altyapısı — [ADR 0873](../docs/adr/0873-existing-insert-array-adoption.md):**
+`cad.arrays.adopt` incelenmiş açık grid/doğru/kutupsal/yol yerleşimini ve
+öğe eşlemesini mevcut `AssocArray` modeline bağlar. Yalnız metadata eklenir;
+mevcut kök UUID/slot/çizim sırası, blok tanımı, geometri ve ölçü referansları
+değişmez. İki eksik yer boş, açıkça `kept` denmiş öğe yerinde kalır.
+Yanlış öğe kendiliğinden taşınmaz veya korunmuş sayılmaz. Ortak şablona
+uymayan görünüş/veri, başka dizi üyeliği ve eski belge durumu atomik ret alır.
+Statik, ortak görünüşlü, verisiz yerleştirme kapsamı ve ayrı açı/ölçek/konum
+toleransları katalogda/Python belgesinde açıklanmıştır. Durdurulabilir işin
+hesabı sürerken belge değişirse metadata-only yazma da reddedilir.
+
+Native 99 birim + 386 entegrasyon, komut sözleşmelerinde 1069, MCP'de 71,
+masaüstü komut geçmişinde 5 ve Python'un tam paketinde 495 test başarılıdır
+(dizi modülünde 9 test). Bağımsız 30 ortak durum native ve Python
+koşucularında geçmiştir; ilgili beş paketin
+tüm hedeflerinde Clippy başarılıdır. Gerçek uygulamada konsoldan yazısız
+inceleme/bağlama, ardından **Diziyi düzenle** menüsünden 8→10 sütun ve
+2000→3000 mm aralık, öğe silme ve açık Sıfırla kullanılmıştır. Altı özgün
+UUID, iki boş yer ve elle taşınmış öğe korunmuş; iç blok çemberlerine bağlı
+ölçü 2000→3000 mm izlemiştir. Sekiz gerçek Undo/Redo kaydetme çifti birebir
+dosya eşitliğiyle, yeniden açılışta dizi/bağlar da API ile doğrulanmıştır.
+Son ikiliyle gerçek konsolda sayı taşması ve tüm kaynaklar birlikte
+taşındıktan sonra eski planla yazma reddi de doğrulanmıştır; ret belgeye
+dizi eklememiştir. Yeniden bağlama/Undo/Redo ve menüden sayı/aralık
+değişikliği aynı ikiliyle tekrarlanmıştır. Görüntüler ve ham kabul kayıtları
+depo dışındadır.
+
+**Doğrusal aday bulma — [ADR 0874](../docs/adr/0874-read-only-linear-array-patterns.md):**
+`cad.arrays.find` aynı statik blok tanımı, görünüş, ayna, yön ve ölçekteki
+yerleştirmelerden doğrusal öneriler üretir. Kaynak sıranın ortasında olabilir;
+aday ilk dolu uca eşlenir. En az üç dolu yer ve gözlenmiş komşu çift gerekir;
+her ikinci yer doluysa gizli ara yer varsayılmaz. İki UUID aynı yere düşerse
+rastgele biri seçilmez. Eşleşmeyen öğe kendiliğinden korunmuş sayılmaz.
+Öneriler mevcut `cad.arrays.adopt` denetiminden geçer; sorgu yazmaz ve açık
+uygulama için aynı tipte girdi döndürür. Kapsam 2 048 kök, geometri iş sınırı
+iki milyon deneme; kısmi sonuç ve çakışan aday açıkça bildirilir. Python/MCP
+ve durdurulabilir native Job aynı sorguyu kullanır.
+
+**Diziyi düzenle** aracında doğru düzenine eksik olan görünür **Aralık (A)**
+eklendi. Birimli pozitif uzunluk gerçek komşu aralığıdır; mevcut yön ve
+fit anlamı korunur. Gerçek uygulamada yazısız arama, eşleşmeyen öğenin açıkça
+korunması, menüden 2000→3000 mm ve 8→10 adet denenmiştir. Altı özgün UUID,
+iki boş yer, korunmuş öğe ve bağlı ölçünün 3000 mm sonucu korunmuştur.
+Sıfır aralık ret dosyası ile aralık/adet Undo/Redo'nun toplam beş çifti
+birebir dosya eşitliği vermiştir. Grafik aday paneli henüz teslim edilmez.
+
+Son kaynaklarla komut sözleşmelerinde 1 072, native uygulamada 99 birim +
+395 entegrasyon, etkileşimde 71 birim + 882 entegrasyon ve MCP ana kabulünde
+72 test başarılıdır; MCP'nin ek protokol/mimari kabul dosyaları da geçmiştir.
+Python dizi modülünde 12 test ve bağımsız 27 ortak durum başarılıdır.
+Komut geçmişinin beş kontrolü, SDK/manifest/bağımsız durum üretimi denetimi
+ve ilgili paketlerin Clippy denetimi başarılıdır. Son derlemeyle gerçek
+sorgu, bağlama/Undo/Redo ve görünür aralık değişimi tekrar doğrulanmıştır.
+Ekranlar, ikili özetleri ve dosya karşılaştırmaları depo dışındadır.
+
+**Grafik doğrusal inceleme — [ADR 0875](../docs/adr/0875-linear-array-review-panel.md):**
+Bloklar panelindeki **Dizileri bul…**, şeridin mevcut Blok ek menüsü ve
+`DIZIBUL` aynı akışı açar. Görünür birimli arama ayarı, sanallaştırılmış aday
+kartı, dolu/boş/korunan yer şeması, Göster ve ayrı İncele vardır. Ortak native
+sorgu arka planda durdurulabilir çalışır; Python çıktısı ayarına uyar.
+Eşleşmeyen blok, kullanıcının seçtiği boş yere açıkça korunmuş öğe olarak
+atanır; kaynak/dolu yerin üzerine yazılmaz. Atama kaldırılabilir, taslak ve
+vazgeçme yazmaz. Diziye bağla aynı native Job ile metadata yazar; eski
+belge/iş sonucu uygulanmaz. Tek Undo/Redo ve iptal/yeniden inceleme vardır.
+
+Gerçek fare/klavyeyle arama, Göster, İncele, eşleşmeyen blok listesi,
+Bloğu göster, atama/kaldırma/yeniden atama, vazgeçme, uygulama ve Undo/Redo
+kullanılmıştır. 2200×1364 pencerede açık/koyu tema denendi; dar dock başlığının
+kırpılması görülüp düzeltilmiş ve yeniden kontrol edilmiştir. DIZIBUL gerçek
+komut satırından açılmıştır. Kaydet-aç dosyaları bağımsız KCAD okuyucusuyla
+incelendi: bağlama bütün kökleri, altı özgün UUID'yi, tanımı, ayarları ve ölçü
+referanslarını korur; iki boş yer ve tek korunan öğe vardır. Aralık menüsünden
+2000→3000 mm değişiminde korunan öğe yerinde, bağlı ölçü 3000 mm'dir.
+Vazgeçme/Undo başlangıç dosyasıyla, Redo bağlanmış dosyayla birebir aynıdır.
+
+Masaüstü genel koşusunda 1640 test geçti; tek katalog envanteri uyumsuzluğu
+üreticisiyle giderildi ve dokuz katalog testi geçti. Son görünüm düzeltmesinden
+sonra 26 Bloklar paneli testi ve tüm hedeflerin Clippy denetimi başarılıdır.
+Manifestte 946 satır tutarlıdır. Ekranlar, ikili özetleri ve kabul dosyaları
+repo dışındadır. Grafik aramanın ilk kapsamı hâlâ doğrusal statik bloklardır.
+
+**Açık kalan:** otomatik grid/kutupsal/yol aday bulma; metin/öznitelik,
+iç blok ve diğer kaynak/ilişki genişletmesi. Bu dilimler CAD-ADV-07'nin
+tamamını kapatmaz.
 
 ### CAD-ADV-08 — Sınır, tarama ve maskeyi hatasını açıklayabilen bir üretim sistemine getir [ ]
 
@@ -1306,6 +1484,13 @@ erişim ürün yönü olarak görülüyor; KentOS sözleşmesi aşağıda tanım
 - Girdi birimleri, kaynak/alt nesne referansları, yaklaşık sonuç,
   kayıp/uyarı, etkilenen nesneler, ilişkiler, pafta ve Undo bilgisi
   yapılandırılmış sonuçta bulunsun. AI kullanıcıya başarıyı gerçek sonuçtan anlatsın.
+- Yalnız metadata değiştiren işler de gerçek Undo adımını ve okudukları
+  nesne/tanım damgalarını raporlasın; plan kimliği yalnız kök geometri
+  yazıldığı varsayımına dayanmasın (ADR0873). Komut günlüğünün yeniden
+  oynatılmasında `AssocArray` kimliği → yeni dizi kimliği eşlemesi ayrıca
+  tamamlanmalı: mevcut `native/application/src/replay.rs` kök nesne ve
+  otomatik ölçü grubu kimliklerini eşliyor; dizi kurma/benimsetme ardından
+  `cad.arrays.edit` içeren günlük kabulü bu maddenin açık işidir.
 - Python tipleri, docstring, örnekler, birim açıklaması ve ret
   kodları komut kataloğundan güncel üretilsin. Aynı senaryo başsız
   belge ve açık masaüstü oturumunda doğru belge/revizyonla çalışsın.

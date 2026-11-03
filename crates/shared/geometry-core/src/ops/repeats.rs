@@ -15,6 +15,8 @@ use crate::store::rtree::PackedTree;
 use crate::vec2::Vec2;
 
 mod path;
+mod places;
+pub use places::{PlaceMatch, map_place};
 
 /// Bound path preparation as well as the subsequent analytic comparisons.
 pub const VERTEX_LIMIT: usize = 200_000;

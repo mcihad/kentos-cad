@@ -136,19 +136,21 @@ fn same_arc((a, b, ab): (Vec2, Vec2, f64), (c, d, cd): (Vec2, Vec2, f64), t: f64
     }
 }
 
-/// None means that the caller's work/cancellation gate stopped the comparison.
-pub(super) fn equal(
+/// Visits every complete analytic vertex correspondence. Returning false from `found`
+/// ends the scan successfully; None means the work/cancellation gate stopped it.
+fn alignments(
     a: &Shape,
     b: &Shape,
     tolerance: f64,
     check: &mut impl FnMut() -> bool,
-) -> Option<bool> {
+    mut found: impl FnMut(usize, bool) -> bool,
+) -> Option<()> {
     let (Some(a), Some(b)) = (view(a), view(b)) else {
-        return Some(false);
+        return Some(());
     };
     let n = a.pts.len();
     if n != b.pts.len() || a.closed != b.closed {
-        return Some(false);
+        return Some(());
     }
     for reverse in [false, true] {
         let starts = if a.closed {
@@ -200,12 +202,108 @@ pub(super) fn equal(
                     break;
                 }
             }
-            if same {
-                return Some(true);
+            if same && !found(start, reverse) {
+                return Some(());
             }
         }
     }
-    Some(false)
+    Some(())
+}
+
+/// None means that the caller's work/cancellation gate stopped the comparison.
+pub(super) fn equal(
+    a: &Shape,
+    b: &Shape,
+    tolerance: f64,
+    check: &mut impl FnMut() -> bool,
+) -> Option<bool> {
+    let mut same = false;
+    alignments(a, b, tolerance, check, |_, _| {
+        same = true;
+        false
+    })?;
+    Some(same)
+}
+
+/// A target place mapped to the replacement's vertex/edge numbering. All complete
+/// alignments must agree: coincident vertices are not permission to guess a topology.
+pub(super) fn map_place(
+    replacement: &Shape,
+    target: &Shape,
+    place: crate::ops::subref::Place,
+    tolerance: f64,
+    check: &mut impl FnMut() -> bool,
+) -> super::PlaceMatch {
+    use super::PlaceMatch;
+    use crate::ops::subref::Place;
+    let Some(p) = view(target) else {
+        return PlaceMatch::NoMatch;
+    };
+    let (index, edge) = match place {
+        Place::Vertex {
+            part: 0,
+            ring: 0,
+            index,
+        } if index < p.pts.len() => (index, false),
+        Place::Mid {
+            part: 0,
+            ring: 0,
+            index,
+        } if index < p.edges() => (index, true),
+        Place::Along {
+            part: 0,
+            ring: 0,
+            index,
+            t,
+        } if index < p.edges() && (0.0..=1.0).contains(&t) => (index, true),
+        _ => return PlaceMatch::NoMatch,
+    };
+    let n = p.pts.len();
+    let mut result = PlaceMatch::NoMatch;
+    let done = alignments(replacement, target, tolerance, check, |start, reverse| {
+        // Alignment maps replacement i to target start +/- i. A reversed target
+        // edge begins at the corresponding replacement edge's END, not its start.
+        let j = if edge && reverse {
+            (index + 1) % n
+        } else {
+            index
+        };
+        let i = if reverse {
+            (start + n - j) % n
+        } else {
+            (j + n - start) % n
+        };
+        let mapped = match place {
+            Place::Vertex { .. } => Place::Vertex {
+                part: 0,
+                ring: 0,
+                index: i,
+            },
+            Place::Mid { .. } => Place::Mid {
+                part: 0,
+                ring: 0,
+                index: i,
+            },
+            Place::Along { t, .. } => Place::Along {
+                part: 0,
+                ring: 0,
+                index: i,
+                t: if reverse { 1.0 - t } else { t },
+            },
+            _ => unreachable!(),
+        };
+        match result {
+            PlaceMatch::NoMatch => result = PlaceMatch::At(mapped),
+            PlaceMatch::At(previous) if previous != mapped => result = PlaceMatch::Ambiguous,
+            _ => {}
+        }
+        result != PlaceMatch::Ambiguous
+    });
+    if done.is_none() {
+        PlaceMatch::Stopped
+    } else {
+        result
+    }
 }
 
 #[cfg(test)]

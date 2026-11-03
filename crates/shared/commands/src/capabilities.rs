@@ -1170,6 +1170,16 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.arrays.find",
+        refusals: &[&["invalid_uid", "entity_not_found", "invalid_tolerance", "invalid_limit", "recognition_scope_limit", "array_adoption_refused", "layer_locked"], REVISION],
+        warnings: &["recognition_truncated"], targets: none,
+    },
+    Entry {
+        id: "cad.arrays.adopt",
+        refusals: &[&["array_adoption_refused", "invalid_uid", "not_finite", "invalid_count", "invalid_spacing", "invalid_fill", "invalid_tolerance", "entity_not_found", "layer_locked", "invalid_path"], REVISION],
+        warnings: &[], targets: none,
+    },
+    Entry {
         id: "cad.arrays.edit",
         refusals: &[
             &[
@@ -1413,6 +1423,11 @@ const ENTRIES: &[Entry] = &[
         ],
         warnings: &["layer_locked"],
         targets: none,
+    },
+    Entry {
+        id: "cad.blocks.convert",
+        refusals: &[&["empty_name", "recognition_conversion_refused", "invalid_uid", "entity_not_found", "invalid_tolerance", "recognition_unsupported", "recognition_scope_limit", "duplicate_block", "block_refused", "layer_locked", "layer_not_found", "not_a_layer"], REVISION],
+        warnings: &[], targets: none,
     },
     Entry {
         id: "cad.blocks.find",

@@ -11,7 +11,7 @@ const INPUT_WIDTH: usize = 240;
 
 /// The product commands' Turkish titles, the catalog's (`commandCatalog.json`;
 /// a test holds them to it).
-pub(crate) const TITLES: [(&str, &str); 334] = [
+pub(crate) const TITLES: [(&str, &str); 337] = [
     ("cad.polygon.create", "Kapalı alan oluştur"),
     ("cad.line.create", "Çizgi oluştur"),
     ("cad.polyline.create", "Çoklu çizgi oluştur"),
@@ -22,6 +22,8 @@ pub(crate) const TITLES: [(&str, &str); 334] = [
     ("cad.entities.transform", "Nesneleri dönüştür"),
     ("cad.entities.edit", "Nesneleri düzenle"),
     ("cad.entities.array", "Nesneleri diziye kopyala"),
+    ("cad.arrays.find", "Doğrusal blok dizilerini bul"),
+    ("cad.arrays.adopt", "Mevcut blokları diziye bağla"),
     ("cad.arrays.edit", "Diziyi düzenle"),
     ("cad.constraints.edit", "Kısıtlar"),
     ("cad.parameters.edit", "Parametreler"),
@@ -154,6 +156,7 @@ pub(crate) const TITLES: [(&str, &str); 334] = [
     ("cad.entities.create", "Nesneleri ekle"),
     ("cad.entities.set", "Nesnelerin özelliklerini değiştir"),
     ("cad.blocks.find", "Tekrarlanan bileşenleri bul"),
+    ("cad.blocks.convert", "Tekrarları bloğa dönüştür"),
     ("cad.blocks.define", "Blok tanımla"),
     ("cad.blocks.edit", "Blok tanımını değiştir"),
     ("file.import.block", "Dosyadan blok al"),
@@ -613,6 +616,45 @@ fn label(key: &str) -> String {
 
 /// The input in words: “Katman: «Yapı» · Merkez: 487020, 4420015 · Yarıçap: 7.5”;
 /// the nesting said once, absent and empty fields left out, cut at its width.
+pub(crate) fn inputs_for(
+    command: Option<&str>,
+    input: &Value,
+    layer: &dyn Fn(&str) -> Option<String>,
+) -> String {
+    if command == Some(kentos_commands::CAD_ARRAYS_ADOPT)
+        && let Ok(i) = serde_json::from_value::<kentos_commands::ArraysAdopt>(input.clone())
+    {
+        let missing = i.items.iter().filter(|i| i.uid.is_none()).count();
+        let kept = i.items.iter().filter(|i| i.kept).count();
+        let kind = match i.layout {
+            kentos_commands::ArrayLayout::Grid { .. } => "Izgara",
+            kentos_commands::ArrayLayout::Line { .. } => "Sıra",
+            kentos_commands::ArrayLayout::Polar { .. } => "Kutupsal",
+            kentos_commands::ArrayLayout::Path { .. } => "Yol boyunca",
+        };
+        let mm = (i.tolerance.unwrap_or(1e-6) * 1000.).to_string().replace('.', ",");
+        return format!("{kind} · {} yer · {} mevcut blok · {missing} eksik · {kept} korunan · Tolerans: {mm} mm",
+            i.items.len(), i.items.len()-missing);
+    }
+    if command == Some(kentos_commands::CAD_BLOCKS_CONVERT)
+        && let Ok(i) = serde_json::from_value::<kentos_commands::BlocksConvert>(input.clone())
+    {
+        // This command's tolerance is metres, independent of the project's display unit.
+        // Keep significant digits: the generic four-decimal summary made 0.001 mm say 0.
+        let mm = (i.tolerance.unwrap_or(kentos_commands::RECOGNITION_TOLERANCE) * 1000.)
+            .to_string()
+            .replace('.', ",");
+        let name = value("name", &Value::String(i.name), layer, false);
+        let on = |b| if b { "evet" } else { "hayır" };
+        return format!(
+            "Ad: {name} · {} aday · Kaynak: {} parça · Tolerans: {mm} mm · Döndürme: {} · Aynalama: {} · Farklı boyut: {}",
+            i.groups.len(), i.source.len(), on(i.rotations.unwrap_or(true)),
+            on(i.mirrors.unwrap_or(false)), on(i.scales.unwrap_or(false))
+        );
+    }
+    inputs(input, layer)
+}
+
 pub(crate) fn inputs(input: &Value, layer: &dyn Fn(&str) -> Option<String>) -> String {
     let Some(map) = input.as_object() else {
         return String::new();
@@ -786,6 +828,34 @@ mod tests {
             ),
             "Kapalı: evet · Noktalar: 3 nokta"
         );
+    }
+
+    #[test]
+    fn repeat_conversion_history_names_millimetres_without_rounding_a_positive_tolerance_to_zero() {
+        let mut input = json!({"name":"Yaylı tekrar", "source":["source"],
+            "groups":[["source"],["other"]],"mirrors":true});
+        let before = input.clone();
+        let said = inputs_for(Some(kentos_commands::CAD_BLOCKS_CONVERT), &input, &|_| None);
+        assert!(said.contains("2 aday · Kaynak: 1 parça · Tolerans: 0,001 mm"), "{said}");
+        assert!(said.contains("Döndürme: evet · Aynalama: evet · Farklı boyut: hayır"));
+        assert_eq!(input, before, "only the readable summary changes; replay keeps model metres");
+        input["tolerance"] = json!(1e-12);
+        let said = inputs_for(Some(kentos_commands::CAD_BLOCKS_CONVERT), &input, &|_| None);
+        assert!(said.contains("Tolerans: 0,000000001 mm"), "{said}");
+        assert_eq!(inputs_for(Some("cad.circle.create"), &input, &|_| None),
+            inputs(&input, &|_| None), "other commands keep their existing summary");
+    }
+
+    #[test]
+    fn adoption_history_says_missing_and_kept_places_with_model_tolerance_in_millimetres() {
+        let input = json!({"source":"01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f",
+            "layout":{"kind":"line","count":3,"dx":2.,"dy":0.,"fit":false},
+            "items":[{"uid":"01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"},{},
+                {"uid":"01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e60","kept":true}]});
+        let before = input.clone();
+        assert_eq!(inputs_for(Some(kentos_commands::CAD_ARRAYS_ADOPT), &input, &|_| None),
+            "Sıra · 3 yer · 2 mevcut blok · 1 eksik · 1 korunan · Tolerans: 0,001 mm");
+        assert_eq!(input, before, "the replay input stays in model metres");
     }
 
     #[test]

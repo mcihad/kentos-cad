@@ -469,6 +469,8 @@ codes! {
     POINTCLOUD_FIXED = "pointcloud_fixed", Failed, false, "Nokta bulutunun yeri dosyalarınındır; taşınmaz, döndürülmez, ölçeklenmez, kopyalanmaz.";
 
     // ── Blocks ──────────────────────────────────────────────────────────
+    /// A chosen repeat cannot be converted without losing topology, appearance or root relations.
+    RECOGNITION_CONVERSION_REFUSED = "recognition_conversion_refused", Failed, false, "Seçilen tekrarların alt nesne eşlemesi veya ilişki/görünüş koruması doğrulanamadı; hiçbir şey yazılmadı.";
     /// The selected source contains a shape not supported by deterministic candidate recognition.
     RECOGNITION_UNSUPPORTED = "recognition_unsupported", Failed, false, "Tekrar arama kaynağı yalnız sıfır uzunluklu olmayan çizgi, çember ve yay içerir; desteklenmeyen öğe atlanmaz.";
     /// Recognition's small source collection limit, before reading or copying a large selection.
@@ -877,6 +879,8 @@ codes! {
     UNITS_DIFFER = "units_differ", Warning, false, "Kaynak çizimin birimi bu çizimin biriminden başka; nesneler gerçek boylarıyla yapıştırıldı.";
     /// An exploded curve's density out of range (Patlat, docs/adr/0308).
     INVALID_DENSITY = "invalid_density", Failed, false, "Nokta sıklığı geçersiz: bölüm sayısı 1 ile 100 000 arasında, aralık ve sapma sıfırdan büyük olmalı.";
+    /// Reviewed placements cannot join the proposed associative array (docs/adr/0873).
+    ARRAY_ADOPTION_REFUSED = "array_adoption_refused", Failed, false, "Mevcut yerleştirmelerin örüntüye, ortak şablona veya tekil öğe kimliğine uygunluğu doğrulanamadı; çizim değiştirilmedi.";
     /// No associative array has the id (Diziyi düzenle, docs/adr/0301).
     ARRAY_NOT_FOUND = "array_not_found", Failed, false, "Kimliği verilen ilişkili dizi çizimde yok.";
     /// An item number out of the array's places, given twice, or none given (Diziyi düzenle).

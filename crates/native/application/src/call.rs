@@ -531,6 +531,20 @@ fn summarize(
             summary.changed.push(uid);
         }
     }
+    if command == kentos_commands::CAD_ARRAYS_ADOPT {
+        // Adoption writes no roots. Its read dependencies must therefore be recorded
+        // explicitly, including kept items and a path, or moving the whole selection
+        // could leave the same plan id while changing its derived first placement.
+        for text in &named {
+            if let Ok(uid) = Uuid::parse_str(text)
+                && let Some(entity) = doc.slot_of(uid).and_then(|s| doc.get(s))
+            {
+                summary.sources.objects.insert(text.clone(), entity_stamp(uid, entity));
+                blocks_named(doc, entity, &mut referenced);
+            }
+        }
+        summary.sources.layers = Some(parts.layers.clone());
+    }
     // The definitions the touched inserts rest on, as they were, and the ones the step changed.
     let mut new_blocks: Vec<String> = Vec::new();
     let mut blocks_result = json!({ "added": [], "changed": {}, "removed": [] });
@@ -627,6 +641,7 @@ fn summarize(
     let undoable = !report.objects.is_empty()
         || !report.layers.is_empty()
         || !report.blocks.is_empty()
+        || !report.arrays.is_empty()
         || !report.undo_parts.is_empty();
     summary.undo = UndoInfo {
         label: (report.outermost && !doc.in_group() && undoable)
@@ -690,6 +705,15 @@ fn summarize(
             "sheets": summary.stamps.sheets,
         },
     });
+    if command == kentos_commands::CAD_ARRAYS_ADOPT {
+        // Hash the metadata that is actually added, without the freshly allocated
+        // array id. Other commands keep their existing plan fingerprints.
+        essence["result"]["arrays"] = Value::Array(report.arrays.added.iter().filter_map(|id| {
+            let mut value = serde_json::to_value(doc.array(*id)?).ok()?;
+            value.as_object_mut()?.remove("id");
+            Some(value)
+        }).collect());
+    }
     // Optional metadata stays out of legacy plan fingerprints. Hash the new recipe JSON only
     // after replacing fresh set/member identities; raw stamps would make plan and execute differ.
     if changed_parts.contains(&ProjectPart::DimensionSets) || scale_reads_dimensions {

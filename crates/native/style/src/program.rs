@@ -492,8 +492,9 @@ pub fn layer_call(
                     (Some(Entity::Hatch(h)), _) => {
                         it.set(piece_stroke.apply(json!({ "fill": hatch_symbol_of(&h, color) })))
                     }
-                    // A leader its own look (docs/adr/0146 §5).
-                    (_, Shape::Leader { .. }) => it.set(piece_stroke.apply(leader_symbols_of(
+                    // Intrinsic solid ink, just as at the root: a leader's head or a wide path's
+                    // band must not take a layer's optional polygon fill (ADR 0869).
+                    (_, Shape::Leader { .. } | Shape::Polyline { widths: Some(_), .. }) => it.set(piece_stroke.apply(leader_symbols_of(
                         style,
                         color,
                         weight,

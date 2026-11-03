@@ -223,6 +223,7 @@ pub enum Dialog {
     BlockReview,
     BlockReplace,
     BlockFind,
+    ArrayFind,
     /// Alanlar (layer_fields.rs, docs/adr/0199 §3); the window is `App::layer_fields`.
     LayerFields,
     /// Katman süzgeci (layer_filters.rs, docs/adr/0211 §4); the window is `App::layer_filter`.
@@ -1926,6 +1927,8 @@ impl App {
             },
             // The status bar's message: when it goes, and its fades (message_log.rs).
             self.log_subscription(Instant::now()),
+            self.block_convert_subscription(),
+            self.array_find_subscription(),
             // The kept layout, written after its last change; the window's size.
             self.layout_subscription(),
             // Genel bakış's picture, drawn again a moment after a change (navigation_cards.rs).
@@ -3472,6 +3475,7 @@ impl App {
             // The blocks (blocks_panel.rs, docs/adr/0144).
             "block.panel" => self.show_blocks_panel(),
             "block.find" => self.open_block_find(),
+            "array.find" => self.open_array_find(),
             "block.purge" => self.purge_blocks(),
             // Blok düzenleyici (block_editor.rs, docs/adr/0316 §1).
             "block.edit" => self.block_editor_from_selection(),
@@ -3754,7 +3758,7 @@ impl App {
             // A drawing tool that writes another kind than the typed active layer holds (docs/adr/0622 §5).
             id if self.layer_misfit(id).is_some() => false,
             "block.purge" | "block.export" => doc.is_some_and(|d| !d.blocks().is_empty()),
-            "block.find" => doc.is_some() && !self.session.is_running(),
+            "block.find" | "array.find" => doc.is_some() && !self.session.is_running(),
             "block.import" | "layer.impact" => doc.is_some(),
             "block.attributes" => doc.is_some_and(|d| {
                 kentos_interaction::blocks::selected_block(d, &self.selection).is_some()

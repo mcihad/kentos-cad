@@ -980,6 +980,7 @@
       ],
       "overflow": [
        "block.find",
+       "array.find",
        "block.insertFile",
        "block.attributes",
        "block.sync",

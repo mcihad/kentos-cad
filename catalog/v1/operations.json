@@ -617,10 +617,15 @@
       ],
       "was": "cad.blocks.define"
     },
+    "array.find": {
+      "level": "semantic",
+      "via": ["cad.arrays.find", "cad.arrays.adopt"],
+      "note": "Yazısız doğrusal aday araması, sahnede gösterme, açık korunan yer eşlemesi ve ayrı inceleme. Mevcut kökleri değiştirmeden tek Undo adımıyla dizi kaydı eklenir; sorgu ve bağlama durdurulabilir (ADR0874/0875)."
+    },
     "block.find": {
-      "level": "query",
-      "via": ["cad.blocks.find"],
-      "note": "Yazısız ve durdurulabilir eşleşme arama; sonuç seçimi ayrı kullanıcı eylemidir (ADR 0866)."
+      "level": "semantic",
+      "via": ["cad.blocks.find", "cad.blocks.convert"],
+      "note": "Arama yazısız ve durdurulabilir; seçilmiş adaylar ayrı ilişki/görünüş incelemesi ve tek onayla bir blok tanımına dönüştürülür. Kök→parça ve ölçü eşlemesi ortak komutta, tek Undo adımındadır (ADR 0871)."
     },
     "block.panel": {
       "level": "host"

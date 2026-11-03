@@ -3,11 +3,26 @@
   "version": 1,
   "commands": [
     {
+      "id": "array.find",
+      "title": "Doğrusal dizileri bul…",
+      "short": "Dizileri bul",
+      "icon": "search",
+      "description": "Seçilen statik bloğun doğrusal yerleşimlerini yazısız arar. Adaylar sahnede gösterilir; eksik yerler ve elle taşınmış öğeler ayrı incelemeden sonra aynı kimliklerle ilişkilendirilir. Bağlama durdurulabilir ve tek adımda geri alınır. İlk kapsam doğrusal dizilerdir.",
+      "aliases": [
+        "DIZIBUL",
+        "DİZİBUL",
+        "FINDARRAYS"
+      ],
+      "shortcuts": [],
+      "category": "Blok",
+      "status": "implemented"
+    },
+    {
       "id": "block.find",
       "title": "Tekrarlanan bileşenleri bul…",
       "short": "Tekrarları bul",
       "icon": "search",
-      "description": "Seçilen çizgi, 2B çoklu çizgi, çember ve yay bileşeninin tam eşlerini arar. Döndürme, aynalama, ölçek ve veri politikası açıkça seçilir; sonuçlar çizimi kullanmaya devam edebildiğiniz Bloklar panelinde incelenir. Hiçbir geometri veya bağ değiştirilmez.",
+      "description": "Seçilen çizgi, 2B çoklu çizgi, çember ve yay bileşeninin tam eşlerini arar. Döndürme, aynalama, ölçek ve veri politikası açıkça seçilir; sonuçlar çizimi kullanmaya devam edebildiğiniz Bloklar panelinde incelenir. Arama geometriyi değiştirmez. Seçilen adaylar dönüşüm incelemesinden sonra ölçü bağlarıyla birlikte tek adımda bloğa dönüştürülebilir.",
       "aliases": ["TEKRARBUL", "FINDREPEATS"],
       "shortcuts": [],
       "category": "Blok",

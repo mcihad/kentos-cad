@@ -67,6 +67,7 @@ impl App {
             Dialog::BlockReview => crate::block_editor::REVIEW_TITLE.to_owned(),
             Dialog::BlockReplace => crate::blocks_panel::REPLACE_TITLE.to_owned(),
             Dialog::BlockFind => crate::blocks_panel::FIND_TITLE.to_owned(),
+            Dialog::ArrayFind => self.array_find_title().to_owned(),
             Dialog::LayerFields => crate::layer_fields::FIELDS_TITLE.to_owned(),
             Dialog::TopologyRules => crate::topology::rules::RULES_TITLE.to_owned(),
             Dialog::Networks => crate::networks::window::TITLE.to_owned(),
@@ -162,6 +163,7 @@ impl App {
                 other => Err(format!("Blok etkisi penceresinde {other} yok")),
             },
             Some(Dialog::BlockFind) => self.block_find_control(control),
+            Some(Dialog::ArrayFind) => self.array_find_control(control),
             Some(Dialog::BlockReplace) => match control {
                 Control::Check("Yalnız seçili yerleştirmeler", on) => Ok(Some(Message::BlocksPanel(crate::blocks_panel::Event::Replace(crate::blocks_panel::ReplaceEvent::Scope(on))))),
                 Control::Press("Değiştir") => Ok(Some(Message::BlocksPanel(crate::blocks_panel::Event::Replace(crate::blocks_panel::ReplaceEvent::Apply)))),

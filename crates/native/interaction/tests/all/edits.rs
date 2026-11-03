@@ -896,6 +896,50 @@ fn an_associative_array_is_edited_through_one_of_its_items() {
 }
 
 #[test]
+fn line_array_spacing_is_visible_unit_aware_and_preserves_direction_ids_fit_and_one_undo() {
+    use kentos_commands::{ArrayLayout,CommandResult,EntitiesArray,Entity};
+    use kentos_native_application::{ExecutionContext,array};
+    for fit in [false,true] {
+        let mut b=bench(&[]);
+        let source=b.add_circle("cizim",[-40.,20.],1.);
+        let source_uid=b.doc.uid(source).unwrap().to_string();
+        let result=array::execute(&mut ExecutionContext::new(&mut b.doc),EntitiesArray {
+            uids:vec![source_uid],
+            layout:ArrayLayout::Line {count:4,dx:4.,dy:3.,fit},associative:true,expected_revision:None,
+        });
+        assert!(matches!(result,CommandResult::Completed {..}),"{result:?}");
+        let before=b.doc.to_snapshot_v2();
+        let ids=b.doc.arrays()[0].items.clone();
+        b.start("arrayEdit");b.click(-39.,20.);
+        assert!(b.options().contains(&"A"),"{}",b.session.prompt().text());
+        assert!(b.type_text("A"));
+        assert_eq!(b.session.prompt().text(),"Diziyi düzenle: öğeler arasındaki aralığı yazın");
+        assert!(b.type_text("3000 mm"));
+        let a=&b.doc.arrays()[0];
+        assert_eq!(a.items,ids);
+        let ArrayLayout::Line {count,dx,dy,fit:actual_fit}=a.layout else {panic!("line")};
+        assert_eq!((count,actual_fit),(4,fit));
+        let factor=if fit {3.} else {1.};
+        assert!((dx-2.4*factor).abs()<1e-12 && (dy-1.8*factor).abs()<1e-12);
+        // Bench coordinates are around E=487000, N=4420000 metres. Compare
+        // absolute poses within four Float64 rounding units at that origin.
+        let pose_tolerance=4.*f64::EPSILON*a.p.x.abs().max(a.p.y.abs()).max(1.);
+        for (k,item) in a.items.iter().enumerate() {
+            let uid=kentos_domain::Uuid::from_bytes(item.uid.unwrap().0);
+            let Entity::Insert(i)=b.doc.get(b.doc.slot_of(uid).unwrap()).unwrap() else {panic!("insert")};
+            assert!((i.p.x-a.p.x-k as f64*2.4).abs()<pose_tolerance,"fit={fit}, item={k}, x={}",i.p.x);
+            assert!((i.p.y-a.p.y-k as f64*1.8).abs()<pose_tolerance,"fit={fit}, item={k}, y={}",i.p.y);
+        }
+        let after=b.doc.to_snapshot_v2();
+        assert!(b.type_text("A"));assert!(b.type_text("0"));
+        assert_eq!(b.doc.to_snapshot_v2(),after,"zero spacing is refused without writing");
+        assert_eq!(b.doc.undo().as_deref(),Some("Diziyi düzenle"));
+        assert_eq!(b.doc.to_snapshot_v2(),before);
+        b.doc.redo();assert_eq!(b.doc.to_snapshot_v2(),after);
+    }
+}
+
+#[test]
 fn circular_fillet_uses_two_picks_readonly_preview_and_one_undo_and_keeps_chamfer_straight_only() {
     use serde_json::json;
     let mut raw: serde_json::Value = serde_json::from_str(EDITS).unwrap();

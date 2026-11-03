@@ -4,7 +4,7 @@
  "command": "cad.entities.array",
  "commandVersion": 1,
  "title": "İlişkili diziler: kaynak blok, yerleşim, öğeler ve izleme",
- "note": "ADR 0300. Bağımsız başvuru: scripts/fixtures/array_assoc_cases.py.",
+ "note": "ADR 0300, ADR 0872. Bağımsız başvuru: scripts/fixtures/array_assoc_cases.py.",
  "setup": {
   "format": "kentos.document",
   "version": 1,
@@ -4069,6 +4069,1157 @@
          },
          {
           "uid": "$uidOf:11"
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kapalı yol: önizleme ve sekiz ilişkili öğe dört kenarda aynıdır; aç/kapat, aralık ve Undo/Redo kimlikleri korur",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "İlişkili diziler",
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 100,
+     "workspace": "cad",
+     "drawingUnit": "mm"
+    },
+    "origin": {
+     "x": 40,
+     "y": 20
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "circle",
+      "id": 1,
+      "layerId": "cizim",
+      "attrs": {},
+      "c": {
+       "x": 0,
+       "y": 0
+      },
+      "r": 0.12
+     },
+     {
+      "kind": "polyline",
+      "id": 2,
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 0,
+        "y": 0
+       },
+       {
+        "x": 4,
+        "y": 0
+       },
+       {
+        "x": 4,
+        "y": 4
+       },
+       {
+        "x": 0,
+        "y": 4
+       }
+      ],
+      "closed": true
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "layout": {
+       "kind": "path",
+       "path": "$uidOf:2",
+       "count": 8,
+       "align": false
+      },
+      "associative": true
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "sources": [
+        "$uidOf:1"
+       ],
+       "entities": [
+        {
+         "kind": "circle",
+         "id": 0,
+         "layerId": "cizim",
+         "attrs": {},
+         "c": {
+          "x": 2,
+          "y": 0
+         },
+         "r": 0.12
+        },
+        {
+         "kind": "circle",
+         "id": 0,
+         "layerId": "cizim",
+         "attrs": {},
+         "c": {
+          "x": 4,
+          "y": 0
+         },
+         "r": 0.12
+        },
+        {
+         "kind": "circle",
+         "id": 0,
+         "layerId": "cizim",
+         "attrs": {},
+         "c": {
+          "x": 4,
+          "y": 2
+         },
+         "r": 0.12
+        },
+        {
+         "kind": "circle",
+         "id": 0,
+         "layerId": "cizim",
+         "attrs": {},
+         "c": {
+          "x": 4,
+          "y": 4
+         },
+         "r": 0.12
+        },
+        {
+         "kind": "circle",
+         "id": 0,
+         "layerId": "cizim",
+         "attrs": {},
+         "c": {
+          "x": 2,
+          "y": 4
+         },
+         "r": 0.12
+        },
+        {
+         "kind": "circle",
+         "id": 0,
+         "layerId": "cizim",
+         "attrs": {},
+         "c": {
+          "x": 0,
+          "y": 4
+         },
+         "r": 0.12
+        },
+        {
+         "kind": "circle",
+         "id": 0,
+         "layerId": "cizim",
+         "attrs": {},
+         "c": {
+          "x": 0,
+          "y": 2
+         },
+         "r": 0.12
+        }
+       ],
+       "locked": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "blocks": [],
+      "arrays": [],
+      "revision": "same",
+      "canUndo": false
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "layout": {
+       "kind": "path",
+       "path": "$uidOf:2",
+       "count": 8,
+       "align": false
+      },
+      "associative": true
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:3",
+        "$uidOf:4",
+        "$uidOf:5",
+        "$uidOf:6",
+        "$uidOf:7",
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10"
+       ],
+       "locked": [],
+       "array": "$any",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "entities": {
+       "3": {
+        "kind": "insert",
+        "id": 3,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 0,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "4": {
+        "kind": "insert",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 2,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "5": {
+        "kind": "insert",
+        "id": 5,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 4,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "6": {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 4,
+         "y": 2
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "7": {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 4,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 2,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "9": {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 0,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "10": {
+        "kind": "insert",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 0,
+         "y": 2
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      },
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 0,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "path",
+         "path": "$uidOf:2",
+         "count": 8,
+         "align": false
+        },
+        "items": [
+         {
+          "uid": "$uidOf:3"
+         },
+         {
+          "uid": "$uidOf:4"
+         },
+         {
+          "uid": "$uidOf:5"
+         },
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         }
+        ]
+       }
+      ],
+      "blocks": [
+       {
+        "name": "Dizi 1",
+        "base": {
+         "x": 0,
+         "y": 0
+        },
+        "entities": [
+         {
+          "kind": "circle",
+          "id": 1,
+          "layerId": "cizim",
+          "attrs": {},
+          "c": {
+           "x": 0,
+           "y": 0
+          },
+          "r": 0.12
+         }
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Yol boyunca dizi",
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "blocks": [],
+      "arrays": []
+     }
+    },
+    {
+     "op": "redo",
+     "returns": "Yol boyunca dizi",
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "entities": {
+       "3": {
+        "kind": "insert",
+        "id": 3,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 0,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "4": {
+        "kind": "insert",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 2,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "5": {
+        "kind": "insert",
+        "id": 5,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 4,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "6": {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 4,
+         "y": 2
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "7": {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 4,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 2,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "9": {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 0,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "10": {
+        "kind": "insert",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 0,
+         "y": 2
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      },
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 0,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "path",
+         "path": "$uidOf:2",
+         "count": 8,
+         "align": false
+        },
+        "items": [
+         {
+          "uid": "$uidOf:3"
+         },
+         {
+          "uid": "$uidOf:4"
+         },
+         {
+          "uid": "$uidOf:5"
+         },
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         }
+        ]
+       }
+      ],
+      "blocks": [
+       {
+        "name": "Dizi 1",
+        "base": {
+         "x": 0,
+         "y": 0
+        },
+        "entities": [
+         {
+          "kind": "circle",
+          "id": 1,
+          "layerId": "cizim",
+          "attrs": {},
+          "c": {
+           "x": 0,
+           "y": 0
+          },
+          "r": 0.12
+         }
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.curves.edit",
+     "input": {
+      "uid": "$uidOf:2",
+      "edit": {
+       "kind": "open"
+      }
+     },
+     "result": "$any",
+     "expect": {
+      "entities": {
+       "3": {
+        "kind": "insert",
+        "id": 3,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 0,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "4": {
+        "kind": "insert",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 1.7142857142857142,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "5": {
+        "kind": "insert",
+        "id": 5,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 3.4285714285714284,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "6": {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 4,
+         "y": 1.1428571428571432
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "7": {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 4,
+         "y": 2.8571428571428568
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 3.428571428571429,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "9": {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 1.7142857142857135,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "10": {
+        "kind": "insert",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 0,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.curves.edit",
+     "input": {
+      "uid": "$uidOf:2",
+      "edit": {
+       "kind": "close"
+      }
+     },
+     "result": "$any",
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "entities": {
+       "3": {
+        "kind": "insert",
+        "id": 3,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 0,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "4": {
+        "kind": "insert",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 2,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "5": {
+        "kind": "insert",
+        "id": 5,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 4,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "6": {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 4,
+         "y": 2
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "7": {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 4,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 2,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "9": {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 0,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "10": {
+        "kind": "insert",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 0,
+         "y": 2
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      },
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 0,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "path",
+         "path": "$uidOf:2",
+         "count": 8,
+         "align": false
+        },
+        "items": [
+         {
+          "uid": "$uidOf:3"
+         },
+         {
+          "uid": "$uidOf:4"
+         },
+         {
+          "uid": "$uidOf:5"
+         },
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         }
+        ]
+       }
+      ],
+      "blocks": [
+       {
+        "name": "Dizi 1",
+        "base": {
+         "x": 0,
+         "y": 0
+        },
+        "entities": [
+         {
+          "kind": "circle",
+          "id": 1,
+          "layerId": "cizim",
+          "attrs": {},
+          "c": {
+           "x": 0,
+           "y": 0
+          },
+          "r": 0.12
+         }
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.arrays.edit",
+     "input": {
+      "array": "$array:0",
+      "edit": {
+       "kind": "layout",
+       "layout": {
+        "kind": "path",
+        "path": "$uidOf:2",
+        "count": 8,
+        "align": false,
+        "spacing": 2
+       }
+      }
+     },
+     "result": "$any",
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "entities": {
+       "3": {
+        "kind": "insert",
+        "id": 3,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 0,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "4": {
+        "kind": "insert",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 2,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "5": {
+        "kind": "insert",
+        "id": 5,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 4,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "6": {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 4,
+         "y": 2
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "7": {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 4,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 2,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "9": {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 0,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "10": {
+        "kind": "insert",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 0,
+         "y": 2
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      },
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 0,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "path",
+         "path": "$uidOf:2",
+         "count": 8,
+         "align": false,
+         "spacing": 2
+        },
+        "items": [
+         {
+          "uid": "$uidOf:3"
+         },
+         {
+          "uid": "$uidOf:4"
+         },
+         {
+          "uid": "$uidOf:5"
+         },
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         }
+        ]
+       }
+      ],
+      "blocks": [
+       {
+        "name": "Dizi 1",
+        "base": {
+         "x": 0,
+         "y": 0
+        },
+        "entities": [
+         {
+          "kind": "circle",
+          "id": 1,
+          "layerId": "cizim",
+          "attrs": {},
+          "c": {
+           "x": 0,
+           "y": 0
+          },
+          "r": 0.12
          }
         ]
        }

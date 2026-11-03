@@ -21,7 +21,7 @@ use std::sync::Arc;
 use kentos_contracts::{
     ArrayLayout, AssocArray, BlockId, Entity, EntityId, InsertEntity, arrays_problem,
 };
-use kentos_geometry_core::api::json::{FromJson, Json};
+use kentos_geometry_core::api::json::Json;
 use kentos_geometry_core::entity::Entity as CoreEntity;
 use kentos_geometry_core::ops::assoc_array::{Layout, Placement, item_placements};
 use kentos_geometry_core::vec2::Vec2 as CoreVec2;
@@ -42,7 +42,7 @@ pub mod labels {
 /// The geometry core's reading of an object (the contract's own JSON).
 fn core(e: &Entity) -> Option<CoreEntity> {
     let json = serde_json::to_string(e).ok()?;
-    CoreEntity::from_json(&Json::parse(&json).ok()?).ok()
+    CoreEntity::from_document_json(&Json::parse(&json).ok()?).ok()
 }
 
 /// The places of an array's items, the path's shape read from `path` (a path array's), the first the

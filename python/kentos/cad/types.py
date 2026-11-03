@@ -13929,6 +13929,144 @@ class ArrayItem(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ArrayPattern(_Model):
+    """
+    Attributes:
+        adoption: Review this exact proposal before calling cad.arrays.adopt. Never executed by the search.
+            The first occupied endpoint becomes source; missing places stay empty, kept is never inferred.
+        present: Unit: count.
+        missing: Unit: count.
+        deviation: Unit: length.
+        overlaps: Shares an existing insert with another returned proposal. They cannot both be adopted.
+    """
+    adoption: ArraysAdopt
+    present: int
+    missing: int
+    deviation: float
+    overlaps: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["adoption"] = self.adoption.to_json()
+        out["present"] = self.present
+        out["missing"] = self.missing
+        out["deviation"] = float(self.deviation)
+        out["overlaps"] = self.overlaps
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArrayPattern:
+        return cls(
+            adoption=ArraysAdopt.from_json(data["adoption"]),
+            present=data["present"],
+            missing=data["missing"],
+            deviation=float(data["deviation"]),
+            overlaps=data["overlaps"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ArraysAdopt(_Model):
+    """Explicit, reviewed layout and slot membership; this command does not infer a pattern.
+    Only metadata is added. Missing slots stay missing; overrides must be explicitly kept.
+    Attributes:
+        source: Existing prototype insert UUID. Must occupy slot zero and must not be kept.
+        items: Exactly one entry per layout place, in layout order. Empty entries are missing places.
+            At least two entries must be present and not kept. A UID may occur only once.
+        tolerance: Maximum position discrepancy in model metres; absent: 0.000001 (0.001 mm).
+            Adoption never moves an insert to hide a discrepancy. Angles compare modulo a full turn
+            within 1e-10 rad; scales within 1e-12 relative, independently of position tolerance. Unit: length.
+    """
+    source: str
+    layout: ArrayLayout
+    items: list[ArrayItem]
+    expected_revision: str | None | Unset = UNSET
+    tolerance: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["source"] = self.source
+        out["layout"] = self.layout.to_json()
+        out["items"] = [e0.to_json() for e0 in self.items]
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.tolerance is not UNSET:
+            out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArraysAdopt:
+        return cls(
+            source=data["source"],
+            layout=ArrayLayout.from_json(data["layout"]),
+            items=[ArrayItem.from_json(e0) for e0 in data["items"]],
+            expected_revision=data.get("expectedRevision", UNSET),
+            tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ArraysAdoptPlan(_Model):
+    """
+    Attributes:
+        array: Proposed existing array model, with nil ID in a read-only plan.
+        deviation: Maximum position discrepancy among the regular items, model metres. Unit: length.
+        missing: Unit: count.
+        kept: Unit: count.
+    """
+    array: AssocArray
+    deviation: float
+    missing: int
+    kept: int
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["array"] = self.array.to_json()
+        out["deviation"] = float(self.deviation)
+        out["missing"] = self.missing
+        out["kept"] = self.kept
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArraysAdoptPlan:
+        return cls(
+            array=AssocArray.from_json(data["array"]),
+            deviation=float(data["deviation"]),
+            missing=data["missing"],
+            kept=data["kept"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ArraysAdopted(_Model):
+    """
+    Attributes:
+        retained: Existing insert UUIDs, in layout order, excluding missing places. No UUID is allocated here.
+    """
+    array: str
+    retained: list[str]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["array"] = self.array
+        out["retained"] = list(self.retained)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArraysAdopted:
+        return cls(
+            array=data["array"],
+            retained=list(data["retained"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ArraysEdit(_Model):
     """Input of `cad.arrays.edit` v1: the associative array `array` edited by `edit`, as one undo step “Diziyi
     düzenle”. The array's layer and every insert the edit touches must be unlocked: all or nothing. The answer is
@@ -13964,6 +14102,86 @@ class ArraysEdit(_Model):
             array=data["array"],
             edit=ArrayEdit.from_json(data["edit"]),
             expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ArraysFind(_Model):
+    """Finds linear patterns containing the seed insert. First delivery: static, data-free inserts
+    of the same block, appearance, mirror, rotation and scale. No rotation of the items is inferred.
+    At least three occupied places and an observed adjacent pair are required. Every second
+    place being occupied is indistinguishable from twice the spacing: no hidden places are invented.
+    Grid, polar and path detection are not implemented by this version.
+    Attributes:
+        source: Existing seed insert UUID. May be an interior place of a candidate.
+        limit: Candidate limit, 1 to 100; absent: 100. Work/result limits report `truncated`. Unit: count.
+        tolerance: Absolute position tolerance in metres, above zero to 0.001; absent: 0.000001. Unit: length.
+        uids: Absent searches the document; empty searches only the seed. At most 2048 objects.
+    """
+    source: str
+    expected_revision: str | None | Unset = UNSET
+    limit: int | None | Unset = UNSET
+    tolerance: float | None | Unset = UNSET
+    uids: list[str] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["source"] = self.source
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.limit is not UNSET:
+            out["limit"] = self.limit
+        if self.tolerance is not UNSET:
+            out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
+        if self.uids is not UNSET:
+            out["uids"] = None if self.uids is None else list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArraysFind:
+        return cls(
+            source=data["source"],
+            expected_revision=data.get("expectedRevision", UNSET),
+            limit=data.get("limit", UNSET),
+            tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
+            uids=UNSET if "uids" not in data else None if data["uids"] is None else list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ArraysFound(_Model):
+    """
+    Attributes:
+        eligible: Compatible scope members, sorted by UUID. Not being in a proposal means unmatched, not kept.
+        excluded: Scope UUID -> explicit exclusion reason: not_insert, template_differs, layer_locked or array_member.
+        comparisons: Unit: count.
+    """
+    matches: list[ArrayPattern]
+    eligible: list[str]
+    excluded: dict[str, str]
+    truncated: bool
+    comparisons: int
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["matches"] = [e0.to_json() for e0 in self.matches]
+        out["eligible"] = list(self.eligible)
+        out["excluded"] = dict(self.excluded)
+        out["truncated"] = self.truncated
+        out["comparisons"] = self.comparisons
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArraysFound:
+        return cls(
+            matches=[ArrayPattern.from_json(e0) for e0 in data["matches"]],
+            eligible=list(data["eligible"]),
+            excluded=dict(data["excluded"]),
+            truncated=data["truncated"],
+            comparisons=data["comparisons"],
+            revision=data["revision"],
         )
 
 
@@ -15411,6 +15629,128 @@ class BlockUnit(_Model):
         return cls(
             name=data["name"],
             code=data["code"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BlocksConvert(_Model):
+    """Converts only the chosen, non-overlapping groups after re-verifying their geometry and relations.
+    First scope: plain analytic 2D CAD objects on one untyped, data-free layer, with ordinary bound
+    dimensions. Unsupported appearance/data/relations are refused before any write, never detached.
+    Attributes:
+        source: Source UUIDs. Definition pieces follow their document drawing order.
+        groups: Chosen candidate member sets, at most 1000. Order within a set is immaterial.
+            Each must have exactly as many distinct objects as the source. Sets cannot share objects.
+        tolerance: Absolute model tolerance in metres, as cad.blocks.find; absent: 0.000001. Unit: length.
+    """
+    name: str
+    source: list[str]
+    groups: list[list[str]]
+    expected_revision: str | None | Unset = UNSET
+    mirrors: bool | None | Unset = UNSET
+    rotations: bool | None | Unset = UNSET
+    scales: bool | None | Unset = UNSET
+    tolerance: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["source"] = list(self.source)
+        out["groups"] = [list(e0) for e0 in self.groups]
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.mirrors is not UNSET:
+            out["mirrors"] = self.mirrors
+        if self.rotations is not UNSET:
+            out["rotations"] = self.rotations
+        if self.scales is not UNSET:
+            out["scales"] = self.scales
+        if self.tolerance is not UNSET:
+            out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BlocksConvert:
+        return cls(
+            name=data["name"],
+            source=list(data["source"]),
+            groups=[list(e0) for e0 in data["groups"]],
+            expected_revision=data.get("expectedRevision", UNSET),
+            mirrors=data.get("mirrors", UNSET),
+            rotations=data.get("rotations", UNSET),
+            scales=data.get("scales", UNSET),
+            tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BlocksConvertPlan(_Model):
+    """
+    Attributes:
+        block: Nil block UUID in a read-only plan; allocated only at execution.
+        rebound: Complete proposed dimension records for review; execution follows the same geometry.
+        removed: Removed roots, excluding the identities retained as inserts.
+    """
+    block: BlockDefinition
+    placements: list[RepeatPlacement]
+    mapping: list[RepeatMemberMap]
+    dimensions: list[RepeatDimensionMap]
+    rebound: list[Entity]
+    removed: list[str]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["block"] = self.block.to_json()
+        out["placements"] = [e0.to_json() for e0 in self.placements]
+        out["mapping"] = [e0.to_json() for e0 in self.mapping]
+        out["dimensions"] = [e0.to_json() for e0 in self.dimensions]
+        out["rebound"] = [e0.to_json() for e0 in self.rebound]
+        out["removed"] = list(self.removed)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BlocksConvertPlan:
+        return cls(
+            block=BlockDefinition.from_json(data["block"]),
+            placements=[RepeatPlacement.from_json(e0) for e0 in data["placements"]],
+            mapping=[RepeatMemberMap.from_json(e0) for e0 in data["mapping"]],
+            dimensions=[RepeatDimensionMap.from_json(e0) for e0 in data["dimensions"]],
+            rebound=[Entity.from_json(e0) for e0 in data["rebound"]],
+            removed=list(data["removed"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BlocksConverted(_Model):
+    block: str
+    inserts: list[str]
+    mapping: list[RepeatMemberMap]
+    dimensions: list[RepeatDimensionMap]
+    removed: list[str]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["block"] = self.block
+        out["inserts"] = list(self.inserts)
+        out["mapping"] = [e0.to_json() for e0 in self.mapping]
+        out["dimensions"] = [e0.to_json() for e0 in self.dimensions]
+        out["removed"] = list(self.removed)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BlocksConverted:
+        return cls(
+            block=data["block"],
+            inserts=list(data["inserts"]),
+            mapping=[RepeatMemberMap.from_json(e0) for e0 in data["mapping"]],
+            dimensions=[RepeatDimensionMap.from_json(e0) for e0 in data["dimensions"]],
+            removed=list(data["removed"]),
+            revision=data["revision"],
         )
 
 
@@ -60621,6 +60961,85 @@ class RenamedColumn(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class RepeatDimensionMap(_Model):
+    """
+    Attributes:
+        point: a, b or c.
+        deviation: Displacement caused by the chosen absolute matching tolerance, metres. Unit: length.
+    """
+    uid: str
+    point: str
+    before: SubRef
+    after: SubRef
+    deviation: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["point"] = self.point
+        out["before"] = self.before.to_json()
+        out["after"] = self.after.to_json()
+        out["deviation"] = float(self.deviation)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RepeatDimensionMap:
+        return cls(
+            uid=data["uid"],
+            point=data["point"],
+            before=SubRef.from_json(data["before"]),
+            after=SubRef.from_json(data["after"]),
+            deviation=float(data["deviation"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RepeatMemberMap(_Model):
+    """
+    Attributes:
+        insert: The first member in drawing order retains its root UUID as the insert.
+        path: Zero-based definition-piece path, NOT the definition's one-based local object id. Unit: index.
+    """
+    from_: str
+    insert: str
+    path: list[int]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = self.from_
+        out["insert"] = self.insert
+        out["path"] = list(self.path)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RepeatMemberMap:
+        return cls(
+            from_=data["from"],
+            insert=data["insert"],
+            path=list(data["path"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RepeatPlacement(_Model):
+    uid: str
+    entity: Entity
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["entity"] = self.entity.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RepeatPlacement:
+        return cls(
+            uid=data["uid"],
+            entity=Entity.from_json(data["entity"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ReportDetail(_Model):
     """A bounded source sample for an aggregated CAD loss report.
     Attributes:
@@ -97544,7 +97963,13 @@ __all__ = [
     "ArrayItem",
     "ArrayLayout",
     "ArrayOpeningsOperation",
+    "ArrayPattern",
+    "ArraysAdopt",
+    "ArraysAdoptPlan",
+    "ArraysAdopted",
     "ArraysEdit",
+    "ArraysFind",
+    "ArraysFound",
     "AssetCounts",
     "AssetKind",
     "AssetKindName",
@@ -97642,6 +98067,9 @@ __all__ = [
     "BlockUnit",
     "BlockUnits",
     "BlockUnitsName",
+    "BlocksConvert",
+    "BlocksConvertPlan",
+    "BlocksConverted",
     "BlocksDefine",
     "BlocksDefinePlan",
     "BlocksEdit",
@@ -99726,7 +100154,10 @@ __all__ = [
     "RenumberOpeningsOperation",
     "ReorderPaperOp",
     "RepathXrefsOperation",
+    "RepeatDimensionMap",
+    "RepeatMemberMap",
     "RepeatModulesOperation",
+    "RepeatPlacement",
     "ReplaceArrayEdit",
     "ReplaceEntityEdit",
     "ReplaceMasterPaperOp",

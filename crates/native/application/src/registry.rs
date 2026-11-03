@@ -56,6 +56,9 @@ use crate::addresses_compare;
 use crate::addresses_normalize;
 use crate::blocks_insert;
 use crate::blocks_find;
+use crate::blocks_convert;
+use crate::arrays_adopt;
+use crate::arrays_find;
 use crate::donut_create;
 use crate::drawing_compare;
 use crate::fields_write;
@@ -509,6 +512,8 @@ macro_rules! by_command {
             kentos_commands::CAD_ENTITIES_JOIN => $then!(entities_join, EntitiesJoin),
             kentos_commands::CAD_ENTITIES_REVERSE => $then!(entities_reverse, EntitiesReverse),
             kentos_commands::CAD_ENTITIES_LENGTHEN => $then!(entities_lengthen, EntitiesLengthen),
+            kentos_commands::CAD_ARRAYS_FIND => $then!(arrays_find, kentos_commands::ArraysFind),
+            kentos_commands::CAD_ARRAYS_ADOPT => $then!(arrays_adopt, kentos_commands::ArraysAdopt),
             kentos_commands::CAD_ARRAYS_EDIT => $then!(arrays_edit, ArraysEdit),
             kentos_commands::CAD_CONSTRAINTS_EDIT => $then!(constraints_edit, ConstraintsEdit),
             kentos_commands::CAD_CONSTRAINTS_QUERY => $then!(constraints_query, ConstraintsQuery),
@@ -609,6 +614,7 @@ macro_rules! by_command {
             kentos_commands::CAD_BLOCKS_REPLACE => $then!(blocks_replace, BlocksReplace),
             kentos_commands::CAD_BLOCKS_QUERY => $then!(blocks_query, BlocksQuery),
             kentos_commands::CAD_BLOCKS_FIND => $then!(blocks_find, kentos_commands::BlocksFind),
+            kentos_commands::CAD_BLOCKS_CONVERT => $then!(blocks_convert, kentos_commands::BlocksConvert),
             kentos_commands::CAD_BLOCKS_PARAMETERS => $then!(block_params, BlocksParameters),
             kentos_commands::CAD_BLOCKS_PROXY => $then!(blocks_proxy, BlocksProxy),
             kentos_commands::CAD_BLOCKS_FREEZE => $then!(blocks_freeze, BlocksFreeze),

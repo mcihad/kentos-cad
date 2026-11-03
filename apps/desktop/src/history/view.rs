@@ -93,7 +93,7 @@ impl App {
                     },
                     r.input
                         .as_ref()
-                        .map(|i| words::inputs(i, &layer))
+                        .map(|i| words::inputs_for(r.command.as_deref(), i, &layer))
                         .unwrap_or_default(),
                     words::outcome(r),
                     tone,
@@ -105,7 +105,7 @@ impl App {
                 (
                     words::title_of(&r.command).to_owned(),
                     format!("{} v{}", r.command, r.version),
-                    words::inputs(&r.input, &layer),
+                    words::inputs_for(Some(&r.command), &r.input, &layer),
                     words::refusal(r),
                     Tone::Refused,
                     Vec::new(),
