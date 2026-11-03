@@ -42,6 +42,11 @@ impl Surface {
             .collect()
     }
 
+    /// The height at (x, y), the walk starting at `start` and leaving it where it ended (for many places in a row).
+    pub fn height_walking(&self, x: f64, y: f64, start: &mut u32) -> Height {
+        self.height_from(x, y, start)
+    }
+
     fn height_from(&self, x: f64, y: f64, start: &mut u32) -> Height {
         let none = |place| Height {
             z: None,

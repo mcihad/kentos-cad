@@ -17,10 +17,13 @@
 //! - [`haul`]: the mass haul (Brückner) diagram read as layers: balance points, loops, haul moments, free haul and
 //!   overhaul, borrow and waste (docs/adr/0907).
 //! - [`cutout`]: a terrain with corridors cut out of it in plan, the planes it keeps exact (docs/adr/0910 §6).
+//! - [`cloud_ground`]: a terrain's ground points from a point cloud, thinned on a grid (cells, steep cells, beside
+//!   breaklines), their density and coverage and the thinning's vertical error (docs/adr/0913).
 //! - [`sources`]: a surface's input gathered from the drawing by its definition, and the digest that says whether
 //!   it is out of date (plan/road.md Y2.2).
 
 pub mod alignment;
+pub mod cloud_ground;
 pub mod corridor;
 pub mod culvert;
 pub mod grading;
