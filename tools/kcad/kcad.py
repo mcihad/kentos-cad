@@ -9684,8 +9684,8 @@ class _Schema:
         def road_sheet(x):
             t = self.fields({"sheet": (word, True), "from": (finite, True), "to": (finite, True),
                              "view": (self.array(self.array(finite)), False)})(x)
-            if not t["from"] < t["to"]:
-                self.fail("bad_value", "paftanın aralığının başı sonundan önce olmalı")
+            if not t["from"] <= t["to"]:
+                self.fail("bad_value", "paftanın aralığının başı sonundan sonra olamaz")
             if "view" in t and (len(t["view"]) != 2 or any(len(c) != 2 for c in t["view"])):
                 self.fail("bad_value", "boykesit görünümünün çerçevesi iki köşedir")
             return t
@@ -9694,13 +9694,14 @@ class _Schema:
             # Docs/adr/0908 §10: a plan–profile sheet set along an alignment, with its sources' revisions.
             t = self.fields({"id": (word, True), "name": (self.text, True), "alignment": (word, True),
                              "alignmentRevision": (self.uint(32), False), "profile": (word, False),
-                             "profileRevision": (self.uint(32), False), "from": (finite, True), "to": (finite, True),
+                             "profileRevision": (self.uint(32), False), "sections": (word, False),
+                             "sectionsRevision": (self.uint(32), False), "from": (finite, True), "to": (finite, True),
                              "scale": (self.uint(32), True), "overlap": (finite, False),
                              "sheets": (self.array(road_sheet), True)})(x)
             name = t["name"]
             if not name or name.strip() != name or len(name) > 120:
                 self.fail("bad_value", "pafta takımının adı boş, boşluklu ya da çok uzun")
-            if not t["from"] < t["to"] or not 1 <= t["scale"] <= 1_000_000 or t.get("overlap", 0) < 0:
+            if not t["from"] <= t["to"] or not 1 <= t["scale"] <= 1_000_000 or t.get("overlap", 0) < 0:
                 self.fail("bad_value", "pafta takımının aralığı, ölçeği ya da bindirmesi kuralın dışında")
             if not 1 <= len(t["sheets"]) <= 500 or len({y["sheet"] for y in t["sheets"]}) != len(t["sheets"]):
                 self.fail("bad_value", "pafta takımında 1 ile 500 arası, kimlikleri tek pafta olur")
@@ -9814,6 +9815,8 @@ class _Schema:
                 self.fail("bad_value", "pafta takımının aksı projede yok ya da paralel aks")
             if "profile" in x and all(y["id"] != x["profile"] or y["alignment"] != x["alignment"] for y in profiles):
                 self.fail("bad_value", "pafta takımının boykesiti projede aynı aksta yok")
+            if "sections" in x and all(y["id"] != x["sections"] or y["alignment"] != x["alignment"] for y in sets):
+                self.fail("bad_value", "pafta takımının kesit takımı projede aynı aksta yok")
         return r
 
     def arch_(self, v):

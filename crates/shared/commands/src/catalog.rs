@@ -7536,6 +7536,31 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::ROAD_SHEETS_SECTIONS.into(),
+            version: crate::ROAD_SHEETS_SECTIONS_VERSION,
+            title: "Enkesit paftaları".into(),
+            summary: "Kesit takımının enkesit görünümlerini paftalara dizer (Civil 3D'nin üretim enkesit görünümleri ve Create Section Sheets'i gibi): bir takımın görünümleri aynı boydadır (road.sections.draw: şerit genişliği × en yüksek kot aralığı), her pafta şablonun haritasının scale ölçeğindeki zemin boyuna sığan kadar sütun ve satır alır; görünümler layerId katmanına grup grup çizilir, ilk grubun sol üstü at'ta, her biri bir öncekinin bir harita yüksekliği ve aralık altında; her paftanın haritası kendi grubunu gösterir. stations (yoksa takımın hepsi), exaggeration, height road.sections.draw'ınki. Şablon yoksa sys:cad-teknik; paftalar first'ten (yoksa E-101) numaralanır. Takım kesit takımının revizyonuyla yol ayarlarında saklanır; görünümler, takım ve paftalar tek geri alma adımı “Enkesit paftaları”. \
+                      Retler: invalid_revision, revision_conflict, not_a_road_project, unknown_section_set, invalid_label, invalid_places, no_terrain, katmanın retleri, invalid_road_sheets, unknown_template, invalid_options, not_fixed_map, bad_drawing_info."
+                .into(),
+            aliases: vec!["enkesitpaftalari".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::RoadSheetsSections>(),
+            output: schema::<crate::RoadSheetsLaid>(),
+            plan: Some(schema::<crate::RoadSheetsLaid>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Enkesitler 1:200".into(),
+                input: json!({ "set": "Enkesitler", "layerId": "0", "at": [0.0, -1000.0], "scale": 200 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::ROAD_ALIGNMENTS_QUERY.into(),
             version: crate::ROAD_ALIGNMENTS_QUERY_VERSION,
             title: "Aksı sorgula".into(),
@@ -13179,6 +13204,9 @@ mod tests {
                     crate::ROAD_SHEETS_PLAN => {
                         serde_json::from_value::<crate::RoadSheetsPlan>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_SHEETS_SECTIONS => {
+                        serde_json::from_value::<crate::RoadSheetsSections>(e.input.clone()).map(|_| ())
+                    }
                     crate::ROAD_ALIGNMENTS_IMPORT => {
                         serde_json::from_value::<crate::AlignmentsImport>(e.input.clone()).map(|_| ())
                     }
@@ -13921,7 +13949,7 @@ mod tests {
                         crate::ROAD_STAKEOUT_SEND => {
                             serde_json::from_value::<crate::StakeoutSent>(output.clone()).map(|_| ())
                         }
-                        crate::ROAD_SHEETS_PLAN => {
+                        crate::ROAD_SHEETS_PLAN | crate::ROAD_SHEETS_SECTIONS => {
                             serde_json::from_value::<crate::RoadSheetsLaid>(output.clone()).map(|_| ())
                         }
                         crate::ROAD_ALIGNMENTS_IMPORT => {

@@ -23,11 +23,12 @@ use crate::{ExecutionContext, road_profiles, road_profiles_draw, sheets_edit};
 
 /// The template when none is given: KentOS's plan–profile sheet.
 pub const DEFAULT_TEMPLATE: &str = "sys:yol-plan-boykesit";
-/// The undo step's name.
+/// The undo steps' names.
 pub const STEP: &str = "Yol paftaları";
+pub const SECTIONS_STEP: &str = "Enkesit paftaları";
 const MOST: usize = kentos_commands::MAX_ROAD_SHEETS;
 
-fn bad(path: &str, words: String) -> Stop {
+pub(crate) fn bad(path: &str, words: String) -> Stop {
     fail(codes::INVALID_ROAD_SHEETS, words, path)
 }
 
@@ -35,17 +36,17 @@ fn num(v: f64) -> String {
     format!("{v}")
 }
 
-struct Laid {
-    set: RoadSheetSetDef,
-    edit: SheetsEdit,
-    objects: Vec<NewObject>,
-    layer: Option<String>,
-    out: RoadSheetsLaid,
-    warnings: Vec<CommandWarning>,
+pub(crate) struct Laid {
+    pub(crate) set: RoadSheetSetDef,
+    pub(crate) edit: SheetsEdit,
+    pub(crate) objects: Vec<NewObject>,
+    pub(crate) layer: Option<String>,
+    pub(crate) out: RoadSheetsLaid,
+    pub(crate) warnings: Vec<CommandWarning>,
 }
 
 /// The template `source` names, or KentOS's plan–profile sheet.
-fn template_of(source: Option<&SheetTemplateSource>) -> Result<template::Template, Stop> {
+pub(crate) fn template_of(source: Option<&SheetTemplateSource>) -> Result<template::Template, Stop> {
     match source {
         None => template::system_template(DEFAULT_TEMPLATE).cloned().ok_or_else(|| {
             Stop::failed(error("unknown_template", format!("“{DEFAULT_TEMPLATE}” sistem şablonu yok."), Some("source".into())))
@@ -62,7 +63,7 @@ fn template_of(source: Option<&SheetTemplateSource>) -> Result<template::Templat
     }
 }
 
-fn not_fixed(words: &str) -> Stop {
+pub(crate) fn not_fixed(words: &str) -> Stop {
     Stop::failed(error("not_fixed_map", words.into(), Some("source".into())))
 }
 
@@ -324,6 +325,8 @@ fn prepare(doc: &Document, input: &RoadSheetsPlan) -> Result<Laid, Stop> {
         to,
         scale,
         overlap,
+        sections: None,
+        sections_revision: 0,
         sheets: laid.iter().map(|l| RoadSheetDef { sheet: l.sheet.clone(), from: l.from, to: l.to, view: l.view }).collect(),
     };
     let out = RoadSheetsLaid {
@@ -331,6 +334,7 @@ fn prepare(doc: &Document, input: &RoadSheetsPlan) -> Result<Laid, Stop> {
         name,
         alignment: def.id.clone(),
         profile: profile.as_ref().map(|p| p.0.id.clone()),
+        sections: None,
         scale,
         length: width,
         height,
@@ -341,14 +345,15 @@ fn prepare(doc: &Document, input: &RoadSheetsPlan) -> Result<Laid, Stop> {
     Ok(Laid { set, edit, objects, layer: profile.map(|p| p.1), out, warnings })
 }
 
-fn write(cx: &mut ExecutionContext<'_>, laid: Laid) -> CommandResult<RoadSheetsLaid> {
+pub(crate) fn write(cx: &mut ExecutionContext<'_>, laid: Laid) -> CommandResult<RoadSheetsLaid> {
     let Laid { set, edit, objects, layer, mut out, warnings } = laid;
-    let group = cx.doc.begin_group(STEP);
+    let label = if set.sections.is_some() { SECTIONS_STEP } else { STEP };
+    let group = cx.doc.begin_group(label);
     if let (Some(layer), false) = (layer, objects.is_empty()) {
         let create = EntitiesCreate {
             layer_id: layer,
             objects,
-            operation: Some(CreateOperation::ProfileDrawing),
+            operation: Some(if label == SECTIONS_STEP { CreateOperation::SectionDrawing } else { CreateOperation::ProfileDrawing }),
             expected_revision: None,
         };
         match crate::create::write_in(cx, create) {
@@ -361,7 +366,7 @@ fn write(cx: &mut ExecutionContext<'_>, laid: Laid) -> CommandResult<RoadSheetsL
     }
     let mut sets = cx.doc.road_sheet_sets().to_vec();
     sets.push(set);
-    if let Err(r) = cx.doc.set_road_sheet_sets(sets, STEP) {
+    if let Err(r) = cx.doc.set_road_sheet_sets(sets, label) {
         cx.doc.cancel_group(group);
         return bad("", r.0).into();
     }

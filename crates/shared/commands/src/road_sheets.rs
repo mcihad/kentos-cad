@@ -13,6 +13,8 @@ use crate::SheetTemplateSource;
 
 pub const ROAD_SHEETS_PLAN: &str = "road.sheets.plan";
 pub const ROAD_SHEETS_PLAN_VERSION: u32 = 1;
+pub const ROAD_SHEETS_SECTIONS: &str = "road.sheets.sections";
+pub const ROAD_SHEETS_SECTIONS_VERSION: u32 = 1;
 
 fn empty_options() -> serde_json::Value {
     serde_json::json!({})
@@ -89,9 +91,68 @@ pub struct RoadSheetsPlan {
     pub expected_revision: Option<String>,
 }
 
+/// Input of `road.sheets.sections` v1: a sample line set's section views laid on sheets as Civil 3D's production
+/// section views and Create Section Sheets do (docs/adr/0908 §11): the set's views (`stations`, all without them) drawn
+/// on `layerId` in groups, each group the template's map (KentOS's technical sheet, `sys:cad-teknik`, without one) wide
+/// and high on the ground at 1:`scale` (the map's without it), filled in rows from the upper left as many views as fit;
+/// the first group's upper left at `at`, each next under the one before. Each group is a sheet whose map shows it. The
+/// views are `road.sections.draw`'s (`exaggeration`, `height`). The set is named `name` (“‹set› paftaları” without
+/// it) and the sheets numbered on from `first` (E-101 without it).
+///
+/// Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `unknown_section_set`, the
+/// section drawing's (`invalid_label`, `invalid_places`, `no_terrain`, the layer's), `invalid_road_sheets` (a scale not
+/// in [1, 1 000 000], a view larger than the map at this scale, more than 500 sheets, a set's name taken),
+/// `unknown_template`, `invalid_options`, `not_fixed_map`, `bad_drawing_info`. Warnings: the section drawing's
+/// (`layer_hidden`, `section_set_stale`, `section_open` …).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RoadSheetsSections {
+    pub set: String,
+    pub layer_id: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub at: [f64; 2],
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<f64>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub stations: Vec<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub exaggeration: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
+    pub height: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
+    pub scale: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub name: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub source: Option<SheetTemplateSource>,
+    /// The template's paper and answers (cad.sheets.create's options but the name, centre and scale).
+    #[serde(default = "empty_options")]
+    #[cfg_attr(feature = "ts", ts(type = "Record<string, unknown>"))]
+    #[cfg_attr(feature="schema",schemars(with="kentos_sheet::template::InstanceOptions", extend("x-raw-record"=true)))]
+    pub options: serde_json::Value,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub first: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature="schema",schemars(regex(pattern=crate::cad::REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
 /// A sheet laid: the book's sheet, its number and title, its stations and km, the plan map's centre and turn (degrees,
-/// the content clockwise on paper), the profile view drawn for it (its frame's lower left and upper right) and whether
-/// the alignment or the profile view leaves its map.
+/// the content clockwise on paper), the profile view drawn for it (its frame's lower left and upper right; on a section
+/// sheet the group's region) and whether the alignment or the profile view leaves its map.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -133,6 +194,10 @@ pub struct RoadSheetsLaid {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub profile: Option<String>,
+    /// A section sheet set's sample line set.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub sections: Option<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
     pub scale: u32,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]

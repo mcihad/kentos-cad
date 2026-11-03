@@ -106,6 +106,69 @@ fn a_template_with_a_side_left_blank_is_refused_and_the_window_stays() {
     assert!(model(&mut app).road_templates().is_empty());
 }
 
+#[test]
+fn a_saved_set_is_laid_on_sheets_as_one_step() {
+    let mut app = app(true);
+    let before = model(&mut app).entities().count();
+    let _ = app.update(Message::Run("section.editor"));
+    send(&mut app, W::Choose(Chosen::Set(0)));
+    send(&mut app, W::DrawLayer("0".into()));
+    send(&mut app, W::Place("0; -500".into()));
+    send(&mut app, W::SheetScale("500".into()));
+    send(&mut app, W::Sheets);
+    assert!(app.section_window.is_none(), "the window closes on the sheets");
+    let doc = model(&mut app);
+    let sets = doc.road_sheet_sets().to_vec();
+    assert_eq!(sets.len(), 1);
+    assert_eq!(sets[0].sections.as_deref(), Some("k-1"));
+    assert_eq!(app.sheets.book().sheets.len(), sets[0].sheets.len());
+    let _ = app.update(Message::Sheet(kentos_sheet_ui::Message::Model));
+    let doc = model(&mut app);
+    assert_eq!(doc.undo().as_deref(), Some("Enkesit paftaları"), "one undo step");
+    assert!(doc.road_sheet_sets().is_empty());
+    assert_eq!(doc.entities().count(), before);
+}
+
+/// Paftalara diz's sheets; `.run/gui-evidence/yol-y10-enkesit-pafta-*`:
+///
+/// ```text
+/// cargo test -p kentos-desktop --lib section_window_tests::sheet_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn sheet_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 650.0), "koyu-dar")] {
+        let mut app = app(true);
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let mut shot = |app: &mut App, file: &str| {
+            snapshot.settle(app, App::view, &mut update);
+            let file = out.join(format!("yol-y10-{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        };
+        let _ = app.update(Message::RibbonTab("alignment"));
+        let _ = app.update(Message::Run("section.editor"));
+        send(&mut app, W::Choose(Chosen::Set(0)));
+        send(&mut app, W::DrawLayer("0".into()));
+        send(&mut app, W::Place("0; -500".into()));
+        send(&mut app, W::Exaggeration("2".into()));
+        send(&mut app, W::SheetScale("500".into()));
+        shot(&mut app, "enkesit-pafta-pencere");
+        send(&mut app, W::Sheets);
+        shot(&mut app, "enkesit-pafta");
+    }
+}
+
 /// The window over the drawing, wide and narrow, light and dark; `.run/gui-evidence/yol-y5-*`:
 ///
 /// ```text

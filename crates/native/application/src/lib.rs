@@ -286,6 +286,7 @@ pub mod road_landxml;
 pub mod road_stakeout;
 pub mod road_stakeout_send;
 pub mod road_sheets;
+pub mod road_sheets_sections;
 pub mod road_volumes;
 pub mod road_volumes_approve;
 pub mod road_volumes_edit;
@@ -1215,6 +1216,7 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (kentos_commands::FILE_EXPORT_IFC, kentos_commands::FILE_EXPORT_IFC_VERSION),
     (kentos_commands::ROAD_STAKEOUT_SEND, kentos_commands::ROAD_STAKEOUT_SEND_VERSION),
     (kentos_commands::ROAD_SHEETS_PLAN, kentos_commands::ROAD_SHEETS_PLAN_VERSION),
+    (kentos_commands::ROAD_SHEETS_SECTIONS, kentos_commands::ROAD_SHEETS_SECTIONS_VERSION),
     (kentos_commands::ROAD_ALIGNMENTS_IMPORT, kentos_commands::ROAD_ALIGNMENTS_IMPORT_VERSION),
     // Alt ağlar ([`subnetworks`], [`subnetworks_update`], docs/adr/0557 §2).
     (

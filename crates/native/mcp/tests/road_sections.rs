@@ -280,3 +280,14 @@ fn an_alignment_is_laid_on_sheets() {
     let sheets = laid["structuredContent"]["output"]["sheets"].as_array().cloned().unwrap_or_default();
     assert!(!sheets.is_empty() && sheets[0]["number"] == "Y-101", "{laid}");
 }
+
+/// The file's sample line set is laid on section sheets (plan/road.md Y10.5b, docs/adr/0908 §11).
+#[test]
+fn a_section_set_is_laid_on_sheets() {
+    let mut server = Server::new();
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/kcad/v2/road-work.kcad");
+    let opened = call(&mut server, "drawing.open", json!({"path":path}));
+    let drawing = opened["structuredContent"]["drawing"].clone();
+    let laid = call(&mut server, "road.sheets.sections", json!({"drawing":drawing,"set":"k-1","layerId":"0","at":[0.0,-2000.0],"name":"MCP enkesitleri"}));
+    assert!(laid["isError"] == false || laid.to_string().contains("no_terrain"), "{laid}");
+}

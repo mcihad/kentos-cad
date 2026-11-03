@@ -2,7 +2,7 @@
 
 /**
  * A sheet laid: the book's sheet, its number and title, its stations and km, the plan map's centre and turn (degrees,
- * the content clockwise on paper), the profile view drawn for it (its frame's lower left and upper right) and whether
- * the alignment or the profile view leaves its map.
+ * the content clockwise on paper), the profile view drawn for it (its frame's lower left and upper right; on a section
+ * sheet the group's region) and whether the alignment or the profile view leaves its map.
  */
 export type RoadSheetLaid = { sheet: string, number: string, title: string, from: number, to: number, center: [number, number], rotation: number, view?: [[number, number], [number, number]], outside?: boolean, };

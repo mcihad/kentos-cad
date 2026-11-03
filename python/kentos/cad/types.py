@@ -60817,8 +60817,8 @@ class RoadSheetDef(_Model):
 @dataclass(kw_only=True, slots=True)
 class RoadSheetLaid(_Model):
     """A sheet laid: the book's sheet, its number and title, its stations and km, the plan map's centre and turn (degrees,
-    the content clockwise on paper), the profile view drawn for it (its frame's lower left and upper right) and whether
-    the alignment or the profile view leaves its map.
+    the content clockwise on paper), the profile view drawn for it (its frame's lower left and upper right; on a section
+    sheet the group's region) and whether the alignment or the profile view leaves its map.
     Attributes:
         from_: Unit: m.
         to: Unit: m.
@@ -60878,6 +60878,8 @@ class RoadSheetSetDef(_Model):
         alignment_revision: Unit: version.
         overlap: Unit: m.
         profile_revision: Unit: version.
+        sections: A section sheet set's sample line set (docs/adr/0908 §11) and its revision.
+        sections_revision: Unit: version.
     """
     id: str
     name: str
@@ -60890,6 +60892,8 @@ class RoadSheetSetDef(_Model):
     overlap: float | Unset = UNSET
     profile: str | None | Unset = UNSET
     profile_revision: int | Unset = UNSET
+    sections: str | None | Unset = UNSET
+    sections_revision: int | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -60908,6 +60912,10 @@ class RoadSheetSetDef(_Model):
             out["profile"] = self.profile
         if self.profile_revision is not UNSET:
             out["profileRevision"] = self.profile_revision
+        if self.sections is not UNSET:
+            out["sections"] = self.sections
+        if self.sections_revision is not UNSET:
+            out["sectionsRevision"] = self.sections_revision
         return out
 
     @classmethod
@@ -60924,6 +60932,8 @@ class RoadSheetSetDef(_Model):
             overlap=float(data["overlap"]) if "overlap" in data else UNSET,
             profile=data.get("profile", UNSET),
             profile_revision=data.get("profileRevision", UNSET),
+            sections=data.get("sections", UNSET),
+            sections_revision=data.get("sectionsRevision", UNSET),
         )
 
 
@@ -60936,6 +60946,7 @@ class RoadSheetsLaid(_Model):
         scale: Unit: scale.
         length: Unit: m.
         height: Unit: m.
+        sections: A section sheet set's sample line set.
     """
     set: str
     name: str
@@ -60947,6 +60958,7 @@ class RoadSheetsLaid(_Model):
     uids: list[str]
     revision: str
     profile: str | None | Unset = UNSET
+    sections: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -60961,6 +60973,8 @@ class RoadSheetsLaid(_Model):
         out["revision"] = self.revision
         if self.profile is not UNSET:
             out["profile"] = self.profile
+        if self.sections is not UNSET:
+            out["sections"] = self.sections
         return out
 
     @classmethod
@@ -60976,6 +60990,7 @@ class RoadSheetsLaid(_Model):
             uids=list(data["uids"]),
             revision=data["revision"],
             profile=data.get("profile", UNSET),
+            sections=data.get("sections", UNSET),
         )
 
 
@@ -61066,6 +61081,84 @@ class RoadSheetsPlan(_Model):
             scale=data.get("scale", UNSET),
             source=UNSET if "source" not in data else None if data["source"] is None else SheetTemplateSource.from_json(data["source"]),
             to=UNSET if "to" not in data else None if data["to"] is None else float(data["to"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RoadSheetsSections(_Model):
+    """Input of `road.sheets.sections` v1: a sample line set's section views laid on sheets as Civil 3D's production
+    section views and Create Section Sheets do (docs/adr/0908 §11): the set's views (`stations`, all without them) drawn
+    on `layerId` in groups, each group the template's map (KentOS's technical sheet, `sys:cad-teknik`, without one) wide
+    and high on the ground at 1:`scale` (the map's without it), filled in rows from the upper left as many views as fit;
+    the first group's upper left at `at`, each next under the one before. Each group is a sheet whose map shows it. The
+    views are `road.sections.draw`'s (`exaggeration`, `height`). The set is named `name` (“‹set› paftaları” without
+    it) and the sheets numbered on from `first` (E-101 without it).
+
+    Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `unknown_section_set`, the
+    section drawing's (`invalid_label`, `invalid_places`, `no_terrain`, the layer's), `invalid_road_sheets` (a scale not
+    in [1, 1 000 000], a view larger than the map at this scale, more than 500 sheets, a set's name taken),
+    `unknown_template`, `invalid_options`, `not_fixed_map`, `bad_drawing_info`. Warnings: the section drawing's
+    (`layer_hidden`, `section_set_stale`, `section_open` …).
+    Attributes:
+        at: Unit: length.
+        exaggeration: Unit: 1.
+        height: Unit: paper-mm.
+        options: The template's paper and answers (cad.sheets.create's options but the name, centre and scale).
+        scale: Unit: scale.
+        stations: Unit: m.
+    """
+    set: str
+    layer_id: str
+    at: list[float]
+    exaggeration: float | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    first: str | None | Unset = UNSET
+    height: float | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    options: PaperInstanceOptions | Mapping[str, Any] = field(default_factory=dict)
+    scale: int | None | Unset = UNSET
+    source: SheetTemplateSource | None | Unset = UNSET
+    stations: list[float] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["set"] = self.set
+        out["layerId"] = self.layer_id
+        out["at"] = [float(e0) for e0 in self.at]
+        if self.exaggeration is not UNSET:
+            out["exaggeration"] = None if self.exaggeration is None else float(self.exaggeration)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.first is not UNSET:
+            out["first"] = self.first
+        if self.height is not UNSET:
+            out["height"] = None if self.height is None else float(self.height)
+        if self.name is not UNSET:
+            out["name"] = self.name
+        out["options"] = (dict(self.options) if isinstance(self.options, Mapping) else self.options.to_json())
+        if self.scale is not UNSET:
+            out["scale"] = self.scale
+        if self.source is not UNSET:
+            out["source"] = None if self.source is None else self.source.to_json()
+        if self.stations is not UNSET:
+            out["stations"] = [float(e0) for e0 in self.stations]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoadSheetsSections:
+        return cls(
+            set=data["set"],
+            layer_id=data["layerId"],
+            at=[float(e0) for e0 in data["at"]],
+            exaggeration=UNSET if "exaggeration" not in data else None if data["exaggeration"] is None else float(data["exaggeration"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            first=data.get("first", UNSET),
+            height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+            name=data.get("name", UNSET),
+            options=data["options"] if "options" in data else dict(),
+            scale=data.get("scale", UNSET),
+            source=UNSET if "source" not in data else None if data["source"] is None else SheetTemplateSource.from_json(data["source"]),
+            stations=[float(e0) for e0 in data["stations"]] if "stations" in data else UNSET,
         )
 
 
@@ -99414,6 +99507,7 @@ __all__ = [
     "RoadSheetSetDef",
     "RoadSheetsLaid",
     "RoadSheetsPlan",
+    "RoadSheetsSections",
     "RoadWork",
     "RoadsEdit",
     "RoadsEdited",

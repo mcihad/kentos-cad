@@ -6,4 +6,8 @@ import type { RoadSheetDef } from "./RoadSheetDef";
  * its stretch in plan at the set's scale (1:`scale`) and, with a profile, the profile view drawn for it; the sources'
  * revisions it was made from, so the sheets say when the alignment or the profile changed since.
  */
-export type RoadSheetSetDef = { id: string, name: string, alignment: string, alignmentRevision?: number, profile?: string, profileRevision?: number, from: number, to: number, scale: number, overlap?: number, sheets: Array<RoadSheetDef>, };
+export type RoadSheetSetDef = { id: string, name: string, alignment: string, alignmentRevision?: number, profile?: string, profileRevision?: number, 
+/**
+ * A section sheet set's sample line set (docs/adr/0908 §11) and its revision.
+ */
+sections?: string, sectionsRevision?: number, from: number, to: number, scale: number, overlap?: number, sheets: Array<RoadSheetDef>, };

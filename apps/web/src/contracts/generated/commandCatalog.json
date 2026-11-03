@@ -40026,6 +40026,13 @@
             "type": "integer",
             "x-unit": "scale"
           },
+          "sections": {
+            "description": "A section sheet set's sample line set.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "set": {
             "type": "string"
           },
@@ -40091,6 +40098,13 @@
             "type": "integer",
             "x-unit": "scale"
           },
+          "sections": {
+            "description": "A section sheet set's sample line set.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "set": {
             "type": "string"
           },
@@ -40155,6 +40169,306 @@
             "layerId": "0",
             "profile": "Proje kotu",
             "scale": 1000
+          }
+        }
+      ]
+    },
+    {
+      "id": "road.sheets.sections",
+      "version": 1,
+      "title": "Enkesit paftaları",
+      "summary": "Kesit takımının enkesit görünümlerini paftalara dizer (Civil 3D'nin üretim enkesit görünümleri ve Create Section Sheets'i gibi): bir takımın görünümleri aynı boydadır (road.sections.draw: şerit genişliği × en yüksek kot aralığı), her pafta şablonun haritasının scale ölçeğindeki zemin boyuna sığan kadar sütun ve satır alır; görünümler layerId katmanına grup grup çizilir, ilk grubun sol üstü at'ta, her biri bir öncekinin bir harita yüksekliği ve aralık altında; her paftanın haritası kendi grubunu gösterir. stations (yoksa takımın hepsi), exaggeration, height road.sections.draw'ınki. Şablon yoksa sys:cad-teknik; paftalar first'ten (yoksa E-101) numaralanır. Takım kesit takımının revizyonuyla yol ayarlarında saklanır; görünümler, takım ve paftalar tek geri alma adımı “Enkesit paftaları”. Retler: invalid_revision, revision_conflict, not_a_road_project, unknown_section_set, invalid_label, invalid_places, no_terrain, katmanın retleri, invalid_road_sheets, unknown_template, invalid_options, not_fixed_map, bad_drawing_info.",
+      "aliases": [
+        "enkesitpaftalari"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `road.sheets.sections` v1: a sample line set's section views laid on sheets as Civil 3D's production\nsection views and Create Section Sheets do (docs/adr/0908 §11): the set's views (`stations`, all without them) drawn\non `layerId` in groups, each group the template's map (KentOS's technical sheet, `sys:cad-teknik`, without one) wide\nand high on the ground at 1:`scale` (the map's without it), filled in rows from the upper left as many views as fit;\nthe first group's upper left at `at`, each next under the one before. Each group is a sheet whose map shows it. The\nviews are `road.sections.draw`'s (`exaggeration`, `height`). The set is named `name` (“‹set› paftaları” without\nit) and the sheets numbered on from `first` (E-101 without it).\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `unknown_section_set`, the\nsection drawing's (`invalid_label`, `invalid_places`, `no_terrain`, the layer's), `invalid_road_sheets` (a scale not\nin [1, 1 000 000], a view larger than the map at this scale, more than 500 sheets, a set's name taken),\n`unknown_template`, `invalid_options`, `not_fixed_map`, `bad_drawing_info`. Warnings: the section drawing's\n(`layer_hidden`, `section_set_stale`, `section_open` …).",
+        "properties": {
+          "at": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array",
+            "x-unit": "length"
+          },
+          "exaggeration": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1"
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "first": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "height": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "paper-mm"
+          },
+          "layerId": {
+            "type": "string"
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "options": {
+            "$ref": "#/$defs/PaperInstanceOptions",
+            "default": {},
+            "description": "The template's paper and answers (cad.sheets.create's options but the name, centre and scale).",
+            "x-raw-record": true
+          },
+          "scale": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "scale"
+          },
+          "set": {
+            "type": "string"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SheetTemplateSource"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "stations": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "type": "array",
+            "x-unit": "m"
+          }
+        },
+        "required": [
+          "set",
+          "layerId",
+          "at"
+        ],
+        "title": "RoadSheetsSections",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.sheets.plan` v1, and its plan: the set's id and name, its alignment and profile, its scale, a sheet's\nstretch on the ground (m) and its plan map's height there, the sheets, the objects written (none in a plan) and the\ndrawing's revision.",
+        "properties": {
+          "alignment": {
+            "type": "string"
+          },
+          "height": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "length": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "name": {
+            "type": "string"
+          },
+          "profile": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "revision": {
+            "type": "string"
+          },
+          "scale": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "scale"
+          },
+          "sections": {
+            "description": "A section sheet set's sample line set.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "set": {
+            "type": "string"
+          },
+          "sheets": {
+            "items": {
+              "$ref": "#/$defs/RoadSheetLaid"
+            },
+            "type": "array"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "set",
+          "name",
+          "alignment",
+          "scale",
+          "length",
+          "height",
+          "sheets",
+          "uids",
+          "revision"
+        ],
+        "title": "RoadSheetsLaid",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.sheets.plan` v1, and its plan: the set's id and name, its alignment and profile, its scale, a sheet's\nstretch on the ground (m) and its plan map's height there, the sheets, the objects written (none in a plan) and the\ndrawing's revision.",
+        "properties": {
+          "alignment": {
+            "type": "string"
+          },
+          "height": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "length": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "name": {
+            "type": "string"
+          },
+          "profile": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "revision": {
+            "type": "string"
+          },
+          "scale": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "scale"
+          },
+          "sections": {
+            "description": "A section sheet set's sample line set.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "set": {
+            "type": "string"
+          },
+          "sheets": {
+            "items": {
+              "$ref": "#/$defs/RoadSheetLaid"
+            },
+            "type": "array"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "set",
+          "name",
+          "alignment",
+          "scale",
+          "length",
+          "height",
+          "sheets",
+          "uids",
+          "revision"
+        ],
+        "title": "RoadSheetsLaid",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_section_set",
+          "invalid_label",
+          "invalid_places",
+          "no_terrain",
+          "invalid_road_sheets",
+          "unknown_template",
+          "invalid_options",
+          "not_fixed_map",
+          "bad_drawing_info",
+          "layer_not_found",
+          "not_a_layer",
+          "layer_locked",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "layer_hidden",
+          "section_set_stale",
+          "section_open"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Enkesitler 1:200",
+          "input": {
+            "at": [
+              0.0,
+              -1000.0
+            ],
+            "layerId": "0",
+            "scale": 200,
+            "set": "Enkesitler"
           }
         }
       ]
@@ -137287,7 +137601,7 @@
       "type": "object"
     },
     "RoadSheetLaid": {
-      "description": "A sheet laid: the book's sheet, its number and title, its stations and km, the plan map's centre and turn (degrees,\nthe content clockwise on paper), the profile view drawn for it (its frame's lower left and upper right) and whether\nthe alignment or the profile view leaves its map.",
+      "description": "A sheet laid: the book's sheet, its number and title, its stations and km, the plan map's centre and turn (degrees,\nthe content clockwise on paper), the profile view drawn for it (its frame's lower left and upper right; on a section\nsheet the group's region) and whether the alignment or the profile view leaves its map.",
       "properties": {
         "center": {
           "items": {
@@ -137402,6 +137716,19 @@
           "minimum": 0,
           "type": "integer",
           "x-unit": "scale"
+        },
+        "sections": {
+          "description": "A section sheet set's sample line set (docs/adr/0908 §11) and its revision.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sectionsRevision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
         },
         "sheets": {
           "items": {

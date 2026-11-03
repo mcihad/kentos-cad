@@ -1228,6 +1228,14 @@ pub struct RoadSheetSetDef {
     #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub profile_revision: u32,
+    /// A section sheet set's sample line set (docs/adr/0908 §11) and its revision.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub sections: Option<String>,
+    #[serde(default, skip_serializing_if = "is_zero_u32")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub sections_revision: u32,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub from: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
@@ -1274,8 +1282,13 @@ fn sheet_sets_problem(road: &RoadSettings) -> Option<(String, String)> {
         {
             return fail(at("profile"), "pafta takımının boykesiti projede aynı aksta yok");
         }
-        if !(t.from.is_finite() && t.to.is_finite() && t.from < t.to) {
-            return fail(at("to"), "aralığın başı sonundan önce, ikisi sonlu olmalı");
+        if let Some(k) = &t.sections
+            && road.sections.iter().all(|q| q.id != *k || q.alignment != t.alignment)
+        {
+            return fail(at("sections"), "pafta takımının kesit takımı projede aynı aksta yok");
+        }
+        if !(t.from.is_finite() && t.to.is_finite() && t.from <= t.to) {
+            return fail(at("to"), "aralığın başı sonundan sonra olamaz, ikisi sonlu olmalı");
         }
         if t.scale == 0 || t.scale > 1_000_000 {
             return fail(at("scale"), "ölçek 1 ile 1 000 000 arası olmalı");
@@ -1292,8 +1305,8 @@ fn sheet_sets_problem(road: &RoadSettings) -> Option<(String, String)> {
             if !word_ok(&sh.sheet) || !sheets.insert(sh.sheet.as_str()) {
                 return fail(path, "paftanın kimliği tek, boş olmayan bir sözcük olmalı");
             }
-            if !(sh.from.is_finite() && sh.to.is_finite() && sh.from < sh.to) {
-                return fail(path, "paftanın aralığının başı sonundan önce olmalı");
+            if !(sh.from.is_finite() && sh.to.is_finite() && sh.from <= sh.to) {
+                return fail(path, "paftanın aralığının başı sonundan sonra olamaz");
             }
             if sh.view.is_some_and(|v| v.iter().flatten().any(|c| !c.is_finite())) {
                 return fail(path, "boykesit görünümünün çerçevesi sonlu olmalı");

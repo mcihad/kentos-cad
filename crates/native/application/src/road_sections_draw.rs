@@ -352,6 +352,59 @@ fn write(cx: &mut ExecutionContext<'_>, input: &SectionsDraw, c: Checked) -> Com
     }
 }
 
+/// The stations drawn, a view's pitch across and down, and the drawing's warnings.
+pub(crate) type Pitch = (Vec<f64>, [f64; 2], Vec<CommandWarning>);
+
+/// A set's views as section sheets lay them (docs/adr/0908 §11): the stations drawn, in order, and a view's pitch
+/// across and down in drawing units (its column of elevations, the frame and the gap; the km row, the frame, the rows
+/// under it and the gap).
+pub(crate) fn pitch(doc: &kentos_domain::Document, input: &SectionsDraw) -> Result<Pitch, Stop> {
+    let c = check(doc, input)?;
+    let h = c.height * doc.settings().plot_scale / 1000.0;
+    let row = 2.4 * h;
+    let across = 8.0 * h + c.left + c.right + 4.0 * h;
+    let down = row + c.span * c.exaggeration + 3.0 * row + 4.0 * h;
+    Ok((c.rows.iter().map(|r| r.station).collect(), [across, down], c.warnings))
+}
+
+/// The views of `input` as a section sheet draws them: their objects, what `road.sections.draw` would answer (no
+/// objects written yet) and its warnings.
+pub(crate) fn view(
+    doc: &kentos_domain::Document,
+    input: &SectionsDraw,
+) -> Result<(Vec<NewObject>, SectionsDrawn, Vec<CommandWarning>), Stop> {
+    let c = check(doc, input)?;
+    let h = c.height * doc.settings().plot_scale / 1000.0;
+    let frames = frames(&c, input.at, h);
+    let objects = objects(&c, &frames, h);
+    let views = c
+        .rows
+        .iter()
+        .zip(&c.datums)
+        .zip(&frames)
+        .map(|((r, d), f)| SectionView {
+            station: r.station,
+            km: r.km,
+            km_text: r.km_text.clone(),
+            frame: *f,
+            datum: *d,
+            top: d + c.span,
+            cut: r.cut,
+            fill: r.fill,
+        })
+        .collect();
+    let drawn = SectionsDrawn {
+        set: c.id.clone(),
+        views,
+        grid: grid_step(0.0, c.span),
+        offsets: offset_step(c.left + c.right),
+        exaggeration: c.exaggeration,
+        uids: Vec::new(),
+        revision: doc.revision().to_string(),
+    };
+    Ok((objects, drawn, c.warnings))
+}
+
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &SectionsDraw) -> CommandResult<()> {
     match check(cx.doc, input) {

@@ -118,6 +118,17 @@ Tarih: 2026-11-03. plan/road.md Y10 (ROAD-SEC-09…11; ROAD-IO-05, 06, 13, 14). 
     modelden okur). Boykesit görünümleri, takım ve paftalar tek geri alma adımı “Yol paftaları”; paftanın kendi
     düzenlemeleri ADR 0251'deki gibi geri alma adımı değildir: geri alınınca görünümler ve takım gider, paftalar kalır.
 
+11. **Enkesit paftaları (ROAD-SEC-11).** `road.sheets.sections` Civil 3D'nin üretim enkesit görünümleri ve Create
+    Section Sheets'i gibi kesit takımının görünümlerini paftalara dizer: bir takımın görünümleri aynı boydadır
+    (`road.sections.draw`: kot sütunu 8, şerit genişliği, 4 yazı boyu aralık; km satırı, en yüksek kot aralığı × abartma,
+    üç satır ve 4 yazı boyu), bir pafta şablonun haritasının (öntanımlı `sys:cad-teknik`) `scale` ölçeğindeki zemin
+    boyuna sığan kadar sütun ve satır alır (Civil 3D'nin basılabilir alanı gibi), görünümler sırayla gruplara bölünür;
+    her grup kendi bölgesinin sol üstünden satır satır çizilir (`road.sections.draw`'ın yerleşimi), ilk bölgenin sol üstü
+    `at`'ta, her biri bir öncekinin bir harita yüksekliği ve çeyrek görünüm aralığı altında; paftanın haritası bölgenin
+    ortasında, döndürülmeden. Bir görünüm haritaya sığmazsa ret. Takım `sheetSets`'te `sections` ve `sectionsRevision`
+    ile; aralığı km'lerin en küçüğüyle en büyüğü. Görünümler, takım ve paftalar tek geri alma adımı “Enkesit paftaları”.
+    Masaüstünde Enkesit penceresinin Çizime satırında “Pafta 1:” ve Paftalara diz.
+
 ## Aşamalar
 
 Y10.1 aplikasyon cetveli (komut, başvuru, Python, MCP, pencere); Y10.2 LandXML'e aks, boykesit ve yüzey yazma ve
@@ -150,8 +161,12 @@ basamaklı başvurusundan, görünümler road_profile_command_cases.py'nin `draw
 dosyasından; pafta kitabının paftaları, numaraları ve haritaları da denetlenir); KCAD şema 161'in `sheetSets`'i bağımsız
 okuyucuda; Python, MCP, masaüstünde Koridor › Pafta › Yol paftaları.
 
+Y10.5b (yapıldı, enkesit): `road.sheets.sections` 27 ortak durum (`road_sheets_sections_cases.py`; görünümler
+road_section_command_cases.py'nin `drawing`'inden, haritanın boyu şablonun dosyasından); Python, MCP, masaüstünde
+Enkesit › Paftalara diz. ROAD-SEC-11 [x].
+
 ## Sonra
 
 Makine kontrolü ve yapılan iş ölçüsü (ROAD-SEC-10), şev kazığı ofset işareti (hinge'den sabit uzaklık), kodların
 kullanıcı adları. Paftalarda: plan haritasının aksı (ekranın aks katmanı) modelin nesnesi olmadan kendisi çizmesi, eşleşme çizgileri
-ve etiketleri, kaynak revizyonu değişince takımı yeniden kurma; enkesit paftaları (Y10.5b).
+ve etiketleri, kaynak revizyonu değişince takımı yeniden kurma.

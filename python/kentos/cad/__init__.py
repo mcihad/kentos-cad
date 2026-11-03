@@ -2507,6 +2507,7 @@ __all__ = [
     "RoadSheetSetDef",
     "RoadSheetsLaid",
     "RoadSheetsPlan",
+    "RoadSheetsSections",
     "RoadWork",
     "RoadsEdit",
     "RoadsEdited",

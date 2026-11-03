@@ -58,6 +58,7 @@ const REMOVE_PART: &str = "Bileşeni sil";
 const PREVIOUS: &str = "◀";
 const NEXT: &str = "▶";
 const DRAW: &str = "Çizime yaz";
+const SHEETS: &str = "Paftalara diz";
 const KINDS: [&str; 2] = ["Şerit", "Banket"];
 const METHODS: [&str; 3] = ["Aralık", "Km'ler", "Çizgiler"];
 
@@ -312,6 +313,8 @@ pub struct Window {
     /// Çizime yaz: the layer, the sheet's upper left as typed (“Y; X”), the views in a row.
     layer: Option<String>,
     place: String,
+    /// Paftalara diz's scale (1:N), as typed; empty: the template's.
+    pub(crate) sheet_scale: String,
     columns: String,
 }
 
@@ -350,6 +353,10 @@ pub enum Event {
     Place(String),
     Columns(String),
     Draw,
+    /// Paftalara diz: the views laid on sheets (`road.sheets.sections`, docs/adr/0908 §11).
+    Sheets,
+    /// The section sheets' scale, as typed.
+    SheetScale(String),
     Save,
     Cancel,
 }
@@ -417,6 +424,7 @@ impl App {
             exaggeration: String::new(),
             layer,
             place,
+            sheet_scale: "500".into(),
             columns: "5".into(),
             ..Window::default()
         });
@@ -719,6 +727,11 @@ impl App {
                 rebuilt = false;
             }
             Event::Draw => return self.draw_sections(),
+            Event::Sheets => return self.section_sheets(),
+            Event::SheetScale(t) => {
+                w.sheet_scale = t;
+                return Task::none();
+            }
             Event::Cancel => {
                 self.section_window = None;
                 self.dialog = None;
@@ -821,6 +834,59 @@ impl App {
             );
         }
         Task::none()
+    }
+
+    /// Paftalara diz: the chosen saved set's views laid on sheets from the typed place at the typed scale
+    /// (`road.sheets.sections`), one undo step; the sheets shown.
+    fn section_sheets(&mut self) -> Task<Message> {
+        let Some(def) = self.chosen_saved_set("paftalara dizilir") else { return Task::none() };
+        let Some(w) = &self.section_window else { return Task::none() };
+        let parts: Vec<Option<f64>> =
+            w.place.split([';', ' ']).filter(|s| !s.is_empty()).map(|s| number(s).ok().flatten()).collect();
+        let [Some(x), Some(y)] = parts[..] else {
+            self.warn("Yeri “Y; X” olarak yazın.".to_owned());
+            return Task::none();
+        };
+        let scale = match number(&w.sheet_scale) {
+            Ok(None) => None,
+            Ok(Some(v)) if v >= 1.0 && v.fract() == 0.0 && v <= 1e6 => Some(v as u32),
+            _ => {
+                self.warn("Paftaların ölçeği 1 ile 1 000 000 arası bir tam sayı olmalı.".to_owned());
+                return Task::none();
+            }
+        };
+        let input = kentos_commands::RoadSheetsSections {
+            set: def.id.clone(),
+            layer_id: w.layer.clone().unwrap_or_default(),
+            at: [x, y],
+            stations: Vec::new(),
+            exaggeration: number(&w.exaggeration).ok().flatten().filter(|v| *v > 0.0),
+            height: None,
+            scale,
+            name: None,
+            source: None,
+            options: serde_json::json!({}),
+            first: None,
+            expected_revision: None,
+        };
+        let Some(doc) = self.document.as_mut() else { return Task::none() };
+        let result =
+            kentos_native_application::road_sheets_sections::execute(&mut ExecutionContext::new(&mut doc.model), input);
+        let Some(out) = self.answered(result) else { return Task::none() };
+        self.say(
+            Level::Success,
+            format!(
+                "“{}”: {} enkesit paftası ({}–{}).",
+                out.name,
+                out.sheets.len(),
+                out.sheets.first().map_or("", |s| s.number.as_str()),
+                out.sheets.last().map_or("", |s| s.number.as_str())
+            ),
+        );
+        self.section_window = None;
+        self.dialog = None;
+        self.follow_sheet_book();
+        self.update(Message::Sheet(kentos_sheet_ui::Message::Tab(1)))
     }
 
     /// Kaydet: the templates written, then the sets (removed, changed, new), then the templates removed.
@@ -1029,6 +1095,8 @@ impl App {
             words::field("Yer (Y; X)", kentos_ui::widget::text_field("Y; X", &w.place).on_input(|t| msg(Event::Place(t))).width(200), None),
             words::field("Satırda", kentos_ui::widget::text_field("5", &w.columns).on_input(|t| msg(Event::Columns(t))).width(60), None),
             words::secondary(DRAW, saved.then(|| msg(Event::Draw))),
+            words::field("Pafta 1:", kentos_ui::widget::text_field("500", &w.sheet_scale).on_input(|t| msg(Event::SheetScale(t))).width(70), None),
+            words::secondary(SHEETS, saved.then(|| msg(Event::Sheets))),
         ]
         .spacing(10)
         .align_y(iced::alignment::Vertical::Bottom)
@@ -1180,6 +1248,7 @@ impl App {
             Control::Press(PREVIOUS) => Some(msg(Event::Previous)),
             Control::Press(NEXT) => Some(msg(Event::Next)),
             Control::Press(DRAW) => Some(msg(Event::Draw)),
+            Control::Press(SHEETS) => Some(msg(Event::Sheets)),
             Control::Press(words) => {
                 if let Some(i) = w.sets.iter().position(|r| r.name == words) {
                     Some(msg(Event::Choose(Chosen::Set(i))))

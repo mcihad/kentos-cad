@@ -7798,12 +7798,13 @@
     "road.templates.edit",
     "road.sections.edit",
     "road.sections.query",
-    "road.sections.draw"
+    "road.sections.draw",
+    "road.sheets.sections"
    ],
    "operation": null,
-   "python": "Connection: road.templates.edit, Connection: road.sections.edit, Connection: road.sections.query, Connection: road.sections.draw",
-   "mcp": "road.templates.edit, road.sections.edit, road.sections.query, road.sections.draw",
-   "note": "Enkesit penceresi tip kesiti ve takımı yazdıkça kesitleri çekirdekle kurar; Kaydet ve Aksa yeniden bağla road.templates.edit ve road.sections.edit ile, Çizime yaz road.sections.draw ile yazar (plan/road.md Y5, ADR 0903).",
+   "python": "Connection: road.templates.edit, Connection: road.sections.edit, Connection: road.sections.query, Connection: road.sections.draw, Connection: road.sheets.sections",
+   "mcp": "road.templates.edit, road.sections.edit, road.sections.query, road.sections.draw, road.sheets.sections",
+   "note": "Enkesit penceresi tip kesiti ve takımı yazdıkça kesitleri çekirdekle kurar; Kaydet ve Aksa yeniden bağla road.templates.edit ve road.sections.edit ile, Çizime yaz road.sections.draw ile, Paftalara diz road.sheets.sections ile yazar (plan/road.md Y5, Y10.5b, ADR 0903, 0908).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0

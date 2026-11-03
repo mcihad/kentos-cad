@@ -6,4 +6,8 @@ import type { RoadSheetLaid } from "./RoadSheetLaid";
  * stretch on the ground (m) and its plan map's height there, the sheets, the objects written (none in a plan) and the
  * drawing's revision.
  */
-export type RoadSheetsLaid = { set: string, name: string, alignment: string, profile?: string, scale: number, length: number, height: number, sheets: Array<RoadSheetLaid>, uids: Array<string>, revision: string, };
+export type RoadSheetsLaid = { set: string, name: string, alignment: string, profile?: string, 
+/**
+ * A section sheet set's sample line set.
+ */
+sections?: string, scale: number, length: number, height: number, sheets: Array<RoadSheetLaid>, uids: Array<string>, revision: string, };
