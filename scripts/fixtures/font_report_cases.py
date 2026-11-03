@@ -3,7 +3,8 @@
 - fixtures/commands/v1/cad.fonts.report.json (`cad.fonts.report` v1)
 
 The rule is the ADR's, written here again without KentOS code: a name ending in `.shx` is an SHX line font; one whose
-letters and digits begin with one of KentOS's seven faces is that face; Arial, Helvetica and Liberation Sans are Arimo's
+family is exactly one of KentOS's seven faces is that face; recognized style suffixes do not change the family.
+Arial, Helvetica and Liberation Sans are Arimo's
 twins, Courier Courier Prime's; any other is missing. A style naming no file is its own face. A style drawn in another
 face than the one its file names is a `font_substituted` warning. The faces are those its texts, dimensions, leaders and
 tables are drawn in (a text's or a table's own face, a dimension's look's, else the project's), in the contract's order.
@@ -26,20 +27,27 @@ LABELS = {"barlow": "Barlow", "arimo": "Arimo", "overpass": "Overpass", "quicksa
 OWN = [("barlow", "barlow"), ("arimo", "arimo"), ("overpass", "overpass"), ("quicksand", "quicksand"),
        ("architectsdaughter", "architects-daughter"), ("courierprime", "courier-prime"), ("ibmplexmono", "plex-mono"),
        ("plexmono", "plex-mono")]
-TWINS = [("arial", "arimo"), ("helvetica", "arimo"), ("liberationsans", "arimo"), ("cour", "courier-prime")]
+TWINS = [("arial", "arimo"), ("helvetica", "arimo"), ("liberationsans", "arimo"), ("couriernew", "courier-prime"), ("courier", "courier-prime"), ("cour", "courier-prime")]
 
 
 def resolve(name):
     """The ADR's rule: (face or None, how)."""
     lower = name.strip().lower()
-    letters = "".join(c for c in lower if c.isascii() and c.isalnum())
-    if lower.endswith(".shx"):
+    leaf = lower.replace("\\", "/").rsplit("/", 1)[-1]
+    if leaf.endswith(".shx"):
         return None, "shx"
+    for extension in (".ttf", ".otf", ".ttc", ".woff2", ".woff"):
+        if leaf.endswith(extension):
+            leaf = leaf[:-len(extension)]
+            break
+    letters = "".join(c for c in leaf if c.isascii() and c.isalnum())
+    styles = {"", "regular", "normal", "roman", "medium", "semibold", "bold", "italic", "oblique",
+              "bolditalic", "boldoblique", "400", "500", "600", "700", "400italic", "bd", "bi", "i", "b", "z"}
     for stem, face in OWN:
-        if letters.startswith(stem):
+        if letters.startswith(stem) and letters[len(stem):] in styles:
             return face, "own"
     for stem, face in TWINS:
-        if letters.startswith(stem):
+        if letters.startswith(stem) and letters[len(stem):] in styles:
             return face, "equivalent"
     return None, "missing"
 
@@ -191,6 +199,13 @@ CASES = [
                                                                                            leader(3), text(4, "b", font="arimo")])),
     case("Projenin yazı tipi Overpass: kendi yazı tipi olmayanlar onunla", setup([], [text(1, "a"), dimension(2), leader(3)], font="overpass")),
     case("Adlar aynı kuralla çözülür", setup(), {"names": NAMES}),
+    case("Benzer isim aynı metrik değildir: dar, siyah, condensed ve başka aileler", setup(),
+         {"names": ["Arial Narrow", "Arial Black", "Helvetica Neue", "Barlow Condensed", "Overpass Mono",
+                    "Arimo Display", "Courtney.ttf", "Courier New Condensed", "Arial-custom.ttf"]}),
+    case("Dosya yolu yalnız aileyi seçer: kaynağın tam adı korunur", setup(),
+         {"names": [r"C:\Windows\Fonts\arialbd.ttf", "/fonts/Arial-BoldItalic.otf", "/fonts/Barlow-400-italic.ttf"]}),
+    case("Dar fontu adlandıran eski stilin yüzü değiştirilmez, eksik kaynak açıkça uyarılır",
+         setup([style(9, "Dar yazı", "arimo", "Arial Narrow")], [text(1, "Ölçü", style(9, "", "")['id'], "arimo")])),
     case("Bir ad: romans.shx", setup(), {"names": ["romans.shx"]}),
     case("Büyük harf ve boşluk önemsiz: IBM Plex Mono", setup(), {"names": ["  ibm plex mono  "]}),
     case("Bilinmeyen ad eksik sayılır, yüzü verilmez", setup(), {"names": ["Segoe UI"]}),

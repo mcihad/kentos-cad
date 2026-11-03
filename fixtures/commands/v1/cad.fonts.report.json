@@ -1634,8 +1634,7 @@
                 },
                 {
                   "name": "Helvetica Neue",
-                  "face": "arimo",
-                  "how": "equivalent"
+                  "how": "missing"
                 },
                 {
                   "name": "Liberation Sans",
@@ -1700,8 +1699,7 @@
                 },
                 {
                   "name": "Barlow Condensed",
-                  "face": "barlow",
-                  "how": "own"
+                  "how": "missing"
                 },
                 {
                   "name": "arimo.ttf",
@@ -1717,6 +1715,324 @@
               "revision": "$current"
             },
             "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Benzer isim aynı metrik değildir: dar, siyah, condensed ve başka aileler",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Yazı tipleri",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "textStyles": []
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "names": [
+              "Arial Narrow",
+              "Arial Black",
+              "Helvetica Neue",
+              "Barlow Condensed",
+              "Overpass Mono",
+              "Arimo Display",
+              "Courtney.ttf",
+              "Courier New Condensed",
+              "Arial-custom.ttf"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "project": "barlow",
+              "styles": [],
+              "names": [
+                {
+                  "name": "Arial Narrow",
+                  "how": "missing"
+                },
+                {
+                  "name": "Arial Black",
+                  "how": "missing"
+                },
+                {
+                  "name": "Helvetica Neue",
+                  "how": "missing"
+                },
+                {
+                  "name": "Barlow Condensed",
+                  "how": "missing"
+                },
+                {
+                  "name": "Overpass Mono",
+                  "how": "missing"
+                },
+                {
+                  "name": "Arimo Display",
+                  "how": "missing"
+                },
+                {
+                  "name": "Courtney.ttf",
+                  "how": "missing"
+                },
+                {
+                  "name": "Courier New Condensed",
+                  "how": "missing"
+                },
+                {
+                  "name": "Arial-custom.ttf",
+                  "how": "missing"
+                }
+              ],
+              "faces": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dosya yolu yalnız aileyi seçer: kaynağın tam adı korunur",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Yazı tipleri",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "textStyles": []
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "names": [
+              "C:\\Windows\\Fonts\\arialbd.ttf",
+              "/fonts/Arial-BoldItalic.otf",
+              "/fonts/Barlow-400-italic.ttf"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "project": "barlow",
+              "styles": [],
+              "names": [
+                {
+                  "name": "C:\\Windows\\Fonts\\arialbd.ttf",
+                  "face": "arimo",
+                  "how": "equivalent"
+                },
+                {
+                  "name": "/fonts/Arial-BoldItalic.otf",
+                  "face": "arimo",
+                  "how": "equivalent"
+                },
+                {
+                  "name": "/fonts/Barlow-400-italic.ttf",
+                  "face": "barlow",
+                  "how": "own"
+                }
+              ],
+              "faces": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dar fontu adlandıran eski stilin yüzü değiştirilmez, eksik kaynak açıkça uyarılır",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Yazı tipleri",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "textStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0509",
+              "name": "Dar yazı",
+              "font": "arimo",
+              "fontFile": "Arial Narrow"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500010,
+              "y": 4400000
+            },
+            "text": "Ölçü",
+            "height": 2.5,
+            "rotation": 0,
+            "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0509",
+            "font": "arimo"
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "project": "barlow",
+              "styles": [
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0509",
+                  "name": "Dar yazı",
+                  "file": "Arial Narrow",
+                  "face": "arimo",
+                  "how": "missing",
+                  "texts": 1
+                }
+              ],
+              "names": [],
+              "faces": [
+                "arimo"
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "font_substituted",
+                "message": "“Dar yazı” stili Arial Narrow yazı tipini adlandırıyor (KentOS'ta yok); yazıları Arimo ile çizilir.",
+                "path": "styles[0]"
+              }
+            ]
           },
           "expect": {
             "canUndo": false,

@@ -85,6 +85,12 @@ impl Frame {
     }
 }
 
+/// Whether a map text's anchor is written by the PDF painter, including
+/// rotated/custom viewport clipping. Preflight must use this same rule.
+pub fn includes_text_anchor(map: &MapPrim, at: [f64; 2]) -> bool {
+    Frame::of(map).holds(at)
+}
+
 /// The frame's clip (until the matching `restore`).
 fn clip_to(page: &mut Page<'_>, frame: &Frame) {
     page.save();

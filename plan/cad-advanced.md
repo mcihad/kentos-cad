@@ -1431,6 +1431,37 @@ sütun ve field içeren metin dosyasını aç/düzenle/yansıt/yazdır. Ekran,
 ölçülen kutu ve PDF satır sonları karşılaştırılsın. Eksik font ve kaynak
 silinmesi ön denetimde görülsün; eski dosyanın metni habersiz değişmesin.
 
+**Çalışma kaydı — devam ediyor (4 Kasım 2026):**
+
+- [ADR 0914](../docs/adr/0914-cad-text-layout-and-live-field-delivery.md)
+  mevcut dört metin yolunu ve eski yerleşimi koruma koşullarını karşılaştırır.
+- Paragrafta birleşik karakteri bozmayan geri/ileri silme uygulandı.
+  Beş editör testi geçti; gerçek uygulamada aksanlı `g` tek geri silmeyle
+  kaldırıldı, onaylandı ve tek geri almayla özgün hali döndü.
+- Aile adı önekiyle yapılan yanlış font eşdeğerlikleri daraltıldı.
+  Üç çekirdek font testi ve 28 bağımsız `cad.fonts.report` komut durumu geçti.
+- Canlı field/önbellek denetimi ve güncel olmayan field'ın PDF teslimini
+  engellemesi uygulandı. 14 uygulama denetim testi, bir kaynak döngüsü
+  testi, iki masaüstü denetim testi ve beş PDF kitap testi geçti.
+  Gerçek GUI'de eski değer → yenile → temiz denetim → tek geri alma →
+  aynı hata dönüşü doğrulandı. Tam baskı denetimi field ve desteklenmeyen
+  karakter hatalarını birlikte gösterdi; ekranlar repo dışında.
+- Mevcut PDF'de aksan/teknik sembol/RTL karakterlerinin `?` olarak
+  kaybolduğu bağımsız Poppler çıktısıyla kanıtlandı. Yeni koruma bu sessiz
+  kaybı hata olarak reddediyor; karakterlerin doğru üretimi henüz tamamlanmadı.
+- Ortak Unicode shaping çekirdeği, 29 paketli yüz için harici HarfBuzz,
+  18 yön ve 12 kesilmiş satır için harici FriBidi, iki biçimli metin için
+  HarfBuzz bağlam sonuçlarıyla karşılaştırıldı; yedi Rust testi geçti.
+  Font dosyaları ve lisansları hash ile doğrulanıyor; yeniden üretim denetlendi.
+- MTEXT sayısal paket aktarımında girinti/tab/sütun kaybı ve web kesir
+  biçimi kaybı giderildi. Doğrudan dönüşümle paketli dönüşüm karşılaştırması
+  ve 15 WASM paket testi geçti; geometri Float64 kalır.
+- Güncel derlemede yedi PDF kitap testi ve beş editör testi yeniden geçti.
+  Gerçek GUI'de tam hata açıklaması, alan yenileme ve temiz denetim tekrar
+  kontrol edildi. Standart KentOS bileşenleri kullanıldı; ekranlar repo dışında.
+- Ortak shaping, glyph kapsamı, çift yönlü metin ve tam ekran/PDF
+  eşdeğerliği tamamlanmadığı için **CAD-ADV-10 açık kalır**.
+
 ### CAD-ADV-11 — Karmaşık çizgi tiplerini ve çizgi görünüşünü eksiksiz çiz [ ]
 
 **Öncelik:** P1; yanlış teslimi önleyen uyarılar P0. **Kod:** [C19], [C31].

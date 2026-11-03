@@ -103,6 +103,8 @@ iced_runtime = { workspace = true }
 rfd = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+# The same Unicode grapheme rules already used by Iced's editor; persistent text ranges remain scalar indexed.
+unicode-segmentation = "=1.13.3"
 
 [dev-dependencies]
 # App boot and font-sensitive widget tests share a reentrant test-only guard.

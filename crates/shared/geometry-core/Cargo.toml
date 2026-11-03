@@ -18,6 +18,10 @@ publish.workspace = true
 rust_decimal = { workspace = true }
 libm = { workspace = true }
 geographiclib-rs = { workspace = true }
+# The shaping engine already used by native plot and Iced; pure Rust on native/WASM.
+rustybuzz = "=0.20.1"
+unicode-bidi = "=0.3.18"
+unicode-segmentation = "=1.13.3"
 
 [dev-dependencies]
 serde_json = { workspace = true }

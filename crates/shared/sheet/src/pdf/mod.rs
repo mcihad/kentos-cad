@@ -19,6 +19,7 @@ mod fonts;
 mod geo;
 mod images;
 mod maps;
+pub use maps::includes_text_anchor;
 mod write;
 
 use serde::{Deserialize, Serialize};

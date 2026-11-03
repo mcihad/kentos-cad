@@ -125,3 +125,61 @@ fn a_gradient_and_a_dense_hatch_go_to_the_pdf_as_vectors() {
     // The bands and the lines are in it: the map grew by them (it would not if they were outside its frame).
     assert!(made.bytes.len() > plain + 20_000, "{} against {plain}", made.bytes.len());
 }
+
+/// Loaded caches are immutable until an explicit update; stale field values
+/// must not escape through desktop/Python's common delivery path.
+#[test]
+fn stale_loaded_field_cache_blocks_pdf_until_explicit_refresh_and_is_undoable() {
+    use kentos_commands::{CallOp, TextField};
+    use kentos_native_application::{ExecutionContext, registry};
+    let scenario: Value = serde_json::from_str(SCENARIO).unwrap();
+    let mut doc = drawing(&scenario);
+    let layer = doc.layers().active().to_owned();
+    let t: Entity = serde_json::from_value(json!({"kind":"text","id":0,"layerId":layer,"attrs":{},
+        "p":{"x":1.,"y":0.5},"text":"Eski","height":0.125,"rotation":0.})).unwrap();
+    let slot = doc.add(t).unwrap();
+    let uid = doc.uid(slot).unwrap().to_string();
+    let mut snapshot = doc.to_snapshot_v2();
+    let Entity::Text(t) = snapshot.entities.last_mut().unwrap() else { panic!() };
+    t.paragraph.fields = serde_json::from_value::<Vec<TextField>>(json!([
+        {"start":0,"end":4,"source":{"kind":"project","value":"name"}}
+    ])).unwrap();
+    let mut doc = Document::from_snapshot_v2(snapshot).unwrap();
+    let before = doc.to_snapshot_v2();
+    let error = book_pdf(&doc, &[], "kabul", "2026-11-04").expect_err("stale cached field");
+    assert_eq!(error.code, "text_field_stale");
+    assert!(error.message.contains("Eski") && error.message.contains("Oda"));
+    assert_eq!(doc.to_snapshot_v2(), before);
+    let changed = registry::run(&mut ExecutionContext::new(&mut doc), "cad.fields.edit", CallOp::Execute,
+        json!({"edit":{"kind":"update","uids":[uid]}})).unwrap();
+    assert_eq!(changed["status"], "completed", "{changed}");
+    let made = book_pdf(&doc, &[], "kabul", "2026-11-04").unwrap();
+    assert!(!made.findings.iter().any(|f| f.code == "text_field_stale"));
+    assert!(doc.undo().is_some());
+    assert_eq!(doc.to_snapshot_v2(), before);
+}
+
+#[test]
+fn model_text_never_silently_exports_question_mark_substitutions() {
+    let scenario: Value = serde_json::from_str(SCENARIO).unwrap();
+    for (text, x, rejected) in [
+        ("Türkçe: İıŞşĞğÇçÖöÜü ±25 °C 20 m²", 1., false),
+        ("g\u{306}", 1., true),
+        ("Çap ⌀32", 1., true),
+        ("Türkçe / العربية / עברית 123", 1., true),
+        ("Outside viewport: ⌀32", 100000., false),
+    ] {
+        let mut doc = drawing(&scenario);
+        let layer = doc.layers().active().to_owned();
+        doc.add(serde_json::from_value(json!({"kind":"text","id":0,"layerId":layer,"attrs":{},
+            "p":{"x":x,"y":0.5},"text":text,"height":0.125,"rotation":0.,"font":"arimo"})).unwrap()).unwrap();
+        let before = doc.to_snapshot_v2();
+        let result = book_pdf(&doc, &[], "kabul", "2026-11-04");
+        if rejected {
+            let error = result.expect_err(text);
+            assert_eq!(error.code, "map_text_unsupported", "{text}: {error:?}");
+            assert!(error.message.contains("U+"));
+        } else { result.unwrap_or_else(|e| panic!("{text}: {e:?}")); }
+        assert_eq!(doc.to_snapshot_v2(), before);
+    }
+}

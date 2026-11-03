@@ -37,13 +37,20 @@ impl FontMatch {
 /// a `DrawingFont` id, and how; none for one drawn in the project's face.
 pub fn resolve(name: &str) -> (Option<&'static str>, FontMatch) {
     let lower = name.trim().to_lowercase();
-    let n: String = lower
+    // A source may carry either Windows or Unix font paths. Keep the source
+    // string on the style; only match the leaf here, without touching disk.
+    let leaf = lower.rsplit(['/', '\\']).next().unwrap_or(&lower);
+    if leaf.ends_with(".shx") {
+        return (None, FontMatch::Shx);
+    }
+    let family = [".ttf", ".otf", ".ttc", ".woff2", ".woff"]
+        .iter()
+        .find_map(|ext| leaf.strip_suffix(ext))
+        .unwrap_or(leaf);
+    let n: String = family
         .chars()
         .filter(|c| c.is_ascii_alphanumeric())
         .collect();
-    if lower.ends_with(".shx") {
-        return (None, FontMatch::Shx);
-    }
     for (stem, id) in [
         ("barlow", "barlow"),
         ("arimo", "arimo"),
@@ -54,7 +61,7 @@ pub fn resolve(name: &str) -> (Option<&'static str>, FontMatch) {
         ("ibmplexmono", "plex-mono"),
         ("plexmono", "plex-mono"),
     ] {
-        if n.starts_with(stem) {
+        if family_style(&n, stem) {
             return (Some(id), FontMatch::Own);
         }
     }
@@ -62,13 +69,26 @@ pub fn resolve(name: &str) -> (Option<&'static str>, FontMatch) {
         ("arial", "arimo"),
         ("helvetica", "arimo"),
         ("liberationsans", "arimo"),
+        ("couriernew", "courier-prime"),
+        ("courier", "courier-prime"),
         ("cour", "courier-prime"),
     ] {
-        if n.starts_with(stem) {
+        if family_style(&n, stem) {
             return (Some(id), FontMatch::Equivalent);
         }
     }
     (None, FontMatch::Missing)
+}
+
+/// Exact family plus known style/weight labels; a prefix is not a metric
+/// guarantee (Arial Narrow, Helvetica Neue and Barlow Condensed differ).
+fn family_style(name: &str, family: &str) -> bool {
+    name.strip_prefix(family).is_some_and(|style| matches!(style,
+        "" | "regular" | "normal" | "roman" | "medium" | "semibold" |
+        "bold" | "italic" | "oblique" | "bolditalic" | "boldoblique" |
+        "400" | "500" | "600" | "700" | "400italic" |
+        "bd" | "bi" | "i" | "b" | "z"
+    ))
 }
 
 #[cfg(test)]
@@ -97,5 +117,24 @@ mod tests {
         assert_eq!(resolve("romans.shx"), (None, FontMatch::Shx));
         assert_eq!(resolve("times.ttf"), (None, FontMatch::Missing));
         assert!(FontMatch::Shx.substituted() && !FontMatch::Equivalent.substituted());
+    }
+
+    #[test]
+    fn related_names_are_not_proof_of_equal_metrics() {
+        for name in ["Arial Narrow", "Arial Black", "Helvetica Neue", "Barlow Condensed",
+            "Barlow Semi Condensed", "Overpass Mono", "Arimo Display", "Courtney.ttf",
+            "Courier New Condensed", "Arial-custom.ttf", "NotArial.ttf"] {
+            assert_eq!(resolve(name), (None, FontMatch::Missing), "{name}");
+        }
+    }
+
+    #[test]
+    fn file_paths_and_recognized_styles_share_the_family_rule() {
+        for name in [r"C:\Windows\Fonts\arialbd.ttf", "/fonts/Arial-BoldItalic.otf",
+            "Arial Oblique", "LiberationSans-Regular.ttf", "Helvetica-Bold"] {
+            assert_eq!(resolve(name), (Some("arimo"), FontMatch::Equivalent), "{name}");
+        }
+        assert_eq!(resolve("/fonts/Barlow-400-italic.ttf"), (Some("barlow"), FontMatch::Own));
+        assert_eq!(resolve(r"C:\Fonts\ROMANS.SHX"), (None, FontMatch::Shx));
     }
 }

@@ -74,6 +74,7 @@ mod subref;
 mod template_members;
 mod text;
 mod text_along;
+mod text_shaping;
 // The map services' tiles (docs/adr/0208 §3).
 mod tiles;
 mod time;

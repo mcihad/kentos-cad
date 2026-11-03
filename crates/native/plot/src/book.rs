@@ -518,6 +518,7 @@ pub(crate) fn prepare_captured(
             matches!(
                 f.code.as_str(),
                 "missing_named_view" | "bad_scale" | "bad_value" | "plot_provider_unsupported"
+                    | "text_field_stale" | "text_field_unverified" | "map_text_unsupported"
             )
         }) {
             return Err(PlotError::new(&f.code, &f.message));

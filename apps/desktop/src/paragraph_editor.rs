@@ -17,6 +17,7 @@
 
 use std::ops::Range;
 use std::sync::Arc;
+use unicode_segmentation::UnicodeSegmentation;
 
 use iced::advanced::text::Highlighter;
 use iced::advanced::text::highlighter::Format;
@@ -143,6 +144,47 @@ fn position_of(text: &str, letter: usize) -> text_editor::Position {
         line: lines.len().saturating_sub(1),
         column: lines.last().map_or(0, |l| l.len()),
     }
+}
+
+/// Delete a visible character, including its accents/joiners. The underlying
+/// editor backspaces one scalar; our stored run/field offsets still use scalars.
+fn perform_edit(content: &mut Content, action: Action) {
+    if matches!(action, Action::Edit(Edit::Backspace | Edit::Delete)) {
+        let text = content.text();
+        let cursor = content.cursor();
+        let byte_at = |p: text_editor::Position| {
+            let scalar = letter_at(&text, p.line, p.column);
+            text.char_indices().nth(scalar).map_or(text.len(), |(b, _)| b)
+        };
+        let at = byte_at(cursor.position);
+        let other = cursor.selection.map_or(at, byte_at);
+        let (low, high) = (at.min(other), at.max(other));
+        let backwards = matches!(action, Action::Edit(Edit::Backspace));
+        let mut span: Option<Range<usize>> = None;
+        for (start, cluster) in text.grapheme_indices(true) {
+            let end = start + cluster.len();
+            let chosen = if low < high {
+                start < high && end > low
+            } else if backwards {
+                start < at && end >= at
+            } else {
+                start <= at && end > at
+            };
+            if chosen {
+                match &mut span {
+                    Some(span) => span.end = end,
+                    None => span = Some(start..end),
+                }
+            }
+        }
+        if let Some(span) = span {
+            content.move_to(text_editor::Cursor {
+                position: position_of(&text, text[..span.end].chars().count()),
+                selection: Some(position_of(&text, text[..span.start].chars().count())),
+            });
+        }
+    }
+    content.perform(action);
 }
 
 /// The letters the cursor chooses, `start..end`: the selection, or the word
@@ -429,7 +471,7 @@ impl App {
         match event {
             Event::Edit(action) => {
                 let editing = action.is_edit();
-                open.content.perform(action);
+                perform_edit(&mut open.content, action);
                 if editing {
                     let text = open.content.text();
                     open.runs = retext(&open.runs, &open.text, &text);
@@ -806,6 +848,62 @@ impl App {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn deleting_visible_characters_preserves_scalar_run_offsets() {
+        for cluster in ["g\u{306}", "I\u{307}", "👩🏽‍💻", "🇹🇷", "क्\u{200d}ष", "\r\n"] {
+            let text = format!("Ö{cluster}ç");
+            let end = 1 + cluster.chars().count();
+            for (edit, at) in [(Edit::Backspace, end), (Edit::Delete, 1)] {
+                let mut content = Content::with_text(&text);
+                content.move_to(text_editor::Cursor {
+                    position: position_of(&text, at),
+                    selection: None,
+                });
+                perform_edit(&mut content, Action::Edit(edit));
+                assert_eq!(content.text(), "Öç", "cluster {cluster:?}");
+                let runs = retext(&[Run {
+                    start: end as u32,
+                    end: end as u32 + 1,
+                    bold: true,
+                    ..Run::default()
+                }], &text, &content.text());
+                assert_eq!(runs.len(), 1);
+                assert_eq!((runs[0].start, runs[0].end, runs[0].bold), (1, 2, true));
+            }
+        }
+    }
+
+    #[test]
+    fn deleting_a_partial_cluster_selection_expands_only_that_cluster() {
+        let text = "ag\u{306}z";
+        for (a, b) in [(2, 3), (3, 2), (1, 2)] {
+            let mut content = Content::with_text(text);
+            content.move_to(text_editor::Cursor {
+                position: position_of(text, a),
+                selection: Some(position_of(text, b)),
+            });
+            perform_edit(&mut content, Action::Edit(Edit::Backspace));
+            assert_eq!(content.text(), "az");
+        }
+    }
+
+    #[test]
+    fn deleting_at_text_boundaries_and_across_lines_keeps_the_editor_contract() {
+        for (text, at, edit, expected) in [
+            ("abc", 0, Edit::Backspace, "abc"),
+            ("abc", 3, Edit::Delete, "abc"),
+            ("a\nç", 2, Edit::Backspace, "aç"),
+            ("a\nç", 1, Edit::Delete, "aç"),
+            ("g\u{306}", 1, Edit::Delete, ""),
+            ("g\u{306}", 1, Edit::Backspace, ""),
+        ] {
+            let mut content = Content::with_text(text);
+            content.move_to(text_editor::Cursor { position: position_of(text, at), selection: None });
+            perform_edit(&mut content, Action::Edit(edit));
+            assert_eq!(content.text(), expected);
+        }
+    }
 
     /// Pictures for the owner (docs/adr/0182): multi-line texts drawn with
     /// their formats, the tool's box between its corners, the editor with a

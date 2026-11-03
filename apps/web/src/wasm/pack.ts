@@ -30,7 +30,7 @@ interface RunFields {
   bold?: boolean;
   italic?: boolean;
   underline?: boolean;
-  script?: 'super' | 'sub';
+  script?: 'super' | 'sub' | 'stack';
   color?: string;
 }
 
@@ -38,7 +38,7 @@ interface RunFields {
 const place = (list: readonly string[], v: unknown): number => (typeof v === 'string' ? list.indexOf(v) : -1);
 
 const runBits = (r: RunFields): number =>
-  (r.bold ? RUN_BOLD : 0) | (r.italic ? RUN_ITALIC : 0) | (r.underline ? RUN_UNDERLINE : 0) | (r.script === 'super' ? RUN_SUPER : r.script === 'sub' ? RUN_SUB : 0);
+  (r.bold ? RUN_BOLD : 0) | (r.italic ? RUN_ITALIC : 0) | (r.underline ? RUN_UNDERLINE : 0) | (r.script === 'super' ? RUN_SUPER : r.script === 'sub' ? RUN_SUB : r.script === 'stack' ? RUN_SUPER | RUN_SUB : 0);
 
 /** Kinds by their number (`KIND` the other way). */
 const KINDS = ['point', 'line', 'polyline', 'polygon', 'circle', 'arc', 'ellipse', 'xline', 'ray', 'spline', 'text', 'dimension', 'hatch'] as const;
@@ -61,6 +61,8 @@ const LEADER = 15;
 const MULTI_PART_LINE = 16;
 /** A multi-point object (docs/adr/0174): its first point as a point's fields, then the count of the others and each one's. */
 const MULTI_POINT = 17;
+/** MTEXT flow and stacked fractions as geometry JSON; legacy text keeps its numeric record. */
+const EXTENDED_TEXT = 37;
 /**
  * A table (docs/adr/0184): its corner, turn and height; its rows' heights and columns' widths; each cell's words, row
  * by row (as many as its rows times its columns); the merged ranges (a count, four numbers each); the alignments (−1
@@ -161,6 +163,7 @@ export function packEntities(list: Iterable<object>): Packed {
     // An area, a polyline or a point with parts past its first has a number of its own (the others are as they always were).
     const parts = (kind === 0 || kind === 2 || kind === 3) && Array.isArray(e.parts) && e.parts.length ? (e.parts as Record<string, unknown>[]) : null;
     if (parts) kind = kind === 3 ? MULTI_PART : kind === 2 ? MULTI_PART_LINE : MULTI_POINT;
+    if (kind === 10 && e.layout != null) kind = EXTENDED_TEXT;
     num(e.id);
     out.push(str(e.layerId), e.label ? 1 : 0, kind);
     switch (kind) {
@@ -223,6 +226,7 @@ export function packEntities(list: Iterable<object>): Packed {
       // docs/adr/0145: the alignment's place in TEXT_ALIGNS (−1 none), the width factor (NaN none), the mask a flag;
       // docs/adr/0182: the box width and line spacing (NaN none), then the runs: a count, each its start, end, flags
       // (RUN_*) and colour (a string, −1 none).
+      case EXTENDED_TEXT:
       case 10: {
         pt(e.p);
         num(e.height);
@@ -243,6 +247,7 @@ export function packEntities(list: Iterable<object>): Packed {
         const path = e.path as { pts: { x: number; y: number }[]; bulges?: number[] } | undefined;
         out.push(path ? path.pts.length : 0);
         if (path) path.pts.forEach((q, i) => out.push(q.x, q.y, path.bulges?.[i] ?? 0));
+        if (kind === EXTENDED_TEXT) out.push(str(JSON.stringify(e.layout)));
         break;
       }
       // docs/adr/0147: the mask a flag, the slope's elevations (NaN none).
@@ -487,6 +492,7 @@ export function unpackEntities(p: Packed): Unpacked[] {
     const labelled = flag();
     const code = num();
     const kind =
+      code === EXTENDED_TEXT ? 'text' :
       code === MULTI_PART
         ? 'polygon'
         : code === MULTI_PART_LINE
@@ -593,7 +599,8 @@ export function unpackEntities(p: Packed): Unpacked[] {
             if (bits & RUN_BOLD) r.bold = true;
             if (bits & RUN_ITALIC) r.italic = true;
             if (bits & RUN_UNDERLINE) r.underline = true;
-            if (bits & RUN_SUPER) r.script = 'super';
+            if ((bits & (RUN_SUPER | RUN_SUB)) === (RUN_SUPER | RUN_SUB)) r.script = 'stack';
+            else if (bits & RUN_SUPER) r.script = 'super';
             else if (bits & RUN_SUB) r.script = 'sub';
             const color = str();
             if (color !== undefined) r.color = color;
@@ -618,6 +625,7 @@ export function unpackEntities(p: Packed): Unpacked[] {
           }
           g.path = bulges.some((b) => b !== 0) ? { pts, bulges } : { pts };
         }
+        if (code === EXTENDED_TEXT) g.layout = JSON.parse(str() ?? 'null');
         break;
       }
       case 'dimension': {

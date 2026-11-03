@@ -136,6 +136,7 @@ pub(crate) fn inspect_captured(doc:&Document,book:&SheetBook,sheet:&str,render:&
         let Some(extent) = m.extent else {
             continue;
         };
+        out.extend(map_text_coverage(doc, m));
         let shown = crate::layers::map_layers(
             doc.layers().nodes(),
             &doc.settings().layer_states,
@@ -166,21 +167,12 @@ pub(crate) fn inspect_captured(doc:&Document,book:&SheetBook,sheet:&str,render:&
                 if matches!(e, Entity::Raster(_) | Entity::PointCloud(_)) {
                     out.push(finding(&m.item,"plot_provider_unsupported",format!("{id} numaralı raster/nokta bulutu bu çıktı hattında çizilemiyor; eksik pafta üretilmeyecek."),"Baskı için desteklenen bir resim altlığı hazırlayın veya bu katmanı viewportta baskıdan çıkarın.",Severity::Error));
                 }
-                if let Entity::Text(t) = e
-                    && let Some(style) = t
-                        .face
-                        .text_style
-                        .as_ref()
-                        .and_then(|id| doc.settings().text_styles.iter().find(|s| &s.id == id))
-                    && let Some(file) = &style.font_file
-                {
-                    out.push(finding(&m.item,"missing_font",format!("{id} numaralı yazının özgün fontu “{file}” bu baskı hattında gömülemiyor; paketli bir font kullanılıyor."),"Yazı stilini desteklenen bir fonta açıkça dönüştürün veya özgün font desteğini sağlayın.",Severity::Warning));
-                }
-                if let Entity::Dimension(_) = e
+                if matches!(e, Entity::Dimension(_) | Entity::Text(_))
                     && let Some(uid) = doc.uid(kentos_domain::Slot(id))
                 {
                     for f in kentos_native_application::drawing_inspect::annotations::findings(doc, uid, e)
-                        .into_iter().filter(|f| matches!(f.code.as_str(), "dimension_override" | "dimension_partial" | "dimension_invalid"))
+                        .into_iter().filter(|f| matches!(f.code.as_str(), "dimension_override" | "dimension_partial" | "dimension_invalid")
+                            || f.code.starts_with("text_"))
                     {
                         out.push(finding(&m.item, &f.code, format!("{id}: {}", f.message), &f.repair,
                             if f.severity == kentos_commands::InspectionSeverity::Error { Severity::Error } else { Severity::Warning }));
@@ -290,6 +282,37 @@ pub(crate) fn inspect_captured(doc:&Document,book:&SheetBook,sheet:&str,render:&
     });
     out.dedup_by(|a, b| a.item == b.item && a.code == b.code && a.message == b.message);
     Ok(out)
+}
+
+/// Inspect actual map label pieces, including block text and generated values.
+/// Sheet-only preflight does not see the map's text and cannot detect its `?` substitutions.
+fn map_text_coverage(doc: &Document, map: &kentos_sheet::display::MapPrim) -> Vec<Finding> {
+    use std::collections::{BTreeMap, BTreeSet};
+    use kentos_sheet::{style::TextStyle, text::{self, Glyph}};
+    let scaled = doc.at_scale(map.view.annotation_denominator());
+    let source = scaled.as_ref().unwrap_or(doc);
+    let mut spatial = Spatial::new();
+    spatial.ignore_object_isolation();
+    spatial.reload(source);
+    let mut missing: BTreeMap<(String, u16, bool), BTreeSet<char>> = BTreeMap::new();
+    for label in crate::labels::map_labels(source, &spatial, map) {
+        if !kentos_sheet::pdf::includes_text_anchor(map, [label.at.x, label.at.y]) { continue; }
+        let key = (label.font.map_or("barlow", crate::fonts::sheet_font).to_owned(), label.weight, label.italic);
+        let Some(face) = text::face(&TextStyle { font:key.0.clone(), weight:key.1, italic:key.2,
+            size:1000, color:String::new() }) else { continue; };
+        for c in label.text.chars() {
+            if matches!(text::glyph(face, c), Glyph::Missing(_)) {
+                missing.entry(key.clone()).or_default().insert(c);
+            }
+        }
+    }
+    missing.into_iter().map(|((font, weight, italic), chars)| {
+        let chars = chars.into_iter().take(32).map(|c| format!("U+{:04X} ({c})", c as u32)).collect::<Vec<_>>().join(", ");
+        finding(&map.item, "map_text_unsupported", format!(
+            "Viewport yazısı {font} {weight}{} ile PDF'ye eksiksiz yazılamıyor: {chars}. Bu karakterler soru işaretine dönüştürülemez.",
+            if italic { " eğik" } else { "" }),
+            "Desteklenen ortak metin yerleşimini kullanın; kaynak yazıyı silerek veya sessiz karakter değiştirerek teslim etmeyin.", Severity::Error)
+    }).collect()
 }
 
 /// Live tables, legends and coordinates must be populated before judging their layout.

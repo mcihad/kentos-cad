@@ -2708,6 +2708,7 @@ dependencies = [
  "serde",
  "serde_json",
  "tiny-skia",
+ "unicode-segmentation",
  "zune-jpeg 0.5.15",
 ]
 
@@ -2803,7 +2804,10 @@ dependencies = [
  "geographiclib-rs",
  "libm",
  "rust_decimal",
+ "rustybuzz",
  "serde_json",
+ "unicode-bidi",
+ "unicode-segmentation",
 ]
 
 [[package]]

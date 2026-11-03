@@ -6,58 +6,9 @@
 
 use kentos_contracts::DrawingFont;
 
-/// Every face, embedded (1.9 MB; OFL, the licences beside them).
-pub const FACES: [&[u8]; 22] = [
-    include_bytes!("../../../../apps/desktop/assets/fonts/drawing/ArchitectsDaughter-400.ttf"),
-    include_bytes!("../../../../apps/desktop/assets/fonts/drawing/Arimo-400.ttf"),
-    include_bytes!("../../../../apps/desktop/assets/fonts/drawing/Arimo-500.ttf"),
-    include_bytes!("../../../../apps/desktop/assets/fonts/drawing/Arimo-600.ttf"),
-    include_bytes!("../../../../apps/desktop/assets/fonts/drawing/Arimo-700.ttf"),
-    include_bytes!("../../../../apps/desktop/assets/fonts/drawing/Barlow-400-italic.ttf"),
-    include_bytes!("../../../../apps/desktop/assets/fonts/drawing/Barlow-400.ttf"),
-    include_bytes!("../../../../apps/desktop/assets/fonts/drawing/Barlow-500.ttf"),
-    include_bytes!("../../../../apps/desktop/assets/fonts/drawing/Barlow-600.ttf"),
-    include_bytes!("../../../../apps/desktop/assets/fonts/drawing/CourierPrime-400-italic.ttf"),
-    include_bytes!("../../../../apps/desktop/assets/fonts/drawing/CourierPrime-400.ttf"),
-    include_bytes!("../../../../apps/desktop/assets/fonts/drawing/CourierPrime-700.ttf"),
-    include_bytes!("../../../../apps/desktop/assets/fonts/drawing/IBMPlexMono-400.ttf"),
-    include_bytes!("../../../../apps/desktop/assets/fonts/drawing/IBMPlexMono-500.ttf"),
-    include_bytes!("../../../../apps/desktop/assets/fonts/drawing/Overpass-400.ttf"),
-    include_bytes!("../../../../apps/desktop/assets/fonts/drawing/Overpass-500.ttf"),
-    include_bytes!("../../../../apps/desktop/assets/fonts/drawing/Overpass-600.ttf"),
-    include_bytes!("../../../../apps/desktop/assets/fonts/drawing/Overpass-700.ttf"),
-    include_bytes!("../../../../apps/desktop/assets/fonts/drawing/Quicksand-400.ttf"),
-    include_bytes!("../../../../apps/desktop/assets/fonts/drawing/Quicksand-500.ttf"),
-    include_bytes!("../../../../apps/desktop/assets/fonts/drawing/Quicksand-600.ttf"),
-    include_bytes!("../../../../apps/desktop/assets/fonts/drawing/Quicksand-700.ttf"),
-];
-
-/// Each of [`FACES`] as the sheet core names it (`TextPrim.font`, its weight, italic): what a
-/// sheet PDF embeds (docs/sheet/design.md §9a).
-pub const FACE_KEYS: [(&str, u16, bool); 22] = [
-    ("architects-daughter", 400, false),
-    ("arimo", 400, false),
-    ("arimo", 500, false),
-    ("arimo", 600, false),
-    ("arimo", 700, false),
-    ("barlow", 400, true),
-    ("barlow", 400, false),
-    ("barlow", 500, false),
-    ("barlow", 600, false),
-    ("courier-prime", 400, true),
-    ("courier-prime", 400, false),
-    ("courier-prime", 700, false),
-    ("plex-mono", 400, false),
-    ("plex-mono", 500, false),
-    ("overpass", 400, false),
-    ("overpass", 500, false),
-    ("overpass", 600, false),
-    ("overpass", 700, false),
-    ("quicksand", 400, false),
-    ("quicksand", 500, false),
-    ("quicksand", 600, false),
-    ("quicksand", 700, false),
-];
+// Shared byte-for-byte with the Unicode geometry layout. Existing callers retain
+// the 22 drawing faces; Unicode fallback faces are requested by the new layout explicitly.
+pub use kentos_geometry_core::text::font_data::{DRAWING_FACES as FACES, DRAWING_KEYS as FACE_KEYS};
 
 /// The faces for a sheet PDF: their TrueType files, as the core names them.
 pub fn pdf_fonts() -> Vec<kentos_sheet::pdf::PdfFont> {

@@ -1,0 +1,125 @@
+{
+  "sourceCommit": "2fe1e8c6b137fb13041a7cfca6fdcd8a910ea4dc",
+  "fontTools": "4.67.0",
+  "date": 3841516800,
+  "sources": [
+    {
+      "folder": "notosans",
+      "font": {
+        "name": "NotoSans[wdth,wght].ttf",
+        "size": 2049096,
+        "url": "https://raw.githubusercontent.com/google/fonts/2fe1e8c6b137fb13041a7cfca6fdcd8a910ea4dc/ofl/notosans/NotoSans%5Bwdth%2Cwght%5D.ttf",
+        "sha256": "bfb7bb691513f12e734dc346c03a03f784912432d7e3fa8e56efcf906fe86b3d"
+      },
+      "licence": {
+        "name": "OFL.txt",
+        "size": 4396,
+        "url": "https://raw.githubusercontent.com/google/fonts/2fe1e8c6b137fb13041a7cfca6fdcd8a910ea4dc/ofl/notosans/OFL.txt",
+        "sha256": "cee9892f9f0cc8fe882c9e9537ee6a89621d86ee7ceaf70b02e2b2b1c25c061a"
+      }
+    },
+    {
+      "folder": "notosansarabic",
+      "font": {
+        "name": "NotoSansArabic[wdth,wght].ttf",
+        "size": 844676,
+        "url": "https://raw.githubusercontent.com/google/fonts/2fe1e8c6b137fb13041a7cfca6fdcd8a910ea4dc/ofl/notosansarabic/NotoSansArabic%5Bwdth%2Cwght%5D.ttf",
+        "sha256": "63111b5b2e074dd48cc67692e0a2726d86ee94c1c37fe8598257b7b4e87e869e"
+      },
+      "licence": {
+        "name": "OFL.txt",
+        "size": 4382,
+        "url": "https://raw.githubusercontent.com/google/fonts/2fe1e8c6b137fb13041a7cfca6fdcd8a910ea4dc/ofl/notosansarabic/OFL.txt",
+        "sha256": "07fc70bfeb985cc1a87a8587d0a0c80bab11c86c9dc3fd95b6f0cb332f983e96"
+      }
+    },
+    {
+      "folder": "notosanshebrew",
+      "font": {
+        "name": "NotoSansHebrew[wdth,wght].ttf",
+        "size": 112640,
+        "url": "https://raw.githubusercontent.com/google/fonts/2fe1e8c6b137fb13041a7cfca6fdcd8a910ea4dc/ofl/notosanshebrew/NotoSansHebrew%5Bwdth%2Cwght%5D.ttf",
+        "sha256": "7ef36a2c3593758cdb622e1bdef4f84523e92fbc3ccc667438dd80ff54c2de88"
+      },
+      "licence": {
+        "name": "OFL.txt",
+        "size": 4382,
+        "url": "https://raw.githubusercontent.com/google/fonts/2fe1e8c6b137fb13041a7cfca6fdcd8a910ea4dc/ofl/notosanshebrew/OFL.txt",
+        "sha256": "9b9fe028b5ba74d231659a1bbaf0ed09b11e759d1ca6a070999e16d151616b47"
+      }
+    },
+    {
+      "folder": "notosansmath",
+      "font": {
+        "name": "NotoSansMath-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/2fe1e8c6b137fb13041a7cfca6fdcd8a910ea4dc/ofl/notosansmath/NotoSansMath-Regular.ttf",
+        "size": 1015396,
+        "sha256": "3f495fe933c06786e4d5f6d86b8ee70b6753a68ee3b9d87528726de0f6e2c47d"
+      },
+      "licence": {
+        "name": "OFL.txt",
+        "url": "https://raw.githubusercontent.com/google/fonts/2fe1e8c6b137fb13041a7cfca6fdcd8a910ea4dc/ofl/notosansmath/OFL.txt",
+        "size": 4380,
+        "sha256": "403a95275b469061b7d4371c328e0ada3bc7d63328abe2e88aad5cd243b2fe21"
+      }
+    }
+  ],
+  "faces": [
+    {
+      "family": "noto-sans",
+      "weight": 400,
+      "italic": false,
+      "file": "NotoSans-400.ttf",
+      "sha256": "a9e60f3e05ec08956e3be59b7aedfa7db0f1b8921265097e22170bc8dff997f4",
+      "bytes": 495840
+    },
+    {
+      "family": "noto-sans",
+      "weight": 600,
+      "italic": false,
+      "file": "NotoSans-600.ttf",
+      "sha256": "b34c1fe719325f43593d6e13f008fd33f401f1186a337b038b2a710724787c5c",
+      "bytes": 497952
+    },
+    {
+      "family": "noto-sans-arabic",
+      "weight": 400,
+      "italic": false,
+      "file": "NotoSansArabic-400.ttf",
+      "sha256": "797fa8fe35f712e376c9fa8d9e4d851b0f2efabead295b0d3d59f179c3164b11",
+      "bytes": 163220
+    },
+    {
+      "family": "noto-sans-arabic",
+      "weight": 600,
+      "italic": false,
+      "file": "NotoSansArabic-600.ttf",
+      "sha256": "31e7ab08dc1483ec19039ee2ccdfb5680d70b677e21df1f68b2dbfad40877cb8",
+      "bytes": 163500
+    },
+    {
+      "family": "noto-sans-hebrew",
+      "weight": 400,
+      "italic": false,
+      "file": "NotoSansHebrew-400.ttf",
+      "sha256": "f850ef5304d12ad9d640ad312e66513b128767f031066ab9b77020178dbc32d7",
+      "bytes": 44028
+    },
+    {
+      "family": "noto-sans-hebrew",
+      "weight": 600,
+      "italic": false,
+      "file": "NotoSansHebrew-600.ttf",
+      "sha256": "850fa38a959b8625c0f131896750059f5c86f6e2e6e79f50ff1d83cb9e885f82",
+      "bytes": 44184
+    },
+    {
+      "family": "noto-sans-math",
+      "weight": 400,
+      "italic": false,
+      "file": "NotoSansMath-400.ttf",
+      "sha256": "2d564eb558428b82d33873beb5ccd4502a8a4227c157f1831209f19c4fdf5015",
+      "bytes": 492328
+    }
+  ]
+}

@@ -348,10 +348,21 @@ impl App {
                 if !self.cad_inspection_current() { return Task::none(); }
                 let Some(f) = self.cad_inspection.selected.and_then(|i| self.cad_inspection.output.as_ref()?.findings.get(i)).cloned() else { return Task::none(); };
                 if f.group == InspectionGroup::Annotations {
+                    if f.code.starts_with("text_font_") || f.code == "text_field_unverified" { return Task::none(); }
+                    if f.code.starts_with("text_field_") {
+                        let doc = &self.document.as_ref().unwrap().model;
+                        let slots = f.uids.iter().filter_map(|u| Uuid::parse_str(u).ok())
+                            .filter_map(|u| doc.slot_of(u))
+                            .filter(|&s| matches!(doc.get(s), Some(kentos_commands::Entity::Text(_))))
+                            .collect::<Vec<_>>();
+                        self.selection.set(slots);
+                        return self.run("text.fieldsUpdate");
+                    }
                     if let Some(slot) = f.uids.first().and_then(|u| Uuid::parse_str(u).ok()).and_then(|u| self.document.as_ref()?.model.slot_of(u)) {
                         self.selection.set([slot]);
                     }
-                    return self.run(if f.code.starts_with("leader_") { "leader.bindTip" } else { "tool.dimensionReassociate" });
+                    return self.run(if f.code.starts_with("leader_") { "leader.bindTip" }
+                        else { "tool.dimensionReassociate" });
                 }
                 if f.group == InspectionGroup::Hatches {
                     self.memory.hatch_edit_mode = 2;
@@ -398,7 +409,7 @@ impl App {
         let options = row![
             crate::exchange::words::check(p.boundaries, "Sınırlar", Some(msg(Event::Boundaries(!p.boundaries)))),
             crate::exchange::words::check(p.hatches, "Taramalar", Some(msg(Event::Hatches(!p.hatches)))),
-            crate::exchange::words::check(p.annotations, "Ölçü ve kılavuzlar", Some(msg(Event::Annotations(!p.annotations)))),
+            crate::exchange::words::check(p.annotations, "Yazı, ölçü, kılavuz", Some(msg(Event::Annotations(!p.annotations)))),
             label::muted("Boşluk eşiği"),
             NumberInput::new(p.gap, |n| msg(Event::Gap(n)))
                 .units(units::MILLIMETRE)
@@ -481,14 +492,18 @@ impl App {
         }
         body = body.push(table);
         if let Some(finding) = p.selected.and_then(|i| p.output.as_ref()?.findings.get(i)) {
-            body = body.push(label::body(finding.repair.clone())).push(
+            body = body.push(label::body(finding.message.clone())).push(label::body(finding.repair.clone())).push(
                 row![
                     button(label::body("Konuma yakınlaş")).padding(kentos_ui::theme::metrics::action()).style(style::button::secondary).on_press_maybe(current.then(|| msg(Event::Near))),
                     button(label::body("Kaynağa git")).padding(kentos_ui::theme::metrics::action()).style(style::button::secondary)
                         .on_press_maybe((current && finding.group == InspectionGroup::Annotations && finding.uids.len() > 1).then(|| msg(Event::Sources))),
                     button(label::body(if finding.group == InspectionGroup::Hatches { "Taramayı düzenle…" }
-                        else if finding.code.starts_with("leader_") { "Kılavuz ucunu bağla…" } else { "Ölçüyü yeniden bağla…" })).on_press_maybe(
-                        (current && finding.group != InspectionGroup::Boundaries && finding.code != "dimension_override")
+                        else if finding.code.starts_with("leader_") { "Kılavuz ucunu bağla…" }
+                        else if finding.code.starts_with("text_field_") { "Alanları yenile" }
+                        else if finding.code.starts_with("text_font_") { "Yazı stilini inceleyin" }
+                        else { "Ölçüyü yeniden bağla…" })).on_press_maybe(
+                        (current && finding.group != InspectionGroup::Boundaries && finding.code != "dimension_override"
+                            && !finding.code.starts_with("text_font_") && finding.code != "text_field_unverified")
                             .then(|| msg(Event::Repair))
                     ).padding(kentos_ui::theme::metrics::action()).style(style::button::secondary)
                 ]
@@ -553,6 +568,10 @@ fn finding_title(code: &str) -> &'static str {
         "dimension_invalid" => "Geçersiz ölçü",
         "leader_broken" => "Kopuk kılavuz bağı",
         "leader_free" => "Serbest kılavuz ucu",
+        "text_field_stale" => "Alan metni güncel değil",
+        "text_field_broken" => "Alan kaynağı okunamıyor",
+        "text_field_unverified" => "Alan zinciri doğrulanamadı",
+        "text_font_substituted" => "Özgün font yerine başka font",
         _ => "Sınırı inceleyin",
     }
 }

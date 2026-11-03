@@ -298,3 +298,71 @@ fn annotation_inspection_distinguishes_partial_broken_and_overridden_values_with
     assert_eq!(doc.to_snapshot_v2(), before);
     assert_eq!(doc.undo_labels(), undo);
 }
+
+fn field_drawing(count: usize) -> kentos_commands::DocumentSnapshotV2 {
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../fixtures/commands/v1/cad.blocks.find.json")).unwrap();
+    let mut raw = fixture["setup"].clone();
+    raw["name"] = json!("Güncel proje");
+    raw["entities"] = Value::Array((1..=count).map(|i| json!({
+        "kind":"text", "id":i, "layerId":"a", "attrs":{}, "p":{"x":i as f64,"y":0.},
+        "text":"Eski", "height":0.125, "rotation":0.
+    })).collect());
+    Document::from_snapshot(serde_json::from_value(raw).unwrap()).unwrap().to_snapshot_v2()
+}
+
+fn set_field(snapshot: &mut kentos_commands::DocumentSnapshotV2, index: usize, source: Value) {
+    let kentos_commands::Entity::Text(t) = &mut snapshot.entities[index] else { panic!() };
+    t.paragraph.fields = serde_json::from_value(json!([{"start":0,"end":4,"source":source}])).unwrap();
+}
+
+#[test]
+fn opened_field_cache_is_compared_to_live_value_without_rewriting_the_file() {
+    use kentos_commands::{Entity, InspectionSeverity};
+    let mut snapshot = field_drawing(1);
+    set_field(&mut snapshot, 0, json!({"kind":"project","value":"name"}));
+    let doc = Document::from_snapshot_v2(snapshot).unwrap();
+    let before = doc.to_snapshot_v2();
+    let uid = doc.uid(kentos_domain::Slot(1)).unwrap();
+    let e = doc.get(kentos_domain::Slot(1)).unwrap();
+    let found = drawing_inspect::annotations::findings(&doc, uid, e);
+    let stale = found.iter().find(|f| f.code == "text_field_stale").unwrap();
+    assert_eq!(stale.severity, InspectionSeverity::Error);
+    assert!(stale.message.contains("Eski") && stale.message.contains("Güncel proje"));
+    assert_eq!(doc.to_snapshot_v2(), before);
+    assert!(!doc.is_dirty());
+    let Entity::Text(t) = e else { panic!() };
+    assert_eq!(t.text, "Eski");
+}
+
+#[test]
+fn hidden_stale_text_source_and_cycles_cannot_be_mistaken_for_current_values() {
+    let mut snapshot = field_drawing(3);
+    let uids = snapshot.uids.clone();
+    set_field(&mut snapshot, 0, json!({"kind":"object","uid":uids[1],"value":"text"}));
+    set_field(&mut snapshot, 1, json!({"kind":"project","value":"name"}));
+    let doc = Document::from_snapshot_v2(snapshot.clone()).unwrap();
+    let found = drawing_inspect::annotations::findings(&doc, kentos_domain::Uuid::from_bytes(uids[0].0), &snapshot.entities[0]);
+    assert!(found.iter().any(|f| f.code == "text_field_stale"));
+    // Close a dependency ring. The detector is iterative and reports live failure,
+    // even if the imported file did not store a broken flag.
+    set_field(&mut snapshot, 1, json!({"kind":"object","uid":uids[2],"value":"text"}));
+    set_field(&mut snapshot, 2, json!({"kind":"object","uid":uids[1],"value":"text"}));
+    let doc = Document::from_snapshot_v2(snapshot.clone()).unwrap();
+    let before = doc.to_snapshot_v2();
+    let found = drawing_inspect::annotations::findings(&doc, kentos_domain::Uuid::from_bytes(uids[0].0), &snapshot.entities[0]);
+    assert!(found.iter().any(|f| f.code == "text_field_stale"));
+    assert!(found.iter().any(|f| f.code == "text_field_broken"));
+    assert_eq!(doc.to_snapshot_v2(), before);
+}
+
+#[test]
+fn long_field_chains_stop_with_an_explicit_unverified_finding() {
+    let mut snapshot = field_drawing(513);
+    let uids = snapshot.uids.clone();
+    for i in 0..512 {
+        set_field(&mut snapshot, i, json!({"kind":"object","uid":uids[i+1],"value":"text"}));
+    }
+    let doc = Document::from_snapshot_v2(snapshot.clone()).unwrap();
+    let found = drawing_inspect::annotations::findings(&doc, kentos_domain::Uuid::from_bytes(uids[0].0), &snapshot.entities[0]);
+    assert!(found.iter().any(|f| f.code == "text_field_unverified"));
+}

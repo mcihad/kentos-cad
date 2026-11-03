@@ -31,6 +31,7 @@
 //! | 22 closed polyline | path, holes (its last bulge the closing edge's; docs/adr/0258 §1) |
 //! | 23 NURBS curve | degree, control points, knots (values), weights (values), closed, periodic, fit points (−1 none, else points), fitTolerance (NaN none), tangents (4: NaN none) (docs/adr/0259) |
 //! | 28 wall | path (its holes −1), the rest of its source as its JSON text (closed, width, justify, offset, components, caps, fill; docs/adr/0339) |
+//! | 37 text with flow | kind 10's numeric fields followed by layout JSON (indents, tabs, columns); coordinates stay float64 |
 //!
 //! `layer`, `text` and `style` are indices into the strings (−1: none);
 //! `label` is 1 for a non-empty label. `points` is a count n and 2n
@@ -203,7 +204,7 @@ impl Reader<'_> {
     }
 
     fn shape(&mut self, kind: f64) -> Result<Shape, String> {
-        if !(kind >= 0.0 && kind <= 34.0 && kind.fract() == 0.0) {
+        if !(kind >= 0.0 && kind <= 37.0 && kind.fract() == 0.0) {
             return Err(format!(
                 "paketin {}. sayısı bilinmeyen bir nesne türü ({kind})",
                 self.at
@@ -386,7 +387,7 @@ impl Reader<'_> {
                     tangents: tangents.iter().any(Option::is_some).then_some(tangents),
                 }
             }
-            10 => {
+            10 | 37 => {
                 let (p, height, rotation) = (self.pt()?, self.num()?, self.num()?);
                 let text = self.string()?.unwrap_or_default();
                 // docs/adr/0145: the alignment's place in `TextAlign::ALL` (−1 none), the width
@@ -443,8 +444,14 @@ impl Reader<'_> {
                     pts,
                     bulges: bulges.iter().any(|&b| b != 0.0).then_some(bulges),
                 });
+                let flow = if kind == 37.0 {
+                    let text = self.string()?.ok_or_else(|| "Yazı düzeninin metni eksik.".to_owned())?;
+                    let v = Json::parse(&text)?;
+                    if !matches!(v, Json::Obj(_)) { return Err("Yazı düzeni bir nesne olmalı.".into()); }
+                    Some(Box::new(<crate::text::paragraph::Flow as crate::api::json::FromJson>::from_json(&v)?))
+                } else { None };
                 Shape::Text {
-                    flow: None,
+                    flow,
                     p,
                     text,
                     height,
@@ -1121,7 +1128,7 @@ impl Packer {
                 self.put(&[fit_tolerance.unwrap_or(f64::NAN), a.x, a.y, b.x, b.y]);
             }
             Shape::Text {
-                flow: _,
+                flow,
                 p,
                 text,
                 height,
@@ -1141,7 +1148,7 @@ impl Packer {
                 });
                 let runs = runs.as_deref().unwrap_or_default();
                 self.put(&[
-                    10.0,
+                    if flow.is_some() { 37.0 } else { 10.0 },
                     p.x,
                     p.y,
                     *height,
@@ -1178,6 +1185,10 @@ impl Packer {
                     for (i, q) in c.pts.iter().enumerate() {
                         self.put(&[q.x, q.y, c.bulge(i)]);
                     }
+                }
+                if let Some(flow) = flow {
+                    let at = self.string(&crate::api::json::to_string(flow));
+                    self.put(&[at]);
                 }
             }
             Shape::Dimension {
@@ -1680,6 +1691,32 @@ impl Store {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn paragraph_flow_survives_packed_transforms_with_stacked_fraction_ranges() {
+        use crate::api::json::{self, FromJson};
+        let mut shape = Shape::from_json(&Json::parse(r#"{"kind":"text","p":{"x":2,"y":3},"text":"A\t1/2\nİstanbul","height":0.25,"rotation":30,
+          "boxWidth":2,"runs":[{"start":2,"end":5,"script":"stack"}],
+          "layout":{"indent":0.5,"leftIndent":1,"tabs":[2,4],"columns":{"count":2,"gap":1,"height":2}}}"#).unwrap()).unwrap();
+        if let Shape::Text { p, .. } = &mut shape { p.x = -0.; }
+        let mut packed = Packer::default();
+        packed.object(1., "yazı", false, &shape);
+        assert_eq!(packed.nums[3], 37.);
+        let back = unpack(&packed.nums,&packed.strings).unwrap();
+        let Shape::Text { p, .. } = &back[0].3 else { panic!() };
+        assert_eq!(p.x.to_bits(), (-0f64).to_bits());
+        for m in [crate::geom::affine::IDENTITY, crate::geom::affine::scaling(2.,Vec2::new(0.,0.)),
+            crate::geom::affine::translation(4.,5.)] {
+            let changed = transform_packed_objects(&packed.nums,&packed.strings,&[m]).unwrap();
+            let back = unpack(&changed.nums,&changed.strings).unwrap();
+            assert_eq!(json::to_string(&back[0].3),json::to_string(&transform_shape(&shape,&m)));
+        }
+        let bad = vec!["yazı".into(), r#"{"kind":"point","p":{"x":0,"y":0}}"#.into()];
+        assert!(unpack(&[1.,0.,0.,37.,1.],&bad).is_err());
+        let mut bad = packed.strings.clone();
+        *bad.last_mut().unwrap() = "false".into();
+        assert!(unpack(&packed.nums,&bad).is_err());
+    }
 
     #[test]
     fn reads_every_kind_like_the_json() {

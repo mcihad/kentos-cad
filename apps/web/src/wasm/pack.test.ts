@@ -310,3 +310,23 @@ describe('a multi-part polyline and a multi-point object packed (docs/adr/0174)'
     store.dispose();
   });
 });
+
+it('preserves MTEXT indents, tabs, columns and stacked fractions in packed geometry', () => {
+  const geometry = {
+    kind: 'text', p: { x: 2, y: 3 }, text: 'A\t1/2\nİstanbul', height: 0.25, rotation: 30, boxWidth: 2,
+    runs: [{ start: 2, end: 5, script: 'stack' }],
+    layout: { indent: 0.5, leftIndent: 1, tabs: [2, 4], columns: { count: 2, gap: 1, height: 2 } },
+  };
+  const packed = packEntities([{ ...geometry, id: 1, layerId: 'yazı', attrs: {} }]);
+  expect(packed.nums[3]).toBe(37);
+  expect(unpackEntities(packed)[0].geometry).toEqual(geometry);
+  const fromPacked = new CoreStore();
+  const fromJson = new CoreStore();
+  try {
+    fromPacked.putPacked(packed.nums, packed.strings);
+    fromJson.put(JSON.stringify([{ ...geometry, id: 1, layerId: 'yazı' }]));
+    expect(fromPacked.itemJson(1)).toEqual(fromJson.itemJson(1));
+  } finally {
+    fromPacked.dispose(); fromJson.dispose();
+  }
+});
