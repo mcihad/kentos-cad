@@ -42,6 +42,139 @@ def closed_path_drawing():
 
 
 class ArrayTests(unittest.TestCase):
+    def test_reviewed_existing_blocks_adopt_without_replacing_roots_and_keep_bound_dimensions(self):
+        fixture = json.loads((ROOT / "fixtures/commands/v1/cad.arrays.adopt.json").read_text())
+        doc = cad.Document.from_bytes(json.dumps(fixture["setup"]).encode())
+        records = list(doc.entities())
+        roots = {r.entity.id: r.uid for r in records}
+        measure = cad.AlignedDimensionMeasure(
+            a=cad.PlaceMeasuredPoint(uid=roots[4], path=[0], place=cad.StartSubPlace()),
+            b=cad.PlaceMeasuredPoint(uid=roots[5], path=[0], place=cad.StartSubPlace()))
+        dimension = cad.dimensions.create(doc, measure=measure, at=(7., 1.), layer_id="a", height=.18).created[0]
+        items = [cad.ArrayItem(uid=roots[k+1], kept=k == 1) if k not in [2, 6] else cad.ArrayItem()
+                 for k in range(8)]
+        layout = cad.LineArrayLayout(count=8, dx=2., dy=0., fit=False)
+        before = doc.to_bytes()
+        objects = [(r.uid, r.entity.to_json()) for r in doc.entities()]
+        plan = cad.arrays.adopt.plan(doc, source=roots[1], items=items, layout=layout)
+        self.assertEqual((plan.missing, plan.kept, plan.deviation), (2, 1, 0.))
+        self.assertEqual(doc.to_bytes(), before)
+        made = cad.arrays.adopt(doc, source=roots[1], items=items, layout=layout,
+                                expected_revision=plan.revision)
+        self.assertEqual(made.retained, [roots[k+1] for k in range(8) if k not in [2, 6]])
+        self.assertEqual([(r.uid, r.entity.to_json()) for r in doc.entities()], objects)
+        adopted = doc.to_bytes()
+        self.assertEqual(cad.Document.from_bytes(adopted).to_bytes(), adopted)
+        doc.undo(); self.assertEqual(doc.to_bytes(), before)
+        doc.redo(); self.assertEqual(doc.to_bytes(), adopted)
+        cad.arrays.edit(doc, array=made.array,
+            edit=cad.LayoutArrayEdit(layout=cad.LineArrayLayout(count=10, dx=3., dy=0., fit=False)))
+        current = doc.arrays()[0]["items"]
+        for k in [0, 1, 3, 4, 5, 7]:
+            self.assertEqual(current[k]["uid"], roots[k+1])
+        self.assertNotIn("uid", current[2]); self.assertNotIn("uid", current[6])
+        kept = doc.entity(roots[2]).entity.p
+        self.assertEqual((kept.x, kept.y), (2.5, .25))
+        self.assertAlmostEqual(cad.dimensions.query(doc).dimensions[0].measured, 3.)
+        self.assertEqual(doc.entity(dimension).entity.refs.a.uid, roots[4])
+        self.assertEqual(doc.entity(dimension).entity.refs.a.path, [0])
+        expanded = doc.to_bytes()
+        cad.arrays.edit(doc, array=made.array, edit=cad.RemoveArrayEdit(items=[4]))
+        removed = doc.to_bytes()
+        cad.arrays.edit(doc, array=made.array, edit=cad.ResetArrayEdit())
+        self.assertTrue(all(i.get("uid") and not i.get("kept", False) for i in doc.arrays()[0]["items"]))
+        self.assertEqual(doc.entity(roots[2]).entity.p.x, 3.)
+        doc.undo(); self.assertEqual(doc.to_bytes(), removed)
+        doc.undo(); self.assertEqual(doc.to_bytes(), expanded)
+        doc.undo(); self.assertEqual(doc.to_bytes(), adopted)
+
+    def test_adoption_request_is_cached_once_without_a_second_array_or_undo_step(self):
+        fixture = json.loads((ROOT / "fixtures/commands/v1/cad.arrays.adopt.json").read_text())
+        doc = cad.Document.from_bytes(json.dumps(fixture["setup"]).encode())
+        roots = {r.entity.id: r.uid for r in doc.entities()}
+        objects = [(r.uid, r.entity.to_json()) for r in doc.entities()]
+        args = dict(source=roots[1], layout=cad.LineArrayLayout(count=8, dx=2., dy=0., fit=False),
+            items=[cad.ArrayItem(uid=roots[k+1], kept=k == 1) if k not in [2, 6] else cad.ArrayItem() for k in range(8)],
+            expected_revision=doc.revision, request_id="array-adopt-once")
+        made = cad.arrays.adopt(doc, **args)
+        after = doc.to_bytes()
+        replay = cad.arrays.adopt(doc, **args)
+        self.assertEqual(replay.array, made.array)
+        self.assertEqual(doc.to_bytes(), after)
+        self.assertEqual(len(doc.arrays()), 1)
+        self.assertEqual([(r.uid, r.entity.to_json()) for r in doc.entities()], objects)
+        self.assertEqual(doc.undo(), "Mevcut blokları diziye bağla")
+        self.assertEqual(doc.arrays(), [])
+        self.assertEqual([(r.uid, r.entity.to_json()) for r in doc.entities()], objects)
+        self.assertIsNone(doc.undo())
+
+    def test_missing_and_kept_places_cannot_hide_coordinate_overflow_in_a_review(self):
+        fixture = json.loads((ROOT / "fixtures/commands/v1/cad.arrays.adopt.json").read_text())
+        doc = cad.Document.from_bytes(json.dumps(fixture["setup"]).encode())
+        roots = {r.entity.id: r.uid for r in doc.entities()}
+        before = doc.to_bytes()
+        for last in [cad.ArrayItem(), cad.ArrayItem(uid=roots[5], kept=True)]:
+            result = cad.arrays.adopt.answer(doc, source=roots[1],
+                layout=cad.LineArrayLayout(count=3, dx=1e308, dy=0., fit=False),
+                items=[cad.ArrayItem(uid=roots[1]), cad.ArrayItem(uid=roots[4]), last],
+                tolerance=1e308, op="plan")
+            self.assertEqual(result.status, "failed")
+            self.assertEqual(result.error.code, "array_adoption_refused")
+            self.assertEqual(result.error.path, "layout")
+            self.assertEqual(doc.to_bytes(), before)
+
+    def test_a_guarded_adoption_plan_reads_existing_roots_and_kept_items_before_metadata_only_write(self):
+        from kentos.cad.protocol import Expected
+        fixture = json.loads((ROOT / "fixtures/commands/v1/cad.arrays.adopt.json").read_text())
+        for kept_only in [False, True]:
+            doc = cad.Document.from_bytes(json.dumps(fixture["setup"]).encode())
+            roots = {r.entity.id: r.uid for r in doc.entities()}
+            args = dict(source=roots[1], layout=cad.LineArrayLayout(count=8, dx=2., dy=0., fit=False),
+                items=[cad.ArrayItem(uid=roots[k+1], kept=k == 1) if k not in [2, 6] else cad.ArrayItem() for k in range(8)])
+            plan = cad.arrays.adopt.answer(doc, **args, op="plan")
+            self.assertEqual(plan.status, "completed")
+            self.assertEqual(len(plan.summary.sources.objects), 6)
+            self.assertEqual(len(plan.summary.sources.blocks), 1)
+            self.assertEqual(plan.summary.undo_label, "Mevcut blokları diziye bağla")
+            changed = [roots[2]] if kept_only else [u for k, u in roots.items() if k != 9]
+            cad.entities.transform(doc, uids=changed, transform=cad.MoveTransform(dx=1., dy=1.))
+            current = cad.arrays.adopt.answer(doc, **args, op="plan")
+            self.assertEqual(current.status, "completed")
+            self.assertNotEqual(current.plan_id, plan.plan_id)
+            before = doc.to_bytes()
+            result = cad.arrays.adopt.answer(doc, **args, expected=Expected(plan=plan.plan_id))
+            self.assertEqual(result.status, "conflict")
+            self.assertEqual(result.error.code, "plan_changed")
+            self.assertEqual(doc.to_bytes(), before)
+
+    def test_adoption_job_refuses_old_geometry_or_cancels_and_a_valid_job_has_typed_output(self):
+        fixture = json.loads((ROOT / "fixtures/commands/v1/cad.arrays.adopt.json").read_text())
+        for action in ["move", "cancel", "success"]:
+            doc = cad.Document.from_bytes(json.dumps(fixture["setup"]).encode())
+            roots = {r.entity.id: r.uid for r in doc.entities()}
+            input_ = cad.ArraysAdopt(source=roots[1], layout=cad.LineArrayLayout(count=8, dx=2., dy=0., fit=False),
+                items=[cad.ArrayItem(uid=roots[k+1], kept=k == 1) if k not in [2, 6] else cad.ArrayItem() for k in range(8)])
+            before = doc.to_bytes()
+            job = doc.start("cad.arrays.adopt", input_)
+            if action == "move":
+                cad.entities.transform(doc, uids=[roots[1]], transform=cad.MoveTransform(dx=0., dy=1.))
+                before = doc.to_bytes()
+                with self.assertRaises(cad.RevisionConflict) as caught:
+                    job.result()
+                self.assertEqual(caught.exception.code, "document_changed")
+                self.assertEqual(doc.to_bytes(), before)
+            elif action == "cancel":
+                job.cancel()
+                with self.assertRaises(cad.CommandCancelled):
+                    job.result()
+                self.assertEqual(doc.to_bytes(), before)
+            else:
+                result = job.result()
+                self.assertEqual(result.status, "completed")
+                self.assertEqual(result.output.array, doc.arrays()[0]["id"])
+                self.assertEqual(len(result.output.retained), 6)
+                doc.undo(); self.assertEqual(doc.to_bytes(), before)
+
     def test_closed_path_preview_committed_items_and_closure_edits_agree_in_millimetre_projects(self):
         doc, source, path = closed_path_drawing()
         layout = cad.PathArrayLayout(path=path, count=8, align=False)

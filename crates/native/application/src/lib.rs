@@ -47,6 +47,7 @@ pub mod arc;
 pub mod array;
 mod array_assoc;
 pub mod arrays_edit;
+pub mod arrays_adopt;
 pub mod constraint_copy;
 pub(crate) mod dimension_set_copy;
 pub mod constraint_follow;
@@ -1222,6 +1223,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_ENTITIES_LENGTHEN,
         kentos_commands::CAD_ENTITIES_LENGTHEN_VERSION,
+    ),
+    (
+        kentos_commands::CAD_ARRAYS_ADOPT,
+        kentos_commands::CAD_ARRAYS_ADOPT_VERSION,
     ),
     (
         kentos_commands::CAD_ARRAYS_EDIT,

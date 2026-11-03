@@ -716,6 +716,8 @@ codes! {
     UNITS_DIFFER = "units_differ", Warning, false, "Kaynak çizimin birimi bu çizimin biriminden başka; nesneler gerçek boylarıyla yapıştırıldı.";
     /// An exploded curve's density out of range (Patlat, docs/adr/0308).
     INVALID_DENSITY = "invalid_density", Failed, false, "Nokta sıklığı geçersiz: bölüm sayısı 1 ile 100 000 arasında, aralık ve sapma sıfırdan büyük olmalı.";
+    /// Reviewed placements cannot join the proposed associative array (docs/adr/0873).
+    ARRAY_ADOPTION_REFUSED = "array_adoption_refused", Failed, false, "Mevcut yerleştirmelerin örüntüye, ortak şablona veya tekil öğe kimliğine uygunluğu doğrulanamadı; çizim değiştirilmedi.";
     /// No associative array has the id (Diziyi düzenle, docs/adr/0301).
     ARRAY_NOT_FOUND = "array_not_found", Failed, false, "Kimliği verilen ilişkili dizi çizimde yok.";
     /// An item number out of the array's places, given twice, or none given (Diziyi düzenle).

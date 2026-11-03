@@ -57,6 +57,7 @@ use crate::addresses_normalize;
 use crate::blocks_insert;
 use crate::blocks_find;
 use crate::blocks_convert;
+use crate::arrays_adopt;
 use crate::donut_create;
 use crate::drawing_compare;
 use crate::fields_write;
@@ -402,6 +403,7 @@ macro_rules! by_command {
             kentos_commands::CAD_ENTITIES_JOIN => $then!(entities_join, EntitiesJoin),
             kentos_commands::CAD_ENTITIES_REVERSE => $then!(entities_reverse, EntitiesReverse),
             kentos_commands::CAD_ENTITIES_LENGTHEN => $then!(entities_lengthen, EntitiesLengthen),
+            kentos_commands::CAD_ARRAYS_ADOPT => $then!(arrays_adopt, kentos_commands::ArraysAdopt),
             kentos_commands::CAD_ARRAYS_EDIT => $then!(arrays_edit, ArraysEdit),
             kentos_commands::CAD_CONSTRAINTS_EDIT => $then!(constraints_edit, ConstraintsEdit),
             kentos_commands::CAD_CONSTRAINTS_QUERY => $then!(constraints_query, ConstraintsQuery),

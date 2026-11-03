@@ -53,6 +53,7 @@ use kentos_native_application::donut_create;
 use kentos_native_application::drawing_compare;
 use kentos_native_application::blocks_find;
 use kentos_native_application::blocks_convert;
+use kentos_native_application::arrays_adopt;
 use kentos_native_application::fields_write;
 use kentos_native_application::gpkg_tiles::{read as gpkg_tiles_read, write as gpkg_tiles_write};
 use kentos_native_application::layers_crs::{
@@ -477,6 +478,21 @@ fn bulge_number<'a>(bulges: &'a mut Option<Vec<f64>>, rest: &str) -> Option<&'a 
 trait Input {
     /// The number at an error path; `None` when the input has no such place.
     fn number(&mut self, path: &str) -> Option<&mut f64>;
+}
+impl Input for kentos_commands::ArraysAdopt {
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        use kentos_commands::ArrayLayout as L;
+        match (&mut self.layout, path) {
+            (_, "tolerance") => self.tolerance.as_mut(),
+            (L::Grid { dx, .. } | L::Line { dx, .. }, "layout.dx") => Some(dx),
+            (L::Grid { dy, .. } | L::Line { dy, .. }, "layout.dy") => Some(dy),
+            (L::Polar { center, .. }, "layout.center.x") => Some(&mut center.x),
+            (L::Polar { center, .. }, "layout.center.y") => Some(&mut center.y),
+            (L::Polar { fill, .. }, "layout.fill") => Some(fill),
+            (L::Path { spacing, .. }, "layout.spacing") => spacing.as_mut(),
+            _ => None,
+        }
+    }
 }
 impl Input for kentos_commands::DimensionSetsCreateInput {
     fn number(&mut self, path: &str) -> Option<&mut f64> {
@@ -4258,6 +4274,9 @@ fn run_op(
             run!(entities_lengthen, kentos_commands::EntitiesLengthen)
         }
         kentos_commands::CAD_ENTITIES_DIVIDE => run!(divide, EntitiesDivide),
+        kentos_commands::CAD_ARRAYS_ADOPT => {
+            run!(arrays_adopt, kentos_commands::ArraysAdopt)
+        }
         kentos_commands::CAD_ARRAYS_EDIT => {
             run!(arrays_edit, kentos_commands::ArraysEdit)
         }

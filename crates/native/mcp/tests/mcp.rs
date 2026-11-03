@@ -9,6 +9,87 @@ use std::process::{Command, Stdio};
 use kentos_mcp::{LEGACY, MODERN, Server};
 use serde_json::{Value, json};
 
+#[test]
+fn reviewed_array_adoption_keeps_original_inserts_dimensions_two_gaps_and_guarded_undo() {
+    let dir = std::env::temp_dir().join(format!("kentos-mcp-adopt-array-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join("source.json");
+    let saved = dir.join("saved.kcad");
+    let fixture: Value = serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.arrays.adopt.json")).unwrap();
+    std::fs::write(&path, fixture["setup"].to_string()).unwrap();
+    let mut server = Server::new();
+    let drawing = call(&mut server, "drawing.open", json!({"path":path}))["structuredContent"]["drawing"].clone();
+    let records = call(&mut server, "drawing.entities", json!({"drawing":drawing}))["structuredContent"]["items"].clone();
+    let roots: std::collections::HashMap<_, _> = records.as_array().unwrap().iter()
+        .map(|r| (r["entity"]["id"].as_u64().unwrap(), r["uid"].clone())).collect();
+    let measure = json!({"kind":"aligned",
+        "a":{"kind":"place","uid":roots[&4],"path":[0],"place":{"kind":"start"}},
+        "b":{"kind":"place","uid":roots[&5],"path":[0],"place":{"kind":"start"}}});
+    let dimension = call(&mut server,"cad.dimensions.create",json!({"drawing":drawing,"measure":measure,
+        "at":{"x":7.,"y":1.},"layerId":"a","height":0.18}))["structuredContent"].clone();
+    assert_eq!(dimension["status"],"completed","{dimension}");
+    let dimension = dimension["output"]["created"][0].clone();
+    call(&mut server,"drawing.save",json!({"drawing":drawing,"path":saved}));
+    let before = std::fs::read(&saved).unwrap();
+    let items:Vec<_> = (0..8).map(|k| match k {
+        2|6 => json!({}), 1 => json!({"uid":roots[&(k+1)],"kept":true}),
+        _ => json!({"uid":roots[&(k+1)]}),
+    }).collect();
+    let mut input = json!({"drawing":drawing,"source":roots[&1],"layout":{"kind":"line","count":8,"dx":2.,"dy":0.,"fit":false},"items":items,"op":"plan"});
+    let plan = call(&mut server,"cad.arrays.adopt",input.clone())["structuredContent"].clone();
+    assert_eq!(plan["status"],"completed","{plan}");
+    assert_eq!(plan["output"]["missing"],2);assert_eq!(plan["output"]["kept"],1);
+    assert_eq!(plan["summary"]["sources"]["objects"].as_object().unwrap().len(),6);
+    assert_eq!(plan["summary"]["undo"]["label"],"Mevcut blokları diziye bağla");
+    call(&mut server,"drawing.save",json!({"drawing":drawing,"path":saved}));
+    assert_eq!(std::fs::read(&saved).unwrap(),before);
+    input["op"]=json!("execute");input["expected"]=json!({"plan":plan["planId"]});
+    let made = call(&mut server,"cad.arrays.adopt",input)["structuredContent"].clone();
+    assert_eq!(made["status"],"completed","{made}");
+    assert_eq!(made["output"]["retained"].as_array().unwrap().len(),6);
+    call(&mut server,"drawing.save",json!({"drawing":drawing,"path":saved}));
+    let adopted = std::fs::read(&saved).unwrap();
+    let initial = kentos_native_application::file_import_block::read_drawing(&before).unwrap();
+    let after = kentos_native_application::file_import_block::read_drawing(&adopted).unwrap();
+    assert_eq!(initial.entities,after.entities);assert_eq!(initial.uids,after.uids);
+    assert_eq!(initial.blocks,after.blocks);assert_eq!(initial.settings,after.settings);
+    assert_eq!(after.arrays.len(),1);assert!(after.arrays[0].items[2].uid.is_none());assert!(after.arrays[0].items[6].uid.is_none());
+    call(&mut server,"drawing.undo",json!({"drawing":drawing}));
+    call(&mut server,"drawing.save",json!({"drawing":drawing,"path":saved}));assert_eq!(std::fs::read(&saved).unwrap(),before);
+    call(&mut server,"drawing.redo",json!({"drawing":drawing}));
+    call(&mut server,"drawing.save",json!({"drawing":drawing,"path":saved}));assert_eq!(std::fs::read(&saved).unwrap(),adopted);
+    let edited=call(&mut server,"cad.arrays.edit",json!({"drawing":drawing,"array":made["output"]["array"],
+        "edit":{"kind":"layout","layout":{"kind":"line","count":10,"dx":3.,"dy":0.,"fit":false}}}))["structuredContent"].clone();
+    assert_eq!(edited["status"],"completed","{edited}");
+    let records=call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"].clone();
+    let dim=records.as_array().unwrap().iter().find(|r|r["uid"]==dimension).unwrap();
+    assert_eq!(dim["entity"]["a"]["x"],9.);assert_eq!(dim["entity"]["b"]["x"],12.);
+    assert_eq!(dim["entity"]["refs"]["a"]["uid"],roots[&4]);
+    assert_eq!(dim["entity"]["refs"]["a"]["path"],json!([0]));
+    assert!(dim["entity"]["refs"]["a"]["broken"].is_null());
+    // Moving every root preserves the relative pattern but invalidates its old absolute review.
+    let second = call(&mut server,"drawing.open",json!({"path":path}))["structuredContent"]["drawing"].clone();
+    let mut guarded = json!({"drawing":second,"source":roots[&1],"layout":{"kind":"line","count":8,"dx":2.,"dy":0.,"fit":false},"items":items,"op":"plan"});
+    let first = call(&mut server,"cad.arrays.adopt",guarded.clone())["structuredContent"].clone();
+    assert_eq!(first["status"],"completed","{first}");
+    let selected:Vec<_>=[1,2,4,5,6,8].into_iter().map(|k|roots[&k].clone()).collect();
+    let moved = call(&mut server,"cad.entities.transform",json!({"drawing":second,"uids":selected,
+        "transform":{"kind":"move","dx":1.,"dy":1.}}))["structuredContent"].clone();
+    assert_eq!(moved["status"],"completed","{moved}");
+    let current = call(&mut server,"cad.arrays.adopt",guarded.clone())["structuredContent"].clone();
+    assert_eq!(current["status"],"completed","{current}");
+    assert_ne!(first["planId"],current["planId"]);
+    let guarded_file=dir.join("guarded.kcad");
+    call(&mut server,"drawing.save",json!({"drawing":second,"path":guarded_file}));
+    let unchanged=std::fs::read(&guarded_file).unwrap();
+    guarded["op"]=json!("execute");guarded["expected"]=json!({"plan":first["planId"]});
+    let stale = call(&mut server,"cad.arrays.adopt",guarded)["structuredContent"].clone();
+    assert_eq!(stale["status"],"conflict","{stale}");assert_eq!(stale["error"]["code"],"plan_changed");
+    call(&mut server,"drawing.save",json!({"drawing":second,"path":guarded_file}));
+    assert_eq!(std::fs::read(&guarded_file).unwrap(),unchanged);
+    std::fs::remove_dir_all(dir).unwrap();
+}
+
 fn meta() -> Value {
     json!({
         "io.modelcontextprotocol/protocolVersion": MODERN,

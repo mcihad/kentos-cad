@@ -12,6 +12,7 @@ mod address_spellings;
 mod addresses_compare;
 mod arch_bond_timing;
 mod array_assoc;
+mod arrays_adopt;
 mod audit_cmd;
 mod gpkg_tiles_files;
 mod gpkg_tiles_timing;

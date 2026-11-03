@@ -1,0 +1,2551 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.arrays.adopt",
+  "commandVersion": 1,
+  "title": "Mevcut blokları diziye bağla",
+  "note": "ADR0873. Independent script; topology/dimensions and exact stale-job/Undo snapshots: arrays_adopt.rs.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Tekrar arama",
+    "settings": {
+      "srid": 0,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 50,
+      "workspace": "cad",
+      "drawingUnit": "mm"
+    },
+    "origin": {
+      "x": 0,
+      "y": 0
+    },
+    "layers": [
+      {
+        "id": "a",
+        "name": "A",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.18
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "a",
+    "entities": [
+      {
+        "kind": "insert",
+        "id": 1,
+        "layerId": "a",
+        "attrs": {},
+        "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+        "p": {
+          "x": 0,
+          "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+      },
+      {
+        "kind": "insert",
+        "id": 2,
+        "layerId": "a",
+        "attrs": {},
+        "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+        "p": {
+          "x": 2.5,
+          "y": 0.25
+        },
+        "scale": 1,
+        "rotation": 0
+      },
+      {
+        "kind": "insert",
+        "id": 4,
+        "layerId": "a",
+        "attrs": {},
+        "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+        "p": {
+          "x": 6,
+          "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+      },
+      {
+        "kind": "insert",
+        "id": 5,
+        "layerId": "a",
+        "attrs": {},
+        "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+        "p": {
+          "x": 8,
+          "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+      },
+      {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "a",
+        "attrs": {},
+        "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+        "p": {
+          "x": 10,
+          "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+      },
+      {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "a",
+        "attrs": {},
+        "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+        "p": {
+          "x": 14,
+          "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+      },
+      {
+        "kind": "line",
+        "id": 9,
+        "layerId": "a",
+        "attrs": {},
+        "a": {
+          "x": 0,
+          "y": 0
+        },
+        "b": {
+          "x": 20,
+          "y": 0
+        }
+      }
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    },
+    "blocks": [
+      {
+        "id": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+        "name": "Teknik parça",
+        "base": {
+          "x": 0,
+          "y": 0
+        },
+        "units": "m",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "a",
+            "attrs": {},
+            "a": {
+              "x": 0,
+              "y": 0
+            },
+            "b": {
+              "x": 1,
+              "y": 0
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "validate: iki eksik yer, açıkça korunan öğe ve değişmeyen kök kimlikler",
+      "steps": [
+        {
+          "op": "validate",
+          "input": {
+            "source": "$uidOf:1",
+            "layout": {
+              "kind": "line",
+              "count": 8,
+              "dx": 2,
+              "dy": 0,
+              "fit": false
+            },
+            "items": [
+              {
+                "uid": "$uidOf:1"
+              },
+              {
+                "uid": "$uidOf:2",
+                "kept": true
+              },
+              {},
+              {
+                "uid": "$uidOf:4"
+              },
+              {
+                "uid": "$uidOf:5"
+              },
+              {
+                "uid": "$uidOf:6"
+              },
+              {},
+              {
+                "uid": "$uidOf:8"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              4,
+              5,
+              6,
+              8,
+              9
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same",
+            "arrays": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "plan: iki eksik yer, açıkça korunan öğe ve değişmeyen kök kimlikler",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "source": "$uidOf:1",
+            "layout": {
+              "kind": "line",
+              "count": 8,
+              "dx": 2,
+              "dy": 0,
+              "fit": false
+            },
+            "items": [
+              {
+                "uid": "$uidOf:1"
+              },
+              {
+                "uid": "$uidOf:2",
+                "kept": true
+              },
+              {},
+              {
+                "uid": "$uidOf:4"
+              },
+              {
+                "uid": "$uidOf:5"
+              },
+              {
+                "uid": "$uidOf:6"
+              },
+              {},
+              {
+                "uid": "$uidOf:8"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              4,
+              5,
+              6,
+              8,
+              9
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same",
+            "arrays": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "execute: iki eksik yer, açıkça korunan öğe ve değişmeyen kök kimlikler",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": "$uidOf:1",
+            "layout": {
+              "kind": "line",
+              "count": 8,
+              "dx": 2,
+              "dy": 0,
+              "fit": false
+            },
+            "items": [
+              {
+                "uid": "$uidOf:1"
+              },
+              {
+                "uid": "$uidOf:2",
+                "kept": true
+              },
+              {},
+              {
+                "uid": "$uidOf:4"
+              },
+              {
+                "uid": "$uidOf:5"
+              },
+              {
+                "uid": "$uidOf:6"
+              },
+              {},
+              {
+                "uid": "$uidOf:8"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              4,
+              5,
+              6,
+              8,
+              9
+            ],
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed",
+            "arrays": [
+              {
+                "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+                "layerId": "a",
+                "p": {
+                  "x": 0,
+                  "y": 0
+                },
+                "scale": 1,
+                "rotation": 0,
+                "layout": {
+                  "kind": "line",
+                  "count": 8,
+                  "dx": 2,
+                  "dy": 0
+                },
+                "items": [
+                  {
+                    "uid": "$uidOf:1"
+                  },
+                  {
+                    "uid": "$uidOf:2",
+                    "kept": true
+                  },
+                  {},
+                  {
+                    "uid": "$uidOf:4"
+                  },
+                  {
+                    "uid": "$uidOf:5"
+                  },
+                  {
+                    "uid": "$uidOf:6"
+                  },
+                  {},
+                  {
+                    "uid": "$uidOf:8"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "bozuk kaynak kimliği",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": "bad",
+            "layout": {
+              "kind": "line",
+              "count": 8,
+              "dx": 2,
+              "dy": 0,
+              "fit": false
+            },
+            "items": [
+              {
+                "uid": "$uidOf:1"
+              },
+              {
+                "uid": "$uidOf:2",
+                "kept": true
+              },
+              {},
+              {
+                "uid": "$uidOf:4"
+              },
+              {
+                "uid": "$uidOf:5"
+              },
+              {
+                "uid": "$uidOf:6"
+              },
+              {},
+              {
+                "uid": "$uidOf:8"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_uid",
+              "message": "$any",
+              "path": "source"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              4,
+              5,
+              6,
+              8,
+              9
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same",
+            "arrays": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "olmayan kaynak",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": "01925f3e-7c1a-7d2b-9e4f-000000000999",
+            "layout": {
+              "kind": "line",
+              "count": 8,
+              "dx": 2,
+              "dy": 0,
+              "fit": false
+            },
+            "items": [
+              {
+                "uid": "$uidOf:1"
+              },
+              {
+                "uid": "$uidOf:2",
+                "kept": true
+              },
+              {},
+              {
+                "uid": "$uidOf:4"
+              },
+              {
+                "uid": "$uidOf:5"
+              },
+              {
+                "uid": "$uidOf:6"
+              },
+              {},
+              {
+                "uid": "$uidOf:8"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "entity_not_found",
+              "message": "$any",
+              "path": "source"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              4,
+              5,
+              6,
+              8,
+              9
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same",
+            "arrays": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "kaynak blok değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": "$uidOf:9",
+            "layout": {
+              "kind": "line",
+              "count": 8,
+              "dx": 2,
+              "dy": 0,
+              "fit": false
+            },
+            "items": [
+              {
+                "uid": "$uidOf:1"
+              },
+              {
+                "uid": "$uidOf:2",
+                "kept": true
+              },
+              {},
+              {
+                "uid": "$uidOf:4"
+              },
+              {
+                "uid": "$uidOf:5"
+              },
+              {
+                "uid": "$uidOf:6"
+              },
+              {},
+              {
+                "uid": "$uidOf:8"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "array_adoption_refused",
+              "message": "$any",
+              "path": "source"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              4,
+              5,
+              6,
+              8,
+              9
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same",
+            "arrays": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "eksik yer kayıtları atlanamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": "$uidOf:1",
+            "layout": {
+              "kind": "line",
+              "count": 8,
+              "dx": 2,
+              "dy": 0,
+              "fit": false
+            },
+            "items": [
+              {
+                "uid": "$uidOf:1"
+              },
+              {
+                "uid": "$uidOf:2",
+                "kept": true
+              },
+              {},
+              {
+                "uid": "$uidOf:4"
+              },
+              {
+                "uid": "$uidOf:5"
+              },
+              {
+                "uid": "$uidOf:6"
+              },
+              {}
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "array_adoption_refused",
+              "message": "$any",
+              "path": "items"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              4,
+              5,
+              6,
+              8,
+              9
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same",
+            "arrays": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "kaynak korunmuş olamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": "$uidOf:1",
+            "layout": {
+              "kind": "line",
+              "count": 8,
+              "dx": 2,
+              "dy": 0,
+              "fit": false
+            },
+            "items": [
+              {
+                "uid": "$uidOf:1",
+                "kept": true
+              },
+              {
+                "uid": "$uidOf:2",
+                "kept": true
+              },
+              {},
+              {
+                "uid": "$uidOf:4"
+              },
+              {
+                "uid": "$uidOf:5"
+              },
+              {
+                "uid": "$uidOf:6"
+              },
+              {},
+              {
+                "uid": "$uidOf:8"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "array_adoption_refused",
+              "message": "$any",
+              "path": "items[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              4,
+              5,
+              6,
+              8,
+              9
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same",
+            "arrays": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "eksik yer korunmuş olamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": "$uidOf:1",
+            "layout": {
+              "kind": "line",
+              "count": 8,
+              "dx": 2,
+              "dy": 0,
+              "fit": false
+            },
+            "items": [
+              {
+                "uid": "$uidOf:1"
+              },
+              {
+                "uid": "$uidOf:2",
+                "kept": true
+              },
+              {
+                "kept": true
+              },
+              {
+                "uid": "$uidOf:4"
+              },
+              {
+                "uid": "$uidOf:5"
+              },
+              {
+                "uid": "$uidOf:6"
+              },
+              {},
+              {
+                "uid": "$uidOf:8"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "array_adoption_refused",
+              "message": "$any",
+              "path": "items[2]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              4,
+              5,
+              6,
+              8,
+              9
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same",
+            "arrays": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "bir UUID iki yeri alamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": "$uidOf:1",
+            "layout": {
+              "kind": "line",
+              "count": 8,
+              "dx": 2,
+              "dy": 0,
+              "fit": false
+            },
+            "items": [
+              {
+                "uid": "$uidOf:1"
+              },
+              {
+                "uid": "$uidOf:2",
+                "kept": true
+              },
+              {},
+              {
+                "uid": "$uidOf:4"
+              },
+              {
+                "uid": "$uidOf:5"
+              },
+              {
+                "uid": "$uidOf:6"
+              },
+              {},
+              {
+                "uid": "$uidOf:1"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "array_adoption_refused",
+              "message": "$any",
+              "path": "items[7]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              4,
+              5,
+              6,
+              8,
+              9
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same",
+            "arrays": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "elle taşınmış nesne kendiliğinden düzeltilmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": "$uidOf:1",
+            "layout": {
+              "kind": "line",
+              "count": 8,
+              "dx": 2,
+              "dy": 0,
+              "fit": false
+            },
+            "items": [
+              {
+                "uid": "$uidOf:1"
+              },
+              {
+                "uid": "$uidOf:2"
+              },
+              {},
+              {
+                "uid": "$uidOf:4"
+              },
+              {
+                "uid": "$uidOf:5"
+              },
+              {
+                "uid": "$uidOf:6"
+              },
+              {},
+              {
+                "uid": "$uidOf:8"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "array_adoption_refused",
+              "message": "$any",
+              "path": "items[1]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              4,
+              5,
+              6,
+              8,
+              9
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same",
+            "arrays": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "yalnız bir normal öğe örüntü sayılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": "$uidOf:1",
+            "layout": {
+              "kind": "line",
+              "count": 8,
+              "dx": 2,
+              "dy": 0,
+              "fit": false
+            },
+            "items": [
+              {
+                "uid": "$uidOf:1"
+              },
+              {
+                "uid": "$uidOf:2",
+                "kept": true
+              },
+              {},
+              {
+                "uid": "$uidOf:4",
+                "kept": true
+              },
+              {
+                "uid": "$uidOf:5",
+                "kept": true
+              },
+              {
+                "uid": "$uidOf:6",
+                "kept": true
+              },
+              {},
+              {
+                "uid": "$uidOf:8",
+                "kept": true
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "array_adoption_refused",
+              "message": "$any",
+              "path": "items"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              4,
+              5,
+              6,
+              8,
+              9
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same",
+            "arrays": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "geçersiz tolerans 0",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": "$uidOf:1",
+            "layout": {
+              "kind": "line",
+              "count": 8,
+              "dx": 2,
+              "dy": 0,
+              "fit": false
+            },
+            "items": [
+              {
+                "uid": "$uidOf:1"
+              },
+              {
+                "uid": "$uidOf:2",
+                "kept": true
+              },
+              {},
+              {
+                "uid": "$uidOf:4"
+              },
+              {
+                "uid": "$uidOf:5"
+              },
+              {
+                "uid": "$uidOf:6"
+              },
+              {},
+              {
+                "uid": "$uidOf:8"
+              }
+            ],
+            "tolerance": 0
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_tolerance",
+              "message": "$any",
+              "path": "tolerance"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              4,
+              5,
+              6,
+              8,
+              9
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same",
+            "arrays": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "geçersiz tolerans -1",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": "$uidOf:1",
+            "layout": {
+              "kind": "line",
+              "count": 8,
+              "dx": 2,
+              "dy": 0,
+              "fit": false
+            },
+            "items": [
+              {
+                "uid": "$uidOf:1"
+              },
+              {
+                "uid": "$uidOf:2",
+                "kept": true
+              },
+              {},
+              {
+                "uid": "$uidOf:4"
+              },
+              {
+                "uid": "$uidOf:5"
+              },
+              {
+                "uid": "$uidOf:6"
+              },
+              {},
+              {
+                "uid": "$uidOf:8"
+              }
+            ],
+            "tolerance": -1
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_tolerance",
+              "message": "$any",
+              "path": "tolerance"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              4,
+              5,
+              6,
+              8,
+              9
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same",
+            "arrays": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "sonlu olmayan aralık NaN",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": "$uidOf:1",
+            "layout": {
+              "kind": "line",
+              "count": 8,
+              "dx": 2,
+              "dy": 0,
+              "fit": false
+            },
+            "items": [
+              {
+                "uid": "$uidOf:1"
+              },
+              {
+                "uid": "$uidOf:2",
+                "kept": true
+              },
+              {},
+              {
+                "uid": "$uidOf:4"
+              },
+              {
+                "uid": "$uidOf:5"
+              },
+              {
+                "uid": "$uidOf:6"
+              },
+              {},
+              {
+                "uid": "$uidOf:8"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "$any",
+              "path": "layout.dx"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              4,
+              5,
+              6,
+              8,
+              9
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same",
+            "arrays": []
+          },
+          "nonFinite": {
+            "layout.dx": "NaN"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sonlu olmayan aralık Infinity",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": "$uidOf:1",
+            "layout": {
+              "kind": "line",
+              "count": 8,
+              "dx": 2,
+              "dy": 0,
+              "fit": false
+            },
+            "items": [
+              {
+                "uid": "$uidOf:1"
+              },
+              {
+                "uid": "$uidOf:2",
+                "kept": true
+              },
+              {},
+              {
+                "uid": "$uidOf:4"
+              },
+              {
+                "uid": "$uidOf:5"
+              },
+              {
+                "uid": "$uidOf:6"
+              },
+              {},
+              {
+                "uid": "$uidOf:8"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "$any",
+              "path": "layout.dx"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              4,
+              5,
+              6,
+              8,
+              9
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same",
+            "arrays": []
+          },
+          "nonFinite": {
+            "layout.dx": "Infinity"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sonlu olmayan aralık -Infinity",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": "$uidOf:1",
+            "layout": {
+              "kind": "line",
+              "count": 8,
+              "dx": 2,
+              "dy": 0,
+              "fit": false
+            },
+            "items": [
+              {
+                "uid": "$uidOf:1"
+              },
+              {
+                "uid": "$uidOf:2",
+                "kept": true
+              },
+              {},
+              {
+                "uid": "$uidOf:4"
+              },
+              {
+                "uid": "$uidOf:5"
+              },
+              {
+                "uid": "$uidOf:6"
+              },
+              {},
+              {
+                "uid": "$uidOf:8"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "$any",
+              "path": "layout.dx"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              4,
+              5,
+              6,
+              8,
+              9
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same",
+            "arrays": []
+          },
+          "nonFinite": {
+            "layout.dx": "-Infinity"
+          }
+        }
+      ]
+    },
+    {
+      "name": "eksik veya korunan yerde hesap taşması gizlenemez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": "$uidOf:1",
+            "layout": {
+              "kind": "line",
+              "count": 3,
+              "dx": 1e+308,
+              "dy": 0,
+              "fit": false
+            },
+            "items": [
+              {
+                "uid": "$uidOf:1"
+              },
+              {
+                "uid": "$uidOf:4"
+              },
+              {}
+            ],
+            "tolerance": 1e+308
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "array_adoption_refused",
+              "message": "$any",
+              "path": "layout"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              4,
+              5,
+              6,
+              8,
+              9
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same",
+            "arrays": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "eksik veya korunan yerde hesap taşması gizlenemez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": "$uidOf:1",
+            "layout": {
+              "kind": "line",
+              "count": 3,
+              "dx": 1e+308,
+              "dy": 0,
+              "fit": false
+            },
+            "items": [
+              {
+                "uid": "$uidOf:1"
+              },
+              {
+                "uid": "$uidOf:4"
+              },
+              {
+                "uid": "$uidOf:5",
+                "kept": true
+              }
+            ],
+            "tolerance": 1e+308
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "array_adoption_refused",
+              "message": "$any",
+              "path": "layout"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              4,
+              5,
+              6,
+              8,
+              9
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same",
+            "arrays": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "geçersiz adet",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": "$uidOf:1",
+            "layout": {
+              "kind": "line",
+              "count": 1,
+              "dx": 2,
+              "dy": 0,
+              "fit": false
+            },
+            "items": [
+              {
+                "uid": "$uidOf:1"
+              },
+              {
+                "uid": "$uidOf:2",
+                "kept": true
+              },
+              {},
+              {
+                "uid": "$uidOf:4"
+              },
+              {
+                "uid": "$uidOf:5"
+              },
+              {
+                "uid": "$uidOf:6"
+              },
+              {},
+              {
+                "uid": "$uidOf:8"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_count",
+              "message": "$any",
+              "path": "layout.count"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              4,
+              5,
+              6,
+              8,
+              9
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same",
+            "arrays": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "sıfır aralık",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": "$uidOf:1",
+            "layout": {
+              "kind": "line",
+              "count": 8,
+              "dx": 0,
+              "dy": 0,
+              "fit": false
+            },
+            "items": [
+              {
+                "uid": "$uidOf:1"
+              },
+              {
+                "uid": "$uidOf:2",
+                "kept": true
+              },
+              {},
+              {
+                "uid": "$uidOf:4"
+              },
+              {
+                "uid": "$uidOf:5"
+              },
+              {
+                "uid": "$uidOf:6"
+              },
+              {},
+              {
+                "uid": "$uidOf:8"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_spacing",
+              "message": "$any",
+              "path": "layout"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              4,
+              5,
+              6,
+              8,
+              9
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same",
+            "arrays": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "geçersiz kutupsal açı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": "$uidOf:1",
+            "layout": {
+              "kind": "polar",
+              "center": {
+                "x": 0,
+                "y": 0
+              },
+              "count": 8,
+              "fill": 0,
+              "rotate": true
+            },
+            "items": [
+              {
+                "uid": "$uidOf:1"
+              },
+              {
+                "uid": "$uidOf:2",
+                "kept": true
+              },
+              {},
+              {
+                "uid": "$uidOf:4"
+              },
+              {
+                "uid": "$uidOf:5"
+              },
+              {
+                "uid": "$uidOf:6"
+              },
+              {},
+              {
+                "uid": "$uidOf:8"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_fill",
+              "message": "$any",
+              "path": "layout.fill"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              4,
+              5,
+              6,
+              8,
+              9
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same",
+            "arrays": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "geçersiz yol kimliği",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": "$uidOf:1",
+            "layout": {
+              "kind": "path",
+              "path": "bad",
+              "count": 8,
+              "align": false
+            },
+            "items": [
+              {
+                "uid": "$uidOf:1"
+              },
+              {
+                "uid": "$uidOf:2",
+                "kept": true
+              },
+              {},
+              {
+                "uid": "$uidOf:4"
+              },
+              {
+                "uid": "$uidOf:5"
+              },
+              {
+                "uid": "$uidOf:6"
+              },
+              {},
+              {
+                "uid": "$uidOf:8"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_uid",
+              "message": "$any",
+              "path": "layout.path"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              4,
+              5,
+              6,
+              8,
+              9
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same",
+            "arrays": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "olmayan yol",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": "$uidOf:1",
+            "layout": {
+              "kind": "path",
+              "path": "01925f3e-7c1a-7d2b-9e4f-000000000999",
+              "count": 8,
+              "align": false
+            },
+            "items": [
+              {
+                "uid": "$uidOf:1"
+              },
+              {
+                "uid": "$uidOf:2",
+                "kept": true
+              },
+              {},
+              {
+                "uid": "$uidOf:4"
+              },
+              {
+                "uid": "$uidOf:5"
+              },
+              {
+                "uid": "$uidOf:6"
+              },
+              {},
+              {
+                "uid": "$uidOf:8"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "entity_not_found",
+              "message": "$any",
+              "path": "layout.path"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              4,
+              5,
+              6,
+              8,
+              9
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same",
+            "arrays": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "blok yol olamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": "$uidOf:1",
+            "layout": {
+              "kind": "path",
+              "path": "$uidOf:1",
+              "count": 8,
+              "align": false
+            },
+            "items": [
+              {
+                "uid": "$uidOf:1"
+              },
+              {
+                "uid": "$uidOf:2",
+                "kept": true
+              },
+              {},
+              {
+                "uid": "$uidOf:4"
+              },
+              {
+                "uid": "$uidOf:5"
+              },
+              {
+                "uid": "$uidOf:6"
+              },
+              {},
+              {
+                "uid": "$uidOf:8"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_path",
+              "message": "$any",
+              "path": "layout.path"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              4,
+              5,
+              6,
+              8,
+              9
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same",
+            "arrays": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "bozuk revizyon",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": "$uidOf:1",
+            "layout": {
+              "kind": "line",
+              "count": 8,
+              "dx": 2,
+              "dy": 0,
+              "fit": false
+            },
+            "items": [
+              {
+                "uid": "$uidOf:1"
+              },
+              {
+                "uid": "$uidOf:2",
+                "kept": true
+              },
+              {},
+              {
+                "uid": "$uidOf:4"
+              },
+              {
+                "uid": "$uidOf:5"
+              },
+              {
+                "uid": "$uidOf:6"
+              },
+              {},
+              {
+                "uid": "$uidOf:8"
+              }
+            ],
+            "expectedRevision": "bad"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "$any",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              4,
+              5,
+              6,
+              8,
+              9
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same",
+            "arrays": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "eski revizyon",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": "$uidOf:1",
+            "layout": {
+              "kind": "line",
+              "count": 8,
+              "dx": 2,
+              "dy": 0,
+              "fit": false
+            },
+            "items": [
+              {
+                "uid": "$uidOf:1"
+              },
+              {
+                "uid": "$uidOf:2",
+                "kept": true
+              },
+              {},
+              {
+                "uid": "$uidOf:4"
+              },
+              {
+                "uid": "$uidOf:5"
+              },
+              {
+                "uid": "$uidOf:6"
+              },
+              {},
+              {
+                "uid": "$uidOf:8"
+              }
+            ],
+            "expectedRevision": "999"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "$any",
+              "path": "expectedRevision",
+              "revision": "$any"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              4,
+              5,
+              6,
+              8,
+              9
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same",
+            "arrays": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "kilitli katman",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": "$uidOf:1",
+            "layout": {
+              "kind": "line",
+              "count": 8,
+              "dx": 2,
+              "dy": 0,
+              "fit": false
+            },
+            "items": [
+              {
+                "uid": "$uidOf:1"
+              },
+              {
+                "uid": "$uidOf:2",
+                "kept": true
+              },
+              {},
+              {
+                "uid": "$uidOf:4"
+              },
+              {
+                "uid": "$uidOf:5"
+              },
+              {
+                "uid": "$uidOf:6"
+              },
+              {},
+              {
+                "uid": "$uidOf:8"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_locked",
+              "message": "$any",
+              "path": "source"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              4,
+              5,
+              6,
+              8,
+              9
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same",
+            "arrays": []
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Tekrar arama",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "a",
+            "name": "A",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "a",
+        "entities": [
+          {
+            "kind": "insert",
+            "id": 1,
+            "layerId": "a",
+            "attrs": {},
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 0,
+              "y": 0
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "insert",
+            "id": 2,
+            "layerId": "a",
+            "attrs": {},
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 2.5,
+              "y": 0.25
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "insert",
+            "id": 4,
+            "layerId": "a",
+            "attrs": {},
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 6,
+              "y": 0
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "insert",
+            "id": 5,
+            "layerId": "a",
+            "attrs": {},
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 8,
+              "y": 0
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "insert",
+            "id": 6,
+            "layerId": "a",
+            "attrs": {},
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 10,
+              "y": 0
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "insert",
+            "id": 8,
+            "layerId": "a",
+            "attrs": {},
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 14,
+              "y": 0
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 9,
+            "layerId": "a",
+            "attrs": {},
+            "a": {
+              "x": 0,
+              "y": 0
+            },
+            "b": {
+              "x": 20,
+              "y": 0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": [
+          {
+            "id": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "name": "Teknik parça",
+            "base": {
+              "x": 0,
+              "y": 0
+            },
+            "units": "m",
+            "entities": [
+              {
+                "kind": "line",
+                "id": 1,
+                "layerId": "a",
+                "attrs": {},
+                "a": {
+                  "x": 0,
+                  "y": 0
+                },
+                "b": {
+                  "x": 1,
+                  "y": 0
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "kaynak verisi atılamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": "$uidOf:1",
+            "layout": {
+              "kind": "line",
+              "count": 8,
+              "dx": 2,
+              "dy": 0,
+              "fit": false
+            },
+            "items": [
+              {
+                "uid": "$uidOf:1"
+              },
+              {
+                "uid": "$uidOf:2",
+                "kept": true
+              },
+              {},
+              {
+                "uid": "$uidOf:4"
+              },
+              {
+                "uid": "$uidOf:5"
+              },
+              {
+                "uid": "$uidOf:6"
+              },
+              {},
+              {
+                "uid": "$uidOf:8"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "array_adoption_refused",
+              "message": "$any",
+              "path": "source"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              4,
+              5,
+              6,
+              8,
+              9
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same",
+            "arrays": []
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Tekrar arama",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "a",
+            "name": "A",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "a",
+        "entities": [
+          {
+            "kind": "insert",
+            "id": 1,
+            "layerId": "a",
+            "attrs": {
+              "CODE": "A"
+            },
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 0,
+              "y": 0
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "insert",
+            "id": 2,
+            "layerId": "a",
+            "attrs": {},
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 2.5,
+              "y": 0.25
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "insert",
+            "id": 4,
+            "layerId": "a",
+            "attrs": {},
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 6,
+              "y": 0
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "insert",
+            "id": 5,
+            "layerId": "a",
+            "attrs": {},
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 8,
+              "y": 0
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "insert",
+            "id": 6,
+            "layerId": "a",
+            "attrs": {},
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 10,
+              "y": 0
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "insert",
+            "id": 8,
+            "layerId": "a",
+            "attrs": {},
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 14,
+              "y": 0
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 9,
+            "layerId": "a",
+            "attrs": {},
+            "a": {
+              "x": 0,
+              "y": 0
+            },
+            "b": {
+              "x": 20,
+              "y": 0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": [
+          {
+            "id": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "name": "Teknik parça",
+            "base": {
+              "x": 0,
+              "y": 0
+            },
+            "units": "m",
+            "entities": [
+              {
+                "kind": "line",
+                "id": 1,
+                "layerId": "a",
+                "attrs": {},
+                "a": {
+                  "x": 0,
+                  "y": 0
+                },
+                "b": {
+                  "x": 1,
+                  "y": 0
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "tek geri alma ve yineleme",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": "$uidOf:1",
+            "layout": {
+              "kind": "line",
+              "count": 8,
+              "dx": 2,
+              "dy": 0,
+              "fit": false
+            },
+            "items": [
+              {
+                "uid": "$uidOf:1"
+              },
+              {
+                "uid": "$uidOf:2",
+                "kept": true
+              },
+              {},
+              {
+                "uid": "$uidOf:4"
+              },
+              {
+                "uid": "$uidOf:5"
+              },
+              {
+                "uid": "$uidOf:6"
+              },
+              {},
+              {
+                "uid": "$uidOf:8"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              4,
+              5,
+              6,
+              8,
+              9
+            ],
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed",
+            "arrays": [
+              {
+                "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+                "layerId": "a",
+                "p": {
+                  "x": 0,
+                  "y": 0
+                },
+                "scale": 1,
+                "rotation": 0,
+                "layout": {
+                  "kind": "line",
+                  "count": 8,
+                  "dx": 2,
+                  "dy": 0
+                },
+                "items": [
+                  {
+                    "uid": "$uidOf:1"
+                  },
+                  {
+                    "uid": "$uidOf:2",
+                    "kept": true
+                  },
+                  {},
+                  {
+                    "uid": "$uidOf:4"
+                  },
+                  {
+                    "uid": "$uidOf:5"
+                  },
+                  {
+                    "uid": "$uidOf:6"
+                  },
+                  {},
+                  {
+                    "uid": "$uidOf:8"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Mevcut blokları diziye bağla",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              4,
+              5,
+              6,
+              8,
+              9
+            ],
+            "canUndo": false,
+            "arrays": []
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Mevcut blokları diziye bağla",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              4,
+              5,
+              6,
+              8,
+              9
+            ],
+            "canUndo": true,
+            "arrays": [
+              {
+                "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+                "layerId": "a",
+                "p": {
+                  "x": 0,
+                  "y": 0
+                },
+                "scale": 1,
+                "rotation": 0,
+                "layout": {
+                  "kind": "line",
+                  "count": 8,
+                  "dx": 2,
+                  "dy": 0
+                },
+                "items": [
+                  {
+                    "uid": "$uidOf:1"
+                  },
+                  {
+                    "uid": "$uidOf:2",
+                    "kept": true
+                  },
+                  {},
+                  {
+                    "uid": "$uidOf:4"
+                  },
+                  {
+                    "uid": "$uidOf:5"
+                  },
+                  {
+                    "uid": "$uidOf:6"
+                  },
+                  {},
+                  {
+                    "uid": "$uidOf:8"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

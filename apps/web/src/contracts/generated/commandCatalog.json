@@ -4345,6 +4345,171 @@
       ]
     },
     {
+      "id": "cad.arrays.adopt",
+      "version": 1,
+      "title": "Mevcut blokları diziye bağla",
+      "summary": "İncelenen mevcut blok yerleştirmelerini verilen grid, doğru, kutupsal veya yol düzenine bağlar. Örüntü tahmin etmez: source sıfır numaralı normal öğe, items her yer için bir kayıt olmalı. Boş kayıt eksik öğe; kept açıkça korunan elle değiştirilmiş öğedir. En az iki normal öğe gereklidir. Yalnız ilişkili dizi kaydı eklenir; geometri, UUID, çizim sırası, blok tanımı ve mevcut bağlar değişmez. Normal öğelerin bloğu, aynası, ölçeği ve yönü düzene uymalıdır; konum toleransı metre (varsayılan 0.000001), açı toleransı 1e-10 rad, ölçek toleransı 1e-12 bağıl. Sapma kendiliğinden düzeltilmez. İlk kapsam ortak görünüşlü, verisiz, tekdüze ölçekli statik blok yerleştirmeleri; dinamik/dış referanslı/öznitelik tanımlı blok, mimari kayıt, kırpma, farklı katman/görünüş veya başka dizinin öğesi açıkça reddedilir. Mevcut cad.arrays.edit sayı/aralık/korunan/silinmiş/reset semantiği kullanılır. İnceleme yazısız, uygulama tek geri alma adımıdır. expectedRevision eskiyse hiçbir şey yazılmaz.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Explicit, reviewed layout and slot membership; this command does not infer a pattern.\nOnly metadata is added. Missing slots stay missing; overrides must be explicitly kept.",
+        "properties": {
+          "expectedRevision": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "items": {
+            "description": "Exactly one entry per layout place, in layout order. Empty entries are missing places.\nAt least two entries must be present and not kept. A UID may occur only once.",
+            "items": {
+              "$ref": "#/$defs/ArrayItem"
+            },
+            "type": "array"
+          },
+          "layout": {
+            "$ref": "#/$defs/ArrayLayout"
+          },
+          "source": {
+            "description": "Existing prototype insert UUID. Must occupy slot zero and must not be kept.",
+            "type": "string"
+          },
+          "tolerance": {
+            "description": "Maximum position discrepancy in model metres; absent: 0.000001 (0.001 mm).\nAdoption never moves an insert to hide a discrepancy. Angles compare modulo a full turn\nwithin 1e-10 rad; scales within 1e-12 relative, independently of position tolerance.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          }
+        },
+        "required": [
+          "source",
+          "layout",
+          "items"
+        ],
+        "title": "ArraysAdopt",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "array": {
+            "$ref": "#/$defs/ArrayId"
+          },
+          "retained": {
+            "description": "Existing insert UUIDs, in layout order, excluding missing places. No UUID is allocated here.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "array",
+          "retained",
+          "revision"
+        ],
+        "title": "ArraysAdopted",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "array": {
+            "$ref": "#/$defs/AssocArray",
+            "description": "Proposed existing array model, with nil ID in a read-only plan."
+          },
+          "deviation": {
+            "description": "Maximum position discrepancy among the regular items, model metres.",
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "kept": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "missing": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "array",
+          "deviation",
+          "missing",
+          "kept",
+          "revision"
+        ],
+        "title": "ArraysAdoptPlan",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "array_adoption_refused",
+          "invalid_uid",
+          "not_finite",
+          "invalid_count",
+          "invalid_spacing",
+          "invalid_fill",
+          "invalid_tolerance",
+          "entity_not_found",
+          "layer_locked",
+          "invalid_path",
+          "invalid_revision",
+          "revision_conflict"
+        ]
+      },
+      "examples": [
+        {
+          "title": "İki mevcut blok ve bir eksik yeri bağla",
+          "input": {
+            "items": [
+              {
+                "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
+              },
+              {},
+              {
+                "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e60"
+              }
+            ],
+            "layout": {
+              "count": 3,
+              "dx": 2.0,
+              "dy": 0.0,
+              "fit": false,
+              "kind": "line"
+            },
+            "source": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.arrays.edit",
       "version": 1,
       "title": "Diziyi düzenle",
@@ -68696,6 +68861,12 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Nokta sıklığı geçersiz: bölüm sayısı 1 ile 100 000 arasında, aralık ve sapma sıfırdan büyük olmalı."
+    },
+    {
+      "code": "array_adoption_refused",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Mevcut yerleştirmelerin örüntüye, ortak şablona veya tekil öğe kimliğine uygunluğu doğrulanamadı; çizim değiştirilmedi."
     },
     {
       "code": "array_not_found",

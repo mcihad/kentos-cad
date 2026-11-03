@@ -12689,6 +12689,107 @@ class ArrayItem(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ArraysAdopt(_Model):
+    """Explicit, reviewed layout and slot membership; this command does not infer a pattern.
+    Only metadata is added. Missing slots stay missing; overrides must be explicitly kept.
+    Attributes:
+        source: Existing prototype insert UUID. Must occupy slot zero and must not be kept.
+        items: Exactly one entry per layout place, in layout order. Empty entries are missing places.
+            At least two entries must be present and not kept. A UID may occur only once.
+        tolerance: Maximum position discrepancy in model metres; absent: 0.000001 (0.001 mm).
+            Adoption never moves an insert to hide a discrepancy. Angles compare modulo a full turn
+            within 1e-10 rad; scales within 1e-12 relative, independently of position tolerance. Unit: length.
+    """
+    source: str
+    layout: ArrayLayout
+    items: list[ArrayItem]
+    expected_revision: str | None | Unset = UNSET
+    tolerance: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["source"] = self.source
+        out["layout"] = self.layout.to_json()
+        out["items"] = [e0.to_json() for e0 in self.items]
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.tolerance is not UNSET:
+            out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArraysAdopt:
+        return cls(
+            source=data["source"],
+            layout=ArrayLayout.from_json(data["layout"]),
+            items=[ArrayItem.from_json(e0) for e0 in data["items"]],
+            expected_revision=data.get("expectedRevision", UNSET),
+            tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ArraysAdoptPlan(_Model):
+    """
+    Attributes:
+        array: Proposed existing array model, with nil ID in a read-only plan.
+        deviation: Maximum position discrepancy among the regular items, model metres. Unit: length.
+        missing: Unit: count.
+        kept: Unit: count.
+    """
+    array: AssocArray
+    deviation: float
+    missing: int
+    kept: int
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["array"] = self.array.to_json()
+        out["deviation"] = float(self.deviation)
+        out["missing"] = self.missing
+        out["kept"] = self.kept
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArraysAdoptPlan:
+        return cls(
+            array=AssocArray.from_json(data["array"]),
+            deviation=float(data["deviation"]),
+            missing=data["missing"],
+            kept=data["kept"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ArraysAdopted(_Model):
+    """
+    Attributes:
+        retained: Existing insert UUIDs, in layout order, excluding missing places. No UUID is allocated here.
+    """
+    array: str
+    retained: list[str]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["array"] = self.array
+        out["retained"] = list(self.retained)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArraysAdopted:
+        return cls(
+            array=data["array"],
+            retained=list(data["retained"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ArraysEdit(_Model):
     """Input of `cad.arrays.edit` v1: the associative array `array` edited by `edit`, as one undo step “Diziyi
     düzenle”. The array's layer and every insert the edit touches must be unlocked: all or nothing. The answer is
@@ -90754,6 +90855,9 @@ __all__ = [
     "ArrayItem",
     "ArrayLayout",
     "ArrayOpeningsOperation",
+    "ArraysAdopt",
+    "ArraysAdoptPlan",
+    "ArraysAdopted",
     "ArraysEdit",
     "AssetCounts",
     "AssetKind",

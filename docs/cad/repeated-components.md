@@ -82,3 +82,35 @@ köşe numarası rastgele seçilmez. Uzun işler için `doc.start("cad.blocks.co
 cad.BlocksConvert(**args))` kullanılabilir. MCP aynı komutta `op=plan`,
 korunan plan kimliği ve `drawing.job.*` iş yüzeylerini sunar.
 [Karar, sınırlar ve ilişki denetimi](../adr/0871-selected-repeat-conversion-and-topological-maps.md).
+
+## Mevcut yerleştirmeleri diziye bağlama
+
+İncelenmiş bir yerleşim ve açık öğe eşlemesi `cad.arrays.adopt` ile mevcut
+dizi modeline bağlanabilir. Bu komut örüntüyü kendisi tahmin etmez;
+grafik örüntü inceleme akışı ayrıca geliştirilecektir.
+
+```python
+# Sekiz yerin 2 ve 6 numaraları boş, 1 numaralı öğe elle taşınmış.
+# existing_by_place kullanıcı tarafından incelenmiş 0 tabanlı yer → mevcut UUID eşlemesidir.
+items = [cad.ArrayItem(uid=existing_by_place[k], kept=(k == 1))
+         if k in existing_by_place else cad.ArrayItem() for k in range(8)]
+args = dict(source=existing_by_place[0], items=items,
+            layout=cad.LineArrayLayout(count=8, dx=2, dy=0, fit=False))
+review = cad.arrays.adopt.plan(doc, **args)
+print(review.missing, review.kept, review.deviation)  # sapma metre
+# Kullanıcının inceleyip kabul ettiği aynı yerleşim:
+done = cad.arrays.adopt(doc, **args, expected_revision=review.revision)
+cad.arrays.edit(doc, array=done.array,
+    edit=cad.LayoutArrayEdit(layout=cad.LineArrayLayout(count=10, dx=3, dy=0, fit=False)))
+```
+
+Bağlama geometriyi taşımaz; UUID, çizim sırası, blok tanımı ve mevcut ölçü
+referansları aynıdır. Eksik yerler boş, korunan öğe yerinde kalır; Reset
+açıkça istenirse eksikler tamamlanır ve istisnalar kaldırılır. Ortak
+şablona veya yerleşime uymayan öğe veri atılmadan reddedilir.
+Yerinde kalan üye UUID'sini korur; silinmiş yeri Reset ile doldurmak yeni
+bir nesne ve yeni UUID oluşturur. Silinen üyeye ait eski kimlik yeniden
+kullanılmaz; bu, silme işlemini Undo ile geri almaktan farklıdır.
+`doc.start("cad.arrays.adopt", cad.ArraysAdopt(**args))` durdurulabilir
+iştir. MCP aynı komutta `op=plan` ve plan beklentisini kullanır.
+[Kapsam ve atomiklik](../adr/0873-existing-insert-array-adoption.md).

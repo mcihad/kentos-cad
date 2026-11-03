@@ -1170,6 +1170,11 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.arrays.adopt",
+        refusals: &[&["array_adoption_refused", "invalid_uid", "not_finite", "invalid_count", "invalid_spacing", "invalid_fill", "invalid_tolerance", "entity_not_found", "layer_locked", "invalid_path"], REVISION],
+        warnings: &[], targets: none,
+    },
+    Entry {
         id: "cad.arrays.edit",
         refusals: &[
             &[

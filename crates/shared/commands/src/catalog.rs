@@ -1242,6 +1242,18 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        CommandDescriptor {
+            id: crate::CAD_ARRAYS_ADOPT.into(), version: crate::CAD_ARRAYS_ADOPT_VERSION,
+            title: "Mevcut blokları diziye bağla".into(),
+            summary: "İncelenen mevcut blok yerleştirmelerini verilen grid, doğru, kutupsal veya yol düzenine bağlar. Örüntü tahmin etmez: source sıfır numaralı normal öğe, items her yer için bir kayıt olmalı. Boş kayıt eksik öğe; kept açıkça korunan elle değiştirilmiş öğedir. En az iki normal öğe gereklidir. Yalnız ilişkili dizi kaydı eklenir; geometri, UUID, çizim sırası, blok tanımı ve mevcut bağlar değişmez. Normal öğelerin bloğu, aynası, ölçeği ve yönü düzene uymalıdır; konum toleransı metre (varsayılan 0.000001), açı toleransı 1e-10 rad, ölçek toleransı 1e-12 bağıl. Sapma kendiliğinden düzeltilmez. İlk kapsam ortak görünüşlü, verisiz, tekdüze ölçekli statik blok yerleştirmeleri; dinamik/dış referanslı/öznitelik tanımlı blok, mimari kayıt, kırpma, farklı katman/görünüş veya başka dizinin öğesi açıkça reddedilir. Mevcut cad.arrays.edit sayı/aralık/korunan/silinmiş/reset semantiği kullanılır. İnceleme yazısız, uygulama tek geri alma adımıdır. expectedRevision eskiyse hiçbir şey yazılmaz.".into(),
+            aliases: vec![], effect: CommandEffect::Document, hosts: vec![CommandHost::Desktop], headless: true,
+            requires: vec![CommandRequirement::Document], permissions: vec![], undo: CommandUndo::Step,
+            cost: CommandCost::Interactive, input: schema::<crate::ArraysAdopt>(), output: schema::<crate::ArraysAdopted>(),
+            plan: Some(schema::<crate::ArraysAdoptPlan>()), capabilities: None,
+            examples: vec![CommandExample { title: "İki mevcut blok ve bir eksik yeri bağla".into(),
+                input: json!({"source":"01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f", "layout":{"kind":"line","count":3,"dx":2.0,"dy":0.0,"fit":false},
+                "items":[{"uid":"01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"},{},{"uid":"01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e60"}]}), output: None }],
+        },
         // Diziyi düzenle (docs/adr/0301), held together by fixtures/commands/v1/cad.arrays.edit.json.
         CommandDescriptor {
             id: crate::CAD_ARRAYS_EDIT.into(),
@@ -11687,6 +11699,9 @@ mod tests {
                     }
                     crate::CAD_ENTITIES_ARRAY => {
                         serde_json::from_value::<crate::EntitiesArray>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_ARRAYS_ADOPT => {
+                        serde_json::from_value::<crate::ArraysAdopt>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_ARRAYS_EDIT => {
                         serde_json::from_value::<crate::ArraysEdit>(e.input.clone()).map(|_| ())

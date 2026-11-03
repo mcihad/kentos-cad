@@ -892,7 +892,7 @@ kimlik eşlemesi, bağlı ölçü ve tek Undo doğrulansın.
   veri/görünüş/ilişkide gerekçeli atomik ret. Gerçek GUI/Python/MCP ve tek
   Undo/Redo kabulü. Metin/öznitelik, iç blok ve diğer geometri/ilişki türleri
   tamamlanmış sayılmaz; kaynak genişletme maddesi açık kalır (ADR 0871).
-- [ ] Grid/kutupsal/yol örüntüsünü mevcut `AssocArray` modeline benimsetme;
+- [~] Grid/kutupsal/yol örüntüsünü mevcut `AssocArray` modeline benimsetme;
   iki eksik öğe, elle değişen öğe, koru/sil/reset ve sayı/aralık değişikliğinde
   bağların ve kimliklerin korunması. Bütün CAD-ADV-07 bu kabulden önce kapanmaz.
 
@@ -1021,6 +1021,37 @@ elle taşınmış istisna ve açık reset otomatik kabulde vardır; bunların
 tamamı fareyle denenmiş gibi sayılmaz. Ham ekranlar ve dosyalar depo
 dışındadır. Bu önkoşul, bağımsız öğelerden örüntü tanıma/benimsetme
 maddesini kapatmaz.
+
+**Mevcut yerleştirmeleri bağlama altyapısı — [ADR 0873](../docs/adr/0873-existing-insert-array-adoption.md):**
+`cad.arrays.adopt` incelenmiş açık grid/doğru/kutupsal/yol yerleşimini ve
+öğe eşlemesini mevcut `AssocArray` modeline bağlar. Yalnız metadata eklenir;
+mevcut kök UUID/slot/çizim sırası, blok tanımı, geometri ve ölçü referansları
+değişmez. İki eksik yer boş, açıkça `kept` denmiş öğe yerinde kalır.
+Yanlış öğe kendiliğinden taşınmaz veya korunmuş sayılmaz. Ortak şablona
+uymayan görünüş/veri, başka dizi üyeliği ve eski belge durumu atomik ret alır.
+Statik, ortak görünüşlü, verisiz yerleştirme kapsamı ve ayrı açı/ölçek/konum
+toleransları katalogda/Python belgesinde açıklanmıştır. Durdurulabilir işin
+hesabı sürerken belge değişirse metadata-only yazma da reddedilir.
+
+Native 99 birim + 386 entegrasyon, komut sözleşmelerinde 1069, MCP'de 71,
+masaüstü komut geçmişinde 5 ve Python'un tam paketinde 495 test başarılıdır
+(dizi modülünde 9 test). Bağımsız 30 ortak durum native ve Python
+koşucularında geçmiştir; ilgili beş paketin
+tüm hedeflerinde Clippy başarılıdır. Gerçek uygulamada konsoldan yazısız
+inceleme/bağlama, ardından **Diziyi düzenle** menüsünden 8→10 sütun ve
+2000→3000 mm aralık, öğe silme ve açık Sıfırla kullanılmıştır. Altı özgün
+UUID, iki boş yer ve elle taşınmış öğe korunmuş; iç blok çemberlerine bağlı
+ölçü 2000→3000 mm izlemiştir. Sekiz gerçek Undo/Redo kaydetme çifti birebir
+dosya eşitliğiyle, yeniden açılışta dizi/bağlar da API ile doğrulanmıştır.
+Son ikiliyle gerçek konsolda sayı taşması ve tüm kaynaklar birlikte
+taşındıktan sonra eski planla yazma reddi de doğrulanmıştır; ret belgeye
+dizi eklememiştir. Yeniden bağlama/Undo/Redo ve menüden sayı/aralık
+değişikliği aynı ikiliyle tekrarlanmıştır. Görüntüler ve ham kabul kayıtları
+depo dışındadır.
+
+**Açık kalan:** otomatik grid/kutupsal/yol aday bulma ve görsel aday/öğe
+incelemesi; metin/öznitelik, iç blok ve diğer kaynak/ilişki genişletmesi.
+Bu API teslimi bunları veya CAD-ADV-07'nin tamamını kapatmaz.
 
 ### CAD-ADV-08 — Sınır, tarama ve maskeyi hatasını açıklayabilen bir üretim sistemine getir [ ]
 
@@ -1399,6 +1430,13 @@ erişim ürün yönü olarak görülüyor; KentOS sözleşmesi aşağıda tanım
 - Girdi birimleri, kaynak/alt nesne referansları, yaklaşık sonuç,
   kayıp/uyarı, etkilenen nesneler, ilişkiler, pafta ve Undo bilgisi
   yapılandırılmış sonuçta bulunsun. AI kullanıcıya başarıyı gerçek sonuçtan anlatsın.
+- Yalnız metadata değiştiren işler de gerçek Undo adımını ve okudukları
+  nesne/tanım damgalarını raporlasın; plan kimliği yalnız kök geometri
+  yazıldığı varsayımına dayanmasın (ADR0873). Komut günlüğünün yeniden
+  oynatılmasında `AssocArray` kimliği → yeni dizi kimliği eşlemesi ayrıca
+  tamamlanmalı: mevcut `native/application/src/replay.rs` kök nesne ve
+  otomatik ölçü grubu kimliklerini eşliyor; dizi kurma/benimsetme ardından
+  `cad.arrays.edit` içeren günlük kabulü bu maddenin açık işidir.
 - Python tipleri, docstring, örnekler, birim açıklaması ve ret
   kodları komut kataloğundan güncel üretilsin. Aynı senaryo başsız
   belge ve açık masaüstü oturumunda doğru belge/revizyonla çalışsın.
