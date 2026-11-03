@@ -1004,6 +1004,24 @@ tutulur. Ekranlar, gerçek GUI dosyaları ve ayrıntılı kayıtlar depo dışı
 İlişkili diziye benimsetme ve kaynak/ilişki genişletme tamamlanmadan
 CAD-ADV-07 bütünü kapatılmaz.
 
+**Mevcut dizi önkoşulu — [ADR 0872](../docs/adr/0872-associative-array-closed-path-geometry.md):**
+kapalı çoklu çizgiyi ilişkili dizi hesabında açık okuyan native okuyucu
+düzeltildi. Önizlemede dört kenara dağılan öğelerin onaydan sonra üç kenara
+kayması gerçek eski GUI'de tekrarlandı. Aynı fare/klavye adımları son
+derlemede dört kenarda aynı sekiz yerleşimi verdi. **Diziyi düzenle** ile
+8→12 adet değişimi dört kenarı kullanır ve ilk sekiz öğenin UUID'sini korur.
+Dizi oluşturma ve adet değişiminin gerçek Undo/Redo kayıtları başlangıç,
+sekizli ve on ikili dosyalara bayt bayt eşittir. Proje mm gösterimi ve
+metre model koordinatları değişmedi. Üç regresyon testi önce başarısız olup
+düzeltmeyle geçti; domain paketinin toplam 140 testi, native/Python'da 136
+ortak dizi durumu, dört Python dizi testi ve 70 MCP testi başarılıdır.
+Masaüstü derlemesi ve ilgili paketlerin Clippy kontrolü geçti. İki yönde
+kapanış yayı istasyonu/teğeti, yol aç/kapat izleme, iki silinmiş öğe,
+elle taşınmış istisna ve açık reset otomatik kabulde vardır; bunların
+tamamı fareyle denenmiş gibi sayılmaz. Ham ekranlar ve dosyalar depo
+dışındadır. Bu önkoşul, bağımsız öğelerden örüntü tanıma/benimsetme
+maddesini kapatmaz.
+
 ### CAD-ADV-08 — Sınır, tarama ve maskeyi hatasını açıklayabilen bir üretim sistemine getir [ ]
 
 **Öncelik:** P0 ilişki/görünürlük; P1 kapsam. **Kod:** [C14], [C15], [C03].
