@@ -266,7 +266,17 @@ fn parameters(
     kept: &BTreeMap<String, kentos_commands::ParamValue>,
 ) -> Result<BTreeMap<String, kentos_commands::ParamValue>, (String, String)> {
     let mut inputs = BTreeMap::new();
-    for (name, value) in kept {
+    let mut literal = kept.clone();
+    if let Some(d) = &old.dynamic {
+        for (name, value) in &d.type_values {
+            // Same-scope type-to-type replacement adopts the selected target type.
+            // Demotion to an instance preserves the original common literal input.
+            if !new.dynamic.as_ref().is_some_and(|n| n.is_type_parameter(name)) {
+                literal.insert(name.clone(), value.clone());
+            }
+        }
+    }
+    for (name, value) in &literal {
         let source = old
             .dynamic
             .as_ref()
@@ -301,6 +311,12 @@ fn parameters(
                 name.clone(),
                 format!("“{name}” için birimsiz ve fiziksel tanım sayıları doğrudan eşlenemez."),
             ));
+        }
+        if let Some(d) = &new.dynamic && d.is_type_parameter(name) {
+            if d.type_values.get(name).is_none_or(|v| !kentos_commands::block_dynamic::same_param_value(v, value)) {
+                return Err((name.clone(), format!("“{name}” örneğe özel değeri hedefin ortak tip değeriyle farklı; önce değerleri eşitleyin veya ayrı tip seçin.")));
+            }
+            continue;
         }
         inputs.insert(name.clone(), value.clone());
     }

@@ -110,7 +110,7 @@
     {"file": "broken/cad-work-on-gis.kcad", "sniff": "kcad", "error": "bad_value"},
     {"file": "broken/cad-work-no-type.kcad", "sniff": "kcad", "error": "bad_value"},
     {"file": "road-work.kcad", "sniff": "kcad", "content": "road-work.json"},
-    {"file": "broken/road-work-in-schema-159.kcad", "sniff": "kcad", "error": "bad_value"},
+    {"file": "broken/road-work-in-schema-160.kcad", "sniff": "kcad", "error": "bad_value"},
     {"file": "broken/road-settings-of-a-map-project.kcad", "sniff": "kcad", "error": "bad_value"},
     {"file": "broken/road-profile-on-parallel-axis.kcad", "sniff": "kcad", "error": "bad_value"},
     {"file": "broken/road-section-on-parallel-axis.kcad", "sniff": "kcad", "error": "bad_value"},
@@ -356,7 +356,7 @@
     { "file": "broken/non-text-key.kcad", "sniff": "kcad", "error": "non_text_key" },
 
     { "file": "broken/wrong-format.kcad", "sniff": "kcad", "error": "schema_format" },
-    { "file": "broken/schema-version-161.kcad", "sniff": "kcad", "error": "schema_version" },
+    { "file": "broken/schema-version-162.kcad", "sniff": "kcad", "error": "schema_version" },
     { "file": "broken/unknown-field.kcad", "sniff": "kcad", "error": "unknown_field" },
     { "file": "broken/missing-field.kcad", "sniff": "kcad", "error": "missing_field" },
     { "file": "broken/int-for-float.kcad", "sniff": "kcad", "error": "wrong_type" },
@@ -1518,6 +1518,13 @@
     {"file": "broken/space-separator-elevations.kcad", "sniff": "kcad", "error": "bad_value"},
     {"file": "broken/space-separator-measures.kcad", "sniff": "kcad", "error": "bad_value"},
     {"file": "broken/space-separator-one-point.kcad", "sniff": "kcad", "error": "bad_value"},
-    {"file": "broken/space-separator-coincident.kcad", "sniff": "kcad", "error": "bad_value"}
+    {"file": "broken/space-separator-coincident.kcad", "sniff": "kcad", "error": "bad_value"},
+    {"file": "block-type-values.kcad", "sniff": "kcad", "content": "block-type-values.json"},
+    {"file": "broken/block-type-values-in-schema-159.kcad", "sniff": "kcad", "error": "unknown_field"},
+    {"file": "broken/block-type-values-missing.kcad", "sniff": "kcad", "error": "bad_value"},
+    {"file": "broken/block-type-values-unknown.kcad", "sniff": "kcad", "error": "bad_value"},
+    {"file": "broken/block-type-values-duplicate.kcad", "sniff": "kcad", "error": "bad_value"},
+    {"file": "broken/block-type-values-off-rule.kcad", "sniff": "kcad", "error": "bad_value"},
+    {"file": "broken/block-type-values-instance.kcad", "sniff": "kcad", "error": "bad_value"}
   ]
 }

@@ -194,6 +194,7 @@ pub enum Dialog {
     /// Blok kartı (block_card.rs, docs/adr/0317 §4); the window is `App::block_card`.
     BlockCard,
     BlockParameterGroups,
+    BlockTypeValues,
     /// Blok çizelgesi (block_schedule.rs, docs/adr/0317 §3); the window is `App::block_schedule`.
     BlockSchedule,
     /// Bul ve değiştir (find_replace.rs, docs/adr/0145 §6); the window is `App::find_replace`.
@@ -573,6 +574,7 @@ pub enum Message {
     AttributeValues(crate::attribute_values::Event),
     BlockCard(crate::block_card::Event),
     BlockParameterGroups(crate::block_parameter_groups::Event),
+    BlockTypeValues(crate::block_type_values::Event),
     BlockSchedule(crate::block_schedule::Event),
     FindReplace(crate::find_replace::Event),
     LayerMerge(crate::layer_merge::Event),
@@ -920,6 +922,7 @@ pub struct App {
     pub(crate) attribute_values: Option<crate::attribute_values::Window>,
     pub(crate) block_card: Option<crate::block_card::Window>,
     pub(crate) block_parameter_groups: Option<crate::block_parameter_groups::Window>,
+    pub(crate) block_type_values: Option<crate::block_type_values::Window>,
     pub(crate) block_schedule: Option<crate::block_schedule::Window>,
     /// Bul ve değiştir's window, while it is open (find_replace.rs).
     pub(crate) find_replace: Option<crate::find_replace::Window>,
@@ -1466,6 +1469,7 @@ impl App {
             attribute_values: None,
             block_card: None,
             block_parameter_groups: None,
+            block_type_values: None,
             block_schedule: None,
             find_replace: None,
             text_tools: Default::default(),
@@ -2309,6 +2313,7 @@ impl App {
             Message::AttributeValues(event) => self.attribute_values_event(event),
             Message::BlockCard(event) => return self.block_card_event(event),
             Message::BlockParameterGroups(event) => return self.block_parameter_groups_event(event),
+            Message::BlockTypeValues(event) => return self.block_type_values_event(event),
             Message::BlockSchedule(event) => return self.block_schedule_event(event),
             Message::FindReplace(event) => return self.find_replace_event(event),
             Message::LayerMerge(event) => return self.layer_merge_event(event),

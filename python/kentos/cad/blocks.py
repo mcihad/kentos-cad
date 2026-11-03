@@ -242,14 +242,18 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
     değiştir), rebase taban noktasını taşır (Blok değiştir), remove kullanılmayan tanımı
     siler (Blok sil), purge kullanılmayan bütün tanımları siler (Blokları temizle),
     attributes tanımın öznitelik listesini bütün yazar (Blok değiştir; etiket boş
-    olamaz, listede bir kez bulunur; boş liste öznitelikleri kaldırır). Tanım değişince
-    bütün yerleştirmeleri yenisini gösterir. Çizimde ya da başka bir tanımda
-    yerleştirmesi olan tanım silinmez; tanım kendini içeremez, en çok 16 düzey iç içe
-    olabilir. redefine'da replace ile nesneler silinir, yerine tanımın bir yerleştirmesi
-    konur. Bir şey değiştirmeyen istek hiçbir şey yazmaz. Bloklar paneli bu komutla
-    yazar. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz,
-    sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik
-    project.changes ile gider.
+    olamaz, listede bir kez bulunur; boş liste öznitelikleri kaldırır). dynamic,
+    parametre/eylem ve isteğe bağlı typeParameters/typeValues ortak tip kapsamını yazar;
+    ortak değer değişimi bütün kök/iç kullanımlara uygulanır. Farklı örnek değerleri
+    ortak tipe sessizce birleştirilmez; kilitli etkilenen kullanım ve uyumsuz girdi
+    atomik reddedilir. Tip formülü yalnız ortak girdileri okur. Tanım değişince bütün
+    yerleştirmeleri yenisini gösterir. Çizimde ya da başka bir tanımda yerleştirmesi
+    olan tanım silinmez; tanım kendini içeremez, en çok 16 düzey iç içe olabilir.
+    redefine'da replace ile nesneler silinir, yerine tanımın bir yerleştirmesi konur.
+    Bir şey değiştirmeyen istek hiçbir şey yazmaz. Bloklar paneli bu komutla yazar.
+    expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
+    conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes
+    ile gider.
     """
     __slots__ = ()
     id = "cad.blocks.edit"
@@ -299,7 +303,11 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
         noktasını taşır (Blok değiştir), remove kullanılmayan tanımı siler (Blok sil), purge
         kullanılmayan bütün tanımları siler (Blokları temizle), attributes tanımın öznitelik
         listesini bütün yazar (Blok değiştir; etiket boş olamaz, listede bir kez bulunur;
-        boş liste öznitelikleri kaldırır). Tanım değişince bütün yerleştirmeleri yenisini
+        boş liste öznitelikleri kaldırır). dynamic, parametre/eylem ve isteğe bağlı
+        typeParameters/typeValues ortak tip kapsamını yazar; ortak değer değişimi bütün
+        kök/iç kullanımlara uygulanır. Farklı örnek değerleri ortak tipe sessizce
+        birleştirilmez; kilitli etkilenen kullanım ve uyumsuz girdi atomik reddedilir. Tip
+        formülü yalnız ortak girdileri okur. Tanım değişince bütün yerleştirmeleri yenisini
         gösterir. Çizimde ya da başka bir tanımda yerleştirmesi olan tanım silinmez; tanım
         kendini içeremez, en çok 16 düzey iç içe olabilir. redefine'da replace ile nesneler
         silinir, yerine tanımın bir yerleştirmesi konur. Bir şey değiştirmeyen istek hiçbir
@@ -961,9 +969,12 @@ class _BlocksParameters(LocalCommand[BlocksParameters, BlocksParametersOut, Bloc
     sayı (uzunluk, radyan), kutupsal ve nokta bir {x, y}, çevir true ya da false,
     görünürlük durumun adı, tablo satırın adı (satırın değerlerini yazar). Her değer
     parametrenin kuralına uyar (en küçük, en büyük, adım, liste); ifadeyle hesaplanan
-    parametre verilmez, öbürleri değişince yeniden hesaplanır. Yerleştirme yalnız
-    varsayılandan farklı değerleri tutar; cevap her yerleştirmenin bütün değerlerini
-    verir. Kilitli katmandaki yerleştirme atlanır. AutoCAD'in dinamik blok özellikleri.
+    parametre verilmez, öbürleri değişince yeniden hesaplanır. Ortak tip değerleri get
+    ile okunur; set ve adla reset ortak adı veya ortak lookup satırını değiştiremez.
+    Ortak kapsam/değer için cad.blocks.edit dynamic kullanılır. Tam reset yalnız örnek
+    girdilerini sıfırlar. Yerleştirme yalnız varsayılandan farklı örnek değerlerini
+    tutar; cevap her yerleştirmenin bütün etkin değerlerini verir. Kilitli katmandaki
+    yerleştirme atlanır. AutoCAD'in dinamik blok özellikleri.
     """
     __slots__ = ()
     id = "cad.blocks.parameters"
@@ -993,10 +1004,12 @@ class _BlocksParameters(LocalCommand[BlocksParameters, BlocksParametersOut, Bloc
         doğrusal ve açı bir sayı (uzunluk, radyan), kutupsal ve nokta bir {x, y}, çevir true
         ya da false, görünürlük durumun adı, tablo satırın adı (satırın değerlerini yazar).
         Her değer parametrenin kuralına uyar (en küçük, en büyük, adım, liste); ifadeyle
-        hesaplanan parametre verilmez, öbürleri değişince yeniden hesaplanır. Yerleştirme
-        yalnız varsayılandan farklı değerleri tutar; cevap her yerleştirmenin bütün
-        değerlerini verir. Kilitli katmandaki yerleştirme atlanır. AutoCAD'in dinamik blok
-        özellikleri.
+        hesaplanan parametre verilmez, öbürleri değişince yeniden hesaplanır. Ortak tip
+        değerleri get ile okunur; set ve adla reset ortak adı veya ortak lookup satırını
+        değiştiremez. Ortak kapsam/değer için cad.blocks.edit dynamic kullanılır. Tam reset
+        yalnız örnek girdilerini sıfırlar. Yerleştirme yalnız varsayılandan farklı örnek
+        değerlerini tutar; cevap her yerleştirmenin bütün etkin değerlerini verir. Kilitli
+        katmandaki yerleştirme atlanır. AutoCAD'in dinamik blok özellikleri.
 
         Args:
             doc: The drawing it works on.
@@ -1362,16 +1375,18 @@ class _BlocksReplace(LocalCommand[BlocksReplace, BlocksReplaced, BlocksReplaced]
     adımı. Her yerleştirme yerini, ölçeğini, dönüşünü, katmanını ve görünüşünü korur;
     to'nun sabit olmayan özniteliklerinin değerleri ve taşınabilir özniteliklerinin
     yerleri kalır, öbürleri düşer ve söylenir (dropped, places); to'nun alanları
-    doldurulur. Aynı ad ve türdeki uyumlu örnek parametreleri korunur, hedef formülleri
-    yeniden hesaplanır; taşınamayan bir örnek değeri varsa invalid_parameter_value ile
-    tüm işlem reddedilir, sessizce sıfırlanmaz. İsteğe bağlı library (kentos.blocks
-    sürüm 2) verilirse to kaynak kitaplığın kimliğidir: aynı aile/tipin daha yeni yayını
-    ayrı bağımlılık grafiğiyle alınır; yalnız kapsam yerleştirmeleri geçirilir. Eski
-    tanımlar korunur; yerel hedef değişikliği ve uyumsuz girdiler atomik reddedilir. Bu
-    kipte purge verilmez; target ve added çözümlenen hedefi bildirir. purge ile from
-    artık hiçbir yerde yerleşmiyorsa silinir. Kilitli katmandakiler atlanır ve söylenir.
-    AutoCAD'in BLOCKREPLACE'i. expectedRevision verilmişse ve çizim o sürümde değilse
-    hiçbir şey yazılmaz, sonuç conflict olur.
+    doldurulur. Tipten tipe geçiş hedefin ortak değerini benimser; tipten örneğe geçiş
+    eski ortak literal girdiyi korur. Aynı ad ve türdeki uyumlu örnek parametreleri
+    korunur, hedef formülleri yeniden hesaplanır; taşınamayan bir örnek değeri varsa
+    invalid_parameter_value ile tüm işlem reddedilir, sessizce sıfırlanmaz. İsteğe bağlı
+    library (kentos.blocks sürüm 2; ortak tip değerleri varsa 3) verilirse to kaynak
+    kitaplığın kimliğidir: aynı aile/tipin daha yeni yayını ayrı bağımlılık grafiğiyle
+    alınır; yalnız kapsam yerleştirmeleri geçirilir. Eski tanımlar korunur; yerel hedef
+    değişikliği ve uyumsuz girdiler atomik reddedilir. Bu kipte purge verilmez; target
+    ve added çözümlenen hedefi bildirir. purge ile from artık hiçbir yerde yerleşmiyorsa
+    silinir. Kilitli katmandakiler atlanır ve söylenir. AutoCAD'in BLOCKREPLACE'i.
+    expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
+    conflict olur.
     """
     __slots__ = ()
     id = "cad.blocks.replace"
@@ -1400,23 +1415,24 @@ class _BlocksReplace(LocalCommand[BlocksReplace, BlocksReplaced, BlocksReplaced]
         verilenleri) to bloğuna geçirir; tek geri alma adımı. Her yerleştirme yerini,
         ölçeğini, dönüşünü, katmanını ve görünüşünü korur; to'nun sabit olmayan
         özniteliklerinin değerleri ve taşınabilir özniteliklerinin yerleri kalır, öbürleri
-        düşer ve söylenir (dropped, places); to'nun alanları doldurulur. Aynı ad ve türdeki
-        uyumlu örnek parametreleri korunur, hedef formülleri yeniden hesaplanır; taşınamayan
-        bir örnek değeri varsa invalid_parameter_value ile tüm işlem reddedilir, sessizce
-        sıfırlanmaz. İsteğe bağlı library (kentos.blocks sürüm 2) verilirse to kaynak
-        kitaplığın kimliğidir: aynı aile/tipin daha yeni yayını ayrı bağımlılık grafiğiyle
-        alınır; yalnız kapsam yerleştirmeleri geçirilir. Eski tanımlar korunur; yerel hedef
-        değişikliği ve uyumsuz girdiler atomik reddedilir. Bu kipte purge verilmez; target
-        ve added çözümlenen hedefi bildirir. purge ile from artık hiçbir yerde yerleşmiyorsa
-        silinir. Kilitli katmandakiler atlanır ve söylenir. AutoCAD'in BLOCKREPLACE'i.
-        expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
-        conflict olur.
+        düşer ve söylenir (dropped, places); to'nun alanları doldurulur. Tipten tipe geçiş
+        hedefin ortak değerini benimser; tipten örneğe geçiş eski ortak literal girdiyi
+        korur. Aynı ad ve türdeki uyumlu örnek parametreleri korunur, hedef formülleri
+        yeniden hesaplanır; taşınamayan bir örnek değeri varsa invalid_parameter_value ile
+        tüm işlem reddedilir, sessizce sıfırlanmaz. İsteğe bağlı library (kentos.blocks
+        sürüm 2; ortak tip değerleri varsa 3) verilirse to kaynak kitaplığın kimliğidir:
+        aynı aile/tipin daha yeni yayını ayrı bağımlılık grafiğiyle alınır; yalnız kapsam
+        yerleştirmeleri geçirilir. Eski tanımlar korunur; yerel hedef değişikliği ve uyumsuz
+        girdiler atomik reddedilir. Bu kipte purge verilmez; target ve added çözümlenen
+        hedefi bildirir. purge ile from artık hiçbir yerde yerleşmiyorsa silinir. Kilitli
+        katmandakiler atlanır ve söylenir. AutoCAD'in BLOCKREPLACE'i. expectedRevision
+        verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
 
         Args:
             doc: The drawing it works on.
             expected_revision:
             from_: The block whose inserts are replaced.
-            library: Optional `kentos.blocks` version 2 text: `to` is its source block id.
+            library: Optional `kentos.blocks` version 2 or 3 text: `to` is its source block id.
                 Requires the same publication family/type and a strictly newer release than `from`.
                 Imports a separate dependency graph, preserves the old definitions, and upgrades only the named root inserts.
                 Compatible instance inputs survive; local target edits or incompatible inputs refuse atomically.

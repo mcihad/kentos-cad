@@ -45,7 +45,7 @@ fn variables(d: &DynamicBlock, values: &BTreeMap<String, ParamValue>) -> Vec<Var
         .filter_map(|p| {
             let n = match (
                 p,
-                values.get(p.name()).cloned().or_else(|| p.default_value()),
+                values.get(p.name()).or_else(|| d.type_values.get(p.name())).cloned().or_else(|| p.default_value()),
             ) {
                 (
                     BlockParameter::Linear { .. } | BlockParameter::Angle { .. },
@@ -147,10 +147,13 @@ fn formula_order(d: &DynamicBlock) -> Result<Vec<usize>, (String, String)> {
         for token in tokens {
             if let Tok::At(name) = token.t
                 && let Some(&j) = numeric.get(&fold_turkish(&name))
-                && derived.contains(&j)
-                && dependencies[i].insert(j)
             {
-                readers[j].push(i);
+                if d.is_type_parameter(d.parameters[i].name()) && !d.is_type_parameter(d.parameters[j].name()) {
+                    return Err((d.parameters[i].name().to_owned(), format!("tip formülü örneğe özel “{}” girdisini okuyamaz", d.parameters[j].name())));
+                }
+                if derived.contains(&j) && dependencies[i].insert(j) {
+                    readers[j].push(i);
+                }
             }
         }
     }
@@ -236,6 +239,30 @@ fn derive(
     Ok(())
 }
 
+/// Canonical common formula caches. Instance inputs never supply a type formula.
+pub(crate) fn normalize_type_values(d: &mut DynamicBlock) -> Result<(), (String, String)> {
+    if d.type_parameters.is_empty() {
+        return Ok(());
+    }
+    formula_order(d)?;
+    let mut common = d.type_values.clone();
+    let mut scoped = d.clone();
+    for p in &mut scoped.parameters {
+        if !d.is_type_parameter(p.name()) {
+            match p {
+                BlockParameter::Linear { rule, .. }
+                | BlockParameter::Polar { rule, .. }
+                | BlockParameter::Angle { rule, .. } => rule.expression = None,
+                _ => {}
+            }
+        }
+    }
+    derive(&scoped, &mut common)?;
+    common.retain(|name, _| d.type_parameters.contains(name));
+    d.type_values = common;
+    Ok(())
+}
+
 /// Why a definition's expressions do not work (docs/adr/0318 §1): each computes a number from the defaults.
 pub fn expressions_problem(d: &DynamicBlock) -> Option<(String, String)> {
     let mut values = BTreeMap::new();
@@ -258,7 +285,8 @@ pub fn resolve(
     kept: &BTreeMap<String, ParamValue>,
     given: &BTreeMap<String, ParamValue>,
 ) -> Result<BTreeMap<String, ParamValue>, Refusal> {
-    let mut values = kept.clone();
+    let mut values = d.type_values.clone();
+    values.extend(kept.clone());
     for (name, v) in given {
         let path = format!("values.{name}");
         let Some(p) = d.parameters.iter().find(|p| p.name() == name) else {
@@ -272,6 +300,15 @@ pub fn resolve(
                 ),
             ));
         };
+        if d.is_type_parameter(name) {
+            return Err(refusal(
+                codes::INVALID_PARAMETER_VALUE,
+                path,
+                format!(
+                    "“{name}” ortak tip değeri. Tip değerleri penceresini veya cad.blocks.edit dynamic işlemini kullanın."
+                ),
+            ));
+        }
         if p.rule().is_some_and(|r| r.expression.is_some()) {
             return Err(refusal(
                 codes::DERIVED_PARAMETER,
@@ -309,6 +346,9 @@ pub fn resolve(
         )
     })?;
     values.retain(|name, v| {
+        if d.is_type_parameter(name) {
+            return false;
+        }
         d.parameters
             .iter()
             .find(|p| p.name() == name)
@@ -330,9 +370,10 @@ pub(crate) fn refresh_definitions(
 ) -> Result<Vec<(Slot, Entity)>, Stop> {
     fn has_formulas(d: Option<&DynamicBlock>) -> bool {
         d.is_some_and(|d| {
-            d.parameters
-                .iter()
-                .any(|p| p.rule().is_some_and(|r| r.expression.is_some()))
+            !d.type_parameters.is_empty()
+                || d.parameters
+                    .iter()
+                    .any(|p| p.rule().is_some_and(|r| r.expression.is_some()))
         })
     }
     fn refresh(
@@ -342,7 +383,7 @@ pub(crate) fn refresh_definitions(
         existing: bool,
     ) -> Result<BTreeMap<String, ParamValue>, Refusal> {
         let calculated = if existing { old } else { new };
-        let inputs = kept
+        let mut inputs: BTreeMap<String, ParamValue> = kept
             .iter()
             .filter(|(name, _)| {
                 !calculated.is_some_and(|d| {
@@ -354,6 +395,52 @@ pub(crate) fn refresh_definitions(
             })
             .map(|(name, value)| (name.clone(), value.clone()))
             .collect();
+        // Scope migration is explicit and lossless: promotion refuses a conflicting
+        // effective instance, demotion materializes its former common value.
+        if let Some(old) = old.filter(|_| existing) {
+            let effective = current(old, kept);
+            for p in &old.parameters {
+                let name = p.name();
+                if matches!(p, BlockParameter::Lookup { .. }) {
+                    continue;
+                }
+                let was = old.is_type_parameter(name);
+                let now = new.is_some_and(|d| d.is_type_parameter(name));
+                if !was && now {
+                    let value = new.and_then(|d| d.type_values.get(name));
+                    if effective
+                        .get(name)
+                        .zip(value)
+                        .is_none_or(|(a, b)| !same_param_value(a, b))
+                    {
+                        return Err(refusal(
+                            codes::INVALID_PARAMETER_VALUE,
+                            format!("typeValues.{name}"),
+                            format!(
+                                "“{name}” örnekleri farklı değer taşıyor; ortak tipe geçmeden önce değerleri eşitleyin veya ayrı tip oluşturun"
+                            ),
+                        ));
+                    }
+                    inputs.remove(name);
+                } else if was && !now {
+                    let target = new.and_then(|d| d.parameters.iter().find(|p| p.name() == name));
+                    let Some(target) = target else {
+                        return Err(refusal(
+                            codes::INVALID_PARAMETER_VALUE,
+                            format!("typeValues.{name}"),
+                            format!(
+                                "“{name}” ortak değeri silinemez; önce örnek kapsamına geçirin"
+                            ),
+                        ));
+                    };
+                    if target.rule().is_none_or(|r| r.expression.is_none())
+                        && let Some(value) = effective.get(name)
+                    {
+                        inputs.insert(name.to_owned(), value.clone());
+                    }
+                }
+            }
+        }
         match new {
             Some(d) => resolve(d, &BTreeMap::new(), &inputs),
             None => Ok(inputs), // Normal block rules reject any remaining literal values.
@@ -366,6 +453,50 @@ pub(crate) fn refresh_definitions(
             Some("blocks".into()),
         ))
     };
+    for b in blocks.iter_mut().filter(|b| incoming.contains(&b.id)) {
+        if let Some(d) = &mut b.dynamic {
+            normalize_type_values(d)
+                .map_err(|(_, why)| refused(format!("“{}” tip hesabı", b.name), why))?;
+        }
+    }
+    let common_changed: HashSet<_> = blocks
+        .iter()
+        .filter(|b| incoming.contains(&b.id))
+        .filter(|b| {
+            let old = doc.block(b.id).and_then(|b| b.dynamic.as_ref());
+            let old_scope = old.map(|d| (&d.type_parameters, &d.type_values));
+            let next_scope = b
+                .dynamic
+                .as_ref()
+                .map(|d| (&d.type_parameters, &d.type_values));
+            old_scope != next_scope
+                && (old.is_some_and(|d| !d.type_parameters.is_empty())
+                    || b.dynamic
+                        .as_ref()
+                        .is_some_and(|d| !d.type_parameters.is_empty()))
+        })
+        .map(|b| b.id)
+        .collect();
+    if !common_changed.is_empty() {
+        let mut affected = common_changed;
+        loop {
+            let count = affected.len();
+            for b in blocks.iter() {
+                if b.entities
+                    .iter()
+                    .any(|e| matches!(e, Entity::Insert(i) if affected.contains(&i.block)))
+                {
+                    affected.insert(b.id);
+                }
+            }
+            if affected.len() == count {
+                break;
+            }
+        }
+        if doc.entities().any(|e| matches!(e, Entity::Insert(i) if affected.contains(&i.block) && doc.layers().is_locked(&i.base.layer_id))) {
+            return Err(Stop::failed(error(codes::LAYER_LOCKED, "Tip değişimi kilitli bir doğrudan veya iç içe kullanımı etkiliyor. Önce katmanın kilidini açın.".into(), Some("dynamic.typeValues".into()))));
+        }
+    }
     let dynamics: HashMap<_, _> = blocks.iter().map(|b| (b.id, b.dynamic.clone())).collect();
     for b in blocks.iter().filter(|b| incoming.contains(&b.id)) {
         if let Some((_, why)) = b.dynamic.as_ref().and_then(expressions_problem) {
@@ -463,7 +594,8 @@ pub(crate) fn formula_inputs_changed(old: Option<&DynamicBlock>, next: Option<&D
         }
         out
     }
-    parameters(old) != parameters(next) || inputs(old) != inputs(next)
+    let common = |d: Option<&DynamicBlock>| d.map(|d| (d.type_parameters.clone(), d.type_values.clone())).unwrap_or_default();
+    parameters(old) != parameters(next) || inputs(old) != inputs(next) || common(old) != common(next)
 }
 
 /// A direct formula-definition edit uses the same complete-graph refresh as a
@@ -493,7 +625,7 @@ pub fn current(
 ) -> BTreeMap<String, ParamValue> {
     let mut out = BTreeMap::new();
     for p in &d.parameters {
-        if let Some(v) = kept.get(p.name()).cloned().or_else(|| p.default_value()) {
+        if let Some(v) = d.type_values.get(p.name()).or_else(|| kept.get(p.name())).cloned().or_else(|| p.default_value()) {
             out.insert(p.name().to_owned(), v);
         }
     }
@@ -649,6 +781,10 @@ fn check(doc: &Document, input: &BlocksParameters) -> Result<Checked, Stop> {
                                     format!("Blokta “{name}” parametresi yok."),
                                     Some(format!("names[{k}]")),
                                 )));
+                            }
+                            if d.is_type_parameter(name) {
+                                return Err(Stop::failed(error(codes::INVALID_PARAMETER_VALUE,
+                                    format!("“{name}” ortak tip değeri; örnek sıfırlama işlemiyle değiştirilemez."), Some(format!("names[{k}]")))));
                             }
                             // A lookup's reset is its rows' parameters'.
                             match d.parameters.iter().find(|p| p.name() == name) {

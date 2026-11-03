@@ -12,7 +12,8 @@ Eklenecek tanımlar, değişecek kayıtlar, kilitli katman uyarısı ve düşece
 incelenen planı uygular; tek geri alma hem yeni tanımları hem yerleştirmeleri
 eski hale döndürür.
 
-Yeni yayın eski tanımı ezmez. Uyumlu örnek girdileri korunur; hedefin
+Yeni yayın eski tanımı ezmez. Ortak tip değeri hedef tanımdan gelir;
+eski tanımın ortak değeri korunur. Uyumlu örnek girdileri korunur; hedefin
 hesaplanan değerleri yeniden üretilir. Daha eski/aynı yayın, başka aile/tip,
 birimsiz–fiziksel geçiş ve uyumsuz parametre reddedilir. Aynı yayın hedefi
 yerel olarak değiştirilmişse mevcut tanım sessizce ezilmez. Tip adı yalnız
@@ -49,3 +50,8 @@ gönderilir. Önizlemeden sonra kaynak metnini değiştirip eski planı uygulama
 reddedilir. Kaynak kimliğiyle hedef çizim UUID'sinin aynı olmasını beklemeyin;
 sonucun `target` alanını kullanın. Eski tanımları koruyan bu kipte `purge`
 verilmez. [Karar ve kabul kapsamı](../adr/0857-selected-block-publication-upgrade.md).
+
+Kitaplık metni yayın kimliği için sürüm 2, ortak tip değerleri taşıyorsa
+sürüm 3 kullanır. Masaüstü Kitaplık yüzeyi ve `cad.blocks.edit export`
+aynı minimum sürüm hesabını yapar; numarası elle düşürülmüş ortak değerli
+kaynak, hiçbir tanım eklenmeden reddedilir. [Ortak değerler](block-type-values.md).

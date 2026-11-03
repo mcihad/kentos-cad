@@ -206,6 +206,25 @@ pub const BLOCKS_FORMAT: &str = "kentos.blocks";
 pub const BLOCKS_VERSION: u32 = 1;
 /// A library carrying stable publication identities; older readers must refuse rather than drop them.
 pub const BLOCKS_PUBLICATION_VERSION: u32 = 2;
+/// Shared type values affect geometry; older library readers must refuse rather than ignore them.
+pub const BLOCKS_TYPE_VALUES_VERSION: u32 = 3;
+/// Minimum readable library format, including every definition in the supplied dependency graph.
+pub fn block_library_version<'a>(blocks: impl IntoIterator<Item = &'a BlockDefinition>) -> u32 {
+    blocks.into_iter().fold(BLOCKS_VERSION, |version, b| {
+        let needed = if b
+            .dynamic
+            .as_ref()
+            .is_some_and(|d| !d.type_parameters.is_empty() || !d.type_values.is_empty())
+        {
+            BLOCKS_TYPE_VALUES_VERSION
+        } else if b.card.as_ref().is_some_and(|c| c.publication.is_some()) {
+            BLOCKS_PUBLICATION_VERSION
+        } else {
+            BLOCKS_VERSION
+        };
+        version.max(needed)
+    })
+}
 
 /// Input of `cad.blocks.edit` v1: one change of the drawing's definitions, as
 /// one undo step named after the operation. A definition is named by its id.
@@ -725,7 +744,7 @@ pub const CAD_BLOCKS_REPLACE_VERSION: u32 = 1;
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct BlocksReplace {
-    /// Optional `kentos.blocks` version 2 text: `to` is its source block id.
+    /// Optional `kentos.blocks` version 2 or 3 text: `to` is its source block id.
     /// Requires the same publication family/type and a strictly newer release than `from`.
     /// Imports a separate dependency graph, preserves the old definitions, and upgrades only the named root inserts.
     /// Compatible instance inputs survive; local target edits or incompatible inputs refuse atomically.

@@ -6022,7 +6022,7 @@ pub fn catalog() -> CommandCatalog {
             version: crate::CAD_BLOCKS_EDIT_VERSION,
             title: "Blok tanımını değiştir".into(),
             summary: "Bir blok tanımını kimliğiyle değiştirir; tek geri alma adımı, adı işlemin: rename yeni ad (Blok değiştir), redefine içindekileri kalıcı kimlikleriyle verilen nesnelerden yeniden kurar (Blok değiştir), rebase taban noktasını taşır (Blok değiştir), remove kullanılmayan tanımı siler (Blok sil), purge kullanılmayan bütün tanımları siler (Blokları temizle), attributes tanımın öznitelik listesini bütün yazar (Blok değiştir; etiket boş olamaz, listede bir kez bulunur; boş liste öznitelikleri kaldırır). \
-                      Tanım değişince bütün yerleştirmeleri yenisini gösterir. Çizimde ya da başka bir tanımda yerleştirmesi olan tanım silinmez; tanım kendini içeremez, en çok 16 düzey iç içe olabilir. \
+                      dynamic, parametre/eylem ve isteğe bağlı typeParameters/typeValues ortak tip kapsamını yazar; ortak değer değişimi bütün kök/iç kullanımlara uygulanır. Farklı örnek değerleri ortak tipe sessizce birleştirilmez; kilitli etkilenen kullanım ve uyumsuz girdi atomik reddedilir. Tip formülü yalnız ortak girdileri okur. Tanım değişince bütün yerleştirmeleri yenisini gösterir. Çizimde ya da başka bir tanımda yerleştirmesi olan tanım silinmez; tanım kendini içeremez, en çok 16 düzey iç içe olabilir. \
                       redefine'da replace ile nesneler silinir, yerine tanımın bir yerleştirmesi konur. Bir şey değiştirmeyen istek hiçbir şey yazmaz. \
                       Bloklar paneli bu komutla yazar. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. \
                       Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider."
@@ -6123,8 +6123,8 @@ pub fn catalog() -> CommandCatalog {
             title: "Bloğu başkasıyla değiştir".into(),
             summary: "from bloğunun çizimdeki yerleştirmelerini (ya da uids ile verilenleri) to bloğuna geçirir; tek geri alma adımı. \
                       Her yerleştirme yerini, ölçeğini, dönüşünü, katmanını ve görünüşünü korur; to'nun sabit olmayan özniteliklerinin değerleri ve taşınabilir özniteliklerinin yerleri kalır, öbürleri düşer ve söylenir (dropped, places); to'nun alanları doldurulur. \
-                      Aynı ad ve türdeki uyumlu örnek parametreleri korunur, hedef formülleri yeniden hesaplanır; taşınamayan bir örnek değeri varsa invalid_parameter_value ile tüm işlem reddedilir, sessizce sıfırlanmaz. \
-                      İsteğe bağlı library (kentos.blocks sürüm 2) verilirse to kaynak kitaplığın kimliğidir: aynı aile/tipin daha yeni yayını ayrı bağımlılık grafiğiyle alınır; yalnız kapsam yerleştirmeleri geçirilir. Eski tanımlar korunur; yerel hedef değişikliği ve uyumsuz girdiler atomik reddedilir. Bu kipte purge verilmez; target ve added çözümlenen hedefi bildirir. \
+                      Tipten tipe geçiş hedefin ortak değerini benimser; tipten örneğe geçiş eski ortak literal girdiyi korur. Aynı ad ve türdeki uyumlu örnek parametreleri korunur, hedef formülleri yeniden hesaplanır; taşınamayan bir örnek değeri varsa invalid_parameter_value ile tüm işlem reddedilir, sessizce sıfırlanmaz. \
+                      İsteğe bağlı library (kentos.blocks sürüm 2; ortak tip değerleri varsa 3) verilirse to kaynak kitaplığın kimliğidir: aynı aile/tipin daha yeni yayını ayrı bağımlılık grafiğiyle alınır; yalnız kapsam yerleştirmeleri geçirilir. Eski tanımlar korunur; yerel hedef değişikliği ve uyumsuz girdiler atomik reddedilir. Bu kipte purge verilmez; target ve added çözümlenen hedefi bildirir. \
                       purge ile from artık hiçbir yerde yerleşmiyorsa silinir. Kilitli katmandakiler atlanır ve söylenir. \
                       AutoCAD'in BLOCKREPLACE'i. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
                 .into(),
@@ -6250,7 +6250,7 @@ pub fn catalog() -> CommandCatalog {
             summary: "Dinamik bir bloğun yerleştirmelerinin parametrelerini okur (get), değiştirir (set) ya da varsayılanlarına döndürür (reset); yazma tek geri alma adımı, adı Blok parametreleri. \
                       values parametrelerin adlarıyla değerleridir: doğrusal ve açı bir sayı (uzunluk, radyan), kutupsal ve nokta bir {x, y}, çevir true ya da false, görünürlük durumun adı, tablo satırın adı (satırın değerlerini yazar). \
                       Her değer parametrenin kuralına uyar (en küçük, en büyük, adım, liste); ifadeyle hesaplanan parametre verilmez, öbürleri değişince yeniden hesaplanır. \
-                      Yerleştirme yalnız varsayılandan farklı değerleri tutar; cevap her yerleştirmenin bütün değerlerini verir. Kilitli katmandaki yerleştirme atlanır. AutoCAD'in dinamik blok özellikleri."
+                      Ortak tip değerleri get ile okunur; set ve adla reset ortak adı veya ortak lookup satırını değiştiremez. Ortak kapsam/değer için cad.blocks.edit dynamic kullanılır. Tam reset yalnız örnek girdilerini sıfırlar. Yerleştirme yalnız varsayılandan farklı örnek değerlerini tutar; cevap her yerleştirmenin bütün etkin değerlerini verir. Kilitli katmandaki yerleştirme atlanır. AutoCAD'in dinamik blok özellikleri."
                 .into(),
             aliases: vec!["bparameter".into(), "blokparametre".into()],
             effect: CommandEffect::Document,

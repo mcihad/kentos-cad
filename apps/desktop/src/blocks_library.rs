@@ -239,7 +239,7 @@ pub fn read_file(path: &Path, unit: Option<DrawingUnit>) -> Result<FileBlocks, S
         });
     Ok(FileBlocks {
         library: doc.blocks().iter().any(|b| b.card.as_ref().is_some_and(|c| c.publication.is_some())).then(|| Arc::new(kentos_commands::canonical::canonical_json(&serde_json::json!({
-            "format":kentos_commands::BLOCKS_FORMAT,"version":kentos_commands::BLOCKS_PUBLICATION_VERSION,
+            "format":kentos_commands::BLOCKS_FORMAT,"version":kentos_commands::block_library_version(doc.blocks().iter().map(|b| &**b)),
             "blocks":doc.blocks().iter().map(|b| &**b).collect::<Vec<_>>()
         })))),
         unit: if known {

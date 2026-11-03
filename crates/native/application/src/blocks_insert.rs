@@ -235,7 +235,10 @@ fn check(doc: &Document, input: &BlocksInsert) -> Result<Checked, Stop> {
     let sy = input.y_scale.map(|y| y * factor).filter(|y| *y != sx);
     // A dynamic block's values given, resolved as `cad.blocks.parameters` does (docs/adr/0318 §3).
     let parameters = match (&input.parameters, &block.dynamic) {
-        (None, _) => Default::default(),
+        (None, Some(d)) => crate::block_params::resolve(d, &Default::default(), &Default::default()).map_err(
+            |(code, path, words)| Stop::failed(error(code, words, Some(path.replacen("values", "parameters", 1))))
+        )?,
+        (None, None) => Default::default(),
         (Some(given), Some(d)) => crate::block_params::resolve(d, &Default::default(), given).map_err(
             |(code, path, words)| {
                 Stop::failed(error(code, words, Some(path.replacen("values", "parameters", 1))))

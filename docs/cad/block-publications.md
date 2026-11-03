@@ -62,11 +62,15 @@ Mevcut `cad.blocks.edit` aracında aynı alanlar camelCase kullanır:
 Araç yeni bir ayrı geometri yazıcısı kullanmaz. Kimlik `drawing` oturumundaki
 bloklardan okunur; yerleştirmeleri bu işlem değiştirmez.
 
-KCAD şema 158 ve KentOS blok kitaplığı sürüm 2 kimliği korur. Kimlik
-içermeyen kitaplıklar sürüm 1 olarak yazılır; eski sürüm 1 kitaplıklar
-okunmaya devam eder. Kimlik alanını sürüm 1 dosyaya eklemek reddedilir;
-eski uygulama sürüm 2 dosyayı kimliği sessizce kaybetmek yerine reddeder. Eski çizimlerde kimlik
+KCAD şema 158 ve KentOS blok kitaplığı sürüm 2 veya üstü kimliği korur.
+Ortak tip değeri yoksa kimlikli kitaplık sürüm 2, kimliksiz kitaplık sürüm 1
+olarak yazılır. Ortak tip değeri varsa geometrinin eski okuyucuda sessizce
+bozulmasını önlemek için sürüm 3 gerekir; bağımlı çocuk tanımlar da hesaba
+katılır. Eski sürüm 1/2 kitaplıklar okunmaya devam eder. Kimliği sürüm 1'e,
+ortak değeri sürüm 1/2'ye eklemek reddedilir. Eski uygulama desteklemediği
+kitaplık sürümünü metadata'yı kaybetmek yerine reddeder. Eski çizimlerde kimlik
 kendiliğinden üretilmez; yeni alan yoksa önceki dosya baytları korunur. Bu
 bilgi bir imza veya yayın içeriğinin değişmediği garantisi değildir.
 Seçilmiş yayın yükseltmesi [kitaplık yükseltme rehberinde](block-publication-upgrade.md)
-anlatılır; tip–örnek parametre politikası ayrıca uygulanacaktır. [Karar ve kabul kapsamı](../adr/0856-block-component-publication-identity.md).
+anlatılır; [tip–örnek parametreleri](block-type-values.md) aynı yayın
+kimliğine sahip eski ve yeni çizim tanımlarını birbirine bağlamaz. [Karar ve kabul kapsamı](../adr/0856-block-component-publication-identity.md).

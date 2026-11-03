@@ -170,3 +170,39 @@ fn a_default_visibility_state_hides_its_pieces_directly_and_through_a_plain_pare
     // Returning to the default after another state cannot reuse the raw four-piece definition.
     assert_eq!(drawn(&blocks, &insert(json!({"Görünüş":"Sade"}))), default);
 }
+
+#[test]
+fn shared_type_values_render_without_instance_overrides_and_have_no_instance_grips() {
+    use kentos_geometry_core::block_dynamic::Dynamic;
+    let mut doc: Value = serde_json::from_str(SAMPLE).unwrap();
+    let d = &mut doc["blocks"][0]["dynamic"];
+    d["typeParameters"] = json!(["Genişlik", "Yön", "Görünüş"]);
+    d["typeValues"] = json!({"Genişlik":1.2,"Yön":true,"Görünüş":"Sade"});
+    let dynamic = Dynamic::from_json(&parse(d));
+    assert!(!dynamic.is_default(None));
+    assert!(dynamic.grips(None, 0.2).is_empty());
+    assert!(
+        dynamic
+            .value_at("Genişlik", Vec2::new(1., 0.), None)
+            .is_none()
+    );
+    assert!(dynamic.value_at("Yön", Vec2::new(1., 0.), None).is_none());
+    let b = Blocks::from_json(&parse(&doc["blocks"])).unwrap();
+    assert_eq!(
+        drawn(&b, &insert(Value::Null)),
+        [
+            "çizgi (10.9, 0) (10.9, 1.2)",
+            "çizgi (10.9, -0.1) (10.9, 0)",
+            "çizgi (9.7, -0.1) (9.7, 0)"
+        ]
+    );
+    // Common values dominate even malformed overrides at the rendering boundary;
+    // the document/command validator refuses storing those overrides.
+    assert_eq!(
+        drawn(
+            &b,
+            &insert(json!({"Genişlik":0.7,"Yön":false,"Görünüş":"Açılım"}))
+        ),
+        drawn(&b, &insert(Value::Null))
+    );
+}

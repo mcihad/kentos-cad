@@ -14,7 +14,7 @@ use crate::document::Document;
 use crate::properties::{Event, Field};
 
 /// How a value is shown in its cell.
-fn shown(p: &BlockParameter, v: &ParamValue, f: Format, factor: f64) -> String {
+pub(crate) fn shown(p: &BlockParameter, v: &ParamValue, f: Format, factor: f64) -> String {
     match v {
         ParamValue::Flag(b) => if *b { "Evet" } else { "Hayır" }.to_owned(),
         ParamValue::Number(x) if matches!(p, BlockParameter::Angle { .. }) => f.angle_bare(*x),
@@ -26,7 +26,7 @@ fn shown(p: &BlockParameter, v: &ParamValue, f: Format, factor: f64) -> String {
 }
 
 /// Show the existing constraints in the same units as the edited value; never reimplement their validation.
-fn bounds(p: &BlockParameter, f: Format, factor: f64) -> Vec<String> {
+pub(crate) fn bounds(p: &BlockParameter, f: Format, factor: f64) -> Vec<String> {
     let Some(rule) = p.rule() else {
         return Vec::new();
     };
@@ -196,7 +196,7 @@ pub(super) fn sections(doc: &Document, slot: Slot, i: &InsertEntity, locked: boo
             _ => Row::text(name.to_owned(), text.clone()),
         };
         let editor = match p {
-            _ if derived => None,
+            _ if derived || d.is_type_parameter(name) => None,
             BlockParameter::Linear { .. }
             | BlockParameter::Angle { .. }
             | BlockParameter::Polar { .. }
@@ -236,9 +236,9 @@ pub(super) fn sections(doc: &Document, slot: Slot, i: &InsertEntity, locked: boo
                 .rule()
                 .and_then(|r| r.expression.as_deref())
                 .unwrap_or_default();
-            out.push(Row::note(&format!("Hesaplanan · {expression}")));
+            out.push(Row::note(&format!("{}Hesaplanan · {expression}", if d.is_type_parameter(name) { "Tip değeri · " } else { "" })));
         } else {
-            let source = if matches!(p, BlockParameter::Lookup { .. }) {
+            let source = if d.is_type_parameter(name) { "Tip değeri · bütün kullanımlarda ortak" } else if matches!(p, BlockParameter::Lookup { .. }) {
                 if value.is_some() {
                     "Eşleşen katalog satırı"
                 } else {
@@ -282,6 +282,11 @@ pub(super) fn sections(doc: &Document, slot: Slot, i: &InsertEntity, locked: boo
             }
         }));
     }
+    reset_items.push(Choice::Separator);
+    reset_items.push(Choice::Action {
+        label: "Tip değerleri…", icon: "blockCard",
+        message: Some(Message::BlocksPanel(crate::blocks_panel::Event::TypeValues(block.id))),
+    });
     let reset = Editor::Select {
         text: said.clone(),
         swatch: None,
@@ -298,7 +303,7 @@ pub(super) fn sections(doc: &Document, slot: Slot, i: &InsertEntity, locked: boo
                 .map_or_else(|| "Kartı yok".into(), |c| c.version.to_string()),
         ),
         Row::note(
-            "Buradaki değerler bu yerleştirmeye aittir. Tanımı düzenlemek diğer kullanımları da etkiler.",
+            "Örnek değerleri bu yerleştirmeye aittir. Tip değerleri ortaktır; Bloklar menüsündeki Tip değerleri penceresinde düzenlenir.",
         ),
         Row::text("Değerler", said)
             .editor(Some(reset))

@@ -15849,7 +15849,7 @@ class BlocksReplace(_Model):
     `from`), `layer_locked` (every one locked; some: a warning), `invalid_field`, `invalid_parameter_value`.
     Attributes:
         from_: The block whose inserts are replaced.
-        library: Optional `kentos.blocks` version 2 text: `to` is its source block id.
+        library: Optional `kentos.blocks` version 2 or 3 text: `to` is its source block id.
             Requires the same publication family/type and a strictly newer release than `from`.
             Imports a separate dependency graph, preserves the old definitions, and upgrades only the named root inserts.
             Compatible instance inputs survive; local target edits or incompatible inputs refuse atomically.
@@ -23561,10 +23561,14 @@ class DynamicBlock(_Model):
         actions: Applied in this order to the definition's objects, each on what the ones before left.
         parameter_groups: Ordered presentation groups. Unassigned parameters retain their automatic headings;
             membership never changes the evaluator's parameter/action order or instance values.
+        type_parameters: Shared scalar parameter names. Scope belongs to this drawing definition, not a publication ID.
+        type_values: Common inputs and calculated caches; geometric defaults remain action reference coordinates.
     """
     parameters: list[BlockParameter]
     actions: list[BlockAction] | Unset = UNSET
     parameter_groups: list[BlockParameterGroup] | Unset = UNSET
+    type_parameters: list[str] | Unset = UNSET
+    type_values: dict[str, ParamValue] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -23573,6 +23577,10 @@ class DynamicBlock(_Model):
             out["actions"] = [e0.to_json() for e0 in self.actions]
         if self.parameter_groups is not UNSET:
             out["parameterGroups"] = [e0.to_json() for e0 in self.parameter_groups]
+        if self.type_parameters is not UNSET:
+            out["typeParameters"] = list(self.type_parameters)
+        if self.type_values is not UNSET:
+            out["typeValues"] = dict(self.type_values)
         return out
 
     @classmethod
@@ -23581,6 +23589,8 @@ class DynamicBlock(_Model):
             parameters=[BlockParameter.from_json(e0) for e0 in data["parameters"]],
             actions=[BlockAction.from_json(e0) for e0 in data["actions"]] if "actions" in data else UNSET,
             parameter_groups=[BlockParameterGroup.from_json(e0) for e0 in data["parameterGroups"]] if "parameterGroups" in data else UNSET,
+            type_parameters=list(data["typeParameters"]) if "typeParameters" in data else UNSET,
+            type_values=dict(data["typeValues"]) if "typeValues" in data else UNSET,
         )
 
 

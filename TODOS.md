@@ -51,6 +51,14 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ADR 0863: ortak çizim-tipi parametre kapsamı,
+  Tip değerleri penceresi ve örnek panelinde salt okunur ortak değerler;
+  kentos.blocks sürüm 3 güvenli okuma/yazma kapısı.
+  Native GUI/komut kabulünden ayrı olarak web parametre düzenleme,
+  lookup/reset/grip ve ortak değer penceresi ayrıca sınanacak; ortak
+  `DynamicBlock.typeParameters/typeValues` sözleşmesi native kabulünü
+  otomatik web kabulüne dönüştürmez.
+
 - ADR 0861: blok formüllerinin gerçek bağımlılık sırasıyla hesaplanması,
   Unicode/harf eşlemesi ve döngünün adlarıyla yazısız reddi. Native ortak
   yolun kabulü web'in ayrı parametre değerlendiricisini tamamlamaz.

@@ -197,6 +197,8 @@ pub struct Action {
 pub struct Dynamic {
     pub parameters: Vec<Parameter>,
     pub actions: Vec<Action>,
+    pub type_parameters: Vec<String>,
+    pub type_values: Vec<(String, ParamValue)>,
 }
 
 fn dist(a: Vec2, b: Vec2) -> f64 {
@@ -238,6 +240,30 @@ impl Dynamic {
     /// The part read from the contract's JSON (`{ parameters, actions? }`); what does not read is left out.
     pub fn from_json(v: &Json) -> Dynamic {
         let mut d = Dynamic::default();
+        if let Json::Arr(names) = v.get("typeParameters") {
+            d.type_parameters = names
+                .iter()
+                .filter_map(|v| match v {
+                    Json::Str(n) => Some(n.clone()),
+                    _ => None,
+                })
+                .collect();
+        }
+        if let Json::Obj(values) = v.get("typeValues") {
+            d.type_values = values
+                .iter()
+                .filter_map(|(n, v)| {
+                    let value = match v {
+                        Json::Bool(b) => ParamValue::Flag(*b),
+                        Json::Num(n) => ParamValue::Number(*n),
+                        Json::Str(t) => ParamValue::Text(t.clone()),
+                        Json::Obj(_) => ParamValue::Point(Vec2::from_json(v).ok()?),
+                        _ => return None,
+                    };
+                    Some((n.clone(), value))
+                })
+                .collect();
+        }
         if let Json::Arr(list) = v.get("parameters") {
             for p in list {
                 let Some(name) = text(p, "name") else {
@@ -327,13 +353,17 @@ impl Dynamic {
 
     /// A parameter's value: the insert's, else its default.
     fn value(&self, p: &Parameter, values: Option<&Params>) -> Option<ParamValue> {
-        values
-            .and_then(|v| v.of(p.name()).cloned())
+        self.type_values.iter().find(|(name, _)| name == p.name()).map(|(_, value)| value.clone())
+            .or_else(|| values.and_then(|v| v.of(p.name()).cloned()))
             .or_else(|| p.default_value())
     }
 
     /// Whether the insert's values draw the definition as it is (every value its default, nothing hidden).
     pub fn is_default(&self, values: Option<&Params>) -> bool {
+        if self.type_values.iter().any(|(name, value)| self.parameter(name)
+            .and_then(Parameter::default_value).is_some_and(|d| !same(&d, value))) {
+            return false;
+        }
         // The first visibility state is also applied when the insert stores no overrides.
         // Its hidden pieces make the raw definition unsuitable for the fast path.
         if self.parameters.iter().any(|p| {
@@ -359,6 +389,7 @@ impl Dynamic {
         let mirror = self.mirror(values);
         let mut out = Vec::new();
         for p in &self.parameters {
+            if self.type_parameters.iter().any(|name| name == p.name()) { continue; }
             let value = self.value(p, values);
             let grip = match (p, value) {
                 (
@@ -482,6 +513,7 @@ impl Dynamic {
     /// distance in that direction (none on its start), an angle's turn toward `at` (the turn nearest its default,
     /// none on its centre), a point's `at`. None for the other kinds, and for a parameter its expression computes.
     pub fn value_at(&self, name: &str, at: Vec2, values: Option<&Params>) -> Option<ParamValue> {
+        if self.type_parameters.iter().any(|n| n == name) { return None; }
         let at = self.unmirror(values, at);
         match self.parameter(name)? {
             Parameter::Linear { from, to, rule, .. } if !rule.derived => {

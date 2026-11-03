@@ -1974,6 +1974,7 @@ impl App {
             Asking::AttributeValues => self.attribute_values_view(),
             Asking::BlockCard => self.block_card_view(),
             Asking::BlockParameterGroups => self.block_parameter_groups_view(),
+            Asking::BlockTypeValues => self.block_type_values_view(),
             Asking::BlockSchedule => self.block_schedule_view(),
             Asking::FindReplace => self.find_replace_view(),
             Asking::LayerMerge => self.layer_merge_view(),
