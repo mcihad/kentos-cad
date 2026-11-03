@@ -28,10 +28,93 @@ pub struct DynamicBlock {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<BlockParameterGroup>>", optional))]
     pub parameter_groups: Vec<BlockParameterGroup>,
+    /// Shared scalar parameter names. Scope belongs to this drawing definition, not a publication ID.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub type_parameters: Vec<String>,
+    /// Common inputs and calculated caches; geometric defaults remain action reference coordinates.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<String, ParamValue>>", optional))]
+    pub type_values: BTreeMap<String, ParamValue>,
     /// Applied in this order to the definition's objects, each on what the ones before left.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<BlockAction>>", optional))]
     pub actions: Vec<BlockAction>,
+}
+
+impl DynamicBlock {
+    /// Lookups inherit the scope of their targets. Validation refuses mixed-scope tables.
+    pub fn is_type_parameter(&self, name: &str) -> bool {
+        if self.type_parameters.iter().any(|n| n == name) {
+            return true;
+        }
+        self.parameters
+            .iter()
+            .find(|p| p.name() == name)
+            .is_some_and(|p| match p {
+                BlockParameter::Lookup { rows, .. } => rows
+                    .iter()
+                    .flat_map(|r| r.values.keys())
+                    .any(|n| self.type_parameters.contains(n)),
+                _ => false,
+            })
+    }
+}
+
+/// Common scope/value metadata is checked independently from geometric action membership.
+pub fn type_parameters_problem(d: &DynamicBlock) -> Option<(String, String)> {
+    let mut names = HashSet::new();
+    for (i, name) in d.type_parameters.iter().enumerate() {
+        let p = d.parameters.iter().find(|p| p.name() == name);
+        if !names.insert(name) || p.is_none() || matches!(p, Some(BlockParameter::Lookup { .. })) {
+            return Some((
+                format!("typeParameters[{i}]"),
+                format!(
+                    "“{name}” tek bir gerçek parametre olmalı; tablo kapsamını hedeflerinden alır"
+                ),
+            ));
+        }
+        if !d.type_values.contains_key(name) {
+            return Some((
+                format!("typeValues.{name}"),
+                format!("“{name}” için ortak tip değeri gerekli"),
+            ));
+        }
+    }
+    for (name, value) in &d.type_values {
+        let Some(p) = d.parameters.iter().find(|p| p.name() == name) else {
+            return Some((
+                format!("typeValues.{name}"),
+                format!("“{name}” parametresi yok"),
+            ));
+        };
+        if !d.type_parameters.contains(name) {
+            return Some((
+                format!("typeValues.{name}"),
+                format!("“{name}” tip kapsamında değil"),
+            ));
+        }
+        if let Some(why) = value_problem(p, value) {
+            return Some((format!("typeValues.{name}"), why));
+        }
+    }
+    for p in &d.parameters {
+        if let BlockParameter::Lookup { name, rows } = p {
+            let mut scopes = rows
+                .iter()
+                .flat_map(|r| r.values.keys())
+                .map(|n| d.type_parameters.contains(n));
+            if let Some(first) = scopes.next()
+                && scopes.any(|v| v != first)
+            {
+                return Some((
+                    "parameters".into(),
+                    format!("“{name}” tablosu tip ve örnek parametrelerini birlikte değiştiremez"),
+                ));
+            }
+        }
+    }
+    None
 }
 
 /// A property-panel heading and the exact parameter names it contains, in display order.
@@ -492,7 +575,7 @@ pub fn parameter_groups_problem(d: &DynamicBlock) -> Option<(String, String)> {
 /// of the definition's objects.
 pub fn dynamic_problem(d: &DynamicBlock, ids: &HashSet<u32>) -> Option<(String, String)> {
     let at = |path: String, m: String| Some((path, m));
-    if let Some(problem) = parameter_groups_problem(d) {
+    if let Some(problem) = type_parameters_problem(d).or_else(|| parameter_groups_problem(d)) {
         return Some(problem);
     }
     if d.parameters.is_empty() {
@@ -733,6 +816,9 @@ pub fn values_problem(
     values: &BTreeMap<String, ParamValue>,
 ) -> Option<(String, String)> {
     for (name, v) in values {
+        if d.is_type_parameter(name) {
+            return Some((name.clone(), format!("“{name}” ortak tip değeri; örnekte saklanamaz")));
+        }
         let Some(p) = d.parameters.iter().find(|p| p.name() == name) else {
             return Some((name.clone(), format!("blokta “{name}” parametresi yok")));
         };
@@ -760,6 +846,8 @@ mod tests {
     fn door() -> DynamicBlock {
         DynamicBlock {
             parameter_groups: Vec::new(),
+            type_parameters: Vec::new(),
+            type_values: BTreeMap::new(),
             parameters: vec![
                 BlockParameter::Linear {
                     name: "Genişlik".into(),

@@ -2089,6 +2089,9 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    if doc.blocks.iter().any(|b| b.dynamic.as_ref().is_some_and(|d| !d.type_parameters.is_empty() || !d.type_values.is_empty())) {
+        return crate::SCHEMA_WITH_BLOCK_TYPE_VALUES;
+    }
     if doc.blocks.iter().any(|b| b.dynamic.as_ref().is_some_and(|d| !d.parameter_groups.is_empty())) {
         return crate::SCHEMA_WITH_BLOCK_PARAMETER_GROUPS;
     }

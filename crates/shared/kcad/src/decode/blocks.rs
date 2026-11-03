@@ -127,6 +127,9 @@ fn definition(
             "dynamic" if has.dynamic_blocks => {
                 let at = r.position();
                 let value = r.opaque()?;
+                if !has.block_type_values && (value.get("typeParameters").is_some() || value.get("typeValues").is_some()) {
+                    return Err(r.fail_at(Code::UnknownField, at, "tip parametreleri bu belge şemasında yok"));
+                }
                 if !has.block_parameter_groups && value.get("parameterGroups").is_some() {
                     return Err(r.fail_at(Code::UnknownField, at, "parameterGroups bu belge şemasında yok"));
                 }
@@ -378,7 +381,7 @@ fn unknown_key(v: &serde_json::Value) -> Option<String> {
     }
     const POINT: &[&str] = &["x", "y"];
     let points = |p: &Value, keys: &[&str]| keys.iter().find_map(|k| p.get(*k).and_then(|q| only(q, POINT)));
-    only(v, &["parameters", "actions", "parameterGroups"])
+    only(v, &["parameters", "actions", "parameterGroups", "typeParameters", "typeValues"])
         .or_else(|| each(v, "parameterGroups", |g| only(g, &["name", "parameters"])))
         .or_else(|| {
             each(v, "parameters", |p| {

@@ -228,7 +228,8 @@ use crate::layer::LineType;
 ///    an insert's option 5, its arch as one JSON text. The web's copy stays 53.
 /// 104: optional block publication family/type/release metadata, KCAD schema 158 (ADR 0856).
 /// 105: ordered user-defined dynamic block parameter groups, KCAD schema 159 (ADR 0858).
-pub const FORMATS_VERSION: u32 = 105;
+/// 106: drawing-type dynamic block parameter scope and values, KCAD160 (ADR 0863).
+pub const FORMATS_VERSION: u32 = 106;
 
 // ── Every import ────────────────────────────────────────────────────────
 

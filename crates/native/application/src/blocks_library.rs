@@ -7,8 +7,9 @@
 use std::collections::{HashMap, HashSet};
 
 use kentos_commands::{
-    BLOCKS_FORMAT, BLOCKS_PUBLICATION_VERSION, BLOCKS_VERSION, BlockDefinition, BlockEditOperation, BlockId, BlocksEdit,
-    BlocksEditPlan, BlocksEdited, CommandResult, Entity,
+    BLOCKS_FORMAT, BLOCKS_PUBLICATION_VERSION, BLOCKS_TYPE_VALUES_VERSION, BLOCKS_VERSION,
+    BlockDefinition, BlockEditOperation, BlockId, BlocksEdit, BlocksEditPlan, BlocksEdited,
+    CommandResult, Entity,
 };
 use kentos_domain::{Document, Slot, Uuid};
 
@@ -133,11 +134,7 @@ fn check(
                 None => doc.blocks().iter().map(|b| b.id).collect(),
             };
             let blocks = with_inserted(doc, &ids);
-            let version = if blocks.iter().any(|b| b.card.as_ref().is_some_and(|c| c.publication.is_some())) {
-                BLOCKS_PUBLICATION_VERSION
-            } else {
-                BLOCKS_VERSION
-            };
+            let version = kentos_commands::block_library_version(&blocks);
             let file = serde_json::json!({ "format": BLOCKS_FORMAT, "version": version, "blocks": blocks });
             planned.library = Some(kentos_commands::canonical::canonical_json(&file));
         }
@@ -170,10 +167,10 @@ fn check(
                 return Err(invalid("biçimi kentos.blocks değil".into()));
             }
             let version = match file.get("version").and_then(serde_json::Value::as_u64) {
-                Some(v) if v == u64::from(BLOCKS_VERSION) || v == u64::from(BLOCKS_PUBLICATION_VERSION) => v,
+                Some(v) if v == u64::from(BLOCKS_VERSION) || v == u64::from(BLOCKS_PUBLICATION_VERSION) || v == u64::from(BLOCKS_TYPE_VALUES_VERSION) => v,
                 Some(v) => {
                     return Err(invalid(format!(
-                        "sürümü {v}; bu KentOS {BLOCKS_VERSION} ve {BLOCKS_PUBLICATION_VERSION}. sürümleri okur"
+                        "sürümü {v}; bu KentOS {BLOCKS_VERSION}, {BLOCKS_PUBLICATION_VERSION} ve {BLOCKS_TYPE_VALUES_VERSION}. sürümleri okur"
                     )));
                 }
                 None => return Err(invalid("sürümü yok".into())),
@@ -188,6 +185,9 @@ fn check(
                 && blocks.iter().any(|b| b.card.as_ref().is_some_and(|c| c.publication.is_some()))
             {
                 return Err(invalid("bileşen yayın kimliği içeren kitaplık 2. sürüm olmalı".into()));
+            }
+            if version < u64::from(kentos_commands::block_library_version(&blocks)) {
+                return Err(invalid("ortak tip değeri içeren kitaplık 3. sürüm olmalı; eski okuyucular boyutları yanlış yorumlamamalı".into()));
             }
             checks::revision(doc, input.expected_revision.as_deref())?;
             take(

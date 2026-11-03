@@ -42,14 +42,17 @@ pub(super) fn check(
     let file: serde_json::Value = serde_json::from_str(text)
         .map_err(|_| refused("Yayın kaynağı geçerli bir kentos.blocks JSON dosyası olmalı."))?;
     if file["format"].as_str() != Some(kentos_commands::BLOCKS_FORMAT)
-        || file["version"].as_u64() != Some(u64::from(kentos_commands::BLOCKS_PUBLICATION_VERSION))
+        || !matches!(file["version"].as_u64(), Some(v) if v == u64::from(kentos_commands::BLOCKS_PUBLICATION_VERSION) || v == u64::from(kentos_commands::BLOCKS_TYPE_VALUES_VERSION))
     {
         return Err(refused(
-            "Yükseltme, yayın kimlikli kentos.blocks sürüm 2 gerektirir.",
+            "Yükseltme, yayın kimlikli kentos.blocks sürüm 2 veya 3 gerektirir.",
         ));
     }
     let blocks: Vec<BlockDefinition> = serde_json::from_value(file["blocks"].clone())
         .map_err(|e| refused(format!("Yayın tanımları okunamadı: {e}")))?;
+    if file["version"].as_u64().unwrap_or_default() < u64::from(kentos_commands::block_library_version(&blocks)) {
+        return Err(refused("Ortak tip değeri içeren yayın kaynağı kentos.blocks sürüm 3 olmalı."));
+    }
     crate::blocks_define::block_rules(&blocks.iter().collect::<Vec<_>>())
         .map_err(|why| refused(why.into_error().message))?;
     let source = blocks

@@ -604,6 +604,11 @@ pub fn scale_dynamic_block(b: &mut BlockDefinition, s: Scale) {
     if let Some(d) = &mut b.dynamic {
         use crate::{BlockAction as A, BlockParameter as P};
         let parameters = d.parameters.clone();
+        for (name, value) in &mut d.type_values {
+            if let Some(p) = parameters.iter().find(|p| p.name() == name) {
+                scale_parameter_value(value, p, s);
+            }
+        }
         for p in &mut d.parameters {
             match p {
                 P::Linear { from, to, rule, .. } | P::Polar { from, to, rule, .. } => {

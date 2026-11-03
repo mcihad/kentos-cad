@@ -35,10 +35,17 @@ use crate::checks::{self, Stop, error};
 /// The stable codes of the answers (`CommandError.code`, `CommandWarning.code`).
 pub use crate::codes;
 
-/// Presentation groups have no geometry or per-insert side effects.
-#[allow(clippy::type_complexity)]
-fn dynamic_draws(b: &BlockDefinition) -> Option<(&Vec<kentos_commands::BlockParameter>, &Vec<kentos_commands::BlockAction>)> {
-    b.dynamic.as_ref().map(|d| (&d.parameters, &d.actions))
+/// Geometry and parameter scope/value semantics; presentation groups have no per-insert side effects.
+type DynamicDrawing<'a> = (
+    &'a [kentos_commands::BlockParameter],
+    &'a [kentos_commands::BlockAction],
+    &'a [String],
+    &'a std::collections::BTreeMap<String, kentos_commands::ParamValue>,
+);
+fn dynamic_draws(b: &BlockDefinition) -> Option<DynamicDrawing<'_>> {
+    b.dynamic.as_ref().map(|d| (
+        d.parameters.as_slice(), d.actions.as_slice(), d.type_parameters.as_slice(), &d.type_values,
+    ))
 }
 
 /// Checks `input` against the document, writing nothing.
@@ -486,7 +493,11 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
         // Its parameters and actions (docs/adr/0318 §1): the rules, the expressions, then its inserts' values refitted.
         BlockEditOperation::Dynamic => {
             next.dynamic = input.dynamic.clone();
-            let formula_edit = next.dynamic.is_some()
+            if let Some(d) = &mut next.dynamic {
+                crate::block_params::normalize_type_values(d).map_err(|(name, why)| Stop::failed(error(
+                    codes::INVALID_DYNAMIC_BLOCK, format!("“{name}” tip formülü: {why}"), Some("dynamic.typeValues".into()))))?;
+            }
+            let formula_edit = (next.dynamic.is_some() || old.dynamic.as_ref().is_some_and(|d| !d.type_parameters.is_empty()))
                 && crate::block_params::formula_inputs_changed(old.dynamic.as_ref(), next.dynamic.as_ref());
             if !formula_edit {
                 rules_with(doc, &next)?;
@@ -533,7 +544,7 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
         kentos_commands::Vec2,
         &Vec<AttributeDefinition>,
         Option<kentos_commands::BlockUnits>,
-        Option<(&Vec<kentos_commands::BlockParameter>, &Vec<kentos_commands::BlockAction>)>,
+        Option<DynamicDrawing<'_>>,
     ) {
         (&b.entities, b.base, &b.attributes, b.units, dynamic_draws(b))
     }

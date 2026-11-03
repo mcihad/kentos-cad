@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `159`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-160.kcad`) |
+| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `160`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-161.kcad`) |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -1568,6 +1568,17 @@ Motor anahtarı olan stil bütün kurallarıyla denetlenir (`kentos_contracts::l
 2.0'da tanımlı tek göç v1'den olduğu için başka `format` ve `version` değerleri `bad_value`'dur. Nesnelerin eski yerel kimlikleri ayrıca yazılmaz: aynı v1 dosyasından türetilen kimlikler zaten dosyadaki `uid`'lerdir.
 
 ### 6.9 Bloklar
+
+**Şema 160 (ADR 0863):** ortak kapsam varsa `dynamic.typeParameters`
+ve `dynamic.typeValues` yazılır. İlki tekrarsız tam skaler parametre
+adları, ikincisi tam aynı adlarla mevcut tipli `ParamValue` değerleridir.
+Lookup adı saklanmaz; bütün satır hedefleri aynı kapsamda olmalıdır.
+Ortak değerler mevcut değer/rule denetiminden geçer ve yerleştirme
+`parameters` haritasında tekrar saklanamaz. Alanlar dinamik bölümün mevcut
+kanonik opaque JSON/CBOR temsiliyle yazılır; nokta `{x,y}` biçimindedir.
+159 veya daha eski şemada iki alan `unknown_field`; hatalı kapsam/değer
+`bad_value` olur. İki alan yoksa eski şema ve baytlar aynen korunur.
+Fixture: `block-type-values.kcad`, iç içe kullanım dahil.
 
 **Şema 159 (ADR 0858):** `dynamic.parameterGroups` doluysa yazıcı 159
 seçer. Dinamik bölümün mevcut kanonik JSON metnine sıralı

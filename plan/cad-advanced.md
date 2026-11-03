@@ -769,7 +769,25 @@ Aç/İptal, kod çalıştırma ve `.py` kayıtları doğrulandı; CAD dosyası
 başlangıçla bayt düzeyinde aynı. 326 UI, 1614 masaüstü testi, Clippy ve
 derleme geçti. [ADR 0862](../docs/adr/0862-python-editor-command-shortcuts.md).
 
-Kalıcı tip–örnek parametre kapsamı ve birleşik blok kabulü açıktır. Web öznitelik penceresinin native eşitleme kapsamıyla
+**İlerleme — 2026-11-03, kalıcı tip–örnek kapsamı:** Ortak değer aynı
+çizim tanımının doğrudan ve iç kullanımlarına uygulanır; eski/yeni yayınlar
+bağımsız kalır. Tip/örnek formülleri, lookup kapsamı, kilitler, farklı
+örneklerde atomik ret ve örneğe dönüşte literal değer koruması ortak
+komuttadır. Tip değerleri penceresi kapsamı/kullanım sayısını, proje
+biriminde min/max/adımı ve katalog satırını gösterir; ortak panel değeri
+salt okunur, ortak grip yoktur. KCAD160 ve bağımsız okuyucu/yazıcı kalıcı
+alanları doğrular. Gerçek GUI'de m/mm, üç kapıda ortak değişim, katalog,
+örnek kapsamına dönüş, çakışma, iptal, dar pencere, kaydet–aç ve tek Undo/Redo kabul edildi.
+GUI/korumalı Python kayıtları tam aynı. 1164 contracts, 316 çekirdek,
+234 KCAD, 356 application, 64 MCP, 1619 masaüstü ve 472 Python testi,
+Clippy ve derleme geçti. Ortak değerli kitaplık sürüm 3 olarak yazılır;
+eski sürümle etiketlenmiş kaynak iki import yolunda atomik reddedilir.
+Son sürüm koruması tekrarında 53 Python blok/9 katalog testi ve gerçek
+menüden dışa/içe alma, ret ve minimum pencere kaynak kaydını korudu. [ADR 0863](../docs/adr/0863-block-type-and-instance-parameter-scope.md),
+[kullanım/API](../docs/cad/block-type-values.md).
+
+**Kalan kabul:** İç tanımlardaki öznitelik göçü için açık kapsam/etki ve
+tüm özellikleri aynı çizimde sınayan birleşik blok kabulü açıktır. Web öznitelik penceresinin native eşitleme kapsamıyla
 aynı olmadığı kodda görüldü; bu dilim web eşitliğini tamamlanmış saymaz.
 
 ### CAD-ADV-07 — Tekrarları tanı, blok ve ilişkili diziye kontrollü dönüştür [ ]

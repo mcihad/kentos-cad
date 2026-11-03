@@ -2352,6 +2352,8 @@ def document(d):
         schema = max(schema, 158)
     if any(b.get("dynamic", {}).get("parameterGroups") for b in d.get("blocks", [])):
         schema = max(schema, 159)
+    if any(b.get("dynamic", {}).get("typeParameters") or b.get("dynamic", {}).get("typeValues") for b in d.get("blocks", [])):
+        schema = max(schema, 160)
     if d.get("casework"):
         # A kitchen run (docs/adr/0727 §5).
         schema = max(schema, 127)
@@ -3260,7 +3262,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-160.kcad"] = container(root(cmap(parts), version=uint(160)))
+    files["schema-version-161.kcad"] = container(root(cmap(parts), version=uint(161)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4873,6 +4875,18 @@ def build():
         if suffix == "empty":
             data = data.replace(b"\x67version\x18\x9e", b"\x67version\x18\x9f")
         out[f"broken/block-parameter-groups-{suffix}.kcad"] = container(data)
+    typed = document(load("block-type-values.json"))
+    out["block-type-values.kcad"] = container(typed)
+    out["broken/block-type-values-in-schema-159.kcad"] = container(typed.replace(b"\x67version\x18\xa0", b"\x67version\x18\x9f"))
+    for suffix, apply in (
+        ("missing", lambda d: d["blocks"][0]["dynamic"]["typeValues"].clear()),
+        ("unknown", lambda d: d["blocks"][0]["dynamic"]["typeParameters"].append("inconnu")),
+        ("duplicate", lambda d: d["blocks"][0]["dynamic"]["typeParameters"].append("Genişlik")),
+        ("off-rule", lambda d: d["blocks"][0]["dynamic"]["typeValues"].update({"Genişlik":1.7})),
+        ("instance", lambda d: d["entities"][0].update(parameters={"Genişlik":1.1})),
+    ):
+        one=load("block-type-values.json");apply(one)
+        out[f"broken/block-type-values-{suffix}.kcad"] = container(document(one))
     out["dynamic-blocks.kcad"] = container(document(load("dynamic-blocks.json")))
     payload = document(load("dynamic-blocks.json"))
     assert payload.count(b"\x67version\x18\x3b") == 1
