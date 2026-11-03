@@ -440,13 +440,15 @@ class ArrayFindKind(_StrEnum):
     - ``line``
     - ``grid``: World X/Y rectangular rows and columns; rotated/skew grids are not inferred.
     - ``polar``: Explicit full-circle interpretation; at least four occupied places and an observed adjacent pair.
+    - ``path``: Fixed spacing along an explicitly selected 2D guide, in its stored direction.
     """
     LINE = "line"
     GRID = "grid"
     POLAR = "polar"
+    PATH = "path"
 
 
-ArrayFindKindName = Literal["line", "grid", "polar"]
+ArrayFindKindName = Literal["line", "grid", "polar", "path"]
 """The names of :class:`ArrayFindKind`, for a plain string."""
 
 
@@ -12893,11 +12895,15 @@ class ArraysFind(_Model):
     A bounding corner must be occupied to reuse it as the existing array source.
     With kind=polar, searches full circles around placement base points; fixed or rotating item
     orientation is verified by the existing adoption engine. Partial-arc intent is not inferred.
-    Rotated/skew grids and path detection are not implemented by this version.
+    With kind=path, the selected seed must be at the guide start. Observed adjacent arc-length
+    gaps suggest fixed spacing; trailing unobserved places and reversed guide intent are not inferred.
+    Rotated/skew grids are not implemented by this version.
     Attributes:
         source: Existing seed insert UUID. May be an interior place of a candidate.
         kind: Omitted: line. Grid is world-X/Y; polar is an explicit full-circle interpretation.
         limit: Candidate limit, 1 to 100; absent: 100. Work/result limits report `truncated`. Unit: count.
+        path: Existing line, arc, circle or single-part 2D polyline UUID; required only with kind=path.
+            The guide is retained and followed by the adopted array. Its stored start/direction are used.
         tolerance: Absolute position tolerance in metres, above zero to 0.001; absent: 0.000001. Unit: length.
         uids: Absent searches the document; empty searches only the seed. At most 2048 objects.
     """
@@ -12905,6 +12911,7 @@ class ArraysFind(_Model):
     expected_revision: str | None | Unset = UNSET
     kind: ArrayFindKind | ArrayFindKindName | None | Unset = UNSET
     limit: int | None | Unset = UNSET
+    path: str | None | Unset = UNSET
     tolerance: float | None | Unset = UNSET
     uids: list[str] | None | Unset = UNSET
 
@@ -12917,6 +12924,8 @@ class ArraysFind(_Model):
             out["kind"] = None if self.kind is None else _enum_out(self.kind)
         if self.limit is not UNSET:
             out["limit"] = self.limit
+        if self.path is not UNSET:
+            out["path"] = self.path
         if self.tolerance is not UNSET:
             out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
         if self.uids is not UNSET:
@@ -12930,6 +12939,7 @@ class ArraysFind(_Model):
             expected_revision=data.get("expectedRevision", UNSET),
             kind=UNSET if "kind" not in data else None if data["kind"] is None else _enum_in(ArrayFindKind, data["kind"]),
             limit=data.get("limit", UNSET),
+            path=data.get("path", UNSET),
             tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
             uids=UNSET if "uids" not in data else None if data["uids"] is None else list(data["uids"]),
         )

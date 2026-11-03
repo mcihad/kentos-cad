@@ -57,7 +57,9 @@ pub(super) struct Window {
     hidden: bool,
     tolerance: f64,
     kind: ArrayFindKind,
-    previous: Option<(bool, f64, ArrayFindKind)>,
+    path: Option<Choice>,
+    paths: Vec<Choice>,
+    previous: Option<(bool, f64, ArrayFindKind, Option<Choice>)>,
     token: u64,
     cancel: Arc<AtomicBool>,
     busy: bool,
@@ -94,6 +96,9 @@ impl Window {
             return None;
         }
         let source = self.source.as_ref()?;
+        let path = if self.kind == ArrayFindKind::Path {
+            Some(self.path.as_ref()?.uid.clone())
+        } else { None };
         let Entity::Insert(seed) = doc.get(doc.slot_of(source.parse().ok()?)?)? else {
             return None;
         };
@@ -111,6 +116,7 @@ impl Window {
         Some(ArraysFind {
             source: source.clone(),
             kind: (self.kind != ArrayFindKind::Line).then_some(self.kind),
+            path,
             uids: Some(uids),
             tolerance: Some(self.tolerance),
             limit: Some(100),
@@ -173,6 +179,7 @@ fn kind_name(kind: ArrayFindKind) -> &'static str {
         ArrayFindKind::Line => "Doğrusal",
         ArrayFindKind::Grid => "Dikdörtgen (X/Y)",
         ArrayFindKind::Polar => "Kutupsal (tam çember)",
+        ArrayFindKind::Path => "Yol boyunca (sabit aralık)",
     }
 }
 fn layout_text(layout: &ArrayLayout, f: &kentos_interaction::Format) -> String {
@@ -187,6 +194,11 @@ fn layout_text(layout: &ArrayLayout, f: &kentos_interaction::Format) -> String {
             count, f.bearing(fill * 400. / 360.), f.bearing(400. / count.max(1) as f64),
             f.length(center.x), f.length(center.y),
             if rotate { "Öğeler merkez etrafında döner" } else { "Öğelerin yönü korunur" }
+        ),
+        ArrayLayout::Path { count, spacing, align, .. } => format!(
+            "{count} yer · Sabit aralık {}\n{} · Kılavuzun kayıtlı başlangıcından ve yönünde",
+            f.length(spacing.unwrap_or(0.)),
+            if align { "Öğeler teğeti izler" } else { "Öğelerin yönü korunur" }
         ),
         _ => format!("Aralık: {}", f.length(spacing(layout))),
     }
@@ -204,6 +216,8 @@ fn place_schema(layout: &ArrayLayout, items: &[ArrayItem]) -> String {
         rows.join("\n")
     } else if matches!(layout, ArrayLayout::Polar { .. }) {
         format!("↺ {}\nKaynak 1; yerler saat yönünün tersine ilerler.", places(items, 18))
+    } else if matches!(layout, ArrayLayout::Path { .. }) {
+        format!("→ {}\nKaynak 1; yerler kılavuzun kayıtlı yönünde ilerler.", places(items, 18))
     } else {
         places(items, 18)
     }
@@ -244,7 +258,9 @@ fn keep_position(r: &Review) -> Element<'_, Message> {
                 .range(1.0..=r.input.items.len() as f64)
                 .step(1.)
                 .decimals(0),
-            Some(if matches!(r.input.layout, ArrayLayout::Polar { .. }) {
+            Some(if matches!(r.input.layout, ArrayLayout::Path { .. }) {
+                "Kaynak 1'dir; yerler kılavuzun kayıtlı yönünde ilerler. Dolu yere yazılmaz."
+            } else if matches!(r.input.layout, ArrayLayout::Polar { .. }) {
                 "Kaynak 1'dir; yerler saat yönünün tersine ilerler. Dolu yere yazılmaz."
             } else {
                 "Yerler soldan/ilk uçtan 1 ile başlar. Dolu yerin üzerine yazılmaz."
@@ -306,6 +322,10 @@ impl App {
                 .style(style::container::tile),
             );
             body=body.push(words::text_line(Kind::Info,"Bloklar taşınmaz veya yeniden oluşturulmaz. Boş yerler boş kalır; mevcut ölçü bağları ve proje birimi korunur."));
+            if let ArrayLayout::Path { path, .. } = &r.input.layout
+                && let Some(choice) = w.paths.iter().find(|c| &c.uid == path) {
+                    body = body.push(label::caption(format!("Kılavuz: {}. Yol düzenlenince normal öğeler aynı kimliklerle izler.", choice.label)));
+            }
             let choices = available_choices(r);
             if !r.choices.is_empty() {
                 body = body.push(label::caption(format!(
@@ -366,14 +386,19 @@ impl App {
                 body=body.push(words::text_line(Kind::Warn,"Çizimde tek bir blok yerleştirmesi seçip yeniden açın. Bir bloğun tanımını değil, çizimdeki örneğini seçin."));
             }
             body=body.push(label::body("Aynı bloğun görünür yerleştirmelerinde seçilen düzen aranır. Sonuçlar çizimi değiştirmeden Bloklar panelinde açılır."))
-                .push(words::field("Düzen türü", pick_list(["Doğrusal", "Dikdörtgen (X/Y)", "Kutupsal (tam çember)"], Some(kind_name(w.kind)), |name| msg(Event::PatternKind(match name { "Dikdörtgen (X/Y)" => ArrayFindKind::Grid, "Kutupsal (tam çember)" => ArrayFindKind::Polar, _ => ArrayFindKind::Line }))).width(Fill), Some("Doğrusal en az üç; dikdörtgen ve kutupsal en az dört mevcut öğe gerektirir.".into())))
+                .push(words::field("Düzen türü", pick_list(["Doğrusal", "Dikdörtgen (X/Y)", "Kutupsal (tam çember)", "Yol boyunca (sabit aralık)"], Some(kind_name(w.kind)), |name| msg(Event::PatternKind(match name { "Dikdörtgen (X/Y)" => ArrayFindKind::Grid, "Kutupsal (tam çember)" => ArrayFindKind::Polar, "Yol boyunca (sabit aralık)" => ArrayFindKind::Path, _ => ArrayFindKind::Line }))).width(Fill), Some("Doğrusal ve yol en az üç; dikdörtgen ve kutupsal en az dört mevcut öğe gerektirir.".into())))
                 .push(words::field("Tolerans (mm)",NumberInput::new(w.tolerance,|n|msg(Event::Tolerance(n))).units(units::MILLIMETRE).range(0.0..=0.001).step(0.001).decimals(3),Some("Sıfırdan büyük, en çok 1 mm. Varsayılan 0,001 mm; çizim ölçeğini değiştirmez.".into())))
                 .push(words::check(w.hidden,"Gizli ve donmuş katmanları da ara",Some(msg(Event::Hidden))))
                 .push(label::caption(match w.kind {
                     ArrayFindKind::Line => "Gözlenen komşu aralıklar aranır. Eksik yerler doldurulmaz; başka tanım, ölçek veya öğe yönü birleştirilmez.",
                     ArrayFindKind::Grid => "Dikdörtgen arama dünya X/Y eksenlerindedir; dönük/eğik gridler bulunmaz. Bir köşe dolu olmalıdır. Dönük blok varyantları ve başka tanımlar birleştirilmez.",
                     ArrayFindKind::Polar => "Tam çember yorumudur; kısmi yay niyeti çıkarılmaz. Öğe yönleri ve gözlenen açısal aralık doğrulanır. Eksik yerler boş kalır; kaynak 1'den saat yönünün tersine ilerlenir.",
+                    ArrayFindKind::Path => "Kılavuzun kayıtlı yönü kullanılır; kaynak başlangıçta olmalıdır. Gözlenen eşit aralık korunur; son dolu öğeden ötesi varsayılmaz.",
                 }));
+            if w.kind == ArrayFindKind::Path {
+                body = body.push(words::field("Kılavuz yol", pick_list(w.paths.clone(), w.path.clone(), |p|msg(Event::Path(p))).width(Fill),
+                    Some("Kaynak bloğu ve bir kılavuzu birlikte seçip açabilirsiniz. Başlangıçtaki blok kaynak olmalı; yön değiştirilmez. İlk 2048 görünür kılavuz listelenir. Kılavuz çizimde kalır.".into())));
+            }
         }
         let mut frame = Frame::new(self.array_find_title()).scroll(body);
         // Validation feedback must remain visible while the optional keep form scrolls.
@@ -405,6 +430,7 @@ impl App {
                 "Bul",
                 (current
                     && w.source.is_some()
+                    && (w.kind != ArrayFindKind::Path || w.path.is_some())
                     && w.tolerance.is_finite()
                     && w.tolerance > 0.
                     && w.tolerance <= 0.001)
@@ -478,8 +504,10 @@ impl App {
                 "Doğrusal" => ArrayFindKind::Line,
                 "Dikdörtgen (X/Y)" => ArrayFindKind::Grid,
                 "Kutupsal (tam çember)" => ArrayFindKind::Polar,
+                "Yol boyunca (sabit aralık)" => ArrayFindKind::Path,
                 _ => return Err("Düzen türü listede yok".into()),
             }),
+            Control::Pick("Kılavuz yol", name) => Event::Path(w.paths.iter().find(|p|p.label==name).cloned().ok_or("Kılavuz listede yok")?),
             Control::Fill("Tolerans (mm)", s) => Event::Tolerance(
                 kentos_ui::widget::number::evaluate(s, units::MILLIMETRE)
                     .map_err(|e| e.to_string())?,
@@ -565,7 +593,10 @@ fn panel_height(app: &App, height: f32) -> Element<'_, Message> {
         return container(
             column![
                 scrollable(top).height(Fill),
-                words::secondary("Yeniden ara", current.then(|| msg(Event::Run)))
+                row![
+                    words::secondary("Yeni kaynak", Some(msg(Event::Back))),
+                    words::secondary("Ayarlar", current.then(||msg(Event::Settings)))
+                ].spacing(6)
             ]
             .spacing(8),
         )
@@ -592,6 +623,8 @@ fn panel_height(app: &App, height: f32) -> Element<'_, Message> {
             )
         } else if let ArrayLayout::Polar { count, .. } = candidate.adoption.layout {
             format!("Çember · {count} yer · {} dolu · {} boş", candidate.present, candidate.missing)
+        } else if let ArrayLayout::Path { count, .. } = candidate.adoption.layout {
+            format!("Yol · {count} yer · {} dolu · {} boş", candidate.present, candidate.missing)
         } else {
             format!(
                 "Sıra {} · {} dolu · {} boş",
@@ -611,6 +644,10 @@ fn panel_height(app: &App, height: f32) -> Element<'_, Message> {
             } else if let ArrayLayout::Polar { count, rotate, .. } = candidate.adoption.layout {
                 label::caption(format!("{} aralık · {}{}", f.bearing(400. / count.max(1) as f64),
                     if rotate { "Öğeler döner" } else { "Yön korunur" },
+                    if candidate.overlaps { " · Ortak öğe" } else { "" })).into()
+            } else if let ArrayLayout::Path { spacing, align, .. } = candidate.adoption.layout {
+                label::caption(format!("{} · {}{}", f.length(spacing.unwrap_or(0.)),
+                    if align { "Teğeti izler" } else { "Yön korunur" },
                     if candidate.overlaps { " · Ortak öğe" } else { "" })).into()
             } else {
                 row![
@@ -675,6 +712,7 @@ pub enum Event {
     Hidden,
     Tolerance(f64),
     PatternKind(ArrayFindKind),
+    Path(Choice),
     Ready(u64, Box<CommandResult<ArraysFound>>),
     Show(usize),
     Review(usize),
@@ -709,11 +747,16 @@ impl App {
             return;
         };
         let selection = self.selection.ids();
-        let picked = if selection.len() == 1 {
-            selection.first().copied()
-        } else {
-            None
-        };
+        let inserts: Vec<_> = selection.iter().copied().filter(|s|matches!(doc.model.get(*s),Some(Entity::Insert(_)))).collect();
+        let picked = inserts.first().filter(|_|inserts.len()==1).copied();
+        let paths:Vec<_> = doc.model.entities_with_uids().filter_map(|(uid,e)|{
+            let kind = match e {Entity::Line(_)=>"Çizgi",Entity::Arc(_)=>"Yay",Entity::Circle(_)=>"Çember",Entity::Polyline(_)=>"Çoklu çizgi",_=>return None};
+            if !doc.model.layers().is_visible(&e.base().layer_id) || doc.model.layers().is_frozen(&e.base().layer_id) {return None;}
+            Some(Choice {uid:uid.to_string(),label:format!("{kind} #{} · Katman {}",e.base().id,e.base().layer_id)})
+        }).take(2048).collect();
+        let selected_paths:Vec<_> = paths.iter().filter(|p|p.uid.parse().ok().and_then(|u|doc.model.slot_of(u)).is_some_and(|s|selection.contains(&s))).cloned().collect();
+        let path = selected_paths.first().filter(|_|selected_paths.len()==1).cloned();
+        let kind = if path.is_some() {ArrayFindKind::Path} else {ArrayFindKind::Line};
         let (source, name) = picked
             .and_then(|s| {
                 let Entity::Insert(i) = doc.model.get(s)? else {
@@ -733,7 +776,9 @@ impl App {
             revision: doc.model.revision().to_string(),
             hidden: false,
             tolerance: 1e-6,
-            kind: ArrayFindKind::Line,
+            kind,
+            path,
+            paths,
             previous: None,
             token: 0,
             cancel: Arc::new(AtomicBool::new(false)),
@@ -771,10 +816,11 @@ impl App {
         if let Some(w) = &mut self.blocks_panel.arrays {
             w.stop();
             w.review = None;
-            if let Some((hidden, tolerance, kind)) = w.previous.take() {
+            if let Some((hidden, tolerance, kind, path)) = w.previous.take() {
                 w.hidden = hidden;
                 w.tolerance = tolerance;
                 w.kind = kind;
+                w.path = path;
             }
             if w.output.is_none() {
                 self.blocks_panel.arrays = None;
@@ -826,12 +872,15 @@ impl App {
         match event {
             Event::Settings if !w.busy => {
                 w.review = None;
-                w.previous = Some((w.hidden, w.tolerance, w.kind));
+                w.previous = Some((w.hidden, w.tolerance, w.kind, w.path.clone()));
                 self.dialog = Some(Dialog::ArrayFind);
             }
             Event::PatternKind(kind) if !w.busy => {
                 w.kind = kind;
                 w.refused = None;
+            }
+            Event::Path(path) if !w.busy => {
+                if w.paths.contains(&path) {w.path=Some(path);w.refused=None;}
             }
             Event::Tolerance(t) if !w.busy => {
                 w.tolerance = t;

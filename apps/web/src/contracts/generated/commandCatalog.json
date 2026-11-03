@@ -4348,7 +4348,7 @@
       "id": "cad.arrays.find",
       "version": 1,
       "title": "Blok dizi örüntülerini bul",
-      "summary": "Kaynak statik blok yerleştirmesini içeren örüntüleri yazısız bulur. kind verilmezse line, grid seçilirse dünya X/Y dikdörtgen düzeni aranır. İlk sürüm aynı blok tanımı, katman, görünüş, ayna, yön ve ölçekli verisiz yerleştirmeler içindir; dönük/eğik grid, kutupsal ve yol araması içermez. Doğrusal için en az üç dolu yer ve gözlenen bir komşu çift; grid için en az iki satır, iki sütun, dört dolu yer, iki eksende gözlenen komşu çift ve dolu bir sınır köşesi gerekir. Her ikinci yer doluysa gizli ara yer varsayılmaz. Aday adoption girdisi cad.arrays.adopt ile yeniden incelenip açıkça uygulanabilir; arama hiçbir nesne, seçim veya dizi kaydı değiştirmez. Eksik yerler boş kalır; eşleşmeyen öğe kendiliğinden kept olmaz. eligible ve UUID→ret nedeni excluded listeleri kapsamı açıklar. Birbiriyle çakışan adaylar overlaps ile belirtilir. uids yoksa belge, boşsa yalnız kaynak aranır; en çok 2048 nesne. Tolerans metre, varsayılan 0.000001, en çok 0.001; limit 1..100. İki milyon karşılaştırma veya aday sınırı kısmi arama truncated üretir. Grid aralık keşfi 500000 çift ya da bir eksende 128 aralık adayına ulaşırsa da kısmi bildirilir. Uzun arama native Job ile durdurulabilir. expectedRevision eskiyse yazısız ret.",
+      "summary": "Kaynak statik blok yerleştirmesini içeren örüntüleri yazısız bulur. kind verilmezse line, grid seçilirse dünya X/Y dikdörtgen düzeni aranır. Aynı statik blok tanımı, katman, görünüş, ayna ve ölçekteki verisiz yerleştirmeler aranır. polar açık tam çember yorumudur; en az dört dolu yer, gözlenen açısal komşuluk ve sabit veya merkezle dönen yönler doğrulanır. path için mevcut 2B kılavuz UUID zorunludur; kaynak kılavuz başlangıcındadır. Kayıtlı yönde gözlenen sabit yay uzunluğu aralıkları ve sabit veya teğeti izleyen yönler aranır. Son dolu yerin ötesi, ters yön ve başlangıç kayması varsayılmaz. Dönük/eğik grid bu sürümde aranmaz. Doğrusal için en az üç dolu yer ve gözlenen bir komşu çift; grid için en az iki satır, iki sütun, dört dolu yer, iki eksende gözlenen komşu çift ve dolu bir sınır köşesi gerekir. Her ikinci yer doluysa gizli ara yer varsayılmaz. Aday adoption girdisi cad.arrays.adopt ile yeniden incelenip açıkça uygulanabilir; arama hiçbir nesne, seçim veya dizi kaydı değiştirmez. Eksik yerler boş kalır; eşleşmeyen öğe kendiliğinden kept olmaz. eligible ve UUID→ret nedeni excluded listeleri kapsamı açıklar. Birbiriyle çakışan adaylar overlaps ile belirtilir. uids yoksa belge, boşsa yalnız kaynak aranır; en çok 2048 nesne. Tolerans metre, varsayılan 0.000001, en çok 0.001; limit 1..100. İki milyon karşılaştırma veya aday sınırı kısmi arama truncated üretir. Grid aralık keşfi 500000 çift ya da bir eksende 128 aralık adayına ulaşırsa da kısmi bildirilir. Uzun arama native Job ile durdurulabilir. expectedRevision eskiyse yazısız ret.",
       "aliases": [],
       "effect": "query",
       "hosts": [
@@ -4364,7 +4364,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Finds requested patterns containing the seed insert: static, data-free inserts\nof the same block, appearance, mirror and scale. Line/grid require the same rotation.\nAt least three occupied places and an observed adjacent pair are required. Every second\nplace being occupied is indistinguishable from twice the spacing: no hidden places are invented.\nWith kind=grid, searches world-X/Y rectangular patterns with at least two rows,\ntwo columns, four occupied places and observed adjacent pairs in both directions.\nA bounding corner must be occupied to reuse it as the existing array source.\nWith kind=polar, searches full circles around placement base points; fixed or rotating item\norientation is verified by the existing adoption engine. Partial-arc intent is not inferred.\nRotated/skew grids and path detection are not implemented by this version.",
+        "description": "Finds requested patterns containing the seed insert: static, data-free inserts\nof the same block, appearance, mirror and scale. Line/grid require the same rotation.\nAt least three occupied places and an observed adjacent pair are required. Every second\nplace being occupied is indistinguishable from twice the spacing: no hidden places are invented.\nWith kind=grid, searches world-X/Y rectangular patterns with at least two rows,\ntwo columns, four occupied places and observed adjacent pairs in both directions.\nA bounding corner must be occupied to reuse it as the existing array source.\nWith kind=polar, searches full circles around placement base points; fixed or rotating item\norientation is verified by the existing adoption engine. Partial-arc intent is not inferred.\nWith kind=path, the selected seed must be at the guide start. Observed adjacent arc-length\ngaps suggest fixed spacing; trailing unobserved places and reversed guide intent are not inferred.\nRotated/skew grids are not implemented by this version.",
         "properties": {
           "expectedRevision": {
             "type": [
@@ -4392,6 +4392,13 @@
               "null"
             ],
             "x-unit": "count"
+          },
+          "path": {
+            "description": "Existing line, arc, circle or single-part 2D polyline UUID; required only with kind=path.\nThe guide is retained and followed by the adopted array. Its stored start/direction are used.",
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "source": {
             "description": "Existing seed insert UUID. May be an interior place of a candidate.",
@@ -4526,6 +4533,8 @@
           "recognition_scope_limit",
           "array_adoption_refused",
           "layer_locked",
+          "invalid_path",
+          "recognition_unsupported",
           "invalid_revision",
           "revision_conflict"
         ],
@@ -77547,6 +77556,11 @@
         {
           "const": "polar",
           "description": "Explicit full-circle interpretation; at least four occupied places and an observed adjacent pair.",
+          "type": "string"
+        },
+        {
+          "const": "path",
+          "description": "Fixed spacing along an explicitly selected 2D guide, in its stored direction.",
           "type": "string"
         }
       ]

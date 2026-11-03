@@ -605,3 +605,28 @@ fn polar_settings_cancel_restores_the_previous_family_without_changing_the_model
     assert_eq!(app.blocks_panel.arrays.as_ref().unwrap().kind,ArrayFindKind::Line);
     assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(),before);
 }
+
+
+#[test]
+fn a_selected_source_and_guide_open_path_search_and_review_the_native_proposal() {
+    let raw:Value=serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"),"/../../fixtures/commands/v1/cad.arrays.find.json"))).unwrap();
+    let case=raw["cases"].as_array().unwrap().iter().find(|c|c["name"]=="yol: köşede teğet hizalama ve iki boş yer").unwrap();
+    let model=Model::from_snapshot(DocumentSnapshotV1::from_json(&case["setup"].to_string()).unwrap()).unwrap();
+    let mut app=crate::files_testing::app_with_drawing();
+    app.document=Some(crate::document::Document::from_v2(model.to_snapshot_v2(),None).unwrap());crate::files_testing::make_cad(&mut app);
+    app.selection.set([Slot(1),Slot(8)]);let before=app.document.as_ref().unwrap().model.to_snapshot_v2();
+    app.open_array_find();let w=app.blocks_panel.arrays.as_ref().unwrap();
+    assert_eq!(w.kind,ArrayFindKind::Path);assert!(w.path.is_some());
+    complete_search(&mut app);let output=app.blocks_panel.arrays.as_ref().unwrap().output.as_ref().unwrap();
+    assert_eq!(output.matches.len(),1,"{output:?}");
+    let _=app.array_find_event(Event::Review(0));complete_review(&mut app);
+    let r=app.blocks_panel.arrays.as_ref().unwrap().review.as_ref().unwrap();
+    assert!(layout_text(&r.input.layout,&app.format()).contains("teğeti izler"));
+    assert!(matches!(r.input.layout,ArrayLayout::Path {count:8,align:true,..}));
+    let _=app.array_find_event(Event::Assign);complete_review(&mut app);
+    let _=app.array_find_event(Event::Apply);
+    for _ in 0..5000 {let _=app.array_find_event(Event::Tick);if app.blocks_panel.arrays.is_none(){break;}std::thread::yield_now();}
+    assert!(app.blocks_panel.arrays.is_none());let model=&mut app.document.as_mut().unwrap().model;
+    let after=model.to_snapshot_v2();assert_eq!(after.entities,before.entities);assert_eq!(after.uids,before.uids);
+    assert!(after.arrays[0].items[2].kept);model.undo();assert_eq!(model.to_snapshot_v2(),before);model.redo();assert_eq!(model.to_snapshot_v2(),after);
+}

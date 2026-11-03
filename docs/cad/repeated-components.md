@@ -247,3 +247,37 @@ Kaymış öğe kendiliğinden hangi boş yere ait sayılmaz. Açık atama, boş 
 boş/korunan yer ve mevcut UUID'ler mevcut dizi kurallarınca korunur;
 Sıfırla ayrı kullanıcı kararıdır. Python Job ve MCP aynı komutu kullanır.
 [Yöntem, sayısal sınırlar ve gerçek kabul](../adr/0879-full-circle-pattern-recognition.md).
+
+
+## Açık kılavuz boyunca sabit aralıklı tekrarlar
+
+Kaynak bloğu ve bir kılavuzu birlikte seçip **Dizileri bul…** açın;
+**Yol boyunca (sabit aralık)** hazır gelir. Yalnız blok seçmişseniz düzeni
+ve **Kılavuz yol** listesinden yolu açıkça seçin. Kaynak blok taban noktası
+kılavuzun kayıtlı başlangıcında olmalıdır. Ters yön veya başlangıç ofseti
+tahmin edilmez; uygun değilse nesneler taşınmadan gerekçe gösterilir.
+
+En az üç dolu yer ve gözlenen komşu aralık gerekir. Kılavuz tek parçalı 2B
+çizgi, yay, çember veya en çok 4096 köşeli çoklu çizgidir. Eksikler boş,
+kaymış öğeler dışarıda kalır; açık koruma ataması yapılabilir. Kartta sabit
+aralık ve teğeti izleme/yönü koruma ayrıdır. Son dolu öğeden sonra görünmeyen
+yerler veya gizli yarım aralık varsayılmaz. Kılavuz korunur; sonradan
+düzenlenince normal üyeler kimliklerini koruyarak izler.
+
+```python
+found = cad.arrays.find(doc, source=start_insert_uid,
+                        kind=cad.ArrayFindKind.PATH, path=guide_uid)
+proposal = found.matches[reviewed_index].adoption
+assert isinstance(proposal.layout, cad.PathArrayLayout)
+print(proposal.layout.path, proposal.layout.spacing, proposal.layout.align)
+# Kullanıcı incelemesinden sonra aynı plan/adopt sözleşmesi kullanılır.
+args = dict(source=proposal.source, layout=proposal.layout, items=proposal.items,
+            tolerance=proposal.tolerance, expected_revision=proposal.expected_revision)
+review = cad.arrays.adopt.plan(doc, **args)
+done = cad.arrays.adopt(doc, **args)
+```
+
+Bu arama sabit aralık önerir; yolu adede göre bölme veya uzayınca yeni öğe
+ekleme niyetini kendiliğinden çıkarmaz. Mevcut **Diziyi düzenle → Aralık/Adet**
+ayrı işlemdir. Tek Undo/Redo, Python Job ve MCP aynı native uygulamadır.
+[Karar ve gerçek kabul](../adr/0880-explicit-guide-pattern-recognition.md).

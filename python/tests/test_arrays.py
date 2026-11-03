@@ -76,6 +76,42 @@ class ArrayTests(unittest.TestCase):
                 doc.undo();self.assertEqual(doc.to_bytes(),before)
                 doc.redo();self.assertEqual(doc.to_bytes(),after)
 
+    def test_path_query_job_and_adoption_keep_the_selected_guide_and_unmatched_roots(self):
+        fixture=json.loads((ROOT / "fixtures/commands/v1/cad.arrays.find.json").read_text())
+        cases=[c for c in fixture["cases"] if c["name"].startswith(("yol: köşeli", "yol: köşede", "yol: analitik"))]
+        self.assertEqual(len(cases),3)
+        for case in cases:
+            with self.subTest(case=case["name"]):
+                doc=cad.Document.from_bytes(json.dumps(case["setup"]).encode())
+                roots={r.entity.id:r.uid for r in doc.entities()}
+                source=roots[int(case["steps"][0]["input"]["source"].split(":")[-1])]
+                guide=roots[int(case["steps"][0]["input"]["path"].split(":")[-1])]
+                before=doc.to_bytes()
+                found=cad.arrays.find(doc,source=source,kind=cad.ArrayFindKind.PATH,path=guide)
+                self.assertEqual(doc.to_bytes(),before)
+                self.assertEqual(len(found.matches),1)
+                candidate=found.matches[0]
+                self.assertEqual((candidate.present,candidate.missing),(6,2))
+                proposal=candidate.adoption
+                self.assertEqual(proposal.source,source)
+                self.assertIsInstance(proposal.layout,cad.PathArrayLayout)
+                self.assertEqual(proposal.layout.count,8)
+                self.assertEqual(proposal.layout.path,guide)
+                self.assertEqual(proposal.layout.align,"köşeli" not in case["name"])
+                answer=doc.start("cad.arrays.find",cad.ArraysFind(source=source,kind=cad.ArrayFindKind.PATH,path=guide)).result()
+                self.assertEqual(answer.status,"completed")
+                self.assertEqual(answer.output.matches[0].adoption.to_json(),proposal.to_json())
+                args=dict(source=proposal.source,layout=proposal.layout,items=proposal.items,tolerance=proposal.tolerance,expected_revision=proposal.expected_revision)
+                plan=cad.arrays.adopt.plan(doc,**args)
+                self.assertEqual((plan.missing,plan.kept),(2,0))
+                self.assertEqual(doc.to_bytes(),before)
+                made=cad.arrays.adopt(doc,**args)
+                self.assertEqual(len(made.retained),6)
+                self.assertEqual({r.entity.id:r.uid for r in doc.entities()},roots)
+                after=doc.to_bytes()
+                doc.undo();self.assertEqual(doc.to_bytes(),before)
+                doc.redo();self.assertEqual(doc.to_bytes(),after)
+
     def test_grid_query_enum_job_and_metadata_only_adoption_share_the_same_public_api(self):
         fixture=json.loads((ROOT / "fixtures/commands/v1/cad.arrays.find.json").read_text())
         case=next(c for c in fixture["cases"] if c["name"].startswith("grid iki"))

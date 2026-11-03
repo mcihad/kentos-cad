@@ -22,6 +22,7 @@ fn request(doc: &Document, slot: u32) -> ArraysFind {
     ArraysFind {
         source: doc.uid(Slot(slot)).unwrap().to_string(),
         kind: None,
+        path: None,
         uids: None,
         tolerance: None,
         limit: None,
@@ -700,4 +701,48 @@ fn polar_stop_discards_the_query_and_never_writes_array_metadata() {
     let result=arrays_find::inspect(&doc,&polar_request(&doc,1),||{calls+=1;calls>1000});
     assert!(matches!(result,CommandResult::Cancelled),"{result:?}");
     assert_eq!(doc.to_snapshot_v2(),before);
+}
+
+
+fn path_drawing() -> (Document, ArraysFind) {
+    let raw: Value=serde_json::from_str(include_str!("../../../../../fixtures/commands/v1/cad.arrays.find.json")).unwrap();
+    let case=raw["cases"].as_array().unwrap().iter().find(|c|c["name"]=="yol: köşede teğet hizalama ve iki boş yer").unwrap();
+    let doc=Document::from_snapshot(DocumentSnapshotV1::from_json(&case["setup"].to_string()).unwrap()).unwrap();
+    let mut input=request(&doc,1);input.kind=Some(kentos_commands::ArrayFindKind::Path);
+    input.path=Some(doc.uid(Slot(8)).unwrap().to_string());
+    (doc,input)
+}
+
+#[test]
+fn path_candidates_keep_two_gaps_and_an_explicit_override_then_follow_the_guide_with_same_ids() {
+    let (mut doc,input)=path_drawing();let before=doc.to_snapshot_v2();let found=find(&doc,&input);
+    assert_eq!(found.matches.len(),1,"{found:?}");assert!(!found.truncated);
+    let mut proposal=found.matches[0].adoption.clone();
+    assert!(matches!(proposal.layout,ArrayLayout::Path {count:8,spacing:Some(2.),align:true,..}));
+    assert_eq!((found.matches[0].present,found.matches[0].missing),(6,2));
+    proposal.items[2]=kentos_commands::ArrayItem {uid:Some(kentos_commands::EntityId(doc.uid(Slot(7)).unwrap().into_bytes())),kept:true};
+    assert!(matches!(arrays_adopt::execute(&mut ExecutionContext::new(&mut doc),proposal),CommandResult::Completed {..}));
+    let bound=doc.to_snapshot_v2();assert_eq!(bound.entities,before.entities);assert_eq!(bound.uids,before.uids);
+    let mut guide=doc.get(Slot(8)).unwrap().clone();let Entity::Polyline(p)=&mut guide else{unreachable!()};p.pts[1].x=8.;p.pts[2].x=8.;
+    let held=doc.get(Slot(7)).unwrap().clone();let members=doc.arrays()[0].items.clone();
+    doc.update(Slot(8),guide);let moved=doc.to_snapshot_v2();
+    assert_eq!(doc.arrays()[0].items,members);assert_eq!(doc.get(Slot(7)),Some(&held));
+    assert_ne!(moved.entities,bound.entities);doc.undo();assert_eq!(doc.to_snapshot_v2(),bound);
+    doc.undo();assert_eq!(doc.to_snapshot_v2(),before);doc.redo();assert_eq!(doc.to_snapshot_v2(),bound);
+}
+
+#[test]
+fn path_detection_requires_the_stored_start_and_does_not_relocate_an_interior_seed() {
+    let (doc,mut input)=path_drawing();input.source=doc.uid(Slot(3)).unwrap().to_string();let before=doc.to_snapshot_v2();
+    assert!(matches!(arrays_find::inspect(&doc,&input,||false),CommandResult::Failed {error} if error.code==kentos_commands::codes::RECOGNITION_UNSUPPORTED));
+    assert_eq!(doc.to_snapshot_v2(),before);
+}
+
+#[test]
+fn path_duplicate_slot_is_ambiguous_and_cancellation_discards_all_proposals() {
+    let (mut doc,input)=path_drawing();let e=doc.get(Slot(2)).unwrap().clone();doc.add(e).unwrap();
+    assert!(find(&doc,&input).matches.is_empty());
+    let (doc,input)=path_drawing();let before=doc.to_snapshot_v2();let mut calls=0;
+    let result=arrays_find::inspect(&doc,&input,||{calls+=1;calls>40});
+    assert!(matches!(result,CommandResult::Cancelled),"{result:?}");assert_eq!(doc.to_snapshot_v2(),before);
 }

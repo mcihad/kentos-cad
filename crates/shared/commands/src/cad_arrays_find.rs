@@ -21,6 +21,8 @@ pub enum ArrayFindKind {
     Grid,
     /// Explicit full-circle interpretation; at least four occupied places and an observed adjacent pair.
     Polar,
+    /// Fixed spacing along an explicitly selected 2D guide, in its stored direction.
+    Path,
 }
 
 /// Finds requested patterns containing the seed insert: static, data-free inserts
@@ -32,7 +34,9 @@ pub enum ArrayFindKind {
 /// A bounding corner must be occupied to reuse it as the existing array source.
 /// With kind=polar, searches full circles around placement base points; fixed or rotating item
 /// orientation is verified by the existing adoption engine. Partial-arc intent is not inferred.
-/// Rotated/skew grids and path detection are not implemented by this version.
+/// With kind=path, the selected seed must be at the guide start. Observed adjacent arc-length
+/// gaps suggest fixed spacing; trailing unobserved places and reversed guide intent are not inferred.
+/// Rotated/skew grids are not implemented by this version.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -45,6 +49,11 @@ pub struct ArraysFind {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub kind: Option<ArrayFindKind>,
+    /// Existing line, arc, circle or single-part 2D polyline UUID; required only with kind=path.
+    /// The guide is retained and followed by the adopted array. Its stored start/direction are used.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub path: Option<String>,
     /// Absent searches the document; empty searches only the seed. At most 2048 objects.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

@@ -11,7 +11,9 @@ import type { ArrayFindKind } from "./ArrayFindKind";
  * A bounding corner must be occupied to reuse it as the existing array source.
  * With kind=polar, searches full circles around placement base points; fixed or rotating item
  * orientation is verified by the existing adoption engine. Partial-arc intent is not inferred.
- * Rotated/skew grids and path detection are not implemented by this version.
+ * With kind=path, the selected seed must be at the guide start. Observed adjacent arc-length
+ * gaps suggest fixed spacing; trailing unobserved places and reversed guide intent are not inferred.
+ * Rotated/skew grids are not implemented by this version.
  */
 export type ArraysFind = {
 /**
@@ -22,6 +24,11 @@ source: string,
  * Omitted: line. Grid is world-X/Y; polar is an explicit full-circle interpretation.
  */
 kind?: ArrayFindKind,
+/**
+ * Existing line, arc, circle or single-part 2D polyline UUID; required only with kind=path.
+ * The guide is retained and followed by the adopted array. Its stored start/direction are used.
+ */
+path?: string,
 /**
  * Absent searches the document; empty searches only the seed. At most 2048 objects.
  */

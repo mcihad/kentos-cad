@@ -1174,7 +1174,22 @@ dizi kaydı ekledi; bütün kökler ve kimlikler aynıdır. Vazgeçme/Undo/Redo 
 menüden 8→10 adet değişiminin dosya çiftleri bayt bayt eşittir. Korunan
 öğe yerinde, eksik yer boş kaldı. Ekranlar 415–424 depo dışındadır.
 
-**Açık kalan:** dönük/eğik grid, yol aday bulma; metin/öznitelik,
+**Kılavuz boyunca aday bulma — [ADR 0880](../docs/adr/0880-explicit-guide-pattern-recognition.md):**
+Açık seçilmiş 2B kılavuzun kayıtlı başlangıcından/yönünde sabit yay uzunluğu
+aralıkları aranır. Kaynak başlangıçta olmalıdır; nesne taşınmaz, ters yön
+ve ofset varsayılmaz. En az üç normal öğe ve gözlenen komşuluk gerekir.
+Köşeli/kapalı yol ve analitik yayda yönü koruma/teğeti izleme aynı yerleşim
+motoruyla doğrulanır. 415 native entegrasyon testi (37 elle test atlandı),
+son koruyucularla 29 tanıma testi, 47 ortak native/Python durum, 15 Python,
+altı ilgili MCP ve 12 panel testi geçti; ilgili tüm hedeflerde Clippy
+başarılıdır. Gerçek pencerede ortak seçim, arama, açık koruma, bağlama,
+2000→1500 mm aralık ve kılavuz köşesi sürükleme denendi. Bağımsız okuyucu
+metadata-only bağlamayı, bütün kimlikleri ve tek Undo/Redo dosya eşitliğini
+doğruladı; yeni kılavuzdaki konum/açılar bağımsız hesapla denetlendi.
+Ret → yeni kaynak → başarılı inceleme teslim programında tekrarlandı.
+Ekranlar 425–433 depo dışındadır. Bu dilim tüm 07'yi kapatmaz.
+
+**Açık kalan:** dönük/eğik grid; metin/öznitelik,
 iç blok ve diğer kaynak/ilişki genişletmesi. Bu dilimler CAD-ADV-07'nin
 tamamını kapatmaz.
 
