@@ -61,6 +61,11 @@ silinmez (`volume_in_use`). Uyarılar kübajın `corridor_stale`, `volume_gap`'i
 birimi `volume-m` (m³·m). 28 + 22 ortak durum (`road_haul_command_cases.py`); `.kcad` şema 161'in `hauls`'u ve bozuk
 örneği; Python, MCP.
 
+Y9.3 (yapıldı): Brükner penceresi (`haul_window.rs`; `haul.editor`, `haul.new`; Koridor sekmesinde Brükner paneli):
+ad, kübaj, denge çizgisi, serbest taşıma ve ödünç ve döküm alanları tablosu; Brükner yazdıkça okunur: eğri,
+döngüler yönlerine göre (dengesiz döngü ayrı renkte), denge noktaları, alanların basamakları, döngüler tablosu,
+toplamlar ve uyarılar. Kaydet `road.hauls.edit` ile yazar.
+
 ## Sonra
 
 Katmanların sıralı taramayla hızlandırılması (bugün köşe düzeyi başına bir tarama), en düşük maliyetli akışla

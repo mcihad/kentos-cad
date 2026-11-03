@@ -272,6 +272,8 @@ CAD = [
         P("Koridor", "corridorEditor", [L("corridor.editor"), L("corridor.new"), L("corridor.slopePlan")]),
         # The earthwork volumes (plan/road.md Y8, docs/adr/0906): the Kübaj window, a new volume and its sheet.
         P("Kübaj", "volumeEditor", [L("volume.editor"), L("volume.new"), L("volume.export")]),
+        # The mass haul diagrams (plan/road.md Y9, docs/adr/0907): the Brükner window and a new diagram.
+        P("Brükner", "haulEditor", [L("haul.editor"), L("haul.new")]),
     ], works=ROAD),
     T("plan", "Plan", [
         P("Yol", "planRoad", [L("tool.planRoad"), S("tool.roadJunctions"), S("tool.medianClose"), S("tool.centerline")]),

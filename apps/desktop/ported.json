@@ -411,6 +411,8 @@
     "volume.editor",
     "volume.new",
     "volume.export",
+    "haul.editor",
+    "haul.new",
     "arch.program",
     "lineTypes.manage",
     "hatchPatterns.manage",

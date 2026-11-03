@@ -605,6 +605,20 @@
         "size": "large"
        }
       ]
+     },
+     {
+      "label": "Brükner",
+      "icon": "haulEditor",
+      "items": [
+       {
+        "command": "haul.editor",
+        "size": "large"
+       },
+       {
+        "command": "haul.new",
+        "size": "large"
+       }
+      ]
      }
     ],
     "works": [

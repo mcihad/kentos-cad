@@ -603,6 +603,9 @@ pub const PORTED: &[&str] = &[
     "volume.editor",
     "volume.new",
     "volume.export",
+    // plan/road.md Y9: Brükner and Brükner oluştur (haul_window.rs).
+    "haul.editor",
+    "haul.new",
     // docs/adr/0773: Bina programı (program_window.rs).
     "arch.program",
     // docs/adr/0313: Çizgi tipleri (line_types_window.rs).

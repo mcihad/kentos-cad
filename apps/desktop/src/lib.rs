@@ -260,6 +260,7 @@ mod section_window;
 mod superelevation_window;
 mod corridor_window;
 mod volume_window;
+mod haul_window;
 #[cfg(test)]
 mod alignment_window_tests;
 #[cfg(test)]
@@ -272,6 +273,8 @@ mod superelevation_window_tests;
 mod corridor_window_tests;
 #[cfg(test)]
 mod volume_window_tests;
+#[cfg(test)]
+mod haul_window_tests;
 mod terrain_layer;
 mod terrain_window;
 #[cfg(test)]

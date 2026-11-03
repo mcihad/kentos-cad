@@ -2696,6 +2696,20 @@
       ],
       "note": "Cetvel çizimi değiştirmez; dosyaya ADR 0223'ün yazıcısıyla yazılır."
     },
+    "haul.editor": {
+      "level": "semantic",
+      "via": [
+        "road.hauls.edit",
+        "road.hauls.query"
+      ],
+      "note": "Brükner penceresi Brükneri yazdıkça çekirdekle okur ve çizer; Kaydet road.hauls.edit ile yazar (plan/road.md Y9, ADR 0907)."
+    },
+    "haul.new": {
+      "level": "semantic",
+      "via": [
+        "road.hauls.edit"
+      ]
+    },
     "profile.new": {
       "level": "semantic",
       "via": [
