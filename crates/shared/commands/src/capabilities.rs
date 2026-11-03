@@ -1972,6 +1972,20 @@ const ENTRIES: &[Entry] = &[
         warnings: &["export_losses"],
         targets: none,
     },
+    // KentOS Yol's 3D scene (plan/road.md Y12.3, docs/adr/0910 §3).
+    Entry {
+        id: "file.export.gltf",
+        refusals: &[&[
+            "not_a_road_project",
+            "invalid_file_path",
+            "file_exists",
+            "unknown_terrain",
+            "unknown_corridor",
+            "invalid_gltf",
+        ]],
+        warnings: &["export_losses"],
+        targets: none,
+    },
     // KentOS Yol's stakeout table (plan/road.md Y10, docs/adr/0908).
     Entry {
         id: "road.stakeout.query",

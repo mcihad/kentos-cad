@@ -4175,6 +4175,22 @@
    "tests": 0
   },
   {
+   "id": "gltf.export",
+   "kind": "command",
+   "title": "glTF ver…",
+   "level": "semantic",
+   "via": [
+    "file.export.gltf"
+   ],
+   "operation": null,
+   "python": "kentos.cad.file.export.gltf",
+   "mcp": "file.export.gltf",
+   "note": "glTF ver dosyanın yerini sorar ve file.export.gltf ile yazar; çizim değişmez (plan/road.md Y12.3, ADR 0910).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "guardrail.editor",
    "kind": "command",
    "title": "Otokorkuluk…",

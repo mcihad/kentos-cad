@@ -4,6 +4,7 @@
 
 mod blocks_find;
 mod ifc_files;
+mod gltf_files;
 mod landxml_files;
 mod stakeout_send_files;
 mod blocks_convert;

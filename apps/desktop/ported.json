@@ -427,6 +427,7 @@
     "landxml.export",
     "landxml.importAlignments",
     "ifc.export",
+    "gltf.export",
     "arch.program",
     "lineTypes.manage",
     "hatchPatterns.manage",

@@ -283,6 +283,7 @@ COMMANDS: dict[str, Any] = {
     "file.export.dxf": file.export.dxf,
     "file.export.fgb": file.export.fgb,
     "file.export.gis": file.export.gis,
+    "file.export.gltf": file.export.gltf,
     "file.export.gml": file.export.gml,
     "file.export.gpkg": file.export.gpkg,
     "file.export.ifc": file.export.ifc,

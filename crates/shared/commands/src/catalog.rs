@@ -7853,6 +7853,31 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::FILE_EXPORT_GLTF.into(),
+            version: crate::FILE_EXPORT_GLTF_VERSION,
+            title: "glTF dışa aktar".into(),
+            summary: "Yol projesinin arazi yüzeylerini ve koridorlarının üst yüzeylerini 3B sahne olarak glTF 2.0 ikili (GLB) dosyasına yazar: her biri bir ağ (üçgenler, normalsiz: okuyucu düz normal kurar), malzemesi türüne göre. Konumlar float32, sahnenin kökenine göre; köken (sınırların ortası, tam metreye) kök düğümün translation'ında tam (f64) yazılır, böylece milyonlarca metrelik koordinat milimetresini korur; error her köşenin float32 konumu ile kaynağı arasındaki en büyük eksen farkıdır. glTF'in ekseni +Y yukarı: (doğu, yukarı, −kuzey); metre. surfaces ve corridors id ya da adla (yoksa hepsi, boş liste hiçbiri); adla seçilen kurulamazsa ret, seçilmeyen kurulamazsa export_losses. Bütün yazılır ya da hiç; çizimi değiştirmez. \
+                      Retler: not_a_road_project, invalid_file_path, file_exists, unknown_terrain, unknown_corridor, invalid_gltf."
+                .into(),
+            aliases: vec!["gltfver".into(), "glbout".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ExportGltf>(),
+            output: schema::<crate::GltfExported>(),
+            plan: Some(schema::<crate::GltfExported>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Zemin ve ana koridor".into(),
+                input: json!({ "path": "/veri/yol.glb", "surfaces": ["Mevcut zemin"], "corridors": ["Ana koridor"], "overwrite": true }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::FILE_EXPORT_IFC.into(),
             version: crate::FILE_EXPORT_IFC_VERSION,
             title: "IFC dışa aktar".into(),
@@ -13740,6 +13765,7 @@ mod tests {
                         serde_json::from_value::<crate::ExportLandxml>(e.input.clone()).map(|_| ())
                     }
                     crate::FILE_EXPORT_IFC => serde_json::from_value::<crate::ExportIfc>(e.input.clone()).map(|_| ()),
+                    crate::FILE_EXPORT_GLTF => serde_json::from_value::<crate::ExportGltf>(e.input.clone()).map(|_| ()),
                     crate::ROAD_STAKEOUT_SEND => {
                         serde_json::from_value::<crate::StakeoutSend>(e.input.clone()).map(|_| ())
                     }
@@ -14527,6 +14553,9 @@ mod tests {
                         }
                         crate::FILE_EXPORT_IFC => {
                             serde_json::from_value::<crate::IfcExported>(output.clone()).map(|_| ())
+                        }
+                        crate::FILE_EXPORT_GLTF => {
+                            serde_json::from_value::<crate::GltfExported>(output.clone()).map(|_| ())
                         }
                         crate::ROAD_STAKEOUT_SEND => {
                             serde_json::from_value::<crate::StakeoutSent>(output.clone()).map(|_| ())

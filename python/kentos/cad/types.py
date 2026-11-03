@@ -5485,6 +5485,20 @@ ScenarioOperationName = Literal["create", "apply"]
 """The names of :class:`ScenarioOperation`, for a plain string."""
 
 
+class SceneMeshKind(_StrEnum):
+    """What a mesh of the scene is made from.
+
+    - ``terrain``: A terrain surface's triangles.
+    - ``corridor``: A corridor's top surface.
+    """
+    TERRAIN = "terrain"
+    CORRIDOR = "corridor"
+
+
+SceneMeshKindName = Literal["terrain", "corridor"]
+"""The names of :class:`SceneMeshKind`, for a plain string."""
+
+
 class ScheduleField(_StrEnum):
     """What one column of a schedule reads.
 
@@ -28792,6 +28806,42 @@ class ExportGis(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ExportGltf(_Model):
+    """Input of `file.export.gltf` v1: a road project's terrain surfaces and corridors to a GLB file, whole or not at all;
+    the path absolute, ending `.glb`; the surfaces and corridors by id or name (absent: every one; an empty list: none).
+
+    Refusals, in this order: `not_a_road_project`, `invalid_file_path`, `file_exists`, `unknown_terrain`,
+    `unknown_corridor`, `invalid_gltf` (a chosen surface or corridor that does not build or has no surface, nothing to
+    write). Warnings: `export_losses` (one not chosen by name that does not build, a project without a coordinate
+    system).
+    """
+    path: str
+    corridors: list[str] | None | Unset = UNSET
+    overwrite: bool | Unset = UNSET
+    surfaces: list[str] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        if self.corridors is not UNSET:
+            out["corridors"] = None if self.corridors is None else list(self.corridors)
+        if self.overwrite is not UNSET:
+            out["overwrite"] = self.overwrite
+        if self.surfaces is not UNSET:
+            out["surfaces"] = None if self.surfaces is None else list(self.surfaces)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExportGltf:
+        return cls(
+            path=data["path"],
+            corridors=UNSET if "corridors" not in data else None if data["corridors"] is None else list(data["corridors"]),
+            overwrite=data.get("overwrite", UNSET),
+            surfaces=UNSET if "surfaces" not in data else None if data["surfaces"] is None else list(data["surfaces"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ExportGml(_Model):
     """Input of `file.export.gml` v1: the layers' objects as one GML 3.2 file at `path`, each layer a feature type named
     as the layer (made an XML name), its fields the feature's properties, its geometry the `geometryProperty`; the
@@ -32873,6 +32923,49 @@ class GisTaken(_Model):
             rows=[TakenRow.from_json(e0) for e0 in data["rows"]],
             changed=data["changed"],
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GltfExported(_Model):
+    """Output of `file.export.gltf` v1, and its plan: the meshes, the origin the positions are relative to (the bounds'
+    middle to the whole metre), the project's coordinate system, the largest gap between a vertex and its float32
+    position plus the origin along any axis, the file's size and digest.
+    Attributes:
+        origin: Unit: length.
+        error: Unit: length.
+        bytes: Unit: bytes.
+    """
+    path: str
+    meshes: list[SceneMeshWritten]
+    origin: list[float]
+    error: float
+    bytes: int
+    sha256: str
+    crs: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["meshes"] = [e0.to_json() for e0 in self.meshes]
+        out["origin"] = [float(e0) for e0 in self.origin]
+        out["error"] = float(self.error)
+        out["bytes"] = self.bytes
+        out["sha256"] = self.sha256
+        if self.crs is not UNSET:
+            out["crs"] = self.crs
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GltfExported:
+        return cls(
+            path=data["path"],
+            meshes=[SceneMeshWritten.from_json(e0) for e0 in data["meshes"]],
+            origin=[float(e0) for e0 in data["origin"]],
+            error=float(data["error"]),
+            bytes=data["bytes"],
+            sha256=data["sha256"],
+            crs=data.get("crs", UNSET),
         )
 
 
@@ -64677,6 +64770,48 @@ class ScenariosEdited(_Model):
             objects=data["objects"],
             removed=data["removed"],
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SceneMeshWritten(_Model):
+    """A mesh in the file: what it is made from, its source's id and name, its vertices and triangles, and its bounds
+    (the source's coordinates, x east, y north, z up).
+    Attributes:
+        vertices: Unit: count.
+        triangles: Unit: count.
+        min: Unit: length.
+        max: Unit: length.
+    """
+    kind: SceneMeshKind | SceneMeshKindName
+    id: str
+    name: str
+    vertices: int
+    triangles: int
+    min: list[float]
+    max: list[float]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        out["id"] = self.id
+        out["name"] = self.name
+        out["vertices"] = self.vertices
+        out["triangles"] = self.triangles
+        out["min"] = [float(e0) for e0 in self.min]
+        out["max"] = [float(e0) for e0 in self.max]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SceneMeshWritten:
+        return cls(
+            kind=_enum_in(SceneMeshKind, data["kind"]),
+            id=data["id"],
+            name=data["name"],
+            vertices=data["vertices"],
+            triangles=data["triangles"],
+            min=[float(e0) for e0 in data["min"]],
+            max=[float(e0) for e0 in data["max"]],
         )
 
 
@@ -101228,6 +101363,7 @@ __all__ = [
     "ExportDxf",
     "ExportFgb",
     "ExportGis",
+    "ExportGltf",
     "ExportGml",
     "ExportGpkg",
     "ExportIfc",
@@ -101412,6 +101548,7 @@ __all__ = [
     "GisTakeback",
     "GisTaken",
     "GivenPaperPointNaming",
+    "GltfExported",
     "GmlExported",
     "GmlFileWritten",
     "GmlLayerWritten",
@@ -102886,6 +103023,9 @@ __all__ = [
     "ScenariosEdit",
     "ScenariosEditPlan",
     "ScenariosEdited",
+    "SceneMeshKind",
+    "SceneMeshKindName",
+    "SceneMeshWritten",
     "ScheduleCell",
     "ScheduleColumn",
     "ScheduleColumnInfo",

@@ -36,6 +36,7 @@ pub mod fields;
 pub mod geojson;
 pub mod geom;
 pub mod gis;
+pub mod gltf;
 pub mod gnss;
 pub mod import;
 mod import_bounds;

@@ -42141,6 +42141,200 @@
       ]
     },
     {
+      "id": "file.export.gltf",
+      "version": 1,
+      "title": "glTF dışa aktar",
+      "summary": "Yol projesinin arazi yüzeylerini ve koridorlarının üst yüzeylerini 3B sahne olarak glTF 2.0 ikili (GLB) dosyasına yazar: her biri bir ağ (üçgenler, normalsiz: okuyucu düz normal kurar), malzemesi türüne göre. Konumlar float32, sahnenin kökenine göre; köken (sınırların ortası, tam metreye) kök düğümün translation'ında tam (f64) yazılır, böylece milyonlarca metrelik koordinat milimetresini korur; error her köşenin float32 konumu ile kaynağı arasındaki en büyük eksen farkıdır. glTF'in ekseni +Y yukarı: (doğu, yukarı, −kuzey); metre. surfaces ve corridors id ya da adla (yoksa hepsi, boş liste hiçbiri); adla seçilen kurulamazsa ret, seçilmeyen kurulamazsa export_losses. Bütün yazılır ya da hiç; çizimi değiştirmez. Retler: not_a_road_project, invalid_file_path, file_exists, unknown_terrain, unknown_corridor, invalid_gltf.",
+      "aliases": [
+        "gltfver",
+        "glbout"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `file.export.gltf` v1: a road project's terrain surfaces and corridors to a GLB file, whole or not at all;\nthe path absolute, ending `.glb`; the surfaces and corridors by id or name (absent: every one; an empty list: none).\n\nRefusals, in this order: `not_a_road_project`, `invalid_file_path`, `file_exists`, `unknown_terrain`,\n`unknown_corridor`, `invalid_gltf` (a chosen surface or corridor that does not build or has no surface, nothing to\nwrite). Warnings: `export_losses` (one not chosen by name that does not build, a project without a coordinate\nsystem).",
+        "properties": {
+          "corridors": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "overwrite": {
+            "type": "boolean"
+          },
+          "path": {
+            "type": "string"
+          },
+          "surfaces": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "ExportGltf",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `file.export.gltf` v1, and its plan: the meshes, the origin the positions are relative to (the bounds'\nmiddle to the whole metre), the project's coordinate system, the largest gap between a vertex and its float32\nposition plus the origin along any axis, the file's size and digest.",
+        "properties": {
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "crs": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "error": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "meshes": {
+            "items": {
+              "$ref": "#/$defs/SceneMeshWritten"
+            },
+            "type": "array"
+          },
+          "origin": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 3,
+            "minItems": 3,
+            "type": "array",
+            "x-unit": "length"
+          },
+          "path": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "meshes",
+          "origin",
+          "error",
+          "bytes",
+          "sha256"
+        ],
+        "title": "GltfExported",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `file.export.gltf` v1, and its plan: the meshes, the origin the positions are relative to (the bounds'\nmiddle to the whole metre), the project's coordinate system, the largest gap between a vertex and its float32\nposition plus the origin along any axis, the file's size and digest.",
+        "properties": {
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "crs": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "error": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "meshes": {
+            "items": {
+              "$ref": "#/$defs/SceneMeshWritten"
+            },
+            "type": "array"
+          },
+          "origin": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 3,
+            "minItems": 3,
+            "type": "array",
+            "x-unit": "length"
+          },
+          "path": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "meshes",
+          "origin",
+          "error",
+          "bytes",
+          "sha256"
+        ],
+        "title": "GltfExported",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "invalid_file_path",
+          "file_exists",
+          "unknown_terrain",
+          "unknown_corridor",
+          "invalid_gltf"
+        ],
+        "warnings": [
+          "export_losses"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Zemin ve ana koridor",
+          "input": {
+            "corridors": [
+              "Ana koridor"
+            ],
+            "overwrite": true,
+            "path": "/veri/yol.glb",
+            "surfaces": [
+              "Mevcut zemin"
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "file.export.ifc",
       "version": 1,
       "title": "IFC dışa aktar",
@@ -78475,6 +78669,12 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "IFC dosyası yazılamıyor."
+    },
+    {
+      "code": "invalid_gltf",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "glTF sahnesi yazılamıyor."
     },
     {
       "code": "invalid_stakeout",
@@ -143562,6 +143762,77 @@
       "required": [
         "base",
         "layer"
+      ],
+      "type": "object"
+    },
+    "SceneMeshKind": {
+      "description": "What a mesh of the scene is made from.",
+      "oneOf": [
+        {
+          "const": "terrain",
+          "description": "A terrain surface's triangles.",
+          "type": "string"
+        },
+        {
+          "const": "corridor",
+          "description": "A corridor's top surface.",
+          "type": "string"
+        }
+      ]
+    },
+    "SceneMeshWritten": {
+      "description": "A mesh in the file: what it is made from, its source's id and name, its vertices and triangles, and its bounds\n(the source's coordinates, x east, y north, z up).",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/SceneMeshKind"
+        },
+        "max": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "type": "array",
+          "x-unit": "length"
+        },
+        "min": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "type": "array",
+          "x-unit": "length"
+        },
+        "name": {
+          "type": "string"
+        },
+        "triangles": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "vertices": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "name",
+        "vertices",
+        "triangles",
+        "min",
+        "max"
       ],
       "type": "object"
     },

@@ -309,6 +309,7 @@ pub mod road_alignments_import;
 pub mod road_alignments_fit;
 pub mod road_profiles_fit;
 pub mod road_ifc;
+pub mod road_scene;
 pub mod road_landxml;
 pub mod road_stakeout;
 pub mod road_stakeout_send;
@@ -1257,6 +1258,7 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (kentos_commands::ROAD_STAKEOUT_QUERY, kentos_commands::ROAD_STAKEOUT_QUERY_VERSION),
     (kentos_commands::FILE_EXPORT_LANDXML, kentos_commands::FILE_EXPORT_LANDXML_VERSION),
     (kentos_commands::FILE_EXPORT_IFC, kentos_commands::FILE_EXPORT_IFC_VERSION),
+    (kentos_commands::FILE_EXPORT_GLTF, kentos_commands::FILE_EXPORT_GLTF_VERSION),
     (kentos_commands::ROAD_STAKEOUT_SEND, kentos_commands::ROAD_STAKEOUT_SEND_VERSION),
     (kentos_commands::ROAD_SHEETS_PLAN, kentos_commands::ROAD_SHEETS_PLAN_VERSION),
     (kentos_commands::ROAD_SHEETS_SECTIONS, kentos_commands::ROAD_SHEETS_SECTIONS_VERSION),

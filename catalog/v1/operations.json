@@ -2784,6 +2784,13 @@
       ],
       "note": "Dosyayı sorar ve road.alignments.import ile alır; tek geri alma adımı (plan/road.md Y10.2, ADR 0908)."
     },
+    "gltf.export": {
+      "level": "semantic",
+      "via": [
+        "file.export.gltf"
+      ],
+      "note": "glTF ver dosyanın yerini sorar ve file.export.gltf ile yazar; çizim değişmez (plan/road.md Y12.3, ADR 0910)."
+    },
     "ifc.export": {
       "level": "semantic",
       "via": [

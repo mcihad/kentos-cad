@@ -83,3 +83,32 @@ fn the_sample_junction_is_asked_widened_and_drawn() {
     let separated = call(&mut server, "road.junctions.edit", json!({"drawing":drawing,"operation":"set","junction":"j-1","kind":"separated"}));
     assert_eq!(separated["structuredContent"]["output"]["junction"]["connected"], false, "{separated}");
 }
+
+/// KentOS Yol's 3D scene (plan/road.md Y12.3, docs/adr/0910 §3): the scene's shared cases' drawing written as glTF.
+#[test]
+fn the_scene_goes_out_as_gltf() {
+    let mut server = Server::new();
+    let listed = server
+        .handle(&json!({"jsonrpc":"2.0","id":2,"method":"tools/list","params":{"_meta":meta()}}))
+        .unwrap();
+    let tools = listed["result"]["tools"].as_array().expect("tools");
+    let tool = tools.iter().find(|t| t["name"] == "file.export.gltf").cloned().unwrap_or_default();
+    assert_eq!(tool["annotations"]["destructiveHint"], true, "{tool}");
+    let cases: Value =
+        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/file.export.gltf.json")).expect("cases");
+    let snapshot = serde_json::from_value(cases["setup"].clone()).expect("the drawing reads");
+    let path = std::env::temp_dir().join(format!("kentos-road-scene-{}.kcad", std::process::id()));
+    std::fs::write(&path, kentos_kcad::encode(&snapshot).expect("encodes")).expect("writes");
+    let opened = call(&mut server, "drawing.open", json!({"path":path}));
+    let _ = std::fs::remove_file(&path);
+    let drawing = opened["structuredContent"]["drawing"].clone();
+    let glb = std::env::temp_dir().join(format!("kentos-road-scene-{}.glb", std::process::id()));
+    let written = call(&mut server, "file.export.gltf", json!({"drawing":drawing,"path":glb,"overwrite":true}));
+    assert_eq!(written["isError"], false, "{written}");
+    let out = &written["structuredContent"]["output"];
+    assert_eq!(out["meshes"].as_array().map(Vec::len), Some(3), "{out}");
+    let bytes = std::fs::read(&glb).expect("written");
+    let _ = std::fs::remove_file(&glb);
+    assert_eq!(&bytes[0..4], b"glTF");
+    assert_eq!(bytes.len() as u64, out["bytes"].as_u64().unwrap());
+}

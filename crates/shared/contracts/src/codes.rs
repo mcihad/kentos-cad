@@ -723,6 +723,9 @@ codes! {
     /// An IFC file that cannot be written: a stamp that does not read, nothing to write, a chosen alignment that does
     /// not build (docs/adr/0908 §8).
     INVALID_IFC = "invalid_ifc", Failed, false, "IFC dosyası yazılamıyor.";
+    /// A glTF scene that cannot be written: a chosen surface or corridor that does not build or has no surface,
+    /// nothing to write (docs/adr/0910 §3).
+    INVALID_GLTF = "invalid_gltf", Failed, false, "glTF sahnesi yazılamıyor.";
     /// A stakeout table that cannot be read: a range off the corridor or backwards, a step out of bounds, a code no
     /// template gives, too many stations or points (docs/adr/0908).
     INVALID_STAKEOUT = "invalid_stakeout", Failed, false, "Aplikasyon cetveli okunamıyor.";

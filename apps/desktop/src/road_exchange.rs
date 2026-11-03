@@ -163,4 +163,54 @@ impl App {
         }
         Task::none()
     }
+
+    /// glTF ver from the ribbon (plan/road.md Y12.3, `gltf.export`): where to write the scene.
+    pub(crate) fn export_gltf(&mut self) -> Task<Message> {
+        let Some(doc) = &self.document else {
+            self.output("Açık çizim yok.");
+            return Task::none();
+        };
+        if doc.model.settings().cad_work != Some(kentos_commands::CadWork::Road) {
+            self.warn("glTF ver yalnız yol projesinde (KentOS Yol) olur.".to_owned());
+            return Task::none();
+        }
+        let name = format!("{}.glb", doc.model.name());
+        Task::perform(
+            async move {
+                let file = rfd::AsyncFileDialog::new()
+                    .set_title("glTF ver")
+                    .set_file_name(name)
+                    .add_filter("glTF 2.0 ikili (.glb)", &["glb"])
+                    .save_file()
+                    .await?;
+                Some(file.path().to_path_buf())
+            },
+            Message::GltfExport,
+        )
+    }
+
+    /// The file chosen: every surface and corridor that builds (`file.export.gltf`; the dialog asked before writing
+    /// over).
+    pub(crate) fn gltf_chosen(&mut self, path: Option<PathBuf>) -> Task<Message> {
+        let Some(mut path) = path else { return Task::none() };
+        if path.extension().is_none() {
+            path.set_extension("glb");
+        }
+        let Some(doc) = self.document.as_mut() else { return Task::none() };
+        let input = kentos_commands::ExportGltf { path: path.display().to_string(), surfaces: None, corridors: None, overwrite: true };
+        let result = kentos_native_application::road_scene::execute(&mut ExecutionContext::new(&mut doc.model), input);
+        if let Some(out) = self.answered(result) {
+            let triangles: u32 = out.meshes.iter().map(|m| m.triangles).sum();
+            self.say(
+                Level::Success,
+                format!(
+                    "3B sahne yazıldı: {} ağ, {triangles} üçgen, en çok {:.1} µm float32 farkı ({}).",
+                    out.meshes.len(),
+                    out.error * 1e6,
+                    path.display()
+                ),
+            );
+        }
+        Task::none()
+    }
 }
