@@ -4,7 +4,8 @@ import type { ArraysAdopt } from "./ArraysAdopt";
 export type ArrayPattern = { 
 /**
  * Review this exact proposal before calling cad.arrays.adopt. Never executed by the search.
- * The first occupied endpoint becomes source; missing places stay empty, kept is never inferred.
+ * Source is the occupied line endpoint/grid corner, or the selected polar seed.
+ * Missing places stay empty; kept is never inferred.
  */
 adoption: ArraysAdopt, present: number, missing: number, deviation: number, 
 /**

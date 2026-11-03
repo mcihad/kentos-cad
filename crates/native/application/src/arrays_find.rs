@@ -1,4 +1,4 @@
-//! Cancellable, bounded line/grid pattern proposals. No objects, selection or array records are written.
+//! Cancellable, bounded line/grid/full-circle pattern proposals. No objects, selection or array records are written.
 use crate::{
     ExecutionContext, arrays_adopt,
     checks::{self, Stop, error},
@@ -12,6 +12,8 @@ use kentos_domain::{Document, Uuid};
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 
 mod grid;
+mod polar;
+mod path;
 
 const WORK_MAX: u64 = 2_000_000;
 
@@ -37,13 +39,14 @@ fn named(doc: &Document, text: &str, path: &str) -> Result<Uuid, Stop> {
     }
     Ok(uid)
 }
-fn compatible(a: &InsertEntity, b: &InsertEntity) -> bool {
+fn compatible(a: &InsertEntity, b: &InsertEntity, polar: bool) -> bool {
     let angle = (a.rotation - b.rotation).rem_euclid(std::f64::consts::TAU);
     arrays_adopt::plain(b)
         && arrays_adopt::same_appearance(a, b)
         && a.block == b.block
         && a.mirror == b.mirror
-        && angle.min(std::f64::consts::TAU - angle) <= 1e-10
+        && b.rotation.is_finite()
+        && (polar || angle.min(std::f64::consts::TAU - angle) <= 1e-10)
         && b.scale.is_finite()
         && b.scale > 0.
         && (a.scale - b.scale).abs() <= a.scale.abs() * 1e-12
@@ -84,6 +87,11 @@ fn check(
     checks::revision(doc, input.expected_revision.as_deref())?;
     let seed = named(doc, &input.source, "source")?;
     arrays_adopt::prototype(doc, seed, "source")?;
+    if input.kind == Some(ArrayFindKind::Path) {
+        path::guide(doc, input)?;
+    } else if input.path.is_some() {
+        return Err(refuse(codes::INVALID_PATH, "Kılavuz yolu yalnız Yol boyunca düzeniyle verin.", "path"));
+    }
     for array in doc.arrays() {
         for item in &array.items {
             if stopped() {
@@ -173,7 +181,7 @@ fn review_layouts(
     doc: &Document,
     source: EntityId,
     items: &[ArrayItem],
-    layouts: [ArrayLayout; 2],
+    layouts: impl IntoIterator<Item = ArrayLayout>,
     tolerance: f64,
     budget: &mut Budget,
     stopped: &mut impl FnMut() -> bool,
@@ -239,7 +247,7 @@ fn search(
         let reason = match e {
             Entity::Insert(_) if owned.contains(&id) => Some("array_member"),
             Entity::Insert(i) if doc.layers().is_locked(&i.base.layer_id) => Some("layer_locked"),
-            Entity::Insert(i) if compatible(source, i) => {
+            Entity::Insert(i) if compatible(source, i, matches!(input.kind, Some(ArrayFindKind::Polar | ArrayFindKind::Path))) => {
                 points.push(Point {
                     uid: id,
                     x: i.p.x,
@@ -265,7 +273,11 @@ fn search(
         cut: false,
     };
     let mut matches: Vec<ArrayPattern> = Vec::new();
-    if input.kind == Some(ArrayFindKind::Grid) {
+    if input.kind == Some(ArrayFindKind::Path) {
+        matches = path::find(doc, input, &points, seed, tolerance, checked.limit, &mut budget, &mut stopped)?;
+    } else if input.kind == Some(ArrayFindKind::Polar) {
+        matches = polar::find(doc, &points, seed, tolerance, checked.limit, &mut budget, &mut stopped)?;
+    } else if input.kind == Some(ArrayFindKind::Grid) {
         matches = grid::find(
             doc,
             &points,

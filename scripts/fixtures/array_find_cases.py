@@ -3,6 +3,7 @@
 import argparse
 from copy import deepcopy
 import json
+import math
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -91,6 +92,65 @@ def main():
         [(4e9+c*.03,4e9+r*.004) for r in range(3) for c in range(4)],6,
         dict(kind="grid",rows=3,cols=4,dx="$any",dy="$any"))
 
+    def polar_case(name, count, missing, rotate, source=0, unmatched=False):
+        raw=deepcopy(setup)
+        slots=[k for k in range(count) if k not in missing]
+        ids={k:i+1 for i,k in enumerate(slots)}
+        raw["entities"]=[dict(kind="insert",id=ids[k],layerId="a",attrs={},
+            block=setup["blocks"][0]["id"],p=dict(x=20+8*math.cos(2*math.pi*k/count),y=-15+8*math.sin(2*math.pi*k/count)),
+            scale=1,rotation=.3+(2*math.pi*k/count if rotate else 0)) for k in slots]
+        candidate=dict(adoption=dict(source=uid(ids[source]),layout=dict(kind="polar",center=dict(x="$any",y="$any"),count=count,fill=360,rotate=rotate),
+            items=[dict(uid=uid(ids[k])) if k in ids else {} for k in [(source+j)%count for j in range(count)]],tolerance=.000001,expectedRevision="$any"),
+            present=len(slots),missing=count-len(slots),deviation="$any",overlaps=False)
+        if unmatched:
+            raw["entities"].append(dict(kind="insert",id=len(slots)+1,layerId="a",attrs={},block=setup["blocks"][0]["id"],p=dict(x=22.5,y=-14.5),scale=1,rotation=.3))
+        expected=dict(result,matches=[candidate])
+        if len(slots)<4:expected=dict(result,matches=[])
+        cases.append(dict(name=name,setup=raw,steps=[dict(op="execute",input=dict(source=uid(ids[source]),kind="polar"),
+            result=dict(status="completed",output=expected,warnings=[]),expect=dict(held,ids=list(range(1,len(raw["entities"])+1))))]))
+    polar_case("kutupsal: iki eksik yer ve yönü sabit öğeler",8,[2,6],False,unmatched=True)
+    polar_case("kutupsal: iç kaynak ve merkez çevresinde dönen öğeler",8,[2,6],True,4)
+    polar_case("kutupsal: yay verisi açık tam çember seçimiyle boş yerler bırakır",12,list(range(4,12)),False)
+    polar_case("kutupsal: üç nokta niyet çıkarmak için yeterli değildir",4,[3],False)
+    success("kutupsal seçimi doğrusal sırayı çember gibi sunmaz",dict(source=uid(1),kind="polar"),empty)
+
+    path_candidate=deepcopy(candidate)
+    path_candidate['adoption']['layout']=dict(kind='path',path=uid(9),count=8,spacing=2,align=False)
+    # candidate above is the original straight row; the guide deliberately extends past the last root.
+    success("yol: son dolu yerden sonrası varsayılmaz",dict(source=uid(1),kind='path',path=uid(9)),dict(result,matches=[path_candidate]))
+
+    def path_case(name,align,closed=False,bulged=False):
+        raw=deepcopy(setup)
+        if bulged:
+            count=8; spacing=math.pi/4; missing={2,6}
+            points=[(2*math.cos(k*spacing/2),2*math.sin(k*spacing/2)) for k in range(count)]
+            guide=dict(kind='arc',id=9,layerId='a',attrs={},c=dict(x=0,y=0),r=2,a0=0,a1=math.pi)
+            angles=[k*spacing/2 for k in range(count)]
+        elif closed:
+            count=14;spacing=2;missing={2,6}
+            points=[(k*2,0) if k<3 else (6,k*2-6) if k<7 else (20-k*2,8) if k<10 else (0,28-k*2) for k in range(count)]
+            angles=[0 if k<3 else math.pi/2 if k<7 else math.pi if k<10 else -math.pi/2 for k in range(count)]
+            guide=dict(kind='polyline',id=9,layerId='a',attrs={},pts=[dict(x=0,y=0),dict(x=6,y=0),dict(x=6,y=8),dict(x=0,y=8)],closed=True)
+        else:
+            count=8;spacing=2;missing={2,6}
+            points=[(k*2,0) if k<3 else (6,k*2-6) for k in range(count)]
+            angles=[0 if k<3 else math.pi/2 for k in range(count)]
+            guide=dict(kind='polyline',id=9,layerId='a',attrs={},pts=[dict(x=0,y=0),dict(x=6,y=0),dict(x=6,y=8)])
+        occupied=[k for k in range(count) if k not in missing]; ids={k:j+1 for j,k in enumerate(occupied)}
+        guide['id']=len(occupied)+2
+        raw['entities']=[dict(kind='insert',id=ids[k],layerId='a',attrs={},block=setup['blocks'][0]['id'],
+            p=dict(x=points[k][0],y=points[k][1]),scale=1,rotation=.2+(angles[k] if align else 0)) for k in occupied]
+        raw['entities'].append(dict(kind='insert',id=len(occupied)+1,layerId='a',attrs={},block=setup['blocks'][0]['id'],p=dict(x=7,y=3),scale=1,rotation=.2))
+        raw['entities'].append(guide)
+        expected=dict(result,matches=[dict(adoption=dict(source=uid(1),layout=dict(kind='path',path=uid(guide['id']),count=count,spacing='$any',align=align),
+            items=[dict(uid=uid(ids[k])) if k in ids else {} for k in range(count)],tolerance=.000001,expectedRevision='$any'),present=len(occupied),missing=2,deviation='$any',overlaps=False)])
+        cases.append(dict(name=name,setup=raw,steps=[dict(op='execute',input=dict(source=uid(1),kind='path',path=uid(guide['id'])),
+            result=dict(status='completed',output=expected,warnings=[]),expect=dict(held,ids=list(range(1,len(raw['entities'])+1))))]))
+    path_case('yol: köşeli kılavuz ve yönü sabit öğeler',False)
+    path_case('yol: köşede teğet hizalama ve iki boş yer',True)
+    path_case('yol: kapalı kılavuzun dördüncü kenarı ve yön',True,closed=True)
+    path_case('yol: analitik yay ve dönen öğeler',True,bulged=True)
+
     def refuse(name, input_, code, path, conflict=False, raw=None, numbers=None):
         err=dict(code=code,message="$any",path=path)
         if conflict:err["revision"]="$any"
@@ -101,6 +161,10 @@ def main():
         cases.append(case)
 
     refuse("geçersiz kaynak UUID",dict(source="bad"),"invalid_uid","source")
+    refuse("yol kılavuzu zorunludur",dict(source=uid(1),kind='path'),'invalid_path','path')
+    refuse("kılavuz başka düzende sessizce yok sayılmaz",dict(source=uid(1),path=uid(9)),'invalid_path','path')
+    refuse("blok kılavuz sayılamaz",dict(source=uid(1),kind='path',path=uid(2)),'invalid_path','path')
+    refuse("kayıtlı başlangıçta olmayan kaynak taşınmaz",dict(source=uid(2),kind='path',path=uid(9)),'recognition_unsupported','source')
     refuse("olmayan kaynak",dict(source="01925f3e-7c1a-7d2b-9e4f-000000000999"),"entity_not_found","source")
     refuse("kaynak blok değil",dict(source=uid(9)),"array_adoption_refused","source")
     refuse("bozuk kapsam kimliği",dict(source=uid(1),uids=["bad"]),"invalid_uid","uids[0]")

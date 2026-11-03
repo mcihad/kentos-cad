@@ -330,20 +330,24 @@ edit = _ArraysEdit()
 class _ArraysFind(LocalCommand[ArraysFind, ArraysFound, ArraysFound]):
     """``cad.arrays.find`` v1. Blok dizi örüntülerini bul: Kaynak statik blok
     yerleştirmesini içeren örüntüleri yazısız bulur. kind verilmezse line, grid
-    seçilirse dünya X/Y dikdörtgen düzeni aranır. İlk sürüm aynı blok tanımı, katman,
-    görünüş, ayna, yön ve ölçekli verisiz yerleştirmeler içindir; dönük/eğik grid,
-    kutupsal ve yol araması içermez. Doğrusal için en az üç dolu yer ve gözlenen bir
-    komşu çift; grid için en az iki satır, iki sütun, dört dolu yer, iki eksende
-    gözlenen komşu çift ve dolu bir sınır köşesi gerekir. Her ikinci yer doluysa gizli
-    ara yer varsayılmaz. Aday adoption girdisi cad.arrays.adopt ile yeniden incelenip
-    açıkça uygulanabilir; arama hiçbir nesne, seçim veya dizi kaydı değiştirmez. Eksik
-    yerler boş kalır; eşleşmeyen öğe kendiliğinden kept olmaz. eligible ve UUID→ret
-    nedeni excluded listeleri kapsamı açıklar. Birbiriyle çakışan adaylar overlaps ile
-    belirtilir. uids yoksa belge, boşsa yalnız kaynak aranır; en çok 2048 nesne.
-    Tolerans metre, varsayılan 0.000001, en çok 0.001; limit 1..100. İki milyon
-    karşılaştırma veya aday sınırı kısmi arama truncated üretir. Grid aralık keşfi
-    500000 çift ya da bir eksende 128 aralık adayına ulaşırsa da kısmi bildirilir. Uzun
-    arama native Job ile durdurulabilir. expectedRevision eskiyse yazısız ret.
+    seçilirse dünya X/Y dikdörtgen düzeni aranır. Aynı statik blok tanımı, katman,
+    görünüş, ayna ve ölçekteki verisiz yerleştirmeler aranır. polar açık tam çember
+    yorumudur; en az dört dolu yer, gözlenen açısal komşuluk ve sabit veya merkezle
+    dönen yönler doğrulanır. path için mevcut 2B kılavuz UUID zorunludur; kaynak kılavuz
+    başlangıcındadır. Kayıtlı yönde gözlenen sabit yay uzunluğu aralıkları ve sabit veya
+    teğeti izleyen yönler aranır. Son dolu yerin ötesi, ters yön ve başlangıç kayması
+    varsayılmaz. Dönük/eğik grid bu sürümde aranmaz. Doğrusal için en az üç dolu yer ve
+    gözlenen bir komşu çift; grid için en az iki satır, iki sütun, dört dolu yer, iki
+    eksende gözlenen komşu çift ve dolu bir sınır köşesi gerekir. Her ikinci yer doluysa
+    gizli ara yer varsayılmaz. Aday adoption girdisi cad.arrays.adopt ile yeniden
+    incelenip açıkça uygulanabilir; arama hiçbir nesne, seçim veya dizi kaydı
+    değiştirmez. Eksik yerler boş kalır; eşleşmeyen öğe kendiliğinden kept olmaz.
+    eligible ve UUID→ret nedeni excluded listeleri kapsamı açıklar. Birbiriyle çakışan
+    adaylar overlaps ile belirtilir. uids yoksa belge, boşsa yalnız kaynak aranır; en
+    çok 2048 nesne. Tolerans metre, varsayılan 0.000001, en çok 0.001; limit 1..100. İki
+    milyon karşılaştırma veya aday sınırı kısmi arama truncated üretir. Grid aralık
+    keşfi 500000 çift ya da bir eksende 128 aralık adayına ulaşırsa da kısmi bildirilir.
+    Uzun arama native Job ile durdurulabilir. expectedRevision eskiyse yazısız ret.
     """
     __slots__ = ()
     id = "cad.arrays.find"
@@ -363,6 +367,7 @@ class _ArraysFind(LocalCommand[ArraysFind, ArraysFound, ArraysFound]):
         expected_revision: str | None | Unset = UNSET,
         kind: ArrayFindKind | ArrayFindKindName | None | Unset = UNSET,
         limit: int | None | Unset = UNSET,
+        path: str | None | Unset = UNSET,
         tolerance: float | None | Unset = UNSET,
         uids: Sequence[str] | None | Unset = UNSET,
         request_id: str | None = None,
@@ -370,27 +375,33 @@ class _ArraysFind(LocalCommand[ArraysFind, ArraysFound, ArraysFound]):
     ) -> ArraysFound:
         """Blok dizi örüntülerini bul: Kaynak statik blok yerleştirmesini içeren örüntüleri
         yazısız bulur. kind verilmezse line, grid seçilirse dünya X/Y dikdörtgen düzeni
-        aranır. İlk sürüm aynı blok tanımı, katman, görünüş, ayna, yön ve ölçekli verisiz
-        yerleştirmeler içindir; dönük/eğik grid, kutupsal ve yol araması içermez. Doğrusal
-        için en az üç dolu yer ve gözlenen bir komşu çift; grid için en az iki satır, iki
-        sütun, dört dolu yer, iki eksende gözlenen komşu çift ve dolu bir sınır köşesi
-        gerekir. Her ikinci yer doluysa gizli ara yer varsayılmaz. Aday adoption girdisi
-        cad.arrays.adopt ile yeniden incelenip açıkça uygulanabilir; arama hiçbir nesne,
-        seçim veya dizi kaydı değiştirmez. Eksik yerler boş kalır; eşleşmeyen öğe
-        kendiliğinden kept olmaz. eligible ve UUID→ret nedeni excluded listeleri kapsamı
-        açıklar. Birbiriyle çakışan adaylar overlaps ile belirtilir. uids yoksa belge, boşsa
-        yalnız kaynak aranır; en çok 2048 nesne. Tolerans metre, varsayılan 0.000001, en çok
-        0.001; limit 1..100. İki milyon karşılaştırma veya aday sınırı kısmi arama truncated
-        üretir. Grid aralık keşfi 500000 çift ya da bir eksende 128 aralık adayına ulaşırsa
-        da kısmi bildirilir. Uzun arama native Job ile durdurulabilir. expectedRevision
-        eskiyse yazısız ret.
+        aranır. Aynı statik blok tanımı, katman, görünüş, ayna ve ölçekteki verisiz
+        yerleştirmeler aranır. polar açık tam çember yorumudur; en az dört dolu yer,
+        gözlenen açısal komşuluk ve sabit veya merkezle dönen yönler doğrulanır. path için
+        mevcut 2B kılavuz UUID zorunludur; kaynak kılavuz başlangıcındadır. Kayıtlı yönde
+        gözlenen sabit yay uzunluğu aralıkları ve sabit veya teğeti izleyen yönler aranır.
+        Son dolu yerin ötesi, ters yön ve başlangıç kayması varsayılmaz. Dönük/eğik grid bu
+        sürümde aranmaz. Doğrusal için en az üç dolu yer ve gözlenen bir komşu çift; grid
+        için en az iki satır, iki sütun, dört dolu yer, iki eksende gözlenen komşu çift ve
+        dolu bir sınır köşesi gerekir. Her ikinci yer doluysa gizli ara yer varsayılmaz.
+        Aday adoption girdisi cad.arrays.adopt ile yeniden incelenip açıkça uygulanabilir;
+        arama hiçbir nesne, seçim veya dizi kaydı değiştirmez. Eksik yerler boş kalır;
+        eşleşmeyen öğe kendiliğinden kept olmaz. eligible ve UUID→ret nedeni excluded
+        listeleri kapsamı açıklar. Birbiriyle çakışan adaylar overlaps ile belirtilir. uids
+        yoksa belge, boşsa yalnız kaynak aranır; en çok 2048 nesne. Tolerans metre,
+        varsayılan 0.000001, en çok 0.001; limit 1..100. İki milyon karşılaştırma veya aday
+        sınırı kısmi arama truncated üretir. Grid aralık keşfi 500000 çift ya da bir eksende
+        128 aralık adayına ulaşırsa da kısmi bildirilir. Uzun arama native Job ile
+        durdurulabilir. expectedRevision eskiyse yazısız ret.
 
         Args:
             doc: The drawing it works on.
             source: Existing seed insert UUID. May be an interior place of a candidate.
             expected_revision:
-            kind: Omitted: line. Explicit grid reuses the existing axis-aligned ArrayLayout::Grid.
+            kind: Omitted: line. Grid is world-X/Y; polar is an explicit full-circle interpretation.
             limit: Candidate limit, 1 to 100; absent: 100. Work/result limits report `truncated`. Unit: count.
+            path: Existing line, arc, circle or single-part 2D polyline UUID; required only with kind=path.
+                The guide is retained and followed by the adopted array. Its stored start/direction are used.
             tolerance: Absolute position tolerance in metres, above zero to 0.001; absent: 0.000001. Unit: length.
             uids: Absent searches the document; empty searches only the seed. At most 2048 objects.
             request_id: Names this write: sent again with the same call it is answered as
@@ -410,6 +421,7 @@ class _ArraysFind(LocalCommand[ArraysFind, ArraysFound, ArraysFound]):
             expected_revision=expected_revision,
             kind=kind,
             limit=limit,
+            path=path,
             tolerance=tolerance,
             uids=_opt(uids, lambda x: list(x)),
         ), request_id=request_id, expected=expected)
@@ -423,6 +435,7 @@ class _ArraysFind(LocalCommand[ArraysFind, ArraysFound, ArraysFound]):
         expected_revision: str | None | Unset = UNSET,
         kind: ArrayFindKind | ArrayFindKindName | None | Unset = UNSET,
         limit: int | None | Unset = UNSET,
+        path: str | None | Unset = UNSET,
         tolerance: float | None | Unset = UNSET,
         uids: Sequence[str] | None | Unset = UNSET,
     ) -> ArraysFound:
@@ -434,6 +447,7 @@ class _ArraysFind(LocalCommand[ArraysFind, ArraysFound, ArraysFound]):
             expected_revision=expected_revision,
             kind=kind,
             limit=limit,
+            path=path,
             tolerance=tolerance,
             uids=_opt(uids, lambda x: list(x)),
         ))
@@ -447,6 +461,7 @@ class _ArraysFind(LocalCommand[ArraysFind, ArraysFound, ArraysFound]):
         expected_revision: str | None | Unset = UNSET,
         kind: ArrayFindKind | ArrayFindKindName | None | Unset = UNSET,
         limit: int | None | Unset = UNSET,
+        path: str | None | Unset = UNSET,
         tolerance: float | None | Unset = UNSET,
         uids: Sequence[str] | None | Unset = UNSET,
     ) -> list[CommandNote]:
@@ -458,6 +473,7 @@ class _ArraysFind(LocalCommand[ArraysFind, ArraysFound, ArraysFound]):
             expected_revision=expected_revision,
             kind=kind,
             limit=limit,
+            path=path,
             tolerance=tolerance,
             uids=_opt(uids, lambda x: list(x)),
         ))
@@ -471,6 +487,7 @@ class _ArraysFind(LocalCommand[ArraysFind, ArraysFound, ArraysFound]):
         expected_revision: str | None | Unset = UNSET,
         kind: ArrayFindKind | ArrayFindKindName | None | Unset = UNSET,
         limit: int | None | Unset = UNSET,
+        path: str | None | Unset = UNSET,
         tolerance: float | None | Unset = UNSET,
         uids: Sequence[str] | None | Unset = UNSET,
         op: str = "execute",
@@ -487,6 +504,7 @@ class _ArraysFind(LocalCommand[ArraysFind, ArraysFound, ArraysFound]):
             expected_revision=expected_revision,
             kind=kind,
             limit=limit,
+            path=path,
             tolerance=tolerance,
             uids=_opt(uids, lambda x: list(x)),
         ), op=op, request_id=request_id, expected=expected)

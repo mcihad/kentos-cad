@@ -1,4 +1,4 @@
-//! Read-only linear-pattern candidates, never implicit array conversion.
+//! Read-only line, grid and full-circle candidates, never implicit array conversion.
 use crate::ArraysAdopt;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -19,16 +19,24 @@ pub enum ArrayFindKind {
     Line,
     /// World X/Y rectangular rows and columns; rotated/skew grids are not inferred.
     Grid,
+    /// Explicit full-circle interpretation; at least four occupied places and an observed adjacent pair.
+    Polar,
+    /// Fixed spacing along an explicitly selected 2D guide, in its stored direction.
+    Path,
 }
 
-/// Finds linear patterns containing the seed insert. First delivery: static, data-free inserts
-/// of the same block, appearance, mirror, rotation and scale. No rotation of the items is inferred.
+/// Finds requested patterns containing the seed insert: static, data-free inserts
+/// of the same block, appearance, mirror and scale. Line/grid require the same rotation.
 /// At least three occupied places and an observed adjacent pair are required. Every second
 /// place being occupied is indistinguishable from twice the spacing: no hidden places are invented.
 /// With kind=grid, searches world-X/Y rectangular patterns with at least two rows,
 /// two columns, four occupied places and observed adjacent pairs in both directions.
 /// A bounding corner must be occupied to reuse it as the existing array source.
-/// Rotated/skew grids, polar and path detection are not implemented by this version.
+/// With kind=polar, searches full circles around placement base points; fixed or rotating item
+/// orientation is verified by the existing adoption engine. Partial-arc intent is not inferred.
+/// With kind=path, the selected seed must be at the guide start. Observed adjacent arc-length
+/// gaps suggest fixed spacing; trailing unobserved places and reversed guide intent are not inferred.
+/// Rotated/skew grids are not implemented by this version.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -37,10 +45,15 @@ pub enum ArrayFindKind {
 pub struct ArraysFind {
     /// Existing seed insert UUID. May be an interior place of a candidate.
     pub source: String,
-    /// Omitted: line. Explicit grid reuses the existing axis-aligned ArrayLayout::Grid.
+    /// Omitted: line. Grid is world-X/Y; polar is an explicit full-circle interpretation.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub kind: Option<ArrayFindKind>,
+    /// Existing line, arc, circle or single-part 2D polyline UUID; required only with kind=path.
+    /// The guide is retained and followed by the adopted array. Its stored start/direction are used.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub path: Option<String>,
     /// Absent searches the document; empty searches only the seed. At most 2048 objects.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -67,7 +80,8 @@ pub struct ArraysFind {
 #[serde(rename_all = "camelCase")]
 pub struct ArrayPattern {
     /// Review this exact proposal before calling cad.arrays.adopt. Never executed by the search.
-    /// The first occupied endpoint becomes source; missing places stay empty, kept is never inferred.
+    /// Source is the occupied line endpoint/grid corner, or the selected polar seed.
+    /// Missing places stay empty; kept is never inferred.
     pub adoption: ArraysAdopt,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub present: u32,

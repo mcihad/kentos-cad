@@ -1171,7 +1171,7 @@ const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "cad.arrays.find",
-        refusals: &[&["invalid_uid", "entity_not_found", "invalid_tolerance", "invalid_limit", "recognition_scope_limit", "array_adoption_refused", "layer_locked"], REVISION],
+        refusals: &[&["invalid_uid", "entity_not_found", "invalid_tolerance", "invalid_limit", "recognition_scope_limit", "array_adoption_refused", "layer_locked", "invalid_path", "recognition_unsupported"], REVISION],
         warnings: &["recognition_truncated"], targets: none,
     },
     Entry {
