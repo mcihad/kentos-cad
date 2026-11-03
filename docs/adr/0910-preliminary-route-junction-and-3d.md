@@ -109,6 +109,17 @@ Tarih: 2026-11-03. plan/road.md Y12 (ROAD-ALIGN-13; ROAD-JUNC; 3d.md bağlantıs
      sırayla), sonuç aynıdır. Sadeleştirilmiş ebeveyn içerikleri (gerçek LOD) aynı hiyerarşiye sonra eklenir; seçim onlar
      için şimdiden hazırdır.
 
+5. **3B çizici (`kentos_render_wgpu::scene3d`).** Iced ve pencere bilmez; ev sahibi aygıtı, kuyruğu ve renk hedefi
+   kendinin, derinlik hedefi `DepthTarget` olan geçişi verir. Gölgelendirici `shaders/wgsl/scene3d/mesh.wgsl`,
+   sözleşmesi `scene3d.layout.json` (naga denetler): köşe 16 bayt (float32 × 3 konum, u32 parça), görünüş bloğu 96
+   bayt (`P · R`, ışık ve ortam payı, abartma), karo bloğu 16 bayt (gösterilen köken − göz) 256 bayt aralıklı dinamik
+   ofsette; parçaların renkleri depolama tamponunda. Normaller düz, konumun türevlerinden, iki yüz de ışıklanır.
+   Önce opak aralıklar en yakın karodan (erken derinlik reddi), derinlik yazarak; sonra rengi saydam parçaların
+   aralıkları en uzaktan, derinliği sınayıp yazmadan, önçarpımlı. İçerik bir kez yüklenir; `Residency` iki bütçeyle
+   (aynı anda GPU'da kalan bayt ve bir karede yüklenen bayt; karenin ilk içeriği her zaman gider, açlık olmaz) yüklenecekleri
+   ve gidecekleri seçer; en uzun süre kullanılmayan gider, bu karenin çizdiği gitmez; sığmayan sonraki kareyi bekler.
+   Öntanımlı bütçeler 1 GiB ve 64 MiB; ölçülmüş aygıtta ev sahibi kendi bütçesini verir (SCENE-DEC-06).
+
 ## Aşamalar
 
 Y12.1 (yapıldı, ön güzergâh): `road.routes.find` 26, `.draw` 22 ortak durum (`road_route_cases.py`; arazinin kotları
@@ -138,6 +149,15 @@ eksik çocuk, ADD, içeriksiz kök, ortografik, abartma, dar pencere, göz karod
 4 milyon üçgenlik 2 km × 1 km TM arazisi 175 ms'de 255 karo, 128 içerik (80,5 MB), en büyük float32 farkı 2,4e-7 m;
 bir karenin seçimi 0,004–0,011 ms; 21 845 karolu dörtlü ağaç üstünde uçuşta 0,003 ms. Bağımlılık yönü temiz, wasm32
 derlenir.
+
+Y12.3c (yapıldı, çizici): §5. Saf yerleşim kuralı birim testli (bütçe, bekleyen, ilk içerik, tahliye sırası, bu karenin
+korunması). Gölgelendiricinin sözleşmesi naga'yla (`styled_contract.rs`). Gerçek GPU'da (`KENTOS_GPU_TESTS=1`, Apple M5,
+Metal): TM koordinatında (512 345,678 D, 4 401 234,567 K) 1 cm'lik kare üstten ortografik ve 6 cm'den perspektifte
+kameranın izdüşürdüğü piksellerin 1 piksel içinde (kuzeyin yalnız float32'si 6,7 cm sapar); 1,5 km'den 2 cm
+aralıklı iki 100 m'lik yüzeyde her pikselde üstteki (ters float32 derinlik); 3 kat abartmada gösterilen köşeler yerinde;
+karede bir içerik bütçesiyle ikinci içerik bir kare bekler. Süre (release, 1920 × 1080, geri okuma dahil): 4 milyon
+üçgenlik TM arazisinde ilk kare 67 MB yükleyip 28–37 ms, sonraki karelerde 75 karo ve 2,3 milyon üçgen ortanca 4,8 ms,
+en kötü 14 ms.
 
 ## Sonra
 

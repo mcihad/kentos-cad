@@ -425,3 +425,45 @@ fn the_composition_module_validates_and_is_the_contract_s() {
         layout["boxInstance"]["stride"].as_u64().expect("stride")
     );
 }
+
+/// The 3D scene's module (`shaders/wgsl/scene3d`, `scene3d.layout.json`, docs/adr/0910 §5): naga validates it within
+/// core WebGPU, its entry points are the contract's, its View block is the 96 bytes and its Tile block the 16 the
+/// desktop writes, its bindings are the contract's, and its version is the contract's.
+#[test]
+fn the_scene3d_module_validates_and_is_the_contract_s() {
+    use kentos_render_wgpu::scene3d::{SCENE3D_LAYOUT_JSON, SCENE3D_WGSL};
+    let module = validate(SCENE3D_WGSL);
+    let layout: serde_json::Value = serde_json::from_str(SCENE3D_LAYOUT_JSON).expect("scene3d.layout.json reads");
+    assert_eq!(layout["module"], "scene3d");
+    for p in layout["pipelines"].as_array().expect("pipelines") {
+        for (key, stage) in [("vertex", naga::ShaderStage::Vertex), ("fragment", naga::ShaderStage::Fragment)] {
+            let name = p[key].as_str().expect("entry point");
+            assert!(module.entry_points.iter().any(|e| e.name == name && e.stage == stage), "{name} ({stage:?})");
+        }
+    }
+    for (name, size) in [("View", 96u64), ("Tile", 16)] {
+        let got = module
+            .types
+            .iter()
+            .find(|(_, t)| t.name.as_deref() == Some(name))
+            .map(|(_, t)| t.inner.size(module.to_ctx()))
+            .unwrap_or_else(|| panic!("{name}"));
+        assert_eq!(u64::from(got), size, "{name}");
+        assert_eq!(layout["structs"][name]["size"].as_u64(), Some(size), "{name}");
+    }
+    for g in layout["bindGroups"].as_array().expect("groups") {
+        for b in g["bindings"].as_array().expect("bindings") {
+            let name = b["name"].as_str().expect("name");
+            let at = binding(&module, name).unwrap_or_else(|| panic!("{name} is bound"));
+            assert_eq!(u64::from(at.group), g["group"].as_u64().expect("group"), "{name}");
+            assert_eq!(u64::from(at.binding), b["binding"].as_u64().expect("binding"), "{name}");
+        }
+    }
+    let version = module
+        .constants
+        .iter()
+        .find(|(_, c)| c.name.as_deref() == Some("LAYOUT_VERSION"))
+        .map(|(_, c)| &module.global_expressions[c.init])
+        .expect("LAYOUT_VERSION");
+    assert!(matches!(version, naga::Expression::Literal(naga::Literal::U32(v)) if u64::from(*v) == layout["version"].as_u64().expect("version")));
+}

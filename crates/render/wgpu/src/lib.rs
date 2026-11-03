@@ -16,6 +16,8 @@
 //!   uniform per view and the scene cache, GPU buffers uploaded once per part
 //!   and never per frame.
 //! - [`RenderSettings`] and [`FrameStats`].
+//! - [`scene3d`]: the 3D scene's tiles drawn with a reversed depth buffer, their contents kept within budgets
+//!   (docs/adr/0910 §5).
 //! - [`targets`]: a view's own multisampled or scaled targets and their
 //!   composition into the host's frame, and the sample counts the device
 //!   takes (TODOS.md AA-01, AA-02; docs/adr/0023).
@@ -41,6 +43,7 @@ pub mod layout;
 pub mod precision;
 pub mod renderer;
 pub mod scene;
+pub mod scene3d;
 pub mod settings;
 pub mod shader;
 pub mod stats;

@@ -1,0 +1,70 @@
+{
+  "format": "kentos.wgsl-layout",
+  "version": 1,
+  "module": "scene3d",
+  "description": "KentOS's 3D scene (docs/adr/0910 §4–§5, plan/3d.md D1): triangle meshes in tiles with a depth32float buffer, reversed (cleared to 0, compare greater); one draw per tile and per part range, the tile's origin minus the eye (float64 on the host, float32 here) at a dynamic offset; the parts' colours in a storage buffer, premultiplied on output. The opaque pipeline writes depth; the see-through one tests it without writing and blends premultiplied alpha.",
+  "sources": ["scene3d/mesh.wgsl"],
+  "bindGroups": [
+    {
+      "group": 0,
+      "bindings": [
+        { "binding": 0, "name": "view", "type": "uniform", "struct": "View", "dynamicOffset": false, "visibility": ["vertex", "fragment"] },
+        { "binding": 1, "name": "styles", "type": "read-only-storage", "visibility": ["fragment"] }
+      ]
+    },
+    {
+      "group": 1,
+      "bindings": [
+        { "binding": 0, "name": "tile", "type": "uniform", "struct": "Tile", "dynamicOffset": true, "visibility": ["vertex"] }
+      ]
+    }
+  ],
+  "structs": {
+    "View": {
+      "size": 96,
+      "align": 16,
+      "fields": [
+        { "name": "clip", "type": "mat4x4<f32>", "offset": 0 },
+        { "name": "light", "type": "vec4<f32>", "offset": 64 },
+        { "name": "look", "type": "vec4<f32>", "offset": 80 }
+      ]
+    },
+    "Tile": {
+      "size": 16,
+      "align": 16,
+      "fields": [{ "name": "offset", "type": "vec4<f32>", "offset": 0 }]
+    }
+  },
+  "pipelines": [
+    {
+      "name": "opaque",
+      "vertex": "meshVs",
+      "fragment": "meshFs",
+      "topology": "triangle-list",
+      "cull": "none",
+      "blend": "none",
+      "depth": { "format": "depth32float", "compare": "greater", "write": true },
+      "buffers": [
+        { "stepMode": "vertex", "arrayStride": 16, "attributes": [
+          { "location": 0, "name": "p", "format": "float32x3", "offset": 0 },
+          { "location": 1, "name": "part", "format": "uint32", "offset": 12 }
+        ] }
+      ]
+    },
+    {
+      "name": "seeThrough",
+      "vertex": "meshVs",
+      "fragment": "meshFs",
+      "topology": "triangle-list",
+      "cull": "none",
+      "blend": "premultiplied",
+      "depth": { "format": "depth32float", "compare": "greater", "write": false },
+      "buffers": [
+        { "stepMode": "vertex", "arrayStride": 16, "attributes": [
+          { "location": 0, "name": "p", "format": "float32x3", "offset": 0 },
+          { "location": 1, "name": "part", "format": "uint32", "offset": 12 }
+        ] }
+      ]
+    }
+  ]
+}

@@ -12,6 +12,8 @@ publish.workspace = true
 [dependencies]
 kentos-contracts = { path = "../../shared/contracts", default-features = false }
 kentos-geometry-core = { path = "../../shared/geometry-core" }
+# The 3D scene's camera, tiles and contents (docs/adr/0910 §4–§5): its scene3d module draws them.
+kentos-scene3d = { path = "../../shared/scene3d" }
 # The styled layers it draws: the style engine's batches with their colours and images (docs/adr/0090).
 kentos-native-style = { path = "../../native/style" }
 wgpu = { workspace = true }
@@ -20,6 +22,8 @@ bytemuck = { workspace = true, features = ["derive"] }
 tiny-skia = { workspace = true }
 
 [dev-dependencies]
+# The 3D scene's picture for the owner (tests/gpu/scene3d.rs).
+png = { workspace = true }
 naga = { workspace = true }
 pollster = { workspace = true }
 serde = { workspace = true }
