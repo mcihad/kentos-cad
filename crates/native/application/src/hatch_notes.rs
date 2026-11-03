@@ -17,7 +17,7 @@ pub(crate) fn notes(doc: &Document, report: &StepReport) -> Vec<CommandWarning> 
         .filter(|c| c.removed())
         .map(|c| c.uid)
         .collect();
-    let (mut gone, mut cycles) = (Vec::new(), Vec::new());
+    let (mut gone, mut cycles, mut detached) = (Vec::new(), Vec::new(), Vec::new());
     for c in &report.objects {
         let (Some(before), Some(after)) = (&c.before, &c.after) else {
             continue;
@@ -25,6 +25,10 @@ pub(crate) fn notes(doc: &Document, report: &StepReport) -> Vec<CommandWarning> 
         let (Entity::Hatch(b), Entity::Hatch(a)) = (&**before, &**after) else {
             continue;
         };
+        if let Some(was)=&b.assoc && a.assoc.is_none() {
+            let source_changed=was.objects().any(|id| report.objects.iter().any(|change|change.uid==Uuid::from_bytes(id.0)));
+            if source_changed || b.ring!=a.ring || b.holes!=a.holes || b.boundary!=a.boundary {detached.push(c.uid.to_string());}
+        }
         let (Some(was), Some(now)) = (&b.assoc, &a.assoc) else {
             continue;
         };
@@ -43,6 +47,9 @@ pub(crate) fn notes(doc: &Document, report: &StepReport) -> Vec<CommandWarning> 
         }
     }
     let mut out = Vec::new();
+    if !detached.is_empty() {
+        out.push(CommandWarning {code:codes::HATCH_ASSOCIATION_LOST.into(),message:format!("{} taramanın geometrisi korundu ancak sınır bağı koptu; artık kaynağı izlemez. Taramayı düzenle ile sınırı yeniden seçin veya oluşturun.",detached.len()),path:None});
+    }
     if !gone.is_empty() {
         out.push(CommandWarning {
             code: codes::CUTOUT_GONE.into(),

@@ -3520,6 +3520,7 @@ fn hatch_rows(
         )],
     });
     rows.push(Row::text("İlişkili", tie).editor(untie));
+    rows.push(Row::text("Sınır izlemesi", if h.assoc.is_some() {"Kaynakları izler"} else {"Bağ yok; mevcut geometri sabit"}));
     // Sınır ▾ (docs/adr/0329 §4): exact when it holds an arc or a curve; written again as objects.
     let exact = if h.boundary.is_some() { "Kesin" } else { "Çizilen halka" };
     let recreate = (!locked).then(|| Editor::Select {

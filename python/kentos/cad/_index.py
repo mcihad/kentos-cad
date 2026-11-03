@@ -64,6 +64,7 @@ COMMANDS: dict[str, Any] = {
     "cad.donut.create": donut.create,
     "cad.drawing.audit": drawing.audit,
     "cad.drawing.compare": drawing.compare,
+    "cad.drawing.inspect": drawing.inspect,
     "cad.elevations.edit": elevations.edit,
     "cad.elevations.query": elevations.query,
     "cad.entities.adjoin": entities.adjoin,

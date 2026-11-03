@@ -1291,6 +1291,30 @@ içeren çizimi tara. Kaynağı buda/sil/düzelt, sonra yeniden bağla. Analitik
 sınır, alan, desen orijini ve tek Undo korunmalı; durum değişimi kullanıcı
 tarafından anlaşılmalı. Yakın/uzak görünüm ve PDF karşılaştırılmalı.
 
+
+**Uygulama durumu — 3 Kasım 2026 (kabul sürüyor):**
+- `cad.drawing.inspect` salt okunur/durdurulabilir sorgusu ve KentOS UI bileşenleriyle
+  CAD denetimi paneli: kapsam, teşhis eşiği, bulguya gitme, sahnede işaret, tarama
+  bağ durumu ve düzenleyiciye geçiş. Eski belge/sürüm sonuçları işlem yaptıramaz.
+- Yeniden sınır seçmede çizgiler/kapalı nesne, adalar, ilişki, yazı boşluğu ve açık
+  boşluk eşiği seçenekleri görünür. Denetimden onarım, önceki düzenleyici kipini
+  kullanarak yanlışlıkla ilişki koparmaya başlamaz.
+- Tarama alanındaki somut hata giderildi: dairesel yaylar görüntü çokgeninden
+  ölçülmez; kayıtlı analitik sınır kullanılır. İki adalı daire bağımsız `98π`
+  referansıyla, yeniden bağlama ve tek Undo ile sınandı. Tam elips alanı analitiktir;
+  karışık elips/NURBS sınırındaki mevcut kord yaklaşımı korunur, kesinlik iddiası yoktur.
+- 316 geometri, 433 uygulama, 15 tarama etkileşim, 2 masaüstü önizleme, 2 Python
+  ve 1 gerçek MCP testi geçti. Kaynak bölmede doğru parçaya bağlanma, analitik alan,
+  desen başlangıcı/açı/ölçek ve tek Undo ayrıca üç testte doğrulandı.
+- Gerçek fareyle ilişki kopar/yeniden seç/tek geri alma; iki ada + yazı boşluğu +
+  4 mm açıklık çizimi, yakın/uzak görünüm ve vektör PDF incelendi. Ham görüntüler
+  depo dışında `/tmp/kentos-cad-adv08-09-2026-11-03/` altında tutulur.
+- Kesin topoloji teşhisi doğru/dairesel yay kapsamındadır; blok/elips/NURBS/spline
+  ve sınırı aşan kaynaklar açıkça kapsam dışında raporlanır. Bunlar temiz sayılmaz.
+- Kalan kabul: güncel main ile birleştirme sonrası tekrar doğrulama, budama ve
+  ölçülü desen düzenleme akışlarının son gerçek arayüz kontrolü. Bu nedenle madde
+  henüz tamamlandı işareti almadı.
+
 ### CAD-ADV-09 — Ölçü, kılavuz ve teknik anotasyonun doğruluğunu görünür kıl [ ]
 
 **Öncelik:** P0. **Kod:** [C16], [C03], [C26].

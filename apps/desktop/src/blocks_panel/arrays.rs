@@ -6,7 +6,7 @@ use crate::{
 };
 use iced::{
     Element, Fill, Subscription, Task,
-    widget::{button, column, container, pick_list, row, scrollable, text},
+    widget::{button, column, container, row, scrollable, text},
 };
 use kentos_commands::{
     ArrayFindKind, ArrayItem, ArrayLayout, ArraysAdopt, ArraysAdoptPlan, ArraysAdopted, ArraysFind,
@@ -16,7 +16,7 @@ use kentos_native_application::jobs::Job;
 use kentos_ui::{
     label, style,
     theme::typography,
-    widget::{Dialog as Frame, NumberInput, VirtualList, number::units},
+    widget::{Dialog as Frame, NumberInput, VirtualList, number::units, select::{Choice as SelectChoice, Select}},
 };
 use std::{
     collections::HashSet,
@@ -347,7 +347,10 @@ impl App {
                 ));
             }
             if r.keep_options && !choices.is_empty() && !w.busy {
-                body=body.push(words::field("Eşleşmeyen blok",pick_list(choices,r.choice.clone(),|c|msg(Event::KeepObject(c))).width(Fill),Some("Bu bloğu yalnız seçtiğiniz boş yere, mevcut konumunu koruyarak bağlayın.".into())))
+                let picked = r.choice.as_ref().and_then(|c| choices.iter().position(|v| v == c));
+                let options = choices.iter().map(|c| SelectChoice::new(c.label.clone())).collect::<Vec<_>>();
+                let select = Select::new(options, picked, move |i| msg(Event::KeepObject(choices[i].clone())));
+                body=body.push(words::field("Eşleşmeyen blok",container(select).width(Fill),Some("Bu bloğu yalnız seçtiğiniz boş yere, mevcut konumunu koruyarak bağlayın.".into())))
                     .push(keep_position(r))
                     .push(row![words::secondary("Bloğu göster",r.choice.as_ref().map(|_|msg(Event::ShowKept))),words::secondary("Bu yere koru",r.choice.as_ref().map(|_|msg(Event::Assign)))].spacing(8));
             }
@@ -390,8 +393,11 @@ impl App {
             if w.source.is_none() {
                 body=body.push(words::text_line(Kind::Warn,"Çizimde tek bir blok yerleştirmesi seçip yeniden açın. Bir bloğun tanımını değil, çizimdeki örneğini seçin."));
             }
+            let kinds = [ArrayFindKind::Line, ArrayFindKind::Grid, ArrayFindKind::Lattice, ArrayFindKind::Polar, ArrayFindKind::Path];
+            let chosen = kinds.iter().position(|k| *k == w.kind);
+            let kind_select = Select::new(kinds.iter().map(|k| SelectChoice::new(kind_name(*k))), chosen, move |i| msg(Event::PatternKind(kinds[i])));
             body=body.push(label::body("Aynı bloğun görünür yerleştirmelerinde seçilen düzen aranır. Sonuçlar çizimi değiştirmeden Bloklar panelinde açılır."))
-                .push(words::field("Düzen türü", pick_list(["Doğrusal", "Dikdörtgen (X/Y)", "Dönük/eğik ızgara", "Kutupsal (tam çember)", "Yol boyunca (sabit aralık)"], Some(kind_name(w.kind)), |name| msg(Event::PatternKind(match name { "Dikdörtgen (X/Y)" => ArrayFindKind::Grid, "Dönük/eğik ızgara" => ArrayFindKind::Lattice, "Kutupsal (tam çember)" => ArrayFindKind::Polar, "Yol boyunca (sabit aralık)" => ArrayFindKind::Path, _ => ArrayFindKind::Line }))).width(Fill), Some("Doğrusal ve yol en az üç; dikdörtgen ve kutupsal en az dört mevcut öğe gerektirir.".into())))
+                .push(words::field("Düzen türü", container(kind_select).width(Fill), Some("Doğrusal ve yol en az üç; dikdörtgen ve kutupsal en az dört mevcut öğe gerektirir.".into())))
                 .push(words::field("Tolerans (mm)",NumberInput::new(w.tolerance,|n|msg(Event::Tolerance(n))).units(units::MILLIMETRE).range(0.0..=0.001).step(0.001).decimals(3),Some("Sıfırdan büyük, en çok 1 mm. Varsayılan 0,001 mm; çizim ölçeğini değiştirmez.".into())))
                 .push(words::check(w.hidden,"Gizli ve donmuş katmanları da ara",Some(msg(Event::Hidden))))
                 .push(label::caption(match w.kind {
@@ -402,7 +408,11 @@ impl App {
                     ArrayFindKind::Path => "Kılavuzun kayıtlı yönü kullanılır; kaynak başlangıçta olmalıdır. Gözlenen eşit aralık korunur; son dolu öğeden ötesi varsayılmaz.",
                 }));
             if w.kind == ArrayFindKind::Path {
-                body = body.push(words::field("Kılavuz yol", pick_list(w.paths.clone(), w.path.clone(), |p|msg(Event::Path(p))).width(Fill),
+                let paths = w.paths.clone();
+                let picked = w.path.as_ref().and_then(|p| paths.iter().position(|v| v == p));
+                let choices = paths.iter().map(|p| SelectChoice::new(p.label.clone())).collect::<Vec<_>>();
+                let path_select = Select::new(choices, picked, move |i| msg(Event::Path(paths[i].clone())));
+                body = body.push(words::field("Kılavuz yol", container(path_select).width(Fill),
                     Some("Kaynak bloğu ve bir kılavuzu birlikte seçip açabilirsiniz. Başlangıçtaki blok kaynak olmalı; yön değiştirilmez. İlk 2048 görünür kılavuz listelenir. Kılavuz çizimde kalır.".into())));
             }
         }

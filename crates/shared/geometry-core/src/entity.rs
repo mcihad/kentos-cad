@@ -2070,13 +2070,20 @@ pub fn entity_area(e: &Shape) -> Option<f64> {
             let g = ellipse_geom(*c, *major, *ratio, *t0, *t1);
             is_full_ellipse(&g).then(|| ellipse_area(&g))
         }
-        Shape::Hatch { ring, holes, .. } => Some(
-            signed_area(ring).abs()
-                - holes
-                    .iter()
-                    .flatten()
-                    .fold(0.0, |s, h| s + signed_area(h).abs()),
-        ),
+        Shape::Hatch { ring, holes, boundary, .. } => {
+            // The display ring is tessellated. Measurement follows the stored analytic boundary.
+            if let Some(loops) = boundary.as_deref().filter(|loops| !loops.is_empty()) {
+                let loop_area = |l: &HatchLoop| {
+                    if let Some(area) = crate::geom::hatch_boundary::whole_curve(l).as_ref().and_then(entity_area) {
+                        return area.abs();
+                    }
+                    let (pts, bulges, _) = crate::geom::hatch_boundary::chorded(l);
+                    bulge_ring_area(&pts, Some(&bulges)).abs()
+                };
+                return Some(loop_area(&loops[0]) - loops[1..].iter().map(loop_area).sum::<f64>());
+            }
+            Some(signed_area(ring).abs() - holes.iter().flatten().map(|h| signed_area(h).abs()).sum::<f64>())
+        },
         _ => None,
     }
 }

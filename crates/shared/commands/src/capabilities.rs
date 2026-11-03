@@ -1170,6 +1170,11 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.drawing.inspect",
+        refusals: &[&["invalid_uid", "entity_not_found", "invalid_gap", "invalid_limit", "inspection_scope_limit"], REVISION],
+        warnings: &["inspection_truncated"], targets: none,
+    },
+    Entry {
         id: "cad.arrays.find",
         refusals: &[&["invalid_uid", "entity_not_found", "invalid_tolerance", "invalid_limit", "recognition_scope_limit", "array_adoption_refused", "layer_locked", "invalid_path", "recognition_unsupported"], REVISION],
         warnings: &["recognition_truncated"], targets: none,
@@ -5949,7 +5954,11 @@ pub fn capabilities_of(id: &str) -> Option<CommandCapabilities> {
         exchange: exchange_profile(id),
         targets: (entry.targets)(),
         refusals,
-        warnings: entry.warnings.iter().map(|w| (*w).to_owned()).collect(),
+        warnings: {
+            let mut warnings:Vec<String>=entry.warnings.iter().map(|w|(*w).to_owned()).collect();
+            if matches!(id,"cad.entities.edit"|"cad.entities.transform"|"cad.entities.delete"|"cad.entities.trim"|"cad.entities.extend"|"cad.entities.break"|"cad.entities.join"|"cad.entities.fillet"|"cad.entities.chamfer"|"cad.entities.stretch"|"cad.entities.lengthen"|"cad.changeset.apply"|"cad.hatches.edit") {warnings.push("hatch_association_lost".into());}
+            warnings
+        },
     })
 }
 

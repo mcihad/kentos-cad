@@ -2921,7 +2921,8 @@
           "relation_too_large"
         ],
         "warnings": [
-          "layer_locked"
+          "layer_locked",
+          "hatch_association_lost"
         ]
       },
       "examples": [
@@ -3778,7 +3779,8 @@
           "warp_shapes",
           "rubber_bends",
           "constraints_not_copied",
-          "room_sources_not_copied"
+          "room_sources_not_copied",
+          "hatch_association_lost"
         ]
       },
       "examples": [
@@ -4036,7 +4038,8 @@
         "warnings": [
           "elevation_lost",
           "measure_lost",
-          "widths_lost"
+          "widths_lost",
+          "hatch_association_lost"
         ]
       },
       "examples": [
@@ -4340,6 +4343,205 @@
             "uids": [
               "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
             ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.drawing.inspect",
+      "version": 1,
+      "title": "CAD sınır ve tarama denetimi",
+      "summary": "Kaynak geometriyi değiştirmeden CAD sınırlarını ve tarama bağlarını denetler. checks yok/boşsa boundaries ve hatches; uids yoksa görünür çizim, boşsa boş kapsam. includeHidden gizli/donmuş katmanları açıkça ekler. Doğru/dairesel yay topolojisinde açık uç, maxGap mesafesindeki açık uç çifti, yinelenen kenar, kendi kendini kesme, kesişim ve teğet teması dünya noktalarıyla raporlanır. Bağımsız nesnelerin kesişimi hata sayılmaz; açık uç kapalı yüz dışındaki uzantı da olabilir. Elips/NURBS/spline kesin topoloji kapsamı dışındaysa unsupported içinde açıkça belirtilir; temizmiş gibi sunulmaz. Taramanın ilişkili/ilişkisiz/kayıp kaynak durumunu, kaynak UUID'lerini, alanını ve desen orijinini verir. maxGap metre, varsayılan 0.01, 0..1000; bu bir teşhis eşiğidir, uçları onarmaz ve tarama toleransını değiştirmez. En çok 50000 nesne, 20000 kenar, iki milyon iş ve limit kadar bulgu (1..1000, varsayılan 200); sınırlarda truncated ve inspection_truncated. Uzun iş durdurulabilir. Sınır onarımı ve tarama yeniden bağlama ayrı plan/komut gerektirir. Hiçbir nesne, UUID, seçim, birim veya Undo kaydı değiştirilmez.",
+      "aliases": [],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "checks": {
+            "description": "Absent/empty: both boundary and hatch checks.",
+            "items": {
+              "$ref": "#/$defs/InspectionGroup"
+            },
+            "type": "array"
+          },
+          "expectedRevision": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "includeHidden": {
+            "type": "boolean"
+          },
+          "limit": {
+            "description": "Maximum findings, 1..1000; default 200. Work/geometry/result caps return explicit partial results.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "1"
+          },
+          "maxGap": {
+            "description": "Greatest gap to report, metres. Default 0.01; 0 disables near-gap pairing, not open-end checks.\nThis is a diagnostic threshold; no source geometry is moved or healed.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "uids": {
+            "description": "Absent: all visible objects. Empty: no objects. Persistent UUIDs; duplicates count once.",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "title": "DrawingInspect",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "comparisons": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "1"
+          },
+          "examined": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "1"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/$defs/InspectionFinding"
+            },
+            "type": "array"
+          },
+          "hatches": {
+            "items": {
+              "$ref": "#/$defs/HatchInspection"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "truncated": {
+            "type": "boolean"
+          },
+          "unsupported": {
+            "description": "Curves excluded from exact line/circular-arc topology diagnosis; never reported as clean.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "findings",
+          "hatches",
+          "unsupported",
+          "examined",
+          "comparisons",
+          "truncated",
+          "revision"
+        ],
+        "title": "DrawingInspected",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "comparisons": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "1"
+          },
+          "examined": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "1"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/$defs/InspectionFinding"
+            },
+            "type": "array"
+          },
+          "hatches": {
+            "items": {
+              "$ref": "#/$defs/HatchInspection"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "truncated": {
+            "type": "boolean"
+          },
+          "unsupported": {
+            "description": "Curves excluded from exact line/circular-arc topology diagnosis; never reported as clean.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "findings",
+          "hatches",
+          "unsupported",
+          "examined",
+          "comparisons",
+          "truncated",
+          "revision"
+        ],
+        "title": "DrawingInspected",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_uid",
+          "entity_not_found",
+          "invalid_gap",
+          "invalid_limit",
+          "inspection_scope_limit",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "inspection_truncated"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Kaynakları değiştirmeden 1 cm altı açıklıkları incele",
+          "input": {
+            "maxGap": 0.01
           }
         }
       ]
@@ -27115,7 +27317,8 @@
           "curves_approximated",
           "gaps_closed",
           "islands_not_nested",
-          "layer_hidden"
+          "layer_hidden",
+          "hatch_association_lost"
         ]
       },
       "examples": [
@@ -28197,7 +28400,8 @@
         ],
         "warnings": [
           "trim_failed",
-          "layer_locked"
+          "layer_locked",
+          "hatch_association_lost"
         ]
       },
       "examples": [
@@ -28476,7 +28680,8 @@
         ],
         "warnings": [
           "extend_failed",
-          "layer_locked"
+          "layer_locked",
+          "hatch_association_lost"
         ]
       },
       "examples": [
@@ -28710,7 +28915,8 @@
           "revision_conflict"
         ],
         "warnings": [
-          "fillet_failed"
+          "fillet_failed",
+          "hatch_association_lost"
         ]
       },
       "examples": [
@@ -28948,7 +29154,8 @@
           "revision_conflict"
         ],
         "warnings": [
-          "chamfer_failed"
+          "chamfer_failed",
+          "hatch_association_lost"
         ]
       },
       "examples": [
@@ -29169,7 +29376,8 @@
           "follows_object",
           "locked_skipped",
           "neighbour_locked",
-          "neighbour_invalid"
+          "neighbour_invalid",
+          "hatch_association_lost"
         ]
       },
       "examples": [
@@ -29386,6 +29594,9 @@
           "break_failed",
           "invalid_revision",
           "revision_conflict"
+        ],
+        "warnings": [
+          "hatch_association_lost"
         ]
       },
       "examples": [
@@ -29608,7 +29819,8 @@
           "locked_skipped",
           "chain_stopped",
           "not_joined",
-          "data_conflict"
+          "data_conflict",
+          "hatch_association_lost"
         ]
       },
       "examples": [
@@ -29972,6 +30184,9 @@
           "arc_closes",
           "invalid_revision",
           "revision_conflict"
+        ],
+        "warnings": [
+          "hatch_association_lost"
         ]
       },
       "examples": [
@@ -54195,6 +54410,9 @@
           "unknown_reference",
           "invalid_revision",
           "revision_conflict"
+        ],
+        "warnings": [
+          "hatch_association_lost"
         ]
       },
       "examples": [
@@ -68407,6 +68625,24 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Tekrar arama kapsamı en çok 50 000 nesne olabilir; aranacak katmanları veya nesneleri daraltın."
+    },
+    {
+      "code": "inspection_scope_limit",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "CAD denetimi en çok 50 000 nesne alır; kapsamı daraltın."
+    },
+    {
+      "code": "inspection_truncated",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Denetim sınırına ulaşıldı; sonuçlar kısmi."
+    },
+    {
+      "code": "hatch_association_lost",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Tarama geometrisi korundu ancak kaynak sınır bağı koptu; yeniden bağlamayı inceleyin."
     },
     {
       "code": "recognition_truncated",
@@ -98531,6 +98767,60 @@
       ],
       "type": "object"
     },
+    "HatchInspection": {
+      "properties": {
+        "area": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "missing": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "patternOrigin": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Vec2"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-unit": "length"
+        },
+        "sources": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "state": {
+          "$ref": "#/$defs/HatchLinkState"
+        },
+        "uid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "state",
+        "sources",
+        "missing",
+        "area"
+      ],
+      "type": "object"
+    },
+    "HatchLinkState": {
+      "enum": [
+        "associated",
+        "unassociated",
+        "broken"
+      ],
+      "type": "string"
+    },
     "HatchLoop": {
       "description": "One closed loop of a hatch's boundary as its source holds it (docs/adr/0328 §1): edge `i` runs from `pts[i]` to\nthe next point (the last to the first); it is straight, a circular arc of `bulges[i]` (tan(θ/4), counter-clockwise\npositive, as a polygon's), or the curve `curves[i]` (an ellipse's arc or a NURBS curve), whose ends are those\npoints. A loop of one point is one closed curve.",
       "properties": {
@@ -100159,6 +100449,73 @@
         "attachments"
       ],
       "type": "object"
+    },
+    "InspectionFinding": {
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "distance": {
+          "description": "A gap's measured length in metres, independent of the project's display unit.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "group": {
+          "$ref": "#/$defs/InspectionGroup"
+        },
+        "message": {
+          "type": "string"
+        },
+        "points": {
+          "description": "Exact world positions used for screen markers; two points may describe a gap.",
+          "items": {
+            "$ref": "#/$defs/Vec2"
+          },
+          "type": "array",
+          "x-unit": "length"
+        },
+        "repair": {
+          "type": "string"
+        },
+        "severity": {
+          "$ref": "#/$defs/InspectionSeverity"
+        },
+        "uids": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "group",
+        "severity",
+        "code",
+        "uids",
+        "points",
+        "message",
+        "repair"
+      ],
+      "type": "object"
+    },
+    "InspectionGroup": {
+      "enum": [
+        "boundaries",
+        "hatches"
+      ],
+      "type": "string"
+    },
+    "InspectionSeverity": {
+      "enum": [
+        "info",
+        "warning",
+        "error"
+      ],
+      "type": "string"
     },
     "InteriorColumns": {
       "description": "What of a crossed column the chain measures (docs/adr/0711 §3).",

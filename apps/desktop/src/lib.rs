@@ -49,6 +49,7 @@ mod design_options_window;
 mod tags_check;
 mod schedule_window;
 mod arch_audit;
+mod cad_inspection;
 mod viewmark_refs;
 mod sheet_set;
 mod xrefs_window;

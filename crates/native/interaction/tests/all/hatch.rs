@@ -465,3 +465,58 @@ fn a_click_in_a_part_of_a_multi_part_parcel_fills_that_part() {
     assert_eq!((bx, holes), ([-28.0, -6.0, -8.0, 10.0], 1));
     assert!(near(area, 272.0), "{area}");
 }
+
+#[test]
+fn editor_reselect_exposes_boundary_and_region_options_and_preserves_undo() {
+    let mut b = bench();
+    b.draft.snap = false;
+    b.memory.hatch_assoc = false;
+    b.click(-20.0, 1.0);
+    let original = b.newest().clone();
+    b.start("hatchEdit");
+    assert!(b.type_text("S"));
+    let keys = b.options();
+    for key in ["B", "A", "İ", "Y"] { assert!(keys.contains(&key), "{keys:?}"); }
+    assert!(b.type_text("B"));
+    assert!(b.memory.hatch_by_lines);
+    assert!(b.options().contains(&"G"));
+    assert!(b.type_text("İ"));
+    assert!(b.memory.hatch_assoc);
+    b.click(-20.0, 1.0);
+    let before = b.doc.to_snapshot_v2();
+    b.click(8.0, -3.0);
+    assert_eq!(b.last_level(), Some(Level::Success), "{:?}", b.last_text());
+    let Entity::Hatch(h) = b.doc.get(kentos_domain::Slot(original.base().id)).unwrap() else { panic!("hatch") };
+    assert!(h.assoc.is_some());
+    assert_eq!(h.pattern, match &original { Entity::Hatch(h) => h.pattern.clone(), _ => unreachable!() });
+    assert_eq!(b.doc.undo().as_deref(), Some("Sınırı yeniden seç"));
+    assert_eq!(b.doc.to_snapshot_v2(), before);
+}
+
+#[test]
+fn editor_gap_input_does_not_reselect_on_a_canvas_click_or_invalid_number() {
+    let mut b = bench();
+    b.draft.snap = false;
+    b.click(-20.0, 1.0);
+    b.start("hatchEdit");
+    assert!(b.type_text("S"));
+    b.click(-20.0, 1.0);
+    assert!(b.type_text("B"));
+    assert!(b.type_text("G"));
+    let before = b.doc.to_snapshot_v2();
+    assert!(b.type_text("-1"));
+    b.click(8.0, -3.0);
+    assert_eq!(b.doc.to_snapshot_v2(), before);
+    assert_eq!(b.memory.hatch_gap, 0.);
+    assert!(b.session.prompt().text().contains("boşluk"));
+    assert!(b.type_text("0.004"));
+    assert_eq!(b.memory.hatch_gap, 0.004);
+    assert_eq!(b.doc.to_snapshot_v2(), before);
+    assert!(b.type_text("G"));
+    b.confirm();
+    assert!(b.session.prompt().text().contains("yeni bölgesinin"));
+    assert_eq!(b.doc.to_snapshot_v2(), before);
+    assert!(b.type_text("G"));
+    assert!(b.run(|s, cx| s.cancel(cx)));
+    assert!(b.session.prompt().text().contains("yeni bölgesinin"));
+}

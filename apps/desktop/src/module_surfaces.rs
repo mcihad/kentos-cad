@@ -174,6 +174,7 @@ const ARCHITECTURE: Surfaces = Surfaces {
         BottomTab::Coords,
         BottomTab::Search,
         BottomTab::Audit,
+        BottomTab::CadInspection,
         BottomTab::Messages,
         BottomTab::Python,
     ],
@@ -215,6 +216,7 @@ const ARCHITECTURE: Surfaces = Surfaces {
 const MAP: Surfaces = Surfaces {
     bottom: &[
         BottomTab::History,
+        BottomTab::CadInspection,
         BottomTab::Coords,
         BottomTab::Points,
         BottomTab::Table,

@@ -26,7 +26,7 @@ use crate::hatch_options as options;
 use crate::log::Level;
 use crate::points::{self, wire};
 use crate::prompt::{Prompt, upper_tr};
-use crate::tool::{Context, Cursor, Flow, Pointer, Preview, Stroke, Tone, Tool};
+use crate::tool::{Context, Cursor, Flow, Pointer, Preview, Stroke, Tone, Tool, Memory};
 
 /// The tool's id: its command is `tool.hatchEdit`.
 pub const ID: &str = "hatchEdit";
@@ -94,6 +94,8 @@ pub struct HatchEditor {
     drawn: Preview,
     /// The memory's mode and form as last seen (the prompt reads them).
     mode: Mode,
+    memory: Memory,
+    asking: Option<options::Asking>,
     polyline: bool,
     asks: &'static str,
 }
@@ -114,6 +116,8 @@ impl HatchEditor {
             picked: None,
             drawn: Preview::default(),
             mode: Mode::AddIslands,
+            memory: Memory::default(),
+            asking: None,
             polyline: false,
             asks: Mode::AddIslands.asks(),
         }
@@ -121,6 +125,7 @@ impl HatchEditor {
 
     /// The memory's mode and form, for the prompt.
     fn see(&mut self, cx: &Context<'_>) {
+        self.memory = *cx.memory;
         self.mode = mode(cx);
         self.polyline = cx.memory.hatch_recreate_polyline;
         self.asks = self.mode.asks();
@@ -341,6 +346,9 @@ impl Tool for HatchEditor {
     }
 
     fn prompt(&self) -> Prompt {
+        if let Some(asking) = self.asking {
+            return options::asking_prompt(LABEL, asking).option("Değiştirmeden dön", "Enter");
+        }
         let mut prompt = match self.picked {
             None => Prompt::new(LABEL, "düzenlenecek taramaya tıklayın"),
             Some(_) => Prompt::new(LABEL, self.asks),
@@ -352,6 +360,13 @@ impl Tool for HatchEditor {
         }
         if self.mode == Mode::Recreate {
             prompt = prompt.option_with("Biçim", "B", if self.polyline { "çoklu çizgi" } else { "alan" });
+        }
+        if self.mode == Mode::Reselect {
+            prompt = prompt.option_with("Sınır", "B", if self.memory.hatch_by_lines { "çizgiler" } else { "kapalı nesne" });
+            prompt = options::with_region_options(prompt, &self.memory, true);
+            if self.memory.hatch_by_lines {
+                prompt = prompt.option_with("Boşluk (m)", "G", crate::format::js_number(self.memory.hatch_gap));
+            }
         }
         prompt
     }
@@ -369,6 +384,9 @@ impl Tool for HatchEditor {
 
     fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         self.see(cx);
+        if self.asking.is_some() {
+            return;
+        }
         if self.picked.is_some() {
             self.act(p, cx);
             self.see(cx);
@@ -392,7 +410,54 @@ impl Tool for HatchEditor {
     /// A mode's letter chooses it (Yeniden oluştur and İlişkiyi kopar act at once on a picked hatch); Biçim turns the
     /// form.
     fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
+        if self.asking.is_some() {
+            let taken = options::answer(&mut self.asking, text, cx);
+            self.see(cx);
+            return taken;
+        }
         let key = upper_tr(js_trim(text));
+        if mode(cx) == Mode::Reselect {
+            match key.as_str() {
+                "B" => cx.memory.hatch_by_lines = !cx.memory.hatch_by_lines,
+                "G" if cx.memory.hatch_by_lines => self.asking = Some(options::Asking::Gap),
+                "A" | "İ" | "Y" => { options::option(&key, true, &mut self.asking, cx); }
+                _ => return self.choose_mode(&key, cx),
+            }
+            self.see(cx);
+            return true;
+        }
+        self.choose_mode(&key, cx)
+    }
+
+    /// Drops the hatch; with none, the tool leaves.
+    fn confirm(&mut self, _cx: &mut Context<'_>) -> Flow {
+        if self.asking.take().is_some() {
+            return Flow::Stay;
+        }
+        if self.picked.take().is_some() {
+            self.drawn = Preview::default();
+            return Flow::Stay;
+        }
+        Flow::Exit
+    }
+
+    fn cancel(&mut self, _cx: &mut Context<'_>) -> bool {
+        if self.asking.take().is_some() {
+            return true;
+        }
+        if self.picked.take().is_some() {
+            self.drawn = Preview::default();
+            return true;
+        }
+        false
+    }
+
+    fn undo_step(&mut self, _cx: &mut Context<'_>) -> bool { false }
+    fn preview(&self, _format: &Format) -> Preview { self.drawn.clone() }
+}
+
+impl HatchEditor {
+    fn choose_mode(&mut self, key: &str, cx: &mut Context<'_>) -> bool {
         if key == "B" && mode(cx) == Mode::Recreate {
             cx.memory.hatch_recreate_polyline = !cx.memory.hatch_recreate_polyline;
             self.see(cx);
@@ -409,28 +474,4 @@ impl Tool for HatchEditor {
         true
     }
 
-    /// Drops the hatch; with none, the tool leaves.
-    fn confirm(&mut self, _cx: &mut Context<'_>) -> Flow {
-        if self.picked.take().is_some() {
-            self.drawn = Preview::default();
-            return Flow::Stay;
-        }
-        Flow::Exit
-    }
-
-    fn cancel(&mut self, _cx: &mut Context<'_>) -> bool {
-        if self.picked.take().is_some() {
-            self.drawn = Preview::default();
-            return true;
-        }
-        false
-    }
-
-    fn undo_step(&mut self, _cx: &mut Context<'_>) -> bool {
-        false
-    }
-
-    fn preview(&self, _format: &Format) -> Preview {
-        self.drawn.clone()
-    }
 }

@@ -36,7 +36,7 @@ fn hatch(doc: &mut Document, x: f64) -> Uuid {
     let out = done(
         doc,
         "cad.entities.hatch",
-        json!({"region":{"kind":"point","at":{"x":x,"y":1.75},"associative":true},"pattern":{"name":"ANSI31"},"layerId":"cizim"}),
+        json!({"region":{"kind":"point","at":{"x":x,"y":1.75},"associative":true},"pattern":{"name":"ANSI31","angle":30.,"scale":2.,"origin":{"kind":"point","at":{"x":0.123,"y":0.456}}},"layerId":"cizim"}),
     );
     Uuid::parse_str(out["created"][0].as_str().unwrap()).unwrap()
 }
@@ -70,6 +70,9 @@ fn curved_holed_split_retains_analytic_area_hatches_and_point_identity_in_one_un
         {"point":"a","to":{"uid":source,"place":{"kind":"vertex","part":0,"ring":0,"index":1}}},
         {"point":"b","to":{"uid":source,"place":{"kind":"vertex","part":0,"ring":0,"index":2}}}]}),
     );
+    let patterns: Vec<_> = [left, right].iter().map(|u| match get(&doc, *u) {
+        Entity::Hatch(h) => h.pattern.clone(), _ => unreachable!(),
+    }).collect();
     let before = doc.to_snapshot_v2();
     let input =
         json!({"work":{"kind":"split","ids":[source],"line":[{"x":2,"y":-1},{"x":2,"y":3}]}});
@@ -89,6 +92,10 @@ fn curved_holed_split_retains_analytic_area_hatches_and_point_identity_in_one_un
             *outer.as_bytes()
         );
         assert_eq!(h.holes.as_ref().map_or(0, Vec::len), holes);
+        let index = usize::from(uid == right);
+        assert_eq!(h.pattern, patterns[index], "splitting the source must not reset pattern origin or angle");
+        let expected = if index == 0 { 3. + PI / 2. } else { 4. + PI / 2. };
+        assert!((area(get(&doc, uid)) - expected).abs() < 1e-9);
         let b = h.boundary.as_ref().unwrap();
         assert!(serde_json::to_string(b).unwrap().contains("bulges"));
     }

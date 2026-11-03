@@ -747,8 +747,6 @@
        }
       ],
       "overflow": [
-       "block.find",
-       "array.find",
        "block.insertFile",
        "block.attributes",
        "block.sync",
@@ -2118,6 +2116,10 @@
       "label": "Temizlik",
       "icon": "cleanup",
       "items": [
+       {
+        "command": "cad.inspect",
+        "size": "small"
+       },
        {
         "command": "tool.cleanup",
         "size": "small"
@@ -5047,6 +5049,10 @@
       {
        "command": "tool.hatchEdit",
        "size": "large"
+      },
+      {
+       "command": "cad.inspect",
+       "size": "small"
       },
       {
        "command": "edit.hatchesToBack",

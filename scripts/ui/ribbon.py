@@ -373,7 +373,7 @@ CAD = [
         # The drawing standard is an office's (Mimari ofis, A-DUVAR …; docs/adr/0312, 0802): KentOS Mimari's alone.
         P("Standart", "standardsCheck", [S("standards.check", ARCHITECTURE), S("standards.apply", ARCHITECTURE),
             S("layer.impact")]),
-        P("Temizlik", "cleanup", [S("tool.cleanup"), S("tool.audit"), S("layer.purge")]),
+        P("Temizlik", "cleanup", [S("cad.inspect"), S("tool.cleanup"), S("tool.audit"), S("layer.purge")]),
         # A layer's typed fields, attribute table, statistics, forms and sources are a map's data (docs/adr/0802); a
         # building's data is its objects' own. Charts are CBS's (Veri › Tablo).
         P("Veri", "featureTable", [S("data.featureTable", MAP), S("layer.fields", MAP), S("data.statistics", MAP),
@@ -612,7 +612,7 @@ CONTEXTUAL = [
     {"id": "ctx.hatch", "label": "Tarama", "kinds": ["hatch"], "modes": ["cad"], "panels": [
         SEL,
         edit_panel(),
-        P("Tarama", "hatch", [L("tool.hatchEdit"), S("edit.hatchesToBack"), S("hatchPatterns.manage")]),
+        P("Tarama", "hatch", [L("tool.hatchEdit"), S("cad.inspect"), S("edit.hatchesToBack"), S("hatchPatterns.manage")]),
     ]},
     # Blocks are CAD's (docs/adr/0802: “blok GIS içinde olmasa da olur”): a CBS selection of inserts takes Seçim.
     {"id": "ctx.block", "label": "Blok", "kinds": ["insert"], "modes": ["cad"], "panels": [

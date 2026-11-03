@@ -498,6 +498,7 @@ pub enum Message {
     Topology(crate::topology::Event),
     /// The Denetim tab (arch_audit.rs, docs/adr/0703).
     ArchAudit(crate::arch_audit::Event),
+    CadInspection(crate::cad_inspection::Event),
     /// Topoloji kuralları (topology/rules.rs, docs/adr/0202 §6).
     TopologyRules(crate::topology::rules::Event),
     /// Ağ analizi: the networks' answers and Ağlar (networks/, docs/adr/0209).
@@ -953,6 +954,7 @@ pub struct App {
     /// The bottom panel's Denetim tab: the last architectural audit, the chosen finding, the group and the
     /// thresholds (arch_audit.rs, docs/adr/0703).
     pub(crate) arch_audit: crate::arch_audit::ArchAuditPanel,
+    pub(crate) cad_inspection: crate::cad_inspection::Panel,
     /// Topoloji kuralları, while it is open (topology/rules.rs, docs/adr/0202 §6).
     pub(crate) topology_rules: Option<crate::topology::rules::Window>,
     /// Köşe tablosu's rows selected and cell edited (vertices/, docs/adr/0172).
@@ -1464,6 +1466,7 @@ impl App {
             search: Default::default(),
             topology: Default::default(),
             arch_audit: Default::default(),
+            cad_inspection: Default::default(),
             topology_rules: None,
             vertices: Default::default(),
             label_spots: Default::default(),
@@ -2169,6 +2172,7 @@ impl App {
             Message::History(event) => return self.calls_event(event),
             Message::Topology(event) => return self.topology_event(event),
             Message::ArchAudit(event) => return self.arch_audit_event(event),
+            Message::CadInspection(event) => return self.cad_inspection_event(event),
             Message::TopologyRules(event) => return self.topology_rules_event(event),
             Message::Networks(event) => return self.networks_event(event),
             Message::Address(event) => return self.address_event(event),
@@ -3152,6 +3156,7 @@ impl App {
             "topology.check" => return self.open_topology_check(),
             // Mimari denetim (arch_audit.rs, docs/adr/0703).
             "arch.audit" => return self.open_arch_audit(),
+            "cad.inspect" => return self.open_cad_inspection(),
             "topology.rules" => return self.open_topology_rules(),
             // Ağlar (networks/, docs/adr/0209 §10).
             "network.manage" => return self.open_networks(),

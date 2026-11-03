@@ -2372,6 +2372,16 @@ HatchDrawOrderName = Literal["none", "back", "front", "behindBoundary", "aboveBo
 """The names of :class:`HatchDrawOrder`, for a plain string."""
 
 
+class HatchLinkState(_StrEnum):
+    ASSOCIATED = "associated"
+    UNASSOCIATED = "unassociated"
+    BROKEN = "broken"
+
+
+HatchLinkStateName = Literal["associated", "unassociated", "broken"]
+"""The names of :class:`HatchLinkState`, for a plain string."""
+
+
 class HatchPatternType(_StrEnum):
     """- ``solid``
     - ``lines``: User-defined lines at `angle`, `spacing` apart.
@@ -2502,6 +2512,25 @@ class InputState(_StrEnum):
 
 InputStateName = Literal["current", "changed", "gone"]
 """The names of :class:`InputState`, for a plain string."""
+
+
+class InspectionGroup(_StrEnum):
+    BOUNDARIES = "boundaries"
+    HATCHES = "hatches"
+
+
+InspectionGroupName = Literal["boundaries", "hatches"]
+"""The names of :class:`InspectionGroup`, for a plain string."""
+
+
+class InspectionSeverity(_StrEnum):
+    INFO = "info"
+    WARNING = "warning"
+    ERROR = "error"
+
+
+InspectionSeverityName = Literal["info", "warning", "error"]
+"""The names of :class:`InspectionSeverity`, for a plain string."""
 
 
 class InteriorColumns(_StrEnum):
@@ -22367,6 +22396,91 @@ class DrawingCompared(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class DrawingInspect(_Model):
+    """
+    Attributes:
+        checks: Absent/empty: both boundary and hatch checks.
+        limit: Maximum findings, 1..1000; default 200. Work/geometry/result caps return explicit partial results. Unit: 1.
+        max_gap: Greatest gap to report, metres. Default 0.01; 0 disables near-gap pairing, not open-end checks.
+            This is a diagnostic threshold; no source geometry is moved or healed. Unit: length.
+        uids: Absent: all visible objects. Empty: no objects. Persistent UUIDs; duplicates count once.
+    """
+    checks: list[InspectionGroup | InspectionGroupName] | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    include_hidden: bool | Unset = UNSET
+    limit: int | None | Unset = UNSET
+    max_gap: float | None | Unset = UNSET
+    uids: list[str] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.checks is not UNSET:
+            out["checks"] = [_enum_out(e0) for e0 in self.checks]
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.include_hidden is not UNSET:
+            out["includeHidden"] = self.include_hidden
+        if self.limit is not UNSET:
+            out["limit"] = self.limit
+        if self.max_gap is not UNSET:
+            out["maxGap"] = None if self.max_gap is None else float(self.max_gap)
+        if self.uids is not UNSET:
+            out["uids"] = None if self.uids is None else list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DrawingInspect:
+        return cls(
+            checks=[_enum_in(InspectionGroup, e0) for e0 in data["checks"]] if "checks" in data else UNSET,
+            expected_revision=data.get("expectedRevision", UNSET),
+            include_hidden=data.get("includeHidden", UNSET),
+            limit=data.get("limit", UNSET),
+            max_gap=UNSET if "maxGap" not in data else None if data["maxGap"] is None else float(data["maxGap"]),
+            uids=UNSET if "uids" not in data else None if data["uids"] is None else list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DrawingInspected(_Model):
+    """
+    Attributes:
+        unsupported: Curves excluded from exact line/circular-arc topology diagnosis; never reported as clean.
+        examined: Unit: 1.
+        comparisons: Unit: 1.
+    """
+    findings: list[InspectionFinding]
+    hatches: list[HatchInspection]
+    unsupported: list[str]
+    examined: int
+    comparisons: int
+    truncated: bool
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["findings"] = [e0.to_json() for e0 in self.findings]
+        out["hatches"] = [e0.to_json() for e0 in self.hatches]
+        out["unsupported"] = list(self.unsupported)
+        out["examined"] = self.examined
+        out["comparisons"] = self.comparisons
+        out["truncated"] = self.truncated
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DrawingInspected:
+        return cls(
+            findings=[InspectionFinding.from_json(e0) for e0 in data["findings"]],
+            hatches=[HatchInspection.from_json(e0) for e0 in data["hatches"]],
+            unsupported=list(data["unsupported"]),
+            examined=data["examined"],
+            comparisons=data["comparisons"],
+            truncated=data["truncated"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class DrawingStandard(_Model):
     """A drawing standard.
     Attributes:
@@ -31599,6 +31713,43 @@ class HatchGradient(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class HatchInspection(_Model):
+    """
+    Attributes:
+        area: Unit: area.
+        pattern_origin: Unit: length.
+    """
+    uid: str
+    state: HatchLinkState | HatchLinkStateName
+    sources: list[str]
+    missing: list[str]
+    area: float
+    pattern_origin: Vec2 | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["state"] = _enum_out(self.state)
+        out["sources"] = list(self.sources)
+        out["missing"] = list(self.missing)
+        out["area"] = float(self.area)
+        if self.pattern_origin is not UNSET:
+            out["patternOrigin"] = None if self.pattern_origin is None else _vec2_out(self.pattern_origin)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HatchInspection:
+        return cls(
+            uid=data["uid"],
+            state=_enum_in(HatchLinkState, data["state"]),
+            sources=list(data["sources"]),
+            missing=list(data["missing"]),
+            area=float(data["area"]),
+            pattern_origin=UNSET if "patternOrigin" not in data else None if data["patternOrigin"] is None else Vec2.from_json(data["patternOrigin"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class HatchLoop(_Model):
     """One closed loop of a hatch's boundary as its source holds it (docs/adr/0328 §1): edge `i` runs from `pts[i]` to
     the next point (the last to the first); it is straight, a circular arc of `bulges[i]` (tan(θ/4), counter-clockwise
@@ -33721,6 +33872,49 @@ class InspectedObject(_Model):
         return cls(
             uid=data["uid"],
             attachments=[AttachmentFacts.from_json(e0) for e0 in data["attachments"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class InspectionFinding(_Model):
+    """
+    Attributes:
+        points: Exact world positions used for screen markers; two points may describe a gap. Unit: length.
+        distance: A gap's measured length in metres, independent of the project's display unit. Unit: length.
+    """
+    group: InspectionGroup | InspectionGroupName
+    severity: InspectionSeverity | InspectionSeverityName
+    code: str
+    uids: list[str]
+    points: list[Vec2]
+    message: str
+    repair: str
+    distance: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["group"] = _enum_out(self.group)
+        out["severity"] = _enum_out(self.severity)
+        out["code"] = self.code
+        out["uids"] = list(self.uids)
+        out["points"] = [_vec2_out(e0) for e0 in self.points]
+        out["message"] = self.message
+        out["repair"] = self.repair
+        if self.distance is not UNSET:
+            out["distance"] = None if self.distance is None else float(self.distance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> InspectionFinding:
+        return cls(
+            group=_enum_in(InspectionGroup, data["group"]),
+            severity=_enum_in(InspectionSeverity, data["severity"]),
+            code=data["code"],
+            uids=list(data["uids"]),
+            points=[Vec2.from_json(e0) for e0 in data["points"]],
+            message=data["message"],
+            repair=data["repair"],
+            distance=UNSET if "distance" not in data else None if data["distance"] is None else float(data["distance"]),
         )
 
 
@@ -91601,6 +91795,8 @@ __all__ = [
     "DrawingCompared",
     "DrawingFont",
     "DrawingFontName",
+    "DrawingInspect",
+    "DrawingInspected",
     "DrawingPaperViewportSource",
     "DrawingSetPaperTableSource",
     "DrawingStandard",
@@ -91971,6 +92167,9 @@ __all__ = [
     "HatchEntity",
     "HatchEntityGeometry",
     "HatchGradient",
+    "HatchInspection",
+    "HatchLinkState",
+    "HatchLinkStateName",
     "HatchLoop",
     "HatchOrigin",
     "HatchPattern",
@@ -92058,6 +92257,11 @@ __all__ = [
     "InsertsClipOperation",
     "InsertsClipped",
     "InspectedObject",
+    "InspectionFinding",
+    "InspectionGroup",
+    "InspectionGroupName",
+    "InspectionSeverity",
+    "InspectionSeverityName",
     "InteriorColumns",
     "InteriorColumnsName",
     "InteriorFaces",

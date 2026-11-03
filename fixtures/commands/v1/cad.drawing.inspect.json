@@ -1,0 +1,692 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.drawing.inspect",
+  "commandVersion": 1,
+  "title": "CAD sınır denetimi",
+  "note": "Salt okunur sınır ve tarama denetimi.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Tekrar arama",
+    "settings": {
+      "srid": 0,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 50,
+      "workspace": "cad",
+      "drawingUnit": "mm"
+    },
+    "origin": {
+      "x": 0,
+      "y": 0
+    },
+    "layers": [
+      {
+        "id": "a",
+        "name": "A",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.18
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "a",
+    "entities": [],
+    "styles": {
+      "items": [],
+      "categories": []
+    },
+    "blocks": []
+  },
+  "cases": [
+    {
+      "name": "validate varsayılan",
+      "steps": [
+        {
+          "op": "validate",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": []
+          },
+          "expect": {
+            "ids": [],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "validate boş seçim",
+      "steps": [
+        {
+          "op": "validate",
+          "input": {
+            "uids": []
+          },
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": []
+          },
+          "expect": {
+            "ids": [],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "validate sıfır eşik",
+      "steps": [
+        {
+          "op": "validate",
+          "input": {
+            "maxGap": 0
+          },
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": []
+          },
+          "expect": {
+            "ids": [],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "validate üst eşik",
+      "steps": [
+        {
+          "op": "validate",
+          "input": {
+            "maxGap": 1000
+          },
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": []
+          },
+          "expect": {
+            "ids": [],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "validate alt sonuç sınırı",
+      "steps": [
+        {
+          "op": "validate",
+          "input": {
+            "limit": 1
+          },
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": []
+          },
+          "expect": {
+            "ids": [],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "validate üst sonuç sınırı",
+      "steps": [
+        {
+          "op": "validate",
+          "input": {
+            "limit": 1000
+          },
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": []
+          },
+          "expect": {
+            "ids": [],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "plan varsayılan",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [],
+              "hatches": [],
+              "unsupported": [],
+              "examined": 0,
+              "comparisons": 0,
+              "truncated": false,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "plan boş seçim",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "uids": []
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [],
+              "hatches": [],
+              "unsupported": [],
+              "examined": 0,
+              "comparisons": 0,
+              "truncated": false,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "plan sıfır eşik",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "maxGap": 0
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [],
+              "hatches": [],
+              "unsupported": [],
+              "examined": 0,
+              "comparisons": 0,
+              "truncated": false,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "plan üst eşik",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "maxGap": 1000
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [],
+              "hatches": [],
+              "unsupported": [],
+              "examined": 0,
+              "comparisons": 0,
+              "truncated": false,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "plan alt sonuç sınırı",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "limit": 1
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [],
+              "hatches": [],
+              "unsupported": [],
+              "examined": 0,
+              "comparisons": 0,
+              "truncated": false,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "plan üst sonuç sınırı",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "limit": 1000
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [],
+              "hatches": [],
+              "unsupported": [],
+              "examined": 0,
+              "comparisons": 0,
+              "truncated": false,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "execute varsayılan",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [],
+              "hatches": [],
+              "unsupported": [],
+              "examined": 0,
+              "comparisons": 0,
+              "truncated": false,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "execute boş seçim",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": []
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [],
+              "hatches": [],
+              "unsupported": [],
+              "examined": 0,
+              "comparisons": 0,
+              "truncated": false,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "execute sıfır eşik",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "maxGap": 0
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [],
+              "hatches": [],
+              "unsupported": [],
+              "examined": 0,
+              "comparisons": 0,
+              "truncated": false,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "execute üst eşik",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "maxGap": 1000
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [],
+              "hatches": [],
+              "unsupported": [],
+              "examined": 0,
+              "comparisons": 0,
+              "truncated": false,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "execute alt sonuç sınırı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "limit": 1
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [],
+              "hatches": [],
+              "unsupported": [],
+              "examined": 0,
+              "comparisons": 0,
+              "truncated": false,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "execute üst sonuç sınırı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "limit": 1000
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [],
+              "hatches": [],
+              "unsupported": [],
+              "examined": 0,
+              "comparisons": 0,
+              "truncated": false,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "negatif eşik",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "maxGap": -1
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_gap",
+              "message": "$any",
+              "path": "maxGap"
+            }
+          },
+          "expect": {
+            "ids": [],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "fazla eşik",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "maxGap": 1001
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_gap",
+              "message": "$any",
+              "path": "maxGap"
+            }
+          },
+          "expect": {
+            "ids": [],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sıfır sınır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "limit": 0
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_limit",
+              "message": "$any",
+              "path": "limit"
+            }
+          },
+          "expect": {
+            "ids": [],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "fazla sınır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "limit": 1001
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_limit",
+              "message": "$any",
+              "path": "limit"
+            }
+          },
+          "expect": {
+            "ids": [],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "geçersiz kimlik",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "bad"
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_uid",
+              "message": "$any",
+              "path": "uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "eksik nesne",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001"
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "entity_not_found",
+              "message": "$any",
+              "path": "uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

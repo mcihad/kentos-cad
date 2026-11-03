@@ -1243,6 +1243,16 @@ pub fn catalog() -> CommandCatalog {
             ],
         },
         CommandDescriptor {
+            id: crate::CAD_DRAWING_INSPECT.into(), version: crate::CAD_DRAWING_INSPECT_VERSION,
+            title: "CAD sınır ve tarama denetimi".into(),
+            summary: "Kaynak geometriyi değiştirmeden CAD sınırlarını ve tarama bağlarını denetler. checks yok/boşsa boundaries ve hatches; uids yoksa görünür çizim, boşsa boş kapsam. includeHidden gizli/donmuş katmanları açıkça ekler. Doğru/dairesel yay topolojisinde açık uç, maxGap mesafesindeki açık uç çifti, yinelenen kenar, kendi kendini kesme, kesişim ve teğet teması dünya noktalarıyla raporlanır. Bağımsız nesnelerin kesişimi hata sayılmaz; açık uç kapalı yüz dışındaki uzantı da olabilir. Elips/NURBS/spline kesin topoloji kapsamı dışındaysa unsupported içinde açıkça belirtilir; temizmiş gibi sunulmaz. Taramanın ilişkili/ilişkisiz/kayıp kaynak durumunu, kaynak UUID'lerini, alanını ve desen orijinini verir. maxGap metre, varsayılan 0.01, 0..1000; bu bir teşhis eşiğidir, uçları onarmaz ve tarama toleransını değiştirmez. En çok 50000 nesne, 20000 kenar, iki milyon iş ve limit kadar bulgu (1..1000, varsayılan 200); sınırlarda truncated ve inspection_truncated. Uzun iş durdurulabilir. Sınır onarımı ve tarama yeniden bağlama ayrı plan/komut gerektirir. Hiçbir nesne, UUID, seçim, birim veya Undo kaydı değiştirilmez.".into(),
+            aliases:vec![], effect:CommandEffect::Query, hosts:vec![CommandHost::Desktop], headless:true,
+            requires:vec![CommandRequirement::Document], permissions:vec![], undo:CommandUndo::None,
+            cost:CommandCost::Interactive, input:schema::<crate::DrawingInspect>(),output:schema::<crate::DrawingInspected>(),
+            plan:Some(schema::<crate::DrawingInspected>()),capabilities:None,
+            examples:vec![CommandExample {title:"Kaynakları değiştirmeden 1 cm altı açıklıkları incele".into(),input:json!({"maxGap":0.01}),output:None}],
+        },
+        CommandDescriptor {
             id: crate::CAD_ARRAYS_FIND.into(), version: crate::CAD_ARRAYS_FIND_VERSION,
             title: "Blok dizi örüntülerini bul".into(),
             summary: "Kaynak statik blok yerleştirmesini içeren örüntüleri yazısız bulur. kind verilmezse line, grid seçilirse dünya X/Y dikdörtgen düzeni aranır. Aynı statik blok tanımı, katman, görünüş, ayna ve ölçekteki verisiz yerleştirmeler aranır. polar açık tam çember yorumudur; en az dört dolu yer, gözlenen açısal komşuluk ve sabit veya merkezle dönen yönler doğrulanır. path için mevcut 2B kılavuz UUID zorunludur; kaynak kılavuz başlangıcındadır. Kayıtlı yönde gözlenen sabit yay uzunluğu aralıkları ve sabit veya teğeti izleyen yönler aranır. Son dolu yerin ötesi, ters yön ve başlangıç kayması varsayılmaz. lattice açık seçimi, bağımsız gözlenmiş iki yönde dönük/eğik düzeni arar; öğe yönleri değişmez. Lattice en çok 32768 çift ve 96 farklı eksen vektörü inceler, sınırlar kısmi bildirilir. Doğrusal için en az üç dolu yer ve gözlenen bir komşu çift; grid için en az iki satır, iki sütun, dört dolu yer, iki eksende gözlenen komşu çift ve dolu bir sınır köşesi gerekir. Her ikinci yer doluysa gizli ara yer varsayılmaz. Aday adoption girdisi cad.arrays.adopt ile yeniden incelenip açıkça uygulanabilir; arama hiçbir nesne, seçim veya dizi kaydı değiştirmez. Eksik yerler boş kalır; eşleşmeyen öğe kendiliğinden kept olmaz. eligible ve UUID→ret nedeni excluded listeleri kapsamı açıklar. Birbiriyle çakışan adaylar overlaps ile belirtilir. uids yoksa belge, boşsa yalnız kaynak aranır; en çok 2048 nesne. Tolerans metre, varsayılan 0.000001, en çok 0.001; limit 1..100. İki milyon karşılaştırma veya aday sınırı kısmi arama truncated üretir. Grid aralık keşfi 500000 çift ya da bir eksende 128 aralık adayına ulaşırsa da kısmi bildirilir. Uzun arama native Job ile durdurulabilir. expectedRevision eskiyse yazısız ret.".into(),
@@ -11711,6 +11721,7 @@ mod tests {
                     crate::CAD_ENTITIES_ARRAY => {
                         serde_json::from_value::<crate::EntitiesArray>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_DRAWING_INSPECT => serde_json::from_value::<crate::DrawingInspect>(e.input.clone()).map(|_| ()),
                     crate::CAD_ARRAYS_FIND => {
                         serde_json::from_value::<crate::ArraysFind>(e.input.clone()).map(|_| ())
                     }

@@ -478,6 +478,9 @@ codes! {
     /// Recognition must be explicitly scoped for large drawings.
     RECOGNITION_SCOPE_LIMIT = "recognition_scope_limit", Failed, false, "Tekrar arama kapsamı en çok 50 000 nesne olabilir; aranacak katmanları veya nesneleri daraltın.";
     /// The candidate count or bounded analytic search budget was reached.
+    INSPECTION_SCOPE_LIMIT = "inspection_scope_limit", Failed, false, "CAD denetimi en çok 50 000 nesne alır; kapsamı daraltın.";
+    INSPECTION_TRUNCATED = "inspection_truncated", Warning, false, "Denetim sınırına ulaşıldı; sonuçlar kısmi.";
+    HATCH_ASSOCIATION_LOST = "hatch_association_lost", Warning, false, "Tarama geometrisi korundu ancak kaynak sınır bağı koptu; yeniden bağlamayı inceleyin.";
     RECOGNITION_TRUNCATED = "recognition_truncated", Warning, false, "Tekrar araması sınıra ulaştı; bulunanlar kısmi sonuçtur, arama kapsamını daraltın.";
     /// Caller explicitly excluded layer, appearance and attributes from matching.
     RECOGNITION_GEOMETRY_ONLY = "recognition_geometry_only", Warning, false, "Yalnız geometri karşılaştırıldı; katman, görünüş ve öznitelik farkları eşleşmeye engel sayılmadı.";

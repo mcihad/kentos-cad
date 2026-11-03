@@ -3,11 +3,26 @@
   "version": 1,
   "commands": [
     {
+      "id": "cad.inspect",
+      "title": "CAD denetimi…",
+      "short": "Sınır ve tarama",
+      "icon": "audit",
+      "description": "Sınırdaki açıklık, yinelenen kenar, kesişim ve tarama bağlarını çizimi değiştirmeden denetler. Kapsam ve milimetre eşiği seçilir; bulgular sahnede gösterilir. Kaynak onarımı ve yeniden bağlama ayrı araçlarla yapılır.",
+      "aliases": [
+        "CADKONTROL",
+        "TARAMADENETLE",
+        "SINIRDENETLE"
+      ],
+      "shortcuts": [],
+      "category": "Yönet",
+      "status": "implemented"
+    },
+    {
       "id": "array.find",
       "title": "Dizi örüntülerini bul…",
       "short": "Dizileri bul",
       "icon": "search",
-      "description": "Seçilen statik bloğun doğrusal veya dünya X/Y dikdörtgen yerleşimlerini yazısız arar. Adaylar sahnede gösterilir; eksik yerler ve elle taşınmış öğeler ayrı incelemeden sonra aynı kimliklerle ilişkilendirilir. Bağlama durdurulabilir ve tek adımda geri alınır. Dönük/eğik grid, kutupsal ve yol araması bu kapsamda değildir.",
+      "description": "Seçilen statik bloğun doğrusal, dünya X/Y, dönük/eğik ızgara, açık tam çember ve seçilen yol üzerindeki tekrarlarını yazısız arar. Adaylar, eksik yerler ve açıkça korunan öğeler incelenip aynı kimliklerle ilişkilendirilir; iş durdurulabilir.",
       "aliases": [
         "DIZIBUL",
         "DİZİBUL",
@@ -23,7 +38,10 @@
       "short": "Tekrarları bul",
       "icon": "search",
       "description": "Seçilen çizgi, 2B çoklu çizgi, çember ve yay bileşeninin tam eşlerini arar. Döndürme, aynalama, ölçek ve veri politikası açıkça seçilir; sonuçlar çizimi kullanmaya devam edebildiğiniz Bloklar panelinde incelenir. Arama geometriyi değiştirmez. Seçilen adaylar dönüşüm incelemesinden sonra ölçü bağlarıyla birlikte tek adımda bloğa dönüştürülebilir.",
-      "aliases": ["TEKRARBUL", "FINDREPEATS"],
+      "aliases": [
+        "TEKRARBUL",
+        "FINDREPEATS"
+      ],
       "shortcuts": [],
       "category": "Blok",
       "status": "implemented"

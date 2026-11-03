@@ -942,8 +942,12 @@ impl App {
         let over = preview::layer(
             &camera,
             marks,
-            self.session
-                .preview(&format)
+            (if !self.session.is_running() && !self.session.grip_active() {
+                self.cad_inspection_preview()
+            } else {
+                None
+            })
+                .or_else(|| self.session.preview(&format))
                 .or_else(|| self.arch_audit_preview()),
             None,
             None,

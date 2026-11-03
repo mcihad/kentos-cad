@@ -65,6 +65,7 @@ pub enum BottomTab {
     Topology,
     /// Mimari denetim's findings (arch_audit.rs, docs/adr/0703).
     Audit,
+    CadInspection,
     /// Servis bilgisi's answers (services/info.rs, docs/adr/0208 §11).
     ServiceInfo,
     Messages,
@@ -73,7 +74,7 @@ pub enum BottomTab {
 
 impl BottomTab {
     /// Every tab in the web's order; a module's program shows its own of them (module_surfaces.rs).
-    pub(crate) const ALL: [BottomTab; 13] = [
+    pub(crate) const ALL: [BottomTab; 14] = [
         BottomTab::History,
         BottomTab::Coords,
         BottomTab::Points,
@@ -84,6 +85,7 @@ impl BottomTab {
         BottomTab::Address,
         BottomTab::Topology,
         BottomTab::Audit,
+        BottomTab::CadInspection,
         BottomTab::ServiceInfo,
         BottomTab::Messages,
         BottomTab::Python,
@@ -102,6 +104,7 @@ impl BottomTab {
             BottomTab::Address => plan::TAB_ADDRESS,
             BottomTab::Topology => plan::TAB_TOPOLOGY,
             BottomTab::Audit => crate::arch_audit::TAB,
+            BottomTab::CadInspection => crate::cad_inspection::TAB,
             BottomTab::ServiceInfo => plan::TAB_SERVICE_INFO,
             BottomTab::Messages => plan::TAB_MESSAGES,
             BottomTab::Python => "Python",
@@ -121,6 +124,7 @@ impl BottomTab {
             BottomTab::Address => "addressSearch",
             BottomTab::Topology => "topologyCheck",
             BottomTab::Audit => "archAudit",
+            BottomTab::CadInspection => "audit",
             BottomTab::ServiceInfo => "serviceInfo",
             BottomTab::Messages => "warning",
             BottomTab::Python => "terminal",
@@ -220,6 +224,7 @@ impl App {
             BottomTab::Address => self.address_tab(),
             BottomTab::Topology => self.topology_tab(),
             BottomTab::Audit => self.arch_audit_tab(),
+            BottomTab::CadInspection => self.cad_inspection_tab(),
             BottomTab::ServiceInfo => self.service_info_tab(),
             BottomTab::Messages => self.log_list(LogListing::Messages),
             BottomTab::Python => self.python_tab(),

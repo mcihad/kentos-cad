@@ -51,6 +51,7 @@ use kentos_native_application::spaces_number;
 use kentos_native_application::{program_check, program_edit};
 use kentos_native_application::donut_create;
 use kentos_native_application::drawing_compare;
+use kentos_native_application::drawing_inspect;
 use kentos_native_application::blocks_find;
 use kentos_native_application::blocks_convert;
 use kentos_native_application::arrays_adopt;
@@ -479,6 +480,11 @@ fn bulge_number<'a>(bulges: &'a mut Option<Vec<f64>>, rest: &str) -> Option<&'a 
 trait Input {
     /// The number at an error path; `None` when the input has no such place.
     fn number(&mut self, path: &str) -> Option<&mut f64>;
+}
+impl Input for kentos_commands::DrawingInspect {
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match path { "maxGap" => self.max_gap.as_mut(), _ => None }
+    }
 }
 impl Input for kentos_commands::ArraysFind {
     fn number(&mut self, path: &str) -> Option<&mut f64> {
@@ -4283,6 +4289,7 @@ fn run_op(
             run!(entities_lengthen, kentos_commands::EntitiesLengthen)
         }
         kentos_commands::CAD_ENTITIES_DIVIDE => run!(divide, EntitiesDivide),
+        kentos_commands::CAD_DRAWING_INSPECT => run!(drawing_inspect, kentos_commands::DrawingInspect),
         kentos_commands::CAD_ARRAYS_FIND => {
             run!(arrays_find, kentos_commands::ArraysFind)
         }
