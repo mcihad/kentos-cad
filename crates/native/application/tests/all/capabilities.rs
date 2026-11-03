@@ -87,6 +87,7 @@ fn reached() -> BTreeMap<String, BTreeSet<String>> {
 
 /// The listed codes no shared case reaches, and why.
 const UNREACHED: &[(&str, &str, &str)] = &[
+    ("road.terrains.repair","terrain_unbuildable","Bırakılacak yer yüzeyin bir nokta kaydı olmalı; kaydı olan ama kurulamayan yüzey (aynı yerde farklı kotlar, kesişen kırık hatlar) road.terrains.query ve .create'in durumlarında sınanır (ADR 0900 §11); onarım onu aynı kodla reddeder (ADR 0916 §6)."),
     ("road.drainage.query","invalid_culvert","Menfezin girişi koridorundan okunur; koridoru okunamayan menfezin reddi road.culverts.query'nin durumlarında sınanır (ADR 0909 §2)."),
     ("road.terrains.cloud","too_many_cloud_points","Bir çağrı en çok 200 milyon nokta okur (POINTCLOUD_MOST_COUNTED); ortak durumun bulutu bu sınırın çok altında, sınır cad.pointclouds.region'ın durumlarında sınanır (ADR 0552)."),
     ("road.project.rebuild","road_drawings_full","Yeniden üretme kaydı yerinde yazar, sayıyı artırmaz; sınır sözleşmenin a_drawing_record_is_judged testinde (ADR 0911 §3)."),

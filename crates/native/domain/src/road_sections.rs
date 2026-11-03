@@ -196,6 +196,23 @@ impl Document {
         })
     }
 
+    /// Gives the project the terrain surfaces `next` as one change named `label` (a repair, docs/adr/0916 §6; the
+    /// surfaces' other edits are settings), as [`Self::set_road_templates`].
+    pub fn set_road_surfaces(&mut self, next: Vec<kentos_contracts::TerrainSurfaceDef>, label: &str) -> Result<bool, Refusal> {
+        let judged = RoadSettings { surfaces: next.clone(), ..self.settings.road.clone().unwrap_or_default() };
+        if let Some((path, problem)) = judged.problem() {
+            return Err(Refusal(format!("{path}: {problem}")));
+        }
+        let before = self.settings.road.as_ref().map_or_else(Vec::new, |r| r.surfaces.clone());
+        if before == next {
+            return Ok(false);
+        }
+        self.transact(label, |doc| {
+            doc.record(vec![Op::RoadSurfaces { before, after: next }], label);
+            Ok(true)
+        })
+    }
+
     /// The project's mass haul diagrams (docs/adr/0907).
     pub fn road_hauls(&self) -> &[HaulDef] {
         self.settings.road.as_ref().map_or(&[], |r| r.hauls.as_slice())

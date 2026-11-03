@@ -463,3 +463,72 @@ pub struct TerrainsQualityRead {
     #[cfg_attr(feature = "ts", ts(optional))]
     pub checkpoints: Option<TerrainCheckpoints>,
 }
+
+pub const ROAD_TERRAINS_REPAIR: &str = "road.terrains.repair";
+pub const ROAD_TERRAINS_REPAIR_VERSION: u32 = 1;
+
+/// Input of `road.terrains.repair` v1 (ROAD-TIN-17): point records left out of a surface (`exclude`, places exactly as
+/// the records': a spike, a shot twice) or taken back (`restore`), the drawing's points untouched; a breakline's
+/// vertex is never left out. The plan says the difference it makes before anything is written; one undo step “Yüzeyi
+/// onar”. A surface accepted before stays accepted.
+///
+/// Refusals, in this order: `not_a_road_project`, `invalid_repair` (nothing asked, a place not finite, a place in both
+/// lists or twice), `unknown_terrain`, `invalid_repair` (a place to restore not left out, to exclude already left
+/// out), `repair_breakline`, `repair_not_a_point`, `terrain_unbuildable`, `invalid_revision`, `revision_conflict`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TerrainsRepair {
+    pub surface: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<[f64; 2]>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub exclude: Vec<[f64; 2]>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<[f64; 2]>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub restore: Vec<[f64; 2]>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = crate::cad::REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
+/// Output of `road.terrains.repair` v1: the surface's id, the places left out now, its corners and triangles before
+/// and after, and the difference (after − before, over the repaired plan): cut and fill volumes, net, the plan area
+/// that changed and the largest change and where.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TerrainsRepaired {
+    pub surface: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<[f64; 2]>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub excluded: Vec<[f64; 2]>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub corners_before: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub corners_after: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub triangles_before: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub triangles_after: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub cut: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub fill: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub net: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub changed_area: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub largest: Option<TerrainDifferenceAt>,
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = crate::cad::REVISION_TEXT)))]
+    pub revision: String,
+}

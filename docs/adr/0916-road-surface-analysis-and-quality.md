@@ -54,8 +54,12 @@ Tarih: 2026-11-04. plan/road.md Y18 (ROAD-TIN-12, 13, 16–18; ROAD-SURVEY-04, 0
    boşluğu, kontrol noktalarının yüzeye farkı sınıfına göre (sert zemin, bitkili; tek RMSE değil).
 5. **Masaüstü (Y18.5).** Yüzey analizi penceresi.
 
-Açık: parçalı yüzeyin dikişleri ve sınırda boş çember (ROAD-TIN-12, 13), GPU ön elemesi (ROAD-TIN-18), onarımın geri
-alınabilir farkı (ROAD-TIN-17), ölçme kaydının tipli kaynağı (ROAD-SURVEY-01).
+6. **Onarım (Y18.6).** Yüzeyin tanımında `excluded` (nokta kayıtlarının yerleri): kaynak toplanırken o yerdeki nokta
+   kayıtları alınmaz, çizimin noktaları değişmez, kırık hattın köşesi bırakılmaz, nokta kaydırılmaz (ROAD-TIN-17);
+   `road.terrains.repair` önce farkı söyler, tek geri alma adımıyla yazar, `restore` geri alır.
+
+Açık: parçalı yüzeyin dikişleri ve sınırda boş çember (ROAD-TIN-12, 13), GPU ön elemesi (ROAD-TIN-18), yumuşatma
+(onarım yalnız dışarıda bırakır), ölçme kaydının tipli kaynağı (ROAD-SURVEY-01).
 
 ## Aşamalar
 
@@ -95,3 +99,12 @@ karşılaştırma yüzeyi ve aralıklar: kazı, dolgu, net, tabanın dışı, fa
 erimi ve sınırı, boşluk kenarı, kontrol katmanı ve sınıf alanı: kontrol noktaları farklarıyla planda, sınıf sınıf
 istatistik. Hiçbir şey yazılmaz. Testler `surface_analysis_window_tests.rs`, resimler
 `.run/gui-evidence/yol-y18-yuzey-analizi-*`.
+
+Y18.6 (yapıldı, onarım): §6. `TerrainSurfaceDef.excluded` (`SurfaceExclusion` x, y; en çok 100 000, her yer bir kez;
+`.kcad`'in yol ayarlarında, iki okuyucuda; `road-work.kcad`'de örnek, `broken/road-surface-excluded-twice.kcad`),
+`kentos_road::sources::gather` o yerlerdeki nokta kayıtlarını almaz (`excluded`, `unmatched`). Belgede geri alınabilir
+`Op::RoadSurfaces` ve `set_road_surfaces`. `road.terrains.repair` (`road_terrains_repair.rs`): `exclude` ve `restore`,
+kırık hattın köşesi `repair_breakline`, kaydı olmayan yer `repair_not_a_point`; fark (sonra − önce: kazı, dolgu, net,
+değişen alan, en büyük değişiklik ve yeri; köşe ve üçgen sayıları); kabul edilmiş yüzey kabul edilmiş kalır
+(`tests/all/terrain_repair.rs`). 22 ortak durum (`scripts/fixtures/road_terrain_repair_cases.py`: düzlemde kare içindeki
+sivri noktanın çadırı, üçgenleri boş çember sınamasıyla; KentOS kodu yok). Python, MCP.

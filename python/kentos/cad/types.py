@@ -75335,6 +75335,30 @@ class SurfaceCloudDef(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SurfaceExclusion(_Model):
+    """A point record left out of a surface: its place (docs/adr/0916 §6).
+    Attributes:
+        x: Unit: length.
+        y: Unit: length.
+    """
+    x: float
+    y: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["x"] = float(self.x)
+        out["y"] = float(self.y)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SurfaceExclusion:
+        return cls(
+            x=float(data["x"]),
+            y=float(data["y"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SurfaceSources(_Model):
     """Where a surface's points or breaklines come from: every object of the layers (and of the groups' layers), and the
     objects named by their persistent ids.
@@ -78391,6 +78415,8 @@ class TerrainSurfaceDef(_Model):
         breaklines: The breaklines: each line's and polyline's path, every vertex with an elevation.
         built: The digest (64 lower-case hex digits) of the sources it was last made and accepted from; absent: never.
         clouds: The ground points taken from point clouds into its point layers (docs/adr/0913 §2), each layer's record.
+        excluded: The point records left out of it (docs/adr/0916 §6; a repair: a spike, a shot twice): each place, exactly as the
+            record's; the drawing's points stay as they are.
         max_edge: The edge method: an outer triangle whose outer edge is longer than this is left out, m; absent: none. Unit: m.
         points: The points: each point object's places with an elevation.
         tolerance: Two records at one place are one vertex when their heights are this close, m; absent: 0.001. Unit: m.
@@ -78402,6 +78428,7 @@ class TerrainSurfaceDef(_Model):
     breaklines: SurfaceSources | Unset = UNSET
     built: str | None | Unset = UNSET
     clouds: list[SurfaceCloudDef] | Unset = UNSET
+    excluded: list[SurfaceExclusion] | Unset = UNSET
     max_edge: float | None | Unset = UNSET
     points: SurfaceSources | Unset = UNSET
     tolerance: float | None | Unset = UNSET
@@ -78419,6 +78446,8 @@ class TerrainSurfaceDef(_Model):
             out["built"] = self.built
         if self.clouds is not UNSET:
             out["clouds"] = [e0.to_json() for e0 in self.clouds]
+        if self.excluded is not UNSET:
+            out["excluded"] = [e0.to_json() for e0 in self.excluded]
         if self.max_edge is not UNSET:
             out["maxEdge"] = None if self.max_edge is None else float(self.max_edge)
         if self.points is not UNSET:
@@ -78438,6 +78467,7 @@ class TerrainSurfaceDef(_Model):
             breaklines=SurfaceSources.from_json(data["breaklines"]) if "breaklines" in data else UNSET,
             built=data.get("built", UNSET),
             clouds=[SurfaceCloudDef.from_json(e0) for e0 in data["clouds"]] if "clouds" in data else UNSET,
+            excluded=[SurfaceExclusion.from_json(e0) for e0 in data["excluded"]] if "excluded" in data else UNSET,
             max_edge=UNSET if "maxEdge" not in data else None if data["maxEdge"] is None else float(data["maxEdge"]),
             points=SurfaceSources.from_json(data["points"]) if "points" in data else UNSET,
             tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
@@ -79117,6 +79147,111 @@ class TerrainsQuery(_Model):
             along=[[float(e1) for e1 in e0] for e0 in data["along"]] if "along" in data else UNSET,
             at=[[float(e1) for e1 in e0] for e0 in data["at"]] if "at" in data else UNSET,
             surface=data.get("surface", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TerrainsRepair(_Model):
+    """Input of `road.terrains.repair` v1 (ROAD-TIN-17): point records left out of a surface (`exclude`, places exactly as
+    the records': a spike, a shot twice) or taken back (`restore`), the drawing's points untouched; a breakline's
+    vertex is never left out. The plan says the difference it makes before anything is written; one undo step “Yüzeyi
+    onar”. A surface accepted before stays accepted.
+
+    Refusals, in this order: `not_a_road_project`, `invalid_repair` (nothing asked, a place not finite, a place in both
+    lists or twice), `unknown_terrain`, `invalid_repair` (a place to restore not left out, to exclude already left
+    out), `repair_breakline`, `repair_not_a_point`, `terrain_unbuildable`, `invalid_revision`, `revision_conflict`.
+    Attributes:
+        exclude: Unit: length.
+        restore: Unit: length.
+    """
+    surface: str
+    exclude: list[list[float]] | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    restore: list[list[float]] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["surface"] = self.surface
+        if self.exclude is not UNSET:
+            out["exclude"] = [[float(e1) for e1 in e0] for e0 in self.exclude]
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.restore is not UNSET:
+            out["restore"] = [[float(e1) for e1 in e0] for e0 in self.restore]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainsRepair:
+        return cls(
+            surface=data["surface"],
+            exclude=[[float(e1) for e1 in e0] for e0 in data["exclude"]] if "exclude" in data else UNSET,
+            expected_revision=data.get("expectedRevision", UNSET),
+            restore=[[float(e1) for e1 in e0] for e0 in data["restore"]] if "restore" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TerrainsRepaired(_Model):
+    """Output of `road.terrains.repair` v1: the surface's id, the places left out now, its corners and triangles before
+    and after, and the difference (after − before, over the repaired plan): cut and fill volumes, net, the plan area
+    that changed and the largest change and where.
+    Attributes:
+        corners_before: Unit: count.
+        corners_after: Unit: count.
+        triangles_before: Unit: count.
+        triangles_after: Unit: count.
+        cut: Unit: volume.
+        fill: Unit: volume.
+        net: Unit: volume.
+        changed_area: Unit: area.
+        excluded: Unit: length.
+    """
+    surface: str
+    corners_before: int
+    corners_after: int
+    triangles_before: int
+    triangles_after: int
+    cut: float
+    fill: float
+    net: float
+    changed_area: float
+    revision: str
+    excluded: list[list[float]] | Unset = UNSET
+    largest: TerrainDifferenceAt | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["surface"] = self.surface
+        out["cornersBefore"] = self.corners_before
+        out["cornersAfter"] = self.corners_after
+        out["trianglesBefore"] = self.triangles_before
+        out["trianglesAfter"] = self.triangles_after
+        out["cut"] = float(self.cut)
+        out["fill"] = float(self.fill)
+        out["net"] = float(self.net)
+        out["changedArea"] = float(self.changed_area)
+        out["revision"] = self.revision
+        if self.excluded is not UNSET:
+            out["excluded"] = [[float(e1) for e1 in e0] for e0 in self.excluded]
+        if self.largest is not UNSET:
+            out["largest"] = None if self.largest is None else self.largest.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainsRepaired:
+        return cls(
+            surface=data["surface"],
+            corners_before=data["cornersBefore"],
+            corners_after=data["cornersAfter"],
+            triangles_before=data["trianglesBefore"],
+            triangles_after=data["trianglesAfter"],
+            cut=float(data["cut"]),
+            fill=float(data["fill"]),
+            net=float(data["net"]),
+            changed_area=float(data["changedArea"]),
+            revision=data["revision"],
+            excluded=[[float(e1) for e1 in e0] for e0 in data["excluded"]] if "excluded" in data else UNSET,
+            largest=UNSET if "largest" not in data else None if data["largest"] is None else TerrainDifferenceAt.from_json(data["largest"]),
         )
 
 
@@ -106166,6 +106301,7 @@ __all__ = [
     "SuperelevationsQuery",
     "SuperelevationsWritten",
     "SurfaceCloudDef",
+    "SurfaceExclusion",
     "SurfaceSources",
     "SurveyAdjust",
     "SurveyAdjusted",
@@ -106305,6 +106441,8 @@ __all__ = [
     "TerrainsQualityRead",
     "TerrainsQueried",
     "TerrainsQuery",
+    "TerrainsRepair",
+    "TerrainsRepaired",
     "TerrainsWritten",
     "TextAlign",
     "TextAlignName",

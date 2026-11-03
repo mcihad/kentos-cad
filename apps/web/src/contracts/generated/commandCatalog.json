@@ -41991,6 +41991,288 @@
       ]
     },
     {
+      "id": "road.terrains.repair",
+      "version": 1,
+      "title": "Yüzeyi onar",
+      "summary": "Bir arazi yüzeyinden nokta kayıtlarını yerleriyle dışarıda bırakır (exclude: sivri nokta, iki kez ölçülen) ya da geri alır (restore); çizimin noktaları değişmez, kırık hattın köşesi dışarıda bırakılmaz, nokta kaydırılmaz. Plan önce farkı söyler (onarılmış eksi önceki, onarılmış planda): kazı ve dolgu hacmi, net, değişen alan, en büyük değişiklik ve yeri; köşe ve üçgen sayısı önce ve sonra. Tek geri alma adımı “Yüzeyi onar”; kabul edilmiş yüzey kabul edilmiş kalır. Retler: not_a_road_project, invalid_repair, unknown_terrain, repair_breakline, repair_not_a_point, terrain_unbuildable, invalid_revision, revision_conflict.",
+      "aliases": [
+        "yuzeyonar",
+        "noktadislama"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.terrains.repair` v1 (ROAD-TIN-17): point records left out of a surface (`exclude`, places exactly as\nthe records': a spike, a shot twice) or taken back (`restore`), the drawing's points untouched; a breakline's\nvertex is never left out. The plan says the difference it makes before anything is written; one undo step “Yüzeyi\nonar”. A surface accepted before stays accepted.\n\nRefusals, in this order: `not_a_road_project`, `invalid_repair` (nothing asked, a place not finite, a place in both\nlists or twice), `unknown_terrain`, `invalid_repair` (a place to restore not left out, to exclude already left\nout), `repair_breakline`, `repair_not_a_point`, `terrain_unbuildable`, `invalid_revision`, `revision_conflict`.",
+        "properties": {
+          "exclude": {
+            "items": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            },
+            "type": "array",
+            "x-unit": "length"
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "restore": {
+            "items": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            },
+            "type": "array",
+            "x-unit": "length"
+          },
+          "surface": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "surface"
+        ],
+        "title": "TerrainsRepair",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.terrains.repair` v1: the surface's id, the places left out now, its corners and triangles before\nand after, and the difference (after − before, over the repaired plan): cut and fill volumes, net, the plan area\nthat changed and the largest change and where.",
+        "properties": {
+          "changedArea": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "cornersAfter": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "cornersBefore": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "cut": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "volume"
+          },
+          "excluded": {
+            "items": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            },
+            "type": "array",
+            "x-unit": "length"
+          },
+          "fill": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "volume"
+          },
+          "largest": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TerrainDifferenceAt"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "net": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "volume"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "surface": {
+            "type": "string"
+          },
+          "trianglesAfter": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "trianglesBefore": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "surface",
+          "cornersBefore",
+          "cornersAfter",
+          "trianglesBefore",
+          "trianglesAfter",
+          "cut",
+          "fill",
+          "net",
+          "changedArea",
+          "revision"
+        ],
+        "title": "TerrainsRepaired",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.terrains.repair` v1: the surface's id, the places left out now, its corners and triangles before\nand after, and the difference (after − before, over the repaired plan): cut and fill volumes, net, the plan area\nthat changed and the largest change and where.",
+        "properties": {
+          "changedArea": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "cornersAfter": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "cornersBefore": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "cut": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "volume"
+          },
+          "excluded": {
+            "items": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            },
+            "type": "array",
+            "x-unit": "length"
+          },
+          "fill": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "volume"
+          },
+          "largest": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TerrainDifferenceAt"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "net": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "volume"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "surface": {
+            "type": "string"
+          },
+          "trianglesAfter": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "trianglesBefore": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "surface",
+          "cornersBefore",
+          "cornersAfter",
+          "trianglesBefore",
+          "trianglesAfter",
+          "cut",
+          "fill",
+          "net",
+          "changedArea",
+          "revision"
+        ],
+        "title": "TerrainsRepaired",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "invalid_repair",
+          "unknown_terrain",
+          "repair_breakline",
+          "repair_not_a_point",
+          "terrain_unbuildable",
+          "invalid_revision",
+          "revision_conflict"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Sivri noktayı dışarıda bırak",
+          "input": {
+            "exclude": [
+              [
+                401.838,
+                123.255
+              ]
+            ],
+            "surface": "Mevcut zemin"
+          }
+        }
+      ]
+    },
+    {
       "id": "road.terrains.cloud",
       "version": 1,
       "title": "Buluttan arazi",
@@ -81770,6 +82052,24 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Karşılaştırma yüzeyinin bir kısmı tabanın dışında; o kısım hacme girmedi."
+    },
+    {
+      "code": "invalid_repair",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Yüzey onarımı geçerli değil; ileti nedenini söyler."
+    },
+    {
+      "code": "repair_breakline",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kırık hattın köşesi dışarıda bırakılmaz."
+    },
+    {
+      "code": "repair_not_a_point",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu yerde yüzeyin bir nokta kaydı yok."
     },
     {
       "code": "invalid_swept",
@@ -156421,6 +156721,27 @@
       ],
       "type": "object"
     },
+    "SurfaceExclusion": {
+      "additionalProperties": false,
+      "description": "A point record left out of a surface: its place (docs/adr/0916 §6).",
+      "properties": {
+        "x": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "y": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ],
+      "type": "object"
+    },
     "SurfaceSources": {
       "additionalProperties": false,
       "description": "Where a surface's points or breaklines come from: every object of the layers (and of the groups' layers), and the\nobjects named by their persistent ids.",
@@ -160462,6 +160783,13 @@
           "description": "The ground points taken from point clouds into its point layers (docs/adr/0913 §2), each layer's record.",
           "items": {
             "$ref": "#/$defs/SurfaceCloudDef"
+          },
+          "type": "array"
+        },
+        "excluded": {
+          "description": "The point records left out of it (docs/adr/0916 §6; a repair: a spike, a shot twice): each place, exactly as the\nrecord's; the drawing's points stay as they are.",
+          "items": {
+            "$ref": "#/$defs/SurfaceExclusion"
           },
           "type": "array"
         },

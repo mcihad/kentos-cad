@@ -831,6 +831,13 @@ codes! {
     INVALID_ANALYSIS = "invalid_analysis", Failed, false, "Yüzey analizi sorusu geçerli değil; ileti nedenini söyler.";
     /// A warning: part of the comparison surface is off the base and is left out of the volumes (docs/adr/0916 §3).
     COMPARE_UNCOVERED = "compare_uncovered", Warning, false, "Karşılaştırma yüzeyinin bir kısmı tabanın dışında; o kısım hacme girmedi.";
+    /// A surface repair that is not right: nothing asked, a place not finite or twice, a place to restore not left
+    /// out, to exclude already left out (docs/adr/0916 §6).
+    INVALID_REPAIR = "invalid_repair", Failed, false, "Yüzey onarımı geçerli değil; ileti nedenini söyler.";
+    /// A place to leave out is a breakline's vertex: a repair never takes a design line apart (docs/adr/0916 §6).
+    REPAIR_BREAKLINE = "repair_breakline", Failed, false, "Kırık hattın köşesi dışarıda bırakılmaz.";
+    /// No point record of the surface is at a place to leave out (docs/adr/0916 §6).
+    REPAIR_NOT_A_POINT = "repair_not_a_point", Failed, false, "Bu yerde yüzeyin bir nokta kaydı yok.";
     INVALID_SWEPT = "invalid_swept", Failed, false, "Araç izi sorusu geçerli değil; ileti nedenini söyler.";
     /// A warning: a vehicle's body meets an obstacle somewhere on its path (docs/adr/0915 §2).
     SWEPT_TOUCHES = "swept_touches", Warning, false, "Aracın gövdesi yolunun bir yerinde bir engele değiyor.";

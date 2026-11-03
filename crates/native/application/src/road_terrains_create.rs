@@ -38,6 +38,7 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsCreate) -> Result<Checke
         max_edge: input.max_edge,
         built: None,
         clouds: Vec::new(),
+        excluded: Vec::new(),
     };
     let mut list = own.to_vec();
     list.push(def.clone());

@@ -239,6 +239,7 @@ impl App {
                     max_edge: None,
                     built: None,
                     clouds: Vec::new(),
+                    excluded: Vec::new(),
                 }));
                 w.chosen = Some(w.rows.len() - 1);
             }

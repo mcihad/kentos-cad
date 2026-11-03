@@ -131,6 +131,7 @@ fn ask(doc: &Document, input: &TerrainsFromCloud) -> Result<Asked, Stop> {
                 max_edge: None,
                 built: None,
                 clouds: Vec::new(),
+                excluded: Vec::new(),
             });
             let at = list.len() - 1;
             (list, at, true)

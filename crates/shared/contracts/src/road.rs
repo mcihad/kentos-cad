@@ -296,7 +296,28 @@ pub struct TerrainSurfaceDef {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<SurfaceCloudDef>>", optional))]
     pub clouds: Vec<SurfaceCloudDef>,
+    /// The point records left out of it (docs/adr/0916 §6; a repair: a spike, a shot twice): each place, exactly as the
+    /// record's; the drawing's points stay as they are.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<SurfaceExclusion>>", optional))]
+    pub excluded: Vec<SurfaceExclusion>,
 }
+
+/// A point record left out of a surface: its place (docs/adr/0916 §6).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SurfaceExclusion {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub x: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub y: f64,
+}
+
+/// The most point records one surface leaves out.
+pub const MOST_SURFACE_EXCLUSIONS: usize = 100_000;
 
 /// Which of a pulse's returns a cloud's points are taken from (docs/adr/0913): all, the first, the last (nearest the
 /// ground), or a pulse's only return.
@@ -1184,6 +1205,17 @@ pub fn road_problem(road: &RoadSettings) -> Option<(String, String)> {
         }
         if let Some(words) = clouds_problem(&s.clouds) {
             return fail(at("clouds"), &words);
+        }
+        if s.excluded.len() > MOST_SURFACE_EXCLUSIONS {
+            return fail(at("excluded"), "bir yüzey en çok 100 000 noktayı dışarıda bırakır");
+        }
+        if s.excluded.iter().any(|e| !(e.x.is_finite() && e.y.is_finite())) {
+            return fail(at("excluded"), "dışarıda bırakılan yer sonlu iki sayı olmalı");
+        }
+        let mut places: Vec<(u64, u64)> = s.excluded.iter().map(|e| ((e.x + 0.0).to_bits(), (e.y + 0.0).to_bits())).collect();
+        places.sort_unstable();
+        if places.windows(2).any(|w| w[0] == w[1]) {
+            return fail(at("excluded"), "bir yer dışarıda bırakılanlarda iki kez");
         }
     }
     alignments_problem(&road.alignments)
@@ -2827,6 +2859,7 @@ mod tests {
             max_edge: Some(50.0),
             built: None,
             clouds: Vec::new(),
+            excluded: Vec::new(),
         }
     }
 

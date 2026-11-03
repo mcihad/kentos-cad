@@ -9438,12 +9438,20 @@ class _Schema:
                 self.fail("bad_value", "yüzeyin bulut kayıtları 1 ile 64 arası, her katman bir kez")
             return got
 
+        def exclusions(x):
+            # The point records a repair left out (plan/road.md Y18.6, docs/adr/0916 §6): places, each once.
+            got = self.array(self.fields({"x": (finite, True), "y": (finite, True)}))(x)
+            places = [(e["x"] + 0.0, e["y"] + 0.0) for e in got]
+            if not got or len(got) > 100_000 or len(set(places)) != len(places):
+                self.fail("bad_value", "dışarıda bırakılanlar 1 ile 100 000 arası, her yer bir kez")
+            return got
+
         def surface(x):
             t = self.fields({"id": (word, True), "name": (self.text, True), "points": (nonempty_sources, False),
                              "breaklines": (nonempty_sources, False), "boundary": (word, False),
                              "voids": (words, False), "tolerance": (positive(1.0), False),
                              "maxEdge": (positive(None), False), "built": (digest, False),
-                             "clouds": (clouds, False)})(x)
+                             "clouds": (clouds, False), "excluded": (exclusions, False)})(x)
             name = t["name"]
             if not name or name.strip() != name or len(name) > 120:
                 self.fail("bad_value", "yüzeyin adı boş, boşluklu ya da çok uzun")

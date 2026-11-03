@@ -5647,6 +5647,10 @@ def build():
     pcl = load("road-work.json")
     pcl["settings"]["road"]["surfaces"][0]["clouds"][0]["kept"] = 182401
     out["broken/road-surface-cloud-kept-past-read.kcad"] = container(document(pcl))
+    # Schema 162 (plan/road.md Y18.6, docs/adr/0916 §6): a surface leaves a place out once.
+    exc = load("road-work.json")
+    exc["settings"]["road"]["surfaces"][0]["excluded"].append(dict(exc["settings"]["road"]["surfaces"][0]["excluded"][0]))
+    out["broken/road-surface-excluded-twice.kcad"] = container(document(exc))
     # Schema 162 (plan/road.md Y11.4, docs/adr/0909 §4): a pay rule names an item of the book.
     pay = load("road-work.json")
     pay["settings"]["road"]["pay"]["rules"][0]["item"] = "Z-9"
