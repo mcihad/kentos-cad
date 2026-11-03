@@ -1,6 +1,6 @@
 # ADR 0908 — Aplikasyon cetveli, yol paftaları ve mühendislik alışverişi
 
-Tarih: 2026-11-03. plan/road.md Y10 (ROAD-SEC-09…11; ROAD-IO-05, 06, 13, 14). Durum: taslak, aşamalar aşağıda.
+Tarih: 2026-11-03. plan/road.md Y10 (ROAD-SEC-09…11; ROAD-IO-05, 06, 13, 14). Durum: kabul edildi (Y10.1–Y10.6b); makine kontrolü ve yapılan iş ölçüsü sonraya.
 
 ## Dayanak
 
