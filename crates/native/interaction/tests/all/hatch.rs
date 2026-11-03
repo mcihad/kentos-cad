@@ -520,3 +520,70 @@ fn editor_gap_input_does_not_reselect_on_a_canvas_click_or_invalid_number() {
     assert!(b.run(|s, cx| s.cancel(cx)));
     assert!(b.session.prompt().text().contains("yeni bölgesinin"));
 }
+
+#[test]
+fn existing_hatch_origin_moves_by_point_or_coordinate_without_resetting_its_pattern() {
+    let mut b = bench();
+    b.draft.snap = false;
+    b.click(-20.0, 1.0);
+    let original = b.newest().clone();
+    let id = kentos_domain::Slot(original.base().id);
+    b.start("hatchEdit");
+    assert!(b.type_text("N"));
+    assert!(b.options().contains(&"N"));
+    b.click(-20.0, 1.0);
+    let before = b.doc.to_snapshot_v2();
+    b.move_to(-21.0, 2.0);
+    assert_eq!(b.doc.to_snapshot_v2(), before, "origin preview is not a write");
+    b.click(-21.0, 2.0);
+    let Entity::Hatch(h) = b.doc.get(id).unwrap() else { panic!("hatch") };
+    let Entity::Hatch(mut expected) = original.clone() else { unreachable!() };
+    expected.pattern.origin = Some(Wire { x: E - 21., y: N + 2. });
+    assert_eq!(h, &expected);
+    assert_eq!(b.doc.undo().as_deref(), Some("Tarama başlangıcı"));
+    assert_eq!(b.doc.to_snapshot_v2(), before);
+    b.spatial.sync(&b.doc);
+    assert!(b.type_text(&format!("{},{}", E - 22., N + 3.)));
+    let Entity::Hatch(h) = b.doc.get(id).unwrap() else { panic!("hatch") };
+    expected.pattern.origin = Some(Wire { x: E - 22., y: N + 3. });
+    assert_eq!(h, &expected);
+    assert_eq!(b.doc.undo().as_deref(), Some("Tarama başlangıcı"));
+    assert_eq!(b.doc.to_snapshot_v2(), before);
+}
+
+#[test]
+fn trim_reaches_a_circle_beneath_its_hatch_and_one_undo_restores_the_tie() {
+    use kentos_commands::CallOp;
+    use kentos_domain::Slot;
+    use kentos_native_application::{ExecutionContext, registry};
+    use serde_json::json;
+    let mut raw: serde_json::Value = serde_json::from_str(HATCH).unwrap();
+    raw["entities"] = json!([
+        {"kind":"circle","id":1,"layerId":"cizim","attrs":{},"c":{"x":E,"y":N},"r":5.},
+        {"kind":"line","id":2,"layerId":"cizim","attrs":{},"a":{"x":E,"y":N-6.},"b":{"x":E,"y":N+6.}}
+    ]);
+    let mut b = Bench::on(&raw.to_string());
+    b.draft.snap = false;
+    let made = registry::run(&mut ExecutionContext::new(&mut b.doc), "cad.entities.hatch", CallOp::Execute,
+        json!({"region":{"kind":"point","at":{"x":E+1.,"y":N+1.},"associative":true},"pattern":{"name":"ANSI31"},"layerId":"cizim"})).unwrap();
+    assert_eq!(made["status"], "completed", "{made}");
+    let hatch_uid = kentos_domain::Uuid::parse_str(made["output"]["created"][0].as_str().unwrap()).unwrap();
+    let hatch_slot = b.doc.slot_of(hatch_uid).unwrap();
+    let Entity::Hatch(original) = b.doc.get(hatch_slot).unwrap().clone() else { panic!("hatch") };
+    let before = b.doc.to_snapshot_v2();
+    b.start("trim");
+    assert!(b.type_text("S"));
+    b.click(0., -6.);
+    b.confirm();
+    b.move_to(5., 0.);
+    assert!(b.session.preview(&Default::default()).unwrap().strokes.iter().any(|s| s.tone == kentos_interaction::Tone::Danger));
+    b.click(5., 0.);
+    assert!(matches!(b.doc.get(Slot(1)), Some(Entity::Arc(_))), "source must be trimmed instead of refusing the overlaid hatch: {:?}", b.last_text());
+    let Entity::Hatch(now) = b.doc.get(hatch_slot).unwrap() else { panic!("hatch") };
+    assert!(now.assoc.is_none(), "open source cannot silently remain associative");
+    let mut expected = original;
+    expected.assoc = None;
+    assert_eq!(now, &expected, "the frozen hatch keeps its analytic geometry and pattern");
+    assert_eq!(b.doc.undo().as_deref(), Some("Buda"));
+    assert_eq!(b.doc.to_snapshot_v2(), before);
+}

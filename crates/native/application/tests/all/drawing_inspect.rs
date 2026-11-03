@@ -196,3 +196,47 @@ fn analytic_hatch_with_two_islands_keeps_area_origin_and_single_undo_on_rebind()
     assert_eq!(doc.undo().as_deref(), Some("Sınırı yeniden seç"));
     assert_eq!(doc.to_snapshot_v2(), before);
 }
+
+#[test]
+fn moving_hatch_origins_is_atomic_and_preserves_pattern_boundary_and_ties() {
+    use kentos_commands::{CallOp, Entity};
+    use kentos_native_application::{ExecutionContext, registry};
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../fixtures/commands/v1/cad.blocks.find.json")).unwrap();
+    let mut raw = fixture["setup"].clone();
+    raw["entities"] = json!([
+        {"kind":"circle","id":1,"layerId":"a","attrs":{},"c":{"x":0.,"y":0.},"r":5.},
+        {"kind":"circle","id":2,"layerId":"a","attrs":{},"c":{"x":12.,"y":0.},"r":2.}
+    ]);
+    let mut doc = Document::from_snapshot(DocumentSnapshotV1::from_json(&raw.to_string()).unwrap()).unwrap();
+    for (x, name) in [(0., "ANSI31"), (12., "Dolu")] {
+        let pattern = if name == "Dolu" { json!({"name":name}) } else {
+            json!({"name":name,"angle":31.,"scale":2.,"origin":{"kind":"point","at":{"x":0.123,"y":0.456}}})
+        };
+        let made = registry::run(&mut ExecutionContext::new(&mut doc), "cad.entities.hatch", CallOp::Execute,
+            json!({"region":{"kind":"point","at":{"x":x,"y":0.},"associative":true},
+                "pattern":pattern,"layerId":"a"})).unwrap();
+        assert_eq!(made["status"], "completed", "{made}");
+    }
+    let hatches: Vec<_> = doc.entities().filter_map(|e| match e { Entity::Hatch(h) => Some((doc.uid(kentos_domain::Slot(h.base.id)).unwrap().to_string(), h.clone())), _ => None }).collect();
+    let before = doc.to_snapshot_v2();
+    let undo = doc.undo_labels();
+    let failed = registry::run(&mut ExecutionContext::new(&mut doc), "cad.hatches.edit", CallOp::Execute,
+        json!({"edit":{"kind":"origin","uids":[hatches[0].0,hatches[1].0],"origin":{"kind":"point","at":{"x":7.,"y":8.}}}})).unwrap();
+    assert_eq!(failed["status"], "failed", "{failed}");
+    assert_eq!(doc.to_snapshot_v2(), before, "solid in a batch rejects the entire change");
+    assert_eq!(doc.undo_labels(), undo);
+    for (origin, expected) in [
+        (json!({"kind":"point","at":{"x":7.,"y":8.}}), Some(kentos_commands::Vec2 { x:7., y:8. })),
+        (json!({"kind":"world"}), None),
+    ] {
+        let done = registry::run(&mut ExecutionContext::new(&mut doc), "cad.hatches.edit", CallOp::Execute,
+            json!({"edit":{"kind":"origin","uids":[hatches[0].0],"origin":origin}})).unwrap();
+        assert_eq!(done["status"], "completed", "{done}");
+        let mut wanted = hatches[0].1.clone();
+        wanted.pattern.origin = expected;
+        let current = doc.entities().find_map(|e| match e { Entity::Hatch(h) if h.base.id == wanted.base.id => Some(h), _ => None }).unwrap();
+        assert_eq!(current, &wanted);
+        assert_eq!(doc.undo().as_deref(), Some("Tarama başlangıcı"));
+        assert_eq!(doc.to_snapshot_v2(), before);
+    }
+}

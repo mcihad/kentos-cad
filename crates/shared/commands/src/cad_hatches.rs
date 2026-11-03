@@ -89,6 +89,12 @@ pub enum HatchEdit {
         uids: Vec<String>,
         pattern: crate::HatchPatternSpec,
     },
+    /// Move only the pattern origin; pattern definition, angle, scale, boundary and associations remain unchanged.
+    Origin {
+        #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
+        uids: Vec<String>,
+        origin: crate::HatchOrigin,
+    },
     /// Hizala: the hatches' lines continue the reference's (AutoCAD's hatch origin across objects, docs/adr/0331 §2):
     /// each takes its origin, and the angle and scale too where its pattern is the reference's.
     Align {

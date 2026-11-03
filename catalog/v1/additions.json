@@ -6413,6 +6413,12 @@
       "icon": "hatchAlign"
     },
     {
+      "command": "tool.hatchEdit",
+      "label": "Başlangıcı taşı",
+      "option": "N",
+      "icon": "hatchAlign"
+    },
+    {
       "command": "tool.constraint",
       "label": "Çakışık",
       "option": "ÇK",

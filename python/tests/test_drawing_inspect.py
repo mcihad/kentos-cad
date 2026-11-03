@@ -48,3 +48,20 @@ class DrawingInspect(unittest.TestCase):
         again = cad.drawing.inspect(reopened, checks=['hatches'])
         self.assertAlmostEqual(again.hatches[0].area, result.hatches[0].area, places=8)
         self.assertEqual(again.hatches[0].pattern_origin, result.hatches[0].pattern_origin)
+
+    def test_typed_origin_edit_preserves_every_other_hatch_property_and_undo(self):
+        doc = drawing([dict(kind='circle', c=dict(x=0., y=0.), r=5.)])
+        made = doc.call('cad.entities.hatch', dict(
+            region=dict(kind='point', at=dict(x=0., y=0.), associative=True),
+            pattern=dict(name='ANSI31', angle=31., scale=2.), layerId='a'))
+        self.assertEqual(made.status, 'completed')
+        row = next(r for r in doc.entities() if r.entity.to_json()['kind'] == 'hatch')
+        before = row.entity.to_json()
+        cad.hatches.edit(doc, edit=cad.OriginHatchEdit(
+            uids=[row.uid], origin=cad.PointHatchOrigin(at=cad.Vec2(x=.123, y=.456))))
+        current = next(r.entity.to_json() for r in doc.entities() if r.uid == row.uid)
+        expected = json.loads(json.dumps(before))
+        expected['pattern']['origin'] = dict(x=.123, y=.456)
+        self.assertEqual(current, expected)
+        self.assertEqual(doc.undo(), 'Tarama başlangıcı')
+        self.assertEqual(next(r.entity.to_json() for r in doc.entities() if r.uid == row.uid), before)

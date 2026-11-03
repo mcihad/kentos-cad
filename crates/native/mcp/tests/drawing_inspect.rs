@@ -34,3 +34,28 @@ fn inspection_through_mcp_keeps_uuid_geometry_and_reports_physical_gap() {
     let empty = tool(&mut server,"cad.drawing.inspect",json!({"drawing":drawing,"uids":[]}));
     assert_eq!(empty["output"]["examined"],0);
 }
+
+#[test]
+fn hatch_origin_edit_through_mcp_keeps_all_other_hatch_data_and_undoes_once() {
+    let mut server = Server::new();
+    let new = tool(&mut server, "drawing.new", json!({"workspace":"cad"}));
+    let drawing = &new["drawing"];
+    let layer = &new["summary"]["activeLayer"];
+    let circle = tool(&mut server, "cad.circle.create", json!({"drawing":drawing,"layerId":layer,"c":{"x":0.,"y":0.},"r":5.}));
+    assert_eq!(circle["status"], "completed", "{circle}");
+    let made = tool(&mut server,"cad.entities.hatch",json!({"drawing":drawing,"layerId":layer,
+        "region":{"kind":"point","at":{"x":0.,"y":0.},"associative":true},
+        "pattern":{"name":"ANSI31","scale":2.,"angle":31.}}));
+    assert_eq!(made["status"], "completed", "{made}");
+    let before = tool(&mut server,"drawing.entities",json!({"drawing":drawing}));
+    let hatch = before["items"].as_array().unwrap().iter().find(|r|r["entity"]["kind"]=="hatch").unwrap();
+    let done = tool(&mut server,"cad.hatches.edit",json!({"drawing":drawing,"edit":{"kind":"origin","uids":[hatch["uid"]],"origin":{"kind":"point","at":{"x":0.123,"y":0.456}}}}));
+    assert_eq!(done["status"], "completed", "{done}");
+    let after = tool(&mut server,"drawing.entities",json!({"drawing":drawing}));
+    let mut expected = hatch["entity"].clone();
+    expected["pattern"]["origin"] = json!({"x":0.123,"y":0.456});
+    assert_eq!(after["items"].as_array().unwrap().iter().find(|r|r["uid"]==hatch["uid"]).unwrap()["entity"],expected);
+    tool(&mut server,"drawing.undo",json!({"drawing":drawing}));
+    let undone = tool(&mut server,"drawing.entities",json!({"drawing":drawing}));
+    assert_eq!(undone["items"].as_array().unwrap().iter().map(|r|&r["entity"]).collect::<Vec<_>>(), before["items"].as_array().unwrap().iter().map(|r|&r["entity"]).collect::<Vec<_>>());
+}

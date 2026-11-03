@@ -42,17 +42,19 @@ pub enum Mode {
     Untie,
     /// Hizala (docs/adr/0331 §2): the hatches clicked continue the picked one's lines.
     Align,
+    Origin,
 }
 
 impl Mode {
     /// The modes in the order the memory keeps them.
-    pub const ALL: [Mode; 6] = [
+    pub const ALL: [Mode; 7] = [
         Mode::AddIslands,
         Mode::RemoveIslands,
         Mode::Reselect,
         Mode::Recreate,
         Mode::Untie,
         Mode::Align,
+        Mode::Origin,
     ];
 
     fn key(self) -> &'static str {
@@ -63,6 +65,7 @@ impl Mode {
             Mode::Recreate => "O",
             Mode::Untie => "K",
             Mode::Align => "H",
+            Mode::Origin => "N",
         }
     }
 
@@ -74,6 +77,7 @@ impl Mode {
             Mode::Recreate => "Yeniden oluştur",
             Mode::Untie => "İlişkiyi kopar",
             Mode::Align => "Hizala",
+            Mode::Origin => "Başlangıcı taşı",
         }
     }
 
@@ -84,6 +88,7 @@ impl Mode {
             Mode::RemoveIslands => "çıkarılacak adaya tıklayın",
             Mode::Reselect => "taramanın yeni bölgesinin içine tıklayın",
             Mode::Recreate | Mode::Untie => "Enter'la başka taramaya geçin",
+            Mode::Origin => "yeni desen başlangıcını seçin veya koordinat girin",
             Mode::Align => "çizgileri bu taramanınkileri sürdürecek taramalara tıklayın",
         }
     }
@@ -172,6 +177,7 @@ impl HatchEditor {
             Edit::Recreate { .. } => "Taramanın sınırı yeniden oluşturuldu.",
             Edit::Untie { .. } => "Taramanın ilişkisi koptu; artık bir şeyi izlemiyor.",
             Edit::Pattern { .. } => "Taramanın deseni değişti.",
+            Edit::Origin { .. } => "Taramanın desen başlangıcı değişti.",
             Edit::Align { .. } => "Tarama hizalandı; çizgileri seçilen taramanınkileri sürdürüyor.",
         };
         let input = HatchesEdit {
@@ -277,6 +283,7 @@ impl HatchEditor {
                 let region = Self::region_at(p.world, cx);
                 self.apply(Edit::Reselect { uid, region }, cx);
             }
+            Mode::Origin => self.apply(Edit::Origin { uids: vec![uid], origin: kentos_commands::HatchOrigin::Point { at: wire(p.world) } }, cx),
             Mode::Align => {
                 let other = crate::selectable::candidates(cx, p.raw)
                     .into_iter()
@@ -338,7 +345,7 @@ impl Tool for HatchEditor {
     }
 
     fn snaps(&self) -> bool {
-        false
+        self.mode == Mode::Origin && self.picked.is_some()
     }
 
     fn point_count(&self) -> usize {
@@ -378,6 +385,11 @@ impl Tool for HatchEditor {
 
     fn pointer_move(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         self.see(cx);
+        if self.mode == Mode::Origin && self.picked.is_some() {
+            self.outline(cx);
+            self.drawn.markers.push(crate::Marker { at: p.world, shape: crate::MarkerShape::Plus(8.), tone: Tone::Snap });
+            return;
+        }
         let hit = crate::selectable::hover(cx, p.raw);
         cx.selection.set_hover(hit);
     }
@@ -426,7 +438,17 @@ impl Tool for HatchEditor {
             self.see(cx);
             return true;
         }
-        self.choose_mode(&key, cx)
+        if self.choose_mode(&key, cx) { return true; }
+        if mode(cx) == Mode::Origin && self.picked.is_some() {
+            if let Some(point) = cx.typed_point(text, None, None) {
+                let uid = self.uid(cx).unwrap();
+                self.apply(Edit::Origin { uids: vec![uid], origin: kentos_commands::HatchOrigin::Point { at: wire(point) } }, cx);
+            } else {
+                cx.say(Level::Warn, "Desen başlangıcı için bir nokta seçin veya koordinat girin.");
+            }
+            return true;
+        }
+        false
     }
 
     /// Drops the hatch; with none, the tool leaves.

@@ -11465,7 +11465,7 @@
    "operation": null,
    "python": "kentos.cad.hatches.edit",
    "mcp": "cad.hatches.edit",
-   "note": "Taramanın kimliği, adanın nesnesi ya da deliğin sırası, yeni bölgenin noktası ve Tarama'nın seçenekleri, sınırın biçimi komuta verilir; bölgeyi ve sınırı komut hesaplar (ADR 0329).",
+   "note": "Taramanın kimliği, adanın nesnesi ya da deliğin sırası, yeni bölgenin noktası ve Tarama'nın seçenekleri, sınırın biçimi veya yalnız taşınacak desen başlangıcı komuta verilir; bölgeyi ve sınırı komut hesaplar (ADR 0329).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0

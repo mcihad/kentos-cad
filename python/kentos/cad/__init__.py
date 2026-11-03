@@ -1904,6 +1904,7 @@ __all__ = [
     "OrderTo",
     "OrderToName",
     "OrdinateDimensionMeasure",
+    "OriginHatchEdit",
     "OriginUcsTo",
     "Outcome",
     "PackageEmbedded",

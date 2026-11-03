@@ -43,6 +43,7 @@ fn label(e: &HatchEdit) -> &'static str {
         HatchEdit::Untie { .. } => "İlişkiyi kopar",
         HatchEdit::Pattern { .. } => "Deseni değiştir",
         HatchEdit::Align { .. } => "Taramaları hizala",
+        HatchEdit::Origin { .. } => "Tarama başlangıcı",
     }
 }
 
@@ -564,6 +565,22 @@ fn check(doc: &Document, store: &Store, input: &HatchesEdit) -> Result<Checked, 
                 }
             }
             checks::revision(doc, input.expected_revision.as_deref())?;
+        }
+        HatchEdit::Origin { uids, origin } => {
+            if let kentos_commands::HatchOrigin::Point { at } = origin {
+                checks::point(*at, "Tarama başlangıcı", "edit.origin.at")?;
+            }
+            let hatches = hatches_at(doc, uids)?;
+            checks::revision(doc, input.expected_revision.as_deref())?;
+            let rings: Vec<Vec<Vec2>> = hatches.iter().map(|(_, _, h)| h.ring.iter().map(|p| Vec2::new(p.x, p.y)).collect()).collect();
+            let all = crate::region::box_of(rings.iter().map(Vec::as_slice));
+            for ((slot, uid, mut h), ring) in hatches.into_iter().zip(&rings) {
+                if !lined(&h.pattern) {
+                    return Err(fail(codes::INVALID_REGION, "Başlangıç yalnız çizgili desenlerde değiştirilebilir.".into(), "edit.uids"));
+                }
+                h.pattern.origin = crate::region::origin_of(Some(origin), crate::region::box_of([ring.as_slice()]), all);
+                changed.push((slot, uid, h));
+            }
         }
         HatchEdit::Pattern { uids, pattern: spec } => {
             let base = crate::region::pattern_of_spec(spec, doc.settings())

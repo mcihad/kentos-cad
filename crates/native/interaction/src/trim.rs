@@ -562,7 +562,13 @@ impl Tool for Boundary {
             cx.selection.set_hover(hit);
             return;
         }
-        self.hover = edge::hover(p, cx, edge::unlocked);
+        // A hatch draws on top of its own source. Prefer the source edge so that the
+        // visible fill cannot prevent editing it; a lone hatch still gives its refusal.
+        let hit = edge::pick(p, cx, |e, doc| {
+            edge::unlocked(e, doc) && !matches!(e, kentos_commands::Entity::Hatch(_))
+        }).or_else(|| edge::pick(p, cx, edge::unlocked));
+        cx.selection.set_hover(hit);
+        self.hover = hit.map(|slot| Hover { slot, at: p.raw });
         self.redraw(cx);
     }
 
@@ -599,7 +605,10 @@ impl Tool for Boundary {
             cx.selection.set_hover(None);
             return;
         }
-        let Some(slot) = edge::pick_said(p, cx, edge::unlocked) else {
+        let preferred = edge::pick(p, cx, |e, doc| {
+            edge::unlocked(e, doc) && !matches!(e, kentos_commands::Entity::Hatch(_))
+        });
+        let Some(slot) = preferred.or_else(|| edge::pick_said(p, cx, edge::unlocked)) else {
             let label = if p.shift {
                 self.other_label()
             } else {

@@ -8477,6 +8477,7 @@ class HatchEdit(_Union):
     - :class:`AddIslandsHatchEdit` (``kind: addIslands``)
     - :class:`RemoveIslandsHatchEdit` (``kind: removeIslands``)
     - :class:`PatternHatchEdit` (``kind: pattern``)
+    - :class:`OriginHatchEdit` (``kind: origin``)
     - :class:`AlignHatchEdit` (``kind: align``)
     - :class:`UntieHatchEdit` (``kind: untie``)
     """
@@ -89863,6 +89864,27 @@ class PatternHatchEdit(HatchEdit):
 
 
 @dataclass(kw_only=True, slots=True)
+class OriginHatchEdit(HatchEdit):
+    """Move only the pattern origin; pattern definition, angle, scale, boundary and associations remain unchanged."""
+    TAG_VALUE: ClassVar[str] = "origin"
+    uids: list[str]
+    origin: HatchOrigin
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "origin"}
+        out["uids"] = list(self.uids)
+        out["origin"] = self.origin.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OriginHatchEdit:
+        return cls(
+            uids=list(data["uids"]),
+            origin=HatchOrigin.from_json(data["origin"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class AlignHatchEdit(HatchEdit):
     """Hizala: the hatches' lines continue the reference's (AutoCAD's hatch origin across objects, docs/adr/0331 §2):
     each takes its origin, and the angle and scale too where its pattern is the reference's.
@@ -100902,7 +100924,7 @@ _FORMS_OP: dict[str, type[FormsOp]] = {"create": CreateFormsOp, "update": Update
 _HATCH_CURVE: dict[str, type[HatchCurve]] = {"ellipse": EllipseHatchCurve, "nurbs": NurbsHatchCurve}
 
 
-_HATCH_EDIT: dict[str, type[HatchEdit]] = {"recreate": RecreateHatchEdit, "reselect": ReselectHatchEdit, "addIslands": AddIslandsHatchEdit, "removeIslands": RemoveIslandsHatchEdit, "pattern": PatternHatchEdit, "align": AlignHatchEdit, "untie": UntieHatchEdit}
+_HATCH_EDIT: dict[str, type[HatchEdit]] = {"recreate": RecreateHatchEdit, "reselect": ReselectHatchEdit, "addIslands": AddIslandsHatchEdit, "removeIslands": RemoveIslandsHatchEdit, "pattern": PatternHatchEdit, "origin": OriginHatchEdit, "align": AlignHatchEdit, "untie": UntieHatchEdit}
 
 
 _HATCH_ORIGIN: dict[str, type[HatchOrigin]] = {"world": WorldHatchOrigin, "point": PointHatchOrigin, "corner": CornerHatchOrigin}
@@ -102997,6 +103019,7 @@ __all__ = [
     "OrderTo",
     "OrderToName",
     "OrdinateDimensionMeasure",
+    "OriginHatchEdit",
     "OriginUcsTo",
     "PackageEmbedded",
     "PackageLeft",

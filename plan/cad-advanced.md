@@ -1264,7 +1264,7 @@ zorunlu değildir. Önceki dilimlerdeki açık durumlar yukarıdaki son kabulle
 kapanmıştır; CAD-ADV-07 tamamlandı.
 
 
-### CAD-ADV-08 — Sınır, tarama ve maskeyi hatasını açıklayabilen bir üretim sistemine getir [ ]
+### CAD-ADV-08 — Sınır, tarama ve maskeyi hatasını açıklayabilen bir üretim sistemine getir [x]
 
 **Öncelik:** P0 ilişki/görünürlük; P1 kapsam. **Kod:** [C14], [C15], [C03].
 **Dayanak:** güncel CAD'lerde tarama ve hızlı budama iş akışı; KentOS'ta
@@ -1292,7 +1292,7 @@ sınır, alan, desen orijini ve tek Undo korunmalı; durum değişimi kullanıc�
 tarafından anlaşılmalı. Yakın/uzak görünüm ve PDF karşılaştırılmalı.
 
 
-**Uygulama durumu — 3 Kasım 2026 (kabul sürüyor):**
+**Uygulama durumu — 3 Kasım 2026 (kabul tamamlandı; [ADR 0912](../docs/adr/0912-cad-boundary-and-hatch-inspection.md)):**
 - `cad.drawing.inspect` salt okunur/durdurulabilir sorgusu ve KentOS UI bileşenleriyle
   CAD denetimi paneli: kapsam, teşhis eşiği, bulguya gitme, sahnede işaret, tarama
   bağ durumu ve düzenleyiciye geçiş. Eski belge/sürüm sonuçları işlem yaptıramaz.
@@ -1311,9 +1311,16 @@ tarafından anlaşılmalı. Yakın/uzak görünüm ve PDF karşılaştırılmal�
   depo dışında `/tmp/kentos-cad-adv08-09-2026-11-03/` altında tutulur.
 - Kesin topoloji teşhisi doğru/dairesel yay kapsamındadır; blok/elips/NURBS/spline
   ve sınırı aşan kaynaklar açıkça kapsam dışında raporlanır. Bunlar temiz sayılmaz.
-- Kalan kabul: güncel main ile birleştirme sonrası tekrar doğrulama, budama ve
-  ölçülü desen düzenleme akışlarının son gerçek arayüz kontrolü. Bu nedenle madde
-  henüz tamamlandı işareti almadı.
+- Güncel main ile birleşim sonrası denetim/masaüstü kontrolleri geçti. Son eklemede
+  10 uygulama denetim, 17 tarama etkileşim, 26 düzenleme regresyon, 3 Python ve
+  2 MCP testi geçti. `cad.hatches.edit origin` yalnız desen başlangıcını değiştirir;
+  karışık dolu/desenli toplu istek atomik reddedilir. Nokta/koordinat, açı ve ölçek
+  gerçek arayüzde değiştirilip tek Undo ile geri alındı.
+- Gerçek budamada üstteki taramanın kaynak daireyi seçtirmeme sorunu düzeltildi.
+  Daire açık yaya dönüşürken tarama geometrisi/deseni korunur; panel 1 ilişkisiz
+  gösterir. Tek Undo ve tekrar denetim 1 ilişkili gösterir. Son menü taşmasız
+  görüntülendi; kaynak sil/düzelt/yeniden bağla, iki ada/yazı, yakın/uzak ve PDF
+  kabulüyle CAD-ADV-08 tamamlandı. Yukarıdaki kesinlik sınırları geçerlidir.
 
 ### CAD-ADV-09 — Ölçü, kılavuz ve teknik anotasyonun doğruluğunu görünür kıl [ ]
 

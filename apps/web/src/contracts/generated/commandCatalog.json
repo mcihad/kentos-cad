@@ -110825,6 +110825,31 @@
           "type": "object"
         },
         {
+          "description": "Move only the pattern origin; pattern definition, angle, scale, boundary and associations remain unchanged.",
+          "properties": {
+            "kind": {
+              "const": "origin",
+              "type": "string"
+            },
+            "origin": {
+              "$ref": "#/$defs/HatchOrigin"
+            },
+            "uids": {
+              "items": {
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "kind",
+            "uids",
+            "origin"
+          ],
+          "type": "object"
+        },
+        {
           "description": "Hizala: the hatches' lines continue the reference's (AutoCAD's hatch origin across objects, docs/adr/0331 §2):\neach takes its origin, and the angle and scale too where its pattern is the reference's.",
           "properties": {
             "kind": {
