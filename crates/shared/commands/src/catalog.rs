@@ -7149,6 +7149,59 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::ROAD_CORRIDORS_EDIT.into(),
+            version: crate::ROAD_CORRIDORS_EDIT_VERSION,
+            title: "Koridoru düzenle".into(),
+            summary: "Yol projesinin koridorunu (corridor: kimliği ya da adı; yoksa yeni) yazar, aksına yeniden bağlar ya da kaldırır. Koridor bir aksın üstündedir: boykesiti (profile) eksen kotunu, yüzeyi (surface) şevin buluştuğu araziyi verir; isteğe bağlı dever çizelgesi (superelevation) şeritlerin eğimini; left ve right her yanda arama genişliğidir (m). Bölgeler (regions: from, to aksın istasyonu, m; template tip kesit) kesişmez, boşluk bırakabilir. \
+                      Km örneklemesi: bölgenin başı ve sonu, aliymanda tangent aralığının katları, kurp ve klotoidde elemanın curve aralığıyla (sag verilirse kirişin yaydan sapması en çok sag olacak adımla) eşit bölünmesi, yatay geometri noktaları; profilePoints ile boykesitin PVI'leri, düşey kurp uçları, tepe ve çukuru; critical ile dever kritik km'leri; stations ile kullanıcının km'leri. Sonuç saklanmaz, her okumada kurulur. \
+                      superelevation \"\" çizelgeyi, sag 0 toleransı kaldırır. Yeni koridorun kimliği verilen ya da ilk boş c-n. Tek geri alma adımı “Koridor”. Retler: not_a_road_project, unknown_corridor, unknown_alignment, unknown_road_profile, unknown_terrain, unknown_superelevation, unknown_road_template, invalid_road_corridor, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["koridor".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::CorridorsEdit>(),
+            output: schema::<crate::CorridorsWritten>(),
+            plan: Some(schema::<crate::CorridorsWritten>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana aksta tek bölgeli koridor, her 20 m ve kurpta 10 m".into(),
+                input: json!({ "operation": "set", "name": "Ana koridor", "alignment": "Ana aks", "profile": "Proje kotu",
+                    "surface": "Mevcut zemin", "left": 25.0, "right": 25.0, "tangent": 20.0, "curve": 10.0,
+                    "regions": [ { "from": 0.0, "to": 300.0, "template": "tk-1" } ] }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_CORRIDORS_QUERY.into(),
+            version: crate::ROAD_CORRIDORS_QUERY_VERSION,
+            title: "Koridoru sorgula".into(),
+            summary: "Yol projesinin koridorlarını bugün kurar ve verir; hiçbir şey yazmaz. Her koridorun km'leri (nedenleriyle), bölgeleri arasındaki boşluklar, çözülmeyen aralıklar (kesit kurulmadı ya da şev araziyle buluşmadı; sol ve sağ ayrı), kesitlerin planda kesiştiği aralıklar, öznitelik çizgileri (axis, left.c1 …, left.hinge, left.ditchToe, left.ditchBottom, left.daylight; km aralığı ve 3B uzunluk), üst yüzeyin üçgen sayısı ve plan alanı; kurulamıyorsa nedeni. corridor ile yalnız biri; points öznitelik çizgilerinin noktalarını, triangles üst yüzeyin üçgenlerini de verir. \
+                      Uyarılar: corridor_stale, corridor_unsolved, corridor_folded, corridor_gap, corridor_surface_gone, corridor_superelevation_gone. Retler: not_a_road_project, unknown_corridor, invalid_road_corridor."
+                .into(),
+            aliases: vec!["koridorsor".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::CorridorsQuery>(),
+            output: schema::<crate::CorridorsQueried>(),
+            plan: Some(schema::<crate::CorridorsQueried>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bir koridorun öznitelik çizgileri noktalarıyla".into(),
+                input: json!({ "corridor": "Ana koridor", "points": true }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::ROAD_ALIGNMENTS_QUERY.into(),
             version: crate::ROAD_ALIGNMENTS_QUERY_VERSION,
             title: "Aksı sorgula".into(),
@@ -12756,6 +12809,12 @@ mod tests {
                     crate::ROAD_SUPERELEVATIONS_QUERY => {
                         serde_json::from_value::<crate::SuperelevationsQuery>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_CORRIDORS_EDIT => {
+                        serde_json::from_value::<crate::CorridorsEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_CORRIDORS_QUERY => {
+                        serde_json::from_value::<crate::CorridorsQuery>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_SUBNETWORKS_FIND => {
                         serde_json::from_value::<crate::SubnetworksFind>(e.input.clone())
                             .map(|_| ())
@@ -13458,6 +13517,12 @@ mod tests {
                         crate::ROAD_SUPERELEVATIONS_QUERY => {
                             serde_json::from_value::<crate::SuperelevationsQueried>(output.clone())
                                 .map(|_| ())
+                        }
+                        crate::ROAD_CORRIDORS_EDIT => {
+                            serde_json::from_value::<crate::CorridorsWritten>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_CORRIDORS_QUERY => {
+                            serde_json::from_value::<crate::CorridorsQueried>(output.clone()).map(|_| ())
                         }
                         crate::CAD_ADDRESSES_DEFINE => {
                             serde_json::from_value::<crate::AddressesDefined>(output.clone())

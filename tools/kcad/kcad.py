@@ -9558,17 +9558,44 @@ class _Schema:
                 self.fail("bad_value", "normal enine eğim en çok %100 olur")
             return t
 
+        def corridor_region(x):
+            return self.fields({"from": (finite, True), "to": (finite, True), "template": (word, True)})(x)
+
+        def corridor(x):
+            # Docs/adr/0905 §1: an alignment's regions with their templates and how often it is sampled.
+            t = self.fields({"id": (word, True), "name": (self.text, True), "alignment": (word, True),
+                             "alignmentRevision": (self.uint(32), False), "revision": (self.uint(32), False),
+                             "profile": (word, True), "surface": (word, True), "superelevation": (word, False),
+                             "left": (finite, True), "right": (finite, True), "tangent": (finite, True),
+                             "curve": (finite, True), "sag": (finite, False), "profilePoints": (self.bool, False),
+                             "critical": (self.bool, False), "stations": (self.array(finite), False),
+                             "regions": (self.array(corridor_region), True)})(x)
+            name = t["name"]
+            if not name or name.strip() != name or len(name) > 120:
+                self.fail("bad_value", "koridorun adı boş, boşluklu ya da çok uzun")
+            if not (0 < t["left"] <= 1000 and 0 < t["right"] <= 1000):
+                self.fail("bad_value", "arama genişliği 0'dan büyük, en çok 1000 m olmalı")
+            if not (0 < t["tangent"] <= 1000 and 0 < t["curve"] <= 1000):
+                self.fail("bad_value", "aralık 0'dan büyük, en çok 1000 m olur")
+            if "sag" in t and not 0 < t["sag"] <= 10:
+                self.fail("bad_value", "sapma toleransı 0'dan büyük, en çok 10 m olur")
+            if not 1 <= len(t["regions"]) <= 256:
+                self.fail("bad_value", "1 ile 256 arası bölge olur")
+            return t
+
         r = self.fields({"surfaces": (self.array(surface), False), "alignments": (self.array(alignment), False),
                          "profiles": (self.array(profile), False), "templates": (self.array(template), False),
                          "sections": (self.array(section_set), False),
-                         "superelevations": (self.array(superelevation), False)})(v)
+                         "superelevations": (self.array(superelevation), False),
+                         "corridors": (self.array(corridor), False)})(v)
         got = r.get("surfaces", [])
         lines = r.get("alignments", [])
         profiles = r.get("profiles", [])
         templates = r.get("templates", [])
         sets = r.get("sections", [])
         supers = r.get("superelevations", [])
-        if not got and not lines and not profiles and not templates and not sets and not supers:
+        corridors = r.get("corridors", [])
+        if not got and not lines and not profiles and not templates and not sets and not supers and not corridors:
             self.fail("bad_value", "boş yol ayarı yazılmaz")
         if len(got) > 64 or ("surfaces" in r and not got):
             self.fail("bad_value", "yol ayarında 1 ile 64 arası yüzey olur")
@@ -9619,6 +9646,23 @@ class _Schema:
             src = next((y for y in lines if y["id"] == x["alignment"]), None)
             if src is None or "offsetOf" in src:
                 self.fail("bad_value", "dever çizelgesi yalnız PI'larıyla kurulan aksa bağlanır")
+        if "corridors" in r and not corridors or len(corridors) > 256:
+            self.fail("bad_value", "yol ayarında 1 ile 256 arası koridor olur")
+        if len({x["id"] for x in corridors}) != len(corridors) or len({x["name"].lower() for x in corridors}) != len(corridors):
+            self.fail("bad_value", "iki koridorun kimliği ya da adı aynı")
+        for x in corridors:
+            src = next((y for y in lines if y["id"] == x["alignment"]), None)
+            if src is None or "offsetOf" in src:
+                self.fail("bad_value", "koridor yalnız PI'larıyla kurulan aksa bağlanır")
+            prof = next((y for y in profiles if y["id"] == x["profile"]), None)
+            if prof is None or prof["alignment"] != x["alignment"]:
+                self.fail("bad_value", "koridorun boykesiti projede yok ya da koridorun aksında değil")
+            if "superelevation" in x:
+                sup = next((y for y in supers if y["id"] == x["superelevation"]), None)
+                if sup is None or sup["alignment"] != x["alignment"]:
+                    self.fail("bad_value", "koridorun dever çizelgesi projede yok ya da koridorun aksında değil")
+            if any(all(y["id"] != g["template"] for y in templates) for g in x["regions"]):
+                self.fail("bad_value", "koridor bölgesinin tip kesiti projede yok")
         return r
 
     def arch_(self, v):

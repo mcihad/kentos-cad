@@ -1735,6 +1735,38 @@ const ENTRIES: &[Entry] = &[
         warnings: &["superelevation_stale"],
         targets: none,
     },
+    // KentOS Yol's corridors (plan/road.md Y7, docs/adr/0905).
+    Entry {
+        id: "road.corridors.edit",
+        refusals: &[
+            &[
+                "not_a_road_project",
+                "unknown_corridor",
+                "unknown_alignment",
+                "unknown_road_profile",
+                "unknown_terrain",
+                "unknown_superelevation",
+                "unknown_road_template",
+                "invalid_road_corridor",
+            ],
+            REVISION,
+        ],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "road.corridors.query",
+        refusals: &[&["not_a_road_project", "unknown_corridor", "invalid_road_corridor"]],
+        warnings: &[
+            "corridor_stale",
+            "corridor_unsolved",
+            "corridor_folded",
+            "corridor_gap",
+            "corridor_surface_gone",
+            "corridor_superelevation_gone",
+        ],
+        targets: none,
+    },
     // Alt ağlar (docs/adr/0557 §2).
     Entry {
         id: "cad.subnetworks.find",

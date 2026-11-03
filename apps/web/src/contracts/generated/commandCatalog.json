@@ -37351,6 +37351,392 @@
       ]
     },
     {
+      "id": "road.corridors.edit",
+      "version": 1,
+      "title": "Koridoru düzenle",
+      "summary": "Yol projesinin koridorunu (corridor: kimliği ya da adı; yoksa yeni) yazar, aksına yeniden bağlar ya da kaldırır. Koridor bir aksın üstündedir: boykesiti (profile) eksen kotunu, yüzeyi (surface) şevin buluştuğu araziyi verir; isteğe bağlı dever çizelgesi (superelevation) şeritlerin eğimini; left ve right her yanda arama genişliğidir (m). Bölgeler (regions: from, to aksın istasyonu, m; template tip kesit) kesişmez, boşluk bırakabilir. Km örneklemesi: bölgenin başı ve sonu, aliymanda tangent aralığının katları, kurp ve klotoidde elemanın curve aralığıyla (sag verilirse kirişin yaydan sapması en çok sag olacak adımla) eşit bölünmesi, yatay geometri noktaları; profilePoints ile boykesitin PVI'leri, düşey kurp uçları, tepe ve çukuru; critical ile dever kritik km'leri; stations ile kullanıcının km'leri. Sonuç saklanmaz, her okumada kurulur. superelevation \"\" çizelgeyi, sag 0 toleransı kaldırır. Yeni koridorun kimliği verilen ya da ilk boş c-n. Tek geri alma adımı “Koridor”. Retler: not_a_road_project, unknown_corridor, unknown_alignment, unknown_road_profile, unknown_terrain, unknown_superelevation, unknown_road_template, invalid_road_corridor, invalid_revision, revision_conflict.",
+      "aliases": [
+        "koridor"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.corridors.edit` v1: the corridor by its id or name (absent: a new one). A new one needs `name`,\n`alignment`, `profile`, `surface`, `left`, `right`, `tangent`, `curve` and `regions`; it holds its alignment's\npresent revision. `superelevation` \"\" takes the schedule away, `sag` 0 the chord tolerance.\n\nRefusals, in this order: `not_a_road_project`, `unknown_corridor` (remove or rebind one not in the project),\n`unknown_alignment`, `unknown_road_profile`, `unknown_terrain`, `unknown_superelevation`, `unknown_road_template`,\n`invalid_road_corridor` (a new one without its fields, set with nothing to set, the definition by `road_problem`,\nregions overlapping, empty or off the alignment, a station written off it, more stations than a corridor samples),\n`invalid_revision`, `revision_conflict`.",
+        "properties": {
+          "alignment": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "corridor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "critical": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "curve": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "left": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "operation": {
+            "$ref": "#/$defs/RoadEditOperation"
+          },
+          "profile": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "profilePoints": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "regions": {
+            "items": {
+              "$ref": "#/$defs/CorridorRegionDef"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "right": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "sag": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "stations": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "type": [
+              "array",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "superelevation": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "surface": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "tangent": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          }
+        },
+        "required": [
+          "operation"
+        ],
+        "title": "CorridorsEdit",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.corridors.edit` v1.",
+        "properties": {
+          "corridor": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/CorridorReport"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The corridor written, built; absent when removed."
+          },
+          "corridors": {
+            "items": {
+              "$ref": "#/$defs/CorridorListed"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "corridors",
+          "revision"
+        ],
+        "title": "CorridorsWritten",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.corridors.edit` v1.",
+        "properties": {
+          "corridor": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/CorridorReport"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The corridor written, built; absent when removed."
+          },
+          "corridors": {
+            "items": {
+              "$ref": "#/$defs/CorridorListed"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "corridors",
+          "revision"
+        ],
+        "title": "CorridorsWritten",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_corridor",
+          "unknown_alignment",
+          "unknown_road_profile",
+          "unknown_terrain",
+          "unknown_superelevation",
+          "unknown_road_template",
+          "invalid_road_corridor",
+          "invalid_revision",
+          "revision_conflict"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Ana aksta tek bölgeli koridor, her 20 m ve kurpta 10 m",
+          "input": {
+            "alignment": "Ana aks",
+            "curve": 10.0,
+            "left": 25.0,
+            "name": "Ana koridor",
+            "operation": "set",
+            "profile": "Proje kotu",
+            "regions": [
+              {
+                "from": 0.0,
+                "template": "tk-1",
+                "to": 300.0
+              }
+            ],
+            "right": 25.0,
+            "surface": "Mevcut zemin",
+            "tangent": 20.0
+          }
+        }
+      ]
+    },
+    {
+      "id": "road.corridors.query",
+      "version": 1,
+      "title": "Koridoru sorgula",
+      "summary": "Yol projesinin koridorlarını bugün kurar ve verir; hiçbir şey yazmaz. Her koridorun km'leri (nedenleriyle), bölgeleri arasındaki boşluklar, çözülmeyen aralıklar (kesit kurulmadı ya da şev araziyle buluşmadı; sol ve sağ ayrı), kesitlerin planda kesiştiği aralıklar, öznitelik çizgileri (axis, left.c1 …, left.hinge, left.ditchToe, left.ditchBottom, left.daylight; km aralığı ve 3B uzunluk), üst yüzeyin üçgen sayısı ve plan alanı; kurulamıyorsa nedeni. corridor ile yalnız biri; points öznitelik çizgilerinin noktalarını, triangles üst yüzeyin üçgenlerini de verir. Uyarılar: corridor_stale, corridor_unsolved, corridor_folded, corridor_gap, corridor_surface_gone, corridor_superelevation_gone. Retler: not_a_road_project, unknown_corridor, invalid_road_corridor.",
+      "aliases": [
+        "koridorsor"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.corridors.query` v1: every corridor built, or one (`corridor`: its id or name); `points` gives the\nfeature lines' points, `triangles` the top surface's triangles (one corridor only).\n\nRefusals: `not_a_road_project`, `unknown_corridor`, `invalid_road_corridor` (`points` or `triangles` without a\ncorridor). Warnings: `corridor_stale`, `corridor_unsolved`, `corridor_folded`, `corridor_gap`,\n`corridor_surface_gone`, `corridor_superelevation_gone`.",
+        "properties": {
+          "corridor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "points": {
+            "type": "boolean"
+          },
+          "triangles": {
+            "type": "boolean"
+          }
+        },
+        "title": "CorridorsQuery",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.corridors.query` v1.",
+        "properties": {
+          "corridors": {
+            "items": {
+              "$ref": "#/$defs/CorridorReport"
+            },
+            "type": "array"
+          },
+          "triangles": {
+            "description": "The top surface's triangles (x, y, z each corner), counterclockwise in plan; asked only.",
+            "items": {
+              "items": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 3,
+                "minItems": 3,
+                "type": "array"
+              },
+              "maxItems": 3,
+              "minItems": 3,
+              "type": "array"
+            },
+            "type": "array",
+            "x-unit": "m"
+          }
+        },
+        "required": [
+          "corridors"
+        ],
+        "title": "CorridorsQueried",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.corridors.query` v1.",
+        "properties": {
+          "corridors": {
+            "items": {
+              "$ref": "#/$defs/CorridorReport"
+            },
+            "type": "array"
+          },
+          "triangles": {
+            "description": "The top surface's triangles (x, y, z each corner), counterclockwise in plan; asked only.",
+            "items": {
+              "items": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 3,
+                "minItems": 3,
+                "type": "array"
+              },
+              "maxItems": 3,
+              "minItems": 3,
+              "type": "array"
+            },
+            "type": "array",
+            "x-unit": "m"
+          }
+        },
+        "required": [
+          "corridors"
+        ],
+        "title": "CorridorsQueried",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_corridor",
+          "invalid_road_corridor"
+        ],
+        "warnings": [
+          "corridor_stale",
+          "corridor_unsolved",
+          "corridor_folded",
+          "corridor_gap",
+          "corridor_surface_gone",
+          "corridor_superelevation_gone"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bir koridorun öznitelik çizgileri noktalarıyla",
+          "input": {
+            "corridor": "Ana koridor",
+            "points": true
+          }
+        }
+      ]
+    },
+    {
       "id": "road.alignments.query",
       "version": 1,
       "title": "Aksı sorgula",
@@ -71441,7 +71827,7 @@
       "code": "alignment_in_use",
       "kind": "failed",
       "retryable": false,
-      "meaning": "Bu aksı izleyen paralel aks ya da ona bağlı boykesit ya da kesit takımı var; önce onu silin."
+      "meaning": "Bu aksı izleyen paralel aks ya da ona bağlı boykesit, kesit takımı, dever çizelgesi ya da koridor var; önce onu silin."
     },
     {
       "code": "station_outside",
@@ -71495,7 +71881,7 @@
       "code": "road_template_in_use",
       "kind": "failed",
       "retryable": false,
-      "meaning": "Bu tip kesiti bir kesit takımı kullanıyor; önce takımdan kaldırın."
+      "meaning": "Bu tip kesiti bir kesit takımı ya da koridor kullanıyor; önce ondan kaldırın."
     },
     {
       "code": "unknown_section_set",
@@ -71513,7 +71899,7 @@
       "code": "profile_in_use",
       "kind": "failed",
       "retryable": false,
-      "meaning": "Bu boykesiti bir kesit takımı kullanıyor; önce takımdan kaldırın."
+      "meaning": "Bu boykesiti bir kesit takımı ya da koridor kullanıyor; önce ondan kaldırın."
     },
     {
       "code": "section_set_stale",
@@ -71549,7 +71935,7 @@
       "code": "superelevation_in_use",
       "kind": "failed",
       "retryable": false,
-      "meaning": "Bu dever çizelgesini bir kesit takımı kullanıyor; önce takımdan kaldırın."
+      "meaning": "Bu dever çizelgesini bir kesit takımı ya da koridor kullanıyor; önce ondan kaldırın."
     },
     {
       "code": "section_superelevation_gone",
@@ -71562,6 +71948,54 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Dever çizelgesinin aksı değişti; km'leri denetleyip aksa yeniden bağlayın."
+    },
+    {
+      "code": "unknown_corridor",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu kimlikte ya da adda koridor yok."
+    },
+    {
+      "code": "invalid_road_corridor",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Koridorun tanımı, bölgeleri ya da km örneklemesi geçerli değil; ileti nedenini ve yerini söyler."
+    },
+    {
+      "code": "corridor_stale",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Koridorun aksı değişti; bölgeleri denetleyip aksa yeniden bağlayın."
+    },
+    {
+      "code": "corridor_unsolved",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Koridorun bazı km aralıkları çözülmedi: kesit kurulmadı ya da şev araziyle buluşmadı; ileti aralıkları söyler."
+    },
+    {
+      "code": "corridor_folded",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Ardışık kesitler planda kesişiyor (dar kurpta geniş şerit); orada üst yüzey kurulmadı."
+    },
+    {
+      "code": "corridor_gap",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Koridorun bölgeleri arasında kesitsiz aralık var."
+    },
+    {
+      "code": "corridor_surface_gone",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Koridorun yüzeyi projede yok ya da kurulamıyor; hiçbir kesit çözülmedi."
+    },
+    {
+      "code": "corridor_superelevation_gone",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Koridorun dever çizelgesi kurulamıyor; şeritler tip kesitin eğimiyle verildi."
     },
     {
       "code": "profile_stale",
@@ -87987,6 +88421,400 @@
           "type": "object"
         }
       ]
+    },
+    "CorridorDef": {
+      "additionalProperties": false,
+      "description": "A corridor (docs/adr/0905): on an alignment of its own PIs (its revision held), its profile's elevations, the\nsurface its slopes meet, an optional superelevation schedule, the swath searched on each side (m), how often it\nis sampled (the tangent and curve intervals, an optional chord tolerance; the profile's points, the critical\nstations and the stations written) and its regions in order.",
+      "properties": {
+        "alignment": {
+          "type": "string"
+        },
+        "alignmentRevision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "critical": {
+          "description": "The superelevation schedule's critical stations are sampled too.",
+          "type": "boolean"
+        },
+        "curve": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "id": {
+          "type": "string"
+        },
+        "left": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "name": {
+          "type": "string"
+        },
+        "profile": {
+          "type": "string"
+        },
+        "profilePoints": {
+          "description": "The profile's PVIs, its vertical curves' ends and its high and low points are sampled too.",
+          "type": "boolean"
+        },
+        "regions": {
+          "items": {
+            "$ref": "#/$defs/CorridorRegionDef"
+          },
+          "type": "array"
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "right": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "sag": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "stations": {
+          "description": "Stations the user wrote (the alignment's own, m).",
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "type": "array",
+          "x-unit": "m"
+        },
+        "superelevation": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "surface": {
+          "type": "string"
+        },
+        "tangent": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "alignment",
+        "profile",
+        "surface",
+        "left",
+        "right",
+        "tangent",
+        "curve",
+        "regions"
+      ],
+      "type": "object"
+    },
+    "CorridorFeature": {
+      "description": "A feature line: its code (`axis`, `left.c1` …, `left.hinge`, `left.ditchToe`, `left.ditchBottom`,\n`left.daylight`), its region, its first and last station, its 3D length and, when asked, its points (station, x, y,\nz).",
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "from": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "length": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "points": {
+          "items": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 4,
+            "minItems": 4,
+            "type": "array"
+          },
+          "type": "array",
+          "x-unit": "m"
+        },
+        "region": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "index"
+        },
+        "to": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "code",
+        "region",
+        "from",
+        "to",
+        "length"
+      ],
+      "type": "object"
+    },
+    "CorridorListed": {
+      "description": "A corridor in a list: its id, name, alignment, revision and whether its alignment changed since.",
+      "properties": {
+        "alignment": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "stale": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "alignment",
+        "revision",
+        "stale"
+      ],
+      "type": "object"
+    },
+    "CorridorRegionDef": {
+      "additionalProperties": false,
+      "description": "A corridor's region (docs/adr/0905 §1): the alignment's stations it spans (m) and its template.",
+      "properties": {
+        "from": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "template": {
+          "type": "string"
+        },
+        "to": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "from",
+        "to",
+        "template"
+      ],
+      "type": "object"
+    },
+    "CorridorReport": {
+      "description": "A corridor as it is now: its sources, whether its alignment changed since, its stations, the gaps between its\nregions, the stretches not solved, where consecutive sections cross in plan, its feature lines, its top surface's\ntriangle count and plan area; why it does not build when it does not.",
+      "properties": {
+        "alignment": {
+          "type": "string"
+        },
+        "area": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "features": {
+          "items": {
+            "$ref": "#/$defs/CorridorFeature"
+          },
+          "type": "array"
+        },
+        "folded": {
+          "items": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "type": "array",
+          "x-unit": "m"
+        },
+        "gaps": {
+          "items": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "type": "array",
+          "x-unit": "m"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "problem": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "profile": {
+          "type": "string"
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "stale": {
+          "type": "boolean"
+        },
+        "stations": {
+          "items": {
+            "$ref": "#/$defs/CorridorStation"
+          },
+          "type": "array"
+        },
+        "superelevation": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "surface": {
+          "type": "string"
+        },
+        "triangles": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "unsolved": {
+          "items": {
+            "$ref": "#/$defs/CorridorStretch"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "revision",
+        "alignment",
+        "profile",
+        "surface",
+        "stale",
+        "stations",
+        "gaps",
+        "unsolved",
+        "folded",
+        "features",
+        "triangles",
+        "area"
+      ],
+      "type": "object"
+    },
+    "CorridorStation": {
+      "description": "A station a corridor samples: the alignment's own, its km, and why (`region`, `geometry`, `critical`, `profile`,\n`user`, `curve`, `interval`).",
+      "properties": {
+        "kmText": {
+          "type": "string"
+        },
+        "region": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "index"
+        },
+        "station": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "why": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "station",
+        "kmText",
+        "why",
+        "region"
+      ],
+      "type": "object"
+    },
+    "CorridorStretch": {
+      "description": "A stretch of a side not solved: the region, the side (`left`, `right`), why (`noSection`, `open`) and its stations.",
+      "properties": {
+        "from": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "fromText": {
+          "type": "string"
+        },
+        "region": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "index"
+        },
+        "side": {
+          "type": "string"
+        },
+        "to": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "toText": {
+          "type": "string"
+        },
+        "why": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "region",
+        "side",
+        "why",
+        "from",
+        "to",
+        "fromText",
+        "toText"
+      ],
+      "type": "object"
     },
     "CreateOperation": {
       "description": "The drawing tool or Hesap window whose step has its own name; without\none the step is “Ekle”, as for every object a drawing tool adds.",
@@ -133055,6 +133883,13 @@
           "description": "The horizontal alignments (docs/adr/0901), in the order the project tree shows them.",
           "items": {
             "$ref": "#/$defs/AlignmentDef"
+          },
+          "type": "array"
+        },
+        "corridors": {
+          "description": "The corridors (docs/adr/0905), each on an alignment, in the order the project tree shows them.",
+          "items": {
+            "$ref": "#/$defs/CorridorDef"
           },
           "type": "array"
         },

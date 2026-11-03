@@ -94,3 +94,27 @@ fn a_superelevation_is_asked_made_and_kept() {
     let kept = call(&mut server, "road.superelevations.edit", json!({"drawing":drawing,"superelevation":"d-1","operation":"remove"}));
     assert!(kept.to_string().contains("superelevation_in_use"), "{kept}");
 }
+
+/// The sample drawing's corridor (docs/adr/0905): built when asked, with its stations and feature lines; a new one made;
+/// a template it uses kept.
+#[test]
+fn a_corridor_is_asked_made_and_keeps_its_template() {
+    let mut server = Server::new();
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/kcad/v2/road-work.kcad");
+    let opened = call(&mut server, "drawing.open", json!({"path":path}));
+    let drawing = opened["structuredContent"]["drawing"].clone();
+    let asked = call(&mut server, "road.corridors.query", json!({"drawing":drawing,"corridor":"Ana koridor"}));
+    assert_eq!(asked["isError"], false, "{asked}");
+    let out = &asked["structuredContent"]["output"]["corridors"][0];
+    assert!(out["stations"].as_array().is_some_and(|s| s.len() > 40), "{out}");
+    assert!(out["stations"].as_array().is_some_and(|s| s.iter().any(|x| x["why"] == "user")), "{out}");
+    let made = call(
+        &mut server,
+        "road.corridors.edit",
+        json!({"drawing":drawing,"operation":"set","name":"Yeni","alignment":"g-1","profile":"b-1","surface":"t-zemin",
+            "left":20.0,"right":20.0,"tangent":50.0,"curve":25.0,"regions":[{"from":0.0,"to":200.0,"template":"tk-2"}]}),
+    );
+    assert_eq!(made["structuredContent"]["output"]["corridor"]["id"], "c-2", "{made}");
+    let kept = call(&mut server, "road.templates.edit", json!({"drawing":drawing,"template":"tk-2","operation":"remove"}));
+    assert!(kept.to_string().contains("road_template_in_use"), "{kept}");
+}

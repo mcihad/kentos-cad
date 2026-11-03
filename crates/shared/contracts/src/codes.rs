@@ -621,7 +621,7 @@ codes! {
     /// A parallel axis folds where a curve's radius is smaller than the offset, or crosses itself.
     OFFSET_CUSP = "offset_cusp", Failed, false, "Paralel aks bu ötelemede kıvrılıyor; ötelemeyi küçültün ya da kurpların yarıçapını büyütün.";
     /// An alignment a parallel axis follows or a profile lies on.
-    ALIGNMENT_IN_USE = "alignment_in_use", Failed, false, "Bu aksı izleyen paralel aks ya da ona bağlı boykesit ya da kesit takımı var; önce onu silin.";
+    ALIGNMENT_IN_USE = "alignment_in_use", Failed, false, "Bu aksı izleyen paralel aks ya da ona bağlı boykesit, kesit takımı, dever çizelgesi ya da koridor var; önce onu silin.";
     /// A station off the alignment, a km on no place.
     STATION_OUTSIDE = "station_outside", Failed, false, "Bu km aksın üstünde değil.";
     /// A km on more than one place, asked without its region.
@@ -639,13 +639,13 @@ codes! {
     /// A road template's definition, or an edit that gives too little (docs/adr/0903 §3).
     INVALID_ROAD_TEMPLATE = "invalid_road_template", Failed, false, "Tip kesitin tanımı geçerli değil; ileti nedenini ve yerini söyler.";
     /// A road template a sample line set uses.
-    ROAD_TEMPLATE_IN_USE = "road_template_in_use", Failed, false, "Bu tip kesiti bir kesit takımı kullanıyor; önce takımdan kaldırın.";
+    ROAD_TEMPLATE_IN_USE = "road_template_in_use", Failed, false, "Bu tip kesiti bir kesit takımı ya da koridor kullanıyor; önce ondan kaldırın.";
     /// No sample line set of the id or name.
     UNKNOWN_SECTION_SET = "unknown_section_set", Failed, false, "Bu kimlikte ya da adda kesit takımı yok.";
     /// A sample line set's definition or its stations (docs/adr/0903 §1–§2).
     INVALID_SECTION_SET = "invalid_section_set", Failed, false, "Kesit takımının tanımı ya da km'leri geçerli değil; ileti nedenini ve yerini söyler.";
     /// A profile a sample line set reads.
-    PROFILE_IN_USE = "profile_in_use", Failed, false, "Bu boykesiti bir kesit takımı kullanıyor; önce takımdan kaldırın.";
+    PROFILE_IN_USE = "profile_in_use", Failed, false, "Bu boykesiti bir kesit takımı ya da koridor kullanıyor; önce ondan kaldırın.";
     /// A warning: the sample line set's alignment changed since it was made or rebound.
     SECTION_SET_STALE = "section_set_stale", Warning, false, "Kesit takımının aksı takım kurulduktan sonra değişti; km'leri denetleyip aksa yeniden bağlayın.";
     /// A warning: the set's surface is not in the project or makes no surface; no terrain, no platform.
@@ -657,11 +657,27 @@ codes! {
     /// A superelevation schedule's definition, or a schedule that does not build (docs/adr/0904 §2).
     INVALID_SUPERELEVATION = "invalid_superelevation", Failed, false, "Dever çizelgesi kurallarına uymuyor ya da kurulamıyor.";
     /// A superelevation schedule a sample line set uses.
-    SUPERELEVATION_IN_USE = "superelevation_in_use", Failed, false, "Bu dever çizelgesini bir kesit takımı kullanıyor; önce takımdan kaldırın.";
+    SUPERELEVATION_IN_USE = "superelevation_in_use", Failed, false, "Bu dever çizelgesini bir kesit takımı ya da koridor kullanıyor; önce ondan kaldırın.";
     /// A warning: the set's superelevation schedule does not build; its lanes keep the template's slopes.
     SECTION_SUPERELEVATION_GONE = "section_superelevation_gone", Warning, false, "Kesit takımının dever çizelgesi kurulamıyor; şeritler tip kesitin eğimiyle verildi.";
     /// A warning: the schedule's alignment changed since it was made or rebound.
     SUPERELEVATION_STALE = "superelevation_stale", Warning, false, "Dever çizelgesinin aksı değişti; km'leri denetleyip aksa yeniden bağlayın.";
+    /// No corridor of the id or name.
+    UNKNOWN_CORRIDOR = "unknown_corridor", Failed, false, "Bu kimlikte ya da adda koridor yok.";
+    /// A corridor's definition, its regions or its sampling (docs/adr/0905 §1–§2).
+    INVALID_ROAD_CORRIDOR = "invalid_road_corridor", Failed, false, "Koridorun tanımı, bölgeleri ya da km örneklemesi geçerli değil; ileti nedenini ve yerini söyler.";
+    /// A warning: the corridor's alignment changed since it was made or rebound.
+    CORRIDOR_STALE = "corridor_stale", Warning, false, "Koridorun aksı değişti; bölgeleri denetleyip aksa yeniden bağlayın.";
+    /// A warning: stretches of the corridor without a section or with a side open (docs/adr/0905 §3).
+    CORRIDOR_UNSOLVED = "corridor_unsolved", Warning, false, "Koridorun bazı km aralıkları çözülmedi: kesit kurulmadı ya da şev araziyle buluşmadı; ileti aralıkları söyler.";
+    /// A warning: consecutive sections cross in plan; no top surface there (docs/adr/0905 §5).
+    CORRIDOR_FOLDED = "corridor_folded", Warning, false, "Ardışık kesitler planda kesişiyor (dar kurpta geniş şerit); orada üst yüzey kurulmadı.";
+    /// A warning: the corridor's regions leave stretches without sections.
+    CORRIDOR_GAP = "corridor_gap", Warning, false, "Koridorun bölgeleri arasında kesitsiz aralık var.";
+    /// A warning: the corridor's surface is not in the project or makes no surface; no section is solved.
+    CORRIDOR_SURFACE_GONE = "corridor_surface_gone", Warning, false, "Koridorun yüzeyi projede yok ya da kurulamıyor; hiçbir kesit çözülmedi.";
+    /// A warning: the corridor's superelevation schedule does not build; its lanes keep the templates' slopes.
+    CORRIDOR_SUPERELEVATION_GONE = "corridor_superelevation_gone", Warning, false, "Koridorun dever çizelgesi kurulamıyor; şeritler tip kesitin eğimiyle verildi.";
     /// A warning: the profile's alignment changed since it was made or rebound.
     PROFILE_STALE = "profile_stale", Warning, false, "Boykesitin aksı boykesit kurulduktan sonra değişti; PVI'ları denetleyip aksa yeniden bağlayın.";
     /// A warning: the profile's surface is not in the project or makes no surface; no black elevations.

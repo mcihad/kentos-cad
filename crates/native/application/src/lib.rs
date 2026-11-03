@@ -272,6 +272,9 @@ pub mod road_profiles_create;
 pub mod road_profiles_draw;
 pub mod road_profiles_edit;
 pub mod road_profiles_query;
+pub mod road_corridors;
+pub mod road_corridors_edit;
+pub mod road_corridors_query;
 pub mod road_sections;
 pub mod road_sections_draw;
 pub mod road_sections_edit;
@@ -1184,6 +1187,8 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
         kentos_commands::ROAD_SUPERELEVATIONS_QUERY,
         kentos_commands::ROAD_SUPERELEVATIONS_QUERY_VERSION,
     ),
+    (kentos_commands::ROAD_CORRIDORS_EDIT, kentos_commands::ROAD_CORRIDORS_EDIT_VERSION),
+    (kentos_commands::ROAD_CORRIDORS_QUERY, kentos_commands::ROAD_CORRIDORS_QUERY_VERSION),
     // Alt ağlar ([`subnetworks`], [`subnetworks_update`], docs/adr/0557 §2).
     (
         kentos_commands::CAD_SUBNETWORKS_FIND,

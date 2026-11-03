@@ -1,0 +1,470 @@
+#!/usr/bin/env python3
+"""Writes fixtures/commands/v1/road.corridors.{edit,query}.json: the shared cases of KentOS Yol's corridor commands
+(plan/road.md Y7, docs/adr/0905), their expectations built here without KentOS code: the drawing, its alignments,
+profiles, templates and superelevation schedules are scripts/fixtures/road_section_command_cases.py's; a corridor's
+stations, feature lines and top surface scripts/fixtures/road_corridor_cases.py's; each station's section the section
+reference's (the terrain along the sample line at 40 digits, the template in fractions). The desktop
+(crates/native/application/tests/all/fixtures.rs) and Python (python/tests/test_command_cases.py) run them.
+
+    uv run --no-project --python 3.11 --with triangle --with numpy --with mpmath --with pyproj \\
+        python3 scripts/fixtures/road_corridor_command_cases.py
+    ... --check   # compares the files with the ones on disk
+"""
+
+import copy
+import json
+import sys
+from pathlib import Path
+
+import mpmath as mp
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import road_alignment_cases as aref  # noqa: E402
+import road_corridor_cases as cref  # noqa: E402
+import road_profile_command_cases as pcmd  # noqa: E402
+import road_section_command_cases as scmd  # noqa: E402
+import road_superelevation_command_cases as supcmd  # noqa: E402
+
+ROOT = Path(__file__).resolve().parents[2]
+OUT = ROOT / "fixtures/commands/v1"
+
+completed, failed, step, case = pcmd.completed, pcmd.failed, pcmd.step, pcmd.case
+UNCHANGED, STEPPED, CONFLICT, BAD_REVISION = pcmd.UNCHANGED, pcmd.STEPPED, pcmd.CONFLICT, pcmd.BAD_REVISION
+NOT_ROAD = failed("not_a_road_project", "Koridor yalnız yol projesinde (KentOS Yol) olur; bu çizim yol projesi değil.")
+TEMPLATES = [scmd.TK1, scmd.TK2]
+SUPERS = [scmd.D1, scmd.D2, scmd.D_BAD]
+
+# A tight curve (R 4, inside the platform) for the folded strips: its alignment and a flat profile near the terrain.
+G4 = {"id": "g-4", "name": "Dar kurp", "revision": 1,
+      "pis": [pcmd.acmd.pi("a", 200, 180), pcmd.acmd.pi("p1", 240, 180, 4), pcmd.acmd.pi("b", 240, 240)]}
+pcmd.ALIGNED["g-4"] = pcmd.acmd.build(pcmd.ALIGNMENTS + [G4], G4)
+pcmd.REV["g-4"] = 1
+G4_LENGTH = float(pcmd.ALIGNED["g-4"].length)
+B4 = {"id": "b-4", "name": "Dar kurbun kotu", "alignment": "g-4", "alignmentRevision": 1, "revision": 1,
+      "pvis": [pcmd.pv("a", 0, 106.0), pcmd.pv("b", round(G4_LENGTH - 0.5, 3), 106.0)]}
+scmd.BY_PROFILE["b-4"] = B4
+PROFILES = scmd.PROFILES + [B4]
+
+C1 = {"id": "c-1", "name": "Ana koridor", "alignment": "g-1", "alignmentRevision": 1, "revision": 1, "profile": "b-1",
+      "surface": "t-1", "left": 30.0, "right": 30.0, "tangent": 25.0, "curve": 10.0,
+      "regions": [{"from": 0.0, "to": 300.0, "template": "tk-1"}, {"from": 300.0, "to": 600.0, "template": "tk-2"}]}
+C2 = {"id": "c-2", "name": "Yan koridor", "alignment": "g-2", "alignmentRevision": 2, "revision": 2, "profile": "b-2",
+      "surface": "t-1", "superelevation": "d-2", "left": 25.0, "right": 25.0, "tangent": 50.0, "curve": 20.0,
+      "regions": [{"from": 50.0, "to": 400.0, "template": "tk-2"}]}
+START = [C1, C2]
+
+
+def road_of(corridors, supers=SUPERS):
+    out = scmd.road_of(TEMPLATES, [scmd.S1, scmd.S2], supers=supers)
+    out["alignments"].append(copy.deepcopy(G4))
+    out["profiles"] = copy.deepcopy(PROFILES)
+    if corridors:
+        out["corridors"] = copy.deepcopy(corridors)
+    return out
+
+
+def setup(corridors=START, work="road", supers=SUPERS):
+    base = scmd.setup(work=work)
+    base["name"] = "Yol koridoru"
+    if work == "road":
+        base["settings"]["road"] = road_of(list(corridors), supers)
+    return base
+
+
+def num(v):
+    """A number as Rust's Display writes an f64."""
+    return str(int(v)) if float(v).is_integer() else repr(float(v))
+
+
+def km_text(alignment, s):
+    b = pcmd.ALIGNED[alignment]
+    return pcmd.acmd.km_text(aref.km_of(b.regions, mp.mpf(s)))
+
+
+class Refused(Exception):
+    def __init__(self, code, message, path=None):
+        super().__init__(message)
+        self.result = failed(code, message, path)
+
+
+def warn(code, message):
+    return {"code": code, "message": message, "path": "corridor"}
+
+
+def bad(path, message):
+    return Refused("invalid_road_corridor", message, path)
+
+
+def template_codes(t):
+    def one(side):
+        d = side.get("ditch")
+        return [len(side["components"]), d["bottom"] if d else None]
+    return {"left": one(t["left"]), "right": one(t.get("right") or t["left"])}
+
+
+def make(c, points=False, templates=TEMPLATES):
+    """The corridor's report, its warnings and its triangles by the references; Refused where it does not build."""
+    b = pcmd.ALIGNED[c["alignment"]]
+    length = float(b.length)
+    regions = cref.regions([[r["from"], r["to"]] for r in c["regions"]], length)
+    if "error" in regions:
+        e = regions["error"]
+        if e["kind"] == "EmptyRegion":
+            raise bad(f"regions[{e['index']}]", f"{e['index'] + 1}. bölgenin sonu başından en az 1 mm sonra olmalı.")
+        if e["kind"] == "Outside":
+            raise bad(f"regions[{e['index']}]",
+                      f"{e['index'] + 1}. bölge aksın dışına taşıyor: aks 0 ile {length:.3f} m arası.")
+        raise bad(f"regions[{e['second']}]",
+                  f"{e['first'] + 1}. ve {e['second'] + 1}. bölge kesişiyor; bölgeler en çok uç uca gelir.")
+    for i, s in enumerate(c.get("stations", [])):
+        if s < -1e-9 or s > length + 1e-9:
+            raise bad(f"stations[{i}]", f"{num(s)} m aksın üstünde değil: aks 0 ile {length:.3f} m arası.")
+    prof = scmd.BY_PROFILE[c["profile"]]
+    warnings = []
+    sup = None
+    crit = []
+    if c.get("superelevation"):
+        d = next(x for x in SUPERS if x["id"] == c["superelevation"])
+        got, why = supcmd.build(d)
+        if why:
+            warnings.append(warn("corridor_superelevation_gone",
+                                 f"“{c['name']}” koridorunun dever çizelgesi kurulamıyor; şeritler tip kesitin eğimiyle verildi."))
+        else:
+            sup = d
+            crit = [float(x["station"]) for x in got[1]]
+    events = [[s, "user"] for s in c.get("stations", [])]
+    if c.get("profilePoints"):
+        events += [[p["station"], "profile"] for p in prof["pvis"]]
+        for cv in pcmd.report(prof)["curves"]:
+            events += [[cv["start"][0], "profile"], [cv["end"][0], "profile"]]
+            if "extreme" in cv:
+                events.append([cv["extreme"][0], "profile"])
+    if c.get("critical"):
+        events += [[s, "critical"] for s in crit]
+    if c["surface"] != "t-1":
+        warnings.append(warn("corridor_surface_gone",
+                             f"“{c['name']}” koridorunun yüzeyi ({c['surface']}) projede yok ya da kurulamıyor; "
+                             "hiçbir kesit çözülmedi."))
+    stations, regs = [], []
+    for ri, r in enumerate(c["regions"]):
+        t = next((x for x in templates if x["id"] == r["template"]), None)
+        if t is None:
+            raise Refused("unknown_road_template", f"“{r['template']}” kimlikli tip kesit projede yok.",
+                          f"regions[{ri}].template")
+        got = cref.stations(b.els, [r["from"], r["to"]], c["tangent"], c["curve"], c.get("sag"), events)
+        if "error" in got:
+            if got["error"]["kind"] == "TooMany":
+                raise bad("tangent", f"Bu aralıklarla {cref.MAX_STATIONS}'den çok km çıkar; tangent ya da curve'ü büyütün.")
+            raise bad("tangent", "Aralıklar ve sapma toleransı 0'dan büyük olmalı.")
+        crosses = []
+        for s, why in got["stations"]:
+            stations.append({"station": s, "kmText": km_text(c["alignment"], s), "why": why, "region": ri})
+            fake = {"name": c["name"], "alignment": c["alignment"], "surface": c["surface"], "profile": c["profile"],
+                    "template": r["template"], "superelevation": sup["id"] if sup else None,
+                    "left": c["left"], "right": c["right"]}
+            row = scmd.sections(fake, [s], templates)[0][0]
+            e, (x, y) = aref.place_at(b.els, mp.mpf(s))
+            th = e.theta(mp.mpf(s) - e.station)
+            sec = None
+            if "left" in row:
+                def side(sd):
+                    return {"points": sd["points"], "hinge": sd["hinge"], "daylight": sd.get("daylight"),
+                            "kind": sd["kind"]}
+                sec = {"axis": row["axis"], "left": side(row["left"]), "right": side(row["right"])}
+            crosses.append({"station": s, "at": [float(x), float(y)], "direction": float(th), "section": sec})
+        regs.append({"template": template_codes(t), "crosses": crosses})
+    built = cref.assemble(regs)
+    text = lambda s: km_text(c["alignment"], s)  # noqa: E731
+    unsolved = [{"region": u["region"], "side": "right" if u["right"] else "left", "why": u["why"], "from": u["from"],
+                 "to": u["to"], "fromText": text(u["from"]), "toText": text(u["to"])} for u in built["unsolved"]]
+    features = []
+    for f in built["features"]:
+        p = f["points"]
+        length3 = 0.0
+        for a, q in zip(p, p[1:]):
+            length3 += ((q[1] - a[1]) ** 2 + (q[2] - a[2]) ** 2 + (q[3] - a[3]) ** 2) ** 0.5
+        out = {"code": f["code"], "region": f["region"], "from": p[0][0], "to": p[-1][0], "length": length3}
+        if points:
+            out["points"] = p
+        features.append(out)
+    area = 0.0
+    for t in built["triangles"]:
+        area += cref.area(t)
+    now = pcmd.REV[c["alignment"]]
+    stale = now != c.get("alignmentRevision", 0)
+    if stale:
+        warnings.append(warn("corridor_stale",
+                             f"“{c['name']}” koridorunun aksı değişti (koridor {c.get('alignmentRevision', 0)}. revizyona "
+                             f"göre kurulu, aks şimdi {now}.); bölgeleri denetleyip aksa yeniden bağlayın."))
+    if regions["gaps"]:
+        words = ", ".join(f"{text(g[0])} – {text(g[1])}" for g in regions["gaps"])
+        warnings.append(warn("corridor_gap", f"“{c['name']}” koridorunun bölgeleri arasında kesitsiz aralık var: {words}."))
+    if unsolved:
+        def word(u):
+            side = "sağ" if u["side"] == "right" else "sol"
+            why = "şev buluşmuyor" if u["why"] == "open" else "kesit yok"
+            if u["from"] == u["to"]:
+                return f"km {u['fromText']} {side} ({why})"
+            return f"km {u['fromText']} – {u['toText']} {side} ({why})"
+        more = f" ve {len(unsolved) - 8} aralık daha" if len(unsolved) > 8 else ""
+        warnings.append(warn("corridor_unsolved",
+                             f"“{c['name']}” koridorunun çözülmeyen aralıkları: {', '.join(word(u) for u in unsolved[:8])}{more}."))
+    if built["folded"]:
+        words = ", ".join(f"km {text(f[1])} – {text(f[2])}" for f in built["folded"])
+        warnings.append(warn("corridor_folded",
+                             f"“{c['name']}” koridorunda ardışık kesitler planda kesişiyor: {words}; orada üst yüzey kurulmadı."))
+    report = {"id": c["id"], "name": c["name"], "revision": c.get("revision", 0), "alignment": c["alignment"],
+              "profile": c["profile"], "surface": c["surface"], "stale": stale, "stations": stations,
+              "gaps": regions["gaps"], "unsolved": unsolved, "folded": [[f[1], f[2]] for f in built["folded"]],
+              "features": features, "triangles": len(built["triangles"]), "area": area}
+    if c.get("superelevation"):
+        report["superelevation"] = c["superelevation"]
+    return report, warnings, built["triangles"]
+
+
+def report(c):
+    try:
+        return make(c)[0]
+    except Refused as r:
+        out = {"id": c["id"], "name": c["name"], "revision": c.get("revision", 0), "alignment": c["alignment"],
+               "profile": c["profile"], "surface": c["surface"], "stale": pcmd.REV[c["alignment"]] != c.get("alignmentRevision", 0),
+               "stations": [], "gaps": [], "unsolved": [], "folded": [], "features": [], "triangles": 0, "area": 0.0,
+               "problem": r.result["error"]["message"]}
+        if c.get("superelevation"):
+            out["superelevation"] = c["superelevation"]
+        return out
+
+
+def listed(corridors):
+    return [{"id": c["id"], "name": c["name"], "alignment": c["alignment"], "revision": c.get("revision", 0),
+             "stale": pcmd.REV[c["alignment"]] != c.get("alignmentRevision", 0)} for c in corridors]
+
+
+def file(command, title, base, cases):
+    return {"format": "kentos.command-cases", "version": 1, "command": command, "commandVersion": 1, "title": title,
+            "note": "scripts/fixtures/road_corridor_command_cases.py yazar; çizim road_section_command_cases.py'nin, "
+                    "km örneklemesi, öznitelik çizgileri ve üst yüzey road_corridor_cases.py'nin, her km'nin kesiti "
+                    "enkesit başvurusunundur; KentOS kodu yok. `expect.road` projenin yol ayarlarıdır. Koridor geri alma "
+                    "geçmişinde tutulan bir proje ayarıdır; sonucu her okumada kurulur.",
+            "setup": base, "cases": cases}
+
+
+# ── road.corridors.edit ────────────────────────────────────────────────────────────────────────────────────────────
+
+def edit_cases():
+    cases = []
+
+    def written(after, target):
+        out = {"corridors": listed(after), "revision": "$current"}
+        if target:
+            out["corridor"] = report(next(c for c in after if c["id"] == target))
+        return out
+
+    def ok(name, input_, after, target, op="execute", undo=False):
+        writes = op == "execute" and after != START
+        result = completed(None) if op == "validate" else completed(written(after, target))
+        expect = {**STEPPED, "road": road_of(after)} if writes else {**UNCHANGED, "road": road_of(START)}
+        steps = [step(op, input_, result, expect)]
+        if undo:
+            steps.append({"op": "undo", "returns": "Koridor", "expect": {"road": road_of(START), "canRedo": True}})
+        cases.append(case(name, steps))
+
+    def no(name, input_, result, setup_=None):
+        road = None if setup_ is not None else road_of(START)
+        cases.append(case(name, [step("execute", input_, result, {**UNCHANGED, "road": road})], setup_))
+
+    def rulefail(words, path=None):
+        return failed("invalid_road_corridor", f"Koridor kurallarına uymuyor: {words}.", path)
+
+    def put(i, c):
+        out = list(START)
+        out[i] = c
+        return out
+
+    base = {"operation": "set", "name": "Yeni koridor", "alignment": "g-1", "profile": "b-1", "surface": "t-1",
+            "left": 30.0, "right": 30.0, "tangent": 50.0, "curve": 20.0}
+    one = [{"from": 100.0, "to": 250.0, "template": "tk-1"}]
+
+    def new(id_, **kw):
+        c = {"id": id_, "name": "Yeni koridor", "alignment": "g-1", "alignmentRevision": 1, "revision": 1,
+             "profile": "b-1", "surface": "t-1", "left": 30.0, "right": 30.0, "tangent": 50.0, "curve": 20.0,
+             "regions": one}
+        c.update(kw)
+        return c
+
+    ok("Yeni koridor: kimliği ilk boş c-3", {**base, "regions": one}, START + [new("c-3")], "c-3")
+    ok("Adlarla: aks, boykesit, yüzey ve tip kesit",
+       {**base, "corridor": "kendi", "alignment": "ANA aks", "profile": "proje kotu", "surface": "Mevcut zemin",
+        "regions": [{"from": 100.0, "to": 250.0, "template": "Tip 1"}]}, START + [new("kendi")], "kendi")
+    ok("Devere ve kritik km'lere bağlı", {**base, "superelevation": "Ana aks deveri", "critical": True,
+                                         "regions": [{"from": 120.0, "to": 260.0, "template": "tk-1"}]},
+       START + [new("c-3", superelevation="d-1", critical=True, regions=[{"from": 120.0, "to": 260.0, "template": "tk-1"}])],
+       "c-3")
+    ok("Sapma toleransı, profil noktaları ve kullanıcı km'leri",
+       {**base, "sag": 0.05, "profilePoints": True, "stations": [133.3], "regions": one},
+       START + [new("c-3", sag=0.05, profilePoints=True, stations=[133.3])], "c-3")
+    ok("Adı değişir", {"operation": "set", "corridor": "c-1", "name": "Koridor A"},
+       put(0, {**C1, "name": "Koridor A", "revision": 2}), "c-1")
+    ok("Bölgeler değişir", {"operation": "set", "corridor": "Ana koridor",
+                            "regions": [{"from": 0.0, "to": 200.0, "template": "tk-2"}]},
+       put(0, {**C1, "regions": [{"from": 0.0, "to": 200.0, "template": "tk-2"}], "revision": 2}), "c-1")
+    ok("Dever kaldırılır", {"operation": "set", "corridor": "c-2", "superelevation": ""},
+       put(1, {k: v for k, v in C2.items() if k != "superelevation"} | {"revision": 3}), "c-2")
+    ok("Sapma toleransı kaldırılır", {"operation": "set", "corridor": "c-1", "sag": 0.0}, START, "c-1")
+    ok("Aynı değerler: değişiklik yok, adım yok", {"operation": "set", "corridor": "c-1", "name": "Ana koridor"}, START, "c-1")
+    ok("Eskiyen koridor aksa yeniden bağlanır", {"operation": "rebind", "corridor": "c-2"},
+       put(1, {**C2, "alignmentRevision": 3, "revision": 3}), "c-2")
+    ok("Koridor silinir", {"operation": "remove", "corridor": "c-2"}, [C1], None)
+    ok("Silme tek geri alma adımı", {"operation": "remove", "corridor": "c-1"}, [C2], None, undo=True)
+    ok("Plan yazmaz", {"operation": "set", "corridor": "c-1", "name": "Koridor A"},
+       put(0, {**C1, "name": "Koridor A", "revision": 2}), "c-1", op="plan")
+    ok("Doğrulama yazmaz", {"operation": "rebind", "corridor": "c-2"},
+       put(1, {**C2, "alignmentRevision": 3, "revision": 3}), "c-2", op="validate")
+
+    L1 = float(pcmd.ALIGNED["g-1"].length)
+    no("Yol projesi değil", {"operation": "remove", "corridor": "c-1"}, NOT_ROAD, setup(work="map"))
+    no("Olmayan koridor silinmez", {"operation": "remove", "corridor": "yok"},
+       failed("unknown_corridor", "“yok” kimlikli ya da adlı koridor projede yok.", "corridor"))
+    no("Olmayan aks", {**base, "alignment": "yok", "regions": one},
+       failed("unknown_alignment", "“yok” kimlikli ya da adlı aks projede yok.", "alignment"))
+    no("Olmayan boykesit", {**base, "profile": "yok", "regions": one},
+       failed("unknown_road_profile", "“yok” kimlikli ya da adlı boykesit projede yok.", "profile"))
+    no("Olmayan yüzey", {**base, "surface": "yok", "regions": one},
+       failed("unknown_terrain", "“yok” kimlikli ya da adlı yüzey projede yok.", "surface"))
+    no("Olmayan dever", {**base, "superelevation": "yok", "regions": one},
+       failed("unknown_superelevation", "“yok” kimlikli ya da adlı dever çizelgesi projede yok.", "superelevation"))
+    no("Olmayan tip kesit", {**base, "regions": [{"from": 0.0, "to": 100.0, "template": "yok"}]},
+       failed("unknown_road_template", "“yok” kimlikli ya da adlı tip kesit projede yok.", "regions[0].template"))
+    no("Değiştirilecek bir şey yok", {"operation": "set", "corridor": "c-1"},
+       failed("invalid_road_corridor", "Değiştirilecek bir şey yok: name, alignment, profile, surface, superelevation, left, "
+                                       "right, tangent, curve, sag, profilePoints, critical, stations ya da regions verin."))
+    no("Yeni koridorun bölgesi yok", base,
+       failed("invalid_road_corridor", "Yeni koridor için name, alignment, profile, surface, left, right, tangent, curve ve "
+                                       "regions verilmeli.", "regions"))
+    no("Boykesit başka aksta", {**base, "profile": "b-2", "regions": one},
+       rulefail("boykesit koridorun aksında değil", "profile"))
+    no("Dever başka aksta", {**base, "superelevation": "d-2", "regions": one},
+       rulefail("dever çizelgesi koridorun aksında değil", "superelevation"))
+    no("Paralel aksa bağlanmaz", {**base, "alignment": "g-3", "regions": one},
+       rulefail("koridor yalnız PI'larıyla kurulan aksa bağlanır", "alignment"))
+    no("Aynı ad", {**base, "name": "YAN koridor", "regions": one}, rulefail("bu adda başka bir koridor var", "name"))
+    no("Sıfır aralık", {**base, "tangent": 0.0, "regions": one}, rulefail("aralık 0'dan büyük, en çok 1000 m olur", "tangent"))
+    no("Kesişen bölgeler", {**base, "regions": [{"from": 0.0, "to": 200.0, "template": "tk-1"},
+                                                 {"from": 150.0, "to": 300.0, "template": "tk-2"}]},
+       failed("invalid_road_corridor", "1. ve 2. bölge kesişiyor; bölgeler en çok uç uca gelir.", "regions[1]"))
+    no("Boş bölge", {**base, "regions": [{"from": 100.0, "to": 100.0, "template": "tk-1"}]},
+       failed("invalid_road_corridor", "1. bölgenin sonu başından en az 1 mm sonra olmalı.", "regions[0]"))
+    no("Aksın dışına taşan bölge", {**base, "regions": [{"from": 500.0, "to": 900.0, "template": "tk-1"}]},
+       failed("invalid_road_corridor", f"1. bölge aksın dışına taşıyor: aks 0 ile {L1:.3f} m arası.", "regions[0]"))
+    no("Aksın dışındaki km", {**base, "stations": [900.0], "regions": one},
+       failed("invalid_road_corridor", f"900 m aksın üstünde değil: aks 0 ile {L1:.3f} m arası.", "stations[0]"))
+    no("Çok sık örnekleme", {**base, "tangent": 0.02, "regions": [{"from": 0.0, "to": 600.0, "template": "tk-1"}]},
+       failed("invalid_road_corridor", f"Bu aralıklarla {cref.MAX_STATIONS}'den çok km çıkar; tangent ya da curve'ü büyütün.",
+              "tangent"))
+    no("Geçersiz beklenen sürüm", {"operation": "remove", "corridor": "c-2", "expectedRevision": "on"}, BAD_REVISION)
+    no("Eski sürüme göre hazırlanmış", {"operation": "remove", "corridor": "c-2", "expectedRevision": "41"}, CONFLICT)
+    return file("road.corridors.edit", "Koridoru düzenle", setup(), cases)
+
+
+# ── road.corridors.query ───────────────────────────────────────────────────────────────────────────────────────────
+
+def query_cases():
+    cases = []
+
+    def q(name, input_, corridors=START, op="execute"):
+        one = input_.get("corridor")
+        if one is None:
+            reports, warns = [], []
+            for c in corridors:
+                try:
+                    r, w, _ = make(c)
+                    reports.append(r)
+                    warns += w
+                except Refused:
+                    reports.append(report(c))
+            out = {"corridors": reports}
+        else:
+            c = next(x for x in corridors if x["id"] == one or x["name"].lower() == one.lower())
+            r, warns, tris = make(c, input_.get("points", False))
+            out = {"corridors": [r]}
+            if input_.get("triangles"):
+                out["triangles"] = tris
+        result = completed(None, warns) if op == "validate" else completed(out, warns)
+        cases.append(case(name, [step(op, input_, result, {**UNCHANGED, "road": road_of(corridors)})],
+                          None if corridors is START else setup(corridors)))
+
+    def no(name, input_, result, corridors=START, setup_=None):
+        road = None if setup_ is not None else road_of(corridors)
+        cases.append(case(name, [step("execute", input_, result, {**UNCHANGED, "road": road})],
+                          setup_ or (None if corridors is START else setup(corridors))))
+
+    def with_(c, **kw):
+        out = dict(c)
+        for k, v in kw.items():
+            if v is None:
+                out.pop(k, None)
+            else:
+                out[k] = v
+        return out
+
+    q("Bütün koridorlar; eskiyen uyarılır", {})
+    q("Bir koridor adıyla", {"corridor": "ANA koridor"})
+    q("Öznitelik çizgileri noktalarıyla", {"corridor": "c-1", "points": True})
+    q("Üst yüzeyin üçgenleri", {"corridor": "c-2", "triangles": True})
+    q("Devere bağlı, kritik km'lerle", {"corridor": "c-1"},
+      [with_(C1, superelevation="d-1", critical=True, regions=[{"from": 100.0, "to": 300.0, "template": "tk-1"}]), C2])
+    q("Profil noktaları ve kullanıcı km'leri", {"corridor": "c-1"},
+      [with_(C1, profilePoints=True, stations=[77.7, 412.5]), C2])
+    q("Kurpta sapma toleransı", {"corridor": "c-1"},
+      [with_(C1, sag=0.02, regions=[{"from": 150.0, "to": 300.0, "template": "tk-1"}]), C2])
+    q("Bölgeler arasında boşluk", {"corridor": "c-1"},
+      [with_(C1, regions=[{"from": 0.0, "to": 150.0, "template": "tk-1"}, {"from": 250.0, "to": 400.0, "template": "tk-2"}]), C2])
+    q("Dar şerit: açık yanlar", {"corridor": "c-1"}, [with_(C1, left=6.0, right=6.0), C2])
+    q("Boykesitin dışı kesitsiz", {"corridor": "c-1"},
+      [with_(C1, profile="b-3", regions=[{"from": 50.0, "to": 450.0, "template": "tk-1"}]), C2])
+    q("Kurulamayan yüzey", {"corridor": "c-1"}, [with_(C1, surface="t-2"), C2])
+    q("Projede olmayan yüzey", {"corridor": "c-1"}, [with_(C1, surface="t-9"), C2])
+    q("Kurulamayan dever", {"corridor": "c-1"}, [with_(C1, superelevation="d-3"), C2])
+    folded = {"id": "c-3", "name": "Dar kurp koridoru", "alignment": "g-4", "alignmentRevision": 1, "revision": 1,
+              "profile": "b-4", "surface": "t-1", "left": 40.0, "right": 40.0, "tangent": 10.0, "curve": 2.0,
+              "regions": [{"from": 0.0, "to": round(G4_LENGTH - 1.0, 3), "template": "tk-1"}]}
+    q("Dar kurpta kesitler kesişir", {"corridor": "c-3"}, START + [folded])
+    q("Plan cevabı verir", {"corridor": "c-2"}, op="plan")
+    q("Doğrulama uyarıları verir", {"corridor": "c-2"}, op="validate")
+    q("Koridor yok: boş liste", {}, [])
+    broken = with_(C1, regions=[{"from": 0.0, "to": 100.0, "template": "tk-1"}, {"from": 50.0, "to": 200.0, "template": "tk-1"}])
+    q("Kurulamayan koridor raporda nedeniyle", {}, [broken, C2])
+
+    no("Yol projesi değil", {}, NOT_ROAD, setup_=setup(work="map"))
+    no("Olmayan koridor", {"corridor": "yok"},
+       failed("unknown_corridor", "“yok” kimlikli ya da adlı koridor projede yok.", "corridor"))
+    no("Koridorsuz nokta sorusu", {"points": True},
+       failed("invalid_road_corridor", "Noktalar ve üçgenler bir koridorda sorulur: koridorun kimliğini ya da adını "
+                                       "(corridor) verin.", "corridor"))
+    no("Kurulamayan koridorun sorusu", {"corridor": "c-1"},
+       failed("invalid_road_corridor", "1. ve 2. bölge kesişiyor; bölgeler en çok uç uca gelir.", "regions[1]"),
+       [broken, C2])
+    return file("road.corridors.query", "Koridoru sorgula", setup(), cases)
+
+
+def main():
+    files = {"road.corridors.edit.json": edit_cases(), "road.corridors.query.json": query_cases()}
+    check = "--check" in sys.argv[1:]
+    bad = []
+    for name, data in files.items():
+        text = json.dumps(data, ensure_ascii=False, indent=1) + "\n"
+        path = OUT / name
+        if check:
+            if not path.exists() or path.read_text() != text:
+                bad.append(name)
+        else:
+            path.write_text(text)
+            print(f"written {path} ({len(data['cases'])} cases)")
+    if bad:
+        sys.exit(f"not current: {', '.join(bad)}")
+    if check:
+        print("road corridor cases are current")
+
+
+if __name__ == "__main__":
+    main()

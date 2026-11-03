@@ -44,6 +44,19 @@ fn check(doc: &kentos_domain::Document, input: &TemplatesEdit) -> Result<Checked
                     "template",
                 ));
             }
+            let corridors: Vec<&str> = doc
+                .road_corridors()
+                .iter()
+                .filter(|c| c.regions.iter().any(|r| r.template == t.id))
+                .map(|c| c.name.as_str())
+                .collect();
+            if !corridors.is_empty() {
+                return Err(fail(
+                    codes::ROAD_TEMPLATE_IN_USE,
+                    format!("“{}” tip kesitini şu koridorlar kullanıyor: {}. Önce koridorlardan kaldırın.", t.name, corridors.join(", ")),
+                    "template",
+                ));
+            }
             list.remove(at);
             None
         }

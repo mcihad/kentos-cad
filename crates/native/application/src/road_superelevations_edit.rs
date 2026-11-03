@@ -47,6 +47,19 @@ fn check(doc: &kentos_domain::Document, input: &SuperelevationsEdit) -> Result<C
                     "superelevation",
                 ));
             }
+            let corridors: Vec<&str> = doc
+                .road_corridors()
+                .iter()
+                .filter(|c| c.superelevation.as_deref() == Some(&d.id))
+                .map(|c| c.name.as_str())
+                .collect();
+            if !corridors.is_empty() {
+                return Err(fail(
+                    codes::SUPERELEVATION_IN_USE,
+                    format!("“{}” dever çizelgesini şu koridorlar kullanıyor: {}. Önce koridorlardan kaldırın.", d.name, corridors.join(", ")),
+                    "superelevation",
+                ));
+            }
             list.remove(at);
             None
         }

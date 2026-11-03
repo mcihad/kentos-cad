@@ -34,6 +34,9 @@ pub const MAX_SECTION_SETS: usize = 256;
 /// The most superelevation schedules a road project holds, curves or rows one holds.
 pub const MAX_SUPERELEVATIONS: usize = 256;
 pub const MAX_SUPERELEVATION_ROWS: usize = 10_000;
+/// The most corridors a road project holds, regions a corridor holds (docs/adr/0905).
+pub const MAX_CORRIDORS: usize = 256;
+pub const MAX_CORRIDOR_REGIONS: usize = 256;
 pub const MAX_SECTION_STATIONS: usize = 10_000;
 /// The widest a sample line reaches on a side, m.
 pub const MAX_SWATH: f64 = 1000.0;
@@ -69,6 +72,10 @@ pub struct RoadSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<SuperelevationDef>>", optional))]
     pub superelevations: Vec<SuperelevationDef>,
+    /// The corridors (docs/adr/0905), each on an alignment, in the order the project tree shows them.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<CorridorDef>>", optional))]
+    pub corridors: Vec<CorridorDef>,
 }
 
 impl RoadSettings {
@@ -80,6 +87,7 @@ impl RoadSettings {
             && self.templates.is_empty()
             && self.sections.is_empty()
             && self.superelevations.is_empty()
+            && self.corridors.is_empty()
     }
 
     /// What is wrong with it, by the field's path and in words; none when it is right.
@@ -581,6 +589,74 @@ pub struct SuperelevationDef {
     pub method: SuperelevationMethod,
 }
 
+/// A corridor's region (docs/adr/0905 §1): the alignment's stations it spans (m) and its template.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CorridorRegionDef {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub from: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub to: f64,
+    pub template: String,
+}
+
+/// A corridor (docs/adr/0905): on an alignment of its own PIs (its revision held), its profile's elevations, the
+/// surface its slopes meet, an optional superelevation schedule, the swath searched on each side (m), how often it
+/// is sampled (the tangent and curve intervals, an optional chord tolerance; the profile's points, the critical
+/// stations and the stations written) and its regions in order.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CorridorDef {
+    pub id: String,
+    pub name: String,
+    pub alignment: String,
+    #[serde(default, skip_serializing_if = "is_zero_u32")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub alignment_revision: u32,
+    #[serde(default, skip_serializing_if = "is_zero_u32")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub revision: u32,
+    pub profile: String,
+    pub surface: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub superelevation: Option<String>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub left: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub right: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub tangent: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub curve: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub sag: Option<f64>,
+    /// The profile's PVIs, its vertical curves' ends and its high and low points are sampled too.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub profile_points: bool,
+    /// The superelevation schedule's critical stations are sampled too.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub critical: bool,
+    /// Stations the user wrote (the alignment's own, m).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<f64>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub stations: Vec<f64>,
+    pub regions: Vec<CorridorRegionDef>,
+}
+
 /// What is wrong with a road project's settings, by the field's path and in words.
 pub fn road_problem(road: &RoadSettings) -> Option<(String, String)> {
     let fail = |path: String, words: &str| Some((path, words.to_string()));
@@ -640,6 +716,7 @@ pub fn road_problem(road: &RoadSettings) -> Option<(String, String)> {
         .or_else(|| templates_problem(&road.templates))
         .or_else(|| sections_problem(road))
         .or_else(|| superelevations_problem(road))
+        .or_else(|| corridors_problem(road))
 }
 
 fn side_problem(s: &TemplateSideDef, at: &str) -> Option<(String, String)> {
@@ -850,6 +927,85 @@ fn superelevations_problem(road: &RoadSettings) -> Option<(String, String)> {
                 if !rows.iter().all(|r| r.station.is_finite() && r.left.is_finite() && r.right.is_finite()) {
                     return fail(at("method.rows"), "satırların km'si ve eğimleri sonlu sayılar olmalı");
                 }
+            }
+        }
+    }
+    None
+}
+
+/// What is wrong with the corridors: each on an alignment of its own PIs, its profile on it, its schedule on it, its
+/// regions' templates in the project, its numbers finite and in range. Its regions' geometry is judged where it is
+/// built (docs/adr/0905 §1).
+fn corridors_problem(road: &RoadSettings) -> Option<(String, String)> {
+    let fail = |path: String, words: &str| Some((path, words.to_string()));
+    let list = &road.corridors;
+    if list.len() > MAX_CORRIDORS {
+        return fail("corridors".into(), &format!("en çok {MAX_CORRIDORS} koridor olur"));
+    }
+    let mut ids = std::collections::BTreeSet::new();
+    let mut names = std::collections::BTreeSet::new();
+    for (i, c) in list.iter().enumerate() {
+        let at = |field: &str| format!("corridors[{i}].{field}");
+        if !word_ok(&c.id) {
+            return fail(at("id"), "koridorun kimliği boş olmayan, en çok 64 karakterlik bir sözcük olmalı");
+        }
+        if !ids.insert(c.id.as_str()) {
+            return fail(at("id"), "bu kimlikte başka bir koridor var");
+        }
+        let name = c.name.trim();
+        if name.is_empty() || name != c.name || c.name.chars().count() > 120 {
+            return fail(at("name"), "koridorun adı boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 120 karakter");
+        }
+        if !names.insert(name.to_lowercase()) {
+            return fail(at("name"), "bu adda başka bir koridor var");
+        }
+        match road.alignments.iter().find(|a| a.id == c.alignment) {
+            None => return fail(at("alignment"), "koridorun aksı projede yok"),
+            Some(a) if a.offset_of.is_some() => return fail(at("alignment"), "koridor yalnız PI'larıyla kurulan aksa bağlanır"),
+            _ => {}
+        }
+        match road.profiles.iter().find(|q| q.id == c.profile) {
+            None => return fail(at("profile"), "koridorun boykesiti projede yok"),
+            Some(q) if q.alignment != c.alignment => return fail(at("profile"), "boykesit koridorun aksında değil"),
+            _ => {}
+        }
+        if !word_ok(&c.surface) {
+            return fail(at("surface"), "yüzey bir yüzeyin kimliği olmalı");
+        }
+        if let Some(e) = &c.superelevation {
+            match road.superelevations.iter().find(|q| q.id == *e) {
+                None => return fail(at("superelevation"), "koridorun dever çizelgesi projede yok"),
+                Some(q) if q.alignment != c.alignment => {
+                    return fail(at("superelevation"), "dever çizelgesi koridorun aksında değil");
+                }
+                _ => {}
+            }
+        }
+        for (field, v) in [("left", c.left), ("right", c.right)] {
+            if !(v.is_finite() && v > 0.0 && v <= MAX_SWATH) {
+                return fail(at(field), &format!("arama genişliği 0'dan büyük, en çok {MAX_SWATH} m olur"));
+            }
+        }
+        for (field, v) in [("tangent", c.tangent), ("curve", c.curve)] {
+            if !(v.is_finite() && v > 0.0 && v <= 1000.0) {
+                return fail(at(field), "aralık 0'dan büyük, en çok 1000 m olur");
+            }
+        }
+        if c.sag.is_some_and(|t| !(t.is_finite() && t > 0.0 && t <= 10.0)) {
+            return fail(at("sag"), "sapma toleransı 0'dan büyük, en çok 10 m olur");
+        }
+        if c.stations.len() > MAX_SECTION_STATIONS || !c.stations.iter().all(|s| s.is_finite()) {
+            return fail(at("stations"), &format!("en çok {MAX_SECTION_STATIONS} sonlu km yazılır"));
+        }
+        if c.regions.is_empty() || c.regions.len() > MAX_CORRIDOR_REGIONS {
+            return fail(at("regions"), &format!("1 ile {MAX_CORRIDOR_REGIONS} arası bölge olur"));
+        }
+        for (j, r) in c.regions.iter().enumerate() {
+            if !(r.from.is_finite() && r.to.is_finite()) {
+                return fail(at(&format!("regions[{j}]")), "bölgenin başı ve sonu sonlu sayılar olmalı");
+            }
+            if road.templates.iter().all(|t| t.id != r.template) {
+                return fail(at(&format!("regions[{j}].template")), "bölgenin tip kesiti projede yok");
             }
         }
     }

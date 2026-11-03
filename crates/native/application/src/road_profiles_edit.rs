@@ -70,6 +70,15 @@ fn check(doc: &kentos_domain::Document, input: &ProfilesEdit) -> Result<Checked,
                     "profile",
                 ));
             }
+            let corridors: Vec<&str> =
+                doc.road_corridors().iter().filter(|c| c.profile == old.id).map(|c| c.name.as_str()).collect();
+            if !corridors.is_empty() {
+                return Err(fail(
+                    codes::PROFILE_IN_USE,
+                    format!("“{}” boykesitini şu koridorlar kullanıyor: {}. Önce koridorlardan kaldırın.", old.name, corridors.join(", ")),
+                    "profile",
+                ));
+            }
             list.remove(at);
             None
         }

@@ -1,433 +1,467 @@
 {
-  "format": "kentos.document",
-  "version": 2,
-  "name": "Yol",
-  "settings": {
-    "srid": 5254,
-    "lengthDecimals": 3,
-    "areaDecimals": 2,
-    "areaUnit": "m2",
-    "angleUnit": "deg",
-    "plotScale": 1000.0,
-    "workspace": "cad",
-    "cadWork": "road",
-    "drawingFont": "barlow",
-    "road": {
-      "surfaces": [
-        {
-          "id": "t-zemin",
-          "name": "Mevcut zemin",
-          "points": {
-            "layers": [
-              "zemin"
-            ]
-          },
-          "breaklines": {
-            "uids": [
-              "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e16"
-            ]
-          },
-          "boundary": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e17",
-          "tolerance": 0.005,
-          "maxEdge": 60.0
-        }
-      ],
-      "alignments": [
-        {
-          "id": "g-1",
-          "name": "Ana aks",
-          "revision": 3,
-          "pis": [
-            {
-              "id": "a",
-              "x": 0.0,
-              "y": 0.0
-            },
-            {
-              "id": "p1",
-              "x": 600.0,
-              "y": 0.0,
-              "radius": 400.0,
-              "spiralIn": 80.0,
-              "spiralOut": 80.0
-            },
-            {
-              "id": "b",
-              "x": 1100.0,
-              "y": 500.0
-            }
-          ],
-          "stationing": {
-            "start": 2000.0,
-            "equations": [
-              {
-                "back": 2200.0,
-                "ahead": 2500.0
-              },
-              {
-                "back": 2650.0,
-                "ahead": 2700.0,
-                "increasing": false
-              }
-            ]
-          }
-        },
-        {
-          "id": "g-2",
-          "name": "Sol kenar",
-          "revision": 1,
-          "offsetOf": {
-            "alignment": "g-1",
-            "offset": -7.5
-          }
-        }
-      ],
-      "profiles": [
-        {
-          "id": "b-1",
-          "name": "Proje kotu",
-          "alignment": "g-1",
-          "alignmentRevision": 3,
-          "revision": 2,
-          "pvis": [
-            {
-              "id": "a",
-              "station": 0.0,
-              "elevation": 100.0
-            },
-            {
-              "id": "v1",
-              "station": 400.0,
-              "elevation": 104.0,
-              "length": 120.0
-            },
-            {
-              "id": "v2",
-              "station": 700.0,
-              "elevation": 101.0,
-              "radius": 3000.0
-            },
-            {
-              "id": "v3",
-              "station": 950.0,
-              "elevation": 106.0,
-              "lengthIn": 60.0,
-              "lengthOut": 40.0
-            },
-            {
-              "id": "b",
-              "station": 1150.0,
-              "elevation": 103.0
-            }
-          ],
-          "surface": "t-zemin"
-        }
-      ],
-      "templates": [
-        {
-          "id": "tk-1",
-          "name": "Tip 1",
-          "revision": 1,
-          "left": {
-            "components": [
-              {
-                "kind": "lane",
-                "width": 3.5,
-                "slope": -2.5
-              },
-              {
-                "kind": "shoulder",
-                "width": 1.0,
-                "slope": -4.0
-              }
-            ],
-            "cut": 1.0,
-            "fill": 1.5,
-            "ditch": {
-              "fore": 2.0,
-              "depth": 0.5,
-              "bottom": 0.5
-            }
-          }
-        },
-        {
-          "id": "tk-2",
-          "name": "Tip 2",
-          "left": {
-            "cut": 1.5,
-            "fill": 2.0
-          },
-          "right": {
-            "components": [
-              {
-                "kind": "lane",
-                "width": 3.0,
-                "slope": 2.0
-              }
-            ],
-            "cut": 1.0,
-            "fill": 1.5,
-            "ditch": {
-              "fore": 3.0,
-              "depth": 0.6
-            }
-          }
-        }
-      ],
-      "sections": [
-        {
-          "id": "k-1",
-          "name": "Enkesitler",
-          "alignment": "g-1",
-          "alignmentRevision": 3,
-          "revision": 1,
-          "profile": "b-1",
-          "template": "tk-1",
-          "surface": "t-zemin",
-          "left": 30.0,
-          "right": 30.0,
-          "stations": {
-            "method": "range",
-            "from": 0.0,
-            "to": 1000.0,
-            "every": 20.0,
-            "geometry": true
-          },
-          "superelevation": "d-1"
-        },
-        {
-          "id": "k-2",
-          "name": "Seçili",
-          "alignment": "g-1",
-          "left": 15.0,
-          "right": 20.0,
-          "stations": {
-            "method": "stations",
-            "stations": [
-              120.0,
-              480.5
-            ]
-          }
-        },
-        {
-          "id": "k-3",
-          "name": "Çizgilerden",
-          "alignment": "g-1",
-          "left": 10.0,
-          "right": 10.0,
-          "stations": {
-            "method": "lines",
-            "uids": [
-              "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11"
-            ]
-          }
-        }
-      ],
-      "superelevations": [
-        {
-          "id": "d-1",
-          "name": "Ana aks deveri",
-          "alignment": "g-1",
-          "alignmentRevision": 3,
-          "revision": 1,
-          "normalLeft": -2.5,
-          "normalRight": -2.5,
-          "method": {
-            "method": "curves",
-            "curves": [
-              {
-                "pi": "p1",
-                "rate": 6.0,
-                "runoff": 80.0,
-                "onTangent": 0.0,
-                "widening": 0.6
-              }
-            ]
-          }
-        },
-        {
-          "id": "d-2",
-          "name": "Satırlarla",
-          "alignment": "g-1",
-          "normalLeft": -2.0,
-          "normalRight": -2.0,
-          "method": {
-            "method": "stations",
-            "rows": [
-              {
-                "station": 100.0,
-                "left": -2.0,
-                "right": -2.0
-              },
-              {
-                "station": 200.0,
-                "left": 4.0,
-                "right": -4.0
-              }
-            ]
-          }
-        }
+ "format": "kentos.document",
+ "version": 2,
+ "name": "Yol",
+ "settings": {
+  "srid": 5254,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "deg",
+  "plotScale": 1000.0,
+  "workspace": "cad",
+  "cadWork": "road",
+  "drawingFont": "barlow",
+  "road": {
+   "surfaces": [
+    {
+     "id": "t-zemin",
+     "name": "Mevcut zemin",
+     "points": {
+      "layers": [
+       "zemin"
       ]
+     },
+     "breaklines": {
+      "uids": [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e16"
+      ]
+     },
+     "boundary": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e17",
+     "tolerance": 0.005,
+     "maxEdge": 60.0
     }
+   ],
+   "alignments": [
+    {
+     "id": "g-1",
+     "name": "Ana aks",
+     "revision": 3,
+     "pis": [
+      {
+       "id": "a",
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "id": "p1",
+       "x": 600.0,
+       "y": 0.0,
+       "radius": 400.0,
+       "spiralIn": 80.0,
+       "spiralOut": 80.0
+      },
+      {
+       "id": "b",
+       "x": 1100.0,
+       "y": 500.0
+      }
+     ],
+     "stationing": {
+      "start": 2000.0,
+      "equations": [
+       {
+        "back": 2200.0,
+        "ahead": 2500.0
+       },
+       {
+        "back": 2650.0,
+        "ahead": 2700.0,
+        "increasing": false
+       }
+      ]
+     }
+    },
+    {
+     "id": "g-2",
+     "name": "Sol kenar",
+     "revision": 1,
+     "offsetOf": {
+      "alignment": "g-1",
+      "offset": -7.5
+     }
+    }
+   ],
+   "profiles": [
+    {
+     "id": "b-1",
+     "name": "Proje kotu",
+     "alignment": "g-1",
+     "alignmentRevision": 3,
+     "revision": 2,
+     "pvis": [
+      {
+       "id": "a",
+       "station": 0.0,
+       "elevation": 100.0
+      },
+      {
+       "id": "v1",
+       "station": 400.0,
+       "elevation": 104.0,
+       "length": 120.0
+      },
+      {
+       "id": "v2",
+       "station": 700.0,
+       "elevation": 101.0,
+       "radius": 3000.0
+      },
+      {
+       "id": "v3",
+       "station": 950.0,
+       "elevation": 106.0,
+       "lengthIn": 60.0,
+       "lengthOut": 40.0
+      },
+      {
+       "id": "b",
+       "station": 1150.0,
+       "elevation": 103.0
+      }
+     ],
+     "surface": "t-zemin"
+    }
+   ],
+   "templates": [
+    {
+     "id": "tk-1",
+     "name": "Tip 1",
+     "revision": 1,
+     "left": {
+      "components": [
+       {
+        "kind": "lane",
+        "width": 3.5,
+        "slope": -2.5
+       },
+       {
+        "kind": "shoulder",
+        "width": 1.0,
+        "slope": -4.0
+       }
+      ],
+      "cut": 1.0,
+      "fill": 1.5,
+      "ditch": {
+       "fore": 2.0,
+       "depth": 0.5,
+       "bottom": 0.5
+      }
+     }
+    },
+    {
+     "id": "tk-2",
+     "name": "Tip 2",
+     "left": {
+      "cut": 1.5,
+      "fill": 2.0
+     },
+     "right": {
+      "components": [
+       {
+        "kind": "lane",
+        "width": 3.0,
+        "slope": 2.0
+       }
+      ],
+      "cut": 1.0,
+      "fill": 1.5,
+      "ditch": {
+       "fore": 3.0,
+       "depth": 0.6
+      }
+     }
+    }
+   ],
+   "sections": [
+    {
+     "id": "k-1",
+     "name": "Enkesitler",
+     "alignment": "g-1",
+     "alignmentRevision": 3,
+     "revision": 1,
+     "profile": "b-1",
+     "template": "tk-1",
+     "surface": "t-zemin",
+     "left": 30.0,
+     "right": 30.0,
+     "stations": {
+      "method": "range",
+      "from": 0.0,
+      "to": 1000.0,
+      "every": 20.0,
+      "geometry": true
+     },
+     "superelevation": "d-1"
+    },
+    {
+     "id": "k-2",
+     "name": "Seçili",
+     "alignment": "g-1",
+     "left": 15.0,
+     "right": 20.0,
+     "stations": {
+      "method": "stations",
+      "stations": [
+       120.0,
+       480.5
+      ]
+     }
+    },
+    {
+     "id": "k-3",
+     "name": "Çizgilerden",
+     "alignment": "g-1",
+     "left": 10.0,
+     "right": 10.0,
+     "stations": {
+      "method": "lines",
+      "uids": [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11"
+      ]
+     }
+    }
+   ],
+   "superelevations": [
+    {
+     "id": "d-1",
+     "name": "Ana aks deveri",
+     "alignment": "g-1",
+     "alignmentRevision": 3,
+     "revision": 1,
+     "normalLeft": -2.5,
+     "normalRight": -2.5,
+     "method": {
+      "method": "curves",
+      "curves": [
+       {
+        "pi": "p1",
+        "rate": 6.0,
+        "runoff": 80.0,
+        "onTangent": 0.0,
+        "widening": 0.6
+       }
+      ]
+     }
+    },
+    {
+     "id": "d-2",
+     "name": "Satırlarla",
+     "alignment": "g-1",
+     "normalLeft": -2.0,
+     "normalRight": -2.0,
+     "method": {
+      "method": "stations",
+      "rows": [
+       {
+        "station": 100.0,
+        "left": -2.0,
+        "right": -2.0
+       },
+       {
+        "station": 200.0,
+        "left": 4.0,
+        "right": -4.0
+       }
+      ]
+     }
+    }
+   ],
+   "corridors": [
+    {
+     "id": "c-1",
+     "name": "Ana koridor",
+     "alignment": "g-1",
+     "alignmentRevision": 3,
+     "revision": 2,
+     "profile": "b-1",
+     "surface": "t-zemin",
+     "superelevation": "d-1",
+     "left": 30.0,
+     "right": 30.0,
+     "tangent": 20.0,
+     "curve": 10.0,
+     "sag": 0.02,
+     "profilePoints": true,
+     "critical": true,
+     "stations": [
+      333.3
+     ],
+     "regions": [
+      {
+       "from": 0.0,
+       "to": 400.0,
+       "template": "tk-1"
+      },
+      {
+       "from": 450.0,
+       "to": 900.0,
+       "template": "tk-2"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "origin": {
+  "x": 0.0,
+  "y": 0.0
+ },
+ "layers": [
+  {
+   "id": "0",
+   "name": "0",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
   },
-  "origin": {
+  {
+   "id": "zemin",
+   "name": "Zemin",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8B6B3E",
+    "lineType": "continuous",
+    "lineWeight": 0.18
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "0",
+ "entities": [
+  {
+   "kind": "line",
+   "id": 1,
+   "layerId": "0",
+   "attrs": {},
+   "a": {
     "x": 0.0,
     "y": 0.0
+   },
+   "b": {
+    "x": 12.5,
+    "y": 0.0
+   }
   },
-  "layers": [
+  {
+   "kind": "point",
+   "id": 2,
+   "layerId": "zemin",
+   "attrs": {
+    "Ad": "Z1"
+   },
+   "p": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "z": 100.0
+  },
+  {
+   "kind": "point",
+   "id": 3,
+   "layerId": "zemin",
+   "attrs": {
+    "Ad": "Z2"
+   },
+   "p": {
+    "x": 40.0,
+    "y": 0.0
+   },
+   "z": 101.5
+  },
+  {
+   "kind": "point",
+   "id": 4,
+   "layerId": "zemin",
+   "attrs": {
+    "Ad": "Z3"
+   },
+   "p": {
+    "x": 40.0,
+    "y": 30.0
+   },
+   "z": 103.25
+  },
+  {
+   "kind": "point",
+   "id": 5,
+   "layerId": "zemin",
+   "attrs": {
+    "Ad": "Z4"
+   },
+   "p": {
+    "x": 0.0,
+    "y": 30.0
+   },
+   "z": 102.0
+  },
+  {
+   "kind": "polyline",
+   "id": 6,
+   "layerId": "zemin",
+   "attrs": {},
+   "pts": [
     {
-      "id": "0",
-      "name": "0",
-      "type": "layer",
-      "visible": true,
-      "locked": false,
-      "expanded": true,
-      "style": {
-        "color": "fg",
-        "lineType": "continuous",
-        "lineWeight": 0.25
-      },
-      "children": []
+     "x": 5.0,
+     "y": 15.0
     },
     {
-      "id": "zemin",
-      "name": "Zemin",
-      "type": "layer",
-      "visible": true,
-      "locked": false,
-      "expanded": true,
-      "style": {
-        "color": "#8B6B3E",
-        "lineType": "continuous",
-        "lineWeight": 0.18
-      },
-      "children": []
+     "x": 35.0,
+     "y": 15.0
     }
-  ],
-  "activeLayer": "0",
-  "entities": [
+   ],
+   "zs": [
+    101.0,
+    102.5
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 7,
+   "layerId": "0",
+   "attrs": {},
+   "pts": [
     {
-      "kind": "line",
-      "id": 1,
-      "layerId": "0",
-      "attrs": {},
-      "a": {
-        "x": 0.0,
-        "y": 0.0
-      },
-      "b": {
-        "x": 12.5,
-        "y": 0.0
-      }
+     "x": 0.0,
+     "y": 0.0
     },
     {
-      "kind": "point",
-      "id": 2,
-      "layerId": "zemin",
-      "attrs": {
-        "Ad": "Z1"
-      },
-      "p": {
-        "x": 0.0,
-        "y": 0.0
-      },
-      "z": 100.0
+     "x": 40.0,
+     "y": 0.0
     },
     {
-      "kind": "point",
-      "id": 3,
-      "layerId": "zemin",
-      "attrs": {
-        "Ad": "Z2"
-      },
-      "p": {
-        "x": 40.0,
-        "y": 0.0
-      },
-      "z": 101.5
+     "x": 40.0,
+     "y": 30.0
     },
     {
-      "kind": "point",
-      "id": 4,
-      "layerId": "zemin",
-      "attrs": {
-        "Ad": "Z3"
-      },
-      "p": {
-        "x": 40.0,
-        "y": 30.0
-      },
-      "z": 103.25
-    },
-    {
-      "kind": "point",
-      "id": 5,
-      "layerId": "zemin",
-      "attrs": {
-        "Ad": "Z4"
-      },
-      "p": {
-        "x": 0.0,
-        "y": 30.0
-      },
-      "z": 102.0
-    },
-    {
-      "kind": "polyline",
-      "id": 6,
-      "layerId": "zemin",
-      "attrs": {},
-      "pts": [
-        {
-          "x": 5.0,
-          "y": 15.0
-        },
-        {
-          "x": 35.0,
-          "y": 15.0
-        }
-      ],
-      "zs": [
-        101.0,
-        102.5
-      ]
-    },
-    {
-      "kind": "polygon",
-      "id": 7,
-      "layerId": "0",
-      "attrs": {},
-      "pts": [
-        {
-          "x": 0.0,
-          "y": 0.0
-        },
-        {
-          "x": 40.0,
-          "y": 0.0
-        },
-        {
-          "x": 40.0,
-          "y": 30.0
-        },
-        {
-          "x": 0.0,
-          "y": 30.0
-        }
-      ]
+     "x": 0.0,
+     "y": 30.0
     }
-  ],
-  "uids": [
-    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11",
-    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e12",
-    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e13",
-    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e14",
-    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e15",
-    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e16",
-    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e17"
-  ],
-  "styles": {
-    "items": [],
-    "categories": []
+   ]
   }
+ ],
+ "uids": [
+  "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11",
+  "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e12",
+  "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e13",
+  "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e14",
+  "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e15",
+  "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e16",
+  "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e17"
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
 }

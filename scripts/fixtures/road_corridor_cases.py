@@ -21,6 +21,7 @@ import road_alignment_cases as al  # noqa: E402
 OUT = Path(__file__).resolve().parents[2] / "fixtures" / "road" / "v1" / "corridor.json"
 P = al.pi
 SAME = 1e-3
+MAX_STATIONS = 20_000
 WHY = ["region", "geometry", "critical", "profile", "user", "curve", "interval"]
 
 
@@ -82,6 +83,8 @@ def stations(els, region, tangent, curve, sag, events):
         else:
             anchor = s
             kept.append((s, w))
+    if len(kept) > MAX_STATIONS:
+        return {"error": {"kind": "TooMany"}}
     return {"stations": [[s, WHY[w]] for s, w in kept]}
 
 
