@@ -124,12 +124,14 @@ impl Window {
 
 impl App {
     pub(crate) fn close_block_find(&mut self) {
+        self.close_array_find();
         self.blocks_panel.find = None;
         if self.dialog == Some(Dialog::BlockFind) {
             self.dialog = None;
         }
     }
     pub(crate) fn open_block_find(&mut self) {
+        self.close_array_find();
         self.show_blocks_panel();
         if self
             .blocks_panel

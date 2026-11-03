@@ -642,6 +642,23 @@
    "tests": 0
   },
   {
+   "id": "array.find",
+   "kind": "command",
+   "title": "Doğrusal dizileri bul…",
+   "level": "semantic",
+   "via": [
+    "cad.arrays.find",
+    "cad.arrays.adopt"
+   ],
+   "operation": null,
+   "python": "kentos.cad.arrays.find, kentos.cad.arrays.adopt",
+   "mcp": "cad.arrays.find, cad.arrays.adopt",
+   "note": "Yazısız doğrusal aday araması, sahnede gösterme, açık korunan yer eşlemesi ve ayrı inceleme. Mevcut kökleri değiştirmeden tek Undo adımıyla dizi kaydı eklenir; sorgu ve bağlama durdurulabilir (ADR0874/0875).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "attachment.add",
    "kind": "command",
    "title": "Dosya ekle…",

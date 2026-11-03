@@ -1077,9 +1077,35 @@ ve ilgili paketlerin Clippy denetimi başarılıdır. Son derlemeyle gerçek
 sorgu, bağlama/Undo/Redo ve görünür aralık değişimi tekrar doğrulanmıştır.
 Ekranlar, ikili özetleri ve dosya karşılaştırmaları depo dışındadır.
 
-**Açık kalan:** otomatik grid/kutupsal/yol aday bulma; doğrusal adaylar dahil
-grafik aday/öğe incelemesi; metin/öznitelik, iç blok ve diğer kaynak/ilişki
-genişletmesi. Bu dilimler CAD-ADV-07'nin tamamını kapatmaz.
+**Grafik doğrusal inceleme — [ADR 0875](../docs/adr/0875-linear-array-review-panel.md):**
+Bloklar panelindeki **Dizileri bul…**, şeridin mevcut Blok ek menüsü ve
+`DIZIBUL` aynı akışı açar. Görünür birimli arama ayarı, sanallaştırılmış aday
+kartı, dolu/boş/korunan yer şeması, Göster ve ayrı İncele vardır. Ortak native
+sorgu arka planda durdurulabilir çalışır; Python çıktısı ayarına uyar.
+Eşleşmeyen blok, kullanıcının seçtiği boş yere açıkça korunmuş öğe olarak
+atanır; kaynak/dolu yerin üzerine yazılmaz. Atama kaldırılabilir, taslak ve
+vazgeçme yazmaz. Diziye bağla aynı native Job ile metadata yazar; eski
+belge/iş sonucu uygulanmaz. Tek Undo/Redo ve iptal/yeniden inceleme vardır.
+
+Gerçek fare/klavyeyle arama, Göster, İncele, eşleşmeyen blok listesi,
+Bloğu göster, atama/kaldırma/yeniden atama, vazgeçme, uygulama ve Undo/Redo
+kullanılmıştır. 2200×1364 pencerede açık/koyu tema denendi; dar dock başlığının
+kırpılması görülüp düzeltilmiş ve yeniden kontrol edilmiştir. DIZIBUL gerçek
+komut satırından açılmıştır. Kaydet-aç dosyaları bağımsız KCAD okuyucusuyla
+incelendi: bağlama bütün kökleri, altı özgün UUID'yi, tanımı, ayarları ve ölçü
+referanslarını korur; iki boş yer ve tek korunan öğe vardır. Aralık menüsünden
+2000→3000 mm değişiminde korunan öğe yerinde, bağlı ölçü 3000 mm'dir.
+Vazgeçme/Undo başlangıç dosyasıyla, Redo bağlanmış dosyayla birebir aynıdır.
+
+Masaüstü genel koşusunda 1640 test geçti; tek katalog envanteri uyumsuzluğu
+üreticisiyle giderildi ve dokuz katalog testi geçti. Son görünüm düzeltmesinden
+sonra 26 Bloklar paneli testi ve tüm hedeflerin Clippy denetimi başarılıdır.
+Manifestte 946 satır tutarlıdır. Ekranlar, ikili özetleri ve kabul dosyaları
+repo dışındadır. Grafik aramanın ilk kapsamı hâlâ doğrusal statik bloklardır.
+
+**Açık kalan:** otomatik grid/kutupsal/yol aday bulma; metin/öznitelik,
+iç blok ve diğer kaynak/ilişki genişletmesi. Bu dilimler CAD-ADV-07'nin
+tamamını kapatmaz.
 
 ### CAD-ADV-08 — Sınır, tarama ve maskeyi hatasını açıklayabilen bir üretim sistemine getir [ ]
 

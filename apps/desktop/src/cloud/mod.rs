@@ -941,6 +941,7 @@ impl App {
             Some(Dialog::BlockReview) => self.block_editor_review_close(),
             Some(Dialog::BlockReplace) => self.block_replace_close(),
             Some(Dialog::BlockFind) => self.block_find_close_options(),
+            Some(Dialog::ArrayFind) => self.array_find_close_dialog(),
             Some(Dialog::ArchTemplate) => self.arch_template = None,
             Some(Dialog::SignIn) => self.cloud.sign_in = None,
             Some(Dialog::Catalog) if self.cloud.share.is_some() => {

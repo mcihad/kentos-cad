@@ -1973,6 +1973,7 @@ impl App {
             Asking::BlockReview => self.block_editor_review_view(),
             Asking::BlockReplace => self.block_replace_view(),
             Asking::BlockFind => self.block_find_view(),
+            Asking::ArrayFind => self.array_find_view(),
             Asking::LayerFields => self.layer_fields_view(),
             Asking::LayerFilter => self.layer_filter_view(),
             Asking::FieldsWrite => self.features_write_view(),

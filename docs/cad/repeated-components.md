@@ -87,7 +87,7 @@ korunan plan kimliği ve `drawing.job.*` iş yüzeylerini sunar.
 
 İncelenmiş bir yerleşim ve açık öğe eşlemesi `cad.arrays.adopt` ile mevcut
 dizi modeline bağlanabilir. Bu komut örüntüyü kendisi tahmin etmez;
-grafik örüntü inceleme akışı ayrıca geliştirilecektir.
+doğrusal örüntü inceleme akışı aşağıdaki masaüstü panelindedir.
 
 ```python
 # Sekiz yerin 2 ve 6 numaraları boş, 1 numaralı öğe elle taşınmış.
@@ -150,9 +150,34 @@ varsayılmaz. Aynı yere iki ayrı UUID düşerse rastgele biri seçilmez.
 2 048 nesnedir; tolerans metreyle varsayılan 0,000001, en çok 0,001'dir.
 `doc.start("cad.arrays.find", cad.ArraysFind(source=seed_insert_uid))`
 durdurulabilir sorgudur. MCP aynı komutu ve `drawing.job.*` yüzeylerini kullanır.
-İlk dilim grid/kutupsal/yol araması veya grafik aday paneli içermez.
+İlk arama dilimi grid/kutupsal/yol örüntülerini içermez.
 Bağlanan doğru düzenini **Diziyi düzenle → Aralık** ile değiştirebilirsiniz.
 Pozitif birimli uzunluk iki komşu yer arasındaki gerçek uzaklıktır; yön
 korunur. Adet değişimi ayrı seçenektir. Mevcut `fit` düzeninin toplam boyu
 aralıkla birlikte yeniden hesaplanır; yerinde tutulan öğeler taşınmaz.
 [Yöntem, belirsizlik ve iş sınırları](../adr/0874-read-only-linear-array-patterns.md).
+
+
+## Masaüstünde doğrusal dizileri inceleme
+
+1. Çizimde tek bir blok yerleştirmesini seçin. Bloklar panelinde **Dizileri bul…**
+   veya komut satırında `DIZIBUL` açın. Mevcut Blok grubunun ek menüsünde de
+   **Doğrusal dizileri bul…** vardır.
+2. Varsayılan **0,001 mm** toleransı ve kapsamı gözden geçirip **Bul** seçin.
+   Arama sırasında çizimi kullanabilir, **Durdur** ile işi kesebilirsiniz.
+3. Panelde dolu/boş yer sayısı ve aralık gösterilir. **Göster** mevcut blokları
+   seçip yakınlaştırır; **İncele…** bağlama koşullarını denetler. Yer şeması
+   geometrik önizleme değildir: ● mevcut, ○ boş, ◇ yerinde korunandır.
+4. Kaymış bir bloğu da bağlayacaksanız **Elle taşınmış öğeyi koru…** bölümünde
+   eşleşmeyen bloğu ve boş yerin numarasını seçip **Bu yere koru** kullanın.
+   Yerler 1'den başlar; dolu yerin üzerine yazılmaz. Atama taslağı kaldırılabilir.
+   Bu işlem bloğu taşımaz ve henüz çizime yazmaz.
+5. **Diziye bağla** ile onaylayın. Mevcut kökler ve ölçü bağları korunur;
+   eksik yerler boş kalır. Bağlama tek Undo/Redo adımıdır. Vazgeç çizime yazmaz.
+
+Çizim aramadan sonra değişirse eski aday yazılamaz. **Yeni kaynak** ile
+kaynağı yeniden seçip arayın. Kısmi sonuç, ortak öğe, ret ve iptal görünürdür.
+Python işlem çıktısı açıksa arama aynı `cad.arrays.find` girdileriyle yazılır;
+uygulama aynı native `cad.arrays.adopt` işini kullanır. Yerleştirmeleri
+bağladıktan sonra mevcut **Diziyi düzenle → Aralık/Adet** kullanılabilir.
+[Arayüz, iptal ve kabul kararı](../adr/0875-linear-array-review-panel.md).

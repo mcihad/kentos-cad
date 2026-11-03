@@ -617,6 +617,11 @@
       ],
       "was": "cad.blocks.define"
     },
+    "array.find": {
+      "level": "semantic",
+      "via": ["cad.arrays.find", "cad.arrays.adopt"],
+      "note": "Yazısız doğrusal aday araması, sahnede gösterme, açık korunan yer eşlemesi ve ayrı inceleme. Mevcut kökleri değiştirmeden tek Undo adımıyla dizi kaydı eklenir; sorgu ve bağlama durdurulabilir (ADR0874/0875)."
+    },
     "block.find": {
       "level": "semantic",
       "via": ["cad.blocks.find", "cad.blocks.convert"],
