@@ -658,6 +658,8 @@ Proje ağacı (ROAD-MOD-04) ve bölünmüş plan–boykesit–enkesit görünü�
 
 **Y16'nın aşamaları ve durumu** ([ADR 0914](../docs/adr/0914-road-surface-drainage.md); araştırma 4 Kasım 2026: Civil 3D'nin Water Drop'u ve Catchment From Surface'ı, akış yolu ve Rasyonel katsayı; OpenRoads'un Analyze Trace Slope, Analyze Pond ve Analyze Catchment'ı; Netpro'nun çevrimiçi kılavuzu yok): Y16.1: çekirdek `kentos_road::drainage` (üçgenlerde kesin su damlası, öncelikli taşkınla göletler, boşaltım noktasının havzası ve akış yolu, Manning ve Rasyonel). Y16.2: `road.drainage.query` (göletler, damlalar, havza, Rasyonel debi, menfezin Manning kapasitesi) ve `.draw`; 28 + 24 ortak durum kapalı biçimle. Y16.3: masaüstünde Drenaj penceresi (Arazi › Drenaj; havza, akış yolu, debi ile menfez kapasitesi, göletler; Planda çiz). Y16 bitti; hendeğin boyuna kapasitesi, geçiş süresi yöntemleri ve dış hidrolik çözücü açık.
 
+**Y17'nin aşamaları ve durumu** ([ADR 0915](../docs/adr/0915-road-vehicle-swept-path.md); araştırma 4 Kasım 2026: Civil 3D ve Vehicle Tracking'in tasarım aracı ölçüleri ve sürüş kipleri, AutoTURN, Austroads şablonları; OpenRoads ve Netcad'in çevrimiçi belgesi yok): Y17.1: çekirdek `kentos_road::swept` (kirişlerde kesin traktrisle arka dingil ve römork, gövdenin köşeleri, iç kayma, bordüre açıklık). Sıradaki: Y17.2 `road.junctions.swept`.
+
 Her maddenin kabulünde CLAUDE.md §9.2 geçerlidir: anlamsal komut, ortak durumlar (KentOS kodu olmadan yazılmış bağımsız başvuru), Python (`kentos.road`) ve MCP, manifest; aracın yazması kayıtta komutun adıyla; dar ve geniş pencerede, iki temada gerçek masaüstü görüntüleri (repo dışında `.run/gui-evidence/`).
 
 İlk 12 iş (taslak 0.1; 25.1'in Y1–Y10'u bunların yerini alır):

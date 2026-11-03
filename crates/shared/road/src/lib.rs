@@ -21,6 +21,8 @@
 //!   breaklines), their density and coverage and the thinning's vertical error (docs/adr/0913).
 //! - [`drainage`]: where water runs and stands on a terrain TIN (water drop, ponds, a discharge point's catchment)
 //!   and what a pipe, a box or a ditch carries by Manning's equation; the Rational method's peak flow (docs/adr/0914).
+//! - [`swept`]: a design vehicle's swept path: its rear axle and trailer following the front axle by the tractrix,
+//!   its body's corners, its off-tracking and its clearance to curbs (docs/adr/0915).
 //! - [`sources`]: a surface's input gathered from the drawing by its definition, and the digest that says whether
 //!   it is out of date (plan/road.md Y2.2).
 
@@ -39,6 +41,7 @@ pub mod route;
 pub mod section;
 pub mod sources;
 pub mod superelevation;
+pub mod swept;
 pub mod surface;
 pub mod volume;
 pub mod wall;
