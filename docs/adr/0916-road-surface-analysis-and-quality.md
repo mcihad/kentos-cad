@@ -53,3 +53,11 @@ Y18.1 (yapıldı, çekirdek): §1. `crates/shared/road/src/surface/analysis.rs`,
 kot aralıkları şeritleri (plan ve 3B alan kapalı biçimle), z = g(x) + h(y) kafesinde (her kare düzlem: sonuç
 köşegenlerden bağımsız) eğim ve bakı aralıkları karelerle, düzlemin pürüzlülüğü sıfır, sırtın 1 − cos 45°, düzlemde
 raster eğimi TIN'inkiyle aynı, sırtta küçük; retler.
+
+Y18.2 (yapıldı, komut): §2. `road.terrains.analysis` (`crates/native/application/src/road_terrains_analysis.rs`):
+yüzeyin plan ve 3B alanı, `elevations`, `slopes`, `aspects` aralıkları (her biri plan ve 3B alan, eğim ve bakıda üçgen
+sayısı, aralık dışı ve düz alan, `pieces` ile parçalar), `roughness` (ortalama, en büyük, yeri), `grid` (rasterin
+eğiminin üçgenlerinkinden farkı). Ret `invalid_analysis`. 29 ortak durum
+(`scripts/fixtures/road_terrain_analysis_cases.py`: drenajın vadi, çukur ve düzlem kafesleri ile teras ve sırt; her
+kafes z = g(x) + h(y), her kare düzlem, cevaplar karelerle; en büyüğün yeri yalnız tekse yazılır; KentOS kodu yok).
+Python `kentos.cad.road.terrains.analysis`, MCP.

@@ -77660,6 +77660,83 @@ class TerminalDevice(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class TerrainBand(_Model):
+    """A range: its bounds (in the measure's unit), its plan and 3D area, its triangles (slope and aspect; 0 for
+    elevation, whose triangles are cut) and, asked, its parts.
+    Attributes:
+        from_: Unit: 1.
+        to: Unit: 1.
+        area: Unit: area.
+        surface_area: Unit: area.
+        triangles: Unit: count.
+        parts: Unit: length.
+    """
+    from_: float
+    to: float
+    area: float
+    surface_area: float
+    triangles: int
+    parts: list[list[list[float]]] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = float(self.from_)
+        out["to"] = float(self.to)
+        out["area"] = float(self.area)
+        out["surfaceArea"] = float(self.surface_area)
+        out["triangles"] = self.triangles
+        if self.parts is not UNSET:
+            out["parts"] = [[[float(e2) for e2 in e1] for e1 in e0] for e0 in self.parts]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainBand:
+        return cls(
+            from_=float(data["from"]),
+            to=float(data["to"]),
+            area=float(data["area"]),
+            surface_area=float(data["surfaceArea"]),
+            triangles=data["triangles"],
+            parts=[[[float(e2) for e2 in e1] for e1 in e0] for e0 in data["parts"]] if "parts" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TerrainBands(_Model):
+    """A measure's ranges, the area outside them and (aspect) the flat area.
+    Attributes:
+        outside_area: Unit: area.
+        outside_triangles: Unit: count.
+        flat_area: Unit: area.
+        flat_triangles: Unit: count.
+    """
+    bands: list[TerrainBand]
+    outside_area: float
+    outside_triangles: int
+    flat_area: float
+    flat_triangles: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["bands"] = [e0.to_json() for e0 in self.bands]
+        out["outsideArea"] = float(self.outside_area)
+        out["outsideTriangles"] = self.outside_triangles
+        out["flatArea"] = float(self.flat_area)
+        out["flatTriangles"] = self.flat_triangles
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainBands:
+        return cls(
+            bands=[TerrainBand.from_json(e0) for e0 in data["bands"]],
+            outside_area=float(data["outsideArea"]),
+            outside_triangles=data["outsideTriangles"],
+            flat_area=float(data["flatArea"]),
+            flat_triangles=data["flatTriangles"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class TerrainContour(_Model):
     """A contour line as written: its level, whether major and closed, its places.
     Attributes:
@@ -77741,6 +77818,48 @@ class TerrainFigures(_Model):
             trimmed=data["trimmed"],
             max_z=UNSET if "maxZ" not in data else None if data["maxZ"] is None else float(data["maxZ"]),
             min_z=UNSET if "minZ" not in data else None if data["minZ"] is None else float(data["minZ"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TerrainGridSlope(_Model):
+    """A raster's slope against the triangles': the cell, the cells compared, the mean (raster − triangle) and mean
+    absolute difference, the largest absolute one and where; percent.
+    Attributes:
+        cell: Unit: m.
+        cells: Unit: count.
+        mean: Unit: percent.
+        mean_absolute: Unit: percent.
+        max_absolute: Unit: percent.
+        at: Unit: length.
+    """
+    cell: float
+    cells: int
+    mean: float
+    mean_absolute: float
+    max_absolute: float
+    at: list[float] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["cell"] = float(self.cell)
+        out["cells"] = self.cells
+        out["mean"] = float(self.mean)
+        out["meanAbsolute"] = float(self.mean_absolute)
+        out["maxAbsolute"] = float(self.max_absolute)
+        if self.at is not UNSET:
+            out["at"] = None if self.at is None else [float(e0) for e0 in self.at]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainGridSlope:
+        return cls(
+            cell=float(data["cell"]),
+            cells=data["cells"],
+            mean=float(data["mean"]),
+            mean_absolute=float(data["meanAbsolute"]),
+            max_absolute=float(data["maxAbsolute"]),
+            at=UNSET if "at" not in data else None if data["at"] is None else [float(e0) for e0 in data["at"]],
         )
 
 
@@ -77889,6 +78008,34 @@ class TerrainReport(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class TerrainRoughness(_Model):
+    """The roughness (vector ruggedness measure, 0–1): its mean over the corners, its largest and where.
+    Attributes:
+        mean: Unit: 1.
+        max: Unit: 1.
+        at: Unit: length.
+    """
+    mean: float
+    max: float
+    at: list[float]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["mean"] = float(self.mean)
+        out["max"] = float(self.max)
+        out["at"] = [float(e0) for e0 in self.at]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainRoughness:
+        return cls(
+            mean=float(data["mean"]),
+            max=float(data["max"]),
+            at=[float(e0) for e0 in data["at"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class TerrainSectionPoint(_Model):
     """A place of a section: its distance from the line's start, where it is, its height (none off the surface), and
     `gap`: the line from the previous place to this one is off the surface.
@@ -77987,6 +78134,105 @@ class TerrainSurfaceDef(_Model):
             points=SurfaceSources.from_json(data["points"]) if "points" in data else UNSET,
             tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
             voids=list(data["voids"]) if "voids" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TerrainsAnalysed(_Model):
+    """Output of `road.terrains.analysis` v1: the surface's plan and 3D area and what was asked.
+    Attributes:
+        area: Unit: area.
+        surface_area: Unit: area.
+    """
+    surface: str
+    area: float
+    surface_area: float
+    aspects: TerrainBands | None | Unset = UNSET
+    elevations: TerrainBands | None | Unset = UNSET
+    grid: TerrainGridSlope | None | Unset = UNSET
+    roughness: TerrainRoughness | None | Unset = UNSET
+    slopes: TerrainBands | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["surface"] = self.surface
+        out["area"] = float(self.area)
+        out["surfaceArea"] = float(self.surface_area)
+        if self.aspects is not UNSET:
+            out["aspects"] = None if self.aspects is None else self.aspects.to_json()
+        if self.elevations is not UNSET:
+            out["elevations"] = None if self.elevations is None else self.elevations.to_json()
+        if self.grid is not UNSET:
+            out["grid"] = None if self.grid is None else self.grid.to_json()
+        if self.roughness is not UNSET:
+            out["roughness"] = None if self.roughness is None else self.roughness.to_json()
+        if self.slopes is not UNSET:
+            out["slopes"] = None if self.slopes is None else self.slopes.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainsAnalysed:
+        return cls(
+            surface=data["surface"],
+            area=float(data["area"]),
+            surface_area=float(data["surfaceArea"]),
+            aspects=UNSET if "aspects" not in data else None if data["aspects"] is None else TerrainBands.from_json(data["aspects"]),
+            elevations=UNSET if "elevations" not in data else None if data["elevations"] is None else TerrainBands.from_json(data["elevations"]),
+            grid=UNSET if "grid" not in data else None if data["grid"] is None else TerrainGridSlope.from_json(data["grid"]),
+            roughness=UNSET if "roughness" not in data else None if data["roughness"] is None else TerrainRoughness.from_json(data["roughness"]),
+            slopes=UNSET if "slopes" not in data else None if data["slopes"] is None else TerrainBands.from_json(data["slopes"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TerrainsAnalysis(_Model):
+    """Input of `road.terrains.analysis` v1: the surface (its id or name) and what is asked: the breaks of the elevation
+    (m), slope (percent) and aspect (degrees from north, clockwise) ranges, increasing, at least two each; `roughness`;
+    `grid` (m: a raster's cell to compare the slope by); with `pieces` each range's parts as plan polygons too. Nothing
+    is filled in: the breaks and the cell are the user's.
+
+    Refusals, in this order: `not_a_road_project`, `invalid_analysis` (nothing asked, breaks fewer than two, not finite
+    or not increasing, a cell not positive), `unknown_terrain`, `terrain_unbuildable`, `invalid_analysis` (more grid
+    cells than four million).
+    Attributes:
+        aspects: Unit: deg.
+        elevations: Unit: elevation.
+        grid: Unit: m.
+        slopes: Unit: percent.
+    """
+    surface: str
+    aspects: list[float] | None | Unset = UNSET
+    elevations: list[float] | None | Unset = UNSET
+    grid: float | None | Unset = UNSET
+    pieces: bool = False
+    roughness: bool = False
+    slopes: list[float] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["surface"] = self.surface
+        if self.aspects is not UNSET:
+            out["aspects"] = None if self.aspects is None else [float(e0) for e0 in self.aspects]
+        if self.elevations is not UNSET:
+            out["elevations"] = None if self.elevations is None else [float(e0) for e0 in self.elevations]
+        if self.grid is not UNSET:
+            out["grid"] = None if self.grid is None else float(self.grid)
+        out["pieces"] = self.pieces
+        out["roughness"] = self.roughness
+        if self.slopes is not UNSET:
+            out["slopes"] = None if self.slopes is None else [float(e0) for e0 in self.slopes]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainsAnalysis:
+        return cls(
+            surface=data["surface"],
+            aspects=UNSET if "aspects" not in data else None if data["aspects"] is None else [float(e0) for e0 in data["aspects"]],
+            elevations=UNSET if "elevations" not in data else None if data["elevations"] is None else [float(e0) for e0 in data["elevations"]],
+            grid=UNSET if "grid" not in data else None if data["grid"] is None else float(data["grid"]),
+            pieces=data["pieces"] if "pieces" in data else False,
+            roughness=data["roughness"] if "roughness" in data else False,
+            slopes=UNSET if "slopes" not in data else None if data["slopes"] is None else [float(e0) for e0 in data["slopes"]],
         )
 
 
@@ -105510,18 +105756,24 @@ __all__ = [
     "TenantKindName",
     "TerminalConfig",
     "TerminalDevice",
+    "TerrainBand",
+    "TerrainBands",
     "TerrainContour",
     "TerrainFigures",
+    "TerrainGridSlope",
     "TerrainHeight",
     "TerrainLeft",
     "TerrainPlace",
     "TerrainPlaceName",
     "TerrainProblem",
     "TerrainReport",
+    "TerrainRoughness",
     "TerrainSectionPoint",
     "TerrainState",
     "TerrainStateName",
     "TerrainSurfaceDef",
+    "TerrainsAnalysed",
+    "TerrainsAnalysis",
     "TerrainsContoured",
     "TerrainsContours",
     "TerrainsCreate",

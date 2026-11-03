@@ -1944,6 +1944,13 @@ const ENTRIES: &[Entry] = &[
         warnings: &["layer_hidden", "drainage_catchment_empty", "culvert_no_roughness", "culvert_over_capacity"],
         targets: none,
     },
+    // KentOS Yol's surface analysis (plan/road.md Y18, docs/adr/0916).
+    Entry {
+        id: "road.terrains.analysis",
+        refusals: &[&["not_a_road_project", "invalid_analysis", "unknown_terrain", "terrain_unbuildable"]],
+        warnings: &[],
+        targets: none,
+    },
     // KentOS Yol's design vehicle swept path (plan/road.md Y17, docs/adr/0915).
     Entry {
         id: "road.swept.query",

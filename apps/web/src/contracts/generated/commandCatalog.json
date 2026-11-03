@@ -41207,6 +41207,268 @@
       ]
     },
     {
+      "id": "road.terrains.analysis",
+      "version": 1,
+      "title": "Yüzeyi analiz et",
+      "summary": "Bir arazi yüzeyinin (surface: kimliği ya da adı) analizini okur; hiçbir şey yazmaz. elevations (m), slopes (yüzde) ve aspects (derece, kuzeyden saat yönünde) aralık sınırlarıyla her aralığın plan ve 3B alanı (kotta üçgenler seviyelerle kırpılır, eğim ve bakıda üçgen bütünüyle aralığına girer; aralık [bᵢ, bᵢ₊₁), sonuncusu kapalı), aralık dışı ve (bakıda) düz alan; pieces ile aralığın parçaları plan çokgeni. roughness: vektör pürüzlülük ölçüsü (VRM, 0 düz, 1'e doğru pürüzlü) köşelerde, ortalaması ve en büyüğü. grid (m): yüzeyden örneklenen rasterde Horn yöntemiyle eğimin üçgenlerinkinden farkı (ortalama, mutlak ortalama, en büyük ve yeri). Aralıklar ve hücre kullanıcının; KentOS değer vermez. Retler: not_a_road_project, invalid_analysis, unknown_terrain, terrain_unbuildable.",
+      "aliases": [
+        "yuzeyanalizi",
+        "egimanalizi",
+        "bakianalizi"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.terrains.analysis` v1: the surface (its id or name) and what is asked: the breaks of the elevation\n(m), slope (percent) and aspect (degrees from north, clockwise) ranges, increasing, at least two each; `roughness`;\n`grid` (m: a raster's cell to compare the slope by); with `pieces` each range's parts as plan polygons too. Nothing\nis filled in: the breaks and the cell are the user's.\n\nRefusals, in this order: `not_a_road_project`, `invalid_analysis` (nothing asked, breaks fewer than two, not finite\nor not increasing, a cell not positive), `unknown_terrain`, `terrain_unbuildable`, `invalid_analysis` (more grid\ncells than four million).",
+        "properties": {
+          "aspects": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "type": [
+              "array",
+              "null"
+            ],
+            "x-unit": "deg"
+          },
+          "elevations": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "type": [
+              "array",
+              "null"
+            ],
+            "x-unit": "elevation"
+          },
+          "grid": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "pieces": {
+            "default": false,
+            "type": "boolean"
+          },
+          "roughness": {
+            "default": false,
+            "type": "boolean"
+          },
+          "slopes": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "type": [
+              "array",
+              "null"
+            ],
+            "x-unit": "percent"
+          },
+          "surface": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "surface"
+        ],
+        "title": "TerrainsAnalysis",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.terrains.analysis` v1: the surface's plan and 3D area and what was asked.",
+        "properties": {
+          "area": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "aspects": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TerrainBands"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "elevations": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TerrainBands"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "grid": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TerrainGridSlope"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "roughness": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TerrainRoughness"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "slopes": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TerrainBands"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "surface": {
+            "type": "string"
+          },
+          "surfaceArea": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          }
+        },
+        "required": [
+          "surface",
+          "area",
+          "surfaceArea"
+        ],
+        "title": "TerrainsAnalysed",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.terrains.analysis` v1: the surface's plan and 3D area and what was asked.",
+        "properties": {
+          "area": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "aspects": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TerrainBands"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "elevations": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TerrainBands"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "grid": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TerrainGridSlope"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "roughness": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TerrainRoughness"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "slopes": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TerrainBands"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "surface": {
+            "type": "string"
+          },
+          "surfaceArea": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          }
+        },
+        "required": [
+          "surface",
+          "area",
+          "surfaceArea"
+        ],
+        "title": "TerrainsAnalysed",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "invalid_analysis",
+          "unknown_terrain",
+          "terrain_unbuildable"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Eğim aralıkları ve pürüzlülük",
+          "input": {
+            "roughness": true,
+            "slopes": [
+              0.0,
+              2.0,
+              5.0,
+              10.0,
+              30.0,
+              100.0
+            ],
+            "surface": "Mevcut zemin"
+          }
+        }
+      ]
+    },
+    {
       "id": "road.terrains.cloud",
       "version": 1,
       "title": "Buluttan arazi",
@@ -80974,6 +81236,12 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Havzanın en yüksek debisi menfezin dolu akış kapasitesinden çok."
+    },
+    {
+      "code": "invalid_analysis",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Yüzey analizi sorusu geçerli değil; ileti nedenini söyler."
     },
     {
       "code": "invalid_swept",
@@ -158787,6 +159055,102 @@
       ],
       "type": "object"
     },
+    "TerrainBand": {
+      "description": "A range: its bounds (in the measure's unit), its plan and 3D area, its triangles (slope and aspect; 0 for\nelevation, whose triangles are cut) and, asked, its parts.",
+      "properties": {
+        "area": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "from": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "parts": {
+          "items": {
+            "items": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            },
+            "type": "array"
+          },
+          "type": "array",
+          "x-unit": "length"
+        },
+        "surfaceArea": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "to": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "triangles": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        }
+      },
+      "required": [
+        "from",
+        "to",
+        "area",
+        "surfaceArea",
+        "triangles"
+      ],
+      "type": "object"
+    },
+    "TerrainBands": {
+      "description": "A measure's ranges, the area outside them and (aspect) the flat area.",
+      "properties": {
+        "bands": {
+          "items": {
+            "$ref": "#/$defs/TerrainBand"
+          },
+          "type": "array"
+        },
+        "flatArea": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "flatTriangles": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "outsideArea": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "outsideTriangles": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        }
+      },
+      "required": [
+        "bands",
+        "outsideArea",
+        "outsideTriangles",
+        "flatArea",
+        "flatTriangles"
+      ],
+      "type": "object"
+    },
     "TerrainContour": {
       "description": "A contour line as written: its level, whether major and closed, its places.",
       "properties": {
@@ -158895,6 +159259,58 @@
         "merged",
         "split",
         "trimmed"
+      ],
+      "type": "object"
+    },
+    "TerrainGridSlope": {
+      "description": "A raster's slope against the triangles': the cell, the cells compared, the mean (raster − triangle) and mean\nabsolute difference, the largest absolute one and where; percent.",
+      "properties": {
+        "at": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "cell": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "cells": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "maxAbsolute": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "percent"
+        },
+        "mean": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "percent"
+        },
+        "meanAbsolute": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "percent"
+        }
+      },
+      "required": [
+        "cell",
+        "cells",
+        "mean",
+        "meanAbsolute",
+        "maxAbsolute"
       ],
       "type": "object"
     },
@@ -159063,6 +159479,37 @@
         "name",
         "state",
         "digest"
+      ],
+      "type": "object"
+    },
+    "TerrainRoughness": {
+      "description": "The roughness (vector ruggedness measure, 0–1): its mean over the corners, its largest and where.",
+      "properties": {
+        "at": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array",
+          "x-unit": "length"
+        },
+        "max": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "mean": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        }
+      },
+      "required": [
+        "mean",
+        "max",
+        "at"
       ],
       "type": "object"
     },
