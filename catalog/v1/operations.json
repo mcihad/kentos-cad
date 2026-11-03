@@ -2793,6 +2793,14 @@
       ],
       "note": "Girdi yazıldıkça road.routes.find ile önizler; Planda çiz road.routes.draw ile yazar (plan/road.md Y12.1, ADR 0910 §1)."
     },
+    "swept.editor": {
+      "level": "semantic",
+      "via": [
+        "road.swept.query",
+        "road.swept.draw"
+      ],
+      "note": "Önizle road.swept.query ile okur (hiçbir şey yazılmaz); Planda çiz road.swept.draw ile yazar (plan/road.md Y17.3, ADR 0915 §3)."
+    },
     "junction.editor": {
       "level": "semantic",
       "via": [

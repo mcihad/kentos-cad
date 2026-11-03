@@ -1,6 +1,6 @@
 # 0915 — KentOS Yol: tasarım aracının dönüş izi
 
-Tarih: 2026-11-04. plan/road.md Y17 (ROAD-JUNC-06, 07; kavşağın kalanı). Durum: taslak, aşamalar aşağıda.
+Tarih: 2026-11-04. plan/road.md Y17 (ROAD-JUNC-06, 07; kavşağın kalanı). Durum: kabul (Y17.1–Y17.3), açıklar aşağıda.
 
 ## Dayanak
 
@@ -58,3 +58,12 @@ kayma, en az açıklık (uzaklık, yolun neresinde, hangi gövde ve engel, bord�
 (`scripts/fixtures/road_swept_cases.py`: traktris, gövdeler, iç kayma ve açıklık ADR'nin kuralıyla yeniden yazıldı;
 kavşağın dönüşleri road_junction_cases.py'nin cevabından; KentOS kodu yok). Python `kentos.cad.road.swept`, MCP. Yolda
 bulunan: aynı doğrudaki iki parçanın, örtüşmeseler de “değiyor” sayılması (çekirdekte düzeltildi, testi var).
+
+Y17.3 (yapıldı, masaüstü): §3. Güzergâh sekmesinin Kavşak panelinde Araç izi, `swept.editor`
+(`apps/desktop/src/swept_window.rs`): aracın dingil aralığı, ön ve arka çıkıntısı, genişliği ve isteğe bağlı römork
+(mafsal, römork dingili, önü, arkası, genişliği; boş başlar, KentOS değer vermez); yol kavşağın çeyreği (kavşak, çeyrek,
+bordürden uzaklık, kollarda düz) ya da seçili çizgi, açık çoklu çizgi ya da yay (Seçimden al); aralık, gövdenin her kaç
+örnekte çizileceği, yön; seçimdekiler engel. Önizle `road.swept.query` ile okur: planda kavşağın dönüşleri, engeller,
+ön dingilin yolu, arka dingil, gövdelerin köşelerinin izleri ve gövdeler, en az açıklığın yeri; yolun boyu, iç kayma,
+römorkun iç kayması, en az açıklık ve uyarılar. Planda çiz `road.swept.draw` ile tek adımda. Testler
+`swept_window_tests.rs`, resimler `.run/gui-evidence/yol-y17-arac-izi-*`.

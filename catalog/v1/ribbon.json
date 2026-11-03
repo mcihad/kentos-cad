@@ -564,6 +564,10 @@
        {
         "command": "junction.editor",
         "size": "large"
+       },
+       {
+        "command": "swept.editor",
+        "size": "large"
        }
       ]
      },

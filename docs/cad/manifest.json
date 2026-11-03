@@ -9461,6 +9461,23 @@
    "tests": 0
   },
   {
+   "id": "swept.editor",
+   "kind": "command",
+   "title": "Araç izi…",
+   "level": "semantic",
+   "via": [
+    "road.swept.query",
+    "road.swept.draw"
+   ],
+   "operation": null,
+   "python": "Connection: road.swept.query, Connection: road.swept.draw",
+   "mcp": "road.swept.query, road.swept.draw",
+   "note": "Önizle road.swept.query ile okur (hiçbir şey yazılmaz); Planda çiz road.swept.draw ile yazar (plan/road.md Y17.3, ADR 0915 §3).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "table.blockSchedule",
    "kind": "command",
    "title": "Blok çizelgesi tablosu",

@@ -144,6 +144,11 @@ fn obstacle_of(doc: &Document, uid: &str, k: usize, step: f64) -> Result<Vec<Vec
     }
 }
 
+/// The drawing's object as obstacle lines for a window's picture; none when it is not one.
+pub fn obstacle_lines(doc: &Document, uid: &str, step: f64) -> Option<Vec<Vec<[f64; 2]>>> {
+    obstacle_of(doc, uid, 0, step).ok()
+}
+
 /// A junction quadrant's path and curb.
 fn quadrant(doc: &Document, j: &kentos_commands::SweptJunctionPath, step: f64) -> Result<(String, Vec<[f64; 2]>, Vec<[f64; 2]>), Stop> {
     crate::road_junctions::road_project(doc)?;
