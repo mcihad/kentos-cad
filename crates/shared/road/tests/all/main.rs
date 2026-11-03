@@ -4,6 +4,7 @@ mod alignments;
 mod cloud_ground;
 mod corridor;
 mod cutout;
+mod drainage;
 mod profiles;
 mod sections;
 mod templates;

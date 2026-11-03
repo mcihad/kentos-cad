@@ -19,6 +19,8 @@
 //! - [`cutout`]: a terrain with corridors cut out of it in plan, the planes it keeps exact (docs/adr/0910 §6).
 //! - [`cloud_ground`]: a terrain's ground points from a point cloud, thinned on a grid (cells, steep cells, beside
 //!   breaklines), their density and coverage and the thinning's vertical error (docs/adr/0913).
+//! - [`drainage`]: where water runs and stands on a terrain TIN (water drop, ponds, a discharge point's catchment)
+//!   and what a pipe, a box or a ditch carries by Manning's equation; the Rational method's peak flow (docs/adr/0914).
 //! - [`sources`]: a surface's input gathered from the drawing by its definition, and the digest that says whether
 //!   it is out of date (plan/road.md Y2.2).
 
@@ -28,6 +30,7 @@ pub mod corridor;
 pub mod culvert;
 pub mod grading;
 pub mod cutout;
+pub mod drainage;
 pub mod guardrail;
 pub mod haul;
 pub mod junction;
