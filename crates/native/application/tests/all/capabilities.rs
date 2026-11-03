@@ -87,6 +87,7 @@ fn reached() -> BTreeMap<String, BTreeSet<String>> {
 
 /// The listed codes no shared case reaches, and why.
 const UNREACHED: &[(&str, &str, &str)] = &[
+    ("cad.blocks.find", "recognition_scope_limit", "50 001 nesnelik liste ortak JSON'a şişirilmez; blocks_find::limits_and_cancellation_keep_the_source_exact testinde üretilip ret ve değişmezlik sınanır (ADR 0866)"),
     ("cad.parameters.edit", "parameter_kind", "Birim boyutu ön denetimi parameter_dimensions.rs içinde validate/plan/execute eşitliği, bağımlı üs, eski pi, atomiklik ve Undo ile sınanır; ortak ADR0336 durumları eski sayısal grameri korur (ADR0840)."),
     ("cad.constraints.query", "parameter_units_legacy", "Eski pi ifadesi Number türünde olan V2 dosyası parameter_dimensions.rs içinde salt okunur uyarı, yeniden adlandırma, açık onarım ve Undo ile sınanır; yeni komutlar bu uyumsuz ifadeyi oluşturamaz (ADR0840)."),
     (
@@ -1223,6 +1224,7 @@ fn a_listed_kind_is_taken_and_another_is_refused_with_the_listed_code() {
             None,
             |u| json!({ "uids": [u], "transform": { "kind": "move", "dx": 1.0, "dy": 0.0 } }),
         ),
+        ("cad.blocks.find", None, |u| json!({"source":[u]})),
         (
             "cad.entities.array",
             None,

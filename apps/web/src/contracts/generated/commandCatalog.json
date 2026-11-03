@@ -31000,6 +31000,248 @@
       ]
     },
     {
+      "id": "cad.blocks.find",
+      "version": 1,
+      "title": "Tekrarlanan bileşenleri bul",
+      "summary": "Kaynak çizgi, çember ve yay koleksiyonunun tam geometrik eşlerini bulur; hiçbir nesneyi, bağı veya seçimi değiştirmez. Kaynak en çok 128, arama kapsamı en çok 50 000 nesnedir; desteklenmeyen kaynak öğesi atlanmaz, bütün istek reddedilir. Döndürme varsayılan açık, aynalama ve ölçek eşleme kapalıdır. geometryOnly açıkça seçilmedikçe katman, görünüş ve nesne verisi de aynı olmalıdır. Tolerans mutlak metre cinsindedir, varsayılan 0.000001 (0.001 mm), en çok 0.001. Her eşleşmenin members listesi kaynak sırasıyla kimlik eşlemesidir; bounds ve dönüşüm verilir. Kesişen adaylar overlaps ile, sonuç/iş sınırına ulaşan eksik arama truncated ile bildirilir. related, bulunanlara bağlı kök ölçü/tarama/tablo/yazı/etiket adetleridir; dönüşüm yapılmış veya bağlar taşınmış sayılmaz. uids yoksa belge, boşsa boş kapsam aranır. expectedRevision eskiyse yazısız conflict. Uzun arama drawing.job.start ile başlatılıp iptal edilebilir.",
+      "aliases": [],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Finds whole collections equivalent to `source`; writes no document or selection state.\nFirst slice supports analytic line/circle/arc sources only; unsupported members refuse the whole source.",
+        "properties": {
+          "expectedRevision": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "geometryOnly": {
+            "description": "Explicitly ignore layer, appearance and object data in comparisons; absent: false.",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "limit": {
+            "description": "Result count limit, 1 to 1000; absent: 1000. `truncated` means the scan is incomplete.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "mirrors": {
+            "description": "Also recognize reflected collections; absent: false.",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "rotations": {
+            "description": "Also recognize rotated collections; absent: true.",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "scales": {
+            "description": "Also recognize uniformly scaled collections; absent: false.",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "source": {
+            "description": "Ordered source object UUIDs, at most 128; repeated UUIDs are taken once.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "tolerance": {
+            "description": "Absolute model tolerance, metres, above zero to 0.001; absent: 0.000001 (0.001 mm).",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "uids": {
+            "description": "Search object UUIDs, at most 50 000; absent searches the document, empty searches nothing.",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "source"
+        ],
+        "title": "BlocksFind",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "comparisons": {
+            "description": "Analytic comparisons/transform trials performed, for reproducible performance evidence.",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "matches": {
+            "items": {
+              "$ref": "#/$defs/BlockMatch"
+            },
+            "type": "array"
+          },
+          "related": {
+            "additionalProperties": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "description": "Root objects linked to any matched member, counted once by kind. No relation is changed.",
+            "type": "object",
+            "x-unit": "count"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "source": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "truncated": {
+            "description": "Result or work budget reached; never claim that partial results cover the full search.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "source",
+          "matches",
+          "truncated",
+          "comparisons",
+          "related",
+          "revision"
+        ],
+        "title": "BlocksFound",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "comparisons": {
+            "description": "Analytic comparisons/transform trials performed, for reproducible performance evidence.",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "matches": {
+            "items": {
+              "$ref": "#/$defs/BlockMatch"
+            },
+            "type": "array"
+          },
+          "related": {
+            "additionalProperties": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "description": "Root objects linked to any matched member, counted once by kind. No relation is changed.",
+            "type": "object",
+            "x-unit": "count"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "source": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "truncated": {
+            "description": "Result or work budget reached; never claim that partial results cover the full search.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "source",
+          "matches",
+          "truncated",
+          "comparisons",
+          "related",
+          "revision"
+        ],
+        "title": "BlocksFound",
+        "type": "object"
+      },
+      "capabilities": {
+        "targets": [
+          {
+            "kinds": [
+              "line",
+              "circle",
+              "arc"
+            ],
+            "refusedWith": "recognition_unsupported",
+            "note": "Kaynak öğeler; sıfır uzunluklu çizgi desteklenmez. Kaynakta desteklenmeyen öğe sessizce atlanmaz."
+          }
+        ],
+        "refusals": [
+          "no_entities",
+          "invalid_uid",
+          "entity_not_found",
+          "invalid_tolerance",
+          "invalid_limit",
+          "recognition_unsupported",
+          "recognition_source_limit",
+          "recognition_scope_limit",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "recognition_truncated",
+          "recognition_geometry_only"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Seçilen bir teknik sembolün döndürülmüş ve aynalanmış eşlerini bul",
+          "input": {
+            "mirrors": true,
+            "source": [
+              "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.blocks.define",
       "version": 1,
       "title": "Blok tanımla",
@@ -67528,6 +67770,36 @@
       "meaning": "Nokta bulutunun yeri dosyalarınındır; taşınmaz, döndürülmez, ölçeklenmez, kopyalanmaz."
     },
     {
+      "code": "recognition_unsupported",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Tekrar arama kaynağı yalnız sıfır uzunluklu olmayan çizgi, çember ve yay içerir; desteklenmeyen öğe atlanmaz."
+    },
+    {
+      "code": "recognition_source_limit",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Tekrar arama kaynağı en çok 128 nesne içerebilir; tek bir bileşen seçin."
+    },
+    {
+      "code": "recognition_scope_limit",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Tekrar arama kapsamı en çok 50 000 nesne olabilir; aranacak katmanları veya nesneleri daraltın."
+    },
+    {
+      "code": "recognition_truncated",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Tekrar araması sınıra ulaştı; bulunanlar kısmi sonuçtur, arama kapsamını daraltın."
+    },
+    {
+      "code": "recognition_geometry_only",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Yalnız geometri karşılaştırıldı; katman, görünüş ve öznitelik farkları eşleşmeye engel sayılmadı."
+    },
+    {
       "code": "invalid_scale",
       "kind": "failed",
       "retryable": false,
@@ -78542,6 +78814,57 @@
       "format": "uuid",
       "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
       "type": "string"
+    },
+    "BlockMatch": {
+      "properties": {
+        "at": {
+          "$ref": "#/$defs/Vec2",
+          "x-unit": "length"
+        },
+        "bounds": {
+          "$ref": "#/$defs/Bounds",
+          "x-unit": "length"
+        },
+        "members": {
+          "description": "Target UUID for each source UUID, in `BlocksFound.source` order: the source-to-target identity map.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "mirror": {
+          "type": "boolean"
+        },
+        "origin": {
+          "$ref": "#/$defs/Vec2",
+          "x-unit": "length"
+        },
+        "overlaps": {
+          "description": "Shares objects with another candidate. Selection is harmless; future conversion must resolve overlap.",
+          "type": "boolean"
+        },
+        "rotation": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "rad"
+        },
+        "scale": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        }
+      },
+      "required": [
+        "members",
+        "origin",
+        "at",
+        "rotation",
+        "scale",
+        "mirror",
+        "bounds",
+        "overlaps"
+      ],
+      "type": "object"
     },
     "BlockParameter": {
       "description": "A parameter (docs/adr/0318 §1). Its points are the definition's coordinates.",

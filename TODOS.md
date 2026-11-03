@@ -51,6 +51,17 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ADR 0866: tekrarlanan çizgi/çember/yay koleksiyonlarını yazısız ve
+  durdurulabilir bulma, kaynak sırasındaki UUID eşlemesi ve adayları
+  çizimin yanında inceleyip seçme akışı native/Python/MCP kapsamındadır.
+  Web yürütücüsü ve arayüzü aynı tolerans, açık ayna/ölçek/özellik politikası,
+  kısmi sonuç, iptal ve eski belge korumasıyla ayrıca eşitlenecek.
+
+- ADR 0865: DXF/DWG yazılmadan önce dinamik blok davranışının ve ölçü
+  bağının statik çıktıda taşınmadığını seçili/tüm kapsamına göre açıklama;
+  başarılı dışa aktarmada kayıp raporu. Native pencere kabulü web'in ayrı
+  dışa aktarma penceresinin kabulü değildir.
+
 - ADR 0864: `cad.blocks.edit.renameNested` ile açık kapsamlı iç etiket
   taşıma, son tanım grafiğinin birlikte doğrulanması ve öznitelik
   penceresindeki kapsam/etki önizlemesi. Native/Python/MCP kabulü

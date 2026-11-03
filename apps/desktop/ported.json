@@ -131,6 +131,7 @@
     "tool.blockDefine",
     "tool.blockInsert",
     "block.panel",
+    "block.find",
     "block.purge",
     "block.attributes",
     "tool.measure",

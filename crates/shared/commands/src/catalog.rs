@@ -5959,6 +5959,30 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Read-only analytic candidate recognition (CAD-ADV-07; ADR 0866).
+        CommandDescriptor {
+            id: crate::CAD_BLOCKS_FIND.into(),
+            version: crate::CAD_BLOCKS_FIND_VERSION,
+            title: "Tekrarlanan bileşenleri bul".into(),
+            summary: "Kaynak çizgi, çember ve yay koleksiyonunun tam geometrik eşlerini bulur; hiçbir nesneyi, bağı veya seçimi değiştirmez. Kaynak en çok 128, arama kapsamı en çok 50 000 nesnedir; desteklenmeyen kaynak öğesi atlanmaz, bütün istek reddedilir. Döndürme varsayılan açık, aynalama ve ölçek eşleme kapalıdır. geometryOnly açıkça seçilmedikçe katman, görünüş ve nesne verisi de aynı olmalıdır. Tolerans mutlak metre cinsindedir, varsayılan 0.000001 (0.001 mm), en çok 0.001. Her eşleşmenin members listesi kaynak sırasıyla kimlik eşlemesidir; bounds ve dönüşüm verilir. Kesişen adaylar overlaps ile, sonuç/iş sınırına ulaşan eksik arama truncated ile bildirilir. related, bulunanlara bağlı kök ölçü/tarama/tablo/yazı/etiket adetleridir; dönüşüm yapılmış veya bağlar taşınmış sayılmaz. uids yoksa belge, boşsa boş kapsam aranır. expectedRevision eskiyse yazısız conflict. Uzun arama drawing.job.start ile başlatılıp iptal edilebilir.".into(),
+            aliases: vec![],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::BlocksFind>(),
+            output: schema::<crate::BlocksFound>(),
+            plan: Some(schema::<crate::BlocksFound>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Seçilen bir teknik sembolün döndürülmüş ve aynalanmış eşlerini bul".into(),
+                input: json!({"source":["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"],"mirrors":true}),
+                output: None,
+            }],
+        },
         // Blok oluştur and the Bloklar panel (docs/adr/0144), held together by
         // fixtures/commands/v1/cad.blocks.define.json and cad.blocks.edit.json.
         CommandDescriptor {
@@ -12083,6 +12107,9 @@ mod tests {
                     }
                     crate::CAD_BLOCKS_QUERY => {
                         serde_json::from_value::<crate::BlocksQuery>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_BLOCKS_FIND => {
+                        serde_json::from_value::<crate::BlocksFind>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_BLOCKS_PARAMETERS => {
                         serde_json::from_value::<crate::BlocksParameters>(e.input.clone())

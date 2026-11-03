@@ -1010,6 +1010,22 @@
    "tests": 0
   },
   {
+   "id": "block.find",
+   "kind": "command",
+   "title": "Tekrarlanan bileşenleri bul…",
+   "level": "query",
+   "via": [
+    "cad.blocks.find"
+   ],
+   "operation": null,
+   "python": "kentos.cad.blocks.find",
+   "mcp": "cad.blocks.find",
+   "note": "Yazısız ve durdurulabilir eşleşme arama; sonuç seçimi ayrı kullanıcı eylemidir (ADR 0866).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "block.freeze",
    "kind": "command",
    "title": "Sabit bloğa çevir",
@@ -14025,6 +14041,20 @@
    "tests": 1
   },
   {
+   "id": "view.endObjectIsolation",
+   "kind": "command",
+   "title": "Nesne yalıtımını bitir",
+   "level": "session",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": "Görünüm; cad.session.* yok (plan §5.1).",
+   "scope": "none",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "view.extentCheck",
    "kind": "command",
    "title": "Kapsam denetimi",
@@ -14065,6 +14095,20 @@
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
+  },
+  {
+   "id": "view.isolateObjects",
+   "kind": "command",
+   "title": "Seçimi geçici yalıt",
+   "level": "session",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": "Görünüm; cad.session.* yok (plan §5.1).",
+   "scope": "none",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "view.keyTips",

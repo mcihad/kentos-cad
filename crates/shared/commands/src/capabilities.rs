@@ -1415,6 +1415,17 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.blocks.find",
+        refusals: &[&["no_entities", "invalid_uid", "entity_not_found", "invalid_tolerance", "invalid_limit", "recognition_unsupported", "recognition_source_limit", "recognition_scope_limit"], REVISION],
+        warnings: &["recognition_truncated", "recognition_geometry_only"],
+        targets: || vec![CommandTarget {
+            kinds: vec!["line".into(), "circle".into(), "arc".into()],
+            refused_with: Some("recognition_unsupported".into()),
+            note: Some("Kaynak öğeler; sıfır uzunluklu çizgi desteklenmez. Kaynakta desteklenmeyen öğe sessizce atlanmaz.".into()),
+            ..Default::default()
+        }],
+    },
+    Entry {
         id: "cad.blocks.query",
         refusals: &[&[
             "unknown_block",

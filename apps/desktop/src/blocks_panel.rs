@@ -11,6 +11,8 @@
 //! `cad.blocks.edit` in the words of `kentos_interaction::blocks`, the web's.
 
 mod replace;
+mod find;
+pub(crate) use find::TITLE as FIND_TITLE;
 pub(crate) use replace::{Event as ReplaceEvent, TITLE as REPLACE_TITLE};
 
 use std::time::{Duration, Instant};
@@ -50,6 +52,7 @@ type Counted = ((u64, u64), Vec<Placements>);
 /// What the panel keeps while the app runs.
 #[derive(Debug, Default)]
 pub struct PanelState {
+    find: Option<find::Window>,
     query: String,
     replacement: Option<replace::Window>,
     /// The row chosen with the mouse or the keys: the keyboard's row.
@@ -87,6 +90,7 @@ enum Picking {
 
 #[derive(Debug, Clone)]
 pub enum Event {
+    Find(find::Event),
     Search(String),
     Pressed(BlockId),
     Insert(BlockId),
@@ -245,6 +249,7 @@ impl App {
 
     pub(crate) fn blocks_panel_event(&mut self, event: Event) -> Task<Message> {
         match event {
+            Event::Find(event) => return self.block_find_event(event),
             Event::Search(text) => {
                 self.blocks_panel.query = text;
                 self.blocks_panel.keyboard = false;
@@ -538,6 +543,7 @@ impl App {
 
     /// The panel's body: the search box and the list.
     pub(crate) fn blocks_panel_view(&self) -> Element<'_, Message> {
+        if self.blocks_panel.find.is_some() { return find::panel(self); }
         // Bu çizim | Kitaplık (docs/adr/0726 §1), as AutoCAD's Blocks palette has Current Drawing and Libraries.
         let shown = self.blocks_panel.library_shown;
         let side = |library: bool, words: &'static str| {
@@ -583,7 +589,7 @@ impl App {
         )
         .padding([6, 8])
         .width(Fill);
-        let search = column![search, self.blocks_view_bar()];
+        let search = column![search, container(button(label::caption("Tekrarlanan bileşenleri bul…")).on_press_maybe(self.available("block.find").then_some(Message::Run("block.find"))).style(style::button::ghost).width(Fill)).padding([4,8]), self.blocks_view_bar()];
         let rows = self.listed_blocks();
         if rows.is_empty() {
             let words = if self.blocks_panel.category.is_some() {

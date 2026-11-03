@@ -1,0 +1,1395 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.blocks.find",
+  "commandVersion": 1,
+  "title": "Tekrarlanan bileşenleri bul",
+  "note": "Written by scripts/fixtures/block_find_cases.py; independent expectations, no KentOS imports.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Tekrar arama",
+    "settings": {
+      "srid": 0,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 50,
+      "workspace": "cad"
+    },
+    "origin": {
+      "x": 0,
+      "y": 0
+    },
+    "layers": [
+      {
+        "id": "a",
+        "name": "A",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.18
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "a",
+    "entities": [
+      {
+        "kind": "line",
+        "id": 1,
+        "layerId": "a",
+        "attrs": {},
+        "a": {
+          "x": 0,
+          "y": 0
+        },
+        "b": {
+          "x": 2,
+          "y": 0
+        }
+      },
+      {
+        "kind": "line",
+        "id": 2,
+        "layerId": "a",
+        "attrs": {},
+        "a": {
+          "x": 10,
+          "y": 0
+        },
+        "b": {
+          "x": 12,
+          "y": 0
+        }
+      },
+      {
+        "kind": "line",
+        "id": 3,
+        "layerId": "a",
+        "attrs": {
+          "TYPE": "B"
+        },
+        "a": {
+          "x": 20,
+          "y": 0
+        },
+        "b": {
+          "x": 22,
+          "y": 0
+        }
+      },
+      {
+        "kind": "point",
+        "id": 4,
+        "layerId": "a",
+        "attrs": {},
+        "p": {
+          "x": 30,
+          "y": 0
+        }
+      }
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "cases": [
+    {
+      "name": "plan: tam geometri ve nesne verisi, kaynak değişmez",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "source": [
+              "$uidOf:1"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "source": [
+                "$uidOf:1"
+              ],
+              "matches": [
+                {
+                  "members": [
+                    "$uidOf:1"
+                  ],
+                  "origin": {
+                    "x": 0,
+                    "y": 0
+                  },
+                  "at": {
+                    "x": 0,
+                    "y": 0
+                  },
+                  "rotation": 0,
+                  "scale": 1,
+                  "mirror": false,
+                  "bounds": {
+                    "minX": 0,
+                    "minY": 0,
+                    "maxX": 2,
+                    "maxY": 0
+                  },
+                  "overlaps": false
+                },
+                {
+                  "members": [
+                    "$uidOf:2"
+                  ],
+                  "origin": {
+                    "x": 0,
+                    "y": 0
+                  },
+                  "at": {
+                    "x": 10,
+                    "y": 0
+                  },
+                  "rotation": 0,
+                  "scale": 1,
+                  "mirror": false,
+                  "bounds": {
+                    "minX": 10,
+                    "minY": 0,
+                    "maxX": 12,
+                    "maxY": 0
+                  },
+                  "overlaps": false
+                }
+              ],
+              "truncated": false,
+              "comparisons": "$any",
+              "related": {},
+              "revision": "$any"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "execute: tam geometri ve nesne verisi, kaynak değişmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": [
+              "$uidOf:1"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "source": [
+                "$uidOf:1"
+              ],
+              "matches": [
+                {
+                  "members": [
+                    "$uidOf:1"
+                  ],
+                  "origin": {
+                    "x": 0,
+                    "y": 0
+                  },
+                  "at": {
+                    "x": 0,
+                    "y": 0
+                  },
+                  "rotation": 0,
+                  "scale": 1,
+                  "mirror": false,
+                  "bounds": {
+                    "minX": 0,
+                    "minY": 0,
+                    "maxX": 2,
+                    "maxY": 0
+                  },
+                  "overlaps": false
+                },
+                {
+                  "members": [
+                    "$uidOf:2"
+                  ],
+                  "origin": {
+                    "x": 0,
+                    "y": 0
+                  },
+                  "at": {
+                    "x": 10,
+                    "y": 0
+                  },
+                  "rotation": 0,
+                  "scale": 1,
+                  "mirror": false,
+                  "bounds": {
+                    "minX": 10,
+                    "minY": 0,
+                    "maxX": 12,
+                    "maxY": 0
+                  },
+                  "overlaps": false
+                }
+              ],
+              "truncated": false,
+              "comparisons": "$any",
+              "related": {},
+              "revision": "$any"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "yinelenen kaynak kimliği bir kez alınır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": [
+              "$uidOf:1",
+              "$uidOf:1"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "source": [
+                "$uidOf:1"
+              ],
+              "matches": [
+                {
+                  "members": [
+                    "$uidOf:1"
+                  ],
+                  "origin": {
+                    "x": 0,
+                    "y": 0
+                  },
+                  "at": {
+                    "x": 0,
+                    "y": 0
+                  },
+                  "rotation": 0,
+                  "scale": 1,
+                  "mirror": false,
+                  "bounds": {
+                    "minX": 0,
+                    "minY": 0,
+                    "maxX": 2,
+                    "maxY": 0
+                  },
+                  "overlaps": false
+                },
+                {
+                  "members": [
+                    "$uidOf:2"
+                  ],
+                  "origin": {
+                    "x": 0,
+                    "y": 0
+                  },
+                  "at": {
+                    "x": 10,
+                    "y": 0
+                  },
+                  "rotation": 0,
+                  "scale": 1,
+                  "mirror": false,
+                  "bounds": {
+                    "minX": 10,
+                    "minY": 0,
+                    "maxX": 12,
+                    "maxY": 0
+                  },
+                  "overlaps": false
+                }
+              ],
+              "truncated": false,
+              "comparisons": "$any",
+              "related": {},
+              "revision": "$any"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "yalnız öteleme araması",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": [
+              "$uidOf:1"
+            ],
+            "rotations": false
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "source": [
+                "$uidOf:1"
+              ],
+              "matches": [
+                {
+                  "members": [
+                    "$uidOf:1"
+                  ],
+                  "origin": {
+                    "x": 0,
+                    "y": 0
+                  },
+                  "at": {
+                    "x": 0,
+                    "y": 0
+                  },
+                  "rotation": 0,
+                  "scale": 1,
+                  "mirror": false,
+                  "bounds": {
+                    "minX": 0,
+                    "minY": 0,
+                    "maxX": 2,
+                    "maxY": 0
+                  },
+                  "overlaps": false
+                },
+                {
+                  "members": [
+                    "$uidOf:2"
+                  ],
+                  "origin": {
+                    "x": 0,
+                    "y": 0
+                  },
+                  "at": {
+                    "x": 10,
+                    "y": 0
+                  },
+                  "rotation": 0,
+                  "scale": 1,
+                  "mirror": false,
+                  "bounds": {
+                    "minX": 10,
+                    "minY": 0,
+                    "maxX": 12,
+                    "maxY": 0
+                  },
+                  "overlaps": false
+                }
+              ],
+              "truncated": false,
+              "comparisons": "$any",
+              "related": {},
+              "revision": "$any"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "aynalama ve ölçek varsayılanı açıkça kapalı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": [
+              "$uidOf:1"
+            ],
+            "mirrors": false,
+            "scales": false
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "source": [
+                "$uidOf:1"
+              ],
+              "matches": [
+                {
+                  "members": [
+                    "$uidOf:1"
+                  ],
+                  "origin": {
+                    "x": 0,
+                    "y": 0
+                  },
+                  "at": {
+                    "x": 0,
+                    "y": 0
+                  },
+                  "rotation": 0,
+                  "scale": 1,
+                  "mirror": false,
+                  "bounds": {
+                    "minX": 0,
+                    "minY": 0,
+                    "maxX": 2,
+                    "maxY": 0
+                  },
+                  "overlaps": false
+                },
+                {
+                  "members": [
+                    "$uidOf:2"
+                  ],
+                  "origin": {
+                    "x": 0,
+                    "y": 0
+                  },
+                  "at": {
+                    "x": 10,
+                    "y": 0
+                  },
+                  "rotation": 0,
+                  "scale": 1,
+                  "mirror": false,
+                  "bounds": {
+                    "minX": 10,
+                    "minY": 0,
+                    "maxX": 12,
+                    "maxY": 0
+                  },
+                  "overlaps": false
+                }
+              ],
+              "truncated": false,
+              "comparisons": "$any",
+              "related": {},
+              "revision": "$any"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "mutlak tolerans geometriyi değiştirmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": [
+              "$uidOf:1"
+            ],
+            "tolerance": 0.0005
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "source": [
+                "$uidOf:1"
+              ],
+              "matches": [
+                {
+                  "members": [
+                    "$uidOf:1"
+                  ],
+                  "origin": {
+                    "x": 0,
+                    "y": 0
+                  },
+                  "at": {
+                    "x": 0,
+                    "y": 0
+                  },
+                  "rotation": 0,
+                  "scale": 1,
+                  "mirror": false,
+                  "bounds": {
+                    "minX": 0,
+                    "minY": 0,
+                    "maxX": 2,
+                    "maxY": 0
+                  },
+                  "overlaps": false
+                },
+                {
+                  "members": [
+                    "$uidOf:2"
+                  ],
+                  "origin": {
+                    "x": 0,
+                    "y": 0
+                  },
+                  "at": {
+                    "x": 10,
+                    "y": 0
+                  },
+                  "rotation": 0,
+                  "scale": 1,
+                  "mirror": false,
+                  "bounds": {
+                    "minX": 10,
+                    "minY": 0,
+                    "maxX": 12,
+                    "maxY": 0
+                  },
+                  "overlaps": false
+                }
+              ],
+              "truncated": false,
+              "comparisons": "$any",
+              "related": {},
+              "revision": "$any"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "boş kapsam bütün çizim anlamına gelmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": [
+              "$uidOf:1"
+            ],
+            "uids": []
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "source": [
+                "$uidOf:1"
+              ],
+              "matches": [],
+              "truncated": false,
+              "comparisons": "$any",
+              "related": {},
+              "revision": "$any"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kaynak kapsamın dışında olsa da yalnız hedef aranır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": [
+              "$uidOf:1"
+            ],
+            "uids": [
+              "$uidOf:2"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "source": [
+                "$uidOf:1"
+              ],
+              "matches": [
+                {
+                  "members": [
+                    "$uidOf:2"
+                  ],
+                  "origin": {
+                    "x": 0,
+                    "y": 0
+                  },
+                  "at": {
+                    "x": 10,
+                    "y": 0
+                  },
+                  "rotation": 0,
+                  "scale": 1,
+                  "mirror": false,
+                  "bounds": {
+                    "minX": 10,
+                    "minY": 0,
+                    "maxX": 12,
+                    "maxY": 0
+                  },
+                  "overlaps": false
+                }
+              ],
+              "truncated": false,
+              "comparisons": "$any",
+              "related": {},
+              "revision": "$any"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "görünüş ve veriyi yok sayma açık ve raporlu",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": [
+              "$uidOf:1"
+            ],
+            "geometryOnly": true
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "source": [
+                "$uidOf:1"
+              ],
+              "matches": [
+                {
+                  "members": [
+                    "$uidOf:1"
+                  ],
+                  "origin": {
+                    "x": 0,
+                    "y": 0
+                  },
+                  "at": {
+                    "x": 0,
+                    "y": 0
+                  },
+                  "rotation": 0,
+                  "scale": 1,
+                  "mirror": false,
+                  "bounds": {
+                    "minX": 0,
+                    "minY": 0,
+                    "maxX": 2,
+                    "maxY": 0
+                  },
+                  "overlaps": false
+                },
+                {
+                  "members": [
+                    "$uidOf:2"
+                  ],
+                  "origin": {
+                    "x": 0,
+                    "y": 0
+                  },
+                  "at": {
+                    "x": 10,
+                    "y": 0
+                  },
+                  "rotation": 0,
+                  "scale": 1,
+                  "mirror": false,
+                  "bounds": {
+                    "minX": 10,
+                    "minY": 0,
+                    "maxX": 12,
+                    "maxY": 0
+                  },
+                  "overlaps": false
+                },
+                {
+                  "members": [
+                    "$uidOf:3"
+                  ],
+                  "origin": {
+                    "x": 0,
+                    "y": 0
+                  },
+                  "at": {
+                    "x": 20,
+                    "y": 0
+                  },
+                  "rotation": 0,
+                  "scale": 1,
+                  "mirror": false,
+                  "bounds": {
+                    "minX": 20,
+                    "minY": 0,
+                    "maxX": 22,
+                    "maxY": 0
+                  },
+                  "overlaps": false
+                }
+              ],
+              "truncated": false,
+              "comparisons": "$any",
+              "related": {},
+              "revision": "$any"
+            },
+            "warnings": [
+              {
+                "code": "recognition_geometry_only",
+                "message": "Yalnız geometri karşılaştırıldı; katman, görünüş ve öznitelik farkları eşleşmeye engel sayılmadı.",
+                "path": "geometryOnly"
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sonuç sınırı eksik taramayı saklamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": [
+              "$uidOf:1"
+            ],
+            "limit": 1
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "source": [
+                "$uidOf:1"
+              ],
+              "matches": [
+                {
+                  "members": [
+                    "$uidOf:1"
+                  ],
+                  "origin": {
+                    "x": 0,
+                    "y": 0
+                  },
+                  "at": {
+                    "x": 0,
+                    "y": 0
+                  },
+                  "rotation": 0,
+                  "scale": 1,
+                  "mirror": false,
+                  "bounds": {
+                    "minX": 0,
+                    "minY": 0,
+                    "maxX": 2,
+                    "maxY": 0
+                  },
+                  "overlaps": false
+                }
+              ],
+              "truncated": true,
+              "comparisons": "$any",
+              "related": {},
+              "revision": "$any"
+            },
+            "warnings": [
+              {
+                "code": "recognition_truncated",
+                "message": "Arama sınıra ulaştı; bulunanlar kısmi sonuçtur. Kapsamı daraltıp yeniden arayın.",
+                "path": "uids"
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "boş kaynak",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": []
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_entities",
+              "message": "$any",
+              "path": "source"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "büyük kaynak seçimden önce reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": [
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1"
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "recognition_source_limit",
+              "message": "$any",
+              "path": "source"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "desteklenmeyen kaynak öğesi atlanmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": [
+              "$uidOf:4"
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "recognition_unsupported",
+              "message": "$any",
+              "path": "source[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "bozuk kaynak kimliği",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": [
+              "bad"
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_uid",
+              "message": "$any",
+              "path": "source[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "bozuk kapsam kimliği",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": [
+              "$uidOf:1"
+            ],
+            "uids": [
+              "bad"
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_uid",
+              "message": "$any",
+              "path": "uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "olmayan kaynak",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": [
+              "01925f3e-7c1a-7d2b-9e4f-000000000999"
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "entity_not_found",
+              "message": "$any",
+              "path": "source[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sıfır tolerans",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": [
+              "$uidOf:1"
+            ],
+            "tolerance": 0
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_tolerance",
+              "message": "$any",
+              "path": "tolerance"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "büyük tolerans",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": [
+              "$uidOf:1"
+            ],
+            "tolerance": 1
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_tolerance",
+              "message": "$any",
+              "path": "tolerance"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sıfır sonuç sınırı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": [
+              "$uidOf:1"
+            ],
+            "limit": 0
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_limit",
+              "message": "$any",
+              "path": "limit"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "bozuk revizyon",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": [
+              "$uidOf:1"
+            ],
+            "expectedRevision": "bad"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "$any",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "eski revizyon",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": [
+              "$uidOf:1"
+            ],
+            "expectedRevision": "999"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "$any",
+              "path": "expectedRevision",
+              "revision": "$any"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

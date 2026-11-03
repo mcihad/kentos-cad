@@ -67,6 +67,7 @@ pub mod block_variants;
 pub mod blocks_freeze;
 pub mod blocks_proxy;
 pub mod blocks_query;
+pub mod blocks_find;
 pub mod blocks_replace;
 pub mod blocks_sync;
 pub mod file_import_block;
@@ -1384,6 +1385,7 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
         kentos_commands::CAD_BLOCKS_QUERY_VERSION,
     ),
     // A dynamic block's inserts' parameter values ([`block_params`], docs/adr/0318 §3).
+    (kentos_commands::CAD_BLOCKS_FIND, kentos_commands::CAD_BLOCKS_FIND_VERSION),
     (
         kentos_commands::CAD_BLOCKS_PARAMETERS,
         kentos_commands::CAD_BLOCKS_PARAMETERS_VERSION,

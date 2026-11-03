@@ -469,6 +469,16 @@ codes! {
     POINTCLOUD_FIXED = "pointcloud_fixed", Failed, false, "Nokta bulutunun yeri dosyalarınındır; taşınmaz, döndürülmez, ölçeklenmez, kopyalanmaz.";
 
     // ── Blocks ──────────────────────────────────────────────────────────
+    /// The selected source contains a shape not supported by deterministic candidate recognition.
+    RECOGNITION_UNSUPPORTED = "recognition_unsupported", Failed, false, "Tekrar arama kaynağı yalnız sıfır uzunluklu olmayan çizgi, çember ve yay içerir; desteklenmeyen öğe atlanmaz.";
+    /// Recognition's small source collection limit, before reading or copying a large selection.
+    RECOGNITION_SOURCE_LIMIT = "recognition_source_limit", Failed, false, "Tekrar arama kaynağı en çok 128 nesne içerebilir; tek bir bileşen seçin.";
+    /// Recognition must be explicitly scoped for large drawings.
+    RECOGNITION_SCOPE_LIMIT = "recognition_scope_limit", Failed, false, "Tekrar arama kapsamı en çok 50 000 nesne olabilir; aranacak katmanları veya nesneleri daraltın.";
+    /// The candidate count or bounded analytic search budget was reached.
+    RECOGNITION_TRUNCATED = "recognition_truncated", Warning, false, "Tekrar araması sınıra ulaştı; bulunanlar kısmi sonuçtur, arama kapsamını daraltın.";
+    /// Caller explicitly excluded layer, appearance and attributes from matching.
+    RECOGNITION_GEOMETRY_ONLY = "recognition_geometry_only", Warning, false, "Yalnız geometri karşılaştırıldı; katman, görünüş ve öznitelik farkları eşleşmeye engel sayılmadı.";
     /// An insert's scale that is not above zero (docs/adr/0144).
     INVALID_SCALE = "invalid_scale", Failed, false, "Ölçek sıfırdan büyük olmalı: yerleştirmenin ya da ölçekli açıklamanın (en çok 1:1 000 000).";
     /// A block the drawing does not define.

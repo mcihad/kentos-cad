@@ -217,6 +217,7 @@ pub const PORTED: &[&str] = &[
     "tool.blockDefine",
     "tool.blockInsert",
     "block.panel",
+    "block.find",
     "block.purge",
     // Blok öznitelikleri: a block's attribute definitions (docs/adr/0144 §7).
     "block.attributes",

@@ -51,6 +51,7 @@ use kentos_native_application::spaces_number;
 use kentos_native_application::{program_check, program_edit};
 use kentos_native_application::donut_create;
 use kentos_native_application::drawing_compare;
+use kentos_native_application::blocks_find;
 use kentos_native_application::fields_write;
 use kentos_native_application::gpkg_tiles::{read as gpkg_tiles_read, write as gpkg_tiles_write};
 use kentos_native_application::layers_crs::{
@@ -2620,6 +2621,12 @@ impl Input for kentos_commands::DrawingAudit {
     }
 }
 
+impl Input for kentos_commands::BlocksFind {
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match path { "tolerance" => self.tolerance.as_mut(), _ => None }
+    }
+}
+
 impl Input for kentos_commands::DrawingCompare {
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         match path {
@@ -4273,6 +4280,9 @@ fn run_op(
         }
         kentos_commands::CAD_DRAWING_AUDIT => {
             run!(drawing_audit, kentos_commands::DrawingAudit)
+        }
+        kentos_commands::CAD_BLOCKS_FIND => {
+            run!(blocks_find, kentos_commands::BlocksFind)
         }
         kentos_commands::CAD_DRAWING_COMPARE => {
             run!(drawing_compare, kentos_commands::DrawingCompare)

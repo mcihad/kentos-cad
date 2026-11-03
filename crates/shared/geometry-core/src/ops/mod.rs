@@ -63,6 +63,7 @@ pub mod polygonize;
 pub mod proximity;
 pub mod reshape;
 pub mod reshape_by;
+pub mod repeats;
 pub mod road;
 pub mod rubber;
 pub mod sampling;

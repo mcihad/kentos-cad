@@ -222,6 +222,7 @@ pub enum Dialog {
     /// Read-only impact of the current block editor draft.
     BlockReview,
     BlockReplace,
+    BlockFind,
     /// Alanlar (layer_fields.rs, docs/adr/0199 §3); the window is `App::layer_fields`.
     LayerFields,
     /// Katman süzgeci (layer_filters.rs, docs/adr/0211 §4); the window is `App::layer_filter`.
@@ -2241,6 +2242,9 @@ impl App {
                 return self.alt_released(modifiers);
             }
             Message::Dock(event) => {
+                if matches!(event, kentos_ui::widget::docking::Event::Closed(Panel::Blocks)) {
+                    self.close_block_find();
+                }
                 self.docks.update(event.clone());
                 self.dock_dragged(&event, Instant::now());
             }
@@ -3326,6 +3330,7 @@ impl App {
             "layer.newGroup" => self.new_group(),
             // The blocks (blocks_panel.rs, docs/adr/0144).
             "block.panel" => self.show_blocks_panel(),
+            "block.find" => self.open_block_find(),
             "block.purge" => self.purge_blocks(),
             // Blok düzenleyici (block_editor.rs, docs/adr/0316 §1).
             "block.edit" => self.block_editor_from_selection(),
@@ -3608,6 +3613,7 @@ impl App {
             // A drawing tool that writes another kind than the typed active layer holds (docs/adr/0622 §5).
             id if self.layer_misfit(id).is_some() => false,
             "block.purge" | "block.export" => doc.is_some_and(|d| !d.blocks().is_empty()),
+            "block.find" => doc.is_some() && !self.session.is_running(),
             "block.import" | "layer.impact" => doc.is_some(),
             "block.attributes" => doc.is_some_and(|d| {
                 kentos_interaction::blocks::selected_block(d, &self.selection).is_some()
