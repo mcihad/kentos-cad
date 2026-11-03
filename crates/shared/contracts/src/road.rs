@@ -105,6 +105,10 @@ pub struct RoadSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<RetainingWallDef>>", optional))]
     pub walls: Vec<RetainingWallDef>,
+    /// The pay item book (docs/adr/0909 §4): the agency's items and the rules that give them KentOS's quantities.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub pay: Option<PayBookDef>,
 }
 
 impl RoadSettings {
@@ -123,6 +127,7 @@ impl RoadSettings {
             && self.guardrails.is_empty()
             && self.culverts.is_empty()
             && self.walls.is_empty()
+            && self.pay.is_none()
     }
 
     /// What is wrong with it, by the field's path and in words; none when it is right.
@@ -982,6 +987,7 @@ pub fn road_problem(road: &RoadSettings) -> Option<(String, String)> {
         .or_else(|| guardrails_problem(road))
         .or_else(|| culverts_problem(road))
         .or_else(|| walls_problem(road))
+        .or_else(|| pay_problem(road))
 }
 
 fn side_problem(s: &TemplateSideDef, at: &str) -> Option<(String, String)> {
@@ -1715,6 +1721,165 @@ fn walls_problem(road: &RoadSettings) -> Option<(String, String)> {
         }
         if w.material.as_ref().is_some_and(|m| m.trim().is_empty() || m.trim() != m || m.chars().count() > 120) {
             return fail(at("material"), "malzeme boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 120 karakter");
+        }
+    }
+    None
+}
+
+/// The most pay items and rules a book holds.
+pub const MAX_PAY_ITEMS: usize = 2000;
+pub const MAX_PAY_RULES: usize = 2000;
+
+/// A quantity KentOS reads from a road project's structures and earthwork (docs/adr/0909 §4).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum PayMeasure {
+    /// A guardrail's runs, both sides (m).
+    GuardrailLength,
+    /// A culvert's barrel (m).
+    CulvertLength,
+    /// A culvert's pipes: count × barrel (m).
+    CulvertPipes,
+    /// A culvert's barrel concrete (m³).
+    CulvertConcrete,
+    /// A retaining wall's face in plan (m).
+    WallLength,
+    /// A retaining wall's stem face (m²).
+    WallFace,
+    /// A retaining wall's concrete (m³).
+    WallConcrete,
+    /// An earthwork volume's cut (m³).
+    VolumeCut,
+    /// An earthwork volume's fill (m³).
+    VolumeFill,
+    /// An earthwork volume's cut times its swell factors (m³).
+    VolumeFactoredCut,
+    /// An earthwork volume's fill times its shrink factors (m³).
+    VolumeFactoredFill,
+}
+
+impl PayMeasure {
+    /// Whether it reads a culvert or a wall (which have a material).
+    pub fn has_material(self) -> bool {
+        matches!(
+            self,
+            Self::CulvertLength | Self::CulvertPipes | Self::CulvertConcrete | Self::WallLength | Self::WallFace | Self::WallConcrete
+        )
+    }
+}
+
+/// An agency's pay item: its code (as the agency writes it), name, unit (as written) and optional unit price.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct PayItemDef {
+    pub code: String,
+    pub name: String,
+    pub unit: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "money")))]
+    pub price: Option<f64>,
+}
+
+/// A rule giving an item a quantity: KentOS's `measure` (of the culverts or walls of `material` only, when given)
+/// times `factor`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct PayRuleDef {
+    pub measure: PayMeasure,
+    pub item: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub factor: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub material: Option<String>,
+}
+
+/// The project's pay item book (docs/adr/0909 §4): its source (the agency's list and year, required: KentOS gives no
+/// item), its version, its currency, its items and its rules.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct PayBookDef {
+    pub source: String,
+    pub version: String,
+    #[serde(default, skip_serializing_if = "is_zero_u32")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub revision: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub currency: Option<String>,
+    pub items: Vec<PayItemDef>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<PayRuleDef>>", optional))]
+    pub rules: Vec<PayRuleDef>,
+}
+
+fn pay_problem(road: &RoadSettings) -> Option<(String, String)> {
+    let fail = |path: String, words: &str| Some((path, words.to_string()));
+    let Some(b) = &road.pay else { return None };
+    let text = |t: &str, most: usize| !t.trim().is_empty() && t.trim() == t && t.chars().count() <= most;
+    if !text(&b.source, 200) {
+        return fail("pay.source".into(), "poz defterinin kaynağı boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 200 karakter");
+    }
+    if !text(&b.version, 64) {
+        return fail("pay.version".into(), "poz defterinin sürümü boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 64 karakter");
+    }
+    if b.currency.as_ref().is_some_and(|c| !text(c, 12)) {
+        return fail("pay.currency".into(), "para birimi boş olmamalı, en çok 12 karakter");
+    }
+    if b.items.is_empty() || b.items.len() > MAX_PAY_ITEMS {
+        return fail("pay.items".into(), &format!("poz defterinde 1 ile {MAX_PAY_ITEMS} arası poz olur"));
+    }
+    if b.rules.len() > MAX_PAY_RULES {
+        return fail("pay.rules".into(), &format!("poz defterinde en çok {MAX_PAY_RULES} kural olur"));
+    }
+    let mut codes = std::collections::BTreeSet::new();
+    for (i, it) in b.items.iter().enumerate() {
+        let at = |field: &str| format!("pay.items[{i}].{field}");
+        if !text(&it.code, 64) {
+            return fail(at("code"), "pozun numarası boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 64 karakter");
+        }
+        if !codes.insert(it.code.as_str()) {
+            return fail(at("code"), "bu numarada başka bir poz var");
+        }
+        if !text(&it.name, 300) {
+            return fail(at("name"), "pozun adı boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 300 karakter");
+        }
+        if !text(&it.unit, 16) {
+            return fail(at("unit"), "pozun birimi boş olmamalı, en çok 16 karakter");
+        }
+        if it.price.is_some_and(|p| !(0.0..=1e12).contains(&p)) {
+            return fail(at("price"), "pozun birim fiyatı 0 ya da büyük, sonlu olmalı");
+        }
+    }
+    for (i, r) in b.rules.iter().enumerate() {
+        let at = |field: &str| format!("pay.rules[{i}].{field}");
+        if !codes.contains(r.item.as_str()) {
+            return fail(at("item"), "kuralın pozu defterde yok");
+        }
+        if !(r.factor.is_finite() && r.factor > 0.0 && r.factor <= 1e6) {
+            return fail(at("factor"), "kuralın çarpanı 0'dan büyük, en çok 1 000 000 olur");
+        }
+        if let Some(m) = &r.material {
+            if !r.measure.has_material() {
+                return fail(at("material"), "malzeme yalnız menfez ve istinat duvarı ölçülerinde olur");
+            }
+            if !text(m, 120) {
+                return fail(at("material"), "kuralın malzemesi boş olmamalı, en çok 120 karakter");
+            }
         }
     }
     None

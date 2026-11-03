@@ -9784,6 +9784,36 @@ class _Schema:
                 self.fail("bad_value", "istinat duvarının km'leri, okuma aralığı ya da en yükseği kuralın dışında")
             return t
 
+        def pay(x):
+            # Docs/adr/0909 §4: the pay item book, the agency's items and the rules giving them KentOS's quantities.
+            measures = ("guardrailLength", "culvertLength", "culvertPipes", "culvertConcrete", "wallLength", "wallFace",
+                        "wallConcrete", "volumeCut", "volumeFill", "volumeFactoredCut", "volumeFactoredFill")
+            item = self.fields({"code": (self.text, True), "name": (self.text, True), "unit": (self.text, True),
+                                "price": (finite, False)})
+            rule = self.fields({"measure": (self.enum(measures), True), "item": (self.text, True),
+                                "factor": (finite, True), "material": (self.text, False)})
+            t = self.fields({"source": (self.text, True), "version": (self.text, True),
+                             "revision": (self.uint(32), False), "currency": (self.text, False),
+                             "items": (self.array(item), True), "rules": (self.array(rule), False)})(x)
+
+            def ok(s, most):
+                return bool(s.strip()) and s.strip() == s and len(s) <= most
+            if not ok(t["source"], 200) or not ok(t["version"], 64) or not ok(t.get("currency", "x"), 12):
+                self.fail("bad_value", "poz defterinin kaynağı, sürümü ya da para birimi kuralın dışında")
+            if not 1 <= len(t["items"]) <= 2000 or len(t.get("rules", [])) > 2000:
+                self.fail("bad_value", "poz defterinde 1 ile 2000 arası poz ve en çok 2000 kural olur")
+            codes = [i["code"] for i in t["items"]]
+            if len(set(codes)) != len(codes) or any(not ok(i["code"], 64) or not ok(i["name"], 300)
+                                                    or not ok(i["unit"], 16) or not 0 <= i.get("price", 0) <= 1e12
+                                                    for i in t["items"]):
+                self.fail("bad_value", "poz defterinin pozları kuralın dışında")
+            for r_ in t.get("rules", []):
+                if r_["item"] not in codes or not 0 < r_["factor"] <= 1e6:
+                    self.fail("bad_value", "poz defterinin kuralı defterde olmayan poza ya da kuralın dışında çarpanla")
+                if "material" in r_ and (not r_["measure"].startswith(("culvert", "wall")) or not ok(r_["material"], 120)):
+                    self.fail("bad_value", "malzeme yalnız menfez ve istinat duvarı ölçülerinde olur")
+            return t
+
         r = self.fields({"surfaces": (self.array(surface), False), "alignments": (self.array(alignment), False),
                          "profiles": (self.array(profile), False), "templates": (self.array(template), False),
                          "sections": (self.array(section_set), False),
@@ -9793,7 +9823,7 @@ class _Schema:
                          "sheetSets": (self.array(sheet_set), False),
                          "guardrails": (self.array(guardrail), False),
                          "culverts": (self.array(culvert), False),
-                         "walls": (self.array(wall), False)})(v)
+                         "walls": (self.array(wall), False), "pay": (pay, False)})(v)
         got = r.get("surfaces", [])
         lines = r.get("alignments", [])
         profiles = r.get("profiles", [])
@@ -9808,7 +9838,7 @@ class _Schema:
         culverts = r.get("culverts", [])
         walls = r.get("walls", [])
         if not (got or lines or profiles or templates or sets or supers or corridors or volumes or hauls or sheet_sets
-                or guardrails or culverts or walls):
+                or guardrails or culverts or walls or "pay" in r):
             self.fail("bad_value", "boş yol ayarı yazılmaz")
         if len(got) > 64 or ("surfaces" in r and not got):
             self.fail("bad_value", "yol ayarında 1 ile 64 arası yüzey olur")

@@ -7643,6 +7643,62 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::ROAD_PAY_EDIT.into(),
+            version: crate::ROAD_PAY_EDIT_VERSION,
+            title: "Poz defterini düzenle".into(),
+            summary: "Yol projesinin poz defterini yazar ya da kaldırır. Defter kurumun birim fiyat listesidir: source (listenin adı ve yılı, zorunlu), version (sürümü), currency (para birimi), items (her biri code poz numarası kurumun yazdığı gibi, name, unit birimi yazıldığı gibi, isteğe bağlı price birim fiyat) ve rules (her biri measure KentOS'un ölçüsü: guardrailLength, culvertLength, culvertPipes, culvertConcrete, wallLength, wallFace, wallConcrete, volumeCut, volumeFill, volumeFactoredCut, volumeFactoredFill; item pozun numarası; factor çarpan; isteğe bağlı material yalnız o malzemedeki menfez ve duvarlar). KentOS poz ve fiyat vermez. set verilen alanları yazar (yeni defter source, version ve items ister), remove kaldırır; null currency'yi kaldırır. \
+                      Tek geri alma adımı “Poz defteri”. Retler: not_a_road_project, no_pay_book, invalid_pay_book, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["pozdefteri".into(), "payitems".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::PayEdit>(),
+            output: schema::<crate::PayWritten>(),
+            plan: Some(schema::<crate::PayWritten>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Kurumun listesinden iki poz ve kuralları".into(),
+                input: json!({ "operation": "set", "source": "İdarenin birim fiyat listesi", "version": "2026",
+                    "currency": "TRY", "items": [
+                        { "code": "A-1", "name": "Menfez betonu", "unit": "m³" },
+                        { "code": "A-2", "name": "Otokorkuluk", "unit": "m" } ],
+                    "rules": [
+                        { "measure": "culvertConcrete", "item": "A-1", "factor": 1.0 },
+                        { "measure": "guardrailLength", "item": "A-2", "factor": 1.0 } ] }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_PAY_QUERY.into(),
+            version: crate::ROAD_PAY_QUERY_VERSION,
+            title: "Poz metrajını sorgula".into(),
+            summary: "Poz defterinin her pozunun metrajını bugün okur; hiçbir şey yazmaz. Her kural, ölçüsünü projenin her otokorkuluğundan, menfezinden, istinat duvarından ya da kübajından (malzemesi verilmişse yalnız o malzemedekiler) okur ve çarpanıyla çarpar; poz satırı kaynak satırlarının (lines: tür, kimlik, ad, ölçü, değer, çarpan, miktar, eskimiş mi) toplamıdır; birim fiyatı varsa tutar. total fiyatlı pozların tutarlarının toplamı, unpriced metrajı olup fiyatı olmayan poz sayısıdır. item ile tek poz. \
+                      Uyarılar: pay_source_stale (kaynağın koridoru değişti), pay_source_unread (kaynak okunamıyor, metrajı yok). Retler: not_a_road_project, no_pay_book, invalid_pay_book."
+                .into(),
+            aliases: vec!["pozmetraj".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::PayQuery>(),
+            output: schema::<crate::PayQueried>(),
+            plan: Some(schema::<crate::PayQueried>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bütün pozlar".into(),
+                input: json!({}),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::FILE_EXPORT_LANDXML.into(),
             version: crate::FILE_EXPORT_LANDXML_VERSION,
             title: "LandXML dışa aktar".into(),
@@ -13541,6 +13597,8 @@ mod tests {
                     crate::ROAD_WALLS_DRAW => {
                         serde_json::from_value::<crate::RetainingWallsDraw>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_PAY_EDIT => serde_json::from_value::<crate::PayEdit>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_PAY_QUERY => serde_json::from_value::<crate::PayQuery>(e.input.clone()).map(|_| ()),
                     crate::ROAD_STAKEOUT_QUERY => {
                         serde_json::from_value::<crate::StakeoutQuery>(e.input.clone()).map(|_| ())
                     }
@@ -14320,6 +14378,8 @@ mod tests {
                         crate::ROAD_WALLS_DRAW => {
                             serde_json::from_value::<crate::RetainingWallsDrawn>(output.clone()).map(|_| ())
                         }
+                        crate::ROAD_PAY_EDIT => serde_json::from_value::<crate::PayWritten>(output.clone()).map(|_| ()),
+                        crate::ROAD_PAY_QUERY => serde_json::from_value::<crate::PayQueried>(output.clone()).map(|_| ()),
                         crate::ROAD_STAKEOUT_QUERY => {
                             serde_json::from_value::<crate::StakeoutQueried>(output.clone()).map(|_| ())
                         }

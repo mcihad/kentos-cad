@@ -40819,6 +40819,330 @@
       ]
     },
     {
+      "id": "road.pay.edit",
+      "version": 1,
+      "title": "Poz defterini düzenle",
+      "summary": "Yol projesinin poz defterini yazar ya da kaldırır. Defter kurumun birim fiyat listesidir: source (listenin adı ve yılı, zorunlu), version (sürümü), currency (para birimi), items (her biri code poz numarası kurumun yazdığı gibi, name, unit birimi yazıldığı gibi, isteğe bağlı price birim fiyat) ve rules (her biri measure KentOS'un ölçüsü: guardrailLength, culvertLength, culvertPipes, culvertConcrete, wallLength, wallFace, wallConcrete, volumeCut, volumeFill, volumeFactoredCut, volumeFactoredFill; item pozun numarası; factor çarpan; isteğe bağlı material yalnız o malzemedeki menfez ve duvarlar). KentOS poz ve fiyat vermez. set verilen alanları yazar (yeni defter source, version ve items ister), remove kaldırır; null currency'yi kaldırır. Tek geri alma adımı “Poz defteri”. Retler: not_a_road_project, no_pay_book, invalid_pay_book, invalid_revision, revision_conflict.",
+      "aliases": [
+        "pozdefteri",
+        "payitems"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.pay.edit` v1: `set` writes the book (a new one needs `source`, `version` and `items`; the given\nfields replace the book's), `remove` takes it off. `currency` null takes it off.\n\nRefusals, in this order: `not_a_road_project`, `no_pay_book` (remove with none), `invalid_pay_book` (rebind, a new\none without its fields, set with nothing to set, the book by `road_problem`: no source or version, a code twice, a\nrule's item not in the book, a factor out of bounds, a material on a measure without one), `invalid_revision`,\n`revision_conflict`.",
+        "properties": {
+          "currency": {
+            "description": "The book's currency; null takes it off.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "items": {
+            "items": {
+              "$ref": "#/$defs/PayItemDef"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "operation": {
+            "$ref": "#/$defs/RoadEditOperation"
+          },
+          "rules": {
+            "items": {
+              "$ref": "#/$defs/PayRuleDef"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "source": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "version": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "operation"
+        ],
+        "title": "PayEdit",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.pay.edit` v1: the book written (absent when removed).",
+        "properties": {
+          "book": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/PayBookDef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "revision"
+        ],
+        "title": "PayWritten",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.pay.edit` v1: the book written (absent when removed).",
+        "properties": {
+          "book": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/PayBookDef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "revision"
+        ],
+        "title": "PayWritten",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "no_pay_book",
+          "invalid_pay_book",
+          "invalid_revision",
+          "revision_conflict"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Kurumun listesinden iki poz ve kuralları",
+          "input": {
+            "currency": "TRY",
+            "items": [
+              {
+                "code": "A-1",
+                "name": "Menfez betonu",
+                "unit": "m³"
+              },
+              {
+                "code": "A-2",
+                "name": "Otokorkuluk",
+                "unit": "m"
+              }
+            ],
+            "operation": "set",
+            "rules": [
+              {
+                "factor": 1.0,
+                "item": "A-1",
+                "measure": "culvertConcrete"
+              },
+              {
+                "factor": 1.0,
+                "item": "A-2",
+                "measure": "guardrailLength"
+              }
+            ],
+            "source": "İdarenin birim fiyat listesi",
+            "version": "2026"
+          }
+        }
+      ]
+    },
+    {
+      "id": "road.pay.query",
+      "version": 1,
+      "title": "Poz metrajını sorgula",
+      "summary": "Poz defterinin her pozunun metrajını bugün okur; hiçbir şey yazmaz. Her kural, ölçüsünü projenin her otokorkuluğundan, menfezinden, istinat duvarından ya da kübajından (malzemesi verilmişse yalnız o malzemedekiler) okur ve çarpanıyla çarpar; poz satırı kaynak satırlarının (lines: tür, kimlik, ad, ölçü, değer, çarpan, miktar, eskimiş mi) toplamıdır; birim fiyatı varsa tutar. total fiyatlı pozların tutarlarının toplamı, unpriced metrajı olup fiyatı olmayan poz sayısıdır. item ile tek poz. Uyarılar: pay_source_stale (kaynağın koridoru değişti), pay_source_unread (kaynak okunamıyor, metrajı yok). Retler: not_a_road_project, no_pay_book, invalid_pay_book.",
+      "aliases": [
+        "pozmetraj"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.pay.query` v1: every item, or one (`item`: its code).\n\nRefusals: `not_a_road_project`, `no_pay_book`, `invalid_pay_book` (an item not in the book). Warnings:\n`pay_source_stale`, `pay_source_unread`.",
+        "properties": {
+          "item": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "title": "PayQuery",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.pay.query` v1: the book's source, version, revision and currency, its items' rows (book order),\nthe priced items' total and how many items with a quantity have no price.",
+        "properties": {
+          "currency": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "revision": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "version"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/$defs/PayRow"
+            },
+            "type": "array"
+          },
+          "source": {
+            "type": "string"
+          },
+          "total": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "money"
+          },
+          "unpriced": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "version": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "source",
+          "version",
+          "revision",
+          "rows",
+          "total",
+          "unpriced"
+        ],
+        "title": "PayQueried",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.pay.query` v1: the book's source, version, revision and currency, its items' rows (book order),\nthe priced items' total and how many items with a quantity have no price.",
+        "properties": {
+          "currency": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "revision": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "version"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/$defs/PayRow"
+            },
+            "type": "array"
+          },
+          "source": {
+            "type": "string"
+          },
+          "total": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "money"
+          },
+          "unpriced": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "version": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "source",
+          "version",
+          "revision",
+          "rows",
+          "total",
+          "unpriced"
+        ],
+        "title": "PayQueried",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "no_pay_book",
+          "invalid_pay_book"
+        ],
+        "warnings": [
+          "pay_source_stale",
+          "pay_source_unread"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bütün pozlar",
+          "input": {}
+        }
+      ]
+    },
+    {
       "id": "file.export.landxml",
       "version": 1,
       "title": "LandXML dışa aktar",
@@ -77444,6 +77768,30 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "İstinat duvarının koridoru değişti; duvarı denetleyip koridora yeniden bağlayın."
+    },
+    {
+      "code": "invalid_pay_book",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Poz defteri geçerli değil; ileti nedenini söyler."
+    },
+    {
+      "code": "no_pay_book",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Projede poz defteri yok; önce Poz metrajı'nda yazın."
+    },
+    {
+      "code": "pay_source_stale",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bir metrajın kaynağının koridoru değişti; kaynağı denetleyip yeniden bağlayın."
+    },
+    {
+      "code": "pay_source_unread",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bir yapı ya da kübaj okunamıyor; metrajı yok."
     },
     {
       "code": "retaining_wall_high",
@@ -132974,6 +133322,261 @@
         }
       ]
     },
+    "PayBookDef": {
+      "additionalProperties": false,
+      "description": "The project's pay item book (docs/adr/0909 §4): its source (the agency's list and year, required: KentOS gives no\nitem), its version, its currency, its items and its rules.",
+      "properties": {
+        "currency": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "items": {
+          "items": {
+            "$ref": "#/$defs/PayItemDef"
+          },
+          "type": "array"
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "rules": {
+          "items": {
+            "$ref": "#/$defs/PayRuleDef"
+          },
+          "type": "array"
+        },
+        "source": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "version",
+        "items"
+      ],
+      "type": "object"
+    },
+    "PayItemDef": {
+      "additionalProperties": false,
+      "description": "An agency's pay item: its code (as the agency writes it), name, unit (as written) and optional unit price.",
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "price": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "money"
+        },
+        "unit": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "name",
+        "unit"
+      ],
+      "type": "object"
+    },
+    "PayLine": {
+      "description": "A quantity's source: the structure or volume (`kind`: `guardrail`, `culvert`, `wall` or `volume`), the measure read,\nits value, the rule's factor, the quantity (value × factor) and whether its corridor changed since.",
+      "properties": {
+        "factor": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "measure": {
+          "$ref": "#/$defs/PayMeasure"
+        },
+        "name": {
+          "type": "string"
+        },
+        "quantity": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "value"
+        },
+        "stale": {
+          "type": "boolean"
+        },
+        "value": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "value"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "name",
+        "measure",
+        "value",
+        "factor",
+        "quantity",
+        "stale"
+      ],
+      "type": "object"
+    },
+    "PayMeasure": {
+      "description": "A quantity KentOS reads from a road project's structures and earthwork (docs/adr/0909 §4).",
+      "oneOf": [
+        {
+          "const": "guardrailLength",
+          "description": "A guardrail's runs, both sides (m).",
+          "type": "string"
+        },
+        {
+          "const": "culvertLength",
+          "description": "A culvert's barrel (m).",
+          "type": "string"
+        },
+        {
+          "const": "culvertPipes",
+          "description": "A culvert's pipes: count × barrel (m).",
+          "type": "string"
+        },
+        {
+          "const": "culvertConcrete",
+          "description": "A culvert's barrel concrete (m³).",
+          "type": "string"
+        },
+        {
+          "const": "wallLength",
+          "description": "A retaining wall's face in plan (m).",
+          "type": "string"
+        },
+        {
+          "const": "wallFace",
+          "description": "A retaining wall's stem face (m²).",
+          "type": "string"
+        },
+        {
+          "const": "wallConcrete",
+          "description": "A retaining wall's concrete (m³).",
+          "type": "string"
+        },
+        {
+          "const": "volumeCut",
+          "description": "An earthwork volume's cut (m³).",
+          "type": "string"
+        },
+        {
+          "const": "volumeFill",
+          "description": "An earthwork volume's fill (m³).",
+          "type": "string"
+        },
+        {
+          "const": "volumeFactoredCut",
+          "description": "An earthwork volume's cut times its swell factors (m³).",
+          "type": "string"
+        },
+        {
+          "const": "volumeFactoredFill",
+          "description": "An earthwork volume's fill times its shrink factors (m³).",
+          "type": "string"
+        }
+      ]
+    },
+    "PayRow": {
+      "description": "An item's quantity now: its code, name and unit, the sum of its lines, its unit price and amount when priced.",
+      "properties": {
+        "amount": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "money"
+        },
+        "code": {
+          "type": "string"
+        },
+        "lines": {
+          "items": {
+            "$ref": "#/$defs/PayLine"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        },
+        "price": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "money"
+        },
+        "quantity": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "value"
+        },
+        "unit": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "name",
+        "unit",
+        "quantity",
+        "lines"
+      ],
+      "type": "object"
+    },
+    "PayRuleDef": {
+      "additionalProperties": false,
+      "description": "A rule giving an item a quantity: KentOS's `measure` (of the culverts or walls of `material` only, when given)\ntimes `factor`.",
+      "properties": {
+        "factor": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "item": {
+          "type": "string"
+        },
+        "material": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "measure": {
+          "$ref": "#/$defs/PayMeasure"
+        }
+      },
+      "required": [
+        "measure",
+        "item",
+        "factor"
+      ],
+      "type": "object"
+    },
     "PdfCurveOutput": {
       "description": "What the page's curves become (docs/adr/0352 §3).",
       "oneOf": [
@@ -141141,6 +141744,17 @@
             "$ref": "#/$defs/HaulDef"
           },
           "type": "array"
+        },
+        "pay": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PayBookDef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The pay item book (docs/adr/0909 §4): the agency's items and the rules that give them KentOS's quantities."
         },
         "profiles": {
           "description": "The vertical alignments (docs/adr/0902), each on an alignment, in the order the project tree shows them.",

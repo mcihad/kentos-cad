@@ -421,6 +421,7 @@
     "guardrail.editor",
     "culvert.editor",
     "retainingWall.editor",
+    "payItems.editor",
     "landxml.export",
     "landxml.importAlignments",
     "ifc.export",

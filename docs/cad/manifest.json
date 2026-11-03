@@ -4994,6 +4994,23 @@
    "tests": 0
   },
   {
+   "id": "payItems.editor",
+   "kind": "command",
+   "title": "Poz metrajı…",
+   "level": "semantic",
+   "via": [
+    "road.pay.edit",
+    "road.pay.query"
+   ],
+   "operation": null,
+   "python": "Connection: road.pay.edit, Connection: road.pay.query",
+   "mcp": "road.pay.edit, road.pay.query",
+   "note": "Defter yazıldıkça road.pay.edit'in denetimi ve road.pay.query'nin cevabıyla okuma kopyasında önizler; Kaydet ve Sil road.pay.edit ile yazar (plan/road.md Y11.4, ADR 0909 §4).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "point.editor",
    "kind": "command",
    "title": "Nokta editörü",

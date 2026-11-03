@@ -2753,6 +2753,14 @@
       ],
       "note": "Ölçüler yazıldıkça road.walls.edit'in planıyla okuma kopyasında önizler; Kaydet ve Sil road.walls.edit, Planda çiz road.walls.draw ile yazar (plan/road.md Y11.3, ADR 0909 §3)."
     },
+    "payItems.editor": {
+      "level": "semantic",
+      "via": [
+        "road.pay.edit",
+        "road.pay.query"
+      ],
+      "note": "Defter yazıldıkça road.pay.edit'in denetimi ve road.pay.query'nin cevabıyla okuma kopyasında önizler; Kaydet ve Sil road.pay.edit ile yazar (plan/road.md Y11.4, ADR 0909 §4)."
+    },
     "landxml.importAlignments": {
       "level": "semantic",
       "via": [

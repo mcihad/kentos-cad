@@ -2032,6 +2032,7 @@ impl App {
             Asking::Guardrails => self.guardrail_view(),
             Asking::Culverts => self.culvert_view(),
             Asking::RetainingWalls => self.retaining_wall_view(),
+            Asking::Pay => self.pay_view(),
             Asking::Program => self.program_view(),
             Asking::SpaceMerge => self.space_merge_question(),
             Asking::TableStyles => self.table_styles_view(),

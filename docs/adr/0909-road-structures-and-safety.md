@@ -1,6 +1,6 @@
 # ADR 0909 — Sanat yapıları ve güvenlik: otokorkuluk, menfez, duvar ve metraj
 
-Tarih: 2026-11-03. plan/road.md Y11 (ROAD-DRAIN-01, 02, 11; ROAD-JUNC-12). Durum: taslak, aşamalar aşağıda.
+Tarih: 2026-11-03. plan/road.md Y11 (ROAD-DRAIN-01, 02, 11; ROAD-JUNC-12). Durum: kabul edildi; aşamalar aşağıda.
 
 ## Dayanak
 
@@ -21,6 +21,9 @@ Tarih: 2026-11-03. plan/road.md Y11 (ROAD-DRAIN-01, 02, 11; ROAD-JUNC-12). Durum
   duvar yüksekliğini temelin üstünden zeminin ya da bağlantı noktasının yüksek olanına ölçer; temel örtüsü (temelin
   üstünden bitmiş zemine), temel eni ve gövde eğimi parametredir. KentOS aynı ölçme biçimini alır, ölçüleri vermez:
   gövde, temel ve örtü projenindir; temel enini yüksekliğe bağlayan kural (Civil 3D'nin örneği) yoktur.
+- **Poz metrajı:** KGM her yıl yol, sanat yapısı ve asfalt işleri için poz numaralı (örneğin “KGM/6220-A” biçiminde)
+  birim fiyat listesi yayımlar; liste resmî yayındır, değerleri ikincil kaynaklardan (fiyat siteleri, yazılım
+  satıcıları) alınmaz. KentOS listeyi taşımaz: defteri kurum yazar, kaynağı ve sürümü zorunludur.
 
 ## Karar
 
@@ -73,6 +76,18 @@ Tarih: 2026-11-03. plan/road.md Y11 (ROAD-DRAIN-01, 02, 11; ROAD-JUNC-12). Durum
    ön ve arka kenarlarıyla kapalı dış çizgi; `labels` ile km aralığı ve en yüksek gövde). Kodlar `cad.walls`'ınkilerle
    çakışmasın diye `invalid_retaining_wall`, `unknown_retaining_wall`.
 
+4. **Poz metrajı (ROAD-DRAIN-11).** Yol ayarlarının `pay`'i projenin tek poz defteridir: `source` (listenin adı ve
+   yılı, zorunlu), `version`, `revision`, isteğe bağlı `currency`, `items[]` (kurumun yazdığı `code`, `name`, `unit`
+   ve isteğe bağlı `price` birim fiyat) ve `rules[]` (`measure`: KentOS'un ölçülerinden biri, otokorkuluk boyu,
+   menfez boyu, borusu ve betonu, duvar boyu, yüzü ve betonu, kazı, dolgu ve çarpanlı hâlleri; `item`; `factor`;
+   isteğe bağlı `material`: yalnız o malzemedeki menfez ve duvarlar). Her kural ölçüsünü projenin o türdeki her
+   kaynağından okur, çarpanla çarpar; poz satırı kaynak satırlarının toplamı, fiyatı varsa tutarı fiyat × miktar;
+   toplam fiyatlı pozların tutarlarıdır, fiyatı olmayıp metrajı olan pozlar sayılır. Metraj yazılmaz, her okumada
+   kaynakların bugünkü okumasından gelir: kaynağın koridoru değişmişse satırı eskimiş işaretlenir ve
+   `pay_source_stale`, okunamayan kaynak metraj vermez ve `pay_source_unread`. Bu, planın “menfezin değişmesi bağlı
+   metrajı eskitir” koşuludur; onaylı bir metrajın dondurulması (kübajın onayı gibi) sonraya. Komutlar `road.pay.edit`
+   (tek adım “Poz defteri”) ve `road.pay.query`. Masaüstünde Koridor › Metraj › Poz metrajı.
+
 ## Aşamalar
 
 Y11.1 (yapıldı, otokorkuluk): `road.guardrails.edit` 29, `.query` 20, `.draw` 21 ortak durum
@@ -97,6 +112,12 @@ okuyucuda (`broken/road-wall-toe-past-footing.kcad`). Python, MCP (`tests/road_s
 Yapılar › İstinat: ölçüler yazıldıkça boyuna görünüş (yol kenarı, zemin, duvarın üstü ve temeli), km'lerin tablosu
 (dolgu ya da yarma, kotlar, gövde, alan), boy, gövde yüzü, beton; Kaydet, Sil, Planda çiz. Duvarın kesite işlenmesi
 (şevin yerine), iksa ve gabion türleri sonraya.
+
+Y11.4 (yapıldı, poz metrajı): `road.pay.edit` 26, `.query` 20 ortak durum (`road_pay_cases.py`; ölçüler yapıların ve
+kübajın kendi başvurularından, kurallar §4'ten; KentOS kodu yok; pozlar, numaralar ve fiyatlar durumlarındır). KCAD şema
+161'in `pay`'i bağımsız okuyucuda (`broken/road-pay-rule-unknown-item.kcad`). Python, MCP (`tests/road_structures.rs`),
+masaüstünde Koridor › Metraj › Poz metrajı: kaynak, sürüm, para birimi; düzenlenen poz ve kural tabloları; yazıldıkça
+metraj, kaynakları (eskiyen işaretli), tutar ve toplam; Kaydet, Sil.
 
 ## Sonra
 

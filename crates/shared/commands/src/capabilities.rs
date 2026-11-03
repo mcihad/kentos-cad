@@ -1898,6 +1898,19 @@ const ENTRIES: &[Entry] = &[
         warnings: &["layer_hidden", "retaining_wall_stale", "retaining_wall_high", "corridor_stale", "corridor_unsolved"],
         targets: none,
     },
+    // KentOS Yol's pay item quantities (plan/road.md Y11.4, docs/adr/0909 §4).
+    Entry {
+        id: "road.pay.edit",
+        refusals: &[&["not_a_road_project", "no_pay_book", "invalid_pay_book"], REVISION],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "road.pay.query",
+        refusals: &[&["not_a_road_project", "no_pay_book", "invalid_pay_book"]],
+        warnings: &["pay_source_stale", "pay_source_unread"],
+        targets: none,
+    },
     // KentOS Yol's LandXML export (plan/road.md Y10.2, docs/adr/0908 §6).
     Entry {
         id: "file.export.landxml",

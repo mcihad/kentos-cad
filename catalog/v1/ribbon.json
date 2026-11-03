@@ -677,6 +677,16 @@
         "size": "large"
        }
       ]
+     },
+     {
+      "label": "Metraj",
+      "icon": "payItemsEditor",
+      "items": [
+       {
+        "command": "payItems.editor",
+        "size": "large"
+       }
+      ]
      }
     ],
     "works": [

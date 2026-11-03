@@ -769,6 +769,14 @@ codes! {
     UNKNOWN_RETAINING_WALL = "unknown_retaining_wall", Failed, false, "Bu kimlikte ya da adda istinat duvarı yok.";
     /// A warning: the wall's corridor changed since it was made or rebound (docs/adr/0909 §3).
     RETAINING_WALL_STALE = "retaining_wall_stale", Warning, false, "İstinat duvarının koridoru değişti; duvarı denetleyip koridora yeniden bağlayın.";
+    /// A pay item book that is not right: no source or version, items or rules out of bounds (docs/adr/0909 §4).
+    INVALID_PAY_BOOK = "invalid_pay_book", Failed, false, "Poz defteri geçerli değil; ileti nedenini söyler.";
+    /// The project has no pay item book (docs/adr/0909 §4).
+    NO_PAY_BOOK = "no_pay_book", Failed, false, "Projede poz defteri yok; önce Poz metrajı'nda yazın.";
+    /// A warning: a quantity comes from a structure or volume whose corridor changed (docs/adr/0909 §4).
+    PAY_SOURCE_STALE = "pay_source_stale", Warning, false, "Bir metrajın kaynağının koridoru değişti; kaynağı denetleyip yeniden bağlayın.";
+    /// A warning: a structure or volume does not read and gives no quantity (docs/adr/0909 §4).
+    PAY_SOURCE_UNREAD = "pay_source_unread", Warning, false, "Bir yapı ya da kübaj okunamıyor; metrajı yok.";
     /// A warning: the wall's stem is somewhere higher than the highest asked (docs/adr/0909 §3).
     RETAINING_WALL_HIGH = "retaining_wall_high", Warning, false, "İstinat duvarının gövdesi istenen en yüksekten yüksek.";
     /// A warning: the profile lies farther from the drawn line than the tolerance (docs/adr/0908 §13).

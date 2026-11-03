@@ -112,6 +112,27 @@ impl Document {
         })
     }
 
+    /// The project's pay item book (docs/adr/0909 §4).
+    pub fn road_pay(&self) -> Option<&kentos_contracts::PayBookDef> {
+        self.settings.road.as_ref().and_then(|r| r.pay.as_ref())
+    }
+
+    /// Gives the project the pay item book `next` as one change named `label`, as [`Self::set_road_templates`].
+    pub fn set_road_pay(&mut self, next: Option<kentos_contracts::PayBookDef>, label: &str) -> Result<bool, Refusal> {
+        let judged = RoadSettings { pay: next.clone(), ..self.settings.road.clone().unwrap_or_default() };
+        if let Some((path, problem)) = judged.problem() {
+            return Err(Refusal(format!("{path}: {problem}")));
+        }
+        let before = self.road_pay().cloned();
+        if before == next {
+            return Ok(false);
+        }
+        self.transact(label, |doc| {
+            doc.record(vec![Op::RoadPay { before, after: next }], label);
+            Ok(true)
+        })
+    }
+
     /// The project's retaining walls (docs/adr/0909 §3).
     pub fn road_walls(&self) -> &[kentos_contracts::RetainingWallDef] {
         self.settings.road.as_ref().map_or(&[], |r| r.walls.as_slice())

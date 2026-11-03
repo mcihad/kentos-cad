@@ -4596,6 +4596,38 @@ PatternUnitName = Literal["paper", "drawing"]
 """The names of :class:`PatternUnit`, for a plain string."""
 
 
+class PayMeasure(_StrEnum):
+    """A quantity KentOS reads from a road project's structures and earthwork (docs/adr/0909 §4).
+
+    - ``guardrailLength``: A guardrail's runs, both sides (m).
+    - ``culvertLength``: A culvert's barrel (m).
+    - ``culvertPipes``: A culvert's pipes: count × barrel (m).
+    - ``culvertConcrete``: A culvert's barrel concrete (m³).
+    - ``wallLength``: A retaining wall's face in plan (m).
+    - ``wallFace``: A retaining wall's stem face (m²).
+    - ``wallConcrete``: A retaining wall's concrete (m³).
+    - ``volumeCut``: An earthwork volume's cut (m³).
+    - ``volumeFill``: An earthwork volume's fill (m³).
+    - ``volumeFactoredCut``: An earthwork volume's cut times its swell factors (m³).
+    - ``volumeFactoredFill``: An earthwork volume's fill times its shrink factors (m³).
+    """
+    GUARDRAIL_LENGTH = "guardrailLength"
+    CULVERT_LENGTH = "culvertLength"
+    CULVERT_PIPES = "culvertPipes"
+    CULVERT_CONCRETE = "culvertConcrete"
+    WALL_LENGTH = "wallLength"
+    WALL_FACE = "wallFace"
+    WALL_CONCRETE = "wallConcrete"
+    VOLUME_CUT = "volumeCut"
+    VOLUME_FILL = "volumeFill"
+    VOLUME_FACTORED_CUT = "volumeFactoredCut"
+    VOLUME_FACTORED_FILL = "volumeFactoredFill"
+
+
+PayMeasureName = Literal["guardrailLength", "culvertLength", "culvertPipes", "culvertConcrete", "wallLength", "wallFace", "wallConcrete", "volumeCut", "volumeFill", "volumeFactoredCut", "volumeFactoredFill"]
+"""The names of :class:`PayMeasure`, for a plain string."""
+
+
 class PdfCurveOutput(_StrEnum):
     """What the page's curves become (docs/adr/0352 §3).
 
@@ -52534,6 +52566,327 @@ class PatternText(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class PayBookDef(_Model):
+    """The project's pay item book (docs/adr/0909 §4): its source (the agency's list and year, required: KentOS gives no
+    item), its version, its currency, its items and its rules.
+    Attributes:
+        revision: Unit: version.
+    """
+    source: str
+    version: str
+    items: list[PayItemDef]
+    currency: str | None | Unset = UNSET
+    revision: int | Unset = UNSET
+    rules: list[PayRuleDef] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["source"] = self.source
+        out["version"] = self.version
+        out["items"] = [e0.to_json() for e0 in self.items]
+        if self.currency is not UNSET:
+            out["currency"] = self.currency
+        if self.revision is not UNSET:
+            out["revision"] = self.revision
+        if self.rules is not UNSET:
+            out["rules"] = [e0.to_json() for e0 in self.rules]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PayBookDef:
+        return cls(
+            source=data["source"],
+            version=data["version"],
+            items=[PayItemDef.from_json(e0) for e0 in data["items"]],
+            currency=data.get("currency", UNSET),
+            revision=data.get("revision", UNSET),
+            rules=[PayRuleDef.from_json(e0) for e0 in data["rules"]] if "rules" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PayEdit(_Model):
+    """Input of `road.pay.edit` v1: `set` writes the book (a new one needs `source`, `version` and `items`; the given
+    fields replace the book's), `remove` takes it off. `currency` null takes it off.
+
+    Refusals, in this order: `not_a_road_project`, `no_pay_book` (remove with none), `invalid_pay_book` (rebind, a new
+    one without its fields, set with nothing to set, the book by `road_problem`: no source or version, a code twice, a
+    rule's item not in the book, a factor out of bounds, a material on a measure without one), `invalid_revision`,
+    `revision_conflict`.
+    Attributes:
+        currency: The book's currency; null takes it off.
+    """
+    operation: RoadEditOperation | RoadEditOperationName
+    currency: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    items: list[PayItemDef] | None | Unset = UNSET
+    rules: list[PayRuleDef] | None | Unset = UNSET
+    source: str | None | Unset = UNSET
+    version: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = _enum_out(self.operation)
+        if self.currency is not UNSET:
+            out["currency"] = self.currency
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.items is not UNSET:
+            out["items"] = None if self.items is None else [e0.to_json() for e0 in self.items]
+        if self.rules is not UNSET:
+            out["rules"] = None if self.rules is None else [e0.to_json() for e0 in self.rules]
+        if self.source is not UNSET:
+            out["source"] = self.source
+        if self.version is not UNSET:
+            out["version"] = self.version
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PayEdit:
+        return cls(
+            operation=_enum_in(RoadEditOperation, data["operation"]),
+            currency=data.get("currency", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            items=UNSET if "items" not in data else None if data["items"] is None else [PayItemDef.from_json(e0) for e0 in data["items"]],
+            rules=UNSET if "rules" not in data else None if data["rules"] is None else [PayRuleDef.from_json(e0) for e0 in data["rules"]],
+            source=data.get("source", UNSET),
+            version=data.get("version", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PayItemDef(_Model):
+    """An agency's pay item: its code (as the agency writes it), name, unit (as written) and optional unit price.
+    Attributes:
+        price: Unit: money.
+    """
+    code: str
+    name: str
+    unit: str
+    price: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["code"] = self.code
+        out["name"] = self.name
+        out["unit"] = self.unit
+        if self.price is not UNSET:
+            out["price"] = None if self.price is None else float(self.price)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PayItemDef:
+        return cls(
+            code=data["code"],
+            name=data["name"],
+            unit=data["unit"],
+            price=UNSET if "price" not in data else None if data["price"] is None else float(data["price"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PayLine(_Model):
+    """A quantity's source: the structure or volume (`kind`: `guardrail`, `culvert`, `wall` or `volume`), the measure read,
+    its value, the rule's factor, the quantity (value × factor) and whether its corridor changed since.
+    Attributes:
+        value: Unit: value.
+        factor: Unit: 1.
+        quantity: Unit: value.
+    """
+    kind: str
+    id: str
+    name: str
+    measure: PayMeasure | PayMeasureName
+    value: float
+    factor: float
+    quantity: float
+    stale: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = self.kind
+        out["id"] = self.id
+        out["name"] = self.name
+        out["measure"] = _enum_out(self.measure)
+        out["value"] = float(self.value)
+        out["factor"] = float(self.factor)
+        out["quantity"] = float(self.quantity)
+        out["stale"] = self.stale
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PayLine:
+        return cls(
+            kind=data["kind"],
+            id=data["id"],
+            name=data["name"],
+            measure=_enum_in(PayMeasure, data["measure"]),
+            value=float(data["value"]),
+            factor=float(data["factor"]),
+            quantity=float(data["quantity"]),
+            stale=data["stale"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PayQueried(_Model):
+    """Output of `road.pay.query` v1: the book's source, version, revision and currency, its items' rows (book order),
+    the priced items' total and how many items with a quantity have no price.
+    Attributes:
+        revision: Unit: version.
+        total: Unit: money.
+        unpriced: Unit: count.
+    """
+    source: str
+    version: str
+    revision: int
+    rows: list[PayRow]
+    total: float
+    unpriced: int
+    currency: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["source"] = self.source
+        out["version"] = self.version
+        out["revision"] = self.revision
+        out["rows"] = [e0.to_json() for e0 in self.rows]
+        out["total"] = float(self.total)
+        out["unpriced"] = self.unpriced
+        if self.currency is not UNSET:
+            out["currency"] = self.currency
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PayQueried:
+        return cls(
+            source=data["source"],
+            version=data["version"],
+            revision=data["revision"],
+            rows=[PayRow.from_json(e0) for e0 in data["rows"]],
+            total=float(data["total"]),
+            unpriced=data["unpriced"],
+            currency=data.get("currency", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PayQuery(_Model):
+    """Input of `road.pay.query` v1: every item, or one (`item`: its code).
+
+    Refusals: `not_a_road_project`, `no_pay_book`, `invalid_pay_book` (an item not in the book). Warnings:
+    `pay_source_stale`, `pay_source_unread`.
+    """
+    item: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.item is not UNSET:
+            out["item"] = self.item
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PayQuery:
+        return cls(
+            item=data.get("item", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PayRow(_Model):
+    """An item's quantity now: its code, name and unit, the sum of its lines, its unit price and amount when priced.
+    Attributes:
+        quantity: Unit: value.
+        amount: Unit: money.
+        price: Unit: money.
+    """
+    code: str
+    name: str
+    unit: str
+    quantity: float
+    lines: list[PayLine]
+    amount: float | None | Unset = UNSET
+    price: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["code"] = self.code
+        out["name"] = self.name
+        out["unit"] = self.unit
+        out["quantity"] = float(self.quantity)
+        out["lines"] = [e0.to_json() for e0 in self.lines]
+        if self.amount is not UNSET:
+            out["amount"] = None if self.amount is None else float(self.amount)
+        if self.price is not UNSET:
+            out["price"] = None if self.price is None else float(self.price)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PayRow:
+        return cls(
+            code=data["code"],
+            name=data["name"],
+            unit=data["unit"],
+            quantity=float(data["quantity"]),
+            lines=[PayLine.from_json(e0) for e0 in data["lines"]],
+            amount=UNSET if "amount" not in data else None if data["amount"] is None else float(data["amount"]),
+            price=UNSET if "price" not in data else None if data["price"] is None else float(data["price"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PayRuleDef(_Model):
+    """A rule giving an item a quantity: KentOS's `measure` (of the culverts or walls of `material` only, when given)
+    times `factor`.
+    Attributes:
+        factor: Unit: 1.
+    """
+    measure: PayMeasure | PayMeasureName
+    item: str
+    factor: float
+    material: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["measure"] = _enum_out(self.measure)
+        out["item"] = self.item
+        out["factor"] = float(self.factor)
+        if self.material is not UNSET:
+            out["material"] = self.material
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PayRuleDef:
+        return cls(
+            measure=_enum_in(PayMeasure, data["measure"]),
+            item=data["item"],
+            factor=float(data["factor"]),
+            material=data.get("material", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PayWritten(_Model):
+    """Output of `road.pay.edit` v1: the book written (absent when removed)."""
+    revision: str
+    book: PayBookDef | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["revision"] = self.revision
+        if self.book is not UNSET:
+            out["book"] = None if self.book is None else self.book.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PayWritten:
+        return cls(
+            revision=data["revision"],
+            book=UNSET if "book" not in data else None if data["book"] is None else PayBookDef.from_json(data["book"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PdfExported(_Model):
     """What `file.export.pdf` wrote, or with `plan` would write.
     Attributes:
@@ -62766,6 +63119,7 @@ class RoadSettings(_Model):
         culverts: The culverts (docs/adr/0909 §2), each across a corridor.
         guardrails: The guardrails (docs/adr/0909 §1), each along a corridor.
         hauls: The mass haul diagrams (docs/adr/0907).
+        pay: The pay item book (docs/adr/0909 §4): the agency's items and the rules that give them KentOS's quantities.
         profiles: The vertical alignments (docs/adr/0902), each on an alignment, in the order the project tree shows them.
         sections: The sample line sets (docs/adr/0903 §2), in the order the project tree shows them.
         sheet_sets: The plan–profile sheet sets (docs/adr/0908 §10), each along an alignment.
@@ -62780,6 +63134,7 @@ class RoadSettings(_Model):
     culverts: list[CulvertDef] | Unset = UNSET
     guardrails: list[GuardrailDef] | Unset = UNSET
     hauls: list[HaulDef] | Unset = UNSET
+    pay: PayBookDef | None | Unset = UNSET
     profiles: list[ProfileDef] | Unset = UNSET
     sections: list[SectionSetDef] | Unset = UNSET
     sheet_sets: list[RoadSheetSetDef] | Unset = UNSET
@@ -62801,6 +63156,8 @@ class RoadSettings(_Model):
             out["guardrails"] = [e0.to_json() for e0 in self.guardrails]
         if self.hauls is not UNSET:
             out["hauls"] = [e0.to_json() for e0 in self.hauls]
+        if self.pay is not UNSET:
+            out["pay"] = None if self.pay is None else self.pay.to_json()
         if self.profiles is not UNSET:
             out["profiles"] = [e0.to_json() for e0 in self.profiles]
         if self.sections is not UNSET:
@@ -62827,6 +63184,7 @@ class RoadSettings(_Model):
             culverts=[CulvertDef.from_json(e0) for e0 in data["culverts"]] if "culverts" in data else UNSET,
             guardrails=[GuardrailDef.from_json(e0) for e0 in data["guardrails"]] if "guardrails" in data else UNSET,
             hauls=[HaulDef.from_json(e0) for e0 in data["hauls"]] if "hauls" in data else UNSET,
+            pay=UNSET if "pay" not in data else None if data["pay"] is None else PayBookDef.from_json(data["pay"]),
             profiles=[ProfileDef.from_json(e0) for e0 in data["profiles"]] if "profiles" in data else UNSET,
             sections=[SectionSetDef.from_json(e0) for e0 in data["sections"]] if "sections" in data else UNSET,
             sheet_sets=[RoadSheetSetDef.from_json(e0) for e0 in data["sheetSets"]] if "sheetSets" in data else UNSET,
@@ -101278,6 +101636,17 @@ __all__ = [
     "PatternText",
     "PatternUnit",
     "PatternUnitName",
+    "PayBookDef",
+    "PayEdit",
+    "PayItemDef",
+    "PayLine",
+    "PayMeasure",
+    "PayMeasureName",
+    "PayQueried",
+    "PayQuery",
+    "PayRow",
+    "PayRuleDef",
+    "PayWritten",
     "PdfCurveOutput",
     "PdfCurveOutputName",
     "PdfExported",

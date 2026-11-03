@@ -281,6 +281,8 @@ CAD = [
         P("Pafta", "roadSheets", [L("road.sheets")]),
         # The road's structures: guardrails and culverts (plan/road.md Y11, docs/adr/0909).
         P("Yapılar", "guardrailEditor", [L("guardrail.editor"), L("culvert.editor"), L("retainingWall.editor")]),
+        # The pay item quantities (plan/road.md Y11.4, docs/adr/0909 §4).
+        P("Metraj", "payItemsEditor", [L("payItems.editor")]),
     ], works=ROAD),
     T("plan", "Plan", [
         P("Yol", "planRoad", [L("tool.planRoad"), S("tool.roadJunctions"), S("tool.medianClose"), S("tool.centerline")]),

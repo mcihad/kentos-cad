@@ -100,3 +100,39 @@ fn retaining_walls_are_asked_changed_and_drawn() {
     assert_eq!(drawn["isError"], false, "{drawn}");
     assert_eq!(drawn["structuredContent"]["output"]["uids"].as_array().map(Vec::len), Some(3), "{drawn}");
 }
+
+#[test]
+fn the_pay_book_gives_its_items_quantities() {
+    let mut server = Server::new();
+    let listed = server
+        .handle(&json!({"jsonrpc":"2.0","id":2,"method":"tools/list","params":{"_meta":meta()}}))
+        .unwrap();
+    let tools = listed["result"]["tools"].as_array().expect("tools");
+    let tool = |name: &str| tools.iter().find(|t| t["name"] == name).cloned().unwrap_or_default();
+    assert_eq!(tool("road.pay.query")["annotations"]["readOnlyHint"], true);
+    assert_eq!(tool("road.pay.edit")["annotations"]["destructiveHint"], true);
+
+    let cases: Value =
+        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/road.pay.query.json")).expect("cases");
+    let snapshot = serde_json::from_value(cases["setup"].clone()).expect("the drawing reads");
+    let path = std::env::temp_dir().join(format!("kentos-road-pay-{}.kcad", std::process::id()));
+    std::fs::write(&path, kentos_kcad::encode(&snapshot).expect("encodes")).expect("writes");
+    let opened = call(&mut server, "drawing.open", json!({"path":path}));
+    let _ = std::fs::remove_file(&path);
+    assert_eq!(opened["isError"], false, "{opened}");
+    let drawing = opened["structuredContent"]["drawing"].clone();
+
+    let asked = call(&mut server, "road.pay.query", json!({"drawing":drawing,"item":"P-3"}));
+    assert_eq!(asked["isError"], false, "{asked}");
+    let length = asked["structuredContent"]["output"]["rows"][0]["quantity"].as_f64().expect("a quantity");
+    assert!(length > 0.0, "{asked}");
+
+    let priced = call(&mut server, "road.pay.edit", json!({"drawing":drawing,"operation":"set","items":[
+        {"code":"P-3","name":"Otokorkuluk","unit":"m","price":40.0}],
+        "rules":[{"measure":"guardrailLength","item":"P-3","factor":1.0}]}));
+    assert_eq!(priced["isError"], false, "{priced}");
+    let total = call(&mut server, "road.pay.query", json!({"drawing":drawing}));
+    let out = &total["structuredContent"]["output"];
+    assert!((out["total"].as_f64().expect("a total") - 40.0 * length).abs() < 1e-6, "{total}");
+    assert_eq!(out["unpriced"], 0, "{total}");
+}

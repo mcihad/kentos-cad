@@ -550,7 +550,39 @@
      "highest": 6.0,
      "material": "Betonarme"
     }
-   ]
+   ],
+   "pay": {
+    "source": "Örnek idarenin birim fiyat listesi",
+    "version": "2026",
+    "revision": 1,
+    "currency": "TRY",
+    "items": [
+     {
+      "code": "Ö-1",
+      "name": "Menfez betonu",
+      "unit": "m³",
+      "price": 100.0
+     },
+     {
+      "code": "Ö-2",
+      "name": "Otokorkuluk",
+      "unit": "m"
+     }
+    ],
+    "rules": [
+     {
+      "measure": "culvertConcrete",
+      "item": "Ö-1",
+      "factor": 1.0,
+      "material": "Betonarme"
+     },
+     {
+      "measure": "guardrailLength",
+      "item": "Ö-2",
+      "factor": 1.0
+     }
+    ]
+   }
   }
  },
  "origin": {

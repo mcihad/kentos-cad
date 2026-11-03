@@ -621,6 +621,8 @@ pub const PORTED: &[&str] = &[
     "culvert.editor",
     // plan/road.md Y11.3: İstinat duvarı (retaining_wall_window.rs).
     "retainingWall.editor",
+    // plan/road.md Y11.4: Poz metrajı (pay_window.rs).
+    "payItems.editor",
     // plan/road.md Y10.2: LandXML ver (road_exchange.rs).
     "landxml.export",
     "landxml.importAlignments",

@@ -266,6 +266,9 @@ mod road_alignment_fit_window;
 mod guardrail_window;
 mod culvert_window;
 mod retaining_wall_window;
+mod pay_window;
+#[cfg(test)]
+mod pay_window_tests;
 #[cfg(test)]
 mod retaining_wall_window_tests;
 #[cfg(test)]

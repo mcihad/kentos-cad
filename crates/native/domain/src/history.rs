@@ -375,6 +375,11 @@ pub(crate) enum Op {
         before: Vec<kentos_contracts::CulvertDef>,
         after: Vec<kentos_contracts::CulvertDef>,
     },
+    /// A road project's pay item book (docs/adr/0909 §4), before and after.
+    RoadPay {
+        before: Option<kentos_contracts::PayBookDef>,
+        after: Option<kentos_contracts::PayBookDef>,
+    },
     /// A road project's retaining walls (docs/adr/0909 §3), before and after.
     RoadWalls {
         before: Vec<kentos_contracts::RetainingWallDef>,
@@ -744,6 +749,10 @@ impl Op {
                 after: before.clone(),
             },
             Op::RoadCulverts { before, after } => Op::RoadCulverts {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::RoadPay { before, after } => Op::RoadPay {
                 before: after.clone(),
                 after: before.clone(),
             },
@@ -1409,6 +1418,7 @@ impl Document {
                 | Op::RoadGuardrails { .. }
                 | Op::RoadCulverts { .. }
                 | Op::RoadWalls { .. }
+                | Op::RoadPay { .. }
                 | Op::ViewArea { .. }
                 | Op::ArchOptions { .. }
                 | Op::OptionCombos { .. }
@@ -1780,6 +1790,12 @@ impl Document {
             Op::RoadCulverts { after, .. } => {
                 let mut road = self.settings.road.take().unwrap_or_default();
                 road.culverts = after.clone();
+                self.settings.road = (!road.is_empty()).then_some(road);
+                return;
+            }
+            Op::RoadPay { after, .. } => {
+                let mut road = self.settings.road.take().unwrap_or_default();
+                road.pay = after.clone();
                 self.settings.road = (!road.is_empty()).then_some(road);
                 return;
             }

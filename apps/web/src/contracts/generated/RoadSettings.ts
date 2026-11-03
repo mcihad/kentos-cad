@@ -4,6 +4,7 @@ import type { CorridorDef } from "./CorridorDef";
 import type { CulvertDef } from "./CulvertDef";
 import type { GuardrailDef } from "./GuardrailDef";
 import type { HaulDef } from "./HaulDef";
+import type { PayBookDef } from "./PayBookDef";
 import type { ProfileDef } from "./ProfileDef";
 import type { RetainingWallDef } from "./RetainingWallDef";
 import type { RoadSheetSetDef } from "./RoadSheetSetDef";
@@ -68,4 +69,8 @@ culverts?: Array<CulvertDef>,
 /**
  * The retaining walls (docs/adr/0909 §3), each along a corridor's side.
  */
-walls?: Array<RetainingWallDef>, };
+walls?: Array<RetainingWallDef>, 
+/**
+ * The pay item book (docs/adr/0909 §4): the agency's items and the rules that give them KentOS's quantities.
+ */
+pay?: PayBookDef, };
