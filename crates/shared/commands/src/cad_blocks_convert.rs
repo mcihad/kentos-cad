@@ -8,8 +8,10 @@ pub const CAD_BLOCKS_CONVERT: &str = "cad.blocks.convert";
 pub const CAD_BLOCKS_CONVERT_VERSION: u32 = 1;
 
 /// Converts only the chosen, non-overlapping groups after re-verifying their geometry and relations.
-/// First scope: plain analytic 2D CAD objects on one untyped, data-free layer, with ordinary bound
-/// dimensions. Unsupported appearance/data/relations are refused before any write, never detached.
+/// Plain analytic 2D CAD objects, representable single-line text and static nested blocks on one
+/// untyped, data-free layer. Ordinary bound dimensions retain full nested paths. Explicit
+/// text_to_attributes preserves differing words as per-insert values, with named mappings.
+/// Unsupported appearance/data/relations are refused before any write, never detached.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -31,6 +33,11 @@ pub struct BlocksConvert {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub scales: Option<bool>,
+    /// Preserve trailing plain single-line text variations as named block attributes.
+    /// Requires representable font/appearance/order and verification of each actual placed text.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub text_to_attributes: Option<bool>,
     /// Absolute model tolerance in metres, as cad.blocks.find; absent: 0.000001.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -53,6 +60,10 @@ pub struct RepeatMemberMap {
     /// Zero-based definition-piece path, NOT the definition's one-based local object id.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub path: Vec<u32>,
+    /// For a converted text value, the destination attribute tag; path is then empty, not a SubRef leaf.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub attribute: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

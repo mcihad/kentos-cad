@@ -1434,9 +1434,9 @@ const ENTRIES: &[Entry] = &[
         refusals: &[&["no_entities", "invalid_uid", "entity_not_found", "invalid_tolerance", "invalid_limit", "recognition_unsupported", "recognition_source_limit", "recognition_scope_limit"], REVISION],
         warnings: &["recognition_truncated", "recognition_geometry_only"],
         targets: || vec![CommandTarget {
-            kinds: vec!["line".into(), "polyline".into(), "circle".into(), "arc".into()],
+            kinds: vec!["line".into(), "polyline".into(), "circle".into(), "arc".into(), "text".into(), "insert".into()],
             refused_with: Some("recognition_unsupported".into()),
-            note: Some("Kaynak öğeler; sıfır uzunluklu çizgi desteklenmez. Çoklu çizgi tek parçalı, deliksiz, Z/M verisi ve mahal ayırıcı rolü olmadan, en çok 4096 köşedir; açık/kapalı durum, analitik yay ve kenar genişliği karşılaştırılır. Kaynak ve kapsam toplam en çok 200000 çoklu çizgi köşesidir. Desteklenmeyen kaynak öğesi atlanmaz.".into()),
+            note: Some("Kaynak öğeler; düz tek satırlı yazı ve statik, tekdüze ölçekli iç blok desteklenir. Yazı/öznitelik değer çeşitleri ayrı seçeneklerdir; yeni türlerin biçim ve bağ sınırları ADR0881 içindedir. Sıfır uzunluklu çizgi desteklenmez. Çoklu çizgi tek parçalı, deliksiz, Z/M verisi ve mahal ayırıcı rolü olmadan, en çok 4096 köşedir; açık/kapalı durum, analitik yay ve kenar genişliği karşılaştırılır. Kaynak ve kapsam toplam en çok 200000 çoklu çizgi köşesidir. Desteklenmeyen kaynak öğesi atlanmaz.".into()),
             ..Default::default()
         }],
     },

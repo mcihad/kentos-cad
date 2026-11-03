@@ -66,14 +66,20 @@ class _BlocksConvert(LocalCommand[BlocksConvert, BlocksConverted, BlocksConvertP
     tabanlı blok parçasına açık mapping ile gider. Sıradan bağlı ölçülerin
     köşe/kenar/oran yerleri ters ve döngüsel yönleriyle taşınır; belirsiz eşleme
     reddedilir. Plan tanımı, yerleştirmeleri, eski/yeni bağları, sapmaları ve silinecek
-    kökleri yazmadan gösterir. İlk kapsam tek, görünür, veri/şema içermeyen CAD
-    katmanındaki sürekli çizgili analitik çizgi/çember/yay/2B çoklu çizgilerdir;
-    öznitelik/sembol, özel çizgi fazı, interleaved çizim sırası, tablo ve taşınamayan
-    kök ilişkisi yazmadan açıklanır. Her seçilmiş aday yeniden tam doğrulanır;
-    istemcinin matrisine güvenilmez. En çok 1000 grup ve 50000 çizim nesnesi; arama ve
-    bağ eşleme durdurulabilir, iş sınırı atomik ret verir. units=m tanımı metre modelini
-    korur; proje gösterim birimi değişmez. Tek geri alma adımı. expectedRevision eskiyse
-    hiçbir şey yazılmaz.
+    kökleri yazmadan gösterir. Kapsam tek, görünür, veri/şema içermeyen CAD katmanındaki
+    sürekli çizgili analitik çizgi/çember/yay/2B çoklu çizgi, düz yazı ve statik iç
+    bloklardır. textToAttributes açık seçilirse çizim sırasının sonundaki temsil
+    edilebilir tek satırlı yazıların her değeri TEXT_n özniteliğinde saklanır ve gerçek
+    yerleştirilmiş yazı doğrulanır; mapping.attribute etiketi gösterir, path boş olur ve
+    bu bir SubRef yaprağı değildir. İç blokların aynı tanımlı öznitelik değerleri aynen
+    korunur, değer çeşitleri bloklaştırmada birleştirilmez. İç ölçü yollarının önüne
+    yeni parça yolu eklenir; öznitelik yazısına bağlı ölçü açık ret alır. Genel nesne
+    verisi/sembol, özel çizgi fazı, interleaved çizim sırası, tablo ve taşınamayan kök
+    ilişkisi yazmadan açıklanır. Her seçilmiş aday yeniden tam doğrulanır; istemcinin
+    matrisine güvenilmez. En çok 1000 grup ve 50000 çizim nesnesi; arama ve bağ eşleme
+    durdurulabilir, iş sınırı atomik ret verir. units=m tanımı metre modelini korur;
+    proje gösterim birimi değişmez. Tek geri alma adımı. expectedRevision eskiyse hiçbir
+    şey yazılmaz.
     """
     __slots__ = ()
     id = "cad.blocks.convert"
@@ -96,6 +102,7 @@ class _BlocksConvert(LocalCommand[BlocksConvert, BlocksConverted, BlocksConvertP
         mirrors: bool | None | Unset = UNSET,
         rotations: bool | None | Unset = UNSET,
         scales: bool | None | Unset = UNSET,
+        text_to_attributes: bool | None | Unset = UNSET,
         tolerance: float | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -106,14 +113,21 @@ class _BlocksConvert(LocalCommand[BlocksConvert, BlocksConverted, BlocksConvertP
         yerleştirmesi olarak korur; diğer kökler sıfır tabanlı blok parçasına açık mapping
         ile gider. Sıradan bağlı ölçülerin köşe/kenar/oran yerleri ters ve döngüsel
         yönleriyle taşınır; belirsiz eşleme reddedilir. Plan tanımı, yerleştirmeleri,
-        eski/yeni bağları, sapmaları ve silinecek kökleri yazmadan gösterir. İlk kapsam tek,
+        eski/yeni bağları, sapmaları ve silinecek kökleri yazmadan gösterir. Kapsam tek,
         görünür, veri/şema içermeyen CAD katmanındaki sürekli çizgili analitik
-        çizgi/çember/yay/2B çoklu çizgilerdir; öznitelik/sembol, özel çizgi fazı,
-        interleaved çizim sırası, tablo ve taşınamayan kök ilişkisi yazmadan açıklanır. Her
-        seçilmiş aday yeniden tam doğrulanır; istemcinin matrisine güvenilmez. En çok 1000
-        grup ve 50000 çizim nesnesi; arama ve bağ eşleme durdurulabilir, iş sınırı atomik
-        ret verir. units=m tanımı metre modelini korur; proje gösterim birimi değişmez. Tek
-        geri alma adımı. expectedRevision eskiyse hiçbir şey yazılmaz.
+        çizgi/çember/yay/2B çoklu çizgi, düz yazı ve statik iç bloklardır. textToAttributes
+        açık seçilirse çizim sırasının sonundaki temsil edilebilir tek satırlı yazıların her
+        değeri TEXT_n özniteliğinde saklanır ve gerçek yerleştirilmiş yazı doğrulanır;
+        mapping.attribute etiketi gösterir, path boş olur ve bu bir SubRef yaprağı değildir.
+        İç blokların aynı tanımlı öznitelik değerleri aynen korunur, değer çeşitleri
+        bloklaştırmada birleştirilmez. İç ölçü yollarının önüne yeni parça yolu eklenir;
+        öznitelik yazısına bağlı ölçü açık ret alır. Genel nesne verisi/sembol, özel çizgi
+        fazı, interleaved çizim sırası, tablo ve taşınamayan kök ilişkisi yazmadan
+        açıklanır. Her seçilmiş aday yeniden tam doğrulanır; istemcinin matrisine
+        güvenilmez. En çok 1000 grup ve 50000 çizim nesnesi; arama ve bağ eşleme
+        durdurulabilir, iş sınırı atomik ret verir. units=m tanımı metre modelini korur;
+        proje gösterim birimi değişmez. Tek geri alma adımı. expectedRevision eskiyse hiçbir
+        şey yazılmaz.
 
         Args:
             doc: The drawing it works on.
@@ -125,6 +139,8 @@ class _BlocksConvert(LocalCommand[BlocksConvert, BlocksConverted, BlocksConvertP
             mirrors:
             rotations:
             scales:
+            text_to_attributes: Preserve trailing plain single-line text variations as named block attributes.
+                Requires representable font/appearance/order and verification of each actual placed text.
             tolerance: Absolute model tolerance in metres, as cad.blocks.find; absent: 0.000001. Unit: length.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -146,6 +162,7 @@ class _BlocksConvert(LocalCommand[BlocksConvert, BlocksConverted, BlocksConvertP
             mirrors=mirrors,
             rotations=rotations,
             scales=scales,
+            text_to_attributes=text_to_attributes,
             tolerance=tolerance,
         ), request_id=request_id, expected=expected)
 
@@ -161,6 +178,7 @@ class _BlocksConvert(LocalCommand[BlocksConvert, BlocksConverted, BlocksConvertP
         mirrors: bool | None | Unset = UNSET,
         rotations: bool | None | Unset = UNSET,
         scales: bool | None | Unset = UNSET,
+        text_to_attributes: bool | None | Unset = UNSET,
         tolerance: float | None | Unset = UNSET,
     ) -> BlocksConvertPlan:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -174,6 +192,7 @@ class _BlocksConvert(LocalCommand[BlocksConvert, BlocksConverted, BlocksConvertP
             mirrors=mirrors,
             rotations=rotations,
             scales=scales,
+            text_to_attributes=text_to_attributes,
             tolerance=tolerance,
         ))
 
@@ -189,6 +208,7 @@ class _BlocksConvert(LocalCommand[BlocksConvert, BlocksConverted, BlocksConvertP
         mirrors: bool | None | Unset = UNSET,
         rotations: bool | None | Unset = UNSET,
         scales: bool | None | Unset = UNSET,
+        text_to_attributes: bool | None | Unset = UNSET,
         tolerance: float | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -202,6 +222,7 @@ class _BlocksConvert(LocalCommand[BlocksConvert, BlocksConverted, BlocksConvertP
             mirrors=mirrors,
             rotations=rotations,
             scales=scales,
+            text_to_attributes=text_to_attributes,
             tolerance=tolerance,
         ))
 
@@ -217,6 +238,7 @@ class _BlocksConvert(LocalCommand[BlocksConvert, BlocksConverted, BlocksConvertP
         mirrors: bool | None | Unset = UNSET,
         rotations: bool | None | Unset = UNSET,
         scales: bool | None | Unset = UNSET,
+        text_to_attributes: bool | None | Unset = UNSET,
         tolerance: float | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -235,6 +257,7 @@ class _BlocksConvert(LocalCommand[BlocksConvert, BlocksConverted, BlocksConvertP
             mirrors=mirrors,
             rotations=rotations,
             scales=scales,
+            text_to_attributes=text_to_attributes,
             tolerance=tolerance,
         ), op=op, request_id=request_id, expected=expected)
 
@@ -785,18 +808,23 @@ edit = _BlocksEdit()
 
 
 class _BlocksFind(LocalCommand[BlocksFind, BlocksFound, BlocksFound]):
-    """``cad.blocks.find`` v1. Tekrarlanan bileşenleri bul: Kaynak çizgi, çember ve yay
-    koleksiyonunun tam geometrik eşlerini bulur; hiçbir nesneyi, bağı veya seçimi
-    değiştirmez. Kaynak en çok 128, arama kapsamı en çok 50 000 nesnedir; desteklenmeyen
-    kaynak öğesi atlanmaz, bütün istek reddedilir. Döndürme varsayılan açık, aynalama ve
-    ölçek eşleme kapalıdır. geometryOnly açıkça seçilmedikçe katman, görünüş ve nesne
-    verisi de aynı olmalıdır. Tolerans mutlak metre cinsindedir, varsayılan 0.000001
-    (0.001 mm), en çok 0.001. Her eşleşmenin members listesi kaynak sırasıyla kimlik
-    eşlemesidir; bounds ve dönüşüm verilir. Kesişen adaylar overlaps ile, sonuç/iş
-    sınırına ulaşan eksik arama truncated ile bildirilir. related, bulunanlara bağlı kök
-    ölçü/tarama/tablo/yazı/etiket adetleridir; dönüşüm yapılmış veya bağlar taşınmış
-    sayılmaz. uids yoksa belge, boşsa boş kapsam aranır. expectedRevision eskiyse
-    yazısız conflict. Uzun arama drawing.job.start ile başlatılıp iptal edilebilir.
+    """``cad.blocks.find`` v1. Tekrarlanan bileşenleri bul: Kaynak çizgi, çember, yay, 2B
+    çoklu çizgi, düz tek satırlı yazı ve statik blok koleksiyonunun tam geometrik
+    eşlerini bulur; hiçbir nesneyi, bağı veya seçimi değiştirmez. Kaynak en çok 128,
+    arama kapsamı en çok 50 000 nesnedir; desteklenmeyen kaynak öğesi atlanmaz, bütün
+    istek reddedilir. Döndürme varsayılan açık, aynalama ve ölçek eşleme kapalıdır.
+    geometryOnly açıkça seçilmedikçe katman, görünüş ve nesne verisi de aynı olmalıdır.
+    textVariants yalnız yazı değerlerini, attributeVariants yalnız blokta tanımlı
+    etiketlerin değerlerini ayrı ve uyarılı seçeneklerle karşılaştırma dışında bırakır;
+    biçim ve blok tanımı aynı kalır. İç bloklar 200000 açılım iş sınırıyla bütünüyle
+    denetlenir; aday sınırları çizilen içeriği kapsar. Tolerans mutlak metre
+    cinsindedir, varsayılan 0.000001 (0.001 mm), en çok 0.001. Her eşleşmenin members
+    listesi kaynak sırasıyla kimlik eşlemesidir; bounds ve dönüşüm verilir. Kesişen
+    adaylar overlaps ile, sonuç/iş sınırına ulaşan eksik arama truncated ile bildirilir.
+    related, bulunanlara bağlı kök ölçü/tarama/tablo/yazı/etiket adetleridir; dönüşüm
+    yapılmış veya bağlar taşınmış sayılmaz. uids yoksa belge, boşsa boş kapsam aranır.
+    expectedRevision eskiyse yazısız conflict. Uzun arama drawing.job.start ile
+    başlatılıp iptal edilebilir.
     """
     __slots__ = ()
     id = "cad.blocks.find"
@@ -813,39 +841,50 @@ class _BlocksFind(LocalCommand[BlocksFind, BlocksFound, BlocksFound]):
         /,
         *,
         source: Sequence[str],
+        attribute_variants: bool | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         geometry_only: bool | None | Unset = UNSET,
         limit: int | None | Unset = UNSET,
         mirrors: bool | None | Unset = UNSET,
         rotations: bool | None | Unset = UNSET,
         scales: bool | None | Unset = UNSET,
+        text_variants: bool | None | Unset = UNSET,
         tolerance: float | None | Unset = UNSET,
         uids: Sequence[str] | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> BlocksFound:
-        """Tekrarlanan bileşenleri bul: Kaynak çizgi, çember ve yay koleksiyonunun tam
-        geometrik eşlerini bulur; hiçbir nesneyi, bağı veya seçimi değiştirmez. Kaynak en
-        çok 128, arama kapsamı en çok 50 000 nesnedir; desteklenmeyen kaynak öğesi atlanmaz,
-        bütün istek reddedilir. Döndürme varsayılan açık, aynalama ve ölçek eşleme
-        kapalıdır. geometryOnly açıkça seçilmedikçe katman, görünüş ve nesne verisi de aynı
-        olmalıdır. Tolerans mutlak metre cinsindedir, varsayılan 0.000001 (0.001 mm), en çok
-        0.001. Her eşleşmenin members listesi kaynak sırasıyla kimlik eşlemesidir; bounds ve
-        dönüşüm verilir. Kesişen adaylar overlaps ile, sonuç/iş sınırına ulaşan eksik arama
-        truncated ile bildirilir. related, bulunanlara bağlı kök
-        ölçü/tarama/tablo/yazı/etiket adetleridir; dönüşüm yapılmış veya bağlar taşınmış
-        sayılmaz. uids yoksa belge, boşsa boş kapsam aranır. expectedRevision eskiyse
-        yazısız conflict. Uzun arama drawing.job.start ile başlatılıp iptal edilebilir.
+        """Tekrarlanan bileşenleri bul: Kaynak çizgi, çember, yay, 2B çoklu çizgi, düz tek
+        satırlı yazı ve statik blok koleksiyonunun tam geometrik eşlerini bulur; hiçbir
+        nesneyi, bağı veya seçimi değiştirmez. Kaynak en çok 128, arama kapsamı en çok 50
+        000 nesnedir; desteklenmeyen kaynak öğesi atlanmaz, bütün istek reddedilir. Döndürme
+        varsayılan açık, aynalama ve ölçek eşleme kapalıdır. geometryOnly açıkça
+        seçilmedikçe katman, görünüş ve nesne verisi de aynı olmalıdır. textVariants yalnız
+        yazı değerlerini, attributeVariants yalnız blokta tanımlı etiketlerin değerlerini
+        ayrı ve uyarılı seçeneklerle karşılaştırma dışında bırakır; biçim ve blok tanımı
+        aynı kalır. İç bloklar 200000 açılım iş sınırıyla bütünüyle denetlenir; aday
+        sınırları çizilen içeriği kapsar. Tolerans mutlak metre cinsindedir, varsayılan
+        0.000001 (0.001 mm), en çok 0.001. Her eşleşmenin members listesi kaynak sırasıyla
+        kimlik eşlemesidir; bounds ve dönüşüm verilir. Kesişen adaylar overlaps ile,
+        sonuç/iş sınırına ulaşan eksik arama truncated ile bildirilir. related, bulunanlara
+        bağlı kök ölçü/tarama/tablo/yazı/etiket adetleridir; dönüşüm yapılmış veya bağlar
+        taşınmış sayılmaz. uids yoksa belge, boşsa boş kapsam aranır. expectedRevision
+        eskiyse yazısız conflict. Uzun arama drawing.job.start ile başlatılıp iptal
+        edilebilir.
 
         Args:
             doc: The drawing it works on.
             source: Ordered source object UUIDs, at most 128; repeated UUIDs are taken once.
+            attribute_variants: Ignore only values of declared block attribute tags; other object data stay strict.
+                Absent: false. Conversion revalidates representability independently.
             expected_revision:
             geometry_only: Explicitly ignore layer, appearance and object data in comparisons; absent: false.
             limit: Result count limit, 1 to 1000; absent: 1000. `truncated` means the scan is incomplete. Unit: count.
             mirrors: Also recognize reflected collections; absent: false.
             rotations: Also recognize rotated collections; absent: true.
             scales: Also recognize uniformly scaled collections; absent: false.
+            text_variants: Explicitly compare single-line text poses/styles while allowing different words; absent: false.
+                A match never discards values. Conversion requires explicit text_to_attributes.
             tolerance: Absolute model tolerance, metres, above zero to 0.001; absent: 0.000001 (0.001 mm). Unit: length.
             uids: Search object UUIDs, at most 50 000; absent searches the document, empty searches nothing.
             request_id: Names this write: sent again with the same call it is answered as
@@ -862,12 +901,14 @@ class _BlocksFind(LocalCommand[BlocksFind, BlocksFound, BlocksFound]):
         """
         return self.execute_input(doc, BlocksFind(
             source=list(source),
+            attribute_variants=attribute_variants,
             expected_revision=expected_revision,
             geometry_only=geometry_only,
             limit=limit,
             mirrors=mirrors,
             rotations=rotations,
             scales=scales,
+            text_variants=text_variants,
             tolerance=tolerance,
             uids=_opt(uids, lambda x: list(x)),
         ), request_id=request_id, expected=expected)
@@ -878,12 +919,14 @@ class _BlocksFind(LocalCommand[BlocksFind, BlocksFound, BlocksFound]):
         /,
         *,
         source: Sequence[str],
+        attribute_variants: bool | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         geometry_only: bool | None | Unset = UNSET,
         limit: int | None | Unset = UNSET,
         mirrors: bool | None | Unset = UNSET,
         rotations: bool | None | Unset = UNSET,
         scales: bool | None | Unset = UNSET,
+        text_variants: bool | None | Unset = UNSET,
         tolerance: float | None | Unset = UNSET,
         uids: Sequence[str] | None | Unset = UNSET,
     ) -> BlocksFound:
@@ -892,12 +935,14 @@ class _BlocksFind(LocalCommand[BlocksFind, BlocksFound, BlocksFound]):
         """
         return self.plan_input(doc, BlocksFind(
             source=list(source),
+            attribute_variants=attribute_variants,
             expected_revision=expected_revision,
             geometry_only=geometry_only,
             limit=limit,
             mirrors=mirrors,
             rotations=rotations,
             scales=scales,
+            text_variants=text_variants,
             tolerance=tolerance,
             uids=_opt(uids, lambda x: list(x)),
         ))
@@ -908,12 +953,14 @@ class _BlocksFind(LocalCommand[BlocksFind, BlocksFound, BlocksFound]):
         /,
         *,
         source: Sequence[str],
+        attribute_variants: bool | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         geometry_only: bool | None | Unset = UNSET,
         limit: int | None | Unset = UNSET,
         mirrors: bool | None | Unset = UNSET,
         rotations: bool | None | Unset = UNSET,
         scales: bool | None | Unset = UNSET,
+        text_variants: bool | None | Unset = UNSET,
         tolerance: float | None | Unset = UNSET,
         uids: Sequence[str] | None | Unset = UNSET,
     ) -> list[CommandNote]:
@@ -922,12 +969,14 @@ class _BlocksFind(LocalCommand[BlocksFind, BlocksFound, BlocksFound]):
         """
         return self.validate_input(doc, BlocksFind(
             source=list(source),
+            attribute_variants=attribute_variants,
             expected_revision=expected_revision,
             geometry_only=geometry_only,
             limit=limit,
             mirrors=mirrors,
             rotations=rotations,
             scales=scales,
+            text_variants=text_variants,
             tolerance=tolerance,
             uids=_opt(uids, lambda x: list(x)),
         ))
@@ -938,12 +987,14 @@ class _BlocksFind(LocalCommand[BlocksFind, BlocksFound, BlocksFound]):
         /,
         *,
         source: Sequence[str],
+        attribute_variants: bool | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         geometry_only: bool | None | Unset = UNSET,
         limit: int | None | Unset = UNSET,
         mirrors: bool | None | Unset = UNSET,
         rotations: bool | None | Unset = UNSET,
         scales: bool | None | Unset = UNSET,
+        text_variants: bool | None | Unset = UNSET,
         tolerance: float | None | Unset = UNSET,
         uids: Sequence[str] | None | Unset = UNSET,
         op: str = "execute",
@@ -957,12 +1008,14 @@ class _BlocksFind(LocalCommand[BlocksFind, BlocksFound, BlocksFound]):
         """
         return self.answer_input(doc, BlocksFind(
             source=list(source),
+            attribute_variants=attribute_variants,
             expected_revision=expected_revision,
             geometry_only=geometry_only,
             limit=limit,
             mirrors=mirrors,
             rotations=rotations,
             scales=scales,
+            text_variants=text_variants,
             tolerance=tolerance,
             uids=_opt(uids, lambda x: list(x)),
         ), op=op, request_id=request_id, expected=expected)

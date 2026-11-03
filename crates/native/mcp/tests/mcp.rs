@@ -4883,3 +4883,35 @@ fn a_closed_path_array_has_the_same_four_sides_in_agent_preview_execute_and_clos
     assert_eq!(std::fs::read(&saved).unwrap(), after);
     std::fs::remove_dir_all(dir).unwrap();
 }
+
+#[test]
+fn agents_keep_each_text_value_through_explicit_attribute_maps_guarded_conversion_and_undo() {
+    let dir=std::env::temp_dir().join(format!("kentos-mcp-text-values-{}",std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();let source=dir.join("source.kcad");let saved=dir.join("saved.kcad");
+    let mut raw:Value=serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.blocks.find.json")).unwrap();
+    raw["setup"]["entities"]=json!([
+        {"kind":"line","id":1,"layerId":"a","attrs":{},"a":{"x":0.,"y":0.},"b":{"x":2.,"y":0.}},
+        {"kind":"text","id":2,"layerId":"a","attrs":{},"p":{"x":0.5,"y":0.2},"text":"A01","height":0.2,"rotation":0.},
+        {"kind":"line","id":3,"layerId":"a","attrs":{},"a":{"x":10.,"y":0.},"b":{"x":12.,"y":0.}},
+        {"kind":"text","id":4,"layerId":"a","attrs":{},"p":{"x":10.5,"y":0.2},"text":"A02","height":0.2,"rotation":0.}]);
+    std::fs::write(&source,serde_json::to_vec(&raw["setup"]).unwrap()).unwrap();let mut server=Server::new();
+    let drawing=call(&mut server,"drawing.open",json!({"path":source}))["structuredContent"]["drawing"].clone();
+    let rows=call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"].clone();
+    let ids:Vec<_>=rows.as_array().unwrap().iter().map(|r|r["uid"].clone()).collect();
+    call(&mut server,"drawing.save",json!({"drawing":drawing,"path":saved}));let before=std::fs::read(&saved).unwrap();
+    let found=call(&mut server,"cad.blocks.find",json!({"drawing":drawing,"source":[ids[0],ids[1]],"textVariants":true}))["structuredContent"].clone();
+    assert_eq!(found["status"],"completed","{found}");assert_eq!(found["output"]["matches"].as_array().unwrap().len(),2);assert_eq!(found["warnings"][0]["path"],"textVariants");
+    let mut args=json!({"drawing":drawing,"name":"Numaralı","source":[ids[0],ids[1]],"groups":[[ids[0],ids[1]],[ids[2],ids[3]]],"textToAttributes":true,"op":"plan"});
+    let plan=call(&mut server,"cad.blocks.convert",args.clone())["structuredContent"].clone();
+    assert_eq!(plan["status"],"completed","{plan}");let maps=plan["output"]["mapping"].as_array().unwrap();
+    assert_eq!(maps.iter().filter(|m|m["attribute"]=="TEXT_1"&&m["path"]==json!([])).count(),2);
+    call(&mut server,"drawing.save",json!({"drawing":drawing,"path":saved}));assert_eq!(std::fs::read(&saved).unwrap(),before);
+    args["op"]=json!("execute");args["expected"]=json!({"plan":plan["planId"]});
+    let done=call(&mut server,"cad.blocks.convert",args)["structuredContent"].clone();assert_eq!(done["status"],"completed","{done}");
+    let rows=call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"].clone();
+    assert_eq!(rows.as_array().unwrap().len(),2);assert_eq!(rows[0]["entity"]["attrs"]["TEXT_1"],"A01");assert_eq!(rows[1]["entity"]["attrs"]["TEXT_1"],"A02");
+    call(&mut server,"drawing.save",json!({"drawing":drawing,"path":saved}));let after=std::fs::read(&saved).unwrap();
+    call(&mut server,"drawing.undo",json!({"drawing":drawing}));call(&mut server,"drawing.save",json!({"drawing":drawing,"path":saved}));assert_eq!(std::fs::read(&saved).unwrap(),before);
+    call(&mut server,"drawing.redo",json!({"drawing":drawing}));call(&mut server,"drawing.save",json!({"drawing":drawing,"path":saved}));assert_eq!(std::fs::read(&saved).unwrap(),after);
+    std::fs::remove_dir_all(dir).unwrap();
+}

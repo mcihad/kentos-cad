@@ -49,6 +49,7 @@ impl Drop for Window {
 #[derive(Clone, Debug)]
 pub enum Event {
     Name(String),
+    TextAttributes(bool),
     Review,
     Ready(u64, Box<CommandResult<BlocksConvertPlan>>),
     Apply,
@@ -90,6 +91,7 @@ impl App {
                 rotations: Some(w.rotations),
                 mirrors: Some(w.mirrors),
                 scales: Some(w.scales),
+                text_to_attributes: None,
                 tolerance: Some(w.tolerance),
                 expected_revision: Some(w.revision.clone()),
             },
@@ -145,6 +147,9 @@ impl App {
                 w.input.name = name;
                 w.plan = None;
                 w.refused = None;
+            }
+            Event::TextAttributes(on) if !w.busy => {
+                w.input.text_to_attributes=Some(on);w.plan=None;w.refused=None;
             }
             Event::Review if !w.busy && !w.input.name.trim().is_empty() => {
                 w.cancel.store(true, Ordering::Relaxed);
@@ -278,6 +283,10 @@ impl App {
             ))
         ]
         .spacing(12);
+        let has_text=w.input.source.iter().any(|uid|self.document.as_ref().and_then(|d|uid.parse().ok().and_then(|u|d.model.slot_of(u)).and_then(|s|d.model.get(s))).is_some_and(|e|matches!(e,kentos_commands::Entity::Text(_))));
+        if has_text {
+            body=body.push(words::check(w.input.text_to_attributes==Some(true),"Metin değerlerini blok öznitelikleri olarak koru",(!w.busy && current).then(||msg(Event::TextAttributes(w.input.text_to_attributes!=Some(true))))));
+        }
         if !current {
             body = body.push(words::text_line(
                 Kind::Warn,
@@ -295,6 +304,9 @@ impl App {
             }));
         }
         if let Some(plan) = &w.plan {
+            if !plan.block.attributes.is_empty() {
+                body=body.push(label::body(format!("{} yazı alanı öznitelik olacak; her yerleştirmenin özgün değeri ayrı korunacak.",plan.block.attributes.len())));
+            }
             body=body.push(words::text_line(Kind::Ok,format!("{} aday tek bir blok tanımını kullanacak.",plan.placements.len())))
                 .push(label::body(format!("{} çizim parçası → {} yerleştirme. {} ölçü noktası bağlı kalacak.",plan.mapping.len(),plan.placements.len(),plan.dimensions.len())))
                 .push(label::caption("Katman, görünüş ve ilişkiler doğrulandı. Her adayın ilk nesne kimliği korunur; diğer parçalar tanımın içinde olur. Tek adımda geri alabilirsiniz."));
@@ -331,12 +343,8 @@ impl App {
                             })
                             .map_or(0, |s| s.0)
                     };
-                    body = body.push(label::caption(format!(
-                        "#{} → #{} / Parça {}",
-                        slot(&map.from),
-                        slot(&map.insert),
-                        map.path[0] + 1
-                    )));
+                    let target=map.attribute.as_ref().map(|tag|format!("Öznitelik {tag}")).unwrap_or_else(||format!("Parça {}",map.path.first().map_or(0,|i|i+1)));
+                    body = body.push(label::caption(format!("#{} → #{} / {target}",slot(&map.from),slot(&map.insert))));
                 }
                 if plan.mapping.len() > 8 {
                     body = body.push(label::caption(format!(
@@ -384,6 +392,7 @@ impl App {
             Control::Press("Dönüşümü incele") => Event::Review,
             Control::Press("Dönüştür") => Event::Apply,
             Control::Fill("Yeni blok adı", name) => Event::Name(name.into()),
+            Control::Check("Metin değerlerini blok öznitelikleri olarak koru",on)=>Event::TextAttributes(on),
             _ => return Ok(None),
         };
         Ok(Some(msg(event)))
@@ -444,6 +453,11 @@ mod tests {
                 .unwrap()
                 .details
         );
+        let _ = app.block_convert_event(Event::TextAttributes(true));
+        let w=app.blocks_panel.find.as_ref().unwrap().conversion.as_ref().unwrap();
+        assert!(w.plan.is_none());assert_eq!(w.input.text_to_attributes,Some(true));
+        let _ = app.block_convert_event(Event::Apply);
+        assert!(app.blocks_panel.find.as_ref().unwrap().conversion.as_ref().unwrap().job.is_none());
         let _ = app.block_convert_event(Event::Name("Başka ad".into()));
         let _ = app.block_convert_event(Event::Apply);
         let w = app

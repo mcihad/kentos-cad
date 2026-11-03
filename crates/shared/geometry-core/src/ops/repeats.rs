@@ -16,6 +16,7 @@ use crate::vec2::Vec2;
 
 mod path;
 mod places;
+mod pose;
 pub use places::{PlaceMatch, map_place};
 
 /// Bound path preparation as well as the subsequent analytic comparisons.
@@ -27,6 +28,8 @@ pub struct Options {
     pub rotations: bool,
     pub mirrors: bool,
     pub scales: bool,
+    pub text_variants: bool,
+    pub attribute_variants: bool,
     /// Absolute model-space tolerance; never relative to distance from world origin.
     pub tolerance: f64,
     pub limit: usize,
@@ -40,6 +43,8 @@ impl Default for Options {
             rotations: true,
             mirrors: false,
             scales: false,
+            text_variants: false,
+            attribute_variants: false,
             tolerance: 1e-6,
             limit: 1000,
             budget: 2_000_000,
@@ -84,6 +89,7 @@ pub fn supported(shape: &Shape) -> bool {
             finite(*c) && r.is_finite() && *r > 0.0 && a0.is_finite() && a1.is_finite()
         }
         Shape::Polyline { .. } => path::supported(shape),
+        Shape::Text { .. } | Shape::Insert { .. } => pose::supported(shape),
         _ => false,
     }
 }
@@ -97,6 +103,7 @@ fn centre(shape: &Shape) -> Option<Vec2> {
         Shape::Line { a, b } => Some(Vec2::new(a.x + (b.x - a.x) / 2.0, a.y + (b.y - a.y) / 2.0)),
         Shape::Circle { c, .. } | Shape::Arc { c, .. } => Some(*c),
         Shape::Polyline { .. } => path::centre(shape),
+        Shape::Text { p, .. } | Shape::Insert { p, .. } => Some(*p),
         _ => None,
     }
 }
@@ -107,7 +114,18 @@ fn on(c: Vec2, r: f64, angle: f64) -> Vec2 {
 
 /// Strict analytic equality: endpoint direction is immaterial for lines, arc span is not.
 fn equal(a: &Shape, b: &Shape, tolerance: f64, check: &mut impl FnMut() -> bool) -> Option<bool> {
+    equal_with(a,b,tolerance,check,false,false)
+}
+/// Strict geometry/pose/content verification at the final world placement; never ignores text values.
+pub fn equivalent(a:&Shape,b:&Shape,tolerance:f64,check:&mut impl FnMut()->bool)->Option<bool> {
+    equal(a,b,tolerance,check)
+}
+fn equal_with(a: &Shape, b: &Shape, tolerance: f64, check: &mut impl FnMut() -> bool, text_variants:bool, attribute_variants:bool) -> Option<bool> {
     Some(match (a, b) {
+        (Shape::Text { .. },Shape::Text { .. }) | (Shape::Insert { .. },Shape::Insert { .. }) => {
+            for _ in 0..pose::work(a).max(pose::work(b)) { if !check() {return None;} }
+            pose::equal(a,b,tolerance,text_variants,attribute_variants)
+        }
         (Shape::Polyline { .. }, Shape::Polyline { .. }) => {
             return path::equal(a, b, tolerance, check);
         }
@@ -156,6 +174,9 @@ fn anchor(scene: &[Shape], source: &[usize]) -> (usize, Vec2, Vec2, bool) {
             return (i, a, b, false);
         }
     }
+    for &i in source {
+        if let Some((p,size,angle))=pose::frame(&scene[i]) {return (i,p,on(p,size,angle),false);}
+    }
     let i = source[0];
     let Shape::Circle { c, r } = scene[i] else {
         unreachable!()
@@ -172,6 +193,8 @@ fn anchor(scene: &[Shape], source: &[usize]) -> (usize, Vec2, Vec2, bool) {
 
 fn pairs(scene: &[Shape], source: &Shape, target: usize, circle_pair: bool) -> Vec<(Vec2, Vec2)> {
     match (source, &scene[target]) {
+        (Shape::Text { .. }, Shape::Text { .. }) | (Shape::Insert { .. }, Shape::Insert { .. }) =>
+            pose::frame(&scene[target]).map(|(p,size,angle)|vec![(p,on(p,size,angle))]).unwrap_or_default(),
         (Shape::Polyline { .. }, Shape::Polyline { .. }) => path::pairs(&scene[target]),
         (Shape::Line { .. }, Shape::Line { a, b }) => vec![(*a, *b), (*b, *a)],
         (Shape::Arc { .. }, Shape::Arc { c, r, a0, a1 }) => {
@@ -305,21 +328,24 @@ pub fn find(
                 if stopped() {
                     return Err(Error::Cancelled);
                 }
-                let source_angle = atan2(
+                let source_angle = pose::frame(&scene[anchor]).map(|(_,_,a)|if mirror {-a}else{a}).unwrap_or_else(||atan2(
                     if mirror {
                         origin.y - end.y
                     } else {
                         end.y - origin.y
                     },
                     end.x - origin.x,
-                );
+                ));
                 let rotation = if options.rotations {
-                    atan2(toward.y - at.y, toward.x - at.x) - source_angle
+                    pose::frame(&scene[target]).map(|(_,_,a)|a).unwrap_or_else(||atan2(toward.y - at.y, toward.x - at.x)) - source_angle
                 } else {
                     0.0
                 };
                 let scale = if options.scales {
-                    dist(at, toward) / dist(origin, end)
+                    match (pose::frame(&scene[anchor]),pose::frame(&scene[target])) {
+                        (Some((_,a,_)),Some((_,b,_)))=>b/a,
+                        _=>dist(at, toward) / dist(origin, end)
+                    }
                 } else {
                     1.0
                 };
@@ -372,14 +398,14 @@ pub fn find(
                         }
                         if compatible(source[member], j as usize) {
                             let mut cancelled = false;
-                            let matched = equal(&mapped, &scene[j as usize], t, &mut || {
+                            let matched = equal_with(&mapped, &scene[j as usize], t, &mut || {
                                 if stopped() {
                                     cancelled = true;
                                     return false;
                                 }
                                 found.comparisons += 1;
                                 found.comparisons <= options.budget
-                            });
+                            }, options.text_variants, options.attribute_variants);
                             match matched {
                                 Some(true) => matches.push(j as usize),
                                 Some(false) => {}

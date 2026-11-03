@@ -3,6 +3,7 @@
 from pathlib import Path
 import argparse
 import json
+from copy import deepcopy
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -92,6 +93,24 @@ def main():
             'recognition_unsupported','source[0]')
     refusal('karma kaynakta Z verili ikinci üye bütün sorguyu reddettirir',dict(source=[uid(1),uid(8)]),
             'recognition_unsupported','source[1]')
+    def semantic_case(name,raw,source,numbers,**flags):
+        matches=[dict(members=[uid(i)],origin=raw['entities'][source-1]['p'],at=raw['entities'][i-1]['p'],rotation=0,scale=1,mirror=False,bounds='$any',overlaps=False) for i in numbers]
+        warnings=[dict(code='recognition_geometry_only',message='$any',path=path) for key,path in [('textVariants','textVariants'),('attributeVariants','attributeVariants')] if flags.get(key)]
+        cases.append(dict(name=name,setup=raw,steps=[dict(op='execute',input=dict(source=[uid(source)],**flags),
+            result=dict(status='completed',output=dict(source=[uid(source)],matches=matches,truncated=False,comparisons='$any',related={},revision='$any'),warnings=warnings),
+            expect=dict(ids=[e['id'] for e in raw['entities']],canUndo=False,dirty=False,revision='same'))]))
+    texts=deepcopy(setup);texts['entities']=[dict(kind='text',id=i+1,layerId='a',attrs={},p=dict(x=i*10,y=0),text=word,height=.2,rotation=0) for i,word in enumerate(['A01','A02','A01','A03'])]
+    semantic_case('yazı değerleri varsayılan olarak aynıdır',texts,1,[1,3])
+    semantic_case('yazı çeşitleri açık seçenekle bulunur değerler değişmez',texts,1,[1,2,3,4],textVariants=True)
+    styled=deepcopy(texts);styled['entities'][-1].update(bold=True,font='arimo')
+    semantic_case('yazı çeşitleri biçim farkını yok saymaz',styled,1,[1,2,3],textVariants=True)
+    tagged=deepcopy(setup);block='01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001'
+    tagged['blocks']=[dict(id=block,name='Etiketli parça',base=dict(x=0,y=0),entities=[dict(kind='line',id=1,layerId='a',attrs={},a=dict(x=0,y=0),b=dict(x=1,y=0))],
+        attributes=[dict(tag='CODE',value='A',p=dict(x=0,y=.2),height=.2,rotation=0)])]
+    tagged['entities']=[dict(kind='insert',id=i+1,layerId='a',attrs=dict(CODE=code,DATA=data),block=block,p=dict(x=i*10,y=0),scale=1,rotation=0)
+        for i,(code,data) in enumerate([('A','same'),('B','same'),('C','different')])]
+    semantic_case('blok öznitelik değeri varsayılan olarak korunur',tagged,1,[1])
+    semantic_case('yalnız tanımlı blok etiketlerinin değerleri çeşit olabilir diğer veri korunur',tagged,1,[1,2],attributeVariants=True)
     target = ROOT / "fixtures/commands/v1/cad.blocks.find.json"
     expected = json.dumps(dict(format="kentos.command-cases", version=1, command="cad.blocks.find",
         commandVersion=1, title="Tekrarlanan bileşenleri bul", note="Written by scripts/fixtures/block_find_cases.py; independent expectations, no KentOS imports.",

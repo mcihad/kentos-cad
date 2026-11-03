@@ -14432,12 +14432,16 @@ class BlockUnit(_Model):
 @dataclass(kw_only=True, slots=True)
 class BlocksConvert(_Model):
     """Converts only the chosen, non-overlapping groups after re-verifying their geometry and relations.
-    First scope: plain analytic 2D CAD objects on one untyped, data-free layer, with ordinary bound
-    dimensions. Unsupported appearance/data/relations are refused before any write, never detached.
+    Plain analytic 2D CAD objects, representable single-line text and static nested blocks on one
+    untyped, data-free layer. Ordinary bound dimensions retain full nested paths. Explicit
+    text_to_attributes preserves differing words as per-insert values, with named mappings.
+    Unsupported appearance/data/relations are refused before any write, never detached.
     Attributes:
         source: Source UUIDs. Definition pieces follow their document drawing order.
         groups: Chosen candidate member sets, at most 1000. Order within a set is immaterial.
             Each must have exactly as many distinct objects as the source. Sets cannot share objects.
+        text_to_attributes: Preserve trailing plain single-line text variations as named block attributes.
+            Requires representable font/appearance/order and verification of each actual placed text.
         tolerance: Absolute model tolerance in metres, as cad.blocks.find; absent: 0.000001. Unit: length.
     """
     name: str
@@ -14447,6 +14451,7 @@ class BlocksConvert(_Model):
     mirrors: bool | None | Unset = UNSET
     rotations: bool | None | Unset = UNSET
     scales: bool | None | Unset = UNSET
+    text_to_attributes: bool | None | Unset = UNSET
     tolerance: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -14462,6 +14467,8 @@ class BlocksConvert(_Model):
             out["rotations"] = self.rotations
         if self.scales is not UNSET:
             out["scales"] = self.scales
+        if self.text_to_attributes is not UNSET:
+            out["textToAttributes"] = self.text_to_attributes
         if self.tolerance is not UNSET:
             out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
         return out
@@ -14476,6 +14483,7 @@ class BlocksConvert(_Model):
             mirrors=data.get("mirrors", UNSET),
             rotations=data.get("rotations", UNSET),
             scales=data.get("scales", UNSET),
+            text_to_attributes=data.get("textToAttributes", UNSET),
             tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
         )
 
@@ -14960,30 +14968,40 @@ class BlocksFind(_Model):
     Supports analytic line/circle/arc and single-part 2D polyline sources (up to 4096 vertices each).
     Polylines retain closure, analytic bulges and taper widths; paths with Z/M, holes, extra parts or
     a room-separator role are refused. Source plus search scope is limited to 200000 polyline vertices.
-    Unsupported members refuse the whole source.
+    Plain single-line text and uniformly placed static block identities are also supported.
+    Value variations are separate opt-ins; block definitions and non-tag object data remain strict.
+    Nested expansion is bounded to 200000 work units; unsupported members refuse the whole source.
     Attributes:
         source: Ordered source object UUIDs, at most 128; repeated UUIDs are taken once.
+        attribute_variants: Ignore only values of declared block attribute tags; other object data stay strict.
+            Absent: false. Conversion revalidates representability independently.
         geometry_only: Explicitly ignore layer, appearance and object data in comparisons; absent: false.
         limit: Result count limit, 1 to 1000; absent: 1000. `truncated` means the scan is incomplete. Unit: count.
         mirrors: Also recognize reflected collections; absent: false.
         rotations: Also recognize rotated collections; absent: true.
         scales: Also recognize uniformly scaled collections; absent: false.
+        text_variants: Explicitly compare single-line text poses/styles while allowing different words; absent: false.
+            A match never discards values. Conversion requires explicit text_to_attributes.
         tolerance: Absolute model tolerance, metres, above zero to 0.001; absent: 0.000001 (0.001 mm). Unit: length.
         uids: Search object UUIDs, at most 50 000; absent searches the document, empty searches nothing.
     """
     source: list[str]
+    attribute_variants: bool | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     geometry_only: bool | None | Unset = UNSET
     limit: int | None | Unset = UNSET
     mirrors: bool | None | Unset = UNSET
     rotations: bool | None | Unset = UNSET
     scales: bool | None | Unset = UNSET
+    text_variants: bool | None | Unset = UNSET
     tolerance: float | None | Unset = UNSET
     uids: list[str] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["source"] = list(self.source)
+        if self.attribute_variants is not UNSET:
+            out["attributeVariants"] = self.attribute_variants
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
         if self.geometry_only is not UNSET:
@@ -14996,6 +15014,8 @@ class BlocksFind(_Model):
             out["rotations"] = self.rotations
         if self.scales is not UNSET:
             out["scales"] = self.scales
+        if self.text_variants is not UNSET:
+            out["textVariants"] = self.text_variants
         if self.tolerance is not UNSET:
             out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
         if self.uids is not UNSET:
@@ -15006,12 +15026,14 @@ class BlocksFind(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> BlocksFind:
         return cls(
             source=list(data["source"]),
+            attribute_variants=data.get("attributeVariants", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
             geometry_only=data.get("geometryOnly", UNSET),
             limit=data.get("limit", UNSET),
             mirrors=data.get("mirrors", UNSET),
             rotations=data.get("rotations", UNSET),
             scales=data.get("scales", UNSET),
+            text_variants=data.get("textVariants", UNSET),
             tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
             uids=UNSET if "uids" not in data else None if data["uids"] is None else list(data["uids"]),
         )
@@ -57460,16 +57482,20 @@ class RepeatMemberMap(_Model):
     Attributes:
         insert: The first member in drawing order retains its root UUID as the insert.
         path: Zero-based definition-piece path, NOT the definition's one-based local object id. Unit: index.
+        attribute: For a converted text value, the destination attribute tag; path is then empty, not a SubRef leaf.
     """
     from_: str
     insert: str
     path: list[int]
+    attribute: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["from"] = self.from_
         out["insert"] = self.insert
         out["path"] = list(self.path)
+        if self.attribute is not UNSET:
+            out["attribute"] = self.attribute
         return out
 
     @classmethod
@@ -57478,6 +57504,7 @@ class RepeatMemberMap(_Model):
             from_=data["from"],
             insert=data["insert"],
             path=list(data["path"]),
+            attribute=data.get("attribute", UNSET),
         )
 
 

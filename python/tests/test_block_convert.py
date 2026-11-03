@@ -1,8 +1,24 @@
 """Chosen repeat conversion through the typed SDK, guarded plans, job API and independent 40-symbol scenes."""
 import unittest
 import math
+import json
+from pathlib import Path
 from kentos import cad
 from test_block_find import drawing, path_drawing
+
+
+def text_values_drawing():
+    raw=json.loads((Path(__file__).resolve().parents[2]/'fixtures/commands/v1/cad.blocks.find.json').read_text())['setup']
+    raw['name']='Yazı değerlerini koruyan tekrarlar'
+    raw['settings'].update(drawingUnit='mm',cadWork='architecture')
+    raw['entities']=[]
+    for k in range(4):
+        angle=k*math.pi/6; c,s=math.cos(angle),math.sin(angle); x=k*5
+        raw['entities'].extend([
+            dict(kind='line',id=k*2+1,layerId='a',attrs={},a=dict(x=x,y=0),b=dict(x=x+2*c,y=2*s)),
+            dict(kind='text',id=k*2+2,layerId='a',attrs={},p=dict(x=x+.5*c-.2*s,y=.5*s+.2*c),text=f'A{k:02}',height=.2,rotation=angle*180/math.pi)])
+    doc=cad.Document.from_bytes(json.dumps(raw).encode())
+    return doc,[r.uid for r in list(doc.entities())[:2]]
 
 
 class BlockConvert(unittest.TestCase):
@@ -148,6 +164,40 @@ class BlockConvert(unittest.TestCase):
             cad.blocks.convert(doc,**args)
         self.assertEqual(refused.exception.code,"recognition_conversion_refused")
         self.assertEqual(doc.to_bytes(),before)
+
+    def test_different_text_values_are_explicit_attributes_with_guarded_mapping_and_byte_exact_undo(self):
+        doc,source=text_values_drawing();before=doc.to_bytes()
+        self.assertEqual(len(cad.blocks.find(doc,source=source).matches),1)
+        found=cad.blocks.find.answer(doc,source=source,text_variants=True)
+        self.assertEqual(len(found.output.matches),4)
+        self.assertEqual(found.warnings[0].path,'textVariants')
+        groups=[m.members for m in found.output.matches]
+        args=dict(name='Numaralı parçalar',source=source,groups=groups,text_to_attributes=True)
+        plan=cad.blocks.convert.answer(doc,**args,op='plan')
+        self.assertEqual(doc.to_bytes(),before)
+        self.assertEqual(len(plan.output.block.attributes),1)
+        self.assertEqual(len(plan.output.block.entities),1)
+        value_maps=[m for m in plan.output.mapping if m.attribute]
+        self.assertEqual(len(value_maps),4)
+        self.assertTrue(all(m.path==[] and m.attribute=='TEXT_1' for m in value_maps))
+        rejected=cad.blocks.convert.answer(doc,**dict(args,text_to_attributes=False))
+        self.assertEqual(rejected.status,'failed');self.assertEqual(doc.to_bytes(),before)
+        done=cad.blocks.convert.answer(doc,**args,expected=cad.Expected(plan=plan.plan_id))
+        self.assertEqual(done.status,'completed')
+        for k,g in enumerate(groups):
+            self.assertEqual(doc.entity(g[0]).entity.attrs['TEXT_1'],f'A{k:02}')
+        after=doc.to_bytes();self.assertEqual(cad.Document.from_bytes(after).to_bytes(),after)
+        doc.undo();self.assertEqual(doc.to_bytes(),before);doc.redo();self.assertEqual(doc.to_bytes(),after)
+
+    def test_text_value_matching_and_conversion_background_jobs_share_the_same_typed_surface(self):
+        doc,source=text_values_drawing();before=doc.to_bytes()
+        found=doc.start('cad.blocks.find',cad.BlocksFind(source=source,text_variants=True)).result()
+        self.assertEqual(found.status,'completed');self.assertEqual(doc.to_bytes(),before)
+        groups=[m.members for m in found.output.matches]
+        result=doc.start('cad.blocks.convert',cad.BlocksConvert(name='İşten gelen değerler',source=source,groups=groups,text_to_attributes=True)).result()
+        self.assertEqual(result.status,'completed');self.assertEqual(len(result.output.inserts),4)
+        self.assertEqual([doc.entity(g[0]).entity.attrs['TEXT_1'] for g in groups],['A00','A01','A02','A03'])
+        doc.undo();self.assertEqual(doc.to_bytes(),before)
 
 
 

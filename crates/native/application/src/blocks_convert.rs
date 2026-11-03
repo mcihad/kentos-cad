@@ -18,6 +18,7 @@ use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
 mod relations;
+mod values;
 pub const LABEL: &str = "Tekrarları bloğa dönüştür";
 
 fn refuse(message: impl Into<String>, path: impl Into<String>) -> Stop {
@@ -120,6 +121,8 @@ fn check(
         scales: input.scales,
         tolerance: input.tolerance,
         geometry_only: Some(false),
+        text_variants: input.text_to_attributes,
+        attribute_variants: Some(false),
         limit: Some(1000),
         expected_revision: input.expected_revision.clone(),
     };
@@ -147,7 +150,13 @@ fn check(
     let candidates: HashMap<_, _> = found.matches.iter().map(|m| (key(&m.members), m)).collect();
     let mut matched = Vec::new();
     for (i, g) in input.groups.iter().enumerate() {
-        let m=candidates.get(&key(g)).ok_or_else(||refuse("Seçilen aday çizimin şimdiki durumunda tam doğrulanamadı. Geometri, katman, görünüş veya öznitelik farklı olabilir; aramayı yenileyin.",format!("groups[{i}]")))?;
+        let m = candidates.get(&key(g)).ok_or_else(|| {
+            let mut message = "Seçilen aday çizimin şimdiki durumunda tam doğrulanamadı. Geometri, katman, görünüş veya öznitelik farklı olabilir; aramayı yenileyin.".to_owned();
+            if input.text_to_attributes != Some(true) && found.source.iter().any(|u| entity(doc,u).is_ok_and(|(e,_)|matches!(e,Entity::Text(_)))) {
+                message.push_str(" Yazı değerleri farklıysa Metin değerlerini blok öznitelikleri olarak koru seçeneğini açıp yeniden inceleyin; biçim ve diğer farklar yine denetlenir.");
+            }
+            refuse(message,format!("groups[{i}]"))
+        })?;
         matched.push(*m);
     }
     let source: Vec<_> = found
@@ -162,14 +171,15 @@ fn check(
         .chain(found.source.iter().cloned())
         .collect();
     relations::appearance(doc, &all, &layer, stopped)?;
-    let entities = crate::blocks_define::as_drawn(crate::blocks_define::copies(source.iter()));
+    let (pieces,attributes)=values::definitions(&source,input.text_to_attributes.unwrap_or(false))?;
+    let entities = crate::blocks_define::as_drawn(crate::blocks_define::copies(pieces.iter()));
     let block = BlockDefinition {
         id: BlockId([0; 16]),
         name: input.name.clone(),
         base: matched[0].origin,
         units: Some(kentos_commands::BlockUnits::M),
         entities,
-        attributes: Vec::new(),
+        attributes,
         description: None,
         dynamic: None,
         xref: None,
@@ -180,8 +190,18 @@ fn check(
     defs.push(Arc::clone(&definition));
     let refs: Vec<_> = defs.iter().map(|b| &**b).collect();
     crate::blocks_define::block_rules(&refs)?;
-    // This definition contains only analytic primitives, so no unrelated block needs expansion.
-    let core_blocks = crate::blocks::core_blocks(std::slice::from_ref(&definition));
+    let mut needed=vec![Arc::clone(&definition)];let mut pending:Vec<_>=source.iter().filter_map(|e|if let Entity::Insert(i)=e {Some(i.block)} else {None}).collect();
+    let mut seen=HashSet::new();let mut total=source.len();
+    while let Some(id)=pending.pop() {
+        if stopped() {return Err(Stop::Cancelled);}
+        if !seen.insert(id) {continue;}
+        let Some(inner)=doc.block(id) else{return Err(refuse("İç blok tanımı yok.","source"));};
+        total=total.saturating_add(inner.entities.len());
+        if total>50_000 || inner.dynamic.is_some() || inner.xref.is_some() {return Err(refuse("İç blok bu kapsamda statik olmalı ve toplam tanım içeriği 50000 nesneyi aşmamalı. Tanım değiştirilmedi.","source"));}
+        pending.extend(inner.entities.iter().filter_map(|e|if let Entity::Insert(i)=e {Some(i.block)} else {None}));
+        needed.push(Arc::new(inner.clone()));
+    }
+    let core_blocks = crate::blocks::core_blocks(&needed);
     let paint_order = relations::PaintOrder::new(doc, &layer);
     let mut mapping = Vec::new();
     let mut placements = Vec::new();
@@ -199,7 +219,7 @@ fn check(
                 id: slot.0,
                 layer_id: layer.clone(),
                 color: None,
-                attrs: Default::default(),
+                attrs: values::attributes(doc,&m.members,&source,&block.attributes)?,
                 label: None,
                 symbol: None,
                 line_weight: None,
@@ -226,10 +246,14 @@ fn check(
             entity,
         });
         for (i, from) in m.members.iter().enumerate() {
+            let attribute=if input.text_to_attributes==Some(true) && matches!(source[i],Entity::Text(_)) {
+                block.attributes.get(i-block.entities.len()).map(|a|a.tag.clone())
+            } else {None};
             mapping.push(RepeatMemberMap {
                 from: from.clone(),
                 insert: first.clone(),
-                path: vec![i as u32],
+                path: if attribute.is_some() {Vec::new()} else {vec![i as u32]},
+                attribute,
             });
             if from != first {
                 removed.push(from.clone());
@@ -242,6 +266,23 @@ fn check(
     let mut changes = Vec::new();
     let tolerance = input.tolerance.unwrap_or(RECOGNITION_TOLERANCE);
     let mut work = 0u64;
+    // Check the actual attribute values at their final world poses, including readable reflection.
+    if !block.attributes.is_empty() {
+        for placed in &placements {
+            if stopped() {return Err(Stop::Cancelled);}
+            let expanded=core_blocks.expand(&crate::geometry::shape(&placed.entity));
+            work+=expanded.len() as u64;
+            if work>2_000_000 {return Err(refuse("Öznitelik görünüş denetimi iş sınırını aştı; çizim değiştirilmedi.","groups"));}
+            for map in mapping.iter().filter(|m|m.insert==placed.uid && m.attribute.is_some()) {
+                let Some(tag)=&map.attribute else{continue;};
+                let (target,_)=entity(doc,&map.from)?;
+                let mut matching=expanded.iter().filter(|p|p.attribute.as_ref()==Some(tag));
+                let verified=matching.next().is_some_and(|p|repeats::equivalent(&p.shape,&crate::geometry::shape(target),input.tolerance.unwrap_or(RECOGNITION_TOLERANCE),&mut ||{work+=1;work<=2_000_000 && !stopped()})==Some(true));
+                if stopped() {return Err(Stop::Cancelled);}
+                if !verified || matching.next().is_some() {return Err(refuse("Özniteliğin son konumu, yönü veya yazı biçimi özgün yazıyla aynı doğrulanamadı; değer kaybedilmedi.","groups"));}
+            }
+        }
+    }
     for (dim_uid, e) in doc.entities_with_uids() {
         if stopped() {
             return Err(Stop::Cancelled);
@@ -282,25 +323,33 @@ fn check(
             let Some(map) = by_uid.get(&before.uid.to_text()) else {
                 continue;
             };
-            if before.broken.is_some() || !before.path.is_empty() {
+            if map.attribute.is_some() {return Err(refuse("Bu yazıya ölçü alt nesne bağı var; öznitelik hedefi aynı SubRef yolu değildir. Ölçü bağı silinmedi.",format!("dimensions.{dim_uid}.{name}")));}
+            if before.broken.is_some() {
                 return Err(refuse(
                     "Adayın ölçü bağı zaten kopuk veya beklenmeyen bir alt nesne yolu taşıyor. Önce bağı kontrol edin.",
                     format!("dimensions.{dim_uid}.{name}"),
                 ));
             }
             let (target, _) = entity(doc, &map.from)?;
+            if !before.path.is_empty() && !matches!(target,Entity::Insert(_)) {
+                return Err(refuse("Alt nesne yolu yalnız mevcut iç blokta izlenebilir; ölçü bağı değiştirilmedi.",format!("dimensions.{dim_uid}.{name}")));
+            }
+            let mut path=map.path.clone();path.extend_from_slice(&before.path);
             let placed = &by_insert
                 .get(&map.insert)
                 .ok_or_else(|| refuse("Yeni yerleştirme eşlemesi eksik.", "groups"))?
                 .entity;
-            let piece = subref::piece(&core_blocks, &crate::blocks::core_entity(placed), &map.path)
+            let piece = subref::piece(&core_blocks, &crate::blocks::core_entity(placed), &path)
                 .ok_or_else(|| {
                     refuse(
                         "Yeni blokta ölçünün karşılık geldiği parça bulunamadı.",
                         "groups",
                     )
                 })?;
-            let target = crate::blocks::core_entity(target);
+            let root = crate::blocks::core_entity(target);
+            let target = if before.path.is_empty() {root} else {
+                subref::piece(&core_blocks,&root,&before.path).ok_or_else(||refuse("Özgün iç blokta ölçü yolu bulunamadı.",format!("dimensions.{dim_uid}.{name}")))?
+            };
             let mapped = repeats::map_place(
                 &piece.shape,
                 &target.shape,
@@ -360,7 +409,7 @@ fn check(
             }
             let after = SubRef {
                 uid: EntityId(uuid(&map.insert)?.into_bytes()),
-                path: map.path.clone(),
+                path,
                 place: kentos_domain::dimension_ties::contract_place(place),
                 broken: None,
             };

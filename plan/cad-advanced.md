@@ -885,8 +885,12 @@ kimlik eşlemesi, bağlı ölçü ve tek Undo doğrulansın.
   [ADR 0867](../docs/adr/0867-analytic-polyline-repeat-recognition.md).
   Z/M verisi, mahal ayırıcı rolü, delik ve ek parçalar açık ret alır.
   Köşe yapısı sadeleştirilmez; bir çizgi 4 096, toplam kapsam 200 000 köşedir.
-- [ ] Kaynak türlerini metin/öznitelik varyantı, iç içe blok ve
-  diğer üretim geometrilerine aynı doğruluk kapısıyla genişletme.
+- [x] 2B çoklu çizgiye ek olarak tek satırlı yazı/öznitelik varyantları ve
+  statik iç bloklar aynı doğruluk kapısından geçti (ADR 0881). Değer farkları
+  ayrı açık seçeneklerdir; metin→öznitelik dönüşümü her değeri ve gerçek
+  yerleştirilmiş biçimi doğrular. İç ölçü yolları ve aynı tanımlı değerler
+  korunur. NURBS/tarama/dinamik blok gibi kapsam dışı kaynak veya taşınamayan
+  veri/ilişki atlanarak sahte tam eşleşme ya da kayıplı dönüşüm yapılmaz.
 - [x] İlk analitik kapsamda seçili adayları bloklaştırma; eski UUID→yeni
   yerleştirme/alt nesne eşlemesi, sıradan ölçü bağlarını koruma ve desteklenmeyen
   veri/görünüş/ilişkide gerekçeli atomik ret. Gerçek GUI/Python/MCP ve tek
@@ -1189,9 +1193,27 @@ doğruladı; yeni kılavuzdaki konum/açılar bağımsız hesapla denetlendi.
 Ret → yeni kaynak → başarılı inceleme teslim programında tekrarlandı.
 Ekranlar 425–433 depo dışındadır. Bu dilim tüm 07'yi kapatmaz.
 
-**Açık kalan:** dönük/eğik grid; metin/öznitelik,
-iç blok ve diğer kaynak/ilişki genişletmesi. Bu dilimler CAD-ADV-07'nin
-tamamını kapatmaz.
+**Açık kalan:** dönük/eğik grid. Metin/öznitelik ve statik iç blok
+genişletmesi aşağıdaki kabul ile teslim edilmiştir. Dönük/eğik grid
+tamamlanmadan CAD-ADV-07 kapatılmaz.
+
+
+**İlerleme — yazı değerleri ve statik iç blok kabulü (3 Kasım 2026):**
+[ADR 0881](../docs/adr/0881-repeat-text-values-and-nested-blocks.md).
+Ayrı yazı/öznitelik seçenekleri, açık metin→öznitelik eşlemesi, gerçek dünya
+pozu doğrulaması, iç blok tanım/değer koruması ve [0,0]→[0,0,0] ölçü yolu
+aktarımı tamamlandı. Tanımların bütünüyle açılması 200000 iş birimi ve
+iptal sınırıyla denetlenir; aday kutusu içeriği kapsar. Temsil edilemeyen
+font/bağ ve farklı iç değerler çizimi değiştirmeden gerekçeli ret alır.
+
+420 native, 16 çekirdek, 76 MCP, 8 panel ve 12 doğrudan Python testi;
+63 bağımsız native/Python ortak durum, katalog/TS/SDK/manifest ve tüm hedef
+Clippy/derleme doğrulandı. Gerçek son programda dört farklı döndürülmüş yazı,
+bağlı 2000 mm ölçü, iki iç blok ve 4000 mm ölçü, inspector'da tek değer
+düzenleme, inceleme/ret ve tek Undo/Redo sınandı. Bağımsız KCAD okuyucusunda
+UUID/değer/yol koruması ve dosya eşitlikleri doğrulandı. Ham ekranlar 434–453
+depo dışındadır. CAD-ADV-07 dönük/eğik grid diliminden önce kapatılmaz.
+
 
 ### CAD-ADV-08 — Sınır, tarama ve maskeyi hatasını açıklayabilen bir üretim sistemine getir [ ]
 

@@ -520,14 +520,19 @@ impl App {
     }
 
     /// The header's meta: how many blocks the drawing has (the head holds the dock's tabs).
-    pub(crate) fn blocks_panel_actions(&self) -> Element<'_, Message> {
+    pub(crate) fn blocks_panel_actions(&self) -> Option<Element<'_, Message>> {
+        // Finder headers own their counts. A second block-count row steals space from
+        // the review controls in a short dock (especially on existing-block drawings).
+        if self.blocks_panel.find.is_some() || self.blocks_panel.arrays.is_some() {
+            return None;
+        }
         let count = self.document.as_ref().map_or(0, |d| d.model.blocks().len());
         let meta = if count > 0 {
             format!("{count} blok")
         } else {
             String::new()
         };
-        label::caption(meta).into()
+        Some(label::caption(meta).into())
     }
 
     /// A button beside the search: the command's icon, its title in the tip.

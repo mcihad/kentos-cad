@@ -8,4 +8,8 @@ insert: string,
 /**
  * Zero-based definition-piece path, NOT the definition's one-based local object id.
  */
-path: Array<number>, };
+path: Array<number>,
+/**
+ * For a converted text value, the destination attribute tag; path is then empty, not a SubRef leaf.
+ */
+attribute?: string, };

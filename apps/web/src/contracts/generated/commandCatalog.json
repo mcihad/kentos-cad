@@ -31375,7 +31375,7 @@
       "id": "cad.blocks.find",
       "version": 1,
       "title": "Tekrarlanan bileşenleri bul",
-      "summary": "Kaynak çizgi, çember ve yay koleksiyonunun tam geometrik eşlerini bulur; hiçbir nesneyi, bağı veya seçimi değiştirmez. Kaynak en çok 128, arama kapsamı en çok 50 000 nesnedir; desteklenmeyen kaynak öğesi atlanmaz, bütün istek reddedilir. Döndürme varsayılan açık, aynalama ve ölçek eşleme kapalıdır. geometryOnly açıkça seçilmedikçe katman, görünüş ve nesne verisi de aynı olmalıdır. Tolerans mutlak metre cinsindedir, varsayılan 0.000001 (0.001 mm), en çok 0.001. Her eşleşmenin members listesi kaynak sırasıyla kimlik eşlemesidir; bounds ve dönüşüm verilir. Kesişen adaylar overlaps ile, sonuç/iş sınırına ulaşan eksik arama truncated ile bildirilir. related, bulunanlara bağlı kök ölçü/tarama/tablo/yazı/etiket adetleridir; dönüşüm yapılmış veya bağlar taşınmış sayılmaz. uids yoksa belge, boşsa boş kapsam aranır. expectedRevision eskiyse yazısız conflict. Uzun arama drawing.job.start ile başlatılıp iptal edilebilir.",
+      "summary": "Kaynak çizgi, çember, yay, 2B çoklu çizgi, düz tek satırlı yazı ve statik blok koleksiyonunun tam geometrik eşlerini bulur; hiçbir nesneyi, bağı veya seçimi değiştirmez. Kaynak en çok 128, arama kapsamı en çok 50 000 nesnedir; desteklenmeyen kaynak öğesi atlanmaz, bütün istek reddedilir. Döndürme varsayılan açık, aynalama ve ölçek eşleme kapalıdır. geometryOnly açıkça seçilmedikçe katman, görünüş ve nesne verisi de aynı olmalıdır. textVariants yalnız yazı değerlerini, attributeVariants yalnız blokta tanımlı etiketlerin değerlerini ayrı ve uyarılı seçeneklerle karşılaştırma dışında bırakır; biçim ve blok tanımı aynı kalır. İç bloklar 200000 açılım iş sınırıyla bütünüyle denetlenir; aday sınırları çizilen içeriği kapsar. Tolerans mutlak metre cinsindedir, varsayılan 0.000001 (0.001 mm), en çok 0.001. Her eşleşmenin members listesi kaynak sırasıyla kimlik eşlemesidir; bounds ve dönüşüm verilir. Kesişen adaylar overlaps ile, sonuç/iş sınırına ulaşan eksik arama truncated ile bildirilir. related, bulunanlara bağlı kök ölçü/tarama/tablo/yazı/etiket adetleridir; dönüşüm yapılmış veya bağlar taşınmış sayılmaz. uids yoksa belge, boşsa boş kapsam aranır. expectedRevision eskiyse yazısız conflict. Uzun arama drawing.job.start ile başlatılıp iptal edilebilir.",
       "aliases": [],
       "effect": "query",
       "hosts": [
@@ -31391,8 +31391,15 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Finds whole collections equivalent to `source`; writes no document or selection state.\nSupports analytic line/circle/arc and single-part 2D polyline sources (up to 4096 vertices each).\nPolylines retain closure, analytic bulges and taper widths; paths with Z/M, holes, extra parts or\na room-separator role are refused. Source plus search scope is limited to 200000 polyline vertices.\nUnsupported members refuse the whole source.",
+        "description": "Finds whole collections equivalent to `source`; writes no document or selection state.\nSupports analytic line/circle/arc and single-part 2D polyline sources (up to 4096 vertices each).\nPolylines retain closure, analytic bulges and taper widths; paths with Z/M, holes, extra parts or\na room-separator role are refused. Source plus search scope is limited to 200000 polyline vertices.\nPlain single-line text and uniformly placed static block identities are also supported.\nValue variations are separate opt-ins; block definitions and non-tag object data remain strict.\nNested expansion is bounded to 200000 work units; unsupported members refuse the whole source.",
         "properties": {
+          "attributeVariants": {
+            "description": "Ignore only values of declared block attribute tags; other object data stay strict.\nAbsent: false. Conversion revalidates representability independently.",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
           "expectedRevision": {
             "type": [
               "string",
@@ -31443,6 +31450,13 @@
               "type": "string"
             },
             "type": "array"
+          },
+          "textVariants": {
+            "description": "Explicitly compare single-line text poses/styles while allowing different words; absent: false.\nA match never discards values. Conversion requires explicit text_to_attributes.",
+            "type": [
+              "boolean",
+              "null"
+            ]
           },
           "tolerance": {
             "description": "Absolute model tolerance, metres, above zero to 0.001; absent: 0.000001 (0.001 mm).",
@@ -31579,10 +31593,12 @@
               "line",
               "polyline",
               "circle",
-              "arc"
+              "arc",
+              "text",
+              "insert"
             ],
             "refusedWith": "recognition_unsupported",
-            "note": "Kaynak öğeler; sıfır uzunluklu çizgi desteklenmez. Çoklu çizgi tek parçalı, deliksiz, Z/M verisi ve mahal ayırıcı rolü olmadan, en çok 4096 köşedir; açık/kapalı durum, analitik yay ve kenar genişliği karşılaştırılır. Kaynak ve kapsam toplam en çok 200000 çoklu çizgi köşesidir. Desteklenmeyen kaynak öğesi atlanmaz."
+            "note": "Kaynak öğeler; düz tek satırlı yazı ve statik, tekdüze ölçekli iç blok desteklenir. Yazı/öznitelik değer çeşitleri ayrı seçeneklerdir; yeni türlerin biçim ve bağ sınırları ADR0881 içindedir. Sıfır uzunluklu çizgi desteklenmez. Çoklu çizgi tek parçalı, deliksiz, Z/M verisi ve mahal ayırıcı rolü olmadan, en çok 4096 köşedir; açık/kapalı durum, analitik yay ve kenar genişliği karşılaştırılır. Kaynak ve kapsam toplam en çok 200000 çoklu çizgi köşesidir. Desteklenmeyen kaynak öğesi atlanmaz."
           }
         ],
         "refusals": [
@@ -31618,7 +31634,7 @@
       "id": "cad.blocks.convert",
       "version": 1,
       "title": "Tekrarları bloğa dönüştür",
-      "summary": "Seçilmiş, nesne paylaşmayan tekrarları bir blok tanımına dönüştürür. Geometri ve katman/görünüş yeniden doğrulanır; geometryOnly aramasının sonucu veri kaybına izin değildir. Her adayın ilk nesnesi UUID ve çizim yerini blok yerleştirmesi olarak korur; diğer kökler sıfır tabanlı blok parçasına açık mapping ile gider. Sıradan bağlı ölçülerin köşe/kenar/oran yerleri ters ve döngüsel yönleriyle taşınır; belirsiz eşleme reddedilir. Plan tanımı, yerleştirmeleri, eski/yeni bağları, sapmaları ve silinecek kökleri yazmadan gösterir. İlk kapsam tek, görünür, veri/şema içermeyen CAD katmanındaki sürekli çizgili analitik çizgi/çember/yay/2B çoklu çizgilerdir; öznitelik/sembol, özel çizgi fazı, interleaved çizim sırası, tablo ve taşınamayan kök ilişkisi yazmadan açıklanır. Her seçilmiş aday yeniden tam doğrulanır; istemcinin matrisine güvenilmez. En çok 1000 grup ve 50000 çizim nesnesi; arama ve bağ eşleme durdurulabilir, iş sınırı atomik ret verir. units=m tanımı metre modelini korur; proje gösterim birimi değişmez. Tek geri alma adımı. expectedRevision eskiyse hiçbir şey yazılmaz.",
+      "summary": "Seçilmiş, nesne paylaşmayan tekrarları bir blok tanımına dönüştürür. Geometri ve katman/görünüş yeniden doğrulanır; geometryOnly aramasının sonucu veri kaybına izin değildir. Her adayın ilk nesnesi UUID ve çizim yerini blok yerleştirmesi olarak korur; diğer kökler sıfır tabanlı blok parçasına açık mapping ile gider. Sıradan bağlı ölçülerin köşe/kenar/oran yerleri ters ve döngüsel yönleriyle taşınır; belirsiz eşleme reddedilir. Plan tanımı, yerleştirmeleri, eski/yeni bağları, sapmaları ve silinecek kökleri yazmadan gösterir. Kapsam tek, görünür, veri/şema içermeyen CAD katmanındaki sürekli çizgili analitik çizgi/çember/yay/2B çoklu çizgi, düz yazı ve statik iç bloklardır. textToAttributes açık seçilirse çizim sırasının sonundaki temsil edilebilir tek satırlı yazıların her değeri TEXT_n özniteliğinde saklanır ve gerçek yerleştirilmiş yazı doğrulanır; mapping.attribute etiketi gösterir, path boş olur ve bu bir SubRef yaprağı değildir. İç blokların aynı tanımlı öznitelik değerleri aynen korunur, değer çeşitleri bloklaştırmada birleştirilmez. İç ölçü yollarının önüne yeni parça yolu eklenir; öznitelik yazısına bağlı ölçü açık ret alır. Genel nesne verisi/sembol, özel çizgi fazı, interleaved çizim sırası, tablo ve taşınamayan kök ilişkisi yazmadan açıklanır. Her seçilmiş aday yeniden tam doğrulanır; istemcinin matrisine güvenilmez. En çok 1000 grup ve 50000 çizim nesnesi; arama ve bağ eşleme durdurulabilir, iş sınırı atomik ret verir. units=m tanımı metre modelini korur; proje gösterim birimi değişmez. Tek geri alma adımı. expectedRevision eskiyse hiçbir şey yazılmaz.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -31634,7 +31650,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Converts only the chosen, non-overlapping groups after re-verifying their geometry and relations.\nFirst scope: plain analytic 2D CAD objects on one untyped, data-free layer, with ordinary bound\ndimensions. Unsupported appearance/data/relations are refused before any write, never detached.",
+        "description": "Converts only the chosen, non-overlapping groups after re-verifying their geometry and relations.\nPlain analytic 2D CAD objects, representable single-line text and static nested blocks on one\nuntyped, data-free layer. Ordinary bound dimensions retain full nested paths. Explicit\ntext_to_attributes preserves differing words as per-insert values, with named mappings.\nUnsupported appearance/data/relations are refused before any write, never detached.",
         "properties": {
           "expectedRevision": {
             "type": [
@@ -31679,6 +31695,13 @@
               "type": "string"
             },
             "type": "array"
+          },
+          "textToAttributes": {
+            "description": "Preserve trailing plain single-line text variations as named block attributes.\nRequires representable font/appearance/order and verification of each actual placed text.",
+            "type": [
+              "boolean",
+              "null"
+            ]
           },
           "tolerance": {
             "description": "Absolute model tolerance in metres, as cad.blocks.find; absent: 0.000001.",
@@ -128919,6 +128942,13 @@
     },
     "RepeatMemberMap": {
       "properties": {
+        "attribute": {
+          "description": "For a converted text value, the destination attribute tag; path is then empty, not a SubRef leaf.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "from": {
           "type": "string"
         },

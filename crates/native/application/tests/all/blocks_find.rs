@@ -180,3 +180,21 @@ fn unsupported_path_data_has_a_specific_reason_even_in_geometry_only_mode() {
         assert!(!doc.can_undo());
     }
 }
+
+#[test]
+fn nested_candidate_bounds_include_the_geometry_and_empty_scope_still_checks_the_source() {
+    let fixture:Value=serde_json::from_str(include_str!("../../../../../fixtures/commands/v1/cad.blocks.find.json")).unwrap();
+    let mut raw=fixture["setup"].clone();let id="01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001";
+    raw["blocks"]=serde_json::json!([{"id":id,"name":"Geniş parça","base":{"x":0.,"y":0.},"entities":[{"kind":"line","id":1,"layerId":"a","attrs":{},"a":{"x":-2.,"y":-1.},"b":{"x":3.,"y":4.}}]}]);
+    raw["entities"]=serde_json::json!([{"kind":"insert","id":1,"layerId":"a","attrs":{},"block":id,"p":{"x":10.,"y":20.},"scale":1.,"rotation":0.}]);
+    let doc=Document::from_snapshot(DocumentSnapshotV1::from_json(&raw.to_string()).unwrap()).unwrap();
+    let query=BlocksFind {source:vec![doc.uid(Slot(1)).unwrap().to_string()],..Default::default()};
+    let answer=blocks_find::inspect(&doc,&query,||false);
+    let CommandResult::Completed {output,..}=answer else{panic!("{answer:?}")};let b=output.matches[0].bounds;
+    assert_eq!([b.min_x,b.min_y,b.max_x,b.max_y],[8.,19.,13.,24.]);
+    raw["blocks"][0]["entities"][0]=serde_json::json!({"kind":"point","id":1,"layerId":"a","attrs":{},"p":{"x":0.,"y":0.}});
+    let doc=Document::from_snapshot(DocumentSnapshotV1::from_json(&raw.to_string()).unwrap()).unwrap();let before=doc.to_snapshot_v2();
+    let query=BlocksFind {source:vec![doc.uid(Slot(1)).unwrap().to_string()],uids:Some(vec![]),..Default::default()};
+    assert!(matches!(blocks_find::inspect(&doc,&query,||false),CommandResult::Failed {error} if error.code=="recognition_unsupported"));
+    assert_eq!(doc.to_snapshot_v2(),before);
+}
