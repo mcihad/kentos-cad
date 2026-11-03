@@ -94,10 +94,8 @@ struct Shape {
 
 /// Twice a ring's signed area: positive counter-clockwise.
 fn signed(p: &[[f64; 2]]) -> f64 {
-    let n = p.len();
-    (0..n)
-        .map(|i| p[i][0] * p[(i + 1) % n][1] - p[(i + 1) % n][0] * p[i][1])
-        .sum()
+    let points: Vec<_> = p.iter().map(|q| kentos_geometry_core::Vec2::new(q[0], q[1])).collect();
+    2.0 * kentos_geometry_core::geometry::signed_area(&points)
 }
 
 /// Whether a point is inside a ring (even-odd crossing).
@@ -187,12 +185,12 @@ fn stroke_paths(layer: &StyledLayer, b: &StyledBatch, o: &VectorScale) -> Option
         return None;
     };
     let [bx, by] = base(o, b);
-    let s = layer.data.get(b.range.clone())?;
+    let s = layer.values(b.range.clone())?;
     let mut parts: Vec<Part> = Vec::new();
     let mut open = false;
     for seg in s.chunks_exact(6) {
-        let (ax, ay) = (f64::from(seg[0]) + bx, f64::from(seg[1]) + by);
-        let (ex, ey) = (f64::from(seg[2]) + bx, f64::from(seg[3]) + by);
+        let (ax, ay) = (seg[0] + bx, seg[1] + by);
+        let (ex, ey) = (seg[2] + bx, seg[3] + by);
         let flags = seg[5] as u32;
         let joins = open
             && parts
@@ -239,14 +237,14 @@ fn stroke_paths(layer: &StyledLayer, b: &StyledBatch, o: &VectorScale) -> Option
 }
 
 /// The rings bounding a triangle list: each triangle counter-clockwise, its unshared edges chained.
-fn triangle_rings(t: &[f32], dx: f64, dy: f64) -> Vec<Part> {
-    type Key = (u32, u32);
-    let key = |x: f32, y: f32| (x.to_bits(), y.to_bits());
+fn triangle_rings(t: &[f64], dx: f64, dy: f64) -> Vec<Part> {
+    type Key = (u64, u64);
+    let key = |x: f64, y: f64| (x.to_bits(), y.to_bits());
     // Each point's outgoing edges, in the order they came (the web's Map keeps insertion order).
     let mut order: Vec<Key> = Vec::new();
     let mut edges: BTreeMap<Key, Vec<Key>> = BTreeMap::new();
-    let mut point: BTreeMap<Key, (f32, f32)> = BTreeMap::new();
-    let mut add = |a: (f32, f32), b: (f32, f32)| {
+    let mut point: BTreeMap<Key, (f64, f64)> = BTreeMap::new();
+    let mut add = |a: (f64, f64), b: (f64, f64)| {
         let (ka, kb) = (key(a.0, a.1), key(b.0, b.1));
         if ka == kb {
             return;
@@ -269,8 +267,8 @@ fn triangle_rings(t: &[f32], dx: f64, dy: f64) -> Vec<Part> {
         let a = (tri[0], tri[1]);
         let mut b = (tri[2], tri[3]);
         let mut c = (tri[4], tri[5]);
-        let cross = (f64::from(b.0) - f64::from(a.0)) * (f64::from(c.1) - f64::from(a.1))
-            - (f64::from(b.1) - f64::from(a.1)) * (f64::from(c.0) - f64::from(a.0));
+        let cross = (b.0 - a.0) * (c.1 - a.1)
+            - (b.1 - a.1) * (c.0 - a.0);
         if cross == 0.0 {
             continue;
         }
@@ -293,7 +291,7 @@ fn triangle_rings(t: &[f32], dx: f64, dy: f64) -> Vec<Part> {
                 let Some(p) = point.get(&at) else {
                     break;
                 };
-                ring.push([f64::from(p.0) + dx, f64::from(p.1) + dy]);
+                ring.push([p.0 + dx, p.1 + dy]);
                 let next = edges.get_mut(&at).and_then(Vec::pop);
                 match next {
                     Some(n) if n != start => at = n,
@@ -312,15 +310,15 @@ fn triangle_rings(t: &[f32], dx: f64, dy: f64) -> Vec<Part> {
 }
 
 /// The parts of a line `n·p = c` inside the triangles, as parameter intervals along `d` (merged).
-fn line_in_triangles(t: &[f32], n: [f64; 2], d: [f64; 2], c: f64) -> Vec<[f64; 2]> {
+fn line_in_triangles(t: &[f64], n: [f64; 2], d: [f64; 2], c: f64) -> Vec<[f64; 2]> {
     let mut spans: Vec<[f64; 2]> = Vec::new();
     for tri in t.chunks_exact(6) {
         let mut pts: Vec<f64> = Vec::new();
         for k in 0..3 {
-            let (ax, ay) = (f64::from(tri[2 * k]), f64::from(tri[2 * k + 1]));
+            let (ax, ay) = (tri[2 * k], tri[2 * k + 1]);
             let (bx, by) = (
-                f64::from(tri[(2 * k + 2) % 6]),
-                f64::from(tri[(2 * k + 3) % 6]),
+                tri[(2 * k + 2) % 6],
+                tri[(2 * k + 3) % 6],
             );
             let sa = n[0] * ax + n[1] * ay - c;
             let sb = n[0] * bx + n[1] * by - c;
@@ -403,10 +401,10 @@ fn fill_paths(
     o: &VectorScale,
 ) -> Result<Vec<Shape>, &'static str> {
     let [bx, by] = base(o, b);
-    let t = layer.data.get(b.range.clone()).unwrap_or_default();
+    let t = layer.values(b.range.clone()).unwrap_or_default();
     match paint {
         FillPaintBatch::Solid { color: c } => {
-            let parts = triangle_rings(t, bx, by);
+            let parts = triangle_rings(&t, bx, by);
             Ok(if parts.is_empty() {
                 Vec::new()
             } else {
@@ -437,7 +435,7 @@ fn fill_paths(
             let n = [-d[1], d[0]];
             let (mut lo, mut hi) = (f64::INFINITY, f64::NEG_INFINITY);
             for p in t.chunks_exact(2) {
-                let v = n[0] * f64::from(p[0]) + n[1] * f64::from(p[1]);
+                let v = n[0] * p[0] + n[1] * p[1];
                 lo = lo.min(v);
                 hi = hi.max(v);
             }
@@ -457,7 +455,7 @@ fn fill_paths(
             while j <= last {
                 let c = offset + j * spacing;
                 let at = |s: f64| [d[0] * s + n[0] * c + bx, d[1] * s + n[1] * c + by];
-                for span in line_in_triangles(t, n, d, c) {
+                for span in line_in_triangles(&t, n, d, c) {
                     pieces.clear();
                     match &dashes {
                         Some(dashes) => {
@@ -524,7 +522,7 @@ fn fill_paths(
             centre,
             radius,
         } => Ok(gradient::bands(
-            t,
+            &t,
             &gradient::Gradient {
                 color: *color,
                 color2: *color2,
@@ -598,15 +596,15 @@ fn marker_paths(
         }
     };
     let (mut fills, mut strokes, mut dots) = (Vec::new(), Vec::new(), Vec::new());
-    let v = layer.data.get(b.range.clone()).unwrap_or_default();
+    let v = layer.values(b.range.clone()).unwrap_or_default();
     for m in v.chunks_exact(5) {
-        let w = f64::from(m[3]);
-        let h = if m[4] > 0.0 { f64::from(m[4]) } else { w };
-        let (sa, ca) = f64::from(m[2]).sin_cos();
+        let w = m[3];
+        let h = if m[4] > 0.0 { m[4] } else { w };
+        let (sa, ca) = m[2].sin_cos();
         // The shape's centre from its point: the anchor and the offset, turned with it.
         let qx = offset[0] - anchor[0] * w;
         let qy = offset[1] - anchor[1] * h;
-        let (px, py) = (f64::from(m[0]) + bx, f64::from(m[1]) + by);
+        let (px, py) = (m[0] + bx, m[1] + by);
         let place = |x: f64, y: f64| -> [f64; 2] {
             [
                 px + (ca * (x + qx) - sa * (y + qy)) * per_unit,
@@ -695,10 +693,10 @@ fn why_not(layer: &StyledLayer, b: &StyledBatch) -> Option<&'static str> {
                 }
                 let a = *angle;
                 let n = [-a.sin(), a.cos()];
-                let t = layer.data.get(b.range.clone()).unwrap_or_default();
+                let t = layer.values(b.range.clone()).unwrap_or_default();
                 let (mut lo, mut hi) = (f64::INFINITY, f64::NEG_INFINITY);
                 for p in t.chunks_exact(2) {
-                    let v = n[0] * f64::from(p[0]) + n[1] * f64::from(p[1]);
+                    let v = n[0] * p[0] + n[1] * p[1];
                     lo = lo.min(v);
                     hi = hi.max(v);
                 }
@@ -827,7 +825,7 @@ mod tests {
     /// Two triangles of a square: one ring of four corners, counter-clockwise, the shared edge gone.
     #[test]
     fn a_square_s_triangles_are_its_ring() {
-        let t: [f32; 12] = [
+        let t: [f64; 12] = [
             0.0, 0.0, 10.0, 0.0, 10.0, 10.0, 0.0, 0.0, 10.0, 10.0, 0.0, 10.0,
         ];
         let rings = triangle_rings(&t, 100.0, 200.0);
@@ -842,10 +840,10 @@ mod tests {
     #[test]
     fn a_ring_of_triangles_has_its_hole() {
         let (o, i) = (
-            [[0.0f32, 0.0], [30.0, 0.0], [30.0, 30.0], [0.0, 30.0]],
-            [[10.0f32, 10.0], [20.0, 10.0], [20.0, 20.0], [10.0, 20.0]],
+            [[0.0f64, 0.0], [30.0, 0.0], [30.0, 30.0], [0.0, 30.0]],
+            [[10.0f64, 10.0], [20.0, 10.0], [20.0, 20.0], [10.0, 20.0]],
         );
-        let mut t: Vec<f32> = Vec::new();
+        let mut t: Vec<f64> = Vec::new();
         // Each side's trapezoid between the outer square and the gap, as two triangles.
         for k in 0..4 {
             let (a, b, c, d) = (o[k], o[(k + 1) % 4], i[(k + 1) % 4], i[k]);
@@ -945,6 +943,7 @@ mod tests {
             weight_cap: 0.0,
         };
         let layer = StyledLayer {
+            low: Vec::new(),
             data,
             batches: vec![batch.clone()],
             pictures: Vec::new(),
@@ -955,6 +954,32 @@ mod tests {
         // The lines at 0, 0.05 … 100 m: 2001, each across the square.
         assert_eq!(lines, 2001);
         assert!(shapes[0].parts.iter().all(|p| (p.points[1][0] - p.points[0][0] - 100.0).abs() < 1e-9));
+    }
+
+    #[test]
+    fn a_pdf_fill_keeps_low_parts_through_its_triangle_edge_keys() {
+        let values = [16960., 16960., 16960.0006, 16960., 16960.0006, 16960.0005,
+            16960., 16960., 16960.0006, 16960.0005, 16960., 16960.0005];
+        let data: Vec<f32> = values.iter().map(|&v| v as f32).collect();
+        let low = values.iter().zip(&data).map(|(&v, &hi)| (v - f64::from(hi)) as f32).collect();
+        let paint = FillPaintBatch::Solid { color: [0., 0., 0., 1.] };
+        let batch = StyledBatch {
+            range: 0..data.len(), kind: BatchKind::Fill { paint: paint.clone() },
+            level: 0., key: 0, bounds: [16960.,16960.,16960.0006,16960.0005],
+            origin: [0.,0.], reach: 0., reach_unit: Unit::World,
+            min_scale: None, max_scale: None, group: 0, effect: None, weight_cap: 0.,
+        };
+        let layer = StyledLayer { data, low, ..Default::default() };
+        let shapes = fill_paths(&layer, &batch, &paint, &VectorScale { scale: 50., origin: [4_000_000_000.,1_000_000.] }).unwrap();
+        assert_eq!(shapes.len(), 1);
+        assert_eq!(shapes[0].parts.len(), 1);
+        let points = &shapes[0].parts[0].points;
+        assert_eq!(points.len(), 4);
+        let lo = points.iter().map(|p| p[1]).fold(f64::INFINITY, f64::min);
+        let hi = points.iter().map(|p| p[1]).fold(f64::NEG_INFINITY, f64::max);
+        assert!((hi - lo - 0.0005).abs() < 1e-9, "height {}", hi - lo);
+        let paths: Vec<_> = shapes.into_iter().flat_map(core_paths).collect();
+        assert_eq!(paths.len(), 1, "the far ring must reach the PDF, not disappear during winding classification");
     }
 
     #[test]

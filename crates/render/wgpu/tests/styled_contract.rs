@@ -1,5 +1,5 @@
 //! The styled drawing's shared WGSL and its layout contract
-//! (`shaders/wgsl/styled.layout.json`, version 9, docs/STYLE.md §6,
+//! (`shaders/wgsl/styled.layout.json`, version 10, docs/STYLE.md §6,
 //! docs/adr/0090): naga, the compiler wgpu runs, parses and validates the
 //! shared module, which the desktop builds as it is (two bind groups: the
 //! frame with the atlas, then the style; Iced's device takes two); the
@@ -61,7 +61,11 @@ struct Pipeline {
     vertex_count: Option<u32>,
     blend: String,
     buffers: Vec<Buffer>,
+    precision: Option<Precision>,
 }
+
+#[derive(Deserialize)]
+struct Precision { vertex: String, buffer: Buffer }
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -113,7 +117,7 @@ fn the_shared_module_validates_and_the_desktop_builds_it_as_it_is() {
     let c = contract();
     assert_eq!(
         (c.format.as_str(), c.version, c.module.as_str()),
-        ("kentos.wgsl-layout", 9, "styled")
+        ("kentos.wgsl-layout", 10, "styled")
     );
     assert_eq!(shader::source(), shader::shared_source());
     let module = validate(&shader::shared_source());
@@ -254,6 +258,21 @@ fn the_pipelines_are_the_contract_s() {
             "{}",
             p.name
         );
+        match (spec.precision(), &p.precision) {
+            (Some((vertex, buffer)), Some(want)) => {
+                assert_eq!(vertex, want.vertex);
+                assert_eq!(buffer.array_stride, want.buffer.array_stride);
+                assert_eq!(buffer.attributes.len(), want.buffer.attributes.len());
+                for (have, attr) in buffer.attributes.iter().zip(&want.buffer.attributes) {
+                    assert_eq!((have.shader_location, format_name(have.format), have.offset), (attr.location, attr.format.as_str(), attr.offset));
+                }
+                assert_eq!(matches!(buffer.step_mode, wgpu::VertexStepMode::Instance), want.buffer.step_mode == "instance");
+                let module = validate(&shader::source());
+                assert!(module.entry_points.iter().any(|e| e.name == vertex && e.stage == naga::ShaderStage::Vertex));
+            },
+            (None, None) => {},
+            _ => panic!("{}: precision layout mismatch", p.name),
+        }
         assert_eq!(spec.vertex_count, p.vertex_count, "{}: vertices", p.name);
         let [buffer] = p.buffers.as_slice() else {
             panic!("{}: one buffer", p.name);

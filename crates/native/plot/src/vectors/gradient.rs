@@ -110,14 +110,14 @@ pub(super) struct Gradient {
 }
 
 /// The gradient over the triangles `t` (the batch's numbers) as filled bands, moved by `(bx, by)`.
-pub(super) fn bands(t: &[f32], g: &Gradient, bx: f64, by: f64) -> Vec<Shape> {
+pub(super) fn bands(t: &[f64], g: &Gradient, bx: f64, by: f64) -> Vec<Shape> {
     let triangles: Vec<[[f64; 2]; 3]> = t
         .chunks_exact(6)
         .map(|c| {
             [
-                [f64::from(c[0]), f64::from(c[1])],
-                [f64::from(c[2]), f64::from(c[3])],
-                [f64::from(c[4]), f64::from(c[5])],
+                [c[0], c[1]],
+                [c[2], c[3]],
+                [c[4], c[5]],
             ]
         })
         .collect();
@@ -260,7 +260,7 @@ mod tests {
     use super::*;
 
     /// A 100 m square as two triangles, its numbers as a batch holds them.
-    const SQUARE: [f32; 12] = [
+    const SQUARE: [f64; 12] = [
         0.0, 0.0, 100.0, 0.0, 100.0, 100.0, 0.0, 0.0, 100.0, 100.0, 0.0, 100.0,
     ];
 

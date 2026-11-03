@@ -120,11 +120,11 @@ pub fn paint_layer(
             continue;
         }
         let st = Style::of(&style_block(b));
-        let data = layer.data.get(b.range.clone()).unwrap_or_default();
+        let data = layer.values(b.range.clone()).unwrap_or_default();
         match &b.kind {
-            BatchKind::Stroke { .. } => strokes(pixmap, view, b, &st, data),
-            BatchKind::Fill { .. } => fill(pixmap, view, b, &st, data, source),
-            BatchKind::Marker { .. } => markers(pixmap, view, b, &st, data, source),
+            BatchKind::Stroke { .. } => strokes(pixmap, view, b, &st, &data),
+            BatchKind::Fill { .. } => fill(pixmap, view, b, &st, &data, source),
+            BatchKind::Marker { .. } => markers(pixmap, view, b, &st, &data, source),
         }
     }
 }
@@ -356,7 +356,7 @@ fn rows_of(corners: &[[f64; 2]], w: u32, h: u32, mut each: impl FnMut(u32, u32))
 
 // ── Strokes (`stroke.wgsl`) ───────────────────────────────────────────────
 
-fn strokes(pixmap: &mut Pixmap, view: &CpuView, b: &StyledBatch, st: &Style, data: &[f32]) {
+fn strokes(pixmap: &mut Pixmap, view: &CpuView, b: &StyledBatch, st: &Style, data: &[f64]) {
     let k = st.unit_k(view);
     let half_w = (st.a[0] * st.weight_k(view)).max(1.0) * 0.5;
     let blur = (st.b[0] * k).max(1.0);
@@ -377,12 +377,12 @@ fn strokes(pixmap: &mut Pixmap, view: &CpuView, b: &StyledBatch, st: &Style, dat
     let (w, h) = (pixmap.width(), pixmap.height());
     for seg in data.chunks_exact(6) {
         let a = view.px(
-            f64::from(seg[0]) + b.origin[0],
-            f64::from(seg[1]) + b.origin[1],
+            seg[0] + b.origin[0],
+            seg[1] + b.origin[1],
         );
         let e = view.px(
-            f64::from(seg[2]) + b.origin[0],
-            f64::from(seg[3]) + b.origin[1],
+            seg[2] + b.origin[0],
+            seg[3] + b.origin[1],
         );
         let d = [e[0] - a[0], e[1] - a[1]];
         let len = d[0].hypot(d[1]);
@@ -393,8 +393,8 @@ fn strokes(pixmap: &mut Pixmap, view: &CpuView, b: &StyledBatch, st: &Style, dat
         };
         let n = [-dir[1], dir[0]];
         let ext = half_w + 0.5 * blur + 1.0;
-        let s0 = f64::from(seg[4]) * view.px_per_m;
-        let ends = (f64::from(seg[5]) + 0.5) as u32;
+        let s0 = seg[4] * view.px_per_m;
+        let ends = (seg[5] + 0.5) as u32;
         let at = |along: f64, across: f64| {
             [
                 a[0] + dir[0] * along + n[0] * across,
@@ -441,7 +441,7 @@ fn strokes(pixmap: &mut Pixmap, view: &CpuView, b: &StyledBatch, st: &Style, dat
 fn coverage(
     view: &CpuView,
     b: &StyledBatch,
-    data: &[f32],
+    data: &[f64],
     w: u32,
     h: u32,
 ) -> Option<(Mask, [u32; 4])> {
@@ -449,8 +449,8 @@ fn coverage(
     for t in data.chunks_exact(6) {
         let p = |i: usize| {
             let q = view.px(
-                f64::from(t[i]) + b.origin[0],
-                f64::from(t[i + 1]) + b.origin[1],
+                t[i] + b.origin[0],
+                t[i + 1] + b.origin[1],
             );
             (q[0] as f32, q[1] as f32)
         };
@@ -479,7 +479,7 @@ fn fill(
     view: &CpuView,
     b: &StyledBatch,
     st: &Style,
-    data: &[f32],
+    data: &[f64],
     source: &dyn ImageSource,
 ) {
     use crate::batches::FillPaintBatch;
@@ -730,7 +730,7 @@ fn warped_picture(
     view: &CpuView,
     b: &StyledBatch,
     st: &Style,
-    data: &[f32],
+    data: &[f64],
     bitmap: Option<&super::picture::Bitmap>,
 ) {
     let o = st.b[2];
@@ -739,10 +739,10 @@ fn warped_picture(
     for t in data.chunks_exact(12) {
         let corner = |k: usize| {
             let q = view.px(
-                f64::from(t[k * 4]) + b.origin[0],
-                f64::from(t[k * 4 + 1]) + b.origin[1],
+                t[k * 4] + b.origin[0],
+                t[k * 4 + 1] + b.origin[1],
             );
-            (q, [f64::from(t[k * 4 + 2]), f64::from(t[k * 4 + 3])])
+            (q, [t[k * 4 + 2], t[k * 4 + 3]])
         };
         let ((a, ua), (p, up), (c, uc)) = (corner(0), corner(1), corner(2));
         let det = (p[0] - a[0]) * (c[1] - a[1]) - (c[0] - a[0]) * (p[1] - a[1]);
@@ -1068,7 +1068,7 @@ fn markers(
     view: &CpuView,
     b: &StyledBatch,
     st: &Style,
-    data: &[f32],
+    data: &[f64],
     source: &dyn ImageSource,
 ) {
     let image_look = st.flags[1] == 1;
@@ -1090,8 +1090,8 @@ fn markers(
     let fit = st.flags[3];
     let (w, h) = (pixmap.width(), pixmap.height());
     for m in data.chunks_exact(5) {
-        let mut mw = f64::from(m[3]) * k;
-        let mut mh = f64::from(m[4]) * k;
+        let mut mw = m[3] * k;
+        let mut mh = m[4] * k;
         if fit == 1 {
             mh = mw * aspect;
         } else if fit == 2 {
@@ -1111,8 +1111,8 @@ fn markers(
         }
         let hs = [mw * 0.5, mh * 0.5];
         // Where the shader puts the quad: the point, then the anchor and offset turned with it.
-        let at = view.px(f64::from(m[0]) + b.origin[0], f64::from(m[1]) + b.origin[1]);
-        let (sa, ca) = f64::from(m[2]).sin_cos();
+        let at = view.px(m[0] + b.origin[0], m[1] + b.origin[1]);
+        let (sa, ca) = m[2].sin_cos();
         let shift = [-st.a[2] * mw + st.a[0] * k, -st.a[3] * mh + st.a[1] * k];
         let to_px = |l: [f64; 2]| {
             let q = [l[0] + shift[0], l[1] + shift[1]];
@@ -1237,6 +1237,7 @@ mod tests {
     #[test]
     fn a_solid_fill_covers_its_triangles() {
         let layer = StyledLayer {
+            low: Vec::new(),
             data: SQUARE.to_vec(),
             batches: vec![batch(
                 BatchKind::Fill {
@@ -1281,6 +1282,7 @@ mod tests {
             unit: Unit::World,
         };
         let layer = StyledLayer {
+            low: Vec::new(),
             data: SQUARE.to_vec(),
             batches: vec![batch(
                 BatchKind::Fill {
@@ -1295,6 +1297,7 @@ mod tests {
         assert_eq!(px(&img, 12, 27), [0, 128, 0, 255], "a disc's middle");
         assert_eq!(px(&img, 15, 24)[3], 0, "between the discs");
         let layer = StyledLayer {
+            low: Vec::new(),
             data: SQUARE.to_vec(),
             batches: vec![batch(
                 BatchKind::Fill {
@@ -1316,6 +1319,7 @@ mod tests {
     #[test]
     fn a_hatch_inks_its_lines() {
         let layer = StyledLayer {
+            low: Vec::new(),
             data: SQUARE.to_vec(),
             batches: vec![batch(
                 BatchKind::Fill {
@@ -1349,6 +1353,7 @@ mod tests {
     #[test]
     fn a_staggered_hatch_moves_its_dashes_line_by_line() {
         let hatch = |dash: Vec<f64>| StyledLayer {
+            low: Vec::new(),
             data: SQUARE.to_vec(),
             batches: vec![batch(
                 BatchKind::Fill {
@@ -1384,6 +1389,7 @@ mod tests {
     #[test]
     fn a_gradient_runs_from_its_first_colour_to_its_second() {
         let gradient = |shape: u32| StyledLayer {
+            low: Vec::new(),
             data: SQUARE.to_vec(),
             batches: vec![batch(
                 BatchKind::Fill {
@@ -1496,6 +1502,7 @@ mod tests {
             }
         }
         let layer = StyledLayer {
+            low: Vec::new(),
             data: vec![20.0, 20.0, 0.0, 20.0, 10.0],
             batches: vec![batch(
                 BatchKind::Marker {
@@ -1542,6 +1549,7 @@ mod tests {
             rotation: 0.0,
         };
         let layer = StyledLayer {
+            low: Vec::new(),
             data: SQUARE.to_vec(),
             batches: vec![batch(
                 BatchKind::Fill {
@@ -1583,6 +1591,7 @@ mod tests {
         );
         b.max_scale = Some(500.0);
         let layer = StyledLayer {
+            low: Vec::new(),
             data: SQUARE.to_vec(),
             batches: vec![b],
             ..StyledLayer::default()

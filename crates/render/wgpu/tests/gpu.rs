@@ -28,6 +28,8 @@ mod compose_timing;
 mod hatch;
 #[path = "gpu/weights.rs"]
 mod weights;
+#[path = "gpu/precision.rs"]
+mod precision;
 
 const SAMPLE: &str = include_str!("../../../../fixtures/document/v1/sample.json");
 const E: f64 = 487_012.346;
@@ -460,6 +462,15 @@ fn on_a_real_gpu() {
     compose::layer_composition_and_effects_match_the_reference(&mut gpu);
     hatch::dense_hairlines_do_not_disappear(&mut gpu);
     weights::paper_widths_are_held(&mut gpu);
+}
+
+#[test]
+fn precise_styled_symbols_on_a_real_gpu() {
+    if std::env::var("KENTOS_GPU_TESTS").as_deref() != Ok("1") {
+        eprintln!("SKIPPED: set KENTOS_GPU_TESTS=1; a skipped test is not a pass");
+        return;
+    }
+    precision::tiny_symbols_keep_their_height(&mut Gpu::open());
 }
 
 /// docs/adr/0793 §1 alone: a paper width held on the model screen, on a real GPU.

@@ -62,6 +62,8 @@ durumla byte düzeyinde eşittir. Sonuç manifesti
 Aynı uç koordinatlı GUI denemesinde 0,6×0,5 mm semboller yatay çizgi
 gibi göründü. Bu ayrı render sorunu açık kalır; dizi tanıma kabulü render
 kabulü olarak sunulmaz. 405–408 numaralı ekranlar bulguyu korur.
+Native geometri düzeltmesi ve 409–412 karşı denemesi daha sonra
+[ADR 0878](0878-styled-geometry-low-part-stream.md) ile doğrulandı.
 Ham kayıtlar `/tmp/kentos-cad-adv04-2026-11-01/recognition-precision-*`
 altındadır; ekranlar repoya eklenmez.
 

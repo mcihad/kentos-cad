@@ -8,11 +8,11 @@ struct StrokeOut {
   @location(3) @interpolate(flat) ends: u32,
   @location(4) @interpolate(flat) halfW: f32,
 };
-@vertex fn strokeVs(@builtin(vertex_index) vi: u32, @location(0) seg: vec4f, @location(1) mt: vec2f) -> StrokeOut {
+fn strokeVertex(vi: u32, seg: vec4f, mt: vec2f, low: vec4f) -> StrokeOut {
   let halfW = max(st.a.x * weightK(), 1.0) * 0.5;
   let blur = max(st.b.x * unitK(), 1.0);
-  let A = toPx(seg.xy);
-  let B = toPx(seg.zw);
+  let A = toPxLow(seg.xy, low.xy);
+  let B = toPxLow(seg.zw, low.zw);
   let d = B - A;
   let len = length(d);
   var dir = vec2f(1.0, 0.0);
@@ -30,6 +30,12 @@ struct StrokeOut {
   o.ends = u32(mt.y + 0.5);
   o.halfW = halfW;
   return o;
+}
+@vertex fn strokeVs(@builtin(vertex_index) vi: u32, @location(0) seg: vec4f, @location(1) mt: vec2f) -> StrokeOut {
+  return strokeVertex(vi, seg, mt, vec4f(0.0));
+}
+@vertex fn strokeVsPrecise(@builtin(vertex_index) vi: u32, @location(0) seg: vec4f, @location(1) mt: vec2f, @location(2) low: vec4f) -> StrokeOut {
+  return strokeVertex(vi, seg, mt, low);
 }
 // Coverage t px inside an edge: a one-pixel ramp, or a smooth fade over the blur width (see the GLSL twin).
 fn cover(t: f32) -> f32 {

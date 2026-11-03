@@ -143,6 +143,7 @@ impl Styles {
             screen_symbols: settings.text("graphics.symbolSize") == "screen",
             line_weights: settings.bool("graphics.lineWeights"),
             view_build: kentos_native_style::View {
+                position_low: true,
                 plot_precision:false,
                 fills: settings.bool("graphics.fills"),
                 area_edges: settings.bool("graphics.areaEdges"),

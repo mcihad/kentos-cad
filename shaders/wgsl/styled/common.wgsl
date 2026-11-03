@@ -36,6 +36,13 @@ fn toPx(p: vec2f) -> vec2f {
   let c = 1.0 + frame.twist.x;
   return vec2f(d.x * c + d.y * frame.twist.y, d.y * c - d.x * frame.twist.y);
 }
+// Precision companion stream (contract version 10): subtract the camera's parts
+// before combining them. Adding low to p first would discard the detail again.
+fn toPxLow(p: vec2f, low: vec2f) -> vec2f {
+  let d = ((p - (frame.offset - st.origin.xy)) + (low - frame.offsetLo)) * frame.pxPerM;
+  let c = 1.0 + frame.twist.x;
+  return vec2f(d.x * c + d.y * frame.twist.y, d.y * c - d.x * frame.twist.y);
+}
 fn pxToClip(px: vec2f) -> vec4f { return vec4f(px / (0.5 * frame.viewport), 0.0, 1.0); }
 fn unitK() -> f32 { if (st.flags.x == 0u) { return frame.pxPerM; } return frame.dpr; }
 // A line's width in device px per its unit (contract version 9, docs/adr/0793 §1): a paper width on the model screen

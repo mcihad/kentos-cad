@@ -1145,6 +1145,22 @@ olanlarda tam örüntü eksilmedi; ULP altındaki 52 örnek açık sayısal sın
 Aynı uç koordinat testinde küçük sembol render'ı düzleşti; ayrı hata olarak
 incelenecek, bu sonuç render kabulü veya 07'nin tamamlanması sayılmaz.
 
+**Tanıma denemesinde bulunan native çizim hassasiyeti — [ADR 0878](../docs/adr/0878-styled-geometry-low-part-stream.md):**
+Büyük koordinatta 0,6×0,5 mm sembolün düzleşmesi giderildi. Native stilli
+konumlar FP32 yüksek/düşük akışla, kamera parçaları çıkarıldıktan sonra
+birleştirilir. Kaynak koordinatı, birimi ve proje ölçeği değişmez. CPU/PDF
+aynı düşük parçayı korur; PDF halka yönü ortak yerel alan hesabındadır.
+Eski/web akışı isteğe bağlı ek tamponu üretmez. 207 stil/PDF/render testi,
+üç gerçek GPU testi dahil, başarılı; altı elle performans testi atlandı.
+Son halka regresyonuyla 17 PDF testi ayrıca tekrar geçti; ilgili tüm
+hedeflerde Clippy başarılıdır. Gerçek pencerede dikdörtgen ve daireler,
+Kaydır ve tekerlek yakınlaştırması doğrulandı; kaydedilen KCAD başlangıçla
+birebir aynıdır. Web düşük akış bağlantısı, dinamik raster ve boya/desen
+koordinatı sınırları ADR'de açıkça ayrı tutulur; tüm render motorunun veya
+CAD-ADV-07'nin tamamlandığı anlamına gelmez. Ek olarak 84 masaüstü stil/
+önbellek testi geçti (dokuz elle performans testi atlandı). Son teslim
+programında kenardan seçim ve 11 öğeli arama 413–414 ekranlarıyla tekrarlandı.
+
 **Açık kalan:** dönük/eğik grid, kutupsal/yol aday bulma; metin/öznitelik,
 iç blok ve diğer kaynak/ilişki genişletmesi. Bu dilimler CAD-ADV-07'nin
 tamamını kapatmaz.

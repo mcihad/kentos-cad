@@ -23,6 +23,7 @@ fn batches() -> Batches {
         hatch
     );
     Batches {
+        low: Vec::new(),
         json,
         data: vec![0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0],
         pictures: Vec::new(),

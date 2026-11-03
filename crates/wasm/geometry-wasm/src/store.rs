@@ -1281,6 +1281,7 @@ impl GeometryStore {
             plot_scale,
             screen,
             View {
+                position_low: false,
                 plot_precision:false,
                 fills,
                 area_edges,

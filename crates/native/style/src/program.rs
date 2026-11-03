@@ -641,7 +641,7 @@ pub fn build_layer(
         opts.origin,
         opts.plot_scale,
         opts.screen,
-        opts.view,
+        View { position_low: true, ..opts.view },
         frame,
     )?;
     Ok((call, batches))
