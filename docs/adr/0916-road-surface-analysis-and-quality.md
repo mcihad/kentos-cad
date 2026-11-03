@@ -33,6 +33,13 @@ Tarih: 2026-11-04. plan/road.md Y18 (ROAD-TIN-12, 13, 16–18; ROAD-SURVEY-04, 0
   3D'de noktalar yüzeyle karşılaştırılıp fark sütunu sıralanır, sivriyi yapan nokta silinir (NRCS'in
   [LiDAR karşılaştırma yöntemi](https://www.nrcs.usda.gov/sites/default/files/2023-06/HowTo-%20LiDAR%20Comparison%20C3D.pdf)).
   KentOS sınırı kendi koymaz, standardın sayısını kural yapmaz; sınıf sınıf istatistik verir.
+- **Parçalı yüzey:** Isenburg, Liu, Shewchuk ve Snoeyink'in akışlı Delaunay'ı (SIGGRAPH 2006) üçgeni çevrel çemberi
+  henüz görülmemiş alana uzanmadığında kesinleştirir; 11,2 GB LIDAR'dan bir milyar üçgen 70 MB bellekle
+  ([proje sayfası](https://www.cs.unc.edu/~isenburg/sd),
+  [UNC: akışlı Delaunay](https://wwwx.cs.unc.edu/Research/compgeom/twiki/bin/view.cgi/TModeling/StreamingDelaunay)).
+  LAStools karoları sabit bir tamponla işler ve yalnız iç kısmı rasterleştirir
+  ([rapidlasso: use buffers when processing lidar in tiles](https://rapidlasso.de/use-buffers-when-processing-lidar-in-tiles/));
+  sabit tampon kenar izlerini azaltır ama bütün yüzeyin Delaunay'ını garanti etmez (ROAD-TIN-12).
 - **Pürüzlülük:** Sappington, Longshore ve Thomson'ın (2007) vektör pürüzlülük ölçüsü (VRM): eğim ve bakı birim
   vektörlere ayrılır, pencerede bileşkenin boyu; 1 − |Σn|/N, 0 düz, 1'e doğru pürüzlü
   ([GRASS r.vector.ruggedness](https://grass.osgeo.org/grass84/manuals/addons/r.vector.ruggedness.html)).
@@ -58,8 +65,16 @@ Tarih: 2026-11-04. plan/road.md Y18 (ROAD-TIN-12, 13, 16–18; ROAD-SURVEY-04, 0
    kayıtları alınmaz, çizimin noktaları değişmez, kırık hattın köşesi bırakılmaz, nokta kaydırılmaz (ROAD-TIN-17);
    `road.terrains.repair` önce farkı söyler, tek geri alma adımıyla yazar, `restore` geri alır.
 
-Açık: parçalı yüzeyin dikişleri ve sınırda boş çember (ROAD-TIN-12, 13), GPU ön elemesi (ROAD-TIN-18), yumuşatma
-(onarım yalnız dışarıda bırakır), ölçme kaydının tipli kaynağı (ROAD-SURVEY-01).
+7. **Parçalı yüzey (Y18.8).** `surface::build_tiled`: noktaların kutusu kare karolara bölünür, her karo çevresindeki
+   payın noktalarıyla üçgenlenir; karonun üstündeki her üçgen kesinleşmeli (payın dışındaki, çemberin eriştiği hücrelerin
+   noktaları tam in-circle yüklemiyle sorulur), karonun bütün yüzeyin örtüsü kadarı üçgenlerle örtülmeli; değilse karonun
+   payı ikiye katlanır. Karo üçgenleri ağırlık merkezleriyle sahiplenir; birleşim üçgen sayısı (2n − 2 − h) ve alanla
+   bütüne karşı denetlenir, tutmazsa bütün paylar büyür; her karo bütün noktaları gördüyse ve yine tutmuyorsa (eş
+   çemberli noktalar) yüzey bütün kurulur. Kırık hat, sınır ve boşluk karolanmaz.
+
+Açık: kırık hatlı yüzeyin karolanması (kısıtlı Delaunay'da çember yalnız görünen noktalara bakar), dış kabuğa komşu
+karoların büyük payı (kabuğa göre pay), GPU ön elemesi (ROAD-TIN-18), yumuşatma (onarım yalnız dışarıda bırakır),
+ölçme kaydının tipli kaynağı (ROAD-SURVEY-01).
 
 ## Aşamalar
 
@@ -114,3 +129,12 @@ Y18.7 (yapıldı, masaüstünde onarım): Yüzey analizi'nin Kalite kipinde Sivr
 Onarımı uygula tek adımda yazar ve kaliteyi yeniden okur; Bırakılanları geri al yüzeyin bıraktıklarının hepsini geri
 alır. Test `the_spikes_are_left_out_after_their_difference_and_taken_back` (fark yazmaz, uygulanınca sivri kalmaz, geri
 alınır, geri al adımı), resimler `.run/gui-evidence/yol-y18-yuzey-analizi-onarim-*`.
+
+Y18.8 (yapıldı, parçalı yüzey): §7. `crates/shared/road/src/surface/tiled.rs`, testleri `tests/all/tiled.rs`: genel
+konumdaki 3000 ve 1500 noktada her karo ve pay için birleşim bütün yüzeyle üçgen üçgen aynı (sıralı köşe üçlüleri), 61 ×
+41 kafeste (her yerde dört nokta bir çemberde) üçgen sayısı ve alan tutar, retler. Ölçüm (release, M5, karolar
+iş parçacıklarında): 200 000 noktada bütün yüzey 98 ms; 500 m karo, 20 m pay 925 ms (48 karo, 202 kurma, en büyük pay
+2560 m); 1000 m karo 1609 ms. Bu boyutta bütünü kurmak daha hızlı: karolama belleği sınırlı tutmanın ve kanıtlı
+birleşimin yoludur; dış kabuğa komşu karoların payı büyüdüğü için yavaştır (açık). İlk sürüm çemberin kutusunu
+noktaların kutusuyla sınırlıyor, payları bütün kutuya büyütüyordu (5 120 m); karonun yalnız merkezi kendinde olan
+üçgenlerini kesinleştirmek kabuğa yakın boşluk bırakıyordu (ölçümle bulundu, örtü denetimi eklendi).

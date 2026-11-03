@@ -8,6 +8,7 @@ mod contours;
 mod figures;
 mod mesh;
 mod quality;
+mod tiled;
 mod query;
 
 use std::collections::HashMap;
@@ -21,6 +22,7 @@ pub use analysis::{AnalysisError, Band, BandParts, Bands, GridSlope, MAX_CELLS a
 pub use contours::{ContourError, ContourLine, MAX_LEVELS, Slope};
 pub use figures::{Figures, SectionPoint};
 pub use quality::{Gaps, NearPair, Spike};
+pub use tiled::{Tiled, TiledError, build_tiled};
 pub use query::{Height, Place};
 
 use mesh::{Mesh, Walk};

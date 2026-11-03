@@ -10,6 +10,7 @@ mod profiles;
 mod quality;
 mod sections;
 mod templates;
+mod tiled;
 mod verticals;
 mod grading;
 mod haul;
