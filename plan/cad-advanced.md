@@ -952,6 +952,17 @@ seçimsiz dolgu, zoom ve 2 000 mm ölçü doğrulandı; kaydedilen dosya önceki
 veriyle bayt bayt aynı. Ölçü bağı diliminin tam Python tekrarı da 481 testle
 başarılıdır. Genel aday dönüştürme ve ilişkili dizi işleri açık kalır.
 
+**Kapalı çizginin son kenarı — [ADR 0870](../docs/adr/0870-closed-polyline-dimension-geometry.md):**
+ölçüye verilen native geometri kapalı durum ve genişlikleri korur; kökte veya
+iç içe blokta son yay kenarı artık açık çizgi gibi okunmaz. Eski JSON/WASM
+varsayılanı ayrı kalır. 605 çekirdek birim, 316 çekirdek entegrasyon, 137 belge,
+371 uygulama, 1 628 masaüstü ve 68 MCP testi; 62 Python blok ve 6 çıktı testi geçti.
+Clippy ve masaüstü derlemesi başarılıdır. Gerçek konsolda önce ret tekrarlandı,
+sonra kapanış yayının orta noktası (800,425) mm olarak bağlandı, canlı kaldı
+ve blokla taşındı. Taşıma Undo, bağlama Undo ve Redo kayıtları ilgili başlangıç
+ve son dosyalarıyla bayt bayt aynıdır. Çizgi gerçekten açılınca yalnız kapanış
+kenarı bağının kopması Python testindedir. Genel dönüştürme işi açık kalır.
+
 ### CAD-ADV-08 — Sınır, tarama ve maskeyi hatasını açıklayabilen bir üretim sistemine getir [ ]
 
 **Öncelik:** P0 ilişki/görünürlük; P1 kapsam. **Kod:** [C14], [C15], [C03].

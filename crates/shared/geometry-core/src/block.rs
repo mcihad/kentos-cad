@@ -335,6 +335,16 @@ impl Blocks {
     /// The definitions read from their JSON: the contract's `BlockDefinition`
     /// list (`[{ id, base, entities, attributes?, … }]`; other fields are the documents').
     pub fn from_json(v: &Json) -> Result<Blocks, String> {
+        Self::read_json(v, crate::api::json::FromJson::from_json)
+    }
+
+    /// Native document definitions retain typed polyline closure/widths on every nesting level.
+    /// Other definition fields, local identities and dynamic data use the same reader.
+    pub fn from_document_json(v: &Json) -> Result<Blocks, String> {
+        Self::read_json(v, Entity::from_document_json)
+    }
+
+    fn read_json(v: &Json, read_entity: fn(&Json) -> Result<Entity, String>) -> Result<Blocks, String> {
         let Json::Arr(list) = v else {
             return Err("blok tanımları bir dizi olmalı".into());
         };
@@ -352,7 +362,7 @@ impl Blocks {
                 .iter()
                 .enumerate()
                 .map(|(k, e)| {
-                    crate::api::json::FromJson::from_json(e)
+                    read_entity(e)
                         .map_err(|m| format!("[{i}].entities[{k}]: {m}"))
                 })
                 .collect::<Result<Vec<Entity>, String>>()?;
@@ -1244,6 +1254,27 @@ mod tests {
 
     fn entity(text: &str) -> Entity {
         Entity::from_json(&Json::parse(text).expect("JSON")).expect("an entity")
+    }
+
+    #[test]
+    fn native_document_paths_keep_closure_widths_and_local_identity_without_changing_legacy_json() {
+        let path = r#"{"kind":"polyline","id":7,"layerId":"a","attrs":{},"pts":[{"x":0,"y":0},{"x":4,"y":0},{"x":0,"y":4}],"bulges":[0,0,0.25],"closed":true,"widths":[[0,0],[0,0],[0.1,0.2]]}"#;
+        let value = Json::parse(path).unwrap();
+        let native = Entity::from_document_json(&value).unwrap();
+        assert!(matches!(&native.shape, Shape::Polyline { closed:true, widths:Some(w), .. } if w[2] == [0.1,0.2]));
+        assert!(matches!(Entity::from_json(&value).unwrap().shape, Shape::Polyline { closed:false, widths:None, .. }));
+        assert_eq!(native.rest.iter().find(|(k,_)| k == "id").unwrap().1, Json::Num(7.0));
+        let written = crate::api::json::to_string(&native);
+        assert_eq!(written.matches("\"closed\"").count(), 1);
+        assert_eq!(Entity::from_document_json(&Json::parse(&written).unwrap()).unwrap(), native);
+        let definitions = Json::parse(&format!(r#"[{{"id":"p","base":{{"x":0,"y":0}},"entities":[{path}]}}]"#)).unwrap();
+        let blocks = Blocks::from_document_json(&definitions).unwrap();
+        let insert = entity(r#"{"kind":"insert","block":"p","p":{"x":0,"y":0},"scale":1,"rotation":0}"#);
+        let mid = crate::ops::subref::point_in(&blocks, &insert, &[0], crate::ops::subref::Place::Mid { part:0,ring:0,index:2 }).unwrap();
+        assert!((mid.x + 0.5).abs() < 1e-12 && (mid.y - 2.0).abs() < 1e-12);
+        for bad in [path.replace("true", "\"true\""), path.replace("[0.1,0.2]", "[-0.1,0.2]"), path.replace("[0.1,0.2]", "[\"#NaN\",0.2]")] {
+            assert!(Entity::from_document_json(&Json::parse(&bad).unwrap()).is_err());
+        }
     }
 
     const ROGAR: &str = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0002";

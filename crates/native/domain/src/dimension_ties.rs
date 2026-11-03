@@ -29,7 +29,7 @@ use kentos_contracts::{
     DimensionEntity, DimensionRefs, DimensionRule, DimensionStyle, Entity, EntityId, SubPlace,
     SubRef, Vec2,
 };
-use kentos_geometry_core::api::json::{FromJson, Json};
+use kentos_geometry_core::api::json::Json;
 use kentos_geometry_core::block::Blocks;
 use kentos_geometry_core::entity::Entity as CoreEntity;
 use kentos_geometry_core::geom::intersect::line_line;
@@ -46,7 +46,7 @@ use crate::store::Stored;
 /// The geometry core's reading of an object (the contract's own JSON).
 fn core(e: &Entity) -> Option<CoreEntity> {
     let json = serde_json::to_string(e).ok()?;
-    CoreEntity::from_json(&Json::parse(&json).ok()?).ok()
+    CoreEntity::from_document_json(&Json::parse(&json).ok()?).ok()
 }
 
 /// The core's place of a contract's place.
@@ -119,7 +119,7 @@ pub fn core_blocks(blocks: &[Arc<BlockDefinition>]) -> Blocks {
     let text = serde_json::to_string(&list).unwrap_or_else(|_| "[]".into());
     Json::parse(&text)
         .ok()
-        .and_then(|v| Blocks::from_json(&v).ok())
+        .and_then(|v| Blocks::from_document_json(&v).ok())
         .unwrap_or_default()
 }
 
