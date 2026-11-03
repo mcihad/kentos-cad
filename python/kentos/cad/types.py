@@ -1295,6 +1295,7 @@ class CreateOperation(_StrEnum):
     - ``retainingWalls``: `road.walls.draw` (plan/road.md Y11.3): a retaining wall's face and footing in plan, “İstinat duvarı çiz”.
     - ``routes``: `road.routes.draw` (plan/road.md Y12.1): a preliminary route as a 3D polyline, “Ön güzergâh”.
     - ``junctions``: `road.junctions.draw` (plan/road.md Y12.2): a junction's curb returns in plan, “Kavşak çiz”.
+    - ``platforms``: `road.platforms.draw` (plan/road.md Y14): a graded pad's boundary, daylight and slope lines, “Platform çiz”.
     """
     PARALLEL = "parallel"
     PERPENDICULAR_IN = "perpendicularIn"
@@ -1342,9 +1343,10 @@ class CreateOperation(_StrEnum):
     RETAINING_WALLS = "retainingWalls"
     ROUTES = "routes"
     JUNCTIONS = "junctions"
+    PLATFORMS = "platforms"
 
 
-CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions", "terrainContours", "landXml", "alignmentLabels", "profileDrawing", "sectionDrawing", "slopePlan", "guardrails", "culverts", "retainingWalls", "routes", "junctions"]
+CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions", "terrainContours", "landXml", "alignmentLabels", "profileDrawing", "sectionDrawing", "slopePlan", "guardrails", "culverts", "retainingWalls", "routes", "junctions", "platforms"]
 """The names of :class:`CreateOperation`, for a plain string."""
 
 
@@ -4778,6 +4780,22 @@ PlanBoxName = Literal["index", "geometry", "local"]
 """The names of :class:`PlanBox`, for a plain string."""
 
 
+class PlatformSide(_StrEnum):
+    """Which way a slope line goes.
+
+    - ``cut``
+    - ``fill``
+    - ``open``: Off the terrain, or no meeting within the reach.
+    """
+    CUT = "cut"
+    FILL = "fill"
+    OPEN = "open"
+
+
+PlatformSideName = Literal["cut", "fill", "open"]
+"""The names of :class:`PlatformSide`, for a plain string."""
+
+
 class PointLabelMode(_StrEnum):
     """Where a point's label goes (docs/adr/0212 §3.3).
 
@@ -5478,12 +5496,13 @@ class RoadNodeKind(_StrEnum):
     GUARDRAIL = "guardrail"
     CULVERT = "culvert"
     WALL = "wall"
+    PLATFORM = "platform"
     SHEET_SET = "sheetSet"
     PAY = "pay"
     DRAWING = "drawing"
 
 
-RoadNodeKindName = Literal["surface", "alignment", "profile", "sections", "superelevation", "junction", "template", "corridor", "volume", "haul", "guardrail", "culvert", "wall", "sheetSet", "pay", "drawing"]
+RoadNodeKindName = Literal["surface", "alignment", "profile", "sections", "superelevation", "junction", "template", "corridor", "volume", "haul", "guardrail", "culvert", "wall", "platform", "sheetSet", "pay", "drawing"]
 """The names of :class:`RoadNodeKind`, for a plain string."""
 
 
@@ -5521,9 +5540,10 @@ class RoadSourceKind(_StrEnum):
     CULVERT = "culvert"
     WALL = "wall"
     JUNCTION = "junction"
+    PLATFORM = "platform"
 
 
-RoadSourceKindName = Literal["surface", "alignment", "profile", "template", "sections", "superelevation", "corridor", "guardrail", "culvert", "wall", "junction"]
+RoadSourceKindName = Literal["surface", "alignment", "profile", "template", "sections", "superelevation", "corridor", "guardrail", "culvert", "wall", "junction", "platform"]
 """The names of :class:`RoadSourceKind`, for a plain string."""
 
 
@@ -53940,6 +53960,508 @@ class PlaceOn(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class PlatformBalanceAsk(_Model):
+    """The bracket a balance is searched in: the pad's vertical offset from `low` to `high` (m), until cut and fill meet
+    within `tolerance` m³.
+    Attributes:
+        low: Unit: m.
+        high: Unit: m.
+        tolerance: Unit: volume.
+    """
+    low: float
+    high: float
+    tolerance: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["low"] = float(self.low)
+        out["high"] = float(self.high)
+        out["tolerance"] = float(self.tolerance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PlatformBalanceAsk:
+        return cls(
+            low=float(data["low"]),
+            high=float(data["high"]),
+            tolerance=float(data["tolerance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PlatformBalanced(_Model):
+    """A balance found: the offset, the base's elevation it gives, the net (cut − fill) there, the bisection's steps and
+    whether it converged. Not written: an alternative the user takes or leaves (ROAD-GRADE-08).
+    Attributes:
+        offset: Unit: m.
+        elevation: Unit: elevation.
+        net: Unit: volume.
+        iterations: Unit: count.
+    """
+    offset: float
+    elevation: float
+    net: float
+    iterations: int
+    converged: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["offset"] = float(self.offset)
+        out["elevation"] = float(self.elevation)
+        out["net"] = float(self.net)
+        out["iterations"] = self.iterations
+        out["converged"] = self.converged
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PlatformBalanced:
+        return cls(
+            offset=float(data["offset"]),
+            elevation=float(data["elevation"]),
+            net=float(data["net"]),
+            iterations=data["iterations"],
+            converged=data["converged"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PlatformDef(_Model):
+    """A graded pad (docs/adr/0912): its boundary's corners, the plane through `base` rising `grade` percent towards
+    `direction` (degrees counterclockwise from +x), its cut and fill slopes (horizontal per vertical), the spacing of
+    its slope lines along an edge, a corner's widest fan step (degrees), the longest slope line and the terrain it is
+    graded to. The slopes are the user's: no soil's default is guessed (ROAD-GRADE-02).
+    Attributes:
+        corners: Unit: m.
+        base: Unit: m.
+        cut: Unit: 1.
+        fill: Unit: 1.
+        step: Unit: m.
+        fan: Unit: deg.
+        reach: Unit: m.
+        direction: Unit: deg.
+        grade: Unit: percent.
+        revision: Unit: version.
+    """
+    id: str
+    name: str
+    corners: list[list[float]]
+    base: list[float]
+    cut: float
+    fill: float
+    step: float
+    fan: float
+    reach: float
+    surface: str
+    direction: float | Unset = UNSET
+    grade: float | Unset = UNSET
+    revision: int | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["corners"] = [[float(e1) for e1 in e0] for e0 in self.corners]
+        out["base"] = [float(e0) for e0 in self.base]
+        out["cut"] = float(self.cut)
+        out["fill"] = float(self.fill)
+        out["step"] = float(self.step)
+        out["fan"] = float(self.fan)
+        out["reach"] = float(self.reach)
+        out["surface"] = self.surface
+        if self.direction is not UNSET:
+            out["direction"] = float(self.direction)
+        if self.grade is not UNSET:
+            out["grade"] = float(self.grade)
+        if self.revision is not UNSET:
+            out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PlatformDef:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            corners=[[float(e1) for e1 in e0] for e0 in data["corners"]],
+            base=[float(e0) for e0 in data["base"]],
+            cut=float(data["cut"]),
+            fill=float(data["fill"]),
+            step=float(data["step"]),
+            fan=float(data["fan"]),
+            reach=float(data["reach"]),
+            surface=data["surface"],
+            direction=float(data["direction"]) if "direction" in data else UNSET,
+            grade=float(data["grade"]) if "grade" in data else UNSET,
+            revision=data.get("revision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PlatformListed(_Model):
+    """A pad in the project's list.
+    Attributes:
+        revision: Unit: version.
+    """
+    id: str
+    name: str
+    surface: str
+    revision: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["surface"] = self.surface
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PlatformListed:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            surface=data["surface"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PlatformReport(_Model):
+    """A pad as read now: its names and surface, its boundary counterclockwise with its heights, its slope lines, the
+    daylight ring, how many lines are open, the pad's and the footprint's plan areas, and cut and fill (m³) with their
+    plan areas against the terrain; the footprint and the volumes none while a line is open, `why` saying so.
+    Attributes:
+        revision: Unit: version.
+        top: Unit: length.
+        daylight: Unit: length.
+        open: Unit: count.
+        top_area: Unit: area.
+        cut: Unit: volume.
+        cut_area: Unit: area.
+        fill: Unit: volume.
+        fill_area: Unit: area.
+        footprint: Unit: area.
+    """
+    id: str
+    name: str
+    surface: str
+    revision: int
+    top: list[list[float]]
+    lines: list[PlatformSlopeLine]
+    daylight: list[list[float]]
+    open: int
+    top_area: float
+    cut: float | None | Unset = UNSET
+    cut_area: float | None | Unset = UNSET
+    fill: float | None | Unset = UNSET
+    fill_area: float | None | Unset = UNSET
+    footprint: float | None | Unset = UNSET
+    why: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["surface"] = self.surface
+        out["revision"] = self.revision
+        out["top"] = [[float(e1) for e1 in e0] for e0 in self.top]
+        out["lines"] = [e0.to_json() for e0 in self.lines]
+        out["daylight"] = [[float(e1) for e1 in e0] for e0 in self.daylight]
+        out["open"] = self.open
+        out["topArea"] = float(self.top_area)
+        if self.cut is not UNSET:
+            out["cut"] = None if self.cut is None else float(self.cut)
+        if self.cut_area is not UNSET:
+            out["cutArea"] = None if self.cut_area is None else float(self.cut_area)
+        if self.fill is not UNSET:
+            out["fill"] = None if self.fill is None else float(self.fill)
+        if self.fill_area is not UNSET:
+            out["fillArea"] = None if self.fill_area is None else float(self.fill_area)
+        if self.footprint is not UNSET:
+            out["footprint"] = None if self.footprint is None else float(self.footprint)
+        if self.why is not UNSET:
+            out["why"] = self.why
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PlatformReport:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            surface=data["surface"],
+            revision=data["revision"],
+            top=[[float(e1) for e1 in e0] for e0 in data["top"]],
+            lines=[PlatformSlopeLine.from_json(e0) for e0 in data["lines"]],
+            daylight=[[float(e1) for e1 in e0] for e0 in data["daylight"]],
+            open=data["open"],
+            top_area=float(data["topArea"]),
+            cut=UNSET if "cut" not in data else None if data["cut"] is None else float(data["cut"]),
+            cut_area=UNSET if "cutArea" not in data else None if data["cutArea"] is None else float(data["cutArea"]),
+            fill=UNSET if "fill" not in data else None if data["fill"] is None else float(data["fill"]),
+            fill_area=UNSET if "fillArea" not in data else None if data["fillArea"] is None else float(data["fillArea"]),
+            footprint=UNSET if "footprint" not in data else None if data["footprint"] is None else float(data["footprint"]),
+            why=data.get("why", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PlatformSlopeLine(_Model):
+    """A slope line: where it starts on the pad's edge (x, y, z), where it meets the terrain (none when open), its side,
+    and the corner it starts at or after.
+    Attributes:
+        from_: Unit: length.
+        corner: Unit: index.
+        to: Unit: length.
+    """
+    from_: list[float]
+    side: PlatformSide | PlatformSideName
+    corner: int
+    at_corner: bool | Unset = UNSET
+    to: list[float] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = [float(e0) for e0 in self.from_]
+        out["side"] = _enum_out(self.side)
+        out["corner"] = self.corner
+        if self.at_corner is not UNSET:
+            out["atCorner"] = self.at_corner
+        if self.to is not UNSET:
+            out["to"] = None if self.to is None else [float(e0) for e0 in self.to]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PlatformSlopeLine:
+        return cls(
+            from_=[float(e0) for e0 in data["from"]],
+            side=_enum_in(PlatformSide, data["side"]),
+            corner=data["corner"],
+            at_corner=data.get("atCorner", UNSET),
+            to=UNSET if "to" not in data else None if data["to"] is None else [float(e0) for e0 in data["to"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PlatformsDraw(_Model):
+    """Input of `road.platforms.draw` v1: the pad drawn on `layerId`: its boundary and daylight line as closed 3D
+    polylines and each slope line as a line; with `labels` a text at its middle saying its elevation, cut and fill.
+
+    Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `unknown_platform`,
+    `invalid_platform`, `layer_not_found`, `not_a_layer`, `layer_locked`. Warnings: `layer_hidden`, `platform_open` (the
+    open lines drawn to their reach's end are not drawn; the daylight line is not drawn).
+    """
+    platform: str
+    layer_id: str
+    expected_revision: str | None | Unset = UNSET
+    labels: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["platform"] = self.platform
+        out["layerId"] = self.layer_id
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.labels is not UNSET:
+            out["labels"] = self.labels
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PlatformsDraw:
+        return cls(
+            platform=data["platform"],
+            layer_id=data["layerId"],
+            expected_revision=data.get("expectedRevision", UNSET),
+            labels=data.get("labels", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PlatformsDrawn(_Model):
+    """Output of `road.platforms.draw` v1, and its plan: the pad and the objects written (in the plan, none)."""
+    platform: str
+    uids: list[str]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["platform"] = self.platform
+        out["uids"] = list(self.uids)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PlatformsDrawn:
+        return cls(
+            platform=data["platform"],
+            uids=list(data["uids"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PlatformsEdit(_Model):
+    """Input of `road.platforms.edit` v1: the pad by its id or name (absent: a new one). A new one needs `name`, `corners`,
+    `base`, `cut`, `fill`, `step`, `fan`, `reach` and `surface`; `grade` and `direction` are 0 unless given. Nothing is
+    filled in: the slopes, the spacing, the fan and the reach are the user's (ROAD-GRADE-02).
+
+    Refusals, in this order: `not_a_road_project`, `unknown_platform` (remove one not in the project),
+    `unknown_terrain`, `invalid_platform` (a new one without its fields, a set with nothing to set, rebind (a pad
+    has nothing to rebind), the definition by `road_problem`, a boundary crossing itself or with two corners at one
+    place), `invalid_revision`, `revision_conflict`.
+    Attributes:
+        base: Unit: length.
+        corners: Unit: length.
+        cut: Unit: 1.
+        direction: Unit: deg.
+        fan: Unit: deg.
+        fill: Unit: 1.
+        grade: Unit: percent.
+        reach: Unit: m.
+        step: Unit: m.
+        surface: The terrain surface by its id or name.
+    """
+    operation: RoadEditOperation | RoadEditOperationName
+    base: list[float] | None | Unset = UNSET
+    corners: list[list[float]] | None | Unset = UNSET
+    cut: float | None | Unset = UNSET
+    direction: float | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    fan: float | None | Unset = UNSET
+    fill: float | None | Unset = UNSET
+    grade: float | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    platform: str | None | Unset = UNSET
+    reach: float | None | Unset = UNSET
+    step: float | None | Unset = UNSET
+    surface: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = _enum_out(self.operation)
+        if self.base is not UNSET:
+            out["base"] = None if self.base is None else [float(e0) for e0 in self.base]
+        if self.corners is not UNSET:
+            out["corners"] = None if self.corners is None else [[float(e1) for e1 in e0] for e0 in self.corners]
+        if self.cut is not UNSET:
+            out["cut"] = None if self.cut is None else float(self.cut)
+        if self.direction is not UNSET:
+            out["direction"] = None if self.direction is None else float(self.direction)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.fan is not UNSET:
+            out["fan"] = None if self.fan is None else float(self.fan)
+        if self.fill is not UNSET:
+            out["fill"] = None if self.fill is None else float(self.fill)
+        if self.grade is not UNSET:
+            out["grade"] = None if self.grade is None else float(self.grade)
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.platform is not UNSET:
+            out["platform"] = self.platform
+        if self.reach is not UNSET:
+            out["reach"] = None if self.reach is None else float(self.reach)
+        if self.step is not UNSET:
+            out["step"] = None if self.step is None else float(self.step)
+        if self.surface is not UNSET:
+            out["surface"] = self.surface
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PlatformsEdit:
+        return cls(
+            operation=_enum_in(RoadEditOperation, data["operation"]),
+            base=UNSET if "base" not in data else None if data["base"] is None else [float(e0) for e0 in data["base"]],
+            corners=UNSET if "corners" not in data else None if data["corners"] is None else [[float(e1) for e1 in e0] for e0 in data["corners"]],
+            cut=UNSET if "cut" not in data else None if data["cut"] is None else float(data["cut"]),
+            direction=UNSET if "direction" not in data else None if data["direction"] is None else float(data["direction"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            fan=UNSET if "fan" not in data else None if data["fan"] is None else float(data["fan"]),
+            fill=UNSET if "fill" not in data else None if data["fill"] is None else float(data["fill"]),
+            grade=UNSET if "grade" not in data else None if data["grade"] is None else float(data["grade"]),
+            name=data.get("name", UNSET),
+            platform=data.get("platform", UNSET),
+            reach=UNSET if "reach" not in data else None if data["reach"] is None else float(data["reach"]),
+            step=UNSET if "step" not in data else None if data["step"] is None else float(data["step"]),
+            surface=data.get("surface", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PlatformsQueried(_Model):
+    """Output of `road.platforms.query` v1."""
+    platforms: list[PlatformReport]
+    balance: PlatformBalanced | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["platforms"] = [e0.to_json() for e0 in self.platforms]
+        if self.balance is not UNSET:
+            out["balance"] = None if self.balance is None else self.balance.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PlatformsQueried:
+        return cls(
+            platforms=[PlatformReport.from_json(e0) for e0 in data["platforms"]],
+            balance=UNSET if "balance" not in data else None if data["balance"] is None else PlatformBalanced.from_json(data["balance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PlatformsQuery(_Model):
+    """Input of `road.platforms.query` v1: every pad read, or one (`platform`: its id or name); with `balance` (one pad
+    only) the offset that balances its cut and fill.
+
+    Refusals: `not_a_road_project`, `unknown_platform`, `invalid_platform` (the one asked does not grade; a balance
+    without one pad, its bracket empty, or a tolerance not positive). Warnings: `platform_open`,
+    `platform_no_balance` (the net keeps its sign over the bracket, or an end does not grade whole: no balance given).
+    """
+    balance: PlatformBalanceAsk | None | Unset = UNSET
+    platform: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.balance is not UNSET:
+            out["balance"] = None if self.balance is None else self.balance.to_json()
+        if self.platform is not UNSET:
+            out["platform"] = self.platform
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PlatformsQuery:
+        return cls(
+            balance=UNSET if "balance" not in data else None if data["balance"] is None else PlatformBalanceAsk.from_json(data["balance"]),
+            platform=data.get("platform", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PlatformsWritten(_Model):
+    """Output of `road.platforms.edit` v1.
+    Attributes:
+        platform: The pad written, read; absent when removed.
+    """
+    platforms: list[PlatformListed]
+    revision: str
+    platform: PlatformReport | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["platforms"] = [e0.to_json() for e0 in self.platforms]
+        out["revision"] = self.revision
+        if self.platform is not UNSET:
+            out["platform"] = None if self.platform is None else self.platform.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PlatformsWritten:
+        return cls(
+            platforms=[PlatformListed.from_json(e0) for e0 in data["platforms"]],
+            revision=data["revision"],
+            platform=UNSET if "platform" not in data else None if data["platform"] is None else PlatformReport.from_json(data["platform"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PointBinding(_Model):
     """One point's new binding.
     Attributes:
@@ -64159,6 +64681,7 @@ class RoadSettings(_Model):
         hauls: The mass haul diagrams (docs/adr/0907).
         junctions: The junctions (docs/adr/0910 §2), each of two alignments.
         pay: The pay item book (docs/adr/0909 §4): the agency's items and the rules that give them KentOS's quantities.
+        platforms: The graded pads (docs/adr/0912), each on a terrain surface.
         profiles: The vertical alignments (docs/adr/0902), each on an alignment, in the order the project tree shows them.
         sections: The sample line sets (docs/adr/0903 §2), in the order the project tree shows them.
         sheet_sets: The plan–profile sheet sets (docs/adr/0908 §10), each along an alignment.
@@ -64177,6 +64700,7 @@ class RoadSettings(_Model):
     hauls: list[HaulDef] | Unset = UNSET
     junctions: list[JunctionDef] | Unset = UNSET
     pay: PayBookDef | None | Unset = UNSET
+    platforms: list[PlatformDef] | Unset = UNSET
     profiles: list[ProfileDef] | Unset = UNSET
     sections: list[SectionSetDef] | Unset = UNSET
     sheet_sets: list[RoadSheetSetDef] | Unset = UNSET
@@ -64206,6 +64730,8 @@ class RoadSettings(_Model):
             out["junctions"] = [e0.to_json() for e0 in self.junctions]
         if self.pay is not UNSET:
             out["pay"] = None if self.pay is None else self.pay.to_json()
+        if self.platforms is not UNSET:
+            out["platforms"] = [e0.to_json() for e0 in self.platforms]
         if self.profiles is not UNSET:
             out["profiles"] = [e0.to_json() for e0 in self.profiles]
         if self.sections is not UNSET:
@@ -64236,6 +64762,7 @@ class RoadSettings(_Model):
             hauls=[HaulDef.from_json(e0) for e0 in data["hauls"]] if "hauls" in data else UNSET,
             junctions=[JunctionDef.from_json(e0) for e0 in data["junctions"]] if "junctions" in data else UNSET,
             pay=UNSET if "pay" not in data else None if data["pay"] is None else PayBookDef.from_json(data["pay"]),
+            platforms=[PlatformDef.from_json(e0) for e0 in data["platforms"]] if "platforms" in data else UNSET,
             profiles=[ProfileDef.from_json(e0) for e0 in data["profiles"]] if "profiles" in data else UNSET,
             sections=[SectionSetDef.from_json(e0) for e0 in data["sections"]] if "sections" in data else UNSET,
             sheet_sets=[RoadSheetSetDef.from_json(e0) for e0 in data["sheetSets"]] if "sheetSets" in data else UNSET,
@@ -103054,6 +103581,20 @@ __all__ = [
     "PlanBoxName",
     "PlanNorthDirection",
     "PlanRoadWork",
+    "PlatformBalanceAsk",
+    "PlatformBalanced",
+    "PlatformDef",
+    "PlatformListed",
+    "PlatformReport",
+    "PlatformSide",
+    "PlatformSideName",
+    "PlatformSlopeLine",
+    "PlatformsDraw",
+    "PlatformsDrawn",
+    "PlatformsEdit",
+    "PlatformsQueried",
+    "PlatformsQuery",
+    "PlatformsWritten",
     "PointBinding",
     "PointBlockParameter",
     "PointCadElement",

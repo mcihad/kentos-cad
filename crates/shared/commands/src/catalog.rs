@@ -7565,6 +7565,84 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::ROAD_PLATFORMS_EDIT.into(),
+            version: crate::ROAD_PLATFORMS_EDIT_VERSION,
+            title: "Platformu düzenle".into(),
+            summary: "Yol projesinin platformunu (platform: kimliği ya da adı; yoksa yeni) yazar ya da kaldırır. Platform kapalı bir sınırın (corners: köşeler, her iki yönde de) içindeki düzlemdir: base taban noktası (x, y, z), grade eğimi (%), direction yükseldiği yön (derece, +x'ten saat yönü tersine). Kazı (cut) ve dolgu (fill) şevi yatay bölü düşey; step kenar boyunca şev çizgilerinin aralığı, fan dışbükey köşedeki yelpazenin en geniş açısı (derece, en çok 90), reach şevin en uzun erimi; surface tesviye edildiği arazi yüzeyi. Değerler kullanıcının: KentOS öntanımlı şev, aralık ya da erim vermez. \
+                      Yeni platformun kimliği verilen ya da ilk boş p-n. Kendini kesen ya da aynı yerde iki köşesi olan sınır reddedilir. Tek geri alma adımı “Platform”. Retler: not_a_road_project, unknown_platform, unknown_terrain, invalid_platform, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["platform".into(), "tesviye".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::PlatformsEdit>(),
+            output: schema::<crate::PlatformsWritten>(),
+            plan: Some(schema::<crate::PlatformsWritten>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Mevcut zemin üstünde 40 × 30 m platform".into(),
+                input: json!({ "operation": "set", "name": "Depo platformu",
+                    "corners": [[100.0, 100.0], [140.0, 100.0], [140.0, 130.0], [100.0, 130.0]],
+                    "base": [100.0, 100.0, 112.5], "grade": 1.0, "direction": 90.0,
+                    "cut": 1.5, "fill": 2.0, "step": 5.0, "fan": 15.0, "reach": 100.0, "surface": "Mevcut zemin" }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_PLATFORMS_QUERY.into(),
+            version: crate::ROAD_PLATFORMS_QUERY_VERSION,
+            title: "Platformu sorgula".into(),
+            summary: "Yol projesinin platformlarını bugün tesviye eder; hiçbir şey yazmaz. Her biri için sınırı (saat yönü tersine, kotlarıyla), şev çizgileri (başı, araziyle buluştuğu yer, yanı: cut, fill ya da open; köşesi), günışığı halkası, açık çizgi sayısı, platformun ve ayak izinin plan alanı, araziye karşı kazı ve dolgu (m³) ve alanları. Açık çizgi varsa ayak izi ve hacim yok, why nedenini söyler. balance (tek platformla: low, high öteleme aralığı m, tolerance m³) kazı ile dolguyu ikiye bölmeyle eşitleyen ötelemeyi ve tabanın kotunu verir, yazmaz; adım sayısı ve yakınsayıp yakınsamadığıyla. \
+                      Uyarılar: platform_open, platform_no_balance. Retler: not_a_road_project, unknown_platform, invalid_platform."
+                .into(),
+            aliases: vec!["platformsor".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::PlatformsQuery>(),
+            output: schema::<crate::PlatformsQueried>(),
+            plan: Some(schema::<crate::PlatformsQueried>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Platformu dengele".into(),
+                input: json!({ "platform": "p-1", "balance": { "low": -5.0, "high": 5.0, "tolerance": 1.0 } }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_PLATFORMS_DRAW.into(),
+            version: crate::ROAD_PLATFORMS_DRAW_VERSION,
+            title: "Platform çiz".into(),
+            summary: "Platformu planda layerId katmanına çizer: sınırı ve günışığı çizgisi kotlu kapalı çoklu çizgi, her şev çizgisi bir çizgi; labels ile ortasında tabanın kotu, kazı ve dolgu. Açık çizgiler ve (açık çizgi varken) günışığı çizgisi çizilmez. Tek geri alma adımı “Platform çiz”; yol çizimlerinin kaydına girer. \
+                      Uyarılar: layer_hidden, platform_open. Retler: invalid_revision, revision_conflict, not_a_road_project, unknown_platform, invalid_platform, layer_not_found, not_a_layer, layer_locked."
+                .into(),
+            aliases: vec!["platformciz".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::PlatformsDraw>(),
+            output: schema::<crate::PlatformsDrawn>(),
+            plan: Some(schema::<crate::PlatformsDrawn>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Platform yazısıyla".into(),
+                input: json!({ "platform": "p-1", "layerId": "platform", "labels": true }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::ROAD_WALLS_EDIT.into(),
             version: crate::ROAD_WALLS_EDIT_VERSION,
             title: "İstinat duvarını düzenle".into(),
@@ -13817,6 +13895,9 @@ mod tests {
                     crate::ROAD_CULVERTS_DRAW => {
                         serde_json::from_value::<crate::CulvertsDraw>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_PLATFORMS_EDIT => serde_json::from_value::<crate::PlatformsEdit>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_PLATFORMS_QUERY => serde_json::from_value::<crate::PlatformsQuery>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_PLATFORMS_DRAW => serde_json::from_value::<crate::PlatformsDraw>(e.input.clone()).map(|_| ()),
                     crate::ROAD_WALLS_EDIT => {
                         serde_json::from_value::<crate::RetainingWallsEdit>(e.input.clone()).map(|_| ())
                     }
@@ -14607,6 +14688,9 @@ mod tests {
                         crate::ROAD_CULVERTS_DRAW => {
                             serde_json::from_value::<crate::CulvertsDrawn>(output.clone()).map(|_| ())
                         }
+                        crate::ROAD_PLATFORMS_EDIT => serde_json::from_value::<crate::PlatformsWritten>(output.clone()).map(|_| ()),
+                        crate::ROAD_PLATFORMS_QUERY => serde_json::from_value::<crate::PlatformsQueried>(output.clone()).map(|_| ()),
+                        crate::ROAD_PLATFORMS_DRAW => serde_json::from_value::<crate::PlatformsDrawn>(output.clone()).map(|_| ()),
                         crate::ROAD_WALLS_EDIT => {
                             serde_json::from_value::<crate::RetainingWallsWritten>(output.clone()).map(|_| ())
                         }

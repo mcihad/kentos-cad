@@ -175,6 +175,27 @@ impl Document {
         })
     }
 
+    /// The project's graded pads (docs/adr/0912).
+    pub fn road_platforms(&self) -> &[kentos_contracts::PlatformDef] {
+        self.settings.road.as_ref().map_or(&[], |r| r.platforms.as_slice())
+    }
+
+    /// Gives the project the graded pads `next` as one change named `label`, as [`Self::set_road_templates`].
+    pub fn set_road_platforms(&mut self, next: Vec<kentos_contracts::PlatformDef>, label: &str) -> Result<bool, Refusal> {
+        let judged = RoadSettings { platforms: next.clone(), ..self.settings.road.clone().unwrap_or_default() };
+        if let Some((path, problem)) = judged.problem() {
+            return Err(Refusal(format!("{path}: {problem}")));
+        }
+        let before = self.road_platforms().to_vec();
+        if before == next {
+            return Ok(false);
+        }
+        self.transact(label, |doc| {
+            doc.record(vec![Op::RoadPlatforms { before, after: next }], label);
+            Ok(true)
+        })
+    }
+
     /// The project's mass haul diagrams (docs/adr/0907).
     pub fn road_hauls(&self) -> &[HaulDef] {
         self.settings.road.as_ref().map_or(&[], |r| r.hauls.as_slice())

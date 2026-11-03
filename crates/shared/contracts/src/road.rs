@@ -105,6 +105,10 @@ pub struct RoadSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<RetainingWallDef>>", optional))]
     pub walls: Vec<RetainingWallDef>,
+    /// The graded pads (docs/adr/0912), each on a terrain surface.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<PlatformDef>>", optional))]
+    pub platforms: Vec<PlatformDef>,
     /// The junctions (docs/adr/0910 §2), each of two alignments.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<JunctionDef>>", optional))]
@@ -124,7 +128,7 @@ pub struct RoadSettings {
 }
 
 /// The road commands that draw (docs/adr/0911 §1): what a drawing's `command` is.
-pub const ROAD_DRAWING_COMMANDS: [&str; 9] = [
+pub const ROAD_DRAWING_COMMANDS: [&str; 10] = [
     "road.alignments.label",
     "road.profiles.draw",
     "road.sections.draw",
@@ -133,6 +137,7 @@ pub const ROAD_DRAWING_COMMANDS: [&str; 9] = [
     "road.culverts.draw",
     "road.walls.draw",
     "road.junctions.draw",
+    "road.platforms.draw",
     "road.terrains.contours",
 ];
 /// The most drawings a project keeps, sources a drawing names and objects it holds.
@@ -158,6 +163,7 @@ pub enum RoadSourceKind {
     Culvert,
     Wall,
     Junction,
+    Platform,
 }
 
 /// A source a drawing was made from: its kind, id and the stamp of what it was (docs/adr/0911 §1).
@@ -210,6 +216,7 @@ impl RoadSettings {
             && self.guardrails.is_empty()
             && self.culverts.is_empty()
             && self.walls.is_empty()
+            && self.platforms.is_empty()
             && self.pay.is_none()
             && self.junctions.is_empty()
             && self.drawings.is_empty()
@@ -1073,6 +1080,7 @@ pub fn road_problem(road: &RoadSettings) -> Option<(String, String)> {
         .or_else(|| guardrails_problem(road))
         .or_else(|| culverts_problem(road))
         .or_else(|| walls_problem(road))
+        .or_else(|| platforms_problem(road))
         .or_else(|| pay_problem(road))
         .or_else(|| junctions_problem(road))
         .or_else(|| drawings_problem(road))
@@ -1849,6 +1857,101 @@ fn walls_problem(road: &RoadSettings) -> Option<(String, String)> {
         }
         if w.material.as_ref().is_some_and(|m| m.trim().is_empty() || m.trim() != m || m.chars().count() > 120) {
             return fail(at("material"), "malzeme boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 120 karakter");
+        }
+    }
+    None
+}
+
+/// The most graded pads a project holds, and corners a pad's boundary has.
+pub const MAX_PLATFORMS: usize = 1000;
+pub const MAX_PLATFORM_CORNERS: usize = 1000;
+
+/// A graded pad (docs/adr/0912): its boundary's corners, the plane through `base` rising `grade` percent towards
+/// `direction` (degrees counterclockwise from +x), its cut and fill slopes (horizontal per vertical), the spacing of
+/// its slope lines along an edge, a corner's widest fan step (degrees), the longest slope line and the terrain it is
+/// graded to. The slopes are the user's: no soil's default is guessed (ROAD-GRADE-02).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct PlatformDef {
+    pub id: String,
+    pub name: String,
+    #[serde(default, skip_serializing_if = "is_zero_u32")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub revision: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub corners: Vec<[f64; 2]>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub base: [f64; 3],
+    #[serde(default, skip_serializing_if = "is_zero_f64")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    pub grade: f64,
+    #[serde(default, skip_serializing_if = "is_zero_f64")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
+    pub direction: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub cut: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub fill: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub step: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
+    pub fan: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub reach: f64,
+    pub surface: String,
+}
+
+fn platforms_problem(road: &RoadSettings) -> Option<(String, String)> {
+    let fail = |path: String, words: &str| Some((path, words.to_string()));
+    let list = &road.platforms;
+    if list.len() > MAX_PLATFORMS {
+        return fail("platforms".into(), &format!("en çok {MAX_PLATFORMS} platform olur"));
+    }
+    let mut ids = std::collections::BTreeSet::new();
+    let mut names = std::collections::BTreeSet::new();
+    for (i, p) in list.iter().enumerate() {
+        let at = |field: &str| format!("platforms[{i}].{field}");
+        if !word_ok(&p.id) {
+            return fail(at("id"), "platformun kimliği boş olmayan, en çok 64 karakterlik bir sözcük olmalı");
+        }
+        if !ids.insert(p.id.as_str()) {
+            return fail(at("id"), "bu kimlikte başka bir platform var");
+        }
+        let name = p.name.trim();
+        if name.is_empty() || name != p.name || p.name.chars().count() > 120 {
+            return fail(at("name"), "platformun adı boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 120 karakter");
+        }
+        if !names.insert(name.to_lowercase()) {
+            return fail(at("name"), "bu adda başka bir platform var");
+        }
+        if p.corners.len() < 3 || p.corners.len() > MAX_PLATFORM_CORNERS {
+            return fail(at("corners"), &format!("platformun sınırı 3 ile {MAX_PLATFORM_CORNERS} arası köşedir"));
+        }
+        if !p.corners.iter().flatten().chain(p.base.iter()).all(|v| v.is_finite()) {
+            return fail(at("corners"), "köşeler ve taban sonlu sayılar olmalı");
+        }
+        if !(p.grade.is_finite() && p.grade.abs() <= 100.0) {
+            return fail(at("grade"), "platformun eğimi en çok %100 olur");
+        }
+        if !(p.direction.is_finite() && (-360.0..=360.0).contains(&p.direction)) {
+            return fail(at("direction"), "eğimin yönü −360 ile 360 derece arası olur");
+        }
+        for (field, v, top) in [("cut", p.cut, 100.0), ("fill", p.fill, 100.0), ("step", p.step, 1000.0), ("reach", p.reach, 10_000.0)] {
+            if !(v.is_finite() && v > 0.0 && v <= top) {
+                return fail(at(field), &format!("0'dan büyük, en çok {top} olur"));
+            }
+        }
+        if !(p.fan.is_finite() && p.fan > 0.0 && p.fan <= 90.0) {
+            return fail(at("fan"), "köşe yelpazesinin açısı 0'dan büyük, en çok 90 derece olur");
+        }
+        if road.surfaces.iter().all(|s| s.id != p.surface) {
+            return fail(at("surface"), "platformun arazi yüzeyi projede yok");
         }
     }
     None

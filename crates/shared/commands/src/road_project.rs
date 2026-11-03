@@ -50,6 +50,7 @@ pub enum RoadNodeKind {
     Guardrail,
     Culvert,
     Wall,
+    Platform,
     SheetSet,
     Pay,
     Drawing,

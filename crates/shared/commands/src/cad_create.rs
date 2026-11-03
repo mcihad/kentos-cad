@@ -133,6 +133,8 @@ pub enum CreateOperation {
     Routes,
     /// `road.junctions.draw` (plan/road.md Y12.2): a junction's curb returns in plan, “Kavşak çiz”.
     Junctions,
+    /// `road.platforms.draw` (plan/road.md Y14): a graded pad's boundary, daylight and slope lines, “Platform çiz”.
+    Platforms,
 }
 
 /// One new object: its geometry and what else it carries. The layer is the

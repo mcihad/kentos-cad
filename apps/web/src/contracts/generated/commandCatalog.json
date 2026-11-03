@@ -40425,6 +40425,516 @@
       ]
     },
     {
+      "id": "road.platforms.edit",
+      "version": 1,
+      "title": "Platformu düzenle",
+      "summary": "Yol projesinin platformunu (platform: kimliği ya da adı; yoksa yeni) yazar ya da kaldırır. Platform kapalı bir sınırın (corners: köşeler, her iki yönde de) içindeki düzlemdir: base taban noktası (x, y, z), grade eğimi (%), direction yükseldiği yön (derece, +x'ten saat yönü tersine). Kazı (cut) ve dolgu (fill) şevi yatay bölü düşey; step kenar boyunca şev çizgilerinin aralığı, fan dışbükey köşedeki yelpazenin en geniş açısı (derece, en çok 90), reach şevin en uzun erimi; surface tesviye edildiği arazi yüzeyi. Değerler kullanıcının: KentOS öntanımlı şev, aralık ya da erim vermez. Yeni platformun kimliği verilen ya da ilk boş p-n. Kendini kesen ya da aynı yerde iki köşesi olan sınır reddedilir. Tek geri alma adımı “Platform”. Retler: not_a_road_project, unknown_platform, unknown_terrain, invalid_platform, invalid_revision, revision_conflict.",
+      "aliases": [
+        "platform",
+        "tesviye"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.platforms.edit` v1: the pad by its id or name (absent: a new one). A new one needs `name`, `corners`,\n`base`, `cut`, `fill`, `step`, `fan`, `reach` and `surface`; `grade` and `direction` are 0 unless given. Nothing is\nfilled in: the slopes, the spacing, the fan and the reach are the user's (ROAD-GRADE-02).\n\nRefusals, in this order: `not_a_road_project`, `unknown_platform` (remove one not in the project),\n`unknown_terrain`, `invalid_platform` (a new one without its fields, a set with nothing to set, rebind (a pad\nhas nothing to rebind), the definition by `road_problem`, a boundary crossing itself or with two corners at one\nplace), `invalid_revision`, `revision_conflict`.",
+        "properties": {
+          "base": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 3,
+            "minItems": 3,
+            "type": [
+              "array",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "corners": {
+            "items": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            },
+            "type": [
+              "array",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "cut": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1"
+          },
+          "direction": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "deg"
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "fan": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "deg"
+          },
+          "fill": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1"
+          },
+          "grade": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "percent"
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "operation": {
+            "$ref": "#/$defs/RoadEditOperation"
+          },
+          "platform": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "reach": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "step": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "surface": {
+            "description": "The terrain surface by its id or name.",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "operation"
+        ],
+        "title": "PlatformsEdit",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.platforms.edit` v1.",
+        "properties": {
+          "platform": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/PlatformReport"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The pad written, read; absent when removed."
+          },
+          "platforms": {
+            "items": {
+              "$ref": "#/$defs/PlatformListed"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "platforms",
+          "revision"
+        ],
+        "title": "PlatformsWritten",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.platforms.edit` v1.",
+        "properties": {
+          "platform": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/PlatformReport"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The pad written, read; absent when removed."
+          },
+          "platforms": {
+            "items": {
+              "$ref": "#/$defs/PlatformListed"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "platforms",
+          "revision"
+        ],
+        "title": "PlatformsWritten",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_platform",
+          "unknown_terrain",
+          "invalid_platform",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "platform_open"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Mevcut zemin üstünde 40 × 30 m platform",
+          "input": {
+            "base": [
+              100.0,
+              100.0,
+              112.5
+            ],
+            "corners": [
+              [
+                100.0,
+                100.0
+              ],
+              [
+                140.0,
+                100.0
+              ],
+              [
+                140.0,
+                130.0
+              ],
+              [
+                100.0,
+                130.0
+              ]
+            ],
+            "cut": 1.5,
+            "direction": 90.0,
+            "fan": 15.0,
+            "fill": 2.0,
+            "grade": 1.0,
+            "name": "Depo platformu",
+            "operation": "set",
+            "reach": 100.0,
+            "step": 5.0,
+            "surface": "Mevcut zemin"
+          }
+        }
+      ]
+    },
+    {
+      "id": "road.platforms.query",
+      "version": 1,
+      "title": "Platformu sorgula",
+      "summary": "Yol projesinin platformlarını bugün tesviye eder; hiçbir şey yazmaz. Her biri için sınırı (saat yönü tersine, kotlarıyla), şev çizgileri (başı, araziyle buluştuğu yer, yanı: cut, fill ya da open; köşesi), günışığı halkası, açık çizgi sayısı, platformun ve ayak izinin plan alanı, araziye karşı kazı ve dolgu (m³) ve alanları. Açık çizgi varsa ayak izi ve hacim yok, why nedenini söyler. balance (tek platformla: low, high öteleme aralığı m, tolerance m³) kazı ile dolguyu ikiye bölmeyle eşitleyen ötelemeyi ve tabanın kotunu verir, yazmaz; adım sayısı ve yakınsayıp yakınsamadığıyla. Uyarılar: platform_open, platform_no_balance. Retler: not_a_road_project, unknown_platform, invalid_platform.",
+      "aliases": [
+        "platformsor"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.platforms.query` v1: every pad read, or one (`platform`: its id or name); with `balance` (one pad\nonly) the offset that balances its cut and fill.\n\nRefusals: `not_a_road_project`, `unknown_platform`, `invalid_platform` (the one asked does not grade; a balance\nwithout one pad, its bracket empty, or a tolerance not positive). Warnings: `platform_open`,\n`platform_no_balance` (the net keeps its sign over the bracket, or an end does not grade whole: no balance given).",
+        "properties": {
+          "balance": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/PlatformBalanceAsk"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "platform": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "title": "PlatformsQuery",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.platforms.query` v1.",
+        "properties": {
+          "balance": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/PlatformBalanced"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "platforms": {
+            "items": {
+              "$ref": "#/$defs/PlatformReport"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "platforms"
+        ],
+        "title": "PlatformsQueried",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.platforms.query` v1.",
+        "properties": {
+          "balance": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/PlatformBalanced"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "platforms": {
+            "items": {
+              "$ref": "#/$defs/PlatformReport"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "platforms"
+        ],
+        "title": "PlatformsQueried",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_platform",
+          "invalid_platform"
+        ],
+        "warnings": [
+          "platform_open",
+          "platform_no_balance"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Platformu dengele",
+          "input": {
+            "balance": {
+              "high": 5.0,
+              "low": -5.0,
+              "tolerance": 1.0
+            },
+            "platform": "p-1"
+          }
+        }
+      ]
+    },
+    {
+      "id": "road.platforms.draw",
+      "version": 1,
+      "title": "Platform çiz",
+      "summary": "Platformu planda layerId katmanına çizer: sınırı ve günışığı çizgisi kotlu kapalı çoklu çizgi, her şev çizgisi bir çizgi; labels ile ortasında tabanın kotu, kazı ve dolgu. Açık çizgiler ve (açık çizgi varken) günışığı çizgisi çizilmez. Tek geri alma adımı “Platform çiz”; yol çizimlerinin kaydına girer. Uyarılar: layer_hidden, platform_open. Retler: invalid_revision, revision_conflict, not_a_road_project, unknown_platform, invalid_platform, layer_not_found, not_a_layer, layer_locked.",
+      "aliases": [
+        "platformciz"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.platforms.draw` v1: the pad drawn on `layerId`: its boundary and daylight line as closed 3D\npolylines and each slope line as a line; with `labels` a text at its middle saying its elevation, cut and fill.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `unknown_platform`,\n`invalid_platform`, `layer_not_found`, `not_a_layer`, `layer_locked`. Warnings: `layer_hidden`, `platform_open` (the\nopen lines drawn to their reach's end are not drawn; the daylight line is not drawn).",
+        "properties": {
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "labels": {
+            "type": "boolean"
+          },
+          "layerId": {
+            "type": "string"
+          },
+          "platform": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "platform",
+          "layerId"
+        ],
+        "title": "PlatformsDraw",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.platforms.draw` v1, and its plan: the pad and the objects written (in the plan, none).",
+        "properties": {
+          "platform": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "platform",
+          "uids",
+          "revision"
+        ],
+        "title": "PlatformsDrawn",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.platforms.draw` v1, and its plan: the pad and the objects written (in the plan, none).",
+        "properties": {
+          "platform": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "platform",
+          "uids",
+          "revision"
+        ],
+        "title": "PlatformsDrawn",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "road_drawings_full",
+          "not_a_road_project",
+          "unknown_platform",
+          "invalid_platform",
+          "layer_not_found",
+          "not_a_layer",
+          "layer_locked",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "layer_hidden",
+          "platform_open"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Platform yazısıyla",
+          "input": {
+            "labels": true,
+            "layerId": "platform",
+            "platform": "p-1"
+          }
+        }
+      ]
+    },
+    {
       "id": "road.walls.edit",
       "version": 1,
       "title": "İstinat duvarını düzenle",
@@ -79230,6 +79740,18 @@
       "meaning": "Bu kimlikte ya da adda istinat duvarı yok."
     },
     {
+      "code": "invalid_platform",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Platformun tanımı geçerli değil ya da tesviye edilemiyor; ileti nedenini söyler."
+    },
+    {
+      "code": "unknown_platform",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu kimlikte ya da adda platform yok."
+    },
+    {
       "code": "retaining_wall_stale",
       "kind": "warning",
       "retryable": false,
@@ -79306,6 +79828,18 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "İstinat duvarının gövdesi istenen en yüksekten yüksek."
+    },
+    {
+      "code": "platform_open",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Platformun bir şev çizgisi araziyle buluşmuyor; hacim ve günışığı çizgisi yok."
+    },
+    {
+      "code": "platform_no_balance",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Verilen aralıkta kazı ile dolgu eşitlenmiyor; denge verilmedi."
     },
     {
       "code": "profile_fit_deviation",
@@ -96655,6 +97189,11 @@
         {
           "const": "junctions",
           "description": "`road.junctions.draw` (plan/road.md Y12.2): a junction's curb returns in plan, “Kavşak çiz”.",
+          "type": "string"
+        },
+        {
+          "const": "platforms",
+          "description": "`road.platforms.draw` (plan/road.md Y14): a graded pad's boundary, daylight and slope lines, “Platform çiz”.",
           "type": "string"
         }
       ]
@@ -135917,6 +136456,372 @@
         }
       ]
     },
+    "PlatformBalanceAsk": {
+      "description": "The bracket a balance is searched in: the pad's vertical offset from `low` to `high` (m), until cut and fill meet\nwithin `tolerance` m³.",
+      "properties": {
+        "high": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "low": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "tolerance": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        }
+      },
+      "required": [
+        "low",
+        "high",
+        "tolerance"
+      ],
+      "type": "object"
+    },
+    "PlatformBalanced": {
+      "description": "A balance found: the offset, the base's elevation it gives, the net (cut − fill) there, the bisection's steps and\nwhether it converged. Not written: an alternative the user takes or leaves (ROAD-GRADE-08).",
+      "properties": {
+        "converged": {
+          "type": "boolean"
+        },
+        "elevation": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "elevation"
+        },
+        "iterations": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "net": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "offset": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "offset",
+        "elevation",
+        "net",
+        "iterations",
+        "converged"
+      ],
+      "type": "object"
+    },
+    "PlatformDef": {
+      "additionalProperties": false,
+      "description": "A graded pad (docs/adr/0912): its boundary's corners, the plane through `base` rising `grade` percent towards\n`direction` (degrees counterclockwise from +x), its cut and fill slopes (horizontal per vertical), the spacing of\nits slope lines along an edge, a corner's widest fan step (degrees), the longest slope line and the terrain it is\ngraded to. The slopes are the user's: no soil's default is guessed (ROAD-GRADE-02).",
+      "properties": {
+        "base": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "type": "array",
+          "x-unit": "m"
+        },
+        "corners": {
+          "items": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "type": "array",
+          "x-unit": "m"
+        },
+        "cut": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "direction": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "deg"
+        },
+        "fan": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "deg"
+        },
+        "fill": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "grade": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "percent"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "reach": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "step": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "surface": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "corners",
+        "base",
+        "cut",
+        "fill",
+        "step",
+        "fan",
+        "reach",
+        "surface"
+      ],
+      "type": "object"
+    },
+    "PlatformListed": {
+      "description": "A pad in the project's list.",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "surface": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "surface",
+        "revision"
+      ],
+      "type": "object"
+    },
+    "PlatformReport": {
+      "description": "A pad as read now: its names and surface, its boundary counterclockwise with its heights, its slope lines, the\ndaylight ring, how many lines are open, the pad's and the footprint's plan areas, and cut and fill (m³) with their\nplan areas against the terrain; the footprint and the volumes none while a line is open, `why` saying so.",
+      "properties": {
+        "cut": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "volume"
+        },
+        "cutArea": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "area"
+        },
+        "daylight": {
+          "items": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 3,
+            "minItems": 3,
+            "type": "array"
+          },
+          "type": "array",
+          "x-unit": "length"
+        },
+        "fill": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "volume"
+        },
+        "fillArea": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "area"
+        },
+        "footprint": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "area"
+        },
+        "id": {
+          "type": "string"
+        },
+        "lines": {
+          "items": {
+            "$ref": "#/$defs/PlatformSlopeLine"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        },
+        "open": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "surface": {
+          "type": "string"
+        },
+        "top": {
+          "items": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 3,
+            "minItems": 3,
+            "type": "array"
+          },
+          "type": "array",
+          "x-unit": "length"
+        },
+        "topArea": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "why": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "surface",
+        "revision",
+        "top",
+        "lines",
+        "daylight",
+        "open",
+        "topArea"
+      ],
+      "type": "object"
+    },
+    "PlatformSide": {
+      "description": "Which way a slope line goes.",
+      "oneOf": [
+        {
+          "enum": [
+            "cut",
+            "fill"
+          ],
+          "type": "string"
+        },
+        {
+          "const": "open",
+          "description": "Off the terrain, or no meeting within the reach.",
+          "type": "string"
+        }
+      ]
+    },
+    "PlatformSlopeLine": {
+      "description": "A slope line: where it starts on the pad's edge (x, y, z), where it meets the terrain (none when open), its side,\nand the corner it starts at or after.",
+      "properties": {
+        "atCorner": {
+          "type": "boolean"
+        },
+        "corner": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "index"
+        },
+        "from": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "type": "array",
+          "x-unit": "length"
+        },
+        "side": {
+          "$ref": "#/$defs/PlatformSide"
+        },
+        "to": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "from",
+        "side",
+        "corner"
+      ],
+      "type": "object"
+    },
     "PointBinding": {
       "description": "One point's new binding.",
       "properties": {
@@ -143767,6 +144672,7 @@
         "guardrail",
         "culvert",
         "wall",
+        "platform",
         "sheetSet",
         "pay",
         "drawing"
@@ -143887,6 +144793,13 @@
             }
           ],
           "description": "The pay item book (docs/adr/0909 §4): the agency's items and the rules that give them KentOS's quantities."
+        },
+        "platforms": {
+          "description": "The graded pads (docs/adr/0912), each on a terrain surface.",
+          "items": {
+            "$ref": "#/$defs/PlatformDef"
+          },
+          "type": "array"
         },
         "profiles": {
           "description": "The vertical alignments (docs/adr/0902), each on an alignment, in the order the project tree shows them.",
@@ -144156,7 +145069,8 @@
         "guardrail",
         "culvert",
         "wall",
-        "junction"
+        "junction",
+        "platform"
       ],
       "type": "string"
     },

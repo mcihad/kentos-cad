@@ -70,3 +70,16 @@ dolgu ve kazı kapalı biçimle (kutu, dört yan prizma, altı dilimli dört kö
 eğimli arazide doğu kazı ve batı dolgunun günışığı elle çözümle (5/9 m, 1,25 m), eğimli platformun düzlemi, arazinin
 dışı ve erimin ötesi açık, sınırın ve değerlerin retleri, eğimli arazide ve düz arazide (eşit şevlerle öteleme 0)
 denge, işaret değiştirmeyen aralık.
+
+Y14.2 (yapıldı, proje ayarı ve komutlar): §2. `RoadSettings.platforms` (`PlatformDef`, `.kcad` şema 162'de; en çok
+1000; yüzeyi projede olmalı, `broken/road-platform-unknown-surface.kcad`), geri alma adımı `Op::RoadPlatforms`;
+`road.platforms.edit` 28, `.query` 24, `.draw` 21 ortak durum (`scripts/fixtures/road_platform_cases.py`: arazi iki
+düzlem; günışığı kapalı biçimde, u = (zₜ − z₀)/(m − g); tek yanlı platformda iki komşu şev çizgisi arasındaki her
+parça düzlem olduğundan hacim parçanın alanı ile ağırlık merkezindeki kot farkının toplamı, düzlem olmayan parçada (içbükey
+köşe) ve kazı-dolgu karışık platformda hacim `$any`; denge ikiye bölmenin aynısı; KentOS kodu yok). Platform çizimi yol
+çizimlerinin kaydına girer (kaynağı platform ve onun yüzeyi), proje ağacında yüzeyin altında, kurarak denetlemede açık
+şev çizgisi “çözülmeyen”; Yeniden üret onu da çizer. Durumların bulduğu: üçgen kenarı boyunca giden (yönü yuvarlamayla
+kenardan sapan) bir doğruda `Surface::section` kesişimi sıfıra yakın paydadan buluyor ve başlangıcın kotunu yanlış
+okuyordu (96,5 yerine 100); yaklaşık paralel kenar artık paralel sayılır (sinüs 1e-12 altı), aynı doğrudaysa yalnız
+uçları yer olur. Boykesit, enkesit ve koridorun durumları bu düzeltmeyle değişmedi. Python `kentos.cad.road.platforms`,
+MCP.

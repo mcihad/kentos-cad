@@ -568,6 +568,44 @@
      "material": "Betonarme"
     }
    ],
+   "platforms": [
+    {
+     "id": "p-1",
+     "name": "Depo platformu",
+     "revision": 2,
+     "corners": [
+      [
+       100.0,
+       100.0
+      ],
+      [
+       140.0,
+       100.0
+      ],
+      [
+       140.0,
+       130.0
+      ],
+      [
+       100.0,
+       130.0
+      ]
+     ],
+     "base": [
+      100.0,
+      100.0,
+      112.5
+     ],
+     "grade": 1.0,
+     "direction": 90.0,
+     "cut": 1.5,
+     "fill": 2.0,
+     "step": 5.0,
+     "fan": 15.0,
+     "reach": 100.0,
+     "surface": "t-zemin"
+    }
+   ],
    "pay": {
     "source": "Örnek idarenin birim fiyat listesi",
     "version": "2026",

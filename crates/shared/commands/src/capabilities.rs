@@ -1900,6 +1900,25 @@ const ENTRIES: &[Entry] = &[
         warnings: &["layer_hidden", "retaining_wall_stale", "retaining_wall_high", "corridor_stale", "corridor_unsolved"],
         targets: none,
     },
+    // KentOS Yol's graded pads (plan/road.md Y14, docs/adr/0912).
+    Entry {
+        id: "road.platforms.edit",
+        refusals: &[&["not_a_road_project", "unknown_platform", "unknown_terrain", "invalid_platform"], REVISION],
+        warnings: &["platform_open"],
+        targets: none,
+    },
+    Entry {
+        id: "road.platforms.query",
+        refusals: &[&["not_a_road_project", "unknown_platform", "invalid_platform"]],
+        warnings: &["platform_open", "platform_no_balance"],
+        targets: none,
+    },
+    Entry {
+        id: "road.platforms.draw",
+        refusals: &[&["road_drawings_full", "not_a_road_project", "unknown_platform", "invalid_platform"], LAYER, REVISION],
+        warnings: &["layer_hidden", "platform_open"],
+        targets: none,
+    },
     // KentOS Yol's pay item quantities (plan/road.md Y11.4, docs/adr/0909 §4).
     Entry {
         id: "road.pay.edit",

@@ -9795,6 +9795,25 @@ class _Schema:
                 self.fail("bad_value", "istinat duvarının km'leri, okuma aralığı ya da en yükseği kuralın dışında")
             return t
 
+        def platform(x):
+            # Docs/adr/0912: a graded pad, a plane inside a closed boundary, its slopes run out to a terrain surface.
+            corner = self.array(finite)
+            t = self.fields({"id": (word, True), "name": (self.text, True), "revision": (self.uint(32), False),
+                             "corners": (self.array(corner), True), "base": (self.array(finite), True),
+                             "grade": (finite, False), "direction": (finite, False), "cut": (finite, True),
+                             "fill": (finite, True), "step": (finite, True), "fan": (finite, True),
+                             "reach": (finite, True), "surface": (word, True)})(x)
+            name = t["name"]
+            if not name or name.strip() != name or len(name) > 120:
+                self.fail("bad_value", "platformun adı boş, boşluklu ya da çok uzun")
+            if not 3 <= len(t["corners"]) <= 1000 or any(len(c) != 2 for c in t["corners"]) or len(t["base"]) != 3:
+                self.fail("bad_value", "platformun sınırı 3 ile 1000 arası köşe, tabanı üç sayı olur")
+            if abs(t.get("grade", 0)) > 100 or not -360 <= t.get("direction", 0) <= 360 or \
+                    not 0 < t["cut"] <= 100 or not 0 < t["fill"] <= 100 or not 0 < t["step"] <= 1000 or \
+                    not 0 < t["reach"] <= 10000 or not 0 < t["fan"] <= 90:
+                self.fail("bad_value", "platformun eğimi, yönü, şevleri, aralığı, yelpazesi ya da erimi kuralın dışında")
+            return t
+
         def junction(x):
             # Docs/adr/0910 §2: a junction of two alignments, at grade with its curb returns' radii or separated.
             leg = self.fields({"alignment": (word, True), "alignmentRevision": (self.uint(32), False),
@@ -9853,9 +9872,9 @@ class _Schema:
             # Docs/adr/0911 §1: what a road command drew, its sources' stamps and its objects.
             commands = ("road.alignments.label", "road.profiles.draw", "road.sections.draw", "road.corridors.draw",
                         "road.guardrails.draw", "road.culverts.draw", "road.walls.draw", "road.junctions.draw",
-                        "road.terrains.contours")
+                        "road.terrains.contours", "road.platforms.draw")
             kinds = ("surface", "alignment", "profile", "template", "sections", "superelevation", "corridor",
-                     "guardrail", "culvert", "wall", "junction")
+                     "guardrail", "culvert", "wall", "junction", "platform")
             source = self.fields({"kind": (self.enum(kinds), True), "id": (self.text, True), "digest": (self.text, True)})
             t = self.fields({"id": (self.text, True), "command": (self.enum(commands), True), "input": (self.any, True),
                              "sources": (self.array(source), True), "uids": (self.array(self.text), False),
@@ -9880,7 +9899,8 @@ class _Schema:
                          "sheetSets": (self.array(sheet_set), False),
                          "guardrails": (self.array(guardrail), False),
                          "culverts": (self.array(culvert), False),
-                         "walls": (self.array(wall), False), "pay": (pay, False),
+                         "walls": (self.array(wall), False), "platforms": (self.array(platform), False),
+                         "pay": (pay, False),
                          "junctions": (self.array(junction), False),
                          "drawings": (self.array(drawing), False), "autoRebuild": (self.bool, False)})(v)
         got = r.get("surfaces", [])
@@ -9896,8 +9916,9 @@ class _Schema:
         guardrails = r.get("guardrails", [])
         culverts = r.get("culverts", [])
         walls = r.get("walls", [])
+        platforms = r.get("platforms", [])
         if not (got or lines or profiles or templates or sets or supers or corridors or volumes or hauls or sheet_sets
-                or guardrails or culverts or walls or "pay" in r or r.get("junctions") or r.get("drawings")
+                or guardrails or culverts or walls or platforms or "pay" in r or r.get("junctions") or r.get("drawings")
                 or r.get("autoRebuild")):
             self.fail("bad_value", "boş yol ayarı yazılmaz")
         if len(got) > 64 or ("surfaces" in r and not got):
@@ -10011,6 +10032,13 @@ class _Schema:
             self.fail("bad_value", "iki istinat duvarının kimliği ya da adı aynı")
         if any(all(y["id"] != x["corridor"] for y in corridors) for x in walls):
             self.fail("bad_value", "istinat duvarının koridoru projede yok")
+        if "platforms" in r and not platforms or len(platforms) > 1000:
+            self.fail("bad_value", "yol ayarında 1 ile 1000 arası platform olur")
+        if len({x["id"] for x in platforms}) != len(platforms) or \
+                len({x["name"].lower() for x in platforms}) != len(platforms):
+            self.fail("bad_value", "iki platformun kimliği ya da adı aynı")
+        if any(all(y["id"] != x["surface"] for y in got) for x in platforms):
+            self.fail("bad_value", "platformun arazi yüzeyi projede yok")
         drawings = r.get("drawings", [])
         if "drawings" in r and not drawings or len(drawings) > 1000 or \
                 len({d["id"] for d in drawings}) != len(drawings):

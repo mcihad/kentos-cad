@@ -5639,6 +5639,10 @@ def build():
     wal = load("road-work.json")
     wal["settings"]["road"]["walls"][0]["shape"]["toe"] = 3.0
     out["broken/road-wall-toe-past-footing.kcad"] = container(document(wal))
+    # Schema 162 (plan/road.md Y14, docs/adr/0912): a graded pad is graded to a terrain surface of the project.
+    plt = load("road-work.json")
+    plt["settings"]["road"]["platforms"][0]["surface"] = "t-yok"
+    out["broken/road-platform-unknown-surface.kcad"] = container(document(plt))
     # Schema 162 (plan/road.md Y11.4, docs/adr/0909 §4): a pay rule names an item of the book.
     pay = load("road-work.json")
     pay["settings"]["road"]["pay"]["rules"][0]["item"] = "Z-9"

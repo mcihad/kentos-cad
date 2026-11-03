@@ -784,6 +784,8 @@ codes! {
     /// stations off the corridor or without ground under its face (docs/adr/0909 §3).
     INVALID_RETAINING_WALL = "invalid_retaining_wall", Failed, false, "İstinat duvarının tanımı geçerli değil ya da okunamıyor; ileti nedenini söyler.";
     UNKNOWN_RETAINING_WALL = "unknown_retaining_wall", Failed, false, "Bu kimlikte ya da adda istinat duvarı yok.";
+    INVALID_PLATFORM = "invalid_platform", Failed, false, "Platformun tanımı geçerli değil ya da tesviye edilemiyor; ileti nedenini söyler.";
+    UNKNOWN_PLATFORM = "unknown_platform", Failed, false, "Bu kimlikte ya da adda platform yok.";
     /// A warning: the wall's corridor changed since it was made or rebound (docs/adr/0909 §3).
     RETAINING_WALL_STALE = "retaining_wall_stale", Warning, false, "İstinat duvarının koridoru değişti; duvarı denetleyip koridora yeniden bağlayın.";
     /// A preliminary route asked out of bounds: its cell, margin, grade or climb, a grid too large, a layer to avoid not
@@ -811,6 +813,8 @@ codes! {
     PAY_SOURCE_UNREAD = "pay_source_unread", Warning, false, "Bir yapı ya da kübaj okunamıyor; metrajı yok.";
     /// A warning: the wall's stem is somewhere higher than the highest asked (docs/adr/0909 §3).
     RETAINING_WALL_HIGH = "retaining_wall_high", Warning, false, "İstinat duvarının gövdesi istenen en yüksekten yüksek.";
+    PLATFORM_OPEN = "platform_open", Warning, false, "Platformun bir şev çizgisi araziyle buluşmuyor; hacim ve günışığı çizgisi yok.";
+    PLATFORM_NO_BALANCE = "platform_no_balance", Warning, false, "Verilen aralıkta kazı ile dolgu eşitlenmiyor; denge verilmedi.";
     /// A warning: the profile lies farther from the drawn line than the tolerance (docs/adr/0908 §13).
     PROFILE_FIT_DEVIATION = "profile_fit_deviation", Warning, false, "Boykesit çizginin köşelerinden toleranstan uzak.";
     /// A warning: the corridor's superelevation schedule does not build; its lanes keep the templates' slopes.

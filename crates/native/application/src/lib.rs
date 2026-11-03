@@ -310,6 +310,10 @@ pub mod road_walls;
 pub mod road_walls_draw;
 pub mod road_walls_edit;
 pub mod road_walls_query;
+pub mod road_platforms;
+pub mod road_platforms_draw;
+pub mod road_platforms_edit;
+pub mod road_platforms_query;
 pub mod road_alignments_import;
 pub mod road_alignments_fit;
 pub mod road_profiles_fit;
@@ -1253,6 +1257,9 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (kentos_commands::ROAD_WALLS_EDIT, kentos_commands::ROAD_WALLS_EDIT_VERSION),
     (kentos_commands::ROAD_WALLS_QUERY, kentos_commands::ROAD_WALLS_QUERY_VERSION),
     (kentos_commands::ROAD_WALLS_DRAW, kentos_commands::ROAD_WALLS_DRAW_VERSION),
+    (kentos_commands::ROAD_PLATFORMS_EDIT, kentos_commands::ROAD_PLATFORMS_EDIT_VERSION),
+    (kentos_commands::ROAD_PLATFORMS_QUERY, kentos_commands::ROAD_PLATFORMS_QUERY_VERSION),
+    (kentos_commands::ROAD_PLATFORMS_DRAW, kentos_commands::ROAD_PLATFORMS_DRAW_VERSION),
     (kentos_commands::ROAD_PAY_EDIT, kentos_commands::ROAD_PAY_EDIT_VERSION),
     (kentos_commands::ROAD_PAY_QUERY, kentos_commands::ROAD_PAY_QUERY_VERSION),
     (kentos_commands::ROAD_ROUTES_FIND, kentos_commands::ROAD_ROUTES_FIND_VERSION),

@@ -158,3 +158,24 @@ fn a_bracket_that_keeps_its_sign_is_no_balance() {
     assert!(matches!(grading::balance(&pad(10.0), &t, 1.0, 3.0, 0.01), Err(BalanceError::NoSignChange { .. })));
     assert_eq!(grading::balance(&pad(10.0), &t, 3.0, 1.0, 0.01), Err(BalanceError::BadBracket));
 }
+
+/// A slope line along a terrain triangle's edge, its direction rounded off the edge's line: the section reads the
+/// terrain's height at its start, not a crossing lost in rounding.
+#[test]
+fn a_line_along_a_triangles_edge_reads_the_terrain() {
+    let points = [[-200.0, -200.0], [400.0, -200.0], [400.0, 400.0], [-200.0, 400.0]]
+        .map(|[x, y]| SpotPoint { x, y, z: 100.0 + 0.05 * x + 0.02 * y, source: None })
+        .to_vec();
+    let t = surface::build(&SurfaceInput { points, ..SurfaceInput::default() }).expect("builds");
+    let a = 1.25 * std::f64::consts::PI;
+    let s = t.section(&[[0.0, 0.0], [100.0 * a.cos(), 100.0 * a.sin()]]);
+    assert!((s[0].z.expect("on the terrain") - 100.0).abs() < 1e-9, "{s:?}");
+    let mut p = pad(104.0);
+    p.base = [0.0, 0.0, 104.0];
+    let g = grading::grade(&p, &t, 0.0).expect("grades");
+    for l in &g.lines {
+        let d = l.daylight.expect("meets");
+        let terrain = 100.0 + 0.05 * d[0] + 0.02 * d[1];
+        assert!((d[2] - terrain).abs() < 1e-9, "{l:?}");
+    }
+}
