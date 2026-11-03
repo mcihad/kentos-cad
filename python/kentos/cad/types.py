@@ -63788,6 +63788,60 @@ class RoadDrawingDef(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class RoadDrawingLeft(_Model):
+    """A drawing left as it is, and why: changed by hand (`edited`), its main source gone (`gone`), or it does not draw now
+    (`refused`, the command's sentence).
+    """
+    drawing: str
+    why: str
+    message: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["drawing"] = self.drawing
+        out["why"] = self.why
+        out["message"] = self.message
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoadDrawingLeft:
+        return cls(
+            drawing=data["drawing"],
+            why=data["why"],
+            message=data["message"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RoadDrawingRebuilt(_Model):
+    """A drawing drawn again: its id and command, how many objects it removed and the new ones.
+    Attributes:
+        removed: Unit: count.
+    """
+    drawing: str
+    command: str
+    removed: int
+    uids: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["drawing"] = self.drawing
+        out["command"] = self.command
+        out["removed"] = self.removed
+        out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoadDrawingRebuilt:
+        return cls(
+            drawing=data["drawing"],
+            command=data["command"],
+            removed=data["removed"],
+            uids=list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class RoadDrawingSource(_Model):
     """A source a drawing was made from: its kind, id and the stamp of what it was (docs/adr/0911 §1).
     Attributes:
@@ -63893,6 +63947,52 @@ class RoadProfileListed(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class RoadProjectEdit(_Model):
+    """Input of `road.project.edit` v1 (docs/adr/0911 §3): `autoRebuild` turns drawing the stale drawings again by itself, in
+    the step of the write that left them stale, on or off; one undo step “Kendiliğinden yeniden üret”.
+
+    Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `nothing_to_set`.
+    """
+    auto_rebuild: bool | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.auto_rebuild is not UNSET:
+            out["autoRebuild"] = self.auto_rebuild
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoadProjectEdit:
+        return cls(
+            auto_rebuild=data.get("autoRebuild", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RoadProjectEdited(_Model):
+    """Output of `road.project.edit` v1: drawing again by itself now, and the revision after."""
+    auto_rebuild: bool
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["autoRebuild"] = self.auto_rebuild
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoadProjectEdited:
+        return cls(
+            auto_rebuild=data["autoRebuild"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class RoadProjectQuery(_Model):
     """Input of `road.project.query` v1: `deep` makes the surfaces and corridors and computes the approved volumes, so the
     tree also says which do not build (`unbuildable`), which leave stretches unsolved (`unsolved`) and which approved
@@ -63912,6 +64012,64 @@ class RoadProjectQuery(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> RoadProjectQuery:
         return cls(
             deep=data.get("deep", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RoadProjectRebuild(_Model):
+    """Input of `road.project.rebuild` v1 (docs/adr/0911 §3): the drawings by id to draw again; absent, every drawing that
+    is stale or missing objects. A drawing changed by hand is drawn again only when named and `edited` says so (its
+    changes are lost). Each is drawn again with the input it was drawn with: its objects removed, new ones written on
+    its layer, its sources' stamps and objects kept anew; one undo step “Yeniden üret”.
+
+    Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `unknown_drawing`,
+    `drawing_source_gone` (a named drawing whose main source is gone), `drawing_edited` (a named drawing changed by hand
+    without `edited`), and the drawing commands' own (a layer gone or locked, a source that no longer draws).
+    """
+    drawings: list[str] | None | Unset = UNSET
+    edited: bool | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.drawings is not UNSET:
+            out["drawings"] = None if self.drawings is None else list(self.drawings)
+        if self.edited is not UNSET:
+            out["edited"] = self.edited
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoadProjectRebuild:
+        return cls(
+            drawings=UNSET if "drawings" not in data else None if data["drawings"] is None else list(data["drawings"]),
+            edited=data.get("edited", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RoadProjectRebuilt(_Model):
+    """Output of `road.project.rebuild` v1: the drawings drawn again in order, the ones left, and the revision after."""
+    rebuilt: list[RoadDrawingRebuilt]
+    revision: str
+    left: list[RoadDrawingLeft] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["rebuilt"] = [e0.to_json() for e0 in self.rebuilt]
+        out["revision"] = self.revision
+        if self.left is not UNSET:
+            out["left"] = [e0.to_json() for e0 in self.left]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoadProjectRebuilt:
+        return cls(
+            rebuilt=[RoadDrawingRebuilt.from_json(e0) for e0 in data["rebuilt"]],
+            revision=data["revision"],
+            left=[RoadDrawingLeft.from_json(e0) for e0 in data["left"]] if "left" in data else UNSET,
         )
 
 
@@ -103240,6 +103398,8 @@ __all__ = [
     "RevisionsMark",
     "RingGeometry",
     "RoadDrawingDef",
+    "RoadDrawingLeft",
+    "RoadDrawingRebuilt",
     "RoadDrawingSource",
     "RoadEditOperation",
     "RoadEditOperationName",
@@ -103251,7 +103411,11 @@ __all__ = [
     "RoadNodeState",
     "RoadNodeStateName",
     "RoadProfileListed",
+    "RoadProjectEdit",
+    "RoadProjectEdited",
     "RoadProjectQuery",
+    "RoadProjectRebuild",
+    "RoadProjectRebuilt",
     "RoadProjectTree",
     "RoadSettings",
     "RoadSheetDef",

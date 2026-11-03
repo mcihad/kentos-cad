@@ -728,6 +728,17 @@ codes! {
     INVALID_GLTF = "invalid_gltf", Failed, false, "glTF sahnesi yazılamıyor.";
     /// A road drawing that cannot be kept: the project keeps at most 1000 drawings, a drawing at most 1 000 000
     /// objects (docs/adr/0911 §1).
+    /// A road drawing the project does not keep (docs/adr/0911 §3).
+    UNKNOWN_DRAWING = "unknown_drawing", Failed, false, "Yol çizimi projede yok.";
+    /// A road drawing whose main source is gone; it is not drawn again (docs/adr/0911 §3).
+    DRAWING_SOURCE_GONE = "drawing_source_gone", Failed, false, "Yol çiziminin kaynağı projede yok; yeniden üretilemez.";
+    /// A road drawing changed by hand: named without `edited` it is refused; drawn again by itself it is left, said as a
+    /// warning (docs/adr/0911 §3).
+    DRAWING_EDITED = "drawing_edited", Failed, false, "Yol çiziminin nesneleri elle değişti; yeniden üretmek bu değişiklikleri siler.";
+    /// A warning: stale road drawings drawn again by themselves in the write's step (docs/adr/0911 §3).
+    DRAWINGS_REBUILT = "drawings_rebuilt", Warning, false, "Eskiyen yol çizimleri yeniden üretildi.";
+    /// A warning: a stale road drawing that could not be drawn again by itself (docs/adr/0911 §3).
+    DRAWING_NOT_REBUILT = "drawing_not_rebuilt", Warning, false, "Eskiyen bir yol çizimi kendiliğinden yeniden üretilemedi.";
     ROAD_DRAWINGS_FULL = "road_drawings_full", Failed, false, "Yol çizimi kaydedilemiyor: proje en çok 1000 çizim ve çizim başına en çok 1 000 000 nesne tutar.";
     /// A stakeout table that cannot be read: a range off the corridor or backwards, a step out of bounds, a code no
     /// template gives, too many stations or points (docs/adr/0908).

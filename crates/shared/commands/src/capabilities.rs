@@ -1952,6 +1952,21 @@ const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: none,
     },
+    Entry {
+        id: "road.project.rebuild",
+        refusals: &[
+            &["not_a_road_project", "unknown_drawing", "drawing_source_gone", "drawing_edited", "road_drawings_full", "layer_locked"],
+            REVISION,
+        ],
+        warnings: &["corridor_unsolved"],
+        targets: none,
+    },
+    Entry {
+        id: "road.project.edit",
+        refusals: &[&["not_a_road_project", "nothing_to_set"], REVISION],
+        warnings: &["drawings_rebuilt", "drawing_edited", "drawing_not_rebuilt"],
+        targets: none,
+    },
     // KentOS Yol's LandXML export (plan/road.md Y10.2, docs/adr/0908 §6).
     Entry {
         id: "file.export.landxml",

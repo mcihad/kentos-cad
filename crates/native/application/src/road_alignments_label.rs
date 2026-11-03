@@ -259,6 +259,12 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &AlignmentsLabel) -> CommandResult
 }
 
 /// Writes the labels: one undo step.
+/// Draws `input` now, checked and written in the step it runs in, its drawing not kept (`road.project.rebuild` keeps it,
+/// docs/adr/0911 §3).
+pub(crate) fn draw(cx: &mut ExecutionContext<'_>, input: &kentos_commands::AlignmentsLabel) -> CommandResult<kentos_commands::AlignmentsLabelled> {
+    write_execute(cx, input.clone())
+}
+
 pub fn execute(cx: &mut ExecutionContext<'_>, input: AlignmentsLabel) -> CommandResult<AlignmentsLabelled> {
     crate::call::recorded(
         cx,

@@ -158,9 +158,14 @@ class State:
             self.sources(k, i, out)
         return out
 
+    def resolve(self, kind, text):
+        xs = self.road.get(LISTS[kind], [])
+        x = next((x for x in xs if x["id"] == text), None) or next((x for x in xs if x["name"].lower() == text.lower()), None)
+        return x["id"]
+
     def draw(self, command, input_, n):
         kind, field = MAIN[command]
-        main = input_[field]
+        main = self.resolve(kind, input_[field])
         ids = [d["id"] for d in self.drawings]
         did = next(f"cz-{k}" for k in range(1, 10000) if f"cz-{k}" not in ids)
         self.drawings.append({"id": did, "command": command, "main": (kind, main), "layer": input_["layerId"],
@@ -380,11 +385,43 @@ PROFILE = ("road.profiles.draw", {"profile": "b-1", "layerId": "0", "at": [0.0, 
 SECTIONS = ("road.sections.draw", {"set": "k-1", "layerId": "0", "at": [0.0, -100.0]})
 
 
+def warns(st, command, input_):
+    """What drawing `input_` warns now (the command's reference)."""
+    r = st.road
+    find = lambda key, id_: next(x for x in r[key] if x["id"] == id_)  # noqa: E731
+    if command == "road.corridors.draw":
+        return ccmd.drawing(find("corridors", input_["corridor"]), input_.get("tick", 5.0))[2]
+    if command == "road.guardrails.draw":
+        return grc.drawing(find("guardrails", input_["guardrail"]), input_.get("labels", False))[2]
+    if command == "road.culverts.draw":
+        return cv.drawing(find("culverts", input_["culvert"]), input_.get("labels", False))[2]
+    if command == "road.walls.draw":
+        return wv.drawing(find("walls", input_["wall"]), input_.get("labels", False))[2]
+    if command == "road.junctions.draw":
+        return jc.drawing(find("junctions", input_["junction"]), input_.get("labels", False))[2]
+    return []
+
+
+INPUTS = {}  # a drawing's id → its command and input as drawn
+
+
+def rebuild(st, d):
+    """Draws `d` again on the state: its objects removed, as many new, its sources' stamps now; what it says."""
+    command, input_ = INPUTS[(id(st), d["id"])]
+    removed = d["present"]
+    n = count(st, command, input_)
+    kind, main = d["main"]
+    d.update(sources=st.sources(kind, main), n=n, present=n, edited=False)
+    return {"drawing": d["id"], "command": command, "removed": removed, "uids": "$any"}, warns(st, command, input_)
+
+
 def drawn(st, what):
     """A step drawing `what` (command, input) on the state: any answer, the drawing kept."""
     command, input_ = what
     n = count(st, command, input_)
-    st.draw(command, input_, n)
+    did = st.draw(command, input_, n)
+    kind, field = MAIN[command]
+    INPUTS[(id(st), did)] = (command, {**input_, field: st.resolve(kind, input_[field])})
     return {**step("execute", input_, ANY), "command": command}
 
 
@@ -395,7 +432,7 @@ def other(command, input_):
 def asked(st, deep=False):
     """The tree asked; it writes nothing (after steps that did, only the revision is said to stay)."""
     input_ = {"deep": True} if deep else {}
-    return step("execute", input_, completed(tree(st, deep)), UNCHANGED)
+    return {**step("execute", input_, completed(tree(st, deep)), UNCHANGED), "command": "road.project.query"}
 
 
 def cases():
@@ -459,7 +496,8 @@ def cases():
     one, two = drawn(st, CORRIDOR), None
     second = ("road.corridors.draw", {"corridor": "Ana koridor", "layerId": "korkuluk", "tick": 10.0})
     st2_count = ccmd.drawing(st.find("corridor", "c-1"), 10.0)[1]
-    st.draw("road.corridors.draw", {"corridor": "c-1", "layerId": "korkuluk"}, st2_count)
+    did = st.draw("road.corridors.draw", {"corridor": "c-1", "layerId": "korkuluk"}, st2_count)
+    INPUTS[(id(st), did)] = ("road.corridors.draw", {"corridor": "c-1", "layerId": "korkuluk", "tick": 10.0})
     two = {**step("execute", second[1], ANY), "command": second[0]}
     add("Aynı koridorun iki çizimi, biri adıyla", [one, two, asked(st)])
     # Surfaces.
@@ -490,6 +528,258 @@ def cases():
     return out
 
 
+def renamed_template(st, name="Tip 2b", tid="tk-2"):
+    t = st.find("template", tid)
+    t["name"], t["revision"] = name, t.get("revision", 0) + 1
+    return other("road.templates.edit", {"template": tid, "operation": "set", "name": name})
+
+
+def locked_layer(st, layer="korkuluk"):
+    def walk(ns):
+        for n in ns:
+            if n["id"] == layer:
+                n["locked"] = True
+            walk(n.get("children", []))
+    walk(st.setup["layers"])
+    return other("cad.layers.set", {"operation": "locked", "layer": layer, "value": True})
+
+
+def rebuilt(st, input_, ids=None, left=(), op="execute"):
+    """The rebuild step: the drawings `ids` (absent: the stale and missing ones) drawn again on the state."""
+    chosen = [d for d in st.drawings if (d["id"] in ids if ids is not None else drawing_state(st, d)[0] in ("stale", "missing"))]
+    if ids is not None:
+        chosen.sort(key=lambda d: ids.index(d["id"]))
+    out, ws = [], []
+    if op == "plan":
+        snapshot = copy.deepcopy(st.drawings)
+    for d in chosen:
+        r, w = rebuild(st, d)
+        out.append({**r, "uids": "$any" if op == "execute" else []})
+        ws += w
+    if op == "plan":
+        st.drawings[:] = snapshot
+    output = {"rebuilt": out, "revision": "$current"}
+    if left:
+        output["left"] = list(left)
+    return step(op, input_, completed(output, ws))
+
+
+def rebuild_cases():
+    out = []
+
+    def add(name, steps, setup=None):
+        if len(steps) > 1 and steps[-1].get("expect") in (None, UNCHANGED):
+            steps[-1] = {**steps[-1], "expect": {"revision": "same"}}
+        out.append(case(name, steps, setup))
+
+    s0 = base()
+    st = State(s0)
+    a = drawn(st, CORRIDOR)
+    add("Güncel çizim kalır: yeniden üretilecek bir şey yok", [a, {**rebuilt(st, {}), "expect": {"revision": "same"}}])
+    st = State(s0)
+    a, b = drawn(st, CORRIDOR), renamed_template(st)
+    r = rebuilt(st, {})
+    add("Tip kesit değişince eskiyen şevli plan yeniden üretilir, ağaç güncel", [a, b, {**r, "expect": {"revision": "changed"}}, asked(st)])
+    st = State(s0)
+    a, b, c = drawn(st, CORRIDOR), drawn(st, GUARDRAIL), renamed_template(st)
+    r = rebuilt(st, {})
+    add("İki eskiyen çizim birlikte, tek adımda", [a, b, c, {**r, "expect": {"revision": "changed"}}, asked(st)])
+    st = State(s0)
+    a, b, c = drawn(st, CORRIDOR), drawn(st, GUARDRAIL), renamed_template(st)
+    r = rebuilt(st, {"drawings": ["cz-2"]}, ["cz-2"])
+    add("Yalnız adı verilen yeniden üretilir, öbürü eskimiş kalır", [a, b, c, {**r, "expect": {"revision": "changed"}}, asked(st)])
+    st = State(s0)
+    a = drawn(st, GUARDRAIL)
+    target = len(s0["entities"]) + 1
+    st.drawings[0]["present"] -= 1
+    b = other("cad.entities.delete", {"uids": [f"$uidOf:{target}"]})
+    r = rebuilt(st, {})
+    add("Nesnesi silinen çizim yeniden üretilince bütün", [a, b, {**r, "expect": {"revision": "changed"}}, asked(st)])
+    st = State(s0)
+    a = drawn(st, CORRIDOR)
+    r = rebuilt(st, {"drawings": ["cz-1"]}, ["cz-1"])
+    add("Güncel çizim adıyla istenince yeniden üretilir", [a, {**r, "expect": {"revision": "changed"}}, asked(st)])
+    st = State(s0)
+    a = drawn(st, GUARDRAIL)
+    st.drawings[0]["edited"] = True
+    b = other("cad.entities.set", {"uids": [f"$uidOf:{target}"], "operation": "color", "color": "#E5484D"})
+    c = renamed_template(st)
+    left = [{"drawing": "cz-1", "why": "edited", "message": "Nesneleri elle değişti; adıyla ve edited ile yeniden üretilir."}]
+    add("Elle değişen çizim hepsinde kalır, söylenir", [a, b, c, {**rebuilt(st, {}, left=left), "expect": {"revision": "same"}}])
+    st = State(s0)
+    a = drawn(st, GUARDRAIL)
+    st.drawings[0]["edited"] = True
+    b = other("cad.entities.set", {"uids": [f"$uidOf:{target}"], "operation": "color", "color": "#E5484D"})
+    add("Elle değişen çizim adıyla, edited olmadan reddedilir", [a, b, step("execute", {"drawings": ["cz-1"]}, failed(
+        "drawing_edited", "“cz-1” çiziminin nesneleri elle değişti; yeniden üretmek bu değişiklikleri siler. edited ile isteyin.",
+        "edited"), {"revision": "same"})])
+    st = State(s0)
+    a = drawn(st, GUARDRAIL)
+    st.drawings[0]["edited"] = True
+    b = other("cad.entities.set", {"uids": [f"$uidOf:{target}"], "operation": "color", "color": "#E5484D"})
+    r = rebuilt(st, {"drawings": ["cz-1"], "edited": True}, ["cz-1"])
+    add("Elle değişen çizim edited ile yeniden üretilir, değişikliği gider", [a, b, {**r, "expect": {"revision": "changed"}}, asked(st)])
+    st = State(s0)
+    a = drawn(st, JUNCTION)
+    st.road["junctions"] = [j for j in st.road["junctions"] if j["id"] != "j-1"]
+    b = other("road.junctions.edit", {"junction": "j-1", "operation": "remove"})
+    left = [{"drawing": "cz-1", "why": "gone", "message": "Kaynağı projede yok."}]
+    add("Kaynağı silinen çizim hepsinde kalır", [a, b, {**rebuilt(st, {}, left=left), "expect": {"revision": "same"}}])
+    st = State(s0)
+    a = drawn(st, JUNCTION)
+    b = other("road.junctions.edit", {"junction": "j-1", "operation": "remove"})
+    add("Kaynağı silinen çizim adıyla reddedilir", [a, b, step("execute", {"drawings": ["cz-1"]}, failed(
+        "drawing_source_gone", "“cz-1” çiziminin kaynağı projede yok; yeniden üretilemez, isterseniz nesnelerini silin.",
+        "drawings"), {"revision": "same"})])
+    add("Bilinmeyen çizim", [step("execute", {"drawings": ["cz-9"]}, failed(
+        "unknown_drawing", "“cz-9” yol çizimi projede yok.", "drawings"), UNCHANGED)])
+    st = State(s0)
+    a, b = drawn(st, GUARDRAIL), renamed_template(st)
+    c = locked_layer(st)
+    add("Kilitlenen katmandaki çizim yeniden üretilemez, hiçbir şey yazılmaz", [a, b, c, step("execute", {}, failed(
+        "layer_locked", "“Korkuluk” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.",
+        "layerId"), {"revision": "same"})])
+    st = State(s0)
+    a, b = drawn(st, CORRIDOR), renamed_template(st)
+    snapshot = copy.deepcopy(st.drawings)
+    p = rebuilt(st, {}, op="plan")
+    add("Plan: yazmadan söyler", [a, b, {**p, "expect": {"revision": "same"}}, asked(st)])
+    st = State(s0)
+    a, b = drawn(st, CORRIDOR), renamed_template(st)
+    add("Doğrulama: yazmaz", [a, b, step("validate", {}, completed(None, warns(st, *CORRIDOR)), {"revision": "same"})])
+    st = State(s0)
+    a, b = drawn(st, CORRIDOR), renamed_template(st)
+    before = copy.deepcopy(st.drawings)
+    r = rebuilt(st, {})
+    st.drawings[:] = before
+    add("Geri alınınca çizim yine eskimiş", [a, b, {**r, "expect": {"revision": "changed"}},
+                                             {"op": "undo", "returns": "Yeniden üret"}, asked(st)])
+    st = State(s0)
+    a, b = drawn(st, PROFILE), other("road.profiles.edit", {"profile": "b-1", "operation": "set", "name": "Proje kotu 2"})
+    pr = st.find("profile", "b-1")
+    pr["name"], pr["revision"] = "Proje kotu 2", pr.get("revision", 0) + 1
+    r = rebuilt(st, {})
+    add("Boykesit değişince boykesit çizimi yeniden üretilir", [a, b, {**r, "expect": {"revision": "changed"}}, asked(st)])
+    st = State(s0)
+    a = drawn(st, SECTIONS)
+    b = renamed_template(st, "Tip 1b", st.find("sections", "k-1").get("template", "tk-1"))
+    r = rebuilt(st, {})
+    add("Tip kesit değişince enkesit çizimi yeniden üretilir", [a, b, {**r, "expect": {"revision": "changed"}}, asked(st)])
+    st = State(s0)
+    a, b, c = drawn(st, CULVERT), drawn(st, WALL), renamed_template(st)
+    r = rebuilt(st, {"drawings": ["cz-2", "cz-1", "cz-2"]}, ["cz-2", "cz-1"])
+    add("Adı verilenler verildiği sırayla, yinelenen bir kez", [a, b, c, {**r, "expect": {"revision": "changed"}}, asked(st)])
+    add("Beklenen revizyon tutmuyor", [step("execute", {"expectedRevision": "99"}, ccmd.CONFLICT,
+                                            UNCHANGED)])
+    add("Revizyon sayı değil", [step("execute", {"expectedRevision": "on"}, ccmd.BAD_REVISION, UNCHANGED)])
+    add("Yol projesi değil", [step("execute", {}, NOT_ROAD, UNCHANGED)], base(work="map"))
+    return out
+
+
+def edit_cases():
+    out = []
+
+    def add(name, steps, setup=None):
+        out.append(case(name, steps, setup))
+
+    s0 = base()
+    on = base(road={"autoRebuild": True})
+    road_on = copy.deepcopy(on["settings"]["road"])
+    edited = lambda v: completed({"autoRebuild": v, "revision": "$current"})  # noqa: E731
+    nothing = failed("nothing_to_set", "Değişecek bir şey yok: kendiliğinden yeniden üretme zaten böyle.", "autoRebuild")
+    add("Açılır", [step("execute", {"autoRebuild": True}, edited(True),
+                        {"canUndo": True, "canRedo": False, "dirty": True, "revision": "changed", "road": road_on})])
+    add("Kapanır", [step("execute", {"autoRebuild": False}, edited(False),
+                         {"canUndo": True, "canRedo": False, "dirty": True, "revision": "changed",
+                          "road": s0["settings"]["road"]})], on)
+    add("Zaten açık", [step("execute", {"autoRebuild": True}, nothing, UNCHANGED)], on)
+    add("Zaten kapalı", [step("execute", {"autoRebuild": False}, nothing, UNCHANGED)])
+    add("Değer yok", [step("execute", {}, nothing, UNCHANGED)])
+    add("Plan yazmaz", [step("plan", {"autoRebuild": True}, edited(True), UNCHANGED)])
+    add("Doğrulama yazmaz", [step("validate", {"autoRebuild": True}, completed(None), UNCHANGED)])
+    add("Geri alınır", [step("execute", {"autoRebuild": True}, edited(True), {"revision": "changed"}),
+                        {"op": "undo", "returns": "Kendiliğinden yeniden üret",
+                         "expect": {"canUndo": False, "canRedo": True, "road": s0["settings"]["road"]}}])
+    add("Beklenen revizyon tutmuyor", [step("execute", {"autoRebuild": True, "expectedRevision": "99"}, ccmd.CONFLICT, UNCHANGED)])
+    add("Revizyon sayı değil", [step("execute", {"autoRebuild": True, "expectedRevision": "on"}, ccmd.BAD_REVISION, UNCHANGED)])
+    add("Yol projesi değil", [step("execute", {"autoRebuild": True}, NOT_ROAD, UNCHANGED)], base(work="map"))
+
+    def rebuilt_by_itself(st, names):
+        return [{"code": "drawings_rebuilt", "message": f"Eskiyen yol çizimleri kendiliğinden yeniden üretildi: {', '.join(names)}."}]
+
+    # Drawing again by itself: the rename's step draws the stale drawings again.
+    st = State(on)
+    a = drawn(st, CORRIDOR)
+    t = st.find("template", "tk-2")
+    t["name"], t["revision"] = "Tip 2b", t.get("revision", 0) + 1
+    rebuild(st, st.drawings[0])
+    b = {**step("execute", {"template": "tk-2", "operation": "set", "name": "Tip 2b"},
+                {"status": "completed", "output": "$any", "warnings": rebuilt_by_itself(st, ["cz-1"])}), "command": "road.templates.edit"}
+    add("Açıkken tip kesit değişince şevli plan aynı adımda yeniden üretilir", [a, b, {**asked(st), "expect": {"revision": "same"}}], on)
+    st = State(on)
+    a, b2 = drawn(st, CORRIDOR), drawn(st, GUARDRAIL)
+    t = st.find("template", "tk-2")
+    t["name"], t["revision"] = "Tip 2b", t.get("revision", 0) + 1
+    for d in st.drawings:
+        rebuild(st, d)
+    c = {**step("execute", {"template": "tk-2", "operation": "set", "name": "Tip 2b"},
+                {"status": "completed", "output": "$any", "warnings": rebuilt_by_itself(st, ["cz-1", "cz-2"])}),
+         "command": "road.templates.edit"}
+    add("Açıkken iki çizim birlikte", [a, b2, c, {**asked(st), "expect": {"revision": "same"}}], on)
+    st = State(on)
+    a = drawn(st, GUARDRAIL)
+    target = len(on["entities"]) + 1
+    st.drawings[0]["edited"] = True
+    b = other("cad.entities.set", {"uids": [f"$uidOf:{target}"], "operation": "color", "color": "#E5484D"})
+    t = st.find("template", "tk-2")
+    t["name"], t["revision"] = "Tip 2b", t.get("revision", 0) + 1
+    c = {**step("execute", {"template": "tk-2", "operation": "set", "name": "Tip 2b"},
+                {"status": "completed", "output": "$any", "warnings": [{"code": "drawing_edited",
+                 "message": "“cz-1” çizimi eskidi ama nesneleri elle değiştiği için kendiliğinden yeniden üretilmedi."}]}),
+         "command": "road.templates.edit"}
+    add("Açıkken elle değişen çizim kalır, söylenir", [a, b, c, {**asked(st), "expect": {"revision": "same"}}], on)
+    st = State(on)
+    a = drawn(st, GUARDRAIL)
+    b = locked_layer(st)
+    t = st.find("template", "tk-2")
+    t["name"], t["revision"] = "Tip 2b", t.get("revision", 0) + 1
+    c = {**step("execute", {"template": "tk-2", "operation": "set", "name": "Tip 2b"},
+                {"status": "completed", "output": "$any", "warnings": [{"code": "drawing_not_rebuilt",
+                 "message": "“cz-1” çizimi kendiliğinden yeniden üretilemedi: “Korkuluk” katmanı kilitli. Kilidi Katmanlar "
+                            "panelinden açın ya da başka bir katmanı etkinleştirin."}]}), "command": "road.templates.edit"}
+    add("Açıkken üretilemeyen çizim eskimiş kalır, söylenir", [a, b, c, {**asked(st), "expect": {"revision": "same"}}], on)
+    st = State(on)
+    a = drawn(st, CORRIDOR)
+    t = st.find("template", "tk-2")
+    b = {**step("execute", {"template": "tk-2", "operation": "set", "name": "Tip 2b"},
+                {"status": "completed", "output": "$any", "warnings": rebuilt_by_itself(st, ["cz-1"])}), "command": "road.templates.edit"}
+    add("Açıkken geri alınan değişiklik çizimi de geri alır", [a, b, {"op": "undo", "returns": "Tip kesit"},
+                                                              {**asked(st), "expect": {"revision": "same"}}], on)
+    st = State(s0)
+    a, b = drawn(st, CORRIDOR), renamed_template(st)
+    add("Kapalıyken çizim eskimiş kalır", [a, b, {**asked(st), "expect": {"revision": "same"}}])
+    st = State(on)
+    a = drawn(st, PROFILE)
+    pr = st.find("profile", "b-1")
+    pr["name"], pr["revision"] = "Proje kotu 2", pr.get("revision", 0) + 1
+    rebuild(st, st.drawings[0])
+    b = {**step("execute", {"profile": "b-1", "operation": "set", "name": "Proje kotu 2"},
+                {"status": "completed", "output": "$any", "warnings": rebuilt_by_itself(st, ["cz-1"])}), "command": "road.profiles.edit"}
+    add("Açıkken boykesit değişince boykesit çizimi yeniden üretilir", [a, b, {**asked(st), "expect": {"revision": "same"}}], on)
+    st = State(on)
+    a = drawn(st, GUARDRAIL)
+    st.drawings[0]["present"] -= 1
+    b = other("cad.entities.delete", {"uids": [f"$uidOf:{target}"]})
+    add("Açıkken silinen nesne kendiliğinden geri gelmez", [a, b, {**asked(st), "expect": {"revision": "same"}}], on)
+    st = State(on)
+    a = drawn(st, JUNCTION)
+    st.road["junctions"] = [j for j in st.road["junctions"] if j["id"] != "j-1"]
+    b = {**step("execute", {"junction": "j-1", "operation": "remove"}, {"status": "completed", "output": "$any", "warnings": []}),
+         "command": "road.junctions.edit"}
+    add("Açıkken kaynağı silinen çizim kalır, yeniden üretilmez", [a, b, {**asked(st), "expect": {"revision": "same"}}], on)
+    return out
+
+
 def file():
     return {"format": "kentos.command-cases", "version": 1, "command": "road.project.query", "commandVersion": 1,
             "title": "Yol projesinin ağacı",
@@ -500,16 +790,32 @@ def file():
             "setup": base(), "cases": cases()}
 
 
+NOTE = ("scripts/fixtures/road_project_cases.py yazar; çizim road_pay_cases.py'nin, kavşaklar road_junction_cases.py'nin, "
+        "Brükner'ler road_haul_command_cases.py'nindir. Satırlar, sıraları ve durumları ADR 0911 §2'nin, yeniden üretme §3'ün "
+        "kuralıdır; kaynağın damgası §1'in; çizimin nesne sayısı ve uyarıları komutunun başvurusunun. KentOS kodu yok.")
+
+
+def files():
+    yield "road.project.query.json", file()
+    yield "road.project.rebuild.json", {"format": "kentos.command-cases", "version": 1, "command": "road.project.rebuild",
+                                        "commandVersion": 1, "title": "Yol çizimlerini yeniden üret", "note": NOTE,
+                                        "setup": base(), "cases": rebuild_cases()}
+    yield "road.project.edit.json", {"format": "kentos.command-cases", "version": 1, "command": "road.project.edit",
+                                     "commandVersion": 1, "title": "Kendiliğinden yeniden üret", "note": NOTE,
+                                     "setup": base(), "cases": edit_cases()}
+
+
 def main():
-    path = OUT / "road.project.query.json"
-    text = json.dumps(file(), ensure_ascii=False, indent=1) + "\n"
-    if "--check" in sys.argv:
-        if path.read_text() != text:
-            sys.exit(f"{path.name}: güncel değil")
-        print(f"{path.name}: güncel")
-        return
-    path.write_text(text)
-    print(f"{path.name}: {len(json.loads(text)['cases'])} durum")
+    for name, content in files():
+        path = OUT / name
+        text = json.dumps(content, ensure_ascii=False, indent=1) + "\n"
+        if "--check" in sys.argv:
+            if path.read_text() != text:
+                sys.exit(f"{path.name}: güncel değil")
+            print(f"{path.name}: güncel")
+            continue
+        path.write_text(text)
+        print(f"{path.name}: {len(json.loads(text)['cases'])} durum")
 
 
 if __name__ == "__main__":

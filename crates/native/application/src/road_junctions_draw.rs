@@ -132,6 +132,15 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &JunctionsDraw) -> CommandResult<J
 }
 
 /// Draws the returns: one undo step.
+/// Draws `input` now, checked and written in the step it runs in, its drawing not kept (`road.project.rebuild` keeps it,
+/// docs/adr/0911 §3).
+pub(crate) fn draw(cx: &mut ExecutionContext<'_>, input: &kentos_commands::JunctionsDraw) -> CommandResult<kentos_commands::JunctionsDrawn> {
+    match check(cx.doc, input) {
+        Ok(c) => write(cx, input, c),
+        Err(stop) => stop.into(),
+    }
+}
+
 pub fn execute(cx: &mut ExecutionContext<'_>, input: JunctionsDraw) -> CommandResult<JunctionsDrawn> {
     crate::call::recorded(
         cx,

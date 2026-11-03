@@ -7853,6 +7853,56 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::ROAD_PROJECT_REBUILD.into(),
+            version: crate::ROAD_PROJECT_REBUILD_VERSION,
+            title: "Yol çizimlerini yeniden üret".into(),
+            summary: "Yol komutlarının çizimlerini çizildikleri girdiyle yeniden yazar: eski nesneleri silinir, aynı katmana yenileri yazılır, kaydın kaynak damgaları ve nesneleri yenilenir; tek geri alma adımı “Yeniden üret”. drawings verilmezse eskiyen ve nesnesi eksik bütün çizimler; elle değişenler ve kaynağı silinenler left'te nedeniyle kalır. Adıyla verilen elle değişmiş çizim yalnız edited ile yeniden üretilir (değişiklikleri silinir). Çizim komutunun kendi retleri (katman yok ya da kilitli, kaynak çizilmiyor) bütün yazmayı geri alır. \
+                      Retler: invalid_revision, revision_conflict, not_a_road_project, unknown_drawing, drawing_source_gone, drawing_edited ve çizim komutlarının retleri."
+                .into(),
+            aliases: vec!["yenidenuret".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::RoadProjectRebuild>(),
+            output: schema::<crate::RoadProjectRebuilt>(),
+            plan: Some(schema::<crate::RoadProjectRebuilt>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Eskiyen bütün çizimler".into(),
+                input: json!({}),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_PROJECT_EDIT.into(),
+            version: crate::ROAD_PROJECT_EDIT_VERSION,
+            title: "Kendiliğinden yeniden üret".into(),
+            summary: "autoRebuild açıkken bir yazma, eskittiği yol çizimlerini kendi adımında yeniden üretir (uyarı drawings_rebuilt); elle değişenler (drawing_edited) ve üretilemeyenler (drawing_not_rebuilt) kalır ve söylenir. Tek geri alma adımı “Kendiliğinden yeniden üret”. \
+                      Retler: invalid_revision, revision_conflict, not_a_road_project, nothing_to_set."
+                .into(),
+            aliases: vec!["otouret".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::RoadProjectEdit>(),
+            output: schema::<crate::RoadProjectEdited>(),
+            plan: Some(schema::<crate::RoadProjectEdited>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Aç".into(),
+                input: json!({ "autoRebuild": true }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::FILE_EXPORT_LANDXML.into(),
             version: crate::FILE_EXPORT_LANDXML_VERSION,
             title: "LandXML dışa aktar".into(),
@@ -13783,6 +13833,8 @@ mod tests {
                     crate::ROAD_JUNCTIONS_EDIT => serde_json::from_value::<crate::JunctionsEdit>(e.input.clone()).map(|_| ()),
                     crate::ROAD_JUNCTIONS_QUERY => serde_json::from_value::<crate::JunctionsQuery>(e.input.clone()).map(|_| ()),
                     crate::ROAD_PROJECT_QUERY => serde_json::from_value::<crate::RoadProjectQuery>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_PROJECT_REBUILD => serde_json::from_value::<crate::RoadProjectRebuild>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_PROJECT_EDIT => serde_json::from_value::<crate::RoadProjectEdit>(e.input.clone()).map(|_| ()),
                     crate::ROAD_JUNCTIONS_DRAW => serde_json::from_value::<crate::JunctionsDraw>(e.input.clone()).map(|_| ()),
                     crate::ROAD_STAKEOUT_QUERY => {
                         serde_json::from_value::<crate::StakeoutQuery>(e.input.clone()).map(|_| ())
@@ -14571,6 +14623,8 @@ mod tests {
                         crate::ROAD_JUNCTIONS_EDIT => serde_json::from_value::<crate::JunctionsWritten>(output.clone()).map(|_| ()),
                         crate::ROAD_JUNCTIONS_QUERY => serde_json::from_value::<crate::JunctionsQueried>(output.clone()).map(|_| ()),
                         crate::ROAD_PROJECT_QUERY => serde_json::from_value::<crate::RoadProjectTree>(output.clone()).map(|_| ()),
+                        crate::ROAD_PROJECT_REBUILD => serde_json::from_value::<crate::RoadProjectRebuilt>(output.clone()).map(|_| ()),
+                        crate::ROAD_PROJECT_EDIT => serde_json::from_value::<crate::RoadProjectEdited>(output.clone()).map(|_| ()),
                         crate::ROAD_JUNCTIONS_DRAW => serde_json::from_value::<crate::JunctionsDrawn>(output.clone()).map(|_| ()),
                         crate::ROAD_STAKEOUT_QUERY => {
                             serde_json::from_value::<crate::StakeoutQueried>(output.clone()).map(|_| ())

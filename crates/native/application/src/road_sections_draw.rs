@@ -429,6 +429,15 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &SectionsDraw) -> CommandResult<Se
 }
 
 /// Writes the drawing: one undo step.
+/// Draws `input` now, checked and written in the step it runs in, its drawing not kept (`road.project.rebuild` keeps it,
+/// docs/adr/0911 §3).
+pub(crate) fn draw(cx: &mut ExecutionContext<'_>, input: &kentos_commands::SectionsDraw) -> CommandResult<kentos_commands::SectionsDrawn> {
+    match check(cx.doc, input) {
+        Ok(c) => write(cx, input, c),
+        Err(stop) => stop.into(),
+    }
+}
+
 pub fn execute(cx: &mut ExecutionContext<'_>, input: SectionsDraw) -> CommandResult<SectionsDrawn> {
     crate::call::recorded(
         cx,

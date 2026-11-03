@@ -153,6 +153,15 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &CulvertsDraw) -> CommandResult<Cu
 }
 
 /// Draws the barrel: one undo step.
+/// Draws `input` now, checked and written in the step it runs in, its drawing not kept (`road.project.rebuild` keeps it,
+/// docs/adr/0911 §3).
+pub(crate) fn draw(cx: &mut ExecutionContext<'_>, input: &kentos_commands::CulvertsDraw) -> CommandResult<kentos_commands::CulvertsDrawn> {
+    match check(cx.doc, input) {
+        Ok(c) => write(cx, input, c),
+        Err(stop) => stop.into(),
+    }
+}
+
 pub fn execute(cx: &mut ExecutionContext<'_>, input: CulvertsDraw) -> CommandResult<CulvertsDrawn> {
     crate::call::recorded(
         cx,

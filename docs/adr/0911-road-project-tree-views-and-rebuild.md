@@ -17,6 +17,17 @@ Tarih: 2026-11-03. plan/road.md Y13 (ROAD-MOD-04, ROAD-MOD-05, ROAD-MOD-06). Dur
   ([OpenRoads Model](https://docs.bentley.com/LiveContent/web/OpenRoads%20Designer%20CONNECT%20Edition-v13/en/GUID-5A5A17CB-B6EC-4FA0-8462-9BB3A0971C7F.html)).
   Netpro proje ekranında projenin dosyalarını (*.KTB, *.KSE, *.KSP) gösterir; Netpro 12'de hesaplar kendiliğinden
   yeniden üretilebilir (plan/road.md ROAD-MOD-06).
+- **Yeniden üretme (Y13.2 öncesi, 3 Kasım 2026):** Civil 3D'de Prospector'daki nesne simgesinin üstündeki sarı “!”
+  rozeti nesnenin eskidiğini ya da kısıtlarını bozduğunu söyler; kilitli ve başvurulan nesnenin rozetleri ayrıdır
+  ([About Drawing Item State Icons](https://help.autodesk.com/cloudhelp/2021/ENU/Civil3D-UserGuide/files/GUID-8D50333A-CB5D-4925-871C-96804CD15779.htm),
+  ekran görüntüsü incelendi). OpenRoads'ta koridor kurallarla (rule propagation) bağlı modeli izler; Process Corridor
+  koridoru elle güncel kılar, kurallar kilitlenip çözülebilir
+  ([Corridor Edit](https://docs.bentley.com/LiveContent/web/OpenRoads%20Designer%20CONNECT-v12/en/GUID-20C4E4C7-E481-4CD0-9962-F0EA85009387.html),
+  [Corridor Design Stages](https://docs.bentley.com/LiveContent/web/OpenRoads%20Designer-v2024.1/Help/en/topics/406410/GUID-429BC2B2-2512-7639-4A81-5F1C49203249.html)).
+  Netpro'nun resmî kılavuzu çevrimiçi değil; Netcad'in sitesinde Netpro 9 için yatay ve düşey parametreler değişince
+  projeyi revize etme özelliği anılır ([Netpro](https://en.netcad.com/en/products/netpro)). KentOS'un kararı: Civil
+  3D gibi eskiyen satırda rozet ve elle Yeniden üret; Kendiliğinden yeniden üret proje başına (Civil 3D'de koridor
+  başına), elle değişmiş çizimin üstüne yazmaz (kavşak bölgelerinin elle değişikliğini silen Civil 3D'nin tersine).
 - **Görünüşler:** OpenRoads'un Dynamic Sections'ı koridorun ya da yatay geometrinin taban çizgisinde bir MicroStation
   görünümünde enkesit açar; kesitler arasında kaydırılır, düşey abartması vardır; Locate Station Via Datapoint planda
   tıklanan yerin kesitini gösterir
@@ -94,7 +105,14 @@ kesit değişince eskiyen çizim, silinen nesneyle eksik, elle değişen, kayna�
 yol projesi değil. Var olan 1297 yol durumu çizim kaydıyla değişmeden geçer (koşucular `road`'un `drawings`'ini
 yalnız durum andığında karşılaştırır). Sözleşmenin kuralı birim testli (`a_drawing_record_is_judged`), `.kcad` şema
 161'in `road-work.kcad` örneği çizim ve `autoRebuild` taşır, `broken/road-drawing-bad-stamp.kcad` reddedilir
-(bağımsız okuyucu da). Python ve MCP. Y13.2: §3. Y13.3: §4. Y13.4: §5.
+(bağımsız okuyucu da). Python ve MCP. Y13.2 (yapıldı, yeniden üretme): §3. `road.project.rebuild` 22, `road.project.edit`
+20 ortak durum (aynı başvuru; yeniden üretilen çizimin nesne sayısı ve uyarıları komutunun başvurusundan): tip kesit,
+boykesit değişince yeniden üretme, iki çizim tek adımda, yalnız adı verilen, nesnesi silinen, elle değişen (hepsinde
+kalır, adıyla edited olmadan ret, edited ile), kaynağı silinen, kilitli katman (bütün yazma geri), plan, doğrulama,
+geri alma, sıra ve yineleme; kendiliğinden açıkken tip kesit ve boykesit değişikliğinin adımında yeniden üretme
+(drawings_rebuilt), elle değişen (drawing_edited) ve üretilemeyen (drawing_not_rebuilt) kalır, değişikliği geri almak
+çizimi de geri alır, silinen nesne ve kaynağı silinen çizim kendiliğinden üretilmez. Çizim komutlarının denetimi
+nesneler silinmeden önce koşar; reddeden çizim hiçbir şey bırakmaz. Y13.3: §4. Y13.4: §5.
 
 ## Sonra
 

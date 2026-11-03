@@ -139,6 +139,12 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &TerrainsContours) -> CommandResul
 }
 
 /// Writes the lines, one undo step.
+/// Draws `input` now, checked and written in the step it runs in, its drawing not kept (`road.project.rebuild` keeps it,
+/// docs/adr/0911 §3).
+pub(crate) fn draw(cx: &mut ExecutionContext<'_>, input: &kentos_commands::TerrainsContours) -> CommandResult<kentos_commands::TerrainsContoured> {
+    write_execute(cx, input.clone())
+}
+
 pub fn execute(cx: &mut ExecutionContext<'_>, input: TerrainsContours) -> CommandResult<TerrainsContoured> {
     crate::call::recorded(
         cx,

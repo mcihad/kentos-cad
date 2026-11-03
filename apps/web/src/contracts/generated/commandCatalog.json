@@ -42132,6 +42132,224 @@
       ]
     },
     {
+      "id": "road.project.rebuild",
+      "version": 1,
+      "title": "Yol çizimlerini yeniden üret",
+      "summary": "Yol komutlarının çizimlerini çizildikleri girdiyle yeniden yazar: eski nesneleri silinir, aynı katmana yenileri yazılır, kaydın kaynak damgaları ve nesneleri yenilenir; tek geri alma adımı “Yeniden üret”. drawings verilmezse eskiyen ve nesnesi eksik bütün çizimler; elle değişenler ve kaynağı silinenler left'te nedeniyle kalır. Adıyla verilen elle değişmiş çizim yalnız edited ile yeniden üretilir (değişiklikleri silinir). Çizim komutunun kendi retleri (katman yok ya da kilitli, kaynak çizilmiyor) bütün yazmayı geri alır. Retler: invalid_revision, revision_conflict, not_a_road_project, unknown_drawing, drawing_source_gone, drawing_edited ve çizim komutlarının retleri.",
+      "aliases": [
+        "yenidenuret"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.project.rebuild` v1 (docs/adr/0911 §3): the drawings by id to draw again; absent, every drawing that\nis stale or missing objects. A drawing changed by hand is drawn again only when named and `edited` says so (its\nchanges are lost). Each is drawn again with the input it was drawn with: its objects removed, new ones written on\nits layer, its sources' stamps and objects kept anew; one undo step “Yeniden üret”.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `unknown_drawing`,\n`drawing_source_gone` (a named drawing whose main source is gone), `drawing_edited` (a named drawing changed by hand\nwithout `edited`), and the drawing commands' own (a layer gone or locked, a source that no longer draws).",
+        "properties": {
+          "drawings": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "edited": {
+            "type": "boolean"
+          },
+          "expectedRevision": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "title": "RoadProjectRebuild",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.project.rebuild` v1: the drawings drawn again in order, the ones left, and the revision after.",
+        "properties": {
+          "left": {
+            "items": {
+              "$ref": "#/$defs/RoadDrawingLeft"
+            },
+            "type": "array"
+          },
+          "rebuilt": {
+            "items": {
+              "$ref": "#/$defs/RoadDrawingRebuilt"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "rebuilt",
+          "revision"
+        ],
+        "title": "RoadProjectRebuilt",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.project.rebuild` v1: the drawings drawn again in order, the ones left, and the revision after.",
+        "properties": {
+          "left": {
+            "items": {
+              "$ref": "#/$defs/RoadDrawingLeft"
+            },
+            "type": "array"
+          },
+          "rebuilt": {
+            "items": {
+              "$ref": "#/$defs/RoadDrawingRebuilt"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "rebuilt",
+          "revision"
+        ],
+        "title": "RoadProjectRebuilt",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_drawing",
+          "drawing_source_gone",
+          "drawing_edited",
+          "road_drawings_full",
+          "layer_locked",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "corridor_unsolved"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Eskiyen bütün çizimler",
+          "input": {}
+        }
+      ]
+    },
+    {
+      "id": "road.project.edit",
+      "version": 1,
+      "title": "Kendiliğinden yeniden üret",
+      "summary": "autoRebuild açıkken bir yazma, eskittiği yol çizimlerini kendi adımında yeniden üretir (uyarı drawings_rebuilt); elle değişenler (drawing_edited) ve üretilemeyenler (drawing_not_rebuilt) kalır ve söylenir. Tek geri alma adımı “Kendiliğinden yeniden üret”. Retler: invalid_revision, revision_conflict, not_a_road_project, nothing_to_set.",
+      "aliases": [
+        "otouret"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.project.edit` v1 (docs/adr/0911 §3): `autoRebuild` turns drawing the stale drawings again by itself, in\nthe step of the write that left them stale, on or off; one undo step “Kendiliğinden yeniden üret”.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `nothing_to_set`.",
+        "properties": {
+          "autoRebuild": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "expectedRevision": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "title": "RoadProjectEdit",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.project.edit` v1: drawing again by itself now, and the revision after.",
+        "properties": {
+          "autoRebuild": {
+            "type": "boolean"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "autoRebuild",
+          "revision"
+        ],
+        "title": "RoadProjectEdited",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.project.edit` v1: drawing again by itself now, and the revision after.",
+        "properties": {
+          "autoRebuild": {
+            "type": "boolean"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "autoRebuild",
+          "revision"
+        ],
+        "title": "RoadProjectEdited",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "nothing_to_set",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "drawings_rebuilt",
+          "drawing_edited",
+          "drawing_not_rebuilt"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Aç",
+          "input": {
+            "autoRebuild": true
+          }
+        }
+      ]
+    },
+    {
       "id": "file.export.landxml",
       "version": 1,
       "title": "LandXML dışa aktar",
@@ -78837,6 +79055,36 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "glTF sahnesi yazılamıyor."
+    },
+    {
+      "code": "unknown_drawing",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Yol çizimi projede yok."
+    },
+    {
+      "code": "drawing_source_gone",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Yol çiziminin kaynağı projede yok; yeniden üretilemez."
+    },
+    {
+      "code": "drawing_edited",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Yol çiziminin nesneleri elle değişti; yeniden üretmek bu değişiklikleri siler."
+    },
+    {
+      "code": "drawings_rebuilt",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Eskiyen yol çizimleri yeniden üretildi."
+    },
+    {
+      "code": "drawing_not_rebuilt",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Eskiyen bir yol çizimi kendiliğinden yeniden üretilemedi."
     },
     {
       "code": "road_drawings_full",
@@ -143246,6 +143494,56 @@
         "input",
         "sources",
         "digest"
+      ],
+      "type": "object"
+    },
+    "RoadDrawingLeft": {
+      "description": "A drawing left as it is, and why: changed by hand (`edited`), its main source gone (`gone`), or it does not draw now\n(`refused`, the command's sentence).",
+      "properties": {
+        "drawing": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "why": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "drawing",
+        "why",
+        "message"
+      ],
+      "type": "object"
+    },
+    "RoadDrawingRebuilt": {
+      "description": "A drawing drawn again: its id and command, how many objects it removed and the new ones.",
+      "properties": {
+        "command": {
+          "type": "string"
+        },
+        "drawing": {
+          "type": "string"
+        },
+        "removed": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "uids": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "drawing",
+        "command",
+        "removed",
+        "uids"
       ],
       "type": "object"
     },

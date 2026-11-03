@@ -236,6 +236,15 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &CorridorsDraw) -> CommandResult<C
 }
 
 /// Writes the slope plan: one undo step.
+/// Draws `input` now, checked and written in the step it runs in, its drawing not kept (`road.project.rebuild` keeps it,
+/// docs/adr/0911 §3).
+pub(crate) fn draw(cx: &mut ExecutionContext<'_>, input: &kentos_commands::CorridorsDraw) -> CommandResult<kentos_commands::CorridorsDrawn> {
+    match check(cx.doc, input) {
+        Ok(c) => write(cx, input, c),
+        Err(stop) => stop.into(),
+    }
+}
+
 pub fn execute(cx: &mut ExecutionContext<'_>, input: CorridorsDraw) -> CommandResult<CorridorsDrawn> {
     crate::call::recorded(
         cx,

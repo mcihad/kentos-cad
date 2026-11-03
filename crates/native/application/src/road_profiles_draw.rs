@@ -506,6 +506,12 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &ProfilesDraw) -> CommandResult<Pr
 }
 
 /// Writes the drawing: one undo step.
+/// Draws `input` now, checked and written in the step it runs in, its drawing not kept (`road.project.rebuild` keeps it,
+/// docs/adr/0911 §3).
+pub(crate) fn draw(cx: &mut ExecutionContext<'_>, input: &kentos_commands::ProfilesDraw) -> CommandResult<kentos_commands::ProfilesDrawn> {
+    write_execute(cx, input.clone())
+}
+
 pub fn execute(cx: &mut ExecutionContext<'_>, input: ProfilesDraw) -> CommandResult<ProfilesDrawn> {
     crate::call::recorded(
         cx,

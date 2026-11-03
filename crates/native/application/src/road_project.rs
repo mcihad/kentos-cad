@@ -350,8 +350,8 @@ impl Tree<'_> {
     }
 }
 
-/// The project's tree now.
-pub(crate) fn tree(doc: &Document, deep: bool) -> Result<RoadProjectTree, Stop> {
+/// Refuses a drawing that is not a road project's.
+pub(crate) fn road_project(doc: &Document) -> Result<(), Stop> {
     if doc.settings().cad_work != Some(kentos_commands::CadWork::Road) {
         return Err(crate::road_terrains::fail(
             crate::codes::NOT_A_ROAD_PROJECT,
@@ -359,6 +359,12 @@ pub(crate) fn tree(doc: &Document, deep: bool) -> Result<RoadProjectTree, Stop> 
             "",
         ));
     }
+    Ok(())
+}
+
+/// The project's tree now.
+pub(crate) fn tree(doc: &Document, deep: bool) -> Result<RoadProjectTree, Stop> {
+    road_project(doc)?;
     let mut t = Tree { doc, deep, nodes: Vec::new() };
     t.surfaces();
     t.alignments();

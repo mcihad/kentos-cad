@@ -145,6 +145,23 @@ pub(crate) fn objects_stamp(doc: &Document, uids: &[String]) -> (String, usize) 
     (stamp(&Value::Array(list)), present)
 }
 
+/// A drawing command's main source: its kind and the input's field naming it.
+pub(crate) fn main_of(command: &str) -> Option<(RoadSourceKind, &'static str)> {
+    use RoadSourceKind as K;
+    Some(match command {
+        "road.alignments.label" => (K::Alignment, "alignment"),
+        "road.profiles.draw" => (K::Profile, "profile"),
+        "road.sections.draw" => (K::Sections, "set"),
+        "road.corridors.draw" => (K::Corridor, "corridor"),
+        "road.guardrails.draw" => (K::Guardrail, "guardrail"),
+        "road.culverts.draw" => (K::Culvert, "culvert"),
+        "road.walls.draw" => (K::Wall, "wall"),
+        "road.junctions.draw" => (K::Junction, "junction"),
+        "road.terrains.contours" => (K::Surface, "surface"),
+        _ => return None,
+    })
+}
+
 /// The (id, name) of the project's sources of `kind`.
 fn named(doc: &Document, kind: RoadSourceKind) -> Vec<(String, String)> {
     use RoadSourceKind as K;
