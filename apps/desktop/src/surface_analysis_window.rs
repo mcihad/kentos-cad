@@ -2,8 +2,9 @@
 //! written. Analiz: elevation, slope or aspect ranges (Civil 3D's Elevations, Slopes, Directions) coloured in plan with
 //! their plan and 3D areas, the roughness and a raster's slope against the triangles' (`road.terrains.analysis`). Fark:
 //! a second surface over the first, cut, fill and net and the difference's ranges (`road.terrains.compare`). Kalite: near
-//! pairs, spikes, coverage gaps and check points by class (`road.terrains.quality`). The breaks and limits are the
-//! user's; KentOS fills in none.
+//! pairs, spikes, coverage gaps and check points by class (`road.terrains.quality`); the spikes found can be left out
+//! of the surface, the difference said first and written in one undo step, or everything left out taken back
+//! (`road.terrains.repair`, Y18.7). The breaks and limits are the user's; KentOS fills in none.
 //!
 //! ```text
 //! ┌ Yüzey analizi ──────────────────────────────────────────────────────────────────────────────────┐
@@ -20,9 +21,12 @@ use iced::widget::{Column, container, row, scrollable, space};
 use iced::{Color, Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{
     TerrainBands, TerrainCheckpointsAsk, TerrainSpikesAsk, TerrainsAnalysed, TerrainsAnalysis, TerrainsCompare,
-    TerrainsCompared, TerrainsQuality, TerrainsQualityRead,
+    TerrainsCompared, TerrainsQuality, TerrainsQualityRead, TerrainsRepair, TerrainsRepaired,
 };
-use kentos_native_application::{road_terrains_analysis, road_terrains_compare, road_terrains_quality};
+use kentos_interaction::Level;
+use kentos_native_application::{
+    ExecutionContext, road_terrains_analysis, road_terrains_compare, road_terrains_quality, road_terrains_repair,
+};
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::select::{Choice, Select};
@@ -35,6 +39,9 @@ use crate::traces::Control;
 /// The window's title, which a trace names it by.
 pub const TITLE: &str = "Yüzey analizi";
 const PREVIEW: &str = "Önizle";
+const LEAVE: &str = "Sivrileri bırak";
+const RESTORE: &str = "Bırakılanları geri al";
+const APPLY: &str = "Onarımı uygula";
 const CLOSE: &str = "Kapat";
 /// The typed fields, in order.
 pub(crate) const FIELDS: [&str; 9] = [
@@ -77,6 +84,8 @@ pub struct Window {
     pub(crate) fields: [String; 9],
     pub(crate) preview: Option<Result<Read, String>>,
     pub(crate) warnings: Vec<String>,
+    /// A repair asked (Kalite: the spikes left out, or everything taken back) and its difference, before it is written.
+    pub(crate) repair: Option<(TerrainsRepair, Result<TerrainsRepaired, String>)>,
 }
 
 #[derive(Debug, Clone)]
@@ -89,6 +98,9 @@ pub enum Event {
     Checks(Option<String>),
     Field(usize, String),
     Preview,
+    LeaveSpikes,
+    RestoreAll,
+    Apply,
     Close,
 }
 
@@ -199,6 +211,7 @@ impl App {
             fields: Default::default(),
             preview: None,
             warnings: Vec::new(),
+            repair: None,
         }));
         self.dialog = Some(Dialog::SurfaceAnalysis);
     }
@@ -234,7 +247,42 @@ impl App {
             Event::Checks(l) => w.checks = l,
             Event::Field(k, t) => w.fields[k.min(8)] = t,
             Event::Preview => {
+                w.repair = None;
                 self.preview_surface_analysis();
+                return Task::none();
+            }
+            Event::LeaveSpikes | Event::RestoreAll => {
+                let Some(surface) = w.surface.clone() else { return Task::none() };
+                let input = if matches!(event, Event::LeaveSpikes) {
+                    let spikes = match &w.preview {
+                        Some(Ok(Read::Quality(q))) => q.spikes.iter().map(|s| [s.at[0], s.at[1]]).collect(),
+                        _ => Vec::new(),
+                    };
+                    TerrainsRepair { surface, exclude: spikes, restore: Vec::new(), expected_revision: None }
+                } else {
+                    let left = self.document.as_ref().and_then(|d| d.model.settings().road.as_ref()).and_then(|r| {
+                        r.surfaces.iter().find(|s| Some(&s.id) == w.surface.as_ref()).map(|s| s.excluded.iter().map(|e| [e.x, e.y]).collect())
+                    });
+                    TerrainsRepair { surface, exclude: Vec::new(), restore: left.unwrap_or_default(), expected_revision: None }
+                };
+                let Some(doc) = &self.document else { return Task::none() };
+                let read = road_terrains_repair::preview(&doc.model, &input);
+                if let Some(w) = self.surface_analysis_window.as_mut() {
+                    w.repair = Some((input, read));
+                }
+                return Task::none();
+            }
+            Event::Apply => {
+                let Some((input, Ok(_))) = w.repair.clone() else { return Task::none() };
+                let Some(doc) = self.document.as_mut() else { return Task::none() };
+                let result = road_terrains_repair::execute(&mut ExecutionContext::new(&mut doc.model), input);
+                if let Some(out) = self.answered(result) {
+                    self.say(Level::Success, format!("Yüzey onarıldı; {} nokta kaydı dışarıda.", out.excluded.len()));
+                    if let Some(w) = self.surface_analysis_window.as_mut() {
+                        w.repair = None;
+                    }
+                    self.preview_surface_analysis();
+                }
                 return Task::none();
             }
             Event::Close => {
@@ -246,6 +294,7 @@ impl App {
         if let Some(w) = self.surface_analysis_window.as_mut() {
             w.preview = None;
             w.warnings.clear();
+            w.repair = None;
         }
         Task::none()
     }
@@ -397,13 +446,41 @@ impl App {
                 body = body.push(row![picture, scrollable(side).height(typography::scaled(360.0))].spacing(12));
             }
         }
+        if let Some((_, read)) = &w.repair {
+            match read {
+                Ok(r) => {
+                    let largest = r.largest.as_ref().map_or("değişiklik yok".to_owned(), |l| {
+                        format!("en büyük {:+.3} m ({:.2}, {:.2})", l.difference, l.at[0], l.at[1])
+                    });
+                    body = body.push(
+                        label::body(format!(
+                            "Onarımın farkı (sonra − önce): kazı {:.3} m³ · dolgu {:.3} m³ · değişen alan {:.2} m² · {largest} · köşe {} → {} · bırakılan {}",
+                            r.cut, r.fill, r.changed_area, r.corners_before, r.corners_after, r.excluded.len()
+                        ))
+                        .style(warn),
+                    );
+                }
+                Err(why) => body = body.push(label::caption(why.clone()).style(danger)),
+            }
+        }
+        let spikes = matches!(&w.preview, Some(Ok(Read::Quality(q))) if !q.spikes.is_empty());
+        let left = model
+            .and_then(|m| m.settings().road.as_ref())
+            .and_then(|r| r.surfaces.iter().find(|s| Some(&s.id) == w.surface.as_ref()))
+            .is_some_and(|s| !s.excluded.is_empty());
+        let ready = matches!(&w.repair, Some((_, Ok(_))));
+        let mut bottom = row![].spacing(8).align_y(iced::alignment::Vertical::Center);
+        if w.mode == Mode::Quality {
+            bottom = bottom
+                .push(words::secondary(LEAVE, spikes.then(|| msg(Event::LeaveSpikes))))
+                .push(words::secondary(RESTORE, left.then(|| msg(Event::RestoreAll))))
+                .push(words::secondary(APPLY, ready.then(|| msg(Event::Apply))));
+        }
         body = body.push(
-            row![
-                space::horizontal().width(Fill),
-                words::secondary(PREVIEW, Some(msg(Event::Preview))),
-                words::secondary(CLOSE, Some(msg(Event::Close))),
-            ]
-            .spacing(8),
+            bottom
+                .push(space::horizontal().width(Fill))
+                .push(words::secondary(PREVIEW, Some(msg(Event::Preview))))
+                .push(words::secondary(CLOSE, Some(msg(Event::Close)))),
         );
         Frame::new(TITLE).push(body).width(1180.0).modal(msg(Event::Close))
     }
@@ -415,6 +492,9 @@ impl App {
         Ok(match control {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(PREVIEW) => Some(msg(Event::Preview)),
+            Control::Press(LEAVE) => Some(msg(Event::LeaveSpikes)),
+            Control::Press(RESTORE) => Some(msg(Event::RestoreAll)),
+            Control::Press(APPLY) => Some(msg(Event::Apply)),
             Control::Fill(name, t) if !name.is_empty() && FIELDS.contains(&name) => {
                 let k = FIELDS.iter().position(|f| *f == name).unwrap_or(0);
                 Some(msg(Event::Field(k, t.to_owned())))

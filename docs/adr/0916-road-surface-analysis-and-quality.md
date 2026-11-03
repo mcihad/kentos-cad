@@ -108,3 +108,9 @@ kırık hattın köşesi `repair_breakline`, kaydı olmayan yer `repair_not_a_po
 değişen alan, en büyük değişiklik ve yeri; köşe ve üçgen sayıları); kabul edilmiş yüzey kabul edilmiş kalır
 (`tests/all/terrain_repair.rs`). 22 ortak durum (`scripts/fixtures/road_terrain_repair_cases.py`: düzlemde kare içindeki
 sivri noktanın çadırı, üçgenleri boş çember sınamasıyla; KentOS kodu yok). Python, MCP.
+
+Y18.7 (yapıldı, masaüstünde onarım): Yüzey analizi'nin Kalite kipinde Sivrileri bırak bulunan sivri noktaların
+`road.terrains.repair` planını okur ve farkı (kazı, dolgu, değişen alan, en büyük değişiklik, köşeler) yazmadan söyler;
+Onarımı uygula tek adımda yazar ve kaliteyi yeniden okur; Bırakılanları geri al yüzeyin bıraktıklarının hepsini geri
+alır. Test `the_spikes_are_left_out_after_their_difference_and_taken_back` (fark yazmaz, uygulanınca sivri kalmaz, geri
+alınır, geri al adımı), resimler `.run/gui-evidence/yol-y18-yuzey-analizi-onarim-*`.

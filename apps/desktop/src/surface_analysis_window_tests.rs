@@ -16,6 +16,57 @@ fn app() -> App {
     app
 }
 
+/// `road.terrains.repair`'s drawing: the same lattices and a plane with two spikes inside its squares.
+fn repair_app() -> App {
+    let (mut app, _) = App::boot(None);
+    let cases: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/road.terrains.repair.json")).expect("cases");
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).expect("the drawing reads");
+    let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    app
+}
+
+/// The spikes of the repair's plane asked.
+fn spiky(app: &mut App) {
+    let _ = app.update(Message::Run("terrain.analysis"));
+    send(app, W::Mode(Mode::Quality));
+    send(app, W::Surface("t-12".into()));
+    send(app, W::Field(4, "2.5".into()));
+    send(app, W::Field(5, "0.6".into()));
+    send(app, W::Preview);
+}
+
+fn excluded(app: &App) -> usize {
+    app.document.as_ref().and_then(|d| d.model.settings().road.as_ref()).map_or(0, |r| {
+        r.surfaces.iter().find(|s| s.id == "t-12").map_or(0, |s| s.excluded.len())
+    })
+}
+
+#[test]
+fn the_spikes_are_left_out_after_their_difference_and_taken_back() {
+    let mut app = repair_app();
+    spiky(&mut app);
+    let Read::Quality(q) = read(&app) else { panic!("quality") };
+    assert_eq!(q.spike_count, Some(2), "{q:?}");
+    send(&mut app, W::LeaveSpikes);
+    let r = match &app.surface_analysis_window.as_ref().expect("open").repair {
+        Some((_, Ok(r))) => r.clone(),
+        other => panic!("a difference: {other:?}"),
+    };
+    assert!(r.cut > 0.0 && r.fill > 0.0 && r.corners_after + 2 == r.corners_before, "{r:?}");
+    assert_eq!(excluded(&app), 0, "the difference writes nothing");
+    send(&mut app, W::Apply);
+    assert_eq!(excluded(&app), 2);
+    let Read::Quality(q) = read(&app) else { panic!("quality") };
+    assert_eq!(q.spike_count, Some(0), "read again without them: {q:?}");
+    send(&mut app, W::RestoreAll);
+    send(&mut app, W::Apply);
+    assert_eq!(excluded(&app), 0);
+    let _ = app.update(Message::Run("edit.undo"));
+    assert_eq!(excluded(&app), 2);
+}
+
 fn send(app: &mut App, e: W) {
     let _ = app.update(Message::SurfaceAnalysis(e));
 }
@@ -124,5 +175,12 @@ fn screens() {
         send(&mut app, W::Field(7, "Sınıf".into()));
         send(&mut app, W::Preview);
         shot(&mut app, "kontrol");
+        let mut app = repair_app();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::RibbonTab("terrain"));
+        spiky(&mut app);
+        send(&mut app, W::LeaveSpikes);
+        shot(&mut app, "onarim");
     }
 }
