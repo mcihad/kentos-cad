@@ -61,3 +61,10 @@ eğiminin üçgenlerinkinden farkı). Ret `invalid_analysis`. 29 ortak durum
 (`scripts/fixtures/road_terrain_analysis_cases.py`: drenajın vadi, çukur ve düzlem kafesleri ile teras ve sırt; her
 kafes z = g(x) + h(y), her kare düzlem, cevaplar karelerle; en büyüğün yeri yalnız tekse yazılır; KentOS kodu yok).
 Python `kentos.cad.road.terrains.analysis`, MCP.
+
+Y18.3 (yapıldı, yüzey farkı): §3. `kentos_road::volume`'e `Ground::overlay` (karşılaştırmanın ve tabanın üçgenlerinin
+kesişen parçaları, d köşelerinde) ve `difference` (hacimler Y8'in kuralıyla, en küçük ve en büyük fark ve yeri, fark
+aralıklarının alanı); `road.terrains.compare` (`road_terrains_compare.rs`): kazı, dolgu, net, alanları, örtülen ve
+tabanın dışında kalan alan (uyarı `compare_uncovered`), uçlar, aralıklar. 22 ortak durum
+(`scripts/fixtures/road_terrain_compare_cases.py`: iki kafesin dikdörtgenlerle üst üste konuşu, her dikdörtgende fark
+doğrusal; düzlem üstünde yarısı dışarıda kazı, teras üstünde set; KentOS kodu yok). Python, MCP.

@@ -41469,6 +41469,272 @@
       ]
     },
     {
+      "id": "road.terrains.compare",
+      "version": 1,
+      "title": "Yüzeyleri karşılaştır",
+      "summary": "İki arazi yüzeyinin farkını okur (Civil 3D'nin TIN hacim yüzeyi); hiçbir şey yazmaz. comparison yüzeyinin base yüzeyinden farkı d = z_karşılaştırma − z_taban, karşılaştırmanın planında: iki yüzeyin üçgenleri üst üste kırpılır, her parçada d doğrusal, hacim kesin. Kazı (karşılaştırma tabanın altında) ve dolgu hacmi, net (dolgu − kazı), alanları, iki yüzeyin örttüğü alan ve tabanın dışında kalan alan; en küçük ve en büyük fark ve yeri; ranges (m) ile farkın aralıklarının plan alanı ve aralık dışı. Uyarılar: compare_uncovered. Retler: not_a_road_project, invalid_analysis, unknown_terrain, terrain_unbuildable.",
+      "aliases": [
+        "yuzeyfarki",
+        "yuzeykarsilastir",
+        "tinhacim"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.terrains.compare` v1: the difference of `comparison` over `base` (each a surface's id or name;\nCivil 3D's TIN volume surface), over the comparison's plan; with `ranges` (m, increasing, at least two) the plan\narea of the difference between each pair.\n\nRefusals, in this order: `not_a_road_project`, `invalid_analysis` (ranges fewer than two, not finite or not\nincreasing), `unknown_terrain`, `invalid_analysis` (the same surface twice), `terrain_unbuildable`. Warnings:\n`compare_uncovered` (part of the comparison is off the base and left out).",
+        "properties": {
+          "base": {
+            "type": "string"
+          },
+          "comparison": {
+            "type": "string"
+          },
+          "ranges": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "type": [
+              "array",
+              "null"
+            ],
+            "x-unit": "m"
+          }
+        },
+        "required": [
+          "base",
+          "comparison"
+        ],
+        "title": "TerrainsCompare",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.terrains.compare` v1: the surfaces' ids; the cut (comparison below base) and fill volumes, the net\n(fill − cut), their plan areas, the area both cover and the comparison's area off the base; the least and the\nlargest difference; with ranges, their areas and the area outside them.",
+        "properties": {
+          "bands": {
+            "items": {
+              "$ref": "#/$defs/TerrainDifferenceBand"
+            },
+            "type": "array"
+          },
+          "base": {
+            "type": "string"
+          },
+          "comparison": {
+            "type": "string"
+          },
+          "covered": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "cut": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "volume"
+          },
+          "cutArea": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "fill": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "volume"
+          },
+          "fillArea": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "largest": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TerrainDifferenceAt"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "least": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TerrainDifferenceAt"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "net": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "volume"
+          },
+          "outsideArea": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "area"
+          },
+          "uncovered": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          }
+        },
+        "required": [
+          "base",
+          "comparison",
+          "cut",
+          "fill",
+          "net",
+          "cutArea",
+          "fillArea",
+          "covered",
+          "uncovered"
+        ],
+        "title": "TerrainsCompared",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.terrains.compare` v1: the surfaces' ids; the cut (comparison below base) and fill volumes, the net\n(fill − cut), their plan areas, the area both cover and the comparison's area off the base; the least and the\nlargest difference; with ranges, their areas and the area outside them.",
+        "properties": {
+          "bands": {
+            "items": {
+              "$ref": "#/$defs/TerrainDifferenceBand"
+            },
+            "type": "array"
+          },
+          "base": {
+            "type": "string"
+          },
+          "comparison": {
+            "type": "string"
+          },
+          "covered": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "cut": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "volume"
+          },
+          "cutArea": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "fill": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "volume"
+          },
+          "fillArea": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "largest": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TerrainDifferenceAt"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "least": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TerrainDifferenceAt"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "net": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "volume"
+          },
+          "outsideArea": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "area"
+          },
+          "uncovered": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          }
+        },
+        "required": [
+          "base",
+          "comparison",
+          "cut",
+          "fill",
+          "net",
+          "cutArea",
+          "fillArea",
+          "covered",
+          "uncovered"
+        ],
+        "title": "TerrainsCompared",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "invalid_analysis",
+          "unknown_terrain",
+          "terrain_unbuildable"
+        ],
+        "warnings": [
+          "compare_uncovered"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Ölçüm öncesi ve sonrası",
+          "input": {
+            "base": "Mevcut zemin",
+            "comparison": "Kazı sonrası",
+            "ranges": [
+              -2.0,
+              -1.0,
+              0.0,
+              1.0,
+              2.0
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "road.terrains.cloud",
       "version": 1,
       "title": "Buluttan arazi",
@@ -81242,6 +81508,12 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Yüzey analizi sorusu geçerli değil; ileti nedenini söyler."
+    },
+    {
+      "code": "compare_uncovered",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Karşılaştırma yüzeyinin bir kısmı tabanın dışında; o kısım hacme girmedi."
     },
     {
       "code": "invalid_swept",
@@ -159184,6 +159456,57 @@
         "major",
         "closed",
         "points"
+      ],
+      "type": "object"
+    },
+    "TerrainDifferenceAt": {
+      "description": "A difference's extreme: its value (comparison − base) and where.",
+      "properties": {
+        "at": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array",
+          "x-unit": "length"
+        },
+        "difference": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "difference",
+        "at"
+      ],
+      "type": "object"
+    },
+    "TerrainDifferenceBand": {
+      "description": "A range of the difference and its plan area.",
+      "properties": {
+        "area": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "from": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "to": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "from",
+        "to",
+        "area"
       ],
       "type": "object"
     },

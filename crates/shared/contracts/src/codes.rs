@@ -829,6 +829,8 @@ codes! {
     /// A surface analysis that is not right: nothing asked, breaks not increasing, a cell not positive, too many cells
     /// (docs/adr/0916 §2).
     INVALID_ANALYSIS = "invalid_analysis", Failed, false, "Yüzey analizi sorusu geçerli değil; ileti nedenini söyler.";
+    /// A warning: part of the comparison surface is off the base and is left out of the volumes (docs/adr/0916 §3).
+    COMPARE_UNCOVERED = "compare_uncovered", Warning, false, "Karşılaştırma yüzeyinin bir kısmı tabanın dışında; o kısım hacme girmedi.";
     INVALID_SWEPT = "invalid_swept", Failed, false, "Araç izi sorusu geçerli değil; ileti nedenini söyler.";
     /// A warning: a vehicle's body meets an obstacle somewhere on its path (docs/adr/0915 §2).
     SWEPT_TOUCHES = "swept_touches", Warning, false, "Aracın gövdesi yolunun bir yerinde bir engele değiyor.";

@@ -77767,6 +77767,58 @@ class TerrainContour(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class TerrainDifferenceAt(_Model):
+    """A difference's extreme: its value (comparison − base) and where.
+    Attributes:
+        difference: Unit: m.
+        at: Unit: length.
+    """
+    difference: float
+    at: list[float]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["difference"] = float(self.difference)
+        out["at"] = [float(e0) for e0 in self.at]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainDifferenceAt:
+        return cls(
+            difference=float(data["difference"]),
+            at=[float(e0) for e0 in data["at"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TerrainDifferenceBand(_Model):
+    """A range of the difference and its plan area.
+    Attributes:
+        from_: Unit: m.
+        to: Unit: m.
+        area: Unit: area.
+    """
+    from_: float
+    to: float
+    area: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = float(self.from_)
+        out["to"] = float(self.to)
+        out["area"] = float(self.area)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainDifferenceBand:
+        return cls(
+            from_=float(data["from"]),
+            to=float(data["to"]),
+            area=float(data["area"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class TerrainFigures(_Model):
     """A surface's figures: corners, kept triangles, constrained edges (breaklines' and rings' pieces), plan area and the
     kept corners' lowest and highest heights.
@@ -78233,6 +78285,108 @@ class TerrainsAnalysis(_Model):
             pieces=data["pieces"] if "pieces" in data else False,
             roughness=data["roughness"] if "roughness" in data else False,
             slopes=UNSET if "slopes" not in data else None if data["slopes"] is None else [float(e0) for e0 in data["slopes"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TerrainsCompare(_Model):
+    """Input of `road.terrains.compare` v1: the difference of `comparison` over `base` (each a surface's id or name;
+    Civil 3D's TIN volume surface), over the comparison's plan; with `ranges` (m, increasing, at least two) the plan
+    area of the difference between each pair.
+
+    Refusals, in this order: `not_a_road_project`, `invalid_analysis` (ranges fewer than two, not finite or not
+    increasing), `unknown_terrain`, `invalid_analysis` (the same surface twice), `terrain_unbuildable`. Warnings:
+    `compare_uncovered` (part of the comparison is off the base and left out).
+    Attributes:
+        ranges: Unit: m.
+    """
+    base: str
+    comparison: str
+    ranges: list[float] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["base"] = self.base
+        out["comparison"] = self.comparison
+        if self.ranges is not UNSET:
+            out["ranges"] = None if self.ranges is None else [float(e0) for e0 in self.ranges]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainsCompare:
+        return cls(
+            base=data["base"],
+            comparison=data["comparison"],
+            ranges=UNSET if "ranges" not in data else None if data["ranges"] is None else [float(e0) for e0 in data["ranges"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TerrainsCompared(_Model):
+    """Output of `road.terrains.compare` v1: the surfaces' ids; the cut (comparison below base) and fill volumes, the net
+    (fill − cut), their plan areas, the area both cover and the comparison's area off the base; the least and the
+    largest difference; with ranges, their areas and the area outside them.
+    Attributes:
+        cut: Unit: volume.
+        fill: Unit: volume.
+        net: Unit: volume.
+        cut_area: Unit: area.
+        fill_area: Unit: area.
+        covered: Unit: area.
+        uncovered: Unit: area.
+        outside_area: Unit: area.
+    """
+    base: str
+    comparison: str
+    cut: float
+    fill: float
+    net: float
+    cut_area: float
+    fill_area: float
+    covered: float
+    uncovered: float
+    bands: list[TerrainDifferenceBand] | Unset = UNSET
+    largest: TerrainDifferenceAt | None | Unset = UNSET
+    least: TerrainDifferenceAt | None | Unset = UNSET
+    outside_area: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["base"] = self.base
+        out["comparison"] = self.comparison
+        out["cut"] = float(self.cut)
+        out["fill"] = float(self.fill)
+        out["net"] = float(self.net)
+        out["cutArea"] = float(self.cut_area)
+        out["fillArea"] = float(self.fill_area)
+        out["covered"] = float(self.covered)
+        out["uncovered"] = float(self.uncovered)
+        if self.bands is not UNSET:
+            out["bands"] = [e0.to_json() for e0 in self.bands]
+        if self.largest is not UNSET:
+            out["largest"] = None if self.largest is None else self.largest.to_json()
+        if self.least is not UNSET:
+            out["least"] = None if self.least is None else self.least.to_json()
+        if self.outside_area is not UNSET:
+            out["outsideArea"] = None if self.outside_area is None else float(self.outside_area)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainsCompared:
+        return cls(
+            base=data["base"],
+            comparison=data["comparison"],
+            cut=float(data["cut"]),
+            fill=float(data["fill"]),
+            net=float(data["net"]),
+            cut_area=float(data["cutArea"]),
+            fill_area=float(data["fillArea"]),
+            covered=float(data["covered"]),
+            uncovered=float(data["uncovered"]),
+            bands=[TerrainDifferenceBand.from_json(e0) for e0 in data["bands"]] if "bands" in data else UNSET,
+            largest=UNSET if "largest" not in data else None if data["largest"] is None else TerrainDifferenceAt.from_json(data["largest"]),
+            least=UNSET if "least" not in data else None if data["least"] is None else TerrainDifferenceAt.from_json(data["least"]),
+            outside_area=UNSET if "outsideArea" not in data else None if data["outsideArea"] is None else float(data["outsideArea"]),
         )
 
 
@@ -105759,6 +105913,8 @@ __all__ = [
     "TerrainBand",
     "TerrainBands",
     "TerrainContour",
+    "TerrainDifferenceAt",
+    "TerrainDifferenceBand",
     "TerrainFigures",
     "TerrainGridSlope",
     "TerrainHeight",
@@ -105774,6 +105930,8 @@ __all__ = [
     "TerrainSurfaceDef",
     "TerrainsAnalysed",
     "TerrainsAnalysis",
+    "TerrainsCompare",
+    "TerrainsCompared",
     "TerrainsContoured",
     "TerrainsContours",
     "TerrainsCreate",

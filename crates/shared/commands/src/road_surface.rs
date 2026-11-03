@@ -158,3 +158,95 @@ pub struct TerrainsAnalysed {
     #[cfg_attr(feature = "ts", ts(optional))]
     pub grid: Option<TerrainGridSlope>,
 }
+
+pub const ROAD_TERRAINS_COMPARE: &str = "road.terrains.compare";
+pub const ROAD_TERRAINS_COMPARE_VERSION: u32 = 1;
+
+/// Input of `road.terrains.compare` v1: the difference of `comparison` over `base` (each a surface's id or name;
+/// Civil 3D's TIN volume surface), over the comparison's plan; with `ranges` (m, increasing, at least two) the plan
+/// area of the difference between each pair.
+///
+/// Refusals, in this order: `not_a_road_project`, `invalid_analysis` (ranges fewer than two, not finite or not
+/// increasing), `unknown_terrain`, `invalid_analysis` (the same surface twice), `terrain_unbuildable`. Warnings:
+/// `compare_uncovered` (part of the comparison is off the base and left out).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TerrainsCompare {
+    pub base: String,
+    pub comparison: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub ranges: Option<Vec<f64>>,
+}
+
+/// A difference's extreme: its value (comparison − base) and where.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TerrainDifferenceAt {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub difference: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub at: [f64; 2],
+}
+
+/// A range of the difference and its plan area.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TerrainDifferenceBand {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub from: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub to: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub area: f64,
+}
+
+/// Output of `road.terrains.compare` v1: the surfaces' ids; the cut (comparison below base) and fill volumes, the net
+/// (fill − cut), their plan areas, the area both cover and the comparison's area off the base; the least and the
+/// largest difference; with ranges, their areas and the area outside them.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TerrainsCompared {
+    pub base: String,
+    pub comparison: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub cut: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub fill: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub net: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub cut_area: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub fill_area: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub covered: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub uncovered: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub least: Option<TerrainDifferenceAt>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub largest: Option<TerrainDifferenceAt>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<TerrainDifferenceBand>>", optional))]
+    pub bands: Vec<TerrainDifferenceBand>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub outside_area: Option<f64>,
+}
