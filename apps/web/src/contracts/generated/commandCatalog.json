@@ -40474,6 +40474,265 @@
       ]
     },
     {
+      "id": "road.alignments.fit",
+      "version": 1,
+      "title": "Çizgiden aks",
+      "summary": "Çizimin bir çizgisinden ya da açık çoklu çizgisinden aks kurar (DWG ya da DGN'den gelen yol ekseni); çizgi silinmez. method elements (Civil 3D'nin Create Alignment from Objects'i): düz parçalar aliyman, yay parçaları (büküm) daire kurbu; yaysız buluşan iki aliymana radius verilirse o yarıçapta kurp. method bestFit (Create Best Fit Alignment): köşe, komşularıyla geçen çember maxRadius'tan küçükse kurpta, değilse aliymanda; her aliyman koşusundan en küçük karelerle doğru, doğruların kesişimleri PI, kurbun yarıçapı iki doğruya teğet yayın köşelere en yakın olanı; klotoid yok. reverse çizginin sonundan başlatır; name (yoksa ‹n›. aks), start başlangıç km'si. Cevap aksın PI'larını, aliyman ve kurp sayısını, boyunu ve çizginin köşelerinin (ve yayların ortasının) aksa en büyük uzaklığını yeriyle verir; tolerance aşılırsa alignment_fit_deviation. Tek geri alma adımı “Çizgiden aks”. Retler: invalid_revision, revision_conflict, not_a_road_project, entity_not_found, invalid_alignment_fit.",
+      "aliases": [
+        "cizgidenaks",
+        "aksuydur"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `road.alignments.fit` v1: the line or open polyline by its persistent id, the method; with `elements` a\n`radius` puts that curve where two tangents meet without an arc; with `bestFit` `maxRadius` (required) parts curves\nfrom tangents. `reverse` runs the alignment from the line's end. The alignment is named `name` (“‹n›. aks” without\nit) and its km starts at `start` (0 without it). A `tolerance` (m) warns where the alignment lies farther from the\nline's vertices.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `entity_not_found`,\n`invalid_alignment_fit` (not a line or an open polyline, fewer than two points, a radius, a maximum radius or a\ntolerance not above 0, a maximum radius missing, compound or reverse arcs or tangents that do not meet, curves that do\nnot fit between their tangents, a name taken). Warnings: `alignment_fit_deviation`.",
+        "properties": {
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "maxRadius": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "method": {
+            "$ref": "#/$defs/AlignmentFitMethod"
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "radius": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "reverse": {
+            "type": "boolean"
+          },
+          "start": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "tolerance": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "uid": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "uid",
+          "method"
+        ],
+        "title": "AlignmentsFit",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.alignments.fit` v1, and its plan: the alignment made (its id, name and PIs), its tangents, curves and\nlength, the line's id, and the largest distance of the line's vertices (and its arcs' middles) from the alignment\nwith where it is; the drawing's revision.",
+        "properties": {
+          "curves": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "deviation": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "id": {
+            "type": "string"
+          },
+          "length": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "method": {
+            "$ref": "#/$defs/AlignmentFitMethod"
+          },
+          "name": {
+            "type": "string"
+          },
+          "pis": {
+            "items": {
+              "$ref": "#/$defs/AlignmentPi"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "tangents": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "worst": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array",
+            "x-unit": "length"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "source",
+          "method",
+          "pis",
+          "tangents",
+          "curves",
+          "length",
+          "deviation",
+          "worst",
+          "revision"
+        ],
+        "title": "AlignmentFitted",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.alignments.fit` v1, and its plan: the alignment made (its id, name and PIs), its tangents, curves and\nlength, the line's id, and the largest distance of the line's vertices (and its arcs' middles) from the alignment\nwith where it is; the drawing's revision.",
+        "properties": {
+          "curves": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "deviation": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "id": {
+            "type": "string"
+          },
+          "length": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "method": {
+            "$ref": "#/$defs/AlignmentFitMethod"
+          },
+          "name": {
+            "type": "string"
+          },
+          "pis": {
+            "items": {
+              "$ref": "#/$defs/AlignmentPi"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "tangents": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "worst": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array",
+            "x-unit": "length"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "source",
+          "method",
+          "pis",
+          "tangents",
+          "curves",
+          "length",
+          "deviation",
+          "worst",
+          "revision"
+        ],
+        "title": "AlignmentFitted",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "entity_not_found",
+          "invalid_alignment_fit",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "alignment_fit_deviation"
+        ]
+      },
+      "examples": [
+        {
+          "title": "DWG'den gelen eksen, en iyi uyumla",
+          "input": {
+            "maxRadius": 1000.0,
+            "method": "bestFit",
+            "tolerance": 0.05,
+            "uid": "0191f0aa-0000-7000-8000-000000000001"
+          }
+        }
+      ]
+    },
+    {
       "id": "road.alignments.query",
       "version": 1,
       "title": "Aksı sorgula",
@@ -74897,6 +75156,18 @@
       "meaning": "Bazı paftalarda aks ya da boykesit görünümü haritanın dışına taşıyor."
     },
     {
+      "code": "invalid_alignment_fit",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Çizgiden aks kurulamıyor."
+    },
+    {
+      "code": "alignment_fit_deviation",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Aks çizginin köşelerinden toleranstan uzak."
+    },
+    {
       "code": "corridor_superelevation_gone",
       "kind": "warning",
       "retryable": false,
@@ -81596,6 +81867,14 @@
         "k1"
       ],
       "type": "object"
+    },
+    "AlignmentFitMethod": {
+      "description": "How a line becomes an alignment: its segments as they are (straight ones tangents, arcs circular curves), or a best\nfit of its vertices (tangents by least squares, curves where the vertices bend tighter than `maxRadius`).",
+      "enum": [
+        "elements",
+        "bestFit"
+      ],
+      "type": "string"
     },
     "AlignmentFoot": {
       "description": "A foot of a point.",

@@ -3347,6 +3347,21 @@
       "status": "implemented"
     },
     {
+      "id": "alignment.fromLine",
+      "title": "Çizgiden aks…",
+      "short": "Çizgiden aks",
+      "icon": "alignmentFromLine",
+      "description": "Seçili çizgiden ya da açık çoklu çizgiden aks kurar (Civil 3D'nin Create Alignment from Objects ve Best Fit Alignment'ı gibi): Eleman eleman çizginin doğruları aliyman, yayları kurp olur, iki yay arasında aliyman yoksa söylenir; En iyi uyum sık köşeli bir eksende en büyük yarıçaptan dar kıvrılan köşeleri kurp sayar, aliymanları en küçük karelerle uydurur ve her kurbun yarıçapını köşelerine en yakın olanla seçer. Aks çizgiden ne kadar ayrıldığını söyler; çizgi kalır. Tek geri alma adımı.",
+      "aliases": [
+        "CIZGIDENAKS",
+        "ÇİZGİDENAKS",
+        "AKSUYDUR"
+      ],
+      "shortcuts": [],
+      "category": "Güzergâh",
+      "status": "implemented"
+    },
+    {
       "id": "landxml.importAlignments",
       "title": "LandXML'den aks al…",
       "short": "LandXML aks",
@@ -4402,6 +4417,7 @@
     "landxmlImport": "<path d=\"M4 2.5h7.5L15 6v11.5H4z\" stroke-width=\"1.2\"/><path d=\"M11.5 2.5V6H15\" stroke-width=\"1\"/><path d=\"M6.5 14.5C8 10 10 9 12.5 8.5\" stroke-width=\"1.5\"/><path d=\"M10.5 7.2l2.3 1.2-1.4 2.2\" stroke-width=\"1.2\"/>",
     "ifcExport": "<path d=\"M3 4.5l7-2.5 7 2.5v7l-7 2.5-7-2.5z\" stroke-width=\"1.2\"/><path d=\"M3 4.5l7 2.5 7-2.5M10 7v7\" stroke-width=\"1\"/><path d=\"M12 17h6M15.5 14.5l2.5 2.5-2.5 2.5\" stroke-width=\"1.5\"/>",
     "landxmlExport": "<path d=\"M4 2.5h7.5L15 6v5\" stroke-width=\"1.2\"/><path d=\"M11.5 2.5V6H15\" stroke-width=\"1\"/><path d=\"M4 2.5v15h6\" stroke-width=\"1.2\"/><path d=\"M6 8.5h5M6 11h3\" stroke-width=\"1\"/><path d=\"M12 15.5h6M15.5 13l2.5 2.5-2.5 2.5\" stroke-width=\"1.5\"/>",
+    "alignmentFromLine": "<circle cx=\"3\" cy=\"15.5\" r=\"1\"/><circle cx=\"7\" cy=\"9\" r=\"1\"/><circle cx=\"12\" cy=\"12\" r=\"1\"/><circle cx=\"17\" cy=\"4.5\" r=\"1\"/><path d=\"M3 15.5C5.5 10.5 7.5 9 10 10.5s4.5 0 7-6\" stroke-width=\"1.6\"/>",
     "roadSheets": "<rect x=\"2.5\" y=\"2.5\" width=\"15\" height=\"15\" rx=\"1\" stroke-width=\"1.3\"/><path d=\"M2.5 10h15\" stroke-width=\"1\"/><path d=\"M4.5 8c2.5-3.5 5-1 7-3.5s2.5-1 4-1.5\" stroke-width=\"1.3\"/><path d=\"M4.5 15.5l4-2.5 3 1 4-3\" stroke-width=\"1.3\"/>",
     "stakeoutTable": "<path d=\"M2 14l3-2h10l3 2\" stroke-width=\"1.5\"/><path d=\"M5 12V5.5M10 12V4M15 12V5.5\" stroke-width=\"1.2\"/><path d=\"M5 5.5l2.2 1-2.2 1M10 4l2.2 1-2.2 1M15 5.5l2.2 1-2.2 1\" stroke-width=\"1\"/>",
     "haulNew": "<path d=\"M2.5 12h10\" stroke-width=\".9\" stroke-dasharray=\"1.6 1.1\"/><path d=\"M2.5 12C4.5 4.5 6 4 7.5 8s2.2 5.5 4 2.5\" stroke-width=\"1.5\"/><path d=\"M15.5 12.2v6.3M12.4 15.4h6.3\" stroke-width=\"1.5\"/>",

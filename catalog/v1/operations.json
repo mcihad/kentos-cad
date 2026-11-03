@@ -2710,6 +2710,13 @@
       ],
       "note": "Brükner penceresi Brükneri yazdıkça çekirdekle okur ve çizer; Kaydet road.hauls.edit ile yazar (plan/road.md Y9, ADR 0907)."
     },
+    "alignment.fromLine": {
+      "level": "semantic",
+      "via": [
+        "road.alignments.fit"
+      ],
+      "note": "Seçili çizgiyle açılır, road.alignments.fit'in planıyla önizler ve onunla yazar; tek geri alma adımı (plan/road.md Y10.6, ADR 0908 §12)."
+    },
     "landxml.importAlignments": {
       "level": "semantic",
       "via": [

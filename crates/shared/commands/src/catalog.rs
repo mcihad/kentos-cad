@@ -7561,6 +7561,31 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::ROAD_ALIGNMENTS_FIT.into(),
+            version: crate::ROAD_ALIGNMENTS_FIT_VERSION,
+            title: "Çizgiden aks".into(),
+            summary: "Çizimin bir çizgisinden ya da açık çoklu çizgisinden aks kurar (DWG ya da DGN'den gelen yol ekseni); çizgi silinmez. method elements (Civil 3D'nin Create Alignment from Objects'i): düz parçalar aliyman, yay parçaları (büküm) daire kurbu; yaysız buluşan iki aliymana radius verilirse o yarıçapta kurp. method bestFit (Create Best Fit Alignment): köşe, komşularıyla geçen çember maxRadius'tan küçükse kurpta, değilse aliymanda; her aliyman koşusundan en küçük karelerle doğru, doğruların kesişimleri PI, kurbun yarıçapı iki doğruya teğet yayın köşelere en yakın olanı; klotoid yok. reverse çizginin sonundan başlatır; name (yoksa ‹n›. aks), start başlangıç km'si. Cevap aksın PI'larını, aliyman ve kurp sayısını, boyunu ve çizginin köşelerinin (ve yayların ortasının) aksa en büyük uzaklığını yeriyle verir; tolerance aşılırsa alignment_fit_deviation. Tek geri alma adımı “Çizgiden aks”. \
+                      Retler: invalid_revision, revision_conflict, not_a_road_project, entity_not_found, invalid_alignment_fit."
+                .into(),
+            aliases: vec!["cizgidenaks".into(), "aksuydur".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::AlignmentsFit>(),
+            output: schema::<crate::AlignmentFitted>(),
+            plan: Some(schema::<crate::AlignmentFitted>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "DWG'den gelen eksen, en iyi uyumla".into(),
+                input: json!({ "uid": "0191f0aa-0000-7000-8000-000000000001", "method": "bestFit", "maxRadius": 1000.0, "tolerance": 0.05 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::ROAD_ALIGNMENTS_QUERY.into(),
             version: crate::ROAD_ALIGNMENTS_QUERY_VERSION,
             title: "Aksı sorgula".into(),
@@ -13207,6 +13232,9 @@ mod tests {
                     crate::ROAD_SHEETS_SECTIONS => {
                         serde_json::from_value::<crate::RoadSheetsSections>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_ALIGNMENTS_FIT => {
+                        serde_json::from_value::<crate::AlignmentsFit>(e.input.clone()).map(|_| ())
+                    }
                     crate::ROAD_ALIGNMENTS_IMPORT => {
                         serde_json::from_value::<crate::AlignmentsImport>(e.input.clone()).map(|_| ())
                     }
@@ -13951,6 +13979,9 @@ mod tests {
                         }
                         crate::ROAD_SHEETS_PLAN | crate::ROAD_SHEETS_SECTIONS => {
                             serde_json::from_value::<crate::RoadSheetsLaid>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_ALIGNMENTS_FIT => {
+                            serde_json::from_value::<crate::AlignmentFitted>(output.clone()).map(|_| ())
                         }
                         crate::ROAD_ALIGNMENTS_IMPORT => {
                             serde_json::from_value::<crate::AlignmentsImported>(output.clone()).map(|_| ())

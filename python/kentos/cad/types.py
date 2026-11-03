@@ -198,6 +198,18 @@ AffectReasonName = Literal["shows", "marked", "unknown"]
 """The names of :class:`AffectReason`, for a plain string."""
 
 
+class AlignmentFitMethod(_StrEnum):
+    """How a line becomes an alignment: its segments as they are (straight ones tangents, arcs circular curves), or a best
+    fit of its vertices (tangents by least squares, curves where the vertices bend tighter than `maxRadius`).
+    """
+    ELEMENTS = "elements"
+    BEST_FIT = "bestFit"
+
+
+AlignmentFitMethodName = Literal["elements", "bestFit"]
+"""The names of :class:`AlignmentFitMethod`, for a plain string."""
+
+
 class AlignmentsEditOperation(_StrEnum):
     """What `road.alignments.edit` does.
 
@@ -11569,6 +11581,62 @@ class AlignmentElementRow(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class AlignmentFitted(_Model):
+    """Output of `road.alignments.fit` v1, and its plan: the alignment made (its id, name and PIs), its tangents, curves and
+    length, the line's id, and the largest distance of the line's vertices (and its arcs' middles) from the alignment
+    with where it is; the drawing's revision.
+    Attributes:
+        tangents: Unit: count.
+        curves: Unit: count.
+        length: Unit: m.
+        deviation: Unit: m.
+        worst: Unit: length.
+    """
+    id: str
+    name: str
+    source: str
+    method: AlignmentFitMethod | AlignmentFitMethodName
+    pis: list[AlignmentPi]
+    tangents: int
+    curves: int
+    length: float
+    deviation: float
+    worst: list[float]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["source"] = self.source
+        out["method"] = _enum_out(self.method)
+        out["pis"] = [e0.to_json() for e0 in self.pis]
+        out["tangents"] = self.tangents
+        out["curves"] = self.curves
+        out["length"] = float(self.length)
+        out["deviation"] = float(self.deviation)
+        out["worst"] = [float(e0) for e0 in self.worst]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AlignmentFitted:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            source=data["source"],
+            method=_enum_in(AlignmentFitMethod, data["method"]),
+            pis=[AlignmentPi.from_json(e0) for e0 in data["pis"]],
+            tangents=data["tangents"],
+            curves=data["curves"],
+            length=float(data["length"]),
+            deviation=float(data["deviation"]),
+            worst=[float(e0) for e0 in data["worst"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class AlignmentFoot(_Model):
     """A foot of a point.
     Attributes:
@@ -12027,6 +12095,69 @@ class AlignmentsEdit(_Model):
             offset=UNSET if "offset" not in data else None if data["offset"] is None else float(data["offset"]),
             pis=UNSET if "pis" not in data else None if data["pis"] is None else [AlignmentPi.from_json(e0) for e0 in data["pis"]],
             stationing=UNSET if "stationing" not in data else None if data["stationing"] is None else AlignmentStationing.from_json(data["stationing"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AlignmentsFit(_Model):
+    """Input of `road.alignments.fit` v1: the line or open polyline by its persistent id, the method; with `elements` a
+    `radius` puts that curve where two tangents meet without an arc; with `bestFit` `maxRadius` (required) parts curves
+    from tangents. `reverse` runs the alignment from the line's end. The alignment is named `name` (“‹n›. aks” without
+    it) and its km starts at `start` (0 without it). A `tolerance` (m) warns where the alignment lies farther from the
+    line's vertices.
+
+    Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `entity_not_found`,
+    `invalid_alignment_fit` (not a line or an open polyline, fewer than two points, a radius, a maximum radius or a
+    tolerance not above 0, a maximum radius missing, compound or reverse arcs or tangents that do not meet, curves that do
+    not fit between their tangents, a name taken). Warnings: `alignment_fit_deviation`.
+    Attributes:
+        max_radius: Unit: m.
+        radius: Unit: m.
+        start: Unit: m.
+        tolerance: Unit: m.
+    """
+    uid: str
+    method: AlignmentFitMethod | AlignmentFitMethodName
+    expected_revision: str | None | Unset = UNSET
+    max_radius: float | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    radius: float | None | Unset = UNSET
+    reverse: bool | Unset = UNSET
+    start: float | None | Unset = UNSET
+    tolerance: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["method"] = _enum_out(self.method)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.max_radius is not UNSET:
+            out["maxRadius"] = None if self.max_radius is None else float(self.max_radius)
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.radius is not UNSET:
+            out["radius"] = None if self.radius is None else float(self.radius)
+        if self.reverse is not UNSET:
+            out["reverse"] = self.reverse
+        if self.start is not UNSET:
+            out["start"] = None if self.start is None else float(self.start)
+        if self.tolerance is not UNSET:
+            out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AlignmentsFit:
+        return cls(
+            uid=data["uid"],
+            method=_enum_in(AlignmentFitMethod, data["method"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            max_radius=UNSET if "maxRadius" not in data else None if data["maxRadius"] is None else float(data["maxRadius"]),
+            name=data.get("name", UNSET),
+            radius=UNSET if "radius" not in data else None if data["radius"] is None else float(data["radius"]),
+            reverse=data.get("reverse", UNSET),
+            start=UNSET if "start" not in data else None if data["start"] is None else float(data["start"]),
+            tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
         )
 
 
@@ -97153,6 +97284,9 @@ __all__ = [
     "AlignmentCurveRow",
     "AlignmentDef",
     "AlignmentElementRow",
+    "AlignmentFitMethod",
+    "AlignmentFitMethodName",
+    "AlignmentFitted",
     "AlignmentFoot",
     "AlignmentImported",
     "AlignmentJoinRow",
@@ -97167,6 +97301,7 @@ __all__ = [
     "AlignmentsEdit",
     "AlignmentsEditOperation",
     "AlignmentsEditOperationName",
+    "AlignmentsFit",
     "AlignmentsImport",
     "AlignmentsImported",
     "AlignmentsLabel",

@@ -1909,6 +1909,12 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "road.alignments.fit",
+        refusals: &[&["not_a_road_project", "entity_not_found", "invalid_alignment_fit"], REVISION],
+        warnings: &["alignment_fit_deviation"],
+        targets: none,
+    },
+    Entry {
         id: "road.volumes.approve",
         refusals: &[&["not_a_road_project", "unknown_volume", "volume_not_approved", "invalid_volume"], REVISION],
         warnings: &[],

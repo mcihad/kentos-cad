@@ -262,6 +262,9 @@ mod corridor_window;
 mod volume_window;
 mod haul_window;
 mod stakeout_window;
+mod road_alignment_fit_window;
+#[cfg(test)]
+mod road_alignment_fit_window_tests;
 mod road_sheets_window;
 mod road_exchange;
 #[cfg(test)]

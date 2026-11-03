@@ -416,6 +416,7 @@
     "haul.new",
     "stakeout.table",
     "road.sheets",
+    "alignment.fromLine",
     "landxml.export",
     "landxml.importAlignments",
     "ifc.export",

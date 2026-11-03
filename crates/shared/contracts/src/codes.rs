@@ -739,6 +739,11 @@ codes! {
     INVALID_ROAD_SHEETS = "invalid_road_sheets", Failed, false, "Yol paftaları yerleştirilemiyor.";
     /// A warning: on some sheets the alignment or the profile view leaves its map (docs/adr/0908 §10).
     ROAD_SHEET_OUTSIDE = "road_sheet_outside", Warning, false, "Bazı paftalarda aks ya da boykesit görünümü haritanın dışına taşıyor.";
+    /// A line that makes no alignment: not a line or an open polyline, too few points, a radius out of bounds, arcs or
+    /// tangents KentOS's PIs do not take, curves that do not fit, a name taken (docs/adr/0908 §12).
+    INVALID_ALIGNMENT_FIT = "invalid_alignment_fit", Failed, false, "Çizgiden aks kurulamıyor.";
+    /// A warning: the alignment lies farther from the line's vertices than the tolerance (docs/adr/0908 §12).
+    ALIGNMENT_FIT_DEVIATION = "alignment_fit_deviation", Warning, false, "Aks çizginin köşelerinden toleranstan uzak.";
     /// A warning: the corridor's superelevation schedule does not build; its lanes keep the templates' slopes.
     CORRIDOR_SUPERELEVATION_GONE = "corridor_superelevation_gone", Warning, false, "Koridorun dever çizelgesi kurulamıyor; şeritler tip kesitin eğimiyle verildi.";
     /// A warning: the profile's alignment changed since it was made or rebound.

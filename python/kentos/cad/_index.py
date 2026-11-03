@@ -334,6 +334,7 @@ COMMANDS: dict[str, Any] = {
     "project.unarchive": project.unarchive,
     "road.alignments.create": road.alignments.create,
     "road.alignments.edit": road.alignments.edit,
+    "road.alignments.fit": road.alignments.fit,
     "road.alignments.import": road.alignments.import_,
     "road.alignments.label": road.alignments.label,
     "road.alignments.query": road.alignments.query,

@@ -514,6 +514,10 @@
         "size": "large"
        },
        {
+        "command": "alignment.fromLine",
+        "size": "large"
+       },
+       {
         "command": "landxml.importAlignments",
         "size": "large"
        }

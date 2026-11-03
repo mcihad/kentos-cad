@@ -29,6 +29,13 @@ Tarih: 2026-11-03. plan/road.md Y10 (ROAD-SEC-09…11; ROAD-IO-05, 06, 13, 14). 
   ötelemede iki dizi önerilmez (Trimble Access Roads kılavuzu 2026.10, “Road file formats”, “LandXML string roads”).
   Leica Captivate yol işini LandXML ya da HeXML'den, Topcon MAGNET Field LandXML'den alır. LandXML 1.2'de dizi
   `PlanFeatures/PlanFeature`'dır, geometrisi `CoordGeom` (XSD).
+- **Çizgiden aks (Civil 3D):** Create Alignment from Objects seçilen çizgi, yay ve çoklu çizgilerden aks kurar;
+  teğetler arasına kurp eklenip eklenmeyeceği ve öntanımlı yarıçap sorulur, yön Enter ile kabul ya da R ile ters
+  çevrilir, ad ve başlangıç km'si verilir. Create Alignment by Best Fit nokta ya da çizgilerden aks uydurur; Maximum
+  Radius For Curve Detection kurp sayılacak en büyük yarıçaptır (bilinen en büyük yarıçaptan biraz büyük yazılır).
+  [To Create a Rail Alignment from Objects](https://help.autodesk.com/cloudhelp/2024/ENG/Civil3D-UserGuide/files/GUID-144311A5-EA42-4D60-B23B-7E15A2F7B09F.htm),
+  [To Create an Alignment by Best Fit](https://help.autodesk.com/cloudhelp/2023/ENU/Civil3D-UserGuide/files/GUID-EF036075-36E4-4E17-A2EB-D33D7876071E.htm),
+  [Entity by Best Fit Dialog Box](https://help.autodesk.com/cloudhelp/2023/ENU/Civil3D-UserGuide/files/GUID-6AB452B3-32F8-4621-B9D7-3A65562E7DCE.htm).
 
 ## Karar
 
@@ -129,6 +136,21 @@ Tarih: 2026-11-03. plan/road.md Y10 (ROAD-SEC-09…11; ROAD-IO-05, 06, 13, 14). 
     ile; aralığı km'lerin en küçüğüyle en büyüğü. Görünümler, takım ve paftalar tek geri alma adımı “Enkesit paftaları”.
     Masaüstünde Enkesit penceresinin Çizime satırında “Pafta 1:” ve Paftalara diz.
 
+12. **Çizgiden aks (ROAD-IO-14).** `road.alignments.fit` çizimin bir çizgisinden ya da açık, tek parçalı çoklu
+    çizgisinden aks kurar (`kentos_road::alignment::trace`); çizgi kalır. **Eleman eleman** (Civil 3D'nin Create
+    Alignment from Objects'i): doğru parça aliyman, yay kurp (yarıçapı ve merkeziyle), PI'lar ADR 0901'in eleman
+    çözümüyle; iki yay art arda (bileşik ya da ters kurp) KentOS'un PI'larıyla tutulamaz, ret; iki doğrunun buluştuğu
+    köşe `radius` verilirse o yarıçapla kurp, verilmezse kurpsuz PI. **En iyi uyum** (Create Alignment by Best Fit):
+    komşularıyla çevrel çemberi `maxRadius`'tan dar olan köşe kurbun üstündedir, uçlar aliymandır; ardışık en az iki
+    aliyman köşesi bir aliyman olur, doğrusu toplam en küçük karelerle (ilkinden sonuncusuna yönlü); PI'lar ilk köşenin
+    ilk doğruya, sonuncunun son doğruya izdüşümü ve doğruların kesişimleri; aradaki köşelerin kurbunun yarıçapı,
+    iki doğruya teğet çemberin köşelere uzaklıklarının kareleri toplamını en küçük yapan değer (altın oran araması,
+    teğet boyu sığdığı kadar); arada köşe yoksa kurpsuz. Kurp sayılmayacak eksenler için klotoid yok (sonraya).
+    `reverse` çizgiyi ters yönden okur (yaylar işaret değiştirir), `start` başlangıç km'si, `name` yoksa “k. aks”.
+    Sapma kurulan akstan her köşenin ve her yayın ortasının uzaklığının en büyüğüdür (`Alignment::locate`), yeriyle;
+    `tolerance` aşılırsa `alignment_fit_deviation`. Tek geri alma adımı “Çizgiden aks”. Masaüstünde Güzergâh ›
+    Çizgiden aks seçili çizgiyle açılır, yöntem ve değerler yazıldıkça aksı çizginin üstünde ve PI tablosuyla gösterir.
+
 ## Aşamalar
 
 Y10.1 aplikasyon cetveli (komut, başvuru, Python, MCP, pencere); Y10.2 LandXML'e aks, boykesit ve yüzey yazma ve
@@ -165,8 +187,13 @@ Y10.5b (yapıldı, enkesit): `road.sheets.sections` 27 ortak durum (`road_sheets
 road_section_command_cases.py'nin `drawing`'inden, haritanın boyu şablonun dosyasından); Python, MCP, masaüstünde
 Enkesit › Paftalara diz. ROAD-SEC-11 [x].
 
+Y10.6 (yapıldı, çizgiden aks): 24 ortak durum (`road_alignment_fit_cases.py`; PI'lar, yarıçaplar, boy ve sapma 40
+basamakta mpmath ile, en iyi uyumun yarıçapı türevin köküyle; KentOS kodu yok; simetrik çizgide en uzak yer belirsiz
+sayılır); Python, MCP, masaüstünde Güzergâh › Çizgiden aks. ROAD-IO-14 [x].
+
 ## Sonra
 
 Makine kontrolü ve yapılan iş ölçüsü (ROAD-SEC-10), şev kazığı ofset işareti (hinge'den sabit uzaklık), kodların
 kullanıcı adları. Paftalarda: plan haritasının aksı (ekranın aks katmanı) modelin nesnesi olmadan kendisi çizmesi, eşleşme çizgileri
-ve etiketleri, kaynak revizyonu değişince takımı yeniden kurma.
+ve etiketleri, kaynak revizyonu değişince takımı yeniden kurma. Çizgiden aksta: klotoidli en iyi uyum (Civil 3D'nin
+Create Spirals'ı), birden çok nesneyi zincirleme, nokta katmanından uyum.

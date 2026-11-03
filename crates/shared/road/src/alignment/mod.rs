@@ -9,6 +9,7 @@ pub mod locate;
 pub mod mapping;
 pub mod offset;
 pub mod stationing;
+pub mod trace;
 
 pub use chain::{Alignment, ChainError, CurveReport, Join, PiInput, Residual, build};
 pub use element::{Element, Kind};

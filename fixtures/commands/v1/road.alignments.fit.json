@@ -1,0 +1,3239 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "road.alignments.fit",
+ "commandVersion": 1,
+ "title": "Çizgiden aks",
+ "note": "scripts/fixtures/road_alignment_fit_cases.py yazar; PI'lar, yarıçaplar ve sapma ADR 0908 §12'nin kuralıyla 40 basamakta (mpmath), KentOS kodu yok.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Yol aksları",
+  "settings": {
+   "srid": 5254,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "deg",
+   "plotScale": 1000.0,
+   "workspace": "cad",
+   "cadWork": "road",
+   "drawingFont": "barlow",
+   "road": {
+    "alignments": [
+     {
+      "id": "g-1",
+      "name": "Ana aks",
+      "revision": 1,
+      "pis": [
+       {
+        "id": "a",
+        "x": 20.0,
+        "y": 50.0
+       },
+       {
+        "id": "p1",
+        "x": 300.0,
+        "y": 60.0,
+        "radius": 150.0
+       },
+       {
+        "id": "b",
+        "x": 560.0,
+        "y": 360.0
+       }
+      ]
+     }
+    ]
+   }
+  },
+  "origin": {
+   "x": 0.0,
+   "y": 0.0
+  },
+  "layers": [
+   {
+    "id": "0",
+    "name": "0",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "km",
+    "name": "Km",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "gizli",
+    "name": "Gizli",
+    "type": "layer",
+    "visible": false,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "grup",
+    "name": "Yol",
+    "type": "group",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [
+     {
+      "id": "yol-km",
+      "name": "Yol km",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ]
+   }
+  ],
+  "activeLayer": "0",
+  "entities": [
+   {
+    "kind": "polyline",
+    "id": 1,
+    "layerId": "0",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 100.0,
+      "y": 100.0
+     },
+     {
+      "x": 300.0,
+      "y": 100.0
+     },
+     {
+      "x": 380.0,
+      "y": 180.0
+     },
+     {
+      "x": 380.0,
+      "y": 400.0
+     }
+    ],
+    "bulges": [
+     0,
+     0.41421356237309503,
+     0
+    ]
+   },
+   {
+    "kind": "polyline",
+    "id": 2,
+    "layerId": "0",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 200.0,
+      "y": 0.0
+     },
+     {
+      "x": 300.0,
+      "y": 150.0
+     },
+     {
+      "x": 500.0,
+      "y": 150.0
+     }
+    ]
+   },
+   {
+    "kind": "polyline",
+    "id": 3,
+    "layerId": "0",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 100.0,
+      "y": 0.0
+     },
+     {
+      "x": 150.0,
+      "y": 50.0
+     },
+     {
+      "x": 200.0,
+      "y": 100.0
+     },
+     {
+      "x": 300.0,
+      "y": 100.0
+     }
+    ],
+    "bulges": [
+     0,
+     0.20710678118654752,
+     -0.20710678118654752,
+     0
+    ]
+   },
+   {
+    "kind": "polyline",
+    "id": 4,
+    "layerId": "0",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 100.0,
+      "y": 0.0
+     },
+     {
+      "x": 150.0,
+      "y": 50.0
+     },
+     {
+      "x": 250.0,
+      "y": 50.0
+     }
+    ],
+    "bulges": [
+     0,
+     0.198912367379658,
+     0
+    ]
+   },
+   {
+    "kind": "line",
+    "id": 5,
+    "layerId": "0",
+    "attrs": {},
+    "a": {
+     "x": 0.0,
+     "y": -50.0
+    },
+    "b": {
+     "x": 300.0,
+     "y": -50.0
+    }
+   },
+   {
+    "kind": "polyline",
+    "id": 6,
+    "layerId": "0",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 1000.0,
+      "y": 500.0
+     },
+     {
+      "x": 1002.0,
+      "y": 500.0
+     },
+     {
+      "x": 1004.0,
+      "y": 500.0
+     },
+     {
+      "x": 1006.0,
+      "y": 500.0
+     },
+     {
+      "x": 1008.0,
+      "y": 500.0
+     },
+     {
+      "x": 1010.0,
+      "y": 500.0
+     },
+     {
+      "x": 1012.0,
+      "y": 500.0
+     },
+     {
+      "x": 1014.0,
+      "y": 500.0
+     },
+     {
+      "x": 1016.0,
+      "y": 500.0
+     },
+     {
+      "x": 1018.0,
+      "y": 500.0
+     },
+     {
+      "x": 1020.0,
+      "y": 500.0
+     },
+     {
+      "x": 1022.0,
+      "y": 500.0
+     },
+     {
+      "x": 1024.0,
+      "y": 500.0
+     },
+     {
+      "x": 1026.0,
+      "y": 500.0
+     },
+     {
+      "x": 1028.0,
+      "y": 500.0
+     },
+     {
+      "x": 1030.0,
+      "y": 500.0
+     },
+     {
+      "x": 1032.0,
+      "y": 500.0
+     },
+     {
+      "x": 1034.0,
+      "y": 500.0
+     },
+     {
+      "x": 1036.0,
+      "y": 500.0
+     },
+     {
+      "x": 1038.0,
+      "y": 500.0
+     },
+     {
+      "x": 1040.0,
+      "y": 500.0
+     },
+     {
+      "x": 1042.0,
+      "y": 500.0
+     },
+     {
+      "x": 1044.0,
+      "y": 500.0
+     },
+     {
+      "x": 1046.0,
+      "y": 500.0
+     },
+     {
+      "x": 1048.0,
+      "y": 500.0
+     },
+     {
+      "x": 1050.0,
+      "y": 500.0
+     },
+     {
+      "x": 1052.0,
+      "y": 500.0
+     },
+     {
+      "x": 1054.0,
+      "y": 500.0
+     },
+     {
+      "x": 1056.0,
+      "y": 500.0
+     },
+     {
+      "x": 1058.0,
+      "y": 500.0
+     },
+     {
+      "x": 1060.0,
+      "y": 500.0
+     },
+     {
+      "x": 1062.6171632419203,
+      "y": 500.05710670508853
+     },
+     {
+      "x": 1065.2293445648595,
+      "y": 500.22831811449527
+     },
+     {
+      "x": 1067.831571533203,
+      "y": 500.5133083175714
+     },
+     {
+      "x": 1070.418890660016,
+      "y": 500.9115348192675
+     },
+     {
+      "x": 1072.9863768362861,
+      "y": 501.422239572804
+     },
+     {
+      "x": 1075.5291427061513,
+      "y": 502.0444504226559
+     },
+     {
+      "x": 1078.0423479702563,
+      "y": 502.7769829551064
+     },
+     {
+      "x": 1080.5212085995402,
+      "y": 503.6184427528455
+     },
+     {
+      "x": 1082.9610059419053,
+      "y": 504.5672280493228
+     },
+     {
+      "x": 1085.357095704442,
+      "y": 505.621532777801
+     },
+     {
+      "x": 1087.704916794102,
+      "y": 506.7793500093067
+     },
+     {
+      "x": 1090.0,
+      "y": 508.0384757729337
+     },
+     {
+      "x": 1092.2379765008095,
+      "y": 509.39651325122685
+     },
+     {
+      "x": 1094.4145861810628,
+      "y": 510.8508773426605
+     },
+     {
+      "x": 1096.5256857405232,
+      "y": 512.3987995825258
+     },
+     {
+      "x": 1098.5672565811924,
+      "y": 514.0373334128614
+     },
+     {
+      "x": 1100.5354124569396,
+      "y": 515.7633597913925
+     },
+     {
+      "x": 1102.4264068711927,
+      "y": 517.5735931288071
+     },
+     {
+      "x": 1104.2366402086075,
+      "y": 519.4645875430604
+     },
+     {
+      "x": 1105.9626665871388,
+      "y": 521.4327434188076
+     },
+     {
+      "x": 1107.601200417474,
+      "y": 523.4743142594767
+     },
+     {
+      "x": 1109.1491226573396,
+      "y": 525.5854138189372
+     },
+     {
+      "x": 1110.603486748773,
+      "y": 527.7620234991906
+     },
+     {
+      "x": 1111.9615242270663,
+      "y": 530.0
+     },
+     {
+      "x": 1113.2206499906933,
+      "y": 532.295083205898
+     },
+     {
+      "x": 1114.378467222199,
+      "y": 534.6429042955581
+     },
+     {
+      "x": 1115.4327719506773,
+      "y": 537.0389940580947
+     },
+     {
+      "x": 1116.3815572471544,
+      "y": 539.4787914004598
+     },
+     {
+      "x": 1117.2230170448936,
+      "y": 541.9576520297436
+     },
+     {
+      "x": 1117.955549577344,
+      "y": 544.4708572938488
+     },
+     {
+      "x": 1118.577760427196,
+      "y": 547.0136231637139
+     },
+     {
+      "x": 1119.0884651807326,
+      "y": 549.5811093399842
+     },
+     {
+      "x": 1119.4866916824287,
+      "y": 552.1684284667969
+     },
+     {
+      "x": 1119.7716818855047,
+      "y": 554.7706554351405
+     },
+     {
+      "x": 1119.9428932949115,
+      "y": 557.3828367580799
+     },
+     {
+      "x": 1120.0,
+      "y": 560.0
+     },
+     {
+      "x": 1120.0,
+      "y": 562.0
+     },
+     {
+      "x": 1120.0,
+      "y": 564.0
+     },
+     {
+      "x": 1120.0,
+      "y": 566.0
+     },
+     {
+      "x": 1120.0,
+      "y": 568.0
+     },
+     {
+      "x": 1120.0,
+      "y": 570.0
+     },
+     {
+      "x": 1120.0,
+      "y": 572.0
+     },
+     {
+      "x": 1120.0,
+      "y": 574.0
+     },
+     {
+      "x": 1120.0,
+      "y": 576.0
+     },
+     {
+      "x": 1120.0,
+      "y": 578.0
+     },
+     {
+      "x": 1120.0,
+      "y": 580.0
+     },
+     {
+      "x": 1120.0,
+      "y": 582.0
+     },
+     {
+      "x": 1120.0,
+      "y": 584.0
+     },
+     {
+      "x": 1120.0,
+      "y": 586.0
+     },
+     {
+      "x": 1120.0,
+      "y": 588.0
+     },
+     {
+      "x": 1120.0,
+      "y": 590.0
+     },
+     {
+      "x": 1120.0,
+      "y": 592.0
+     },
+     {
+      "x": 1120.0,
+      "y": 594.0
+     },
+     {
+      "x": 1120.0,
+      "y": 596.0
+     },
+     {
+      "x": 1120.0,
+      "y": 598.0
+     },
+     {
+      "x": 1120.0,
+      "y": 600.0
+     },
+     {
+      "x": 1120.0,
+      "y": 602.0
+     },
+     {
+      "x": 1120.0,
+      "y": 604.0
+     },
+     {
+      "x": 1120.0,
+      "y": 606.0
+     },
+     {
+      "x": 1120.0,
+      "y": 608.0
+     },
+     {
+      "x": 1120.0,
+      "y": 610.0
+     },
+     {
+      "x": 1120.0,
+      "y": 612.0
+     },
+     {
+      "x": 1120.0,
+      "y": 614.0
+     },
+     {
+      "x": 1120.0,
+      "y": 616.0
+     },
+     {
+      "x": 1120.0,
+      "y": 618.0
+     },
+     {
+      "x": 1120.0,
+      "y": 620.0
+     }
+    ]
+   },
+   {
+    "kind": "polyline",
+    "id": 7,
+    "layerId": "0",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 50.0,
+      "y": 0.0
+     },
+     {
+      "x": 50.0,
+      "y": 50.0
+     }
+    ],
+    "closed": true
+   },
+   {
+    "kind": "point",
+    "id": 8,
+    "layerId": "0",
+    "attrs": {},
+    "p": {
+     "x": 1.0,
+     "y": 2.0
+    }
+   }
+  ],
+  "uids": [
+   "0191f0aa-0000-7000-8000-000000000001",
+   "0191f0aa-0000-7000-8000-000000000002",
+   "0191f0aa-0000-7000-8000-000000000003",
+   "0191f0aa-0000-7000-8000-000000000004",
+   "0191f0aa-0000-7000-8000-000000000005",
+   "0191f0aa-0000-7000-8000-000000000006",
+   "0191f0aa-0000-7000-8000-000000000007",
+   "0191f0aa-0000-7000-8000-000000000008"
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "Aliyman, kurp, aliyman: yaylı çoklu çizgi eleman eleman",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0191f0aa-0000-7000-8000-000000000001",
+      "method": "elements"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "id": "g-2",
+       "name": "1. aks",
+       "source": "0191f0aa-0000-7000-8000-000000000001",
+       "method": "elements",
+       "pis": [
+        {
+         "id": "a",
+         "x": 100.0,
+         "y": 100.0
+        },
+        {
+         "id": "p1",
+         "x": 380.0,
+         "y": 100.0,
+         "radius": 80.0
+        },
+        {
+         "id": "b",
+         "x": 380.0,
+         "y": 400.0
+        }
+       ],
+       "tangents": 2,
+       "curves": 1,
+       "length": 545.6637061435918,
+       "deviation": 2.0059623583066997e-15,
+       "worst": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed",
+      "road": {
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ana aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 20.0,
+           "y": 50.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 60.0,
+           "radius": 150.0
+          },
+          {
+           "id": "b",
+           "x": 560.0,
+           "y": 360.0
+          }
+         ]
+        },
+        {
+         "id": "g-2",
+         "name": "1. aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 100.0,
+           "y": 100.0
+          },
+          {
+           "id": "p1",
+           "x": 380.0,
+           "y": 100.0,
+           "radius": 80.0
+          },
+          {
+           "id": "b",
+           "x": 380.0,
+           "y": 400.0
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Aynısı ters yönde, adıyla, km 2+000'dan",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0191f0aa-0000-7000-8000-000000000001",
+      "method": "elements",
+      "reverse": true,
+      "name": "Bağlantı yolu",
+      "start": 2000.0
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "id": "g-2",
+       "name": "Bağlantı yolu",
+       "source": "0191f0aa-0000-7000-8000-000000000001",
+       "method": "elements",
+       "pis": [
+        {
+         "id": "a",
+         "x": 380.0,
+         "y": 400.0
+        },
+        {
+         "id": "p1",
+         "x": 380.0,
+         "y": 100.0,
+         "radius": 80.0
+        },
+        {
+         "id": "b",
+         "x": 100.0,
+         "y": 100.0
+        }
+       ],
+       "tangents": 2,
+       "curves": 1,
+       "length": 545.6637061435918,
+       "deviation": 2.0059623583066997e-15,
+       "worst": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed",
+      "road": {
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ana aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 20.0,
+           "y": 50.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 60.0,
+           "radius": 150.0
+          },
+          {
+           "id": "b",
+           "x": 560.0,
+           "y": 360.0
+          }
+         ]
+        },
+        {
+         "id": "g-2",
+         "name": "Bağlantı yolu",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 380.0,
+           "y": 400.0
+          },
+          {
+           "id": "p1",
+           "x": 380.0,
+           "y": 100.0,
+           "radius": 80.0
+          },
+          {
+           "id": "b",
+           "x": 100.0,
+           "y": 100.0
+          }
+         ],
+         "stationing": {
+          "start": 2000.0
+         }
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Kırık çizgi: kurpsuz PI'lar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0191f0aa-0000-7000-8000-000000000002",
+      "method": "elements"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "id": "g-2",
+       "name": "1. aks",
+       "source": "0191f0aa-0000-7000-8000-000000000002",
+       "method": "elements",
+       "pis": [
+        {
+         "id": "a",
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "id": "p1",
+         "x": 200.0,
+         "y": 0.0
+        },
+        {
+         "id": "p2",
+         "x": 300.0,
+         "y": 150.0
+        },
+        {
+         "id": "b",
+         "x": 500.0,
+         "y": 150.0
+        }
+       ],
+       "tangents": 3,
+       "curves": 0,
+       "length": 580.2775637731995,
+       "deviation": 0.0,
+       "worst": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed",
+      "road": {
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ana aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 20.0,
+           "y": 50.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 60.0,
+           "radius": 150.0
+          },
+          {
+           "id": "b",
+           "x": 560.0,
+           "y": 360.0
+          }
+         ]
+        },
+        {
+         "id": "g-2",
+         "name": "1. aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 200.0,
+           "y": 0.0
+          },
+          {
+           "id": "p2",
+           "x": 300.0,
+           "y": 150.0
+          },
+          {
+           "id": "b",
+           "x": 500.0,
+           "y": 150.0
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Kırık çizgi, teğetler arasına 30 m kurp",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0191f0aa-0000-7000-8000-000000000002",
+      "method": "elements",
+      "radius": 30.0
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "id": "g-2",
+       "name": "1. aks",
+       "source": "0191f0aa-0000-7000-8000-000000000002",
+       "method": "elements",
+       "pis": [
+        {
+         "id": "a",
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "id": "p1",
+         "x": 200.0,
+         "y": 0.0,
+         "radius": 30.0
+        },
+        {
+         "id": "p2",
+         "x": 300.0,
+         "y": 150.0,
+         "radius": 30.0
+        },
+        {
+         "id": "b",
+         "x": 500.0,
+         "y": 150.0
+        }
+       ],
+       "tangents": 3,
+       "curves": 2,
+       "length": 575.0231361494797,
+       "deviation": 4.02615890479565,
+       "worst": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed",
+      "road": {
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ana aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 20.0,
+           "y": 50.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 60.0,
+           "radius": 150.0
+          },
+          {
+           "id": "b",
+           "x": 560.0,
+           "y": 360.0
+          }
+         ]
+        },
+        {
+         "id": "g-2",
+         "name": "1. aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 200.0,
+           "y": 0.0,
+           "radius": 30.0
+          },
+          {
+           "id": "p2",
+           "x": 300.0,
+           "y": 150.0,
+           "radius": 30.0
+          },
+          {
+           "id": "b",
+           "x": 500.0,
+           "y": 150.0
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Tek çizgi: tek aliyman",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0191f0aa-0000-7000-8000-000000000005",
+      "method": "elements"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "id": "g-2",
+       "name": "1. aks",
+       "source": "0191f0aa-0000-7000-8000-000000000005",
+       "method": "elements",
+       "pis": [
+        {
+         "id": "a",
+         "x": 0.0,
+         "y": -50.0
+        },
+        {
+         "id": "b",
+         "x": 300.0,
+         "y": -50.0
+        }
+       ],
+       "tangents": 1,
+       "curves": 0,
+       "length": 300.0,
+       "deviation": 0.0,
+       "worst": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed",
+      "road": {
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ana aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 20.0,
+           "y": 50.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 60.0,
+           "radius": 150.0
+          },
+          {
+           "id": "b",
+           "x": 560.0,
+           "y": 360.0
+          }
+         ]
+        },
+        {
+         "id": "g-2",
+         "name": "1. aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": -50.0
+          },
+          {
+           "id": "b",
+           "x": 300.0,
+           "y": -50.0
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Teğet olmayan yay: sapma toleransı aşar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0191f0aa-0000-7000-8000-000000000004",
+      "method": "elements",
+      "tolerance": 0.01
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "id": "g-2",
+       "name": "1. aks",
+       "source": "0191f0aa-0000-7000-8000-000000000004",
+       "method": "elements",
+       "pis": [
+        {
+         "id": "a",
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "id": "p1",
+         "x": 135.35533905932738,
+         "y": 14.644660940672624,
+         "radius": 92.38795325112868
+        },
+        {
+         "id": "b",
+         "x": 250.0,
+         "y": 50.0
+        }
+       ],
+       "tangents": 2,
+       "curves": 1,
+       "length": 256.0636080251605,
+       "deviation": 29.469538517494684,
+       "worst": "$any",
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "alignment_fit_deviation",
+        "path": "tolerance",
+        "message": "$any"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed",
+      "road": {
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ana aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 20.0,
+           "y": 50.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 60.0,
+           "radius": 150.0
+          },
+          {
+           "id": "b",
+           "x": 560.0,
+           "y": 360.0
+          }
+         ]
+        },
+        {
+         "id": "g-2",
+         "name": "1. aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 135.35533905932738,
+           "y": 14.644660940672624,
+           "radius": 92.38795325112868
+          },
+          {
+           "id": "b",
+           "x": 250.0,
+           "y": 50.0
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Sık köşeli eksen, en iyi uyum 500 m",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0191f0aa-0000-7000-8000-000000000006",
+      "method": "bestFit",
+      "maxRadius": 500.0,
+      "tolerance": 0.001
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "id": "g-2",
+       "name": "1. aks",
+       "source": "0191f0aa-0000-7000-8000-000000000006",
+       "method": "bestFit",
+       "pis": [
+        {
+         "id": "a",
+         "x": 1000.0,
+         "y": 500.0
+        },
+        {
+         "id": "p1",
+         "x": 1120.0,
+         "y": 500.0,
+         "radius": 59.99999999999999
+        },
+        {
+         "id": "b",
+         "x": 1120.0,
+         "y": 620.0
+        }
+       ],
+       "tangents": 2,
+       "curves": 1,
+       "length": 214.24777960769381,
+       "deviation": 1.071723543818895e-13,
+       "worst": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed",
+      "road": {
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ana aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 20.0,
+           "y": 50.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 60.0,
+           "radius": 150.0
+          },
+          {
+           "id": "b",
+           "x": 560.0,
+           "y": 360.0
+          }
+         ]
+        },
+        {
+         "id": "g-2",
+         "name": "1. aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 1000.0,
+           "y": 500.0
+          },
+          {
+           "id": "p1",
+           "x": 1120.0,
+           "y": 500.0,
+           "radius": 59.99999999999999
+          },
+          {
+           "id": "b",
+           "x": 1120.0,
+           "y": 620.0
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "En iyi uyum ters yönde",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0191f0aa-0000-7000-8000-000000000006",
+      "method": "bestFit",
+      "maxRadius": 500.0,
+      "reverse": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "id": "g-2",
+       "name": "1. aks",
+       "source": "0191f0aa-0000-7000-8000-000000000006",
+       "method": "bestFit",
+       "pis": [
+        {
+         "id": "a",
+         "x": 1120.0,
+         "y": 620.0
+        },
+        {
+         "id": "p1",
+         "x": 1120.0,
+         "y": 500.0,
+         "radius": 59.99999999999999
+        },
+        {
+         "id": "b",
+         "x": 1000.0,
+         "y": 500.0
+        }
+       ],
+       "tangents": 2,
+       "curves": 1,
+       "length": 214.24777960769381,
+       "deviation": 1.071723543818895e-13,
+       "worst": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed",
+      "road": {
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ana aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 20.0,
+           "y": 50.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 60.0,
+           "radius": 150.0
+          },
+          {
+           "id": "b",
+           "x": 560.0,
+           "y": 360.0
+          }
+         ]
+        },
+        {
+         "id": "g-2",
+         "name": "1. aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 1120.0,
+           "y": 620.0
+          },
+          {
+           "id": "p1",
+           "x": 1120.0,
+           "y": 500.0,
+           "radius": 59.99999999999999
+          },
+          {
+           "id": "b",
+           "x": 1000.0,
+           "y": 500.0
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Kırık çizgi en iyi uyumla: köşelerde kurpsuz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0191f0aa-0000-7000-8000-000000000002",
+      "method": "bestFit",
+      "maxRadius": 100.0
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "id": "g-2",
+       "name": "1. aks",
+       "source": "0191f0aa-0000-7000-8000-000000000002",
+       "method": "bestFit",
+       "pis": [
+        {
+         "id": "a",
+         "x": 5.082666258636655,
+         "y": -13.988669320176456
+        },
+        {
+         "id": "b",
+         "x": 494.91733374136334,
+         "y": 163.98866932017646
+        }
+       ],
+       "tangents": 1,
+       "curves": 0,
+       "length": 521.165937621998,
+       "deviation": 53.41625597446146,
+       "worst": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed",
+      "road": {
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ana aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 20.0,
+           "y": 50.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 60.0,
+           "radius": 150.0
+          },
+          {
+           "id": "b",
+           "x": 560.0,
+           "y": 360.0
+          }
+         ]
+        },
+        {
+         "id": "g-2",
+         "name": "1. aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 5.082666258636655,
+           "y": -13.988669320176456
+          },
+          {
+           "id": "b",
+           "x": 494.91733374136334,
+           "y": 163.98866932017646
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Planı",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uid": "0191f0aa-0000-7000-8000-000000000001",
+      "method": "elements"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "id": "g-2",
+       "name": "1. aks",
+       "source": "0191f0aa-0000-7000-8000-000000000001",
+       "method": "elements",
+       "pis": [
+        {
+         "id": "a",
+         "x": 100.0,
+         "y": 100.0
+        },
+        {
+         "id": "p1",
+         "x": 380.0,
+         "y": 100.0,
+         "radius": 80.0
+        },
+        {
+         "id": "b",
+         "x": 380.0,
+         "y": 400.0
+        }
+       ],
+       "tangents": 2,
+       "curves": 1,
+       "length": 545.6637061435918,
+       "deviation": 2.0059623583066997e-15,
+       "worst": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ana aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 20.0,
+           "y": 50.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 60.0,
+           "radius": 150.0
+          },
+          {
+           "id": "b",
+           "x": 560.0,
+           "y": 360.0
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Doğrulama",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "uid": "0191f0aa-0000-7000-8000-000000000002",
+      "method": "elements",
+      "radius": 30.0
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ana aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 20.0,
+           "y": 50.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 60.0,
+           "radius": 150.0
+          },
+          {
+           "id": "b",
+           "x": 560.0,
+           "y": 360.0
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Tek geri alma adımı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0191f0aa-0000-7000-8000-000000000006",
+      "method": "bestFit",
+      "maxRadius": 500.0
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "id": "g-2",
+       "name": "1. aks",
+       "source": "0191f0aa-0000-7000-8000-000000000006",
+       "method": "bestFit",
+       "pis": [
+        {
+         "id": "a",
+         "x": 1000.0,
+         "y": 500.0
+        },
+        {
+         "id": "p1",
+         "x": 1120.0,
+         "y": 500.0,
+         "radius": 59.99999999999999
+        },
+        {
+         "id": "b",
+         "x": 1120.0,
+         "y": 620.0
+        }
+       ],
+       "tangents": 2,
+       "curves": 1,
+       "length": 214.24777960769381,
+       "deviation": 1.071723543818895e-13,
+       "worst": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed",
+      "road": {
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ana aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 20.0,
+           "y": 50.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 60.0,
+           "radius": 150.0
+          },
+          {
+           "id": "b",
+           "x": 560.0,
+           "y": 360.0
+          }
+         ]
+        },
+        {
+         "id": "g-2",
+         "name": "1. aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 1000.0,
+           "y": 500.0
+          },
+          {
+           "id": "p1",
+           "x": 1120.0,
+           "y": 500.0,
+           "radius": 59.99999999999999
+          },
+          {
+           "id": "b",
+           "x": 1120.0,
+           "y": 620.0
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    },
+    {
+     "op": "undo",
+     "returns": "Çizgiden aks",
+     "expect": {
+      "canRedo": true,
+      "road": {
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ana aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 20.0,
+           "y": 50.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 60.0,
+           "radius": 150.0
+          },
+          {
+           "id": "b",
+           "x": 560.0,
+           "y": 360.0
+          }
+         ]
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yol projesi değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0191f0aa-0000-7000-8000-000000000001",
+      "method": "elements"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_road_project",
+       "message": "Aks yalnız yol projesinde (KentOS Yol) olur; bu çizim yol projesi değil."
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": null
+     },
+     "within": 1e-06
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Yol aksları",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "drawingFont": "barlow"
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "km",
+      "name": "Km",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Yol",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "yol-km",
+        "name": "Yol km",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "polyline",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 100.0,
+        "y": 100.0
+       },
+       {
+        "x": 300.0,
+        "y": 100.0
+       },
+       {
+        "x": 380.0,
+        "y": 180.0
+       },
+       {
+        "x": 380.0,
+        "y": 400.0
+       }
+      ],
+      "bulges": [
+       0,
+       0.41421356237309503,
+       0
+      ]
+     },
+     {
+      "kind": "polyline",
+      "id": 2,
+      "layerId": "0",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 0.0,
+        "y": 0.0
+       },
+       {
+        "x": 200.0,
+        "y": 0.0
+       },
+       {
+        "x": 300.0,
+        "y": 150.0
+       },
+       {
+        "x": 500.0,
+        "y": 150.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "id": 3,
+      "layerId": "0",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 0.0,
+        "y": 0.0
+       },
+       {
+        "x": 100.0,
+        "y": 0.0
+       },
+       {
+        "x": 150.0,
+        "y": 50.0
+       },
+       {
+        "x": 200.0,
+        "y": 100.0
+       },
+       {
+        "x": 300.0,
+        "y": 100.0
+       }
+      ],
+      "bulges": [
+       0,
+       0.20710678118654752,
+       -0.20710678118654752,
+       0
+      ]
+     },
+     {
+      "kind": "polyline",
+      "id": 4,
+      "layerId": "0",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 0.0,
+        "y": 0.0
+       },
+       {
+        "x": 100.0,
+        "y": 0.0
+       },
+       {
+        "x": 150.0,
+        "y": 50.0
+       },
+       {
+        "x": 250.0,
+        "y": 50.0
+       }
+      ],
+      "bulges": [
+       0,
+       0.198912367379658,
+       0
+      ]
+     },
+     {
+      "kind": "line",
+      "id": 5,
+      "layerId": "0",
+      "attrs": {},
+      "a": {
+       "x": 0.0,
+       "y": -50.0
+      },
+      "b": {
+       "x": 300.0,
+       "y": -50.0
+      }
+     },
+     {
+      "kind": "polyline",
+      "id": 6,
+      "layerId": "0",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1000.0,
+        "y": 500.0
+       },
+       {
+        "x": 1002.0,
+        "y": 500.0
+       },
+       {
+        "x": 1004.0,
+        "y": 500.0
+       },
+       {
+        "x": 1006.0,
+        "y": 500.0
+       },
+       {
+        "x": 1008.0,
+        "y": 500.0
+       },
+       {
+        "x": 1010.0,
+        "y": 500.0
+       },
+       {
+        "x": 1012.0,
+        "y": 500.0
+       },
+       {
+        "x": 1014.0,
+        "y": 500.0
+       },
+       {
+        "x": 1016.0,
+        "y": 500.0
+       },
+       {
+        "x": 1018.0,
+        "y": 500.0
+       },
+       {
+        "x": 1020.0,
+        "y": 500.0
+       },
+       {
+        "x": 1022.0,
+        "y": 500.0
+       },
+       {
+        "x": 1024.0,
+        "y": 500.0
+       },
+       {
+        "x": 1026.0,
+        "y": 500.0
+       },
+       {
+        "x": 1028.0,
+        "y": 500.0
+       },
+       {
+        "x": 1030.0,
+        "y": 500.0
+       },
+       {
+        "x": 1032.0,
+        "y": 500.0
+       },
+       {
+        "x": 1034.0,
+        "y": 500.0
+       },
+       {
+        "x": 1036.0,
+        "y": 500.0
+       },
+       {
+        "x": 1038.0,
+        "y": 500.0
+       },
+       {
+        "x": 1040.0,
+        "y": 500.0
+       },
+       {
+        "x": 1042.0,
+        "y": 500.0
+       },
+       {
+        "x": 1044.0,
+        "y": 500.0
+       },
+       {
+        "x": 1046.0,
+        "y": 500.0
+       },
+       {
+        "x": 1048.0,
+        "y": 500.0
+       },
+       {
+        "x": 1050.0,
+        "y": 500.0
+       },
+       {
+        "x": 1052.0,
+        "y": 500.0
+       },
+       {
+        "x": 1054.0,
+        "y": 500.0
+       },
+       {
+        "x": 1056.0,
+        "y": 500.0
+       },
+       {
+        "x": 1058.0,
+        "y": 500.0
+       },
+       {
+        "x": 1060.0,
+        "y": 500.0
+       },
+       {
+        "x": 1062.6171632419203,
+        "y": 500.05710670508853
+       },
+       {
+        "x": 1065.2293445648595,
+        "y": 500.22831811449527
+       },
+       {
+        "x": 1067.831571533203,
+        "y": 500.5133083175714
+       },
+       {
+        "x": 1070.418890660016,
+        "y": 500.9115348192675
+       },
+       {
+        "x": 1072.9863768362861,
+        "y": 501.422239572804
+       },
+       {
+        "x": 1075.5291427061513,
+        "y": 502.0444504226559
+       },
+       {
+        "x": 1078.0423479702563,
+        "y": 502.7769829551064
+       },
+       {
+        "x": 1080.5212085995402,
+        "y": 503.6184427528455
+       },
+       {
+        "x": 1082.9610059419053,
+        "y": 504.5672280493228
+       },
+       {
+        "x": 1085.357095704442,
+        "y": 505.621532777801
+       },
+       {
+        "x": 1087.704916794102,
+        "y": 506.7793500093067
+       },
+       {
+        "x": 1090.0,
+        "y": 508.0384757729337
+       },
+       {
+        "x": 1092.2379765008095,
+        "y": 509.39651325122685
+       },
+       {
+        "x": 1094.4145861810628,
+        "y": 510.8508773426605
+       },
+       {
+        "x": 1096.5256857405232,
+        "y": 512.3987995825258
+       },
+       {
+        "x": 1098.5672565811924,
+        "y": 514.0373334128614
+       },
+       {
+        "x": 1100.5354124569396,
+        "y": 515.7633597913925
+       },
+       {
+        "x": 1102.4264068711927,
+        "y": 517.5735931288071
+       },
+       {
+        "x": 1104.2366402086075,
+        "y": 519.4645875430604
+       },
+       {
+        "x": 1105.9626665871388,
+        "y": 521.4327434188076
+       },
+       {
+        "x": 1107.601200417474,
+        "y": 523.4743142594767
+       },
+       {
+        "x": 1109.1491226573396,
+        "y": 525.5854138189372
+       },
+       {
+        "x": 1110.603486748773,
+        "y": 527.7620234991906
+       },
+       {
+        "x": 1111.9615242270663,
+        "y": 530.0
+       },
+       {
+        "x": 1113.2206499906933,
+        "y": 532.295083205898
+       },
+       {
+        "x": 1114.378467222199,
+        "y": 534.6429042955581
+       },
+       {
+        "x": 1115.4327719506773,
+        "y": 537.0389940580947
+       },
+       {
+        "x": 1116.3815572471544,
+        "y": 539.4787914004598
+       },
+       {
+        "x": 1117.2230170448936,
+        "y": 541.9576520297436
+       },
+       {
+        "x": 1117.955549577344,
+        "y": 544.4708572938488
+       },
+       {
+        "x": 1118.577760427196,
+        "y": 547.0136231637139
+       },
+       {
+        "x": 1119.0884651807326,
+        "y": 549.5811093399842
+       },
+       {
+        "x": 1119.4866916824287,
+        "y": 552.1684284667969
+       },
+       {
+        "x": 1119.7716818855047,
+        "y": 554.7706554351405
+       },
+       {
+        "x": 1119.9428932949115,
+        "y": 557.3828367580799
+       },
+       {
+        "x": 1120.0,
+        "y": 560.0
+       },
+       {
+        "x": 1120.0,
+        "y": 562.0
+       },
+       {
+        "x": 1120.0,
+        "y": 564.0
+       },
+       {
+        "x": 1120.0,
+        "y": 566.0
+       },
+       {
+        "x": 1120.0,
+        "y": 568.0
+       },
+       {
+        "x": 1120.0,
+        "y": 570.0
+       },
+       {
+        "x": 1120.0,
+        "y": 572.0
+       },
+       {
+        "x": 1120.0,
+        "y": 574.0
+       },
+       {
+        "x": 1120.0,
+        "y": 576.0
+       },
+       {
+        "x": 1120.0,
+        "y": 578.0
+       },
+       {
+        "x": 1120.0,
+        "y": 580.0
+       },
+       {
+        "x": 1120.0,
+        "y": 582.0
+       },
+       {
+        "x": 1120.0,
+        "y": 584.0
+       },
+       {
+        "x": 1120.0,
+        "y": 586.0
+       },
+       {
+        "x": 1120.0,
+        "y": 588.0
+       },
+       {
+        "x": 1120.0,
+        "y": 590.0
+       },
+       {
+        "x": 1120.0,
+        "y": 592.0
+       },
+       {
+        "x": 1120.0,
+        "y": 594.0
+       },
+       {
+        "x": 1120.0,
+        "y": 596.0
+       },
+       {
+        "x": 1120.0,
+        "y": 598.0
+       },
+       {
+        "x": 1120.0,
+        "y": 600.0
+       },
+       {
+        "x": 1120.0,
+        "y": 602.0
+       },
+       {
+        "x": 1120.0,
+        "y": 604.0
+       },
+       {
+        "x": 1120.0,
+        "y": 606.0
+       },
+       {
+        "x": 1120.0,
+        "y": 608.0
+       },
+       {
+        "x": 1120.0,
+        "y": 610.0
+       },
+       {
+        "x": 1120.0,
+        "y": 612.0
+       },
+       {
+        "x": 1120.0,
+        "y": 614.0
+       },
+       {
+        "x": 1120.0,
+        "y": 616.0
+       },
+       {
+        "x": 1120.0,
+        "y": 618.0
+       },
+       {
+        "x": 1120.0,
+        "y": 620.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "id": 7,
+      "layerId": "0",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 0.0,
+        "y": 0.0
+       },
+       {
+        "x": 50.0,
+        "y": 0.0
+       },
+       {
+        "x": 50.0,
+        "y": 50.0
+       }
+      ],
+      "closed": true
+     },
+     {
+      "kind": "point",
+      "id": 8,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 1.0,
+       "y": 2.0
+      }
+     }
+    ],
+    "uids": [
+     "0191f0aa-0000-7000-8000-000000000001",
+     "0191f0aa-0000-7000-8000-000000000002",
+     "0191f0aa-0000-7000-8000-000000000003",
+     "0191f0aa-0000-7000-8000-000000000004",
+     "0191f0aa-0000-7000-8000-000000000005",
+     "0191f0aa-0000-7000-8000-000000000006",
+     "0191f0aa-0000-7000-8000-000000000007",
+     "0191f0aa-0000-7000-8000-000000000008"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "Olmayan nesne",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0191f0aa-0000-7000-8000-000000000063",
+      "method": "elements"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entity_not_found",
+       "message": "“0191f0aa-0000-7000-8000-000000000063” kimlikli nesne çizimde yok.",
+       "path": "uid"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ana aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 20.0,
+           "y": 50.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 60.0,
+           "radius": 150.0
+          },
+          {
+           "id": "b",
+           "x": 560.0,
+           "y": 360.0
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Nokta",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0191f0aa-0000-7000-8000-000000000008",
+      "method": "elements"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_alignment_fit",
+       "message": "“0191f0aa-0000-7000-8000-000000000008” bir çizgi ya da çoklu çizgi değil.",
+       "path": "uid"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ana aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 20.0,
+           "y": 50.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 60.0,
+           "radius": 150.0
+          },
+          {
+           "id": "b",
+           "x": 560.0,
+           "y": 360.0
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Kapalı çoklu çizgi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0191f0aa-0000-7000-8000-000000000007",
+      "method": "elements"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_alignment_fit",
+       "message": "“0191f0aa-0000-7000-8000-000000000007” kapalı bir çoklu çizgi; aks açık bir çizgiden kurulur.",
+       "path": "uid"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ana aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 20.0,
+           "y": 50.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 60.0,
+           "radius": 150.0
+          },
+          {
+           "id": "b",
+           "x": 560.0,
+           "y": 360.0
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Ters kurp: iki yay art arda",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0191f0aa-0000-7000-8000-000000000003",
+      "method": "elements"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_alignment_fit",
+       "message": "Çizgiden aks kurulamıyor: 3. parçada aralarında aliyman olmayan iki yay var (bileşik ya da ters kurp).",
+       "path": "uid"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ana aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 20.0,
+           "y": 50.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 60.0,
+           "radius": 150.0
+          },
+          {
+           "id": "b",
+           "x": 560.0,
+           "y": 360.0
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "En iyi uyumda en büyük yarıçap yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0191f0aa-0000-7000-8000-000000000006",
+      "method": "bestFit"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_alignment_fit",
+       "message": "En iyi uyumda kurpları ayıran en büyük yarıçap (maxRadius) verilmeli.",
+       "path": "maxRadius"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ana aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 20.0,
+           "y": 50.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 60.0,
+           "radius": 150.0
+          },
+          {
+           "id": "b",
+           "x": 560.0,
+           "y": 360.0
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Sıfır yarıçap",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0191f0aa-0000-7000-8000-000000000002",
+      "method": "elements",
+      "radius": 0.0
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_alignment_fit",
+       "message": "Teğetler arasındaki kurbun yarıçapı (radius) 0'dan büyük olmalı.",
+       "path": "radius"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ana aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 20.0,
+           "y": 50.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 60.0,
+           "radius": 150.0
+          },
+          {
+           "id": "b",
+           "x": 560.0,
+           "y": 360.0
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Eksi en büyük yarıçap",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0191f0aa-0000-7000-8000-000000000006",
+      "method": "bestFit",
+      "maxRadius": -5.0
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_alignment_fit",
+       "message": "En büyük yarıçap (maxRadius) 0'dan büyük olmalı.",
+       "path": "maxRadius"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ana aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 20.0,
+           "y": 50.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 60.0,
+           "radius": 150.0
+          },
+          {
+           "id": "b",
+           "x": 560.0,
+           "y": 360.0
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Sıfır tolerans",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0191f0aa-0000-7000-8000-000000000001",
+      "method": "elements",
+      "tolerance": 0.0
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_alignment_fit",
+       "message": "Tolerans (tolerance) 0'dan büyük olmalı.",
+       "path": "tolerance"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ana aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 20.0,
+           "y": 50.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 60.0,
+           "radius": 150.0
+          },
+          {
+           "id": "b",
+           "x": 560.0,
+           "y": 360.0
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Alınmış ad",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0191f0aa-0000-7000-8000-000000000001",
+      "method": "elements",
+      "name": "ana AKS"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_alignment_fit",
+       "message": "Projede “ana AKS” adlı bir aks var.",
+       "path": "name"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ana aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 20.0,
+           "y": 50.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 60.0,
+           "radius": 150.0
+          },
+          {
+           "id": "b",
+           "x": 560.0,
+           "y": 360.0
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Geçersiz beklenen sürüm",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0191f0aa-0000-7000-8000-000000000001",
+      "method": "elements",
+      "expectedRevision": "on"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_revision",
+       "message": "Beklenen sürüm “on” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+       "path": "expectedRevision"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ana aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 20.0,
+           "y": 50.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 60.0,
+           "radius": 150.0
+          },
+          {
+           "id": "b",
+           "x": 560.0,
+           "y": 360.0
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Eski sürüme göre hazırlanmış",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0191f0aa-0000-7000-8000-000000000001",
+      "method": "elements",
+      "expectedRevision": "41"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "revision_conflict",
+       "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+       "path": "expectedRevision",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ana aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 20.0,
+           "y": 50.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 60.0,
+           "radius": 150.0
+          },
+          {
+           "id": "b",
+           "x": 560.0,
+           "y": 360.0
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  }
+ ]
+}

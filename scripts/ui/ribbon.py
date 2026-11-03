@@ -258,7 +258,8 @@ CAD = [
     ], works=ROAD),
     # KentOS Yol's horizontal alignments (plan/road.md Y3, docs/adr/0901): the Güzergâh window and a new alignment.
     T("alignment", "Güzergâh", [
-        P("Güzergâh", "alignmentEditor", [L("alignment.editor"), L("alignment.new"), L("landxml.importAlignments")]),
+        P("Güzergâh", "alignmentEditor", [L("alignment.editor"), L("alignment.new"), L("alignment.fromLine"),
+                                                   L("landxml.importAlignments")]),
         # The vertical alignments (plan/road.md Y4, docs/adr/0902): the Boykesit window and a new profile.
         P("Boykesit", "profileEditor", [L("profile.editor"), L("profile.new")]),
         # The cross sections (plan/road.md Y5, docs/adr/0903): the Enkesit window, a new set and a new template.
@@ -276,6 +277,8 @@ CAD = [
         P("Brükner", "haulEditor", [L("haul.editor"), L("haul.new")]),
         # The stakeout table (plan/road.md Y10, docs/adr/0908).
         P("Aplikasyon", "stakeoutTable", [L("stakeout.table"), L("landxml.export"), L("ifc.export")]),
+        # The plan–profile sheets (plan/road.md Y10.5, docs/adr/0908 §10).
+        P("Pafta", "roadSheets", [L("road.sheets")]),
     ], works=ROAD),
     T("plan", "Plan", [
         P("Yol", "planRoad", [L("tool.planRoad"), S("tool.roadJunctions"), S("tool.medianClose"), S("tool.centerline")]),

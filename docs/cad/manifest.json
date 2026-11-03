@@ -114,6 +114,22 @@
    "tests": 0
   },
   {
+   "id": "alignment.fromLine",
+   "kind": "command",
+   "title": "Çizgiden aks…",
+   "level": "semantic",
+   "via": [
+    "road.alignments.fit"
+   ],
+   "operation": null,
+   "python": "Connection: road.alignments.fit",
+   "mcp": "road.alignments.fit",
+   "note": "Seçili çizgiyle açılır, road.alignments.fit'in planıyla önizler ve onunla yazar; tek geri alma adımı (plan/road.md Y10.6, ADR 0908 §12).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "alignment.new",
    "kind": "command",
    "title": "Aks oluştur…",

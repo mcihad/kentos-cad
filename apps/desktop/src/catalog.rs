@@ -611,6 +611,8 @@ pub const PORTED: &[&str] = &[
     "stakeout.table",
     // plan/road.md Y10.5: Yol paftaları (road_sheets_window.rs).
     "road.sheets",
+    // plan/road.md Y10.6: Çizgiden aks (road_alignment_fit_window.rs).
+    "alignment.fromLine",
     // plan/road.md Y10.2: LandXML ver (road_exchange.rs).
     "landxml.export",
     "landxml.importAlignments",
