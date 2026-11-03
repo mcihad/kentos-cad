@@ -575,3 +575,129 @@ fn full_span_refinement_rechecks_the_line_membership_and_recovers_the_eleventh_e
         CommandResult::Completed { .. }
     ));
 }
+
+fn polar_drawing(center: (f64,f64), count: u32, missing: &[usize], rotate: bool) -> (Document, Vec<usize>) {
+    use kentos_geometry_core::{Vec2,ops::assoc_array::{Layout,Placement,item_placements}};
+    let source=Placement {p:Vec2::new(center.0+8.,center.1),scale:1.,rotation:0.3,mirror:false};
+    let poses=item_placements(source,&Layout::Polar {center:Vec2::new(center.0,center.1),count,fill:360.,rotate}).unwrap();
+    let occupied:Vec<_>=(0..count as usize).filter(|k|!missing.contains(k)).collect();
+    let mut doc=drawing(&occupied.iter().map(|&k|(poses[k].p.x,poses[k].p.y)).collect::<Vec<_>>());
+    for (at,&k) in occupied.iter().enumerate() {
+        let slot=Slot(at as u32+1);
+        let mut e=doc.get(slot).unwrap().clone();
+        let Entity::Insert(i)=&mut e else {unreachable!()};
+        i.rotation=poses[k].rotation;
+        doc.update(slot,e);
+    }
+    (doc,occupied)
+}
+fn polar_request(doc:&Document,slot:u32)->ArraysFind {
+    let mut input=request(doc,slot);
+    input.kind=Some(kentos_commands::ArrayFindKind::Polar);
+    input
+}
+
+#[test]
+fn full_circle_gaps_and_an_interior_source_retain_fixed_and_rotating_roots() {
+    for rotate in [false,true] {
+        for seed in [1,4] {
+            let (mut doc,_)=polar_drawing((20.,-15.),8,&[2,6],rotate);
+            let before=doc.to_snapshot_v2();
+            let bytes=kentos_kcad::encode_verified(&before).unwrap();
+            let input=polar_request(&doc,seed);
+            let found=find(&doc,&input);
+            assert!(!found.truncated);
+            assert_eq!(found.matches.len(),1,"{found:?}");
+            let candidate=&found.matches[0];
+            assert_eq!((candidate.present,candidate.missing),(6,2));
+            assert_eq!(candidate.adoption.source,input.source);
+            let ArrayLayout::Polar {center,count,fill,rotate:r}=candidate.adoption.layout else {panic!()};
+            assert_eq!((count,fill,r),(8,360.,rotate));
+            assert!((center.x-20.).hypot(center.y+15.)<1e-8);
+            assert!(candidate.adoption.items.iter().all(|i|!i.kept));
+            let applied=arrays_adopt::execute(&mut ExecutionContext::new(&mut doc),candidate.adoption.clone());
+            assert!(matches!(applied,CommandResult::Completed {..}),"{applied:?}");
+            let after=doc.to_snapshot_v2();
+            assert_eq!(after.entities,before.entities);
+            assert_eq!(after.uids,before.uids);
+            assert_eq!(after.blocks,before.blocks);
+            doc.undo();
+            assert_eq!(kentos_kcad::encode_verified(&doc.to_snapshot_v2()).unwrap(),bytes);
+        }
+    }
+}
+
+#[test]
+fn known_valid_circles_at_large_positive_and_negative_coordinates_are_found() {
+    use kentos_commands::{ArraysAdopt,ArrayItem,Vec2};
+    for center in [(487_000.,4_420_000.),(4_000_000_000.,1_000_000.),(-4_000_000_000.,-1_000_000.)] {
+        for rotate in [false,true] {
+            let (doc,occupied)=polar_drawing(center,12,&[3,6,10],rotate);
+            let input=polar_request(&doc,1);
+            let items=(0..12).map(|k|ArrayItem {uid:occupied.iter().position(|v|*v==k).map(|at|kentos_commands::EntityId(doc.uid(Slot(at as u32+1)).unwrap().into_bytes())),kept:false}).collect();
+            let known=ArraysAdopt {source:input.source.clone(),layout:ArrayLayout::Polar {center:Vec2 {x:center.0,y:center.1},count:12,fill:360.,rotate},items,tolerance:Some(1e-6),expected_revision:None};
+            assert!(matches!(arrays_adopt::inspect(&doc,&known,||false),CommandResult::Completed {..}));
+            let found=find(&doc,&input);
+            assert!(!found.truncated,"{found:?}");
+            assert_eq!(found.matches.len(),1,"center={center:?} rotate={rotate}: {found:?}");
+            assert_eq!((found.matches[0].present,found.matches[0].missing),(9,3),"{found:?}");
+            assert!(matches!(found.matches[0].adoption.layout,ArrayLayout::Polar {count:12,rotate:r,..} if r==rotate));
+        }
+    }
+}
+
+#[test]
+fn a_circle_does_not_invent_a_hidden_half_angular_spacing() {
+    let (doc,_)=polar_drawing((0.,0.),8,&[1,3,5,7],false);
+    let found=find(&doc,&polar_request(&doc,3));
+    assert_eq!(found.matches.len(),1);
+    assert!(matches!(found.matches[0].adoption.layout,ArrayLayout::Polar {count:4,..}));
+    assert_eq!(found.matches[0].missing,0);
+}
+
+#[test]
+fn full_circle_is_an_explicit_interpretation_even_when_only_an_arc_is_occupied() {
+    let (doc,_)=polar_drawing((10.,20.),12,&[4,5,6,7,8,9,10,11],false);
+    let found=find(&doc,&polar_request(&doc,2));
+    assert_eq!(found.matches.len(),1,"{found:?}");
+    assert!(matches!(found.matches[0].adoption.layout,ArrayLayout::Polar {count:12,fill:360.,..}));
+    assert_eq!((found.matches[0].present,found.matches[0].missing),(4,8));
+}
+
+#[test]
+fn collinear_and_three_point_scopes_are_not_polar_patterns() {
+    for points in [vec![(0.,0.),(1.,1.),(2.,2.),(3.,3.),(4.,4.)],vec![(0.,0.),(2.,0.),(1.,1.)]] {
+        let doc=drawing(&points);
+        assert!(find(&doc,&polar_request(&doc,1)).matches.is_empty());
+    }
+}
+
+#[test]
+fn coincident_roots_are_not_silently_chosen_for_a_circle_slot() {
+    let doc=drawing(&[(8.,0.),(0.,8.),(-8.,0.),(0.,-8.),(8.,0.)]);
+    assert!(find(&doc,&polar_request(&doc,1)).matches.is_empty());
+}
+
+#[test]
+fn a_wrong_turn_stays_unmatched_and_is_never_implicitly_kept() {
+    let (mut doc,_)=polar_drawing((0.,0.),8,&[],true);
+    let mut e=doc.get(Slot(5)).unwrap().clone();
+    let Entity::Insert(i)=&mut e else {unreachable!()};i.rotation=0.45;
+    doc.update(Slot(5),e);
+    let found=find(&doc,&polar_request(&doc,1));
+    assert_eq!(found.matches.len(),1,"{found:?}");
+    assert_eq!((found.matches[0].present,found.matches[0].missing),(7,1));
+    let wrong=kentos_commands::EntityId(doc.uid(Slot(5)).unwrap().into_bytes());
+    assert!(found.eligible.contains(&wrong.to_text()));
+    assert!(found.matches[0].adoption.items.iter().all(|i|i.uid!=Some(wrong) && !i.kept));
+    assert!(find(&doc,&request(&doc,1)).eligible.len()<found.eligible.len());
+}
+
+#[test]
+fn polar_stop_discards_the_query_and_never_writes_array_metadata() {
+    let (doc,_)=polar_drawing((0.,0.),80,&[],false);
+    let before=doc.to_snapshot_v2();let mut calls=0;
+    let result=arrays_find::inspect(&doc,&polar_request(&doc,1),||{calls+=1;calls>1000});
+    assert!(matches!(result,CommandResult::Cancelled),"{result:?}");
+    assert_eq!(doc.to_snapshot_v2(),before);
+}

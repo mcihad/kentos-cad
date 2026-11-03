@@ -4364,7 +4364,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Finds linear patterns containing the seed insert. First delivery: static, data-free inserts\nof the same block, appearance, mirror, rotation and scale. No rotation of the items is inferred.\nAt least three occupied places and an observed adjacent pair are required. Every second\nplace being occupied is indistinguishable from twice the spacing: no hidden places are invented.\nWith kind=grid, searches world-X/Y rectangular patterns with at least two rows,\ntwo columns, four occupied places and observed adjacent pairs in both directions.\nA bounding corner must be occupied to reuse it as the existing array source.\nRotated/skew grids, polar and path detection are not implemented by this version.",
+        "description": "Finds requested patterns containing the seed insert: static, data-free inserts\nof the same block, appearance, mirror and scale. Line/grid require the same rotation.\nAt least three occupied places and an observed adjacent pair are required. Every second\nplace being occupied is indistinguishable from twice the spacing: no hidden places are invented.\nWith kind=grid, searches world-X/Y rectangular patterns with at least two rows,\ntwo columns, four occupied places and observed adjacent pairs in both directions.\nA bounding corner must be occupied to reuse it as the existing array source.\nWith kind=polar, searches full circles around placement base points; fixed or rotating item\norientation is verified by the existing adoption engine. Partial-arc intent is not inferred.\nRotated/skew grids and path detection are not implemented by this version.",
         "properties": {
           "expectedRevision": {
             "type": [
@@ -4381,7 +4381,7 @@
                 "type": "null"
               }
             ],
-            "description": "Omitted: line. Explicit grid reuses the existing axis-aligned ArrayLayout::Grid."
+            "description": "Omitted: line. Grid is world-X/Y; polar is an explicit full-circle interpretation."
           },
           "limit": {
             "description": "Candidate limit, 1 to 100; absent: 100. Work/result limits report `truncated`.",
@@ -77543,6 +77543,11 @@
           "const": "grid",
           "description": "World X/Y rectangular rows and columns; rotated/skew grids are not inferred.",
           "type": "string"
+        },
+        {
+          "const": "polar",
+          "description": "Explicit full-circle interpretation; at least four occupied places and an observed adjacent pair.",
+          "type": "string"
         }
       ]
     },
@@ -77732,7 +77737,7 @@
       "properties": {
         "adoption": {
           "$ref": "#/$defs/ArraysAdopt",
-          "description": "Review this exact proposal before calling cad.arrays.adopt. Never executed by the search.\nThe first occupied endpoint becomes source; missing places stay empty, kept is never inferred."
+          "description": "Review this exact proposal before calling cad.arrays.adopt. Never executed by the search.\nSource is the occupied line endpoint/grid corner, or the selected polar seed.\nMissing places stay empty; kept is never inferred."
         },
         "deviation": {
           "format": "double",

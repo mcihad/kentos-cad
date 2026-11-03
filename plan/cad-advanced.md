@@ -1161,7 +1161,20 @@ CAD-ADV-07'nin tamamlandığı anlamına gelmez. Ek olarak 84 masaüstü stil/
 önbellek testi geçti (dokuz elle performans testi atlandı). Son teslim
 programında kenardan seçim ve 11 öğeli arama 413–414 ekranlarıyla tekrarlandı.
 
-**Açık kalan:** dönük/eğik grid, kutupsal/yol aday bulma; metin/öznitelik,
+**Kutupsal aday bulma — [ADR 0879](../docs/adr/0879-full-circle-pattern-recognition.md):**
+Aynı arama penceresinde açık **Kutupsal (tam çember)** ailesi, en az dört
+mevcut öğe ve gözlenen komşu aralıkla 360° yerleşim önerir. Yönü koruma ve
+merkezle dönme ayrı doğrulanır; merkez/yarıçap/açı/yer sırası görünürdür.
+Kaymış kök yalnız açık boş-yer atamasıyla korunur; dolu yere atama reddedilir.
+Sorgu/bağlama aynı durdurulabilir native, Python ve MCP yüzeyidir. 26 native
+tanıma, 38 ortak native/Python, 14 Python dizi, beş ilgili MCP ve 11 panel
+testi geçti; ilgili bütün hedeflerde Clippy başarılıdır. Gerçek iki çizimde
+yön davranışları ve son derleme doğrulandı. Bağımsız okuyucuda bağlama yalnız
+dizi kaydı ekledi; bütün kökler ve kimlikler aynıdır. Vazgeçme/Undo/Redo ve
+menüden 8→10 adet değişiminin dosya çiftleri bayt bayt eşittir. Korunan
+öğe yerinde, eksik yer boş kaldı. Ekranlar 415–424 depo dışındadır.
+
+**Açık kalan:** dönük/eğik grid, yol aday bulma; metin/öznitelik,
 iç blok ve diğer kaynak/ilişki genişletmesi. Bu dilimler CAD-ADV-07'nin
 tamamını kapatmaz.
 

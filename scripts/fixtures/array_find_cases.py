@@ -3,6 +3,7 @@
 import argparse
 from copy import deepcopy
 import json
+import math
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -90,6 +91,28 @@ def main():
     precision_case("büyük koordinatta grid yuvarlanan tek aralığı çoğaltmaz",
         [(4e9+c*.03,4e9+r*.004) for r in range(3) for c in range(4)],6,
         dict(kind="grid",rows=3,cols=4,dx="$any",dy="$any"))
+
+    def polar_case(name, count, missing, rotate, source=0, unmatched=False):
+        raw=deepcopy(setup)
+        slots=[k for k in range(count) if k not in missing]
+        ids={k:i+1 for i,k in enumerate(slots)}
+        raw["entities"]=[dict(kind="insert",id=ids[k],layerId="a",attrs={},
+            block=setup["blocks"][0]["id"],p=dict(x=20+8*math.cos(2*math.pi*k/count),y=-15+8*math.sin(2*math.pi*k/count)),
+            scale=1,rotation=.3+(2*math.pi*k/count if rotate else 0)) for k in slots]
+        candidate=dict(adoption=dict(source=uid(ids[source]),layout=dict(kind="polar",center=dict(x="$any",y="$any"),count=count,fill=360,rotate=rotate),
+            items=[dict(uid=uid(ids[k])) if k in ids else {} for k in [(source+j)%count for j in range(count)]],tolerance=.000001,expectedRevision="$any"),
+            present=len(slots),missing=count-len(slots),deviation="$any",overlaps=False)
+        if unmatched:
+            raw["entities"].append(dict(kind="insert",id=len(slots)+1,layerId="a",attrs={},block=setup["blocks"][0]["id"],p=dict(x=22.5,y=-14.5),scale=1,rotation=.3))
+        expected=dict(result,matches=[candidate])
+        if len(slots)<4:expected=dict(result,matches=[])
+        cases.append(dict(name=name,setup=raw,steps=[dict(op="execute",input=dict(source=uid(ids[source]),kind="polar"),
+            result=dict(status="completed",output=expected,warnings=[]),expect=dict(held,ids=list(range(1,len(raw["entities"])+1))))]))
+    polar_case("kutupsal: iki eksik yer ve yönü sabit öğeler",8,[2,6],False,unmatched=True)
+    polar_case("kutupsal: iç kaynak ve merkez çevresinde dönen öğeler",8,[2,6],True,4)
+    polar_case("kutupsal: yay verisi açık tam çember seçimiyle boş yerler bırakır",12,list(range(4,12)),False)
+    polar_case("kutupsal: üç nokta niyet çıkarmak için yeterli değildir",4,[3],False)
+    success("kutupsal seçimi doğrusal sırayı çember gibi sunmaz",dict(source=uid(1),kind="polar"),empty)
 
     def refuse(name, input_, code, path, conflict=False, raw=None, numbers=None):
         err=dict(code=code,message="$any",path=path)

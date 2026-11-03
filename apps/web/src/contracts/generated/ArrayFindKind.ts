@@ -3,4 +3,4 @@
 /**
  * Requested pattern family. Omitted kind preserves the original linear search.
  */
-export type ArrayFindKind = "line" | "grid";
+export type ArrayFindKind = "line" | "grid" | "polar";

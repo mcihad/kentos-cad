@@ -389,7 +389,7 @@ class _ArraysFind(LocalCommand[ArraysFind, ArraysFound, ArraysFound]):
             doc: The drawing it works on.
             source: Existing seed insert UUID. May be an interior place of a candidate.
             expected_revision:
-            kind: Omitted: line. Explicit grid reuses the existing axis-aligned ArrayLayout::Grid.
+            kind: Omitted: line. Grid is world-X/Y; polar is an explicit full-circle interpretation.
             limit: Candidate limit, 1 to 100; absent: 100. Work/result limits report `truncated`. Unit: count.
             tolerance: Absolute position tolerance in metres, above zero to 0.001; absent: 0.000001. Unit: length.
             uids: Absent searches the document; empty searches only the seed. At most 2048 objects.

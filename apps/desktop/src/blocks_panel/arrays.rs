@@ -172,6 +172,7 @@ fn kind_name(kind: ArrayFindKind) -> &'static str {
     match kind {
         ArrayFindKind::Line => "Doğrusal",
         ArrayFindKind::Grid => "Dikdörtgen (X/Y)",
+        ArrayFindKind::Polar => "Kutupsal (tam çember)",
     }
 }
 fn layout_text(layout: &ArrayLayout, f: &kentos_interaction::Format) -> String {
@@ -180,6 +181,12 @@ fn layout_text(layout: &ArrayLayout, f: &kentos_interaction::Format) -> String {
             "{rows} satır × {cols} sütun · Sütun {} · Satır {}",
             f.length(dx.abs()),
             f.length(dy.abs())
+        ),
+        ArrayLayout::Polar { center, count, fill, rotate } => format!(
+            "{} yer · {} · Açısal aralık {}\nMerkez (dünya X/Y): {} / {}\n{}",
+            count, f.bearing(fill * 400. / 360.), f.bearing(400. / count.max(1) as f64),
+            f.length(center.x), f.length(center.y),
+            if rotate { "Öğeler merkez etrafında döner" } else { "Öğelerin yönü korunur" }
         ),
         _ => format!("Aralık: {}", f.length(spacing(layout))),
     }
@@ -195,6 +202,8 @@ fn place_schema(layout: &ArrayLayout, items: &[ArrayItem]) -> String {
             rows.push("…".into());
         }
         rows.join("\n")
+    } else if matches!(layout, ArrayLayout::Polar { .. }) {
+        format!("↺ {}\nKaynak 1; yerler saat yönünün tersine ilerler.", places(items, 18))
     } else {
         places(items, 18)
     }
@@ -235,7 +244,11 @@ fn keep_position(r: &Review) -> Element<'_, Message> {
                 .range(1.0..=r.input.items.len() as f64)
                 .step(1.)
                 .decimals(0),
-            Some("Yerler soldan/ilk uçtan 1 ile başlar. Dolu yerin üzerine yazılmaz.".into()),
+            Some(if matches!(r.input.layout, ArrayLayout::Polar { .. }) {
+                "Kaynak 1'dir; yerler saat yönünün tersine ilerler. Dolu yere yazılmaz."
+            } else {
+                "Yerler soldan/ilk uçtan 1 ile başlar. Dolu yerin üzerine yazılmaz."
+            }.into()),
         )
     }
 }
@@ -330,6 +343,12 @@ impl App {
                 );
             }
             if let Some(plan) = &r.plan {
+                if let ArrayLayout::Polar { center, .. } = plan.array.layout {
+                    body = body.push(label::caption(format!(
+                        "Yarıçap (blok taban noktasından): {}",
+                        f.length((plan.array.p.x - center.x).hypot(plan.array.p.y - center.y))
+                    )));
+                }
                 body = body.push(label::caption(format!(
                     "Denetlenen en büyük sapma: {}. Bağlama tek geri alma adımıdır.",
                     f.length(plan.deviation)
@@ -347,10 +366,14 @@ impl App {
                 body=body.push(words::text_line(Kind::Warn,"Çizimde tek bir blok yerleştirmesi seçip yeniden açın. Bir bloğun tanımını değil, çizimdeki örneğini seçin."));
             }
             body=body.push(label::body("Aynı bloğun görünür yerleştirmelerinde seçilen düzen aranır. Sonuçlar çizimi değiştirmeden Bloklar panelinde açılır."))
-                .push(words::field("Düzen türü", pick_list(["Doğrusal", "Dikdörtgen (X/Y)"], Some(kind_name(w.kind)), |name| msg(Event::PatternKind(if name == "Doğrusal" { ArrayFindKind::Line } else { ArrayFindKind::Grid }))).width(Fill), Some("Doğrusal en az üç öğe; dikdörtgen en az iki satır, iki sütun ve dört öğe gerektirir.".into())))
+                .push(words::field("Düzen türü", pick_list(["Doğrusal", "Dikdörtgen (X/Y)", "Kutupsal (tam çember)"], Some(kind_name(w.kind)), |name| msg(Event::PatternKind(match name { "Dikdörtgen (X/Y)" => ArrayFindKind::Grid, "Kutupsal (tam çember)" => ArrayFindKind::Polar, _ => ArrayFindKind::Line }))).width(Fill), Some("Doğrusal en az üç; dikdörtgen ve kutupsal en az dört mevcut öğe gerektirir.".into())))
                 .push(words::field("Tolerans (mm)",NumberInput::new(w.tolerance,|n|msg(Event::Tolerance(n))).units(units::MILLIMETRE).range(0.0..=0.001).step(0.001).decimals(3),Some("Sıfırdan büyük, en çok 1 mm. Varsayılan 0,001 mm; çizim ölçeğini değiştirmez.".into())))
                 .push(words::check(w.hidden,"Gizli ve donmuş katmanları da ara",Some(msg(Event::Hidden))))
-                .push(label::caption("Dikdörtgen arama dünya X/Y eksenlerindedir; dönük/eğik gridler bulunmaz. Bir köşe dolu olmalıdır. Dönük blok varyantları ve başka tanımlar birleştirilmez."));
+                .push(label::caption(match w.kind {
+                    ArrayFindKind::Line => "Gözlenen komşu aralıklar aranır. Eksik yerler doldurulmaz; başka tanım, ölçek veya öğe yönü birleştirilmez.",
+                    ArrayFindKind::Grid => "Dikdörtgen arama dünya X/Y eksenlerindedir; dönük/eğik gridler bulunmaz. Bir köşe dolu olmalıdır. Dönük blok varyantları ve başka tanımlar birleştirilmez.",
+                    ArrayFindKind::Polar => "Tam çember yorumudur; kısmi yay niyeti çıkarılmaz. Öğe yönleri ve gözlenen açısal aralık doğrulanır. Eksik yerler boş kalır; kaynak 1'den saat yönünün tersine ilerlenir.",
+                }));
         }
         let mut frame = Frame::new(self.array_find_title()).scroll(body);
         // Validation feedback must remain visible while the optional keep form scrolls.
@@ -454,6 +477,7 @@ impl App {
             Control::Pick("Düzen türü", name) => Event::PatternKind(match name {
                 "Doğrusal" => ArrayFindKind::Line,
                 "Dikdörtgen (X/Y)" => ArrayFindKind::Grid,
+                "Kutupsal (tam çember)" => ArrayFindKind::Polar,
                 _ => return Err("Düzen türü listede yok".into()),
             }),
             Control::Fill("Tolerans (mm)", s) => Event::Tolerance(
@@ -566,6 +590,8 @@ fn panel_height(app: &App, height: f32) -> Element<'_, Message> {
                 candidate.present,
                 candidate.missing
             )
+        } else if let ArrayLayout::Polar { count, .. } = candidate.adoption.layout {
+            format!("Çember · {count} yer · {} dolu · {} boş", candidate.present, candidate.missing)
         } else {
             format!(
                 "Sıra {} · {} dolu · {} boş",
@@ -582,6 +608,10 @@ fn panel_height(app: &App, height: f32) -> Element<'_, Message> {
                     f.length(dy.abs())
                 ))
                 .into()
+            } else if let ArrayLayout::Polar { count, rotate, .. } = candidate.adoption.layout {
+                label::caption(format!("{} aralık · {}{}", f.bearing(400. / count.max(1) as f64),
+                    if rotate { "Öğeler döner" } else { "Yön korunur" },
+                    if candidate.overlaps { " · Ortak öğe" } else { "" })).into()
             } else {
                 row![
                     label::caption(format!(

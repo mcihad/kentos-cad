@@ -150,7 +150,7 @@ varsayılmaz. Aynı yere iki ayrı UUID düşerse rastgele biri seçilmez.
 2 048 nesnedir; tolerans metreyle varsayılan 0,000001, en çok 0,001'dir.
 `doc.start("cad.arrays.find", cad.ArraysFind(source=seed_insert_uid))`
 durdurulabilir sorgudur. MCP aynı komutu ve `drawing.job.*` yüzeylerini kullanır.
-İlk arama dilimi grid/kutupsal/yol örüntülerini içermez.
+Diğer aileler açık `kind` seçimiyle aşağıda açıklanır.
 Bağlanan doğru düzenini **Diziyi düzenle → Aralık** ile değiştirebilirsiniz.
 Pozitif birimli uzunluk iki komşu yer arasındaki gerçek uzaklıktır; yön
 korunur. Adet değişimi ayrı seçenektir. Mevcut `fit` düzeninin toplam boyu
@@ -210,8 +210,8 @@ done = cad.arrays.adopt(doc, **args)
 kind=cad.ArrayFindKind.GRID))` ve MCP aynı durdurulabilir sorgudur. İki
 milyonluk iş bütçesine ek olarak grid aralık keşfi 500 000 çift veya bir
 eksende 128 aralık adayını aşarsa sonuç **kısmidir**. Uyarıyı tam tarama
-gibi yorumlamayın. Dönük/eğik grid, kutupsal ve yol tanıma bu kapsamda
-bulunmaz. [Karar ve sınırlar](../adr/0876-axis-aligned-grid-pattern-review.md).
+gibi yorumlamayın. Dönük/eğik grid ve yol tanıma bu kapsamda bulunmaz. Kutupsal tanıma
+aşağıdaki ayrı açık aile seçimidir. [Karar ve sınırlar](../adr/0876-axis-aligned-grid-pattern-review.md).
 
 Büyük koordinatlarda kısa aralıkların tek komşu farkındaki yuvarlaması bütün
 sıraya çoğaltılmaz: toplam gözlenen açıklık da denenir ve uç üyelik yeniden
@@ -219,3 +219,31 @@ taranır. Aday yine aynı gerçek yerleşim doğrulayıcısından, verdiğiniz m
 toleransla geçer; bloklar taşınmaz. Koordinatın temsil aralığının altındaki
 toleranslarda bütün desenleri bulma garantisi yoktur; tolerans otomatik
 büyütülmez. [Sayısal düzeltme ve ölçülen sınırlar](../adr/0877-full-span-pattern-spacing-validation.md).
+
+
+## Tam çemberde kutupsal tekrarlar
+
+**Düzen türü → Kutupsal (tam çember)** seçin. Bu, açık 360° yorumudur;
+kısmi yay niyeti kendiliğinden çıkarılmaz. En az dört dolu yer ve gözlenen
+komşu çift gerekir. Kaynak 1'dir; yerler dünya düzleminde saat yönünün
+tersine sıralanır. Kart **Yön korunur** veya **Öğeler döner** davranışını
+gösterir. İncelemede merkez X/Y, yarıçap, tam açı, açısal aralık ve boş
+yerler ayrı görünür. Yarıçap blok taban noktasından ölçülür.
+
+```python
+found = cad.arrays.find(doc, source=seed_insert_uid, kind=cad.ArrayFindKind.POLAR)
+proposal = found.matches[reviewed_index].adoption
+assert isinstance(proposal.layout, cad.PolarArrayLayout)
+print(proposal.layout.center, proposal.layout.fill, proposal.layout.rotate)
+# Kullanıcı incelemesiyle aynı native plan/adopt akışına verilir.
+args = dict(source=proposal.source, layout=proposal.layout, items=proposal.items,
+            tolerance=proposal.tolerance, expected_revision=proposal.expected_revision)
+review = cad.arrays.adopt.plan(doc, **args)
+done = cad.arrays.adopt(doc, **args)
+```
+
+Kaymış öğe kendiliğinden hangi boş yere ait sayılmaz. Açık atama, boş yere
+`kept=True` bağlar; kök taşınmaz. Dolu yerin üzerine yazılmaz. Adet değişince
+boş/korunan yer ve mevcut UUID'ler mevcut dizi kurallarınca korunur;
+Sıfırla ayrı kullanıcı kararıdır. Python Job ve MCP aynı komutu kullanır.
+[Yöntem, sayısal sınırlar ve gerçek kabul](../adr/0879-full-circle-pattern-recognition.md).

@@ -2,14 +2,16 @@
 import type { ArrayFindKind } from "./ArrayFindKind";
 
 /**
- * Finds linear patterns containing the seed insert. First delivery: static, data-free inserts
- * of the same block, appearance, mirror, rotation and scale. No rotation of the items is inferred.
+ * Finds requested patterns containing the seed insert: static, data-free inserts
+ * of the same block, appearance, mirror and scale. Line/grid require the same rotation.
  * At least three occupied places and an observed adjacent pair are required. Every second
  * place being occupied is indistinguishable from twice the spacing: no hidden places are invented.
  * With kind=grid, searches world-X/Y rectangular patterns with at least two rows,
  * two columns, four occupied places and observed adjacent pairs in both directions.
  * A bounding corner must be occupied to reuse it as the existing array source.
- * Rotated/skew grids, polar and path detection are not implemented by this version.
+ * With kind=polar, searches full circles around placement base points; fixed or rotating item
+ * orientation is verified by the existing adoption engine. Partial-arc intent is not inferred.
+ * Rotated/skew grids and path detection are not implemented by this version.
  */
 export type ArraysFind = {
 /**
@@ -17,7 +19,7 @@ export type ArraysFind = {
  */
 source: string,
 /**
- * Omitted: line. Explicit grid reuses the existing axis-aligned ArrayLayout::Grid.
+ * Omitted: line. Grid is world-X/Y; polar is an explicit full-circle interpretation.
  */
 kind?: ArrayFindKind,
 /**

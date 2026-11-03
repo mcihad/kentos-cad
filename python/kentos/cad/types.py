@@ -439,12 +439,14 @@ class ArrayFindKind(_StrEnum):
 
     - ``line``
     - ``grid``: World X/Y rectangular rows and columns; rotated/skew grids are not inferred.
+    - ``polar``: Explicit full-circle interpretation; at least four occupied places and an observed adjacent pair.
     """
     LINE = "line"
     GRID = "grid"
+    POLAR = "polar"
 
 
-ArrayFindKindName = Literal["line", "grid"]
+ArrayFindKindName = Literal["line", "grid", "polar"]
 """The names of :class:`ArrayFindKind`, for a plain string."""
 
 
@@ -12707,7 +12709,8 @@ class ArrayPattern(_Model):
     """
     Attributes:
         adoption: Review this exact proposal before calling cad.arrays.adopt. Never executed by the search.
-            The first occupied endpoint becomes source; missing places stay empty, kept is never inferred.
+            Source is the occupied line endpoint/grid corner, or the selected polar seed.
+            Missing places stay empty; kept is never inferred.
         present: Unit: count.
         missing: Unit: count.
         deviation: Unit: length.
@@ -12881,17 +12884,19 @@ class ArraysEdit(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class ArraysFind(_Model):
-    """Finds linear patterns containing the seed insert. First delivery: static, data-free inserts
-    of the same block, appearance, mirror, rotation and scale. No rotation of the items is inferred.
+    """Finds requested patterns containing the seed insert: static, data-free inserts
+    of the same block, appearance, mirror and scale. Line/grid require the same rotation.
     At least three occupied places and an observed adjacent pair are required. Every second
     place being occupied is indistinguishable from twice the spacing: no hidden places are invented.
     With kind=grid, searches world-X/Y rectangular patterns with at least two rows,
     two columns, four occupied places and observed adjacent pairs in both directions.
     A bounding corner must be occupied to reuse it as the existing array source.
-    Rotated/skew grids, polar and path detection are not implemented by this version.
+    With kind=polar, searches full circles around placement base points; fixed or rotating item
+    orientation is verified by the existing adoption engine. Partial-arc intent is not inferred.
+    Rotated/skew grids and path detection are not implemented by this version.
     Attributes:
         source: Existing seed insert UUID. May be an interior place of a candidate.
-        kind: Omitted: line. Explicit grid reuses the existing axis-aligned ArrayLayout::Grid.
+        kind: Omitted: line. Grid is world-X/Y; polar is an explicit full-circle interpretation.
         limit: Candidate limit, 1 to 100; absent: 100. Work/result limits report `truncated`. Unit: count.
         tolerance: Absolute position tolerance in metres, above zero to 0.001; absent: 0.000001. Unit: length.
         uids: Absent searches the document; empty searches only the seed. At most 2048 objects.
