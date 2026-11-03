@@ -1919,6 +1919,31 @@ const ENTRIES: &[Entry] = &[
         warnings: &["layer_hidden", "platform_open"],
         targets: none,
     },
+    // KentOS Yol's surface drainage (plan/road.md Y16, docs/adr/0914).
+    Entry {
+        id: "road.drainage.query",
+        refusals: &[&[
+            "not_a_road_project",
+            "invalid_drainage",
+            "unknown_terrain",
+            "unknown_culvert",
+            "terrain_unbuildable",
+            "invalid_culvert",
+        ]],
+        warnings: &["drainage_catchment_empty", "culvert_no_roughness", "culvert_over_capacity"],
+        targets: none,
+    },
+    Entry {
+        id: "road.drainage.draw",
+        refusals: &[
+            &["not_a_road_project", "invalid_drainage", "unknown_terrain", "unknown_culvert", "terrain_unbuildable"],
+            &["drainage_nothing"],
+            LAYER,
+            REVISION,
+        ],
+        warnings: &["layer_hidden", "drainage_catchment_empty", "culvert_no_roughness", "culvert_over_capacity"],
+        targets: none,
+    },
     // KentOS Yol's terrain from point clouds (plan/road.md Y15, docs/adr/0913).
     Entry {
         id: "road.terrains.cloud",

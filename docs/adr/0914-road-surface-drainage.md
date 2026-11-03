@@ -58,3 +58,15 @@ kenarındaki başlangıçlar dahil), koni çanakta gölet kenara kadar (dip 0, s
 çarpı ağırlık merkezindeki derinlikle aynı, vadinin çıkışının havzası kapalı biçimin hücreleri, Manning ve Rasyonel elle.
 Testlerin bulduğu: başlangıcı bir üçgenin kenarında olan ve en dik inişi komşuya giden damla “düz” diye duruyordu; kenarı
 geçer, köşedeyse köşeden sürer.
+
+Y16.2 (yapıldı, komutlar): §2. `road.drainage.query` (`crates/native/application/src/road_drainage.rs`): göletler,
+damlalar (yol, son yer, boy, bitiş), havza (boşaltım noktası `at` ya da menfezin girişi, hücreler, alan, dış hatlar, akış
+yolu, boy, düşü, ortalama eğim; C ile i verilince Rasyonel debi; menfezle her gözün ya da borunun dolu akış kapasitesi
+Manning'le, eğim menfezin, pürüzlülük menfezin; debinin kapasiteye oranı); uyarılar `drainage_catchment_empty`,
+`culvert_no_roughness`, `culvert_over_capacity`. `road.drainage.draw` havzanın dış hatlarını, akış yolunu, göletlerin
+diplerini ve isteğe bağlı yazıları tek adımda (“Drenaj çiz”) çizer; çizilecek bir şey yoksa `drainage_nothing`. Yeni
+birimler `discharge` (m³/s), `velocity` (m/s), `rainfall` (mm/sa). 28 + 24 ortak durum
+(`scripts/fixtures/road_drainage_cases.py`: menfezin çizimine eklenen üç kafes arazi, her karesi düzlem: V vadide damlanın
+yeri ve boyu, havzanın hücreleri ve en uzak akış yolu kapalı biçimle; elmas çukurda gölet 5 m derin, 50 m², 250/3 m³;
+düzlemde kenara; Manning ve Rasyonel ADR'nin formülleriyle; menfezlerin ölçüleri road_culvert_cases.py'nin; KentOS kodu
+yok). Python `kentos.cad.road.drainage`, MCP.

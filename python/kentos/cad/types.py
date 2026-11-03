@@ -45,6 +45,9 @@ UNITS: dict[str, str] = {
     "elevation": "Düşey metre: kot, z, yükseklik.",
     "volume": "Hacim: m³ (alan × düşey metre).",
     "volume-m": "Taşıma momenti: m³·m (hacim × taşıma uzaklığı).",
+    "discharge": "Debi: m³/s.",
+    "velocity": "Hız: m/s.",
+    "rainfall": "Yağış şiddeti: mm/sa.",
     "money": "Para: tanımın para biriminde.",
     "money/volume": "Birim fiyat: para / m³, tanımın para biriminde.",
     "money/volume-km": "Taşıma birim fiyatı: para / (m³·km), tanımın para biriminde.",
@@ -1311,6 +1314,7 @@ class CreateOperation(_StrEnum):
     - ``junctions``: `road.junctions.draw` (plan/road.md Y12.2): a junction's curb returns in plan, “Kavşak çiz”.
     - ``platforms``: `road.platforms.draw` (plan/road.md Y14): a graded pad's boundary, daylight and slope lines, “Platform çiz”.
     - ``cloudTerrain``: A terrain's ground points from point clouds (`road.terrains.cloud`, docs/adr/0913).
+    - ``drainage``: `road.drainage.draw` (plan/road.md Y16): a catchment's outline and flow path and the ponds, “Drenaj çiz”.
     """
     PARALLEL = "parallel"
     PERPENDICULAR_IN = "perpendicularIn"
@@ -1360,9 +1364,10 @@ class CreateOperation(_StrEnum):
     JUNCTIONS = "junctions"
     PLATFORMS = "platforms"
     CLOUD_TERRAIN = "cloudTerrain"
+    DRAINAGE = "drainage"
 
 
-CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions", "terrainContours", "landXml", "alignmentLabels", "profileDrawing", "sectionDrawing", "slopePlan", "guardrails", "culverts", "retainingWalls", "routes", "junctions", "platforms", "cloudTerrain"]
+CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions", "terrainContours", "landXml", "alignmentLabels", "profileDrawing", "sectionDrawing", "slopePlan", "guardrails", "culverts", "retainingWalls", "routes", "junctions", "platforms", "cloudTerrain", "drainage"]
 """The names of :class:`CreateOperation`, for a plain string."""
 
 
@@ -1721,6 +1726,19 @@ class DivideEnds(_StrEnum):
 
 DivideEndsName = Literal["none", "start", "end", "both"]
 """The names of :class:`DivideEnds`, for a plain string."""
+
+
+class DrainageDropEnd(_StrEnum):
+    """Why a water drop ended."""
+    LOW_POINT = "lowPoint"
+    FLAT = "flat"
+    EDGE = "edge"
+    OUTSIDE = "outside"
+    STEPS = "steps"
+
+
+DrainageDropEndName = Literal["lowPoint", "flat", "edge", "outside", "steps"]
+"""The names of :class:`DrainageDropEnd`, for a plain string."""
 
 
 class DrawingFont(_StrEnum):
@@ -24697,6 +24715,370 @@ class DoorSource(_Model):
             neighbourhood=data.get("neighbourhood", UNSET),
             postcode=data.get("postcode", UNSET),
             province=data.get("province", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DrainageCapacity(_Model):
+    """A culvert's full-flow capacity by Manning: every barrel full at the culvert's slope and roughness; its discharge
+    (m³/s), its velocity (m/s), and the peak flow over it.
+    Attributes:
+        discharge: Unit: discharge.
+        velocity: Unit: velocity.
+        ratio: The peak flow over the capacity; absent without a peak flow. Unit: 1.
+    """
+    culvert: str
+    discharge: float
+    velocity: float
+    ratio: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["culvert"] = self.culvert
+        out["discharge"] = float(self.discharge)
+        out["velocity"] = float(self.velocity)
+        if self.ratio is not UNSET:
+            out["ratio"] = None if self.ratio is None else float(self.ratio)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DrainageCapacity:
+        return cls(
+            culvert=data["culvert"],
+            discharge=float(data["discharge"]),
+            velocity=float(data["velocity"]),
+            ratio=UNSET if "ratio" not in data else None if data["ratio"] is None else float(data["ratio"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DrainageCatchment(_Model):
+    """A catchment: its discharge point, its cells at the grid's cell and its area, its outline rings, the flow path from
+    its most distant cell with its length, fall and mean slope (m/m), its Rational peak flow (m³/s) and a culvert's
+    capacity.
+    Attributes:
+        at: Unit: length.
+        cells: Unit: count.
+        cell: Unit: m.
+        area: Unit: area.
+        outline: Unit: length.
+        path: Unit: length.
+        length: Unit: m.
+        fall: Unit: m.
+        slope: Unit: 1.
+        peak: Unit: discharge.
+    """
+    at: list[float]
+    cells: int
+    cell: float
+    area: float
+    outline: list[list[list[float]]]
+    path: list[list[float]]
+    length: float
+    fall: float
+    slope: float
+    capacity: DrainageCapacity | None | Unset = UNSET
+    peak: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["at"] = [float(e0) for e0 in self.at]
+        out["cells"] = self.cells
+        out["cell"] = float(self.cell)
+        out["area"] = float(self.area)
+        out["outline"] = [[[float(e2) for e2 in e1] for e1 in e0] for e0 in self.outline]
+        out["path"] = [[float(e1) for e1 in e0] for e0 in self.path]
+        out["length"] = float(self.length)
+        out["fall"] = float(self.fall)
+        out["slope"] = float(self.slope)
+        if self.capacity is not UNSET:
+            out["capacity"] = None if self.capacity is None else self.capacity.to_json()
+        if self.peak is not UNSET:
+            out["peak"] = None if self.peak is None else float(self.peak)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DrainageCatchment:
+        return cls(
+            at=[float(e0) for e0 in data["at"]],
+            cells=data["cells"],
+            cell=float(data["cell"]),
+            area=float(data["area"]),
+            outline=[[[float(e2) for e2 in e1] for e1 in e0] for e0 in data["outline"]],
+            path=[[float(e1) for e1 in e0] for e0 in data["path"]],
+            length=float(data["length"]),
+            fall=float(data["fall"]),
+            slope=float(data["slope"]),
+            capacity=UNSET if "capacity" not in data else None if data["capacity"] is None else DrainageCapacity.from_json(data["capacity"]),
+            peak=UNSET if "peak" not in data else None if data["peak"] is None else float(data["peak"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DrainageCatchmentAsk(_Model):
+    """A catchment asked for: the discharge point (`at`, or a culvert's inlet), the grid's cell (m) and the radius a drop
+    must pass within (m); with `runoff` (C, 0–1) and `intensity` (mm/h) the Rational peak flow, and with `culvert` its
+    full-flow capacity against it.
+    Attributes:
+        cell: Unit: length.
+        radius: Unit: length.
+        at: Unit: length.
+        culvert: A culvert by its id or name.
+        intensity: Unit: rainfall.
+        runoff: Unit: 1.
+    """
+    cell: float
+    radius: float
+    at: list[float] | None | Unset = UNSET
+    culvert: str | None | Unset = UNSET
+    intensity: float | None | Unset = UNSET
+    runoff: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["cell"] = float(self.cell)
+        out["radius"] = float(self.radius)
+        if self.at is not UNSET:
+            out["at"] = None if self.at is None else [float(e0) for e0 in self.at]
+        if self.culvert is not UNSET:
+            out["culvert"] = self.culvert
+        if self.intensity is not UNSET:
+            out["intensity"] = None if self.intensity is None else float(self.intensity)
+        if self.runoff is not UNSET:
+            out["runoff"] = None if self.runoff is None else float(self.runoff)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DrainageCatchmentAsk:
+        return cls(
+            cell=float(data["cell"]),
+            radius=float(data["radius"]),
+            at=UNSET if "at" not in data else None if data["at"] is None else [float(e0) for e0 in data["at"]],
+            culvert=data.get("culvert", UNSET),
+            intensity=UNSET if "intensity" not in data else None if data["intensity"] is None else float(data["intensity"]),
+            runoff=UNSET if "runoff" not in data else None if data["runoff"] is None else float(data["runoff"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DrainageDraw(_Model):
+    """Input of `road.drainage.draw` v1: a query's catchment (its outline as closed polylines, its flow path as a 3D
+    polyline) and ponds (a point at each bottom), drawn on `layerId`; with `labels` the catchment's area and peak flow
+    and each pond's depth. One undo step “Drenaj çiz”.
+
+    Refusals: the query's, `drainage_nothing` (no catchment and no pond to draw), the layer's, `invalid_revision`,
+    `revision_conflict`.
+    """
+    query: DrainageQuery
+    layer_id: str
+    expected_revision: str | None | Unset = UNSET
+    labels: bool = False
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["query"] = self.query.to_json()
+        out["layerId"] = self.layer_id
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        out["labels"] = self.labels
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DrainageDraw:
+        return cls(
+            query=DrainageQuery.from_json(data["query"]),
+            layer_id=data["layerId"],
+            expected_revision=data.get("expectedRevision", UNSET),
+            labels=data["labels"] if "labels" in data else False,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DrainageDrawn(_Model):
+    """Output of `road.drainage.draw` v1."""
+    uids: list[str]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DrainageDrawn:
+        return cls(
+            uids=list(data["uids"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DrainageDrop(_Model):
+    """A water drop: where it started, its path with heights, its last place, its plan length and why it ended.
+    Attributes:
+        from_: Unit: length.
+        path: Unit: length.
+        length: Unit: m.
+        to: Unit: length.
+    """
+    from_: list[float]
+    path: list[list[float]]
+    length: float
+    end: DrainageDropEnd | DrainageDropEndName
+    to: list[float] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = [float(e0) for e0 in self.from_]
+        out["path"] = [[float(e1) for e1 in e0] for e0 in self.path]
+        out["length"] = float(self.length)
+        out["end"] = _enum_out(self.end)
+        if self.to is not UNSET:
+            out["to"] = None if self.to is None else [float(e0) for e0 in self.to]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DrainageDrop:
+        return cls(
+            from_=[float(e0) for e0 in data["from"]],
+            path=[[float(e1) for e1 in e0] for e0 in data["path"]],
+            length=float(data["length"]),
+            end=_enum_in(DrainageDropEnd, data["end"]),
+            to=UNSET if "to" not in data else None if data["to"] is None else [float(e0) for e0 in data["to"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DrainagePond(_Model):
+    """A pond: its bottom, the level it spills at and the corner it spills over, its depth, its water's area and volume and
+    how many corners are under it.
+    Attributes:
+        bottom: Unit: length.
+        level: Unit: elevation.
+        outlet: Unit: length.
+        depth: Unit: m.
+        area: Unit: area.
+        volume: Unit: volume.
+        corners: Unit: count.
+    """
+    bottom: list[float]
+    level: float
+    outlet: list[float]
+    depth: float
+    area: float
+    volume: float
+    corners: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["bottom"] = [float(e0) for e0 in self.bottom]
+        out["level"] = float(self.level)
+        out["outlet"] = [float(e0) for e0 in self.outlet]
+        out["depth"] = float(self.depth)
+        out["area"] = float(self.area)
+        out["volume"] = float(self.volume)
+        out["corners"] = self.corners
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DrainagePond:
+        return cls(
+            bottom=[float(e0) for e0 in data["bottom"]],
+            level=float(data["level"]),
+            outlet=[float(e0) for e0 in data["outlet"]],
+            depth=float(data["depth"]),
+            area=float(data["area"]),
+            volume=float(data["volume"]),
+            corners=data["corners"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DrainagePondsAsk(_Model):
+    """The ponds asked for: at least `minDepth` deep (OpenRoads' minimum depth).
+    Attributes:
+        min_depth: Unit: m.
+    """
+    min_depth: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["minDepth"] = float(self.min_depth)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DrainagePondsAsk:
+        return cls(
+            min_depth=float(data["minDepth"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DrainageQueried(_Model):
+    """Output of `road.drainage.query` v1."""
+    surface: str
+    catchment: DrainageCatchment | None | Unset = UNSET
+    drops: list[DrainageDrop] | Unset = UNSET
+    ponds: list[DrainagePond] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["surface"] = self.surface
+        if self.catchment is not UNSET:
+            out["catchment"] = None if self.catchment is None else self.catchment.to_json()
+        if self.drops is not UNSET:
+            out["drops"] = [e0.to_json() for e0 in self.drops]
+        if self.ponds is not UNSET:
+            out["ponds"] = [e0.to_json() for e0 in self.ponds]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DrainageQueried:
+        return cls(
+            surface=data["surface"],
+            catchment=UNSET if "catchment" not in data else None if data["catchment"] is None else DrainageCatchment.from_json(data["catchment"]),
+            drops=[DrainageDrop.from_json(e0) for e0 in data["drops"]] if "drops" in data else UNSET,
+            ponds=[DrainagePond.from_json(e0) for e0 in data["ponds"]] if "ponds" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DrainageQuery(_Model):
+    """Input of `road.drainage.query` v1: the terrain surface (its id or name) and what is asked of it: `ponds`, `drops`
+    (places in plan) and `catchment`. Nothing is filled in: the depth, the cell, the radius, C and i are the user's.
+
+    Refusals, in this order: `not_a_road_project`, `invalid_drainage` (nothing asked, more than [`MOST_DRAINAGE_DROPS`]
+    drops, a value not finite or not positive, C outside 0–1, C or i without the other, a catchment without `at` or a
+    culvert), `unknown_terrain`, `unknown_culvert`, `terrain_unbuildable`, the culvert's `invalid_culvert` (its inlet is
+    read from its corridor), `invalid_drainage` (a grid of more than [`MOST_CATCHMENT_CELLS`] cells). Warnings:
+    `drainage_catchment_empty`, `culvert_no_roughness`, `culvert_over_capacity`.
+    Attributes:
+        drops: Unit: length.
+    """
+    surface: str
+    catchment: DrainageCatchmentAsk | None | Unset = UNSET
+    drops: list[list[float]] | Unset = UNSET
+    ponds: DrainagePondsAsk | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["surface"] = self.surface
+        if self.catchment is not UNSET:
+            out["catchment"] = None if self.catchment is None else self.catchment.to_json()
+        if self.drops is not UNSET:
+            out["drops"] = [[float(e1) for e1 in e0] for e0 in self.drops]
+        if self.ponds is not UNSET:
+            out["ponds"] = None if self.ponds is None else self.ponds.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DrainageQuery:
+        return cls(
+            surface=data["surface"],
+            catchment=UNSET if "catchment" not in data else None if data["catchment"] is None else DrainageCatchmentAsk.from_json(data["catchment"]),
+            drops=[[float(e1) for e1 in e0] for e0 in data["drops"]] if "drops" in data else UNSET,
+            ponds=UNSET if "ponds" not in data else None if data["ponds"] is None else DrainagePondsAsk.from_json(data["ponds"]),
         )
 
 
@@ -102492,6 +102874,18 @@ __all__ = [
     "DomainsPackage",
     "DonutCreate",
     "DoorSource",
+    "DrainageCapacity",
+    "DrainageCatchment",
+    "DrainageCatchmentAsk",
+    "DrainageDraw",
+    "DrainageDrawn",
+    "DrainageDrop",
+    "DrainageDropEnd",
+    "DrainageDropEndName",
+    "DrainagePond",
+    "DrainagePondsAsk",
+    "DrainageQueried",
+    "DrainageQuery",
     "DrawingAudit",
     "DrawingAudited",
     "DrawingCompare",

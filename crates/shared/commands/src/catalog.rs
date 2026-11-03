@@ -7565,6 +7565,58 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::ROAD_DRAINAGE_QUERY.into(),
+            version: crate::ROAD_DRAINAGE_QUERY_VERSION,
+            title: "Drenajı sorgula".into(),
+            summary: "Bir arazi yüzeyinde (surface: kimliği ya da adı) suyun nereden aktığını ve nerede durduğunu okur; hiçbir şey yazmaz. ponds (minDepth m): göletler, kenardan öncelikli taşkınla; dip, taşma seviyesi ve taştığı köşe, derinlik, su alanı ve hacmi. drops: verilen noktalardan su damlası (üçgenlerde en dik iniş, vadide kenar boyunca), yolu, son yeri, boyu, bitişi (lowPoint, flat, edge, outside). catchment: boşaltım noktasının (at ya da culvert: menfezin girişi) havzası, cell aralıklı ızgaranın hücrelerinden su damlası radius eriminden geçenler; hücre sayısı, alan (ızgaranın çözünürlüğünde), dış hatları, en uzak hücreden akış yolu, boyu, düşüsü, ortalama eğimi; runoff (C) ve intensity (mm/sa) ile Rasyonel en yüksek debi Q = C·i·A/3,6; culvert ile menfezin dolu akış kapasitesi (Manning: menfezin eğimi ve pürüzlülüğü, her boru ya da göz) ve debinin kapasiteye oranı. Değerler kullanıcının: KentOS C, i, aralık ya da erim vermez. \
+                      Uyarılar: drainage_catchment_empty, culvert_no_roughness, culvert_over_capacity. Retler: not_a_road_project, invalid_drainage, unknown_terrain, unknown_culvert, terrain_unbuildable, invalid_culvert."
+                .into(),
+            aliases: vec!["drenaj".into(), "havza".into(), "sudamlasi".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::DrainageQuery>(),
+            output: schema::<crate::DrainageQueried>(),
+            plan: Some(schema::<crate::DrainageQueried>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Menfezin havzası ve kapasitesi".into(),
+                input: json!({ "surface": "Mevcut zemin", "ponds": { "minDepth": 0.1 },
+                    "catchment": { "culvert": "m-1", "cell": 5.0, "radius": 3.0, "runoff": 0.6, "intensity": 90.0 } }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_DRAINAGE_DRAW.into(),
+            version: crate::ROAD_DRAINAGE_DRAW_VERSION,
+            title: "Drenajı çiz".into(),
+            summary: "Bir drenaj sorusunun (query: road.drainage.query'nin girdisi) havzasını ve göletlerini katmana çizer: havzanın dış hatları kapalı çoklu çizgi, akış yolu 3B çoklu çizgi, her göletin dibi kotlu nokta; labels ile boşaltım noktasında havzanın alanı (ha) ve debisi, göletin derinliği. Tek geri alma adımı “Drenaj çiz”. \
+                      Uyarılar: sorgunun, layer_hidden. Retler: sorgunun, drainage_nothing, katmanın retleri, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["drenajciz".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::DrainageDraw>(),
+            output: schema::<crate::DrainageDrawn>(),
+            plan: Some(schema::<crate::DrainageDrawn>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Havza yazısıyla".into(),
+                input: json!({ "query": { "surface": "t-1", "catchment": { "at": [120.0, 80.0], "cell": 5.0, "radius": 3.0 } },
+                    "layerId": "drenaj", "labels": true }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::ROAD_TERRAINS_FROM_CLOUD.into(),
             version: crate::ROAD_TERRAINS_FROM_CLOUD_VERSION,
             title: "Buluttan arazi".into(),
@@ -13923,6 +13975,8 @@ mod tests {
                     }
                     crate::ROAD_PLATFORMS_EDIT => serde_json::from_value::<crate::PlatformsEdit>(e.input.clone()).map(|_| ()),
                     crate::ROAD_TERRAINS_FROM_CLOUD => serde_json::from_value::<crate::TerrainsFromCloud>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_DRAINAGE_QUERY => serde_json::from_value::<crate::DrainageQuery>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_DRAINAGE_DRAW => serde_json::from_value::<crate::DrainageDraw>(e.input.clone()).map(|_| ()),
                     crate::ROAD_PLATFORMS_QUERY => serde_json::from_value::<crate::PlatformsQuery>(e.input.clone()).map(|_| ()),
                     crate::ROAD_PLATFORMS_DRAW => serde_json::from_value::<crate::PlatformsDraw>(e.input.clone()).map(|_| ()),
                     crate::ROAD_WALLS_EDIT => {
@@ -14717,6 +14771,8 @@ mod tests {
                         }
                         crate::ROAD_PLATFORMS_EDIT => serde_json::from_value::<crate::PlatformsWritten>(output.clone()).map(|_| ()),
                         crate::ROAD_TERRAINS_FROM_CLOUD => serde_json::from_value::<crate::TerrainsFromCloudWritten>(output.clone()).map(|_| ()),
+                        crate::ROAD_DRAINAGE_QUERY => serde_json::from_value::<crate::DrainageQueried>(output.clone()).map(|_| ()),
+                        crate::ROAD_DRAINAGE_DRAW => serde_json::from_value::<crate::DrainageDrawn>(output.clone()).map(|_| ()),
                         crate::ROAD_PLATFORMS_QUERY => serde_json::from_value::<crate::PlatformsQueried>(output.clone()).map(|_| ()),
                         crate::ROAD_PLATFORMS_DRAW => serde_json::from_value::<crate::PlatformsDrawn>(output.clone()).map(|_| ()),
                         crate::ROAD_WALLS_EDIT => {

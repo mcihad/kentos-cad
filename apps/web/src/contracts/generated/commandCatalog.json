@@ -40425,6 +40425,314 @@
       ]
     },
     {
+      "id": "road.drainage.query",
+      "version": 1,
+      "title": "Drenajı sorgula",
+      "summary": "Bir arazi yüzeyinde (surface: kimliği ya da adı) suyun nereden aktığını ve nerede durduğunu okur; hiçbir şey yazmaz. ponds (minDepth m): göletler, kenardan öncelikli taşkınla; dip, taşma seviyesi ve taştığı köşe, derinlik, su alanı ve hacmi. drops: verilen noktalardan su damlası (üçgenlerde en dik iniş, vadide kenar boyunca), yolu, son yeri, boyu, bitişi (lowPoint, flat, edge, outside). catchment: boşaltım noktasının (at ya da culvert: menfezin girişi) havzası, cell aralıklı ızgaranın hücrelerinden su damlası radius eriminden geçenler; hücre sayısı, alan (ızgaranın çözünürlüğünde), dış hatları, en uzak hücreden akış yolu, boyu, düşüsü, ortalama eğimi; runoff (C) ve intensity (mm/sa) ile Rasyonel en yüksek debi Q = C·i·A/3,6; culvert ile menfezin dolu akış kapasitesi (Manning: menfezin eğimi ve pürüzlülüğü, her boru ya da göz) ve debinin kapasiteye oranı. Değerler kullanıcının: KentOS C, i, aralık ya da erim vermez. Uyarılar: drainage_catchment_empty, culvert_no_roughness, culvert_over_capacity. Retler: not_a_road_project, invalid_drainage, unknown_terrain, unknown_culvert, terrain_unbuildable, invalid_culvert.",
+      "aliases": [
+        "drenaj",
+        "havza",
+        "sudamlasi"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.drainage.query` v1: the terrain surface (its id or name) and what is asked of it: `ponds`, `drops`\n(places in plan) and `catchment`. Nothing is filled in: the depth, the cell, the radius, C and i are the user's.\n\nRefusals, in this order: `not_a_road_project`, `invalid_drainage` (nothing asked, more than [`MOST_DRAINAGE_DROPS`]\ndrops, a value not finite or not positive, C outside 0–1, C or i without the other, a catchment without `at` or a\nculvert), `unknown_terrain`, `unknown_culvert`, `terrain_unbuildable`, the culvert's `invalid_culvert` (its inlet is\nread from its corridor), `invalid_drainage` (a grid of more than [`MOST_CATCHMENT_CELLS`] cells). Warnings:\n`drainage_catchment_empty`, `culvert_no_roughness`, `culvert_over_capacity`.",
+        "properties": {
+          "catchment": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DrainageCatchmentAsk"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "drops": {
+            "items": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            },
+            "type": "array",
+            "x-unit": "length"
+          },
+          "ponds": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DrainagePondsAsk"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "surface": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "surface"
+        ],
+        "title": "DrainageQuery",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.drainage.query` v1.",
+        "properties": {
+          "catchment": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DrainageCatchment"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "drops": {
+            "items": {
+              "$ref": "#/$defs/DrainageDrop"
+            },
+            "type": "array"
+          },
+          "ponds": {
+            "items": {
+              "$ref": "#/$defs/DrainagePond"
+            },
+            "type": "array"
+          },
+          "surface": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "surface"
+        ],
+        "title": "DrainageQueried",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.drainage.query` v1.",
+        "properties": {
+          "catchment": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DrainageCatchment"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "drops": {
+            "items": {
+              "$ref": "#/$defs/DrainageDrop"
+            },
+            "type": "array"
+          },
+          "ponds": {
+            "items": {
+              "$ref": "#/$defs/DrainagePond"
+            },
+            "type": "array"
+          },
+          "surface": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "surface"
+        ],
+        "title": "DrainageQueried",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "invalid_drainage",
+          "unknown_terrain",
+          "unknown_culvert",
+          "terrain_unbuildable",
+          "invalid_culvert"
+        ],
+        "warnings": [
+          "drainage_catchment_empty",
+          "culvert_no_roughness",
+          "culvert_over_capacity"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Menfezin havzası ve kapasitesi",
+          "input": {
+            "catchment": {
+              "cell": 5.0,
+              "culvert": "m-1",
+              "intensity": 90.0,
+              "radius": 3.0,
+              "runoff": 0.6
+            },
+            "ponds": {
+              "minDepth": 0.1
+            },
+            "surface": "Mevcut zemin"
+          }
+        }
+      ]
+    },
+    {
+      "id": "road.drainage.draw",
+      "version": 1,
+      "title": "Drenajı çiz",
+      "summary": "Bir drenaj sorusunun (query: road.drainage.query'nin girdisi) havzasını ve göletlerini katmana çizer: havzanın dış hatları kapalı çoklu çizgi, akış yolu 3B çoklu çizgi, her göletin dibi kotlu nokta; labels ile boşaltım noktasında havzanın alanı (ha) ve debisi, göletin derinliği. Tek geri alma adımı “Drenaj çiz”. Uyarılar: sorgunun, layer_hidden. Retler: sorgunun, drainage_nothing, katmanın retleri, invalid_revision, revision_conflict.",
+      "aliases": [
+        "drenajciz"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.drainage.draw` v1: a query's catchment (its outline as closed polylines, its flow path as a 3D\npolyline) and ponds (a point at each bottom), drawn on `layerId`; with `labels` the catchment's area and peak flow\nand each pond's depth. One undo step “Drenaj çiz”.\n\nRefusals: the query's, `drainage_nothing` (no catchment and no pond to draw), the layer's, `invalid_revision`,\n`revision_conflict`.",
+        "properties": {
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "labels": {
+            "default": false,
+            "type": "boolean"
+          },
+          "layerId": {
+            "type": "string"
+          },
+          "query": {
+            "$ref": "#/$defs/DrainageQuery"
+          }
+        },
+        "required": [
+          "query",
+          "layerId"
+        ],
+        "title": "DrainageDraw",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.drainage.draw` v1.",
+        "properties": {
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "uids",
+          "revision"
+        ],
+        "title": "DrainageDrawn",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.drainage.draw` v1.",
+        "properties": {
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "uids",
+          "revision"
+        ],
+        "title": "DrainageDrawn",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "invalid_drainage",
+          "unknown_terrain",
+          "unknown_culvert",
+          "terrain_unbuildable",
+          "drainage_nothing",
+          "layer_not_found",
+          "not_a_layer",
+          "layer_locked",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "layer_hidden",
+          "drainage_catchment_empty",
+          "culvert_no_roughness",
+          "culvert_over_capacity"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Havza yazısıyla",
+          "input": {
+            "labels": true,
+            "layerId": "drenaj",
+            "query": {
+              "catchment": {
+                "at": [
+                  120.0,
+                  80.0
+                ],
+                "cell": 5.0,
+                "radius": 3.0
+              },
+              "surface": "t-1"
+            }
+          }
+        }
+      ]
+    },
+    {
       "id": "road.terrains.cloud",
       "version": 1,
       "title": "Buluttan arazi",
@@ -80170,6 +80478,36 @@
       "meaning": "Verilen aralıkta kazı ile dolgu eşitlenmiyor; denge verilmedi."
     },
     {
+      "code": "invalid_drainage",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Drenaj sorusu geçerli değil; ileti nedenini söyler."
+    },
+    {
+      "code": "drainage_nothing",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Çizilecek havza ya da gölet yok."
+    },
+    {
+      "code": "drainage_catchment_empty",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Hiçbir hücrenin suyu boşaltım noktasının eriminden geçmiyor; havza yok."
+    },
+    {
+      "code": "culvert_over_capacity",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Havzanın en yüksek debisi menfezin dolu akış kapasitesinden çok."
+    },
+    {
+      "code": "culvert_no_roughness",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Menfezin pürüzlülüğü yok; kapasitesi verilmedi."
+    },
+    {
       "code": "invalid_cloud_terrain",
       "kind": "failed",
       "retryable": false,
@@ -85381,6 +85719,18 @@
     {
       "unit": "volume-m",
       "meaning": "Taşıma momenti: m³·m (hacim × taşıma uzaklığı)."
+    },
+    {
+      "unit": "discharge",
+      "meaning": "Debi: m³/s."
+    },
+    {
+      "unit": "velocity",
+      "meaning": "Hız: m/s."
+    },
+    {
+      "unit": "rainfall",
+      "meaning": "Yağış şiddeti: mm/sa."
     },
     {
       "unit": "money",
@@ -97562,6 +97912,11 @@
           "const": "cloudTerrain",
           "description": "A terrain's ground points from point clouds (`road.terrains.cloud`, docs/adr/0913).",
           "type": "string"
+        },
+        {
+          "const": "drainage",
+          "description": "`road.drainage.draw` (plan/road.md Y16): a catchment's outline and flow path and the ponds, “Drenaj çiz”.",
+          "type": "string"
         }
       ]
     },
@@ -103188,6 +103543,387 @@
         "layer",
         "street",
         "door"
+      ],
+      "type": "object"
+    },
+    "DrainageCapacity": {
+      "description": "A culvert's full-flow capacity by Manning: every barrel full at the culvert's slope and roughness; its discharge\n(m³/s), its velocity (m/s), and the peak flow over it.",
+      "properties": {
+        "culvert": {
+          "type": "string"
+        },
+        "discharge": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "discharge"
+        },
+        "ratio": {
+          "description": "The peak flow over the capacity; absent without a peak flow.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        },
+        "velocity": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "velocity"
+        }
+      },
+      "required": [
+        "culvert",
+        "discharge",
+        "velocity"
+      ],
+      "type": "object"
+    },
+    "DrainageCatchment": {
+      "description": "A catchment: its discharge point, its cells at the grid's cell and its area, its outline rings, the flow path from\nits most distant cell with its length, fall and mean slope (m/m), its Rational peak flow (m³/s) and a culvert's\ncapacity.",
+      "properties": {
+        "area": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "at": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array",
+          "x-unit": "length"
+        },
+        "capacity": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DrainageCapacity"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cell": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "cells": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "fall": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "length": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "outline": {
+          "items": {
+            "items": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            },
+            "type": "array"
+          },
+          "type": "array",
+          "x-unit": "length"
+        },
+        "path": {
+          "items": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 3,
+            "minItems": 3,
+            "type": "array"
+          },
+          "type": "array",
+          "x-unit": "length"
+        },
+        "peak": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "discharge"
+        },
+        "slope": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        }
+      },
+      "required": [
+        "at",
+        "cells",
+        "cell",
+        "area",
+        "outline",
+        "path",
+        "length",
+        "fall",
+        "slope"
+      ],
+      "type": "object"
+    },
+    "DrainageCatchmentAsk": {
+      "description": "A catchment asked for: the discharge point (`at`, or a culvert's inlet), the grid's cell (m) and the radius a drop\nmust pass within (m); with `runoff` (C, 0–1) and `intensity` (mm/h) the Rational peak flow, and with `culvert` its\nfull-flow capacity against it.",
+      "properties": {
+        "at": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "cell": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "culvert": {
+          "description": "A culvert by its id or name.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "intensity": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "rainfall"
+        },
+        "radius": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "runoff": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        }
+      },
+      "required": [
+        "cell",
+        "radius"
+      ],
+      "type": "object"
+    },
+    "DrainageDrop": {
+      "description": "A water drop: where it started, its path with heights, its last place, its plan length and why it ended.",
+      "properties": {
+        "end": {
+          "$ref": "#/$defs/DrainageDropEnd"
+        },
+        "from": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array",
+          "x-unit": "length"
+        },
+        "length": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "path": {
+          "items": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 3,
+            "minItems": 3,
+            "type": "array"
+          },
+          "type": "array",
+          "x-unit": "length"
+        },
+        "to": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "from",
+        "path",
+        "length",
+        "end"
+      ],
+      "type": "object"
+    },
+    "DrainageDropEnd": {
+      "description": "Why a water drop ended.",
+      "enum": [
+        "lowPoint",
+        "flat",
+        "edge",
+        "outside",
+        "steps"
+      ],
+      "type": "string"
+    },
+    "DrainagePond": {
+      "description": "A pond: its bottom, the level it spills at and the corner it spills over, its depth, its water's area and volume and\nhow many corners are under it.",
+      "properties": {
+        "area": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "bottom": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "type": "array",
+          "x-unit": "length"
+        },
+        "corners": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "depth": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "level": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "elevation"
+        },
+        "outlet": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "type": "array",
+          "x-unit": "length"
+        },
+        "volume": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        }
+      },
+      "required": [
+        "bottom",
+        "level",
+        "outlet",
+        "depth",
+        "area",
+        "volume",
+        "corners"
+      ],
+      "type": "object"
+    },
+    "DrainagePondsAsk": {
+      "description": "The ponds asked for: at least `minDepth` deep (OpenRoads' minimum depth).",
+      "properties": {
+        "minDepth": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "minDepth"
+      ],
+      "type": "object"
+    },
+    "DrainageQuery": {
+      "description": "Input of `road.drainage.query` v1: the terrain surface (its id or name) and what is asked of it: `ponds`, `drops`\n(places in plan) and `catchment`. Nothing is filled in: the depth, the cell, the radius, C and i are the user's.\n\nRefusals, in this order: `not_a_road_project`, `invalid_drainage` (nothing asked, more than [`MOST_DRAINAGE_DROPS`]\ndrops, a value not finite or not positive, C outside 0–1, C or i without the other, a catchment without `at` or a\nculvert), `unknown_terrain`, `unknown_culvert`, `terrain_unbuildable`, the culvert's `invalid_culvert` (its inlet is\nread from its corridor), `invalid_drainage` (a grid of more than [`MOST_CATCHMENT_CELLS`] cells). Warnings:\n`drainage_catchment_empty`, `culvert_no_roughness`, `culvert_over_capacity`.",
+      "properties": {
+        "catchment": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DrainageCatchmentAsk"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "drops": {
+          "items": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "type": "array",
+          "x-unit": "length"
+        },
+        "ponds": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DrainagePondsAsk"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "surface": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "surface"
       ],
       "type": "object"
     },

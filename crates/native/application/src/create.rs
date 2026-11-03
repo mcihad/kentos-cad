@@ -202,6 +202,7 @@ pub fn label(operation: Option<CreateOperation>) -> &'static str {
         Some(CreateOperation::Junctions) => "Kavşak çiz",
         Some(CreateOperation::Platforms) => "Platform çiz",
         Some(CreateOperation::CloudTerrain) => "Buluttan arazi",
+        Some(CreateOperation::Drainage) => "Drenaj çiz",
     }
 }
 

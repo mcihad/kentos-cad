@@ -815,6 +815,17 @@ codes! {
     RETAINING_WALL_HIGH = "retaining_wall_high", Warning, false, "İstinat duvarının gövdesi istenen en yüksekten yüksek.";
     PLATFORM_OPEN = "platform_open", Warning, false, "Platformun bir şev çizgisi araziyle buluşmuyor; hacim ve günışığı çizgisi yok.";
     PLATFORM_NO_BALANCE = "platform_no_balance", Warning, false, "Verilen aralıkta kazı ile dolgu eşitlenmiyor; denge verilmedi.";
+    /// A drainage query that is not right: nothing asked, too many drops, a value not positive, C outside 0–1, a
+    /// catchment with no discharge point (docs/adr/0914 §2).
+    INVALID_DRAINAGE = "invalid_drainage", Failed, false, "Drenaj sorusu geçerli değil; ileti nedenini söyler.";
+    /// Nothing to draw: no catchment and no pond (docs/adr/0914 §2).
+    DRAINAGE_NOTHING = "drainage_nothing", Failed, false, "Çizilecek havza ya da gölet yok.";
+    /// A warning: no cell's water drop passes the discharge point (docs/adr/0914 §1).
+    DRAINAGE_CATCHMENT_EMPTY = "drainage_catchment_empty", Warning, false, "Hiçbir hücrenin suyu boşaltım noktasının eriminden geçmiyor; havza yok.";
+    /// A warning: the peak flow is more than the culvert's full-flow capacity (docs/adr/0914 §2).
+    CULVERT_OVER_CAPACITY = "culvert_over_capacity", Warning, false, "Havzanın en yüksek debisi menfezin dolu akış kapasitesinden çok.";
+    /// A warning: the culvert has no roughness; its capacity is not given (docs/adr/0914 §2).
+    CULVERT_NO_ROUGHNESS = "culvert_no_roughness", Warning, false, "Menfezin pürüzlülüğü yok; kapasitesi verilmedi.";
     /// A terrain from point clouds that is not right: no cloud or class, both or neither of surface and name, a
     /// thinning value not positive, an area not closed, too many kept points (docs/adr/0913 §2).
     INVALID_CLOUD_TERRAIN = "invalid_cloud_terrain", Failed, false, "Buluttan arazi isteği geçerli değil; ileti nedenini söyler.";

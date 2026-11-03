@@ -137,6 +137,8 @@ pub enum CreateOperation {
     Platforms,
     /// A terrain's ground points from point clouds (`road.terrains.cloud`, docs/adr/0913).
     CloudTerrain,
+    /// `road.drainage.draw` (plan/road.md Y16): a catchment's outline and flow path and the ponds, “Drenaj çiz”.
+    Drainage,
 }
 
 /// One new object: its geometry and what else it carries. The layer is the
