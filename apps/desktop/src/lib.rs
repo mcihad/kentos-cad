@@ -279,6 +279,8 @@ mod volume_window_tests;
 mod haul_window_tests;
 #[cfg(test)]
 mod stakeout_window_tests;
+#[cfg(test)]
+mod road_exchange_tests;
 mod terrain_layer;
 mod terrain_window;
 #[cfg(test)]

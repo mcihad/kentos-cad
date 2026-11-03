@@ -46,10 +46,77 @@ pub struct LxSurface {
     pub twice: usize,
 }
 
-/// What a LandXML file says of its surfaces.
+/// A horizontal element's kind as the file writes it; a curve's and a spiral's turn and radii (none: infinite).
+#[derive(Clone, Debug, PartialEq)]
+pub enum LxKind {
+    Line,
+    Curve { radius: f64, clockwise: bool, center: Option<[f64; 2]> },
+    Spiral { radius_start: Option<f64>, radius_end: Option<f64>, clockwise: bool, clothoid: bool },
+}
+
+/// A horizontal element (docs/adr/0908 §7): its kind, its start and end, its PI where the file gives one, its length
+/// and internal station where it gives them (metres; places east, north).
+#[derive(Clone, Debug, PartialEq)]
+pub struct LxElement {
+    pub kind: LxKind,
+    pub start: [f64; 2],
+    pub end: [f64; 2],
+    pub pi: Option<[f64; 2]>,
+    pub length: Option<f64>,
+    pub station: Option<f64>,
+}
+
+/// A km equation: its internal station, the km back (none when the file does not say) and ahead, and its direction.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct LxEquation {
+    pub internal: f64,
+    pub back: Option<f64>,
+    pub ahead: f64,
+    pub increasing: bool,
+}
+
+/// A PVI's curve as the file writes it.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum LxVCurve {
+    None,
+    Parabola { length: f64 },
+    Unsymmetric { length_in: f64, length_out: f64 },
+    Circle { length: f64, radius: f64 },
+}
+
+/// A PVI: its station (internal, as the file writes it) and elevation, metres, and its curve.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct LxPvi {
+    pub station: f64,
+    pub elevation: f64,
+    pub curve: LxVCurve,
+}
+
+/// A vertical alignment (`Profile/ProfAlign`).
+#[derive(Clone, Debug, PartialEq)]
+pub struct LxProfile {
+    pub name: String,
+    pub pvis: Vec<LxPvi>,
+}
+
+/// A horizontal alignment: its name, km at the start, length, elements, km equations and profiles; the elements it
+/// does not take (an irregular line, a chain, a spiral not a clothoid) by their names.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct LxAlignment {
+    pub name: String,
+    pub sta_start: f64,
+    pub length: f64,
+    pub elements: Vec<LxElement>,
+    pub equations: Vec<LxEquation>,
+    pub profiles: Vec<LxProfile>,
+    pub left: Vec<String>,
+}
+
+/// What a LandXML file says of its surfaces and its alignments.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct LandXml {
     pub surfaces: Vec<LxSurface>,
+    pub alignments: Vec<LxAlignment>,
     /// The metres of the file's linear unit.
     pub metres: f64,
     /// The unit's name as the file writes it (`meter`, `USSurveyFoot` …); empty when it says none (metres taken).
@@ -125,12 +192,120 @@ pub fn read(bytes: &[u8]) -> Result<LandXml, LxError> {
     let k = metres_of(&unit);
     let mut out = LandXml {
         surfaces: Vec::new(),
+        alignments: Vec::new(),
         metres: k,
         unit,
     };
     for surfaces in named(root, "Surfaces") {
         for s in named(surfaces, "Surface") {
             out.surfaces.push(surface(s, k)?);
+        }
+    }
+    for alignments in named(root, "Alignments") {
+        for a in named(alignments, "Alignment") {
+            out.alignments.push(alignment(a, k)?);
+        }
+    }
+    Ok(out)
+}
+
+/// A number attribute (in the file's unit when `k` is not 1); "INF" none.
+fn attr(n: Node<'_, '_>, name: &str, k: f64) -> Result<Option<f64>, LxError> {
+    match n.attribute(name) {
+        None => Ok(None),
+        Some(t) if t.trim().eq_ignore_ascii_case("INF") => Ok(None),
+        Some(t) => t.trim().replace(',', ".").parse::<f64>().ok().filter(|v| v.is_finite()).map(|v| Some(v * k)).ok_or(LxError::BadNumber),
+    }
+}
+
+/// A place element's text, “northing easting [elevation]”, as (east, north) in metres.
+fn place(n: Option<Node<'_, '_>>, k: f64) -> Result<Option<[f64; 2]>, LxError> {
+    let Some(n) = n else { return Ok(None) };
+    let v = numbers(n.text().unwrap_or(""))?;
+    match v[..] {
+        [north, east] | [north, east, _] => Ok(Some([east * k, north * k])),
+        _ => Err(LxError::BadNumber),
+    }
+}
+
+fn alignment(a: Node<'_, '_>, k: f64) -> Result<LxAlignment, LxError> {
+    let mut out = LxAlignment {
+        name: a.attribute("name").unwrap_or("").to_owned(),
+        sta_start: attr(a, "staStart", k)?.unwrap_or(0.0),
+        length: attr(a, "length", k)?.unwrap_or(0.0),
+        ..LxAlignment::default()
+    };
+    if let Some(geo) = first(a, "CoordGeom") {
+        for (i, e) in geo.children().filter(|c| c.is_element()).enumerate() {
+            let tag = e.tag_name().name();
+            let named_as = || format!("{}. eleman ({tag})", i + 1);
+            let clockwise = e.attribute("rot") == Some("cw");
+            let kind = match tag {
+                "Line" => LxKind::Line,
+                "Curve" => LxKind::Curve {
+                    radius: attr(e, "radius", k)?.unwrap_or(0.0),
+                    clockwise,
+                    center: place(first(e, "Center"), k)?,
+                },
+                "Spiral" => LxKind::Spiral {
+                    radius_start: attr(e, "radiusStart", k)?,
+                    radius_end: attr(e, "radiusEnd", k)?,
+                    clockwise,
+                    clothoid: e.attribute("spiType").is_none_or(|t| t == "clothoid"),
+                },
+                "Feature" => continue,
+                _ => {
+                    out.left.push(named_as());
+                    continue;
+                }
+            };
+            let (Some(start), Some(end)) = (place(first(e, "Start"), k)?, place(first(e, "End"), k)?) else {
+                out.left.push(named_as());
+                continue;
+            };
+            out.elements.push(LxElement {
+                kind,
+                start,
+                end,
+                pi: place(first(e, "PI"), k)?,
+                length: attr(e, "length", k)?,
+                station: attr(e, "staStart", k)?,
+            });
+        }
+    }
+    for q in named(a, "StaEquation") {
+        out.equations.push(LxEquation {
+            internal: attr(q, "staInternal", k)?.ok_or(LxError::BadNumber)?,
+            back: attr(q, "staBack", k)?,
+            ahead: attr(q, "staAhead", k)?.ok_or(LxError::BadNumber)?,
+            increasing: q.attribute("staIncrement") != Some("decreasing"),
+        });
+    }
+    for prof in named(a, "Profile") {
+        for pa in named(prof, "ProfAlign") {
+            let mut pvis = Vec::new();
+            for v in pa.children().filter(|c| c.is_element()) {
+                let curve = match v.tag_name().name() {
+                    "PVI" => LxVCurve::None,
+                    "ParaCurve" => LxVCurve::Parabola { length: attr(v, "length", k)?.ok_or(LxError::BadNumber)? },
+                    "UnsymParaCurve" => LxVCurve::Unsymmetric {
+                        length_in: attr(v, "lengthIn", k)?.ok_or(LxError::BadNumber)?,
+                        length_out: attr(v, "lengthOut", k)?.ok_or(LxError::BadNumber)?,
+                    },
+                    "CircCurve" => LxVCurve::Circle {
+                        length: attr(v, "length", k)?.ok_or(LxError::BadNumber)?,
+                        radius: attr(v, "radius", k)?.ok_or(LxError::BadNumber)?,
+                    },
+                    _ => continue,
+                };
+                let xy = numbers(v.text().unwrap_or(""))?;
+                let [station, elevation] = xy[..] else { return Err(LxError::BadNumber) };
+                pvis.push(LxPvi { station: station * k, elevation: elevation * k, curve });
+            }
+            out.profiles.push(LxProfile {
+                name: pa.attribute("name").or(prof.attribute("name")).unwrap_or("").to_owned(),
+                pvis,
+            });
         }
     }
     Ok(out)

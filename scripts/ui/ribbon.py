@@ -258,7 +258,7 @@ CAD = [
     ], works=ROAD),
     # KentOS Yol's horizontal alignments (plan/road.md Y3, docs/adr/0901): the Güzergâh window and a new alignment.
     T("alignment", "Güzergâh", [
-        P("Güzergâh", "alignmentEditor", [L("alignment.editor"), L("alignment.new")]),
+        P("Güzergâh", "alignmentEditor", [L("alignment.editor"), L("alignment.new"), L("landxml.importAlignments")]),
         # The vertical alignments (plan/road.md Y4, docs/adr/0902): the Boykesit window and a new profile.
         P("Boykesit", "profileEditor", [L("profile.editor"), L("profile.new")]),
         # The cross sections (plan/road.md Y5, docs/adr/0903): the Enkesit window, a new set and a new template.

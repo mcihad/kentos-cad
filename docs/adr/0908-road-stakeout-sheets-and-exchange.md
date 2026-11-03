@@ -46,6 +46,17 @@ Tarih: 2026-11-03. plan/road.md Y10 (ROAD-SEC-09…11; ROAD-IO-05, 06, 13, 14). 
    kurulamayan yüzey ya da aks seçilmişse ret, seçilmemişse uyarı. Dosya yanına yazılır, okuyucuyla geri okunur, sonra
    yerine konur. Koridor sekmesinin Aplikasyon panelinde LandXML ver.
 
+7. **LandXML'den aks (ROAD-IO-05).** `road.alignments.import` dosyanın akslarını alır. PI'lar elemanlardan bulunur
+   (`kentos_road::alignment::fit`): aliymanlar arasındaki her kurp grubu (daire eğrisi; önünde, arkasında ya da iki
+   yanında aliymandan kurba giden klotoid; ya da en keskin yerinde buluşan iki klotoid) bir PI'dır: grubun giriş ve
+   çıkış teğetlerinin buluştuğu yer, daire eğrisinin yarıçapı, klotoidlerin boyu; açıyla buluşan iki aliyman kurpsuz
+   PI. Teğet doğrultusu daire eğrisinde merkezden, yoksa PI'dan; klotoidde PI'dan okunur. KentOS'un PI biçimi aliyman
+   olmadan art arda gelen kurpları (bileşik, ters), ove klotoidi, klotoid olmayan geçiş eğrisini, düzensiz çizgiyi ve
+   zinciri tutamaz: o aks alınmaz, nedeni ve elemanın sırası `landxml_left` ile söylenir. PI'lardan kurulan aks
+   dosyanın elemanlarıyla eleman eleman karşılaştırılır (aynı sayı, uçlar en çok 1 mm; cevabın `deviation`'ı). Km
+   denklemleri gelir (geri km yazılmamışsa önceki bölgeden hesaplanır); boykesitlerin km'leri iç km'den aksın boyuna
+   çevrilir. Projede aynı adlı aks ret. Tek geri alma adımı “LandXML aks al”; Güzergâh sekmesinde LandXML aks.
+
 ## Aşamalar
 
 Y10.1 aplikasyon cetveli (komut, başvuru, Python, MCP, pencere); Y10.2 LandXML'e aks, boykesit ve yüzey yazma ve
@@ -58,7 +69,9 @@ zemin boyu PROJ'un nokta ölçekleri ve Euler yarıçapıyla, KentOS kodu yok), 
 Y10.2 (yapıldı, yazma): 22 ortak durum (`road_landxml_cases.py`; akslar road_alignment_cases.py'nin, yüzey Triangle'ın,
 boykesitler road_profile_command_cases.py'nin başvurusundan); KentOS'un yazdığı dosya (`fixtures/road/v1/landxml/out`)
 `--written` ile xmllint'te landxml.org'un XSD'sine karşı geçerli ve her yer, PI, merkez, doğrultu, yarıçap, km ve PVI
-başvuruyla aynı; Python, MCP, masaüstünde LandXML ver. Aks ve boykesit okuma (LandXML al'ın genişlemesi) açık.
+başvuruyla aynı; Python, MCP, masaüstünde LandXML ver. Y10.2b (yapıldı, okuma): 21 ortak durum (`road_landxml_cases.py`; `aks.xml`'i başvurunun 40 basamaklı elemanlarından
+KentOS kodu olmadan yazar, şemaya uygun; beklenen PI'lar aksların tanımındakiler, ±1e-6); KentOS'un yazdığı `yol.xml`
+geri alınınca PI'lar özgünleriyle aynı; Python, masaüstünde LandXML aks.
 
 ## Sonra
 

@@ -4,6 +4,7 @@
 
 pub mod chain;
 pub mod element;
+pub mod fit;
 pub mod locate;
 pub mod mapping;
 pub mod offset;

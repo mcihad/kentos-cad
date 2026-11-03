@@ -4217,6 +4217,22 @@
    "tests": 0
   },
   {
+   "id": "landxml.importAlignments",
+   "kind": "command",
+   "title": "LandXML'den aks al…",
+   "level": "semantic",
+   "via": [
+    "road.alignments.import"
+   ],
+   "operation": null,
+   "python": "Connection: road.alignments.import",
+   "mcp": "road.alignments.import",
+   "note": "Dosyayı sorar ve road.alignments.import ile alır; tek geri alma adımı (plan/road.md Y10.2, ADR 0908).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "layer.crs",
    "kind": "command",
    "title": "Sistem ata…",

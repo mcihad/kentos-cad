@@ -615,6 +615,9 @@ codes! {
     NO_CONTOURS = "no_contours", Failed, false, "Bu aralıkla yüzeyi kesen eş yükselti eğrisi yok.";
     /// A LandXML file with no surface, none of the name asked, or one without points (plan/road.md Y2.5).
     LANDXML_NO_SURFACE = "landxml_no_surface", Failed, false, "LandXML dosyasında alınacak yüzey yok.";
+    /// A LandXML file with no alignment KentOS takes: none in it, a name it does not have, none whose elements make
+    /// KentOS's PIs (docs/adr/0908 §7).
+    LANDXML_NO_ALIGNMENT = "landxml_no_alignment", Failed, false, "LandXML dosyasında alınacak aks yok.";
     /// A warning: what a LandXML surface says and is not taken (a face naming a missing point, a point id twice, a
     /// second outer boundary).
     LANDXML_LEFT = "landxml_left", Warning, false, "LandXML yüzeyinin bir kısmı alınmadı; ileti nedenini söyler.";

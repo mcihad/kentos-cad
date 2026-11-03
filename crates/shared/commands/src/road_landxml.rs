@@ -9,6 +9,9 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
 use ts_rs::TS;
 
+#[cfg(feature = "schema")]
+use crate::cad::REVISION_TEXT;
+
 pub const FILE_EXPORT_LANDXML: &str = "file.export.landxml";
 pub const FILE_EXPORT_LANDXML_VERSION: u32 = 1;
 
@@ -95,4 +98,63 @@ pub struct LandxmlExported {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "bytes")))]
     pub bytes: u64,
     pub sha256: String,
+}
+
+pub const ROAD_ALIGNMENTS_IMPORT: &str = "road.alignments.import";
+pub const ROAD_ALIGNMENTS_IMPORT_VERSION: u32 = 1;
+
+/// Input of `road.alignments.import` v1 (plan/road.md Y10.2, docs/adr/0908 §7): a LandXML file's alignments taken in
+/// as KentOS alignments (their PIs found from the elements), with their km equations and, unless `withoutProfiles`,
+/// their profiles; `alignments` the file's alignments by name (absent: every one).
+///
+/// Refusals, in this order: `not_a_road_project`, `file_not_found`, `import_unreadable`, `landxml_no_alignment` (none in
+/// the file, a name it does not have, none that KentOS takes), `invalid_alignment` (a name the project has, a
+/// definition the rules refuse), `invalid_revision`, `revision_conflict`. Warnings: `landxml_left` (an alignment
+/// KentOS's PIs cannot hold, elements it does not take, a profile that does not build).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AlignmentsImport {
+    pub path: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub alignments: Option<Vec<String>>,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub without_profiles: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
+/// An alignment taken in: its id and name, its PIs, the file's elements and how far KentOS's alignment from its PIs
+/// lies from them at their ends (m), and its profiles' names.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AlignmentImported {
+    pub id: String,
+    pub name: String,
+    pub pis: Vec<crate::AlignmentPi>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub elements: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub deviation: f64,
+    pub profiles: Vec<String>,
+}
+
+/// Output of `road.alignments.import` v1, and its plan.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AlignmentsImported {
+    pub alignments: Vec<AlignmentImported>,
+    pub revision: String,
 }

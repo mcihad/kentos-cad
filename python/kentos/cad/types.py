@@ -11578,6 +11578,43 @@ class AlignmentFoot(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class AlignmentImported(_Model):
+    """An alignment taken in: its id and name, its PIs, the file's elements and how far KentOS's alignment from its PIs
+    lies from them at their ends (m), and its profiles' names.
+    Attributes:
+        elements: Unit: count.
+        deviation: Unit: m.
+    """
+    id: str
+    name: str
+    pis: list[AlignmentPi]
+    elements: int
+    deviation: float
+    profiles: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["pis"] = [e0.to_json() for e0 in self.pis]
+        out["elements"] = self.elements
+        out["deviation"] = float(self.deviation)
+        out["profiles"] = list(self.profiles)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AlignmentImported:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            pis=[AlignmentPi.from_json(e0) for e0 in data["pis"]],
+            elements=data["elements"],
+            deviation=float(data["deviation"]),
+            profiles=list(data["profiles"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class AlignmentJoinRow(_Model):
     """Two curves with no tangent between them.
     Attributes:
@@ -11972,6 +12009,63 @@ class AlignmentsEdit(_Model):
             offset=UNSET if "offset" not in data else None if data["offset"] is None else float(data["offset"]),
             pis=UNSET if "pis" not in data else None if data["pis"] is None else [AlignmentPi.from_json(e0) for e0 in data["pis"]],
             stationing=UNSET if "stationing" not in data else None if data["stationing"] is None else AlignmentStationing.from_json(data["stationing"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AlignmentsImport(_Model):
+    """Input of `road.alignments.import` v1 (plan/road.md Y10.2, docs/adr/0908 §7): a LandXML file's alignments taken in
+    as KentOS alignments (their PIs found from the elements), with their km equations and, unless `withoutProfiles`,
+    their profiles; `alignments` the file's alignments by name (absent: every one).
+
+    Refusals, in this order: `not_a_road_project`, `file_not_found`, `import_unreadable`, `landxml_no_alignment` (none in
+    the file, a name it does not have, none that KentOS takes), `invalid_alignment` (a name the project has, a
+    definition the rules refuse), `invalid_revision`, `revision_conflict`. Warnings: `landxml_left` (an alignment
+    KentOS's PIs cannot hold, elements it does not take, a profile that does not build).
+    """
+    path: str
+    alignments: list[str] | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    without_profiles: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        if self.alignments is not UNSET:
+            out["alignments"] = None if self.alignments is None else list(self.alignments)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.without_profiles is not UNSET:
+            out["withoutProfiles"] = self.without_profiles
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AlignmentsImport:
+        return cls(
+            path=data["path"],
+            alignments=UNSET if "alignments" not in data else None if data["alignments"] is None else list(data["alignments"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            without_profiles=data.get("withoutProfiles", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AlignmentsImported(_Model):
+    """Output of `road.alignments.import` v1, and its plan."""
+    alignments: list[AlignmentImported]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["alignments"] = [e0.to_json() for e0 in self.alignments]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AlignmentsImported:
+        return cls(
+            alignments=[AlignmentImported.from_json(e0) for e0 in data["alignments"]],
+            revision=data["revision"],
         )
 
 
@@ -96364,6 +96458,7 @@ __all__ = [
     "AlignmentDef",
     "AlignmentElementRow",
     "AlignmentFoot",
+    "AlignmentImported",
     "AlignmentJoinRow",
     "AlignmentLabelRow",
     "AlignmentListed",
@@ -96376,6 +96471,8 @@ __all__ = [
     "AlignmentsEdit",
     "AlignmentsEditOperation",
     "AlignmentsEditOperationName",
+    "AlignmentsImport",
+    "AlignmentsImported",
     "AlignmentsLabel",
     "AlignmentsLabelled",
     "AlignmentsQueried",

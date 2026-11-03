@@ -512,6 +512,10 @@
        {
         "command": "alignment.new",
         "size": "large"
+       },
+       {
+        "command": "landxml.importAlignments",
+        "size": "large"
        }
       ]
      },

@@ -280,6 +280,7 @@ pub mod road_corridors_query;
 pub mod road_hauls;
 pub mod road_hauls_edit;
 pub mod road_hauls_query;
+pub mod road_alignments_import;
 pub mod road_landxml;
 pub mod road_stakeout;
 pub mod road_volumes;
@@ -1208,6 +1209,7 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (kentos_commands::ROAD_HAULS_QUERY, kentos_commands::ROAD_HAULS_QUERY_VERSION),
     (kentos_commands::ROAD_STAKEOUT_QUERY, kentos_commands::ROAD_STAKEOUT_QUERY_VERSION),
     (kentos_commands::FILE_EXPORT_LANDXML, kentos_commands::FILE_EXPORT_LANDXML_VERSION),
+    (kentos_commands::ROAD_ALIGNMENTS_IMPORT, kentos_commands::ROAD_ALIGNMENTS_IMPORT_VERSION),
     // Alt ağlar ([`subnetworks`], [`subnetworks_update`], docs/adr/0557 §2).
     (
         kentos_commands::CAD_SUBNETWORKS_FIND,

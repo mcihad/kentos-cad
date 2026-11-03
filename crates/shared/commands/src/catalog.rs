@@ -7404,6 +7404,31 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::ROAD_ALIGNMENTS_IMPORT.into(),
+            version: crate::ROAD_ALIGNMENTS_IMPORT_VERSION,
+            title: "LandXML'den aks al".into(),
+            summary: "LandXML dosyasının akslarını KentOS aksı olarak alır: PI'lar elemanlardan bulunur (her aliymanlar arası kurp grubu bir PI: giriş ve çıkış teğetlerinin buluştuğu yer, daire eğrisinin yarıçapı, klotoidlerin boyu; açıyla buluşan iki aliyman kurpsuz PI), PI'lardan kurulan aks dosyanın elemanlarıyla uç uca karşılaştırılır (en çok 1 mm; cevabın deviation'ı). Km denklemleri ve withoutProfiles verilmezse boykesitleri (PVI'lar ve parabol, asimetrik parabol, daire eğrisi; km'ler iç km'den aksın boyuna çevrilir) de gelir. alignments dosyanın akslarını adla seçer (yoksa hepsi). Aralarında aliyman olmayan bileşik ya da ters kurp, ove klotoid, klotoid olmayan geçiş eğrisi, düzensiz çizgi ve zincir alınmaz, landxml_left ile söylenir. Tek geri alma adımı “LandXML aks al”. \
+                      Retler: not_a_road_project, file_not_found, import_unreadable, landxml_no_alignment, invalid_alignment, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["landxmlaksal".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::AlignmentsImport>(),
+            output: schema::<crate::AlignmentsImported>(),
+            plan: Some(schema::<crate::AlignmentsImported>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Dosyanın ana aksı boykesitleriyle".into(),
+                input: json!({ "path": "/veri/yol.xml", "alignments": ["Ana aks"] }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::ROAD_STAKEOUT_QUERY.into(),
             version: crate::ROAD_STAKEOUT_QUERY_VERSION,
             title: "Aplikasyon cetveli".into(),
@@ -13065,6 +13090,9 @@ mod tests {
                     crate::FILE_EXPORT_LANDXML => {
                         serde_json::from_value::<crate::ExportLandxml>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_ALIGNMENTS_IMPORT => {
+                        serde_json::from_value::<crate::AlignmentsImport>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_SUBNETWORKS_FIND => {
                         serde_json::from_value::<crate::SubnetworksFind>(e.input.clone())
                             .map(|_| ())
@@ -13797,6 +13825,9 @@ mod tests {
                         }
                         crate::FILE_EXPORT_LANDXML => {
                             serde_json::from_value::<crate::LandxmlExported>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_ALIGNMENTS_IMPORT => {
+                            serde_json::from_value::<crate::AlignmentsImported>(output.clone()).map(|_| ())
                         }
                         crate::CAD_ADDRESSES_DEFINE => {
                             serde_json::from_value::<crate::AddressesDefined>(output.clone())

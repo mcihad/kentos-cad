@@ -39066,6 +39066,126 @@
       ]
     },
     {
+      "id": "road.alignments.import",
+      "version": 1,
+      "title": "LandXML'den aks al",
+      "summary": "LandXML dosyasının akslarını KentOS aksı olarak alır: PI'lar elemanlardan bulunur (her aliymanlar arası kurp grubu bir PI: giriş ve çıkış teğetlerinin buluştuğu yer, daire eğrisinin yarıçapı, klotoidlerin boyu; açıyla buluşan iki aliyman kurpsuz PI), PI'lardan kurulan aks dosyanın elemanlarıyla uç uca karşılaştırılır (en çok 1 mm; cevabın deviation'ı). Km denklemleri ve withoutProfiles verilmezse boykesitleri (PVI'lar ve parabol, asimetrik parabol, daire eğrisi; km'ler iç km'den aksın boyuna çevrilir) de gelir. alignments dosyanın akslarını adla seçer (yoksa hepsi). Aralarında aliyman olmayan bileşik ya da ters kurp, ove klotoid, klotoid olmayan geçiş eğrisi, düzensiz çizgi ve zincir alınmaz, landxml_left ile söylenir. Tek geri alma adımı “LandXML aks al”. Retler: not_a_road_project, file_not_found, import_unreadable, landxml_no_alignment, invalid_alignment, invalid_revision, revision_conflict.",
+      "aliases": [
+        "landxmlaksal"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.alignments.import` v1 (plan/road.md Y10.2, docs/adr/0908 §7): a LandXML file's alignments taken in\nas KentOS alignments (their PIs found from the elements), with their km equations and, unless `withoutProfiles`,\ntheir profiles; `alignments` the file's alignments by name (absent: every one).\n\nRefusals, in this order: `not_a_road_project`, `file_not_found`, `import_unreadable`, `landxml_no_alignment` (none in\nthe file, a name it does not have, none that KentOS takes), `invalid_alignment` (a name the project has, a\ndefinition the rules refuse), `invalid_revision`, `revision_conflict`. Warnings: `landxml_left` (an alignment\nKentOS's PIs cannot hold, elements it does not take, a profile that does not build).",
+        "properties": {
+          "alignments": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "path": {
+            "type": "string"
+          },
+          "withoutProfiles": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "AlignmentsImport",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.alignments.import` v1, and its plan.",
+        "properties": {
+          "alignments": {
+            "items": {
+              "$ref": "#/$defs/AlignmentImported"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "alignments",
+          "revision"
+        ],
+        "title": "AlignmentsImported",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.alignments.import` v1, and its plan.",
+        "properties": {
+          "alignments": {
+            "items": {
+              "$ref": "#/$defs/AlignmentImported"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "alignments",
+          "revision"
+        ],
+        "title": "AlignmentsImported",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "file_not_found",
+          "import_unreadable",
+          "landxml_no_alignment",
+          "invalid_alignment",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "landxml_left"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Dosyanın ana aksı boykesitleriyle",
+          "input": {
+            "alignments": [
+              "Ana aks"
+            ],
+            "path": "/veri/yol.xml"
+          }
+        }
+      ]
+    },
+    {
       "id": "road.stakeout.query",
       "version": 1,
       "title": "Aplikasyon cetveli",
@@ -73323,6 +73443,12 @@
       "meaning": "LandXML dosyasında alınacak yüzey yok."
     },
     {
+      "code": "landxml_no_alignment",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "LandXML dosyasında alınacak aks yok."
+    },
+    {
       "code": "landxml_left",
       "kind": "warning",
       "retryable": false,
@@ -80356,6 +80482,49 @@
         "at",
         "offset",
         "corner"
+      ],
+      "type": "object"
+    },
+    "AlignmentImported": {
+      "description": "An alignment taken in: its id and name, its PIs, the file's elements and how far KentOS's alignment from its PIs\nlies from them at their ends (m), and its profiles' names.",
+      "properties": {
+        "deviation": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "elements": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "pis": {
+          "items": {
+            "$ref": "#/$defs/AlignmentPi"
+          },
+          "type": "array"
+        },
+        "profiles": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "pis",
+        "elements",
+        "deviation",
+        "profiles"
       ],
       "type": "object"
     },

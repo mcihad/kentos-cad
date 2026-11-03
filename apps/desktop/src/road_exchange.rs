@@ -68,3 +68,47 @@ impl App {
         Task::none()
     }
 }
+
+impl App {
+    /// LandXML'den aks al from the ribbon: which file.
+    pub(crate) fn import_landxml_alignments(&mut self) -> Task<Message> {
+        let Some(doc) = &self.document else {
+            self.output("Açık çizim yok.");
+            return Task::none();
+        };
+        if doc.model.settings().cad_work != Some(kentos_commands::CadWork::Road) {
+            self.warn("LandXML'den aks yalnız yol projesine (KentOS Yol) alınır.".to_owned());
+            return Task::none();
+        }
+        Task::perform(
+            async move {
+                let file = rfd::AsyncFileDialog::new()
+                    .set_title("LandXML'den aks al")
+                    .add_filter("LandXML (.xml)", &["xml", "landxml"])
+                    .pick_file()
+                    .await?;
+                Some(file.path().to_path_buf())
+            },
+            Message::LandxmlAlignments,
+        )
+    }
+
+    /// The file chosen: every alignment of it taken in with its profiles (`road.alignments.import`, one undo step).
+    pub(crate) fn landxml_alignments_chosen(&mut self, path: Option<PathBuf>) -> Task<Message> {
+        let Some(path) = path else { return Task::none() };
+        let Some(doc) = self.document.as_mut() else { return Task::none() };
+        let input = kentos_commands::AlignmentsImport {
+            path: path.display().to_string(),
+            alignments: None,
+            without_profiles: false,
+            expected_revision: None,
+        };
+        let result = kentos_native_application::road_alignments_import::execute(&mut ExecutionContext::new(&mut doc.model), input);
+        if let Some(out) = self.answered(result) {
+            let names: Vec<String> = out.alignments.iter().map(|a| format!("“{}”", a.name)).collect();
+            let profiles: usize = out.alignments.iter().map(|a| a.profiles.len()).sum();
+            self.say(Level::Success, format!("LandXML'den {} aks alındı: {}; {profiles} boykesit.", names.len(), names.join(", ")));
+        }
+        Task::none()
+    }
+}

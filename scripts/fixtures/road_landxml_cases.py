@@ -13,6 +13,7 @@ radius, station and PVI is compared with the references.
         python3 scripts/fixtures/road_landxml_cases.py [--check | --written]
 """
 
+import copy
 import json
 import subprocess
 import sys
@@ -308,6 +309,224 @@ def check_written():
           f"{len(PROFILES)} boykesit başvuruyla aynı")
 
 
+# ── road.alignments.import ────────────────────────────────────────────────────────────────────────────────────────
+
+IMPORT_OUT = ROOT / "fixtures/commands/v1/road.alignments.import.json"
+AKS = HERE / "aks.xml"
+STEPPED = {"canUndo": True, "canRedo": False, "dirty": True, "revision": "changed"}
+
+
+def fmt(v):
+    """A number as the shortest text that reads back, without an exponent."""
+    from decimal import Decimal
+    v = float(v)
+    if v == 0:
+        return "0"
+    t = format(Decimal(repr(v)), "f")
+    return t.rstrip("0").rstrip(".") if "." in t else t
+
+
+def pl(p):
+    return f"{fmt(p[1])} {fmt(p[0])}"
+
+
+def meet(p0, th0, p1, th1):
+    c0, s0, c1, s1 = mp.cos(th0), mp.sin(th0), mp.cos(th1), mp.sin(th1)
+    t = ((p1[0] - p0[0]) * s1 - (p1[1] - p0[1]) * c1) / (c0 * s1 - s0 * c1)
+    return [p0[0] + t * c0, p0[1] + t * s0]
+
+
+def element_xml(e, km0):
+    """A reference element (road_alignment_cases.El, 40 digits) as LandXML, written here without KentOS."""
+    p0, p1 = e.point(0), e.end()
+    th0, th1 = e.theta(0), e.theta(e.length)
+    head = f'staStart="{fmt(km0 + e.station)}" length="{fmt(e.length)}"'
+    if e.kind == "tangent":
+        return f'<Line {head}><Start>{pl(p0)}</Start><End>{pl(p1)}</End></Line>'
+    rot = "cw" if (e.k0 + e.k1) < 0 else "ccw"
+    if e.kind == "arc":
+        k = e.k0
+        c = [p0[0] - mp.sin(th0) / k, p0[1] + mp.cos(th0) / k]
+        pi = meet(p0, th0, p1, th1)
+        return (f'<Curve rot="{rot}" crvType="arc" radius="{fmt(1 / abs(k))}" {head}><Start>{pl(p0)}</Start>'
+                f'<Center>{pl(c)}</Center><End>{pl(p1)}</End><PI>{pl(pi)}</PI></Curve>')
+    r = lambda k: "INF" if k == 0 else fmt(1 / abs(k))  # noqa: E731
+    return (f'<Spiral rot="{rot}" spiType="clothoid" radiusStart="{r(e.k0)}" radiusEnd="{r(e.k1)}" {head}>'
+            f'<Start>{pl(p0)}</Start><PI>{pl(meet(p0, th0, p1, th1))}</PI><End>{pl(p1)}</End></Spiral>')
+
+
+def alignment_xml(name, b, km0, extra="", profile=None):
+    els = "".join(element_xml(e, km0) for e in b.els)
+    prof = ""
+    if profile:
+        rows = []
+        for q in profile["pvis"]:
+            at = f"{fmt(km0 + q['station'])} {fmt(q['elevation'])}"
+            if q.get("radius"):
+                c = next(c for c in pcmd.report(profile)["curves"] if c["pvi"] == q["id"])
+                rows.append(f'<CircCurve length="{fmt(c["length"])}" radius="{fmt(q["radius"])}">{at}</CircCurve>')
+            elif q.get("length"):
+                rows.append(f'<ParaCurve length="{fmt(q["length"])}">{at}</ParaCurve>')
+            elif q.get("lengthIn"):
+                rows.append(f'<UnsymParaCurve lengthIn="{fmt(q["lengthIn"])}" lengthOut="{fmt(q["lengthOut"])}">{at}</UnsymParaCurve>')
+            else:
+                rows.append(f"<PVI>{at}</PVI>")
+        prof = f'<Profile name="{profile["name"]}"><ProfAlign name="{profile["name"]}">{"".join(rows)}</ProfAlign></Profile>'
+    return (f'<Alignment name="{name}" length="{fmt(b.length)}" staStart="{fmt(km0)}"><CoordGeom>{els}</CoordGeom>'
+            f'{extra}{prof}</Alignment>')
+
+
+def raw(name, body, extra=""):
+    return f'<Alignment name="{name}" length="1" staStart="0"><CoordGeom>{body}</CoordGeom>{extra}</Alignment>'
+
+
+def line(a, b):
+    return f"<Line><Start>{pl(a)}</Start><End>{pl(b)}</End></Line>"
+
+
+def aks_xml():
+    g1, g4 = pcmd.ALIGNED["g-1"], pcmd.ALIGNED["g-4"]
+    main = next(p for p in PROFILES if p["id"] == "b-1")
+    parts = [
+        alignment_xml("Ana aks", g1, 1000, profile=main),
+        alignment_xml("Dar kurp", g4, 0),
+        raw("Kırık aks", line([0, 0], [100, 0]) + line([100, 0], [150, 80])),
+        raw("Denklemli aks", line([0, 300], [300, 300]),
+            '<StaEquation staInternal="120" staAhead="500" staIncrement="increasing"/>'),
+        raw("Bileşik kurp", line([0, 0], [100, 0])
+            + '<Curve rot="ccw" radius="100"><Start>0 100</Start><Center>100 100</Center><End>29.289 170.711</End></Curve>'
+            + '<Curve rot="ccw" radius="200"><Start>29.289 170.711</Start><Center>170.711 29.289</Center><End>100 200</End></Curve>'),
+        raw("Ove klotoid", line([0, 0], [100, 0])
+            + '<Spiral rot="ccw" spiType="clothoid" radiusStart="300" radiusEnd="150" length="20"><Start>0 100</Start><PI>0 110</PI><End>1 120</End></Spiral>'
+            + '<Curve rot="ccw" radius="150"><Start>1 120</Start><Center>151 120</Center><End>5 150</End></Curve>'),
+        raw("Kübik geçiş", line([0, 0], [100, 0])
+            + '<Spiral rot="ccw" spiType="cubic" radiusStart="INF" radiusEnd="150" length="20"><Start>0 100</Start><PI>0 110</PI><End>1 120</End></Spiral>'),
+        raw("Düzensiz", '<IrregularLine><Start>0 0</Start><End>10 10</End><PntList2D>0 0 10 10</PntList2D></IrregularLine>'),
+    ]
+    return ('<?xml version="1.0" encoding="UTF-8"?>\n<LandXML xmlns="http://www.landxml.org/schema/LandXML-1.2" '
+            'date="2026-11-03" time="09:00:00" version="1.2"><Units><Metric areaUnit="squareMeter" linearUnit="meter" '
+            'volumeUnit="cubicMeter" temperatureUnit="celsius" pressureUnit="milliBars"/></Units><Alignments>'
+            + "".join(parts) + "</Alignments></LandXML>\n")
+
+
+def import_setup(with_alignments=False, work="road"):
+    base = ccmd.setup([], work=work)
+    base["name"] = "Yol alışverişi"
+    if work == "road" and not with_alignments:
+        base["settings"]["road"] = {"surfaces": copy.deepcopy(SURFACES)}
+    return base
+
+
+def pi(id_, x, y, radius=0, s_in=0, s_out=0):
+    out = {"id": id_, "x": float(x), "y": float(y)}
+    if radius:
+        out["radius"] = float(radius)
+    if s_in:
+        out["spiralIn"] = float(s_in)
+    if s_out:
+        out["spiralOut"] = float(s_out)
+    return out
+
+
+def defined(id_):
+    a = next(a for a in ALIGNMENTS if a["id"] == id_)
+    return [pi(p["id"], p["x"], p["y"], p.get("radius", 0), p.get("spiralIn", 0), p.get("spiralOut", 0)) for p in a["pis"]]
+
+
+TAKEN = {
+    "Ana aks": (defined("g-1"), 5, ["Proje kotu"]),
+    "Dar kurp": (defined("g-4"), 3, []),
+    "Kırık aks": ([pi("a", 0, 0), pi("p1", 100, 0), pi("b", 150, 80)], 2, []),
+    "Denklemli aks": ([pi("a", 0, 300), pi("b", 300, 300)], 1, []),
+}
+WHY = {
+    "Bileşik kurp": "3. elemanda aralarında aliyman olmayan bileşik ya da ters kurp var; KentOS'un PI'larında her kurp aliymanlar arasındadır",
+    "Ove klotoid": "2. eleman aliymandan kurba giden bir klotoid değil (ove klotoid ya da yarıçapı kurbunkinden farklı)",
+    "Kübik geçiş": "2. eleman klotoid olmayan bir geçiş eğrisi",
+    "Düzensiz": "KentOS'un almadığı elemanlar var (1. eleman (IrregularLine))",
+}
+ORDER = ["Ana aks", "Dar kurp", "Kırık aks", "Denklemli aks", "Bileşik kurp", "Ove klotoid", "Kübik geçiş", "Düzensiz"]
+
+
+OURS = {
+    "Ana aks": (defined("g-1"), 5, ["Proje kotu", "Kısmi kot"]),
+    "Yan aks": (defined("g-2"), 1, ["Yan kot"]),
+    "Dar kurp": (defined("g-4"), 3, ["Dar kurbun kotu"]),
+}
+
+
+def taken(names, without_profiles=False, table=None):
+    table = table or TAKEN
+    out, warnings, n = [], [], 0
+    for name in names:
+        if name in WHY:
+            warnings.append({"code": "landxml_left", "message": f"“{name}” aksı alınmadı: {WHY[name]}.", "path": "alignments"})
+            continue
+        n += 1
+        pis, elements, profiles = table[name]
+        out.append({"id": f"g-{n}", "name": name, "pis": pis, "elements": elements, "deviation": 0.0,
+                    "profiles": [] if without_profiles else profiles})
+    return out, warnings
+
+
+def import_cases():
+    path = f"$fixture:road/v1/landxml/{AKS.name}"
+    cases = []
+
+    def ok(name, input_, names, op="execute", without=False, table=None):
+        out, warnings = taken(names, without, table)
+        result = completed(None if op == "validate" else {"alignments": out, "revision": "$current"})
+        result["warnings"] = warnings
+        expect = STEPPED if op == "execute" else UNCHANGED
+        steps = [{**step(op, input_, result, expect), "within": 1e-6}]
+        if op == "execute":
+            steps.append({"op": "undo", "returns": "LandXML aks al", "expect": {"canRedo": True}})
+        cases.append(case(name, steps))
+
+    ok("Bütün akslar: dördü alınır, dördü nedeniyle kalır", {"path": path}, ORDER)
+    ok("Planı", {"path": path}, ORDER, op="plan")
+    ok("Doğrulama", {"path": path}, ORDER, op="validate")
+    ok("Ana aks boykesitiyle", {"path": path, "alignments": ["Ana aks"]}, ["Ana aks"])
+    ok("Ana aks boykesitsiz", {"path": path, "alignments": ["Ana aks"], "withoutProfiles": True}, ["Ana aks"], without=True)
+    ok("Dar kurp ve kırık aks", {"path": path, "alignments": ["Dar kurp", "Kırık aks"]}, ["Dar kurp", "Kırık aks"])
+    ok("Km denklemi: geri km'si yazılmamış", {"path": path, "alignments": ["Denklemli aks"]}, ["Denklemli aks"])
+    ok("Bir kez: aynı ad iki kez", {"path": path, "alignments": ["Kırık aks", "Kırık aks"]}, ["Kırık aks"])
+    ok("Alınamayanla birlikte", {"path": path, "alignments": ["Ove klotoid", "Kırık aks"]}, ["Ove klotoid", "Kırık aks"])
+    yol = "$fixture:road/v1/landxml/out/yol.xml"
+    ok("KentOS'un yazdığı LandXML geri alınır", {"path": yol, "alignments": ["Ana aks", "Dar kurp"]},
+       ["Ana aks", "Dar kurp"], table=OURS)
+    ok("KentOS'un yazdığı LandXML'in bütün aksları boykesitleriyle", {"path": yol}, ["Ana aks", "Yan aks", "Dar kurp"],
+       table=OURS)
+
+    def no(name, input_, result, setup_=None):
+        cases.append(case(name, [step("execute", input_, result, UNCHANGED)], setup_))
+
+    no("Yol projesi değil", {"path": path},
+       failed("not_a_road_project", "Aks yalnız yol projesinde (KentOS Yol) olur; bu çizim yol projesi değil."),
+       import_setup(work="map"))
+    no("Dosya yok", {"path": "$tmp:yok.xml"}, failed("file_not_found", "$tmp:yok.xml yok; dosyanın yolunu denetleyin.", "path"))
+    no("LandXML değil", {"path": "$fixture:road/v1/landxml/LandXML-1.2.xsd"},
+       failed("import_unreadable", "$fixture:road/v1/landxml/LandXML-1.2.xsd LandXML olarak okunamadı: kökü LandXML değil.",
+              "path"))
+    no("Akssız dosya", {"path": "$fixture:road/v1/landxml/var.xml"}, failed("landxml_no_alignment", "Dosyada aks yok.", "path"))
+    no("Dosyada olmayan ad", {"path": path, "alignments": ["Ana aks", "Yok"]},
+       failed("landxml_no_alignment", "“Yok” adlı aks dosyada yok; dosyanın aksları: "
+              + ", ".join(f"“{n}”" for n in ORDER) + ".", "alignments[1]"))
+    no("Hiçbiri alınamıyor", {"path": path, "alignments": ["Bileşik kurp", "Düzensiz"]},
+       failed("landxml_no_alignment", f"“Bileşik kurp” aksı alınmadı: {WHY['Bileşik kurp']}.", "alignments"))
+    no("Yalnız kübik geçiş", {"path": path, "alignments": ["Kübik geçiş"]},
+       failed("landxml_no_alignment", f"“Kübik geçiş” aksı alınmadı: {WHY['Kübik geçiş']}.", "alignments"))
+    no("Projede aynı adlı aks", {"path": path, "alignments": ["Ana aks"]},
+       failed("invalid_alignment", "Projede “Ana aks” adlı bir aks var; dosyanınkini almadan önce birini yeniden adlandırın.",
+              "alignments"), import_setup(with_alignments=True))
+    no("Okunmayan revizyon", {"path": path, "alignments": ["Kırık aks"], "expectedRevision": "r-0"},
+       failed("invalid_revision", "Beklenen sürüm “r-0” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. "
+              "Sürümü belgeden ya da komutun planından alın.", "expectedRevision"))
+    no("Eski revizyon", {"path": path, "alignments": ["Kırık aks"], "expectedRevision": "99"},
+       pcmd.CONFLICT)
+    return cases
+
+
 def main():
     if "--written" in sys.argv:
         check_written()
@@ -320,12 +539,20 @@ def main():
             "setup": SETUP, "cases": cases()}
     text = json.dumps(data, ensure_ascii=False, indent=1) + "\n"
     if "--check" in sys.argv:
-        if OUT.read_text(encoding="utf-8") != text:
-            raise SystemExit(f"{OUT} güncel değil: python3 {Path(__file__).name}")
+        if OUT.read_text(encoding="utf-8") != text or AKS.read_text(encoding="utf-8") != aks_xml():
+            raise SystemExit(f"{OUT} ya da {AKS} güncel değil: python3 {Path(__file__).name}")
         print(f"{OUT.name}: {len(data['cases'])} durum güncel")
         return
     OUT.write_text(text, encoding="utf-8")
     print(f"{OUT.name}: {len(data['cases'])} durum")
+    AKS.write_text(aks_xml(), encoding="utf-8")
+    data = {"format": "kentos.command-cases", "version": 1, "command": "road.alignments.import", "commandVersion": 1,
+            "title": "LandXML'den aks al",
+            "note": "scripts/fixtures/road_landxml_cases.py yazar; aks.xml'i başvurunun 40 basamaklı elemanlarından KentOS "
+                    "kodu olmadan yazar, beklenen PI'lar aksların tanımındakilerdir (±1e-6).",
+            "setup": import_setup(), "cases": import_cases()}
+    IMPORT_OUT.write_text(json.dumps(data, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    print(f"{IMPORT_OUT.name}: {len(data['cases'])} durum")
 
 
 if __name__ == "__main__":

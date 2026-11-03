@@ -416,6 +416,7 @@
     "haul.new",
     "stakeout.table",
     "landxml.export",
+    "landxml.importAlignments",
     "arch.program",
     "lineTypes.manage",
     "hatchPatterns.manage",

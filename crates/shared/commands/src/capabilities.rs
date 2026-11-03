@@ -1840,6 +1840,15 @@ const ENTRIES: &[Entry] = &[
         warnings: &["export_losses"],
         targets: none,
     },
+    Entry {
+        id: "road.alignments.import",
+        refusals: &[
+            &["not_a_road_project", "file_not_found", "import_unreadable", "landxml_no_alignment", "invalid_alignment"],
+            REVISION,
+        ],
+        warnings: &["landxml_left"],
+        targets: none,
+    },
     // KentOS Yol's stakeout table (plan/road.md Y10, docs/adr/0908).
     Entry {
         id: "road.stakeout.query",

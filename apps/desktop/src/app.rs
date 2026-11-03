@@ -650,6 +650,8 @@ pub enum Message {
     Stakeout(crate::stakeout_window::Event),
     /// LandXML ver's file, or none when the dialog was closed (road_exchange.rs, plan/road.md Y10.2).
     LandxmlExport(Option<std::path::PathBuf>),
+    /// LandXML'den aks al's file, or none (road_exchange.rs, plan/road.md Y10.2).
+    LandxmlAlignments(Option<std::path::PathBuf>),
     /// An event of Bina programı (program_window.rs, docs/adr/0773).
     Program(crate::program_window::Event),
     TableStyles(crate::forms::table_styles::Event),
@@ -2377,6 +2379,7 @@ impl App {
             Message::Hauls(event) => return self.haul_event(event),
             Message::Stakeout(event) => return self.stakeout_event(event),
             Message::LandxmlExport(path) => return self.landxml_chosen(path),
+            Message::LandxmlAlignments(path) => return self.landxml_alignments_chosen(path),
             Message::Program(event) => return self.program_event(event),
             Message::TableStyles(event) => return self.table_styles_event(event),
             Message::Subtypes(event) => return self.subtypes_event(event),
@@ -3420,6 +3423,7 @@ impl App {
             "stakeout.table" => self.open_stakeout(),
             // LandXML ver (road_exchange.rs, plan/road.md Y10.2).
             "landxml.export" => return self.export_landxml(),
+            "landxml.importAlignments" => return self.import_landxml_alignments(),
             // Bina programı (program_window.rs, docs/adr/0773).
             "arch.program" => self.open_program(),
             // Çizgi tipleri (docs/adr/0313 §7).
