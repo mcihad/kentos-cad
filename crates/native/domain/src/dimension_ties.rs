@@ -180,9 +180,13 @@ impl Document {
         // changed itself, as they were.
         let mut changed: Changed = BTreeMap::new();
         let mut own: BTreeMap<Slot, Arc<Entity>> = BTreeMap::new();
+        let mut added = HashSet::new();
         let mut redefined = false;
         for op in ops {
             match op {
+                Op::Add(s) if matches!(*s.entity, Entity::Dimension(_)) => {
+                    added.insert(s.slot());
+                }
                 Op::BlockAdd { .. } | Op::BlockRemove { .. } | Op::BlockUpdate { .. } => {
                     redefined = true;
                 }
@@ -262,6 +266,26 @@ impl Document {
                     continue;
                 }
                 let of = Uuid::from_bytes(r.uid.0);
+                // An explicit new binding names the geometry AFTER this step. In particular a
+                // replacement insert/new definition has no corresponding piece in blocks_before.
+                // Following that new path through the old geometry would break a valid binding.
+                let rebound = was.as_ref().is_some_and(|w| reference_of(w, name) != Some(r));
+                let newly_bound = added.contains(&slot) && (redefined || changed.contains_key(&of));
+                if rebound || newly_bound {
+                    if let Some(p) = self.object_now(r).and_then(|e| point(&e, core_place(r.place))) {
+                        set_point(&mut next, name, wire(p));
+                    } else if let Some(s) = reference_mut(&mut next_refs, name) {
+                        let reason = if self.slot_of(of).is_none() {
+                            Reason::ObjectGone
+                        } else if !r.path.is_empty() && self.object_now(r).is_none() {
+                            Reason::PieceGone
+                        } else {
+                            Reason::NoSuchPlace
+                        };
+                        s.broken = Some(reason.code().to_owned());
+                    }
+                    continue;
+                }
                 if !r.path.is_empty() && (redefined || changed.contains_key(&of)) {
                     let (before, after) = match changed.get(&of) {
                         Some((b, a)) => (Arc::clone(b), a.clone()),

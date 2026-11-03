@@ -929,6 +929,19 @@ Durdur üzerinden iptal edildi; iki nesnelik seçim korundu. İptal çizimi ve
 karşılaştırıldı: ikisi de aynıdır. Ham görüntüler ve kabul kayıtları depo
 dışındadır. Bu kabul bloklaştırma veya ilişkili dizi dönüşümünü kapatmaz.
 
+**Bloklaştırma önkoşulu — [ADR 0868](../docs/adr/0868-explicit-dimension-rebind-uses-current-geometry.md):**
+yeni blok alt nesnesine aynı işlemde açıkça geçirilen ölçü bağı eski geometri
+üzerinden izlenip kopmuyor. Aynı/yeni yerleştirme kimliği, yeni ölçü, geçersiz
+yer ve tek Undo/Redo domain testlerinde; üç public komutun dış işlemde
+birleşmesi uygulama testinde doğrulandı. Gerçek konsolda önce kopma tekrarlandı,
+yeni sürümde iki bağ canlı kaldı; taşıma ile 2 000 mm ölçü izledi. GUI'den
+kaydedilen taşıma Undo, blok+bağ Undo ve Redo dosyaları karşılaştırıldığında
+beklenen dosyalarla bayt bayt aynı çıktı. Genel dönüştürme hâlâ açık;
+geniş çizginin blok içi dolgu farkı ayrıca giderilecek.
+Bu dilimde 136 domain, 370 native uygulama ve 1 628 masaüstü testi geçti;
+294 isteğe bağlı test atlandı. İlgili paketlerin Clippy kontrolü ve masaüstü
+derlemesi başarılıdır.
+
 ### CAD-ADV-08 — Sınır, tarama ve maskeyi hatasını açıklayabilen bir üretim sistemine getir [ ]
 
 **Öncelik:** P0 ilişki/görünürlük; P1 kapsam. **Kod:** [C14], [C15], [C03].

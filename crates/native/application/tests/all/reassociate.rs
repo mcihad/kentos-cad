@@ -128,6 +128,54 @@ fn a_copy_of_a_bound_dimension_is_free() {
     assert!(d.refs.is_none());
 }
 
+#[test]
+fn public_commands_rebind_a_replacement_insert_inside_one_outer_step() {
+    use kentos_native_application::{blocks_define, edit};
+    let (mut doc, wall, dim) = drawing();
+    bind(
+        &mut doc,
+        wall,
+        dim,
+        &[(DimensionPoint::A, 0), (DimensionPoint::B, 1)],
+    );
+    let before = doc.to_snapshot_v2();
+    let steps = doc.undo_labels().len();
+    let uid = doc.uid(wall).unwrap().to_string();
+    doc.transact("Blok ve ölçü bağı", |doc| -> Result<(), ()> {
+        let input = serde_json::from_value(json!({"name":"Bağlı parça","base":{"x":0,"y":0},
+            "uids":[uid],"units":"m"})).unwrap();
+        let CommandResult::Completed { output: block, .. } =
+            blocks_define::execute(&mut ExecutionContext::new(doc), input) else { panic!() };
+        let input = serde_json::from_value(json!({"operation":"properties","changes":[
+            {"kind":"replace","uid":uid,"keepData":true,"geometry":{"kind":"insert",
+             "block":block.block,"p":{"x":0,"y":0},"scale":1,"rotation":0}}
+        ]})).unwrap();
+        assert!(matches!(edit::execute(&mut ExecutionContext::new(doc), input), CommandResult::Completed { .. }));
+        let input = serde_json::from_value(json!({"uid":doc.uid(dim).unwrap().to_string(),"points":[
+            {"point":"a","to":{"uid":uid,"path":[0],"place":{"kind":"vertex","part":0,"ring":0,"index":0}}},
+            {"point":"b","to":{"uid":uid,"path":[0],"place":{"kind":"vertex","part":0,"ring":0,"index":1}}}
+        ]})).unwrap();
+        let CommandResult::Completed { output, .. } =
+            dimensions_reassociate::execute(&mut ExecutionContext::new(doc), input) else { panic!() };
+        assert_eq!(output.value, 10.0);
+        Ok(())
+    }).unwrap();
+    assert!(
+        dimension(&doc, dim)
+            .refs
+            .unwrap()
+            .each()
+            .all(|(_, r)| r.live())
+    );
+    assert_eq!(dimension(&doc, dim).b, Vec2 { x: 10.0, y: 0.0 });
+    let after = doc.to_snapshot_v2();
+    assert_eq!(doc.undo_labels().len(), steps + 1);
+    doc.undo().unwrap();
+    assert_eq!(doc.to_snapshot_v2(), before);
+    doc.redo().unwrap();
+    assert_eq!(doc.to_snapshot_v2(), after);
+}
+
 /// Öznitelikler writes a dimension's Zemin through `cad.entities.edit`'s
 /// update, its geometry from the core's shape (no references): the
 /// references stay; a grip that moves a bound point lets that point go.

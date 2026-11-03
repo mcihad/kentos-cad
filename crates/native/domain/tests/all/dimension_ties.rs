@@ -246,3 +246,135 @@ fn a_redefined_block_moves_its_pieces_and_a_removed_piece_breaks() {
     );
     assert_eq!(dim(&doc, d).b, Vec2 { x: 22.0, y: 10.0 });
 }
+
+#[test]
+fn an_explicit_rebind_to_a_new_block_piece_uses_the_new_geometry_in_one_step() {
+    for keep_uid in [false, true] {
+        let mut doc = doc();
+        let wall = doc.add(wall()).unwrap();
+        let d = doc.add(dimension(&doc, wall)).unwrap();
+        let before = doc.to_snapshot_v2();
+        let undo_count = doc.undo_labels().len();
+        let insert = doc
+            .transact("Bloklaştır", |doc| -> Result<Slot, ()> {
+                doc.add_block(
+                    serde_json::from_value(json!({
+                        "id":"22222222-3333-4444-8555-666666666666", "name":"Duvar parçası",
+                        "base":{"x":0,"y":0}, "entities":[
+                            {"kind":"polyline","id":1,"layerId":"a","attrs":{},
+                             "pts":[{"x":0,"y":0},{"x":10,"y":0},{"x":10,"y":5}],"closed":false}
+                        ]
+                    }))
+                    .unwrap(),
+                )
+                .unwrap();
+                let replacement = entity(json!({"kind":"insert","id":0,"layerId":"a","attrs":{},
+                "block":"22222222-3333-4444-8555-666666666666",
+                "p":{"x":0,"y":0},"scale":1,"rotation":0}));
+                let insert = if keep_uid {
+                    assert!(doc.update(wall, replacement));
+                    wall
+                } else {
+                    let insert = doc.add(replacement).unwrap();
+                    assert_eq!(doc.remove(&[wall]), 1);
+                    insert
+                };
+                let mut bound = dim(doc, d);
+                let refs = bound.refs.as_mut().unwrap();
+                for reference in [&mut refs.a, &mut refs.b, &mut refs.c]
+                    .into_iter()
+                    .flatten()
+                {
+                    reference.uid = EntityId(*doc.uid(insert).unwrap().as_bytes());
+                    reference.path = vec![0];
+                }
+                assert!(doc.update(d, Entity::Dimension(bound)));
+                Ok(insert)
+            })
+            .unwrap();
+        let after = doc.to_snapshot_v2();
+        let bound = dim(&doc, d);
+        assert!(
+            bound.refs.as_ref().unwrap().each().all(|(_, r)| r.live()),
+            "explicit new binding must not be followed through the old object: {bound:?}"
+        );
+        assert_eq!(
+            (bound.a, bound.b),
+            (Vec2 { x: 0.0, y: 0.0 }, Vec2 { x: 10.0, y: 0.0 })
+        );
+        assert_eq!(doc.undo_labels().len(), undo_count + 1);
+        doc.undo().unwrap();
+        assert_eq!(doc.to_snapshot_v2(), before);
+        doc.redo().unwrap();
+        assert_eq!(doc.to_snapshot_v2(), after);
+        let mut moved = doc.get(insert).unwrap().clone();
+        if let Entity::Insert(i) = &mut moved {
+            i.p = Vec2 { x: 5.0, y: 3.0 };
+        }
+        assert!(doc.update(insert, moved));
+        let bound = dim(&doc, d);
+        assert_eq!(
+            (bound.a, bound.b),
+            (Vec2 { x: 5.0, y: 3.0 }, Vec2 { x: 15.0, y: 3.0 })
+        );
+        assert!(bound.refs.unwrap().each().all(|(_, r)| r.live()));
+    }
+}
+
+#[test]
+fn a_new_dimension_on_a_new_definition_is_bound_to_current_geometry_or_reports_the_bad_place() {
+    for index in [1, 99] {
+        let mut doc = doc();
+        let before = doc.to_snapshot_v2();
+        let d = doc
+            .transact("Blok ve ölçü", |doc| -> Result<Slot, ()> {
+                let block = serde_json::from_value(json!({
+                    "id":"22222222-3333-4444-8555-666666666666", "name":"Yeni parça",
+                    "base":{"x":0,"y":0}, "entities":[
+                        {"kind":"polyline","id":1,"layerId":"a","attrs":{},
+                         "pts":[{"x":0,"y":0},{"x":10,"y":0}],"closed":false}
+                    ]
+                }))
+                .unwrap();
+                doc.add_block(block).unwrap();
+                let insert = doc
+                    .add(entity(
+                        json!({"kind":"insert","id":0,"layerId":"a","attrs":{},
+                "block":"22222222-3333-4444-8555-666666666666",
+                "p":{"x":5,"y":3},"scale":1,"rotation":0}),
+                    ))
+                    .unwrap();
+                let mut bound = dimension(doc, insert);
+                if let Entity::Dimension(d) = &mut bound {
+                    let refs = d.refs.as_mut().unwrap();
+                    refs.a.as_mut().unwrap().path = vec![0];
+                    let b = refs.b.as_mut().unwrap();
+                    b.path = vec![0];
+                    b.place = vertex(index);
+                }
+                Ok(doc.add(bound).unwrap())
+            })
+            .unwrap();
+        let bound = dim(&doc, d);
+        assert_eq!(bound.a, Vec2 { x: 5.0, y: 3.0 });
+        let refs = bound.refs.unwrap();
+        assert!(refs.a.unwrap().live());
+        if index == 1 {
+            assert_eq!(bound.b, Vec2 { x: 15.0, y: 3.0 });
+            assert!(refs.b.unwrap().live());
+        } else {
+            assert_eq!(
+                bound.b,
+                Vec2 { x: 10.0, y: 0.0 },
+                "a broken reference keeps its point"
+            );
+            assert_eq!(refs.b.unwrap().broken.as_deref(), Some("no_such_place"));
+        }
+        let after = doc.to_snapshot_v2();
+        assert_eq!(doc.undo_labels().len(), 1);
+        doc.undo().unwrap();
+        assert_eq!(doc.to_snapshot_v2(), before);
+        doc.redo().unwrap();
+        assert_eq!(doc.to_snapshot_v2(), after);
+    }
+}
