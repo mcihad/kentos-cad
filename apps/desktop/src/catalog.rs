@@ -623,6 +623,8 @@ pub const PORTED: &[&str] = &[
     "retainingWall.editor",
     // plan/road.md Y11.4: Poz metrajı (pay_window.rs).
     "payItems.editor",
+    // plan/road.md Y12.1: Ön güzergâh (route_window.rs).
+    "route.finder",
     // plan/road.md Y10.2: LandXML ver (road_exchange.rs).
     "landxml.export",
     "landxml.importAlignments",

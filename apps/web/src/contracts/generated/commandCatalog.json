@@ -41154,6 +41154,413 @@
       ]
     },
     {
+      "id": "road.routes.find",
+      "version": 1,
+      "title": "Ön güzergâh bul",
+      "summary": "Yol projesinin arazi yüzeyinde (surface: kimliği ya da adı) iki yer (from, to) arasında en düşük maliyetli ön güzergâhı bulur; hiçbir şey yazmaz. Yerlerin çevresinde margin payıyla cell aralıklı ızgaranın düğümlerinde yüzeyin kotu okunur (mikrometreye yuvarlanır); yüzeyin dışındaki ve avoid katmanlarının alanlarındaki düğümlere girilmez. Bir adım (16 komşu: düz, çapraz ve at hamlesi) plan boyu artı climb × aştığı kot farkı tutar; grade'ten (yüzde) dik adım atılmaz. Eşit maliyette önce bulunan yol kalır. tolerance ile yol Douglas–Peucker'la sadeleşir. Cevap: noktalar (başı ve sonu sorulan yerler), plan boyu, toplam kot farkı, en dik bölüm (yüzde), maliyet, düğüm sayısı ve yerleşen düğümler. Sınırlar kullanıcının; KentOS sınır değeri vermez. Bulunan yol aks değildir: Aksı çizgiye oturt (road.alignments.fit) ile aks olur. Retler: not_a_road_project, unknown_terrain, invalid_route, route_blocked, route_unreached.",
+      "aliases": [
+        "onguzergah",
+        "routefind"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.routes.find` v1.\n\nRefusals, in this order: `not_a_road_project`, `unknown_terrain`, `invalid_route` (a cell, margin, grade or climb\nout of bounds, a grid of more than two million nodes, a layer to avoid not in the drawing, the surface not\nbuilding), `route_blocked` (the start or the end off the terrain or in an area to avoid), `route_unreached` (no path\nwithin the grade).",
+        "properties": {
+          "avoid": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "cell": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "climb": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "1"
+          },
+          "from": {
+            "$ref": "#/$defs/Vec2",
+            "x-unit": "length"
+          },
+          "grade": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "percent"
+          },
+          "margin": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "surface": {
+            "type": "string"
+          },
+          "to": {
+            "$ref": "#/$defs/Vec2",
+            "x-unit": "length"
+          },
+          "tolerance": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          }
+        },
+        "required": [
+          "surface",
+          "from",
+          "to",
+          "cell",
+          "margin",
+          "grade",
+          "climb"
+        ],
+        "title": "RoutesFind",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.routes.find` v1: the route's points (the start and the end where asked, the grid's nodes\nbetween, simplified within the tolerance), its plan length, the height it rises and falls in all, its steepest\nstretch (percent, between the points kept), its cost, the grid's nodes and those settled.",
+        "properties": {
+          "climb": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "cost": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "length": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "nodes": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "points": {
+            "items": {
+              "$ref": "#/$defs/RoutePoint"
+            },
+            "type": "array"
+          },
+          "settled": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "steepest": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "percent"
+          }
+        },
+        "required": [
+          "points",
+          "length",
+          "climb",
+          "steepest",
+          "cost",
+          "nodes",
+          "settled"
+        ],
+        "title": "RouteFound",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.routes.find` v1: the route's points (the start and the end where asked, the grid's nodes\nbetween, simplified within the tolerance), its plan length, the height it rises and falls in all, its steepest\nstretch (percent, between the points kept), its cost, the grid's nodes and those settled.",
+        "properties": {
+          "climb": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "cost": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "length": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "nodes": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "points": {
+            "items": {
+              "$ref": "#/$defs/RoutePoint"
+            },
+            "type": "array"
+          },
+          "settled": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "steepest": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "percent"
+          }
+        },
+        "required": [
+          "points",
+          "length",
+          "climb",
+          "steepest",
+          "cost",
+          "nodes",
+          "settled"
+        ],
+        "title": "RouteFound",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_terrain",
+          "invalid_route",
+          "route_blocked",
+          "route_unreached"
+        ]
+      },
+      "examples": [
+        {
+          "title": "İki köy arasında, yasak alandan kaçarak",
+          "input": {
+            "avoid": [
+              "yasak"
+            ],
+            "cell": 5.0,
+            "climb": 10.0,
+            "from": {
+              "x": 100.0,
+              "y": 100.0
+            },
+            "grade": 8.0,
+            "margin": 50.0,
+            "surface": "Mevcut zemin",
+            "to": {
+              "x": 400.0,
+              "y": 300.0
+            },
+            "tolerance": 2.0
+          }
+        }
+      ]
+    },
+    {
+      "id": "road.routes.draw",
+      "version": 1,
+      "title": "Ön güzergâh çiz",
+      "summary": "road.routes.find'in bulduğu ön güzergâhı layerId katmanına noktalarının kotlarıyla tek çoklu çizgi olarak çizer; çizgi Aksı çizgiye oturt ile aks olur. Tek geri alma adımı “Ön güzergâh”. Uyarılar: layer_hidden. Retler: invalid_revision, revision_conflict, road.routes.find'inkiler, layer_not_found, not_a_layer, layer_locked.",
+      "aliases": [
+        "onguzergahciz"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.routes.draw` v1: the route found as `road.routes.find` finds it, drawn on `layerId` as one 3D\npolyline.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `road.routes.find`'s, `layer_not_found`,\n`not_a_layer`, `layer_locked`. Warnings: `layer_hidden`.",
+        "properties": {
+          "avoid": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "cell": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "climb": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "1"
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "from": {
+            "$ref": "#/$defs/Vec2",
+            "x-unit": "length"
+          },
+          "grade": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "percent"
+          },
+          "layerId": {
+            "type": "string"
+          },
+          "margin": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "surface": {
+            "type": "string"
+          },
+          "to": {
+            "$ref": "#/$defs/Vec2",
+            "x-unit": "length"
+          },
+          "tolerance": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          }
+        },
+        "required": [
+          "surface",
+          "from",
+          "to",
+          "cell",
+          "margin",
+          "grade",
+          "climb",
+          "layerId"
+        ],
+        "title": "RoutesDraw",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.routes.draw` v1, and its plan: the route and the object written (in the plan, none).",
+        "properties": {
+          "revision": {
+            "type": "string"
+          },
+          "route": {
+            "$ref": "#/$defs/RouteFound"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "route",
+          "uids",
+          "revision"
+        ],
+        "title": "RoutesDrawn",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.routes.draw` v1, and its plan: the route and the object written (in the plan, none).",
+        "properties": {
+          "revision": {
+            "type": "string"
+          },
+          "route": {
+            "$ref": "#/$defs/RouteFound"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "route",
+          "uids",
+          "revision"
+        ],
+        "title": "RoutesDrawn",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_terrain",
+          "invalid_route",
+          "route_blocked",
+          "route_unreached",
+          "layer_not_found",
+          "not_a_layer",
+          "layer_locked",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "layer_hidden"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Ön güzergâhı çiz",
+          "input": {
+            "cell": 5.0,
+            "climb": 10.0,
+            "from": {
+              "x": 100.0,
+              "y": 100.0
+            },
+            "grade": 8.0,
+            "layerId": "guzergah",
+            "margin": 50.0,
+            "surface": "Mevcut zemin",
+            "to": {
+              "x": 400.0,
+              "y": 300.0
+            }
+          }
+        }
+      ]
+    },
+    {
       "id": "file.export.landxml",
       "version": 1,
       "title": "LandXML dışa aktar",
@@ -77781,6 +78188,24 @@
       "meaning": "İstinat duvarının koridoru değişti; duvarı denetleyip koridora yeniden bağlayın."
     },
     {
+      "code": "invalid_route",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Ön güzergâhın girdisi geçerli değil; ileti nedenini söyler."
+    },
+    {
+      "code": "route_blocked",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Ön güzergâhın başı ya da sonu yüzeyin dışında ya da kaçınılacak alanda."
+    },
+    {
+      "code": "route_unreached",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "İki yer arasında istenen eğimi aşmayan yol yok."
+    },
+    {
       "code": "invalid_pay_book",
       "kind": "failed",
       "retryable": false,
@@ -95080,6 +95505,11 @@
         {
           "const": "retainingWalls",
           "description": "`road.walls.draw` (plan/road.md Y11.3): a retaining wall's face and footing in plan, “İstinat duvarı çiz”.",
+          "type": "string"
+        },
+        {
+          "const": "routes",
+          "description": "`road.routes.draw` (plan/road.md Y12.1): a preliminary route as a 3D polyline, “Ön güzergâh”.",
           "type": "string"
         }
       ]
@@ -142150,6 +142580,85 @@
           "type": "object"
         }
       ]
+    },
+    "RouteFound": {
+      "description": "Output of `road.routes.find` v1: the route's points (the start and the end where asked, the grid's nodes\nbetween, simplified within the tolerance), its plan length, the height it rises and falls in all, its steepest\nstretch (percent, between the points kept), its cost, the grid's nodes and those settled.",
+      "properties": {
+        "climb": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "cost": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "length": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "nodes": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "points": {
+          "items": {
+            "$ref": "#/$defs/RoutePoint"
+          },
+          "type": "array"
+        },
+        "settled": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "steepest": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "percent"
+        }
+      },
+      "required": [
+        "points",
+        "length",
+        "climb",
+        "steepest",
+        "cost",
+        "nodes",
+        "settled"
+      ],
+      "type": "object"
+    },
+    "RoutePoint": {
+      "description": "A place of a route: plan and the terrain's height there (rounded to the micrometre).",
+      "properties": {
+        "x": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "y": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "z": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "elevation"
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
+      "type": "object"
     },
     "RubberLink": {
       "description": "A link of Kauçuk levha: a point of the drawing and where it is to go.",

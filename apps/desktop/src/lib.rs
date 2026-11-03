@@ -267,6 +267,9 @@ mod guardrail_window;
 mod culvert_window;
 mod retaining_wall_window;
 mod pay_window;
+mod route_window;
+#[cfg(test)]
+mod route_window_tests;
 #[cfg(test)]
 mod pay_window_tests;
 #[cfg(test)]

@@ -7834,6 +7834,23 @@
    "tests": 0
   },
   {
+   "id": "route.finder",
+   "kind": "command",
+   "title": "Ön güzergâh…",
+   "level": "semantic",
+   "via": [
+    "road.routes.find",
+    "road.routes.draw"
+   ],
+   "operation": null,
+   "python": "Connection: road.routes.find, Connection: road.routes.draw",
+   "mcp": "road.routes.find, road.routes.draw",
+   "note": "Girdi yazıldıkça road.routes.find ile önizler; Planda çiz road.routes.draw ile yazar (plan/road.md Y12.1, ADR 0910 §1).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "scenario.apply",
    "kind": "command",
    "title": "Senaryoyu uygula…",

@@ -2761,6 +2761,14 @@
       ],
       "note": "Defter yazıldıkça road.pay.edit'in denetimi ve road.pay.query'nin cevabıyla okuma kopyasında önizler; Kaydet ve Sil road.pay.edit ile yazar (plan/road.md Y11.4, ADR 0909 §4)."
     },
+    "route.finder": {
+      "level": "semantic",
+      "via": [
+        "road.routes.find",
+        "road.routes.draw"
+      ],
+      "note": "Girdi yazıldıkça road.routes.find ile önizler; Planda çiz road.routes.draw ile yazar (plan/road.md Y12.1, ADR 0910 §1)."
+    },
     "landxml.importAlignments": {
       "level": "semantic",
       "via": [

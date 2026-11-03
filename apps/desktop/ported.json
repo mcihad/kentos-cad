@@ -422,6 +422,7 @@
     "culvert.editor",
     "retainingWall.editor",
     "payItems.editor",
+    "route.finder",
     "landxml.export",
     "landxml.importAlignments",
     "ifc.export",

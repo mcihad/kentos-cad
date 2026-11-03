@@ -19,7 +19,7 @@ source: string,
 /**
  * Omitted: line. Explicit grid reuses the existing axis-aligned ArrayLayout::Grid.
  */
-kind?: ArrayFindKind,
+kind?: ArrayFindKind, 
 /**
  * Absent searches the document; empty searches only the seed. At most 2048 objects.
  */

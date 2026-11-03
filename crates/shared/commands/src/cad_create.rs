@@ -129,6 +129,8 @@ pub enum CreateOperation {
     Culverts,
     /// `road.walls.draw` (plan/road.md Y11.3): a retaining wall's face and footing in plan, “İstinat duvarı çiz”.
     RetainingWalls,
+    /// `road.routes.draw` (plan/road.md Y12.1): a preliminary route as a 3D polyline, “Ön güzergâh”.
+    Routes,
 }
 
 /// One new object: its geometry and what else it carries. The layer is the

@@ -260,6 +260,8 @@ CAD = [
     T("alignment", "Güzergâh", [
         P("Güzergâh", "alignmentEditor", [L("alignment.editor"), L("alignment.new"), L("alignment.fromLine"),
                                                    L("landxml.importAlignments")]),
+        # The preliminary route (plan/road.md Y12.1, docs/adr/0910 §1).
+        P("Ön güzergâh", "routeFinder", [L("route.finder")]),
         # The vertical alignments (plan/road.md Y4, docs/adr/0902): the Boykesit window and a new profile.
         P("Boykesit", "profileEditor", [L("profile.editor"), L("profile.new"), L("profile.fromLine")]),
         # The cross sections (plan/road.md Y5, docs/adr/0903): the Enkesit window, a new set and a new template.

@@ -769,6 +769,13 @@ codes! {
     UNKNOWN_RETAINING_WALL = "unknown_retaining_wall", Failed, false, "Bu kimlikte ya da adda istinat duvarı yok.";
     /// A warning: the wall's corridor changed since it was made or rebound (docs/adr/0909 §3).
     RETAINING_WALL_STALE = "retaining_wall_stale", Warning, false, "İstinat duvarının koridoru değişti; duvarı denetleyip koridora yeniden bağlayın.";
+    /// A preliminary route asked out of bounds: its cell, margin, grade or climb, a grid too large, a layer to avoid not
+    /// in the drawing, a surface that does not build (docs/adr/0910 §1).
+    INVALID_ROUTE = "invalid_route", Failed, false, "Ön güzergâhın girdisi geçerli değil; ileti nedenini söyler.";
+    /// The route's start or end is off the terrain or in an area to avoid (docs/adr/0910 §1).
+    ROUTE_BLOCKED = "route_blocked", Failed, false, "Ön güzergâhın başı ya da sonu yüzeyin dışında ya da kaçınılacak alanda.";
+    /// No path joins the route's ends within the grade (docs/adr/0910 §1).
+    ROUTE_UNREACHED = "route_unreached", Failed, false, "İki yer arasında istenen eğimi aşmayan yol yok.";
     /// A pay item book that is not right: no source or version, items or rules out of bounds (docs/adr/0909 §4).
     INVALID_PAY_BOOK = "invalid_pay_book", Failed, false, "Poz defteri geçerli değil; ileti nedenini söyler.";
     /// The project has no pay item book (docs/adr/0909 §4).

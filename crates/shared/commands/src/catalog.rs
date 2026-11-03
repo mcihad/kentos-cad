@@ -7699,6 +7699,58 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::ROAD_ROUTES_FIND.into(),
+            version: crate::ROAD_ROUTES_FIND_VERSION,
+            title: "Ön güzergâh bul".into(),
+            summary: "Yol projesinin arazi yüzeyinde (surface: kimliği ya da adı) iki yer (from, to) arasında en düşük maliyetli ön güzergâhı bulur; hiçbir şey yazmaz. Yerlerin çevresinde margin payıyla cell aralıklı ızgaranın düğümlerinde yüzeyin kotu okunur (mikrometreye yuvarlanır); yüzeyin dışındaki ve avoid katmanlarının alanlarındaki düğümlere girilmez. Bir adım (16 komşu: düz, çapraz ve at hamlesi) plan boyu artı climb × aştığı kot farkı tutar; grade'ten (yüzde) dik adım atılmaz. Eşit maliyette önce bulunan yol kalır. tolerance ile yol Douglas–Peucker'la sadeleşir. Cevap: noktalar (başı ve sonu sorulan yerler), plan boyu, toplam kot farkı, en dik bölüm (yüzde), maliyet, düğüm sayısı ve yerleşen düğümler. Sınırlar kullanıcının; KentOS sınır değeri vermez. Bulunan yol aks değildir: Aksı çizgiye oturt (road.alignments.fit) ile aks olur. \
+                      Retler: not_a_road_project, unknown_terrain, invalid_route, route_blocked, route_unreached."
+                .into(),
+            aliases: vec!["onguzergah".into(), "routefind".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::RoutesFind>(),
+            output: schema::<crate::RouteFound>(),
+            plan: Some(schema::<crate::RouteFound>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "İki köy arasında, yasak alandan kaçarak".into(),
+                input: json!({ "surface": "Mevcut zemin", "from": { "x": 100.0, "y": 100.0 }, "to": { "x": 400.0, "y": 300.0 },
+                    "cell": 5.0, "margin": 50.0, "grade": 8.0, "climb": 10.0, "avoid": ["yasak"], "tolerance": 2.0 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_ROUTES_DRAW.into(),
+            version: crate::ROAD_ROUTES_DRAW_VERSION,
+            title: "Ön güzergâh çiz".into(),
+            summary: "road.routes.find'in bulduğu ön güzergâhı layerId katmanına noktalarının kotlarıyla tek çoklu çizgi olarak çizer; çizgi Aksı çizgiye oturt ile aks olur. Tek geri alma adımı “Ön güzergâh”. \
+                      Uyarılar: layer_hidden. Retler: invalid_revision, revision_conflict, road.routes.find'inkiler, layer_not_found, not_a_layer, layer_locked."
+                .into(),
+            aliases: vec!["onguzergahciz".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::RoutesDraw>(),
+            output: schema::<crate::RoutesDrawn>(),
+            plan: Some(schema::<crate::RoutesDrawn>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ön güzergâhı çiz".into(),
+                input: json!({ "surface": "Mevcut zemin", "from": { "x": 100.0, "y": 100.0 }, "to": { "x": 400.0, "y": 300.0 },
+                    "cell": 5.0, "margin": 50.0, "grade": 8.0, "climb": 10.0, "layerId": "guzergah" }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::FILE_EXPORT_LANDXML.into(),
             version: crate::FILE_EXPORT_LANDXML_VERSION,
             title: "LandXML dışa aktar".into(),
@@ -13599,6 +13651,8 @@ mod tests {
                     }
                     crate::ROAD_PAY_EDIT => serde_json::from_value::<crate::PayEdit>(e.input.clone()).map(|_| ()),
                     crate::ROAD_PAY_QUERY => serde_json::from_value::<crate::PayQuery>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_ROUTES_FIND => serde_json::from_value::<crate::RoutesFind>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_ROUTES_DRAW => serde_json::from_value::<crate::RoutesDraw>(e.input.clone()).map(|_| ()),
                     crate::ROAD_STAKEOUT_QUERY => {
                         serde_json::from_value::<crate::StakeoutQuery>(e.input.clone()).map(|_| ())
                     }
@@ -14380,6 +14434,8 @@ mod tests {
                         }
                         crate::ROAD_PAY_EDIT => serde_json::from_value::<crate::PayWritten>(output.clone()).map(|_| ()),
                         crate::ROAD_PAY_QUERY => serde_json::from_value::<crate::PayQueried>(output.clone()).map(|_| ()),
+                        crate::ROAD_ROUTES_FIND => serde_json::from_value::<crate::RouteFound>(output.clone()).map(|_| ()),
+                        crate::ROAD_ROUTES_DRAW => serde_json::from_value::<crate::RoutesDrawn>(output.clone()).map(|_| ()),
                         crate::ROAD_STAKEOUT_QUERY => {
                             serde_json::from_value::<crate::StakeoutQueried>(output.clone()).map(|_| ())
                         }

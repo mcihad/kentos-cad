@@ -3451,6 +3451,21 @@
       "status": "implemented"
     },
     {
+      "id": "route.finder",
+      "title": "Ön güzergâh…",
+      "short": "Ön güzergâh",
+      "icon": "routeFinder",
+      "description": "Arazi yüzeyinde iki yer arasında en düşük maliyetli ön güzergâh (koridor analizi): ızgaranın her adımı plan boyu artı tırmanma ağırlığı × kot farkı tutar, en dik eğimden dik adım atılmaz, seçilen katmanların alanlarına girilmez. Sınırlar kullanıcının; KentOS değer vermez. Yol yazıldıkça planda görünür; Planda çiz kotlu çizgi olarak bir katmana çizer, Aksı çizgiye oturt onu aks yapar.",
+      "aliases": [
+        "ONGUZERGAH",
+        "ÖNGÜZERGÂH",
+        "KORIDORANALIZI"
+      ],
+      "shortcuts": [],
+      "category": "Güzergâh",
+      "status": "implemented"
+    },
+    {
       "id": "landxml.importAlignments",
       "title": "LandXML'den aks al…",
       "short": "LandXML aks",
@@ -4508,6 +4523,7 @@
     "landxmlExport": "<path d=\"M4 2.5h7.5L15 6v5\" stroke-width=\"1.2\"/><path d=\"M11.5 2.5V6H15\" stroke-width=\"1\"/><path d=\"M4 2.5v15h6\" stroke-width=\"1.2\"/><path d=\"M6 8.5h5M6 11h3\" stroke-width=\"1\"/><path d=\"M12 15.5h6M15.5 13l2.5 2.5-2.5 2.5\" stroke-width=\"1.5\"/>",
     "alignmentFromLine": "<circle cx=\"3\" cy=\"15.5\" r=\"1\"/><circle cx=\"7\" cy=\"9\" r=\"1\"/><circle cx=\"12\" cy=\"12\" r=\"1\"/><circle cx=\"17\" cy=\"4.5\" r=\"1\"/><path d=\"M3 15.5C5.5 10.5 7.5 9 10 10.5s4.5 0 7-6\" stroke-width=\"1.6\"/>",
     "profileFromLine": "<path d=\"M2 17.5h16\" stroke-width=\"1\"/><circle cx=\"3\" cy=\"13.5\" r=\"1\"/><circle cx=\"8\" cy=\"6.5\" r=\"1\"/><circle cx=\"17\" cy=\"12.5\" r=\"1\"/><path d=\"M3 13.5C5.5 9 7.5 7.5 10 8s4.5 2.5 7 4.5\" stroke-width=\"1.6\"/>",
+    "routeFinder": "<circle cx=\"4\" cy=\"15\" r=\"1.6\" stroke-width=\"1.2\"/><circle cx=\"16\" cy=\"5\" r=\"1.6\" stroke-width=\"1.2\"/><path d=\"M5.3 13.8 8 11l-.5-3 3-1 1.5 2 3-2.4\" stroke-width=\"1.3\"/><path d=\"M10 13.5h4.5v3H10z\" stroke-width=\"1\" stroke-dasharray=\"1.4 1.2\"/>",
     "payItemsEditor": "<path d=\"M4 3h9l3 3v11H4z\" stroke-width=\"1.3\"/><path d=\"M13 3v3h3\" stroke-width=\"1.1\"/><path d=\"M6.5 9h7M6.5 11.5h7M6.5 14h4\" stroke-width=\"1.1\"/><path d=\"M13.5 14h0\" stroke-width=\"1.6\"/>",
     "retainingWallEditor": "<path d=\"M2 6.5h7l2 2\" stroke-width=\"1.4\"/><path d=\"M9 6.5v9.5h3.2L11 6.5\" stroke-width=\"1.3\"/><path d=\"M7 16h7.5v1.5H7z\" stroke-width=\"1.1\"/><path d=\"M12.5 11h5.5\" stroke-width=\"1\" stroke-dasharray=\"1.5 1.5\"/>",
     "culvertEditor": "<path d=\"M2 7.5h16\" stroke-width=\"1.4\"/><path d=\"M2 7.5 1 9.5M18 7.5l1 2\" stroke-width=\"1\"/><circle cx=\"10\" cy=\"13\" r=\"3.2\" stroke-width=\"1.4\"/><path d=\"M2 17.5h16\" stroke-width=\"1\" stroke-dasharray=\"1.5 1.5\"/>",

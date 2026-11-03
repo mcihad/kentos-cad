@@ -1287,6 +1287,7 @@ class CreateOperation(_StrEnum):
     - ``guardrails``: `road.guardrails.draw` (plan/road.md Y11.1): a guardrail's runs in plan, “Otokorkuluk çiz”.
     - ``culverts``: `road.culverts.draw` (plan/road.md Y11.2): a culvert's barrel in plan, “Menfez çiz”.
     - ``retainingWalls``: `road.walls.draw` (plan/road.md Y11.3): a retaining wall's face and footing in plan, “İstinat duvarı çiz”.
+    - ``routes``: `road.routes.draw` (plan/road.md Y12.1): a preliminary route as a 3D polyline, “Ön güzergâh”.
     """
     PARALLEL = "parallel"
     PERPENDICULAR_IN = "perpendicularIn"
@@ -1332,9 +1333,10 @@ class CreateOperation(_StrEnum):
     GUARDRAILS = "guardrails"
     CULVERTS = "culverts"
     RETAINING_WALLS = "retainingWalls"
+    ROUTES = "routes"
 
 
-CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions", "terrainContours", "landXml", "alignmentLabels", "profileDrawing", "sectionDrawing", "slopePlan", "guardrails", "culverts", "retainingWalls"]
+CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions", "terrainContours", "landXml", "alignmentLabels", "profileDrawing", "sectionDrawing", "slopePlan", "guardrails", "culverts", "retainingWalls", "routes"]
 """The names of :class:`CreateOperation`, for a plain string."""
 
 
@@ -63672,6 +63674,222 @@ class RoadsEdited(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class RouteFound(_Model):
+    """Output of `road.routes.find` v1: the route's points (the start and the end where asked, the grid's nodes
+    between, simplified within the tolerance), its plan length, the height it rises and falls in all, its steepest
+    stretch (percent, between the points kept), its cost, the grid's nodes and those settled.
+    Attributes:
+        length: Unit: m.
+        climb: Unit: m.
+        steepest: Unit: percent.
+        cost: Unit: m.
+        nodes: Unit: count.
+        settled: Unit: count.
+    """
+    points: list[RoutePoint]
+    length: float
+    climb: float
+    steepest: float
+    cost: float
+    nodes: int
+    settled: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["points"] = [e0.to_json() for e0 in self.points]
+        out["length"] = float(self.length)
+        out["climb"] = float(self.climb)
+        out["steepest"] = float(self.steepest)
+        out["cost"] = float(self.cost)
+        out["nodes"] = self.nodes
+        out["settled"] = self.settled
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RouteFound:
+        return cls(
+            points=[RoutePoint.from_json(e0) for e0 in data["points"]],
+            length=float(data["length"]),
+            climb=float(data["climb"]),
+            steepest=float(data["steepest"]),
+            cost=float(data["cost"]),
+            nodes=data["nodes"],
+            settled=data["settled"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RoutePoint(_Model):
+    """A place of a route: plan and the terrain's height there (rounded to the micrometre).
+    Attributes:
+        x: Unit: length.
+        y: Unit: length.
+        z: Unit: elevation.
+    """
+    x: float
+    y: float
+    z: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["x"] = float(self.x)
+        out["y"] = float(self.y)
+        out["z"] = float(self.z)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoutePoint:
+        return cls(
+            x=float(data["x"]),
+            y=float(data["y"]),
+            z=float(data["z"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RoutesDraw(_Model):
+    """Input of `road.routes.draw` v1: the route found as `road.routes.find` finds it, drawn on `layerId` as one 3D
+    polyline.
+
+    Refusals, in this order: `invalid_revision`, `revision_conflict`, `road.routes.find`'s, `layer_not_found`,
+    `not_a_layer`, `layer_locked`. Warnings: `layer_hidden`.
+    Attributes:
+        from_: Unit: length.
+        to: Unit: length.
+        cell: Unit: m.
+        margin: Unit: m.
+        grade: Unit: percent.
+        climb: Unit: 1.
+        tolerance: Unit: m.
+    """
+    surface: str
+    from_: Vec2
+    to: Vec2
+    cell: float
+    margin: float
+    grade: float
+    climb: float
+    layer_id: str
+    avoid: list[str] | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    tolerance: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["surface"] = self.surface
+        out["from"] = _vec2_out(self.from_)
+        out["to"] = _vec2_out(self.to)
+        out["cell"] = float(self.cell)
+        out["margin"] = float(self.margin)
+        out["grade"] = float(self.grade)
+        out["climb"] = float(self.climb)
+        out["layerId"] = self.layer_id
+        if self.avoid is not UNSET:
+            out["avoid"] = list(self.avoid)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.tolerance is not UNSET:
+            out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoutesDraw:
+        return cls(
+            surface=data["surface"],
+            from_=Vec2.from_json(data["from"]),
+            to=Vec2.from_json(data["to"]),
+            cell=float(data["cell"]),
+            margin=float(data["margin"]),
+            grade=float(data["grade"]),
+            climb=float(data["climb"]),
+            layer_id=data["layerId"],
+            avoid=list(data["avoid"]) if "avoid" in data else UNSET,
+            expected_revision=data.get("expectedRevision", UNSET),
+            tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RoutesDrawn(_Model):
+    """Output of `road.routes.draw` v1, and its plan: the route and the object written (in the plan, none)."""
+    route: RouteFound
+    uids: list[str]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["route"] = self.route.to_json()
+        out["uids"] = list(self.uids)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoutesDrawn:
+        return cls(
+            route=RouteFound.from_json(data["route"]),
+            uids=list(data["uids"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RoutesFind(_Model):
+    """Input of `road.routes.find` v1.
+
+    Refusals, in this order: `not_a_road_project`, `unknown_terrain`, `invalid_route` (a cell, margin, grade or climb
+    out of bounds, a grid of more than two million nodes, a layer to avoid not in the drawing, the surface not
+    building), `route_blocked` (the start or the end off the terrain or in an area to avoid), `route_unreached` (no path
+    within the grade).
+    Attributes:
+        from_: Unit: length.
+        to: Unit: length.
+        cell: Unit: m.
+        margin: Unit: m.
+        grade: Unit: percent.
+        climb: Unit: 1.
+        tolerance: Unit: m.
+    """
+    surface: str
+    from_: Vec2
+    to: Vec2
+    cell: float
+    margin: float
+    grade: float
+    climb: float
+    avoid: list[str] | Unset = UNSET
+    tolerance: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["surface"] = self.surface
+        out["from"] = _vec2_out(self.from_)
+        out["to"] = _vec2_out(self.to)
+        out["cell"] = float(self.cell)
+        out["margin"] = float(self.margin)
+        out["grade"] = float(self.grade)
+        out["climb"] = float(self.climb)
+        if self.avoid is not UNSET:
+            out["avoid"] = list(self.avoid)
+        if self.tolerance is not UNSET:
+            out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoutesFind:
+        return cls(
+            surface=data["surface"],
+            from_=Vec2.from_json(data["from"]),
+            to=Vec2.from_json(data["to"]),
+            cell=float(data["cell"]),
+            margin=float(data["margin"]),
+            grade=float(data["grade"]),
+            climb=float(data["climb"]),
+            avoid=list(data["avoid"]) if "avoid" in data else UNSET,
+            tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class RubberLink(_Model):
     """A link of Kauçuk levha: a point of the drawing and where it is to go.
     Attributes:
@@ -102143,6 +102361,11 @@ __all__ = [
     "RotateItemsPaperOp",
     "RotateTransform",
     "RotateUcsTo",
+    "RouteFound",
+    "RoutePoint",
+    "RoutesDraw",
+    "RoutesDrawn",
+    "RoutesFind",
     "RowHeightTableEdit",
     "RowOffsetDimensionSetEdit",
     "RubberLink",

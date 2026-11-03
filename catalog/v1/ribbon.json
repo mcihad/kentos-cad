@@ -524,6 +524,16 @@
       ]
      },
      {
+      "label": "Ön güzergâh",
+      "icon": "routeFinder",
+      "items": [
+       {
+        "command": "route.finder",
+        "size": "large"
+       }
+      ]
+     },
+     {
       "label": "Boykesit",
       "icon": "profileEditor",
       "items": [

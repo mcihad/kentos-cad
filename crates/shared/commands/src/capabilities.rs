@@ -1911,6 +1911,19 @@ const ENTRIES: &[Entry] = &[
         warnings: &["pay_source_stale", "pay_source_unread"],
         targets: none,
     },
+    // KentOS Yol's preliminary routes (plan/road.md Y12.1, docs/adr/0910 §1).
+    Entry {
+        id: "road.routes.find",
+        refusals: &[&["not_a_road_project", "unknown_terrain", "invalid_route", "route_blocked", "route_unreached"]],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "road.routes.draw",
+        refusals: &[&["not_a_road_project", "unknown_terrain", "invalid_route", "route_blocked", "route_unreached"], LAYER, REVISION],
+        warnings: &["layer_hidden"],
+        targets: none,
+    },
     // KentOS Yol's LandXML export (plan/road.md Y10.2, docs/adr/0908 §6).
     Entry {
         id: "file.export.landxml",
