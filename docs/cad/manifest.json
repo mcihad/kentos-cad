@@ -9596,6 +9596,22 @@
    "tests": 2
   },
   {
+   "id": "terrain.cloud",
+   "kind": "command",
+   "title": "Buluttan arazi…",
+   "level": "semantic",
+   "via": [
+    "road.terrains.cloud"
+   ],
+   "operation": null,
+   "python": "Connection: road.terrains.cloud",
+   "mcp": "road.terrains.cloud",
+   "note": "Önizle road.terrains.cloud'un planını okuma kopyasında çalıştırır (bulut okunur, hiçbir şey yazılmaz); Uygula aynı komutla yazar (plan/road.md Y15.3, ADR 0913 §3).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "terrain.new",
    "kind": "command",
    "title": "Yüzey oluştur…",

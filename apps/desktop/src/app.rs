@@ -308,6 +308,8 @@ pub enum Dialog {
     RetainingWalls,
     /// Platform (platform_window.rs, plan/road.md Y14.3); the window is `App::platform_window`.
     Platforms,
+    /// Buluttan arazi (terrain_cloud_window.rs, plan/road.md Y15.3); the window is `App::terrain_cloud_window`.
+    TerrainCloud,
     /// Poz metrajı (pay_window.rs, plan/road.md Y11.4); the window is `App::pay_window`.
     Pay,
     /// Ön güzergâh (route_window.rs, plan/road.md Y12.1); the window is `App::route_window`.
@@ -695,6 +697,8 @@ pub enum Message {
     RetainingWalls(crate::retaining_wall_window::Event),
     /// An event of Platform (platform_window.rs, plan/road.md Y14.3).
     Platforms(crate::platform_window::Event),
+    /// An event of Buluttan arazi (terrain_cloud_window.rs, plan/road.md Y15.3).
+    TerrainCloud(crate::terrain_cloud_window::Event),
     /// An event of Poz metrajı (pay_window.rs, plan/road.md Y11.4).
     Pay(crate::pay_window::Event),
     /// An event of Ön güzergâh (route_window.rs, plan/road.md Y12.1).
@@ -1299,6 +1303,8 @@ pub struct App {
     pub(crate) retaining_wall_window: Option<Box<crate::retaining_wall_window::Window>>,
     /// Platform (platform_window.rs, plan/road.md Y14.3).
     pub(crate) platform_window: Option<Box<crate::platform_window::Window>>,
+    /// Buluttan arazi (terrain_cloud_window.rs, plan/road.md Y15.3).
+    pub(crate) terrain_cloud_window: Option<Box<crate::terrain_cloud_window::Window>>,
     /// Poz metrajı (pay_window.rs, plan/road.md Y11.4).
     pub(crate) pay_window: Option<Box<crate::pay_window::Window>>,
     /// Ön güzergâh (route_window.rs, plan/road.md Y12.1).
@@ -1745,6 +1751,7 @@ impl App {
             culvert_window: None,
             retaining_wall_window: None,
             platform_window: None,
+            terrain_cloud_window: None,
             pay_window: None,
             route_window: None,
             junction_window: None,
@@ -2484,6 +2491,7 @@ impl App {
             Message::Culverts(event) => return self.culvert_event(event),
             Message::RetainingWalls(event) => return self.retaining_wall_event(event),
             Message::Platforms(event) => return self.platform_event(event),
+            Message::TerrainCloud(event) => return self.terrain_cloud_event(event),
             Message::Pay(event) => return self.pay_event(event),
             Message::Route(event) => return self.route_event(event),
             Message::Junctions(event) => return self.junction_event(event),
@@ -3541,6 +3549,7 @@ impl App {
             "culvert.editor" => self.open_culverts(),
             "retainingWall.editor" => self.open_retaining_walls(),
             "platform.editor" => self.open_platforms(),
+            "terrain.cloud" => self.open_terrain_cloud(),
             "payItems.editor" => self.open_pay(),
             "route.finder" => self.open_route(),
             "junction.editor" => self.open_junctions(),

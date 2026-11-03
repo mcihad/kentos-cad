@@ -268,6 +268,7 @@ mod guardrail_window;
 mod culvert_window;
 mod retaining_wall_window;
 mod platform_window;
+mod terrain_cloud_window;
 mod pay_window;
 mod route_window;
 mod junction_window;
@@ -286,6 +287,8 @@ mod pay_window_tests;
 mod retaining_wall_window_tests;
 #[cfg(test)]
 mod platform_window_tests;
+#[cfg(test)]
+mod terrain_cloud_window_tests;
 #[cfg(test)]
 mod culvert_window_tests;
 #[cfg(test)]

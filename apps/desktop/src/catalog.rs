@@ -625,6 +625,8 @@ pub const PORTED: &[&str] = &[
     "retainingWall.editor",
     // plan/road.md Y14.3: Platform (platform_window.rs).
     "platform.editor",
+    // plan/road.md Y15.3: Buluttan arazi (terrain_cloud_window.rs).
+    "terrain.cloud",
     // plan/road.md Y11.4: Poz metrajı (pay_window.rs).
     "payItems.editor",
     // plan/road.md Y12.1: Ön güzergâh (route_window.rs).

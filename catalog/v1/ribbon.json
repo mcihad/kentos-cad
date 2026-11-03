@@ -450,6 +450,10 @@
        {
         "command": "terrain.new",
         "size": "large"
+       },
+       {
+        "command": "terrain.cloud",
+        "size": "large"
        }
       ]
      },

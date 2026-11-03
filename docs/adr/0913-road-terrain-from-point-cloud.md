@@ -72,3 +72,13 @@ tanımına `clouds[]` (`SurfaceCloudDef`; `.kcad` şema 162'de, `road-work.kcad`
 üçgenlemesine karşı, üçgen sayısı 2n − 2 − h ile denetlenir; KentOS kodu yok). İlk karşılaştırmada üçgenlemenin süper
 üçgeni küçük kalıp üç dış üçgeni düşürdüğünden başvurunun hatası farklıydı; başvuru düzeldi, KentOS değişmedi. Python
 `kentos.cad.road.terrains.cloud`, MCP.
+
+Y15.3 (yapıldı, masaüstü): §3. Arazi › Yüzey'de Buluttan (`terrain.cloud`, `apps/desktop/src/terrain_cloud_window.rs`):
+bulut, dönüş, hücre, kot toleransı, kırık hat erimi, ASPRS sınıfları (0–11; köprü tabliyesi ve üst yapı sunulmaz), alan
+seçimden, yeni ya da projedeki yüzey, katman. Önizle komutun planını okuma kopyasında çalıştırır (bulut okunur, hiçbir
+şey yazılmaz): okunan, süzgeçten geçen, kalan ve nedenleri, kapsama, yoğunluk, seyreltme hatası, yüzeyin dışında kalan;
+değer değişince önizleme düşer, Uygula yalnız önizlenmişken açıktır. Testler `terrain_cloud_window_tests.rs`, resimler
+`.run/gui-evidence/yol-y15-bulut-*`. Resimlerde bulunan: stilli çizimde nokta bulutunun planı alan gölgelendiricisinin
+hassas sürümüyle çiziliyordu ama çizim alt parçaların (low) ikinci tamponunu bağlamıyordu; wgpu doğrulaması her bulut
+resminde düşüyordu (`crates/render/wgpu/src/styled/gpu.rs`, main'den gelen hassasiyet işinin eksiği). Bulut çizimi de
+alt parçaları bağlar.
