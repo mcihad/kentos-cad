@@ -1161,6 +1161,8 @@ __all__ = [
     "HatchesEdit",
     "HatchesEdited",
     "HatchesPlan",
+    "HaulCostDef",
+    "HaulCostReport",
     "HaulDef",
     "HaulListed",
     "HaulLoop",

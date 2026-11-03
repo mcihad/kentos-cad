@@ -70,6 +70,25 @@ fn step(points: &[[f64; 2]], s: f64, delta: f64) -> Vec<[f64; 2]> {
     out
 }
 
+/// How the haul is assigned: the mass diagram read layer by layer, not an optimisation (docs/adr/0907 §5).
+const LAYERS: &str = "layers";
+
+/// The diagram's cost by its prices: the overhaul moment in m³·km times its price, the waste and the borrow times
+/// theirs, the total of those priced; the trips everything moved over the payload, rounded up.
+pub(crate) fn cost(c: &kentos_commands::HaulCostDef, d: &kentos_road::haul::Diagram) -> kentos_commands::HaulCostReport {
+    let overhaul = c.overhaul.map(|p| d.over_moment / 1000.0 * p);
+    let waste = c.waste.map(|p| d.waste * p);
+    let borrow = c.borrow.map(|p| d.borrow * p);
+    kentos_commands::HaulCostReport {
+        currency: c.currency.clone(),
+        overhaul,
+        waste,
+        borrow,
+        total: [overhaul, waste, borrow].into_iter().flatten().sum(),
+        trips: c.payload.map(|p| ((d.volume + d.waste + d.borrow) / p - 1e-9).ceil().max(0.0)),
+    }
+}
+
 /// The diagram read now with its warnings; refused where its volume does not compute or a site is off its stations.
 pub(crate) fn read(doc: &Document, def: &HaulDef, points: bool) -> Result<(HaulReport, Vec<CommandWarning>), Stop> {
     let vdef = doc.road_volumes().iter().find(|v| v.id == def.volume).ok_or_else(|| {
@@ -133,6 +152,7 @@ pub(crate) fn read(doc: &Document, def: &HaulDef, points: bool) -> Result<(HaulR
             path: Some("haul".into()),
         });
     }
+    let priced = def.cost.as_ref().map(|c| cost(c, &d));
     let out = HaulReport {
         id: def.id.clone(),
         name: def.name.clone(),
@@ -151,6 +171,8 @@ pub(crate) fn read(doc: &Document, def: &HaulDef, points: bool) -> Result<(HaulR
         over_moment: d.over_moment,
         waste: d.waste,
         borrow: d.borrow,
+        method: LAYERS.into(),
+        cost: priced,
         problem: None,
     };
     Ok((out, warnings))
@@ -176,6 +198,8 @@ pub(crate) fn broken(def: &HaulDef, why: String) -> HaulReport {
         over_moment: 0.0,
         waste: 0.0,
         borrow: 0.0,
+        method: LAYERS.into(),
+        cost: None,
         problem: Some(why),
     }
 }

@@ -7,7 +7,8 @@
 //! ```text
 //! ┌ Brükner ────────────────────────────────────────────────────────────────────────────────────┐
 //! │ Brüknerler          │ Ad [Ana Brükner] Kübaj [▾] Denge çizgisi (m³) [0] Serbest taşıma (m) [ ] │
-//! │ ● Ana Brükner       │ Alanlar: Ad  Tür [Ödünç ▾]  Km  Hacim  ○   [Alan ekle] [Alanı sil]    │
+//! │ ● Ana Brükner       │ Para birimi [TL] Fazla taşıma Döküm Ödünç (birim fiyat) Kamyon yükü  │
+//! │                     │ Alanlar: Ad  Tür [Ödünç ▾]  Km  Hacim  ○   [Alan ekle] [Alanı sil]    │
 //! │ [Yeni Brükner]      │ ┌───────────────────────────────────────────────────────────────────┐ │
 //! │                     │ │  the diagram: curve, loops, balance line and points, sites         │ │
 //! │                     │ └───────────────────────────────────────────────────────────────────┘ │
@@ -17,12 +18,13 @@
 //! ```
 //!
 //! The window edits a copy of the diagrams; Kaydet writes what changed through `road.hauls.edit` (removes, then sets),
-//! each one undo step, and closes. The free haul and the sites are the user's: nothing is filled in.
+//! each one undo step, and closes. The free haul, the sites, the unit prices and the truck's payload are the user's:
+//! nothing is filled in; the cost is the priced items' sum, the trips the hauled volume over the payload (ADR 0907 §5).
 
 use iced::widget::canvas::{self, Path, Stroke, Text};
 use iced::widget::{Column, column, container, row, scrollable, space};
 use iced::{Center, Color, Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
-use kentos_commands::{CommandWarning, HaulDef, HaulReport, HaulSiteDef, HaulSiteKind, HaulsEdit, RoadEditOperation};
+use kentos_commands::{CommandWarning, HaulCostDef, HaulDef, HaulReport, HaulSiteDef, HaulSiteKind, HaulsEdit, RoadEditOperation};
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, road_hauls, road_hauls_edit};
 use kentos_ui::theme::{Tokens, typography};
@@ -78,8 +80,8 @@ pub struct Row {
     pub(crate) name: String,
     revision: u32,
     volume: Option<String>,
-    /// The balance line and the free haul.
-    fields: [String; 2],
+    /// The balance line, the free haul, the currency, the overhaul, waste and borrow prices, the truck's payload.
+    fields: [String; 7],
     /// A site's name, kind, station and volume.
     sites: Vec<(String, HaulSiteKind, String, String)>,
 }
@@ -91,7 +93,18 @@ impl Row {
             name: d.name.clone(),
             revision: d.revision,
             volume: Some(d.volume.clone()),
-            fields: [if d.balance == 0.0 { String::new() } else { trimmed(d.balance) }, d.free.map(trimmed).unwrap_or_default()],
+            fields: {
+                let price = |f: fn(&HaulCostDef) -> Option<f64>| d.cost.as_ref().and_then(f).map(trimmed).unwrap_or_default();
+                [
+                    if d.balance == 0.0 { String::new() } else { trimmed(d.balance) },
+                    d.free.map(trimmed).unwrap_or_default(),
+                    d.cost.as_ref().map(|c| c.currency.clone()).unwrap_or_default(),
+                    price(|c| c.overhaul),
+                    price(|c| c.waste),
+                    price(|c| c.borrow),
+                    price(|c| c.payload),
+                ]
+            },
             sites: d.sites.iter().map(|s| (s.name.clone(), s.kind, trimmed(s.station), trimmed(s.volume))).collect(),
         }
     }
@@ -100,6 +113,22 @@ impl Row {
         let volume = self.volume.clone().ok_or("Bir kübaj seçin: Brükner onun kütle ordinatıdır.")?;
         let balance = number(&self.fields[0]).map_err(|()| "Denge çizgisi bir sayı olmalı.".to_owned())?.unwrap_or(0.0);
         let free = number(&self.fields[1]).map_err(|()| "Serbest taşıma bir sayı olmalı.".to_owned())?;
+        let mut prices = [None; 4];
+        for (k, what) in ["Fazla taşıma fiyatı", "Döküm fiyatı", "Ödünç fiyatı", "Kamyon yükü"].into_iter().enumerate() {
+            prices[k] = number(&self.fields[3 + k]).map_err(|()| format!("{what} bir sayı olmalı."))?;
+        }
+        let currency = self.fields[2].trim();
+        let cost = match (currency.is_empty(), prices.iter().any(Option::is_some)) {
+            (true, false) => None,
+            (true, true) => return Err("Birim fiyat ya da kamyon yükü için para birimini yazın.".to_owned()),
+            (false, _) => Some(HaulCostDef {
+                currency: currency.to_owned(),
+                overhaul: prices[0],
+                waste: prices[1],
+                borrow: prices[2],
+                payload: prices[3],
+            }),
+        };
         let mut sites = Vec::new();
         for (i, (name, kind, station, volume)) in self.sites.iter().enumerate() {
             let n = i + 1;
@@ -109,7 +138,7 @@ impl Row {
             };
             sites.push(HaulSiteDef { name: name.clone(), kind: *kind, station: need(station, "km'si")?, volume: need(volume, "hacmi")? });
         }
-        Ok(HaulDef { id: self.id.clone(), name: self.name.clone(), volume, revision: self.revision, balance, free, sites })
+        Ok(HaulDef { id: self.id.clone(), name: self.name.clone(), volume, revision: self.revision, balance, free, sites, cost })
     }
 }
 
@@ -137,7 +166,7 @@ pub enum Event {
     Remove,
     Name(String),
     Volume(String),
-    /// 0 the balance line, 1 the free haul.
+    /// 0 the balance line, 1 the free haul, 2 the currency, 3–5 the overhaul, waste and borrow prices, 6 the payload.
     Field(usize, String),
     /// A site's name (0), station (2) or volume (3).
     Site(usize, usize, String),
@@ -256,7 +285,7 @@ impl App {
             }
             Event::Field(k, t) => {
                 if let Some(r) = chosen_row(w) {
-                    r.fields[k.min(1)] = t;
+                    r.fields[k.min(6)] = t;
                 }
             }
             Event::Site(j, k, t) => {
@@ -315,6 +344,7 @@ impl App {
             balance: None,
             free: None,
             sites: None,
+            cost: None,
             expected_revision: None,
         }
     }
@@ -353,6 +383,7 @@ impl App {
                 balance: Some(d.balance),
                 free: Some(d.free),
                 sites: Some(d.sites.clone()),
+                cost: Some(d.cost.clone()),
                 ..Self::blank_haul_edit(RoadEditOperation::Set, &d.id)
             };
             if !self.haul_write(edit) {
@@ -441,6 +472,22 @@ impl App {
             .spacing(10)
             .align_y(iced::alignment::Vertical::Bottom),
         );
+        // The price fields name the currency as it is typed.
+        let currency = if r.fields[2].trim().is_empty() { "para".to_owned() } else { r.fields[2].trim().to_owned() };
+        let priced = |title: String, k: usize, width: f32| -> Element<'a, Message> {
+            column![label::caption(title), field("", k, width)].spacing(4).into()
+        };
+        col = col.push(
+            row![
+                words::field("Para birimi", field("", 2, 80.0), None),
+                priced(format!("Fazla taşıma ({currency}/m³·km)"), 3, 150.0),
+                priced(format!("Döküm ({currency}/m³)"), 4, 110.0),
+                priced(format!("Ödünç ({currency}/m³)"), 5, 110.0),
+                words::field("Kamyon yükü (m³)", field("", 6, 110.0), None),
+            ]
+            .spacing(10)
+            .align_y(iced::alignment::Vertical::Bottom),
+        );
         let widths = [150.0, 110.0, 80.0, 90.0];
         let mut table = Column::new().spacing(3);
         table = table.push(
@@ -477,18 +524,15 @@ impl App {
                 column![
                     words::secondary(ADD, Some(msg(Event::Add))),
                     words::ghost(REMOVE_ROW, w.line.map(|_| msg(Event::RemoveRow))),
-                    label::caption("Serbest taşıma sözleşmeden yazılır;\nKentOS öntanımlı sayı vermez.").style(muted),
+                    label::caption("Serbest taşıma ve birim fiyatlar\nsözleşmeden ve tarifeden yazılır;\nKentOS öntanımlı sayı vermez.")
+                        .style(muted),
                 ]
                 .spacing(6),
             ]
             .spacing(16),
         );
-        col = col.push(
-            container(iced::widget::canvas(Diagram { preview: &w.preview }).width(Fill).height(typography::scaled(160.0)))
-                .style(style::container::field_box)
-                .width(Fill),
-        );
         match (&w.preview.why, &w.preview.report) {
+            // The totals and the cost over the diagram, the loops under it.
             (Some(e), _) => col = col.push(label::caption(e.clone()).style(danger)),
             (None, Some(rep)) => {
                 let avg = rep.average.map_or_else(|| "—".to_owned(), |a| format!("{} m", grouped(a, 0)));
@@ -501,9 +545,23 @@ impl App {
                     grouped(rep.waste, 0),
                     grouped(rep.borrow, 0),
                 )));
+                if let Some(c) = &rep.cost {
+                    let part = |what: &str, v: Option<f64>| v.map(|v| format!(" · {what} {} {}", grouped(v, 2), c.currency));
+                    let parts: String = [part("fazla taşıma", c.overhaul), part("döküm", c.waste), part("ödünç", c.borrow)]
+                        .into_iter()
+                        .flatten()
+                        .collect();
+                    let trips = c.trips.map_or_else(String::new, |t| format!(" · {} kamyon seferi", grouped(t, 0)));
+                    col = col.push(label::strong(format!("Maliyet {} {}{parts}{trips}", grouped(c.total, 2), c.currency)));
+                }
                 for wn in &w.preview.warnings {
                     col = col.push(label::caption(wn.message.clone()).style(warn));
                 }
+                col = col.push(
+                    container(iced::widget::canvas(Diagram { preview: &w.preview }).width(Fill).height(typography::scaled(160.0)))
+                        .style(style::container::field_box)
+                        .width(Fill),
+                );
                 col = col.push(loops_table(rep));
             }
             _ => {}
@@ -529,6 +587,8 @@ impl App {
             Control::Fill("Ad", text) => Some(msg(Event::Name(text.to_owned()))),
             Control::Fill("Denge çizgisi (m³)", text) => Some(msg(Event::Field(0, text.to_owned()))),
             Control::Fill("Serbest taşıma (m)", text) => Some(msg(Event::Field(1, text.to_owned()))),
+            Control::Fill("Para birimi", text) => Some(msg(Event::Field(2, text.to_owned()))),
+            Control::Fill("Kamyon yükü (m³)", text) => Some(msg(Event::Field(6, text.to_owned()))),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }

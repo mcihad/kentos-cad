@@ -47,6 +47,33 @@ fn the_window_makes_a_diagram_with_a_site_and_reads_it() {
 }
 
 #[test]
+fn prices_and_a_payload_give_the_cost_and_are_written() {
+    let mut app = app();
+    let _ = app.update(Message::Run("haul.editor"));
+    send(&mut app, W::Choose(0));
+    send(&mut app, W::Field(1, "100".into()));
+    send(&mut app, W::Field(3, "12,5".into()));
+    assert!(app.haul_window.as_ref().is_some_and(|w| w.preview.why.is_some()), "a price wants a number in the dot");
+    send(&mut app, W::Field(3, "12.5".into()));
+    assert!(
+        app.haul_window.as_ref().and_then(|w| w.preview.why.as_deref()).is_some_and(|e| e.contains("para birimi")),
+        "a price wants a currency"
+    );
+    send(&mut app, W::Field(2, "TL".into()));
+    send(&mut app, W::Field(6, "15".into()));
+    let w = app.haul_window.as_ref().expect("open");
+    let rep = w.preview.report.as_ref().unwrap_or_else(|| panic!("reads: {:?}", w.preview.why));
+    let cost = rep.cost.as_ref().expect("priced");
+    assert_eq!(cost.currency, "TL");
+    assert!((cost.total - rep.over_moment / 1000.0 * 12.5).abs() < 1e-6, "{cost:?} {rep:?}");
+    assert!(cost.trips.is_some_and(|t| t >= 1.0));
+    send(&mut app, W::Save);
+    assert!(app.haul_window.is_none());
+    let saved = model(&mut app).road_hauls()[0].cost.clone().expect("written");
+    assert_eq!((saved.overhaul, saved.payload), (Some(12.5), Some(15.0)));
+}
+
+#[test]
 fn a_bad_site_is_refused_and_the_window_stays() {
     let mut app = app();
     let _ = app.update(Message::Run("haul.editor"));
@@ -99,6 +126,11 @@ fn screens() {
         send(&mut app, W::Site(0, 2, "120".into()));
         send(&mut app, W::Site(0, 3, "2000".into()));
         send(&mut app, W::Kind(0, kentos_commands::HaulSiteKind::Borrow));
+        send(&mut app, W::Field(1, "150".into()));
+        send(&mut app, W::Field(2, "TL".into()));
+        for (k, v) in [(3, "12.5"), (4, "40"), (5, "85"), (6, "15")] {
+            send(&mut app, W::Field(k, v.into()));
+        }
         send(&mut app, W::Add);
         send(&mut app, W::Site(1, 2, "560".into()));
         send(&mut app, W::Site(1, 3, "8000".into()));

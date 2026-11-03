@@ -12,7 +12,7 @@ use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
-use crate::{HaulSiteDef, RoadEditOperation};
+use crate::{HaulCostDef, HaulSiteDef, RoadEditOperation};
 
 pub const ROAD_HAULS_EDIT: &str = "road.hauls.edit";
 pub const ROAD_HAULS_EDIT_VERSION: u32 = 1;
@@ -25,7 +25,8 @@ pub const ROAD_HAULS_QUERY_VERSION: u32 = 1;
 /// Refusals, in this order: `not_a_road_project`, `invalid_haul` (rebind), `unknown_haul` (remove one not in the
 /// project), `unknown_volume`, `invalid_haul` (another volume, a new one without its fields, set with nothing to set,
 /// the definition by `road_problem`: a free haul not in (0, 100 km], a site without a name or with a volume not above
-/// 0; a volume that does not compute or a site off its stations), `invalid_revision`, `revision_conflict`.
+/// 0, a cost without a currency, a price below 0, a payload not in (0, 1000] m³; a volume that does not compute or a
+/// site off its stations), `invalid_revision`, `revision_conflict`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -55,6 +56,11 @@ pub struct HaulsEdit {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub sites: Option<Vec<HaulSiteDef>>,
+    /// The prices and the truck's payload; null takes them off.
+    #[serde(default, with = "crate::cad_properties::nullable", skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<HaulCostDef>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<HaulCostDef>"))]
+    pub cost: Option<Option<HaulCostDef>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
@@ -91,6 +97,36 @@ pub struct HaulLoop {
     pub over_moment: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub unbalanced: f64,
+}
+
+/// A diagram's cost as priced (docs/adr/0907 §5): the currency, the overhaul (its moment in m³·km times its price), the
+/// waste and the borrow (their volume times their price), each where priced, the total of those priced, and the truck
+/// trips (everything moved, hauled, wasted and borrowed, over the payload, rounded up) where a payload is given.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct HaulCostReport {
+    pub currency: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "money")))]
+    pub overhaul: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "money")))]
+    pub waste: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "money")))]
+    pub borrow: Option<f64>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "money")))]
+    pub total: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub trips: Option<f64>,
 }
 
 /// A mass haul diagram as it reads now: its sources, whether its volume's corridor is stale, the ordinate's points
@@ -136,6 +172,13 @@ pub struct HaulReport {
     pub waste: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub borrow: f64,
+    /// How the haul is assigned: `layers`, the mass diagram read layer by layer (the balance point method), not an
+    /// optimisation (docs/adr/0907 §5).
+    pub method: String,
+    /// Its cost, where priced.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub cost: Option<HaulCostReport>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub problem: Option<String>,

@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any  # noqa: F401
 from .._runtime import CommandNote, LocalCommand, Outcome, UNSET, Unset, _opt  # noqa: F401
 from ..protocol import Expected  # noqa: F401
 from ..types import (  # noqa: F401
+    HaulCostDef,
     HaulSiteDef,
     HaulsEdit,
     HaulsQueried,
@@ -31,10 +32,12 @@ class _RoadHaulsEdit(LocalCommand[HaulsEdit, HaulsWritten, HaulsWritten]):
     (m³, öntanımlı 0), serbest taşıma uzaklığı free (m; null kaldırır, yoksa bütün
     taşıma fazla taşımadır), ödünç ve döküm alanları sites (name, kind borrow ya da
     waste, station aksın istasyonu, volume m³; ödünç eğriyi yükseltir, döküm düşürür).
-    KentOS öntanımlı serbest taşıma vermez. Brükner kübajını izler, yeniden bağlanmaz ve
-    başka kübaja geçmez. Yeni Brüknerin kimliği verilen ya da ilk boş h-n. Tek geri alma
-    adımı “Brükner”. Retler: not_a_road_project, unknown_haul, unknown_volume,
-    invalid_haul, invalid_revision, revision_conflict.
+    cost birim fiyatlar: currency para birimi, overhaul fazla taşımanın para/(m³·km)'si,
+    waste ve borrow döküm ve ödüncün para/m³'ü, payload kamyon yükü (m³); null kaldırır.
+    KentOS öntanımlı serbest taşıma ya da fiyat vermez. Brükner kübajını izler, yeniden
+    bağlanmaz ve başka kübaja geçmez. Yeni Brüknerin kimliği verilen ya da ilk boş h-n.
+    Tek geri alma adımı “Brükner”. Retler: not_a_road_project, unknown_haul,
+    unknown_volume, invalid_haul, invalid_revision, revision_conflict.
     """
     __slots__ = ()
     id = "road.hauls.edit"
@@ -52,6 +55,7 @@ class _RoadHaulsEdit(LocalCommand[HaulsEdit, HaulsWritten, HaulsWritten]):
         *,
         operation: RoadEditOperation | RoadEditOperationName,
         balance: float | None | Unset = UNSET,
+        cost: HaulCostDef | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         free: float | None | Unset = UNSET,
         haul: str | None | Unset = UNSET,
@@ -66,16 +70,19 @@ class _RoadHaulsEdit(LocalCommand[HaulsEdit, HaulsWritten, HaulsWritten]):
         (birikimli düzeltilmiş kazı eksi dolgu): denge çizgisi balance (m³, öntanımlı 0),
         serbest taşıma uzaklığı free (m; null kaldırır, yoksa bütün taşıma fazla taşımadır),
         ödünç ve döküm alanları sites (name, kind borrow ya da waste, station aksın
-        istasyonu, volume m³; ödünç eğriyi yükseltir, döküm düşürür). KentOS öntanımlı
-        serbest taşıma vermez. Brükner kübajını izler, yeniden bağlanmaz ve başka kübaja
-        geçmez. Yeni Brüknerin kimliği verilen ya da ilk boş h-n. Tek geri alma adımı
-        “Brükner”. Retler: not_a_road_project, unknown_haul, unknown_volume, invalid_haul,
-        invalid_revision, revision_conflict.
+        istasyonu, volume m³; ödünç eğriyi yükseltir, döküm düşürür). cost birim fiyatlar:
+        currency para birimi, overhaul fazla taşımanın para/(m³·km)'si, waste ve borrow
+        döküm ve ödüncün para/m³'ü, payload kamyon yükü (m³); null kaldırır. KentOS
+        öntanımlı serbest taşıma ya da fiyat vermez. Brükner kübajını izler, yeniden
+        bağlanmaz ve başka kübaja geçmez. Yeni Brüknerin kimliği verilen ya da ilk boş h-n.
+        Tek geri alma adımı “Brükner”. Retler: not_a_road_project, unknown_haul,
+        unknown_volume, invalid_haul, invalid_revision, revision_conflict.
 
         Args:
             doc: The drawing it works on.
             operation:
             balance: Unit: volume.
+            cost: The prices and the truck's payload; null takes them off.
             expected_revision:
             free: The free haul distance; null takes it off. Unit: m.
             haul:
@@ -97,6 +104,7 @@ class _RoadHaulsEdit(LocalCommand[HaulsEdit, HaulsWritten, HaulsWritten]):
         return self.execute_input(doc, HaulsEdit(
             operation=operation,
             balance=balance,
+            cost=cost,
             expected_revision=expected_revision,
             free=free,
             haul=haul,
@@ -112,6 +120,7 @@ class _RoadHaulsEdit(LocalCommand[HaulsEdit, HaulsWritten, HaulsWritten]):
         *,
         operation: RoadEditOperation | RoadEditOperationName,
         balance: float | None | Unset = UNSET,
+        cost: HaulCostDef | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         free: float | None | Unset = UNSET,
         haul: str | None | Unset = UNSET,
@@ -125,6 +134,7 @@ class _RoadHaulsEdit(LocalCommand[HaulsEdit, HaulsWritten, HaulsWritten]):
         return self.plan_input(doc, HaulsEdit(
             operation=operation,
             balance=balance,
+            cost=cost,
             expected_revision=expected_revision,
             free=free,
             haul=haul,
@@ -140,6 +150,7 @@ class _RoadHaulsEdit(LocalCommand[HaulsEdit, HaulsWritten, HaulsWritten]):
         *,
         operation: RoadEditOperation | RoadEditOperationName,
         balance: float | None | Unset = UNSET,
+        cost: HaulCostDef | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         free: float | None | Unset = UNSET,
         haul: str | None | Unset = UNSET,
@@ -153,6 +164,7 @@ class _RoadHaulsEdit(LocalCommand[HaulsEdit, HaulsWritten, HaulsWritten]):
         return self.validate_input(doc, HaulsEdit(
             operation=operation,
             balance=balance,
+            cost=cost,
             expected_revision=expected_revision,
             free=free,
             haul=haul,
@@ -168,6 +180,7 @@ class _RoadHaulsEdit(LocalCommand[HaulsEdit, HaulsWritten, HaulsWritten]):
         *,
         operation: RoadEditOperation | RoadEditOperationName,
         balance: float | None | Unset = UNSET,
+        cost: HaulCostDef | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         free: float | None | Unset = UNSET,
         haul: str | None | Unset = UNSET,
@@ -186,6 +199,7 @@ class _RoadHaulsEdit(LocalCommand[HaulsEdit, HaulsWritten, HaulsWritten]):
         return self.answer_input(doc, HaulsEdit(
             operation=operation,
             balance=balance,
+            cost=cost,
             expected_revision=expected_revision,
             free=free,
             haul=haul,
@@ -204,10 +218,12 @@ class _RoadHaulsQuery(LocalCommand[HaulsQuery, HaulsQueried, HaulsQueried]):
     hiçbir şey yazmaz. Kütle eğrisi denge çizgisine göre katman katman okunur: denge
     noktaları, döngüler (ileri ya da geri; km'ler, dengelenen hacim, taşıma momenti
     m³·m, ortalama taşıma uzaklığı, serbest taşımayı aşan hacim ve moment, ucunda
-    varacak yeri olmayan hacim), toplamlar, döküm ve ödünç; okunamıyorsa nedeni. haul
-    ile yalnız biri; points kütle eğrisinin noktalarını (km, m³; ödünç ve döküm alanında
-    basamak) da verir. Uyarılar: corridor_stale, volume_gap, haul_unbalanced. Retler:
-    not_a_road_project, unknown_haul, invalid_haul.
+    varacak yeri olmayan hacim), toplamlar, döküm ve ödünç; yöntem (method: layers,
+    katman okuması; en iyileme değil); fiyatlıysa maliyet (fazla taşıma, döküm, ödünç,
+    toplam, kamyon seferi); okunamıyorsa nedeni. haul ile yalnız biri; points kütle
+    eğrisinin noktalarını (km, m³; ödünç ve döküm alanında basamak) da verir. Uyarılar:
+    corridor_stale, volume_gap, haul_unbalanced. Retler: not_a_road_project,
+    unknown_haul, invalid_haul.
     """
     __slots__ = ()
     id = "road.hauls.query"
@@ -232,10 +248,11 @@ class _RoadHaulsQuery(LocalCommand[HaulsQuery, HaulsQueried, HaulsQueried]):
         eğrisi denge çizgisine göre katman katman okunur: denge noktaları, döngüler (ileri
         ya da geri; km'ler, dengelenen hacim, taşıma momenti m³·m, ortalama taşıma uzaklığı,
         serbest taşımayı aşan hacim ve moment, ucunda varacak yeri olmayan hacim),
-        toplamlar, döküm ve ödünç; okunamıyorsa nedeni. haul ile yalnız biri; points kütle
-        eğrisinin noktalarını (km, m³; ödünç ve döküm alanında basamak) da verir. Uyarılar:
-        corridor_stale, volume_gap, haul_unbalanced. Retler: not_a_road_project,
-        unknown_haul, invalid_haul.
+        toplamlar, döküm ve ödünç; yöntem (method: layers, katman okuması; en iyileme
+        değil); fiyatlıysa maliyet (fazla taşıma, döküm, ödünç, toplam, kamyon seferi);
+        okunamıyorsa nedeni. haul ile yalnız biri; points kütle eğrisinin noktalarını (km,
+        m³; ödünç ve döküm alanında basamak) da verir. Uyarılar: corridor_stale, volume_gap,
+        haul_unbalanced. Retler: not_a_road_project, unknown_haul, invalid_haul.
 
         Args:
             doc: The drawing it works on.

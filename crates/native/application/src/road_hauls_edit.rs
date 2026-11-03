@@ -52,8 +52,12 @@ fn check(doc: &kentos_domain::Document, input: &HaulsEdit) -> Result<Checked, St
                     "volume",
                 ));
             }
-            if input.name.is_none() && input.balance.is_none() && input.free.is_none() && input.sites.is_none() {
-                return Err(fail(codes::INVALID_HAUL, "Değiştirilecek bir şey yok: name, balance, free ya da sites verin.".into(), ""));
+            if input.name.is_none() && input.balance.is_none() && input.free.is_none() && input.sites.is_none() && input.cost.is_none() {
+                return Err(fail(
+                    codes::INVALID_HAUL,
+                    "Değiştirilecek bir şey yok: name, balance, free, sites ya da cost verin.".into(),
+                    "",
+                ));
             }
             let mut d = old.clone();
             if let Some(n) = &input.name {
@@ -67,6 +71,9 @@ fn check(doc: &kentos_domain::Document, input: &HaulsEdit) -> Result<Checked, St
             }
             if let Some(s) = &input.sites {
                 d.sites = s.clone();
+            }
+            if let Some(c) = &input.cost {
+                d.cost = c.clone();
             }
             if d != *old {
                 d.revision = old.revision.saturating_add(1);
@@ -94,6 +101,7 @@ fn check(doc: &kentos_domain::Document, input: &HaulsEdit) -> Result<Checked, St
                 balance: input.balance.unwrap_or(0.0),
                 free: input.free.flatten(),
                 sites: input.sites.clone().unwrap_or_default(),
+                cost: input.cost.clone().flatten(),
             });
             Some(id)
         }

@@ -38372,7 +38372,7 @@
       "id": "road.hauls.edit",
       "version": 1,
       "title": "Brükneri düzenle",
-      "summary": "Yol projesinin Brüknerini (haul: kimliği ya da adı; yoksa yeni) yazar ya da kaldırır. Brükner bir kübaj hesabının (volume) kütle ordinatıdır (birikimli düzeltilmiş kazı eksi dolgu): denge çizgisi balance (m³, öntanımlı 0), serbest taşıma uzaklığı free (m; null kaldırır, yoksa bütün taşıma fazla taşımadır), ödünç ve döküm alanları sites (name, kind borrow ya da waste, station aksın istasyonu, volume m³; ödünç eğriyi yükseltir, döküm düşürür). KentOS öntanımlı serbest taşıma vermez. Brükner kübajını izler, yeniden bağlanmaz ve başka kübaja geçmez. Yeni Brüknerin kimliği verilen ya da ilk boş h-n. Tek geri alma adımı “Brükner”. Retler: not_a_road_project, unknown_haul, unknown_volume, invalid_haul, invalid_revision, revision_conflict.",
+      "summary": "Yol projesinin Brüknerini (haul: kimliği ya da adı; yoksa yeni) yazar ya da kaldırır. Brükner bir kübaj hesabının (volume) kütle ordinatıdır (birikimli düzeltilmiş kazı eksi dolgu): denge çizgisi balance (m³, öntanımlı 0), serbest taşıma uzaklığı free (m; null kaldırır, yoksa bütün taşıma fazla taşımadır), ödünç ve döküm alanları sites (name, kind borrow ya da waste, station aksın istasyonu, volume m³; ödünç eğriyi yükseltir, döküm düşürür). cost birim fiyatlar: currency para birimi, overhaul fazla taşımanın para/(m³·km)'si, waste ve borrow döküm ve ödüncün para/m³'ü, payload kamyon yükü (m³); null kaldırır. KentOS öntanımlı serbest taşıma ya da fiyat vermez. Brükner kübajını izler, yeniden bağlanmaz ve başka kübaja geçmez. Yeni Brüknerin kimliği verilen ya da ilk boş h-n. Tek geri alma adımı “Brükner”. Retler: not_a_road_project, unknown_haul, unknown_volume, invalid_haul, invalid_revision, revision_conflict.",
       "aliases": [
         "bruckner",
         "brükner"
@@ -38390,7 +38390,7 @@
       "cost": "instant",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `road.hauls.edit` v1: the diagram by its id or name (absent: a new one). A new one needs `name` and\n`volume`. A diagram follows its volume: it is not rebound to another.\n\nRefusals, in this order: `not_a_road_project`, `invalid_haul` (rebind), `unknown_haul` (remove one not in the\nproject), `unknown_volume`, `invalid_haul` (another volume, a new one without its fields, set with nothing to set,\nthe definition by `road_problem`: a free haul not in (0, 100 km], a site without a name or with a volume not above\n0; a volume that does not compute or a site off its stations), `invalid_revision`, `revision_conflict`.",
+        "description": "Input of `road.hauls.edit` v1: the diagram by its id or name (absent: a new one). A new one needs `name` and\n`volume`. A diagram follows its volume: it is not rebound to another.\n\nRefusals, in this order: `not_a_road_project`, `invalid_haul` (rebind), `unknown_haul` (remove one not in the\nproject), `unknown_volume`, `invalid_haul` (another volume, a new one without its fields, set with nothing to set,\nthe definition by `road_problem`: a free haul not in (0, 100 km], a site without a name or with a volume not above\n0, a cost without a currency, a price below 0, a payload not in (0, 1000] m³; a volume that does not compute or a\nsite off its stations), `invalid_revision`, `revision_conflict`.",
         "properties": {
           "balance": {
             "format": "double",
@@ -38399,6 +38399,17 @@
               "null"
             ],
             "x-unit": "volume"
+          },
+          "cost": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/HaulCostDef"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The prices and the truck's payload; null takes them off."
           },
           "expectedRevision": {
             "pattern": "^(0|[1-9][0-9]*)$",
@@ -38551,7 +38562,7 @@
       "id": "road.hauls.query",
       "version": 1,
       "title": "Brükneri sorgula",
-      "summary": "Yol projesinin Brüknerlerini bugün okur; hiçbir şey yazmaz. Kütle eğrisi denge çizgisine göre katman katman okunur: denge noktaları, döngüler (ileri ya da geri; km'ler, dengelenen hacim, taşıma momenti m³·m, ortalama taşıma uzaklığı, serbest taşımayı aşan hacim ve moment, ucunda varacak yeri olmayan hacim), toplamlar, döküm ve ödünç; okunamıyorsa nedeni. haul ile yalnız biri; points kütle eğrisinin noktalarını (km, m³; ödünç ve döküm alanında basamak) da verir. Uyarılar: corridor_stale, volume_gap, haul_unbalanced. Retler: not_a_road_project, unknown_haul, invalid_haul.",
+      "summary": "Yol projesinin Brüknerlerini bugün okur; hiçbir şey yazmaz. Kütle eğrisi denge çizgisine göre katman katman okunur: denge noktaları, döngüler (ileri ya da geri; km'ler, dengelenen hacim, taşıma momenti m³·m, ortalama taşıma uzaklığı, serbest taşımayı aşan hacim ve moment, ucunda varacak yeri olmayan hacim), toplamlar, döküm ve ödünç; yöntem (method: layers, katman okuması; en iyileme değil); fiyatlıysa maliyet (fazla taşıma, döküm, ödünç, toplam, kamyon seferi); okunamıyorsa nedeni. haul ile yalnız biri; points kütle eğrisinin noktalarını (km, m³; ödünç ve döküm alanında basamak) da verir. Uyarılar: corridor_stale, volume_gap, haul_unbalanced. Retler: not_a_road_project, unknown_haul, invalid_haul.",
       "aliases": [
         "brucknersor",
         "brüknersor"
@@ -78151,6 +78162,18 @@
       "meaning": "Taşıma momenti: m³·m (hacim × taşıma uzaklığı)."
     },
     {
+      "unit": "money",
+      "meaning": "Para: tanımın para biriminde."
+    },
+    {
+      "unit": "money/volume",
+      "meaning": "Birim fiyat: para / m³, tanımın para biriminde."
+    },
+    {
+      "unit": "money/volume-km",
+      "meaning": "Taşıma birim fiyatı: para / (m³·km), tanımın para biriminde."
+    },
+    {
       "unit": "m",
       "meaning": "Her sistemde metre: izdüşümün parametreleri, ölçme doğrulukları."
     },
@@ -104123,6 +104146,101 @@
         }
       ]
     },
+    "HaulCostDef": {
+      "additionalProperties": false,
+      "description": "A mass haul diagram's prices (docs/adr/0907 §5): the currency, the overhaul's price per m³·km beyond the free haul,\nthe waste's and the borrow's per m³ (absent: not priced), and a truck's payload (m³, in the volume sheet's state) for\nthe trips; all the project's (its contract and price list).",
+      "properties": {
+        "borrow": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "money/volume"
+        },
+        "currency": {
+          "type": "string"
+        },
+        "overhaul": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "money/volume-km"
+        },
+        "payload": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "volume"
+        },
+        "waste": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "money/volume"
+        }
+      },
+      "required": [
+        "currency"
+      ],
+      "type": "object"
+    },
+    "HaulCostReport": {
+      "description": "A diagram's cost as priced (docs/adr/0907 §5): the currency, the overhaul (its moment in m³·km times its price), the\nwaste and the borrow (their volume times their price), each where priced, the total of those priced, and the truck\ntrips (everything moved, hauled, wasted and borrowed, over the payload, rounded up) where a payload is given.",
+      "properties": {
+        "borrow": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "money"
+        },
+        "currency": {
+          "type": "string"
+        },
+        "overhaul": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "money"
+        },
+        "total": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "money"
+        },
+        "trips": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "count"
+        },
+        "waste": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "money"
+        }
+      },
+      "required": [
+        "currency",
+        "total"
+      ],
+      "type": "object"
+    },
     "HaulDef": {
       "additionalProperties": false,
       "description": "A mass haul diagram (docs/adr/0907): an earthwork volume's mass ordinate against a balance line (m³), with a free\nhaul distance (m; absent: none, every haul is overhaul) and borrow and waste sites.",
@@ -104131,6 +104249,17 @@
           "format": "double",
           "type": "number",
           "x-unit": "volume"
+        },
+        "cost": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/HaulCostDef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Its prices and the truck's payload."
         },
         "free": {
           "format": "double",
@@ -104295,6 +104424,17 @@
           "type": "number",
           "x-unit": "volume"
         },
+        "cost": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/HaulCostReport"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Its cost, where priced."
+        },
         "free": {
           "format": "double",
           "type": [
@@ -104316,6 +104456,10 @@
             "$ref": "#/$defs/HaulLoop"
           },
           "type": "array"
+        },
+        "method": {
+          "description": "How the haul is assigned: `layers`, the mass diagram read layer by layer (the balance point method), not an\noptimisation (docs/adr/0907 §5).",
+          "type": "string"
         },
         "moment": {
           "format": "double",
@@ -104386,7 +104530,8 @@
         "overVolume",
         "overMoment",
         "waste",
-        "borrow"
+        "borrow",
+        "method"
       ],
       "type": "object"
     },

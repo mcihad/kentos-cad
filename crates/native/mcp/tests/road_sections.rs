@@ -163,6 +163,9 @@ fn a_mass_haul_diagram_is_read_written_and_keeps_its_volume() {
     assert_eq!(asked["isError"], false, "{asked}");
     let out = &asked["structuredContent"]["output"]["hauls"][0];
     assert!(out["loops"].as_array().is_some_and(|l| !l.is_empty()), "{out}");
+    assert_eq!(out["method"], "layers", "{out}");
+    assert_eq!(out["cost"]["currency"], "TL", "{out}");
+    assert!(out["cost"]["trips"].as_f64().is_some_and(|t| t >= 1.0), "{out}");
     let points = out["points"].as_array().cloned().unwrap_or_default();
     assert!(points.windows(2).any(|w| w[0][0] == w[1][0]), "a site's step: {out}");
     let made = call(

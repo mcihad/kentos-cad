@@ -12,6 +12,7 @@ and Python (python/tests/test_command_cases.py) run them.
 
 import copy
 import json
+import math
 import sys
 from pathlib import Path
 
@@ -123,15 +124,34 @@ def read(h, volumes=VOLUMES, corridors=CORRIDORS, points=False):
         report["free"] = h["free"]
     if d["volume"] > 0:
         report["average"] = d["moment"] / d["volume"]
+    report["method"] = "layers"
+    if h.get("cost"):
+        report["cost"] = cost(h["cost"], d)
     if points:
         report["points"] = curve
     return report, warnings
 
 
+def cost(c, d):
+    """The diagram's cost (docs/adr/0907 §5): the overhaul moment in m³·km times its price, the waste and the borrow
+    times theirs, the total of those priced; the trips everything moved over the payload, rounded up."""
+    out = {"currency": c["currency"]}
+    parts = []
+    for key, amount in (("overhaul", d["overMoment"] / 1000), ("waste", d["waste"]), ("borrow", d["borrow"])):
+        if key in c:
+            out[key] = amount * c[key]
+            parts.append(out[key])
+    out["total"] = sum(parts)
+    if "payload" in c:
+        out["trips"] = float(max(0, math.ceil((d["volume"] + d["waste"] + d["borrow"]) / c["payload"] - 1e-9)))
+    return out
+
+
 def broken(h, why):
     out = {"id": h["id"], "name": h["name"], "revision": h.get("revision", 0), "volume": h["volume"],
            "balance": h.get("balance", 0.0), "stale": False, "balancePoints": [], "loops": [], "hauled": 0.0,
-           "moment": 0.0, "overVolume": 0.0, "overMoment": 0.0, "waste": 0.0, "borrow": 0.0, "problem": why}
+           "moment": 0.0, "overVolume": 0.0, "overMoment": 0.0, "waste": 0.0, "borrow": 0.0, "method": "layers",
+           "problem": why}
     if "free" in h:
         out["free"] = h["free"]
     return out
@@ -211,6 +231,15 @@ def edit_cases():
        put(0, {k: v for k, v in H1.items() if k != "free"} | {"revision": 2}), "h-1")
     ok("Alanlar kaldırılır", {"operation": "set", "haul": "h-2", "sites": []},
        put(1, {k: v for k, v in H2.items() if k != "sites"} | {"revision": 2}), "h-2")
+    price = {"currency": "TL", "overhaul": 12.5, "waste": 40.0, "borrow": 85.0, "payload": 15.0}
+    ok("Birim fiyatlar ve kamyon yükü", {**base, "cost": price}, START + [new("h-3", cost=price)], "h-3")
+    ok("Yalnız fazla taşıma fiyatı", {"operation": "set", "haul": "h-1", "cost": {"currency": "EUR", "overhaul": 0.8}},
+       put(0, {**H1, "cost": {"currency": "EUR", "overhaul": 0.8}, "revision": 2}), "h-1")
+    hp = {**H1, "cost": price}
+    cases.append(case("Fiyatlar null ile kalkar", [step(
+        "execute", {"operation": "set", "haul": "h-1", "cost": None},
+        completed({"hauls": listed([{**H1, "revision": 2}, H2]), "revision": "$current", "haul": report({**H1, "revision": 2})}),
+        {**STEPPED, "road": road_of([{**H1, "revision": 2}, H2])})], setup([hp, H2])))
     ok("Aynı değerler: değişiklik yok, adım yok", {"operation": "set", "haul": "h-1", "name": "Ana Brükner"}, START, "h-1")
     ok("Brükner silinir", {"operation": "remove", "haul": "h-2"}, [H1], None)
     ok("Silme tek geri alma adımı", {"operation": "remove", "haul": "Ana Brükner"}, [H2], None, undo=True)
@@ -229,7 +258,7 @@ def edit_cases():
     no("Başka kübaja geçmez", {"operation": "set", "haul": "h-1", "volume": "v-2"},
        failed("invalid_haul", "“Ana Brükner” Brüknerinin kübajı değiştirilmez; başka kübaj için yeni bir Brükner yazın.", "volume"))
     no("Değiştirilecek bir şey yok", {"operation": "set", "haul": "h-1"},
-       failed("invalid_haul", "Değiştirilecek bir şey yok: name, balance, free ya da sites verin."))
+       failed("invalid_haul", "Değiştirilecek bir şey yok: name, balance, free, sites ya da cost verin."))
     no("Yeni Brüknerin kübajı yok", {"operation": "set", "name": "x"},
        failed("invalid_haul", "Yeni Brükner için name ve volume verilmeli.", "volume"))
     no("Aynı ad", {**base, "name": "YAN Brükner"}, rulefail("bu adda başka bir Brükner var", "name"))
@@ -246,6 +275,12 @@ def edit_cases():
     no("Hesaplanamayan kübajın Brükneri", base,
        failed("invalid_haul", "“Ana kübaj” kübajı hesaplanamıyor: “Ana koridor” koridoru kurulamıyor: 1. ve 2. bölge kesişiyor; "
                               "bölgeler en çok uç uca gelir.", "volume"), setup(START, VOLUMES, [broken_corr, ccmd.C2]))
+    no("Para birimsiz fiyat", {**base, "cost": {"currency": "", "overhaul": 1.0}},
+       rulefail("para birimi boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 12 karakter", "cost"))
+    no("Eksi fiyat", {**base, "cost": {"currency": "TL", "waste": -1.0}},
+       rulefail("birim fiyat 0 ya da daha büyük, sonlu olmalı", "cost"))
+    no("Sıfır kamyon yükü", {**base, "cost": {"currency": "TL", "payload": 0.0}},
+       rulefail("kamyon yükü 0'dan büyük, en çok 1000 m³ olur", "cost"))
     no("Geçersiz beklenen sürüm", {"operation": "remove", "haul": "h-2", "expectedRevision": "on"}, BAD_REVISION)
     no("Eski sürüme göre hazırlanmış", {"operation": "remove", "haul": "h-2", "expectedRevision": "41"}, CONFLICT)
     return file("road.hauls.edit", "Brükneri düzenle", setup(), cases)
@@ -303,6 +338,11 @@ def query_cases():
     c_gap = {**ccmd.C1, "regions": [{"from": 0.0, "to": 150.0, "template": "tk-1"}, {"from": 250.0, "to": 400.0, "template": "tk-2"}]}
     q("Kesitsiz aralıkta eğri düz", {"haul": "h-1", "points": True}, START, VOLUMES, [c_gap, ccmd.C2])
     q("Prizmoidal kübajın Brükneri", {"haul": "h-1"}, START, [{**vcmd.V1, "method": "prismoidal"}, vcmd.V2])
+    full = {"currency": "TL", "overhaul": 12.5, "waste": 40.0, "borrow": 85.0, "payload": 15.0}
+    q("Maliyet: fazla taşıma, döküm, ödünç ve sefer", {"haul": "h-1"}, [{**H1, "cost": full, "balance": -3000.0}, H2])
+    q("Maliyet: yalnız fazla taşıma", {"haul": "h-1"}, [{**H1, "cost": {"currency": "EUR", "overhaul": 0.8}}, H2])
+    q("Maliyet: döküm alanıyla, sefer sayısı", {"haul": "h-2"}, [H1, {**H2, "cost": {"currency": "TL", "waste": 40.0, "payload": 12.0}}])
+    q("Maliyet: sıfır fiyat", {"haul": "h-1"}, [{**H1, "cost": {"currency": "TL", "overhaul": 0.0, "waste": 0.0}}, H2])
     q("Plan cevabı verir", {"haul": "h-2"}, op="plan")
     q("Doğrulama uyarıları verir", {"haul": "h-2"}, op="validate")
     q("Brükner yok: boş liste", {}, [])

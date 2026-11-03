@@ -9655,11 +9655,23 @@ class _Schema:
                 self.fail("bad_value", "ödünç ya da döküm alanının adı ya da hacmi kuralın dışında")
             return t
 
+        def haul_cost(x):
+            t = self.fields({"currency": (self.text, True), "overhaul": (finite, False), "waste": (finite, False),
+                             "borrow": (finite, False), "payload": (finite, False)})(x)
+            cur = t["currency"]
+            if not cur or cur.strip() != cur or len(cur) > 12:
+                self.fail("bad_value", "para birimi boş, boşluklu ya da çok uzun")
+            if any(not 0 <= t[k] <= 1e9 for k in ("overhaul", "waste", "borrow") if k in t):
+                self.fail("bad_value", "birim fiyat 0 ya da daha büyük olmalı")
+            if "payload" in t and not 0 < t["payload"] <= 1000:
+                self.fail("bad_value", "kamyon yükü 0'dan büyük, en çok 1000 m³ olur")
+            return t
+
         def haul(x):
-            # Docs/adr/0907: a volume's mass haul diagram, its balance line, free haul and sites.
+            # Docs/adr/0907: a volume's mass haul diagram, its balance line, free haul, sites and prices.
             t = self.fields({"id": (word, True), "name": (self.text, True), "volume": (word, True),
                              "revision": (self.uint(32), False), "balance": (finite, False), "free": (finite, False),
-                             "sites": (self.array(haul_site), False)})(x)
+                             "sites": (self.array(haul_site), False), "cost": (haul_cost, False)})(x)
             name = t["name"]
             if not name or name.strip() != name or len(name) > 120:
                 self.fail("bad_value", "Brüknerin adı boş, boşluklu ya da çok uzun")

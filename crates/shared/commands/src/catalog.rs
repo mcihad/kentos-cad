@@ -7307,7 +7307,7 @@ pub fn catalog() -> CommandCatalog {
             id: crate::ROAD_HAULS_EDIT.into(),
             version: crate::ROAD_HAULS_EDIT_VERSION,
             title: "Brükneri düzenle".into(),
-            summary: "Yol projesinin Brüknerini (haul: kimliği ya da adı; yoksa yeni) yazar ya da kaldırır. Brükner bir kübaj hesabının (volume) kütle ordinatıdır (birikimli düzeltilmiş kazı eksi dolgu): denge çizgisi balance (m³, öntanımlı 0), serbest taşıma uzaklığı free (m; null kaldırır, yoksa bütün taşıma fazla taşımadır), ödünç ve döküm alanları sites (name, kind borrow ya da waste, station aksın istasyonu, volume m³; ödünç eğriyi yükseltir, döküm düşürür). KentOS öntanımlı serbest taşıma vermez. Brükner kübajını izler, yeniden bağlanmaz ve başka kübaja geçmez. \
+            summary: "Yol projesinin Brüknerini (haul: kimliği ya da adı; yoksa yeni) yazar ya da kaldırır. Brükner bir kübaj hesabının (volume) kütle ordinatıdır (birikimli düzeltilmiş kazı eksi dolgu): denge çizgisi balance (m³, öntanımlı 0), serbest taşıma uzaklığı free (m; null kaldırır, yoksa bütün taşıma fazla taşımadır), ödünç ve döküm alanları sites (name, kind borrow ya da waste, station aksın istasyonu, volume m³; ödünç eğriyi yükseltir, döküm düşürür). cost birim fiyatlar: currency para birimi, overhaul fazla taşımanın para/(m³·km)'si, waste ve borrow döküm ve ödüncün para/m³'ü, payload kamyon yükü (m³); null kaldırır. KentOS öntanımlı serbest taşıma ya da fiyat vermez. Brükner kübajını izler, yeniden bağlanmaz ve başka kübaja geçmez. \
                       Yeni Brüknerin kimliği verilen ya da ilk boş h-n. Tek geri alma adımı “Brükner”. Retler: not_a_road_project, unknown_haul, unknown_volume, invalid_haul, invalid_revision, revision_conflict."
                 .into(),
             aliases: vec!["bruckner".into(), "brükner".into()],
@@ -7333,7 +7333,7 @@ pub fn catalog() -> CommandCatalog {
             id: crate::ROAD_HAULS_QUERY.into(),
             version: crate::ROAD_HAULS_QUERY_VERSION,
             title: "Brükneri sorgula".into(),
-            summary: "Yol projesinin Brüknerlerini bugün okur; hiçbir şey yazmaz. Kütle eğrisi denge çizgisine göre katman katman okunur: denge noktaları, döngüler (ileri ya da geri; km'ler, dengelenen hacim, taşıma momenti m³·m, ortalama taşıma uzaklığı, serbest taşımayı aşan hacim ve moment, ucunda varacak yeri olmayan hacim), toplamlar, döküm ve ödünç; okunamıyorsa nedeni. haul ile yalnız biri; points kütle eğrisinin noktalarını (km, m³; ödünç ve döküm alanında basamak) da verir. \
+            summary: "Yol projesinin Brüknerlerini bugün okur; hiçbir şey yazmaz. Kütle eğrisi denge çizgisine göre katman katman okunur: denge noktaları, döngüler (ileri ya da geri; km'ler, dengelenen hacim, taşıma momenti m³·m, ortalama taşıma uzaklığı, serbest taşımayı aşan hacim ve moment, ucunda varacak yeri olmayan hacim), toplamlar, döküm ve ödünç; yöntem (method: layers, katman okuması; en iyileme değil); fiyatlıysa maliyet (fazla taşıma, döküm, ödünç, toplam, kamyon seferi); okunamıyorsa nedeni. haul ile yalnız biri; points kütle eğrisinin noktalarını (km, m³; ödünç ve döküm alanında basamak) da verir. \
                       Uyarılar: corridor_stale, volume_gap, haul_unbalanced. Retler: not_a_road_project, unknown_haul, invalid_haul."
                 .into(),
             aliases: vec!["brucknersor".into(), "brüknersor".into()],

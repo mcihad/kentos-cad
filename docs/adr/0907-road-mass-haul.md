@@ -1,6 +1,6 @@
 # ADR 0907 — Brükner (kütle diyagramı), denge, serbest ve fazla taşıma, ödünç ve döküm
 
-Tarih: 2026-11-03. plan/road.md Y9 (ROAD-HAUL-01…12). Durum: taslak, aşamalar aşağıda.
+Tarih: 2026-11-03. plan/road.md Y9 (ROAD-HAUL-01…12). Durum: kabul edildi (Y9.1–Y9.4); taşıma planı sonraya.
 
 ## Dayanak
 
@@ -66,7 +66,17 @@ ad, kübaj, denge çizgisi, serbest taşıma ve ödünç ve döküm alanları ta
 döngüler yönlerine göre (dengesiz döngü ayrı renkte), denge noktaları, alanların basamakları, döngüler tablosu,
 toplamlar ve uyarılar. Kaydet `road.hauls.edit` ile yazar.
 
+Y9.4 (yapıldı): maliyet. Brüknerin isteğe bağlı `cost`'u: para birimi (en çok 12 karakter), fazla taşıma birim fiyatı
+(para/(m³·km), hacmin durumu kübajın katsayılarınınki), döküm ve ödünç birim fiyatı (para/m³), kamyon yükü (m³). Rapor
+bunları kendi birimleriyle verir: fazla taşıma = fazla taşıma momenti/1000 × fiyat, döküm = döküm hacmi × fiyat, ödünç =
+ödünç hacmi × fiyat, toplam fiyatı verilenlerin toplamı; kamyon seferi = ⌈(dengelenen + döküm + ödünç)/yük⌉ (yuvarlama
+payı 1e-9). Hiçbir fiyat öntanımlı değil, verilmeyen kalem toplama girmez; rapor okumanın yöntemini (`method: layers`)
+söyler. `road.hauls.edit`'in `cost`'u (null kaldırır), `money`, `money/volume`, `money/volume-km` birimleri; 34 + 26 ortak
+durum, `.kcad` şema 161'in `cost`'u, Python, MCP. Pencerede Para birimi, üç fiyat ve Kamyon yükü; maliyet satırı
+toplamların altında. Karbon katsayısı ve en düşük maliyetli akışla taşıma planı açık.
+
 ## Sonra
 
 Katmanların sıralı taramayla hızlandırılması (bugün köşe düzeyi başına bir tarama), en düşük maliyetli akışla
-taşıma planı, kapasiteli alanlar, engeller ve taşıma yolları (ROAD-HAUL-02…09), 3B malzeme bölgeleri.
+taşıma planı (kapasitesiz tek eksende katman okuması zaten doğrusal maliyetin en iyisidir; kapasite gelince akış
+çözücüsü ve sürümü raporlanır), karbon katsayıları, kapasiteli alanlar, engeller ve taşıma yolları (ROAD-HAUL-02…09), 3B malzeme bölgeleri.

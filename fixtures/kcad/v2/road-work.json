@@ -390,7 +390,14 @@
        "station": 640.0,
        "volume": 4200.0
       }
-     ]
+     ],
+     "cost": {
+      "currency": "TL",
+      "overhaul": 12.5,
+      "waste": 40.0,
+      "borrow": 85.0,
+      "payload": 15.0
+     }
     }
    ]
   }

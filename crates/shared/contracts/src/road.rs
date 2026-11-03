@@ -832,6 +832,34 @@ pub enum HaulSiteKind {
     Waste,
 }
 
+/// A mass haul diagram's prices (docs/adr/0907 §5): the currency, the overhaul's price per m³·km beyond the free haul,
+/// the waste's and the borrow's per m³ (absent: not priced), and a truck's payload (m³, in the volume sheet's state) for
+/// the trips; all the project's (its contract and price list).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct HaulCostDef {
+    pub currency: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "money/volume-km")))]
+    pub overhaul: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "money/volume")))]
+    pub waste: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "money/volume")))]
+    pub borrow: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub payload: Option<f64>,
+}
+
 /// A mass haul diagram (docs/adr/0907): an earthwork volume's mass ordinate against a balance line (m³), with a free
 /// haul distance (m; absent: none, every haul is overhaul) and borrow and waste sites.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -858,6 +886,10 @@ pub struct HaulDef {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<HaulSiteDef>>", optional))]
     pub sites: Vec<HaulSiteDef>,
+    /// Its prices and the truck's payload.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub cost: Option<HaulCostDef>,
 }
 
 fn is_zero_f64(v: &f64) -> bool {
@@ -1194,6 +1226,18 @@ fn hauls_problem(road: &RoadSettings) -> Option<(String, String)> {
             }
             if !(site.volume.is_finite() && site.volume > 0.0 && site.volume <= 1e12) {
                 return fail(path, "alanın hacmi 0'dan büyük olmalı");
+            }
+        }
+        if let Some(c) = &h.cost {
+            let cur = c.currency.trim();
+            if cur.is_empty() || cur != c.currency || c.currency.chars().count() > 12 {
+                return fail(at("cost"), "para birimi boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 12 karakter");
+            }
+            if [c.overhaul, c.waste, c.borrow].into_iter().flatten().any(|p| !(p.is_finite() && (0.0..=1e9).contains(&p))) {
+                return fail(at("cost"), "birim fiyat 0 ya da daha büyük, sonlu olmalı");
+            }
+            if c.payload.is_some_and(|p| !(p.is_finite() && p > 0.0 && p <= 1000.0)) {
+                return fail(at("cost"), "kamyon yükü 0'dan büyük, en çok 1000 m³ olur");
             }
         }
     }
