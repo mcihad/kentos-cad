@@ -40,6 +40,8 @@ pub const MAX_CORRIDOR_REGIONS: usize = 256;
 /// The most earthwork volumes a road project holds, factor rows one holds (docs/adr/0906).
 pub const MAX_VOLUMES: usize = 256;
 pub const MAX_VOLUME_FACTORS: usize = 1000;
+/// At most so many approved stretches: a corridor's stations at most (`kentos_road::corridor::MAX_STATIONS`).
+pub const MAX_VOLUME_ROWS: usize = 20000;
 pub const MAX_SECTION_STATIONS: usize = 10_000;
 /// The widest a sample line reaches on a side, m.
 pub const MAX_SWATH: f64 = 1000.0;
@@ -731,6 +733,41 @@ pub struct VolumeBenchDef {
     pub height: f64,
 }
 
+/// An approved earthwork volume's figures (docs/adr/0906 §5): when and by which revision of its definition, a note,
+/// the totals and each stretch's cut and fill (from, to, cut, fill; the stretches with volume) as they were.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct VolumeApprovalDef {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub revision: u32,
+    /// The day it was approved, YYYY-MM-DD.
+    pub at: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub note: Option<String>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub cut: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub fill: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub factored_cut: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub factored_fill: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub strip: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub bench: Option<f64>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub rows: Vec<[f64; 4]>,
+}
+
 /// An earthwork volume (docs/adr/0906, Netpro's kübaj hesabı): a corridor's, by a method, with the factors by stations.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -757,6 +794,10 @@ pub struct VolumeDef {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub bench: Option<VolumeBenchDef>,
+    /// Its figures as approved; an approved volume's definition does not change.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub approved: Option<VolumeApprovalDef>,
 }
 
 /// What is wrong with a road project's settings, by the field's path and in words.
@@ -1102,6 +1143,21 @@ fn volumes_problem(road: &RoadSettings) -> Option<(String, String)> {
             && !(b.slope.is_finite() && b.slope > 0.0 && b.slope <= 1000.0 && b.height.is_finite() && b.height > 0.0 && b.height <= 10.0)
         {
             return fail(at("bench"), "diş kazısının eğimi 0'dan büyük, en çok %1000; basamak yüksekliği 0'dan büyük, en çok 10 m olur");
+        }
+        if let Some(a) = &v.approved {
+            let day = a.at.as_bytes();
+            let date = day.len() == 10
+                && day.iter().enumerate().all(|(i, c)| if i == 4 || i == 7 { *c == b'-' } else { c.is_ascii_digit() });
+            if !date {
+                return fail(at("approved"), "onay günü YYYY-AA-GG biçiminde olmalı");
+            }
+            if a.note.as_ref().is_some_and(|n| n.chars().count() > 500) {
+                return fail(at("approved"), "onay notu en çok 500 karakter olur");
+            }
+            let numbers = [a.cut, a.fill, a.factored_cut, a.factored_fill].into_iter().chain(a.strip).chain(a.bench);
+            if a.rows.len() > MAX_VOLUME_ROWS || !numbers.chain(a.rows.iter().flatten().copied()).all(f64::is_finite) {
+                return fail(at("approved"), &format!("onaylı kübajın sayıları sonlu, en çok {MAX_VOLUME_ROWS} satır olur"));
+            }
         }
     }
     None

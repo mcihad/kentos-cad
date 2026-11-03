@@ -25,11 +25,11 @@ use iced::widget::canvas::{self, Path, Stroke, Text};
 use iced::widget::{Column, column, container, row, scrollable, space};
 use iced::{Center, Color, Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{
-    CommandWarning, RoadEditOperation, VolumeBenchDef, VolumeDef, VolumeFactorDef, VolumeMethod, VolumeReport,
+    CommandWarning, RoadEditOperation, VolumeApprovalDef, VolumeBenchDef, VolumeDef, VolumeFactorDef, VolumeMethod, VolumeReport,
     VolumeStripDef, VolumesEdit, WorkbookFormat,
 };
 use kentos_interaction::Level;
-use kentos_native_application::{ExecutionContext, road_volumes, road_volumes_edit};
+use kentos_native_application::{ExecutionContext, road_volumes, road_volumes_approve, road_volumes_edit};
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::{Dialog as Frame, Elided};
@@ -48,6 +48,8 @@ const REMOVE: &str = "Sil";
 const ADD: &str = "Satır ekle";
 const REMOVE_ROW: &str = "Satırı sil";
 const WRITE: &str = "Cetveli yaz…";
+const APPROVE: &str = "Onayla";
+const REVOKE: &str = "Onayı kaldır";
 const ADD_STRIP: &str = "Sıyırma ekle";
 const REMOVE_STRIP: &str = "Sıyırmayı sil";
 const DIAGRAM: &str = "Kütle diyagramı";
@@ -79,6 +81,11 @@ fn grouped(v: f64, digits: usize) -> String {
     if fraction.is_empty() { format!("{sign}{out}") } else { format!("{sign}{out},{fraction}") }
 }
 
+/// A change with its sign: “+12,5”, “−3,0”.
+fn signed(v: f64) -> String {
+    if v < -0.05 { format!("−{}", grouped(-v, 1)) } else { format!("+{}", grouped(v.max(0.0), 1)) }
+}
+
 fn number(text: &str) -> Result<Option<f64>, ()> {
     let t = text.trim().replace(',', ".");
     if t.is_empty() {
@@ -101,6 +108,8 @@ pub struct Row {
     strip: Vec<[String; 3]>,
     /// The bench's slope (%) and height; both empty: no benching.
     bench: [String; 2],
+    /// Its figures as approved, kept as they are.
+    approved: Option<VolumeApprovalDef>,
 }
 
 impl Row {
@@ -118,6 +127,7 @@ impl Row {
                 .collect(),
             strip: d.strip.iter().map(|f| [trimmed(f.from), trimmed(f.to), trimmed(f.depth)]).collect(),
             bench: d.bench.as_ref().map_or_else(Default::default, |b| [trimmed(b.slope), trimmed(b.height)]),
+            approved: d.approved.clone(),
         }
     }
 
@@ -161,6 +171,7 @@ impl Row {
             factors,
             strip,
             bench,
+            approved: self.approved.clone(),
         })
     }
 }
@@ -207,6 +218,8 @@ pub enum Event {
     Add,
     RemoveRow,
     Format(WorkbookFormat),
+    /// Approve the chosen, saved volume as it computes now (true), or take its approval off (false).
+    Approve(bool),
     /// The mass diagram (false) or the sheet (true).
     Show(bool),
     Write,
@@ -306,6 +319,7 @@ impl App {
                         factors: Vec::new(),
                         strip: Vec::new(),
                         bench: Default::default(),
+                        approved: None,
                     });
                     w.chosen = Some(w.rows.len() - 1);
                     w.line = None;
@@ -388,6 +402,7 @@ impl App {
                 }
             }
             Event::Format(f) => w.format = f,
+            Event::Approve(on) => return self.approve_volume(on),
             Event::Show(sheet) => w.sheet = sheet,
             Event::Write => return self.write_volume_sheet(),
             Event::Cancel => {
@@ -422,6 +437,39 @@ impl App {
         let Some(doc) = self.document.as_mut() else { return false };
         let result = road_volumes_edit::execute(&mut ExecutionContext::new(&mut doc.model), edit);
         self.answered(result).is_some()
+    }
+
+    /// The chosen volume approved today as it computes, or its approval taken off; then the window reads the saved
+    /// volumes again.
+    fn approve_volume(&mut self, on: bool) -> Task<Message> {
+        let Some(w) = &self.volume_window else { return Task::none() };
+        let Some(r) = w.chosen.and_then(|i| w.rows.get(i)) else { return Task::none() };
+        if !r.def().is_ok_and(|d| w.kept.contains(&d)) {
+            self.warn("Önce kübajı kaydedin; kaydedilmiş kübaj onaylanır.".to_owned());
+            return Task::none();
+        }
+        let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.as_secs());
+        let zone = crate::cloud::local_time::Zone::system();
+        let day: String = crate::cloud::local_time::iso_local(i64::try_from(now).unwrap_or(0), zone).chars().take(10).collect();
+        let input = kentos_commands::VolumesApprove {
+            volume: r.id.clone(),
+            revoke: !on,
+            at: on.then_some(day),
+            note: None,
+            expected_revision: None,
+        };
+        let Some(doc) = self.document.as_mut() else { return Task::none() };
+        let result = road_volumes_approve::execute(&mut ExecutionContext::new(&mut doc.model), input);
+        if self.answered(result).is_some() {
+            let kept = doc_volumes(self);
+            if let Some(w) = self.volume_window.as_mut() {
+                w.rows = kept.iter().map(Row::of).collect();
+                w.kept = kept;
+            }
+            self.refresh_volume();
+            self.say(Level::Success, if on { "Kübaj onaylandı." } else { "Kübajın onayı kaldırıldı." });
+        }
+        Task::none()
     }
 
     /// The chosen volume's sheet, as typed, written where the user says.
@@ -513,6 +561,8 @@ impl App {
             None => container(label::caption("Bir kübaj seçin ya da yeni bir kübaj oluşturun.")).padding(12).into(),
             Some(r) => scrollable(self.volume_editor(w, r, &corridors)).height(typography::scaled(360.0)).into(),
         };
+        let saved = chosen.is_some_and(|r| r.def().is_ok_and(|d| w.kept.contains(&d)));
+        let approved = chosen.is_some_and(|r| r.approved.is_some());
         let formats: Vec<WorkbookFormat> = crate::table_write::FORMATS.iter().map(|c| c.format).collect();
         let format = Select::new(
             crate::table_write::FORMATS.iter().map(|c| Choice::new(c.label.to_owned())),
@@ -523,6 +573,8 @@ impl App {
             row![container(left).width(220), container(right).width(Fill)].spacing(16),
             row![
                 words::ghost(REMOVE, w.chosen.map(|_| msg(Event::Remove))),
+                words::secondary(APPROVE, (saved && !approved).then(|| msg(Event::Approve(true)))),
+                words::ghost(REVOKE, approved.then(|| msg(Event::Approve(false)))),
                 space::horizontal().width(16),
                 words::field("Biçim", container(format).width(240), None),
                 words::secondary(WRITE, w.preview.report.as_ref().map(|_| msg(Event::Write))),
@@ -541,6 +593,7 @@ impl App {
         let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
         let warn = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).warning) };
         let danger = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).danger) };
+        let good = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).success) };
         let ids: Vec<String> = corridors.iter().map(|c| c.0.clone()).collect();
         let on_corridor = Select::new(
             corridors.iter().map(|c| Choice::new(c.1.clone())),
@@ -562,6 +615,25 @@ impl App {
             ]
             .spacing(10),
         );
+        // The approval, at the top: when, and how today's figures differ; an approved definition does not change.
+        if let Some(a) = w.preview.report.as_ref().and_then(|rep| rep.approval.as_ref()) {
+            let note = a.approved.note.as_ref().map_or_else(String::new, |n| format!(" · {n}"));
+            col = col.push(if a.changed {
+                label::caption(format!(
+                    "Onaylı ({}{note}) hâline göre: kazı {} m³, dolgu {} m³, düzeltilmiş kazı {} m³, düzeltilmiş dolgu {} m³; {} aralık değişti.",
+                    a.approved.at,
+                    signed(a.cut_change),
+                    signed(a.fill_change),
+                    signed(a.factored_cut_change),
+                    signed(a.factored_fill_change),
+                    a.rows.len()
+                ))
+                .style(warn)
+            } else {
+                label::caption(format!("Onaylı: {}{note}; bugün de aynı hacmi veriyor. Değiştirmek için önce onayı kaldırın.", a.approved.at))
+                    .style(good)
+            });
+        }
         let widths = [80.0, 80.0, 80.0, 80.0];
         let mut table = Column::new().spacing(3);
         table = table.push(
@@ -708,6 +780,8 @@ impl App {
             Control::Press(ADD) => Some(msg(Event::Add)),
             Control::Press(REMOVE_ROW) => Some(msg(Event::RemoveRow)),
             Control::Press(WRITE) => Some(msg(Event::Write)),
+            Control::Press(APPROVE) => Some(msg(Event::Approve(true))),
+            Control::Press(REVOKE) => Some(msg(Event::Approve(false))),
             Control::Press(ADD_STRIP) => Some(msg(Event::AddStrip)),
             Control::Press(REMOVE_STRIP) => Some(msg(Event::RemoveStrip)),
             Control::Press(DIAGRAM) => Some(msg(Event::Show(false))),
@@ -723,6 +797,11 @@ impl App {
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }
+}
+
+/// The road project's volumes as saved.
+fn doc_volumes(app: &App) -> Vec<VolumeDef> {
+    app.document.as_ref().map_or_else(Vec::new, |d| d.model.road_volumes().to_vec())
 }
 
 /// The sheet's rows as the window shows them: km, cut and fill, the factors, the running totals and the mass ordinate.

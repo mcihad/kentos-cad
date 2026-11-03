@@ -83,6 +83,14 @@ kazısı); kübajın `strip` ve `bench`'i (`.kcad` şema 161), satırda ve topla
 Sıyırma tablosu ve Diş kazısı alanları. 37 + 28 ortak durum (`road_volume_command_cases.py`: kesitin kendisi enkesit
 başvurusundan, toprak işi kesirlerle). Onay ve fark Y8.5'tedir.
 
+Y8.5: §5'in onayı ve farkı. `road.volumes.approve` (onay: bugünkü toplamlar ve her aralığın kazı ve dolgusu, gün
+`at` ve not kübajın tanımına `approved` olarak; `revoke` kaldırır; tek adım “Kübaj onayı”). Onaylı kübaj
+`road.volumes.edit` ile değiştirilmez ve silinmez (`volume_approved`); kaynakları (koridor, aks, boykesit, arazi)
+değişebilir: `.query` raporun `approval`'ında onaylı hâli, toplamların farkını ve değişen (1 cm³'ten çok), eklenen ya da
+kalkan aralıkları verir, `volume_changed` uyarısıyla; istasyonlar 1e-6 m içinde eşleşir. Gün girdinin açık alanıdır
+(komut saati okumaz); masaüstü cihazın bugününü verir. Kübaj penceresinde Onayla, Onayı kaldır ve en üstte onay
+durumu. 39 + 31 + 20 ortak durum; `.kcad` şema 161'in `approved`'ı ve bozuk günü; Python, MCP.
+
 ## Sonra
 
 Bileşik kesit hacmi (kesitler arası poligonlar), kurp düzeltmesi, malzeme katmanları ve jeoloji, raster yöntemi, GPU ile

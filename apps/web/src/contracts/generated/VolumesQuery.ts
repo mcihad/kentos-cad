@@ -4,6 +4,6 @@
  * Input of `road.volumes.query` v1: every earthwork volume computed, or one (`volume`: its id or name).
  *
  * Refusals: `not_a_road_project`, `unknown_volume`, `invalid_volume` (the one asked does not compute). Warnings:
- * `corridor_stale`, `volume_gap`, `volume_uncovered`, `volume_unfactored`.
+ * `corridor_stale`, `volume_gap`, `volume_uncovered`, `volume_unfactored`, `volume_changed`.
  */
 export type VolumesQuery = { volume?: string, };

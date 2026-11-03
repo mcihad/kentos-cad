@@ -7232,7 +7232,7 @@ pub fn catalog() -> CommandCatalog {
             title: "Kübaj hesabını düzenle".into(),
             summary: "Yol projesinin kübaj hesabını (volume: kimliği ya da adı; yoksa yeni) yazar ya da kaldırır. Kübaj bir koridorun (corridor) hacmidir; yöntem (method): endArea ardışık iki kesit arasında ortalama alan L·(A₀ + A₁)/2, prismoidal iki kesitin ortasında kurulan kesitle L·(A₀ + 4Aₘ + A₁)/6, surfaces koridorun üst yüzeyiyle arazisi arasındaki hacim (üçgenler planda üst üste konur). Kazı ve dolgu ayrıdır. \
                       factors km aralıklarına (from, to aksın istasyonu, m) kazının kabarma (cut) ve dolgunun sıkışma (fill) çarpanını verir; artan, birbirine binmeyen satırlar, çarpan 0'dan büyük, en çok 10; KentOS öntanımlı katsayı vermez. Kesit yöntemlerinde strip km aralıklarına bitkisel toprak kalınlığı (depth, m) verir: kübaj zeminin kalınlık kadar indirilmiş hâline göre, bitkisel toprak hacmi ayrı kalem; bench diş kazısıdır (slope: arazinin enine eğimi bu yüzdeden dikken dolgunun altında, height: basamak yüksekliği; hacmi genişlik × yükseklik/2), ayrı kalem, kazı ve dolguya katılmaz; bench null kaldırır. Kübaj koridorunu izler, başka koridora bağlanmaz, yeniden bağlanmaz. Sonuç saklanmaz, her okumada hesaplanır. \
-                      Yeni hesabın kimliği verilen ya da ilk boş v-n. Tek geri alma adımı “Kübaj”. Retler: not_a_road_project, unknown_volume, unknown_corridor, invalid_volume, invalid_revision, revision_conflict."
+                      Yeni hesabın kimliği verilen ya da ilk boş v-n. Tek geri alma adımı “Kübaj”. Onaylı kübaj değiştirilmez ve silinmez (volume_approved); önce road.volumes.approve revoke. Retler: not_a_road_project, unknown_volume, volume_approved, unknown_corridor, invalid_volume, invalid_revision, revision_conflict."
                 .into(),
             aliases: vec!["kubaj".into(), "kübaj".into()],
             effect: CommandEffect::Document,
@@ -7258,7 +7258,7 @@ pub fn catalog() -> CommandCatalog {
             version: crate::ROAD_VOLUMES_QUERY_VERSION,
             title: "Kübajı sorgula".into(),
             summary: "Yol projesinin kübaj hesaplarını bugün hesaplar ve kübaj cetvelini verir; hiçbir şey yazmaz. Her hesabın satırları ardışık iki kesit arasıdır: km'ler, kazı ve dolgu (m³; kesiti çözülmeyen aralıkta yok), aralığın ortasının katsayıları, kabarma ve sıkışmayla düzeltilmiş kazı ve dolgunun birikimli toplamları ve farkı (kütle ordinatı). Toplamlar ham ve düzeltilmiş; surfaces yönteminde kazı ve dolgu plan alanları ve arazinin örtmediği alan; hacmi olmayan aralıklar; sıyırma ve diş kazısı varsa bitkisel toprak ve diş kazısı hacimleri (satırda ve toplamda); hesaplanamıyorsa nedeni. volume ile yalnız biri. \
-                      Uyarılar: corridor_stale, volume_gap, volume_uncovered, volume_unfactored. Retler: not_a_road_project, unknown_volume, invalid_volume."
+                      Onaylı kübajda onay (approval): onaylı toplamlar, bugünkü toplamların farkı ve değişen, eklenen ya da kalkan aralıklar. Uyarılar: corridor_stale, volume_gap, volume_uncovered, volume_unfactored, volume_changed. Retler: not_a_road_project, unknown_volume, invalid_volume."
                 .into(),
             aliases: vec!["kubajsor".into(), "kübajsor".into()],
             effect: CommandEffect::Query,
@@ -7275,6 +7275,31 @@ pub fn catalog() -> CommandCatalog {
             examples: vec![CommandExample {
                 title: "Ana kübajın cetveli".into(),
                 input: json!({ "volume": "Ana kübaj" }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_VOLUMES_APPROVE.into(),
+            version: crate::ROAD_VOLUMES_APPROVE_VERSION,
+            title: "Kübajı onayla".into(),
+            summary: "Yol projesinin kübaj hesabını (volume: kimliği ya da adı) bugün hesaplandığı gibi onaylar: toplamlar ve ardışık iki kesit arası her aralığın kazı ve dolgusu, onay günü (at, YYYY-AA-GG) ve isteğe bağlı not (note) kübajın tanımına yazılır. Onaylı kübajın tanımı değişmez ve silinmez; kaynakları (koridor, aks, boykesit, arazi) değişirse road.volumes.query bugünkü hacmi onaylı hâliyle karşılaştırır. revoke onayı kaldırır. \
+                      Tek geri alma adımı “Kübaj onayı”. Retler: not_a_road_project, unknown_volume, volume_not_approved, invalid_volume, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["kubajonayla".into(), "kübajonayla".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::VolumesApprove>(),
+            output: schema::<crate::VolumesWritten>(),
+            plan: Some(schema::<crate::VolumesWritten>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana kübajı onayla".into(),
+                input: json!({ "volume": "Ana kübaj", "at": "2026-11-03", "note": "Uygulama projesi" }),
                 output: None,
             }],
         },
@@ -12901,6 +12926,9 @@ mod tests {
                     crate::ROAD_VOLUMES_QUERY => {
                         serde_json::from_value::<crate::VolumesQuery>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_VOLUMES_APPROVE => {
+                        serde_json::from_value::<crate::VolumesApprove>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_SUBNETWORKS_FIND => {
                         serde_json::from_value::<crate::SubnetworksFind>(e.input.clone())
                             .map(|_| ())
@@ -13618,6 +13646,9 @@ mod tests {
                         }
                         crate::ROAD_VOLUMES_QUERY => {
                             serde_json::from_value::<crate::VolumesQueried>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_VOLUMES_APPROVE => {
+                            serde_json::from_value::<crate::VolumesWritten>(output.clone()).map(|_| ())
                         }
                         crate::CAD_ADDRESSES_DEFINE => {
                             serde_json::from_value::<crate::AddressesDefined>(output.clone())

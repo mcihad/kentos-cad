@@ -688,6 +688,12 @@ codes! {
     VOLUME_UNCOVERED = "volume_uncovered", Warning, false, "Tasarım yüzeyinin bir kısmını arazi örtmüyor; o alanın hacmi yok.";
     /// A warning: stretches without factors are not converted (docs/adr/0906 §4).
     VOLUME_UNFACTORED = "volume_unfactored", Warning, false, "Katsayı verilmeyen aralıklar dönüştürülmedi; düzeltilmiş hacim ham hacimdir.";
+    /// An approved earthwork volume's definition does not change (docs/adr/0906 §5).
+    VOLUME_APPROVED = "volume_approved", Failed, false, "Bu kübaj onaylı; değiştirmek ya da silmek için önce onayı kaldırın.";
+    /// Revoking the approval of a volume not approved.
+    VOLUME_NOT_APPROVED = "volume_not_approved", Failed, false, "Bu kübaj onaylı değil; kaldırılacak onay yok.";
+    /// A warning: an approved volume gives other figures now, its sources having changed; the report says how.
+    VOLUME_CHANGED = "volume_changed", Warning, false, "Onaylı kübaj kaynakları değiştiği için bugün başka hacim veriyor; fark raporda.";
     /// A warning: the corridor's superelevation schedule does not build; its lanes keep the templates' slopes.
     CORRIDOR_SUPERELEVATION_GONE = "corridor_superelevation_gone", Warning, false, "Koridorun dever çizelgesi kurulamıyor; şeritler tip kesitin eğimiyle verildi.";
     /// A warning: the profile's alignment changed since it was made or rebound.

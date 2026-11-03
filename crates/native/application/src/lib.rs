@@ -277,6 +277,7 @@ pub mod road_corridors_draw;
 pub mod road_corridors_edit;
 pub mod road_corridors_query;
 pub mod road_volumes;
+pub mod road_volumes_approve;
 pub mod road_volumes_edit;
 pub mod road_volumes_query;
 pub mod road_sections;
@@ -1196,6 +1197,7 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (kentos_commands::ROAD_CORRIDORS_DRAW, kentos_commands::ROAD_CORRIDORS_DRAW_VERSION),
     (kentos_commands::ROAD_VOLUMES_EDIT, kentos_commands::ROAD_VOLUMES_EDIT_VERSION),
     (kentos_commands::ROAD_VOLUMES_QUERY, kentos_commands::ROAD_VOLUMES_QUERY_VERSION),
+    (kentos_commands::ROAD_VOLUMES_APPROVE, kentos_commands::ROAD_VOLUMES_APPROVE_VERSION),
     // Alt ağlar ([`subnetworks`], [`subnetworks_update`], docs/adr/0557 §2).
     (
         kentos_commands::CAD_SUBNETWORKS_FIND,

@@ -4,4 +4,4 @@ import type { VolumeMethod } from "./VolumeMethod";
 /**
  * An earthwork volume in a list.
  */
-export type VolumeListed = { id: string, name: string, corridor: string, method: VolumeMethod, revision: number, };
+export type VolumeListed = { id: string, name: string, corridor: string, method: VolumeMethod, revision: number, approved: boolean, };

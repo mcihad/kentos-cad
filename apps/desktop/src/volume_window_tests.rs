@@ -86,6 +86,59 @@ fn stripping_and_benching_are_typed_and_saved() {
     assert_eq!(doc.undo().as_deref(), Some("Kübaj"));
 }
 
+/// The main corridor sampled more densely: the approved volume's sources change.
+fn densify(app: &mut App) {
+    let input = kentos_commands::CorridorsEdit {
+        operation: kentos_commands::RoadEditOperation::Set,
+        corridor: Some("c-1".into()),
+        name: None,
+        alignment: None,
+        profile: None,
+        surface: None,
+        superelevation: None,
+        left: None,
+        right: None,
+        tangent: Some(20.0),
+        curve: None,
+        sag: None,
+        profile_points: None,
+        critical: None,
+        stations: None,
+        regions: None,
+        expected_revision: None,
+    };
+    let mut cx = kentos_native_application::ExecutionContext::new(model(app));
+    assert!(matches!(
+        kentos_native_application::road_corridors_edit::execute(&mut cx, input),
+        kentos_commands::CommandResult::Completed { .. }
+    ));
+}
+
+#[test]
+fn an_approved_volume_stays_and_says_how_it_changed() {
+    let mut app = app();
+    let _ = app.update(Message::Run("volume.editor"));
+    send(&mut app, W::Choose(0));
+    send(&mut app, W::Approve(true));
+    assert!(model(&mut app).road_volumes()[0].approved.is_some());
+    assert_eq!(model(&mut app).undo().as_deref(), Some("Kübaj onayı"));
+    let _ = model(&mut app).redo();
+    // The corridor changes: the approval stays and the report says how today's figures differ.
+    send(&mut app, W::Cancel);
+    densify(&mut app);
+    let _ = app.update(Message::Run("volume.editor"));
+    send(&mut app, W::Choose(0));
+    let w = app.volume_window.as_ref().expect("open");
+    let approval = w.preview.report.as_ref().and_then(|r| r.approval.as_ref()).expect("an approval");
+    assert!(approval.changed && !approval.rows.is_empty(), "{approval:?}");
+    assert!(w.preview.warnings.iter().any(|x| x.code == "volume_changed"));
+    // Approved, its definition does not change.
+    send(&mut app, W::Name("Başka".into()));
+    send(&mut app, W::Save);
+    assert!(app.volume_window.is_some(), "refused: the window stays");
+    assert_eq!(model(&mut app).road_volumes()[0].name, "Ana kübaj");
+}
+
 #[test]
 fn the_sheet_is_written_as_a_workbook_and_a_csv() {
     let mut app = app();
@@ -157,6 +210,16 @@ fn screens() {
         send(&mut app, W::Choose(1));
         send(&mut app, W::Show(false));
         shot(&mut app, "kubaj-yuzey");
+        send(&mut app, W::Cancel);
+        // Approved, then its corridor sampled more densely: the window says how today's figures differ.
+        let _ = app.update(Message::Run("volume.editor"));
+        send(&mut app, W::Choose(0));
+        send(&mut app, W::Approve(true));
+        send(&mut app, W::Cancel);
+        densify(&mut app);
+        let _ = app.update(Message::Run("volume.editor"));
+        send(&mut app, W::Choose(0));
+        shot(&mut app, "kubaj-onay");
         send(&mut app, W::Cancel);
     }
 }

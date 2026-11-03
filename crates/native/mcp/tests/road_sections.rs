@@ -142,4 +142,11 @@ fn a_volume_is_asked_written_and_keeps_its_corridor() {
     assert_eq!(made["structuredContent"]["output"]["volume"]["id"], "v-3", "{made}");
     let kept = call(&mut server, "road.corridors.edit", json!({"drawing":drawing,"corridor":"c-1","operation":"remove"}));
     assert!(kept.to_string().contains("corridor_in_use"), "{kept}");
+    // Approved, it does not change; the file's surface volume came approved with other figures, and says so.
+    let approved = call(&mut server, "road.volumes.approve", json!({"drawing":drawing,"volume":"v-1","at":"2026-11-03"}));
+    assert_eq!(approved["structuredContent"]["output"]["volume"]["approval"]["changed"], false, "{approved}");
+    let refused = call(&mut server, "road.volumes.edit", json!({"drawing":drawing,"volume":"v-1","operation":"set","name":"X"}));
+    assert!(refused.to_string().contains("volume_approved"), "{refused}");
+    let side = call(&mut server, "road.volumes.query", json!({"drawing":drawing,"volume":"v-2"}));
+    assert!(side.to_string().contains("volume_changed"), "{side}");
 }

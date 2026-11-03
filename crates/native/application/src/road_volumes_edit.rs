@@ -35,6 +35,13 @@ fn check(doc: &kentos_domain::Document, input: &VolumesEdit) -> Result<Checked, 
         let name = input.volume.clone().unwrap_or_default();
         return Err(common::find(own, &name, "volume").err().unwrap_or(Stop::Cancelled));
     }
+    if let Some((_, old)) = found.filter(|(_, v)| v.approved.is_some()) {
+        return Err(fail(
+            codes::VOLUME_APPROVED,
+            format!("“{}” kübajı onaylı; değiştirmek ya da silmek için önce onayı kaldırın.", old.name),
+            "volume",
+        ));
+    }
     let corridor = match input.corridor.as_deref() {
         Some(c) => Some(corridors::find(doc.road_corridors(), c, "corridor")?.1.id.clone()),
         None => None,
@@ -104,6 +111,7 @@ fn check(doc: &kentos_domain::Document, input: &VolumesEdit) -> Result<Checked, 
                 factors: input.factors.clone().unwrap_or_default(),
                 strip: input.strip.clone().unwrap_or_default(),
                 bench: input.bench.clone().flatten(),
+                approved: None,
             });
             Some(id)
         }

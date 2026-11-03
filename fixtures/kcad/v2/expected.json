@@ -118,6 +118,7 @@
     {"file": "broken/road-superelevation-on-parallel-axis.kcad", "sniff": "kcad", "error": "bad_value"},
     {"file": "broken/road-corridor-on-parallel-axis.kcad", "sniff": "kcad", "error": "bad_value"},
     {"file": "broken/road-volume-unknown-corridor.kcad", "sniff": "kcad", "error": "bad_value"},
+    {"file": "broken/road-volume-bad-approval-day.kcad", "sniff": "kcad", "error": "bad_value"},
     {"file": "arch-bonds.kcad", "sniff": "kcad", "content": "arch-bonds.json"},
     {"file": "broken/arch-bonds-in-schema-136.kcad", "sniff": "kcad", "error": "bad_value"},
     {"file": "broken/arch-bonds-coincident.kcad", "sniff": "kcad", "error": "bad_value"},

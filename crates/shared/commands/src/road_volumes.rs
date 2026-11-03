@@ -18,12 +18,14 @@ pub const ROAD_VOLUMES_EDIT: &str = "road.volumes.edit";
 pub const ROAD_VOLUMES_EDIT_VERSION: u32 = 1;
 pub const ROAD_VOLUMES_QUERY: &str = "road.volumes.query";
 pub const ROAD_VOLUMES_QUERY_VERSION: u32 = 1;
+pub const ROAD_VOLUMES_APPROVE: &str = "road.volumes.approve";
+pub const ROAD_VOLUMES_APPROVE_VERSION: u32 = 1;
 
 /// Input of `road.volumes.edit` v1: the earthwork volume by its id or name (absent: a new one). A new one needs `name`,
 /// `corridor` and `method`. A volume is not rebound: it follows its corridor.
 ///
 /// Refusals, in this order: `not_a_road_project`, `invalid_volume` (rebind), `unknown_volume` (remove one not in the
-/// project), `unknown_corridor`, `invalid_volume` (another corridor, a new one without its fields, set with nothing to
+/// project), `volume_approved` (change or remove an approved one), `unknown_corridor`, `invalid_volume` (another corridor, a new one without its fields, set with nothing to
 /// set, the definition by `road_problem`: factors not positive, over 10 or over overlapping stretches; strip rows
 /// overlapping or a depth not in (0, 5] m; a bench's slope not in (0, 1000] % or its height not in (0, 10] m; stripping or
 /// benching between surfaces; a corridor that does not build), `invalid_revision`, `revision_conflict`.
@@ -162,9 +164,64 @@ pub struct VolumeReport {
     pub bench: Option<f64>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub gaps: Vec<[f64; 2]>,
+    /// The approval against today's figures, where approved.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub approval: Option<VolumeApprovalReport>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub problem: Option<String>,
+}
+
+/// A stretch whose figures differ from the approved ones (beyond 1 cm³, 1e-6 m³), or that is new or gone: the approved cut and
+/// fill and today's (none where it has none).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct VolumeRowChange {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub from: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub to: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub approved_cut: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub approved_fill: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub cut: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub fill: Option<f64>,
+}
+
+/// An approved volume against today's: the approval as written, whether the figures changed, today's totals less the
+/// approved ones and the stretches that changed.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct VolumeApprovalReport {
+    pub approved: crate::VolumeApprovalDef,
+    pub changed: bool,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub cut_change: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub fill_change: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub factored_cut_change: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub factored_fill_change: f64,
+    pub rows: Vec<VolumeRowChange>,
 }
 
 /// An earthwork volume in a list.
@@ -180,6 +237,7 @@ pub struct VolumeListed {
     pub method: VolumeMethod,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub revision: u32,
+    pub approved: bool,
 }
 
 /// Output of `road.volumes.edit` v1.
@@ -197,10 +255,38 @@ pub struct VolumesWritten {
     pub revision: String,
 }
 
+/// Input of `road.volumes.approve` v1 (docs/adr/0906 §5): the volume (id or name) approved as it computes now, on the
+/// day `at` (YYYY-MM-DD) with an optional note; or, with `revoke`, its approval taken off. One undo step “Kübaj onayı”.
+///
+/// Refusals, in this order: `not_a_road_project`, `unknown_volume`, `volume_not_approved` (revoke one not approved),
+/// `invalid_volume` (approve without `at`, a day or note the rule refuses, a volume that does not compute),
+/// `invalid_revision`, `revision_conflict`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct VolumesApprove {
+    pub volume: String,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub revoke: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub at: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub note: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
 /// Input of `road.volumes.query` v1: every earthwork volume computed, or one (`volume`: its id or name).
 ///
 /// Refusals: `not_a_road_project`, `unknown_volume`, `invalid_volume` (the one asked does not compute). Warnings:
-/// `corridor_stale`, `volume_gap`, `volume_uncovered`, `volume_unfactored`.
+/// `corridor_stale`, `volume_gap`, `volume_uncovered`, `volume_unfactored`, `volume_changed`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]

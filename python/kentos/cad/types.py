@@ -74253,6 +74253,107 @@ class VisibilityState(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class VolumeApprovalDef(_Model):
+    """An approved earthwork volume's figures (docs/adr/0906 §5): when and by which revision of its definition, a note,
+    the totals and each stretch's cut and fill (from, to, cut, fill; the stretches with volume) as they were.
+    Attributes:
+        revision: Unit: version.
+        at: The day it was approved, YYYY-MM-DD.
+        cut: Unit: volume.
+        fill: Unit: volume.
+        factored_cut: Unit: volume.
+        factored_fill: Unit: volume.
+        rows: Unit: volume.
+        bench: Unit: volume.
+        strip: Unit: volume.
+    """
+    revision: int
+    at: str
+    cut: float
+    fill: float
+    factored_cut: float
+    factored_fill: float
+    rows: list[list[float]]
+    bench: float | None | Unset = UNSET
+    note: str | None | Unset = UNSET
+    strip: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["revision"] = self.revision
+        out["at"] = self.at
+        out["cut"] = float(self.cut)
+        out["fill"] = float(self.fill)
+        out["factoredCut"] = float(self.factored_cut)
+        out["factoredFill"] = float(self.factored_fill)
+        out["rows"] = [[float(e1) for e1 in e0] for e0 in self.rows]
+        if self.bench is not UNSET:
+            out["bench"] = None if self.bench is None else float(self.bench)
+        if self.note is not UNSET:
+            out["note"] = self.note
+        if self.strip is not UNSET:
+            out["strip"] = None if self.strip is None else float(self.strip)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VolumeApprovalDef:
+        return cls(
+            revision=data["revision"],
+            at=data["at"],
+            cut=float(data["cut"]),
+            fill=float(data["fill"]),
+            factored_cut=float(data["factoredCut"]),
+            factored_fill=float(data["factoredFill"]),
+            rows=[[float(e1) for e1 in e0] for e0 in data["rows"]],
+            bench=UNSET if "bench" not in data else None if data["bench"] is None else float(data["bench"]),
+            note=data.get("note", UNSET),
+            strip=UNSET if "strip" not in data else None if data["strip"] is None else float(data["strip"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class VolumeApprovalReport(_Model):
+    """An approved volume against today's: the approval as written, whether the figures changed, today's totals less the
+    approved ones and the stretches that changed.
+    Attributes:
+        cut_change: Unit: volume.
+        fill_change: Unit: volume.
+        factored_cut_change: Unit: volume.
+        factored_fill_change: Unit: volume.
+    """
+    approved: VolumeApprovalDef
+    changed: bool
+    cut_change: float
+    fill_change: float
+    factored_cut_change: float
+    factored_fill_change: float
+    rows: list[VolumeRowChange]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["approved"] = self.approved.to_json()
+        out["changed"] = self.changed
+        out["cutChange"] = float(self.cut_change)
+        out["fillChange"] = float(self.fill_change)
+        out["factoredCutChange"] = float(self.factored_cut_change)
+        out["factoredFillChange"] = float(self.factored_fill_change)
+        out["rows"] = [e0.to_json() for e0 in self.rows]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VolumeApprovalReport:
+        return cls(
+            approved=VolumeApprovalDef.from_json(data["approved"]),
+            changed=data["changed"],
+            cut_change=float(data["cutChange"]),
+            fill_change=float(data["fillChange"]),
+            factored_cut_change=float(data["factoredCutChange"]),
+            factored_fill_change=float(data["factoredFillChange"]),
+            rows=[VolumeRowChange.from_json(e0) for e0 in data["rows"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class VolumeBenchDef(_Model):
     """The fill's foundation benched (diş kazısı, docs/adr/0906 §6): where the ground falls across steeper than `slope`
     percent under a fill, steps `height` (m) high; both the project's (its regulation, its soil report).
@@ -74281,6 +74382,7 @@ class VolumeBenchDef(_Model):
 class VolumeDef(_Model):
     """An earthwork volume (docs/adr/0906, Netpro's kübaj hesabı): a corridor's, by a method, with the factors by stations.
     Attributes:
+        approved: Its figures as approved; an approved volume's definition does not change.
         bench: The fill's foundation benched (a section method's).
         revision: Unit: version.
         strip: The topsoil stripped by stations (a section method's).
@@ -74289,6 +74391,7 @@ class VolumeDef(_Model):
     name: str
     corridor: str
     method: VolumeMethod | VolumeMethodName
+    approved: VolumeApprovalDef | None | Unset = UNSET
     bench: VolumeBenchDef | None | Unset = UNSET
     factors: list[VolumeFactorDef] | Unset = UNSET
     revision: int | Unset = UNSET
@@ -74300,6 +74403,8 @@ class VolumeDef(_Model):
         out["name"] = self.name
         out["corridor"] = self.corridor
         out["method"] = _enum_out(self.method)
+        if self.approved is not UNSET:
+            out["approved"] = None if self.approved is None else self.approved.to_json()
         if self.bench is not UNSET:
             out["bench"] = None if self.bench is None else self.bench.to_json()
         if self.factors is not UNSET:
@@ -74317,6 +74422,7 @@ class VolumeDef(_Model):
             name=data["name"],
             corridor=data["corridor"],
             method=_enum_in(VolumeMethod, data["method"]),
+            approved=UNSET if "approved" not in data else None if data["approved"] is None else VolumeApprovalDef.from_json(data["approved"]),
             bench=UNSET if "bench" not in data else None if data["bench"] is None else VolumeBenchDef.from_json(data["bench"]),
             factors=[VolumeFactorDef.from_json(e0) for e0 in data["factors"]] if "factors" in data else UNSET,
             revision=data.get("revision", UNSET),
@@ -74370,6 +74476,7 @@ class VolumeListed(_Model):
     corridor: str
     method: VolumeMethod | VolumeMethodName
     revision: int
+    approved: bool
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -74378,6 +74485,7 @@ class VolumeListed(_Model):
         out["corridor"] = self.corridor
         out["method"] = _enum_out(self.method)
         out["revision"] = self.revision
+        out["approved"] = self.approved
         return out
 
     @classmethod
@@ -74388,6 +74496,7 @@ class VolumeListed(_Model):
             corridor=data["corridor"],
             method=_enum_in(VolumeMethod, data["method"]),
             revision=data["revision"],
+            approved=data["approved"],
         )
 
 
@@ -74403,6 +74512,7 @@ class VolumeReport(_Model):
         factored_cut: Unit: volume.
         factored_fill: Unit: volume.
         gaps: Unit: m.
+        approval: The approval against today's figures, where approved.
         bench: The benches cut in all (m³), where the volume benches. Unit: volume.
         cut_area: Unit: area.
         fill_area: Unit: area.
@@ -74421,6 +74531,7 @@ class VolumeReport(_Model):
     factored_cut: float
     factored_fill: float
     gaps: list[list[float]]
+    approval: VolumeApprovalReport | None | Unset = UNSET
     bench: float | None | Unset = UNSET
     cut_area: float | None | Unset = UNSET
     fill_area: float | None | Unset = UNSET
@@ -74442,6 +74553,8 @@ class VolumeReport(_Model):
         out["factoredCut"] = float(self.factored_cut)
         out["factoredFill"] = float(self.factored_fill)
         out["gaps"] = [[float(e1) for e1 in e0] for e0 in self.gaps]
+        if self.approval is not UNSET:
+            out["approval"] = None if self.approval is None else self.approval.to_json()
         if self.bench is not UNSET:
             out["bench"] = None if self.bench is None else float(self.bench)
         if self.cut_area is not UNSET:
@@ -74471,6 +74584,7 @@ class VolumeReport(_Model):
             factored_cut=float(data["factoredCut"]),
             factored_fill=float(data["factoredFill"]),
             gaps=[[float(e1) for e1 in e0] for e0 in data["gaps"]],
+            approval=UNSET if "approval" not in data else None if data["approval"] is None else VolumeApprovalReport.from_json(data["approval"]),
             bench=UNSET if "bench" not in data else None if data["bench"] is None else float(data["bench"]),
             cut_area=UNSET if "cutArea" not in data else None if data["cutArea"] is None else float(data["cutArea"]),
             fill_area=UNSET if "fillArea" not in data else None if data["fillArea"] is None else float(data["fillArea"]),
@@ -74555,6 +74669,51 @@ class VolumeRow(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class VolumeRowChange(_Model):
+    """A stretch whose figures differ from the approved ones (beyond 1 cm³, 1e-6 m³), or that is new or gone: the approved cut and
+    fill and today's (none where it has none).
+    Attributes:
+        from_: Unit: m.
+        to: Unit: m.
+        approved_cut: Unit: volume.
+        approved_fill: Unit: volume.
+        cut: Unit: volume.
+        fill: Unit: volume.
+    """
+    from_: float
+    to: float
+    approved_cut: float | None | Unset = UNSET
+    approved_fill: float | None | Unset = UNSET
+    cut: float | None | Unset = UNSET
+    fill: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = float(self.from_)
+        out["to"] = float(self.to)
+        if self.approved_cut is not UNSET:
+            out["approvedCut"] = None if self.approved_cut is None else float(self.approved_cut)
+        if self.approved_fill is not UNSET:
+            out["approvedFill"] = None if self.approved_fill is None else float(self.approved_fill)
+        if self.cut is not UNSET:
+            out["cut"] = None if self.cut is None else float(self.cut)
+        if self.fill is not UNSET:
+            out["fill"] = None if self.fill is None else float(self.fill)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VolumeRowChange:
+        return cls(
+            from_=float(data["from"]),
+            to=float(data["to"]),
+            approved_cut=UNSET if "approvedCut" not in data else None if data["approvedCut"] is None else float(data["approvedCut"]),
+            approved_fill=UNSET if "approvedFill" not in data else None if data["approvedFill"] is None else float(data["approvedFill"]),
+            cut=UNSET if "cut" not in data else None if data["cut"] is None else float(data["cut"]),
+            fill=UNSET if "fill" not in data else None if data["fill"] is None else float(data["fill"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class VolumeStripDef(_Model):
     """The topsoil stripped over a stretch of stations (docs/adr/0906 §6): its depth (m) under the earthwork's footprint.
     Attributes:
@@ -74583,12 +74742,51 @@ class VolumeStripDef(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class VolumesApprove(_Model):
+    """Input of `road.volumes.approve` v1 (docs/adr/0906 §5): the volume (id or name) approved as it computes now, on the
+    day `at` (YYYY-MM-DD) with an optional note; or, with `revoke`, its approval taken off. One undo step “Kübaj onayı”.
+
+    Refusals, in this order: `not_a_road_project`, `unknown_volume`, `volume_not_approved` (revoke one not approved),
+    `invalid_volume` (approve without `at`, a day or note the rule refuses, a volume that does not compute),
+    `invalid_revision`, `revision_conflict`.
+    """
+    volume: str
+    at: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    note: str | None | Unset = UNSET
+    revoke: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["volume"] = self.volume
+        if self.at is not UNSET:
+            out["at"] = self.at
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.note is not UNSET:
+            out["note"] = self.note
+        if self.revoke is not UNSET:
+            out["revoke"] = self.revoke
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VolumesApprove:
+        return cls(
+            volume=data["volume"],
+            at=data.get("at", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            note=data.get("note", UNSET),
+            revoke=data.get("revoke", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class VolumesEdit(_Model):
     """Input of `road.volumes.edit` v1: the earthwork volume by its id or name (absent: a new one). A new one needs `name`,
     `corridor` and `method`. A volume is not rebound: it follows its corridor.
 
     Refusals, in this order: `not_a_road_project`, `invalid_volume` (rebind), `unknown_volume` (remove one not in the
-    project), `unknown_corridor`, `invalid_volume` (another corridor, a new one without its fields, set with nothing to
+    project), `volume_approved` (change or remove an approved one), `unknown_corridor`, `invalid_volume` (another corridor, a new one without its fields, set with nothing to
     set, the definition by `road_problem`: factors not positive, over 10 or over overlapping stretches; strip rows
     overlapping or a depth not in (0, 5] m; a bench's slope not in (0, 1000] % or its height not in (0, 10] m; stripping or
     benching between surfaces; a corridor that does not build), `invalid_revision`, `revision_conflict`.
@@ -74664,7 +74862,7 @@ class VolumesQuery(_Model):
     """Input of `road.volumes.query` v1: every earthwork volume computed, or one (`volume`: its id or name).
 
     Refusals: `not_a_road_project`, `unknown_volume`, `invalid_volume` (the one asked does not compute). Warnings:
-    `corridor_stale`, `volume_gap`, `volume_uncovered`, `volume_unfactored`.
+    `corridor_stale`, `volume_gap`, `volume_uncovered`, `volume_unfactored`, `volume_changed`.
     """
     volume: str | None | Unset = UNSET
 
@@ -98172,6 +98370,8 @@ __all__ = [
     "ViewsOp",
     "VisibilityBlockParameter",
     "VisibilityState",
+    "VolumeApprovalDef",
+    "VolumeApprovalReport",
     "VolumeBenchDef",
     "VolumeDef",
     "VolumeFactorDef",
@@ -98180,7 +98380,9 @@ __all__ = [
     "VolumeMethodName",
     "VolumeReport",
     "VolumeRow",
+    "VolumeRowChange",
     "VolumeStripDef",
+    "VolumesApprove",
     "VolumesEdit",
     "VolumesQueried",
     "VolumesQuery",

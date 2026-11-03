@@ -3238,7 +3238,7 @@
       "title": "Kübaj…",
       "short": "Kübaj",
       "icon": "volumeEditor",
-      "description": "Yol projesinin kübaj hesapları: bir koridorun hacmi ortalama alanla, iki kesitin ortasında kurulan kesitle prizmoidal ya da koridorun üst yüzeyiyle arazi arasında; kabarma ve sıkışma katsayıları km aralıklarına. Kübaj yazdıkça hesaplanır: kütle diyagramı (birikimli düzeltilmiş kazı, dolgu ve kütle ordinatı), toplamlar, uyarılar ve kübaj cetveli. Kaydet road.volumes.edit ile yazar, her yazma bir geri alma adımıdır; Cetveli yaz cetveli Excel, OpenDocument ya da CSV olarak yazar.",
+      "description": "Yol projesinin kübaj hesapları: bir koridorun hacmi ortalama alanla, iki kesitin ortasında kurulan kesitle prizmoidal ya da koridorun üst yüzeyiyle arazi arasında; kabarma ve sıkışma katsayıları km aralıklarına. Kübaj yazdıkça hesaplanır: kütle diyagramı (birikimli düzeltilmiş kazı, dolgu ve kütle ordinatı), toplamlar, uyarılar ve kübaj cetveli. Sıyırma (bitkisel toprak kalınlığı km aralıklarına) ve diş kazısı (eğim eşiği, basamak yüksekliği) kesit yöntemlerinde. Kaydet road.volumes.edit ile yazar, Onayla ve Onayı kaldır road.volumes.approve ile; onaylı kübaj değişmez, kaynakları değişince bugünkü hacmin onaylı hâlinden farkı gösterilir. Her yazma bir geri alma adımıdır; Cetveli yaz cetveli Excel, OpenDocument ya da CSV olarak yazar.",
       "aliases": [
         "KUBAJ",
         "KÜBAJ",

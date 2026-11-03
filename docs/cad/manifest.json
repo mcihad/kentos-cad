@@ -14849,12 +14849,13 @@
    "level": "semantic",
    "via": [
     "road.volumes.edit",
-    "road.volumes.query"
+    "road.volumes.query",
+    "road.volumes.approve"
    ],
    "operation": null,
-   "python": "Connection: road.volumes.edit, Connection: road.volumes.query",
-   "mcp": "road.volumes.edit, road.volumes.query",
-   "note": "Kübaj penceresi kübajı yazdıkça çekirdekle hesaplar, kütle diyagramını ve cetveli gösterir; Kaydet road.volumes.edit ile yazar, Cetveli yaz road.volumes.query'nin cetvelini dosyaya yazar (plan/road.md Y8, ADR 0906).",
+   "python": "Connection: road.volumes.edit, Connection: road.volumes.query, Connection: road.volumes.approve",
+   "mcp": "road.volumes.edit, road.volumes.query, road.volumes.approve",
+   "note": "Kübaj penceresi kübajı yazdıkça çekirdekle hesaplar, kütle diyagramını ve cetveli gösterir; Kaydet road.volumes.edit ile, Onayla ve Onayı kaldır road.volumes.approve ile yazar, Cetveli yaz road.volumes.query'nin cetvelini dosyaya yazar (plan/road.md Y8, ADR 0906).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0

@@ -343,7 +343,30 @@
      "id": "v-2",
      "name": "Yüzey kübajı",
      "corridor": "c-1",
-     "method": "surfaces"
+     "method": "surfaces",
+     "approved": {
+      "revision": 1,
+      "at": "2026-11-03",
+      "note": "Uygulama projesi",
+      "cut": 1200.5,
+      "fill": 340.25,
+      "factoredCut": 1200.5,
+      "factoredFill": 340.25,
+      "rows": [
+       [
+        0.0,
+        20.0,
+        100.0,
+        10.0
+       ],
+       [
+        20.0,
+        40.0,
+        110.0,
+        12.5
+       ]
+      ]
+     }
     }
    ]
   }

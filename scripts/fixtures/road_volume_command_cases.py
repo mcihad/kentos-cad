@@ -265,7 +265,56 @@ def compute(v, corridors=CORRIDORS):
         report["strip"] = strip
     if v.get("bench") is not None:
         report["bench"] = benched
+    if v.get("approved"):
+        approval = compare(v["approved"], report)
+        if approval["changed"]:
+            warnings.append(warn("volume_changed", f"“{v['name']}” kübajı {v['approved']['at']} günü onaylanan hâlinden "
+                                                   f"farklı: {len(approval['rows'])} aralık değişti; fark raporda."))
+        report["approval"] = approval
     return report, warnings
+
+
+SAME = 1e-6
+
+
+def compare(a, now):
+    """The approved figures against today's (docs/adr/0906 §5): the totals' changes and the stretches that changed (beyond
+    1e-6 m³), are new or gone; stations the same within 1e-6 m."""
+    today = [[r["from"], r["to"], r["cut"], r["fill"]] for r in now["rows"] if "cut" in r]
+    same = lambda x, y: abs(x - y) <= SAME  # noqa: E731
+    rows, used = [], [False] * len(today)
+    for p in a["rows"]:
+        i = next((k for k, t in enumerate(today) if same(t[0], p[0]) and same(t[1], p[1])), None)
+        if i is None:
+            rows.append({"from": p[0], "to": p[1], "approvedCut": p[2], "approvedFill": p[3]})
+            continue
+        used[i] = True
+        t = today[i]
+        if not same(t[2], p[2]) or not same(t[3], p[3]):
+            rows.append({"from": p[0], "to": p[1], "approvedCut": p[2], "approvedFill": p[3], "cut": t[2], "fill": t[3]})
+    rows += [{"from": t[0], "to": t[1], "cut": t[2], "fill": t[3]} for t, u in zip(today, used) if not u]
+    rows.sort(key=lambda r: (r["from"], r["to"]))
+    ch = [now["cut"] - a["cut"], now["fill"] - a["fill"], now["factoredCut"] - a["factoredCut"],
+          now["factoredFill"] - a["factoredFill"]]
+    return {"approved": a, "changed": bool(rows) or any(abs(c) > SAME for c in ch), "cutChange": ch[0],
+            "fillChange": ch[1], "factoredCutChange": ch[2], "factoredFillChange": ch[3], "rows": rows}
+
+
+def approval_of(v, now, at, note=None):
+    out = {"revision": v.get("revision", 0), "at": at, "cut": now["cut"], "fill": now["fill"],
+           "factoredCut": now["factoredCut"], "factoredFill": now["factoredFill"],
+           "rows": [[r["from"], r["to"], r["cut"], r["fill"]] for r in now["rows"] if "cut" in r]}
+    if note is not None:
+        out["note"] = note
+    for k in ("strip", "bench"):
+        if k in now:
+            out[k] = now[k]
+    return out
+
+
+def approved(v, at="2026-11-03", note=None, corridors=CORRIDORS):
+    """The volume approved as it computes with `corridors`."""
+    return {**v, "approved": approval_of(v, compute(v, corridors)[0], at, note)}
 
 
 def broken(v, why):
@@ -283,7 +332,7 @@ def report(v, corridors=CORRIDORS):
 
 def listed(volumes):
     return [{"id": v["id"], "name": v["name"], "corridor": v["corridor"], "method": v["method"],
-             "revision": v.get("revision", 0)} for v in volumes]
+             "revision": v.get("revision", 0), "approved": bool(v.get("approved"))} for v in volumes]
 
 
 def file(command, title, base, cases):
@@ -406,6 +455,13 @@ def edit_cases():
        rulefail("bitkisel toprak kalınlığı 0'dan büyük, en çok 5 m olur", "strip[0]"))
     no("Sıfır eğimli diş kazısı", {**base, "bench": {"slope": 0.0, "height": 0.5}},
        rulefail("diş kazısının eğimi 0'dan büyük, en çok %1000; basamak yüksekliği 0'dan büyük, en çok 10 m olur", "bench"))
+    a1 = approved(V1)
+    no("Onaylı kübaj değişmez", {"operation": "set", "volume": "v-1", "name": "Kübaj A"},
+       failed("volume_approved", "“Ana kübaj” kübajı onaylı; değiştirmek ya da silmek için önce onayı kaldırın.", "volume"),
+       setup([a1, V2]))
+    no("Onaylı kübaj silinmez", {"operation": "remove", "volume": "Ana kübaj"},
+       failed("volume_approved", "“Ana kübaj” kübajı onaylı; değiştirmek ya da silmek için önce onayı kaldırın.", "volume"),
+       setup([a1, V2]))
     no("Geçersiz beklenen sürüm", {"operation": "remove", "volume": "v-2", "expectedRevision": "on"}, BAD_REVISION)
     no("Eski sürüme göre hazırlanmış", {"operation": "remove", "volume": "v-2", "expectedRevision": "41"}, CONFLICT)
     return file("road.volumes.edit", "Kübaj hesabını düzenle", setup(), cases)
@@ -478,6 +534,11 @@ def query_cases():
     q("Sıyırma yalnız bir aralıkta", {"volume": "v-1"}, [v(strip=[{"from": 150.0, "to": 250.0, "depth": 0.25}]), V2])
     q("Dik eşikte diş kazısı yok", {"volume": "v-1"}, [v(bench={"slope": 900.0, "height": 0.5}), V2])
     q("Devere bağlı koridorda sıyırma", {"volume": "v-2"}, [V1, {**V2, "method": "endArea", "strip": strips}])
+    q("Onaylı ve değişmemiş: uyarı yok", {"volume": "v-1"}, [approved(V1, note="Uygulama projesi"), V2])
+    c_dense = {**ccmd.C1, "tangent": 20.0}
+    q("Onaydan sonra koridor sıklaştı: fark", {"volume": "v-1"}, [approved(V1), V2], [c_dense, ccmd.C2])
+    c_short = {**ccmd.C1, "regions": [{"from": 0.0, "to": 300.0, "template": "tk-1"}]}
+    q("Onaydan sonra bölge kısaldı: kalkan aralıklar", {"volume": "v-1"}, [approved(V1), V2], [c_short, ccmd.C2])
     q("Plan cevabı verir", {"volume": "v-1"}, op="plan")
     q("Doğrulama uyarıları verir", {"volume": "v-2"}, op="validate")
     q("Kübaj yok: boş liste", {}, [])
@@ -496,8 +557,81 @@ def query_cases():
     return file("road.volumes.query", "Kübajı sorgula", setup(), cases)
 
 
+# ── road.volumes.approve ───────────────────────────────────────────────────────────────────────────────────────────
+
+def approve_cases():
+    cases = []
+
+    def loose(volumes, corridors):
+        """The road settings with each approval written as "$any": its figures are the volume's, which the output
+        compares within the step's tolerance (a sum's last bit is the core's)."""
+        road = road_of(volumes, corridors)
+        for v in road.get("volumes", []):
+            if "approved" in v:
+                v["approved"] = "$any"
+        return road
+
+    def ok(name, input_, after, target, start=START, corridors=CORRIDORS, op="execute", undo=False):
+        writes = op == "execute" and after != start
+        out = {"volumes": listed(after), "revision": "$current",
+               "volume": report(next(v for v in after if v["id"] == target), corridors)}
+        result = completed(None) if op == "validate" else completed(out)
+        default = start is START and corridors is CORRIDORS
+        expect = {**STEPPED, "road": loose(after, corridors)} if writes else {**UNCHANGED, "road": loose(start, corridors)}
+        steps = [step(op, input_, result, expect)]
+        if undo:
+            steps.append({"op": "undo", "returns": "Kübaj onayı", "expect": {"road": loose(start, corridors), "canRedo": True}})
+        cases.append(case(name, steps, None if default else setup(start, corridors)))
+
+    def no(name, input_, result, start=START, corridors=CORRIDORS, setup_=None):
+        default = start is START and corridors is CORRIDORS
+        road = setup_["settings"].get("road") if setup_ is not None else road_of(start, corridors)
+        cases.append(case(name, [step("execute", input_, result, {**UNCHANGED, "road": road})],
+                          setup_ or (None if default else setup(start, corridors))))
+
+    day = "2026-11-03"
+    ok("Kübaj onaylanır", {"volume": "v-1", "at": day}, [approved(V1, day), V2], "v-1")
+    ok("Notla, adıyla", {"volume": "ANA kübaj", "at": day, "note": "Uygulama projesi"},
+       [approved(V1, day, "Uygulama projesi"), V2], "v-1")
+    ok("Yüzeyler arası kübaj onaylanır", {"volume": "v-2", "at": "2026-10-30"}, [V1, approved(V2, "2026-10-30")], "v-2")
+    vs = {**V1, "strip": [{"from": 0.0, "to": 600.0, "depth": 0.3}], "bench": {"slope": 3.0, "height": 0.5}}
+    ok("Sıyırma ve diş kazısıyla onay", {"volume": "v-1", "at": day}, [approved(vs, day), V2], "v-1", start=[vs, V2])
+    a1 = approved(V1, day)
+    ok("Onay kaldırılır", {"volume": "v-1", "revoke": True}, [V1, V2], "v-1", start=[a1, V2])
+    ok("Yeniden onay eskisinin yerine geçer", {"volume": "v-1", "at": "2026-11-04"}, [approved(V1, "2026-11-04"), V2], "v-1",
+       start=[a1, V2])
+    ok("Onay tek geri alma adımı", {"volume": "v-1", "at": day}, [approved(V1, day), V2], "v-1", undo=True)
+    ok("Onaylı kübajın kaynağı değişince yeni onay farkı sıfırlar", {"volume": "v-1", "at": "2026-11-05"},
+       [approved(V1, "2026-11-05", corridors=[{**ccmd.C1, "tangent": 20.0}, ccmd.C2]), V2], "v-1",
+       start=[a1, V2], corridors=[{**ccmd.C1, "tangent": 20.0}, ccmd.C2])
+    a2 = approved(V2, "2026-10-30")
+    ok("Yüzeyler arası kübajın onayı kaldırılır", {"volume": "Yan kübaj", "revoke": True}, [V1, V2], "v-2", start=[V1, a2])
+    ok("Plan yazmaz", {"volume": "v-1", "at": day}, [approved(V1, day), V2], "v-1", op="plan")
+    ok("Doğrulama yazmaz", {"volume": "v-1", "at": day}, [approved(V1, day), V2], "v-1", op="validate")
+
+    no("Yol projesi değil", {"volume": "v-1", "at": day}, NOT_ROAD, setup_=setup(work="map"))
+    no("Olmayan kübaj", {"volume": "yok", "at": day},
+       failed("unknown_volume", "“yok” kimlikli ya da adlı kübaj hesabı projede yok.", "volume"))
+    no("Onaylı olmayanın onayı kaldırılmaz", {"volume": "v-1", "revoke": True},
+       failed("volume_not_approved", "“Ana kübaj” kübajı onaylı değil; kaldırılacak onay yok.", "volume"))
+    no("Günsüz onay", {"volume": "v-1"}, failed("invalid_volume", "Onay için günü (at, YYYY-AA-GG) verin.", "at"))
+    no("Bozuk gün", {"volume": "v-1", "at": "3 Kasım 2026"},
+       failed("invalid_volume", "Kübaj onayı kurallarına uymuyor: onay günü YYYY-AA-GG biçiminde olmalı.", "approved"))
+    no("Uzun not", {"volume": "v-1", "at": day, "note": "x" * 501},
+       failed("invalid_volume", "Kübaj onayı kurallarına uymuyor: onay notu en çok 500 karakter olur.", "approved"))
+    broken_corr = {**ccmd.C1, "regions": [{"from": 0.0, "to": 100.0, "template": "tk-1"},
+                                          {"from": 50.0, "to": 200.0, "template": "tk-1"}]}
+    no("Hesaplanamayan kübaj onaylanmaz", {"volume": "v-1", "at": day},
+       failed("invalid_volume", "“Ana koridor” koridoru kurulamıyor: 1. ve 2. bölge kesişiyor; bölgeler en çok uç uca gelir.",
+              "corridor"), START, [broken_corr, ccmd.C2])
+    no("Geçersiz beklenen sürüm", {"volume": "v-1", "at": day, "expectedRevision": "on"}, BAD_REVISION)
+    no("Eski sürüme göre hazırlanmış", {"volume": "v-1", "at": day, "expectedRevision": "41"}, CONFLICT)
+    return file("road.volumes.approve", "Kübajı onayla", setup(), cases)
+
+
 def main():
-    files = {"road.volumes.edit.json": edit_cases(), "road.volumes.query.json": query_cases()}
+    files = {"road.volumes.edit.json": edit_cases(), "road.volumes.query.json": query_cases(),
+             "road.volumes.approve.json": approve_cases()}
     check = "--check" in sys.argv[1:]
     bad = []
     for name, data in files.items():

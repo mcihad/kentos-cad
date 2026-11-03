@@ -9615,13 +9615,26 @@ class _Schema:
                 self.fail("bad_value", "diş kazısının eğimi ya da basamak yüksekliği aralığın dışında")
             return t
 
+        def volume_approval(x):
+            # Docs/adr/0906 §5: the figures as approved.
+            t = self.fields({"revision": (self.uint(32), True), "at": (self.text, True), "note": (self.text, False),
+                             "cut": (finite, True), "fill": (finite, True), "factoredCut": (finite, True),
+                             "factoredFill": (finite, True), "strip": (finite, False), "bench": (finite, False),
+                             "rows": (self.array(self.array(finite)), True)})(x)
+            if not re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}", t["at"]):
+                self.fail("bad_value", "onay günü YYYY-AA-GG biçiminde olmalı")
+            if len(t.get("note", "")) > 500 or len(t["rows"]) > 20000 or any(len(r) != 4 for r in t["rows"]):
+                self.fail("bad_value", "onayın notu ya da satırları kuralın dışında")
+            return t
+
         def volume(x):
             # Docs/adr/0906 §4, §6: a corridor's earthwork volume by a method, its factors, topsoil and benches.
             t = self.fields({"id": (word, True), "name": (self.text, True), "corridor": (word, True),
                              "revision": (self.uint(32), False),
                              "method": (self.enum(("endArea", "prismoidal", "surfaces")), True),
                              "factors": (self.array(volume_factor), False),
-                             "strip": (self.array(volume_strip), False), "bench": (volume_bench, False)})(x)
+                             "strip": (self.array(volume_strip), False), "bench": (volume_bench, False),
+                             "approved": (volume_approval, False)})(x)
             strips = t.get("strip", [])
             if len(strips) > 1000 or any(b["from"] < a["to"] for a, b in zip(strips, strips[1:])):
                 self.fail("bad_value", "sıyırma satırları artan km'lerle, birbirine binmeden, en çok 1000")

@@ -41,6 +41,7 @@ pub(crate) fn listed(list: &[VolumeDef]) -> Vec<VolumeListed> {
             corridor: v.corridor.clone(),
             method: v.method,
             revision: v.revision,
+            approved: v.approved.is_some(),
         })
         .collect()
 }
@@ -267,9 +268,84 @@ pub(crate) fn compute(doc: &Document, def: &VolumeDef) -> Result<(VolumeReport, 
         strip: (!def.strip.is_empty()).then_some(strip),
         bench: def.bench.as_ref().map(|_| benched),
         gaps: joined,
+        approval: None,
         problem: None,
     };
+    let mut report = report;
+    if let Some(a) = &def.approved {
+        let approval = compare(a, &report);
+        if approval.changed {
+            warnings.push(warning(
+                codes::VOLUME_CHANGED,
+                format!(
+                    "“{}” kübajı {} günü onaylanan hâlinden farklı: {} aralık değişti; fark raporda.",
+                    def.name,
+                    a.at,
+                    approval.rows.len()
+                ),
+            ));
+        }
+        report.approval = Some(approval);
+    }
     Ok((report, warnings))
+}
+
+/// Within this (m³) two figures of a volume are the same; within this (m) two stations.
+const SAME_VOLUME: f64 = 1e-6;
+
+/// The approved figures against today's: the totals' changes and the stretches that changed, are new or gone.
+pub(crate) fn compare(a: &kentos_commands::VolumeApprovalDef, now: &VolumeReport) -> kentos_commands::VolumeApprovalReport {
+    use kentos_commands::VolumeRowChange;
+    let today: Vec<[f64; 4]> = now
+        .rows
+        .iter()
+        .filter_map(|r| Some([r.from, r.to, r.cut?, r.fill?]))
+        .collect();
+    let same = |x: f64, y: f64| (x - y).abs() <= SAME_VOLUME;
+    let mut rows = Vec::new();
+    let mut used = vec![false; today.len()];
+    for p in &a.rows {
+        match today.iter().position(|t| same(t[0], p[0]) && same(t[1], p[1])) {
+            Some(i) => {
+                used[i] = true;
+                let t = today[i];
+                if !same(t[2], p[2]) || !same(t[3], p[3]) {
+                    rows.push(VolumeRowChange { from: p[0], to: p[1], approved_cut: Some(p[2]), approved_fill: Some(p[3]), cut: Some(t[2]), fill: Some(t[3]) });
+                }
+            }
+            None => rows.push(VolumeRowChange { from: p[0], to: p[1], approved_cut: Some(p[2]), approved_fill: Some(p[3]), cut: None, fill: None }),
+        }
+    }
+    for (t, _) in today.iter().zip(&used).filter(|(_, u)| !**u) {
+        rows.push(VolumeRowChange { from: t[0], to: t[1], approved_cut: None, approved_fill: None, cut: Some(t[2]), fill: Some(t[3]) });
+    }
+    rows.sort_by(|x, y| x.from.total_cmp(&y.from).then(x.to.total_cmp(&y.to)));
+    let changes = [now.cut - a.cut, now.fill - a.fill, now.factored_cut - a.factored_cut, now.factored_fill - a.factored_fill];
+    kentos_commands::VolumeApprovalReport {
+        approved: a.clone(),
+        changed: !rows.is_empty() || changes.iter().any(|c| c.abs() > SAME_VOLUME),
+        cut_change: changes[0],
+        fill_change: changes[1],
+        factored_cut_change: changes[2],
+        factored_fill_change: changes[3],
+        rows,
+    }
+}
+
+/// The figures to approve: the volume as computed now.
+pub(crate) fn approval_of(def: &VolumeDef, now: &VolumeReport, at: String, note: Option<String>) -> kentos_commands::VolumeApprovalDef {
+    kentos_commands::VolumeApprovalDef {
+        revision: def.revision,
+        at,
+        note,
+        cut: now.cut,
+        fill: now.fill,
+        factored_cut: now.factored_cut,
+        factored_fill: now.factored_fill,
+        strip: now.strip,
+        bench: now.bench,
+        rows: now.rows.iter().filter_map(|r| Some([r.from, r.to, r.cut?, r.fill?])).collect(),
+    }
 }
 
 /// A report for a volume that does not compute: its sources and why.
@@ -292,6 +368,7 @@ pub(crate) fn broken(def: &VolumeDef, why: String) -> VolumeReport {
         strip: None,
         bench: None,
         gaps: Vec::new(),
+        approval: None,
         problem: Some(why),
     }
 }

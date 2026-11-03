@@ -37938,7 +37938,7 @@
       "id": "road.volumes.edit",
       "version": 1,
       "title": "Kübaj hesabını düzenle",
-      "summary": "Yol projesinin kübaj hesabını (volume: kimliği ya da adı; yoksa yeni) yazar ya da kaldırır. Kübaj bir koridorun (corridor) hacmidir; yöntem (method): endArea ardışık iki kesit arasında ortalama alan L·(A₀ + A₁)/2, prismoidal iki kesitin ortasında kurulan kesitle L·(A₀ + 4Aₘ + A₁)/6, surfaces koridorun üst yüzeyiyle arazisi arasındaki hacim (üçgenler planda üst üste konur). Kazı ve dolgu ayrıdır. factors km aralıklarına (from, to aksın istasyonu, m) kazının kabarma (cut) ve dolgunun sıkışma (fill) çarpanını verir; artan, birbirine binmeyen satırlar, çarpan 0'dan büyük, en çok 10; KentOS öntanımlı katsayı vermez. Kesit yöntemlerinde strip km aralıklarına bitkisel toprak kalınlığı (depth, m) verir: kübaj zeminin kalınlık kadar indirilmiş hâline göre, bitkisel toprak hacmi ayrı kalem; bench diş kazısıdır (slope: arazinin enine eğimi bu yüzdeden dikken dolgunun altında, height: basamak yüksekliği; hacmi genişlik × yükseklik/2), ayrı kalem, kazı ve dolguya katılmaz; bench null kaldırır. Kübaj koridorunu izler, başka koridora bağlanmaz, yeniden bağlanmaz. Sonuç saklanmaz, her okumada hesaplanır. Yeni hesabın kimliği verilen ya da ilk boş v-n. Tek geri alma adımı “Kübaj”. Retler: not_a_road_project, unknown_volume, unknown_corridor, invalid_volume, invalid_revision, revision_conflict.",
+      "summary": "Yol projesinin kübaj hesabını (volume: kimliği ya da adı; yoksa yeni) yazar ya da kaldırır. Kübaj bir koridorun (corridor) hacmidir; yöntem (method): endArea ardışık iki kesit arasında ortalama alan L·(A₀ + A₁)/2, prismoidal iki kesitin ortasında kurulan kesitle L·(A₀ + 4Aₘ + A₁)/6, surfaces koridorun üst yüzeyiyle arazisi arasındaki hacim (üçgenler planda üst üste konur). Kazı ve dolgu ayrıdır. factors km aralıklarına (from, to aksın istasyonu, m) kazının kabarma (cut) ve dolgunun sıkışma (fill) çarpanını verir; artan, birbirine binmeyen satırlar, çarpan 0'dan büyük, en çok 10; KentOS öntanımlı katsayı vermez. Kesit yöntemlerinde strip km aralıklarına bitkisel toprak kalınlığı (depth, m) verir: kübaj zeminin kalınlık kadar indirilmiş hâline göre, bitkisel toprak hacmi ayrı kalem; bench diş kazısıdır (slope: arazinin enine eğimi bu yüzdeden dikken dolgunun altında, height: basamak yüksekliği; hacmi genişlik × yükseklik/2), ayrı kalem, kazı ve dolguya katılmaz; bench null kaldırır. Kübaj koridorunu izler, başka koridora bağlanmaz, yeniden bağlanmaz. Sonuç saklanmaz, her okumada hesaplanır. Yeni hesabın kimliği verilen ya da ilk boş v-n. Tek geri alma adımı “Kübaj”. Onaylı kübaj değiştirilmez ve silinmez (volume_approved); önce road.volumes.approve revoke. Retler: not_a_road_project, unknown_volume, volume_approved, unknown_corridor, invalid_volume, invalid_revision, revision_conflict.",
       "aliases": [
         "kubaj",
         "kübaj"
@@ -37956,7 +37956,7 @@
       "cost": "instant",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `road.volumes.edit` v1: the earthwork volume by its id or name (absent: a new one). A new one needs `name`,\n`corridor` and `method`. A volume is not rebound: it follows its corridor.\n\nRefusals, in this order: `not_a_road_project`, `invalid_volume` (rebind), `unknown_volume` (remove one not in the\nproject), `unknown_corridor`, `invalid_volume` (another corridor, a new one without its fields, set with nothing to\nset, the definition by `road_problem`: factors not positive, over 10 or over overlapping stretches; strip rows\noverlapping or a depth not in (0, 5] m; a bench's slope not in (0, 1000] % or its height not in (0, 10] m; stripping or\nbenching between surfaces; a corridor that does not build), `invalid_revision`, `revision_conflict`.",
+        "description": "Input of `road.volumes.edit` v1: the earthwork volume by its id or name (absent: a new one). A new one needs `name`,\n`corridor` and `method`. A volume is not rebound: it follows its corridor.\n\nRefusals, in this order: `not_a_road_project`, `invalid_volume` (rebind), `unknown_volume` (remove one not in the\nproject), `volume_approved` (change or remove an approved one), `unknown_corridor`, `invalid_volume` (another corridor, a new one without its fields, set with nothing to\nset, the definition by `road_problem`: factors not positive, over 10 or over overlapping stretches; strip rows\noverlapping or a depth not in (0, 5] m; a bench's slope not in (0, 1000] % or its height not in (0, 10] m; stripping or\nbenching between surfaces; a corridor that does not build), `invalid_revision`, `revision_conflict`.",
         "properties": {
           "bench": {
             "anyOf": [
@@ -38101,6 +38101,7 @@
         "refusals": [
           "not_a_road_project",
           "unknown_volume",
+          "volume_approved",
           "unknown_corridor",
           "invalid_volume",
           "invalid_revision",
@@ -38131,7 +38132,7 @@
       "id": "road.volumes.query",
       "version": 1,
       "title": "Kübajı sorgula",
-      "summary": "Yol projesinin kübaj hesaplarını bugün hesaplar ve kübaj cetvelini verir; hiçbir şey yazmaz. Her hesabın satırları ardışık iki kesit arasıdır: km'ler, kazı ve dolgu (m³; kesiti çözülmeyen aralıkta yok), aralığın ortasının katsayıları, kabarma ve sıkışmayla düzeltilmiş kazı ve dolgunun birikimli toplamları ve farkı (kütle ordinatı). Toplamlar ham ve düzeltilmiş; surfaces yönteminde kazı ve dolgu plan alanları ve arazinin örtmediği alan; hacmi olmayan aralıklar; sıyırma ve diş kazısı varsa bitkisel toprak ve diş kazısı hacimleri (satırda ve toplamda); hesaplanamıyorsa nedeni. volume ile yalnız biri. Uyarılar: corridor_stale, volume_gap, volume_uncovered, volume_unfactored. Retler: not_a_road_project, unknown_volume, invalid_volume.",
+      "summary": "Yol projesinin kübaj hesaplarını bugün hesaplar ve kübaj cetvelini verir; hiçbir şey yazmaz. Her hesabın satırları ardışık iki kesit arasıdır: km'ler, kazı ve dolgu (m³; kesiti çözülmeyen aralıkta yok), aralığın ortasının katsayıları, kabarma ve sıkışmayla düzeltilmiş kazı ve dolgunun birikimli toplamları ve farkı (kütle ordinatı). Toplamlar ham ve düzeltilmiş; surfaces yönteminde kazı ve dolgu plan alanları ve arazinin örtmediği alan; hacmi olmayan aralıklar; sıyırma ve diş kazısı varsa bitkisel toprak ve diş kazısı hacimleri (satırda ve toplamda); hesaplanamıyorsa nedeni. volume ile yalnız biri. Onaylı kübajda onay (approval): onaylı toplamlar, bugünkü toplamların farkı ve değişen, eklenen ya da kalkan aralıklar. Uyarılar: corridor_stale, volume_gap, volume_uncovered, volume_unfactored, volume_changed. Retler: not_a_road_project, unknown_volume, invalid_volume.",
       "aliases": [
         "kubajsor",
         "kübajsor"
@@ -38149,7 +38150,7 @@
       "cost": "instant",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `road.volumes.query` v1: every earthwork volume computed, or one (`volume`: its id or name).\n\nRefusals: `not_a_road_project`, `unknown_volume`, `invalid_volume` (the one asked does not compute). Warnings:\n`corridor_stale`, `volume_gap`, `volume_uncovered`, `volume_unfactored`.",
+        "description": "Input of `road.volumes.query` v1: every earthwork volume computed, or one (`volume`: its id or name).\n\nRefusals: `not_a_road_project`, `unknown_volume`, `invalid_volume` (the one asked does not compute). Warnings:\n`corridor_stale`, `volume_gap`, `volume_uncovered`, `volume_unfactored`, `volume_changed`.",
         "properties": {
           "volume": {
             "type": [
@@ -38205,13 +38206,155 @@
           "corridor_stale",
           "volume_gap",
           "volume_uncovered",
-          "volume_unfactored"
+          "volume_unfactored",
+          "volume_changed"
         ]
       },
       "examples": [
         {
           "title": "Ana kübajın cetveli",
           "input": {
+            "volume": "Ana kübaj"
+          }
+        }
+      ]
+    },
+    {
+      "id": "road.volumes.approve",
+      "version": 1,
+      "title": "Kübajı onayla",
+      "summary": "Yol projesinin kübaj hesabını (volume: kimliği ya da adı) bugün hesaplandığı gibi onaylar: toplamlar ve ardışık iki kesit arası her aralığın kazı ve dolgusu, onay günü (at, YYYY-AA-GG) ve isteğe bağlı not (note) kübajın tanımına yazılır. Onaylı kübajın tanımı değişmez ve silinmez; kaynakları (koridor, aks, boykesit, arazi) değişirse road.volumes.query bugünkü hacmi onaylı hâliyle karşılaştırır. revoke onayı kaldırır. Tek geri alma adımı “Kübaj onayı”. Retler: not_a_road_project, unknown_volume, volume_not_approved, invalid_volume, invalid_revision, revision_conflict.",
+      "aliases": [
+        "kubajonayla",
+        "kübajonayla"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.volumes.approve` v1 (docs/adr/0906 §5): the volume (id or name) approved as it computes now, on the\nday `at` (YYYY-MM-DD) with an optional note; or, with `revoke`, its approval taken off. One undo step “Kübaj onayı”.\n\nRefusals, in this order: `not_a_road_project`, `unknown_volume`, `volume_not_approved` (revoke one not approved),\n`invalid_volume` (approve without `at`, a day or note the rule refuses, a volume that does not compute),\n`invalid_revision`, `revision_conflict`.",
+        "properties": {
+          "at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "revoke": {
+            "type": "boolean"
+          },
+          "volume": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "volume"
+        ],
+        "title": "VolumesApprove",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.volumes.edit` v1.",
+        "properties": {
+          "revision": {
+            "type": "string"
+          },
+          "volume": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/VolumeReport"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The volume written, computed; absent when removed."
+          },
+          "volumes": {
+            "items": {
+              "$ref": "#/$defs/VolumeListed"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "volumes",
+          "revision"
+        ],
+        "title": "VolumesWritten",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.volumes.edit` v1.",
+        "properties": {
+          "revision": {
+            "type": "string"
+          },
+          "volume": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/VolumeReport"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The volume written, computed; absent when removed."
+          },
+          "volumes": {
+            "items": {
+              "$ref": "#/$defs/VolumeListed"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "volumes",
+          "revision"
+        ],
+        "title": "VolumesWritten",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_volume",
+          "volume_not_approved",
+          "invalid_volume",
+          "invalid_revision",
+          "revision_conflict"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Ana kübajı onayla",
+          "input": {
+            "at": "2026-11-03",
+            "note": "Uygulama projesi",
             "volume": "Ana kübaj"
           }
         }
@@ -72507,6 +72650,24 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Katsayı verilmeyen aralıklar dönüştürülmedi; düzeltilmiş hacim ham hacimdir."
+    },
+    {
+      "code": "volume_approved",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu kübaj onaylı; değiştirmek ya da silmek için önce onayı kaldırın."
+    },
+    {
+      "code": "volume_not_approved",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu kübaj onaylı değil; kaldırılacak onay yok."
+    },
+    {
+      "code": "volume_changed",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Onaylı kübaj kaynakları değiştiği için bugün başka hacim veriyor; fark raporda."
     },
     {
       "code": "corridor_superelevation_gone",
@@ -149987,6 +150148,134 @@
       ],
       "type": "object"
     },
+    "VolumeApprovalDef": {
+      "additionalProperties": false,
+      "description": "An approved earthwork volume's figures (docs/adr/0906 §5): when and by which revision of its definition, a note,\nthe totals and each stretch's cut and fill (from, to, cut, fill; the stretches with volume) as they were.",
+      "properties": {
+        "at": {
+          "description": "The day it was approved, YYYY-MM-DD.",
+          "type": "string"
+        },
+        "bench": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "volume"
+        },
+        "cut": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "factoredCut": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "factoredFill": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "fill": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "note": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "rows": {
+          "items": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 4,
+            "minItems": 4,
+            "type": "array"
+          },
+          "type": "array",
+          "x-unit": "volume"
+        },
+        "strip": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "volume"
+        }
+      },
+      "required": [
+        "revision",
+        "at",
+        "cut",
+        "fill",
+        "factoredCut",
+        "factoredFill",
+        "rows"
+      ],
+      "type": "object"
+    },
+    "VolumeApprovalReport": {
+      "description": "An approved volume against today's: the approval as written, whether the figures changed, today's totals less the\napproved ones and the stretches that changed.",
+      "properties": {
+        "approved": {
+          "$ref": "#/$defs/VolumeApprovalDef"
+        },
+        "changed": {
+          "type": "boolean"
+        },
+        "cutChange": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "factoredCutChange": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "factoredFillChange": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "fillChange": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "rows": {
+          "items": {
+            "$ref": "#/$defs/VolumeRowChange"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "approved",
+        "changed",
+        "cutChange",
+        "fillChange",
+        "factoredCutChange",
+        "factoredFillChange",
+        "rows"
+      ],
+      "type": "object"
+    },
     "VolumeBenchDef": {
       "additionalProperties": false,
       "description": "The fill's foundation benched (diş kazısı, docs/adr/0906 §6): where the ground falls across steeper than `slope`\npercent under a fill, steps `height` (m) high; both the project's (its regulation, its soil report).",
@@ -150012,6 +150301,17 @@
       "additionalProperties": false,
       "description": "An earthwork volume (docs/adr/0906, Netpro's kübaj hesabı): a corridor's, by a method, with the factors by stations.",
       "properties": {
+        "approved": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/VolumeApprovalDef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Its figures as approved; an approved volume's definition does not change."
+        },
         "bench": {
           "anyOf": [
             {
@@ -150103,6 +150403,9 @@
     "VolumeListed": {
       "description": "An earthwork volume in a list.",
       "properties": {
+        "approved": {
+          "type": "boolean"
+        },
         "corridor": {
           "type": "string"
         },
@@ -150127,7 +150430,8 @@
         "name",
         "corridor",
         "method",
-        "revision"
+        "revision",
+        "approved"
       ],
       "type": "object"
     },
@@ -150154,6 +150458,17 @@
     "VolumeReport": {
       "description": "An earthwork volume as it is now: its sources, whether its corridor's alignment changed since, its rows (by\nsections), the totals of the cut and fill and their factored volumes, the surfaces' plan areas (between surfaces),\nthe stretches without volume; why it does not compute when it does not.",
       "properties": {
+        "approval": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/VolumeApprovalReport"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The approval against today's figures, where approved."
+        },
         "bench": {
           "description": "The benches cut in all (m³), where the volume benches.",
           "format": "double",
@@ -150372,6 +150687,58 @@
         "totalCut",
         "totalFill",
         "mass"
+      ],
+      "type": "object"
+    },
+    "VolumeRowChange": {
+      "description": "A stretch whose figures differ from the approved ones (beyond 1 cm³, 1e-6 m³), or that is new or gone: the approved cut and\nfill and today's (none where it has none).",
+      "properties": {
+        "approvedCut": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "volume"
+        },
+        "approvedFill": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "volume"
+        },
+        "cut": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "volume"
+        },
+        "fill": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "volume"
+        },
+        "from": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "to": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "from",
+        "to"
       ],
       "type": "object"
     },
