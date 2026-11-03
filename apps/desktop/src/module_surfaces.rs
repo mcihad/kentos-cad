@@ -296,6 +296,7 @@ const ROAD: Surfaces = Surfaces {
         Panel::Blocks,
         Panel::Templates,
         Panel::Sources,
+        Panel::RoadProject,
         Panel::Properties,
     ],
     cells: &[Cell::SecondCrs],

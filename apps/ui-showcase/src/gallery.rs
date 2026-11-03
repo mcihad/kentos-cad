@@ -157,6 +157,9 @@ pub enum Demo {
     ParcelFit(usize),
     /// Satıra basıldı (örnek verideki yeri).
     ParcelRow(usize),
+    /// Durum ağacı örneği: dalın okuna basıldı (anahtar), süzgeç seçildi.
+    StatusToggle(String),
+    StatusFilter(Option<kentos_ui::widget::Status>),
     Toggled(usize),
     Checked(bool),
     OpacityChanged(f32),
@@ -552,6 +555,9 @@ pub struct Gallery {
     pub picked_region: Option<usize>,
 
     /// Ağaç örneği: açık klasörler, işaretli dosyalar ve seçili satır.
+    /// Durum ağacı örneği: başlangıca göre açılıp kapanan dallar ve seçili süzgeç.
+    pub status_toggled: std::collections::HashSet<String>,
+    pub status_filter: Option<kentos_ui::widget::Status>,
     pub project_open: [bool; 4],
     pub project_checked: [bool; 5],
     pub project_selected: Option<ProjectRow>,
@@ -984,6 +990,8 @@ impl Default for Gallery {
             picked_moment: None,
             picked_time: Time::new(9, 0, 0),
             picked_region: Some(0),
+            status_toggled: std::collections::HashSet::new(),
+            status_filter: None,
             project_open: [true, true, true, false],
             project_checked: [true, true, true, false, true],
             project_selected: Some(ProjectRow::File(2)),
@@ -1110,6 +1118,12 @@ impl Gallery {
                     kentos_ui::theme::typography::unscaled(widest.ceil() + 2.0);
             }
             Demo::ParcelRow(row) => self.parcel_row = Some(row),
+            Demo::StatusToggle(key) => {
+                if !self.status_toggled.remove(&key) {
+                    self.status_toggled.insert(key);
+                }
+            }
+            Demo::StatusFilter(filter) => self.status_filter = filter,
             Demo::Toggled(index) => {
                 if let Some(toggle) = self.toggles.get_mut(index) {
                     *toggle = !*toggle;

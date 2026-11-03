@@ -117,6 +117,7 @@ mod blocks_files;
 mod blocks_library;
 mod blocks_panel;
 mod navigator;
+mod road_project_panel;
 mod bottom;
 mod calc;
 mod catalog;
@@ -274,6 +275,8 @@ mod scene3d_window;
 mod junction_window_tests;
 #[cfg(test)]
 mod scene3d_window_tests;
+#[cfg(test)]
+mod road_project_panel_tests;
 #[cfg(test)]
 mod route_window_tests;
 #[cfg(test)]

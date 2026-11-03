@@ -85,10 +85,17 @@ Tarih: 2026-11-03. plan/road.md Y13 (ROAD-MOD-04, ROAD-MOD-05, ROAD-MOD-06). Dur
    - *Kendiliğinden yeniden üret* (`RoadSettings.autoRebuild`, kapalı başlar): açıkken yol tanımını değiştiren bir
      yazma, eskittiği ve elle değişmemiş çizimleri aynı adımda yeniden üretir; elle değişmişleri ve kaynağı silinmişleri
      bırakır ve söyler.
-4. **Masaüstünde Yol projesi paneli.** Yol modülünde sağ dokta proje ağacı: satırın simgesi türünün, durumu renkli
-   rozetle (Civil 3D'nin uyarı simgesi gibi), nedeni ipucunda; satıra basmak kaynağı seçer ve planda gösterir, çift
-   tık düzenleyicisini açar (Güzergâh, Boykesit, Enkesit, Dever, Koridor, Kübaj, Brükner, Otokorkuluk, Menfez,
-   İstinat, Kavşak); çizim satırında Yeniden üret, panelin başında Hepsini yeniden üret ve Kendiliğinden yeniden üret.
+4. **Masaüstünde Yol projesi paneli.** Yol modülünde sağ dokta proje ağacı, KentOS UI'ın durum ağacıyla
+   (`kentos_ui::widget::StatusTree`, yeniden kullanılır: başka modülün kaynak ağacı, denetim bulguları, sunucu işleri):
+   satırın simgesi türünün düzenleyicisininki, durumu yumuşak zeminli renkli hap (`status_pill`; güncel sessiz,
+   “Kabul edilmedi” gri, “Onaylı” vurgu, “Güncel değil”, “Çözülmeyen kesit”, “Nesnesi eksik”, “Elle değişti” amber,
+   “Kurulamıyor”, “Onaydan sonra değişti”, “Kaynağı yok” kırmızı; Civil 3D'nin uyarı simgesi gibi), nedeni ve sayısı
+   satırın ipucunda. Dikkat isteyen bir şey taşıyan dal açık, öbürü kapalı başlar; kullanıcının açıp kapattıkları
+   oturumda tutulur. Başta sayılı süzgeç hapları (Güncel değil n, Sorun n; basınca yalnız onlar ve üstleri) ve Hepsini
+   yeniden üret (n); üstte Kurarak denetle ve Kendiliğinden yeniden üret. Kaynağın satırına basmak düzenleyicisini
+   açar (Yüzeyler, Güzergâh, Boykesit, Enkesit, Dever, Kavşak, Koridor, Kübaj, Brükner, Otokorkuluk, Menfez, İstinat,
+   Yol paftaları, Poz metrajı), çizimin satırı nesnelerini seçer ve gösterir; çizimin ↻'si yeniden üretir, elle
+   değişende “Üstüne yaz” (edited). “Eskidi” yerine “Güncel değil” (sahibin isteği; Civil 3D'nin “Out of date”'i).
 5. **Bölünmüş görünüşler.** Seçili aksın boykesiti ve km'sindeki enkesit planın yanında, aynı pencerede: km kaydırıcısı
    (ya da yazılan km) üç görünüşü birlikte yürütür; planda aksa dik km çizgisi, boykesitte km'nin düşey çizgisi,
    enkesitte o km'nin kesiti (kesit takımının ya da koridorun). Boykesitin düşey abartması yalnız görünüşündür
@@ -112,7 +119,12 @@ kalır, adıyla edited olmadan ret, edited ile), kaynağı silinen, kilitli katm
 geri alma, sıra ve yineleme; kendiliğinden açıkken tip kesit ve boykesit değişikliğinin adımında yeniden üretme
 (drawings_rebuilt), elle değişen (drawing_edited) ve üretilemeyen (drawing_not_rebuilt) kalır, değişikliği geri almak
 çizimi de geri alır, silinen nesne ve kaynağı silinen çizim kendiliğinden üretilmez. Çizim komutlarının denetimi
-nesneler silinmeden önce koşar; reddeden çizim hiçbir şey bırakmaz. Y13.3: §4. Y13.4: §5.
+nesneler silinmeden önce koşar; reddeden çizim hiçbir şey bırakmaz. Y13.3 (yapıldı, panel): §4. Durum hapı ve durum
+ağacı KentOS UI'da (`widget/status.rs`, `widget/status_tree.rs`; açılış ve süzgecin birim testleri), vitrinin Geri
+bildirim sayfasında örnekleriyle; panel `road_project_panel.rs`, ağacı sürümü ya da derinliği değişince yeniden okur.
+Masaüstü testi: iki çizim güncel değil, Hepsini yeniden üret ikisini tek adımda yazar, geri alma geri getirir,
+Kendiliğinden yeniden üret açılır, Kurarak denetle çözülmeyen kesiti bulur, koridorun satırı Koridor'u açar. Resimler
+açık geniş ve koyu dar (`.run/gui-evidence/yol-proje-agaci-*`, `vitrin-durum-agaci*`). Y13.4: §5.
 
 ## Sonra
 

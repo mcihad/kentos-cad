@@ -9,7 +9,8 @@ use kentos_ui::label;
 use kentos_ui::style;
 use kentos_ui::theme::typography;
 use kentos_ui::widget::progress::{self, State, Task, TaskList, Tint};
-use kentos_ui::widget::{Banner, Confirm, EmptyState, PropertiesDialog, Wizard};
+use kentos_ui::icon::icon;
+use kentos_ui::widget::{Banner, Confirm, EmptyState, PropertiesDialog, Status, StatusItem, StatusTree, Wizard, status_pill};
 
 use super::{entry, pressed};
 use crate::app::Showcase;
@@ -155,6 +156,46 @@ impl Showcase {
                 ),
             ),
             entry(
+                "Durum hapı",
+                "kentos_ui::widget::status_pill",
+                "Bir kaynağın, işin ya da denetimin hâli: tonun noktası ve kısa söz, yumuşak zeminde. Beş ton \
+                 var: güncel yeşil, nötr gri, bilgi vurgu, uyarı amber, sorun kırmızı. Güncel olan çoğu yerde \
+                 hiç gösterilmez; dikkat isteyen yalnız uyarı ve sorundur.",
+                row![
+                    status_pill(Status::Ok, "Güncel"),
+                    status_pill(Status::Neutral, "Kabul edilmedi"),
+                    status_pill(Status::Info, "Onaylı"),
+                    status_pill(Status::Warning, "Güncel değil"),
+                    status_pill(Status::Danger, "Kurulamıyor"),
+                ]
+                .spacing(8)
+                .align_y(Center),
+                Some("status_pill(Status::Warning, \"Güncel değil\")"),
+            ),
+            entry(
+                "Durum ağacı",
+                "kentos_ui::widget::StatusTree",
+                "Kaynaklar ve onlardan üretilenler bir ağaçta, hâlleriyle (Civil 3D'nin Prospector'ı, \
+                 OpenRoads'un Explorer'ı). Güncel satır sessizdir; güncel olmayan ya da kurulamayan satır hapını \
+                 taşır, nedeni ipucundadır. Dikkat isteyen bir şey taşıyan dal açık başlar. Üstteki haplar \
+                 sayılarıyla süzer, sağdaki düğme hepsini birden yeniler; satırın düğmesi yalnız onu.",
+                container(self.status_tree_sample())
+                    .width(typography::scaled(460.0))
+                    .padding(1)
+                    .style(style::container::bordered),
+                Some(
+                    "StatusTree::new(items)\n    \
+                     .toggled(&self.toggled, Message::Toggle)\n    \
+                     .filter(self.filter, Message::Filter)\n    \
+                     .bulk(icon(Icon::Redo), \"Hepsini yeniden üret\", 2, Some(Message::RebuildAll))\n\n\
+                     StatusItem::new(\"cz-1\", \"Şevli plan\")\n    \
+                     .meta(\"293 nesne\")\n    \
+                     .status(Status::Warning, \"Güncel değil\")\n    \
+                     .detail(\"“Tip 2” enkesiti değişti.\")\n    \
+                     .action(icon(Icon::Redo), \"Yeniden üret\", Message::Rebuild(id))",
+                ),
+            ),
+            entry(
                 "Uyarı şeridi",
                 "kentos_ui::widget::Banner",
                 "Bir alanın üstünde süren bir durumu anlatır: olay değil, hâl. Bildirimden farkı \
@@ -224,6 +265,57 @@ impl Showcase {
                 ),
             ),
         ]
+    }
+
+    /// Durum ağacı örneği: bir yol projesi, iki çizimi güncel değil, bir koridoru kurulamıyor.
+    fn status_tree_sample(&self) -> Element<'_, Message> {
+        let pressed = |words: &'static str| Message::Gallery(Demo::Pressed(words));
+        let redo = || icon(Icon::Redo).size(13.0);
+        let items = [
+            StatusItem::new("yz-1", "Mevcut zemin")
+                .icon(icon(Icon::Layers).size(14.0))
+                .meta("18 240 üçgen")
+                .status(Status::Neutral, "Kabul edilmedi")
+                .detail("Yüzey denetimden geçti ama kabul edilmedi."),
+            StatusItem::new("a-1", "Ana aks")
+                .icon(icon(Icon::Measure).size(14.0))
+                .meta("2,40 km")
+                .push(StatusItem::new("p-1", "Proje kotu").meta("4 PVI"))
+                .push(
+                    StatusItem::new("c-1", "Ana koridor")
+                        .meta("2 enkesit")
+                        .push(
+                            StatusItem::new("cz-1", "Şevli plan")
+                                .meta("293 nesne")
+                                .status(Status::Warning, "Güncel değil")
+                                .detail("“Tip 2” enkesiti değişti.")
+                                .action(redo(), "Yeniden üret", pressed("Yeniden üret: Şevli plan")),
+                        )
+                        .push(
+                            StatusItem::new("cz-2", "Korkuluk")
+                                .meta("41 nesne")
+                                .status(Status::Warning, "Güncel değil")
+                                .detail("“Ana aks” aksı değişti.")
+                                .action(redo(), "Yeniden üret", pressed("Yeniden üret: Korkuluk")),
+                        ),
+                ),
+            StatusItem::new("a-2", "Bağlantı yolu")
+                .icon(icon(Icon::Measure).size(14.0))
+                .meta("0,62 km")
+                .push(
+                    StatusItem::new("c-2", "Bağlantı koridoru")
+                        .status(Status::Danger, "Kurulamıyor")
+                        .detail("0+120 – 0+180 arasında şev zemine ulaşmıyor."),
+                ),
+            StatusItem::new("a-3", "Servis yolu").icon(icon(Icon::Measure).size(14.0)).meta("0,31 km"),
+        ];
+        StatusTree::new(items)
+            .toggled(&self.gallery.status_toggled, |key| Message::Gallery(Demo::StatusToggle(key)))
+            .filter(self.gallery.status_filter, |f| Message::Gallery(Demo::StatusFilter(f)))
+            .bulk(redo(), "Hepsini yeniden üret", 2, Some(pressed("Hepsini yeniden üret")))
+            .counted("Güncel değil", "Sorun")
+            .meta_column(true)
+            .into()
     }
 
     /// Sihirbaz örneği: adımlar gerçek değil, gezilebilir.

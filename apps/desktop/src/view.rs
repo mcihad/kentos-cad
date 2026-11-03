@@ -120,6 +120,7 @@ impl App {
                     (Panel::Sources, _) => pane,
                     // Gezgin's sections scroll with the pane (navigator.rs).
                     (Panel::Navigator, _) => pane.scrollable(),
+                    (Panel::RoadProject, _) => pane.scrollable(),
                     (Panel::Properties, Some(doc)) => match self.properties_meta(doc) {
                         Some(meta) => pane.meta(label::caption(meta)),
                         None => pane,
@@ -1056,6 +1057,7 @@ impl App {
             Panel::Sources => self.sources_view(),
             // Gezgin: the project's tree (navigator.rs, docs/adr/0778).
             Panel::Navigator => self.navigator_view(),
+            Panel::RoadProject => self.road_project_view(),
             // Öznitelikler, editable as the web's (properties/, docs/adr/0063).
             Panel::Properties => self.architecture_properties_view(doc),
         }
