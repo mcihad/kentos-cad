@@ -2716,6 +2716,13 @@
       ],
       "note": "Dosyayı sorar ve road.alignments.import ile alır; tek geri alma adımı (plan/road.md Y10.2, ADR 0908)."
     },
+    "ifc.export": {
+      "level": "semantic",
+      "via": [
+        "file.export.ifc"
+      ],
+      "note": "IFC ver dosyanın yerini sorar ve file.export.ifc ile yazar; çizim değişmez (plan/road.md Y10.3, ADR 0908)."
+    },
     "landxml.export": {
       "level": "semantic",
       "via": [

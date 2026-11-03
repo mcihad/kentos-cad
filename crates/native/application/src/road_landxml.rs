@@ -74,7 +74,7 @@ pub fn element_geometry(e: &Element) -> WGeom {
 }
 
 /// The km equations of a built alignment, as LandXML's `StaEquation`s, and its km at the start.
-fn equations(b: &Built) -> (f64, Vec<WEquation>) {
+pub(crate) fn equations(b: &Built) -> (f64, Vec<WEquation>) {
     let start = b.regions.first().map_or(0.0, |r| r.ahead);
     let mut out = Vec::new();
     for w in b.regions.windows(2) {
@@ -90,7 +90,7 @@ fn equations(b: &Built) -> (f64, Vec<WEquation>) {
 }
 
 /// The `$`-less stamp, `YYYY-MM-DDThh:mm:ss`, as the file's date and time; none where it does not read.
-fn stamp_of(text: &str) -> Option<(String, String)> {
+pub(crate) fn stamp_of(text: &str) -> Option<(String, String)> {
     let (d, t) = text.split_once('T')?;
     let ok_date = d.len() == 10 && d.as_bytes()[4] == b'-' && d.as_bytes()[7] == b'-';
     let ok_time = t.len() == 8 && t.as_bytes()[2] == b':' && t.as_bytes()[5] == b':';
@@ -99,7 +99,7 @@ fn stamp_of(text: &str) -> Option<(String, String)> {
 }
 
 /// Now, UTC, as a stamp.
-fn now() -> (String, String) {
+pub(crate) fn now() -> (String, String) {
     let secs = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.as_secs()) as i64;
     let (y, m, d) = kentos_geometry_core::time::civil_from_days(secs.div_euclid(86_400));
     let s = secs.rem_euclid(86_400);

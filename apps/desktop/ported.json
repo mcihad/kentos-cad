@@ -417,6 +417,7 @@
     "stakeout.table",
     "landxml.export",
     "landxml.importAlignments",
+    "ifc.export",
     "arch.program",
     "lineTypes.manage",
     "hatchPatterns.manage",

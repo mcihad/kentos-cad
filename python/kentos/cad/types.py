@@ -27825,6 +27825,48 @@ class ExportGpkg(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ExportIfc(_Model):
+    """Input of `file.export.ifc` v1 (plan/road.md Y10.3, docs/adr/0908 §8; ROAD-IO-06): a road project's alignments and
+    their profiles to an IFC 4.3 (`IFC4X3_ADD2`) file, whole or not at all; the path absolute, ending `.ifc`; the
+    alignments by id or name (absent: every one); `withoutProfiles` leaves the profiles out; `stamp` the file's date and
+    time (`YYYY-MM-DDThh:mm:ss`; absent: now, UTC).
+
+    Refusals, in this order: `not_a_road_project`, `invalid_file_path`, `file_exists`, `unknown_alignment`,
+    `invalid_ifc` (a stamp that does not read, nothing to write, a chosen alignment that does not build). Warnings:
+    `export_losses` (a parallel axis, an alignment or a profile that does not build, a decreasing km equation, a project
+    without a coordinate system).
+    """
+    path: str
+    alignments: list[str] | None | Unset = UNSET
+    overwrite: bool | Unset = UNSET
+    stamp: str | None | Unset = UNSET
+    without_profiles: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        if self.alignments is not UNSET:
+            out["alignments"] = None if self.alignments is None else list(self.alignments)
+        if self.overwrite is not UNSET:
+            out["overwrite"] = self.overwrite
+        if self.stamp is not UNSET:
+            out["stamp"] = self.stamp
+        if self.without_profiles is not UNSET:
+            out["withoutProfiles"] = self.without_profiles
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExportIfc:
+        return cls(
+            path=data["path"],
+            alignments=UNSET if "alignments" not in data else None if data["alignments"] is None else list(data["alignments"]),
+            overwrite=data.get("overwrite", UNSET),
+            stamp=data.get("stamp", UNSET),
+            without_profiles=data.get("withoutProfiles", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ExportLandxml(_Model):
     """Input of `file.export.landxml` v1: the file's path (absolute, ending `.xml`); the surfaces and the alignments by id
     or name (absent: every one; an empty list: none); `withoutProfiles` leaves the alignments' profiles out; `stamp` the
@@ -33843,6 +33885,88 @@ class Helmert(_Model):
             scale=float(data["scale"]),
             convention=_enum_in(Convention, data["convention"]),
             accuracy=UNSET if "accuracy" not in data else None if data["accuracy"] is None else float(data["accuracy"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class IfcAlignmentWritten(_Model):
+    """An alignment in the IFC file: its horizontal segments by kind, its vertical segments and the profiles (the first
+    on the alignment, the others on child alignments).
+    Attributes:
+        lines: Unit: count.
+        arcs: Unit: count.
+        clothoids: Unit: count.
+        referents: Unit: count.
+        vertical_segments: Unit: count.
+    """
+    id: str
+    name: str
+    lines: int
+    arcs: int
+    clothoids: int
+    referents: int
+    profiles: list[str]
+    vertical_segments: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["lines"] = self.lines
+        out["arcs"] = self.arcs
+        out["clothoids"] = self.clothoids
+        out["referents"] = self.referents
+        out["profiles"] = list(self.profiles)
+        out["verticalSegments"] = self.vertical_segments
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> IfcAlignmentWritten:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            lines=data["lines"],
+            arcs=data["arcs"],
+            clothoids=data["clothoids"],
+            referents=data["referents"],
+            profiles=list(data["profiles"]),
+            vertical_segments=data["verticalSegments"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class IfcExported(_Model):
+    """Output of `file.export.ifc` v1, and its plan.
+    Attributes:
+        bytes: Unit: bytes.
+    """
+    path: str
+    schema: str
+    alignments: list[IfcAlignmentWritten]
+    bytes: int
+    sha256: str
+    crs: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["schema"] = self.schema
+        out["alignments"] = [e0.to_json() for e0 in self.alignments]
+        out["bytes"] = self.bytes
+        out["sha256"] = self.sha256
+        if self.crs is not UNSET:
+            out["crs"] = self.crs
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> IfcExported:
+        return cls(
+            path=data["path"],
+            schema=data["schema"],
+            alignments=[IfcAlignmentWritten.from_json(e0) for e0 in data["alignments"]],
+            bytes=data["bytes"],
+            sha256=data["sha256"],
+            crs=data.get("crs", UNSET),
         )
 
 
@@ -97246,6 +97370,7 @@ __all__ = [
     "ExportGis",
     "ExportGml",
     "ExportGpkg",
+    "ExportIfc",
     "ExportLandxml",
     "ExportMaplibre",
     "ExportMaterialsOperation",
@@ -97524,6 +97649,8 @@ __all__ = [
     "HoleRemoveAreaWork",
     "HorizontalAdjustWork",
     "HorizontalConstraintRule",
+    "IfcAlignmentWritten",
+    "IfcExported",
     "ImageClipBy",
     "ImageEntity",
     "ImageEntityGeometry",

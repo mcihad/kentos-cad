@@ -839,6 +839,7 @@ fn command_tool(c: &Value) -> Value {
             | "file.export.gml"
             | "file.export.xyz"
             | "file.export.landxml"
+            | "file.export.ifc"
             | "file.export.atlas"
             | "file.import.csv"
             | "file.import.fgb"

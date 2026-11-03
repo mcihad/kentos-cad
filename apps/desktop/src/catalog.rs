@@ -612,6 +612,7 @@ pub const PORTED: &[&str] = &[
     // plan/road.md Y10.2: LandXML ver (road_exchange.rs).
     "landxml.export",
     "landxml.importAlignments",
+    "ifc.export",
     // docs/adr/0773: Bina programı (program_window.rs).
     "arch.program",
     // docs/adr/0313: Çizgi tipleri (line_types_window.rs).

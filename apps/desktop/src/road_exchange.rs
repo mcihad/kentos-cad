@@ -112,3 +112,55 @@ impl App {
         Task::none()
     }
 }
+
+impl App {
+    /// IFC ver from the ribbon: where to write the file.
+    pub(crate) fn export_ifc(&mut self) -> Task<Message> {
+        let Some(doc) = &self.document else {
+            self.output("Açık çizim yok.");
+            return Task::none();
+        };
+        if doc.model.settings().cad_work != Some(kentos_commands::CadWork::Road) {
+            self.warn("IFC ver yalnız yol projesinde (KentOS Yol) olur.".to_owned());
+            return Task::none();
+        }
+        let name = format!("{}.ifc", doc.model.name());
+        Task::perform(
+            async move {
+                let file = rfd::AsyncFileDialog::new()
+                    .set_title("IFC ver")
+                    .set_file_name(name)
+                    .add_filter("IFC 4.3 (.ifc)", &["ifc"])
+                    .save_file()
+                    .await?;
+                Some(file.path().to_path_buf())
+            },
+            Message::IfcExport,
+        )
+    }
+
+    /// The file chosen: every alignment with its profiles (`file.export.ifc`; the dialog asked before writing over).
+    pub(crate) fn ifc_chosen(&mut self, path: Option<PathBuf>) -> Task<Message> {
+        let Some(mut path) = path else { return Task::none() };
+        if path.extension().is_none() {
+            path.set_extension("ifc");
+        }
+        let Some(doc) = self.document.as_mut() else { return Task::none() };
+        let input = kentos_commands::ExportIfc {
+            path: path.display().to_string(),
+            alignments: None,
+            without_profiles: false,
+            stamp: None,
+            overwrite: true,
+        };
+        let result = kentos_native_application::road_ifc::execute(&mut ExecutionContext::new(&mut doc.model), input);
+        if let Some(out) = self.answered(result) {
+            let profiles: usize = out.alignments.iter().map(|a| a.profiles.len()).sum();
+            self.say(
+                Level::Success,
+                format!("IFC 4.3 yazıldı: {} aks, {profiles} boykesit ({}).", out.alignments.len(), path.display()),
+            );
+        }
+        Task::none()
+    }
+}

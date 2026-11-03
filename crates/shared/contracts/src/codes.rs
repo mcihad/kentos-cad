@@ -718,6 +718,9 @@ codes! {
     /// A LandXML file that cannot be written: a stamp that does not read, nothing to write, a chosen surface or
     /// alignment that does not build (docs/adr/0908).
     INVALID_LANDXML = "invalid_landxml", Failed, false, "LandXML dosyası yazılamıyor.";
+    /// An IFC file that cannot be written: a stamp that does not read, nothing to write, a chosen alignment that does
+    /// not build (docs/adr/0908 §8).
+    INVALID_IFC = "invalid_ifc", Failed, false, "IFC dosyası yazılamıyor.";
     /// A stakeout table that cannot be read: a range off the corridor or backwards, a step out of bounds, a code no
     /// template gives, too many stations or points (docs/adr/0908).
     INVALID_STAKEOUT = "invalid_stakeout", Failed, false, "Aplikasyon cetveli okunamıyor.";

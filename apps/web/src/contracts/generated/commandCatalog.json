@@ -39066,6 +39066,170 @@
       ]
     },
     {
+      "id": "file.export.ifc",
+      "version": 1,
+      "title": "IFC dışa aktar",
+      "summary": "Yol projesinin akslarını ve boykesitlerini IFC 4.3 (IFC4X3_ADD2) dosyasına yazar: iş mantığı (IfcAlignmentHorizontal ve IfcAlignmentVertical, IfcAlignmentSegment'leri ve tasarım değerleri: başlangıç noktası ve doğrultusu, yarıçaplar (saat yönü tersine artı, 0 sonsuz), boy; düşeyde başlangıç uzaklığı, yatay boy, kot, eğimler, yarıçap) ve geometri (IfcCompositeCurve ve IfcGradientCurve: IfcCurveSegment'ler IfcLine, IfcCircle, IfcClothoid, IfcPolynomialCurve üstünde; IfcOpenShell'in eşlemesi); her düzen sıfır boylu parçayla biter. İlk boykesit aksın, öbürleri alt aksların düşeyidir. Başlangıç km'si ve km denklemleri Pset_Stationing'li IfcReferent'tir; projenin sistemi IfcMapConversion ile IfcProjectedCRS'e. Uzunluk metre, açı radyan. alignments id ya da adla (yoksa hepsi); withoutProfiles boykesitleri yazmaz; stamp tarih ve saat. Paralel aks yazılmaz (export_losses). Bütün yazılır ya da hiç; çizimi değiştirmez. Retler: not_a_road_project, invalid_file_path, file_exists, unknown_alignment, invalid_ifc.",
+      "aliases": [
+        "ifcver",
+        "ifcout"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `file.export.ifc` v1 (plan/road.md Y10.3, docs/adr/0908 §8; ROAD-IO-06): a road project's alignments and\ntheir profiles to an IFC 4.3 (`IFC4X3_ADD2`) file, whole or not at all; the path absolute, ending `.ifc`; the\nalignments by id or name (absent: every one); `withoutProfiles` leaves the profiles out; `stamp` the file's date and\ntime (`YYYY-MM-DDThh:mm:ss`; absent: now, UTC).\n\nRefusals, in this order: `not_a_road_project`, `invalid_file_path`, `file_exists`, `unknown_alignment`,\n`invalid_ifc` (a stamp that does not read, nothing to write, a chosen alignment that does not build). Warnings:\n`export_losses` (a parallel axis, an alignment or a profile that does not build, a decreasing km equation, a project\nwithout a coordinate system).",
+        "properties": {
+          "alignments": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "overwrite": {
+            "type": "boolean"
+          },
+          "path": {
+            "type": "string"
+          },
+          "stamp": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "withoutProfiles": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "ExportIfc",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `file.export.ifc` v1, and its plan.",
+        "properties": {
+          "alignments": {
+            "items": {
+              "$ref": "#/$defs/IfcAlignmentWritten"
+            },
+            "type": "array"
+          },
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "crs": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "path": {
+            "type": "string"
+          },
+          "schema": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "schema",
+          "alignments",
+          "bytes",
+          "sha256"
+        ],
+        "title": "IfcExported",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `file.export.ifc` v1, and its plan.",
+        "properties": {
+          "alignments": {
+            "items": {
+              "$ref": "#/$defs/IfcAlignmentWritten"
+            },
+            "type": "array"
+          },
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "crs": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "path": {
+            "type": "string"
+          },
+          "schema": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "schema",
+          "alignments",
+          "bytes",
+          "sha256"
+        ],
+        "title": "IfcExported",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "invalid_file_path",
+          "file_exists",
+          "unknown_alignment",
+          "invalid_ifc"
+        ],
+        "warnings": [
+          "export_losses"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Ana aks boykesitleriyle",
+          "input": {
+            "alignments": [
+              "Ana aks"
+            ],
+            "overwrite": true,
+            "path": "/veri/yol.ifc"
+          }
+        }
+      ]
+    },
+    {
       "id": "road.alignments.import",
       "version": 1,
       "title": "LandXML'den aks al",
@@ -73743,6 +73907,12 @@
       "meaning": "LandXML dosyası yazılamıyor."
     },
     {
+      "code": "invalid_ifc",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "IFC dosyası yazılamıyor."
+    },
+    {
       "code": "invalid_stakeout",
       "kind": "failed",
       "retryable": false,
@@ -105551,6 +105721,64 @@
         "rotation",
         "scale",
         "convention"
+      ],
+      "type": "object"
+    },
+    "IfcAlignmentWritten": {
+      "description": "An alignment in the IFC file: its horizontal segments by kind, its vertical segments and the profiles (the first\non the alignment, the others on child alignments).",
+      "properties": {
+        "arcs": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "clothoids": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "id": {
+          "type": "string"
+        },
+        "lines": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "name": {
+          "type": "string"
+        },
+        "profiles": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "referents": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "verticalSegments": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "lines",
+        "arcs",
+        "clothoids",
+        "referents",
+        "profiles",
+        "verticalSegments"
       ],
       "type": "object"
     },

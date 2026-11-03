@@ -57,6 +57,20 @@ Tarih: 2026-11-03. plan/road.md Y10 (ROAD-SEC-09…11; ROAD-IO-05, 06, 13, 14). 
    denklemleri gelir (geri km yazılmamışsa önceki bölgeden hesaplanır); boykesitlerin km'leri iç km'den aksın boyuna
    çevrilir. Projede aynı adlı aks ret. Tek geri alma adımı “LandXML aks al”; Güzergâh sekmesinde LandXML aks.
 
+8. **IFC 4.3 aks (ROAD-IO-06).** `file.export.ifc` akslarla boykesitleri `IFC4X3_ADD2` STEP dosyasına yazar.
+   Dayanak buildingSMART'ın IFC 4.3 belgeleri (IfcAlignment, IfcAlignmentHorizontalSegment, IfcAlignmentVerticalSegment,
+   IfcCurveSegment, IfcClothoid, IfcGradientCurve, IfcMapConversion, Pset_Stationing; buildingSMART/IFC4.3.x-development
+   deposundan, sitesi doğrudan okumayı engelliyor) ve IfcOpenShell'in alignment API'sinin eşlemesidir. İş mantığı:
+   IfcAlignment'a iç içe IfcAlignmentHorizontal ve IfcAlignmentVertical, onlara IfcAlignmentSegment'ler (tasarım değerleri:
+   başlangıç noktası ve doğrultusu radyan, yarıçaplar saat yönü tersine artı ve 0 sonsuz, boy; düşeyde başlangıç uzaklığı,
+   yatay boy, kot, eğimler, parabolün sabiti L/(g1−g0) ya da dairenin yarıçapı); her düzen sıfır boylu bir parçayla
+   biter. Geometri: FootPrint/Curve2D IfcCompositeCurve, Axis/Curve3D IfcGradientCurve; IfcCurveSegment'ler IfcLine,
+   IfcCircle (parça boyu yarıçapın işaretiyle), IfcClothoid (A = işaret(k1−k0)·√(L/|k1−k0|), başlangıç s0 = k0·L/(k1−k0))
+   ve IfcPolynomialCurve üstünde, IfcOpenShell'in yazdığı gibi; geçiş kodu konum (1 mm), doğrultu ve eğrilikle. İlk
+   boykesit aksın düşeyidir, öbürleri IfcRelAggregates ile alt aks. Başlangıç km'si ve km denklemleri Pset_Stationing'li
+   (Station, IncomingStation) IfcReferent; azalan km söylenemez (export_losses). Proje sistemi IfcMapConversion ile
+   IfcProjectedCRS'e (EPSG kodu), dönüşüm birim (koordinatlar zaten projenin sisteminde). Paralel aks yazılmaz.
+
 ## Aşamalar
 
 Y10.1 aplikasyon cetveli (komut, başvuru, Python, MCP, pencere); Y10.2 LandXML'e aks, boykesit ve yüzey yazma ve
@@ -72,6 +86,11 @@ boykesitler road_profile_command_cases.py'nin başvurusundan); KentOS'un yazdı�
 başvuruyla aynı; Python, MCP, masaüstünde LandXML ver. Y10.2b (yapıldı, okuma): 21 ortak durum (`road_landxml_cases.py`; `aks.xml`'i başvurunun 40 basamaklı elemanlarından
 KentOS kodu olmadan yazar, şemaya uygun; beklenen PI'lar aksların tanımındakiler, ±1e-6); KentOS'un yazdığı `yol.xml`
 geri alınınca PI'lar özgünleriyle aynı; Python, masaüstünde LandXML aks.
+
+Y10.3 (yapıldı): 20 ortak durum (`road_ifc_cases.py`); KentOS'un yazdığı `yol.ifc` (`fixtures/road/v1/ifc/out`)
+`--written` ile IfcOpenShell 0.9'da: IFC4X3_ADD2 şeması ve EXPRESS kuralları temiz, her yatay parçanın iş mantığı
+başvuruyla ve her eğri parçası IfcOpenShell'in aynı iş mantığından eşlediğiyle aynı, IfcOpenShell'in geometri
+çekirdeğinin her 5 m'de değerlendirdiği 286 yer ve 346 kot başvurudan en çok 1e-6 m. Python, MCP, masaüstünde IFC ver.
 
 ## Sonra
 

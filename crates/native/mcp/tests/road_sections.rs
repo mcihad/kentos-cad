@@ -217,3 +217,22 @@ fn a_road_project_goes_out_as_landxml() {
     assert!(text.contains("<Alignment name=\"Ana aks\"") && text.contains("<Surface "), "{text}");
     let _ = std::fs::remove_file(&out);
 }
+
+/// The file's alignments go out as IFC 4.3 (plan/road.md Y10.3, docs/adr/0908 §8).
+#[test]
+fn a_road_project_goes_out_as_ifc() {
+    let mut server = Server::new();
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/kcad/v2/road-work.kcad");
+    let opened = call(&mut server, "drawing.open", json!({"path":path}));
+    let drawing = opened["structuredContent"]["drawing"].clone();
+    let out = std::env::temp_dir().join(format!("kentos-mcp-ifc-{}.ifc", std::process::id()));
+    let written = call(
+        &mut server,
+        "file.export.ifc",
+        json!({"drawing":drawing,"path":out.display().to_string(),"stamp":"2026-11-03T10:00:00","overwrite":true}),
+    );
+    assert_eq!(written["isError"], false, "{written}");
+    let text = std::fs::read_to_string(&out).expect("written");
+    assert!(text.contains("FILE_SCHEMA(('IFC4X3_ADD2'));") && text.contains("IFCALIGNMENT("), "{text}");
+    let _ = std::fs::remove_file(&out);
+}

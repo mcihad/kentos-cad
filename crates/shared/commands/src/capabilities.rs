@@ -1849,6 +1849,12 @@ const ENTRIES: &[Entry] = &[
         warnings: &["landxml_left"],
         targets: none,
     },
+    Entry {
+        id: "file.export.ifc",
+        refusals: &[&["not_a_road_project", "invalid_file_path", "file_exists", "unknown_alignment", "invalid_ifc"]],
+        warnings: &["export_losses"],
+        targets: none,
+    },
     // KentOS Yol's stakeout table (plan/road.md Y10, docs/adr/0908).
     Entry {
         id: "road.stakeout.query",

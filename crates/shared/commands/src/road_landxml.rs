@@ -158,3 +158,77 @@ pub struct AlignmentsImported {
     pub alignments: Vec<AlignmentImported>,
     pub revision: String,
 }
+
+pub const FILE_EXPORT_IFC: &str = "file.export.ifc";
+pub const FILE_EXPORT_IFC_VERSION: u32 = 1;
+
+/// Input of `file.export.ifc` v1 (plan/road.md Y10.3, docs/adr/0908 §8; ROAD-IO-06): a road project's alignments and
+/// their profiles to an IFC 4.3 (`IFC4X3_ADD2`) file, whole or not at all; the path absolute, ending `.ifc`; the
+/// alignments by id or name (absent: every one); `withoutProfiles` leaves the profiles out; `stamp` the file's date and
+/// time (`YYYY-MM-DDThh:mm:ss`; absent: now, UTC).
+///
+/// Refusals, in this order: `not_a_road_project`, `invalid_file_path`, `file_exists`, `unknown_alignment`,
+/// `invalid_ifc` (a stamp that does not read, nothing to write, a chosen alignment that does not build). Warnings:
+/// `export_losses` (a parallel axis, an alignment or a profile that does not build, a decreasing km equation, a project
+/// without a coordinate system).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ExportIfc {
+    pub path: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub alignments: Option<Vec<String>>,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub without_profiles: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub stamp: Option<String>,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub overwrite: bool,
+}
+
+/// An alignment in the IFC file: its horizontal segments by kind, its vertical segments and the profiles (the first
+/// on the alignment, the others on child alignments).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct IfcAlignmentWritten {
+    pub id: String,
+    pub name: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub lines: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub arcs: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub clothoids: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub referents: u32,
+    pub profiles: Vec<String>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub vertical_segments: u32,
+}
+
+/// Output of `file.export.ifc` v1, and its plan.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct IfcExported {
+    pub path: String,
+    pub schema: String,
+    pub alignments: Vec<IfcAlignmentWritten>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub crs: Option<String>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "bytes")))]
+    pub bytes: u64,
+    pub sha256: String,
+}

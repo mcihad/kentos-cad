@@ -652,6 +652,8 @@ pub enum Message {
     LandxmlExport(Option<std::path::PathBuf>),
     /// LandXML'den aks al's file, or none (road_exchange.rs, plan/road.md Y10.2).
     LandxmlAlignments(Option<std::path::PathBuf>),
+    /// IFC ver's file, or none (road_exchange.rs, plan/road.md Y10.3).
+    IfcExport(Option<std::path::PathBuf>),
     /// An event of Bina programı (program_window.rs, docs/adr/0773).
     Program(crate::program_window::Event),
     TableStyles(crate::forms::table_styles::Event),
@@ -2380,6 +2382,7 @@ impl App {
             Message::Stakeout(event) => return self.stakeout_event(event),
             Message::LandxmlExport(path) => return self.landxml_chosen(path),
             Message::LandxmlAlignments(path) => return self.landxml_alignments_chosen(path),
+            Message::IfcExport(path) => return self.ifc_chosen(path),
             Message::Program(event) => return self.program_event(event),
             Message::TableStyles(event) => return self.table_styles_event(event),
             Message::Subtypes(event) => return self.subtypes_event(event),
@@ -3424,6 +3427,7 @@ impl App {
             // LandXML ver (road_exchange.rs, plan/road.md Y10.2).
             "landxml.export" => return self.export_landxml(),
             "landxml.importAlignments" => return self.import_landxml_alignments(),
+            "ifc.export" => return self.export_ifc(),
             // Bina programı (program_window.rs, docs/adr/0773).
             "arch.program" => self.open_program(),
             // Çizgi tipleri (docs/adr/0313 §7).

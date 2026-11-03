@@ -7404,6 +7404,31 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::FILE_EXPORT_IFC.into(),
+            version: crate::FILE_EXPORT_IFC_VERSION,
+            title: "IFC dışa aktar".into(),
+            summary: "Yol projesinin akslarını ve boykesitlerini IFC 4.3 (IFC4X3_ADD2) dosyasına yazar: iş mantığı (IfcAlignmentHorizontal ve IfcAlignmentVertical, IfcAlignmentSegment'leri ve tasarım değerleri: başlangıç noktası ve doğrultusu, yarıçaplar (saat yönü tersine artı, 0 sonsuz), boy; düşeyde başlangıç uzaklığı, yatay boy, kot, eğimler, yarıçap) ve geometri (IfcCompositeCurve ve IfcGradientCurve: IfcCurveSegment'ler IfcLine, IfcCircle, IfcClothoid, IfcPolynomialCurve üstünde; IfcOpenShell'in eşlemesi); her düzen sıfır boylu parçayla biter. İlk boykesit aksın, öbürleri alt aksların düşeyidir. Başlangıç km'si ve km denklemleri Pset_Stationing'li IfcReferent'tir; projenin sistemi IfcMapConversion ile IfcProjectedCRS'e. Uzunluk metre, açı radyan. alignments id ya da adla (yoksa hepsi); withoutProfiles boykesitleri yazmaz; stamp tarih ve saat. Paralel aks yazılmaz (export_losses). Bütün yazılır ya da hiç; çizimi değiştirmez. \
+                      Retler: not_a_road_project, invalid_file_path, file_exists, unknown_alignment, invalid_ifc."
+                .into(),
+            aliases: vec!["ifcver".into(), "ifcout".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ExportIfc>(),
+            output: schema::<crate::IfcExported>(),
+            plan: Some(schema::<crate::IfcExported>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana aks boykesitleriyle".into(),
+                input: json!({ "path": "/veri/yol.ifc", "alignments": ["Ana aks"], "overwrite": true }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::ROAD_ALIGNMENTS_IMPORT.into(),
             version: crate::ROAD_ALIGNMENTS_IMPORT_VERSION,
             title: "LandXML'den aks al".into(),
@@ -13090,6 +13115,7 @@ mod tests {
                     crate::FILE_EXPORT_LANDXML => {
                         serde_json::from_value::<crate::ExportLandxml>(e.input.clone()).map(|_| ())
                     }
+                    crate::FILE_EXPORT_IFC => serde_json::from_value::<crate::ExportIfc>(e.input.clone()).map(|_| ()),
                     crate::ROAD_ALIGNMENTS_IMPORT => {
                         serde_json::from_value::<crate::AlignmentsImport>(e.input.clone()).map(|_| ())
                     }
@@ -13825,6 +13851,9 @@ mod tests {
                         }
                         crate::FILE_EXPORT_LANDXML => {
                             serde_json::from_value::<crate::LandxmlExported>(output.clone()).map(|_| ())
+                        }
+                        crate::FILE_EXPORT_IFC => {
+                            serde_json::from_value::<crate::IfcExported>(output.clone()).map(|_| ())
                         }
                         crate::ROAD_ALIGNMENTS_IMPORT => {
                             serde_json::from_value::<crate::AlignmentsImported>(output.clone()).map(|_| ())

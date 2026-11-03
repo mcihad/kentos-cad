@@ -635,6 +635,10 @@
        {
         "command": "landxml.export",
         "size": "large"
+       },
+       {
+        "command": "ifc.export",
+        "size": "large"
        }
       ]
      }
