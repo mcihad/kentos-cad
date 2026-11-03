@@ -266,9 +266,12 @@ CAD = [
         # The superelevation (plan/road.md Y6, docs/adr/0904): the Dever window and a new schedule.
         P("Dever", "superelevationEditor", [L("superelevation.editor"), L("superelevation.new")]),
     ], works=ROAD),
-    # KentOS Yol's corridors (plan/road.md Y7, docs/adr/0905): the Koridor window, a new corridor and the slope plan.
+    # KentOS Yol's corridors (plan/road.md Y7, docs/adr/0905): the Koridor window, a new corridor and the slope plan;
+    # the earthwork volumes on it.
     T("corridor", "Koridor", [
         P("Koridor", "corridorEditor", [L("corridor.editor"), L("corridor.new"), L("corridor.slopePlan")]),
+        # The earthwork volumes (plan/road.md Y8, docs/adr/0906): the Kübaj window, a new volume and its sheet.
+        P("Kübaj", "volumeEditor", [L("volume.editor"), L("volume.new"), L("volume.export")]),
     ], works=ROAD),
     T("plan", "Plan", [
         P("Yol", "planRoad", [L("tool.planRoad"), S("tool.roadJunctions"), S("tool.medianClose"), S("tool.centerline")]),

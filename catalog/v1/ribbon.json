@@ -587,6 +587,24 @@
         "size": "large"
        }
       ]
+     },
+     {
+      "label": "Kübaj",
+      "icon": "volumeEditor",
+      "items": [
+       {
+        "command": "volume.editor",
+        "size": "large"
+       },
+       {
+        "command": "volume.new",
+        "size": "large"
+       },
+       {
+        "command": "volume.export",
+        "size": "large"
+       }
+      ]
      }
     ],
     "works": [

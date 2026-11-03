@@ -74,6 +74,10 @@
     "label": "Güzergâh"
    },
    {
+    "id": "corridor",
+    "label": "Koridor"
+   },
+   {
     "id": "plan",
     "label": "Plan"
    },

@@ -259,6 +259,7 @@ mod profile_window;
 mod section_window;
 mod superelevation_window;
 mod corridor_window;
+mod volume_window;
 #[cfg(test)]
 mod alignment_window_tests;
 #[cfg(test)]
@@ -269,6 +270,8 @@ mod section_window_tests;
 mod superelevation_window_tests;
 #[cfg(test)]
 mod corridor_window_tests;
+#[cfg(test)]
+mod volume_window_tests;
 mod terrain_layer;
 mod terrain_window;
 #[cfg(test)]

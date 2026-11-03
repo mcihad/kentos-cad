@@ -599,6 +599,10 @@ pub const PORTED: &[&str] = &[
     "corridor.editor",
     "corridor.new",
     "corridor.slopePlan",
+    // plan/road.md Y8: Kübaj, Kübaj hesabı oluştur and Kübaj cetveli (volume_window.rs).
+    "volume.editor",
+    "volume.new",
+    "volume.export",
     // docs/adr/0773: Bina programı (program_window.rs).
     "arch.program",
     // docs/adr/0313: Çizgi tipleri (line_types_window.rs).

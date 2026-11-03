@@ -3197,8 +3197,8 @@
       "icon": "corridorEditor",
       "description": "Yol projesinin koridorları: bir aksın üstünde boykesit, yüzey ve isteğe bağlı dever çizelgesi; arama genişliği; km örneklemesi (aliyman ve kurp aralığı, kirişin sapma toleransı, profil noktaları, dever kritik km'leri, yazılan km'ler) ve her biri bir tip kesitle bölgeler. Koridor yazdıkça kurulur: planda üst yüzey, öznitelik çizgileri (eksen, menteşe, hendek, şev ayağı) ve çözülmeyen aralıklar; uyarılar nedenini söyler. Kaydet road.corridors.edit ile yazar, Şevli plan çiz road.corridors.draw ile çizer; her yazma bir geri alma adımıdır.",
       "aliases": [
-        "KORIDOR",
-        "CORRIDOR"
+        "YOLKORIDORU",
+        "ROADCORRIDOR"
       ],
       "shortcuts": [],
       "category": "Koridor",
@@ -3231,6 +3231,49 @@
       ],
       "shortcuts": [],
       "category": "Koridor",
+      "status": "implemented"
+    },
+    {
+      "id": "volume.editor",
+      "title": "Kübaj…",
+      "short": "Kübaj",
+      "icon": "volumeEditor",
+      "description": "Yol projesinin kübaj hesapları: bir koridorun hacmi ortalama alanla, iki kesitin ortasında kurulan kesitle prizmoidal ya da koridorun üst yüzeyiyle arazi arasında; kabarma ve sıkışma katsayıları km aralıklarına. Kübaj yazdıkça hesaplanır: kütle diyagramı (birikimli düzeltilmiş kazı, dolgu ve kütle ordinatı), toplamlar, uyarılar ve kübaj cetveli. Kaydet road.volumes.edit ile yazar, her yazma bir geri alma adımıdır; Cetveli yaz cetveli Excel, OpenDocument ya da CSV olarak yazar.",
+      "aliases": [
+        "KUBAJ",
+        "KÜBAJ",
+        "VOLUMES"
+      ],
+      "shortcuts": [],
+      "category": "Kübaj",
+      "status": "implemented"
+    },
+    {
+      "id": "volume.new",
+      "title": "Kübaj hesabı oluştur…",
+      "short": "Yeni kübaj",
+      "icon": "volumeNew",
+      "description": "Yeni bir kübaj hesabı kurar: Kübaj penceresini ilk koridorla ve ortalama alan yöntemiyle açar; katsayılar zemin raporundan yazılır, KentOS öntanımlı sayı vermez. Kaydet road.volumes.edit ile yazar.",
+      "aliases": [
+        "KUBAJOLUSTUR",
+        "KÜBAJOLUŞTUR"
+      ],
+      "shortcuts": [],
+      "category": "Kübaj",
+      "status": "implemented"
+    },
+    {
+      "id": "volume.export",
+      "title": "Kübaj cetveli…",
+      "short": "Cetvel",
+      "icon": "volumeExport",
+      "description": "Kübaj cetvelini dosyaya yazar: Kübaj penceresinde seçilen kübajın satırları (km'ler, uzunluk, kazı, dolgu, katsayılar, düzeltilmiş hacimler, birikimli toplamlar ve kütle ordinatı) ve toplam satırı Excel çalışma kitabı, OpenDocument hesap tablosu ya da CSV olarak; çizim değişmez.",
+      "aliases": [
+        "KUBAJCETVELI",
+        "KÜBAJCETVELİ"
+      ],
+      "shortcuts": [],
+      "category": "Kübaj",
       "status": "implemented"
     },
     {
@@ -4241,6 +4284,9 @@
     "corridorEditor": "<path d=\"M3 17C6 9 10 6 17 4\" stroke-width=\"1.4\"/><path d=\"M7 18.5C9.5 12 13 9.5 18.5 8\" stroke-width=\"1.4\"/><path d=\"M4.2 13.5 8.6 15M7 9.3 10.8 12M11.3 6.2 14.4 9.6\" stroke-width=\".8\"/>",
     "corridorNew": "<path d=\"M3 15C5.5 9 8.5 6.5 13 5\" stroke-width=\"1.4\"/><path d=\"M6.5 16.5C8.4 12 11 9.6 14 8.6\" stroke-width=\"1.4\"/><path d=\"M4.4 11.8 7.8 13.4M8 8.2 10.6 10.8\" stroke-width=\".8\"/><path d=\"M15.5 12.2v6.3M12.4 15.4h6.3\" stroke-width=\"1.5\"/>",
     "corridorSlopePlan": "<path d=\"M2.5 6h15\" stroke-width=\"1.5\"/><path d=\"M4 6v9M7 6v4.5M10 6v9M13 6v4.5M16 6v9\" stroke-width=\".9\"/><path d=\"M2.5 15.5h15\" stroke-width=\".8\" stroke-dasharray=\"1.4 1\"/>",
+    "volumeEditor": "<path d=\"M2.5 9c2.5-3.2 4.6-3.2 7 0s4.6 2.6 8-.6\" stroke-width=\"1.3\"/><path d=\"M2.5 12.5h15\" stroke-width=\"1.5\"/><path d=\"M4.8 8.4v4.1M7.2 7.1v5.4M12.6 10.3v2.2M15.1 9.8v2.7\" stroke-width=\".8\"/>",
+    "volumeNew": "<path d=\"M2.5 8c2-2.6 3.8-2.6 5.8 0s3.6 2 6-.4\" stroke-width=\"1.3\"/><path d=\"M2.5 11h11\" stroke-width=\"1.5\"/><path d=\"M4.6 7.4V11M6.6 6.4V11M11.3 8.6V11\" stroke-width=\".8\"/><path d=\"M15.5 12.2v6.3M12.4 15.4h6.3\" stroke-width=\"1.5\"/>",
+    "volumeExport": "<rect x=\"2.5\" y=\"3.5\" width=\"10.5\" height=\"13\" rx=\"1\" stroke-width=\"1.2\"/><path d=\"M2.5 7.5H13M2.5 11H13M6.8 3.5v13\" stroke-width=\".8\"/><path d=\"M14.5 13.5h4M16.8 11.6l1.9 1.9-1.9 1.9\" stroke-width=\"1.3\"/>",
     "superelevationEditor": "<path d=\"M2 12h3.5L9 7h5l4 0\" stroke-width=\"1.5\"/><path d=\"M2 12h3.5L9 15h5l4 0\" stroke-width=\"1\"/><path d=\"M2 12h16\" stroke-width=\".6\" stroke-dasharray=\"1.2 1\"/>",
     "superelevationNew": "<path d=\"M2 11h3L8 7h4\" stroke-width=\"1.5\"/><path d=\"M2 11h3L8 14h4\" stroke-width=\"1\"/><path d=\"M15.5 12.2v6.3M12.4 15.4h6.3\" stroke-width=\"1.5\"/>",
     "sectionEditor": "<path d=\"M2 9.5 18 12.5\" stroke-width=\".8\"/><path d=\"M3 15.5 6.5 11h7l3.5 4.5\" stroke-width=\"1.5\"/><path d=\"M10 3.5v14\" stroke-width=\".7\" stroke-dasharray=\"1.5 1.2\"/>",

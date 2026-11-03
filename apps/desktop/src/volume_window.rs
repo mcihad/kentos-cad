@@ -1,0 +1,692 @@
+//! Kübaj (plan/road.md Y8, `volume.editor`): a road project's earthwork volumes, as Civil 3D's sample line group
+//! volumes, OpenRoads' end area volumes report and Netpro's kübaj hesabı make them: a corridor's, by the average end
+//! area, the prismoidal formula or between the corridor's top surface and the terrain, with the swell and shrink
+//! factors written by stations. The volume is computed as it is typed (`road.volumes.query`'s rule): the mass diagram
+//! shows the factored running cut and fill and their difference, the sheet its rows; the warnings say why.
+//!
+//! ```text
+//! ┌ Kübaj ──────────────────────────────────────────────────────────────────────────────────────┐
+//! │ Kübaj hesapları     │ Ad [Ana kübaj]  Koridor [▾]  Yöntem [Ortalama alan ▾]                 │
+//! │ ● Ana kübaj         │ Baş  Son  Kabarma  Sıkışma  ○      [Satır ekle] [Satırı sil]          │
+//! │ [Yeni kübaj]        │ ┌───────────────────────────────────────────────────────────────────┐ │
+//! │                     │ [Kütle diyagramı] [Cetvel]                                            │
+//! │                     │ │  mass diagram: Σ cut, Σ fill, mass ordinate; or the sheet's rows   │ │
+//! │                     │ └───────────────────────────────────────────────────────────────────┘ │
+//! │                     │ totals · warnings                                                     │
+//! │ [Sil]   Biçim [Excel ▾] [Cetveli yaz…]                                   [Vazgeç] [Kaydet] │
+//! └─────────────────────────────────────────────────────────────────────────────────────────────┘
+//! ```
+//!
+//! The window edits a copy of the volumes; Kaydet writes what changed through `road.volumes.edit` (removes, then
+//! sets), each one undo step, and closes. Cetveli yaz writes the chosen volume's sheet as typed (an Excel workbook, an
+//! OpenDocument spreadsheet or a CSV file, docs/adr/0223's writer). The factors are the user's: nothing is filled in.
+
+use iced::widget::canvas::{self, Path, Stroke, Text};
+use iced::widget::{Column, column, container, row, scrollable, space};
+use iced::{Center, Color, Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
+use kentos_commands::{
+    CommandWarning, RoadEditOperation, VolumeDef, VolumeFactorDef, VolumeMethod, VolumeReport, VolumesEdit, WorkbookFormat,
+};
+use kentos_interaction::Level;
+use kentos_native_application::{ExecutionContext, road_volumes, road_volumes_edit};
+use kentos_ui::theme::{Tokens, typography};
+use kentos_ui::widget::select::{Choice, Select};
+use kentos_ui::widget::{Dialog as Frame, Elided};
+use kentos_ui::{label, style};
+
+use crate::app::{App, Dialog, Message};
+use crate::exchange::words;
+use crate::traces::Control;
+
+/// The window's title, which a trace names it by.
+pub const TITLE: &str = "Kübaj";
+const SAVE: &str = "Kaydet";
+const CANCEL: &str = "Vazgeç";
+const NEW: &str = "Yeni kübaj";
+const REMOVE: &str = "Sil";
+const ADD: &str = "Satır ekle";
+const REMOVE_ROW: &str = "Satırı sil";
+const WRITE: &str = "Cetveli yaz…";
+const DIAGRAM: &str = "Kütle diyagramı";
+const SHEET: &str = "Cetvel";
+
+const METHODS: [(VolumeMethod, &str); 3] = [
+    (VolumeMethod::EndArea, "Ortalama alan"),
+    (VolumeMethod::Prismoidal, "Prizmoidal"),
+    (VolumeMethod::Surfaces, "Yüzeyler arası"),
+];
+
+fn trimmed(v: f64) -> String {
+    let s = format!("{v:.6}");
+    s.trim_end_matches('0').trim_end_matches('.').to_owned()
+}
+
+/// A number in Turkish: thousands with points, the fraction after a comma.
+fn grouped(v: f64, digits: usize) -> String {
+    let text = format!("{:.digits$}", v.abs());
+    let (whole, fraction) = text.split_once('.').unwrap_or((&text, ""));
+    let mut out = String::new();
+    for (i, c) in whole.chars().enumerate() {
+        if i > 0 && (whole.len() - i) % 3 == 0 {
+            out.push('.');
+        }
+        out.push(c);
+    }
+    let sign = if v < 0.0 && text.chars().any(|c| c.is_ascii_digit() && c != '0') { "-" } else { "" };
+    if fraction.is_empty() { format!("{sign}{out}") } else { format!("{sign}{out},{fraction}") }
+}
+
+fn number(text: &str) -> Result<Option<f64>, ()> {
+    let t = text.trim().replace(',', ".");
+    if t.is_empty() {
+        return Ok(None);
+    }
+    t.parse::<f64>().map(Some).map_err(|_| ())
+}
+
+/// An earthwork volume as typed.
+#[derive(Debug, Clone)]
+pub struct Row {
+    pub(crate) id: String,
+    pub(crate) name: String,
+    revision: u32,
+    corridor: Option<String>,
+    method: VolumeMethod,
+    /// From, to, the cut's and the fill's factor.
+    factors: Vec<[String; 4]>,
+}
+
+impl Row {
+    fn of(d: &VolumeDef) -> Self {
+        Self {
+            id: d.id.clone(),
+            name: d.name.clone(),
+            revision: d.revision,
+            corridor: Some(d.corridor.clone()),
+            method: d.method,
+            factors: d
+                .factors
+                .iter()
+                .map(|f| [trimmed(f.from), trimmed(f.to), f.cut.map(trimmed).unwrap_or_default(), f.fill.map(trimmed).unwrap_or_default()])
+                .collect(),
+        }
+    }
+
+    fn def(&self) -> Result<VolumeDef, String> {
+        let corridor = self.corridor.clone().ok_or("Bir koridor seçin: kübaj onun kesitlerinden ve üst yüzeyinden hesaplanır.")?;
+        let mut factors = Vec::new();
+        for (i, f) in self.factors.iter().enumerate() {
+            let n = i + 1;
+            let need = |t: &str, what: &str| match number(t) {
+                Ok(Some(v)) => Ok(v),
+                _ => Err(format!("{n}. katsayı satırının {what} bir sayı olmalı.")),
+            };
+            let may = |t: &str, what: &str| number(t).map_err(|()| format!("{n}. katsayı satırının {what} bir sayı olmalı."));
+            factors.push(VolumeFactorDef {
+                from: need(&f[0], "başı")?,
+                to: need(&f[1], "sonu")?,
+                cut: may(&f[2], "kabarması")?,
+                fill: may(&f[3], "sıkışması")?,
+            });
+        }
+        Ok(VolumeDef { id: self.id.clone(), name: self.name.clone(), corridor, revision: self.revision, method: self.method, factors })
+    }
+}
+
+/// The chosen volume as last computed: its report and warnings, or why it does not compute.
+#[derive(Debug, Clone, Default)]
+pub(crate) struct Preview {
+    pub(crate) report: Option<VolumeReport>,
+    pub(crate) warnings: Vec<CommandWarning>,
+    pub(crate) why: Option<String>,
+}
+
+#[derive(Debug, Clone)]
+pub struct Window {
+    pub(crate) rows: Vec<Row>,
+    kept: Vec<VolumeDef>,
+    pub(crate) chosen: Option<usize>,
+    line: Option<usize>,
+    pub(crate) preview: Preview,
+    format: WorkbookFormat,
+    /// The sheet shown in place of the mass diagram.
+    pub(crate) sheet: bool,
+}
+
+#[derive(Debug, Clone)]
+pub enum Event {
+    Choose(usize),
+    New,
+    Remove,
+    Name(String),
+    Corridor(String),
+    Method(VolumeMethod),
+    /// A factor row's from (0), to (1), cut (2) or fill (3).
+    Factor(usize, usize, String),
+    Line(usize),
+    Add,
+    RemoveRow,
+    Format(WorkbookFormat),
+    /// The mass diagram (false) or the sheet (true).
+    Show(bool),
+    Write,
+    Save,
+    Cancel,
+}
+
+fn msg(event: Event) -> Message {
+    Message::Volumes(event)
+}
+
+fn chosen_row(w: &mut Window) -> Option<&mut Row> {
+    w.chosen.and_then(|i| w.rows.get_mut(i))
+}
+
+impl App {
+    /// Kübaj: the window on the road project's earthwork volumes.
+    pub(crate) fn open_volumes(&mut self) {
+        let Some(doc) = &self.document else {
+            self.output("Açık çizim yok.");
+            return;
+        };
+        if doc.model.settings().cad_work != Some(kentos_commands::CadWork::Road) {
+            self.warn("Kübaj yalnız yol projesinde (KentOS Yol) olur.".to_owned());
+            return;
+        }
+        let kept = doc.model.road_volumes().to_vec();
+        self.volume_window = Some(Box::new(Window {
+            chosen: (!kept.is_empty()).then_some(0),
+            rows: kept.iter().map(Row::of).collect(),
+            kept,
+            line: None,
+            preview: Preview::default(),
+            format: WorkbookFormat::Xlsx,
+            sheet: false,
+        }));
+        self.dialog = Some(Dialog::Volumes);
+        self.refresh_volume();
+    }
+
+    /// Kübaj hesabı oluştur from the ribbon: the window with a new volume of the first corridor.
+    pub(crate) fn new_volume(&mut self) {
+        self.open_volumes();
+        if self.volume_window.is_some() {
+            let _ = self.volume_event(Event::New);
+        }
+    }
+
+    /// Kübaj cetveli from the ribbon: the window on the first volume, to write its sheet.
+    pub(crate) fn volume_sheet(&mut self) {
+        self.open_volumes();
+    }
+
+    fn refresh_volume(&mut self) {
+        let Some(doc) = &self.document else { return };
+        let Some(w) = self.volume_window.as_mut() else { return };
+        let Some(r) = w.chosen.and_then(|i| w.rows.get(i)) else {
+            w.preview = Preview::default();
+            return;
+        };
+        w.preview = match r.def().and_then(|d| road_volumes::preview(&doc.model, &d)) {
+            Err(e) => Preview { why: Some(e), ..Preview::default() },
+            Ok((report, warnings)) => Preview { report: Some(report), warnings, why: None },
+        };
+    }
+
+    /// The project's corridors: id and name.
+    fn volume_corridors(&self) -> Vec<(String, String)> {
+        self.document
+            .as_ref()
+            .map_or_else(Vec::new, |d| d.model.road_corridors().iter().map(|c| (c.id.clone(), c.name.clone())).collect())
+    }
+
+    pub(crate) fn volume_event(&mut self, event: Event) -> Task<Message> {
+        let corridors = self.volume_corridors();
+        let Some(w) = self.volume_window.as_mut() else { return Task::none() };
+        let mut warning = None;
+        match event {
+            Event::Choose(i) => {
+                w.chosen = Some(i);
+                w.line = None;
+            }
+            Event::New => match corridors.first() {
+                None => warning = Some("Kübaj bir koridorun hacmidir: önce Koridor'da bir koridor oluşturun."),
+                Some((id, _)) => {
+                    let taken: Vec<String> = w.rows.iter().map(|r| r.id.clone()).collect();
+                    let new_id = (1..).map(|n| format!("v-{n}")).find(|x| !taken.contains(x)).unwrap_or_default();
+                    let n = w.rows.len() + 1;
+                    // The first corridor and the average end area; the factors are the user's.
+                    w.rows.push(Row {
+                        id: new_id,
+                        name: if n == 1 { "Kübaj".to_owned() } else { format!("Kübaj {n}") },
+                        revision: 0,
+                        corridor: Some(id.clone()),
+                        method: VolumeMethod::EndArea,
+                        factors: Vec::new(),
+                    });
+                    w.chosen = Some(w.rows.len() - 1);
+                    w.line = None;
+                }
+            },
+            Event::Remove => {
+                if let Some(i) = w.chosen.filter(|i| *i < w.rows.len()) {
+                    w.rows.remove(i);
+                    w.chosen = (!w.rows.is_empty()).then_some(i.min(w.rows.len().saturating_sub(1)));
+                }
+            }
+            Event::Name(t) => {
+                if let Some(r) = chosen_row(w) {
+                    r.name = t;
+                }
+            }
+            Event::Corridor(id) => {
+                let saved = w.chosen.and_then(|i| w.rows.get(i)).is_some_and(|r| w.kept.iter().any(|k| k.id == r.id));
+                if saved {
+                    warning = Some("Kaydedilmiş kübajın koridoru değişmez; başka koridor için yeni bir kübaj oluşturun.");
+                } else if let Some(r) = chosen_row(w) {
+                    r.corridor = Some(id);
+                }
+            }
+            Event::Method(m) => {
+                if let Some(r) = chosen_row(w) {
+                    r.method = m;
+                }
+            }
+            Event::Factor(j, k, t) => {
+                if let Some(x) = chosen_row(w).and_then(|r| r.factors.get_mut(j)) {
+                    x[k.min(3)] = t;
+                }
+                w.line = Some(j);
+            }
+            Event::Line(j) => w.line = Some(j),
+            Event::Add => {
+                if let Some(r) = chosen_row(w) {
+                    // A new row starts where the last ends; its end and factors are the user's.
+                    let from = r.factors.last().map(|x| x[1].clone()).unwrap_or_else(|| "0".into());
+                    r.factors.push([from, String::new(), String::new(), String::new()]);
+                    let n = r.factors.len() - 1;
+                    w.line = Some(n);
+                }
+            }
+            Event::RemoveRow => {
+                if let Some(j) = w.line {
+                    if let Some(r) = chosen_row(w).filter(|r| j < r.factors.len()) {
+                        r.factors.remove(j);
+                    }
+                    w.line = None;
+                }
+            }
+            Event::Format(f) => w.format = f,
+            Event::Show(sheet) => w.sheet = sheet,
+            Event::Write => return self.write_volume_sheet(),
+            Event::Cancel => {
+                self.volume_window = None;
+                self.dialog = None;
+                return Task::none();
+            }
+            Event::Save => return self.save_volumes(),
+        }
+        if let Some(words) = warning {
+            self.warn(words.to_owned());
+        }
+        self.refresh_volume();
+        Task::none()
+    }
+
+    fn blank_volume_edit(operation: RoadEditOperation, id: &str) -> VolumesEdit {
+        VolumesEdit {
+            operation,
+            volume: Some(id.to_owned()),
+            name: None,
+            corridor: None,
+            method: None,
+            factors: None,
+            expected_revision: None,
+        }
+    }
+
+    fn volume_write(&mut self, edit: VolumesEdit) -> bool {
+        let Some(doc) = self.document.as_mut() else { return false };
+        let result = road_volumes_edit::execute(&mut ExecutionContext::new(&mut doc.model), edit);
+        self.answered(result).is_some()
+    }
+
+    /// The chosen volume's sheet, as typed, written where the user says.
+    fn write_volume_sheet(&mut self) -> Task<Message> {
+        let Some(w) = &self.volume_window else { return Task::none() };
+        let Some(report) = &w.preview.report else {
+            let why = w.preview.why.clone().unwrap_or_else(|| "Bir kübaj seçin.".into());
+            self.warn(format!("Cetvel yazılamaz: {why}"));
+            return Task::none();
+        };
+        crate::table_write::save(vec![road_volumes::sheet(report)], w.format, format!("{} cetveli", report.name))
+    }
+
+    fn save_volumes(&mut self) -> Task<Message> {
+        let Some(w) = self.volume_window.clone() else { return Task::none() };
+        let mut defs = Vec::new();
+        for r in &w.rows {
+            match r.def() {
+                Ok(d) => defs.push(d),
+                Err(e) => {
+                    self.warn(format!("“{}”: {e}", r.name));
+                    return Task::none();
+                }
+            }
+        }
+        for k in w.kept.iter().filter(|k| defs.iter().all(|d| d.id != k.id)) {
+            if !self.volume_write(Self::blank_volume_edit(RoadEditOperation::Remove, &k.id)) {
+                return Task::none();
+            }
+        }
+        for d in &defs {
+            let kept = w.kept.iter().find(|k| k.id == d.id);
+            if kept == Some(d) {
+                continue;
+            }
+            let edit = VolumesEdit {
+                name: Some(d.name.clone()),
+                corridor: kept.is_none().then(|| d.corridor.clone()),
+                method: Some(d.method),
+                factors: Some(d.factors.clone()),
+                ..Self::blank_volume_edit(RoadEditOperation::Set, &d.id)
+            };
+            if !self.volume_write(edit) {
+                return Task::none();
+            }
+        }
+        self.volume_window = None;
+        self.dialog = None;
+        self.say(Level::Success, "Kübaj hesapları kaydedildi.");
+        Task::none()
+    }
+
+    pub(crate) fn road_volume_view(&self) -> Element<'_, Message> {
+        let Some(w) = &self.volume_window else {
+            return iced::widget::text("").into();
+        };
+        let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
+        let corridors = self.volume_corridors();
+        let mut list = Column::new().spacing(1).padding(2);
+        for (i, r) in w.rows.iter().enumerate() {
+            let on = corridors.iter().find(|c| Some(&c.0) == r.corridor.as_ref()).map_or_else(String::new, |c| c.1.clone());
+            let how = METHODS.iter().find(|m| m.0 == r.method).map_or("", |m| m.1);
+            let face = column![
+                Elided::new(r.name.clone()).size(typography::body()).font(typography::ui()).width(Fill),
+                label::caption(format!("{on} · {how}")).style(muted),
+            ]
+            .spacing(1);
+            list = list.push(
+                iced::widget::button(face)
+                    .on_press(msg(Event::Choose(i)))
+                    .padding([4, 8])
+                    .width(Fill)
+                    .style(style::button::row(w.chosen == Some(i))),
+            );
+        }
+        if w.rows.is_empty() {
+            list = list.push(label::caption("Kübaj yok. Yeni kübaj ile bir koridorun hacmini hesaplayın.").style(muted));
+        }
+        let left = column![
+            label::strong("Kübaj hesapları"),
+            container(scrollable(list).height(typography::scaled(300.0))).style(style::container::field_box).width(Fill),
+            words::secondary(NEW, Some(msg(Event::New))),
+        ]
+        .spacing(8);
+        let chosen = w.chosen.and_then(|i| w.rows.get(i));
+        let right: Element<'_, Message> = match chosen {
+            None => container(label::caption("Bir kübaj seçin ya da yeni bir kübaj oluşturun.")).padding(12).into(),
+            Some(r) => scrollable(self.volume_editor(w, r, &corridors)).height(typography::scaled(360.0)).into(),
+        };
+        let formats: Vec<WorkbookFormat> = crate::table_write::FORMATS.iter().map(|c| c.format).collect();
+        let format = Select::new(
+            crate::table_write::FORMATS.iter().map(|c| Choice::new(c.label.to_owned())),
+            formats.iter().position(|f| *f == w.format),
+            move |i| msg(Event::Format(formats[i])),
+        );
+        let body = column![
+            row![container(left).width(220), container(right).width(Fill)].spacing(16),
+            row![
+                words::ghost(REMOVE, w.chosen.map(|_| msg(Event::Remove))),
+                space::horizontal().width(16),
+                words::field("Biçim", container(format).width(240), None),
+                words::secondary(WRITE, w.preview.report.as_ref().map(|_| msg(Event::Write))),
+                space::horizontal().width(Fill),
+                words::secondary(CANCEL, Some(msg(Event::Cancel))),
+                words::primary(SAVE, Some(msg(Event::Save))),
+            ]
+            .spacing(8)
+            .align_y(iced::alignment::Vertical::Bottom),
+        ]
+        .spacing(14);
+        Frame::new(TITLE).push(body).width(1120.0).modal(msg(Event::Cancel))
+    }
+
+    fn volume_editor<'a>(&'a self, w: &'a Window, r: &'a Row, corridors: &[(String, String)]) -> Element<'a, Message> {
+        let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
+        let warn = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).warning) };
+        let danger = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).danger) };
+        let ids: Vec<String> = corridors.iter().map(|c| c.0.clone()).collect();
+        let on_corridor = Select::new(
+            corridors.iter().map(|c| Choice::new(c.1.clone())),
+            r.corridor.as_ref().and_then(|c| ids.iter().position(|i| i == c)),
+            move |i| msg(Event::Corridor(ids[i].clone())),
+        )
+        .placeholder("Koridor");
+        let on_method = Select::new(
+            METHODS.iter().map(|m| Choice::new(m.1.to_owned())),
+            METHODS.iter().position(|m| m.0 == r.method),
+            |i| msg(Event::Method(METHODS[i].0)),
+        );
+        let mut col = Column::new().spacing(10).padding(iced::Padding::default().right(14));
+        col = col.push(
+            row![
+                words::field("Ad", kentos_ui::widget::text_field("Kübajın adı", &r.name).on_input(|t| msg(Event::Name(t))), None),
+                words::field("Koridor", container(on_corridor).width(220), None),
+                words::field("Yöntem", container(on_method).width(180), None),
+            ]
+            .spacing(10),
+        );
+        let widths = [80.0, 80.0, 80.0, 80.0];
+        let mut table = Column::new().spacing(3);
+        table = table.push(
+            ["Baş (m)", "Son (m)", "Kabarma", "Sıkışma"]
+                .iter()
+                .zip(widths)
+                .fold(row![].spacing(4), |row, (h, wd)| row.push(label::caption(*h).style(muted).width(wd))),
+        );
+        for (j, f) in r.factors.iter().enumerate() {
+            let cell = |k: usize, hint: &'a str| {
+                kentos_ui::widget::text_field(hint, &f[k]).on_input(move |v| msg(Event::Factor(j, k, v))).width(widths[k])
+            };
+            table = table.push(
+                row![
+                    cell(0, "0"),
+                    cell(1, ""),
+                    cell(2, ""),
+                    cell(3, ""),
+                    iced::widget::button(label::caption(if w.line == Some(j) { "●" } else { "○" }))
+                        .on_press(msg(Event::Line(j)))
+                        .padding([2, 6])
+                        .style(style::button::row(w.line == Some(j))),
+                ]
+                .spacing(4)
+                .align_y(Center),
+            );
+        }
+        col = col.push(
+            row![
+                words::field("Kabarma ve sıkışma (km aralığı)", table, None),
+                column![
+                    words::secondary(ADD, Some(msg(Event::Add))),
+                    words::ghost(REMOVE_ROW, w.line.map(|_| msg(Event::RemoveRow))),
+                    label::caption("Katsayılar zemin raporundan yazılır;\nKentOS öntanımlı sayı vermez.").style(muted),
+                ]
+                .spacing(6),
+            ]
+            .spacing(16),
+        );
+        let tab = |words: &'static str, on: bool| {
+            iced::widget::button(label::caption(words)).on_press(msg(Event::Show(on))).padding([3, 10]).style(style::button::row(w.sheet == on))
+        };
+        col = col.push(row![tab(DIAGRAM, false), tab(SHEET, true)].spacing(2));
+        let shown: Element<'a, Message> = match (&w.preview.report, w.sheet) {
+            (Some(rep), true) => sheet_table(rep),
+            _ => iced::widget::canvas(Mass { preview: &w.preview }).width(Fill).height(typography::scaled(170.0)).into(),
+        };
+        col = col.push(container(shown).style(style::container::field_box).width(Fill));
+        match (&w.preview.why, &w.preview.report) {
+            (Some(e), _) => col = col.push(label::caption(e.clone()).style(danger)),
+            (None, Some(rep)) => {
+                let mut sum = format!(
+                    "Kazı {} m³ · dolgu {} m³ · düzeltilmiş kazı {} m³ · düzeltilmiş dolgu {} m³ · fark {} m³",
+                    grouped(rep.cut, 1),
+                    grouped(rep.fill, 1),
+                    grouped(rep.factored_cut, 1),
+                    grouped(rep.factored_fill, 1),
+                    grouped(rep.factored_cut - rep.factored_fill, 1),
+                );
+                if let (Some(c), Some(f)) = (rep.cut_area, rep.fill_area) {
+                    sum.push_str(&format!(" · plan alanı yarma {} m², dolgu {} m²", grouped(c, 0), grouped(f, 0)));
+                }
+                col = col.push(label::caption(sum));
+                for wn in &w.preview.warnings {
+                    col = col.push(label::caption(wn.message.clone()).style(warn));
+                }
+            }
+            _ => {}
+        }
+        col.into()
+    }
+
+    pub(crate) fn volume_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+        let Some(w) = &self.volume_window else {
+            return Err(format!("{TITLE} penceresi açık değil"));
+        };
+        Ok(match control {
+            Control::Press(SAVE) => Some(msg(Event::Save)),
+            Control::Press(CANCEL) => Some(msg(Event::Cancel)),
+            Control::Press(NEW) => Some(msg(Event::New)),
+            Control::Press(REMOVE) => Some(msg(Event::Remove)),
+            Control::Press(ADD) => Some(msg(Event::Add)),
+            Control::Press(REMOVE_ROW) => Some(msg(Event::RemoveRow)),
+            Control::Press(WRITE) => Some(msg(Event::Write)),
+            Control::Press(DIAGRAM) => Some(msg(Event::Show(false))),
+            Control::Press(SHEET) => Some(msg(Event::Show(true))),
+            Control::Press(words) => match w.rows.iter().position(|r| r.name == words) {
+                Some(i) => Some(msg(Event::Choose(i))),
+                None => match METHODS.iter().find(|m| m.1 == words) {
+                    Some(m) => Some(msg(Event::Method(m.0))),
+                    None => return Err(format!("“{TITLE}” penceresinde “{words}” düğmesi yok")),
+                },
+            },
+            Control::Fill("Ad", text) => Some(msg(Event::Name(text.to_owned()))),
+            other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
+        })
+    }
+}
+
+/// The sheet's rows as the window shows them: km, cut and fill, the factors, the running totals and the mass ordinate.
+fn sheet_table(rep: &VolumeReport) -> Element<'_, Message> {
+    let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
+    let widths = [84.0, 84.0, 74.0, 74.0, 44.0, 44.0, 84.0, 84.0, 84.0];
+    let head = ["Baş km", "Son km", "Kazı", "Dolgu", "Kab.", "Sık.", "Σ kazı", "Σ dolgu", "Kütle"];
+    let header = head.iter().zip(widths).fold(row![].spacing(6), |row, (h, wd)| row.push(label::caption(*h).style(muted).width(wd)));
+    let mut rows = Column::new().spacing(2);
+    let opt = |v: Option<f64>, d: usize| v.map_or_else(|| "—".to_owned(), |x| grouped(x, d));
+    for r in &rep.rows {
+        let cells = [
+            r.from_text.clone(),
+            r.to_text.clone(),
+            opt(r.cut, 1),
+            opt(r.fill, 1),
+            r.cut_factor.map_or_else(|| "—".into(), |x| trimmed(x).replace('.', ",")),
+            r.fill_factor.map_or_else(|| "—".into(), |x| trimmed(x).replace('.', ",")),
+            grouped(r.total_cut, 1),
+            grouped(r.total_fill, 1),
+            grouped(r.mass, 1),
+        ];
+        rows = rows.push(cells.into_iter().zip(widths).fold(row![].spacing(6), |row, (c, wd)| row.push(label::caption(c).width(wd))));
+    }
+    column![header, scrollable(rows).height(typography::scaled(146.0))].spacing(4).padding([6, 8]).into()
+}
+
+/// What a line of the mass diagram reads of a row.
+type Value = fn(&kentos_commands::VolumeRow) -> f64;
+
+/// The mass diagram: the factored running cut and fill and the mass ordinate along the stations.
+struct Mass<'a> {
+    preview: &'a Preview,
+}
+
+impl canvas::Program<Message> for Mass<'_> {
+    type State = ();
+
+    fn draw(&self, _: &(), renderer: &Renderer, theme: &Theme, bounds: Rectangle, _: mouse::Cursor) -> Vec<canvas::Geometry> {
+        let t = Tokens::of(theme);
+        let mut frame = canvas::Frame::new(renderer, bounds.size());
+        let caption = |frame: &mut canvas::Frame, words: String, at: Point, color: Color| {
+            frame.fill_text(Text {
+                content: words,
+                position: at,
+                color,
+                size: Pixels(typography::caption()),
+                font: typography::ui(),
+                ..Text::default()
+            });
+        };
+        let Some(rep) = self.preview.report.as_ref().filter(|r| !r.rows.is_empty()) else {
+            caption(&mut frame, "Koridoru ve yöntemi seçince kütle diyagramı burada çizilir.".into(), Point::new(16.0, 20.0), t.muted);
+            return vec![frame.into_geometry()];
+        };
+        let (s0, s1) = (rep.rows[0].from, rep.rows[rep.rows.len() - 1].to);
+        let mut lo: f64 = 0.0;
+        let mut hi: f64 = 0.0;
+        for r in &rep.rows {
+            for v in [r.total_cut, r.total_fill, r.mass] {
+                lo = lo.min(v);
+                hi = hi.max(v);
+            }
+        }
+        if hi - lo < 1e-9 {
+            hi = lo + 1.0;
+        }
+        let (left, pad) = (64.0, 12.0);
+        let (wd, ht) = (bounds.width as f64 - left - pad, bounds.height as f64 - 2.0 * pad - 14.0);
+        let at = |s: f64, v: f64| {
+            Point::new((left + (s - s0) / (s1 - s0).max(1e-9) * wd) as f32, (pad + (hi - v) / (hi - lo) * ht) as f32)
+        };
+        for k in 0..=4 {
+            let v = lo + (hi - lo) * f64::from(k) / 4.0;
+            let a = at(s0, v);
+            frame.stroke(&Path::line(a, at(s1, v)), Stroke::default().with_color(Color { a: 0.35, ..t.border }).with_width(1.0));
+            caption(&mut frame, grouped(v, 0), Point::new(4.0, a.y - 7.0), t.muted);
+        }
+        frame.stroke(&Path::line(at(s0, 0.0), at(s1, 0.0)), Stroke::default().with_color(t.muted).with_width(1.0));
+        let green = Color::from_rgb8(0x16, 0xa3, 0x4a);
+        let series: [(Value, Color); 3] = [(|r| r.total_cut, t.danger), (|r| r.total_fill, t.accent), (|r| r.mass, green)];
+        for (k, (value, color)) in series.iter().enumerate() {
+            let line = Path::new(|b| {
+                b.move_to(at(s0, 0.0));
+                for r in &rep.rows {
+                    b.line_to(at(r.to, value(r)));
+                }
+            });
+            let width = if k == 2 { 1.4 } else { 2.0 };
+            frame.stroke(&line, Stroke::default().with_color(*color).with_width(width));
+        }
+        // The stretches without volume, under the axis.
+        let orange = Color::from_rgb8(0xea, 0x58, 0x0c);
+        for g in &rep.gaps {
+            let (a, b) = (at(g[0].max(s0), lo), at(g[1].min(s1), lo));
+            frame.fill_rectangle(Point::new(a.x, a.y + 2.0), iced::Size::new((b.x - a.x).max(2.0), 4.0), orange);
+        }
+        let mut x = left as f32 + 8.0;
+        for (words, color) in [("Σ kazı (gevşek)", t.danger), ("Σ dolgu (sıkışık)", t.accent), ("Kütle ordinatı", green)] {
+            frame.fill_rectangle(Point::new(x, bounds.height - 12.0), iced::Size::new(14.0, 3.0), color);
+            caption(&mut frame, words.into(), Point::new(x + 18.0, bounds.height - 18.0), t.text);
+            x += 140.0;
+        }
+        vec![frame.into_geometry()]
+    }
+}

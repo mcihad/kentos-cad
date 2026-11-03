@@ -60,6 +60,13 @@ ve `volume_unfactored` uyarısı verilir. 30 + 22 ortak durum (`road_volume_comm
 MCP. Yolda bulunan: koridorun şerit üçgenlemesi eşit köşegenlerde (dikdörtgen) yuvarlamaya göre farklı köşegen
 seçiyordu; eşitlik artık 1 nm içinde (`corridor::SAME_DIAGONAL`, ADR 0905 §5) ve iki tarafta aynı.
 
+Y8.3: Kübaj penceresi (`volume_window.rs`; `volume.editor`, `volume.new`, `volume.export`; Koridor sekmesinde Kübaj
+paneli). Kübaj yazdıkça `road.volumes.query`'nin kuralıyla hesaplanır: kütle diyagramı (birikimli düzeltilmiş kazı ve
+dolgu, kütle ordinatı, hacimsiz aralıklar), toplamlar, uyarılar ve cetvel. Kaydet `road.volumes.edit` ile yazar;
+Cetveli yaz cetveli (`road_volumes::sheet`: km, uzunluk, kazı, dolgu, katsayılar, düzeltilmiş hacimler, birikimli
+toplamlar, kütle ordinatı ve toplam satırı) ADR 0223'ün yazıcısıyla Excel, OpenDocument ya da CSV olarak yazar.
+Sıyırma, diş kazısı, onay ve fark sonraki aşamadır (Y8.4).
+
 ## Sonra
 
 Bileşik kesit hacmi (kesitler arası poligonlar), kurp düzeltmesi, malzeme katmanları ve jeoloji, raster yöntemi, GPU ile

@@ -263,3 +263,68 @@ pub fn made_volumes(doc: &Document) -> Vec<(VolumeDef, MadeVolume)> {
 pub fn preview(doc: &Document, def: &VolumeDef) -> MadeVolume {
     compute(doc, def).map_err(corridors::words)
 }
+
+fn decimal(v: f64) -> String {
+    format!("{v:.3}")
+}
+
+/// The volume sheet as a workbook's sheet (docs/adr/0906 §5, docs/adr/0223's writer): a row between each two
+/// consecutive sections (its km, length, cut and fill, the factors, the factored cut and fill, the running totals and
+/// the mass ordinate; empty cells where a stretch has no volume or no factor), then the totals.
+pub fn sheet(report: &VolumeReport) -> kentos_commands::WorkbookSheet {
+    use kentos_commands::{CellKind, WorkbookColumn};
+    let column = |name: &str, kind: CellKind, decimals: Option<u32>| WorkbookColumn { name: name.into(), kind, decimals };
+    let n = |name: &str| column(name, CellKind::Number, Some(3));
+    let columns = vec![
+        column("Başlangıç km", CellKind::Text, None),
+        column("Bitiş km", CellKind::Text, None),
+        n("Uzunluk (m)"),
+        n("Kazı (m³)"),
+        n("Dolgu (m³)"),
+        n("Kabarma"),
+        n("Sıkışma"),
+        n("Düzeltilmiş kazı (m³)"),
+        n("Düzeltilmiş dolgu (m³)"),
+        n("Birikimli kazı (m³)"),
+        n("Birikimli dolgu (m³)"),
+        n("Kütle (m³)"),
+    ];
+    let opt = |v: Option<f64>| v.map(decimal).unwrap_or_default();
+    let mut rows: Vec<Vec<String>> = report
+        .rows
+        .iter()
+        .map(|r| {
+            vec![
+                r.from_text.clone(),
+                r.to_text.clone(),
+                decimal(r.to - r.from),
+                opt(r.cut),
+                opt(r.fill),
+                opt(r.cut_factor),
+                opt(r.fill_factor),
+                opt(r.cut.map(|c| c * r.cut_factor.unwrap_or(1.0))),
+                opt(r.fill.map(|f| f * r.fill_factor.unwrap_or(1.0))),
+                decimal(r.total_cut),
+                decimal(r.total_fill),
+                decimal(r.mass),
+            ]
+        })
+        .collect();
+    let length: f64 = report.rows.iter().filter(|r| r.cut.is_some()).map(|r| r.to - r.from).sum();
+    rows.push(vec![
+        "Toplam".into(),
+        String::new(),
+        decimal(length),
+        decimal(report.cut),
+        decimal(report.fill),
+        String::new(),
+        String::new(),
+        decimal(report.factored_cut),
+        decimal(report.factored_fill),
+        decimal(report.factored_cut),
+        decimal(report.factored_fill),
+        decimal(report.factored_cut - report.factored_fill),
+    ]);
+    let name: String = report.name.chars().filter(|c| !"[]:*?/\\".contains(*c)).take(31).collect();
+    kentos_commands::WorkbookSheet { name: if name.is_empty() { "Kübaj".into() } else { name }, columns, rows }
+}

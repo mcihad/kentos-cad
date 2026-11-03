@@ -2021,6 +2021,7 @@ impl App {
             Asking::Sections => self.road_section_view(),
             Asking::Superelevations => self.road_superelevation_view(),
             Asking::Corridors => self.road_corridor_view(),
+            Asking::Volumes => self.road_volume_view(),
             Asking::Program => self.program_view(),
             Asking::SpaceMerge => self.space_merge_question(),
             Asking::TableStyles => self.table_styles_view(),

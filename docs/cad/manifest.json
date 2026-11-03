@@ -14843,6 +14843,55 @@
    "tests": 1
   },
   {
+   "id": "volume.editor",
+   "kind": "command",
+   "title": "Kübaj…",
+   "level": "semantic",
+   "via": [
+    "road.volumes.edit",
+    "road.volumes.query"
+   ],
+   "operation": null,
+   "python": "Connection: road.volumes.edit, Connection: road.volumes.query",
+   "mcp": "road.volumes.edit, road.volumes.query",
+   "note": "Kübaj penceresi kübajı yazdıkça çekirdekle hesaplar, kütle diyagramını ve cetveli gösterir; Kaydet road.volumes.edit ile yazar, Cetveli yaz road.volumes.query'nin cetvelini dosyaya yazar (plan/road.md Y8, ADR 0906).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "volume.export",
+   "kind": "command",
+   "title": "Kübaj cetveli…",
+   "level": "query",
+   "via": [
+    "road.volumes.query"
+   ],
+   "operation": null,
+   "python": "Connection: road.volumes.query",
+   "mcp": "road.volumes.query",
+   "note": "Cetvel çizimi değiştirmez; dosyaya ADR 0223'ün yazıcısıyla yazılır.",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "volume.new",
+   "kind": "command",
+   "title": "Kübaj hesabı oluştur…",
+   "level": "semantic",
+   "via": [
+    "road.volumes.edit"
+   ],
+   "operation": null,
+   "python": "Connection: road.volumes.edit",
+   "mcp": "road.volumes.edit",
+   "note": null,
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "workspace.cad",
    "kind": "command",
    "title": "CAD",

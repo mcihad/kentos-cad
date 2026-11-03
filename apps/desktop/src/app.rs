@@ -278,6 +278,8 @@ pub enum Dialog {
     Superelevations,
     /// Koridor (corridor_window.rs, plan/road.md Y7); the window is `App::corridor_window`.
     Corridors,
+    /// Kübaj (volume_window.rs, plan/road.md Y8); the window is `App::volume_window`.
+    Volumes,
     /// Bina programı (program_window.rs, docs/adr/0773); the window is `App::program_window`.
     Program,
     /// Mahalleri birleştir's decision, asked before writing (quantities.rs, docs/adr/0773 §4).
@@ -635,6 +637,8 @@ pub enum Message {
     Superelevations(crate::superelevation_window::Event),
     /// An event of Koridor (corridor_window.rs, plan/road.md Y7).
     Corridors(crate::corridor_window::Event),
+    /// An event of Kübaj (volume_window.rs, plan/road.md Y8).
+    Volumes(crate::volume_window::Event),
     /// An event of Bina programı (program_window.rs, docs/adr/0773).
     Program(crate::program_window::Event),
     TableStyles(crate::forms::table_styles::Event),
@@ -1202,6 +1206,8 @@ pub struct App {
     pub(crate) superelevation_window: Option<Box<crate::superelevation_window::Window>>,
     /// Koridor (corridor_window.rs, plan/road.md Y7).
     pub(crate) corridor_window: Option<Box<crate::corridor_window::Window>>,
+    /// Kübaj (volume_window.rs, plan/road.md Y8).
+    pub(crate) volume_window: Option<Box<crate::volume_window::Window>>,
     /// Bina programı (program_window.rs, docs/adr/0773).
     pub(crate) program_window: Option<crate::program_window::Window>,
     /// Mahalleri birleştir asked: its input and its decision's words (docs/adr/0773 §4).
@@ -1628,6 +1634,7 @@ impl App {
             section_window: None,
             superelevation_window: None,
             corridor_window: None,
+            volume_window: None,
             program_window: None,
             space_merging: None,
             table_styles: None,
@@ -2346,6 +2353,7 @@ impl App {
             Message::Sections(event) => return self.section_event(event),
             Message::Superelevations(event) => return self.superelevation_event(event),
             Message::Corridors(event) => return self.corridor_event(event),
+            Message::Volumes(event) => return self.volume_event(event),
             Message::Program(event) => return self.program_event(event),
             Message::TableStyles(event) => return self.table_styles_event(event),
             Message::Subtypes(event) => return self.subtypes_event(event),
@@ -3378,6 +3386,10 @@ impl App {
             "corridor.editor" => self.open_corridors(),
             "corridor.new" => self.new_corridor(),
             "corridor.slopePlan" => self.corridor_slope_plan(),
+            // Kübaj, Kübaj hesabı oluştur and Kübaj cetveli (volume_window.rs, plan/road.md Y8).
+            "volume.editor" => self.open_volumes(),
+            "volume.new" => self.new_volume(),
+            "volume.export" => self.volume_sheet(),
             // Bina programı (program_window.rs, docs/adr/0773).
             "arch.program" => self.open_program(),
             // Çizgi tipleri (docs/adr/0313 §7).
