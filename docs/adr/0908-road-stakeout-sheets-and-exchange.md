@@ -151,6 +151,20 @@ Tarih: 2026-11-03. plan/road.md Y10 (ROAD-SEC-09…11; ROAD-IO-05, 06, 13, 14). 
     `tolerance` aşılırsa `alignment_fit_deviation`. Tek geri alma adımı “Çizgiden aks”. Masaüstünde Güzergâh ›
     Çizgiden aks seçili çizgiyle açılır, yöntem ve değerler yazıldıkça aksı çizginin üstünde ve PI tablosuyla gösterir.
 
+13. **Çizimden boykesit (ROAD-IO-14).** `road.profiles.fit` bir boykesit görünümünde çizilmiş çizgiden ya da açık
+    çoklu çizgiden boykesit kurar (`kentos_road::profile::trace`); görünüm `road.profiles.draw`'ınkidir: `at` noktası
+    `station`'da (aksın başından uzaklık, yoksa 0) ve `datum` kotunda, bir metre km bir çizim birimi, bir metre kot
+    `exaggeration` birim (yoksa 1). Düz parça eğim; iki eğimin köşesi PVI, `length` verilirse o boyda simetrik parabol
+    (ADR 0902), eğimin değişmediği köşe PVI değildir. Yay, iki ucu arasında düşey kurptur: uçlarındaki teğetler
+    görünümden (s, z)'ye çevrilir, kesişimi PVI; PVI iki ucun ortasındaysa simetrik, değilse asimetrik parabol (iki
+    eğime uçlarında teğet). Abartmalı görünümde daire yayı (s, z)'de elipstir; parabol onunla uçlarında ve
+    teğetlerinde buluşur, aradaki ayrılık sapmada söylenir. Art arda iki yay arasında eğim yoktur, ret; sağdan sola
+    çizilmiş çizgi soldan sağa okunur, km'si geri giden köşe ret. Boykesit ADR 0902'nin kurallarıyla kurulur (kurpların
+    sığması, aksın üstünde olmak). Sapma her köşenin ve yayın ortasının boykesite düşey uzaklığının en büyüğü, km ve
+    kotuyla; `tolerance` aşılırsa `profile_fit_deviation`. Tek geri alma adımı “Çizimden boykesit”. Masaüstünde
+    Güzergâh › Boykesit › Çizimden boykesit seçili çizgiyle açılır, görünümün yeri, km'si, kıyas kotu ve abartması
+    yazıldıkça boykesiti çizginin üstünde ve PVI tablosuyla gösterir.
+
 ## Aşamalar
 
 Y10.1 aplikasyon cetveli (komut, başvuru, Python, MCP, pencere); Y10.2 LandXML'e aks, boykesit ve yüzey yazma ve
@@ -189,11 +203,16 @@ Enkesit › Paftalara diz. ROAD-SEC-11 [x].
 
 Y10.6 (yapıldı, çizgiden aks): 24 ortak durum (`road_alignment_fit_cases.py`; PI'lar, yarıçaplar, boy ve sapma 40
 basamakta mpmath ile, en iyi uyumun yarıçapı türevin köküyle; KentOS kodu yok; simetrik çizgide en uzak yer belirsiz
-sayılır); Python, MCP, masaüstünde Güzergâh › Çizgiden aks. ROAD-IO-14 [x].
+sayılır); Python, MCP, masaüstünde Güzergâh › Çizgiden aks.
+
+Y10.6b (yapıldı, çizimden boykesit): 27 ortak durum (`road_profile_fit_cases.py`; PVI'lar ve kurplar 40 basamakta
+mpmath ile, çizimin yayları başvurunun kendi dolgusundan, boykesit road_vertical_cases.py'nin başvurusuyla kurulur ve
+retleri ondan; KentOS kodu yok); Python, MCP, masaüstünde Güzergâh › Boykesit › Çizimden boykesit. ROAD-IO-14 [x].
 
 ## Sonra
 
 Makine kontrolü ve yapılan iş ölçüsü (ROAD-SEC-10), şev kazığı ofset işareti (hinge'den sabit uzaklık), kodların
 kullanıcı adları. Paftalarda: plan haritasının aksı (ekranın aks katmanı) modelin nesnesi olmadan kendisi çizmesi, eşleşme çizgileri
 ve etiketleri, kaynak revizyonu değişince takımı yeniden kurma. Çizgiden aksta: klotoidli en iyi uyum (Civil 3D'nin
-Create Spirals'ı), birden çok nesneyi zincirleme, nokta katmanından uyum.
+Create Spirals'ı), birden çok nesneyi zincirleme, nokta katmanından uyum. Çizimden boykesitte: görünümün yerini
+çizimin ızgarasından ya da yazılarından bulma, dairesel düşey kurp (abartmasız görünümde), en iyi uyum.

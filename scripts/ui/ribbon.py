@@ -261,7 +261,7 @@ CAD = [
         P("Güzergâh", "alignmentEditor", [L("alignment.editor"), L("alignment.new"), L("alignment.fromLine"),
                                                    L("landxml.importAlignments")]),
         # The vertical alignments (plan/road.md Y4, docs/adr/0902): the Boykesit window and a new profile.
-        P("Boykesit", "profileEditor", [L("profile.editor"), L("profile.new")]),
+        P("Boykesit", "profileEditor", [L("profile.editor"), L("profile.new"), L("profile.fromLine")]),
         # The cross sections (plan/road.md Y5, docs/adr/0903): the Enkesit window, a new set and a new template.
         P("Enkesit", "sectionEditor", [L("section.editor"), L("section.new"), L("section.template")]),
         # The superelevation (plan/road.md Y6, docs/adr/0904): the Dever window and a new schedule.

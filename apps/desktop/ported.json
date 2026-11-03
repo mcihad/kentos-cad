@@ -417,6 +417,7 @@
     "stakeout.table",
     "road.sheets",
     "alignment.fromLine",
+    "profile.fromLine",
     "landxml.export",
     "landxml.importAlignments",
     "ifc.export",

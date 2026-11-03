@@ -116,21 +116,7 @@ impl App {
         }
         let picked = match self.selection.ids() {
             [slot] => doc.model.get(*slot).and_then(|e| {
-                let pts: Vec<[f64; 2]> = match e {
-                    Entity::Line(l) => vec![[l.a.x, l.a.y], [l.b.x, l.b.y]],
-                    Entity::Polyline(p) => {
-                        let bulges = p.bulges.clone().unwrap_or_default();
-                        let mut out = Vec::new();
-                        for (i, w) in p.pts.windows(2).enumerate() {
-                            out.extend(arc_points([w[0].x, w[0].y], [w[1].x, w[1].y], bulges.get(i).copied().unwrap_or(0.0)));
-                        }
-                        if let Some(last) = p.pts.last() {
-                            out.push([last.x, last.y]);
-                        }
-                        out
-                    }
-                    _ => return None,
-                };
+                let pts = drawn_points(e)?;
                 doc.model.uid(*slot).map(|u| (u.to_string(), pts))
             }),
             _ => None,
@@ -312,6 +298,25 @@ impl App {
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }
+}
+
+/// A line's or a polyline's points, its arcs in pieces; none for another object.
+pub(crate) fn drawn_points(e: &Entity) -> Option<Vec<[f64; 2]>> {
+    Some(match e {
+        Entity::Line(l) => vec![[l.a.x, l.a.y], [l.b.x, l.b.y]],
+        Entity::Polyline(p) => {
+            let bulges = p.bulges.clone().unwrap_or_default();
+            let mut out = Vec::new();
+            for (i, w) in p.pts.windows(2).enumerate() {
+                out.extend(arc_points([w[0].x, w[0].y], [w[1].x, w[1].y], bulges.get(i).copied().unwrap_or(0.0)));
+            }
+            if let Some(last) = p.pts.last() {
+                out.push([last.x, last.y]);
+            }
+            out
+        }
+        _ => return None,
+    })
 }
 
 /// A segment from `a` towards `b` as points, `b` left out: an arc (bulge `g`, the tangent of a quarter of its turn)

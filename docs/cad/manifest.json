@@ -7565,6 +7565,22 @@
    "tests": 0
   },
   {
+   "id": "profile.fromLine",
+   "kind": "command",
+   "title": "Çizimden boykesit…",
+   "level": "semantic",
+   "via": [
+    "road.profiles.fit"
+   ],
+   "operation": null,
+   "python": "Connection: road.profiles.fit",
+   "mcp": "road.profiles.fit",
+   "note": "Seçili çizgiyle açılır, görünümün yeri, km'si, kıyas kotu ve abartması yazıldıkça road.profiles.fit'in planıyla önizler ve onunla yazar; tek geri alma adımı (plan/road.md Y10.6b, ADR 0908 §13).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "profile.new",
    "kind": "command",
    "title": "Boykesit oluştur…",

@@ -2717,6 +2717,13 @@
       ],
       "note": "Seçili çizgiyle açılır, road.alignments.fit'in planıyla önizler ve onunla yazar; tek geri alma adımı (plan/road.md Y10.6, ADR 0908 §12)."
     },
+    "profile.fromLine": {
+      "level": "semantic",
+      "via": [
+        "road.profiles.fit"
+      ],
+      "note": "Seçili çizgiyle açılır, görünümün yeri, km'si, kıyas kotu ve abartması yazıldıkça road.profiles.fit'in planıyla önizler ve onunla yazar; tek geri alma adımı (plan/road.md Y10.6b, ADR 0908 §13)."
+    },
     "landxml.importAlignments": {
       "level": "semantic",
       "via": [

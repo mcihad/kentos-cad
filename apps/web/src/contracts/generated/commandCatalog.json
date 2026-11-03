@@ -40733,6 +40733,304 @@
       ]
     },
     {
+      "id": "road.profiles.fit",
+      "version": 1,
+      "title": "Çizimden boykesit",
+      "summary": "Bir boykesit görünümünde çizilmiş çizgiden ya da açık çoklu çizgiden boykesit kurar (DWG ya da DGN'den gelen proje kotu); çizgi silinmez. Görünüm road.profiles.draw'ınki gibidir: at noktası station'da (aksın başından uzaklık, yoksa 0) ve datum kotundadır, bir metre km bir çizim birimi, bir metre kot exaggeration birim (yoksa 1). Düz parçalar eğim, iki eğimin köşesi PVI (length verilirse o boyda simetrik parabol), yay parçası iki ucu arasında düşey kurp: PVI uçlardaki teğetlerin kesişimi, PVI ortadaysa simetrik, değilse asimetrik parabol; eğimin değişmediği köşe PVI değildir; art arda iki yay ret. Sağdan sola çizilmiş çizgi soldan sağa okunur. name (yoksa ‹n›. boykesit), surface siyah kotun yüzeyi. Cevap boykesitin PVI'larını, eğim ve kurp sayısını, km aralığını ve çizginin köşelerinin (ve yayların ortasının) boykesite en büyük düşey uzaklığını km ve kotuyla verir; tolerance aşılırsa profile_fit_deviation. Tek geri alma adımı “Çizimden boykesit”. Retler: invalid_revision, revision_conflict, not_a_road_project, unknown_alignment, unknown_terrain, entity_not_found, invalid_profile_fit.",
+      "aliases": [
+        "cizimdenboykesit",
+        "boykesituydur"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `road.profiles.fit` v1: the line or open polyline by its persistent id, the alignment the profile lies on,\nand the view it is drawn in: the drawing point `at` stands at `station` (the distance along the alignment, 0 without\nit) and at the `datum` elevation, a metre of station a drawing unit, a metre of elevation `exaggeration` units (1\nwithout it), as `road.profiles.draw` draws. A corner between two grades takes a symmetric parabola of `length` (none\nwithout it); an arc is a vertical curve between its ends. The profile is named `name` (“‹n›. boykesit” without it)\nand read against `surface`. A `tolerance` (m) warns where the profile lies farther from the line.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `unknown_alignment`,\n`unknown_terrain`, `entity_not_found`, `invalid_profile_fit` (not a line or an open polyline, a datum not finite, an\nexaggeration, a length or a tolerance not above 0, fewer than two stations, a station that does not grow, two arcs\nin a row, an arc whose tangents do not meet, a PVI off the alignment, curves that do not fit, a name taken).\nWarnings: `profile_fit_deviation`.",
+        "properties": {
+          "alignment": {
+            "type": "string"
+          },
+          "at": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array",
+            "x-unit": "length"
+          },
+          "datum": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "elevation"
+          },
+          "exaggeration": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1"
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "length": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "station": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "surface": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "tolerance": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "uid": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "uid",
+          "alignment",
+          "at",
+          "datum"
+        ],
+        "title": "ProfilesFit",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.profiles.fit` v1, and its plan: the profile made (its id, name, alignment and PVIs), its grades and\ncurves, the stations it spans, the line's id, and the largest vertical distance of the line's vertices (and its\narcs' middles) from the profile with the station and elevation where it is; the drawing's revision.",
+        "properties": {
+          "alignment": {
+            "type": "string"
+          },
+          "curves": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "deviation": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "grades": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "pvis": {
+            "items": {
+              "$ref": "#/$defs/ProfilePvi"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "stations": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array",
+            "x-unit": "m"
+          },
+          "worst": {
+            "description": "The station and the elevation.",
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array",
+            "x-unit": "m"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "alignment",
+          "source",
+          "pvis",
+          "grades",
+          "curves",
+          "stations",
+          "deviation",
+          "worst",
+          "revision"
+        ],
+        "title": "ProfileFitted",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.profiles.fit` v1, and its plan: the profile made (its id, name, alignment and PVIs), its grades and\ncurves, the stations it spans, the line's id, and the largest vertical distance of the line's vertices (and its\narcs' middles) from the profile with the station and elevation where it is; the drawing's revision.",
+        "properties": {
+          "alignment": {
+            "type": "string"
+          },
+          "curves": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "deviation": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "grades": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "pvis": {
+            "items": {
+              "$ref": "#/$defs/ProfilePvi"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "stations": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array",
+            "x-unit": "m"
+          },
+          "worst": {
+            "description": "The station and the elevation.",
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array",
+            "x-unit": "m"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "alignment",
+          "source",
+          "pvis",
+          "grades",
+          "curves",
+          "stations",
+          "deviation",
+          "worst",
+          "revision"
+        ],
+        "title": "ProfileFitted",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_alignment",
+          "unknown_terrain",
+          "entity_not_found",
+          "invalid_profile_fit",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "profile_fit_deviation"
+        ]
+      },
+      "examples": [
+        {
+          "title": "1:10 abartmalı görünümde çizilmiş proje kotu",
+          "input": {
+            "alignment": "Ana aks",
+            "at": [
+              0.0,
+              -500.0
+            ],
+            "datum": 90.0,
+            "exaggeration": 10.0,
+            "length": 80.0,
+            "uid": "0191f0aa-0000-7000-8000-000000000001"
+          }
+        }
+      ]
+    },
+    {
       "id": "road.alignments.query",
       "version": 1,
       "title": "Aksı sorgula",
@@ -75166,6 +75464,18 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Aks çizginin köşelerinden toleranstan uzak."
+    },
+    {
+      "code": "invalid_profile_fit",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Çizimden boykesit kurulamıyor."
+    },
+    {
+      "code": "profile_fit_deviation",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Boykesit çizginin köşelerinden toleranstan uzak."
     },
     {
       "code": "corridor_superelevation_gone",

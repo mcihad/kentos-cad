@@ -744,6 +744,11 @@ codes! {
     INVALID_ALIGNMENT_FIT = "invalid_alignment_fit", Failed, false, "Çizgiden aks kurulamıyor.";
     /// A warning: the alignment lies farther from the line's vertices than the tolerance (docs/adr/0908 §12).
     ALIGNMENT_FIT_DEVIATION = "alignment_fit_deviation", Warning, false, "Aks çizginin köşelerinden toleranstan uzak.";
+    /// A drawn profile that makes no profile: not a line or an open polyline, a view value out of bounds, stations
+    /// that do not grow, arcs in a row, a PVI off the alignment, curves that do not fit, a name taken (docs/adr/0908 §13).
+    INVALID_PROFILE_FIT = "invalid_profile_fit", Failed, false, "Çizimden boykesit kurulamıyor.";
+    /// A warning: the profile lies farther from the drawn line than the tolerance (docs/adr/0908 §13).
+    PROFILE_FIT_DEVIATION = "profile_fit_deviation", Warning, false, "Boykesit çizginin köşelerinden toleranstan uzak.";
     /// A warning: the corridor's superelevation schedule does not build; its lanes keep the templates' slopes.
     CORRIDOR_SUPERELEVATION_GONE = "corridor_superelevation_gone", Warning, false, "Koridorun dever çizelgesi kurulamıyor; şeritler tip kesitin eğimiyle verildi.";
     /// A warning: the profile's alignment changed since it was made or rebound.

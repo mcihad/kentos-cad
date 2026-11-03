@@ -613,6 +613,8 @@ pub const PORTED: &[&str] = &[
     "road.sheets",
     // plan/road.md Y10.6: Çizgiden aks (road_alignment_fit_window.rs).
     "alignment.fromLine",
+    // plan/road.md Y10.6b: Çizimden boykesit (road_profile_fit_window.rs).
+    "profile.fromLine",
     // plan/road.md Y10.2: LandXML ver (road_exchange.rs).
     "landxml.export",
     "landxml.importAlignments",

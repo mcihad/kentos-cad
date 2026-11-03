@@ -53731,6 +53731,62 @@ class ProfileFinding(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ProfileFitted(_Model):
+    """Output of `road.profiles.fit` v1, and its plan: the profile made (its id, name, alignment and PVIs), its grades and
+    curves, the stations it spans, the line's id, and the largest vertical distance of the line's vertices (and its
+    arcs' middles) from the profile with the station and elevation where it is; the drawing's revision.
+    Attributes:
+        grades: Unit: count.
+        curves: Unit: count.
+        stations: Unit: m.
+        deviation: Unit: m.
+        worst: The station and the elevation. Unit: m.
+    """
+    id: str
+    name: str
+    alignment: str
+    source: str
+    pvis: list[ProfilePvi]
+    grades: int
+    curves: int
+    stations: list[float]
+    deviation: float
+    worst: list[float]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["alignment"] = self.alignment
+        out["source"] = self.source
+        out["pvis"] = [e0.to_json() for e0 in self.pvis]
+        out["grades"] = self.grades
+        out["curves"] = self.curves
+        out["stations"] = [float(e0) for e0 in self.stations]
+        out["deviation"] = float(self.deviation)
+        out["worst"] = [float(e0) for e0 in self.worst]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfileFitted:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            alignment=data["alignment"],
+            source=data["source"],
+            pvis=[ProfilePvi.from_json(e0) for e0 in data["pvis"]],
+            grades=data["grades"],
+            curves=data["curves"],
+            stations=[float(e0) for e0 in data["stations"]],
+            deviation=float(data["deviation"]),
+            worst=[float(e0) for e0 in data["worst"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ProfileForbid(_Model):
     """What forbids an edge to a profile: the edge field's values (Turkish case aside)."""
     field: str
@@ -54606,6 +54662,79 @@ class ProfilesEdit(_Model):
             name=data.get("name", UNSET),
             pvis=UNSET if "pvis" not in data else None if data["pvis"] is None else [ProfilePvi.from_json(e0) for e0 in data["pvis"]],
             surface=data.get("surface", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProfilesFit(_Model):
+    """Input of `road.profiles.fit` v1: the line or open polyline by its persistent id, the alignment the profile lies on,
+    and the view it is drawn in: the drawing point `at` stands at `station` (the distance along the alignment, 0 without
+    it) and at the `datum` elevation, a metre of station a drawing unit, a metre of elevation `exaggeration` units (1
+    without it), as `road.profiles.draw` draws. A corner between two grades takes a symmetric parabola of `length` (none
+    without it); an arc is a vertical curve between its ends. The profile is named `name` (“‹n›. boykesit” without it)
+    and read against `surface`. A `tolerance` (m) warns where the profile lies farther from the line.
+
+    Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `unknown_alignment`,
+    `unknown_terrain`, `entity_not_found`, `invalid_profile_fit` (not a line or an open polyline, a datum not finite, an
+    exaggeration, a length or a tolerance not above 0, fewer than two stations, a station that does not grow, two arcs
+    in a row, an arc whose tangents do not meet, a PVI off the alignment, curves that do not fit, a name taken).
+    Warnings: `profile_fit_deviation`.
+    Attributes:
+        at: Unit: length.
+        datum: Unit: elevation.
+        exaggeration: Unit: 1.
+        length: Unit: m.
+        station: Unit: m.
+        tolerance: Unit: m.
+    """
+    uid: str
+    alignment: str
+    at: list[float]
+    datum: float
+    exaggeration: float | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    length: float | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    station: float | None | Unset = UNSET
+    surface: str | None | Unset = UNSET
+    tolerance: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["alignment"] = self.alignment
+        out["at"] = [float(e0) for e0 in self.at]
+        out["datum"] = float(self.datum)
+        if self.exaggeration is not UNSET:
+            out["exaggeration"] = None if self.exaggeration is None else float(self.exaggeration)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.length is not UNSET:
+            out["length"] = None if self.length is None else float(self.length)
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.station is not UNSET:
+            out["station"] = None if self.station is None else float(self.station)
+        if self.surface is not UNSET:
+            out["surface"] = self.surface
+        if self.tolerance is not UNSET:
+            out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfilesFit:
+        return cls(
+            uid=data["uid"],
+            alignment=data["alignment"],
+            at=[float(e0) for e0 in data["at"]],
+            datum=float(data["datum"]),
+            exaggeration=UNSET if "exaggeration" not in data else None if data["exaggeration"] is None else float(data["exaggeration"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            length=UNSET if "length" not in data else None if data["length"] is None else float(data["length"]),
+            name=data.get("name", UNSET),
+            station=UNSET if "station" not in data else None if data["station"] is None else float(data["station"]),
+            surface=data.get("surface", UNSET),
+            tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
         )
 
 
@@ -99314,6 +99443,7 @@ __all__ = [
     "ProfileFinding",
     "ProfileFindingKind",
     "ProfileFindingKindName",
+    "ProfileFitted",
     "ProfileForbid",
     "ProfileGeometry",
     "ProfileGeometryName",
@@ -99342,6 +99472,7 @@ __all__ = [
     "ProfilesEdit",
     "ProfilesEditOperation",
     "ProfilesEditOperationName",
+    "ProfilesFit",
     "ProfilesImport",
     "ProfilesList",
     "ProfilesListed",

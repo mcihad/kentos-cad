@@ -289,6 +289,8 @@ pub enum Dialog {
     RoadSheets,
     /// Çizgiden aks (road_alignment_fit_window.rs, plan/road.md Y10.6); the window is `App::road_alignment_fit_window`.
     RoadAlignmentFit,
+    /// Çizimden boykesit (road_profile_fit_window.rs, plan/road.md Y10.6b); the window is `App::road_profile_fit_window`.
+    RoadProfileFit,
     /// Bina programı (program_window.rs, docs/adr/0773); the window is `App::program_window`.
     Program,
     /// Mahalleri birleştir's decision, asked before writing (quantities.rs, docs/adr/0773 §4).
@@ -656,6 +658,8 @@ pub enum Message {
     RoadSheets(crate::road_sheets_window::Event),
     /// An event of Çizgiden aks (road_alignment_fit_window.rs, plan/road.md Y10.6).
     RoadAlignmentFit(crate::road_alignment_fit_window::Event),
+    /// An event of Çizimden boykesit (road_profile_fit_window.rs, plan/road.md Y10.6b).
+    RoadProfileFit(crate::road_profile_fit_window::Event),
     /// LandXML ver's file, or none when the dialog was closed (road_exchange.rs, plan/road.md Y10.2).
     LandxmlExport(Option<std::path::PathBuf>),
     /// LandXML'den aks al's file, or none (road_exchange.rs, plan/road.md Y10.2).
@@ -1239,6 +1243,8 @@ pub struct App {
     pub(crate) road_sheets_window: Option<Box<crate::road_sheets_window::Window>>,
     /// Çizgiden aks (road_alignment_fit_window.rs, plan/road.md Y10.6).
     pub(crate) road_alignment_fit_window: Option<Box<crate::road_alignment_fit_window::Window>>,
+    /// Çizimden boykesit (road_profile_fit_window.rs, plan/road.md Y10.6b).
+    pub(crate) road_profile_fit_window: Option<Box<crate::road_profile_fit_window::Window>>,
     /// Bina programı (program_window.rs, docs/adr/0773).
     pub(crate) program_window: Option<crate::program_window::Window>,
     /// Mahalleri birleştir asked: its input and its decision's words (docs/adr/0773 §4).
@@ -1670,6 +1676,7 @@ impl App {
             stakeout_window: None,
             road_sheets_window: None,
             road_alignment_fit_window: None,
+            road_profile_fit_window: None,
             program_window: None,
             space_merging: None,
             table_styles: None,
@@ -2396,6 +2403,7 @@ impl App {
             Message::Stakeout(event) => return self.stakeout_event(event),
             Message::RoadSheets(event) => return self.road_sheets_event(event),
             Message::RoadAlignmentFit(event) => return self.road_alignment_fit_event(event),
+            Message::RoadProfileFit(event) => return self.road_profile_fit_event(event),
             Message::LandxmlExport(path) => return self.landxml_chosen(path),
             Message::LandxmlAlignments(path) => return self.landxml_alignments_chosen(path),
             Message::IfcExport(path) => return self.ifc_chosen(path),
@@ -3442,6 +3450,7 @@ impl App {
             "stakeout.table" => self.open_stakeout(),
             "road.sheets" => self.open_road_sheets(),
             "alignment.fromLine" => self.open_road_alignment_fit(),
+            "profile.fromLine" => self.open_road_profile_fit(),
             // LandXML ver (road_exchange.rs, plan/road.md Y10.2).
             "landxml.export" => return self.export_landxml(),
             "landxml.importAlignments" => return self.import_landxml_alignments(),

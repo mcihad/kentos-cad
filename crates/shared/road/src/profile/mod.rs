@@ -2,6 +2,7 @@
 //! alignment. The algorithm's id is `kentos.profile/1`.
 
 pub mod terrain;
+pub mod trace;
 pub mod vertical;
 
 pub use terrain::{ProfilePoint, TOLERANCE, terrain};

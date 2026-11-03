@@ -534,6 +534,10 @@
        {
         "command": "profile.new",
         "size": "large"
+       },
+       {
+        "command": "profile.fromLine",
+        "size": "large"
        }
       ]
      },

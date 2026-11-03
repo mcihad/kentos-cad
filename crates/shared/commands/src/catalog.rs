@@ -7586,6 +7586,31 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::ROAD_PROFILES_FIT.into(),
+            version: crate::ROAD_PROFILES_FIT_VERSION,
+            title: "Çizimden boykesit".into(),
+            summary: "Bir boykesit görünümünde çizilmiş çizgiden ya da açık çoklu çizgiden boykesit kurar (DWG ya da DGN'den gelen proje kotu); çizgi silinmez. Görünüm road.profiles.draw'ınki gibidir: at noktası station'da (aksın başından uzaklık, yoksa 0) ve datum kotundadır, bir metre km bir çizim birimi, bir metre kot exaggeration birim (yoksa 1). Düz parçalar eğim, iki eğimin köşesi PVI (length verilirse o boyda simetrik parabol), yay parçası iki ucu arasında düşey kurp: PVI uçlardaki teğetlerin kesişimi, PVI ortadaysa simetrik, değilse asimetrik parabol; eğimin değişmediği köşe PVI değildir; art arda iki yay ret. Sağdan sola çizilmiş çizgi soldan sağa okunur. name (yoksa ‹n›. boykesit), surface siyah kotun yüzeyi. Cevap boykesitin PVI'larını, eğim ve kurp sayısını, km aralığını ve çizginin köşelerinin (ve yayların ortasının) boykesite en büyük düşey uzaklığını km ve kotuyla verir; tolerance aşılırsa profile_fit_deviation. Tek geri alma adımı “Çizimden boykesit”. \
+                      Retler: invalid_revision, revision_conflict, not_a_road_project, unknown_alignment, unknown_terrain, entity_not_found, invalid_profile_fit."
+                .into(),
+            aliases: vec!["cizimdenboykesit".into(), "boykesituydur".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ProfilesFit>(),
+            output: schema::<crate::ProfileFitted>(),
+            plan: Some(schema::<crate::ProfileFitted>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "1:10 abartmalı görünümde çizilmiş proje kotu".into(),
+                input: json!({ "uid": "0191f0aa-0000-7000-8000-000000000001", "alignment": "Ana aks", "at": [0.0, -500.0], "datum": 90.0, "exaggeration": 10.0, "length": 80.0 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::ROAD_ALIGNMENTS_QUERY.into(),
             version: crate::ROAD_ALIGNMENTS_QUERY_VERSION,
             title: "Aksı sorgula".into(),
@@ -13235,6 +13260,9 @@ mod tests {
                     crate::ROAD_ALIGNMENTS_FIT => {
                         serde_json::from_value::<crate::AlignmentsFit>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_PROFILES_FIT => {
+                        serde_json::from_value::<crate::ProfilesFit>(e.input.clone()).map(|_| ())
+                    }
                     crate::ROAD_ALIGNMENTS_IMPORT => {
                         serde_json::from_value::<crate::AlignmentsImport>(e.input.clone()).map(|_| ())
                     }
@@ -13982,6 +14010,9 @@ mod tests {
                         }
                         crate::ROAD_ALIGNMENTS_FIT => {
                             serde_json::from_value::<crate::AlignmentFitted>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_PROFILES_FIT => {
+                            serde_json::from_value::<crate::ProfileFitted>(output.clone()).map(|_| ())
                         }
                         crate::ROAD_ALIGNMENTS_IMPORT => {
                             serde_json::from_value::<crate::AlignmentsImported>(output.clone()).map(|_| ())
