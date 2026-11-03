@@ -4814,6 +4814,22 @@
    "tests": 0
   },
   {
+   "id": "leader.bindTip",
+   "kind": "command",
+   "title": "Kılavuz ucunu bağla",
+   "level": "semantic",
+   "via": [
+    "cad.leaders.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.leaders.edit",
+   "mcp": "cad.leaders.edit",
+   "note": "Seçili kılavuzun kimliği, seçilen kol sırası ve cad.snap.find'in tam alt nesne yolu bind işlemine verilir; kenet bulunmazsa yazılmaz.",
+   "scope": "none",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "leader.blocks",
    "kind": "command",
    "title": "Blok içerik",

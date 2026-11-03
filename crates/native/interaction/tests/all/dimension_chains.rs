@@ -243,3 +243,25 @@ fn a_point_on_the_last_end_makes_no_dimension_and_s_chooses_another_base() {
     assert_eq!(rel(newest(&b).b)[0], 14.0);
     assert!(near2(rel(newest(&b).a), [10.0, 0.0]));
 }
+
+#[test]
+fn chain_and_baseline_show_the_value_at_the_exact_committed_text_position() {
+    for tool in ["dimContinue", "dimBaseline"] {
+        let mut b = with_base(3.);
+        b.start(tool);
+        b.move_to(16., 0.);
+        let before = b.doc.to_snapshot_v2();
+        let preview = b.session.preview(&Default::default()).unwrap();
+        let text = preview.texts.first().expect("value at its real placement").clone();
+        assert_eq!(b.doc.to_snapshot_v2(), before);
+        b.click(16., 0.);
+        let d = newest(&b);
+        let layout = kentos_interaction::dimension_layout(b.newest()).unwrap();
+        assert_eq!(text.p, layout.text_at);
+        assert_eq!(text.rotation, layout.rotation);
+        assert_eq!(text.height, d.height);
+        assert_eq!(text.text, preview.tag.as_ref().unwrap().lines[0]);
+        assert!(b.doc.undo().is_some());
+        assert_eq!(b.doc.to_snapshot_v2(), before);
+    }
+}

@@ -2486,19 +2486,19 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
                     .editor(number(Field::InsertTurn(slot))),
                 Row::text("Aynalı", yes_no(i.mirror)).editor(edit(mirror)),
             ]);
-            // What it places, real size, and its block's unit (docs/adr/0726 §3): the insert's factors hold a
-            // unitless block's unit already.
+            let blocks = kentos_native_application::blocks::core_blocks(doc.model.blocks());
+            if let Some([x0, y0, x1, y1]) = kentos_native_application::blocks::placed_box_in(&doc.model, &blocks, e) {
+                geo.extend([len("Kutu eni (Y)", x1-x0), len("Kutu boyu (X)", y1-y0)]);
+            }
+            // Physical dimensions along the block's own axes; same active pieces, clip and layer gates.
+            // Rotation is removed only for this read, so local dimensions and world-axis envelope stay distinct.
             if let Some(def) = doc.model.block(i.block) {
-                let values = (!i.parameters.is_empty()).then_some(&i.parameters);
-                if let Some([x0, y0, x1, y1]) =
-                    kentos_native_application::blocks::definition_box(&doc.model, i.block, values)
-                {
-                    let w = (x1 - x0) * i.scale.abs();
-                    let d = (y1 - y0) * i.y_scale.unwrap_or(i.scale).abs();
-                    geo.push(Row::text(
-                        "En × boy",
-                        format!("{} × {} {}", f.length_bare(w), f.length_bare(d), f.length_unit_label()),
-                    ));
+                let mut local = i.clone();
+                local.p = kentos_commands::Vec2 { x:0., y:0. };
+                local.rotation = 0.;
+                if let Some([x0, y0, x1, y1]) = kentos_native_application::blocks::placed_box_in(&doc.model, &blocks, &Entity::Insert(local)) {
+                    geo.push(Row::text("En × boy", format!("{} × {} {}",
+                        f.length_bare(x1-x0), f.length_bare(y1-y0), f.length_unit_label())));
                 }
                 geo.push(Row::text(
                     "Bloğun birimi",

@@ -326,6 +326,7 @@ pub fn page<'a>(doc: &'a Document, filter: &Filter) -> Result<Page<'a>, Headless
         Some(layer) => Box::new(doc.by_layer(layer)),
         None => Box::new(doc.entities()),
     };
+    let blocks = std::cell::OnceCell::new();
     let mut past = start.is_none();
     let mut items = Vec::new();
     let mut more = false;
@@ -341,13 +342,7 @@ pub fn page<'a>(doc: &'a Document, filter: &Filter) -> Result<Page<'a>, Headless
             continue;
         }
         if let Some(bbox) = &filter.bbox {
-            let b = entity_bounds(&shape(e));
-            let b = Bounds {
-                min_x: b.min_x,
-                min_y: b.min_y,
-                max_x: b.max_x,
-                max_y: b.max_y,
-            };
+            let b = measured_bounds(doc, e, &shape(e), &blocks);
             if !meets(&b, bbox) {
                 continue;
             }
@@ -377,7 +372,7 @@ pub fn measure(doc: &Document, uid: &str) -> Result<Measure, HeadlessError> {
 /// An object's measures taken by `method`.
 pub fn measure_by(doc: &Document, uid: &str, method: Method) -> Result<Measure, HeadlessError> {
     let way = Way::of(doc.settings(), method)?;
-    let item = item(doc, uid, &way)?;
+    let item = item(doc, uid, &way, &std::cell::OnceCell::new())?;
     Ok(Measure {
         uid: item.uid,
         kind: item.kind,
@@ -405,9 +400,10 @@ pub fn measure_many(
         ));
     }
     let way = Way::of(doc.settings(), method)?;
+    let blocks = std::cell::OnceCell::new();
     let items = uids
         .iter()
-        .map(|uid| item(doc, uid, &way))
+        .map(|uid| item(doc, uid, &way, &blocks))
         .collect::<Result<Vec<_>, _>>()?;
     let totals = Totals {
         count: items.len(),
@@ -453,7 +449,18 @@ impl Way {
     }
 }
 
-fn item(doc: &Document, uid: &str, way: &Way) -> Result<MeasureItem, HeadlessError> {
+fn measured_bounds(doc: &Document, e: &Entity, s: &kentos_geometry_core::entity::Shape, blocks: &std::cell::OnceCell<kentos_geometry_core::block::Blocks>) -> Bounds {
+    if matches!(e, Entity::Insert(_)) {
+        let blocks = blocks.get_or_init(|| kentos_native_application::blocks::core_blocks(doc.blocks()));
+        if let Some([min_x, min_y, max_x, max_y]) = kentos_native_application::blocks::placed_box_in(doc, blocks, e) {
+            return Bounds { min_x, min_y, max_x, max_y };
+        }
+    }
+    let b = entity_bounds(s);
+    Bounds { min_x: b.min_x, min_y: b.min_y, max_x: b.max_x, max_y: b.max_y }
+}
+
+fn item(doc: &Document, uid: &str, way: &Way, blocks: &std::cell::OnceCell<kentos_geometry_core::block::Blocks>) -> Result<MeasureItem, HeadlessError> {
     let slot = slot_of(doc, uid)?;
     let Some(e) = doc.get(slot) else {
         return Err(HeadlessError::new(
@@ -462,7 +469,7 @@ fn item(doc: &Document, uid: &str, way: &Way) -> Result<MeasureItem, HeadlessErr
         ));
     };
     let s = shape(e);
-    let b = entity_bounds(&s);
+    let b = measured_bounds(doc, e, &s, blocks);
     let (area, length) = match way {
         // A space's or a slab's rings as one area object: its area net of its holes and its rings' length, what
         // Metraj reads (docs/adr/0776 §2: the API gave none, an agent had to ask cad.spaces.quantities).

@@ -455,3 +455,19 @@ fn a_wall_cut_jamb_endpoint_names_its_live_visible_opening_without_changing_poin
     s.set_hosts([(2., None)]);
     assert!(s.loose_openings().len() == 1);
 }
+
+#[test]
+fn reference_candidates_preserve_coincident_owners_while_tab_cycle_stays_point_unique() {
+    let mut s = Store::new();
+    s.put_json(r#"[{"id":1,"layerId":"a","kind":"line","a":{"x":0,"y":0},"b":{"x":2,"y":0}},{"id":2,"layerId":"b","kind":"line","a":{"x":2,"y":0},"b":{"x":2,"y":2}}]"#).unwrap();
+    let at = Vec2::new(2.,0.);
+    let kinds = SnapKind::Endpoint.bit();
+    let ordinary = s.snap_candidates(at,0.01,kinds,None,&SnapExtras::default());
+    assert_eq!(ordinary.len(),1);
+    let sources = s.snap_sources(at,0.01,kinds,None,&SnapExtras::default());
+    assert_eq!(sources.iter().map(|s| s.id).collect::<Vec<_>>(),vec![1.,2.]);
+    assert_eq!(sources[0],ordinary[0]);
+    assert!(sources.iter().all(|s| s.point == at));
+    s.set_layers([("a",kentos_geometry_core::store::LayerFlags { visible:false,locked:false,pick_interior:true,snap:u32::MAX })]);
+    assert_eq!(s.snap_sources(at,0.01,kinds,None,&SnapExtras::default()).iter().map(|s| s.id).collect::<Vec<_>>(),vec![2.]);
+}

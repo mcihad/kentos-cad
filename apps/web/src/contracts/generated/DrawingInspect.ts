@@ -7,7 +7,7 @@ export type DrawingInspect = {
  */
 uids?: Array<string>, 
 /**
- * Absent/empty: both boundary and hatch checks.
+ * Absent/empty: boundary, hatch and annotation checks.
  */
 checks?: Array<InspectionGroup>, 
 /**

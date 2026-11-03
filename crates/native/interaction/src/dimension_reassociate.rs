@@ -144,6 +144,10 @@ impl DimensionReassociate {
             cx.say(Level::Warn, NO_DIMENSION_HERE);
             return;
         };
+        self.pick_slot(slot, cx);
+    }
+
+    fn pick_slot(&mut self, slot: kentos_domain::Slot, cx: &mut Context<'_>) {
         let Some(Entity::Dimension(d)) = cx.doc.get(slot) else {
             return;
         };
@@ -255,6 +259,11 @@ impl Tool for DimensionReassociate {
 
     fn activate(&mut self, cx: &mut Context<'_>) -> Flow {
         self.format = cx.format();
+        if let [slot] = cx.selection.ids()
+            && cx.doc.get(*slot).is_some_and(|e| dimension(e, cx.doc))
+        {
+            self.pick_slot(*slot, cx);
+        }
         Flow::Stay
     }
 

@@ -54,6 +54,7 @@ class _SnapFind(LocalCommand[SnapFind, SnapFound, SnapFound]):
         from_: Vec2Like | None | Unset = UNSET,
         kinds: Sequence[SnapKindName | SnapKindNameName] | None | Unset = UNSET,
         model_scope: SheetModelScope | None | Unset = UNSET,
+        sources: bool | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> SnapFound:
@@ -73,6 +74,8 @@ class _SnapFind(LocalCommand[SnapFind, SnapFound, SnapFound]):
             from_: The running command's last point: Dik's foot and Teğet's point are measured from it. Unit: length.
             kinds: The kinds that apply; absent: the settings' kinds on at first (all but Yakın and Ağırlık merkezi).
             model_scope: Explicit paper viewport context; world coordinates and returned ids remain those of the one model.
+            sources: With `all`, retain coincident points owned by different objects for persistent reference binding.
+                Absent/false keeps the ordinary Tab cycle's one candidate per geometric point.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -92,6 +95,7 @@ class _SnapFind(LocalCommand[SnapFind, SnapFound, SnapFound]):
             from_=_opt(from_, lambda x: Vec2.of(x)),
             kinds=_opt(kinds, lambda x: list(x)),
             model_scope=model_scope,
+            sources=sources,
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -105,6 +109,7 @@ class _SnapFind(LocalCommand[SnapFind, SnapFound, SnapFound]):
         from_: Vec2Like | None | Unset = UNSET,
         kinds: Sequence[SnapKindName | SnapKindNameName] | None | Unset = UNSET,
         model_scope: SheetModelScope | None | Unset = UNSET,
+        sources: bool | Unset = UNSET,
     ) -> SnapFound:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -116,6 +121,7 @@ class _SnapFind(LocalCommand[SnapFind, SnapFound, SnapFound]):
             from_=_opt(from_, lambda x: Vec2.of(x)),
             kinds=_opt(kinds, lambda x: list(x)),
             model_scope=model_scope,
+            sources=sources,
         ))
 
     def validate(
@@ -129,6 +135,7 @@ class _SnapFind(LocalCommand[SnapFind, SnapFound, SnapFound]):
         from_: Vec2Like | None | Unset = UNSET,
         kinds: Sequence[SnapKindName | SnapKindNameName] | None | Unset = UNSET,
         model_scope: SheetModelScope | None | Unset = UNSET,
+        sources: bool | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -140,6 +147,7 @@ class _SnapFind(LocalCommand[SnapFind, SnapFound, SnapFound]):
             from_=_opt(from_, lambda x: Vec2.of(x)),
             kinds=_opt(kinds, lambda x: list(x)),
             model_scope=model_scope,
+            sources=sources,
         ))
 
     def answer(
@@ -153,6 +161,7 @@ class _SnapFind(LocalCommand[SnapFind, SnapFound, SnapFound]):
         from_: Vec2Like | None | Unset = UNSET,
         kinds: Sequence[SnapKindName | SnapKindNameName] | None | Unset = UNSET,
         model_scope: SheetModelScope | None | Unset = UNSET,
+        sources: bool | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -169,6 +178,7 @@ class _SnapFind(LocalCommand[SnapFind, SnapFound, SnapFound]):
             from_=_opt(from_, lambda x: Vec2.of(x)),
             kinds=_opt(kinds, lambda x: list(x)),
             model_scope=model_scope,
+            sources=sources,
         ), op=op, request_id=request_id, expected=expected)
 
 

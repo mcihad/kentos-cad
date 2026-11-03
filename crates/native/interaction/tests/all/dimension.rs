@@ -909,3 +909,42 @@ fn native_endpoint_measure_binds_the_opening_owning_a_cut_wall_jamb_and_one_hist
     b.run(|s, cx| s.cancel(cx));
     assert_eq!(b.doc.to_snapshot_v2(), created);
 }
+
+#[test]
+fn reassociation_starts_with_the_selected_dimension_and_cancel_never_writes() {
+    let mut b = Bench::new("dimension");
+    b.click(0., 0.);
+    b.click(2.5, 0.);
+    b.click(1., 1.);
+    let slot = kentos_domain::Slot(b.newest().base().id);
+    b.selection.set([slot]);
+    let before = b.doc.to_snapshot_v2();
+    b.start("dimensionReassociate");
+    assert!(b.session.prompt().text().contains("birinci noktasının"));
+    assert!(b.run(|s, cx| s.cancel(cx)));
+    assert_eq!(b.doc.to_snapshot_v2(), before);
+    b.start("dimensionReassociate");
+    b.confirm();
+    assert!(b.session.prompt().text().contains("ikinci noktasının"));
+    b.confirm();
+    assert_eq!(b.doc.to_snapshot_v2(), before, "keeping both references is read only");
+}
+
+#[test]
+fn dimension_placement_warns_about_coincident_text_without_moving_or_writing_it() {
+    let mut b = Bench::new("dimension");
+    b.click(0., 0.); b.click(10., 0.); b.click(5., 3.);
+    b.confirm();
+    b.start("dimension");
+    b.click(0., 0.); b.click(10., 0.);
+    let before = b.doc.to_snapshot_v2();
+    b.move_to(5., 3.);
+    let preview = b.session.preview(&Default::default()).unwrap();
+    assert!(preview.tag.as_ref().unwrap().lines.iter().any(|s| s.contains("çakışabilir")));
+    assert_eq!(preview.tag_tone, kentos_interaction::Tone::Danger);
+    assert_eq!(b.doc.to_snapshot_v2(), before);
+    b.move_to(5., 30.);
+    let clear = b.session.preview(&Default::default()).unwrap();
+    assert!(!clear.tag.as_ref().unwrap().lines.iter().any(|s| s.contains("çakışabilir")));
+    assert_eq!(b.doc.to_snapshot_v2(), before);
+}

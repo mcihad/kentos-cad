@@ -758,7 +758,7 @@ pub fn place_elevation(e: &Entity, place: SubPlace) -> Option<f64> {
 
 impl Document {
     /// The block definitions as they were before `ops` (applied): each block step taken back, last first.
-    fn blocks_before(&self, ops: &[Op]) -> Vec<Arc<BlockDefinition>> {
+    pub(crate) fn blocks_before(&self, ops: &[Op]) -> Vec<Arc<BlockDefinition>> {
         let mut list = self.blocks.clone();
         for op in ops.iter().rev() {
             match op {

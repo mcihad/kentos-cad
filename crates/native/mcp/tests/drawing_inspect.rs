@@ -59,3 +59,45 @@ fn hatch_origin_edit_through_mcp_keeps_all_other_hatch_data_and_undoes_once() {
     let undone = tool(&mut server,"drawing.entities",json!({"drawing":drawing}));
     assert_eq!(undone["items"].as_array().unwrap().iter().map(|r|&r["entity"]).collect::<Vec<_>>(), before["items"].as_array().unwrap().iter().map(|r|&r["entity"]).collect::<Vec<_>>());
 }
+
+#[test]
+fn annotation_inspection_through_mcp_reports_true_measure_separately_from_written_text() {
+    let mut server = Server::new();
+    let new = tool(&mut server, "drawing.new", json!({"workspace":"cad"}));
+    let drawing = &new["drawing"];
+    let layer = &new["summary"]["activeLayer"];
+    let made = tool(&mut server, "cad.entities.create", json!({"drawing":drawing,"layerId":layer,
+        "objects":[{"geometry":{"kind":"dimension","a":{"x":0.,"y":0.},"b":{"x":2.5,"y":0.},"offset":0.3,"height":0.125,"text":"2400"}}]}));
+    assert_eq!(made["status"], "completed", "{made}");
+    let before = tool(&mut server, "drawing.entities", json!({"drawing":drawing}));
+    let found = tool(&mut server, "cad.drawing.inspect", json!({"drawing":drawing,"checks":["annotations"]}));
+    assert_eq!(found["status"], "completed", "{found}");
+    let values = tool(&mut server, "cad.dimensions.query", json!({"drawing":drawing}));
+    assert_eq!(found["output"]["dimensions"], values["output"]["dimensions"]);
+    assert_eq!(found["output"]["dimensions"][0]["measured"], 2.5);
+    assert_eq!(found["output"]["dimensions"][0]["shown"], "2400");
+    assert!(found["output"]["findings"].as_array().unwrap().iter().any(|f| f["code"] == "dimension_override"));
+    assert_eq!(tool(&mut server, "drawing.entities", json!({"drawing":drawing})), before);
+}
+
+#[test]
+fn source_snap_query_preserves_coincident_owner_uuids_without_changing_default_cycle() {
+    let mut server = Server::new();
+    let new = tool(&mut server,"drawing.new",json!({"workspace":"cad"}));
+    let drawing = &new["drawing"];
+    let layer = &new["summary"]["activeLayer"];
+    for (a,b) in [([0.,0.],[2.,0.]),([2.,0.],[2.,2.])] {
+        let made = tool(&mut server,"cad.line.create",json!({"drawing":drawing,"layerId":layer,
+            "a":{"x":a[0],"y":a[1]},"b":{"x":b[0],"y":b[1]}}));
+        assert_eq!(made["status"],"completed");
+    }
+    let request = json!({"drawing":drawing,"at":{"x":2.,"y":0.},"aperture":0.01,"kinds":["endpoint"],"all":true});
+    let ordinary = tool(&mut server,"cad.snap.find",request.clone());
+    let mut request = request; request["sources"] = json!(true);
+    let sources = tool(&mut server,"cad.snap.find",request);
+    assert_eq!(ordinary["output"]["snaps"].as_array().unwrap().len(),1);
+    let snaps = sources["output"]["snaps"].as_array().unwrap();
+    assert_eq!(snaps.len(),2);
+    assert_ne!(snaps[0]["uid"],snaps[1]["uid"]);
+    assert_eq!(snaps[0]["point"],snaps[1]["point"]);
+}

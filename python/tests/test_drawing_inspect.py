@@ -65,3 +65,31 @@ class DrawingInspect(unittest.TestCase):
         self.assertEqual(current, expected)
         self.assertEqual(doc.undo(), 'Tarama başlangıcı')
         self.assertEqual(next(r.entity.to_json() for r in doc.entities() if r.uid == row.uid), before)
+
+    def test_annotations_expose_true_measure_apart_from_override_and_match_query(self):
+        doc = drawing([dict(kind='dimension', a=dict(x=0., y=0.), b=dict(x=2.5, y=0.),
+                            offset=.3, height=.125, text='2400')])
+        before = doc.to_bytes()
+        result = cad.drawing.inspect(doc, checks=['annotations'])
+        values = cad.dimensions.query(doc)
+        self.assertEqual([d.to_json() for d in result.dimensions], [d.to_json() for d in values.dimensions])
+        self.assertEqual(result.dimensions[0].measured, 2.5)
+        self.assertEqual(result.dimensions[0].shown, '2400')
+        self.assertTrue(result.dimensions[0].overridden)
+        self.assertEqual({f.code for f in result.findings}, {'dimension_free', 'dimension_override'})
+        self.assertEqual(doc.to_bytes(), before)
+
+    def test_reference_snap_keeps_coincident_sources_without_changing_default_cycle(self):
+        doc = drawing([
+            dict(kind='line', a=dict(x=0., y=0.), b=dict(x=2., y=0.)),
+            dict(kind='line', a=dict(x=2., y=0.), b=dict(x=2., y=2.)),
+        ])
+        before = doc.to_bytes()
+        at = cad.Vec2(x=2., y=0.)
+        ordinary = cad.snap.find(doc, at=at, aperture=.01, kinds=['endpoint'], all=True)
+        sources = cad.snap.find(doc, at=at, aperture=.01, kinds=['endpoint'], all=True, sources=True)
+        self.assertEqual(len(ordinary.snaps), 1)
+        self.assertEqual(len(sources.snaps), 2)
+        self.assertNotEqual(sources.snaps[0].uid, sources.snaps[1].uid)
+        self.assertEqual(sources.snaps[0].point, sources.snaps[1].point)
+        self.assertEqual(doc.to_bytes(), before)

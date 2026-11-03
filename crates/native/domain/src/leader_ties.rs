@@ -21,9 +21,9 @@ use kentos_geometry_core::api::json::{FromJson, Json};
 use kentos_geometry_core::entity::{Entity as CoreEntity, entity_bounds};
 use kentos_geometry_core::geom::leader::layout_of;
 use kentos_geometry_core::jsmath::{PI, cos, sin};
-use kentos_geometry_core::ops::subref::{Followed, follow};
+use kentos_geometry_core::ops::subref::{Followed, follow, follow_path};
 
-use crate::dimension_ties::{contract_place, core_place};
+use crate::dimension_ties::{contract_place, core_place, core_blocks};
 use crate::document::Document;
 use crate::history::Op;
 use crate::identity::{Slot, Uuid};
@@ -189,8 +189,10 @@ impl Document {
         let mut added: BTreeSet<Uuid> = BTreeSet::new();
         let mut gone_leaders: Vec<LeaderEntity> = Vec::new();
         let mut any_leader = false;
+        let mut redefined = false;
         for op in ops {
             match op {
+                Op::BlockAdd { .. } | Op::BlockRemove { .. } | Op::BlockUpdate { .. } => { redefined = true; }
                 Op::Add(s) => {
                     if matches!(*s.entity, Entity::Leader(_)) {
                         added.insert(s.uid);
@@ -235,6 +237,16 @@ impl Document {
                 }
             }
         }
+        if redefined {
+            for slot in self.store.tied_slots() {
+                if let Some(s) = self.store.get(slot)
+                    && matches!(*s.entity, Entity::Leader(_))
+                {
+                    leaders.insert(s.uid);
+                }
+            }
+        }
+        let mut definitions = None;
         let mut out = Vec::new();
         for uid in leaders {
             let Some(current) = self
@@ -258,6 +270,33 @@ impl Document {
                     continue;
                 };
                 let of = Uuid::from_bytes(t.uid.0);
+                if !t.path.is_empty() && (redefined || changed.contains_key(&of)) {
+                    // A new binding is already expressed in the geometry after this step.
+                    if added.contains(&uid) || was.as_ref().is_some_and(|w| tips(w).get(k).copied().flatten() != Some(&t)) {
+                        continue;
+                    }
+                    let (before, after) = match changed.get(&of) {
+                        Some((b, a)) => (Arc::clone(b), a.clone()),
+                        None => match self.store.slot_of(of).and_then(|s| self.store.get(s)) {
+                            Some(now) => (Arc::clone(&now.entity), Some(Arc::clone(&now.entity))),
+                            None => continue,
+                        },
+                    };
+                    let (old_blocks, new_blocks) = definitions.get_or_insert_with(|| (
+                        core_blocks(&self.blocks_before(ops)), core_blocks(&self.blocks),
+                    ));
+                    let Some(before) = core(&before) else { continue; };
+                    let after = after.as_ref().and_then(|e| core(e));
+                    let (followed, path) = follow_path(core_place(t.place), &t.path, (old_blocks, &before), after.as_ref().map(|a| (&*new_blocks, a)));
+                    match followed {
+                        Followed::At(place, p) => set_tip(&mut next, k, Vec2 { x:p.x, y:p.y }, Some(SubRef { place:contract_place(place), path, ..t })),
+                        Followed::Broken(reason) => {
+                            let p = tip_point(&next, k).unwrap_or(Vec2 { x:0., y:0. });
+                            set_tip(&mut next, k, p, Some(SubRef { broken:Some(reason.code().into()), ..t }));
+                        }
+                    }
+                    continue;
+                }
                 match changed.get(&of) {
                     Some((before, after)) => {
                         let followed = match (core(before), after.as_ref().map(|a| core(a))) {

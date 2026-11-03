@@ -176,6 +176,16 @@ pub(crate) fn inspect_captured(doc:&Document,book:&SheetBook,sheet:&str,render:&
                 {
                     out.push(finding(&m.item,"missing_font",format!("{id} numaralı yazının özgün fontu “{file}” bu baskı hattında gömülemiyor; paketli bir font kullanılıyor."),"Yazı stilini desteklenen bir fonta açıkça dönüştürün veya özgün font desteğini sağlayın.",Severity::Warning));
                 }
+                if let Entity::Dimension(_) = e
+                    && let Some(uid) = doc.uid(kentos_domain::Slot(id))
+                {
+                    for f in kentos_native_application::drawing_inspect::annotations::findings(doc, uid, e)
+                        .into_iter().filter(|f| matches!(f.code.as_str(), "dimension_override" | "dimension_partial" | "dimension_invalid"))
+                    {
+                        out.push(finding(&m.item, &f.code, format!("{id}: {}", f.message), &f.repair,
+                            if f.severity == kentos_commands::InspectionSeverity::Error { Severity::Error } else { Severity::Warning }));
+                    }
+                }
                 for fault in doc.audit_object(kentos_domain::Slot(id)) {
                     if matches!(
                         fault.kind,
@@ -200,6 +210,7 @@ pub(crate) fn inspect_captured(doc:&Document,book:&SheetBook,sheet:&str,render:&
                     for ptr in [
                         "/refs",
                         "/tip",
+                        "/arms",
                         "/fields",
                         "/paragraph/fields",
                         "/tag",

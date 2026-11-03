@@ -94,7 +94,9 @@ pub fn answer(doc: &Document, store: Option<&Store>, input: &SnapFind) -> Comman
     let at = Vec2::new(input.at.x, input.at.y);
     let from = input.from.map(|f| Vec2::new(f.x, f.y));
     let extras = SnapExtras::default();
-    let mut hits = if input.all || scope.is_some() {
+    let mut hits = if input.all && input.sources {
+        store.snap_sources(at, input.aperture, kinds, from, &extras)
+    } else if input.all || scope.is_some() {
         store.snap_candidates(at, input.aperture, kinds, from, &extras)
     } else {
         store

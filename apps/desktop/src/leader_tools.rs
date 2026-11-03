@@ -62,6 +62,8 @@ impl fmt::Display for Way {
 enum Picking {
     AddArm(Slot),
     RemoveArm(Slot),
+    ChooseTip(Slot),
+    BindTip(Slot, u32),
 }
 
 /// Hizala's window.
@@ -165,25 +167,54 @@ impl App {
         ok
     }
 
+    fn leader_pick(&mut self, picking: Picking, field: &'static str) {
+        self.leader_tools.picking = Some(picking);
+        self.say(Level::Command, format!("Kılavuz: {}", field.to_lowercase()));
+        self.field = None;
+        self.snap = None;
+        self.session.run(Box::new(PickPoint::new("", field)));
+        self.with_tool(|s, cx| s.activate(cx));
+    }
+
+    fn leader_tip_at(&self, uid: &str, p: Vec2) -> Option<SubRef> {
+        let d = self.document.as_ref()?;
+        let input = SnapFind {
+            model_scope: self.spatial.sheet_model_scope(), at: p,
+            aperture: 10.0 / self.viewport.camera.scale.max(1e-9),
+            kinds: None, from: None, all: true, sources: true,
+        };
+        let CommandResult::Completed { output, .. } = snap_find::answer(&d.model, Some(self.spatial.store()), &input) else { return None; };
+        output.snaps.into_iter().find_map(|s| {
+            let u = Uuid::parse_str(s.uid.as_deref()?).ok()?;
+            if u.to_string() == uid { return None; }
+            let place = s.place?;
+            let source = d.model.slot_of(u).and_then(|slot| d.model.get(slot))?;
+            // A snap marker can belong to an annotation whose place is not a persistent
+            // source reference. Keep searching the coincident candidates in that case.
+            kentos_native_application::blocks::place_point(d.model.blocks(), source, &s.path, place).ok()?;
+            Some(SubRef {
+                uid: kentos_commands::EntityId(*u.as_bytes()), place,
+                path: s.path, broken: None,
+            })
+        })
+    }
+
     /// The leader commands by their ids; false for any other.
     pub(crate) fn leader_tools_run(&mut self, id: &str) -> bool {
         match id {
-            "leader.addArm" | "leader.removeArm" => {
+            "leader.addArm" | "leader.removeArm" | "leader.bindTip" => {
                 let [leader] = self.selected_of("leader")[..] else {
                     self.warn("Önce bir kılavuz seçin.");
                     return true;
                 };
                 let (picking, field) = if id == "leader.addArm" {
                     (Picking::AddArm(leader), "Yeni kolun ucu")
-                } else {
+                } else if id == "leader.removeArm" {
                     (Picking::RemoveArm(leader), "Silinecek kolun ucu")
+                } else {
+                    (Picking::ChooseTip(leader), "Bağlanacak kolun mevcut ucu")
                 };
-                self.leader_tools.picking = Some(picking);
-                self.say(Level::Command, format!("Kılavuz: {}", field.to_lowercase()));
-                self.field = None;
-                self.snap = None;
-                self.session.run(Box::new(PickPoint::new("", field)));
-                self.with_tool(|s, cx| s.activate(cx));
+                self.leader_pick(picking, field);
             }
             "leader.align" => {
                 let leaders = self.selected_of("leader");
@@ -252,32 +283,8 @@ impl App {
         match picking {
             Picking::AddArm(leader) => {
                 let uid = self.uids_of(&[leader]).pop().unwrap_or_default();
-                // The place a snap gives at the point, on another object: the tip follows it.
-                let aperture = 10.0 / self.viewport.camera.scale.max(1e-9);
-                let tip = self.document.as_ref().and_then(|d| {
-                    let input = SnapFind {
-                        model_scope: self.spatial.sheet_model_scope(),
-                        at: p,
-                        aperture,
-                        kinds: None,
-                        from: None,
-                        all: false,
-                    };
-                    match snap_find::answer(&d.model, Some(self.spatial.store()), &input) {
-                        CommandResult::Completed { output, .. } => {
-                            output.snaps.into_iter().find_map(|s| {
-                                let u = Uuid::parse_str(s.uid.as_deref()?).ok()?;
-                                (u.to_string() != uid).then_some(SubRef {
-                                    uid: kentos_commands::EntityId(*u.as_bytes()),
-                                    place: s.place?,
-                                    path: Vec::new(),
-                                    broken: None,
-                                })
-                            })
-                        }
-                        _ => None,
-                    }
-                });
+                // Keep the full nested block path supplied by the canonical snap query.
+                let tip = self.leader_tip_at(&uid, p);
                 let bound = tip.is_some();
                 let _ = self.leaders_edit(
                     LeaderEdit::AddArm {
@@ -291,6 +298,24 @@ impl App {
                         "Kol eklendi."
                     },
                 );
+            }
+            Picking::ChooseTip(leader) => {
+                let Some(Entity::Leader(l)) = self.document.as_ref().and_then(|d| d.model.get(leader)) else { return true; };
+                let nearest = std::iter::once(l.pts.first()).chain(l.arms.iter().map(|a| a.pts.first()))
+                    .enumerate().filter_map(|(i, q)| q.map(|q| (i, (q.x - p.x).hypot(q.y - p.y))))
+                    .min_by(|a, b| a.1.total_cmp(&b.1)).map(|(i, _)| i as u32);
+                if let Some(arm) = nearest {
+                    self.leader_pick(Picking::BindTip(leader, arm), "Yeni uç: kaynak nesnenin ucuna, köşesine veya merkezine kenetleyin");
+                }
+            }
+            Picking::BindTip(leader, arm) => {
+                let uid = self.uids_of(&[leader]).pop().unwrap_or_default();
+                if let Some(tip) = self.leader_tip_at(&uid, p) {
+                    let _ = self.leaders_edit(LeaderEdit::Bind { uid, arm, tip: Some(tip) }, "Kılavuzun ucu kaynağa bağlandı.");
+                } else {
+                    self.leader_pick(Picking::BindTip(leader, arm), "Kaynak nesnenin ucuna, köşesine veya merkezine kenetleyin");
+                    self.warn("Bağlanabilir bir kaynak noktası yok; kılavuz değiştirilmedi. Esc ile iptal edebilirsiniz.");
+                }
             }
             Picking::RemoveArm(leader) => {
                 let Some(Entity::Leader(l)) = self
@@ -679,5 +704,113 @@ impl StylesWindow {
                 self.choose(i.min(self.styles.len() - 1));
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod binding_tests {
+    use super::*;
+    use kentos_commands::DocumentSnapshotV1;
+    use serde_json::{Value, json};
+
+    fn app() -> App {
+        let fixture: Value = serde_json::from_str(include_str!("../../../fixtures/commands/v1/cad.blocks.find.json")).unwrap();
+        let mut raw = fixture["setup"].clone();
+        let inner = "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001";
+        let outer = "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4002";
+        raw["blocks"] = json!([
+            {"id":inner,"name":"Inner","base":{"x":0.,"y":0.},"units":"m","entities":[
+                {"kind":"line","id":1,"layerId":"a","attrs":{},"a":{"x":1.,"y":2.},"b":{"x":3.,"y":2.}}]},
+            {"id":outer,"name":"Outer","base":{"x":0.,"y":0.},"units":"m","entities":[
+                {"kind":"insert","id":1,"layerId":"a","attrs":{},"block":inner,"p":{"x":10.,"y":20.},"scale":2.,"rotation":0.}]}
+        ]);
+        raw["entities"] = json!([
+            {"kind":"insert","id":1,"layerId":"a","attrs":{},"block":outer,"p":{"x":100.,"y":200.},"scale":1.,"rotation":0.},
+            {"kind":"leader","id":2,"layerId":"a","attrs":{},"pts":[{"x":0.,"y":0.},{"x":5.,"y":0.}],"height":0.1,"rotation":0.,"text":"QA"}
+        ]);
+        let mut app = crate::files_testing::app_with_drawing();
+        app.document.as_mut().unwrap().model = kentos_domain::Document::from_snapshot(DocumentSnapshotV1::from_json(&raw.to_string()).unwrap()).unwrap();
+        app.spatial.reload(&app.document.as_ref().unwrap().model);
+        app.viewport.camera.scale = 100.;
+        app.selection.set([Slot(2)]);
+        app
+    }
+
+    #[test]
+    fn tip_binding_keeps_nested_path_rejects_empty_space_and_undoes_once() {
+        let mut app = app();
+        let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+        assert!(app.leader_tools_run("leader.bindTip"));
+        assert!(app.leader_tools_picked(Some(kentos_geometry_core::Vec2::new(0., 0.))));
+        assert!(matches!(app.leader_tools.picking, Some(Picking::BindTip(Slot(2), 0))));
+        assert!(app.leader_tools_picked(Some(kentos_geometry_core::Vec2::new(90., 90.))));
+        assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(), before);
+        assert!(matches!(app.leader_tools.picking, Some(Picking::BindTip(_, 0))));
+        let tip = app.leader_tip_at(&app.document.as_ref().unwrap().model.uid(Slot(2)).unwrap().to_string(), Vec2 { x:112., y:224. });
+        assert!(tip.is_some(), "nested endpoint snap: {:?}", snap_find::answer(&app.document.as_ref().unwrap().model, Some(app.spatial.store()), &SnapFind { model_scope: None, at: Vec2 { x:112., y:224. }, aperture: 0.1, kinds: None, from: None, all: true, sources: true }));
+        let command = LeadersEdit { edit: LeaderEdit::Bind { uid: app.document.as_ref().unwrap().model.uid(Slot(2)).unwrap().to_string(), arm: 0, tip }, expected_revision: None };
+        let planned = leaders_edit::plan(&ExecutionContext::new(&mut app.document.as_mut().unwrap().model), &command);
+        assert!(matches!(planned, CommandResult::Completed { .. }), "{planned:?}");
+        assert!(app.leader_tools_picked(Some(kentos_geometry_core::Vec2::new(112., 224.))));
+        let doc = &mut app.document.as_mut().unwrap().model;
+        let Some(Entity::Leader(l)) = doc.get(Slot(2)) else { panic!("leader") };
+        let tip = l.tip.as_ref().expect("bound tip");
+        assert_eq!(tip.path, vec![0, 0]);
+        assert_eq!(Uuid::from_bytes(tip.uid.0), doc.uid(Slot(1)).unwrap());
+        assert_eq!(l.pts[0], Vec2 { x:112., y:224. });
+        let bound = doc.to_snapshot_v2();
+        let mut moved = doc.get(Slot(1)).unwrap().clone();
+        let Entity::Insert(i) = &mut moved else { unreachable!() };
+        i.p = Vec2 { x:101., y:203. };
+        assert!(doc.update(Slot(1), moved));
+        let Some(Entity::Leader(l)) = doc.get(Slot(2)) else { unreachable!() };
+        assert_eq!(l.pts[0], Vec2 { x:113., y:227. });
+        assert!(l.tip.as_ref().unwrap().live());
+        doc.undo();
+        assert_eq!(doc.to_snapshot_v2(), bound);
+        let mut changed = doc.blocks()[0].as_ref().clone();
+        let Entity::Line(line) = &mut changed.entities[0] else { unreachable!() };
+        line.a.x = 2.;
+        assert!(doc.update_block(changed).unwrap());
+        let Some(Entity::Leader(l)) = doc.get(Slot(2)) else { unreachable!() };
+        assert_eq!(l.pts[0], Vec2 { x:114., y:224. });
+        assert!(l.tip.as_ref().unwrap().live());
+        doc.undo();
+        assert_eq!(doc.to_snapshot_v2(), bound);
+        let mut changed = doc.blocks()[0].as_ref().clone();
+        changed.entities[0] = serde_json::from_value(json!({"kind":"point","id":1,"layerId":"a","attrs":{},"p":{"x":0.,"y":0.}})).unwrap();
+        assert!(doc.update_block(changed).unwrap());
+        let Some(Entity::Leader(l)) = doc.get(Slot(2)) else { unreachable!() };
+        assert!(!l.tip.as_ref().unwrap().live());
+        assert_eq!(l.pts[0], Vec2 { x:112., y:224. });
+        doc.undo();
+        assert_eq!(doc.to_snapshot_v2(), bound);
+        assert_eq!(doc.undo().as_deref(), Some("Kılavuzun ucu"));
+        assert_eq!(doc.to_snapshot_v2(), before);
+    }
+
+    #[test]
+    fn coincident_dimension_snap_does_not_hide_bindable_line_endpoint() {
+        let mut app = app();
+        let doc = &mut app.document.as_mut().unwrap().model;
+        let line: Entity = serde_json::from_value(json!({"kind":"line","id":3,"layerId":"a","attrs":{},"a":{"x":20.,"y":20.},"b":{"x":25.,"y":20.}})).unwrap();
+        let dimension: Entity = serde_json::from_value(json!({"kind":"dimension","id":4,"layerId":"a","attrs":{},"a":{"x":20.,"y":20.},"b":{"x":25.,"y":20.},"offset":-0.4,"height":0.125})).unwrap();
+        doc.add(dimension).unwrap();
+        let line_slot = doc.add(line).unwrap();
+        let leader_uid = doc.uid(Slot(2)).unwrap().to_string();
+        let line_uid = doc.uid(line_slot).unwrap();
+        app.spatial.reload(&app.document.as_ref().unwrap().model);
+        let tip = app.leader_tip_at(&leader_uid, Vec2 { x:25., y:20. }).expect("valid underlying source");
+        assert_eq!(Uuid::from_bytes(tip.uid.0), line_uid);
+    }
+
+    #[test]
+    fn cancelled_tip_selection_keeps_geometry_and_associations() {
+        let mut app = app();
+        let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+        assert!(app.leader_tools_run("leader.bindTip"));
+        assert!(app.leader_tools_picked(None));
+        assert!(app.leader_tools.picking.is_none());
+        assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(), before);
     }
 }

@@ -71,6 +71,8 @@ pub struct DimensionChain {
     hover: Option<Vec2>,
     tracking: Option<Tracking>,
     format: Format,
+    font: Option<kentos_commands::DrawingFont>,
+    overlap: Option<Vec<Vec2>>,
 }
 
 /// Objects a click can choose as the base.
@@ -91,6 +93,8 @@ impl DimensionChain {
             hover: None,
             tracking: None,
             format: Format::default(),
+            font: None,
+            overlap: None,
         }
     }
 
@@ -130,6 +134,7 @@ impl DimensionChain {
     /// deleted) are taken back: the run stands where it did before them.
     fn sync(&mut self, cx: &mut Context<'_>) {
         self.format = cx.format();
+        self.font = cx.doc.settings().drawing_font;
         while let Some((uid, _)) = self.steps.last() {
             if cx.doc.slot_of(*uid).is_some() {
                 break;
@@ -149,6 +154,14 @@ impl DimensionChain {
             Kind::Continue => continue_dimension(base, base.b, p),
             Kind::Baseline => baseline_dimension(base, p, 1.0, LEVEL_TEXT_HEIGHTS * base.height),
         }
+    }
+
+    fn value_ghost(&self, g: &DimensionGeom, l: &kentos_geometry_core::geom::dimension::DimensionLayout, format: &Format) -> crate::tool::TextGhost {
+        let look = contract_look(g.look.clone());
+        crate::tool::TextGhost { p:l.text_at,
+            text:format.dimension_in(l.prefix,l.unit,l.value,&look), height:g.height, rotation:l.rotation,
+            align:Some(kentos_geometry_core::text::TextAlign::MiddleCenter), mask:false,
+            face:kentos_commands::TextFace { font:look.font.or(self.font), ..Default::default() }, width_factor:1. }
     }
 
     /// Where the cursor's point is measured from: the ordinary anchor of ortho and polar.
@@ -352,6 +365,8 @@ impl Tool for DimensionChain {
         let (point, tracking) = constrain(self.anchor(), p, cx);
         self.hover = Some(point);
         self.tracking = tracking;
+        self.overlap = self.next(point).and_then(|g| layout_dimension(&g).map(|l| (g,l)))
+            .and_then(|(g,l)| crate::dimension_preview::overlap(cx, &self.value_ghost(&g,&l,&cx.format())));
     }
 
     fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>) {
@@ -421,6 +436,7 @@ impl Tool for DimensionChain {
             .next(hover)
             .and_then(|g| layout_dimension(&g).map(|l| (g, l)))
         {
+            preview.texts.push(self.value_ghost(&g, &l, format));
             preview.strokes = l
                 .lines
                 .iter()
@@ -438,6 +454,7 @@ impl Tool for DimensionChain {
                 lines: vec![format.dimension_in(l.prefix, l.unit, l.value, &contract_look(g.look))],
             });
         }
+        crate::dimension_preview::warn(&mut preview, &self.overlap);
         preview
     }
 }

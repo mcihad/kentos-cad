@@ -5,9 +5,9 @@
     {
       "id": "cad.inspect",
       "title": "CAD denetimi…",
-      "short": "Sınır ve tarama",
+      "short": "Çizim denetimi",
       "icon": "audit",
-      "description": "Sınırdaki açıklık, yinelenen kenar, kesişim ve tarama bağlarını çizimi değiştirmeden denetler. Kapsam ve milimetre eşiği seçilir; bulgular sahnede gösterilir. Kaynak onarımı ve yeniden bağlama ayrı araçlarla yapılır.",
+      "description": "Sınırdaki açıklık, yinelenen kenar, kesişim, tarama bağları ve ölçü/kılavuzların kaynak ilişkilerini çizimi değiştirmeden denetler. Gerçek ölçü ile elle yazılmış değeri ayırır. Kapsam ve milimetre eşiği seçilir; bulgular sahnede gösterilir. Kaynak onarımı ve yeniden bağlama ayrı araçlarla yapılır.",
       "aliases": [
         "CADKONTROL",
         "TARAMADENETLE",
@@ -1154,6 +1154,15 @@
       "status": "implemented"
     },
     {
+      "id": "leader.bindTip",
+      "title": "Kılavuz ucunu bağla",
+      "short": "Ucu bağla",
+      "icon": "leaderArm",
+      "description": "Seçili kılavuzun önce mevcut kol ucunu, sonra bağlanacak kaynak noktasını seçin. İç içe blok alt nesnesinin yolu korunur; kenet yoksa yazılmaz. Esc iptal, tek Undo geri alır (cad.leaders.edit bind).",
+      "aliases": ["KILAVUZUCUNUBAGLA"],
+      "shortcuts": [], "category": "Açıklama", "status": "implemented"
+    },
+    {
       "id": "leader.addArm",
       "title": "Kol ekle",
       "short": "Kol ekle",
@@ -1266,7 +1275,7 @@
       "id": "tool.hatchEdit",
       "title": "Taramayı düzenle",
       "icon": "hatchEdit",
-      "description": "Bir taramaya tıklanır; Ada ekle tıklanan kapalı nesneyi ada yapar, Ada çıkar tıklanan adayı yeniden tarar, Yeniden seç taramanın bölgesini tıklanan yerden Tarama'nın seçenekleriyle yeniden bulur, Yeniden oluştur sınırını alan ya da çoklu çizgi olarak yazar ve taramayı ona bağlar, İlişkiyi kopar taramayı serbest bırakır (cad.hatches.edit; AutoCAD'in HATCHEDIT'i).",
+      "description": "Bir taramaya tıklanır; Ada ekle tıklanan kapalı nesneyi ada yapar, Ada çıkar tıklanan adayı yeniden tarar, Yeniden seç taramanın bölgesini tıklanan yerden Tarama'nın seçenekleriyle yeniden bulur, Yeniden oluştur sınırını alan ya da çoklu çizgi olarak yazar ve taramayı ona bağlar, İlişkiyi kopar taramayı serbest bırakır, Başlangıcı taşı yalnız desenin başlangıç noktasını değiştirir (N; cad.hatches.edit; AutoCAD'in HATCHEDIT'i).",
       "aliases": [
         "HATCHEDIT",
         "HE",
@@ -5289,6 +5298,10 @@
       "items": [
         {
           "command": "leader.addArm",
+          "size": "small"
+        },
+        {
+          "command": "leader.bindTip",
           "size": "small"
         },
         {

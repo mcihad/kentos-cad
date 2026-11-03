@@ -172,3 +172,28 @@ fn visibility_changes_keep_attribute_labels_and_their_moved_positions() {
     assert!(b.doc.undo().is_some());
     assert_eq!(labels(&mut b), before);
 }
+
+#[test]
+fn block_highlight_does_not_reveal_hidden_layer_pieces_and_updates_when_the_layer_is_shown() {
+    use serde_json::{Value, json};
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../fixtures/commands/v1/cad.blocks.find.json")).unwrap();
+    let mut raw = fixture["setup"].clone();
+    let mut hidden = raw["layers"][0].clone();
+    hidden["id"] = json!("hidden"); hidden["name"] = json!("Hidden"); hidden["visible"] = json!(false);
+    raw["layers"].as_array_mut().unwrap().push(hidden);
+    let block = "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001";
+    raw["blocks"] = json!([{"id":block,"name":"Two layers","base":{"x":0.,"y":0.},"entities":[
+       {"kind":"line","id":1,"layerId":"","attrs":{},"a":{"x":0.,"y":0.},"b":{"x":2.,"y":0.}},
+       {"kind":"line","id":2,"layerId":"hidden","attrs":{},"a":{"x":-1000.,"y":0.},"b":{"x":1000.,"y":0.}}]}]);
+    raw["entities"] = json!([{"kind":"insert","id":1,"layerId":"a","attrs":{},"block":block,"p":{"x":0.,"y":0.},"scale":1.,"rotation":0.}]);
+    let mut b = Bench::on(&raw.to_string());
+    let pieces = b.spatial.pieces(b.doc.get(Slot(1)).unwrap()).unwrap();
+    assert_eq!(pieces.len(),1);
+    let Entity::Line(line) = &pieces[0] else { panic!("line") };
+    assert_eq!(line.b.x,2.);
+    b.doc.set_layer_visible("hidden",true);
+    b.spatial.sync(&b.doc);
+    assert_eq!(b.spatial.pieces(b.doc.get(Slot(1)).unwrap()).unwrap().len(),2);
+    b.doc.set_layer_visible("hidden",false); b.spatial.sync(&b.doc);
+    assert_eq!(b.spatial.pieces(b.doc.get(Slot(1)).unwrap()).unwrap().len(),1);
+}

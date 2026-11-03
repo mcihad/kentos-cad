@@ -157,3 +157,39 @@ fn a_viewport_theme_can_show_globally_hidden_text_and_its_layer_list_can_hide_it
         serde_json::from_value(serde_json::json!({"type":"list","layers":["geom"]})).unwrap();
     assert!(kentos_plot::labels::map_labels(&doc, &spatial, &m).is_empty());
 }
+
+#[test]
+fn preflight_reports_true_override_partial_dimension_and_a_broken_secondary_leader_arm() {
+    use kentos_commands::{Entity, EntityId, SubPlace, SubRef, DimensionRefs};
+    use kentos_domain::{Slot, Uuid};
+    use serde_json::json;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/sheet/v1/viewport-annotations.json")).unwrap();
+    let case = &fixture["cases"][0];
+    let mut raw = case["model"].clone();
+    raw["settings"]["drawingUnit"] = json!("mm");
+    raw["entities"] = json!([
+      {"kind":"line","id":1,"layerId":"geom","attrs":{},"a":{"x":0.,"y":0.},"b":{"x":2.5,"y":0.}},
+      {"kind":"dimension","id":2,"layerId":"geom","attrs":{},"a":{"x":0.,"y":0.},"b":{"x":2.5,"y":0.},"offset":0.3,"height":0.125,"text":"2400"},
+      {"kind":"leader","id":3,"layerId":"geom","attrs":{},"pts":[{"x":0.,"y":0.},{"x":1.,"y":1.}],"height":0.125,"rotation":0.,"text":"İki kol",
+       "arms":[{"pts":[{"x":2.5,"y":0.}],"tip":{"uid":"01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4999","place":{"kind":"end"},"broken":"object_gone"}}]}
+    ]);
+    let mut doc = Document::from_snapshot(serde_json::from_value(raw).unwrap()).unwrap();
+    let mut dimension = doc.get(Slot(2)).unwrap().clone();
+    let Entity::Dimension(d) = &mut dimension else { unreachable!() };
+    d.refs = Some(Box::new(DimensionRefs { a:Some(SubRef { uid:EntityId(*doc.uid(Slot(1)).unwrap().as_bytes()),place:SubPlace::Start,path:vec![],broken:None }), ..Default::default() }));
+    doc.update(Slot(2),dimension);
+    let mut sheet = case["sheet"].clone();
+    sheet["items"][0]["kind"]["view"] = json!({"type":"fixed","center":{"x":1.25,"y":0.},"rotation":0,"scale":50});
+    let mut book = SheetBook::default();
+    book.sheets.push(serde_json::from_value(sheet).unwrap());
+    let before = doc.to_snapshot_v2();
+    let found = kentos_plot::preflight::inspect(&doc,&book,"page",&RenderInputs::default(),None).unwrap();
+    let changed = found.iter().find(|f| f.code=="dimension_override").expect("true and shown values");
+    assert!(changed.message.contains("2500") && changed.message.contains("2400"), "{changed:?}");
+    assert!(found.iter().any(|f| f.code=="dimension_partial"), "{found:?}");
+    assert!(found.iter().any(|f| f.code=="broken_annotation" && f.message.starts_with("3 ")), "{found:?}");
+    assert_eq!(doc.to_snapshot_v2(),before);
+    // Merely reading source identity must not synthesize a replacement object for the missing arm.
+    assert!(doc.slot_of(Uuid::parse_str("01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4999").unwrap()).is_none());
+}

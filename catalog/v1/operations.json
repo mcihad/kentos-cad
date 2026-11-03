@@ -1568,6 +1568,10 @@
       ],
       "note": "Pencere komutun bulgularını gösterir (ADR 0325)."
     },
+    "leader.bindTip": {
+      "level": "semantic", "via": ["cad.leaders.edit"],
+      "note": "Seçili kılavuzun kimliği, seçilen kol sırası ve cad.snap.find'in tam alt nesne yolu bind işlemine verilir; kenet bulunmazsa yazılmaz."
+    },
     "leader.addArm": {
       "level": "semantic",
       "via": [

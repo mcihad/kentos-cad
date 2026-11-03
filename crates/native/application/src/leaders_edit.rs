@@ -134,19 +134,16 @@ fn tip_point(doc: &Document, tip: &SubRef, path: &str) -> Result<Vec2, Stop> {
     let Some(e) = doc.slot_of(uid).and_then(|s| doc.get(s)) else {
         return Err(not_found(&uid.to_string(), &format!("{path}.uid")));
     };
-    let core = crate::blocks::core_entity(e);
-    kentos_geometry_core::ops::subref::point(
-        &core,
-        kentos_domain::dimension_ties::core_place(tip.place),
-    )
-    .map(|p| Vec2 { x: p.x, y: p.y })
-    .ok_or_else(|| {
-        fail(
-            codes::NO_SUCH_PLACE,
-            "Nesnenin böyle bir yeri yok: köşe, uç ya da merkez nesnede olmalı.".into(),
-            &format!("{path}.place"),
-        )
-    })
+    if let Some(problem) = kentos_commands::path_problem(&tip.path) {
+        return Err(invalid(problem, &format!("{path}.path")));
+    }
+    crate::blocks::place_point(doc.blocks(), e, &tip.path, tip.place)
+        .map(|p| Vec2 { x: p.x, y: p.y })
+        .map_err(|miss| match miss {
+            crate::blocks::PlaceMiss::Piece => fail(codes::NO_SUCH_PLACE, crate::blocks::NO_PIECE.into(), &format!("{path}.path")),
+            crate::blocks::PlaceMiss::Place => fail(codes::NO_SUCH_PLACE,
+                "Nesnenin böyle bir yeri yok: köşe, uç ya da merkez nesnede olmalı.".into(), &format!("{path}.place")),
+        })
 }
 
 fn finite_points(pts: &[Vec2], path: &str) -> Result<(), Stop> {

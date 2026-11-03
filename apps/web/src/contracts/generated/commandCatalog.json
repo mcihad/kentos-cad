@@ -4350,8 +4350,8 @@
     {
       "id": "cad.drawing.inspect",
       "version": 1,
-      "title": "CAD sınır ve tarama denetimi",
-      "summary": "Kaynak geometriyi değiştirmeden CAD sınırlarını ve tarama bağlarını denetler. checks yok/boşsa boundaries ve hatches; uids yoksa görünür çizim, boşsa boş kapsam. includeHidden gizli/donmuş katmanları açıkça ekler. Doğru/dairesel yay topolojisinde açık uç, maxGap mesafesindeki açık uç çifti, yinelenen kenar, kendi kendini kesme, kesişim ve teğet teması dünya noktalarıyla raporlanır. Bağımsız nesnelerin kesişimi hata sayılmaz; açık uç kapalı yüz dışındaki uzantı da olabilir. Elips/NURBS/spline kesin topoloji kapsamı dışındaysa unsupported içinde açıkça belirtilir; temizmiş gibi sunulmaz. Taramanın ilişkili/ilişkisiz/kayıp kaynak durumunu, kaynak UUID'lerini, alanını ve desen orijinini verir. maxGap metre, varsayılan 0.01, 0..1000; bu bir teşhis eşiğidir, uçları onarmaz ve tarama toleransını değiştirmez. En çok 50000 nesne, 20000 kenar, iki milyon iş ve limit kadar bulgu (1..1000, varsayılan 200); sınırlarda truncated ve inspection_truncated. Uzun iş durdurulabilir. Sınır onarımı ve tarama yeniden bağlama ayrı plan/komut gerektirir. Hiçbir nesne, UUID, seçim, birim veya Undo kaydı değiştirilmez.",
+      "title": "CAD çizim denetimi",
+      "summary": "Kaynak geometriyi değiştirmeden CAD sınırlarını ve tarama bağlarını denetler. checks yok/boşsa boundaries, hatches ve annotations; uids yoksa görünür çizim, boşsa boş kapsam. includeHidden gizli/donmuş katmanları açıkça ekler. Doğru/dairesel yay topolojisinde açık uç, maxGap mesafesindeki açık uç çifti, yinelenen kenar, kendi kendini kesme, kesişim ve teğet teması dünya noktalarıyla raporlanır. Bağımsız nesnelerin kesişimi hata sayılmaz; açık uç kapalı yüz dışındaki uzantı da olabilir. Elips/NURBS/spline kesin topoloji kapsamı dışındaysa unsupported içinde açıkça belirtilir; temizmiş gibi sunulmaz. Taramanın ilişkili/ilişkisiz/kayıp kaynak durumunu, kaynak UUID'lerini, alanını ve desen orijinini verir. annotations ölçülerin gerçek measured değeri, shown yazısı, override ve bağ durumunu dimensions içinde verir; kopuk/kısmi/serbest ölçüleri, sabit yazı override'larını ve kılavuzların bütün kollarındaki kopuk/serbest uçları işaretler. Anotasyon bulgusunun uids listesinde önce anotasyon, sonra kaynakları gelir; eksik kaynak kimliği de korunur. maxGap metre, varsayılan 0.01, 0..1000; bu bir teşhis eşiğidir, uçları onarmaz ve tarama toleransını değiştirmez. En çok 50000 nesne, 20000 kenar, iki milyon iş ve limit kadar bulgu (1..1000, varsayılan 200); sınırlarda truncated ve inspection_truncated. Uzun iş durdurulabilir. Sınır onarımı ve tarama yeniden bağlama ayrı plan/komut gerektirir. Hiçbir nesne, UUID, seçim, birim veya Undo kaydı değiştirilmez.",
       "aliases": [],
       "effect": "query",
       "hosts": [
@@ -4369,7 +4369,7 @@
         "additionalProperties": false,
         "properties": {
           "checks": {
-            "description": "Absent/empty: both boundary and hatch checks.",
+            "description": "Absent/empty: boundary, hatch and annotation checks.",
             "items": {
               "$ref": "#/$defs/InspectionGroup"
             },
@@ -4426,6 +4426,13 @@
             "type": "integer",
             "x-unit": "1"
           },
+          "dimensions": {
+            "description": "Real measured values, displayed text, overrides and association state of inspected dimensions.",
+            "items": {
+              "$ref": "#/$defs/DimensionRead"
+            },
+            "type": "array"
+          },
           "examined": {
             "format": "uint32",
             "minimum": 0,
@@ -4478,6 +4485,13 @@
             "minimum": 0,
             "type": "integer",
             "x-unit": "1"
+          },
+          "dimensions": {
+            "description": "Real measured values, displayed text, overrides and association state of inspected dimensions.",
+            "items": {
+              "$ref": "#/$defs/DimensionRead"
+            },
+            "type": "array"
           },
           "examined": {
             "format": "uint32",
@@ -69191,6 +69205,10 @@
               }
             ],
             "description": "Explicit paper viewport context; world coordinates and returned ids remain those of the one model."
+          },
+          "sources": {
+            "description": "With `all`, retain coincident points owned by different objects for persistent reference binding.\nAbsent/false keeps the ordinary Tab cycle's one candidate per geometric point.",
+            "type": "boolean"
           }
         },
         "required": [
@@ -113334,7 +113352,8 @@
     "InspectionGroup": {
       "enum": [
         "boundaries",
-        "hatches"
+        "hatches",
+        "annotations"
       ],
       "type": "string"
     },

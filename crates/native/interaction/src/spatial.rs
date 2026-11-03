@@ -55,7 +55,7 @@ use kentos_geometry_core::store::placing::{
 use kentos_geometry_core::store::polygon::PolygonMode;
 use kentos_geometry_core::store::snap::{Extension, SnapExtras, SnapHit};
 use kentos_geometry_core::store::{LayerFlags, Store};
-use kentos_native_application::blocks::{core_blocks, piece_entities};
+use kentos_native_application::blocks::{core_blocks, piece_entities_shown};
 use kentos_native_application::expression_unit::{Unit, reading_unit};
 use kentos_native_application::geometry::{drawing_font, shape};
 use kentos_native_application::label_texts::{
@@ -1182,7 +1182,7 @@ impl Spatial {
             return None;
         }
         let item = self.store.get(f64::from(e.base().id))?;
-        item.expanded.as_ref().map(|x| piece_entities(e, x))
+        item.expanded.as_ref().map(|x| piece_entities_shown(e, x, |i| item.piece_shown(i)))
     }
 
     /// The most specific visible object within `tol` world units of `at`

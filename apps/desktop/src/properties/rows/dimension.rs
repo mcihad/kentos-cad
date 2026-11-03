@@ -464,16 +464,10 @@ fn option_rows(dims: &[&DimensionEntity], slots: &[Slot], locked: bool, f: &Form
         if l.unit == "none" {
             return rows;
         }
-        let label = if d
-            .text
-            .as_deref()
-            .is_some_and(|t| !t.is_empty() && !t.contains("<>"))
-        {
-            "Ölçülen değer (elle yazılmış)"
-        } else {
-            "Ölçülen değer"
-        };
-        rows.push(Row::text(label, measured));
+        rows.push(Row::text("Gerçek ölçü", measured));
+        if d.text.as_deref().is_some_and(|t| !t.is_empty() && !t.contains("<>")) {
+            rows.push(Row::text("Yazı durumu", "Elle değiştirilmiş"));
+        }
     }
     let options = common(dims, |d| {
         d.look.options.as_deref().cloned().unwrap_or_default()

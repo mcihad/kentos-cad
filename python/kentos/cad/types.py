@@ -2596,9 +2596,10 @@ InputStateName = Literal["current", "changed", "gone"]
 class InspectionGroup(_StrEnum):
     BOUNDARIES = "boundaries"
     HATCHES = "hatches"
+    ANNOTATIONS = "annotations"
 
 
-InspectionGroupName = Literal["boundaries", "hatches"]
+InspectionGroupName = Literal["boundaries", "hatches", "annotations"]
 """The names of :class:`InspectionGroup`, for a plain string."""
 
 
@@ -24857,7 +24858,7 @@ class DrawingCompared(_Model):
 class DrawingInspect(_Model):
     """
     Attributes:
-        checks: Absent/empty: both boundary and hatch checks.
+        checks: Absent/empty: boundary, hatch and annotation checks.
         limit: Maximum findings, 1..1000; default 200. Work/geometry/result caps return explicit partial results. Unit: 1.
         max_gap: Greatest gap to report, metres. Default 0.01; 0 disables near-gap pairing, not open-end checks.
             This is a diagnostic threshold; no source geometry is moved or healed. Unit: length.
@@ -24905,6 +24906,7 @@ class DrawingInspected(_Model):
         unsupported: Curves excluded from exact line/circular-arc topology diagnosis; never reported as clean.
         examined: Unit: 1.
         comparisons: Unit: 1.
+        dimensions: Real measured values, displayed text, overrides and association state of inspected dimensions.
     """
     findings: list[InspectionFinding]
     hatches: list[HatchInspection]
@@ -24913,6 +24915,7 @@ class DrawingInspected(_Model):
     comparisons: int
     truncated: bool
     revision: str
+    dimensions: list[DimensionRead] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -24923,6 +24926,8 @@ class DrawingInspected(_Model):
         out["comparisons"] = self.comparisons
         out["truncated"] = self.truncated
         out["revision"] = self.revision
+        if self.dimensions is not UNSET:
+            out["dimensions"] = [e0.to_json() for e0 in self.dimensions]
         return out
 
     @classmethod
@@ -24935,6 +24940,7 @@ class DrawingInspected(_Model):
             comparisons=data["comparisons"],
             truncated=data["truncated"],
             revision=data["revision"],
+            dimensions=[DimensionRead.from_json(e0) for e0 in data["dimensions"]] if "dimensions" in data else UNSET,
         )
 
 
@@ -69203,6 +69209,8 @@ class SnapFind(_Model):
         from_: The running command's last point: Dik's foot and Teğet's point are measured from it. Unit: length.
         kinds: The kinds that apply; absent: the settings' kinds on at first (all but Yakın and Ağırlık merkezi).
         model_scope: Explicit paper viewport context; world coordinates and returned ids remain those of the one model.
+        sources: With `all`, retain coincident points owned by different objects for persistent reference binding.
+            Absent/false keeps the ordinary Tab cycle's one candidate per geometric point.
     """
     at: Vec2
     aperture: float
@@ -69210,6 +69218,7 @@ class SnapFind(_Model):
     from_: Vec2 | None | Unset = UNSET
     kinds: list[SnapKindName | SnapKindNameName] | None | Unset = UNSET
     model_scope: SheetModelScope | None | Unset = UNSET
+    sources: bool | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -69223,6 +69232,8 @@ class SnapFind(_Model):
             out["kinds"] = None if self.kinds is None else [_enum_out(e0) for e0 in self.kinds]
         if self.model_scope is not UNSET:
             out["modelScope"] = None if self.model_scope is None else self.model_scope.to_json()
+        if self.sources is not UNSET:
+            out["sources"] = self.sources
         return out
 
     @classmethod
@@ -69234,6 +69245,7 @@ class SnapFind(_Model):
             from_=UNSET if "from" not in data else None if data["from"] is None else Vec2.from_json(data["from"]),
             kinds=UNSET if "kinds" not in data else None if data["kinds"] is None else [_enum_in(SnapKindName, e0) for e0 in data["kinds"]],
             model_scope=UNSET if "modelScope" not in data else None if data["modelScope"] is None else SheetModelScope.from_json(data["modelScope"]),
+            sources=data.get("sources", UNSET),
         )
 
 

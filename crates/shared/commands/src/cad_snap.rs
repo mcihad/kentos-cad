@@ -74,6 +74,11 @@ pub struct SnapFind {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
     pub all: bool,
+    /// With `all`, retain coincident points owned by different objects for persistent reference binding.
+    /// Absent/false keeps the ordinary Tab cycle's one candidate per geometric point.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
+    pub sources: bool,
 }
 
 /// A snap point as a command reads it.

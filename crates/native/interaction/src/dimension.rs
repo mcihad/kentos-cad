@@ -257,6 +257,7 @@ pub struct Dimension {
     /// The dimension the command would write where the pointer is, as of the
     /// last event (the preview's).
     shown: Option<DimensionGeom>,
+    overlap: Option<Vec<Vec2>>,
     /// The project's units, as of the last call.
     format: Format,
     /// The text's height in metres, as of the last call: the dimension
@@ -654,6 +655,7 @@ impl Dimension {
     /// while its point on the arc is pointed at.
     fn refresh(&mut self, cx: &Context<'_>) {
         self.shown = None;
+        self.overlap = None;
         let Some(hover) = self.d.hover else {
             return;
         };
@@ -668,6 +670,9 @@ impl Dimension {
         self.shown = input
             .and_then(|i| measured_in(cx.doc, &i).ok())
             .map(|m| m.geom);
+        if let Some(l) = self.shown.as_ref().and_then(layout_dimension) {
+            self.overlap = crate::dimension_preview::overlap(cx, &self.value_ghost(&l, &cx.format()));
+        }
     }
 
     /// Açı's first pick on an arc or a circle (docs/adr/0147 §7): Yaydan,
@@ -1299,12 +1304,9 @@ impl Tool for Dimension {
                     lines: vec![format.dimension_in(l.prefix, l.unit, l.value, &self.look)],
                 });
             }
-            return Preview {
-                strokes,
-                tag,
-                texts,
-                ..Preview::default()
-            };
+            let mut preview = Preview { strokes, tag, texts, ..Preview::default() };
+            crate::dimension_preview::warn(&mut preview, &self.overlap);
+            return preview;
         }
         if self.picks_edge() {
             return Preview {

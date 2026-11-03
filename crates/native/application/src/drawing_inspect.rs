@@ -13,6 +13,7 @@ use kentos_domain::{Document, Uuid};
 use std::collections::BTreeSet;
 
 mod boundaries;
+pub mod annotations;
 const WORK_MAX: u64 = 2_000_000;
 const EDGE_MAX: usize = 20_000;
 const EPS: f64 = 1e-6;
@@ -208,6 +209,7 @@ fn run(
     let mut out = DrawingInspected {
         findings: Vec::new(),
         hatches: Vec::new(),
+        dimensions: Vec::new(),
         unsupported: Vec::new(),
         examined: 0,
         comparisons: 0,
@@ -234,6 +236,16 @@ fn run(
             && let Entity::Hatch(h) = e
         {
             hatch(doc, uid, h, &mut out, limit, &mut budget, &mut stopped)?;
+        }
+        if check_group(input, InspectionGroup::Annotations) {
+            for finding in annotations::findings(doc, uid, e) {
+                if !budget.tick(&mut stopped)? { break; }
+                push(&mut out, finding, limit);
+            }
+            if let Entity::Dimension(d) = e {
+                let read = crate::dimensions_query::read(&kentos_project::format::Format::of(doc.settings()), uid, d);
+                if read.measured.is_finite() { out.dimensions.push(read); }
+            }
         }
         if check_group(input, InspectionGroup::Boundaries) {
             boundaries::collect(e, uid, &mut edges, &mut out);

@@ -304,17 +304,21 @@ compare = _DrawingCompare()
 
 
 class _DrawingInspect(LocalCommand[DrawingInspect, DrawingInspected, DrawingInspected]):
-    """``cad.drawing.inspect`` v1. CAD sınır ve tarama denetimi: Kaynak geometriyi
-    değiştirmeden CAD sınırlarını ve tarama bağlarını denetler. checks yok/boşsa
-    boundaries ve hatches; uids yoksa görünür çizim, boşsa boş kapsam. includeHidden
-    gizli/donmuş katmanları açıkça ekler. Doğru/dairesel yay topolojisinde açık uç,
-    maxGap mesafesindeki açık uç çifti, yinelenen kenar, kendi kendini kesme, kesişim ve
-    teğet teması dünya noktalarıyla raporlanır. Bağımsız nesnelerin kesişimi hata
-    sayılmaz; açık uç kapalı yüz dışındaki uzantı da olabilir. Elips/NURBS/spline kesin
-    topoloji kapsamı dışındaysa unsupported içinde açıkça belirtilir; temizmiş gibi
-    sunulmaz. Taramanın ilişkili/ilişkisiz/kayıp kaynak durumunu, kaynak UUID'lerini,
-    alanını ve desen orijinini verir. maxGap metre, varsayılan 0.01, 0..1000; bu bir
-    teşhis eşiğidir, uçları onarmaz ve tarama toleransını değiştirmez. En çok 50000
+    """``cad.drawing.inspect`` v1. CAD çizim denetimi: Kaynak geometriyi değiştirmeden CAD
+    sınırlarını ve tarama bağlarını denetler. checks yok/boşsa boundaries, hatches ve
+    annotations; uids yoksa görünür çizim, boşsa boş kapsam. includeHidden gizli/donmuş
+    katmanları açıkça ekler. Doğru/dairesel yay topolojisinde açık uç, maxGap
+    mesafesindeki açık uç çifti, yinelenen kenar, kendi kendini kesme, kesişim ve teğet
+    teması dünya noktalarıyla raporlanır. Bağımsız nesnelerin kesişimi hata sayılmaz;
+    açık uç kapalı yüz dışındaki uzantı da olabilir. Elips/NURBS/spline kesin topoloji
+    kapsamı dışındaysa unsupported içinde açıkça belirtilir; temizmiş gibi sunulmaz.
+    Taramanın ilişkili/ilişkisiz/kayıp kaynak durumunu, kaynak UUID'lerini, alanını ve
+    desen orijinini verir. annotations ölçülerin gerçek measured değeri, shown yazısı,
+    override ve bağ durumunu dimensions içinde verir; kopuk/kısmi/serbest ölçüleri,
+    sabit yazı override'larını ve kılavuzların bütün kollarındaki kopuk/serbest uçları
+    işaretler. Anotasyon bulgusunun uids listesinde önce anotasyon, sonra kaynakları
+    gelir; eksik kaynak kimliği de korunur. maxGap metre, varsayılan 0.01, 0..1000; bu
+    bir teşhis eşiğidir, uçları onarmaz ve tarama toleransını değiştirmez. En çok 50000
     nesne, 20000 kenar, iki milyon iş ve limit kadar bulgu (1..1000, varsayılan 200);
     sınırlarda truncated ve inspection_truncated. Uzun iş durdurulabilir. Sınır onarımı
     ve tarama yeniden bağlama ayrı plan/komut gerektirir. Hiçbir nesne, UUID, seçim,
@@ -323,7 +327,7 @@ class _DrawingInspect(LocalCommand[DrawingInspect, DrawingInspected, DrawingInsp
     __slots__ = ()
     id = "cad.drawing.inspect"
     version = 1
-    title = "CAD sınır ve tarama denetimi"
+    title = "CAD çizim denetimi"
     scope = "document"
     input_type = DrawingInspect
     output_type = DrawingInspected
@@ -343,24 +347,29 @@ class _DrawingInspect(LocalCommand[DrawingInspect, DrawingInspected, DrawingInsp
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> DrawingInspected:
-        """CAD sınır ve tarama denetimi: Kaynak geometriyi değiştirmeden CAD sınırlarını ve
-        tarama bağlarını denetler. checks yok/boşsa boundaries ve hatches; uids yoksa
+        """CAD çizim denetimi: Kaynak geometriyi değiştirmeden CAD sınırlarını ve tarama
+        bağlarını denetler. checks yok/boşsa boundaries, hatches ve annotations; uids yoksa
         görünür çizim, boşsa boş kapsam. includeHidden gizli/donmuş katmanları açıkça ekler.
         Doğru/dairesel yay topolojisinde açık uç, maxGap mesafesindeki açık uç çifti,
         yinelenen kenar, kendi kendini kesme, kesişim ve teğet teması dünya noktalarıyla
         raporlanır. Bağımsız nesnelerin kesişimi hata sayılmaz; açık uç kapalı yüz dışındaki
         uzantı da olabilir. Elips/NURBS/spline kesin topoloji kapsamı dışındaysa unsupported
         içinde açıkça belirtilir; temizmiş gibi sunulmaz. Taramanın ilişkili/ilişkisiz/kayıp
-        kaynak durumunu, kaynak UUID'lerini, alanını ve desen orijinini verir. maxGap metre,
-        varsayılan 0.01, 0..1000; bu bir teşhis eşiğidir, uçları onarmaz ve tarama
-        toleransını değiştirmez. En çok 50000 nesne, 20000 kenar, iki milyon iş ve limit
-        kadar bulgu (1..1000, varsayılan 200); sınırlarda truncated ve inspection_truncated.
-        Uzun iş durdurulabilir. Sınır onarımı ve tarama yeniden bağlama ayrı plan/komut
-        gerektirir. Hiçbir nesne, UUID, seçim, birim veya Undo kaydı değiştirilmez.
+        kaynak durumunu, kaynak UUID'lerini, alanını ve desen orijinini verir. annotations
+        ölçülerin gerçek measured değeri, shown yazısı, override ve bağ durumunu dimensions
+        içinde verir; kopuk/kısmi/serbest ölçüleri, sabit yazı override'larını ve
+        kılavuzların bütün kollarındaki kopuk/serbest uçları işaretler. Anotasyon bulgusunun
+        uids listesinde önce anotasyon, sonra kaynakları gelir; eksik kaynak kimliği de
+        korunur. maxGap metre, varsayılan 0.01, 0..1000; bu bir teşhis eşiğidir, uçları
+        onarmaz ve tarama toleransını değiştirmez. En çok 50000 nesne, 20000 kenar, iki
+        milyon iş ve limit kadar bulgu (1..1000, varsayılan 200); sınırlarda truncated ve
+        inspection_truncated. Uzun iş durdurulabilir. Sınır onarımı ve tarama yeniden
+        bağlama ayrı plan/komut gerektirir. Hiçbir nesne, UUID, seçim, birim veya Undo kaydı
+        değiştirilmez.
 
         Args:
             doc: The drawing it works on.
-            checks: Absent/empty: both boundary and hatch checks.
+            checks: Absent/empty: boundary, hatch and annotation checks.
             expected_revision:
             include_hidden:
             limit: Maximum findings, 1..1000; default 200. Work/geometry/result caps return explicit partial results. Unit: 1.
@@ -467,7 +476,7 @@ class _DrawingInspect(LocalCommand[DrawingInspect, DrawingInspected, DrawingInsp
 
 
 inspect = _DrawingInspect()
-"""CAD sınır ve tarama denetimi (``cad.drawing.inspect``)."""
+"""CAD çizim denetimi (``cad.drawing.inspect``)."""
 
 
 __all__ = ["audit", "compare", "inspect"]

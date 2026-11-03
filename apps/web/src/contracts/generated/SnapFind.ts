@@ -33,4 +33,9 @@ from?: Vec2,
 /**
  * Every candidate best first (Tab's order, docs/adr/0271), not only the snap.
  */
-all?: boolean, };
+all?: boolean,
+/**
+ * With `all`, retain coincident points owned by different objects for persistent reference binding.
+ * Absent/false keeps the ordinary Tab cycle's one candidate per geometric point.
+ */
+sources?: boolean, };

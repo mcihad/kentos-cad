@@ -76,6 +76,27 @@ pub fn definition_box_in(
     out
 }
 
+/// The world-axis box of an insert's drawn pieces, excluding its insertion grip.
+/// Expansion is the renderer's: active parameters, nested transforms and clips are already resolved.
+/// Piece layer gates follow the drawing's layer tree, as `Store::Item::shapes` does.
+/// None means no drawable piece; callers may explicitly fall back to the insertion point.
+pub fn placed_box_in(
+    doc: &kentos_domain::Document,
+    blocks: &Blocks,
+    insert: &Entity,
+) -> Option<[f64; 4]> {
+    if !matches!(insert, Entity::Insert(_)) { return None; }
+    let font = crate::geometry::drawing_font(doc.settings().drawing_font);
+    let boxes: Vec<_> = blocks.expand(&shape(insert)).into_iter()
+        .filter(|p| !kentos_geometry_core::block::shows_nothing(&p.shape)
+            && p.gates.iter().all(|l| doc.layers().is_visible(l)))
+        .map(|p| kentos_geometry_core::entity::entity_bounds_in(&p.shape, font))
+        .filter(|b| [b.min_x, b.min_y, b.max_x, b.max_y].iter().all(|v| v.is_finite()))
+        .collect();
+    kentos_geometry_core::ops::arrange::union(&boxes)
+        .map(|b| [b.min_x, b.min_y, b.max_x, b.max_y])
+}
+
 /// A dynamic block's values as the core draws them (docs/adr/0318 §3); none when there are none.
 pub fn core_params(
     values: &std::collections::BTreeMap<String, kentos_commands::ParamValue>,
@@ -253,12 +274,17 @@ pub fn place_shape(
 /// insert's slot, no attributes. A piece the contract cannot hold, and an
 /// attribute's text that shows nothing (§7), is left out.
 pub fn piece_entities(insert: &Entity, x: &Expanded) -> Vec<Entity> {
+    piece_entities_shown(insert, x, |_| true)
+}
+
+/// As `piece_entities`, restricted to the store's visible piece indices (selection highlight).
+pub fn piece_entities_shown(insert: &Entity, x: &Expanded, shown: impl Fn(usize) -> bool) -> Vec<Entity> {
     let own = insert.base();
     x.shapes
         .iter()
         .enumerate()
         .filter_map(|(i, s)| {
-            if kentos_geometry_core::block::shows_nothing(s) {
+            if !shown(i) || kentos_geometry_core::block::shows_nothing(s) {
                 return None;
             }
             let geometry = edit_geometry(s.clone())?;

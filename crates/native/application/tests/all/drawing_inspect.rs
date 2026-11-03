@@ -240,3 +240,61 @@ fn moving_hatch_origins_is_atomic_and_preserves_pattern_boundary_and_ties() {
         assert_eq!(doc.to_snapshot_v2(), before);
     }
 }
+
+#[test]
+fn annotation_inspection_distinguishes_partial_broken_and_overridden_values_without_writing() {
+    use kentos_commands::{CallOp, Entity, InspectionGroup};
+    use kentos_domain::Slot;
+    use kentos_native_application::{ExecutionContext, registry};
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../fixtures/commands/v1/cad.blocks.find.json")).unwrap();
+    let mut raw = fixture["setup"].clone();
+    raw["settings"]["drawingUnit"] = json!("mm");
+    raw["entities"] = json!([
+        {"kind":"line","id":1,"layerId":"a","attrs":{},"a":{"x":0.,"y":0.},"b":{"x":2.5,"y":0.}},
+        {"kind":"line","id":2,"layerId":"a","attrs":{},"a":{"x":0.,"y":1.},"b":{"x":2.5,"y":1.}}
+    ]);
+    let mut doc = Document::from_snapshot(DocumentSnapshotV1::from_json(&raw.to_string()).unwrap()).unwrap();
+    let source = doc.uid(Slot(1)).unwrap().to_string();
+    let removed = doc.uid(Slot(2)).unwrap().to_string();
+    let mut dimensions = Vec::new();
+    for (i, text) in [None, None, Some("2400"), Some("<> mm")].into_iter().enumerate() {
+        let mut e = json!({"kind":"dimension","id":0,"layerId":"a","attrs":{},"a":{"x":0.,"y":0.},"b":{"x":2.5,"y":0.},"height":0.1,"offset":0.3 + i as f64 * 0.2});
+        if let Some(text) = text { e["text"] = json!(text); }
+        let slot = doc.add(serde_json::from_value(e).unwrap()).unwrap();
+        dimensions.push(doc.uid(slot).unwrap().to_string());
+    }
+    let mut execute = |command, input| {
+        let r = registry::run(&mut ExecutionContext::new(&mut doc), command, CallOp::Execute, input).unwrap();
+        assert_eq!(r["status"], "completed", "{r}");
+    };
+    execute("cad.dimensions.reassociate", json!({"uid":dimensions[0],"points":[{"point":"a","to":{"uid":source,"place":{"kind":"start"}}}]}));
+    execute("cad.dimensions.reassociate", json!({"uid":dimensions[1],"points":[
+        {"point":"a","to":{"uid":source,"place":{"kind":"start"}}},
+        {"point":"b","to":{"uid":removed,"place":{"kind":"end"}}}]}));
+    let leader: Entity = serde_json::from_value(json!({"kind":"leader","id":0,"layerId":"a","attrs":{},
+        "pts":[{"x":0.,"y":0.},{"x":3.,"y":0.}],"height":0.1,"rotation":0.,"text":"QA",
+        "arms":[{"pts":[{"x":2.5,"y":1.}],"tip":{"uid":removed,"place":{"kind":"end"}}}]})).unwrap();
+    let slot = doc.add(leader).unwrap();
+    let leader = doc.uid(slot).unwrap().to_string();
+    let deleted = registry::run(&mut ExecutionContext::new(&mut doc), "cad.entities.delete", CallOp::Execute, json!({"uids":[removed]})).unwrap();
+    assert_eq!(deleted["status"], "completed", "{deleted}");
+    let before = doc.to_snapshot_v2();
+    let undo = doc.undo_labels();
+    let CommandResult::Completed { output, .. } = drawing_inspect::inspect(&doc, &DrawingInspect { checks: vec![InspectionGroup::Annotations], ..Default::default() }, || false) else { panic!("inspection") };
+    let has = |code: &str, uid: &str| output.findings.iter().any(|f| f.code == code && f.uids.first().map(String::as_str) == Some(uid));
+    assert!(has("dimension_partial", &dimensions[0]));
+    assert_eq!(output.findings.iter().find(|f| f.code == "dimension_partial").unwrap().points,
+        vec![kentos_commands::Vec2 { x:2.5, y:0. }], "mark the free end, not the still-bound end");
+    assert!(has("dimension_broken", &dimensions[1]));
+    assert!(has("dimension_override", &dimensions[2]));
+    assert!(!has("dimension_override", &dimensions[3]), "<> still displays the real measure");
+    assert!(has("leader_broken", &leader), "all arms, not only the first tip, are inspected");
+    let value = output.dimensions.iter().find(|d| d.uid == dimensions[2]).unwrap();
+    assert_eq!(value.measured, 2.5);
+    assert_eq!(value.shown, "2400");
+    assert!(value.overridden);
+    let broken = output.findings.iter().find(|f| f.code == "dimension_broken").unwrap();
+    assert!(broken.uids.contains(&removed), "missing source identity remains explainable");
+    assert_eq!(doc.to_snapshot_v2(), before);
+    assert_eq!(doc.undo_labels(), undo);
+}

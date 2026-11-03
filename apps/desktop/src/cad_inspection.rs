@@ -28,6 +28,7 @@ pub(crate) struct Panel {
     gap: f64,
     boundaries: bool,
     hatches: bool,
+    annotations: bool,
     hidden: bool,
     busy: bool,
     token: u64,
@@ -45,6 +46,7 @@ impl Default for Panel {
             gap: 0.01,
             boundaries: true,
             hatches: true,
+            annotations: true,
             hidden: false,
             busy: false,
             token: 0,
@@ -80,6 +82,8 @@ pub enum Event {
     Gap(f64),
     Boundaries(bool),
     Hatches(bool),
+    Annotations(bool),
+    Sources,
     Hidden(bool),
     Ready(u64, u64, u64, Box<CommandResult<DrawingInspected>>),
     Show(usize),
@@ -146,6 +150,9 @@ impl App {
         if p.hatches {
             checks.push(InspectionGroup::Hatches);
         }
+        if p.annotations {
+            checks.push(InspectionGroup::Annotations);
+        }
         Some(DrawingInspect {
             uids,
             checks,
@@ -158,7 +165,7 @@ impl App {
     pub(crate) fn cad_inspection_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Run => {
-                if !self.cad_inspection.boundaries && !self.cad_inspection.hatches {
+                if !self.cad_inspection.boundaries && !self.cad_inspection.hatches && !self.cad_inspection.annotations {
                     return Task::none();
                 }
                 let Some(input) = self.cad_inspection_input() else {
@@ -260,6 +267,10 @@ impl App {
                 self.cad_inspection.hatches = on;
                 self.cad_inspection.invalidate();
             }
+            Event::Annotations(on) => {
+                self.cad_inspection.annotations = on;
+                self.cad_inspection.invalidate();
+            }
             Event::Hidden(on) => {
                 self.cad_inspection.hidden = on;
                 self.cad_inspection.invalidate();
@@ -281,6 +292,7 @@ impl App {
                 let slots: Vec<Slot> = f
                     .uids
                     .iter()
+                    .take(if f.group == InspectionGroup::Annotations { 1 } else { usize::MAX })
                     .filter_map(|u| Uuid::parse_str(u).ok())
                     .filter_map(|u| doc.model.slot_of(u))
                     .collect();
@@ -320,9 +332,28 @@ impl App {
                     self.navigating(|app| app.viewport.camera.fit(&b, 24.));
                 }
             }
+            Event::Sources => {
+                if !self.cad_inspection_current() { return Task::none(); }
+                let Some(f) = self.cad_inspection.selected.and_then(|i| self.cad_inspection.output.as_ref()?.findings.get(i)) else { return Task::none(); };
+                let doc = &self.document.as_ref().unwrap().model;
+                let slots: Vec<_> = f.uids.iter().skip(1).filter_map(|u| Uuid::parse_str(u).ok()).filter_map(|u| doc.slot_of(u)).collect();
+                if slots.is_empty() { self.warn("Bu bulgunun çizimde kalan kaynak nesnesi yok."); }
+                else {
+                    let ids: Vec<_> = slots.iter().map(|s| f64::from(s.0)).collect();
+                    self.selection.set(slots);
+                    self.navigating(|app| app.zoom_to_objects(&ids));
+                }
+            }
             Event::Repair => {
-                if self.cad_inspection_current() {
-                    // Diagnosis leads to repair, regardless of the previously used editor mode.
+                if !self.cad_inspection_current() { return Task::none(); }
+                let Some(f) = self.cad_inspection.selected.and_then(|i| self.cad_inspection.output.as_ref()?.findings.get(i)).cloned() else { return Task::none(); };
+                if f.group == InspectionGroup::Annotations {
+                    if let Some(slot) = f.uids.first().and_then(|u| Uuid::parse_str(u).ok()).and_then(|u| self.document.as_ref()?.model.slot_of(u)) {
+                        self.selection.set([slot]);
+                    }
+                    return self.run(if f.code.starts_with("leader_") { "leader.bindTip" } else { "tool.dimensionReassociate" });
+                }
+                if f.group == InspectionGroup::Hatches {
                     self.memory.hatch_edit_mode = 2;
                     self.memory.hatch_assoc = true;
                     return self.run("tool.hatchEdit");
@@ -356,7 +387,7 @@ impl App {
             button(label::body("Denetle"))
                 .padding(kentos_ui::theme::metrics::action())
                 .style(style::button::primary)
-                .on_press_maybe((!p.busy && (p.boundaries || p.hatches)).then(|| msg(Event::Run))),
+                .on_press_maybe((!p.busy && (p.boundaries || p.hatches || p.annotations)).then(|| msg(Event::Run))),
             button(label::body("Durdur")).padding(kentos_ui::theme::metrics::action())
                 .style(style::button::secondary).on_press_maybe(p.busy.then(|| msg(Event::Stop))),
             container(Select::new(SCOPES.map(Choice::new), Some(p.scope), |i| msg(Event::Scope(i)))).width(220),
@@ -367,6 +398,7 @@ impl App {
         let options = row![
             crate::exchange::words::check(p.boundaries, "Sınırlar", Some(msg(Event::Boundaries(!p.boundaries)))),
             crate::exchange::words::check(p.hatches, "Taramalar", Some(msg(Event::Hatches(!p.hatches)))),
+            crate::exchange::words::check(p.annotations, "Ölçü ve kılavuzlar", Some(msg(Event::Annotations(!p.annotations)))),
             label::muted("Boşluk eşiği"),
             NumberInput::new(p.gap, |n| msg(Event::Gap(n)))
                 .units(units::MILLIMETRE)
@@ -452,8 +484,11 @@ impl App {
             body = body.push(label::body(finding.repair.clone())).push(
                 row![
                     button(label::body("Konuma yakınlaş")).padding(kentos_ui::theme::metrics::action()).style(style::button::secondary).on_press_maybe(current.then(|| msg(Event::Near))),
-                    button(label::body("Taramayı düzenle…")).on_press_maybe(
-                        (current && finding.group == InspectionGroup::Hatches)
+                    button(label::body("Kaynağa git")).padding(kentos_ui::theme::metrics::action()).style(style::button::secondary)
+                        .on_press_maybe((current && finding.group == InspectionGroup::Annotations && finding.uids.len() > 1).then(|| msg(Event::Sources))),
+                    button(label::body(if finding.group == InspectionGroup::Hatches { "Taramayı düzenle…" }
+                        else if finding.code.starts_with("leader_") { "Kılavuz ucunu bağla…" } else { "Ölçüyü yeniden bağla…" })).on_press_maybe(
+                        (current && finding.group != InspectionGroup::Boundaries && finding.code != "dimension_override")
                             .then(|| msg(Event::Repair))
                     ).padding(kentos_ui::theme::metrics::action()).style(style::button::secondary)
                 ]
@@ -511,6 +546,13 @@ fn finding_title(code: &str) -> &'static str {
         "boundary_tangent" => "Teğet temas",
         "hatch_unassociated" => "İlişkisiz tarama",
         "hatch_missing_source" => "Eksik sınır kaynağı",
+        "dimension_broken" => "Kopuk ölçü bağı",
+        "dimension_partial" => "Kısmen bağlı ölçü",
+        "dimension_free" => "Serbest ölçü",
+        "dimension_override" => "Ölçü yazısı değişmiş",
+        "dimension_invalid" => "Geçersiz ölçü",
+        "leader_broken" => "Kopuk kılavuz bağı",
+        "leader_free" => "Serbest kılavuz ucu",
         _ => "Sınırı inceleyin",
     }
 }

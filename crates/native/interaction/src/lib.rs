@@ -132,6 +132,7 @@ pub mod dimension;
 pub mod constraint_marks;
 pub mod dimension_bonds;
 pub mod dimension_chain;
+mod dimension_preview;
 pub mod annotative;
 pub mod dimension_marks;
 pub mod constraint_tool;

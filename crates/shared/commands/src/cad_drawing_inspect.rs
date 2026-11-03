@@ -15,6 +15,7 @@ pub const INSPECTION_SCOPE_MAX: usize = 50_000;
 pub enum InspectionGroup {
     Boundaries,
     Hatches,
+    Annotations,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -36,7 +37,7 @@ pub struct DrawingInspect {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub uids: Option<Vec<String>>,
-    /// Absent/empty: both boundary and hatch checks.
+    /// Absent/empty: boundary, hatch and annotation checks.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<InspectionGroup>>", optional))]
     pub checks: Vec<InspectionGroup>,
@@ -114,6 +115,10 @@ pub struct HatchInspection {
 pub struct DrawingInspected {
     pub findings: Vec<InspectionFinding>,
     pub hatches: Vec<HatchInspection>,
+    /// Real measured values, displayed text, overrides and association state of inspected dimensions.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::DimensionRead>>", optional))]
+    pub dimensions: Vec<crate::DimensionRead>,
     /// Curves excluded from exact line/circular-arc topology diagnosis; never reported as clean.
     pub unsupported: Vec<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]

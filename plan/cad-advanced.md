@@ -1322,7 +1322,7 @@ tarafından anlaşılmalı. Yakın/uzak görünüm ve PDF karşılaştırılmal�
   görüntülendi; kaynak sil/düzelt/yeniden bağla, iki ada/yazı, yakın/uzak ve PDF
   kabulüyle CAD-ADV-08 tamamlandı. Yukarıdaki kesinlik sınırları geçerlidir.
 
-### CAD-ADV-09 — Ölçü, kılavuz ve teknik anotasyonun doğruluğunu görünür kıl [ ]
+### CAD-ADV-09 — Ölçü, kılavuz ve teknik anotasyonun doğruluğunu görünür kıl [x]
 
 **Öncelik:** P0. **Kod:** [C16], [C03], [C26].
 **Dayanak:** AutoCAD'in tam/kısmi/kopuk ilişki ve Annotation Monitor
@@ -1356,6 +1356,52 @@ birim/tolerans ve metin konumu tutarlı olsun; zoom gerçek değeri etkilemesin.
 ve farklı birimli blokta etkin varyant/kırpma/katman kapsamını esas alan
 kutuyu API ve GUI'de aynı kuralla doğrula. ADR 0851 aktarım testi bu eksik
 kutuyla değil gerçek parça uçlarıyla doğrulanmıştır.
+
+**Tamamlandı — 4 Kasım 2026, [ADR 0913](../docs/adr/0913-cad-annotation-truth-and-reference-repair.md):**
+
+- `cad.drawing.inspect(checks=["annotations"])`: gerçek/gösterilen değer,
+  override, tam/kısmi/serbest/kopuk ilişki; kılavuzun ilk ve ek kolları.
+  Aynı okuyucu `cad.dimensions.query`, Python ve MCP'de. `<>` ölçülen
+  değeri korur. Öznitelikler hesaplanan değeri **Gerçek ölçü** diye gösterir.
+- KentOS UI denetim tablosunda seçili kapsam, sahnede sorunlu uç,
+  Kaynağa git ve doğrudan yeniden bağlama. Seçili ölçü yeniden seçtirilmez.
+  Kılavuzun istenen kolu gerçek alt nesneye bağlanır; boşlukta tıklama
+  yazmaz. `cad.snap.find(all=true,sources=true)` çakışan kaynakları ayırır;
+  normal kenet/Tab sırası korunur.
+- İç içe blok yolundaki kılavuz ucu, örnek taşınmasını ve tanım
+  değişmesini izler; kaynak parça kalkınca kopuk kalır. Tanım değişimi,
+  taşıma ve geri alma test edildi. Kaynağı silinmiş ölçü/kılavuz ile
+  override/kısmi ilişki baskı ön denetiminde görünür; tanı işareti basılmaz.
+- Zincir/baz ölçüsünün gerçek konumlu yazı önizlemesi; genel ölçüde ve
+  zincir/bazda yakın yazı kutularıyla olası çakışma uyarısı. Uyarı hiçbir
+  geometriyi otomatik taşımaz. Mevcut ortak referans, baz aralığı, koordinat,
+  birim/alternatif birim, tolerans, yuvarlama ve teknik çerçeve motoru korunur.
+- Yukarıdaki ek blok kutusu açığı kapandı: API ölçümü, kutuyla sorgu ve
+  GUI'nin **Kutu eni (Y)** / **Kutu boyu (X)** alanları aynı görünür blok
+  parçalarını okur. İç içe dönüşüm, aynalama, farklı eksen ölçekleri,
+  kırpma, etkin parametre ve gizli parça katmanları kapsanır. Yerel
+  **En × boy** da gizli parçayla şişmez; seçim vurgusu gizli parçayı çizmez.
+- Gerçek GUI: kısmi ölçünün serbest B ucu işaretlendi; kaynak seçildi,
+  B yeniden bağlanınca bulgu kalktı ve tek Undo ile döndü. Kılavuzun
+  kopuk ikinci kolu, ölçüyle çakışan çizgi ucuna bağlandı: 5 → 4 bulgu,
+  tek Undo ile 5. Zincir ölçüsü önizleme/yerleştirmede aynı 857.143 mm;
+  tek Undo. Çakışan 2500 mm yazısı yerleştirmeden uyarıldı; Esc yazmadı.
+  İç içe aynalı blokta GUI ve API 12000 × 8000 mm gösterdi.
+- Aynı kabul çizimi 1:20 ve 1:50 GUI paftasında ve iki sayfalık vektör
+  PDF'de incelendi. Gerçek 2500 mm / kasıtlı 2400 yazısı korunur;
+  anotatif ölçü ve kılavuz yazısının kâğıt boyu sabittir. Poppler iki
+  sayfada ölçü yazılarının aynı kutu yüksekliğini doğruladı.
+- Kontroller: 17 komut dosyasının 666 bağımsız durumu; 11 uygulama
+  denetimi, 67 ölçü etkileşimi + 2 biçim testi, 10 domain referans testi,
+  3 iç içe blok/kenet GUI mantığı, 3 headless blok ölçümü, 3 pafta testi,
+  1 gizli blok vurgusu, 64 öznitelik testi (4 mevcut ignored), 4 MCP,
+  5 Python testi geçti. Kenet çekirdeğinde 7 birim + 13 entegrasyon;
+  katalog 4, TypeScript bağlama 1254 test; SDK/manifest tutarlı.
+- Sınırlar ADR'de açıktır: yerel çakışma ipucu 128 yakın nesne ve
+  muhafazakâr kutu ile sınırlıdır; tam otomatik yerleşim/ISO-ASME
+  sertifikası iddiası yoktur. Tanımsız/boş blok kutusu ekleme noktasına
+  düşer; alan/uzunluk uydurulmaz. Gizli katmanları kapsayan mevcut
+  Tümünü göster kuralı değiştirilmedi. Ham GUI/PDF kanıtları repo dışında.
 
 ### CAD-ADV-10 — Yazı ve field üretimini ekran ile çıktıda aynı hale getir [ ]
 

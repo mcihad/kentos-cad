@@ -127,7 +127,7 @@ impl Designer {
         } else if warnings > 0 {
             (Icon::Warning, format!("{warnings} uyarı"))
         } else {
-            (Icon::Success, "Ön denetim temiz".to_owned())
+            (Icon::Success, "Yerleşim denetimi temiz".to_owned())
         };
         cells.push(
             Readout::new(label::body(text))
