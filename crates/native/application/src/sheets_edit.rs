@@ -299,7 +299,7 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: SheetsEdit) -> CommandResul
 
 /// [`execute`]'s write; `call::recorded` runs it as one step of the
 /// document, all or nothing, and journals it (docs/adr/0253 §1, §3).
-fn write_execute(cx: &mut ExecutionContext<'_>, input: SheetsEdit) -> CommandResult<SheetsEdited> {
+pub(crate) fn write_execute(cx: &mut ExecutionContext<'_>, input: SheetsEdit) -> CommandResult<SheetsEdited> {
     let next = match check(cx.doc, &input) {
         Ok(next) => next,
         Err(stop) => return stop.into(),

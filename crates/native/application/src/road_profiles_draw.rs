@@ -29,6 +29,11 @@ const MOST: usize = 100_000;
 pub const BANDS: [&str; 5] = ["Km", "Siyah kot", "Kırmızı kot", "Fark", "Eğim"];
 const RED: &str = "#d62828";
 
+/// A number as Rust writes an f64.
+fn num(v: f64) -> String {
+    format!("{v}")
+}
+
 struct Checked {
     id: String,
     built: Built,
@@ -40,6 +45,9 @@ struct Checked {
     every: f64,
     /// The PVIs' stations and elevations, in order.
     pvis: Vec<(f64, f64)>,
+    /// The stations drawn: the profile's ends or the range asked for.
+    s0: f64,
+    s1: f64,
     warnings: Vec<CommandWarning>,
 }
 
@@ -48,9 +56,8 @@ fn range(built: &Built) -> (f64, f64) {
     (built.vertical.start, built.vertical.end)
 }
 
-/// The terrain's points inside the range, and its ends: station, height (none off the surface).
-fn terrain(built: &Built, surface: &Surface) -> Vec<(f64, Option<f64>)> {
-    let (s0, s1) = range(built);
+/// The terrain's points inside the range `s0`–`s1`, and its ends: station, height (none off the surface).
+fn terrain(built: &Built, surface: &Surface, s0: f64, s1: f64) -> Vec<(f64, Option<f64>)> {
     let core = &built.alignment.core;
     let ends: Vec<f64> =
         std::iter::once(0.0).chain(core.elements.iter().map(|e| e.station)).chain(std::iter::once(core.length)).collect();
@@ -66,13 +73,16 @@ fn terrain(built: &Built, surface: &Surface) -> Vec<(f64, Option<f64>)> {
     out
 }
 
-/// The stations whose red elevations bound the design line: its pieces' ends and its curves' highest or lowest points.
-fn design_stations(built: &Built) -> Vec<f64> {
+/// The stations whose red elevations bound the design line between `s0` and `s1`: its pieces' ends and its curves'
+/// highest or lowest points there, and the range's ends.
+fn design_stations(built: &Built, s0: f64, s1: f64) -> Vec<f64> {
     let mut out: Vec<f64> = built.vertical.pieces.iter().flat_map(|p| {
         let (a, b) = p.range();
         [a, b]
     }).collect();
     out.extend(built.vertical.curves.iter().filter_map(|c| c.extreme.map(|e| e[0])));
+    out.retain(|s| *s >= s0 - 1e-9 && *s <= s1 + 1e-9);
+    out.extend([s0, s1]);
     out
 }
 
@@ -98,7 +108,20 @@ fn check(doc: &kentos_domain::Document, input: &ProfilesDraw) -> Result<Checked,
         ));
     }
     let built = common::build(doc, def)?;
-    let (s0, s1) = range(&built);
+    let (p0, p1) = range(&built);
+    let span = format!("boykesit {} ile {} m arası", num(p0), num(p1));
+    let s0 = input.from.unwrap_or(p0);
+    let s1 = input.to.unwrap_or(p1);
+    if !s0.is_finite() || s0 < p0 - 1e-9 || s0 > p1 + 1e-9 {
+        return Err(fail(codes::INVALID_LABEL, format!("{} m boykesitin üstünde değil: {span}.", num(s0)), "from"));
+    }
+    if !s1.is_finite() || s1 < p0 - 1e-9 || s1 > p1 + 1e-9 {
+        return Err(fail(codes::INVALID_LABEL, format!("{} m boykesitin üstünde değil: {span}.", num(s1)), "to"));
+    }
+    if s1 <= s0 {
+        return Err(fail(codes::INVALID_LABEL, "Aralığın sonu başından sonra olmalı.".into(), "to"));
+    }
+    let (s0, s1) = (s0.clamp(p0, p1), s1.clamp(p0, p1));
     if (s1 - s0) / every > MOST as f64 {
         return Err(fail(
             codes::INVALID_LABEL,
@@ -116,9 +139,10 @@ fn check(doc: &kentos_domain::Document, input: &ProfilesDraw) -> Result<Checked,
         None => None,
     };
     // The elevations shown: the design line's bounds and the terrain's points in the range.
-    let mut zs: Vec<f64> = design_stations(&built).into_iter().filter_map(|s| built.vertical.at(s).map(|r| r.0)).collect();
+    let mut zs: Vec<f64> =
+        design_stations(&built, s0, s1).into_iter().filter_map(|s| built.vertical.at(s).map(|r| r.0)).collect();
     if let Some(s) = &surface {
-        zs.extend(terrain(&built, s).into_iter().filter_map(|(_, z)| z));
+        zs.extend(terrain(&built, s, s0, s1).into_iter().filter_map(|(_, z)| z));
     }
     let (lo, hi) = zs.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), z| (lo.min(*z), hi.max(*z)));
     let datum = match input.datum {
@@ -163,6 +187,8 @@ fn check(doc: &kentos_domain::Document, input: &ProfilesDraw) -> Result<Checked,
         height,
         every,
         pvis: def.pvis.iter().map(|p| (p.station, p.elevation)).collect(),
+        s0,
+        s1,
         warnings: layer_warnings,
     })
 }
@@ -177,7 +203,7 @@ pub fn grid_step(datum: f64, top: f64) -> f64 {
 
 /// The bands' columns: every round km in the range and its ends, in station order.
 fn columns(c: &Checked) -> Result<Vec<ProfileAt>, Stop> {
-    let (s0, s1) = range(&c.built);
+    let (s0, s1) = (c.s0, c.s1);
     let mut stations: Vec<f64> = alignments::tick_stations(&c.built.alignment, c.every)?
         .into_iter()
         .filter(|s| *s >= s0 - 1e-9 && *s <= s1 + 1e-9)
@@ -288,7 +314,7 @@ fn objects(doc: &kentos_domain::Document, c: &Checked, columns: &[ProfileAt], at
     let h = c.height * mm;
     let row = 2.4 * h;
     let names = 14.0 * h;
-    let (s0, s1) = range(&c.built);
+    let (s0, s1) = (c.s0, c.s1);
     let x = |s: f64| at[0] + (s - s0);
     let y = |z: f64| at[1] + (z - c.datum) * c.exaggeration;
     let mut out = Vec::new();
@@ -309,7 +335,7 @@ fn objects(doc: &kentos_domain::Document, c: &Checked, columns: &[ProfileAt], at
     if let Some(surface) = &c.surface {
         let core = &c.built.alignment.core;
         let on = |s: f64| core.at(s).is_some_and(|p| surface.height(p.x, p.y).z.is_some());
-        for run in terrain_runs(&terrain(&c.built, surface), on) {
+        for run in terrain_runs(&terrain(&c.built, surface, s0, s1), on) {
             let pts: Vec<[f64; 2]> = run.iter().map(|p| [x(p[0]), y(p[1])]).collect();
             out.push(path(&pts, false, None, Some(0.25)));
         }
@@ -318,6 +344,10 @@ fn objects(doc: &kentos_domain::Document, c: &Checked, columns: &[ProfileAt], at
     let mut pts: Vec<[f64; 2]> = Vec::new();
     for p in &c.built.vertical.pieces {
         let (a, b) = p.range();
+        if b <= s0 + 1e-9 || a >= s1 - 1e-9 {
+            continue;
+        }
+        let (a, b) = (a.max(s0), b.min(s1));
         let n = if matches!(p, Piece::Grade { .. }) { 1 } else { 16 };
         for i in 0..=n {
             let s = a + (b - a) * i as f64 / n as f64;
@@ -328,7 +358,7 @@ fn objects(doc: &kentos_domain::Document, c: &Checked, columns: &[ProfileAt], at
         }
     }
     out.push(path(&pts, false, Some(RED), Some(0.5)));
-    for cu in &c.built.vertical.curves {
+    for cu in c.built.vertical.curves.iter().filter(|cu| cu.start[0] < s1 - 1e-9 && cu.end[0] > s0 + 1e-9) {
         let size = match cu.curve {
             VCurve::Asymmetric { length_in, length_out } => format!("L1={length_in:.2} L2={length_out:.2}"),
             VCurve::Circle { radius } => format!("R={radius:.2} L={:.2}", cu.end[0] - cu.start[0]),
@@ -336,7 +366,7 @@ fn objects(doc: &kentos_domain::Document, c: &Checked, columns: &[ProfileAt], at
         };
         let top = cu.start[1].max(cu.end[1]).max(cu.extreme.map_or(f64::NEG_INFINITY, |e| e[1]));
         out.push(text(
-            [x(0.5 * (cu.start[0] + cu.end[0])), y(top) + 2.0 * h],
+            [x(0.5 * (cu.start[0].max(s0) + cu.end[0].min(s1))), y(top) + 2.0 * h],
             format!("{} {size} K={:.1}", cu.pvi, cu.k.unwrap_or(0.0)),
             h,
             TextAlign::BottomCenter,
@@ -367,9 +397,12 @@ fn objects(doc: &kentos_domain::Document, c: &Checked, columns: &[ProfileAt], at
     }
     for w in c.pvis.windows(2) {
         let ((sa, za), (sb, zb)) = (w[0], w[1]);
+        if sb <= s0 + 1e-9 || sa >= s1 - 1e-9 {
+            continue;
+        }
         let g = (zb - za) / (sb - sa);
         out.push(text(
-            [x(0.5 * (sa + sb)), mid(4)],
+            [x(0.5 * (sa.max(s0) + sb.min(s1))), mid(4)],
             format!("%{:.2} L={:.2}", 100.0 * g, sb - sa),
             h,
             TextAlign::MiddleCenter,
@@ -395,7 +428,7 @@ fn write(cx: &mut ExecutionContext<'_>, input: &ProfilesDraw, c: Checked) -> Com
         CommandResult::Completed { output, .. } => output,
         other => return crate::trim::relay(other),
     };
-    let (s0, s1) = range(&c.built);
+    let (s0, s1) = (c.s0, c.s1);
     CommandResult::Completed {
         output: ProfilesDrawn {
             profile: c.id,
@@ -413,6 +446,37 @@ fn write(cx: &mut ExecutionContext<'_>, input: &ProfilesDraw, c: Checked) -> Com
         },
         warnings: c.warnings,
     }
+}
+
+/// A profile view as a sheet set draws it (docs/adr/0908 §10): its objects, what `road.profiles.draw` would answer
+/// (no objects written yet) and its warnings.
+pub(crate) fn view(
+    doc: &kentos_domain::Document,
+    input: &ProfilesDraw,
+) -> Result<(Vec<NewObject>, ProfilesDrawn, Vec<CommandWarning>), Stop> {
+    let c = check(doc, input)?;
+    let cols = columns(&c)?;
+    let objects = objects(doc, &c, &cols, input.at);
+    let drawn = ProfilesDrawn {
+        profile: c.id.clone(),
+        frame: [
+            [input.at[0], input.at[1]],
+            [input.at[0] + (c.s1 - c.s0), input.at[1] + (c.top - c.datum) * c.exaggeration],
+        ],
+        datum: c.datum,
+        top: c.top,
+        exaggeration: c.exaggeration,
+        grid: grid_step(c.datum, c.top),
+        columns: cols,
+        uids: Vec::new(),
+        revision: doc.revision().to_string(),
+    };
+    Ok((objects, drawn, c.warnings))
+}
+
+/// How deep the bands under a view are, in drawing units, with texts `height` paper millimetres high.
+pub(crate) fn bands_depth(doc: &kentos_domain::Document, height: f64) -> f64 {
+    BANDS.len() as f64 * 2.4 * height * doc.settings().plot_scale / 1000.0
 }
 
 /// Checks `input` against the document, writing nothing.

@@ -399,6 +399,36 @@
       "payload": 15.0
      }
     }
+   ],
+   "sheetSets": [
+    {
+     "id": "ps-1",
+     "name": "Ana aks paftaları",
+     "alignment": "g-1",
+     "alignmentRevision": 3,
+     "profile": "b-1",
+     "profileRevision": 2,
+     "from": 0.0,
+     "to": 300.0,
+     "scale": 1000,
+     "sheets": [
+      {
+       "sheet": "yol-ps-1-1",
+       "from": 0.0,
+       "to": 300.0,
+       "view": [
+        [
+         0.0,
+         -400.0
+        ],
+        [
+         300.0,
+         -330.0
+        ]
+       ]
+      }
+     ]
+    }
    ]
   }
  },

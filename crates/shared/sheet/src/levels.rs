@@ -64,7 +64,7 @@ pub fn shown_levels(book: &SheetBook) -> BTreeSet<String> {
 }
 
 /// `first` cut at its last run of digits: what comes before, the number, its width, what comes after.
-fn numbered(first: &str) -> Option<(String, u64, usize, String)> {
+pub(crate) fn numbered(first: &str) -> Option<(String, u64, usize, String)> {
     let chars: Vec<char> = first.chars().collect();
     let end = chars.iter().rposition(char::is_ascii_digit)? + 1;
     let start = chars[..end]

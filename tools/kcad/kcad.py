@@ -9681,12 +9681,38 @@ class _Schema:
                 self.fail("bad_value", "en çok 64 ödünç ve döküm alanı olur")
             return t
 
+        def road_sheet(x):
+            t = self.fields({"sheet": (word, True), "from": (finite, True), "to": (finite, True),
+                             "view": (self.array(self.array(finite)), False)})(x)
+            if not t["from"] < t["to"]:
+                self.fail("bad_value", "paftanın aralığının başı sonundan önce olmalı")
+            if "view" in t and (len(t["view"]) != 2 or any(len(c) != 2 for c in t["view"])):
+                self.fail("bad_value", "boykesit görünümünün çerçevesi iki köşedir")
+            return t
+
+        def sheet_set(x):
+            # Docs/adr/0908 §10: a plan–profile sheet set along an alignment, with its sources' revisions.
+            t = self.fields({"id": (word, True), "name": (self.text, True), "alignment": (word, True),
+                             "alignmentRevision": (self.uint(32), False), "profile": (word, False),
+                             "profileRevision": (self.uint(32), False), "from": (finite, True), "to": (finite, True),
+                             "scale": (self.uint(32), True), "overlap": (finite, False),
+                             "sheets": (self.array(road_sheet), True)})(x)
+            name = t["name"]
+            if not name or name.strip() != name or len(name) > 120:
+                self.fail("bad_value", "pafta takımının adı boş, boşluklu ya da çok uzun")
+            if not t["from"] < t["to"] or not 1 <= t["scale"] <= 1_000_000 or t.get("overlap", 0) < 0:
+                self.fail("bad_value", "pafta takımının aralığı, ölçeği ya da bindirmesi kuralın dışında")
+            if not 1 <= len(t["sheets"]) <= 500 or len({y["sheet"] for y in t["sheets"]}) != len(t["sheets"]):
+                self.fail("bad_value", "pafta takımında 1 ile 500 arası, kimlikleri tek pafta olur")
+            return t
+
         r = self.fields({"surfaces": (self.array(surface), False), "alignments": (self.array(alignment), False),
                          "profiles": (self.array(profile), False), "templates": (self.array(template), False),
                          "sections": (self.array(section_set), False),
                          "superelevations": (self.array(superelevation), False),
                          "corridors": (self.array(corridor), False),
-                         "volumes": (self.array(volume), False), "hauls": (self.array(haul), False)})(v)
+                         "volumes": (self.array(volume), False), "hauls": (self.array(haul), False),
+                         "sheetSets": (self.array(sheet_set), False)})(v)
         got = r.get("surfaces", [])
         lines = r.get("alignments", [])
         profiles = r.get("profiles", [])
@@ -9696,7 +9722,8 @@ class _Schema:
         corridors = r.get("corridors", [])
         volumes = r.get("volumes", [])
         hauls = r.get("hauls", [])
-        if not (got or lines or profiles or templates or sets or supers or corridors or volumes or hauls):
+        sheet_sets = r.get("sheetSets", [])
+        if not (got or lines or profiles or templates or sets or supers or corridors or volumes or hauls or sheet_sets):
             self.fail("bad_value", "boş yol ayarı yazılmaz")
         if len(got) > 64 or ("surfaces" in r and not got):
             self.fail("bad_value", "yol ayarında 1 ile 64 arası yüzey olur")
@@ -9776,6 +9803,17 @@ class _Schema:
             self.fail("bad_value", "iki Brüknerin kimliği ya da adı aynı")
         if any(all(y["id"] != x["volume"] for y in volumes) for x in hauls):
             self.fail("bad_value", "Brüknerin kübaj hesabı projede yok")
+        if "sheetSets" in r and not sheet_sets or len(sheet_sets) > 256:
+            self.fail("bad_value", "yol ayarında 1 ile 256 arası pafta takımı olur")
+        if len({x["id"] for x in sheet_sets}) != len(sheet_sets) or \
+                len({x["name"].lower() for x in sheet_sets}) != len(sheet_sets):
+            self.fail("bad_value", "iki pafta takımının kimliği ya da adı aynı")
+        for x in sheet_sets:
+            a = next((y for y in lines if y["id"] == x["alignment"]), None)
+            if a is None or "offsetOf" in a:
+                self.fail("bad_value", "pafta takımının aksı projede yok ya da paralel aks")
+            if "profile" in x and all(y["id"] != x["profile"] or y["alignment"] != x["alignment"] for y in profiles):
+                self.fail("bad_value", "pafta takımının boykesiti projede aynı aksta yok")
         return r
 
     def arch_(self, v):

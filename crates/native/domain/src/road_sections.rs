@@ -44,6 +44,32 @@ impl Document {
         })
     }
 
+    /// The project's plan–profile sheet sets (docs/adr/0908 §10).
+    pub fn road_sheet_sets(&self) -> &[kentos_contracts::RoadSheetSetDef] {
+        self.settings.road.as_ref().map_or(&[], |r| r.sheet_sets.as_slice())
+    }
+
+    /// Gives the project the sheet sets `next` as one change named `label`, as [`Self::set_road_templates`]; inside an
+    /// open group it joins the group's step.
+    pub fn set_road_sheet_sets(
+        &mut self,
+        next: Vec<kentos_contracts::RoadSheetSetDef>,
+        label: &str,
+    ) -> Result<bool, Refusal> {
+        let judged = RoadSettings { sheet_sets: next.clone(), ..self.settings.road.clone().unwrap_or_default() };
+        if let Some((path, problem)) = judged.problem() {
+            return Err(Refusal(format!("{path}: {problem}")));
+        }
+        let before = self.road_sheet_sets().to_vec();
+        if before == next {
+            return Ok(false);
+        }
+        self.transact(label, |doc| {
+            doc.record(vec![Op::RoadSheetSets { before, after: next }], label);
+            Ok(true)
+        })
+    }
+
     /// The project's mass haul diagrams (docs/adr/0907).
     pub fn road_hauls(&self) -> &[HaulDef] {
         self.settings.road.as_ref().map_or(&[], |r| r.hauls.as_slice())

@@ -644,6 +644,8 @@ impl App {
             datum: None,
             exaggeration: number(&w.exaggeration).ok().flatten().filter(|v| *v > 0.0),
             height: None,
+            from: None,
+            to: None,
             expected_revision: None,
         };
         let Some(doc) = self.document.as_mut() else {

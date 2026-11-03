@@ -89,6 +89,10 @@ pub struct RoadSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<HaulDef>>", optional))]
     pub hauls: Vec<HaulDef>,
+    /// The plan–profile sheet sets (docs/adr/0908 §10), each along an alignment.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<RoadSheetSetDef>>", optional))]
+    pub sheet_sets: Vec<RoadSheetSetDef>,
 }
 
 impl RoadSettings {
@@ -103,6 +107,7 @@ impl RoadSettings {
             && self.corridors.is_empty()
             && self.volumes.is_empty()
             && self.hauls.is_empty()
+            && self.sheet_sets.is_empty()
     }
 
     /// What is wrong with it, by the field's path and in words; none when it is right.
@@ -958,6 +963,7 @@ pub fn road_problem(road: &RoadSettings) -> Option<(String, String)> {
         .or_else(|| corridors_problem(road))
         .or_else(|| volumes_problem(road))
         .or_else(|| hauls_problem(road))
+        .or_else(|| sheet_sets_problem(road))
 }
 
 fn side_problem(s: &TemplateSideDef, at: &str) -> Option<(String, String)> {
@@ -1177,6 +1183,126 @@ fn superelevations_problem(road: &RoadSettings) -> Option<(String, String)> {
 /// What is wrong with the earthwork volumes: each of a corridor in the project, its factors positive and over
 /// stretches in increasing stations that do not overlap.
 /// At most so many mass haul diagrams, and so many sites on one.
+pub const MAX_SHEET_SETS: usize = 256;
+pub const MAX_ROAD_SHEETS: usize = 500;
+
+/// A sheet of a plan–profile set: the book's sheet, the stations it shows (internal, m) and the profile view drawn for
+/// it (its frame's lower left and upper right), when the set has a profile.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RoadSheetDef {
+    pub sheet: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub from: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub to: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub view: Option<[[f64; 2]; 2]>,
+}
+
+/// A plan–profile sheet set (docs/adr/0908 §10; Civil 3D's view frame group): sheets along an alignment, each showing
+/// its stretch in plan at the set's scale (1:`scale`) and, with a profile, the profile view drawn for it; the sources'
+/// revisions it was made from, so the sheets say when the alignment or the profile changed since.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RoadSheetSetDef {
+    pub id: String,
+    pub name: String,
+    pub alignment: String,
+    #[serde(default, skip_serializing_if = "is_zero_u32")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub alignment_revision: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub profile: Option<String>,
+    #[serde(default, skip_serializing_if = "is_zero_u32")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub profile_revision: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub from: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub to: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
+    pub scale: u32,
+    #[serde(default, skip_serializing_if = "is_zero_f64")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub overlap: f64,
+    pub sheets: Vec<RoadSheetDef>,
+}
+
+fn sheet_sets_problem(road: &RoadSettings) -> Option<(String, String)> {
+    let fail = |path: String, words: &str| Some((path, words.to_string()));
+    let list = &road.sheet_sets;
+    if list.len() > MAX_SHEET_SETS {
+        return fail("sheetSets".into(), &format!("en çok {MAX_SHEET_SETS} pafta takımı olur"));
+    }
+    let mut ids = std::collections::BTreeSet::new();
+    let mut names = std::collections::BTreeSet::new();
+    for (i, t) in list.iter().enumerate() {
+        let at = |field: &str| format!("sheetSets[{i}].{field}");
+        if !word_ok(&t.id) {
+            return fail(at("id"), "pafta takımının kimliği boş olmayan, en çok 64 karakterlik bir sözcük olmalı");
+        }
+        if !ids.insert(t.id.as_str()) {
+            return fail(at("id"), "bu kimlikte başka bir pafta takımı var");
+        }
+        let name = t.name.trim();
+        if name.is_empty() || name != t.name || t.name.chars().count() > 120 {
+            return fail(at("name"), "pafta takımının adı boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 120 karakter");
+        }
+        if !names.insert(name.to_lowercase()) {
+            return fail(at("name"), "bu adda başka bir pafta takımı var");
+        }
+        match road.alignments.iter().find(|a| a.id == t.alignment) {
+            None => return fail(at("alignment"), "pafta takımının aksı projede yok"),
+            Some(a) if a.offset_of.is_some() => return fail(at("alignment"), "pafta takımı paralel aksta olmaz"),
+            Some(_) => {}
+        }
+        if let Some(p) = &t.profile
+            && road.profiles.iter().all(|q| q.id != *p || q.alignment != t.alignment)
+        {
+            return fail(at("profile"), "pafta takımının boykesiti projede aynı aksta yok");
+        }
+        if !(t.from.is_finite() && t.to.is_finite() && t.from < t.to) {
+            return fail(at("to"), "aralığın başı sonundan önce, ikisi sonlu olmalı");
+        }
+        if t.scale == 0 || t.scale > 1_000_000 {
+            return fail(at("scale"), "ölçek 1 ile 1 000 000 arası olmalı");
+        }
+        if !(t.overlap.is_finite() && t.overlap >= 0.0) {
+            return fail(at("overlap"), "bindirme 0 ya da büyük, sonlu olmalı");
+        }
+        if t.sheets.is_empty() || t.sheets.len() > MAX_ROAD_SHEETS {
+            return fail(at("sheets"), &format!("pafta takımında 1 ile {MAX_ROAD_SHEETS} arası pafta olur"));
+        }
+        let mut sheets = std::collections::BTreeSet::new();
+        for (j, sh) in t.sheets.iter().enumerate() {
+            let path = at(&format!("sheets[{j}]"));
+            if !word_ok(&sh.sheet) || !sheets.insert(sh.sheet.as_str()) {
+                return fail(path, "paftanın kimliği tek, boş olmayan bir sözcük olmalı");
+            }
+            if !(sh.from.is_finite() && sh.to.is_finite() && sh.from < sh.to) {
+                return fail(path, "paftanın aralığının başı sonundan önce olmalı");
+            }
+            if sh.view.is_some_and(|v| v.iter().flatten().any(|c| !c.is_finite())) {
+                return fail(path, "boykesit görünümünün çerçevesi sonlu olmalı");
+            }
+        }
+    }
+    None
+}
+
 pub const MAX_HAULS: usize = 256;
 pub const MAX_HAUL_SITES: usize = 64;
 

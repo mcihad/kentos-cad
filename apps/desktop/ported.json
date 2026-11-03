@@ -415,6 +415,7 @@
     "haul.editor",
     "haul.new",
     "stakeout.table",
+    "road.sheets",
     "landxml.export",
     "landxml.importAlignments",
     "ifc.export",

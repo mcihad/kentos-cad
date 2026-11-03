@@ -7511,6 +7511,31 @@ pub fn catalog() -> CommandCatalog {
             ],
         },
         CommandDescriptor {
+            id: crate::ROAD_SHEETS_PLAN.into(),
+            version: crate::ROAD_SHEETS_PLAN_VERSION,
+            title: "Yol paftaları".into(),
+            summary: "Aksı plan–boykesit paftalarına dizer (Civil 3D'nin Create View Frames ve Create Sheets'i gibi): bir paftanın aralığı şablonun plan haritasının genişliğinin scale ölçeğindeki zemin boyudur, her plan haritası aralığın kirişinin ortasında, aks soldan sağa akacak biçimde döndürülür; overlap kadar bindirilir. profile verilince (aynı aksta) her paftanın km'lerinin boykesit görünümü (road.profiles.draw'ın from ve to'suyla) layerId katmanına çizilir, ilki at'ta, her biri bir öncekinin bantlarının altına; şablonun ikinci haritası onu aynı ölçekte gösterir, bir km planda ve boykesitte üst üste düşer. Şablon yoksa sys:yol-plan-boykesit; paftalar first'ten (yoksa Y-101) numaralanır, Yol › aks altında. Pafta takımı aksın ve boykesitin revizyonlarıyla yol ayarlarında saklanır. Boykesit görünümleri, takım ve paftalar tek geri alma adımı “Yol paftaları” (paftanın kendi düzenlemeleri geri alma adımı değildir). \
+                      Uyarılar: road_sheet_outside, layer_hidden, profile_stale. Retler: invalid_revision, revision_conflict, not_a_road_project, unknown_alignment, unknown_road_profile, invalid_road_sheets, katmanın retleri, unknown_template, invalid_options, not_fixed_map, bad_drawing_info."
+                .into(),
+            aliases: vec!["yolpaftalari".into(), "planboykesit".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::RoadSheetsPlan>(),
+            output: schema::<crate::RoadSheetsLaid>(),
+            plan: Some(schema::<crate::RoadSheetsLaid>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana aks 1:1000, boykesitiyle".into(),
+                input: json!({ "alignment": "Ana aks", "profile": "Proje kotu", "layerId": "0", "at": [0.0, -500.0], "scale": 1000 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::ROAD_ALIGNMENTS_QUERY.into(),
             version: crate::ROAD_ALIGNMENTS_QUERY_VERSION,
             title: "Aksı sorgula".into(),
@@ -13151,6 +13176,9 @@ mod tests {
                     crate::ROAD_STAKEOUT_SEND => {
                         serde_json::from_value::<crate::StakeoutSend>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_SHEETS_PLAN => {
+                        serde_json::from_value::<crate::RoadSheetsPlan>(e.input.clone()).map(|_| ())
+                    }
                     crate::ROAD_ALIGNMENTS_IMPORT => {
                         serde_json::from_value::<crate::AlignmentsImport>(e.input.clone()).map(|_| ())
                     }
@@ -13892,6 +13920,9 @@ mod tests {
                         }
                         crate::ROAD_STAKEOUT_SEND => {
                             serde_json::from_value::<crate::StakeoutSent>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_SHEETS_PLAN => {
+                            serde_json::from_value::<crate::RoadSheetsLaid>(output.clone()).map(|_| ())
                         }
                         crate::ROAD_ALIGNMENTS_IMPORT => {
                             serde_json::from_value::<crate::AlignmentsImported>(output.clone()).map(|_| ())

@@ -5601,6 +5601,12 @@ def build():
     hau = load("road-work.json")
     hau["settings"]["road"]["hauls"][0]["volume"] = "v-yok"
     out["broken/road-haul-unknown-volume.kcad"] = container(document(hau))
+    # Schema 161 (plan/road.md Y10.5, docs/adr/0908 §10): a sheet set lies on an alignment built from its PIs.
+    sst = load("road-work.json")
+    sst["settings"]["road"]["sheetSets"][0]["alignment"] = "g-2"
+    sst["settings"]["road"]["sheetSets"][0].pop("profile")
+    sst["settings"]["road"]["sheetSets"][0].pop("profileRevision")
+    out["broken/road-sheet-set-on-parallel-axis.kcad"] = container(document(sst))
     # Schema 136 (docs/adr/0758): a layer's indexes, a key over two fields, a plain one and a key taking empty values as
     # the same; schema 135 refuses them, an empty list, a group's, one over a field the layer lacks, empty values the
     # same on a plain index and a default written are refused too.

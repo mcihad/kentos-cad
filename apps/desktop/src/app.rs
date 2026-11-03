@@ -285,6 +285,8 @@ pub enum Dialog {
     Hauls,
     /// Aplikasyon cetveli (stakeout_window.rs, plan/road.md Y10); the window is `App::stakeout_window`.
     Stakeout,
+    /// Yol paftaları (road_sheets_window.rs, plan/road.md Y10.5); the window is `App::road_sheets_window`.
+    RoadSheets,
     /// Bina programı (program_window.rs, docs/adr/0773); the window is `App::program_window`.
     Program,
     /// Mahalleri birleştir's decision, asked before writing (quantities.rs, docs/adr/0773 §4).
@@ -648,6 +650,8 @@ pub enum Message {
     Hauls(crate::haul_window::Event),
     /// An event of Aplikasyon cetveli (stakeout_window.rs, plan/road.md Y10).
     Stakeout(crate::stakeout_window::Event),
+    /// An event of Yol paftaları (road_sheets_window.rs, plan/road.md Y10.5).
+    RoadSheets(crate::road_sheets_window::Event),
     /// LandXML ver's file, or none when the dialog was closed (road_exchange.rs, plan/road.md Y10.2).
     LandxmlExport(Option<std::path::PathBuf>),
     /// LandXML'den aks al's file, or none (road_exchange.rs, plan/road.md Y10.2).
@@ -1227,6 +1231,8 @@ pub struct App {
     pub(crate) haul_window: Option<Box<crate::haul_window::Window>>,
     /// Aplikasyon cetveli (stakeout_window.rs, plan/road.md Y10).
     pub(crate) stakeout_window: Option<Box<crate::stakeout_window::Window>>,
+    /// Yol paftaları (road_sheets_window.rs, plan/road.md Y10.5).
+    pub(crate) road_sheets_window: Option<Box<crate::road_sheets_window::Window>>,
     /// Bina programı (program_window.rs, docs/adr/0773).
     pub(crate) program_window: Option<crate::program_window::Window>,
     /// Mahalleri birleştir asked: its input and its decision's words (docs/adr/0773 §4).
@@ -1656,6 +1662,7 @@ impl App {
             volume_window: None,
             haul_window: None,
             stakeout_window: None,
+            road_sheets_window: None,
             program_window: None,
             space_merging: None,
             table_styles: None,
@@ -2380,6 +2387,7 @@ impl App {
             Message::Volumes(event) => return self.volume_event(event),
             Message::Hauls(event) => return self.haul_event(event),
             Message::Stakeout(event) => return self.stakeout_event(event),
+            Message::RoadSheets(event) => return self.road_sheets_event(event),
             Message::LandxmlExport(path) => return self.landxml_chosen(path),
             Message::LandxmlAlignments(path) => return self.landxml_alignments_chosen(path),
             Message::IfcExport(path) => return self.ifc_chosen(path),
@@ -3424,6 +3432,7 @@ impl App {
             "haul.new" => self.new_haul(),
             // Aplikasyon cetveli (stakeout_window.rs, plan/road.md Y10).
             "stakeout.table" => self.open_stakeout(),
+            "road.sheets" => self.open_road_sheets(),
             // LandXML ver (road_exchange.rs, plan/road.md Y10.2).
             "landxml.export" => return self.export_landxml(),
             "landxml.importAlignments" => return self.import_landxml_alignments(),

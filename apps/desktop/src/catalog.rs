@@ -609,6 +609,8 @@ pub const PORTED: &[&str] = &[
     "haul.new",
     // plan/road.md Y10: Aplikasyon cetveli (stakeout_window.rs).
     "stakeout.table",
+    // plan/road.md Y10.5: Yol paftaları (road_sheets_window.rs).
+    "road.sheets",
     // plan/road.md Y10.2: LandXML ver (road_exchange.rs).
     "landxml.export",
     "landxml.importAlignments",

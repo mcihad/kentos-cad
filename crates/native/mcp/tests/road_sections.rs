@@ -267,3 +267,16 @@ fn a_stakeout_is_sent_to_an_instrument() {
     assert!(text.contains("<PlanFeatures name=\"Ana koridor\">") && text.contains("<Alignment name="), "{text}");
     let _ = (std::fs::remove_file(&gsi), std::fs::remove_file(&xml));
 }
+
+/// The file's alignment is laid on plan–profile sheets (plan/road.md Y10.5, docs/adr/0908 §10).
+#[test]
+fn an_alignment_is_laid_on_sheets() {
+    let mut server = Server::new();
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/kcad/v2/road-work.kcad");
+    let opened = call(&mut server, "drawing.open", json!({"path":path}));
+    let drawing = opened["structuredContent"]["drawing"].clone();
+    let laid = call(&mut server, "road.sheets.plan", json!({"drawing":drawing,"alignment":"Ana aks","name":"MCP paftaları","scale":1000}));
+    assert_eq!(laid["isError"], false, "{laid}");
+    let sheets = laid["structuredContent"]["output"]["sheets"].as_array().cloned().unwrap_or_default();
+    assert!(!sheets.is_empty() && sheets[0]["number"] == "Y-101", "{laid}");
+}

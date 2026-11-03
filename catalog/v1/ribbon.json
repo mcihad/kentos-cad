@@ -641,6 +641,16 @@
         "size": "large"
        }
       ]
+     },
+     {
+      "label": "Pafta",
+      "icon": "roadSheets",
+      "items": [
+       {
+        "command": "road.sheets",
+        "size": "large"
+       }
+      ]
      }
     ],
     "works": [

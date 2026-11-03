@@ -1887,6 +1887,17 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "road.sheets.plan",
+        refusals: &[
+            &["not_a_road_project", "unknown_alignment", "unknown_road_profile", "invalid_road_sheets", "unknown_template"],
+            &["invalid_options", "not_fixed_map", "bad_drawing_info"],
+            LAYER,
+            REVISION,
+        ],
+        warnings: &["road_sheet_outside", "layer_hidden", "profile_stale"],
+        targets: none,
+    },
+    Entry {
         id: "road.volumes.approve",
         refusals: &[&["not_a_road_project", "unknown_volume", "volume_not_approved", "invalid_volume"], REVISION],
         warnings: &[],

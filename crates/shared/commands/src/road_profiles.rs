@@ -330,10 +330,13 @@ pub const ROAD_PROFILES_DRAW_VERSION: u32 = 1;
 /// off the surface left out), the design (red) line and each curve's sizes and K. Under it the bands: km, black and red
 /// elevations and their difference at every round `every` metres of km (50 when absent) and at the ends, and the grades.
 /// Texts are `height` paper millimetres high at the project's drawing scale (2.5 when absent). The datum when absent is a
-/// metre under the lowest elevation shown, floored; the top a metre over the highest, ceiled.
+/// metre under the lowest elevation shown, floored; the top a metre over the highest, ceiled. `from` and `to` (internal
+/// stations, m) draw a view of part of the profile, as a plan–profile sheet's (docs/adr/0908 §10): the frame, the lines,
+/// the curves' texts, the bands and the grades between them only, the datum and top from what is shown there.
 ///
 /// Refusals, in this order: `not_a_road_project`, `unknown_road_profile`, `invalid_label` (`every`, `height` or
-/// `exaggeration` not above 0, more than 100 000 ticks, a datum over the lowest elevation), the layer's
+/// `exaggeration` not above 0, a range off the profile, backwards or empty, more than 100 000 ticks, a datum over the
+/// lowest elevation), the layer's
 /// (`layer_not_found`, `not_a_layer`, `service_layer`, `layer_locked`), `invalid_revision`, `revision_conflict`, and
 /// the geometry's when the profile no longer builds. Warnings: `layer_hidden`, `profile_stale`, `profile_surface_gone`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -362,6 +365,14 @@ pub struct ProfilesDraw {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub height: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub from: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub to: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]

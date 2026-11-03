@@ -234,7 +234,9 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
         every: float | None | Unset = UNSET,
         exaggeration: float | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        from_: float | None | Unset = UNSET,
         height: float | None | Unset = UNSET,
+        to: float | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> ProfilesDrawn:
@@ -262,7 +264,9 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
             every: Unit: m.
             exaggeration: Unit: 1.
             expected_revision:
+            from_: Unit: m.
             height: Unit: paper-mm.
+            to: Unit: m.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -283,7 +287,9 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
             every=every,
             exaggeration=exaggeration,
             expected_revision=expected_revision,
+            from_=from_,
             height=height,
+            to=to,
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -298,7 +304,9 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
         every: float | None | Unset = UNSET,
         exaggeration: float | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        from_: float | None | Unset = UNSET,
         height: float | None | Unset = UNSET,
+        to: float | None | Unset = UNSET,
     ) -> ProfilesDrawn:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -311,7 +319,9 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
             every=every,
             exaggeration=exaggeration,
             expected_revision=expected_revision,
+            from_=from_,
             height=height,
+            to=to,
         ))
 
     def validate(
@@ -326,7 +336,9 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
         every: float | None | Unset = UNSET,
         exaggeration: float | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        from_: float | None | Unset = UNSET,
         height: float | None | Unset = UNSET,
+        to: float | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -339,7 +351,9 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
             every=every,
             exaggeration=exaggeration,
             expected_revision=expected_revision,
+            from_=from_,
             height=height,
+            to=to,
         ))
 
     def answer(
@@ -354,7 +368,9 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
         every: float | None | Unset = UNSET,
         exaggeration: float | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        from_: float | None | Unset = UNSET,
         height: float | None | Unset = UNSET,
+        to: float | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -372,7 +388,9 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
             every=every,
             exaggeration=exaggeration,
             expected_revision=expected_revision,
+            from_=from_,
             height=height,
+            to=to,
         ), op=op, request_id=request_id, expected=expected)
 
 

@@ -733,6 +733,12 @@ codes! {
     INVALID_STAKEOUT_SEND = "invalid_stakeout_send", Failed, false, "Aplikasyon noktaları gönderilemiyor.";
     /// A warning: codes the instrument's file cannot carry are left off their points (docs/adr/0908 §9).
     STAKEOUT_CODE_DROPPED = "stakeout_code_dropped", Warning, false, "Aletin dosyasının taşıyamadığı kodlar noktalardan çıkarıldı.";
+    /// Road sheets that cannot be laid: a parallel axis, a profile on another alignment or without a layer or a place,
+    /// a range off the alignment, a scale or an overlap out of bounds, too many sheets, a set's name taken (docs/adr/0908
+    /// §10).
+    INVALID_ROAD_SHEETS = "invalid_road_sheets", Failed, false, "Yol paftaları yerleştirilemiyor.";
+    /// A warning: on some sheets the alignment or the profile view leaves its map (docs/adr/0908 §10).
+    ROAD_SHEET_OUTSIDE = "road_sheet_outside", Warning, false, "Bazı paftalarda aks ya da boykesit görünümü haritanın dışına taşıyor.";
     /// A warning: the corridor's superelevation schedule does not build; its lanes keep the templates' slopes.
     CORRIDOR_SUPERELEVATION_GONE = "corridor_superelevation_gone", Warning, false, "Koridorun dever çizelgesi kurulamıyor; şeritler tip kesitin eğimiyle verildi.";
     /// A warning: the profile's alignment changed since it was made or rebound.

@@ -3,6 +3,7 @@ import type { AlignmentDef } from "./AlignmentDef";
 import type { CorridorDef } from "./CorridorDef";
 import type { HaulDef } from "./HaulDef";
 import type { ProfileDef } from "./ProfileDef";
+import type { RoadSheetSetDef } from "./RoadSheetSetDef";
 import type { SectionSetDef } from "./SectionSetDef";
 import type { SuperelevationDef } from "./SuperelevationDef";
 import type { TemplateDef } from "./TemplateDef";
@@ -48,4 +49,8 @@ volumes?: Array<VolumeDef>,
 /**
  * The mass haul diagrams (docs/adr/0907).
  */
-hauls?: Array<HaulDef>, };
+hauls?: Array<HaulDef>, 
+/**
+ * The plan–profile sheet sets (docs/adr/0908 §10), each along an alignment.
+ */
+sheetSets?: Array<RoadSheetSetDef>, };

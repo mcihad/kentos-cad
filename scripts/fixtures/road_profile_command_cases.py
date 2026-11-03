@@ -578,11 +578,16 @@ DRAW_LAYERS = LAYERS + [{**node("kilitli", "Kilitli"), "locked": True}, {**node(
                         {**node("grup", "Yol"), "type": "group", "children": [node("yol-boykesit", "Yol boykesit")]}]
 
 
-def drawing(d, at_, every=50.0, datum=None, ex=10.0, surface_ok=True):
-    """What the drawing says (frame, datum, top, grid, columns) and how many objects it writes."""
+def drawing(d, at_, every=50.0, datum=None, ex=10.0, surface_ok=True, frm=None, to=None):
+    """What the drawing says (frame, datum, top, grid, columns) and how many objects it writes; `frm` and `to` a view of
+    the stations between them only (docs/adr/0908 §10)."""
     b = ALIGNED[d["alignment"]]
     pvis = d["pvis"]
     s0, s1 = pvis[0]["station"], pvis[-1]["station"]
+    s0, s1 = (s0 if frm is None else frm), (s1 if to is None else to)
+
+    def inside(q):
+        return s0 - 1e-9 <= q <= s1 + 1e-9
     curves, ev, S, _ = solve(d)
     rows = vref.report(to_vref(pvis), curves)
     # The design line's bounds: the pieces' ends (PVIs without a curve, the curves' ends, an asymmetric one's PVI) and
@@ -596,7 +601,9 @@ def drawing(d, at_, every=50.0, datum=None, ex=10.0, surface_ok=True):
             bounds |= {float(c[0]), float(c[1])}
             if "lengthIn" in p:
                 bounds.add(float(S[i]))
-    zs = [ev(q)[0] for q in sorted(bounds)] + [r["extreme"][1] for r in rows if r["extreme"] is not None]
+    bounds = {q for q in bounds if inside(q)} | {float(s0), float(s1)}
+    zs = [ev(q)[0] for q in sorted(bounds)] + [r["extreme"][1] for r in rows
+                                                if r["extreme"] is not None and inside(r["extreme"][0])]
     on = d.get("surface") == "t-1" and surface_ok
     points = []
     if on:
@@ -626,8 +633,10 @@ def drawing(d, at_, every=50.0, datum=None, ex=10.0, surface_ok=True):
             drawn = True
         else:
             drawn = False
-    n = (1 + len(inner_lines) + len(heights) + runs + 1 + len(rows) + 10
-         + sum(3 + ("black" in c) + ("difference" in c) for c in cols) + len(pvis) - 1)
+    shown_curves = [r for r in rows if r["start"][0] < s1 - 1e-9 and r["end"][0] > s0 + 1e-9]
+    grades = [1 for p, q in zip(pvis, pvis[1:]) if q["station"] > s0 + 1e-9 and p["station"] < s1 - 1e-9]
+    n = (1 + len(inner_lines) + len(heights) + runs + 1 + len(shown_curves) + 10
+         + sum(3 + ("black" in c) + ("difference" in c) for c in cols) + len(grades))
     out = {"profile": d["id"], "frame": [list(at_), [at_[0] + (s1 - s0), at_[1] + (top - base) * ex]],
            "datum": base, "top": top, "exaggeration": ex, "grid": float(grid), "columns": cols}
     return out, n, lo
@@ -679,6 +688,18 @@ def draw_cases():
     ok("Plan yazmaz", {"profile": "b-1", "layerId": "0", "at": [0.0, -200.0]}, MAIN, op="plan")
     ok("Doğrulama yazmaz", {"profile": "b-1", "layerId": "0", "at": [0.0, -200.0]}, MAIN, op="validate")
     ok("Tek geri alma adımı", {"profile": "b-3", "layerId": "0", "at": [0.0, -200.0]}, PART, undo=True)
+    # A view of part of the profile, as a plan–profile sheet draws (docs/adr/0908 §10).
+    ok("Km 100–300: iki kurbun parçası, kendi kıyas kotu", {"profile": "b-1", "layerId": "0", "at": [0.0, -300.0],
+                                                           "from": 100.0, "to": 300.0}, MAIN, frm=100.0, to=300.0)
+    ok("Km 0–150: ilk eğimin bandı, kurp yok", {"profile": "b-1", "layerId": "0", "at": [0.0, -300.0], "from": 0.0,
+                                               "to": 120.0}, MAIN, frm=0.0, to=120.0)
+    ok("Yalnız başlangıç: km 400'den sona", {"profile": "b-1", "layerId": "0", "at": [500.0, -300.0], "from": 400.0},
+       MAIN, frm=400.0)
+    ok("Yalnız bitiş, 20 m bantla", {"profile": "b-1", "layerId": "0", "at": [0.0, -300.0], "to": 250.5, "every": 20.0},
+       MAIN, every=20.0, to=250.5)
+    ok("Kurbun ortasından: tepe noktası aralıkta", {"profile": "b-1", "layerId": "0", "at": [0.0, -300.0],
+                                                  "from": 320.0, "to": 380.0, "exaggeration": 5.0},
+       MAIN, frm=320.0, to=380.0, ex=5.0)
 
     _, _, lowest = drawing(MAIN, [0.0, 0.0])
     no("Yol projesi değil", {"profile": "b-1", "layerId": "0", "at": [0.0, 0.0]}, NOT_ROAD,
@@ -701,6 +722,14 @@ def draw_cases():
        failed("not_a_layer", "“Yol” bir katman grubu; nesne yalnız katmana eklenir. Grubun içinden bir katman seçin.", "layerId"))
     no("Kilitli katman", {"profile": "b-1", "layerId": "kilitli", "at": [0.0, 0.0]},
        failed("layer_locked", "“Kilitli” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.", "layerId"))
+    no("Aralığın başı boykesitten önce", {"profile": "b-1", "layerId": "0", "at": [0.0, 0.0], "from": -10.0},
+       failed("invalid_label", "-10 m boykesitin üstünde değil: boykesit 0 ile 669 m arası.", "from"))
+    no("Aralığın sonu boykesitin ötesinde", {"profile": "b-1", "layerId": "0", "at": [0.0, 0.0], "to": 700.0},
+       failed("invalid_label", "700 m boykesitin üstünde değil: boykesit 0 ile 669 m arası.", "to"))
+    no("Aralık ters", {"profile": "b-1", "layerId": "0", "at": [0.0, 0.0], "from": 300.0, "to": 200.0},
+       failed("invalid_label", "Aralığın sonu başından sonra olmalı.", "to"))
+    no("Aralık boş", {"profile": "b-1", "layerId": "0", "at": [0.0, 0.0], "from": 300.0, "to": 300.0},
+       failed("invalid_label", "Aralığın sonu başından sonra olmalı.", "to"))
     no("Geçersiz beklenen sürüm", {"profile": "b-1", "layerId": "0", "at": [0.0, 0.0], "expectedRevision": "on"}, BAD_REVISION)
     no("Eski sürüme göre hazırlanmış", {"profile": "b-1", "layerId": "0", "at": [0.0, 0.0], "expectedRevision": "41"}, CONFLICT)
     return file("road.profiles.draw", "Boykesit çiz", base_setup, cases)

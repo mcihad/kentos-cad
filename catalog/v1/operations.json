@@ -2730,6 +2730,13 @@
       ],
       "note": "LandXML ver dosyanın yerini sorar ve file.export.landxml ile yazar; çizim değişmez (plan/road.md Y10.2, ADR 0908)."
     },
+    "road.sheets": {
+      "level": "semantic",
+      "via": [
+        "road.sheets.plan"
+      ],
+      "note": "Yol paftaları road.sheets.plan'ın planıyla önizler ve onunla yazar: boykesit görünümleri, pafta takımı ve paftalar tek geri alma adımı (plan/road.md Y10.5, ADR 0908 §10)."
+    },
     "stakeout.table": {
       "level": "semantic",
       "via": [

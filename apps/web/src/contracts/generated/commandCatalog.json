@@ -36171,7 +36171,7 @@
       "cost": "instant",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `road.profiles.draw` v1 (plan/road.md Y4, docs/adr/0902 §8): a profile drawn on a layer as lines and texts,\nso it goes to sheets and DXF as Netcad's and Civil 3D's profile views do, from its first to its last PVI. The frame's\nlower left is `at` (the first PVI's station at the `datum` elevation); a metre of station is a drawing unit, a metre\nof elevation `exaggeration` units (10 when absent). Inside: the elevation grid with its heights, the terrain (black;\noff the surface left out), the design (red) line and each curve's sizes and K. Under it the bands: km, black and red\nelevations and their difference at every round `every` metres of km (50 when absent) and at the ends, and the grades.\nTexts are `height` paper millimetres high at the project's drawing scale (2.5 when absent). The datum when absent is a\nmetre under the lowest elevation shown, floored; the top a metre over the highest, ceiled.\n\nRefusals, in this order: `not_a_road_project`, `unknown_road_profile`, `invalid_label` (`every`, `height` or\n`exaggeration` not above 0, more than 100 000 ticks, a datum over the lowest elevation), the layer's\n(`layer_not_found`, `not_a_layer`, `service_layer`, `layer_locked`), `invalid_revision`, `revision_conflict`, and\nthe geometry's when the profile no longer builds. Warnings: `layer_hidden`, `profile_stale`, `profile_surface_gone`.",
+        "description": "Input of `road.profiles.draw` v1 (plan/road.md Y4, docs/adr/0902 §8): a profile drawn on a layer as lines and texts,\nso it goes to sheets and DXF as Netcad's and Civil 3D's profile views do, from its first to its last PVI. The frame's\nlower left is `at` (the first PVI's station at the `datum` elevation); a metre of station is a drawing unit, a metre\nof elevation `exaggeration` units (10 when absent). Inside: the elevation grid with its heights, the terrain (black;\noff the surface left out), the design (red) line and each curve's sizes and K. Under it the bands: km, black and red\nelevations and their difference at every round `every` metres of km (50 when absent) and at the ends, and the grades.\nTexts are `height` paper millimetres high at the project's drawing scale (2.5 when absent). The datum when absent is a\nmetre under the lowest elevation shown, floored; the top a metre over the highest, ceiled. `from` and `to` (internal\nstations, m) draw a view of part of the profile, as a plan–profile sheet's (docs/adr/0908 §10): the frame, the lines,\nthe curves' texts, the bands and the grades between them only, the datum and top from what is shown there.\n\nRefusals, in this order: `not_a_road_project`, `unknown_road_profile`, `invalid_label` (`every`, `height` or\n`exaggeration` not above 0, a range off the profile, backwards or empty, more than 100 000 ticks, a datum over the\nlowest elevation), the layer's\n(`layer_not_found`, `not_a_layer`, `service_layer`, `layer_locked`), `invalid_revision`, `revision_conflict`, and\nthe geometry's when the profile no longer builds. Warnings: `layer_hidden`, `profile_stale`, `profile_surface_gone`.",
         "properties": {
           "at": {
             "items": {
@@ -36214,6 +36214,14 @@
               "null"
             ]
           },
+          "from": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
           "height": {
             "format": "double",
             "type": [
@@ -36227,6 +36235,14 @@
           },
           "profile": {
             "type": "string"
+          },
+          "to": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
           }
         },
         "required": [
@@ -39835,6 +39851,310 @@
             "format": "gsi16",
             "path": "/veri/sev.gsi",
             "step": 20.0
+          }
+        }
+      ]
+    },
+    {
+      "id": "road.sheets.plan",
+      "version": 1,
+      "title": "Yol paftaları",
+      "summary": "Aksı plan–boykesit paftalarına dizer (Civil 3D'nin Create View Frames ve Create Sheets'i gibi): bir paftanın aralığı şablonun plan haritasının genişliğinin scale ölçeğindeki zemin boyudur, her plan haritası aralığın kirişinin ortasında, aks soldan sağa akacak biçimde döndürülür; overlap kadar bindirilir. profile verilince (aynı aksta) her paftanın km'lerinin boykesit görünümü (road.profiles.draw'ın from ve to'suyla) layerId katmanına çizilir, ilki at'ta, her biri bir öncekinin bantlarının altına; şablonun ikinci haritası onu aynı ölçekte gösterir, bir km planda ve boykesitte üst üste düşer. Şablon yoksa sys:yol-plan-boykesit; paftalar first'ten (yoksa Y-101) numaralanır, Yol › aks altında. Pafta takımı aksın ve boykesitin revizyonlarıyla yol ayarlarında saklanır. Boykesit görünümleri, takım ve paftalar tek geri alma adımı “Yol paftaları” (paftanın kendi düzenlemeleri geri alma adımı değildir). Uyarılar: road_sheet_outside, layer_hidden, profile_stale. Retler: invalid_revision, revision_conflict, not_a_road_project, unknown_alignment, unknown_road_profile, invalid_road_sheets, katmanın retleri, unknown_template, invalid_options, not_fixed_map, bad_drawing_info.",
+      "aliases": [
+        "yolpaftalari",
+        "planboykesit"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `road.sheets.plan` v1: the alignment by its id or name, its stations from `from` to `to` (internal, m; its\nends without them), laid on sheets of `source`'s template (KentOS's plan–profile sheet, `sys:yol-plan-boykesit`,\nwithout one) at 1:`scale` (the template's plan map's without it). A sheet's stretch is the plan map's width on the\nground; the next starts `overlap` metres before its end (0 without it). With a `profile` (on the same alignment) each\nsheet's profile view is drawn on `layerId`, the first's lower left at `at`, each next under the one before, and the\ntemplate's second map shows it. The set is named `name` (“‹alignment› paftaları” without it) and the sheets numbered\non from `first` (Y-101 without it).\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `unknown_alignment`,\n`unknown_road_profile`, `invalid_road_sheets` (a parallel axis, a profile on another alignment, a profile without a\nlayer or a place, a range off the alignment or backwards, a scale not in [1, 1 000 000], an overlap not under half a\nsheet's stretch, more than 500 sheets, a set's name taken), the layer's, `unknown_template`, `invalid_options`,\n`not_fixed_map`, `bad_drawing_info`, then the sheet core's and the profile drawing's. Warnings: `road_sheet_outside`\n(the alignment or a profile view leaves its map on some sheets), `layer_hidden`, `profile_stale`.",
+        "properties": {
+          "alignment": {
+            "type": "string"
+          },
+          "at": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": [
+              "array",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "exaggeration": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1"
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "first": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "from": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "layerId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "options": {
+            "$ref": "#/$defs/PaperInstanceOptions",
+            "default": {},
+            "description": "The template's paper and answers, every sheet's alike (cad.sheets.create's options but the name, centre and scale).",
+            "x-raw-record": true
+          },
+          "overlap": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "profile": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "scale": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "scale"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SheetTemplateSource"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "to": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          }
+        },
+        "required": [
+          "alignment"
+        ],
+        "title": "RoadSheetsPlan",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.sheets.plan` v1, and its plan: the set's id and name, its alignment and profile, its scale, a sheet's\nstretch on the ground (m) and its plan map's height there, the sheets, the objects written (none in a plan) and the\ndrawing's revision.",
+        "properties": {
+          "alignment": {
+            "type": "string"
+          },
+          "height": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "length": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "name": {
+            "type": "string"
+          },
+          "profile": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "revision": {
+            "type": "string"
+          },
+          "scale": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "scale"
+          },
+          "set": {
+            "type": "string"
+          },
+          "sheets": {
+            "items": {
+              "$ref": "#/$defs/RoadSheetLaid"
+            },
+            "type": "array"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "set",
+          "name",
+          "alignment",
+          "scale",
+          "length",
+          "height",
+          "sheets",
+          "uids",
+          "revision"
+        ],
+        "title": "RoadSheetsLaid",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.sheets.plan` v1, and its plan: the set's id and name, its alignment and profile, its scale, a sheet's\nstretch on the ground (m) and its plan map's height there, the sheets, the objects written (none in a plan) and the\ndrawing's revision.",
+        "properties": {
+          "alignment": {
+            "type": "string"
+          },
+          "height": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "length": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "name": {
+            "type": "string"
+          },
+          "profile": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "revision": {
+            "type": "string"
+          },
+          "scale": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "scale"
+          },
+          "set": {
+            "type": "string"
+          },
+          "sheets": {
+            "items": {
+              "$ref": "#/$defs/RoadSheetLaid"
+            },
+            "type": "array"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "set",
+          "name",
+          "alignment",
+          "scale",
+          "length",
+          "height",
+          "sheets",
+          "uids",
+          "revision"
+        ],
+        "title": "RoadSheetsLaid",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_alignment",
+          "unknown_road_profile",
+          "invalid_road_sheets",
+          "unknown_template",
+          "invalid_options",
+          "not_fixed_map",
+          "bad_drawing_info",
+          "layer_not_found",
+          "not_a_layer",
+          "layer_locked",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "road_sheet_outside",
+          "layer_hidden",
+          "profile_stale"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Ana aks 1:1000, boykesitiyle",
+          "input": {
+            "alignment": "Ana aks",
+            "at": [
+              0.0,
+              -500.0
+            ],
+            "layerId": "0",
+            "profile": "Proje kotu",
+            "scale": 1000
           }
         }
       ]
@@ -74249,6 +74569,18 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Aletin dosyasının taşıyamadığı kodlar noktalardan çıkarıldı."
+    },
+    {
+      "code": "invalid_road_sheets",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Yol paftaları yerleştirilemiyor."
+    },
+    {
+      "code": "road_sheet_outside",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bazı paftalarda aks ya da boykesit görünümü haritanın dışına taşıyor."
     },
     {
       "code": "corridor_superelevation_gone",
@@ -136873,6 +137205,13 @@
           },
           "type": "array"
         },
+        "sheetSets": {
+          "description": "The plan–profile sheet sets (docs/adr/0908 §10), each along an alignment.",
+          "items": {
+            "$ref": "#/$defs/RoadSheetSetDef"
+          },
+          "type": "array"
+        },
         "superelevations": {
           "description": "The superelevation schedules (docs/adr/0904), each on an alignment, in the order the project tree shows them.",
           "items": {
@@ -136902,6 +137241,189 @@
           "type": "array"
         }
       },
+      "type": "object"
+    },
+    "RoadSheetDef": {
+      "additionalProperties": false,
+      "description": "A sheet of a plan–profile set: the book's sheet, the stations it shows (internal, m) and the profile view drawn for\nit (its frame's lower left and upper right), when the set has a profile.",
+      "properties": {
+        "from": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "sheet": {
+          "type": "string"
+        },
+        "to": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "view": {
+          "items": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "sheet",
+        "from",
+        "to"
+      ],
+      "type": "object"
+    },
+    "RoadSheetLaid": {
+      "description": "A sheet laid: the book's sheet, its number and title, its stations and km, the plan map's centre and turn (degrees,\nthe content clockwise on paper), the profile view drawn for it (its frame's lower left and upper right) and whether\nthe alignment or the profile view leaves its map.",
+      "properties": {
+        "center": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array",
+          "x-unit": "length"
+        },
+        "from": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "number": {
+          "type": "string"
+        },
+        "outside": {
+          "type": "boolean"
+        },
+        "rotation": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "deg"
+        },
+        "sheet": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "to": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "view": {
+          "items": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "sheet",
+        "number",
+        "title",
+        "from",
+        "to",
+        "center",
+        "rotation"
+      ],
+      "type": "object"
+    },
+    "RoadSheetSetDef": {
+      "additionalProperties": false,
+      "description": "A plan–profile sheet set (docs/adr/0908 §10; Civil 3D's view frame group): sheets along an alignment, each showing\nits stretch in plan at the set's scale (1:`scale`) and, with a profile, the profile view drawn for it; the sources'\nrevisions it was made from, so the sheets say when the alignment or the profile changed since.",
+      "properties": {
+        "alignment": {
+          "type": "string"
+        },
+        "alignmentRevision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "from": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "overlap": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "profile": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "profileRevision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "scale": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "scale"
+        },
+        "sheets": {
+          "items": {
+            "$ref": "#/$defs/RoadSheetDef"
+          },
+          "type": "array"
+        },
+        "to": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "alignment",
+        "from",
+        "to",
+        "scale",
+        "sheets"
+      ],
       "type": "object"
     },
     "RoadWork": {

@@ -15,6 +15,15 @@ Tarih: 2026-11-03. plan/road.md Y10 (ROAD-SEC-09…11; ROAD-IO-05, 06, 13, 14). 
   [Cross Section Report](https://docs.bentley.com/LiveContent/web/OpenRoads%20Designer-v2024.0.2/Help/en/topics/353439/GUID-22028E55-D2A7-441C-86FE-03414C5D252B.html).
 - **Zemin ve ızgara:** sahada ölçülen uzunluk zemindedir; ızgara uzunluğu zemin uzunluğu × çizginin ölçeği ×
   yüksekliğin çarpanıdır (ADR 0171 §3). Aplikasyonda koordinatlar ızgarada kalır, ötelemenin zemin boyu ayrıca verilir.
+- **Pafta üretimi (Civil 3D Plan Production):** görünüm çerçeveleri (view frames) aks boyunca dizilir, boyu, biçimi ve
+  ölçeği şablonun yerleşimindeki görünüm penceresinden gelir; yerleşim “Along Alignment” (kâğıdı en iyi kullanan,
+  çerçeve aksla döner) ya da kuzeye döndürülmüş; plan–profil paftasında eşleşme çizgileri zorunludur ve profil
+  görünümleri her pafta için model alanında, kullanıcının seçtiği noktadan başlayarak kendiliğinden çizilir; plan ve
+  profil başta, ortada ya da sonda hizalanır; çerçeve grubu tasarım verisine bağlıdır, değişince paftalar güncellenir.
+  [About Plan/Profile Sheet Production](https://help.autodesk.com/cloudhelp/2023/ENU/Civil3D-UserGuide/files/GUID-E23210B2-8097-407C-A461-ED33DB5857B8.htm),
+  [To Create View Frames](https://help.autodesk.com/cloudhelp/2023/ENU/Civil3D-UserGuide/files/GUID-879A407F-9F9F-49F3-842D-C6A1CA57AFD1.htm),
+  [Match Lines Page](https://help.autodesk.com/cloudhelp/2023/ENU/Civil3D-UserGuide/files/GUID-98EA0818-F894-4584-A72C-95849A22EBB4.htm),
+  [To Create Plan/Profile Sheets](https://help.autodesk.com/cloudhelp/2023/ENU/Civil3D-UserGuide/files/GUID-755FA485-8C22-4640-93E2-01498296E4E0.htm).
 - **Saha yazılımları:** Trimble Access Roads yol tanımını RXL, LandXML ve GENIO olarak alır; LandXML'den bir aks, tek
   boykesit ve boyuna dizilerden (strings, özellik çizgileri) oluşan “string yol” kurar, uzunluklar ızgarada, aynı
   ötelemede iki dizi önerilmez (Trimble Access Roads kılavuzu 2026.10, “Road file formats”, “LandXML string roads”).
@@ -90,6 +99,25 @@ Tarih: 2026-11-03. plan/road.md Y10 (ROAD-SEC-09…11; ROAD-IO-05, 06, 13, 14). 
    JobXML'in iş adı ve Nikon RAW'ın notu; verilmezse koridorun adı, biçim onu taşıyamazsa “KentOS”. Bütün yazılır ya da
    hiç; çizim değişmez. Masaüstünde Aplikasyon cetveli penceresinin Alete gönder satırı.
 
+10. **Plan–boykesit paftaları (ROAD-SEC-11).** `road.sheets.plan` aksı Civil 3D'nin “Along Alignment” çerçeveleri gibi
+    paftalara dizer: bir paftanın aralığı şablonun ilk (plan) haritasının genişliğinin paftanın ölçeğindeki zemin boyudur
+    (`scale`, yoksa şablon haritasının ölçeği), bir sonraki `overlap` metre önce başlar; harita aralığın uçlarındaki
+    noktaları birleştiren kirişin ortasında, kiriş soldan sağa yatay olacak biçimde döndürülür (içerik kâğıtta saat
+    yönünde kirişin doğudan açısı kadar). Kiriş aralığın yay boyundan kısa olduğu için aralık haritaya enine sığar;
+    aksın bir noktası (aralık boyunca en çok her metrede) haritanın dışına düşerse `road_sheet_outside`. Boykesit
+    verilince her paftanın km'leri (boykesitin aralığıyla kesişen kısmı) `road.profiles.draw`'ın yeni `from`/`to`'suyla
+    görünüm olarak çizilir: çerçeve, ızgara, siyah ve kırmızı çizgi, eğrilerin yazıları, bantlar ve eğimler yalnız o
+    aralıkta, kıyas kotu ve tepe orada görünenden; ilki `at`'ta, her biri bir öncekinin bantlarının (5 bant × 2,4 yazı
+    boyu) altında 0,4 bant derinliği aralıkla. Şablonun ikinci haritası görünümü (çerçeve ve bantlar) ortalar,
+    döndürmez, aynı ölçekte: km planda ve boykesitte üst üste düşer (Civil 3D'nin ortada hizalaması); görünüm
+    haritadan yüksekse `road_sheet_outside`. Eşleşme çizgisi ayrıca çizilmez: paftanın sınırı aralığın ucudur.
+    KentOS'un şablonu `sys:yol-plan-boykesit` (A3 yatay, `cad-teknik`'in çerçevesi, antedi ve revizyon tablosuyla, üstte
+    plan, altta boykesit haritası). Paftalar `first`'ten (yoksa Y-101) numaralanır, “Km a – b” başlığıyla Yol › aks
+    altına girer. Pafta takımı yol ayarlarında `sheetSets[]` olarak aksın ve boykesitin revizyonlarıyla, paftaların
+    kimlikleri, aralıkları ve görünümlerin çerçeveleriyle saklanır (şema 161; önbellek resmi yok, harita her çizimde
+    modelden okur). Boykesit görünümleri, takım ve paftalar tek geri alma adımı “Yol paftaları”; paftanın kendi
+    düzenlemeleri ADR 0251'deki gibi geri alma adımı değildir: geri alınınca görünümler ve takım gider, paftalar kalır.
+
 ## Aşamalar
 
 Y10.1 aplikasyon cetveli (komut, başvuru, Python, MCP, pencere); Y10.2 LandXML'e aks, boykesit ve yüzey yazma ve
@@ -116,7 +144,14 @@ alet dosyalarının metni field_write_cases.py'nin yazıcılarıyla: boy ve SHA-
 KentOS'un yazdığı string yol (`fixtures/road/v1/landxml/out/aplikasyon.xml`) `--written` ile xmllint'te LandXML 1.2
 XSD'sine geçerli, 13 dizinin her yeri başvurudan en çok 1e-6 m; Python, MCP, masaüstünde Alete gönder.
 
+Y10.5 (yapıldı, plan–boykesit): `road.profiles.draw`'ın km aralığıyla 36 durum (9'u yeni, `road_profile_command_cases.py`);
+`road.sheets.plan` 33 ortak durum (`road_sheets_cases.py`; aksın noktaları ve km'si road_alignment_cases.py'nin 40
+basamaklı başvurusundan, görünümler road_profile_command_cases.py'nin `drawing`'inden, haritanın boyu şablonun
+dosyasından; pafta kitabının paftaları, numaraları ve haritaları da denetlenir); KCAD şema 161'in `sheetSets`'i bağımsız
+okuyucuda; Python, MCP, masaüstünde Koridor › Pafta › Yol paftaları.
+
 ## Sonra
 
 Makine kontrolü ve yapılan iş ölçüsü (ROAD-SEC-10), şev kazığı ofset işareti (hinge'den sabit uzaklık), kodların
-kullanıcı adları.
+kullanıcı adları. Paftalarda: plan haritasının aksı (ekranın aks katmanı) modelin nesnesi olmadan kendisi çizmesi, eşleşme çizgileri
+ve etiketleri, kaynak revizyonu değişince takımı yeniden kurma; enkesit paftaları (Y10.5b).

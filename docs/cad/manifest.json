@@ -7700,6 +7700,22 @@
    "tests": 0
   },
   {
+   "id": "road.sheets",
+   "kind": "command",
+   "title": "Yol paftaları…",
+   "level": "semantic",
+   "via": [
+    "road.sheets.plan"
+   ],
+   "operation": null,
+   "python": "Connection: road.sheets.plan",
+   "mcp": "road.sheets.plan",
+   "note": "Yol paftaları road.sheets.plan'ın planıyla önizler ve onunla yazar: boykesit görünümleri, pafta takımı ve paftalar tek geri alma adımı (plan/road.md Y10.5, ADR 0908 §10).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "scenario.apply",
    "kind": "command",
    "title": "Senaryoyu uygula…",
