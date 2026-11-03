@@ -139,6 +139,7 @@ pub enum CreateOperation {
     CloudTerrain,
     /// `road.drainage.draw` (plan/road.md Y16): a catchment's outline and flow path and the ponds, “Drenaj çiz”.
     Drainage,
+    Swept,
 }
 
 /// One new object: its geometry and what else it carries. The layer is the

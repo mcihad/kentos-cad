@@ -32,9 +32,10 @@ Tarih: 2026-11-04. plan/road.md Y17 (ROAD-JUNC-06, 07; kavşağın kalanı). Dur
    her örnekte dingiller ve gövdelerin dört köşesi; en büyük iç kayma (arka dingilin ve römorkun, başlangıç hizasıyla
    uzatılmış yoldan uzaklığı); `clearance` gövdelerin engel çizgilerine (bordür) en az uzaklığı ve örneği, değdiği yerde
    sıfır. Aracın ölçüleri kullanıcınındır (kurumun tasarım aracı); KentOS araç vermez.
-2. **Komut (Y17.2).** `road.junctions.swept`: bir aracı bir yol boyunca (çizimdeki çoklu çizgi ya da kavşağın bir
-   çeyreği: bordür dönüşüne paralel iz ve iki kolda yaklaşma) sürer; köşelerin izleri, iç kayma ve kavşağın bordürlerine
-   açıklık; `.draw` izleri çizer.
+2. **Komut (Y17.2).** `road.swept.query`: bir aracı bir yol boyunca (noktalar; çizimdeki çizgi, açık çoklu çizgi ya da
+   yay; ya da kavşağın bir çeyreği: bordür dönüşüne `offset` uzaklıkta, iki kolda `approach` boyunca düz) sürer;
+   dingillerin ve gövdelerin köşelerinin izleri, iç kayma ve engellere (çizimin nesneleri, kavşakta çeyreğin bordürü) en
+   az açıklık; `road.swept.draw` izleri ve her birkaç örnekte gövdeleri çizer.
 3. **Masaüstü (Y17.3).** Kavşak'ta Dönüş izi penceresi.
 
 Açık: çok römorklu araç ve çeki demiri, hıza bağlı (kaymalı) model, AutoDrive gibi kendiliğinden yol, 3B zarf; kavşak
@@ -47,3 +48,13 @@ Y17.1 (yapıldı, çekirdek): §1. `crates/shared/road/src/swept.rs`, testleri `
 dingil yolda ve gövdenin köşeleri; R = 20 dairede üç turda arka dingil √(R² − L²)'ye, römorklu dört turda √(R² − L₁² − L₂²)'ye
 yerleşir; dik köşeden sonra arka dingil traktrisin kapalı biçimindeki yerde (1e-9); bordüre açıklık, kesişen ve gövdenin
 içindeki bordür sıfır; retler.
+
+Y17.2 (yapıldı, komutlar): §2. `road.swept.query` (`crates/native/application/src/road_swept.rs`): yol `path`, `uid` ya
+da `junction` (biri), `reverse`, `step`, `obstacles`; yaylar step'ten uzun olmayan kirişlerle (`swept::arc_places`,
+`bulge_places`); cevap yolun boyu, örnekler, ön, arka ve römork dingilinin izleri, gövdelerin köşelerinin izleri, iç
+kayma, en az açıklık (uzaklık, yolun neresinde, hangi gövde ve engel, bordür mü); uyarı `swept_touches`, retler
+`invalid_swept`, `not_a_road_project`, `unknown_junction`, `invalid_junction` (katlı kavşakta dönüş yok),
+`entity_not_found`. `road.swept.draw` tek adımda (“Araç izi çiz”). 33 + 20 ortak durum
+(`scripts/fixtures/road_swept_cases.py`: traktris, gövdeler, iç kayma ve açıklık ADR'nin kuralıyla yeniden yazıldı;
+kavşağın dönüşleri road_junction_cases.py'nin cevabından; KentOS kodu yok). Python `kentos.cad.road.swept`, MCP. Yolda
+bulunan: aynı doğrudaki iki parçanın, örtüşmeseler de “değiyor” sayılması (çekirdekte düzeltildi, testi var).

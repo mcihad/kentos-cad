@@ -40733,6 +40733,480 @@
       ]
     },
     {
+      "id": "road.swept.query",
+      "version": 1,
+      "title": "Araç izini sorgula",
+      "summary": "Bir tasarım aracının (vehicle: dingil aralığı wheelbase, ön dingilin önündeki gövde front, arka dingilin arkasındaki gövde rear, genişlik width; isteğe bağlı trailer: mafsalın arka dingilden geriliği kingpin, mafsaldan römork dingiline wheelbase, römorkun front, rear, width) ön dingilini bir yol boyunca sürer ve izini okur; hiçbir şey yazmaz. Yol path (noktalar), uid (çizimdeki çizgi, açık tek parçalı çoklu çizgi ya da yay) ya da junction (kavşağın çeyreği: junction, quadrant 0–3, bordürden offset uzaklıkta, kollarda approach boyunca düz) olur; reverse sondan sürer. Ön dingil kirişler boyunca her step metrede, yaylar step'ten uzun olmayan kirişlerle; arka dingil ve römork her kirişte kesin traktrisle izler (düşük hız, kaymasız). Cevap: yolun boyu, örnek sayısı, ön, arka ve römork dingilinin izleri, gövdelerin dört köşesinin izleri, arka dingilin ve römorkun en büyük iç kayması, engellere (obstacles: çizimin çizgileri, çoklu çizgileri, yayları, daireleri; kavşakta çeyreğin bordürü de) en az açıklık. Aracın ölçüleri kurumun; KentOS araç vermez. Uyarılar: swept_touches. Retler: invalid_swept, not_a_road_project, unknown_junction, invalid_junction, entity_not_found.",
+      "aliases": [
+        "aracizi",
+        "donusizi",
+        "sweptpath"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.swept.query` v1: the vehicle, one path (`path`: places; `uid`: a line, an open one-part polyline or\nan arc of the drawing; `junction`: a junction's quadrant, in a road project), driven from its start (`reverse`: from\nits end) with the front axle placed every `step` m along its chords (arcs taken as chords no longer than `step`),\nand the obstacles the clearance is read to (`obstacles`: lines, polylines, arcs, circles of the drawing; with a\njunction its quadrant's curb is one too).\n\nRefusals, in this order: `invalid_swept` (no path or more than one, a vehicle size not right, a step not positive,\na quadrant over 3, an offset or approach negative, fewer than two places, more than [`MOST_SWEPT_OBSTACLES`]\nobstacles), `not_a_road_project`, `unknown_junction`, `invalid_junction` (it does not read, or it has no curb\nreturns), `entity_not_found`, `invalid_swept` (an object not of the kinds, more than [`MOST_SWEPT_SAMPLES`]\nsamples). Warnings: `swept_touches` (a body meets an obstacle).",
+        "properties": {
+          "junction": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SweptJunctionPath"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "obstacles": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "path": {
+            "items": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            },
+            "type": "array",
+            "x-unit": "length"
+          },
+          "reverse": {
+            "default": false,
+            "type": "boolean"
+          },
+          "step": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "uid": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "vehicle": {
+            "$ref": "#/$defs/SweptVehicleDef"
+          }
+        },
+        "required": [
+          "vehicle",
+          "step"
+        ],
+        "title": "SweptQuery",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.swept.query` v1: the front's path length and samples, the front, rear and trailer axles' tracks,\nthe bodies' corners' tracks (front left, front right, rear right, rear left; the trailer's four after the\ntractor's), the largest off-tracking of the rear axle and of the trailer's (m), and the least clearance.",
+        "properties": {
+          "clearance": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SweptClearance"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "corners": {
+            "items": {
+              "items": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "x-unit": "length"
+          },
+          "front": {
+            "items": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            },
+            "type": "array",
+            "x-unit": "length"
+          },
+          "length": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "offtracking": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "rear": {
+            "items": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            },
+            "type": "array",
+            "x-unit": "length"
+          },
+          "samples": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "trailer": {
+            "items": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            },
+            "type": "array",
+            "x-unit": "length"
+          },
+          "trailerOfftracking": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          }
+        },
+        "required": [
+          "length",
+          "samples",
+          "front",
+          "rear",
+          "corners",
+          "offtracking"
+        ],
+        "title": "SweptQueried",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.swept.query` v1: the front's path length and samples, the front, rear and trailer axles' tracks,\nthe bodies' corners' tracks (front left, front right, rear right, rear left; the trailer's four after the\ntractor's), the largest off-tracking of the rear axle and of the trailer's (m), and the least clearance.",
+        "properties": {
+          "clearance": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SweptClearance"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "corners": {
+            "items": {
+              "items": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "x-unit": "length"
+          },
+          "front": {
+            "items": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            },
+            "type": "array",
+            "x-unit": "length"
+          },
+          "length": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "offtracking": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "rear": {
+            "items": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            },
+            "type": "array",
+            "x-unit": "length"
+          },
+          "samples": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "trailer": {
+            "items": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            },
+            "type": "array",
+            "x-unit": "length"
+          },
+          "trailerOfftracking": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          }
+        },
+        "required": [
+          "length",
+          "samples",
+          "front",
+          "rear",
+          "corners",
+          "offtracking"
+        ],
+        "title": "SweptQueried",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_swept",
+          "not_a_road_project",
+          "unknown_junction",
+          "invalid_junction",
+          "entity_not_found"
+        ],
+        "warnings": [
+          "swept_touches"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Kavşağın çeyreğinde kamyon",
+          "input": {
+            "junction": {
+              "approach": 20.0,
+              "junction": "j-1",
+              "offset": 1.5,
+              "quadrant": 0
+            },
+            "step": 0.5,
+            "vehicle": {
+              "front": 1.2,
+              "rear": 1.8,
+              "wheelbase": 6.1,
+              "width": 2.6
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "road.swept.draw",
+      "version": 1,
+      "title": "Araç izini çiz",
+      "summary": "Bir araç izi sorusunun (query: road.swept.query'nin girdisi) izlerini katmana çizer: ön dingilin yolu ve gövdelerin köşelerinin izleri çoklu çizgi, every ile her every'inci örnekte (ilk ve son her zaman) gövdeler kapalı çoklu çizgi; labels ile yolun sonunda iç kayma ve açıklık. Tek geri alma adımı “Araç izi çiz”. Uyarılar: sorgunun, layer_hidden. Retler: sorgunun, invalid_swept (every sıfır), katmanın retleri, invalid_revision, revision_conflict.",
+      "aliases": [
+        "aracizician"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.swept.draw` v1: a query's tracks drawn on `layerId`: the front axle's path and the bodies' corners'\ntracks as polylines, and every `every`th sample's bodies (the first and the last always) as closed polylines; with\n`labels` the off-tracking and the clearance at the path's end. One undo step “Araç izi çiz”.\n\nRefusals: the query's, `invalid_swept` (`every` zero), the layer's, `invalid_revision`, `revision_conflict`.",
+        "properties": {
+          "every": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "labels": {
+            "default": false,
+            "type": "boolean"
+          },
+          "layerId": {
+            "type": "string"
+          },
+          "query": {
+            "$ref": "#/$defs/SweptQuery"
+          }
+        },
+        "required": [
+          "query",
+          "layerId"
+        ],
+        "title": "SweptDraw",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.swept.draw` v1.",
+        "properties": {
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "uids",
+          "revision"
+        ],
+        "title": "SweptDrawn",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.swept.draw` v1.",
+        "properties": {
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "uids",
+          "revision"
+        ],
+        "title": "SweptDrawn",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_swept",
+          "not_a_road_project",
+          "unknown_junction",
+          "layer_not_found",
+          "not_a_layer",
+          "layer_locked",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "layer_hidden",
+          "swept_touches"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Her onuncu örnekte gövde",
+          "input": {
+            "every": 10,
+            "labels": true,
+            "layerId": "arac",
+            "query": {
+              "path": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  30.0,
+                  0.0
+                ],
+                [
+                  30.0,
+                  30.0
+                ]
+              ],
+              "step": 0.5,
+              "vehicle": {
+                "front": 1.2,
+                "rear": 1.8,
+                "wheelbase": 6.1,
+                "width": 2.6
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
       "id": "road.terrains.cloud",
       "version": 1,
       "title": "Buluttan arazi",
@@ -80502,6 +80976,18 @@
       "meaning": "Havzanın en yüksek debisi menfezin dolu akış kapasitesinden çok."
     },
     {
+      "code": "invalid_swept",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Araç izi sorusu geçerli değil; ileti nedenini söyler."
+    },
+    {
+      "code": "swept_touches",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Aracın gövdesi yolunun bir yerinde bir engele değiyor."
+    },
+    {
       "code": "culvert_no_roughness",
       "kind": "warning",
       "retryable": false,
@@ -97673,6 +98159,12 @@
     "CreateOperation": {
       "description": "The drawing tool or Hesap window whose step has its own name; without\none the step is “Ekle”, as for every object a drawing tool adds.",
       "oneOf": [
+        {
+          "enum": [
+            "swept"
+          ],
+          "type": "string"
+        },
         {
           "const": "parallel",
           "description": "Paralel çizgi: the lines beside an axis, the corridor between them, the axis.",
@@ -155573,6 +156065,226 @@
           "type": "object"
         }
       ]
+    },
+    "SweptClearance": {
+      "description": "The least clearance: its distance (0 where a body meets the obstacle), how far the front had gone, the front's\nplace then, which body (0 the tractor, 1 the trailer) and the obstacle (its uid; the junction's id for its curb).",
+      "properties": {
+        "along": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "at": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array",
+          "x-unit": "length"
+        },
+        "body": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "index"
+        },
+        "curb": {
+          "type": "boolean"
+        },
+        "distance": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "obstacle": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "distance",
+        "along",
+        "at",
+        "body",
+        "obstacle",
+        "curb"
+      ],
+      "type": "object"
+    },
+    "SweptJunctionPath": {
+      "description": "A junction's quadrant as the path: the junction (its id or name), the quadrant (0–3 in `road.junctions.query`'s\norder), the front axle's distance outward of the curb (`offset`, m; the path runs at the return's radius plus it)\nand the straight run along each leg before and after the return (`approach`, m).",
+      "properties": {
+        "approach": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "junction": {
+          "type": "string"
+        },
+        "offset": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "quadrant": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "index"
+        }
+      },
+      "required": [
+        "junction",
+        "quadrant",
+        "offset",
+        "approach"
+      ],
+      "type": "object"
+    },
+    "SweptQuery": {
+      "description": "Input of `road.swept.query` v1: the vehicle, one path (`path`: places; `uid`: a line, an open one-part polyline or\nan arc of the drawing; `junction`: a junction's quadrant, in a road project), driven from its start (`reverse`: from\nits end) with the front axle placed every `step` m along its chords (arcs taken as chords no longer than `step`),\nand the obstacles the clearance is read to (`obstacles`: lines, polylines, arcs, circles of the drawing; with a\njunction its quadrant's curb is one too).\n\nRefusals, in this order: `invalid_swept` (no path or more than one, a vehicle size not right, a step not positive,\na quadrant over 3, an offset or approach negative, fewer than two places, more than [`MOST_SWEPT_OBSTACLES`]\nobstacles), `not_a_road_project`, `unknown_junction`, `invalid_junction` (it does not read, or it has no curb\nreturns), `entity_not_found`, `invalid_swept` (an object not of the kinds, more than [`MOST_SWEPT_SAMPLES`]\nsamples). Warnings: `swept_touches` (a body meets an obstacle).",
+      "properties": {
+        "junction": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SweptJunctionPath"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "obstacles": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "path": {
+          "items": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "type": "array",
+          "x-unit": "length"
+        },
+        "reverse": {
+          "default": false,
+          "type": "boolean"
+        },
+        "step": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "uid": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "vehicle": {
+          "$ref": "#/$defs/SweptVehicleDef"
+        }
+      },
+      "required": [
+        "vehicle",
+        "step"
+      ],
+      "type": "object"
+    },
+    "SweptTrailerDef": {
+      "description": "A trailer behind the tractor's kingpin: the kingpin's place behind the tractor's rear axle on its axis (negative:\nahead of it), from the kingpin to the trailer's axle, the trailer's body ahead of the kingpin and behind its axle,\nand its width; m.",
+      "properties": {
+        "front": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "kingpin": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "rear": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "wheelbase": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "width": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "kingpin",
+        "wheelbase",
+        "front",
+        "rear",
+        "width"
+      ],
+      "type": "object"
+    },
+    "SweptVehicleDef": {
+      "description": "A design vehicle: its wheelbase, its body ahead of the front axle and behind the rear axle, its width (m) and an\noptional trailer. KentOS gives no vehicle: the sizes are the agency's.",
+      "properties": {
+        "front": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rear": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "trailer": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SweptTrailerDef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "wheelbase": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "width": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "wheelbase",
+        "front",
+        "rear",
+        "width"
+      ],
+      "type": "object"
     },
     "SyncDirection": {
       "description": "Which way a sync goes.",

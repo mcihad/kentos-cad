@@ -1944,6 +1944,19 @@ const ENTRIES: &[Entry] = &[
         warnings: &["layer_hidden", "drainage_catchment_empty", "culvert_no_roughness", "culvert_over_capacity"],
         targets: none,
     },
+    // KentOS Yol's design vehicle swept path (plan/road.md Y17, docs/adr/0915).
+    Entry {
+        id: "road.swept.query",
+        refusals: &[&["invalid_swept", "not_a_road_project", "unknown_junction", "invalid_junction", "entity_not_found"]],
+        warnings: &["swept_touches"],
+        targets: none,
+    },
+    Entry {
+        id: "road.swept.draw",
+        refusals: &[&["invalid_swept", "not_a_road_project", "unknown_junction"], LAYER, REVISION],
+        warnings: &["layer_hidden", "swept_touches"],
+        targets: none,
+    },
     // KentOS Yol's terrain from point clouds (plan/road.md Y15, docs/adr/0913).
     Entry {
         id: "road.terrains.cloud",

@@ -824,6 +824,11 @@ codes! {
     DRAINAGE_CATCHMENT_EMPTY = "drainage_catchment_empty", Warning, false, "Hiçbir hücrenin suyu boşaltım noktasının eriminden geçmiyor; havza yok.";
     /// A warning: the peak flow is more than the culvert's full-flow capacity (docs/adr/0914 §2).
     CULVERT_OVER_CAPACITY = "culvert_over_capacity", Warning, false, "Havzanın en yüksek debisi menfezin dolu akış kapasitesinden çok.";
+    /// A swept path query that is not right: no path or more than one, a vehicle size, a step, a quadrant, too many
+    /// samples or obstacles, an object not of the kinds (docs/adr/0915 §2).
+    INVALID_SWEPT = "invalid_swept", Failed, false, "Araç izi sorusu geçerli değil; ileti nedenini söyler.";
+    /// A warning: a vehicle's body meets an obstacle somewhere on its path (docs/adr/0915 §2).
+    SWEPT_TOUCHES = "swept_touches", Warning, false, "Aracın gövdesi yolunun bir yerinde bir engele değiyor.";
     /// A warning: the culvert has no roughness; its capacity is not given (docs/adr/0914 §2).
     CULVERT_NO_ROUGHNESS = "culvert_no_roughness", Warning, false, "Menfezin pürüzlülüğü yok; kapasitesi verilmedi.";
     /// A terrain from point clouds that is not right: no cloud or class, both or neither of surface and name, a

@@ -316,6 +316,8 @@ pub mod road_platforms_edit;
 pub mod road_terrain_cloud;
 pub mod road_drainage;
 pub mod road_drainage_draw;
+pub mod road_swept;
+pub mod road_swept_draw;
 pub mod road_platforms_query;
 pub mod road_alignments_import;
 pub mod road_alignments_fit;
@@ -1264,6 +1266,8 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (kentos_commands::ROAD_TERRAINS_FROM_CLOUD, kentos_commands::ROAD_TERRAINS_FROM_CLOUD_VERSION),
     (kentos_commands::ROAD_DRAINAGE_QUERY, kentos_commands::ROAD_DRAINAGE_QUERY_VERSION),
     (kentos_commands::ROAD_DRAINAGE_DRAW, kentos_commands::ROAD_DRAINAGE_DRAW_VERSION),
+    (kentos_commands::ROAD_SWEPT_QUERY, kentos_commands::ROAD_SWEPT_QUERY_VERSION),
+    (kentos_commands::ROAD_SWEPT_DRAW, kentos_commands::ROAD_SWEPT_DRAW_VERSION),
     (kentos_commands::ROAD_PLATFORMS_QUERY, kentos_commands::ROAD_PLATFORMS_QUERY_VERSION),
     (kentos_commands::ROAD_PLATFORMS_DRAW, kentos_commands::ROAD_PLATFORMS_DRAW_VERSION),
     (kentos_commands::ROAD_PAY_EDIT, kentos_commands::ROAD_PAY_EDIT_VERSION),

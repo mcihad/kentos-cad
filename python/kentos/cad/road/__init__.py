@@ -22,10 +22,11 @@ from . import sections
 from . import sheets
 from . import stakeout
 from . import superelevations
+from . import swept
 from . import templates
 from . import terrains
 from . import volumes
 from . import walls
 
 
-__all__ = ["alignments", "corridors", "culverts", "drainage", "guardrails", "hauls", "junctions", "pay", "platforms", "profiles", "project", "routes", "sections", "sheets", "stakeout", "superelevations", "templates", "terrains", "volumes", "walls"]
+__all__ = ["alignments", "corridors", "culverts", "drainage", "guardrails", "hauls", "junctions", "pay", "platforms", "profiles", "project", "routes", "sections", "sheets", "stakeout", "superelevations", "swept", "templates", "terrains", "volumes", "walls"]

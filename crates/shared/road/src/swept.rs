@@ -118,6 +118,41 @@ fn body(back: [f64; 2], ahead: [f64; 2], width: f64) -> [[f64; 2]; 4] {
     ]
 }
 
+/// An arc's places: from `start` (radians) through `sweep` (radians, counter-clockwise positive) round `centre` at
+/// `radius`, in n = ⌈|sweep|·radius / step⌉ equal pieces (at least one), both ends included.
+pub fn arc_places(centre: [f64; 2], radius: f64, start: f64, sweep: f64, step: f64) -> Vec<[f64; 2]> {
+    let n = ((sweep.abs() * radius / step).ceil() as usize).max(1);
+    (0..=n)
+        .map(|k| {
+            let a = start + sweep * k as f64 / n as f64;
+            [centre[0] + radius * a.cos(), centre[1] + radius * a.sin()]
+        })
+        .collect()
+}
+
+/// A polyline's edge from `a` to `b` with `bulge` (tan of a quarter of its sweep, positive counter-clockwise) as places
+/// by [`arc_places`]; a straight edge is its two ends.
+pub fn bulge_places(a: [f64; 2], b: [f64; 2], bulge: f64, step: f64) -> Vec<[f64; 2]> {
+    if bulge == 0.0 {
+        return vec![a, b];
+    }
+    let (dx, dy) = (b[0] - a[0], b[1] - a[1]);
+    let c = dx.hypot(dy);
+    if c == 0.0 {
+        return vec![a, b];
+    }
+    // The centre off the chord's middle, to the left of the chord by (c/2)(1 − b²)/(2b).
+    let h = c / 2.0 * (1.0 - bulge * bulge) / (2.0 * bulge);
+    let centre = [(a[0] + b[0]) / 2.0 - dy / c * h, (a[1] + b[1]) / 2.0 + dx / c * h];
+    let radius = (a[0] - centre[0]).hypot(a[1] - centre[1]);
+    let start = (a[1] - centre[1]).atan2(a[0] - centre[0]);
+    let mut out = arc_places(centre, radius, start, 4.0 * bulge.atan(), step);
+    if let Some(last) = out.last_mut() {
+        *last = b;
+    }
+    out
+}
+
 /// The places of `path` every `step` metres along it (and its corners), with how far along each is.
 pub fn resample(path: &[[f64; 2]], step: f64) -> Vec<(f64, [f64; 2])> {
     let mut out = vec![(0.0, path[0])];
@@ -237,11 +272,18 @@ pub fn drive(vehicle: &Vehicle, path: &[[f64; 2]], step: f64) -> Result<Swept, S
     Ok(Swept { samples, offtracking, trailer_offtracking, step })
 }
 
-/// Whether two segments cross or touch.
+/// Whether two segments cross or touch (collinear ones only where they overlap).
 fn segments_meet(a: [f64; 2], b: [f64; 2], c: [f64; 2], d: [f64; 2]) -> bool {
     let o = |p: [f64; 2], q: [f64; 2], r: [f64; 2]| (q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0]);
+    // `r` on the segment from `p` to `q`, given it is on its line.
+    let on = |p: [f64; 2], q: [f64; 2], r: [f64; 2]| {
+        r[0] >= p[0].min(q[0]) && r[0] <= p[0].max(q[0]) && r[1] >= p[1].min(q[1]) && r[1] <= p[1].max(q[1])
+    };
     let (d1, d2, d3, d4) = (o(c, d, a), o(c, d, b), o(a, b, c), o(a, b, d));
-    ((d1 > 0.0) != (d2 > 0.0) || d1 == 0.0 || d2 == 0.0) && ((d3 > 0.0) != (d4 > 0.0) || d3 == 0.0 || d4 == 0.0)
+    if d1 != 0.0 && d2 != 0.0 && d3 != 0.0 && d4 != 0.0 {
+        return (d1 > 0.0) != (d2 > 0.0) && (d3 > 0.0) != (d4 > 0.0);
+    }
+    (d1 == 0.0 && on(c, d, a)) || (d2 == 0.0 && on(c, d, b)) || (d3 == 0.0 && on(a, b, c)) || (d4 == 0.0 && on(a, b, d))
 }
 
 fn segments_distance(a: [f64; 2], b: [f64; 2], c: [f64; 2], d: [f64; 2]) -> f64 {
@@ -251,24 +293,33 @@ fn segments_distance(a: [f64; 2], b: [f64; 2], c: [f64; 2], d: [f64; 2]) -> f64 
     segment_point(a, b, c).min(segment_point(a, b, d)).min(segment_point(c, d, a)).min(segment_point(c, d, b))
 }
 
-/// The least clearance of the drive's bodies to the obstacles (polylines): the distance and the sample it is at; zero
-/// where a body's edge meets an obstacle. A point of an obstacle inside a body is a meeting too.
-pub fn clearance(swept: &Swept, obstacles: &[Vec<[f64; 2]>]) -> Option<(f64, usize)> {
-    let mut best: Option<(f64, usize)> = None;
+/// The least clearance found: its distance, the sample, the body (0 the tractor, 1 the trailer) and the obstacle.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Clearance {
+    pub distance: f64,
+    pub sample: usize,
+    pub body: usize,
+    pub obstacle: usize,
+}
+
+/// The least clearance of the drive's bodies to the obstacles (polylines); zero where a body's edge meets an obstacle.
+/// A point of an obstacle inside a body is a meeting too. The first least found (sample, body, obstacle in order).
+pub fn clearance(swept: &Swept, obstacles: &[Vec<[f64; 2]>]) -> Option<Clearance> {
+    let mut best: Option<Clearance> = None;
     for (k, s) in swept.samples.iter().enumerate() {
-        for b in &s.bodies {
-            for line in obstacles {
+        for (j, b) in s.bodies.iter().enumerate() {
+            for (o, line) in obstacles.iter().enumerate() {
+                let mut d = f64::INFINITY;
                 for w in line.windows(2) {
-                    let mut d = f64::INFINITY;
                     for i in 0..4 {
                         d = d.min(segments_distance(b[i], b[(i + 1) % 4], w[0], w[1]));
                     }
-                    if inside(b, w[0]) {
-                        d = 0.0;
-                    }
-                    if best.is_none_or(|(bd, _)| d < bd) {
-                        best = Some((d, k));
-                    }
+                }
+                if line.iter().any(|p| inside(b, *p)) {
+                    d = 0.0;
+                }
+                if d.is_finite() && best.is_none_or(|c| d < c.distance) {
+                    best = Some(Clearance { distance: d, sample: k, body: j, obstacle: o });
                 }
             }
         }

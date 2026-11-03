@@ -1266,6 +1266,7 @@ class CreateOperation(_StrEnum):
     """The drawing tool or Hesap window whose step has its own name; without
     one the step is “Ekle”, as for every object a drawing tool adds.
 
+    - ``swept``
     - ``parallel``: Paralel çizgi: the lines beside an axis, the corridor between them, the axis.
     - ``perpendicularIn``: Dik in: a perpendicular from a point down to a reference line.
     - ``perpendicularOut``: Dik çık: a perpendicular up from a point of a reference line.
@@ -1316,6 +1317,7 @@ class CreateOperation(_StrEnum):
     - ``cloudTerrain``: A terrain's ground points from point clouds (`road.terrains.cloud`, docs/adr/0913).
     - ``drainage``: `road.drainage.draw` (plan/road.md Y16): a catchment's outline and flow path and the ponds, “Drenaj çiz”.
     """
+    SWEPT = "swept"
     PARALLEL = "parallel"
     PERPENDICULAR_IN = "perpendicularIn"
     PERPENDICULAR_OUT = "perpendicularOut"
@@ -1367,7 +1369,7 @@ class CreateOperation(_StrEnum):
     DRAINAGE = "drainage"
 
 
-CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions", "terrainContours", "landXml", "alignmentLabels", "profileDrawing", "sectionDrawing", "slopePlan", "guardrails", "culverts", "retainingWalls", "routes", "junctions", "platforms", "cloudTerrain", "drainage"]
+CreateOperationName = Literal["swept", "parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions", "terrainContours", "landXml", "alignmentLabels", "profileDrawing", "sectionDrawing", "slopePlan", "guardrails", "culverts", "retainingWalls", "routes", "junctions", "platforms", "cloudTerrain", "drainage"]
 """The names of :class:`CreateOperation`, for a plain string."""
 
 
@@ -75697,6 +75699,324 @@ class SurveyShot(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SweptClearance(_Model):
+    """The least clearance: its distance (0 where a body meets the obstacle), how far the front had gone, the front's
+    place then, which body (0 the tractor, 1 the trailer) and the obstacle (its uid; the junction's id for its curb).
+    Attributes:
+        distance: Unit: m.
+        along: Unit: m.
+        at: Unit: length.
+        body: Unit: index.
+    """
+    distance: float
+    along: float
+    at: list[float]
+    body: int
+    obstacle: str
+    curb: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["distance"] = float(self.distance)
+        out["along"] = float(self.along)
+        out["at"] = [float(e0) for e0 in self.at]
+        out["body"] = self.body
+        out["obstacle"] = self.obstacle
+        out["curb"] = self.curb
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SweptClearance:
+        return cls(
+            distance=float(data["distance"]),
+            along=float(data["along"]),
+            at=[float(e0) for e0 in data["at"]],
+            body=data["body"],
+            obstacle=data["obstacle"],
+            curb=data["curb"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SweptDraw(_Model):
+    """Input of `road.swept.draw` v1: a query's tracks drawn on `layerId`: the front axle's path and the bodies' corners'
+    tracks as polylines, and every `every`th sample's bodies (the first and the last always) as closed polylines; with
+    `labels` the off-tracking and the clearance at the path's end. One undo step “Araç izi çiz”.
+
+    Refusals: the query's, `invalid_swept` (`every` zero), the layer's, `invalid_revision`, `revision_conflict`.
+    Attributes:
+        every: Unit: count.
+    """
+    query: SweptQuery
+    layer_id: str
+    every: int | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    labels: bool = False
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["query"] = self.query.to_json()
+        out["layerId"] = self.layer_id
+        if self.every is not UNSET:
+            out["every"] = self.every
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        out["labels"] = self.labels
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SweptDraw:
+        return cls(
+            query=SweptQuery.from_json(data["query"]),
+            layer_id=data["layerId"],
+            every=data.get("every", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            labels=data["labels"] if "labels" in data else False,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SweptDrawn(_Model):
+    """Output of `road.swept.draw` v1."""
+    uids: list[str]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SweptDrawn:
+        return cls(
+            uids=list(data["uids"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SweptJunctionPath(_Model):
+    """A junction's quadrant as the path: the junction (its id or name), the quadrant (0–3 in `road.junctions.query`'s
+    order), the front axle's distance outward of the curb (`offset`, m; the path runs at the return's radius plus it)
+    and the straight run along each leg before and after the return (`approach`, m).
+    Attributes:
+        quadrant: Unit: index.
+        offset: Unit: m.
+        approach: Unit: m.
+    """
+    junction: str
+    quadrant: int
+    offset: float
+    approach: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["junction"] = self.junction
+        out["quadrant"] = self.quadrant
+        out["offset"] = float(self.offset)
+        out["approach"] = float(self.approach)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SweptJunctionPath:
+        return cls(
+            junction=data["junction"],
+            quadrant=data["quadrant"],
+            offset=float(data["offset"]),
+            approach=float(data["approach"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SweptQueried(_Model):
+    """Output of `road.swept.query` v1: the front's path length and samples, the front, rear and trailer axles' tracks,
+    the bodies' corners' tracks (front left, front right, rear right, rear left; the trailer's four after the
+    tractor's), the largest off-tracking of the rear axle and of the trailer's (m), and the least clearance.
+    Attributes:
+        length: Unit: m.
+        samples: Unit: count.
+        front: Unit: length.
+        rear: Unit: length.
+        corners: Unit: length.
+        offtracking: Unit: m.
+        trailer: Unit: length.
+        trailer_offtracking: Unit: m.
+    """
+    length: float
+    samples: int
+    front: list[list[float]]
+    rear: list[list[float]]
+    corners: list[list[list[float]]]
+    offtracking: float
+    clearance: SweptClearance | None | Unset = UNSET
+    trailer: list[list[float]] | Unset = UNSET
+    trailer_offtracking: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["length"] = float(self.length)
+        out["samples"] = self.samples
+        out["front"] = [[float(e1) for e1 in e0] for e0 in self.front]
+        out["rear"] = [[float(e1) for e1 in e0] for e0 in self.rear]
+        out["corners"] = [[[float(e2) for e2 in e1] for e1 in e0] for e0 in self.corners]
+        out["offtracking"] = float(self.offtracking)
+        if self.clearance is not UNSET:
+            out["clearance"] = None if self.clearance is None else self.clearance.to_json()
+        if self.trailer is not UNSET:
+            out["trailer"] = [[float(e1) for e1 in e0] for e0 in self.trailer]
+        if self.trailer_offtracking is not UNSET:
+            out["trailerOfftracking"] = None if self.trailer_offtracking is None else float(self.trailer_offtracking)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SweptQueried:
+        return cls(
+            length=float(data["length"]),
+            samples=data["samples"],
+            front=[[float(e1) for e1 in e0] for e0 in data["front"]],
+            rear=[[float(e1) for e1 in e0] for e0 in data["rear"]],
+            corners=[[[float(e2) for e2 in e1] for e1 in e0] for e0 in data["corners"]],
+            offtracking=float(data["offtracking"]),
+            clearance=UNSET if "clearance" not in data else None if data["clearance"] is None else SweptClearance.from_json(data["clearance"]),
+            trailer=[[float(e1) for e1 in e0] for e0 in data["trailer"]] if "trailer" in data else UNSET,
+            trailer_offtracking=UNSET if "trailerOfftracking" not in data else None if data["trailerOfftracking"] is None else float(data["trailerOfftracking"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SweptQuery(_Model):
+    """Input of `road.swept.query` v1: the vehicle, one path (`path`: places; `uid`: a line, an open one-part polyline or
+    an arc of the drawing; `junction`: a junction's quadrant, in a road project), driven from its start (`reverse`: from
+    its end) with the front axle placed every `step` m along its chords (arcs taken as chords no longer than `step`),
+    and the obstacles the clearance is read to (`obstacles`: lines, polylines, arcs, circles of the drawing; with a
+    junction its quadrant's curb is one too).
+
+    Refusals, in this order: `invalid_swept` (no path or more than one, a vehicle size not right, a step not positive,
+    a quadrant over 3, an offset or approach negative, fewer than two places, more than [`MOST_SWEPT_OBSTACLES`]
+    obstacles), `not_a_road_project`, `unknown_junction`, `invalid_junction` (it does not read, or it has no curb
+    returns), `entity_not_found`, `invalid_swept` (an object not of the kinds, more than [`MOST_SWEPT_SAMPLES`]
+    samples). Warnings: `swept_touches` (a body meets an obstacle).
+    Attributes:
+        step: Unit: m.
+        path: Unit: length.
+    """
+    vehicle: SweptVehicleDef
+    step: float
+    junction: SweptJunctionPath | None | Unset = UNSET
+    obstacles: list[str] | Unset = UNSET
+    path: list[list[float]] | Unset = UNSET
+    reverse: bool = False
+    uid: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["vehicle"] = self.vehicle.to_json()
+        out["step"] = float(self.step)
+        if self.junction is not UNSET:
+            out["junction"] = None if self.junction is None else self.junction.to_json()
+        if self.obstacles is not UNSET:
+            out["obstacles"] = list(self.obstacles)
+        if self.path is not UNSET:
+            out["path"] = [[float(e1) for e1 in e0] for e0 in self.path]
+        out["reverse"] = self.reverse
+        if self.uid is not UNSET:
+            out["uid"] = self.uid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SweptQuery:
+        return cls(
+            vehicle=SweptVehicleDef.from_json(data["vehicle"]),
+            step=float(data["step"]),
+            junction=UNSET if "junction" not in data else None if data["junction"] is None else SweptJunctionPath.from_json(data["junction"]),
+            obstacles=list(data["obstacles"]) if "obstacles" in data else UNSET,
+            path=[[float(e1) for e1 in e0] for e0 in data["path"]] if "path" in data else UNSET,
+            reverse=data["reverse"] if "reverse" in data else False,
+            uid=data.get("uid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SweptTrailerDef(_Model):
+    """A trailer behind the tractor's kingpin: the kingpin's place behind the tractor's rear axle on its axis (negative:
+    ahead of it), from the kingpin to the trailer's axle, the trailer's body ahead of the kingpin and behind its axle,
+    and its width; m.
+    Attributes:
+        kingpin: Unit: m.
+        wheelbase: Unit: m.
+        front: Unit: m.
+        rear: Unit: m.
+        width: Unit: m.
+    """
+    kingpin: float
+    wheelbase: float
+    front: float
+    rear: float
+    width: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kingpin"] = float(self.kingpin)
+        out["wheelbase"] = float(self.wheelbase)
+        out["front"] = float(self.front)
+        out["rear"] = float(self.rear)
+        out["width"] = float(self.width)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SweptTrailerDef:
+        return cls(
+            kingpin=float(data["kingpin"]),
+            wheelbase=float(data["wheelbase"]),
+            front=float(data["front"]),
+            rear=float(data["rear"]),
+            width=float(data["width"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SweptVehicleDef(_Model):
+    """A design vehicle: its wheelbase, its body ahead of the front axle and behind the rear axle, its width (m) and an
+    optional trailer. KentOS gives no vehicle: the sizes are the agency's.
+    Attributes:
+        wheelbase: Unit: m.
+        front: Unit: m.
+        rear: Unit: m.
+        width: Unit: m.
+    """
+    wheelbase: float
+    front: float
+    rear: float
+    width: float
+    name: str | None | Unset = UNSET
+    trailer: SweptTrailerDef | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["wheelbase"] = float(self.wheelbase)
+        out["front"] = float(self.front)
+        out["rear"] = float(self.rear)
+        out["width"] = float(self.width)
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.trailer is not UNSET:
+            out["trailer"] = None if self.trailer is None else self.trailer.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SweptVehicleDef:
+        return cls(
+            wheelbase=float(data["wheelbase"]),
+            front=float(data["front"]),
+            rear=float(data["rear"]),
+            width=float(data["width"]),
+            name=data.get("name", UNSET),
+            trailer=UNSET if "trailer" not in data else None if data["trailer"] is None else SweptTrailerDef.from_json(data["trailer"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SyncedLayer(_Model):
     """What a write did to one layer's table.
     Attributes:
@@ -105102,6 +105422,14 @@ __all__ = [
     "SurveySettings",
     "SurveyShot",
     "SurveyWork",
+    "SweptClearance",
+    "SweptDraw",
+    "SweptDrawn",
+    "SweptJunctionPath",
+    "SweptQueried",
+    "SweptQuery",
+    "SweptTrailerDef",
+    "SweptVehicleDef",
     "SymmetricConstraintRule",
     "SyncDirection",
     "SyncDirectionName",

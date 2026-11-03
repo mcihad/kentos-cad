@@ -64,12 +64,12 @@ fn after_a_right_angle_the_rear_draws_a_tractrix() {
 #[test]
 fn the_clearance_to_a_curb() {
     let s = swept::drive(&car(6.0), &[[0.0, 0.0], [30.0, 0.0]], 0.5).expect("drives");
-    let (d, _) = swept::clearance(&s, &[vec![[-20.0, 3.0], [40.0, 3.0]]]).expect("a clearance");
+    let d = swept::clearance(&s, &[vec![[-20.0, 3.0], [40.0, 3.0]]]).expect("a clearance").distance;
     assert!((d - 1.75).abs() < 1e-12, "{d}");
-    let (d, _) = swept::clearance(&s, &[vec![[10.0, -5.0], [10.0, 5.0]]]).expect("a clearance");
+    let d = swept::clearance(&s, &[vec![[10.0, -5.0], [10.0, 5.0]]]).expect("a clearance").distance;
     assert_eq!(d, 0.0);
     // A curb post inside the body meets it.
-    let (d, _) = swept::clearance(&s, &[vec![[20.0, 0.1], [20.0, 0.2]]]).expect("a clearance");
+    let d = swept::clearance(&s, &[vec![[20.0, 0.1], [20.0, 0.2]]]).expect("a clearance").distance;
     assert_eq!(d, 0.0);
 }
 
@@ -79,4 +79,30 @@ fn the_refusals() {
     assert_eq!(swept::drive(&Vehicle { rear: -1.0, ..car(6.0) }, &[[0.0, 0.0], [1.0, 0.0]], 0.5).err(), Some(SweptError::Vehicle));
     assert_eq!(swept::drive(&car(6.0), &[[0.0, 0.0], [0.0, 0.0]], 0.5).err(), Some(SweptError::Path));
     assert_eq!(swept::drive(&car(6.0), &[[0.0, 0.0], [1.0, 0.0]], 0.0).err(), Some(SweptError::Path));
+}
+
+#[test]
+fn arcs_as_places() {
+    // A quarter circle of radius 10 at step 1: ⌈15.7⌉ = 16 pieces, ends on it.
+    let p = swept::arc_places([0.0, 0.0], 10.0, 0.0, std::f64::consts::FRAC_PI_2, 1.0);
+    assert_eq!(p.len(), 17);
+    assert!((p[16][0]).abs() < 1e-12 && (p[16][1] - 10.0).abs() < 1e-12);
+    // A bulge of tan(π/8) from (10,0) to (0,10) is the same quarter, counter-clockwise round the origin.
+    let q = swept::bulge_places([10.0, 0.0], [0.0, 10.0], (std::f64::consts::PI / 8.0).tan(), 1.0);
+    assert_eq!(q.len(), 17);
+    for (a, b) in p.iter().zip(&q) {
+        assert!((a[0] - b[0]).abs() < 1e-9 && (a[1] - b[1]).abs() < 1e-9, "{a:?} {b:?}");
+    }
+    // A negative bulge goes clockwise: its middle is off the far side.
+    let r = swept::bulge_places([10.0, 0.0], [0.0, 10.0], -(std::f64::consts::PI / 8.0).tan(), 1.0);
+    let mid = r[8];
+    assert!((mid[0] - 10.0).hypot(mid[1] - 10.0) - 10.0 < 1e-9, "{mid:?}");
+}
+
+#[test]
+fn a_curb_on_the_line_of_a_body_edge_but_beyond_it_is_apart() {
+    // The car's left edge is on y = 1.25 and ends at x = 1.5 at the last sample; a curb on that line from 40 is 38.5 off.
+    let s = swept::drive(&car(6.0), &[[0.0, 0.0], [0.5, 0.0]], 0.5).expect("drives");
+    let c = swept::clearance(&s, &[vec![[40.0, 1.25], [50.0, 1.25]]]).expect("a clearance");
+    assert!((c.distance - 38.5).abs() < 1e-12, "{c:?}");
 }
