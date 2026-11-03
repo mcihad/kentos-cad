@@ -937,10 +937,20 @@ birleşmesi uygulama testinde doğrulandı. Gerçek konsolda önce kopma tekrarl
 yeni sürümde iki bağ canlı kaldı; taşıma ile 2 000 mm ölçü izledi. GUI'den
 kaydedilen taşıma Undo, blok+bağ Undo ve Redo dosyaları karşılaştırıldığında
 beklenen dosyalarla bayt bayt aynı çıktı. Genel dönüştürme hâlâ açık;
-geniş çizginin blok içi dolgu farkı ayrıca giderilecek.
+geniş çizginin blok içi dolgu farkı ayrı ADR 0869 kapsamında giderildi.
 Bu dilimde 136 domain, 370 native uygulama ve 1 628 masaüstü testi geçti;
 294 isteğe bağlı test atlandı. İlgili paketlerin Clippy kontrolü ve masaüstü
 derlemesi başarılıdır.
+
+**Blokta görünüş koruma — [ADR 0869](../docs/adr/0869-wide-polyline-ink-inside-blocks.md):**
+geniş çoklu çizgi blok alt nesnesi olunca katmanın alan dolgusu yerine kendi
+rengindeki dolgusunu korur. İç içe/ayna/ölçek, farklı katman dolgusu,
+alan dolgusu görünümü ve fiziksel çıktı hassasiyetiyle 32 karşılaştırmada
+kök çizgiyle çizim verisi eşittir. Stil paketinde 77, son masaüstü tekrarında
+1 628 test geçti; 259 isteğe bağlı test atlandı. Gerçek son GUI'de seçili ve
+seçimsiz dolgu, zoom ve 2 000 mm ölçü doğrulandı; kaydedilen dosya önceki
+veriyle bayt bayt aynı. Ölçü bağı diliminin tam Python tekrarı da 481 testle
+başarılıdır. Genel aday dönüştürme ve ilişkili dizi işleri açık kalır.
 
 ### CAD-ADV-08 — Sınır, tarama ve maskeyi hatasını açıklayabilen bir üretim sistemine getir [ ]
 

@@ -18,3 +18,4 @@ mod template_form;
 mod units;
 mod wall_views;
 mod weight_caps;
+mod wide_block_paths;

@@ -51,4 +51,5 @@ Ham görüntüler, dosyalar ve SHA kayıtları depo dışındadır.
 
 Bu kabul genel bloklaştırmanın bütün bağımlılıklarını veya görünüş
 korumasını tamamlamaz. GUI'de geniş çoklu çizginin blok içinde farklı dolgu
-ile çizildiği ayrıca görüldü; dönüşüm araçları açılmadan ayrıca giderilmelidir.
+ile çizildiği ayrıca görüldü; bu fark ayrı
+[ADR 0869](0869-wide-polyline-ink-inside-blocks.md) kapsamında giderildi.
