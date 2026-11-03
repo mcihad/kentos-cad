@@ -9728,6 +9728,38 @@ class _Schema:
                 self.fail("bad_value", "otokorkuluğun uzunlukları, okuma aralığı ya da uzaklığı kuralın dışında")
             return t
 
+        def culvert(x):
+            # Docs/adr/0909 §2: a culvert across a corridor, a pipe or box barrel of the project's sizes.
+            def shape(y):
+                if not isinstance(y, dict) or y.get("kind") not in ("pipe", "box"):
+                    self.fail("bad_value", "menfezin kesiti boru ya da kutudur")
+                if y["kind"] == "pipe":
+                    s = self.fields({"kind": (self.text, True), "diameter": (finite, True), "thickness": (finite, True),
+                                     "count": (self.uint(32), True), "spacing": (finite, False)})(y)
+                    sizes, n = [s["diameter"], s["thickness"]], s["count"]
+                    if not 0 <= s.get("spacing", 0) <= 100:
+                        self.fail("bad_value", "borular arası boşluk kuralın dışında")
+                else:
+                    s = self.fields({"kind": (self.text, True), "width": (finite, True), "height": (finite, True),
+                                     "thickness": (finite, True), "slab": (finite, True), "cells": (self.uint(32), True)})(y)
+                    sizes, n = [s["width"], s["height"], s["thickness"], s["slab"]], s["cells"]
+                if any(not 0 < v <= 100 for v in sizes) or not 1 <= n <= 20:
+                    self.fail("bad_value", "menfezin ölçüleri ya da göz ve boru sayısı kuralın dışında")
+                return s
+            t = self.fields({"id": (word, True), "name": (self.text, True), "corridor": (word, True),
+                             "corridorRevision": (self.uint(32), False), "revision": (self.uint(32), False),
+                             "station": (finite, True), "skew": (finite, False), "shape": (shape, True),
+                             "invert": (finite, True), "slope": (finite, True),
+                             "flow": (self.enum(("right", "left")), True), "extend": (finite, False),
+                             "cover": (finite, False), "material": (self.text, False), "roughness": (finite, False)})(x)
+            name = t["name"]
+            if not name or name.strip() != name or len(name) > 120:
+                self.fail("bad_value", "menfezin adı boş, boşluklu ya da çok uzun")
+            if not abs(t.get("skew", 0)) < 90 or not 0 <= t["slope"] <= 100 or not 0 <= t.get("extend", 0) <= 100 \
+                    or not 0 <= t.get("cover", 0) <= 100 or not 0 < t.get("roughness", 0.5) <= 1:
+                self.fail("bad_value", "menfezin açısı, eğimi, uzatması, örtüsü ya da pürüzlülüğü kuralın dışında")
+            return t
+
         r = self.fields({"surfaces": (self.array(surface), False), "alignments": (self.array(alignment), False),
                          "profiles": (self.array(profile), False), "templates": (self.array(template), False),
                          "sections": (self.array(section_set), False),
@@ -9735,7 +9767,8 @@ class _Schema:
                          "corridors": (self.array(corridor), False),
                          "volumes": (self.array(volume), False), "hauls": (self.array(haul), False),
                          "sheetSets": (self.array(sheet_set), False),
-                         "guardrails": (self.array(guardrail), False)})(v)
+                         "guardrails": (self.array(guardrail), False),
+                         "culverts": (self.array(culvert), False)})(v)
         got = r.get("surfaces", [])
         lines = r.get("alignments", [])
         profiles = r.get("profiles", [])
@@ -9747,8 +9780,9 @@ class _Schema:
         hauls = r.get("hauls", [])
         sheet_sets = r.get("sheetSets", [])
         guardrails = r.get("guardrails", [])
+        culverts = r.get("culverts", [])
         if not (got or lines or profiles or templates or sets or supers or corridors or volumes or hauls or sheet_sets
-                or guardrails):
+                or guardrails or culverts):
             self.fail("bad_value", "boş yol ayarı yazılmaz")
         if len(got) > 64 or ("surfaces" in r and not got):
             self.fail("bad_value", "yol ayarında 1 ile 64 arası yüzey olur")
@@ -9848,6 +9882,13 @@ class _Schema:
             self.fail("bad_value", "iki otokorkuluğun kimliği ya da adı aynı")
         if any(all(y["id"] != x["corridor"] for y in corridors) for x in guardrails):
             self.fail("bad_value", "otokorkuluğun koridoru projede yok")
+        if "culverts" in r and not culverts or len(culverts) > 1000:
+            self.fail("bad_value", "yol ayarında 1 ile 1000 arası menfez olur")
+        if len({x["id"] for x in culverts}) != len(culverts) or \
+                len({x["name"].lower() for x in culverts}) != len(culverts):
+            self.fail("bad_value", "iki menfezin kimliği ya da adı aynı")
+        if any(all(y["id"] != x["corridor"] for y in corridors) for x in culverts):
+            self.fail("bad_value", "menfezin koridoru projede yok")
         return r
 
     def arch_(self, v):

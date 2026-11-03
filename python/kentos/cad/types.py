@@ -1271,6 +1271,7 @@ class CreateOperation(_StrEnum):
     - ``sectionDrawing``: `road.sections.draw` (plan/road.md Y5): a sample line set's section views, “Enkesit çiz”.
     - ``slopePlan``: `road.corridors.draw` (plan/road.md Y7): a corridor's slope plan, “Şevli plan”.
     - ``guardrails``: `road.guardrails.draw` (plan/road.md Y11.1): a guardrail's runs in plan, “Otokorkuluk çiz”.
+    - ``culverts``: `road.culverts.draw` (plan/road.md Y11.2): a culvert's barrel in plan, “Menfez çiz”.
     """
     PARALLEL = "parallel"
     PERPENDICULAR_IN = "perpendicularIn"
@@ -1314,9 +1315,10 @@ class CreateOperation(_StrEnum):
     SECTION_DRAWING = "sectionDrawing"
     SLOPE_PLAN = "slopePlan"
     GUARDRAILS = "guardrails"
+    CULVERTS = "culverts"
 
 
-CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions", "terrainContours", "landXml", "alignmentLabels", "profileDrawing", "sectionDrawing", "slopePlan", "guardrails"]
+CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions", "terrainContours", "landXml", "alignmentLabels", "profileDrawing", "sectionDrawing", "slopePlan", "guardrails", "culverts"]
 """The names of :class:`CreateOperation`, for a plain string."""
 
 
@@ -1365,6 +1367,16 @@ class CsvSeparator(_StrEnum):
 
 CsvSeparatorName = Literal["comma", "semicolon", "tab"]
 """The names of :class:`CsvSeparator`, for a plain string."""
+
+
+class CulvertFlow(_StrEnum):
+    """The side a culvert's water runs to."""
+    RIGHT = "right"
+    LEFT = "left"
+
+
+CulvertFlowName = Literal["right", "left"]
+"""The names of :class:`CulvertFlow`, for a plain string."""
 
 
 class DerivationStatus(_StrEnum):
@@ -7659,6 +7671,31 @@ class CsvGeometryIn(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> CsvGeometryIn:
         return _variant(_CSV_GEOMETRY_IN, "CsvGeometryIn", "kind", data).from_json(data)
+
+
+class CulvertShapeDef(_Union):
+    """A culvert's barrel cross (docs/adr/0909 §2): pipes side by side (`spacing` their clear gap) or a box of cells.
+
+    One of:
+
+    - :class:`PipeCulvertShapeDef` (``kind: pipe``)
+    - :class:`BoxCulvertShapeDef` (``kind: box``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    if TYPE_CHECKING:
+        # Every variant has these.
+        thickness: float
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CulvertShapeDef:
+        return _variant(_CULVERT_SHAPE_DEF, "CulvertShapeDef", "kind", data).from_json(data)
 
 
 class CurveConstruction(_Union):
@@ -20948,6 +20985,450 @@ class CsvFileWritten(_Model):
             name=data["name"],
             bytes=data["bytes"],
             sha256=data["sha256"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CulvertDef(_Model):
+    """A culvert across a corridor (docs/adr/0909 §2): its corridor and that corridor's revision it was made from, its
+    station and skew (degrees from the cross, positive ahead on the right), its barrel, its flow line under the axis and
+    its fall (percent) toward `flow`, the length added beyond each toe, the least cover asked, its material and Manning
+    roughness (typed, kept).
+    Attributes:
+        station: Unit: m.
+        invert: Unit: elevation.
+        slope: Unit: percent.
+        corridor_revision: Unit: version.
+        cover: Unit: m.
+        extend: Unit: m.
+        revision: Unit: version.
+        roughness: Unit: 1.
+        skew: Unit: deg.
+    """
+    id: str
+    name: str
+    corridor: str
+    station: float
+    shape: CulvertShapeDef
+    invert: float
+    slope: float
+    flow: CulvertFlow | CulvertFlowName
+    corridor_revision: int | Unset = UNSET
+    cover: float | None | Unset = UNSET
+    extend: float | Unset = UNSET
+    material: str | None | Unset = UNSET
+    revision: int | Unset = UNSET
+    roughness: float | None | Unset = UNSET
+    skew: float | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["corridor"] = self.corridor
+        out["station"] = float(self.station)
+        out["shape"] = self.shape.to_json()
+        out["invert"] = float(self.invert)
+        out["slope"] = float(self.slope)
+        out["flow"] = _enum_out(self.flow)
+        if self.corridor_revision is not UNSET:
+            out["corridorRevision"] = self.corridor_revision
+        if self.cover is not UNSET:
+            out["cover"] = None if self.cover is None else float(self.cover)
+        if self.extend is not UNSET:
+            out["extend"] = float(self.extend)
+        if self.material is not UNSET:
+            out["material"] = self.material
+        if self.revision is not UNSET:
+            out["revision"] = self.revision
+        if self.roughness is not UNSET:
+            out["roughness"] = None if self.roughness is None else float(self.roughness)
+        if self.skew is not UNSET:
+            out["skew"] = float(self.skew)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CulvertDef:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            corridor=data["corridor"],
+            station=float(data["station"]),
+            shape=CulvertShapeDef.from_json(data["shape"]),
+            invert=float(data["invert"]),
+            slope=float(data["slope"]),
+            flow=_enum_in(CulvertFlow, data["flow"]),
+            corridor_revision=data.get("corridorRevision", UNSET),
+            cover=UNSET if "cover" not in data else None if data["cover"] is None else float(data["cover"]),
+            extend=float(data["extend"]) if "extend" in data else UNSET,
+            material=data.get("material", UNSET),
+            revision=data.get("revision", UNSET),
+            roughness=UNSET if "roughness" not in data else None if data["roughness"] is None else float(data["roughness"]),
+            skew=float(data["skew"]) if "skew" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CulvertEnd(_Model):
+    """An end of a culvert's barrel (`left` or `right` of the road): its distance along the barrel from the axis (signed,
+    right positive), its offset in the cross, its plan place and its flow line's elevation.
+    Attributes:
+        distance: Unit: m.
+        offset: Unit: m.
+        x: Unit: length.
+        y: Unit: length.
+        invert: Unit: elevation.
+    """
+    side: str
+    distance: float
+    offset: float
+    x: float
+    y: float
+    invert: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["side"] = self.side
+        out["distance"] = float(self.distance)
+        out["offset"] = float(self.offset)
+        out["x"] = float(self.x)
+        out["y"] = float(self.y)
+        out["invert"] = float(self.invert)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CulvertEnd:
+        return cls(
+            side=data["side"],
+            distance=float(data["distance"]),
+            offset=float(data["offset"]),
+            x=float(data["x"]),
+            y=float(data["y"]),
+            invert=float(data["invert"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CulvertListed(_Model):
+    """A culvert in the project's list.
+    Attributes:
+        station: Unit: m.
+        revision: Unit: version.
+    """
+    id: str
+    name: str
+    corridor: str
+    station: float
+    revision: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["corridor"] = self.corridor
+        out["station"] = float(self.station)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CulvertListed:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            corridor=data["corridor"],
+            station=float(data["station"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CulvertReport(_Model):
+    """A culvert as read now: its names, whether its corridor changed since (`stale`), its station and km, its barrel's
+    length and outer width, its ends (left then right) and the side the water enters (`inlet`), the least cover over it
+    and that cover's offset in the cross, and its quantities: the pipes' total length and the barrel's concrete.
+    Attributes:
+        revision: Unit: version.
+        station: Unit: m.
+        length: Unit: m.
+        width: Unit: m.
+        cover: Unit: m.
+        cover_offset: Unit: m.
+        pipes: Unit: m.
+        concrete: Unit: volume.
+    """
+    id: str
+    name: str
+    corridor: str
+    revision: int
+    stale: bool
+    station: float
+    km_text: str
+    length: float
+    width: float
+    ends: list[CulvertEnd]
+    inlet: str
+    cover: float
+    cover_offset: float
+    pipes: float
+    concrete: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["corridor"] = self.corridor
+        out["revision"] = self.revision
+        out["stale"] = self.stale
+        out["station"] = float(self.station)
+        out["kmText"] = self.km_text
+        out["length"] = float(self.length)
+        out["width"] = float(self.width)
+        out["ends"] = [e0.to_json() for e0 in self.ends]
+        out["inlet"] = self.inlet
+        out["cover"] = float(self.cover)
+        out["coverOffset"] = float(self.cover_offset)
+        out["pipes"] = float(self.pipes)
+        out["concrete"] = float(self.concrete)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CulvertReport:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            corridor=data["corridor"],
+            revision=data["revision"],
+            stale=data["stale"],
+            station=float(data["station"]),
+            km_text=data["kmText"],
+            length=float(data["length"]),
+            width=float(data["width"]),
+            ends=[CulvertEnd.from_json(e0) for e0 in data["ends"]],
+            inlet=data["inlet"],
+            cover=float(data["cover"]),
+            cover_offset=float(data["coverOffset"]),
+            pipes=float(data["pipes"]),
+            concrete=float(data["concrete"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CulvertsDraw(_Model):
+    """Input of `road.culverts.draw` v1: the culvert's barrel drawn on `layerId`: its two outer edges, its line and its
+    ends; with `labels` a text along its line saying its km, cross and length.
+
+    Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `unknown_culvert`,
+    `invalid_culvert`, `layer_not_found`, `not_a_layer`, `layer_locked`. Warnings: `layer_hidden`, and the read's.
+    """
+    culvert: str
+    layer_id: str
+    expected_revision: str | None | Unset = UNSET
+    labels: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["culvert"] = self.culvert
+        out["layerId"] = self.layer_id
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.labels is not UNSET:
+            out["labels"] = self.labels
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CulvertsDraw:
+        return cls(
+            culvert=data["culvert"],
+            layer_id=data["layerId"],
+            expected_revision=data.get("expectedRevision", UNSET),
+            labels=data.get("labels", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CulvertsDrawn(_Model):
+    """Output of `road.culverts.draw` v1, and its plan: the culvert, its barrel's length and the objects written (in the
+    plan, none).
+    Attributes:
+        length: Unit: m.
+    """
+    culvert: str
+    length: float
+    uids: list[str]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["culvert"] = self.culvert
+        out["length"] = float(self.length)
+        out["uids"] = list(self.uids)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CulvertsDrawn:
+        return cls(
+            culvert=data["culvert"],
+            length=float(data["length"]),
+            uids=list(data["uids"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CulvertsEdit(_Model):
+    """Input of `road.culverts.edit` v1: the culvert by its id or name (absent: a new one). A new one needs `name`,
+    `corridor`, `station`, `shape`, `invert`, `slope` and `flow`. Rebind takes the corridor's present revision. `cover`,
+    `material` and `roughness` null take them off.
+
+    Refusals, in this order: `not_a_road_project`, `unknown_culvert` (rebind or remove one not in the project),
+    `unknown_corridor`, `invalid_culvert` (a new one without its fields, set with nothing to set, the definition by
+    `road_problem`: a skew not within ±90°, sizes, counts, fall, length beyond the toes or cover out of bounds; a
+    station off the corridor or without a section, a side in cut or open, a corridor that does not build),
+    `invalid_revision`, `revision_conflict`.
+    Attributes:
+        cover: The least cover asked; null takes it off. Unit: m.
+        extend: Unit: m.
+        invert: Unit: elevation.
+        material: The barrel's material; null takes it off.
+        roughness: Its Manning roughness; null takes it off. Unit: 1.
+        skew: Unit: deg.
+        slope: Unit: percent.
+        station: Unit: m.
+    """
+    operation: RoadEditOperation | RoadEditOperationName
+    corridor: str | None | Unset = UNSET
+    cover: float | None | Unset = UNSET
+    culvert: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    extend: float | None | Unset = UNSET
+    flow: CulvertFlow | CulvertFlowName | None | Unset = UNSET
+    invert: float | None | Unset = UNSET
+    material: str | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    roughness: float | None | Unset = UNSET
+    shape: CulvertShapeDef | None | Unset = UNSET
+    skew: float | None | Unset = UNSET
+    slope: float | None | Unset = UNSET
+    station: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = _enum_out(self.operation)
+        if self.corridor is not UNSET:
+            out["corridor"] = self.corridor
+        if self.cover is not UNSET:
+            out["cover"] = None if self.cover is None else float(self.cover)
+        if self.culvert is not UNSET:
+            out["culvert"] = self.culvert
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.extend is not UNSET:
+            out["extend"] = None if self.extend is None else float(self.extend)
+        if self.flow is not UNSET:
+            out["flow"] = None if self.flow is None else _enum_out(self.flow)
+        if self.invert is not UNSET:
+            out["invert"] = None if self.invert is None else float(self.invert)
+        if self.material is not UNSET:
+            out["material"] = self.material
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.roughness is not UNSET:
+            out["roughness"] = None if self.roughness is None else float(self.roughness)
+        if self.shape is not UNSET:
+            out["shape"] = None if self.shape is None else self.shape.to_json()
+        if self.skew is not UNSET:
+            out["skew"] = None if self.skew is None else float(self.skew)
+        if self.slope is not UNSET:
+            out["slope"] = None if self.slope is None else float(self.slope)
+        if self.station is not UNSET:
+            out["station"] = None if self.station is None else float(self.station)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CulvertsEdit:
+        return cls(
+            operation=_enum_in(RoadEditOperation, data["operation"]),
+            corridor=data.get("corridor", UNSET),
+            cover=UNSET if "cover" not in data else None if data["cover"] is None else float(data["cover"]),
+            culvert=data.get("culvert", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            extend=UNSET if "extend" not in data else None if data["extend"] is None else float(data["extend"]),
+            flow=UNSET if "flow" not in data else None if data["flow"] is None else _enum_in(CulvertFlow, data["flow"]),
+            invert=UNSET if "invert" not in data else None if data["invert"] is None else float(data["invert"]),
+            material=data.get("material", UNSET),
+            name=data.get("name", UNSET),
+            roughness=UNSET if "roughness" not in data else None if data["roughness"] is None else float(data["roughness"]),
+            shape=UNSET if "shape" not in data else None if data["shape"] is None else CulvertShapeDef.from_json(data["shape"]),
+            skew=UNSET if "skew" not in data else None if data["skew"] is None else float(data["skew"]),
+            slope=UNSET if "slope" not in data else None if data["slope"] is None else float(data["slope"]),
+            station=UNSET if "station" not in data else None if data["station"] is None else float(data["station"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CulvertsQueried(_Model):
+    """Output of `road.culverts.query` v1: the culverts read (one that does not read with no ends: `length` 0)."""
+    culverts: list[CulvertReport]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["culverts"] = [e0.to_json() for e0 in self.culverts]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CulvertsQueried:
+        return cls(
+            culverts=[CulvertReport.from_json(e0) for e0 in data["culverts"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CulvertsQuery(_Model):
+    """Input of `road.culverts.query` v1: every culvert read, or one (`culvert`: its id or name).
+
+    Refusals: `not_a_road_project`, `unknown_culvert`, `invalid_culvert` (the one asked does not read). Warnings:
+    `culvert_stale`, `culvert_cover`, and the corridor's own.
+    """
+    culvert: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.culvert is not UNSET:
+            out["culvert"] = self.culvert
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CulvertsQuery:
+        return cls(
+            culvert=data.get("culvert", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CulvertsWritten(_Model):
+    """Output of `road.culverts.edit` v1.
+    Attributes:
+        culvert: The culvert written, read; absent when removed.
+    """
+    culverts: list[CulvertListed]
+    revision: str
+    culvert: CulvertReport | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["culverts"] = [e0.to_json() for e0 in self.culverts]
+        out["revision"] = self.revision
+        if self.culvert is not UNSET:
+            out["culvert"] = None if self.culvert is None else self.culvert.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CulvertsWritten:
+        return cls(
+            culverts=[CulvertListed.from_json(e0) for e0 in data["culverts"]],
+            revision=data["revision"],
+            culvert=UNSET if "culvert" not in data else None if data["culvert"] is None else CulvertReport.from_json(data["culvert"]),
         )
 
 
@@ -61832,6 +62313,7 @@ class RoadSettings(_Model):
     Attributes:
         alignments: The horizontal alignments (docs/adr/0901), in the order the project tree shows them.
         corridors: The corridors (docs/adr/0905), each on an alignment, in the order the project tree shows them.
+        culverts: The culverts (docs/adr/0909 §2), each across a corridor.
         guardrails: The guardrails (docs/adr/0909 §1), each along a corridor.
         hauls: The mass haul diagrams (docs/adr/0907).
         profiles: The vertical alignments (docs/adr/0902), each on an alignment, in the order the project tree shows them.
@@ -61844,6 +62326,7 @@ class RoadSettings(_Model):
     """
     alignments: list[AlignmentDef] | Unset = UNSET
     corridors: list[CorridorDef] | Unset = UNSET
+    culverts: list[CulvertDef] | Unset = UNSET
     guardrails: list[GuardrailDef] | Unset = UNSET
     hauls: list[HaulDef] | Unset = UNSET
     profiles: list[ProfileDef] | Unset = UNSET
@@ -61860,6 +62343,8 @@ class RoadSettings(_Model):
             out["alignments"] = [e0.to_json() for e0 in self.alignments]
         if self.corridors is not UNSET:
             out["corridors"] = [e0.to_json() for e0 in self.corridors]
+        if self.culverts is not UNSET:
+            out["culverts"] = [e0.to_json() for e0 in self.culverts]
         if self.guardrails is not UNSET:
             out["guardrails"] = [e0.to_json() for e0 in self.guardrails]
         if self.hauls is not UNSET:
@@ -61885,6 +62370,7 @@ class RoadSettings(_Model):
         return cls(
             alignments=[AlignmentDef.from_json(e0) for e0 in data["alignments"]] if "alignments" in data else UNSET,
             corridors=[CorridorDef.from_json(e0) for e0 in data["corridors"]] if "corridors" in data else UNSET,
+            culverts=[CulvertDef.from_json(e0) for e0 in data["culverts"]] if "culverts" in data else UNSET,
             guardrails=[GuardrailDef.from_json(e0) for e0 in data["guardrails"]] if "guardrails" in data else UNSET,
             hauls=[HaulDef.from_json(e0) for e0 in data["hauls"]] if "hauls" in data else UNSET,
             profiles=[ProfileDef.from_json(e0) for e0 in data["profiles"]] if "profiles" in data else UNSET,
@@ -82481,6 +82967,77 @@ class NoneCsvGeometryIn(CsvGeometryIn):
 
 
 @dataclass(kw_only=True, slots=True)
+class PipeCulvertShapeDef(CulvertShapeDef):
+    """
+    Attributes:
+        diameter: Unit: m.
+        thickness: Unit: m.
+        count: Unit: count.
+        spacing: Unit: m.
+    """
+    TAG_VALUE: ClassVar[str] = "pipe"
+    diameter: float
+    thickness: float
+    count: int
+    spacing: float | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "pipe"}
+        out["diameter"] = float(self.diameter)
+        out["thickness"] = float(self.thickness)
+        out["count"] = self.count
+        if self.spacing is not UNSET:
+            out["spacing"] = float(self.spacing)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PipeCulvertShapeDef:
+        return cls(
+            diameter=float(data["diameter"]),
+            thickness=float(data["thickness"]),
+            count=data["count"],
+            spacing=float(data["spacing"]) if "spacing" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BoxCulvertShapeDef(CulvertShapeDef):
+    """
+    Attributes:
+        width: Unit: m.
+        height: Unit: m.
+        thickness: Unit: m.
+        slab: Unit: m.
+        cells: Unit: count.
+    """
+    TAG_VALUE: ClassVar[str] = "box"
+    width: float
+    height: float
+    thickness: float
+    slab: float
+    cells: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "box"}
+        out["width"] = float(self.width)
+        out["height"] = float(self.height)
+        out["thickness"] = float(self.thickness)
+        out["slab"] = float(self.slab)
+        out["cells"] = self.cells
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BoxCulvertShapeDef:
+        return cls(
+            width=float(data["width"]),
+            height=float(data["height"]),
+            thickness=float(data["thickness"]),
+            slab=float(data["slab"]),
+            cells=data["cells"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CircleTwoPointsCurveConstruction(CurveConstruction):
     """Daire, 2 nokta: the circle on the diameter from `a` to `b`."""
     TAG_VALUE: ClassVar[str] = "circleTwoPoints"
@@ -97874,6 +98431,9 @@ _CRS_SYSTEM: dict[str, type[CrsSystem]] = {"tm": TmCrsSystem, "geographic": Geog
 _CSV_GEOMETRY_IN: dict[str, type[CsvGeometryIn]] = {"auto": AutoCsvGeometryIn, "wkt": WktCsvGeometryIn, "xy": XyCsvGeometryIn, "none": NoneCsvGeometryIn}
 
 
+_CULVERT_SHAPE_DEF: dict[str, type[CulvertShapeDef]] = {"pipe": PipeCulvertShapeDef, "box": BoxCulvertShapeDef}
+
+
 _CURVE_CONSTRUCTION: dict[str, type[CurveConstruction]] = {"circleTwoPoints": CircleTwoPointsCurveConstruction, "circleThreePoints": CircleThreePointsCurveConstruction, "circleTangentTangentRadius": CircleTangentTangentRadiusCurveConstruction, "circleTangents": CircleTangentsCurveConstruction, "arcThreePoints": ArcThreePointsCurveConstruction, "arcStartCentreEnd": ArcStartCentreEndCurveConstruction, "arcStartCentreAngle": ArcStartCentreAngleCurveConstruction, "arcStartCentreChord": ArcStartCentreChordCurveConstruction, "arcStartEndAngle": ArcStartEndAngleCurveConstruction, "arcStartEndDirection": ArcStartEndDirectionCurveConstruction, "arcStartEndRadius": ArcStartEndRadiusCurveConstruction, "arcContinue": ArcContinueCurveConstruction, "ellipseAxis": EllipseAxisCurveConstruction, "ellipseCentre": EllipseCentreCurveConstruction}
 
 
@@ -98536,6 +99096,7 @@ __all__ = [
     "Bounds",
     "BoxCorner",
     "BoxCornerName",
+    "BoxCulvertShapeDef",
     "BreakDimensionEdit",
     "BreakLine",
     "BreakLineName",
@@ -98769,6 +99330,19 @@ __all__ = [
     "CsvGeometryName",
     "CsvSeparator",
     "CsvSeparatorName",
+    "CulvertDef",
+    "CulvertEnd",
+    "CulvertFlow",
+    "CulvertFlowName",
+    "CulvertListed",
+    "CulvertReport",
+    "CulvertShapeDef",
+    "CulvertsDraw",
+    "CulvertsDrawn",
+    "CulvertsEdit",
+    "CulvertsQueried",
+    "CulvertsQuery",
+    "CulvertsWritten",
     "CurveConstruction",
     "CurveEdit",
     "CurvesConstruct",
@@ -100226,6 +100800,7 @@ __all__ = [
     "PinMatchName",
     "PinMove",
     "PinnedObject",
+    "PipeCulvertShapeDef",
     "PlaceMeasuredPoint",
     "PlaceModulesOperation",
     "PlaceOn",

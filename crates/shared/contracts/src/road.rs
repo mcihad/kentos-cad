@@ -97,6 +97,10 @@ pub struct RoadSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<GuardrailDef>>", optional))]
     pub guardrails: Vec<GuardrailDef>,
+    /// The culverts (docs/adr/0909 §2), each across a corridor.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<CulvertDef>>", optional))]
+    pub culverts: Vec<CulvertDef>,
 }
 
 impl RoadSettings {
@@ -113,6 +117,7 @@ impl RoadSettings {
             && self.hauls.is_empty()
             && self.sheet_sets.is_empty()
             && self.guardrails.is_empty()
+            && self.culverts.is_empty()
     }
 
     /// What is wrong with it, by the field's path and in words; none when it is right.
@@ -970,6 +975,7 @@ pub fn road_problem(road: &RoadSettings) -> Option<(String, String)> {
         .or_else(|| hauls_problem(road))
         .or_else(|| sheet_sets_problem(road))
         .or_else(|| guardrails_problem(road))
+        .or_else(|| culverts_problem(road))
 }
 
 fn side_problem(s: &TemplateSideDef, at: &str) -> Option<(String, String)> {
@@ -1388,6 +1394,180 @@ pub struct GuardrailDef {
     #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub offset: f64,
+}
+
+/// The most culverts a project holds, and barrels a culvert carries.
+pub const MAX_CULVERTS: usize = 1000;
+pub const MAX_CULVERT_BARRELS: u32 = 20;
+
+/// A culvert's barrel cross (docs/adr/0909 §2): pipes side by side (`spacing` their clear gap) or a box of cells.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum CulvertShapeDef {
+    Pipe {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+        diameter: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+        thickness: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+        count: u32,
+        #[serde(default, skip_serializing_if = "is_zero_f64")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+        spacing: f64,
+    },
+    Box {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+        width: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+        height: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+        thickness: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+        slab: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+        cells: u32,
+    },
+}
+
+/// The side a culvert's water runs to.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum CulvertFlow {
+    Right,
+    Left,
+}
+
+/// A culvert across a corridor (docs/adr/0909 §2): its corridor and that corridor's revision it was made from, its
+/// station and skew (degrees from the cross, positive ahead on the right), its barrel, its flow line under the axis and
+/// its fall (percent) toward `flow`, the length added beyond each toe, the least cover asked, its material and Manning
+/// roughness (typed, kept).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CulvertDef {
+    pub id: String,
+    pub name: String,
+    pub corridor: String,
+    #[serde(default, skip_serializing_if = "is_zero_u32")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub corridor_revision: u32,
+    #[serde(default, skip_serializing_if = "is_zero_u32")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub revision: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub station: f64,
+    #[serde(default, skip_serializing_if = "is_zero_f64")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
+    pub skew: f64,
+    pub shape: CulvertShapeDef,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub invert: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    pub slope: f64,
+    pub flow: CulvertFlow,
+    #[serde(default, skip_serializing_if = "is_zero_f64")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub extend: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub cover: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub material: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub roughness: Option<f64>,
+}
+
+fn culverts_problem(road: &RoadSettings) -> Option<(String, String)> {
+    let fail = |path: String, words: &str| Some((path, words.to_string()));
+    let list = &road.culverts;
+    if list.len() > MAX_CULVERTS {
+        return fail("culverts".into(), &format!("en çok {MAX_CULVERTS} menfez olur"));
+    }
+    let mut ids = std::collections::BTreeSet::new();
+    let mut names = std::collections::BTreeSet::new();
+    let size = |v: f64| v.is_finite() && v > 0.0 && v <= 100.0;
+    for (i, c) in list.iter().enumerate() {
+        let at = |field: &str| format!("culverts[{i}].{field}");
+        if !word_ok(&c.id) {
+            return fail(at("id"), "menfezin kimliği boş olmayan, en çok 64 karakterlik bir sözcük olmalı");
+        }
+        if !ids.insert(c.id.as_str()) {
+            return fail(at("id"), "bu kimlikte başka bir menfez var");
+        }
+        let name = c.name.trim();
+        if name.is_empty() || name != c.name || c.name.chars().count() > 120 {
+            return fail(at("name"), "menfezin adı boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 120 karakter");
+        }
+        if !names.insert(name.to_lowercase()) {
+            return fail(at("name"), "bu adda başka bir menfez var");
+        }
+        if road.corridors.iter().all(|x| x.id != c.corridor) {
+            return fail(at("corridor"), "menfezin koridoru projede yok");
+        }
+        if !c.station.is_finite() {
+            return fail(at("station"), "menfezin km'si sonlu olmalı");
+        }
+        if !(c.skew.is_finite() && c.skew.abs() < 90.0) {
+            return fail(at("skew"), "menfezin açısı -90° ile 90° arası olur (sınırlar dışında)");
+        }
+        match c.shape {
+            CulvertShapeDef::Pipe { diameter, thickness, count, spacing } => {
+                if !size(diameter) || !size(thickness) {
+                    return fail(at("shape"), "borunun çapı ve et kalınlığı 0'dan büyük, en çok 100 m olur");
+                }
+                if !(1..=MAX_CULVERT_BARRELS).contains(&count) {
+                    return fail(at("shape.count"), &format!("boru sayısı 1 ile {MAX_CULVERT_BARRELS} arası olur"));
+                }
+                if !(spacing.is_finite() && (0.0..=100.0).contains(&spacing)) {
+                    return fail(at("shape.spacing"), "borular arası boşluk 0 ile 100 m arası olur");
+                }
+            }
+            CulvertShapeDef::Box { width, height, thickness, slab, cells } => {
+                if !size(width) || !size(height) || !size(thickness) || !size(slab) {
+                    return fail(at("shape"), "kutunun genişliği, yüksekliği, duvar ve döşeme kalınlığı 0'dan büyük, en çok 100 m olur");
+                }
+                if !(1..=MAX_CULVERT_BARRELS).contains(&cells) {
+                    return fail(at("shape.cells"), &format!("göz sayısı 1 ile {MAX_CULVERT_BARRELS} arası olur"));
+                }
+            }
+        }
+        if !(c.invert.is_finite() && c.invert.abs() <= 10_000.0) {
+            return fail(at("invert"), "akış kotu sonlu, en çok 10 000 m olur");
+        }
+        if !(c.slope.is_finite() && (0.0..=100.0).contains(&c.slope)) {
+            return fail(at("slope"), "akış eğimi 0 ile %100 arası olur");
+        }
+        if !(c.extend.is_finite() && (0.0..=100.0).contains(&c.extend)) {
+            return fail(at("extend"), "topuğun ötesine boy 0 ile 100 m arası olur");
+        }
+        if c.cover.is_some_and(|v| !(v.is_finite() && (0.0..=100.0).contains(&v))) {
+            return fail(at("cover"), "en az örtü 0 ile 100 m arası olur");
+        }
+        if c.material.as_ref().is_some_and(|m| m.trim().is_empty() || m.trim() != m || m.chars().count() > 120) {
+            return fail(at("material"), "malzeme boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 120 karakter");
+        }
+        if c.roughness.is_some_and(|n| !(n.is_finite() && n > 0.0 && n <= 1.0)) {
+            return fail(at("roughness"), "Manning pürüzlülüğü 0'dan büyük, en çok 1 olur");
+        }
+    }
+    None
 }
 
 fn guardrails_problem(road: &RoadSettings) -> Option<(String, String)> {

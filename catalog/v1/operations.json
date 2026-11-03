@@ -2737,6 +2737,14 @@
       ],
       "note": "Kural yazıldıkça road.guardrails.edit'in planıyla okuma kopyasında önizler; Kaydet road.guardrails.edit, Planda çiz road.guardrails.draw ile yazar (plan/road.md Y11.1, ADR 0909 §1)."
     },
+    "culvert.editor": {
+      "level": "semantic",
+      "via": [
+        "road.culverts.edit",
+        "road.culverts.draw"
+      ],
+      "note": "Ölçüler yazıldıkça road.culverts.edit'in planıyla okuma kopyasında önizler; Kaydet ve Sil road.culverts.edit, Planda çiz road.culverts.draw ile yazar (plan/road.md Y11.2, ADR 0909 §2)."
+    },
     "landxml.importAlignments": {
       "level": "semantic",
       "via": [

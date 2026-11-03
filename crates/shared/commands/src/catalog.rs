@@ -7488,6 +7488,83 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::ROAD_CULVERTS_EDIT.into(),
+            version: crate::ROAD_CULVERTS_EDIT_VERSION,
+            title: "Menfezi düzenle".into(),
+            summary: "Yol projesinin menfezini (culvert: kimliği ya da adı; yoksa yeni) yazar, koridoruna yeniden bağlar ya da kaldırır. Menfez bir koridorun (corridor) km'sinde (station, aksın istasyonu) yolu kesen gövdedir: skew aksın dikinden sapma (derece, sağ ucu ileride artı, ±90'dan küçük), shape boru (kind pipe: diameter iç çap, thickness et, count boru sayısı, spacing borular arası boşluk) ya da kutu (kind box: width ve height göz içi, thickness yan duvar, slab taban ve tavan, cells göz sayısı); invert aksın altındaki akış kotu, slope akış eğimi (%), flow suyun aktığı yan (right ya da left); extend her uçta şev topuğunun ötesine boy, cover istenen en az örtü (denetlenir), material ve roughness (Manning n) tipli öznitelik. Ölçüler projenin; KentOS öntanımlı ölçü vermez. Menfezin km'sinde kesitin iki yanı dolguda olmalı. null cover, material ve roughness'ı kaldırır. \
+                      Yeni menfezin kimliği verilen ya da ilk boş m-n; rebind koridorun bugünkü sürümünü alır. Tek geri alma adımı “Menfez”. Retler: not_a_road_project, unknown_culvert, unknown_corridor, invalid_culvert, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["menfez".into(), "culvert".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::CulvertsEdit>(),
+            output: schema::<crate::CulvertsWritten>(),
+            plan: Some(schema::<crate::CulvertsWritten>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana koridorda iki gözlü kutu menfez".into(),
+                input: json!({ "operation": "set", "name": "Km 1+380 menfezi", "corridor": "Ana koridor", "station": 380.0,
+                    "shape": { "kind": "box", "width": 2.0, "height": 1.5, "thickness": 0.25, "slab": 0.3, "cells": 2 },
+                    "invert": 101.0, "slope": 1.0, "flow": "right", "extend": 1.0, "cover": 0.5 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_CULVERTS_QUERY.into(),
+            version: crate::ROAD_CULVERTS_QUERY_VERSION,
+            title: "Menfezi sorgula".into(),
+            summary: "Yol projesinin menfezlerini bugün okur; hiçbir şey yazmaz. Her biri için km ve km yazısı, gövdenin iki şev topuğu arası eğik boyu (artı uçlardaki ek boy) ve dış genişliği, uçları (sol ve sağ: gövde boyunca uzaklık, kesitteki öteleme, plandaki yer, akış kotu), suyun girdiği yan (inlet), yolun şev başları arasındaki üst yüzeyinden gövdenin üstüne en az örtü ve ötelemesi, metraj (boru boyu ve gövde betonu). Okunamayan menfez listede boy 0 ile gelir; tek sorulursa invalid_culvert. \
+                      Uyarılar: culvert_stale, culvert_cover ve koridorun kendi uyarıları. Retler: not_a_road_project, unknown_culvert, invalid_culvert."
+                .into(),
+            aliases: vec!["menfezsor".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::CulvertsQuery>(),
+            output: schema::<crate::CulvertsQueried>(),
+            plan: Some(schema::<crate::CulvertsQueried>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bütün menfezler".into(),
+                input: json!({}),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_CULVERTS_DRAW.into(),
+            version: crate::ROAD_CULVERTS_DRAW_VERSION,
+            title: "Menfez çiz".into(),
+            summary: "Menfezin gövdesini planda layerId katmanına çizer: dış genişliğin yarısı kadar iki yandaki kenarları uçlarıyla kapalı çoklu çizgi ve uçları arasında ekseni; labels ile gövde boyunca km, kesit ve boy. Tek geri alma adımı “Menfez çiz”. \
+                      Uyarılar: layer_hidden ve okumanın uyarıları. Retler: invalid_revision, revision_conflict, not_a_road_project, unknown_culvert, invalid_culvert, layer_not_found, not_a_layer, layer_locked."
+                .into(),
+            aliases: vec!["menfezciz".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::CulvertsDraw>(),
+            output: schema::<crate::CulvertsDrawn>(),
+            plan: Some(schema::<crate::CulvertsDrawn>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Menfez yazısıyla".into(),
+                input: json!({ "culvert": "m-1", "layerId": "menfez", "labels": true }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::FILE_EXPORT_LANDXML.into(),
             version: crate::FILE_EXPORT_LANDXML_VERSION,
             title: "LandXML dışa aktar".into(),
@@ -13368,6 +13445,15 @@ mod tests {
                     crate::ROAD_GUARDRAILS_DRAW => {
                         serde_json::from_value::<crate::GuardrailsDraw>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_CULVERTS_EDIT => {
+                        serde_json::from_value::<crate::CulvertsEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_CULVERTS_QUERY => {
+                        serde_json::from_value::<crate::CulvertsQuery>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_CULVERTS_DRAW => {
+                        serde_json::from_value::<crate::CulvertsDraw>(e.input.clone()).map(|_| ())
+                    }
                     crate::ROAD_STAKEOUT_QUERY => {
                         serde_json::from_value::<crate::StakeoutQuery>(e.input.clone()).map(|_| ())
                     }
@@ -14128,6 +14214,15 @@ mod tests {
                         }
                         crate::ROAD_GUARDRAILS_DRAW => {
                             serde_json::from_value::<crate::GuardrailsDrawn>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_CULVERTS_EDIT => {
+                            serde_json::from_value::<crate::CulvertsWritten>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_CULVERTS_QUERY => {
+                            serde_json::from_value::<crate::CulvertsQueried>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_CULVERTS_DRAW => {
+                            serde_json::from_value::<crate::CulvertsDrawn>(output.clone()).map(|_| ())
                         }
                         crate::ROAD_STAKEOUT_QUERY => {
                             serde_json::from_value::<crate::StakeoutQueried>(output.clone()).map(|_| ())

@@ -5611,6 +5611,10 @@ def build():
     grd = load("road-work.json")
     grd["settings"]["road"]["guardrails"][0]["corridor"] = "c-yok"
     out["broken/road-guardrail-unknown-corridor.kcad"] = container(document(grd))
+    # Schema 161 (plan/road.md Y11.2, docs/adr/0909 §2): a culvert's skew is within ±90°.
+    clv = load("road-work.json")
+    clv["settings"]["road"]["culverts"][0]["skew"] = 90.0
+    out["broken/road-culvert-right-angle.kcad"] = container(document(clv))
     # Schema 136 (docs/adr/0758): a layer's indexes, a key over two fields, a plain one and a key taking empty values as
     # the same; schema 135 refuses them, an empty list, a group's, one over a field the layer lacks, empty values the
     # same on a plain index and a default written are refused too.

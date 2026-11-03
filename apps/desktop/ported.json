@@ -419,6 +419,7 @@
     "alignment.fromLine",
     "profile.fromLine",
     "guardrail.editor",
+    "culvert.editor",
     "landxml.export",
     "landxml.importAlignments",
     "ifc.export",

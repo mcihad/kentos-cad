@@ -25,5 +25,7 @@ kentos-cloud = { path = "../cloud" }
 serde_json = { workspace = true }
 
 [dev-dependencies]
+# Writing a shared cases' drawing to a file the tools open (tests/road_structures.rs).
+kentos-kcad = { path = "../../shared/kcad" }
 # Inflating the PDF's streams in the acceptance test's own reader (the plotter's tests/support/files.rs).
 miniz_oxide = { workspace = true }

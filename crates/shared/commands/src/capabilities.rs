@@ -1860,6 +1860,25 @@ const ENTRIES: &[Entry] = &[
         warnings: &["layer_hidden", "guardrail_stale", "corridor_stale", "corridor_unsolved"],
         targets: none,
     },
+    // KentOS Yol's culverts (plan/road.md Y11.2, docs/adr/0909 §2).
+    Entry {
+        id: "road.culverts.edit",
+        refusals: &[&["not_a_road_project", "unknown_culvert", "unknown_corridor", "invalid_culvert"], REVISION],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "road.culverts.query",
+        refusals: &[&["not_a_road_project", "unknown_culvert", "invalid_culvert"]],
+        warnings: &["culvert_stale", "culvert_cover", "corridor_stale", "corridor_unsolved"],
+        targets: none,
+    },
+    Entry {
+        id: "road.culverts.draw",
+        refusals: &[&["not_a_road_project", "unknown_culvert", "invalid_culvert"], LAYER, REVISION],
+        warnings: &["layer_hidden", "culvert_stale", "culvert_cover", "corridor_stale", "corridor_unsolved"],
+        targets: none,
+    },
     // KentOS Yol's LandXML export (plan/road.md Y10.2, docs/adr/0908 §6).
     Entry {
         id: "file.export.landxml",

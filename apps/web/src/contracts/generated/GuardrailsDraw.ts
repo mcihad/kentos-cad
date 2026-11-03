@@ -7,6 +7,6 @@
  *
  * Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `unknown_guardrail`,
  * `invalid_guardrail` (its corridor does not build), `layer_not_found`, `not_a_layer`, `layer_locked`. Warnings:
- * `layer_hidden`, `guardrail_stale`.
+ * `layer_hidden`, `guardrail_stale`, `corridor_stale`, `corridor_unsolved`.
  */
 export type GuardrailsDraw = { guardrail: string, layerId: string, labels?: boolean, expectedRevision?: string, };

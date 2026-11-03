@@ -4,6 +4,6 @@
  * Input of `road.guardrails.query` v1: every guardrail read, or one (`guardrail`: its id or name).
  *
  * Refusals: `not_a_road_project`, `unknown_guardrail`, `invalid_guardrail` (its corridor does not build). Warnings:
- * `guardrail_stale`.
+ * `guardrail_stale`, and the corridor's own (`corridor_stale`, `corridor_surface_gone`, `corridor_unsolved`).
  */
 export type GuardrailsQuery = { guardrail?: string, };

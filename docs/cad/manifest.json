@@ -1826,6 +1826,23 @@
    "tests": 1
   },
   {
+   "id": "culvert.editor",
+   "kind": "command",
+   "title": "Menfez…",
+   "level": "semantic",
+   "via": [
+    "road.culverts.edit",
+    "road.culverts.draw"
+   ],
+   "operation": null,
+   "python": "Connection: road.culverts.edit, Connection: road.culverts.draw",
+   "mcp": "road.culverts.edit, road.culverts.draw",
+   "note": "Ölçüler yazıldıkça road.culverts.edit'in planıyla okuma kopyasında önizler; Kaydet ve Sil road.culverts.edit, Planda çiz road.culverts.draw ile yazar (plan/road.md Y11.2, ADR 0909 §2).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "data.chart",
    "kind": "command",
    "title": "Grafik",

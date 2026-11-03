@@ -2920,6 +2920,7 @@ dependencies = [
  "kentos-commands",
  "kentos-domain",
  "kentos-headless",
+ "kentos-kcad",
  "kentos-native-application",
  "kentos-postgis",
  "miniz_oxide 0.9.1",

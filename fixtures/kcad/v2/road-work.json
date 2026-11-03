@@ -483,6 +483,49 @@
      "step": 10.0,
      "offset": 0.5
     }
+   ],
+   "culverts": [
+    {
+     "id": "m-1",
+     "name": "Km 0+150 menfezi",
+     "corridor": "c-1",
+     "corridorRevision": 2,
+     "revision": 1,
+     "station": 150.0,
+     "skew": 15.0,
+     "shape": {
+      "kind": "box",
+      "width": 2.0,
+      "height": 1.5,
+      "thickness": 0.25,
+      "slab": 0.3,
+      "cells": 2
+     },
+     "invert": 101.0,
+     "slope": 1.0,
+     "flow": "right",
+     "extend": 1.0,
+     "cover": 0.5,
+     "material": "Betonarme",
+     "roughness": 0.013
+    },
+    {
+     "id": "m-2",
+     "name": "Boru menfez",
+     "corridor": "c-1",
+     "revision": 2,
+     "station": 250.0,
+     "shape": {
+      "kind": "pipe",
+      "diameter": 1.0,
+      "thickness": 0.12,
+      "count": 2,
+      "spacing": 0.5
+     },
+     "invert": 100.0,
+     "slope": 2.0,
+     "flow": "left"
+    }
    ]
   }
  },

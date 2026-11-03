@@ -617,6 +617,8 @@ pub const PORTED: &[&str] = &[
     "profile.fromLine",
     // plan/road.md Y11.1: Otokorkuluk (guardrail_window.rs).
     "guardrail.editor",
+    // plan/road.md Y11.2: Menfez (culvert_window.rs).
+    "culvert.editor",
     // plan/road.md Y10.2: LandXML ver (road_exchange.rs).
     "landxml.export",
     "landxml.importAlignments",

@@ -755,6 +755,14 @@ codes! {
     UNKNOWN_GUARDRAIL = "unknown_guardrail", Failed, false, "Bu kimlikte ya da adda otokorkuluk yok.";
     /// A warning: the guardrail's corridor changed since it was made or rebound (docs/adr/0909 §1).
     GUARDRAIL_STALE = "guardrail_stale", Warning, false, "Otokorkuluğun koridoru değişti; korkulukları denetleyip koridora yeniden bağlayın.";
+    /// A culvert that is not right: its sizes, skew or fall out of bounds, a new one without its fields, its station off
+    /// the corridor or in cut, a corridor that does not build (docs/adr/0909 §2).
+    INVALID_CULVERT = "invalid_culvert", Failed, false, "Menfezin tanımı geçerli değil ya da okunamıyor; ileti nedenini söyler.";
+    UNKNOWN_CULVERT = "unknown_culvert", Failed, false, "Bu kimlikte ya da adda menfez yok.";
+    /// A warning: the culvert's corridor changed since it was made or rebound (docs/adr/0909 §2).
+    CULVERT_STALE = "culvert_stale", Warning, false, "Menfezin koridoru değişti; menfezi denetleyip koridora yeniden bağlayın.";
+    /// A warning: the road over the culvert is closer to its top than the cover asked (docs/adr/0909 §2).
+    CULVERT_COVER = "culvert_cover", Warning, false, "Menfezin üstündeki örtü istenenden az.";
     /// A warning: the profile lies farther from the drawn line than the tolerance (docs/adr/0908 §13).
     PROFILE_FIT_DEVIATION = "profile_fit_deviation", Warning, false, "Boykesit çizginin köşelerinden toleranstan uzak.";
     /// A warning: the corridor's superelevation schedule does not build; its lanes keep the templates' slopes.

@@ -58,7 +58,16 @@ Y11.1 (yapıldı, otokorkuluk): `road.guardrails.edit` 29, `.query` 20, `.draw` 
 (`road_guardrail_cases.py`; kesitler road_stakeout_cases.py'nin, yerler road_alignment_cases.py'nin 40 basamaklı
 başvurusundan, kural ADR'den; KentOS kodu yok; kuralın sayıları durumlarındır, bir standardın değil). Çekirdek
 `kentos_road::guardrail`, KCAD şema 161'in `guardrails`'i bağımsız okuyucuda (`broken/road-guardrail-unknown-corridor.kcad`).
-Python, MCP, masaüstünde Koridor › Güvenlik › Otokorkuluk.
+Python, MCP, masaüstünde Koridor › Yapılar › Otokorkuluk.
+
+Y11.2 (yapıldı, menfez): `road.culverts.edit` 29, `.query` 20, `.draw` 21 ortak durum (`road_culvert_cases.py`; kesit
+road_stakeout_cases.py'nin, yerler road_alignment_cases.py'nin başvurusundan, gövde, örtü ve metraj §2'den; KentOS kodu
+yok; boru ve kutu ölçüleri durumlarındır). Çekirdek `kentos_road::culvert`, KCAD şema 161'in `culverts`'i bağımsız
+okuyucuda (`broken/road-culvert-right-angle.kcad`). Python, MCP (`tests/road_structures.rs`: durumların çizimi dosyaya
+yazılıp açılır; örnek `road-work.kcad`'in koridoru şev buluşturmadığından menfezleri okunmaz, `invalid_culvert`).
+Masaüstünde Koridor › Yapılar › Menfez: ölçüler yazıldıkça gövde boyuna kesitte (yükseklikler en çok beş kat), uçların
+ötelemesi, yeri ve akış kotu; Kaydet, Sil, Planda çiz. Menfezin bağlı kesite ve metraja eskitme olarak işlenmesi ve
+palye hendeği §4 ve sonraya.
 
 ## Sonra
 

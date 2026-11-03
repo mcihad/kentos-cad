@@ -91,6 +91,27 @@ impl Document {
         })
     }
 
+    /// The project's culverts (docs/adr/0909 §2).
+    pub fn road_culverts(&self) -> &[kentos_contracts::CulvertDef] {
+        self.settings.road.as_ref().map_or(&[], |r| r.culverts.as_slice())
+    }
+
+    /// Gives the project the culverts `next` as one change named `label`, as [`Self::set_road_templates`].
+    pub fn set_road_culverts(&mut self, next: Vec<kentos_contracts::CulvertDef>, label: &str) -> Result<bool, Refusal> {
+        let judged = RoadSettings { culverts: next.clone(), ..self.settings.road.clone().unwrap_or_default() };
+        if let Some((path, problem)) = judged.problem() {
+            return Err(Refusal(format!("{path}: {problem}")));
+        }
+        let before = self.road_culverts().to_vec();
+        if before == next {
+            return Ok(false);
+        }
+        self.transact(label, |doc| {
+            doc.record(vec![Op::RoadCulverts { before, after: next }], label);
+            Ok(true)
+        })
+    }
+
     /// The project's mass haul diagrams (docs/adr/0907).
     pub fn road_hauls(&self) -> &[HaulDef] {
         self.settings.road.as_ref().map_or(&[], |r| r.hauls.as_slice())

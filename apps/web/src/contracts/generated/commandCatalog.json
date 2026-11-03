@@ -39906,6 +39906,475 @@
       ]
     },
     {
+      "id": "road.culverts.edit",
+      "version": 1,
+      "title": "Menfezi düzenle",
+      "summary": "Yol projesinin menfezini (culvert: kimliği ya da adı; yoksa yeni) yazar, koridoruna yeniden bağlar ya da kaldırır. Menfez bir koridorun (corridor) km'sinde (station, aksın istasyonu) yolu kesen gövdedir: skew aksın dikinden sapma (derece, sağ ucu ileride artı, ±90'dan küçük), shape boru (kind pipe: diameter iç çap, thickness et, count boru sayısı, spacing borular arası boşluk) ya da kutu (kind box: width ve height göz içi, thickness yan duvar, slab taban ve tavan, cells göz sayısı); invert aksın altındaki akış kotu, slope akış eğimi (%), flow suyun aktığı yan (right ya da left); extend her uçta şev topuğunun ötesine boy, cover istenen en az örtü (denetlenir), material ve roughness (Manning n) tipli öznitelik. Ölçüler projenin; KentOS öntanımlı ölçü vermez. Menfezin km'sinde kesitin iki yanı dolguda olmalı. null cover, material ve roughness'ı kaldırır. Yeni menfezin kimliği verilen ya da ilk boş m-n; rebind koridorun bugünkü sürümünü alır. Tek geri alma adımı “Menfez”. Retler: not_a_road_project, unknown_culvert, unknown_corridor, invalid_culvert, invalid_revision, revision_conflict.",
+      "aliases": [
+        "menfez",
+        "culvert"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.culverts.edit` v1: the culvert by its id or name (absent: a new one). A new one needs `name`,\n`corridor`, `station`, `shape`, `invert`, `slope` and `flow`. Rebind takes the corridor's present revision. `cover`,\n`material` and `roughness` null take them off.\n\nRefusals, in this order: `not_a_road_project`, `unknown_culvert` (rebind or remove one not in the project),\n`unknown_corridor`, `invalid_culvert` (a new one without its fields, set with nothing to set, the definition by\n`road_problem`: a skew not within ±90°, sizes, counts, fall, length beyond the toes or cover out of bounds; a\nstation off the corridor or without a section, a side in cut or open, a corridor that does not build),\n`invalid_revision`, `revision_conflict`.",
+        "properties": {
+          "corridor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "cover": {
+            "description": "The least cover asked; null takes it off.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "culvert": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "extend": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "flow": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/CulvertFlow"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "invert": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "elevation"
+          },
+          "material": {
+            "description": "The barrel's material; null takes it off.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "operation": {
+            "$ref": "#/$defs/RoadEditOperation"
+          },
+          "roughness": {
+            "description": "Its Manning roughness; null takes it off.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1"
+          },
+          "shape": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/CulvertShapeDef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "skew": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "deg"
+          },
+          "slope": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "percent"
+          },
+          "station": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          }
+        },
+        "required": [
+          "operation"
+        ],
+        "title": "CulvertsEdit",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.culverts.edit` v1.",
+        "properties": {
+          "culvert": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/CulvertReport"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The culvert written, read; absent when removed."
+          },
+          "culverts": {
+            "items": {
+              "$ref": "#/$defs/CulvertListed"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "culverts",
+          "revision"
+        ],
+        "title": "CulvertsWritten",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.culverts.edit` v1.",
+        "properties": {
+          "culvert": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/CulvertReport"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The culvert written, read; absent when removed."
+          },
+          "culverts": {
+            "items": {
+              "$ref": "#/$defs/CulvertListed"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "culverts",
+          "revision"
+        ],
+        "title": "CulvertsWritten",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_culvert",
+          "unknown_corridor",
+          "invalid_culvert",
+          "invalid_revision",
+          "revision_conflict"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Ana koridorda iki gözlü kutu menfez",
+          "input": {
+            "corridor": "Ana koridor",
+            "cover": 0.5,
+            "extend": 1.0,
+            "flow": "right",
+            "invert": 101.0,
+            "name": "Km 1+380 menfezi",
+            "operation": "set",
+            "shape": {
+              "cells": 2,
+              "height": 1.5,
+              "kind": "box",
+              "slab": 0.3,
+              "thickness": 0.25,
+              "width": 2.0
+            },
+            "slope": 1.0,
+            "station": 380.0
+          }
+        }
+      ]
+    },
+    {
+      "id": "road.culverts.query",
+      "version": 1,
+      "title": "Menfezi sorgula",
+      "summary": "Yol projesinin menfezlerini bugün okur; hiçbir şey yazmaz. Her biri için km ve km yazısı, gövdenin iki şev topuğu arası eğik boyu (artı uçlardaki ek boy) ve dış genişliği, uçları (sol ve sağ: gövde boyunca uzaklık, kesitteki öteleme, plandaki yer, akış kotu), suyun girdiği yan (inlet), yolun şev başları arasındaki üst yüzeyinden gövdenin üstüne en az örtü ve ötelemesi, metraj (boru boyu ve gövde betonu). Okunamayan menfez listede boy 0 ile gelir; tek sorulursa invalid_culvert. Uyarılar: culvert_stale, culvert_cover ve koridorun kendi uyarıları. Retler: not_a_road_project, unknown_culvert, invalid_culvert.",
+      "aliases": [
+        "menfezsor"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.culverts.query` v1: every culvert read, or one (`culvert`: its id or name).\n\nRefusals: `not_a_road_project`, `unknown_culvert`, `invalid_culvert` (the one asked does not read). Warnings:\n`culvert_stale`, `culvert_cover`, and the corridor's own.",
+        "properties": {
+          "culvert": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "title": "CulvertsQuery",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.culverts.query` v1: the culverts read (one that does not read with no ends: `length` 0).",
+        "properties": {
+          "culverts": {
+            "items": {
+              "$ref": "#/$defs/CulvertReport"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "culverts"
+        ],
+        "title": "CulvertsQueried",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.culverts.query` v1: the culverts read (one that does not read with no ends: `length` 0).",
+        "properties": {
+          "culverts": {
+            "items": {
+              "$ref": "#/$defs/CulvertReport"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "culverts"
+        ],
+        "title": "CulvertsQueried",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_culvert",
+          "invalid_culvert"
+        ],
+        "warnings": [
+          "culvert_stale",
+          "culvert_cover",
+          "corridor_stale",
+          "corridor_unsolved"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bütün menfezler",
+          "input": {}
+        }
+      ]
+    },
+    {
+      "id": "road.culverts.draw",
+      "version": 1,
+      "title": "Menfez çiz",
+      "summary": "Menfezin gövdesini planda layerId katmanına çizer: dış genişliğin yarısı kadar iki yandaki kenarları uçlarıyla kapalı çoklu çizgi ve uçları arasında ekseni; labels ile gövde boyunca km, kesit ve boy. Tek geri alma adımı “Menfez çiz”. Uyarılar: layer_hidden ve okumanın uyarıları. Retler: invalid_revision, revision_conflict, not_a_road_project, unknown_culvert, invalid_culvert, layer_not_found, not_a_layer, layer_locked.",
+      "aliases": [
+        "menfezciz"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.culverts.draw` v1: the culvert's barrel drawn on `layerId`: its two outer edges, its line and its\nends; with `labels` a text along its line saying its km, cross and length.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `unknown_culvert`,\n`invalid_culvert`, `layer_not_found`, `not_a_layer`, `layer_locked`. Warnings: `layer_hidden`, and the read's.",
+        "properties": {
+          "culvert": {
+            "type": "string"
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "labels": {
+            "type": "boolean"
+          },
+          "layerId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "culvert",
+          "layerId"
+        ],
+        "title": "CulvertsDraw",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.culverts.draw` v1, and its plan: the culvert, its barrel's length and the objects written (in the\nplan, none).",
+        "properties": {
+          "culvert": {
+            "type": "string"
+          },
+          "length": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "culvert",
+          "length",
+          "uids",
+          "revision"
+        ],
+        "title": "CulvertsDrawn",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.culverts.draw` v1, and its plan: the culvert, its barrel's length and the objects written (in the\nplan, none).",
+        "properties": {
+          "culvert": {
+            "type": "string"
+          },
+          "length": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "culvert",
+          "length",
+          "uids",
+          "revision"
+        ],
+        "title": "CulvertsDrawn",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_culvert",
+          "invalid_culvert",
+          "layer_not_found",
+          "not_a_layer",
+          "layer_locked",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "layer_hidden",
+          "culvert_stale",
+          "culvert_cover",
+          "corridor_stale",
+          "corridor_unsolved"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Menfez yazısıyla",
+          "input": {
+            "culvert": "m-1",
+            "labels": true,
+            "layerId": "menfez"
+          }
+        }
+      ]
+    },
+    {
       "id": "file.export.landxml",
       "version": 1,
       "title": "LandXML dışa aktar",
@@ -76491,6 +76960,30 @@
       "meaning": "Otokorkuluğun koridoru değişti; korkulukları denetleyip koridora yeniden bağlayın."
     },
     {
+      "code": "invalid_culvert",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Menfezin tanımı geçerli değil ya da okunamıyor; ileti nedenini söyler."
+    },
+    {
+      "code": "unknown_culvert",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu kimlikte ya da adda menfez yok."
+    },
+    {
+      "code": "culvert_stale",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Menfezin koridoru değişti; menfezi denetleyip koridora yeniden bağlayın."
+    },
+    {
+      "code": "culvert_cover",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Menfezin üstündeki örtü istenenden az."
+    },
+    {
       "code": "profile_fit_deviation",
       "kind": "warning",
       "retryable": false,
@@ -93735,6 +94228,11 @@
           "const": "guardrails",
           "description": "`road.guardrails.draw` (plan/road.md Y11.1): a guardrail's runs in plan, “Otokorkuluk çiz”.",
           "type": "string"
+        },
+        {
+          "const": "culverts",
+          "description": "`road.culverts.draw` (plan/road.md Y11.2): a culvert's barrel in plan, “Menfez çiz”.",
+          "type": "string"
         }
       ]
     },
@@ -94285,6 +94783,354 @@
         "tab"
       ],
       "type": "string"
+    },
+    "CulvertDef": {
+      "additionalProperties": false,
+      "description": "A culvert across a corridor (docs/adr/0909 §2): its corridor and that corridor's revision it was made from, its\nstation and skew (degrees from the cross, positive ahead on the right), its barrel, its flow line under the axis and\nits fall (percent) toward `flow`, the length added beyond each toe, the least cover asked, its material and Manning\nroughness (typed, kept).",
+      "properties": {
+        "corridor": {
+          "type": "string"
+        },
+        "corridorRevision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "cover": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "extend": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "flow": {
+          "$ref": "#/$defs/CulvertFlow"
+        },
+        "id": {
+          "type": "string"
+        },
+        "invert": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "elevation"
+        },
+        "material": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "roughness": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        },
+        "shape": {
+          "$ref": "#/$defs/CulvertShapeDef"
+        },
+        "skew": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "deg"
+        },
+        "slope": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "percent"
+        },
+        "station": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "corridor",
+        "station",
+        "shape",
+        "invert",
+        "slope",
+        "flow"
+      ],
+      "type": "object"
+    },
+    "CulvertEnd": {
+      "description": "An end of a culvert's barrel (`left` or `right` of the road): its distance along the barrel from the axis (signed,\nright positive), its offset in the cross, its plan place and its flow line's elevation.",
+      "properties": {
+        "distance": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "invert": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "elevation"
+        },
+        "offset": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "side": {
+          "type": "string"
+        },
+        "x": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "y": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "side",
+        "distance",
+        "offset",
+        "x",
+        "y",
+        "invert"
+      ],
+      "type": "object"
+    },
+    "CulvertFlow": {
+      "description": "The side a culvert's water runs to.",
+      "enum": [
+        "right",
+        "left"
+      ],
+      "type": "string"
+    },
+    "CulvertListed": {
+      "description": "A culvert in the project's list.",
+      "properties": {
+        "corridor": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "station": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "corridor",
+        "station",
+        "revision"
+      ],
+      "type": "object"
+    },
+    "CulvertReport": {
+      "description": "A culvert as read now: its names, whether its corridor changed since (`stale`), its station and km, its barrel's\nlength and outer width, its ends (left then right) and the side the water enters (`inlet`), the least cover over it\nand that cover's offset in the cross, and its quantities: the pipes' total length and the barrel's concrete.",
+      "properties": {
+        "concrete": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "corridor": {
+          "type": "string"
+        },
+        "cover": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "coverOffset": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "ends": {
+          "items": {
+            "$ref": "#/$defs/CulvertEnd"
+          },
+          "type": "array"
+        },
+        "id": {
+          "type": "string"
+        },
+        "inlet": {
+          "type": "string"
+        },
+        "kmText": {
+          "type": "string"
+        },
+        "length": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "name": {
+          "type": "string"
+        },
+        "pipes": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "stale": {
+          "type": "boolean"
+        },
+        "station": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "width": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "corridor",
+        "revision",
+        "stale",
+        "station",
+        "kmText",
+        "length",
+        "width",
+        "ends",
+        "inlet",
+        "cover",
+        "coverOffset",
+        "pipes",
+        "concrete"
+      ],
+      "type": "object"
+    },
+    "CulvertShapeDef": {
+      "description": "A culvert's barrel cross (docs/adr/0909 §2): pipes side by side (`spacing` their clear gap) or a box of cells.",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "count": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer",
+              "x-unit": "count"
+            },
+            "diameter": {
+              "format": "double",
+              "type": "number",
+              "x-unit": "m"
+            },
+            "kind": {
+              "const": "pipe",
+              "type": "string"
+            },
+            "spacing": {
+              "format": "double",
+              "type": "number",
+              "x-unit": "m"
+            },
+            "thickness": {
+              "format": "double",
+              "type": "number",
+              "x-unit": "m"
+            }
+          },
+          "required": [
+            "kind",
+            "diameter",
+            "thickness",
+            "count"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "cells": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer",
+              "x-unit": "count"
+            },
+            "height": {
+              "format": "double",
+              "type": "number",
+              "x-unit": "m"
+            },
+            "kind": {
+              "const": "box",
+              "type": "string"
+            },
+            "slab": {
+              "format": "double",
+              "type": "number",
+              "x-unit": "m"
+            },
+            "thickness": {
+              "format": "double",
+              "type": "number",
+              "x-unit": "m"
+            },
+            "width": {
+              "format": "double",
+              "type": "number",
+              "x-unit": "m"
+            }
+          },
+          "required": [
+            "kind",
+            "width",
+            "height",
+            "thickness",
+            "slab",
+            "cells"
+          ],
+          "type": "object"
+        }
+      ]
     },
     "CurveConstruction": {
       "description": "One curve to construct: Daire's, Yay's and Elips's methods (AutoCAD's CIRCLE, ARC and ELLIPSE). A circle by\nits centre and radius or diameter needs no construction: `cad.circle.create` takes it (r = diameter / 2).",
@@ -139523,6 +140369,13 @@
           "description": "The corridors (docs/adr/0905), each on an alignment, in the order the project tree shows them.",
           "items": {
             "$ref": "#/$defs/CorridorDef"
+          },
+          "type": "array"
+        },
+        "culverts": {
+          "description": "The culverts (docs/adr/0909 §2), each across a corridor.",
+          "items": {
+            "$ref": "#/$defs/CulvertDef"
           },
           "type": "array"
         },

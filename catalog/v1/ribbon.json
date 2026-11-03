@@ -661,11 +661,15 @@
       ]
      },
      {
-      "label": "Güvenlik",
+      "label": "Yapılar",
       "icon": "guardrailEditor",
       "items": [
        {
         "command": "guardrail.editor",
+        "size": "large"
+       },
+       {
+        "command": "culvert.editor",
         "size": "large"
        }
       ]

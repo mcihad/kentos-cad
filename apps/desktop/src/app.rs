@@ -294,6 +294,8 @@ pub enum Dialog {
     RoadProfileFit,
     /// Otokorkuluk (guardrail_window.rs, plan/road.md Y11.1); the window is `App::guardrail_window`.
     Guardrails,
+    /// Menfez (culvert_window.rs, plan/road.md Y11.2); the window is `App::culvert_window`.
+    Culverts,
     /// Bina programı (program_window.rs, docs/adr/0773); the window is `App::program_window`.
     Program,
     /// Mahalleri birleştir's decision, asked before writing (quantities.rs, docs/adr/0773 §4).
@@ -665,6 +667,8 @@ pub enum Message {
     RoadProfileFit(crate::road_profile_fit_window::Event),
     /// An event of Otokorkuluk (guardrail_window.rs, plan/road.md Y11.1).
     Guardrails(crate::guardrail_window::Event),
+    /// An event of Menfez (culvert_window.rs, plan/road.md Y11.2).
+    Culverts(crate::culvert_window::Event),
     /// LandXML ver's file, or none when the dialog was closed (road_exchange.rs, plan/road.md Y10.2).
     LandxmlExport(Option<std::path::PathBuf>),
     /// LandXML'den aks al's file, or none (road_exchange.rs, plan/road.md Y10.2).
@@ -1252,6 +1256,8 @@ pub struct App {
     pub(crate) road_profile_fit_window: Option<Box<crate::road_profile_fit_window::Window>>,
     /// Otokorkuluk (guardrail_window.rs, plan/road.md Y11.1).
     pub(crate) guardrail_window: Option<Box<crate::guardrail_window::Window>>,
+    /// Menfez (culvert_window.rs, plan/road.md Y11.2).
+    pub(crate) culvert_window: Option<Box<crate::culvert_window::Window>>,
     /// Bina programı (program_window.rs, docs/adr/0773).
     pub(crate) program_window: Option<crate::program_window::Window>,
     /// Mahalleri birleştir asked: its input and its decision's words (docs/adr/0773 §4).
@@ -1685,6 +1691,7 @@ impl App {
             road_alignment_fit_window: None,
             road_profile_fit_window: None,
             guardrail_window: None,
+            culvert_window: None,
             program_window: None,
             space_merging: None,
             table_styles: None,
@@ -2415,6 +2422,7 @@ impl App {
             Message::RoadAlignmentFit(event) => return self.road_alignment_fit_event(event),
             Message::RoadProfileFit(event) => return self.road_profile_fit_event(event),
             Message::Guardrails(event) => return self.guardrail_event(event),
+            Message::Culverts(event) => return self.culvert_event(event),
             Message::LandxmlExport(path) => return self.landxml_chosen(path),
             Message::LandxmlAlignments(path) => return self.landxml_alignments_chosen(path),
             Message::IfcExport(path) => return self.ifc_chosen(path),
@@ -3463,6 +3471,7 @@ impl App {
             "alignment.fromLine" => self.open_road_alignment_fit(),
             "profile.fromLine" => self.open_road_profile_fit(),
             "guardrail.editor" => self.open_guardrails(),
+            "culvert.editor" => self.open_culverts(),
             // LandXML ver (road_exchange.rs, plan/road.md Y10.2).
             "landxml.export" => return self.export_landxml(),
             "landxml.importAlignments" => return self.import_landxml_alignments(),

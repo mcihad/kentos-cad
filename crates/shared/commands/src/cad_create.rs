@@ -125,6 +125,8 @@ pub enum CreateOperation {
     SlopePlan,
     /// `road.guardrails.draw` (plan/road.md Y11.1): a guardrail's runs in plan, “Otokorkuluk çiz”.
     Guardrails,
+    /// `road.culverts.draw` (plan/road.md Y11.2): a culvert's barrel in plan, “Menfez çiz”.
+    Culverts,
 }
 
 /// One new object: its geometry and what else it carries. The layer is the
