@@ -435,9 +435,12 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: SectionsDraw) -> CommandRes
         kentos_commands::ROAD_SECTIONS_DRAW,
         kentos_commands::ROAD_SECTIONS_DRAW_VERSION,
         input,
-        |cx, input| match check(cx.doc, &input) {
-            Ok(c) => write(cx, &input, c),
-            Err(stop) => stop.into(),
+        |cx, input| {
+            let r = match check(cx.doc, &input) {
+                Ok(c) => write(cx, &input, c),
+                Err(stop) => stop.into(),
+            };
+            crate::road_drawings::kept(cx, kentos_commands::ROAD_SECTIONS_DRAW, &input, (kentos_commands::RoadSourceKind::Sections, "set"), r, |o| &o.uids)
         },
     )
 }

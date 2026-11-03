@@ -7828,6 +7828,31 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::ROAD_PROJECT_QUERY.into(),
+            version: crate::ROAD_PROJECT_QUERY_VERSION,
+            title: "Yol projesini sorgula".into(),
+            summary: "Yol projesinin ağacını bugün okur; hiçbir şey yazmaz: yüzeyler, akslar (altında boykesitleri, kesit takımları, deverleri, kavşakları), tip kesitler, koridorlar (altında kübajları ve Brükner'leri, korkulukları, menfezleri, duvarları), pafta takımları, poz defteri; yol komutlarının çizimleri ana kaynaklarının altında. Her satırın türü, kimliği, adı, ebeveyninin sırası, durumu (current, new, stale, unbuildable, unsolved, approved, changed, missing, edited, gone) ve nedenleri. Çizim, kaynaklarından biri çizildiğinden beri değişince stale, nesnelerinden biri silinince missing, elle değişince edited, ana kaynağı silinince gone olur. deep yüzeyleri ve koridorları kurar, onaylı kübajları ve Brükner'leri hesaplar. \
+                      Retler: not_a_road_project."
+                .into(),
+            aliases: vec!["yolprojesi".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::RoadProjectQuery>(),
+            output: schema::<crate::RoadProjectTree>(),
+            plan: Some(schema::<crate::RoadProjectTree>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Kurarak, sorunlarıyla".into(),
+                input: json!({ "deep": true }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::FILE_EXPORT_LANDXML.into(),
             version: crate::FILE_EXPORT_LANDXML_VERSION,
             title: "LandXML dışa aktar".into(),
@@ -13757,6 +13782,7 @@ mod tests {
                     crate::ROAD_ROUTES_DRAW => serde_json::from_value::<crate::RoutesDraw>(e.input.clone()).map(|_| ()),
                     crate::ROAD_JUNCTIONS_EDIT => serde_json::from_value::<crate::JunctionsEdit>(e.input.clone()).map(|_| ()),
                     crate::ROAD_JUNCTIONS_QUERY => serde_json::from_value::<crate::JunctionsQuery>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_PROJECT_QUERY => serde_json::from_value::<crate::RoadProjectQuery>(e.input.clone()).map(|_| ()),
                     crate::ROAD_JUNCTIONS_DRAW => serde_json::from_value::<crate::JunctionsDraw>(e.input.clone()).map(|_| ()),
                     crate::ROAD_STAKEOUT_QUERY => {
                         serde_json::from_value::<crate::StakeoutQuery>(e.input.clone()).map(|_| ())
@@ -14544,6 +14570,7 @@ mod tests {
                         crate::ROAD_ROUTES_DRAW => serde_json::from_value::<crate::RoutesDrawn>(output.clone()).map(|_| ()),
                         crate::ROAD_JUNCTIONS_EDIT => serde_json::from_value::<crate::JunctionsWritten>(output.clone()).map(|_| ()),
                         crate::ROAD_JUNCTIONS_QUERY => serde_json::from_value::<crate::JunctionsQueried>(output.clone()).map(|_| ()),
+                        crate::ROAD_PROJECT_QUERY => serde_json::from_value::<crate::RoadProjectTree>(output.clone()).map(|_| ()),
                         crate::ROAD_JUNCTIONS_DRAW => serde_json::from_value::<crate::JunctionsDrawn>(output.clone()).map(|_| ()),
                         crate::ROAD_STAKEOUT_QUERY => {
                             serde_json::from_value::<crate::StakeoutQueried>(output.clone()).map(|_| ())

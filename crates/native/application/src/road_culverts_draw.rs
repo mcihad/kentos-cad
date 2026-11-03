@@ -159,9 +159,12 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: CulvertsDraw) -> CommandRes
         kentos_commands::ROAD_CULVERTS_DRAW,
         kentos_commands::ROAD_CULVERTS_DRAW_VERSION,
         input,
-        |cx, input| match check(cx.doc, &input) {
-            Ok(c) => write(cx, &input, c),
-            Err(stop) => stop.into(),
+        |cx, input| {
+            let r = match check(cx.doc, &input) {
+                Ok(c) => write(cx, &input, c),
+                Err(stop) => stop.into(),
+            };
+            crate::road_drawings::kept(cx, kentos_commands::ROAD_CULVERTS_DRAW, &input, (kentos_commands::RoadSourceKind::Culvert, "culvert"), r, |o| &o.uids)
         },
     )
 }

@@ -512,7 +512,10 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: ProfilesDraw) -> CommandRes
         kentos_commands::ROAD_PROFILES_DRAW,
         kentos_commands::ROAD_PROFILES_DRAW_VERSION,
         input,
-        write_execute,
+        |cx, input| {
+            let r = write_execute(cx, input.clone());
+            crate::road_drawings::kept(cx, kentos_commands::ROAD_PROFILES_DRAW, &input, (kentos_commands::RoadSourceKind::Profile, "profile"), r, |o| &o.uids)
+        },
     )
 }
 

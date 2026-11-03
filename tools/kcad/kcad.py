@@ -9838,6 +9838,28 @@ class _Schema:
                     self.fail("bad_value", "malzeme yalnız menfez ve istinat duvarı ölçülerinde olur")
             return t
 
+        def drawing(x):
+            # Docs/adr/0911 §1: what a road command drew, its sources' stamps and its objects.
+            commands = ("road.alignments.label", "road.profiles.draw", "road.sections.draw", "road.corridors.draw",
+                        "road.guardrails.draw", "road.culverts.draw", "road.walls.draw", "road.junctions.draw",
+                        "road.terrains.contours")
+            kinds = ("surface", "alignment", "profile", "template", "sections", "superelevation", "corridor",
+                     "guardrail", "culvert", "wall", "junction")
+            source = self.fields({"kind": (self.enum(kinds), True), "id": (self.text, True), "digest": (self.text, True)})
+            t = self.fields({"id": (self.text, True), "command": (self.enum(commands), True), "input": (self.any, True),
+                             "sources": (self.array(source), True), "uids": (self.array(self.text), False),
+                             "digest": (self.text, True)})(x)
+            stamp = lambda s: len(s) == 16 and all(c in "0123456789abcdef" for c in s)  # noqa: E731
+            if not isinstance(t["input"], dict):
+                self.fail("bad_value", "çizimin girdisi bir nesne olur")
+            if not 1 <= len(t["sources"]) <= 256 or not stamp(t["digest"]) or \
+                    any(not stamp(s["digest"]) for s in t["sources"]) or \
+                    len({(s["kind"], s["id"]) for s in t["sources"]}) != len(t["sources"]):
+                self.fail("bad_value", "çizimin 1 ile 256 arası ayrı kaynağı olur, özetleri 16 onaltılık hane")
+            if len(t.get("uids", [])) > 1_000_000:
+                self.fail("bad_value", "çizimin en çok 1 000 000 nesnesi olur")
+            return t
+
         r = self.fields({"surfaces": (self.array(surface), False), "alignments": (self.array(alignment), False),
                          "profiles": (self.array(profile), False), "templates": (self.array(template), False),
                          "sections": (self.array(section_set), False),
@@ -9848,7 +9870,8 @@ class _Schema:
                          "guardrails": (self.array(guardrail), False),
                          "culverts": (self.array(culvert), False),
                          "walls": (self.array(wall), False), "pay": (pay, False),
-                         "junctions": (self.array(junction), False)})(v)
+                         "junctions": (self.array(junction), False),
+                         "drawings": (self.array(drawing), False), "autoRebuild": (self.bool, False)})(v)
         got = r.get("surfaces", [])
         lines = r.get("alignments", [])
         profiles = r.get("profiles", [])
@@ -9863,7 +9886,8 @@ class _Schema:
         culverts = r.get("culverts", [])
         walls = r.get("walls", [])
         if not (got or lines or profiles or templates or sets or supers or corridors or volumes or hauls or sheet_sets
-                or guardrails or culverts or walls or "pay" in r or r.get("junctions")):
+                or guardrails or culverts or walls or "pay" in r or r.get("junctions") or r.get("drawings")
+                or r.get("autoRebuild")):
             self.fail("bad_value", "boş yol ayarı yazılmaz")
         if len(got) > 64 or ("surfaces" in r and not got):
             self.fail("bad_value", "yol ayarında 1 ile 64 arası yüzey olur")
@@ -9976,6 +10000,10 @@ class _Schema:
             self.fail("bad_value", "iki istinat duvarının kimliği ya da adı aynı")
         if any(all(y["id"] != x["corridor"] for y in corridors) for x in walls):
             self.fail("bad_value", "istinat duvarının koridoru projede yok")
+        drawings = r.get("drawings", [])
+        if "drawings" in r and not drawings or len(drawings) > 1000 or \
+                len({d["id"] for d in drawings}) != len(drawings):
+            self.fail("bad_value", "yol ayarında 1 ile 1000 arası, kimlikleri ayrı yol çizimi olur")
         junctions = r.get("junctions", [])
         if "junctions" in r and not junctions or len(junctions) > 1000:
             self.fail("bad_value", "yol ayarında 1 ile 1000 arası kavşak olur")

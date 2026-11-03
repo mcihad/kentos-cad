@@ -35506,6 +35506,7 @@
       },
       "capabilities": {
         "refusals": [
+          "road_drawings_full",
           "not_a_road_project",
           "invalid_contours",
           "layer_not_found",
@@ -36375,6 +36376,7 @@
       },
       "capabilities": {
         "refusals": [
+          "road_drawings_full",
           "not_a_road_project",
           "unknown_alignment",
           "invalid_label",
@@ -36990,6 +36992,7 @@
       },
       "capabilities": {
         "refusals": [
+          "road_drawings_full",
           "not_a_road_project",
           "unknown_road_profile",
           "invalid_label",
@@ -37877,6 +37880,7 @@
       },
       "capabilities": {
         "refusals": [
+          "road_drawings_full",
           "not_a_road_project",
           "unknown_section_set",
           "invalid_label",
@@ -38625,6 +38629,7 @@
       },
       "capabilities": {
         "refusals": [
+          "road_drawings_full",
           "not_a_road_project",
           "unknown_corridor",
           "invalid_label",
@@ -39898,6 +39903,7 @@
       },
       "capabilities": {
         "refusals": [
+          "road_drawings_full",
           "not_a_road_project",
           "unknown_guardrail",
           "invalid_guardrail",
@@ -40366,6 +40372,7 @@
       },
       "capabilities": {
         "refusals": [
+          "road_drawings_full",
           "not_a_road_project",
           "unknown_culvert",
           "invalid_culvert",
@@ -40810,6 +40817,7 @@
       },
       "capabilities": {
         "refusals": [
+          "road_drawings_full",
           "not_a_road_project",
           "unknown_retaining_wall",
           "invalid_retaining_wall",
@@ -41952,6 +41960,7 @@
       },
       "capabilities": {
         "refusals": [
+          "road_drawings_full",
           "not_a_road_project",
           "unknown_junction",
           "invalid_junction",
@@ -41974,6 +41983,150 @@
             "junction": "j-1",
             "labels": true,
             "layerId": "kavsak"
+          }
+        }
+      ]
+    },
+    {
+      "id": "road.project.query",
+      "version": 1,
+      "title": "Yol projesini sorgula",
+      "summary": "Yol projesinin ağacını bugün okur; hiçbir şey yazmaz: yüzeyler, akslar (altında boykesitleri, kesit takımları, deverleri, kavşakları), tip kesitler, koridorlar (altında kübajları ve Brükner'leri, korkulukları, menfezleri, duvarları), pafta takımları, poz defteri; yol komutlarının çizimleri ana kaynaklarının altında. Her satırın türü, kimliği, adı, ebeveyninin sırası, durumu (current, new, stale, unbuildable, unsolved, approved, changed, missing, edited, gone) ve nedenleri. Çizim, kaynaklarından biri çizildiğinden beri değişince stale, nesnelerinden biri silinince missing, elle değişince edited, ana kaynağı silinince gone olur. deep yüzeyleri ve koridorları kurar, onaylı kübajları ve Brükner'leri hesaplar. Retler: not_a_road_project.",
+      "aliases": [
+        "yolprojesi"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.project.query` v1: `deep` makes the surfaces and corridors and computes the approved volumes, so the\ntree also says which do not build (`unbuildable`), which leave stretches unsolved (`unsolved`) and which approved\nvolumes changed (`changed`); without it only the definitions and the surfaces' sources are read.\n\nRefusals: `not_a_road_project`.",
+        "properties": {
+          "deep": {
+            "type": "boolean"
+          }
+        },
+        "title": "RoadProjectQuery",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.project.query` v1: the rows in the tree's order (a parent before its children), how many rows are\nstale, how many have a problem (unbuildable, unsolved, changed, missing, edited, gone), how many drawings could be\ndrawn again (stale or missing), whether it was deep, whether drawing again by itself is on, and the revision read.",
+        "properties": {
+          "autoRebuild": {
+            "type": "boolean"
+          },
+          "deep": {
+            "type": "boolean"
+          },
+          "nodes": {
+            "items": {
+              "$ref": "#/$defs/RoadNode"
+            },
+            "type": "array"
+          },
+          "problems": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "rebuildable": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "stale": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "nodes",
+          "stale",
+          "problems",
+          "rebuildable",
+          "deep",
+          "autoRebuild",
+          "revision"
+        ],
+        "title": "RoadProjectTree",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.project.query` v1: the rows in the tree's order (a parent before its children), how many rows are\nstale, how many have a problem (unbuildable, unsolved, changed, missing, edited, gone), how many drawings could be\ndrawn again (stale or missing), whether it was deep, whether drawing again by itself is on, and the revision read.",
+        "properties": {
+          "autoRebuild": {
+            "type": "boolean"
+          },
+          "deep": {
+            "type": "boolean"
+          },
+          "nodes": {
+            "items": {
+              "$ref": "#/$defs/RoadNode"
+            },
+            "type": "array"
+          },
+          "problems": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "rebuildable": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "stale": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "nodes",
+          "stale",
+          "problems",
+          "rebuildable",
+          "deep",
+          "autoRebuild",
+          "revision"
+        ],
+        "title": "RoadProjectTree",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Kurarak, sorunlarıyla",
+          "input": {
+            "deep": true
           }
         }
       ]
@@ -78684,6 +78837,12 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "glTF sahnesi yazılamıyor."
+    },
+    {
+      "code": "road_drawings_full",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Yol çizimi kaydedilemiyor: proje en çok 1000 çizim ve çizim başına en çok 1 000 000 nesne tutar."
     },
     {
       "code": "invalid_stakeout",
@@ -143050,6 +143209,68 @@
       ],
       "type": "object"
     },
+    "RoadDrawingDef": {
+      "additionalProperties": false,
+      "description": "A drawing a road command made (docs/adr/0911 §1): its id, the command and its input as given, the sources it was\nmade from (its main source first), the objects it wrote in order and the stamp of those objects as written.",
+      "properties": {
+        "command": {
+          "type": "string"
+        },
+        "digest": {
+          "description": "16 lower-case hex digits: the objects' JSON in order, stamped.",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "input": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "sources": {
+          "items": {
+            "$ref": "#/$defs/RoadDrawingSource"
+          },
+          "type": "array"
+        },
+        "uids": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "command",
+        "input",
+        "sources",
+        "digest"
+      ],
+      "type": "object"
+    },
+    "RoadDrawingSource": {
+      "additionalProperties": false,
+      "description": "A source a drawing was made from: its kind, id and the stamp of what it was (docs/adr/0911 §1).",
+      "properties": {
+        "digest": {
+          "description": "16 lower-case hex digits: its definition's canonical JSON stamped (a surface's with its sources' digest).",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/RoadSourceKind"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "digest"
+      ],
+      "type": "object"
+    },
     "RoadEditOperation": {
       "description": "What an edit of a template or a set does.",
       "oneOf": [
@@ -143089,6 +143310,98 @@
           "type": "string"
         }
       ]
+    },
+    "RoadNode": {
+      "description": "A row of the project tree: what it is, its id and name, its parent's index (none: a top row), how it stands and\nwhy in sentences; a drawing's command and how many of its objects the drawing holds now.",
+      "properties": {
+        "command": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/RoadNodeKind"
+        },
+        "name": {
+          "type": "string"
+        },
+        "objects": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "count"
+        },
+        "parent": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "index"
+        },
+        "state": {
+          "$ref": "#/$defs/RoadNodeState"
+        },
+        "why": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "name",
+        "state"
+      ],
+      "type": "object"
+    },
+    "RoadNodeKind": {
+      "description": "What a row of the project tree is.",
+      "enum": [
+        "surface",
+        "alignment",
+        "profile",
+        "sections",
+        "superelevation",
+        "junction",
+        "template",
+        "corridor",
+        "volume",
+        "haul",
+        "guardrail",
+        "culvert",
+        "wall",
+        "sheetSet",
+        "pay",
+        "drawing"
+      ],
+      "type": "string"
+    },
+    "RoadNodeState": {
+      "description": "How a row stands: up to date; a surface never accepted; its sources changed; a surface that does not build; a\ncorridor with unsolved stretches; an approved volume as approved, or its sources changed; a drawing some of whose\nobjects are gone, whose objects were changed by hand, or whose source is gone.",
+      "enum": [
+        "current",
+        "new",
+        "stale",
+        "unbuildable",
+        "unsolved",
+        "approved",
+        "changed",
+        "missing",
+        "edited",
+        "gone"
+      ],
+      "type": "string"
     },
     "RoadProfileListed": {
       "description": "A profile in the project's list.",
@@ -143132,6 +143445,10 @@
           },
           "type": "array"
         },
+        "autoRebuild": {
+          "description": "A write that leaves drawings stale draws them again in its step (docs/adr/0911 §3); off unless chosen.",
+          "type": "boolean"
+        },
         "corridors": {
           "description": "The corridors (docs/adr/0905), each on an alignment, in the order the project tree shows them.",
           "items": {
@@ -143143,6 +143460,13 @@
           "description": "The culverts (docs/adr/0909 §2), each across a corridor.",
           "items": {
             "$ref": "#/$defs/CulvertDef"
+          },
+          "type": "array"
+        },
+        "drawings": {
+          "description": "What the road commands drew (docs/adr/0911 §1): each drawing's command, input, sources and objects.",
+          "items": {
+            "$ref": "#/$defs/RoadDrawingDef"
           },
           "type": "array"
         },
@@ -143432,6 +143756,23 @@
         "sheets"
       ],
       "type": "object"
+    },
+    "RoadSourceKind": {
+      "description": "What kind of road source a drawing depends on (docs/adr/0911 §1).",
+      "enum": [
+        "surface",
+        "alignment",
+        "profile",
+        "template",
+        "sections",
+        "superelevation",
+        "corridor",
+        "guardrail",
+        "culvert",
+        "wall",
+        "junction"
+      ],
+      "type": "string"
     },
     "RoadWork": {
       "description": "What is drawn or tidied.",

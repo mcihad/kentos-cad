@@ -768,6 +768,8 @@ fn report_of_ops(ops: &[Op]) -> StepReport {
             | Op::RoadWalls { .. }
             | Op::RoadPay { .. }
             | Op::RoadJunctions { .. }
+            | Op::RoadDrawings { .. }
+            | Op::RoadAutoRebuild { .. }
             | Op::ViewArea { .. }
             | Op::ArchOptions { .. }
             | Op::OptionCombos { .. }

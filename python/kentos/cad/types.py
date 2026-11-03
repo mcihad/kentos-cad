@@ -5461,6 +5461,70 @@ RoadKindName = Literal["road", "footway", "cycleway"]
 """The names of :class:`RoadKind`, for a plain string."""
 
 
+class RoadNodeKind(_StrEnum):
+    """What a row of the project tree is."""
+    SURFACE = "surface"
+    ALIGNMENT = "alignment"
+    PROFILE = "profile"
+    SECTIONS = "sections"
+    SUPERELEVATION = "superelevation"
+    JUNCTION = "junction"
+    TEMPLATE = "template"
+    CORRIDOR = "corridor"
+    VOLUME = "volume"
+    HAUL = "haul"
+    GUARDRAIL = "guardrail"
+    CULVERT = "culvert"
+    WALL = "wall"
+    SHEET_SET = "sheetSet"
+    PAY = "pay"
+    DRAWING = "drawing"
+
+
+RoadNodeKindName = Literal["surface", "alignment", "profile", "sections", "superelevation", "junction", "template", "corridor", "volume", "haul", "guardrail", "culvert", "wall", "sheetSet", "pay", "drawing"]
+"""The names of :class:`RoadNodeKind`, for a plain string."""
+
+
+class RoadNodeState(_StrEnum):
+    """How a row stands: up to date; a surface never accepted; its sources changed; a surface that does not build; a
+    corridor with unsolved stretches; an approved volume as approved, or its sources changed; a drawing some of whose
+    objects are gone, whose objects were changed by hand, or whose source is gone.
+    """
+    CURRENT = "current"
+    NEW = "new"
+    STALE = "stale"
+    UNBUILDABLE = "unbuildable"
+    UNSOLVED = "unsolved"
+    APPROVED = "approved"
+    CHANGED = "changed"
+    MISSING = "missing"
+    EDITED = "edited"
+    GONE = "gone"
+
+
+RoadNodeStateName = Literal["current", "new", "stale", "unbuildable", "unsolved", "approved", "changed", "missing", "edited", "gone"]
+"""The names of :class:`RoadNodeState`, for a plain string."""
+
+
+class RoadSourceKind(_StrEnum):
+    """What kind of road source a drawing depends on (docs/adr/0911 §1)."""
+    SURFACE = "surface"
+    ALIGNMENT = "alignment"
+    PROFILE = "profile"
+    TEMPLATE = "template"
+    SECTIONS = "sections"
+    SUPERELEVATION = "superelevation"
+    CORRIDOR = "corridor"
+    GUARDRAIL = "guardrail"
+    CULVERT = "culvert"
+    WALL = "wall"
+    JUNCTION = "junction"
+
+
+RoadSourceKindName = Literal["surface", "alignment", "profile", "template", "sections", "superelevation", "corridor", "guardrail", "culvert", "wall", "junction"]
+"""The names of :class:`RoadSourceKind`, for a plain string."""
+
+
 class ScaleBasis(_StrEnum):
     """What a pattern's Ölçek is of (docs/adr/0331 §3).
 
@@ -63687,6 +63751,116 @@ class RingGeometry(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class RoadDrawingDef(_Model):
+    """A drawing a road command made (docs/adr/0911 §1): its id, the command and its input as given, the sources it was
+    made from (its main source first), the objects it wrote in order and the stamp of those objects as written.
+    Attributes:
+        digest: 16 lower-case hex digits: the objects' JSON in order, stamped.
+    """
+    id: str
+    command: str
+    input: dict[str, Any]
+    sources: list[RoadDrawingSource]
+    digest: str
+    uids: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["command"] = self.command
+        out["input"] = dict(self.input)
+        out["sources"] = [e0.to_json() for e0 in self.sources]
+        out["digest"] = self.digest
+        if self.uids is not UNSET:
+            out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoadDrawingDef:
+        return cls(
+            id=data["id"],
+            command=data["command"],
+            input=dict(data["input"]),
+            sources=[RoadDrawingSource.from_json(e0) for e0 in data["sources"]],
+            digest=data["digest"],
+            uids=list(data["uids"]) if "uids" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RoadDrawingSource(_Model):
+    """A source a drawing was made from: its kind, id and the stamp of what it was (docs/adr/0911 §1).
+    Attributes:
+        digest: 16 lower-case hex digits: its definition's canonical JSON stamped (a surface's with its sources' digest).
+    """
+    kind: RoadSourceKind | RoadSourceKindName
+    id: str
+    digest: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        out["id"] = self.id
+        out["digest"] = self.digest
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoadDrawingSource:
+        return cls(
+            kind=_enum_in(RoadSourceKind, data["kind"]),
+            id=data["id"],
+            digest=data["digest"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RoadNode(_Model):
+    """A row of the project tree: what it is, its id and name, its parent's index (none: a top row), how it stands and
+    why in sentences; a drawing's command and how many of its objects the drawing holds now.
+    Attributes:
+        objects: Unit: count.
+        parent: Unit: index.
+    """
+    kind: RoadNodeKind | RoadNodeKindName
+    id: str
+    name: str
+    state: RoadNodeState | RoadNodeStateName
+    command: str | None | Unset = UNSET
+    objects: int | None | Unset = UNSET
+    parent: int | None | Unset = UNSET
+    why: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        out["id"] = self.id
+        out["name"] = self.name
+        out["state"] = _enum_out(self.state)
+        if self.command is not UNSET:
+            out["command"] = self.command
+        if self.objects is not UNSET:
+            out["objects"] = self.objects
+        if self.parent is not UNSET:
+            out["parent"] = self.parent
+        if self.why is not UNSET:
+            out["why"] = list(self.why)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoadNode:
+        return cls(
+            kind=_enum_in(RoadNodeKind, data["kind"]),
+            id=data["id"],
+            name=data["name"],
+            state=_enum_in(RoadNodeState, data["state"]),
+            command=data.get("command", UNSET),
+            objects=data.get("objects", UNSET),
+            parent=data.get("parent", UNSET),
+            why=list(data["why"]) if "why" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class RoadProfileListed(_Model):
     """A profile in the project's list.
     Attributes:
@@ -63719,12 +63893,79 @@ class RoadProfileListed(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class RoadProjectQuery(_Model):
+    """Input of `road.project.query` v1: `deep` makes the surfaces and corridors and computes the approved volumes, so the
+    tree also says which do not build (`unbuildable`), which leave stretches unsolved (`unsolved`) and which approved
+    volumes changed (`changed`); without it only the definitions and the surfaces' sources are read.
+
+    Refusals: `not_a_road_project`.
+    """
+    deep: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.deep is not UNSET:
+            out["deep"] = self.deep
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoadProjectQuery:
+        return cls(
+            deep=data.get("deep", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RoadProjectTree(_Model):
+    """Output of `road.project.query` v1: the rows in the tree's order (a parent before its children), how many rows are
+    stale, how many have a problem (unbuildable, unsolved, changed, missing, edited, gone), how many drawings could be
+    drawn again (stale or missing), whether it was deep, whether drawing again by itself is on, and the revision read.
+    Attributes:
+        stale: Unit: count.
+        problems: Unit: count.
+        rebuildable: Unit: count.
+    """
+    nodes: list[RoadNode]
+    stale: int
+    problems: int
+    rebuildable: int
+    deep: bool
+    auto_rebuild: bool
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["nodes"] = [e0.to_json() for e0 in self.nodes]
+        out["stale"] = self.stale
+        out["problems"] = self.problems
+        out["rebuildable"] = self.rebuildable
+        out["deep"] = self.deep
+        out["autoRebuild"] = self.auto_rebuild
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoadProjectTree:
+        return cls(
+            nodes=[RoadNode.from_json(e0) for e0 in data["nodes"]],
+            stale=data["stale"],
+            problems=data["problems"],
+            rebuildable=data["rebuildable"],
+            deep=data["deep"],
+            auto_rebuild=data["autoRebuild"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class RoadSettings(_Model):
     """A road project's settings; absent while it has none.
     Attributes:
         alignments: The horizontal alignments (docs/adr/0901), in the order the project tree shows them.
+        auto_rebuild: A write that leaves drawings stale draws them again in its step (docs/adr/0911 §3); off unless chosen.
         corridors: The corridors (docs/adr/0905), each on an alignment, in the order the project tree shows them.
         culverts: The culverts (docs/adr/0909 §2), each across a corridor.
+        drawings: What the road commands drew (docs/adr/0911 §1): each drawing's command, input, sources and objects.
         guardrails: The guardrails (docs/adr/0909 §1), each along a corridor.
         hauls: The mass haul diagrams (docs/adr/0907).
         junctions: The junctions (docs/adr/0910 §2), each of two alignments.
@@ -63739,8 +63980,10 @@ class RoadSettings(_Model):
         walls: The retaining walls (docs/adr/0909 §3), each along a corridor's side.
     """
     alignments: list[AlignmentDef] | Unset = UNSET
+    auto_rebuild: bool | Unset = UNSET
     corridors: list[CorridorDef] | Unset = UNSET
     culverts: list[CulvertDef] | Unset = UNSET
+    drawings: list[RoadDrawingDef] | Unset = UNSET
     guardrails: list[GuardrailDef] | Unset = UNSET
     hauls: list[HaulDef] | Unset = UNSET
     junctions: list[JunctionDef] | Unset = UNSET
@@ -63758,10 +64001,14 @@ class RoadSettings(_Model):
         out: dict[str, Any] = {}
         if self.alignments is not UNSET:
             out["alignments"] = [e0.to_json() for e0 in self.alignments]
+        if self.auto_rebuild is not UNSET:
+            out["autoRebuild"] = self.auto_rebuild
         if self.corridors is not UNSET:
             out["corridors"] = [e0.to_json() for e0 in self.corridors]
         if self.culverts is not UNSET:
             out["culverts"] = [e0.to_json() for e0 in self.culverts]
+        if self.drawings is not UNSET:
+            out["drawings"] = [e0.to_json() for e0 in self.drawings]
         if self.guardrails is not UNSET:
             out["guardrails"] = [e0.to_json() for e0 in self.guardrails]
         if self.hauls is not UNSET:
@@ -63792,8 +64039,10 @@ class RoadSettings(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> RoadSettings:
         return cls(
             alignments=[AlignmentDef.from_json(e0) for e0 in data["alignments"]] if "alignments" in data else UNSET,
+            auto_rebuild=data.get("autoRebuild", UNSET),
             corridors=[CorridorDef.from_json(e0) for e0 in data["corridors"]] if "corridors" in data else UNSET,
             culverts=[CulvertDef.from_json(e0) for e0 in data["culverts"]] if "culverts" in data else UNSET,
+            drawings=[RoadDrawingDef.from_json(e0) for e0 in data["drawings"]] if "drawings" in data else UNSET,
             guardrails=[GuardrailDef.from_json(e0) for e0 in data["guardrails"]] if "guardrails" in data else UNSET,
             hauls=[HaulDef.from_json(e0) for e0 in data["hauls"]] if "hauls" in data else UNSET,
             junctions=[JunctionDef.from_json(e0) for e0 in data["junctions"]] if "junctions" in data else UNSET,
@@ -102990,11 +103239,20 @@ __all__ = [
     "RevisionPlan",
     "RevisionsMark",
     "RingGeometry",
+    "RoadDrawingDef",
+    "RoadDrawingSource",
     "RoadEditOperation",
     "RoadEditOperationName",
     "RoadKind",
     "RoadKindName",
+    "RoadNode",
+    "RoadNodeKind",
+    "RoadNodeKindName",
+    "RoadNodeState",
+    "RoadNodeStateName",
     "RoadProfileListed",
+    "RoadProjectQuery",
+    "RoadProjectTree",
     "RoadSettings",
     "RoadSheetDef",
     "RoadSheetLaid",
@@ -103002,6 +103260,8 @@ __all__ = [
     "RoadSheetsLaid",
     "RoadSheetsPlan",
     "RoadSheetsSections",
+    "RoadSourceKind",
+    "RoadSourceKindName",
     "RoadWork",
     "RoadsEdit",
     "RoadsEdited",

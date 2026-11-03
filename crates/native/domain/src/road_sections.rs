@@ -275,4 +275,43 @@ impl Document {
             Ok(true)
         })
     }
+
+    /// What the project's road commands drew (docs/adr/0911 §1).
+    pub fn road_drawings(&self) -> &[kentos_contracts::RoadDrawingDef] {
+        self.settings.road.as_ref().map_or(&[], |r| r.drawings.as_slice())
+    }
+
+    /// Gives the project the drawings `next` as one change named `label`, as [`Self::set_road_templates`].
+    pub fn set_road_drawings(&mut self, next: Vec<kentos_contracts::RoadDrawingDef>, label: &str) -> Result<bool, Refusal> {
+        let judged = RoadSettings { drawings: next.clone(), ..self.settings.road.clone().unwrap_or_default() };
+        if let Some((path, problem)) = judged.problem() {
+            return Err(Refusal(format!("{path}: {problem}")));
+        }
+        let before = self.road_drawings().to_vec();
+        if before == next {
+            return Ok(false);
+        }
+        self.transact(label, |doc| {
+            doc.record(vec![Op::RoadDrawings { before, after: next }], label);
+            Ok(true)
+        })
+    }
+
+    /// Whether a write draws the drawings it leaves stale again in its step (docs/adr/0911 §3).
+    pub fn road_auto_rebuild(&self) -> bool {
+        self.settings.road.as_ref().is_some_and(|r| r.auto_rebuild)
+    }
+
+    /// Turns drawing again by itself on or off, as one change named `label`.
+    pub fn set_road_auto_rebuild(&mut self, on: bool, label: &str) -> bool {
+        let before = self.road_auto_rebuild();
+        if before == on {
+            return false;
+        }
+        let _ = self.transact(label, |doc| -> Result<(), Refusal> {
+            doc.record(vec![Op::RoadAutoRebuild { before, after: on }], label);
+            Ok(())
+        });
+        true
+    }
 }

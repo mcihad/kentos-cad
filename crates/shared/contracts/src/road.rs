@@ -113,6 +113,85 @@ pub struct RoadSettings {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub pay: Option<PayBookDef>,
+    /// What the road commands drew (docs/adr/0911 §1): each drawing's command, input, sources and objects.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<RoadDrawingDef>>", optional))]
+    pub drawings: Vec<RoadDrawingDef>,
+    /// A write that leaves drawings stale draws them again in its step (docs/adr/0911 §3); off unless chosen.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub auto_rebuild: bool,
+}
+
+/// The road commands that draw (docs/adr/0911 §1): what a drawing's `command` is.
+pub const ROAD_DRAWING_COMMANDS: [&str; 9] = [
+    "road.alignments.label",
+    "road.profiles.draw",
+    "road.sections.draw",
+    "road.corridors.draw",
+    "road.guardrails.draw",
+    "road.culverts.draw",
+    "road.walls.draw",
+    "road.junctions.draw",
+    "road.terrains.contours",
+];
+/// The most drawings a project keeps, sources a drawing names and objects it holds.
+pub const MAX_ROAD_DRAWINGS: usize = 1000;
+pub const MAX_DRAWING_SOURCES: usize = 256;
+pub const MAX_DRAWING_OBJECTS: usize = 1_000_000;
+
+/// What kind of road source a drawing depends on (docs/adr/0911 §1).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum RoadSourceKind {
+    Surface,
+    Alignment,
+    Profile,
+    Template,
+    Sections,
+    Superelevation,
+    Corridor,
+    Guardrail,
+    Culvert,
+    Wall,
+    Junction,
+}
+
+/// A source a drawing was made from: its kind, id and the stamp of what it was (docs/adr/0911 §1).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RoadDrawingSource {
+    pub kind: RoadSourceKind,
+    pub id: String,
+    /// 16 lower-case hex digits: its definition's canonical JSON stamped (a surface's with its sources' digest).
+    pub digest: String,
+}
+
+/// A drawing a road command made (docs/adr/0911 §1): its id, the command and its input as given, the sources it was
+/// made from (its main source first), the objects it wrote in order and the stamp of those objects as written.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RoadDrawingDef {
+    pub id: String,
+    pub command: String,
+    #[cfg_attr(feature = "ts", ts(type = "Record<string, unknown>"))]
+    #[cfg_attr(feature = "schema", schemars(with = "std::collections::BTreeMap<String, serde_json::Value>"))]
+    pub input: std::collections::BTreeMap<String, serde_json::Value>,
+    pub sources: Vec<RoadDrawingSource>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub uids: Vec<String>,
+    /// 16 lower-case hex digits: the objects' JSON in order, stamped.
+    pub digest: String,
 }
 
 impl RoadSettings {
@@ -133,6 +212,8 @@ impl RoadSettings {
             && self.walls.is_empty()
             && self.pay.is_none()
             && self.junctions.is_empty()
+            && self.drawings.is_empty()
+            && !self.auto_rebuild
     }
 
     /// What is wrong with it, by the field's path and in words; none when it is right.
@@ -994,6 +1075,47 @@ pub fn road_problem(road: &RoadSettings) -> Option<(String, String)> {
         .or_else(|| walls_problem(road))
         .or_else(|| pay_problem(road))
         .or_else(|| junctions_problem(road))
+        .or_else(|| drawings_problem(road))
+}
+
+fn stamp_ok(s: &str) -> bool {
+    s.len() == 16 && s.bytes().all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+}
+
+fn drawings_problem(road: &RoadSettings) -> Option<(String, String)> {
+    let fail = |path: String, words: &str| Some((path, words.to_string()));
+    if road.drawings.len() > MAX_ROAD_DRAWINGS {
+        return fail("drawings".into(), &format!("en çok {MAX_ROAD_DRAWINGS} yol çizimi kaydedilir"));
+    }
+    let mut ids = std::collections::BTreeSet::new();
+    for (i, d) in road.drawings.iter().enumerate() {
+        let at = |field: &str| format!("drawings[{i}].{field}");
+        if !word_ok(&d.id) || !ids.insert(d.id.as_str()) {
+            return fail(at("id"), "çizimin kimliği boş olmayan, en çok 64 karakterlik ve tek bir sözcük olmalı");
+        }
+        if !ROAD_DRAWING_COMMANDS.contains(&d.command.as_str()) {
+            return fail(at("command"), "çizimin komutu çizime yazan bir yol komutu olmalı");
+        }
+        if d.sources.is_empty() || d.sources.len() > MAX_DRAWING_SOURCES {
+            return fail(at("sources"), &format!("çizimin 1 ile {MAX_DRAWING_SOURCES} arası kaynağı olur"));
+        }
+        let mut seen = std::collections::BTreeSet::new();
+        for (k, s) in d.sources.iter().enumerate() {
+            if !word_ok(&s.id) || !stamp_ok(&s.digest) || !seen.insert((s.kind, s.id.as_str())) {
+                return fail(
+                    format!("drawings[{i}].sources[{k}]"),
+                    "kaynağın kimliği bir sözcük, özeti 16 onaltılık hane olur; aynı kaynak iki kez yazılmaz",
+                );
+            }
+        }
+        if d.uids.len() > MAX_DRAWING_OBJECTS || d.uids.iter().any(|u| !word_ok(u)) {
+            return fail(at("uids"), &format!("çizimin en çok {MAX_DRAWING_OBJECTS} nesnesi olur, her biri bir kimlik"));
+        }
+        if !stamp_ok(&d.digest) {
+            return fail(at("digest"), "nesnelerin özeti 16 onaltılık hane olur");
+        }
+    }
+    None
 }
 
 fn side_problem(s: &TemplateSideDef, at: &str) -> Option<(String, String)> {
@@ -2484,6 +2606,37 @@ mod tests {
             max_edge: Some(50.0),
             built: None,
         }
+    }
+
+    #[test]
+    fn a_drawing_record_is_judged() {
+        let drawing = |id: &str| RoadDrawingDef {
+            id: id.into(),
+            command: "road.corridors.draw".into(),
+            input: std::collections::BTreeMap::new(),
+            sources: vec![RoadDrawingSource { kind: RoadSourceKind::Corridor, id: "c-1".into(), digest: "0123456789abcdef".into() }],
+            uids: vec!["u-1".into()],
+            digest: "fedcba9876543210".into(),
+        };
+        let of = |drawings: Vec<RoadDrawingDef>| road_problem(&RoadSettings { drawings, ..RoadSettings::default() }).map(|p| p.0);
+        assert_eq!(of(vec![drawing("cz-1")]), None);
+        assert_eq!(of(vec![drawing("cz-1"), drawing("cz-1")]).as_deref(), Some("drawings[1].id"));
+        let mut d = drawing("cz-1");
+        d.command = "road.routes.draw".into();
+        assert_eq!(of(vec![d]).as_deref(), Some("drawings[0].command"));
+        let mut d = drawing("cz-1");
+        d.sources[0].digest = "0123456789ABCDEF".into();
+        assert_eq!(of(vec![d]).as_deref(), Some("drawings[0].sources[0]"));
+        let mut d = drawing("cz-1");
+        d.sources.push(d.sources[0].clone());
+        assert_eq!(of(vec![d]).as_deref(), Some("drawings[0].sources[1]"));
+        let mut d = drawing("cz-1");
+        d.digest = "x".into();
+        assert_eq!(of(vec![d]).as_deref(), Some("drawings[0].digest"));
+        // The most a project keeps: the 1001st is refused (what road_drawings_full answers).
+        let many: Vec<RoadDrawingDef> = (0..=MAX_ROAD_DRAWINGS).map(|k| drawing(&format!("cz-{k}"))).collect();
+        assert_eq!(of(many).as_deref(), Some("drawings"));
+        assert!(!RoadSettings { auto_rebuild: true, ..RoadSettings::default() }.is_empty());
     }
 
     #[test]

@@ -5597,6 +5597,10 @@ def build():
     apv = load("road-work.json")
     apv["settings"]["road"]["volumes"][1]["approved"]["at"] = "3 Kasım 2026"
     out["broken/road-volume-bad-approval-day.kcad"] = container(document(apv))
+    # Schema 161 (plan/road.md Y13, docs/adr/0911 §1): a road drawing's stamps are 16 hex digits.
+    drw = load("road-work.json")
+    drw["settings"]["road"]["drawings"][0]["sources"][0]["digest"] = "0F1E2D3C4B5A6978"
+    out["broken/road-drawing-bad-stamp.kcad"] = container(document(drw))
     # Schema 161 (plan/road.md Y9, docs/adr/0907): a mass haul diagram names an earthwork volume of the project.
     hau = load("road-work.json")
     hau["settings"]["road"]["hauls"][0]["volume"] = "v-yok"

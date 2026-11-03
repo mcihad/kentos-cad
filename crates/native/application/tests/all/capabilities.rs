@@ -87,6 +87,15 @@ fn reached() -> BTreeMap<String, BTreeSet<String>> {
 
 /// The listed codes no shared case reaches, and why.
 const UNREACHED: &[(&str, &str, &str)] = &[
+    ("road.alignments.label","road_drawings_full","Proje en çok 1000 yol çizimi tutar; sınır sözleşmenin a_drawing_record_is_judged testinde, kaydı geri alan adım road_drawings birim testinde sınanır (ADR 0911 §1)."),
+    ("road.profiles.draw","road_drawings_full","Proje en çok 1000 yol çizimi tutar; sınır sözleşmenin a_drawing_record_is_judged testinde, kaydı geri alan adım road_drawings birim testinde sınanır (ADR 0911 §1)."),
+    ("road.sections.draw","road_drawings_full","Proje en çok 1000 yol çizimi tutar; sınır sözleşmenin a_drawing_record_is_judged testinde, kaydı geri alan adım road_drawings birim testinde sınanır (ADR 0911 §1)."),
+    ("road.corridors.draw","road_drawings_full","Proje en çok 1000 yol çizimi tutar; sınır sözleşmenin a_drawing_record_is_judged testinde, kaydı geri alan adım road_drawings birim testinde sınanır (ADR 0911 §1)."),
+    ("road.guardrails.draw","road_drawings_full","Proje en çok 1000 yol çizimi tutar; sınır sözleşmenin a_drawing_record_is_judged testinde, kaydı geri alan adım road_drawings birim testinde sınanır (ADR 0911 §1)."),
+    ("road.culverts.draw","road_drawings_full","Proje en çok 1000 yol çizimi tutar; sınır sözleşmenin a_drawing_record_is_judged testinde, kaydı geri alan adım road_drawings birim testinde sınanır (ADR 0911 §1)."),
+    ("road.walls.draw","road_drawings_full","Proje en çok 1000 yol çizimi tutar; sınır sözleşmenin a_drawing_record_is_judged testinde, kaydı geri alan adım road_drawings birim testinde sınanır (ADR 0911 §1)."),
+    ("road.junctions.draw","road_drawings_full","Proje en çok 1000 yol çizimi tutar; sınır sözleşmenin a_drawing_record_is_judged testinde, kaydı geri alan adım road_drawings birim testinde sınanır (ADR 0911 §1)."),
+    ("road.terrains.contours","road_drawings_full","Proje en çok 1000 yol çizimi tutar; sınır sözleşmenin a_drawing_record_is_judged testinde, kaydı geri alan adım road_drawings birim testinde sınanır (ADR 0911 §1)."),
     ("road.stakeout.send", "stakeout_unsolved", "Ortak çizimde kesitsiz km yalnız yüzeysiz koridorda olur, o da hiç nokta vermez ve gönderme reddedilir; uyarının metni road.stakeout.query'nin durumlarında sınanır, gönderme cetvelin uyarılarını olduğu gibi taşır (ADR 0908 §9)."),
     ("cad.blocks.convert", "recognition_scope_limit", "Toplam 204000 köşe blocks_convert::aggregate_vertex_limit_is_inherited_from_the_same_recognition_gate_without_a_partial_write testinde oluşturulup ortak aramanın ret kodu, değişmez snapshot ve Undo yokluğu sınanır (ADR0871)."),
     ("cad.blocks.convert", "block_refused", "Yazmadan önce aynı tanım block_rules ile doğrulanır; add_block reddi yalnız savunmadır. Yeni tanım saf analitik üyelerden ve yeni UUID ile oluşur; yinelenen ad ortak durumda duplicate_block olur (ADR0871)."),

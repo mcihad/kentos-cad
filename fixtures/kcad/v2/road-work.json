@@ -622,7 +622,40 @@
       }
      ]
     }
-   ]
+   ],
+   "drawings": [
+    {
+     "id": "cz-1",
+     "command": "road.corridors.draw",
+     "input": {
+      "corridor": "c-1",
+      "layerId": "0",
+      "tick": 5.0
+     },
+     "sources": [
+      {
+       "kind": "corridor",
+       "id": "c-1",
+       "digest": "0f1e2d3c4b5a6978"
+      },
+      {
+       "kind": "alignment",
+       "id": "g-1",
+       "digest": "8796a5b4c3d2e1f0"
+      },
+      {
+       "kind": "surface",
+       "id": "t-zemin",
+       "digest": "00ff00ff00ff00ff"
+      }
+     ],
+     "uids": [
+      "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11"
+     ],
+     "digest": "0123456789abcdef"
+    }
+   ],
+   "autoRebuild": true
   }
  },
  "origin": {

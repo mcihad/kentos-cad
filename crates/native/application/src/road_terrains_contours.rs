@@ -145,7 +145,10 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: TerrainsContours) -> Comman
         kentos_commands::ROAD_TERRAINS_CONTOURS,
         kentos_commands::ROAD_TERRAINS_CONTOURS_VERSION,
         input,
-        write_execute,
+        |cx, input| {
+            let r = write_execute(cx, input.clone());
+            crate::road_drawings::kept(cx, kentos_commands::ROAD_TERRAINS_CONTOURS, &input, (kentos_commands::RoadSourceKind::Surface, "surface"), r, |o| &o.uids)
+        },
     )
 }
 

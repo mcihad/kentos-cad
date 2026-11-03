@@ -265,7 +265,10 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: AlignmentsLabel) -> Command
         kentos_commands::ROAD_ALIGNMENTS_LABEL,
         kentos_commands::ROAD_ALIGNMENTS_LABEL_VERSION,
         input,
-        write_execute,
+        |cx, input| {
+            let r = write_execute(cx, input.clone());
+            crate::road_drawings::kept(cx, kentos_commands::ROAD_ALIGNMENTS_LABEL, &input, (kentos_commands::RoadSourceKind::Alignment, "alignment"), r, |o| &o.uids)
+        },
     )
 }
 

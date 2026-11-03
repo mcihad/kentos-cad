@@ -93,7 +93,7 @@ use kentos_native_application::{
     images_clip, labels_pin, labels_report, layers_compose, layers_contingents, layers_edit,
     layers_filter, layers_find, layers_indexes, layers_info, layers_labels, layers_renderer,
     layers_rules, layers_service, layers_set, layers_states, layers_subtypes, layers_table,
-    layers_time, layers_translate, leaders_edit, legends, levels_assign, line, linearref_define, file_import_landxml, road_alignments_create, road_scene, road_alignments_edit, road_alignments_label, road_alignments_query, road_profiles_create, road_profiles_draw, road_profiles_edit, road_profiles_query, road_sections_draw, road_sections_edit, road_sections_query, road_superelevations_edit, road_superelevations_query, road_corridors_draw, road_corridors_edit, road_corridors_query, road_volumes_approve, road_volumes_edit, road_volumes_query, road_hauls_edit, road_hauls_query, road_guardrails_edit, road_guardrails_query, road_guardrails_draw, road_culverts_edit, road_culverts_query, road_culverts_draw, road_walls_edit, road_walls_query, road_walls_draw, road_pay_edit, road_pay_query, road_routes_find, road_routes_draw, road_junctions_edit, road_junctions_query, road_junctions_draw, road_alignments_import, road_alignments_fit, road_profiles_fit, road_ifc, road_landxml, road_stakeout, road_stakeout_send, road_sheets, road_sheets_sections, road_templates_edit, road_terrains_contours, road_terrains_create, road_terrains_edit, road_terrains_query,
+    layers_time, layers_translate, leaders_edit, legends, levels_assign, line, linearref_define, file_import_landxml, road_alignments_create, road_scene, road_alignments_edit, road_alignments_label, road_alignments_query, road_profiles_create, road_profiles_draw, road_profiles_edit, road_profiles_query, road_sections_draw, road_sections_edit, road_sections_query, road_superelevations_edit, road_superelevations_query, road_corridors_draw, road_corridors_edit, road_corridors_query, road_volumes_approve, road_volumes_edit, road_volumes_query, road_hauls_edit, road_hauls_query, road_guardrails_edit, road_guardrails_query, road_guardrails_draw, road_culverts_edit, road_culverts_query, road_culverts_draw, road_walls_edit, road_walls_query, road_walls_draw, road_pay_edit, road_pay_query, road_routes_find, road_routes_draw, road_junctions_edit, road_junctions_query, road_junctions_draw, road_project_query, road_alignments_import, road_alignments_fit, road_profiles_fit, road_ifc, road_landxml, road_stakeout, road_stakeout_send, road_sheets, road_sheets_sections, road_templates_edit, road_terrains_contours, road_terrains_create, road_terrains_edit, road_terrains_query,
     network_define, north, nurbs, objects_derive, offset, openings_create, openings_distances,
     openings_edit, opening_types_edit, materials_edit, openings_query, modules_edit, modules_query, options_edit, options_query, elevations_edit, elevations_query, parcels, point, points_construct, polygon, polygon_regular, polyline,
     rectangle_create, revcloud_create, revisions, roads_edit, scenarios_edit, sector_create, set,
@@ -3687,6 +3687,11 @@ impl Input for kentos_commands::JunctionsQuery {
         None
     }
 }
+impl Input for kentos_commands::RoadProjectQuery {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
 
 impl Input for kentos_commands::JunctionsDraw {
     fn number(&mut self, _: &str) -> Option<&mut f64> {
@@ -5066,6 +5071,9 @@ fn run_op(
         kentos_commands::ROAD_JUNCTIONS_QUERY => {
             run!(road_junctions_query, kentos_commands::JunctionsQuery)
         }
+        kentos_commands::ROAD_PROJECT_QUERY => {
+            run!(road_project_query, kentos_commands::RoadProjectQuery)
+        }
         kentos_commands::ROAD_JUNCTIONS_DRAW => {
             run!(road_junctions_draw, kentos_commands::JunctionsDraw)
         }
@@ -6103,9 +6111,20 @@ fn check(
             }
             // A road project's terrain surfaces' definitions (plan/road.md Y2.3); null: none.
             "road" => {
-                let got = serde_json::to_value(&doc.settings().road)
+                let mut got = serde_json::to_value(&doc.settings().road)
                     .map_err(|e| format!("{at}: {e}"))?;
                 let wanted = fill(want, doc, state, at)?;
+                // What the road commands drew (docs/adr/0911 §1) is compared only where a case names it.
+                for key in ["drawings", "autoRebuild"] {
+                    if wanted.get(key).is_none()
+                        && let Some(o) = got.as_object_mut()
+                    {
+                        o.remove(key);
+                    }
+                }
+                if got.as_object().is_some_and(serde_json::Map::is_empty) {
+                    got = Value::Null;
+                }
                 match within {
                     // An alignment fitted to a line (docs/adr/0908 §12): its PIs within the step's `within`.
                     Some(w) if !close(&got, &wanted, w) => {

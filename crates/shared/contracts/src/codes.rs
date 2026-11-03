@@ -726,6 +726,9 @@ codes! {
     /// A glTF scene that cannot be written: a chosen surface or corridor that does not build or has no surface,
     /// nothing to write (docs/adr/0910 §3).
     INVALID_GLTF = "invalid_gltf", Failed, false, "glTF sahnesi yazılamıyor.";
+    /// A road drawing that cannot be kept: the project keeps at most 1000 drawings, a drawing at most 1 000 000
+    /// objects (docs/adr/0911 §1).
+    ROAD_DRAWINGS_FULL = "road_drawings_full", Failed, false, "Yol çizimi kaydedilemiyor: proje en çok 1000 çizim ve çizim başına en çok 1 000 000 nesne tutar.";
     /// A stakeout table that cannot be read: a range off the corridor or backwards, a step out of bounds, a code no
     /// template gives, too many stations or points (docs/adr/0908).
     INVALID_STAKEOUT = "invalid_stakeout", Failed, false, "Aplikasyon cetveli okunamıyor.";

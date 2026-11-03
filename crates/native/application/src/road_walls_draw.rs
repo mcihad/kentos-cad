@@ -154,9 +154,12 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: RetainingWallsDraw) -> Comm
         kentos_commands::ROAD_WALLS_DRAW,
         kentos_commands::ROAD_WALLS_DRAW_VERSION,
         input,
-        |cx, input| match check(cx.doc, &input) {
-            Ok(c) => write(cx, &input, c),
-            Err(stop) => stop.into(),
+        |cx, input| {
+            let r = match check(cx.doc, &input) {
+                Ok(c) => write(cx, &input, c),
+                Err(stop) => stop.into(),
+            };
+            crate::road_drawings::kept(cx, kentos_commands::ROAD_WALLS_DRAW, &input, (kentos_commands::RoadSourceKind::Wall, "wall"), r, |o| &o.uids)
         },
     )
 }

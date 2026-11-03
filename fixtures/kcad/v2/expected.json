@@ -115,6 +115,7 @@
     {"file": "broken/road-profile-on-parallel-axis.kcad", "sniff": "kcad", "error": "bad_value"},
     {"file": "broken/road-section-on-parallel-axis.kcad", "sniff": "kcad", "error": "bad_value"},
     {"file": "broken/road-section-unknown-template.kcad", "sniff": "kcad", "error": "bad_value"},
+    {"file": "broken/road-drawing-bad-stamp.kcad", "sniff": "kcad", "error": "bad_value"},
     {"file": "broken/road-superelevation-on-parallel-axis.kcad", "sniff": "kcad", "error": "bad_value"},
     {"file": "broken/road-corridor-on-parallel-axis.kcad", "sniff": "kcad", "error": "bad_value"},
     {"file": "broken/road-volume-unknown-corridor.kcad", "sniff": "kcad", "error": "bad_value"},

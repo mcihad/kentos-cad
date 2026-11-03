@@ -1549,7 +1549,7 @@ const ENTRIES: &[Entry] = &[
     Entry {
         id: "road.terrains.contours",
         refusals: &[
-            &["not_a_road_project", "invalid_contours"],
+            &["road_drawings_full", "not_a_road_project", "invalid_contours"],
             LAYER,
             REVISION,
             &["unknown_terrain", "terrain_unbuildable", "no_contours"],
@@ -1613,7 +1613,7 @@ const ENTRIES: &[Entry] = &[
     Entry {
         id: "road.alignments.label",
         refusals: &[
-            &["not_a_road_project", "unknown_alignment", "invalid_label"],
+            &["road_drawings_full", "not_a_road_project", "unknown_alignment", "invalid_label"],
             LAYER,
             REVISION,
         ],
@@ -1666,7 +1666,7 @@ const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "road.profiles.draw",
-        refusals: &[&["not_a_road_project", "unknown_road_profile", "invalid_label"], LAYER, REVISION],
+        refusals: &[&["road_drawings_full", "not_a_road_project", "unknown_road_profile", "invalid_label"], LAYER, REVISION],
         warnings: &["layer_hidden", "profile_stale", "profile_surface_gone"],
         targets: none,
     },
@@ -1720,6 +1720,7 @@ const ENTRIES: &[Entry] = &[
         id: "road.sections.draw",
         refusals: &[
             &[
+                "road_drawings_full",
                 "not_a_road_project",
                 "unknown_section_set",
                 "invalid_label",
@@ -1785,6 +1786,7 @@ const ENTRIES: &[Entry] = &[
         id: "road.corridors.draw",
         refusals: &[
             &[
+                "road_drawings_full",
                 "not_a_road_project",
                 "unknown_corridor",
                 "invalid_label",
@@ -1856,7 +1858,7 @@ const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "road.guardrails.draw",
-        refusals: &[&["not_a_road_project", "unknown_guardrail", "invalid_guardrail"], LAYER, REVISION],
+        refusals: &[&["road_drawings_full", "not_a_road_project", "unknown_guardrail", "invalid_guardrail"], LAYER, REVISION],
         warnings: &["layer_hidden", "guardrail_stale", "corridor_stale", "corridor_unsolved"],
         targets: none,
     },
@@ -1875,7 +1877,7 @@ const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "road.culverts.draw",
-        refusals: &[&["not_a_road_project", "unknown_culvert", "invalid_culvert"], LAYER, REVISION],
+        refusals: &[&["road_drawings_full", "not_a_road_project", "unknown_culvert", "invalid_culvert"], LAYER, REVISION],
         warnings: &["layer_hidden", "culvert_stale", "culvert_cover", "corridor_stale", "corridor_unsolved"],
         targets: none,
     },
@@ -1894,7 +1896,7 @@ const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "road.walls.draw",
-        refusals: &[&["not_a_road_project", "unknown_retaining_wall", "invalid_retaining_wall"], LAYER, REVISION],
+        refusals: &[&["road_drawings_full", "not_a_road_project", "unknown_retaining_wall", "invalid_retaining_wall"], LAYER, REVISION],
         warnings: &["layer_hidden", "retaining_wall_stale", "retaining_wall_high", "corridor_stale", "corridor_unsolved"],
         targets: none,
     },
@@ -1939,8 +1941,15 @@ const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "road.junctions.draw",
-        refusals: &[&["not_a_road_project", "unknown_junction", "invalid_junction"], LAYER, REVISION],
+        refusals: &[&["road_drawings_full", "not_a_road_project", "unknown_junction", "invalid_junction"], LAYER, REVISION],
         warnings: &["layer_hidden", "junction_stale", "junction_on_curve"],
+        targets: none,
+    },
+    // KentOS Yol's project tree (plan/road.md Y13, docs/adr/0911 §2).
+    Entry {
+        id: "road.project.query",
+        refusals: &[&["not_a_road_project"]],
+        warnings: &[],
         targets: none,
     },
     // KentOS Yol's LandXML export (plan/road.md Y10.2, docs/adr/0908 §6).

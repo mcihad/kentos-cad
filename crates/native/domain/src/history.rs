@@ -380,6 +380,13 @@ pub(crate) enum Op {
         before: Vec<kentos_contracts::JunctionDef>,
         after: Vec<kentos_contracts::JunctionDef>,
     },
+    /// What a road project's commands drew (docs/adr/0911 §1), before and after.
+    RoadDrawings {
+        before: Vec<kentos_contracts::RoadDrawingDef>,
+        after: Vec<kentos_contracts::RoadDrawingDef>,
+    },
+    /// Whether a road project draws its stale drawings again by itself (docs/adr/0911 §3), before and after.
+    RoadAutoRebuild { before: bool, after: bool },
     /// A road project's pay item book (docs/adr/0909 §4), before and after.
     RoadPay {
         before: Option<kentos_contracts::PayBookDef>,
@@ -761,6 +768,11 @@ impl Op {
                 before: after.clone(),
                 after: before.clone(),
             },
+            Op::RoadDrawings { before, after } => Op::RoadDrawings {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::RoadAutoRebuild { before, after } => Op::RoadAutoRebuild { before: *after, after: *before },
             Op::RoadPay { before, after } => Op::RoadPay {
                 before: after.clone(),
                 after: before.clone(),
@@ -1429,6 +1441,8 @@ impl Document {
                 | Op::RoadWalls { .. }
                 | Op::RoadPay { .. }
                 | Op::RoadJunctions { .. }
+                | Op::RoadDrawings { .. }
+                | Op::RoadAutoRebuild { .. }
                 | Op::ViewArea { .. }
                 | Op::ArchOptions { .. }
                 | Op::OptionCombos { .. }
@@ -1806,6 +1820,18 @@ impl Document {
             Op::RoadJunctions { after, .. } => {
                 let mut road = self.settings.road.take().unwrap_or_default();
                 road.junctions = after.clone();
+                self.settings.road = (!road.is_empty()).then_some(road);
+                return;
+            }
+            Op::RoadDrawings { after, .. } => {
+                let mut road = self.settings.road.take().unwrap_or_default();
+                road.drawings = after.clone();
+                self.settings.road = (!road.is_empty()).then_some(road);
+                return;
+            }
+            Op::RoadAutoRebuild { after, .. } => {
+                let mut road = self.settings.road.take().unwrap_or_default();
+                road.auto_rebuild = *after;
                 self.settings.road = (!road.is_empty()).then_some(road);
                 return;
             }

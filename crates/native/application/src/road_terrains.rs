@@ -60,6 +60,13 @@ pub(crate) struct Made {
     pub surface: Result<Surface, TerrainProblem>,
 }
 
+/// The digest of what `def` is made of now (its sources and method, `sources::gather`'s), without making it.
+pub(crate) fn sources_digest(doc: &Document, def: &TerrainSurfaceDef) -> String {
+    let uids: Vec<(String, &kentos_commands::Entity)> =
+        doc.entities_with_uids().map(|(uid, e)| (uid.to_string(), e)).collect();
+    sources::gather(def, doc.layers().nodes(), uids.iter().map(|(uid, entity)| SourceObject { uid, entity })).digest
+}
+
 pub(crate) fn make(doc: &Document, def: &TerrainSurfaceDef) -> Made {
     let uids: Vec<(String, &kentos_commands::Entity)> =
         doc.entities_with_uids().map(|(uid, e)| (uid.to_string(), e)).collect();

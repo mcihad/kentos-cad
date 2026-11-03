@@ -8,6 +8,7 @@ import type { JunctionDef } from "./JunctionDef";
 import type { PayBookDef } from "./PayBookDef";
 import type { ProfileDef } from "./ProfileDef";
 import type { RetainingWallDef } from "./RetainingWallDef";
+import type { RoadDrawingDef } from "./RoadDrawingDef";
 import type { RoadSheetSetDef } from "./RoadSheetSetDef";
 import type { SectionSetDef } from "./SectionSetDef";
 import type { SuperelevationDef } from "./SuperelevationDef";
@@ -78,4 +79,12 @@ junctions?: Array<JunctionDef>,
 /**
  * The pay item book (docs/adr/0909 §4): the agency's items and the rules that give them KentOS's quantities.
  */
-pay?: PayBookDef, };
+pay?: PayBookDef, 
+/**
+ * What the road commands drew (docs/adr/0911 §1): each drawing's command, input, sources and objects.
+ */
+drawings?: Array<RoadDrawingDef>, 
+/**
+ * A write that leaves drawings stale draws them again in its step (docs/adr/0911 §3); off unless chosen.
+ */
+autoRebuild?: boolean, };

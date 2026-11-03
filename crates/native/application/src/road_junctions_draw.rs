@@ -138,9 +138,12 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: JunctionsDraw) -> CommandRe
         kentos_commands::ROAD_JUNCTIONS_DRAW,
         kentos_commands::ROAD_JUNCTIONS_DRAW_VERSION,
         input,
-        |cx, input| match check(cx.doc, &input) {
-            Ok(c) => write(cx, &input, c),
-            Err(stop) => stop.into(),
+        |cx, input| {
+            let r = match check(cx.doc, &input) {
+                Ok(c) => write(cx, &input, c),
+                Err(stop) => stop.into(),
+            };
+            crate::road_drawings::kept(cx, kentos_commands::ROAD_JUNCTIONS_DRAW, &input, (kentos_commands::RoadSourceKind::Junction, "junction"), r, |o| &o.uids)
         },
     )
 }
