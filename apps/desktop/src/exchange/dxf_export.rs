@@ -63,6 +63,21 @@ impl fmt::Display for Counted {
 /// Theme colours DXF has no colour for (ink is DXF colour 7 exactly).
 const THEMED: [&str; 3] = ["fg", "fg-dim", "paper"];
 
+/// The writer also preserves unused definitions, so a static-only selection can still lose library behavior.
+/// Inspect metadata only: do not bake dynamic geometry on the UI thread just to show a warning.
+fn dynamic_loss_warning(doc: &kentos_domain::Document) -> Option<String> {
+    let count = doc.blocks().iter().filter(|b| b.dynamic.is_some()).count();
+    (count > 0).then(|| format!(
+        "{count} dinamik blok tanımı statik aktarılacak. Parametreler, formüller, görünüş seçenekleri ve katalog davranışı korunmaz. Mevcut boyut ve görünüş yazılır; iç içe kullanımlar kendi değerleriyle sabitlenir. Yeniden açıldığında dinamik düzenlenemez. Kullanılmayan kitaplık tanımları da statik yazılır. Düzenlenebilir kaynağı KCAD olarak saklayın."
+    ))
+}
+
+fn has_dimension_references(doc: &kentos_domain::Document, chosen: &[(String, Vec<&Entity>)]) -> bool {
+    chosen.iter().flat_map(|(_, list)| list.iter().copied())
+        .chain(doc.blocks().iter().flat_map(|b| &b.entities))
+        .any(|e| matches!(e, Entity::Dimension(d) if d.refs.is_some()))
+}
+
 #[derive(Debug, Clone)]
 pub struct State {
     id: u64,
@@ -461,8 +476,15 @@ impl App {
                 } else {
                     format!("AutoCAD 2007 DXF (UTF-8, birim {}); koordinatlar yuvarlanmadan, tam yazılır.", unit.mark())
                 }),
-            ))
-            .push(self.dxf_export_layers(s))
+            ));
+        // Disclose behavior loss before the layer/options table and before asking for an output path.
+        if let Some(warning) = self.document.as_ref().and_then(|d| dynamic_loss_warning(&d.model)) {
+            body = body.push(words::text_line(Line::Warn, warning));
+        }
+        if self.document.as_ref().is_some_and(|d| has_dimension_references(&d.model, &chosen)) {
+            body = body.push(words::text_line(Line::Warn, kentos_formats::dxf::DIMENSION_REFERENCE_LOSS));
+        }
+        body = body.push(self.dxf_export_layers(s))
             .push(dxf_export_forms(s))
             .push(words::field("Çoklu çizgi aktarımı", words::check(s.allow_polyline_loss, "Raporlanan çoklu çizgi kaybını kabul et", (!s.writing).then(|| event(Event::AllowPolylineLoss))), Some("Varsayılan olarak genişliği, yayı veya kotu kaybolacak dosya yazılmaz. Kabul ederseniz kayıp dışa aktarım raporunda belirtilir.".into())))
             .push(self.dxf_export_summary(&chosen, &s.annotations));
@@ -813,7 +835,7 @@ fn dxf_export_forms(s: &State) -> Element<'_, Message> {
         line("Kılavuzlar", choice(a.leaders, Event::Leaders).into()),
         words::check(
             a.metadata,
-            "KentOS verisini yaz: tablo, ölçü ve kılavuz KentOS'a bütün alanlarıyla geri gelir",
+            "KentOS verisini yaz: tablo, ölçü ve kılavuzun görünüş seçeneklerini koru",
             Some(event(Event::Metadata)),
         ),
     ]
@@ -869,6 +891,48 @@ impl State {
 #[cfg(test)]
 mod tests {
     use kentos_commands::Entity;
+
+    #[test]
+    fn nested_dynamic_loss_is_visible_before_writing_and_preview_keeps_the_source_exact() {
+        let snapshot = kentos_kcad::decode(include_bytes!(
+            "../../../../fixtures/interaction/v1/block-parametric-component.kcad"
+        )).unwrap();
+        let doc = kentos_domain::Document::from_snapshot_v2(snapshot).unwrap();
+        let before = doc.to_snapshot_v2();
+        // Only the parent is chosen; inspecting just the selected root's dynamic field misses the loss.
+        let parent = doc.entities().find(|e| e.base().id == 3).unwrap();
+        let warning = super::dynamic_loss_warning(&doc).unwrap();
+        assert!(warning.contains("1 dinamik blok tanımı"));
+        assert!(warning.contains("KCAD"));
+        let chosen = kentos_headless::export::by_layer(&doc, [parent]);
+        assert!(!super::has_dimension_references(&doc, &chosen));
+        let input = kentos_headless::export::dxf_input(&doc, &chosen);
+        let (_, report) = kentos_formats::dxf::write_checked(&input).unwrap();
+        assert!(report.notes.iter().any(|n| n.what == "Dinamik blok"
+            && n.reason.contains("İç içe yerleştirmeler")
+            && n.severity == Some(kentos_commands::ReportSeverity::Warning)));
+        assert_eq!(doc.to_snapshot_v2(), before);
+    }
+
+    #[test]
+    fn unused_dynamic_definitions_warn_even_when_only_a_dimension_is_exported() {
+        let snapshot = kentos_kcad::decode(include_bytes!(
+            "../../../../fixtures/interaction/v1/block-parametric-component.kcad"
+        )).unwrap();
+        let doc = kentos_domain::Document::from_snapshot_v2(snapshot).unwrap();
+        let dimension = doc.entities().find(|e| matches!(e, Entity::Dimension(_))).unwrap();
+        assert!(super::dynamic_loss_warning(&doc).unwrap().contains("Kullanılmayan"));
+        let chosen = kentos_headless::export::by_layer(&doc, [dimension]);
+        assert!(super::has_dimension_references(&doc, &chosen));
+        let input = kentos_headless::export::dxf_input(&doc, &chosen);
+        let (_, report) = kentos_formats::dxf::write_checked(&input).unwrap();
+        assert!(report.notes.iter().any(|n| n.what == "Dinamik blok"));
+        assert!(report.notes.iter().any(|n| n.what == "Ölçü bağı"
+            && n.reason == kentos_formats::dxf::DIMENSION_REFERENCE_LOSS
+            && n.severity == Some(kentos_commands::ReportSeverity::Warning)));
+        let plain = crate::files_testing::app_with_drawing();
+        assert!(super::dynamic_loss_warning(&plain.document.as_ref().unwrap().model).is_none());
+    }
 
     /// An area whose only hole is in a later part has islands (docs/adr/0143).
     #[test]

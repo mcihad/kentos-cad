@@ -286,6 +286,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
         name: str | None | Unset = UNSET,
         publication: BlockPublication | None | Unset = UNSET,
         remove_tags: Sequence[str] | None | Unset = UNSET,
+        rename_nested: bool | None | Unset = UNSET,
         renames: Mapping[str, str] | None | Unset = UNSET,
         replace: bool | None | Unset = UNSET,
         rescale: bool | None | Unset = UNSET,
@@ -336,6 +337,10 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
             name: `rename`: the new name.
             publication: `card`: publisher-assigned family/type/release; absent keeps it.
             remove_tags: `sync`: tags whose values are taken off the inserts though no attribute has them.
+            rename_nested: `attributes`, `update`, `sync`: explicitly carry the rename map through inserts owned by other
+                definitions too. Default false preserves drawing-only sync. Only tag/value/custom-position identity
+                migrates; other nested attributes and field caches are not silently synchronized. A conflicting nested
+                target or affected locked ancestor refuses the entire operation.
             renames: `attributes`, `sync`: an insert's value under an old tag moved to the new one (old → new).
             replace: `redefine`: true, the objects are replaced by an insert of the block.
             rescale: `units` between two units: true keeps its numbers (its size changes by their ratio); absent or false keeps
@@ -376,6 +381,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
             name=name,
             publication=publication,
             remove_tags=_opt(remove_tags, lambda x: list(x)),
+            rename_nested=rename_nested,
             renames=_opt(renames, lambda x: dict(x)),
             replace=replace,
             rescale=rescale,
@@ -408,6 +414,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
         name: str | None | Unset = UNSET,
         publication: BlockPublication | None | Unset = UNSET,
         remove_tags: Sequence[str] | None | Unset = UNSET,
+        rename_nested: bool | None | Unset = UNSET,
         renames: Mapping[str, str] | None | Unset = UNSET,
         replace: bool | None | Unset = UNSET,
         rescale: bool | None | Unset = UNSET,
@@ -438,6 +445,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
             name=name,
             publication=publication,
             remove_tags=_opt(remove_tags, lambda x: list(x)),
+            rename_nested=rename_nested,
             renames=_opt(renames, lambda x: dict(x)),
             replace=replace,
             rescale=rescale,
@@ -470,6 +478,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
         name: str | None | Unset = UNSET,
         publication: BlockPublication | None | Unset = UNSET,
         remove_tags: Sequence[str] | None | Unset = UNSET,
+        rename_nested: bool | None | Unset = UNSET,
         renames: Mapping[str, str] | None | Unset = UNSET,
         replace: bool | None | Unset = UNSET,
         rescale: bool | None | Unset = UNSET,
@@ -500,6 +509,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
             name=name,
             publication=publication,
             remove_tags=_opt(remove_tags, lambda x: list(x)),
+            rename_nested=rename_nested,
             renames=_opt(renames, lambda x: dict(x)),
             replace=replace,
             rescale=rescale,
@@ -532,6 +542,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
         name: str | None | Unset = UNSET,
         publication: BlockPublication | None | Unset = UNSET,
         remove_tags: Sequence[str] | None | Unset = UNSET,
+        rename_nested: bool | None | Unset = UNSET,
         renames: Mapping[str, str] | None | Unset = UNSET,
         replace: bool | None | Unset = UNSET,
         rescale: bool | None | Unset = UNSET,
@@ -567,6 +578,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
             name=name,
             publication=publication,
             remove_tags=_opt(remove_tags, lambda x: list(x)),
+            rename_nested=rename_nested,
             renames=_opt(renames, lambda x: dict(x)),
             replace=replace,
             rescale=rescale,

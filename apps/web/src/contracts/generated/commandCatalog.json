@@ -31424,6 +31424,13 @@
               "null"
             ]
           },
+          "renameNested": {
+            "description": "`attributes`, `update`, `sync`: explicitly carry the rename map through inserts owned by other\ndefinitions too. Default false preserves drawing-only sync. Only tag/value/custom-position identity\nmigrates; other nested attributes and field caches are not silently synchronized. A conflicting nested\ntarget or affected locked ancestor refuses the entire operation.",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
           "renames": {
             "additionalProperties": {
               "type": "string"

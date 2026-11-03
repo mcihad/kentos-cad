@@ -361,6 +361,7 @@ pub(super) fn form_words(what: &str, block: bool, metadata: bool) -> String {
         _ => "kılavuz",
     };
     let back = match (block || what == "Tablo", metadata) {
+        (_, true) if what == "Ölçü" => "KentOS verisiyle: KentOS ölçü olarak stili ve görünüş seçenekleriyle geri okur".to_owned(),
         (_, true) => format!("KentOS verisiyle: KentOS {kind} olarak bütün alanlarıyla geri okur"),
         (true, false) => "KentOS verisi olmadan: KentOS da blok olarak geri okur".to_owned(),
         (false, false) => format!("KentOS verisi olmadan: KentOS {kind} olarak DXF'in söylediği kadarıyla geri okur"),
@@ -1709,6 +1710,16 @@ impl Writer<'_> {
         }
         self.pen = Pen::default();
         self.block_end(record);
+        if d.refs.is_some() {
+            self.report.note_item(kentos_contracts::ReportItem {
+                what: "Ölçü bağı".into(),
+                count: 1,
+                reason: crate::dxf::DIMENSION_REFERENCE_LOSS.into(),
+                severity: Some(kentos_contracts::ReportSeverity::Warning),
+                details: Vec::new(),
+                lines: Vec::new(),
+            });
+        }
         if block_form {
             self.insert_whole(&d.base, &name, &Entity::Dimension(d.clone()), "Ölçü");
             return true;

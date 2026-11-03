@@ -31,6 +31,7 @@ pub fn input(operation: BlockEditOperation, block: Option<BlockId>) -> BlocksEdi
         dynamic: None,
         sync: None,
         renames: None,
+        rename_nested: None,
         remove_tags: None,
         tag: None,
         at: None,
@@ -264,6 +265,18 @@ pub fn set_attributes_with_renames(
     attributes: Vec<kentos_commands::AttributeDefinition>,
     renames: std::collections::BTreeMap<String, String>,
 ) -> (Vec<Said>, bool) {
+    set_attributes_scoped(doc, id, attributes, renames, false, None)
+}
+
+/// Explicit nested tag migration, with the same revision guard used by the editor's plan.
+pub fn set_attributes_scoped(
+    doc: &mut Document,
+    id: BlockId,
+    attributes: Vec<kentos_commands::AttributeDefinition>,
+    renames: std::collections::BTreeMap<String, String>,
+    rename_nested: bool,
+    expected_revision: Option<String>,
+) -> (Vec<Said>, bool) {
     let name = name_of(doc, id);
     let n = attributes.len();
     let mut said = Vec::new();
@@ -272,6 +285,8 @@ pub fn set_attributes_with_renames(
         BlocksEdit {
             attributes: Some(attributes),
             renames: (!renames.is_empty()).then_some(renames),
+            rename_nested: rename_nested.then_some(true),
+            expected_revision,
             ..input(BlockEditOperation::Attributes, Some(id))
         },
         &mut said,

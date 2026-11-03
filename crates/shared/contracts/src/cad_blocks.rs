@@ -338,6 +338,14 @@ pub struct BlocksEdit {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub renames: Option<BTreeMap<String, String>>,
+    /// `attributes`, `update`, `sync`: explicitly carry the rename map through inserts owned by other
+    /// definitions too. Default false preserves drawing-only sync. Only tag/value/custom-position identity
+    /// migrates; other nested attributes and field caches are not silently synchronized. A conflicting nested
+    /// target or affected locked ancestor refuses the entire operation.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub rename_nested: Option<bool>,
+
     /// `sync`: tags whose values are taken off the inserts though no attribute has them.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

@@ -16,6 +16,33 @@ def drawing():
     return d,block.id,a,b
 
 class BlockAttributeRenames(unittest.TestCase):
+    def test_explicit_nested_scope_preserves_combined_component_and_one_undo(self):
+        d=cad.Document.open(ROOT/'fixtures/interaction/v1/block-parametric-component.kcad')
+        block=d.blocks()[0];before=d.to_bytes()
+        attributes=[cad.AttributeDefinition.from_json(dict(block.to_json()['attributes'][0],tag='ODA'))]
+        args=dict(operation='attributes',block=block.id,attributes=attributes,renames={'NO':'ODA'},rename_nested=True)
+        plan=cad.blocks.edit.answer(d,**args,op='plan')
+        self.assertEqual(plan.status,'completed');self.assertEqual(d.to_bytes(),before)
+        self.assertEqual(len(plan.output.changed),2)
+        cad.blocks.edit(d,**args,expected=cad.Expected(plan=plan.plan_id))
+        after=d.to_bytes();records=list(d.entities())
+        self.assertEqual(records[0].entity.to_json()['attrs']['ODA'],'K-1')
+        self.assertEqual(records[1].entity.to_json()['attrs']['ODA'],'K-2')
+        self.assertEqual(d.blocks()[1].to_json()['entities'][0]['attrs']['ODA'],'İÇ-1')
+        self.assertEqual(cad.dimensions.query(d).dimensions[0].measured,1.1)
+        self.assertEqual(cad.blocks.parameters(d,operation='get',uids=[records[0].uid]).inserts[0].values['Çift genişlik'],2.2)
+        self.assertEqual(cad.Document.from_bytes(after).to_bytes(),after)
+        d.undo();self.assertEqual(d.to_bytes(),before);d.redo();self.assertEqual(d.to_bytes(),after)
+
+    def test_a_root_only_plan_cannot_authorize_nested_scope(self):
+        d=cad.Document.open(ROOT/'fixtures/interaction/v1/block-parametric-component.kcad')
+        block=d.blocks()[0];before=d.to_bytes()
+        args=dict(operation='attributes',block=block.id,
+                  attributes=[cad.AttributeDefinition.from_json(dict(block.to_json()['attributes'][0],tag='ODA'))],renames={'NO':'ODA'})
+        plan=cad.blocks.edit.answer(d,**args,op='plan')
+        answer=cad.blocks.edit.answer(d,**args,rename_nested=True,expected=cad.Expected(plan=plan.plan_id))
+        self.assertNotEqual(answer.status,'completed');self.assertEqual(d.to_bytes(),before)
+
     def test_values_and_custom_places_swap_simultaneously_and_undo_exactly(self):
         d,bid,a,b=drawing()
         target=next(r for r in d.entities() if r.entity.to_json().get('block')==bid)

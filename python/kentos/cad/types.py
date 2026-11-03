@@ -15256,6 +15256,10 @@ class BlocksEdit(_Model):
         name: `rename`: the new name.
         publication: `card`: publisher-assigned family/type/release; absent keeps it.
         remove_tags: `sync`: tags whose values are taken off the inserts though no attribute has them.
+        rename_nested: `attributes`, `update`, `sync`: explicitly carry the rename map through inserts owned by other
+            definitions too. Default false preserves drawing-only sync. Only tag/value/custom-position identity
+            migrates; other nested attributes and field caches are not silently synchronized. A conflicting nested
+            target or affected locked ancestor refuses the entire operation.
         renames: `attributes`, `sync`: an insert's value under an old tag moved to the new one (old → new).
         replace: `redefine`: true, the objects are replaced by an insert of the block.
         rescale: `units` between two units: true keeps its numbers (its size changes by their ratio); absent or false keeps
@@ -15284,6 +15288,7 @@ class BlocksEdit(_Model):
     name: str | None | Unset = UNSET
     publication: BlockPublication | None | Unset = UNSET
     remove_tags: list[str] | None | Unset = UNSET
+    rename_nested: bool | None | Unset = UNSET
     renames: dict[str, str] | None | Unset = UNSET
     replace: bool | None | Unset = UNSET
     rescale: bool | None | Unset = UNSET
@@ -15328,6 +15333,8 @@ class BlocksEdit(_Model):
             out["publication"] = None if self.publication is None else self.publication.to_json()
         if self.remove_tags is not UNSET:
             out["removeTags"] = None if self.remove_tags is None else list(self.remove_tags)
+        if self.rename_nested is not UNSET:
+            out["renameNested"] = self.rename_nested
         if self.renames is not UNSET:
             out["renames"] = None if self.renames is None else dict(self.renames)
         if self.replace is not UNSET:
@@ -15366,6 +15373,7 @@ class BlocksEdit(_Model):
             name=data.get("name", UNSET),
             publication=UNSET if "publication" not in data else None if data["publication"] is None else BlockPublication.from_json(data["publication"]),
             remove_tags=UNSET if "removeTags" not in data else None if data["removeTags"] is None else list(data["removeTags"]),
+            rename_nested=data.get("renameNested", UNSET),
             renames=UNSET if "renames" not in data else None if data["renames"] is None else dict(data["renames"]),
             replace=data.get("replace", UNSET),
             rescale=data.get("rescale", UNSET),

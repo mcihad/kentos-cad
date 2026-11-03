@@ -190,6 +190,7 @@ impl App {
                     rescale: None,
                     sync: None,
                     renames: None,
+                    rename_nested: None,
                     remove_tags: None,
                     tag: None,
                     at: None,
