@@ -712,6 +712,9 @@ codes! {
     VOLUME_IN_USE = "volume_in_use", Failed, false, "Bu kübaj hesabını bir Brükner kullanıyor; önce Brükneri silin.";
     /// A warning: material left over at an end of the diagram, to be wasted or borrowed (docs/adr/0907 §3).
     HAUL_UNBALANCED = "haul_unbalanced", Warning, false, "Brüknerin ucunda dengelenmeyen hacim var; döküm ya da ödünç gerekir.";
+    /// A LandXML file that cannot be written: a stamp that does not read, nothing to write, a chosen surface or
+    /// alignment that does not build (docs/adr/0908).
+    INVALID_LANDXML = "invalid_landxml", Failed, false, "LandXML dosyası yazılamıyor.";
     /// A stakeout table that cannot be read: a range off the corridor or backwards, a step out of bounds, a code no
     /// template gives, too many stations or points (docs/adr/0908).
     INVALID_STAKEOUT = "invalid_stakeout", Failed, false, "Aplikasyon cetveli okunamıyor.";

@@ -627,6 +627,10 @@
        {
         "command": "stakeout.table",
         "size": "large"
+       },
+       {
+        "command": "landxml.export",
+        "size": "large"
        }
       ]
      }

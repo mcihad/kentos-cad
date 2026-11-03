@@ -2709,6 +2709,13 @@
       ],
       "note": "Brükner penceresi Brükneri yazdıkça çekirdekle okur ve çizer; Kaydet road.hauls.edit ile yazar (plan/road.md Y9, ADR 0907)."
     },
+    "landxml.export": {
+      "level": "semantic",
+      "via": [
+        "file.export.landxml"
+      ],
+      "note": "LandXML ver dosyanın yerini sorar ve file.export.landxml ile yazar; çizim değişmez (plan/road.md Y10.2, ADR 0908)."
+    },
     "stakeout.table": {
       "level": "semantic",
       "via": [

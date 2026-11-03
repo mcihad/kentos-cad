@@ -7379,6 +7379,31 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::FILE_EXPORT_LANDXML.into(),
+            version: crate::FILE_EXPORT_LANDXML_VERSION,
+            title: "LandXML dışa aktar".into(),
+            summary: "Yol projesinin arazi yüzeylerini (TIN: noktalar ve üçgenler), akslarını (doğru, daire eğrisi ve klotoid; km denklemleri) ve akslarının boykesitlerini (PVI'lar; simetrik ve asimetrik parabol, daire eğrisi) LandXML 1.2 dosyasına yazar; Civil 3D, OpenRoads ve Netcad okur. Yer kuzey doğu sırasıyla, uzunluk metre, doğrultu ve açı ondalık derece (doğrultu kuzeyden saat yönünde); elemanların ve PVI'ların km'leri iç km'dir (başlangıç km'si + aks boyunca uzaklık). surfaces ve alignments id ya da adla (yoksa hepsi, boş liste hiçbiri); withoutProfiles boykesitleri yazmaz; stamp dosyanın tarihi ve saati (yoksa şimdi, UTC). Paralel aks LandXML'de olmadığından yazılmaz (export_losses). Bütün yazılır ya da hiç: yanına yazılır, okuyucuyla geri okunur, sonra yerine konur; plan yazmadan söyler. Çizimi değiştirmez ve geri alma adımı değildir. \
+                      Retler: not_a_road_project, invalid_file_path, file_exists, unknown_terrain, unknown_alignment, invalid_landxml."
+                .into(),
+            aliases: vec!["landxmlver".into(), "landxmlout".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ExportLandxml>(),
+            output: schema::<crate::LandxmlExported>(),
+            plan: Some(schema::<crate::LandxmlExported>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana aks boykesitleriyle ve zemin yüzeyi".into(),
+                input: json!({ "path": "/veri/yol.xml", "surfaces": ["Mevcut zemin"], "alignments": ["Ana aks"], "overwrite": true }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::ROAD_STAKEOUT_QUERY.into(),
             version: crate::ROAD_STAKEOUT_QUERY_VERSION,
             title: "Aplikasyon cetveli".into(),
@@ -13037,6 +13062,9 @@ mod tests {
                     crate::ROAD_STAKEOUT_QUERY => {
                         serde_json::from_value::<crate::StakeoutQuery>(e.input.clone()).map(|_| ())
                     }
+                    crate::FILE_EXPORT_LANDXML => {
+                        serde_json::from_value::<crate::ExportLandxml>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_SUBNETWORKS_FIND => {
                         serde_json::from_value::<crate::SubnetworksFind>(e.input.clone())
                             .map(|_| ())
@@ -13766,6 +13794,9 @@ mod tests {
                         }
                         crate::ROAD_STAKEOUT_QUERY => {
                             serde_json::from_value::<crate::StakeoutQueried>(output.clone()).map(|_| ())
+                        }
+                        crate::FILE_EXPORT_LANDXML => {
+                            serde_json::from_value::<crate::LandxmlExported>(output.clone()).map(|_| ())
                         }
                         crate::CAD_ADDRESSES_DEFINE => {
                             serde_json::from_value::<crate::AddressesDefined>(output.clone())

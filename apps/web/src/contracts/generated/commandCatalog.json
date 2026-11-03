@@ -38895,6 +38895,177 @@
       ]
     },
     {
+      "id": "file.export.landxml",
+      "version": 1,
+      "title": "LandXML dışa aktar",
+      "summary": "Yol projesinin arazi yüzeylerini (TIN: noktalar ve üçgenler), akslarını (doğru, daire eğrisi ve klotoid; km denklemleri) ve akslarının boykesitlerini (PVI'lar; simetrik ve asimetrik parabol, daire eğrisi) LandXML 1.2 dosyasına yazar; Civil 3D, OpenRoads ve Netcad okur. Yer kuzey doğu sırasıyla, uzunluk metre, doğrultu ve açı ondalık derece (doğrultu kuzeyden saat yönünde); elemanların ve PVI'ların km'leri iç km'dir (başlangıç km'si + aks boyunca uzaklık). surfaces ve alignments id ya da adla (yoksa hepsi, boş liste hiçbiri); withoutProfiles boykesitleri yazmaz; stamp dosyanın tarihi ve saati (yoksa şimdi, UTC). Paralel aks LandXML'de olmadığından yazılmaz (export_losses). Bütün yazılır ya da hiç: yanına yazılır, okuyucuyla geri okunur, sonra yerine konur; plan yazmadan söyler. Çizimi değiştirmez ve geri alma adımı değildir. Retler: not_a_road_project, invalid_file_path, file_exists, unknown_terrain, unknown_alignment, invalid_landxml.",
+      "aliases": [
+        "landxmlver",
+        "landxmlout"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `file.export.landxml` v1: the file's path (absolute, ending `.xml`); the surfaces and the alignments by id\nor name (absent: every one; an empty list: none); `withoutProfiles` leaves the alignments' profiles out; `stamp` the\nfile's date and time (`YYYY-MM-DDThh:mm:ss`; absent: now, UTC).\n\nRefusals, in this order: `not_a_road_project`, `invalid_file_path` (empty, relative, not `.xml`, its folder not\nthere), `file_exists` (without `overwrite`), `unknown_terrain`, `unknown_alignment`, `invalid_landxml` (a stamp that\ndoes not read, nothing to write, a surface or an alignment chosen that does not build). Warnings: `export_losses`\n(a parallel axis, an alignment or a surface that does not build when every one is written, a profile whose\nalignment is not written).",
+        "properties": {
+          "alignments": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "overwrite": {
+            "type": "boolean"
+          },
+          "path": {
+            "type": "string"
+          },
+          "stamp": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "surfaces": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "withoutProfiles": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "ExportLandxml",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `file.export.landxml` v1, and its plan: what is (or would be) in the file.",
+        "properties": {
+          "alignments": {
+            "items": {
+              "$ref": "#/$defs/LandxmlAlignmentWritten"
+            },
+            "type": "array"
+          },
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "path": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "surfaces": {
+            "items": {
+              "$ref": "#/$defs/LandxmlSurfaceWritten"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "path",
+          "surfaces",
+          "alignments",
+          "bytes",
+          "sha256"
+        ],
+        "title": "LandxmlExported",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `file.export.landxml` v1, and its plan: what is (or would be) in the file.",
+        "properties": {
+          "alignments": {
+            "items": {
+              "$ref": "#/$defs/LandxmlAlignmentWritten"
+            },
+            "type": "array"
+          },
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "path": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "surfaces": {
+            "items": {
+              "$ref": "#/$defs/LandxmlSurfaceWritten"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "path",
+          "surfaces",
+          "alignments",
+          "bytes",
+          "sha256"
+        ],
+        "title": "LandxmlExported",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "invalid_file_path",
+          "file_exists",
+          "unknown_terrain",
+          "unknown_alignment",
+          "invalid_landxml"
+        ],
+        "warnings": [
+          "export_losses"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Ana aks boykesitleriyle ve zemin yüzeyi",
+          "input": {
+            "alignments": [
+              "Ana aks"
+            ],
+            "overwrite": true,
+            "path": "/veri/yol.xml",
+            "surfaces": [
+              "Mevcut zemin"
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "road.stakeout.query",
       "version": 1,
       "title": "Aplikasyon cetveli",
@@ -73440,6 +73611,12 @@
       "meaning": "Brüknerin ucunda dengelenmeyen hacim var; döküm ya da ödünç gerekir."
     },
     {
+      "code": "invalid_landxml",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "LandXML dosyası yazılamıyor."
+    },
+    {
       "code": "invalid_stakeout",
       "kind": "failed",
       "retryable": false,
@@ -107758,6 +107935,93 @@
           "type": "string"
         }
       ]
+    },
+    "LandxmlAlignmentWritten": {
+      "description": "A written alignment: its name, its elements by kind, its km equations and the profiles written on it.",
+      "properties": {
+        "curves": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "equations": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "id": {
+          "type": "string"
+        },
+        "length": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "lines": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "name": {
+          "type": "string"
+        },
+        "profiles": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "spirals": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "length",
+        "lines",
+        "curves",
+        "spirals",
+        "equations",
+        "profiles"
+      ],
+      "type": "object"
+    },
+    "LandxmlSurfaceWritten": {
+      "description": "A written surface: its name and its points and triangles.",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "points": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "triangles": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "points",
+        "triangles"
+      ],
+      "type": "object"
     },
     "LatePolicy": {
       "description": "What a late observation (earlier than the asset's latest) does.",

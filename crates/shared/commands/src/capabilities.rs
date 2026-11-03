@@ -1826,6 +1826,20 @@ const ENTRIES: &[Entry] = &[
         warnings: &["corridor_stale", "volume_gap", "haul_unbalanced"],
         targets: none,
     },
+    // KentOS Yol's LandXML export (plan/road.md Y10.2, docs/adr/0908 §6).
+    Entry {
+        id: "file.export.landxml",
+        refusals: &[&[
+            "not_a_road_project",
+            "invalid_file_path",
+            "file_exists",
+            "unknown_terrain",
+            "unknown_alignment",
+            "invalid_landxml",
+        ]],
+        warnings: &["export_losses"],
+        targets: none,
+    },
     // KentOS Yol's stakeout table (plan/road.md Y10, docs/adr/0908).
     Entry {
         id: "road.stakeout.query",

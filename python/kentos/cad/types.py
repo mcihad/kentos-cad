@@ -27731,6 +27731,52 @@ class ExportGpkg(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ExportLandxml(_Model):
+    """Input of `file.export.landxml` v1: the file's path (absolute, ending `.xml`); the surfaces and the alignments by id
+    or name (absent: every one; an empty list: none); `withoutProfiles` leaves the alignments' profiles out; `stamp` the
+    file's date and time (`YYYY-MM-DDThh:mm:ss`; absent: now, UTC).
+
+    Refusals, in this order: `not_a_road_project`, `invalid_file_path` (empty, relative, not `.xml`, its folder not
+    there), `file_exists` (without `overwrite`), `unknown_terrain`, `unknown_alignment`, `invalid_landxml` (a stamp that
+    does not read, nothing to write, a surface or an alignment chosen that does not build). Warnings: `export_losses`
+    (a parallel axis, an alignment or a surface that does not build when every one is written, a profile whose
+    alignment is not written).
+    """
+    path: str
+    alignments: list[str] | None | Unset = UNSET
+    overwrite: bool | Unset = UNSET
+    stamp: str | None | Unset = UNSET
+    surfaces: list[str] | None | Unset = UNSET
+    without_profiles: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        if self.alignments is not UNSET:
+            out["alignments"] = None if self.alignments is None else list(self.alignments)
+        if self.overwrite is not UNSET:
+            out["overwrite"] = self.overwrite
+        if self.stamp is not UNSET:
+            out["stamp"] = self.stamp
+        if self.surfaces is not UNSET:
+            out["surfaces"] = None if self.surfaces is None else list(self.surfaces)
+        if self.without_profiles is not UNSET:
+            out["withoutProfiles"] = self.without_profiles
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExportLandxml:
+        return cls(
+            path=data["path"],
+            alignments=UNSET if "alignments" not in data else None if data["alignments"] is None else list(data["alignments"]),
+            overwrite=data.get("overwrite", UNSET),
+            stamp=data.get("stamp", UNSET),
+            surfaces=UNSET if "surfaces" not in data else None if data["surfaces"] is None else list(data["surfaces"]),
+            without_profiles=data.get("withoutProfiles", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ExportMaplibre(_Model):
     """Input of `file.export.maplibre` v1: the look of `layer` (or of every visible layer, the one drawn last on top,
     when `layer` is not given) as a MapLibre style at `path`, a `.json`. Without `sourceUrl` each layer's objects
@@ -36740,6 +36786,83 @@ class LabelsReported(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class LandxmlAlignmentWritten(_Model):
+    """A written alignment: its name, its elements by kind, its km equations and the profiles written on it.
+    Attributes:
+        length: Unit: m.
+        lines: Unit: count.
+        curves: Unit: count.
+        spirals: Unit: count.
+        equations: Unit: count.
+    """
+    id: str
+    name: str
+    length: float
+    lines: int
+    curves: int
+    spirals: int
+    equations: int
+    profiles: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["length"] = float(self.length)
+        out["lines"] = self.lines
+        out["curves"] = self.curves
+        out["spirals"] = self.spirals
+        out["equations"] = self.equations
+        out["profiles"] = list(self.profiles)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LandxmlAlignmentWritten:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            length=float(data["length"]),
+            lines=data["lines"],
+            curves=data["curves"],
+            spirals=data["spirals"],
+            equations=data["equations"],
+            profiles=list(data["profiles"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LandxmlExported(_Model):
+    """Output of `file.export.landxml` v1, and its plan: what is (or would be) in the file.
+    Attributes:
+        bytes: Unit: bytes.
+    """
+    path: str
+    surfaces: list[LandxmlSurfaceWritten]
+    alignments: list[LandxmlAlignmentWritten]
+    bytes: int
+    sha256: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["surfaces"] = [e0.to_json() for e0 in self.surfaces]
+        out["alignments"] = [e0.to_json() for e0 in self.alignments]
+        out["bytes"] = self.bytes
+        out["sha256"] = self.sha256
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LandxmlExported:
+        return cls(
+            path=data["path"],
+            surfaces=[LandxmlSurfaceWritten.from_json(e0) for e0 in data["surfaces"]],
+            alignments=[LandxmlAlignmentWritten.from_json(e0) for e0 in data["alignments"]],
+            bytes=data["bytes"],
+            sha256=data["sha256"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LandxmlImported(_Model):
     """Output of `file.import.landxml` v1, and its plan.
     Attributes:
@@ -36801,6 +36924,36 @@ class LandxmlImported(_Model):
             revision=data["revision"],
             differs=UNSET if "differs" not in data else None if data["differs"] is None else float(data["differs"]),
             uids=list(data["uids"]) if "uids" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LandxmlSurfaceWritten(_Model):
+    """A written surface: its name and its points and triangles.
+    Attributes:
+        points: Unit: count.
+        triangles: Unit: count.
+    """
+    id: str
+    name: str
+    points: int
+    triangles: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["points"] = self.points
+        out["triangles"] = self.triangles
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LandxmlSurfaceWritten:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            points=data["points"],
+            triangles=data["triangles"],
         )
 
 
@@ -96996,6 +97149,7 @@ __all__ = [
     "ExportGis",
     "ExportGml",
     "ExportGpkg",
+    "ExportLandxml",
     "ExportMaplibre",
     "ExportMaterialsOperation",
     "ExportOpeningTypesOperation",
@@ -97410,7 +97564,10 @@ __all__ = [
     "LabelsPinned",
     "LabelsReport",
     "LabelsReported",
+    "LandxmlAlignmentWritten",
+    "LandxmlExported",
     "LandxmlImported",
+    "LandxmlSurfaceWritten",
     "LatePolicy",
     "LatePolicyName",
     "LayerAction",

@@ -4201,6 +4201,22 @@
    "tests": 2
   },
   {
+   "id": "landxml.export",
+   "kind": "command",
+   "title": "LandXML ver…",
+   "level": "semantic",
+   "via": [
+    "file.export.landxml"
+   ],
+   "operation": null,
+   "python": "kentos.cad.file.export.landxml",
+   "mcp": "file.export.landxml",
+   "note": "LandXML ver dosyanın yerini sorar ve file.export.landxml ile yazar; çizim değişmez (plan/road.md Y10.2, ADR 0908).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "layer.crs",
    "kind": "command",
    "title": "Sistem ata…",

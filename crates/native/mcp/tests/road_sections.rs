@@ -198,3 +198,22 @@ fn a_stakeout_table_is_read_and_ground_lengths_want_a_height() {
     let ground = call(&mut server, "road.stakeout.query", json!({"drawing":drawing,"corridor":"Ana koridor","distances":"ground"}));
     assert!(ground.to_string().contains("stakeout_no_ground") || ground["isError"] == false, "{ground}");
 }
+
+/// The file's alignments and surface go out as LandXML (plan/road.md Y10.2, docs/adr/0908 §6).
+#[test]
+fn a_road_project_goes_out_as_landxml() {
+    let mut server = Server::new();
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/kcad/v2/road-work.kcad");
+    let opened = call(&mut server, "drawing.open", json!({"path":path}));
+    let drawing = opened["structuredContent"]["drawing"].clone();
+    let out = std::env::temp_dir().join(format!("kentos-mcp-landxml-{}.xml", std::process::id()));
+    let written = call(
+        &mut server,
+        "file.export.landxml",
+        json!({"drawing":drawing,"path":out.display().to_string(),"stamp":"2026-11-03T09:00:00","overwrite":true}),
+    );
+    assert_eq!(written["isError"], false, "{written}");
+    let text = std::fs::read_to_string(&out).expect("written");
+    assert!(text.contains("<Alignment name=\"Ana aks\"") && text.contains("<Surface "), "{text}");
+    let _ = std::fs::remove_file(&out);
+}

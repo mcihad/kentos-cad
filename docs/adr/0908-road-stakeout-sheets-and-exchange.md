@@ -35,6 +35,17 @@ Tarih: 2026-11-03. plan/road.md Y10 (ROAD-SEC-09…11; ROAD-IO-05, 06, 13, 14). 
    yazdıkça okunur, noktalar planda yanlarına göre renkli çizilir, ilk 400 satır listelenir; Cetveli yaz ADR 0223'ün
    yazıcısıyla Excel, ODS ya da CSV yazar. Çizim değişmez.
 
+6. **LandXML 1.2 yazma (ROAD-IO-05).** `file.export.landxml` arazi yüzeylerini (`Surface/Definition surfType="TIN"`:
+   noktalar ve üçgenler), akslarını (`Alignment/CoordGeom`: `Line`, `Curve` crvType arc, `Spiral` spiType clothoid;
+   `StaEquation`) ve boykesitlerini (`Profile/ProfAlign`: `PVI`, `ParaCurve`, `UnsymParaCurve`, `CircCurve`) landxml.org'un
+   LandXML 1.2 şemasına göre yazar. Yer “kuzey doğu”, uzunluk metre, doğrultu ve açı ondalık derece (doğrultu kuzeyden
+   saat yönünde, şemanın `direction`'ı). Eğrinin merkezi iç yanında, PI teğetlerin buluştuğu yer (yarım daireden büyük
+   eğride yok); klotoidin PI'sı uç teğetlerinin buluştuğu yer, teğetler paralelse orta noktası; teğet uçta yarıçap
+   `INF`. Elemanların, km denklemlerinin (`staInternal`) ve PVI'ların km'leri iç km'dir (başlangıç km'si + aks
+   boyunca uzaklık), şemanın tanımıyla. Paralel aks LandXML'de yoktur, yazılmaz ve `export_losses` ile söylenir;
+   kurulamayan yüzey ya da aks seçilmişse ret, seçilmemişse uyarı. Dosya yanına yazılır, okuyucuyla geri okunur, sonra
+   yerine konur. Koridor sekmesinin Aplikasyon panelinde LandXML ver.
+
 ## Aşamalar
 
 Y10.1 aplikasyon cetveli (komut, başvuru, Python, MCP, pencere); Y10.2 LandXML'e aks, boykesit ve yüzey yazma ve
@@ -43,6 +54,11 @@ Y10.5 plan–boykesit ve enkesit paftaları (ROAD-SEC-11); Y10.6 çoklu çizgide
 
 Y10.1 (yapıldı): 25 ortak durum (`road_stakeout_cases.py`; kesitler road_corridor_command_cases.py'nin başvurusundan,
 zemin boyu PROJ'un nokta ölçekleri ve Euler yarıçapıyla, KentOS kodu yok), Python, MCP; pencere `stakeout_window.rs`.
+
+Y10.2 (yapıldı, yazma): 22 ortak durum (`road_landxml_cases.py`; akslar road_alignment_cases.py'nin, yüzey Triangle'ın,
+boykesitler road_profile_command_cases.py'nin başvurusundan); KentOS'un yazdığı dosya (`fixtures/road/v1/landxml/out`)
+`--written` ile xmllint'te landxml.org'un XSD'sine karşı geçerli ve her yer, PI, merkez, doğrultu, yarıçap, km ve PVI
+başvuruyla aynı; Python, MCP, masaüstünde LandXML ver. Aks ve boykesit okuma (LandXML al'ın genişlemesi) açık.
 
 ## Sonra
 
