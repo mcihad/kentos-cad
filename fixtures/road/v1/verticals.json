@@ -1,0 +1,1288 @@
+{
+ "cases": [
+  {
+   "name": "İki PVI, yalnız eğim",
+   "pvis": [
+    {
+     "id": "a",
+     "station": 0,
+     "elevation": 100
+    },
+    {
+     "id": "b",
+     "station": 400,
+     "elevation": 108
+    }
+   ],
+   "curves": [],
+   "at": [
+    {
+     "station": 0,
+     "value": [
+      100.0,
+      0.02,
+      0.0
+     ]
+    },
+    {
+     "station": 123.4,
+     "value": [
+      102.468,
+      0.02,
+      0.0
+     ]
+    },
+    {
+     "station": 400,
+     "value": [
+      108.0,
+      0.02,
+      0.0
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Simetrik parabol, çukur",
+   "pvis": [
+    {
+     "id": "a",
+     "station": 0,
+     "elevation": 100
+    },
+    {
+     "id": "v1",
+     "station": 300,
+     "elevation": 94,
+     "curve": {
+      "kind": "parabola",
+      "length": 160
+     }
+    },
+    {
+     "id": "b",
+     "station": 700,
+     "elevation": 106
+    }
+   ],
+   "curves": [
+    {
+     "pvi": "v1",
+     "gIn": -0.02,
+     "gOut": 0.03,
+     "start": [
+      220.0,
+      95.6
+     ],
+     "end": [
+      380.0,
+      96.4
+     ],
+     "a": 5.0,
+     "k": 32.0,
+     "crest": false,
+     "extreme": [
+      284.0,
+      94.96
+     ]
+    }
+   ],
+   "at": [
+    {
+     "station": 0,
+     "value": [
+      100.0,
+      -0.02,
+      0.0
+     ]
+    },
+    {
+     "station": 220,
+     "value": [
+      95.6,
+      -0.02,
+      0.0003125
+     ]
+    },
+    {
+     "station": 260,
+     "value": [
+      95.05,
+      -0.0075,
+      0.0003125
+     ]
+    },
+    {
+     "station": 300,
+     "value": [
+      95.0,
+      0.005,
+      0.0003125
+     ]
+    },
+    {
+     "station": 350,
+     "value": [
+      95.640625,
+      0.020625,
+      0.0003125
+     ]
+    },
+    {
+     "station": 380,
+     "value": [
+      96.4,
+      0.03,
+      0.0
+     ]
+    },
+    {
+     "station": 700,
+     "value": [
+      106.0,
+      0.03,
+      0.0
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Simetrik parabol, tepe, en yüksek nokta içinde",
+   "pvis": [
+    {
+     "id": "a",
+     "station": 0,
+     "elevation": 100
+    },
+    {
+     "id": "v1",
+     "station": 250,
+     "elevation": 110,
+     "curve": {
+      "kind": "parabola",
+      "length": 200
+     }
+    },
+    {
+     "id": "b",
+     "station": 600,
+     "elevation": 99.5
+    }
+   ],
+   "curves": [
+    {
+     "pvi": "v1",
+     "gIn": 0.04,
+     "gOut": -0.03,
+     "start": [
+      150.0,
+      106.0
+     ],
+     "end": [
+      350.0,
+      107.0
+     ],
+     "a": -7.0,
+     "k": 28.571428571428573,
+     "crest": true,
+     "extreme": [
+      264.2857142857143,
+      108.28571428571429
+     ]
+    }
+   ],
+   "at": [
+    {
+     "station": 150,
+     "value": [
+      106.0,
+      0.04,
+      -0.00035
+     ]
+    },
+    {
+     "station": 200,
+     "value": [
+      107.5625,
+      0.0225,
+      -0.00035
+     ]
+    },
+    {
+     "station": 250,
+     "value": [
+      108.25,
+      0.005,
+      -0.00035
+     ]
+    },
+    {
+     "station": 300,
+     "value": [
+      108.0625,
+      -0.0125,
+      -0.00035
+     ]
+    },
+    {
+     "station": 350,
+     "value": [
+      107.0,
+      -0.03,
+      0.0
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Tepe, iki eğim de artı: en yüksek nokta dışında",
+   "pvis": [
+    {
+     "id": "a",
+     "station": 0,
+     "elevation": 50
+    },
+    {
+     "id": "v1",
+     "station": 200,
+     "elevation": 60,
+     "curve": {
+      "kind": "parabola",
+      "length": 120
+     }
+    },
+    {
+     "id": "b",
+     "station": 500,
+     "elevation": 66
+    }
+   ],
+   "curves": [
+    {
+     "pvi": "v1",
+     "gIn": 0.05,
+     "gOut": 0.02,
+     "start": [
+      140.0,
+      57.0
+     ],
+     "end": [
+      260.0,
+      61.2
+     ],
+     "a": -3.0,
+     "k": 40.0,
+     "crest": true,
+     "extreme": null
+    }
+   ],
+   "at": [
+    {
+     "station": 140,
+     "value": [
+      57.0,
+      0.05,
+      -0.00025
+     ]
+    },
+    {
+     "station": 200,
+     "value": [
+      59.55,
+      0.035,
+      -0.00025
+     ]
+    },
+    {
+     "station": 260,
+     "value": [
+      61.2,
+      0.02,
+      0.0
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Asimetrik parabol",
+   "pvis": [
+    {
+     "id": "a",
+     "station": 0,
+     "elevation": 100
+    },
+    {
+     "id": "v1",
+     "station": 300,
+     "elevation": 91,
+     "curve": {
+      "kind": "asymmetric",
+      "lengthIn": 80,
+      "lengthOut": 200
+     }
+    },
+    {
+     "id": "b",
+     "station": 800,
+     "elevation": 111
+    }
+   ],
+   "curves": [
+    {
+     "pvi": "v1",
+     "gIn": -0.03,
+     "gOut": 0.04,
+     "start": [
+      220.0,
+      93.4
+     ],
+     "end": [
+      500.0,
+      99.0
+     ],
+     "a": 7.0,
+     "k": 40.0,
+     "crest": false,
+     "extreme": [
+      268.0,
+      92.68
+     ]
+    }
+   ],
+   "at": [
+    {
+     "station": 220,
+     "value": [
+      93.4,
+      -0.03,
+      0.000625
+     ]
+    },
+    {
+     "station": 260,
+     "value": [
+      92.7,
+      -0.005,
+      0.000625
+     ]
+    },
+    {
+     "station": 300,
+     "value": [
+      93.0,
+      0.02,
+      0.0001
+     ]
+    },
+    {
+     "station": 301,
+     "value": [
+      93.02005,
+      0.0201,
+      0.0001
+     ]
+    },
+    {
+     "station": 400,
+     "value": [
+      95.5,
+      0.03,
+      0.0001
+     ]
+    },
+    {
+     "station": 500,
+     "value": [
+      99.0,
+      0.04,
+      0.0
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Asimetrik tepe",
+   "pvis": [
+    {
+     "id": "a",
+     "station": 1000,
+     "elevation": 845.2
+    },
+    {
+     "id": "v1",
+     "station": 1400,
+     "elevation": 861.2,
+     "curve": {
+      "kind": "asymmetric",
+      "lengthIn": 150,
+      "lengthOut": 60
+     }
+    },
+    {
+     "id": "b",
+     "station": 1700,
+     "elevation": 852.2
+    }
+   ],
+   "curves": [
+    {
+     "pvi": "v1",
+     "gIn": 0.04,
+     "gOut": -0.03,
+     "start": [
+      1250.0,
+      855.2
+     ],
+     "end": [
+      1460.0,
+      859.4000000000001
+     ],
+     "a": -7.0,
+     "k": 30.0,
+     "crest": true,
+     "extreme": [
+      1424.0,
+      859.94
+     ]
+    }
+   ],
+   "at": [
+    {
+     "station": 1250,
+     "value": [
+      855.2,
+      0.04,
+      -0.00013333333333333334
+     ]
+    },
+    {
+     "station": 1300,
+     "value": [
+      857.0333333333334,
+      0.03333333333333333,
+      -0.00013333333333333334
+     ]
+    },
+    {
+     "station": 1400,
+     "value": [
+      859.7,
+      0.02,
+      -0.0008333333333333334
+     ]
+    },
+    {
+     "station": 1430,
+     "value": [
+      859.9250000000001,
+      -0.005,
+      -0.0008333333333333334
+     ]
+    },
+    {
+     "station": 1460,
+     "value": [
+      859.4000000000001,
+      -0.03,
+      0.0
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Çember, çukur",
+   "pvis": [
+    {
+     "id": "a",
+     "station": 0,
+     "elevation": 100
+    },
+    {
+     "id": "v1",
+     "station": 300,
+     "elevation": 94,
+     "curve": {
+      "kind": "circle",
+      "radius": 4000
+     }
+    },
+    {
+     "id": "b",
+     "station": 700,
+     "elevation": 106
+    }
+   ],
+   "curves": [
+    {
+     "pvi": "v1",
+     "gIn": -0.02,
+     "gOut": 0.03,
+     "start": [
+      200.02249187856847,
+      95.99955016242863
+     ],
+     "end": [
+      399.95253309965307,
+      96.99857599298959
+     ],
+     "a": 5.0,
+     "k": 39.98600824421691,
+     "crest": false,
+     "extreme": [
+      280.00649667696905,
+      95.19979008245662
+     ]
+    }
+   ],
+   "at": [
+    {
+     "station": 210,
+     "value": [
+      95.81245069870826,
+      -0.01750430521884787,
+      0.00025011490906387887
+     ]
+    },
+    {
+     "station": 260,
+     "value": [
+      95.24982288402747,
+      -0.005001686731342199,
+      0.00025000938138498207
+     ]
+    },
+    {
+     "station": 300,
+     "value": [
+      95.24975791644567,
+      0.004998438271041172,
+      0.00025000936920295134
+     ]
+    },
+    {
+     "station": 350,
+     "value": [
+      95.81222328018822,
+      0.017501055387586412,
+      0.00025011486639677676
+     ]
+    },
+    {
+     "station": 389,
+     "value": [
+      96.68501378946755,
+      0.027258497072275047,
+      0.00025027868637525084
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Çember, tepe",
+   "pvis": [
+    {
+     "id": "a",
+     "station": 0,
+     "elevation": 100
+    },
+    {
+     "id": "v1",
+     "station": 250,
+     "elevation": 110,
+     "curve": {
+      "kind": "circle",
+      "radius": 3000
+     }
+    },
+    {
+     "id": "b",
+     "station": 600,
+     "elevation": 99.5
+    }
+   ],
+   "curves": [
+    {
+     "pvi": "v1",
+     "gIn": 0.04,
+     "gOut": -0.03,
+     "start": [
+      145.0865189622738,
+      105.80346075849096
+     ],
+     "end": [
+      354.95016132590155,
+      106.85149516022295
+     ],
+     "a": -7.0,
+     "k": 29.980520337661105,
+     "crest": true,
+     "extreme": [
+      264.99063400888855,
+      108.20058459312268
+     ]
+    }
+   ],
+   "at": [
+    {
+     "station": 150,
+     "value": [
+      105.99596688495512,
+      0.038358399872167895,
+      -0.00033406928730243167
+     ]
+    },
+    {
+     "station": 200,
+     "value": [
+      107.49653822809579,
+      0.021668629909670518,
+      -0.00033356812564950487
+     ]
+    },
+    {
+     "station": 250,
+     "value": [
+      108.16313117466485,
+      0.004996940387129288,
+      -0.0003333458181178832
+     ]
+    },
+    {
+     "station": 300,
+     "value": [
+      107.99630168668844,
+      -0.01167058336393361,
+      -0.00033340143691019865
+     ]
+    },
+    {
+     "station": 340,
+     "value": [
+      107.2627038253355,
+      -0.025010941090581527,
+      -0.0003336461558290116
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Beş PVI, üç kurp türü, yüksek kotlar",
+   "pvis": [
+    {
+     "id": "a",
+     "station": 2000,
+     "elevation": 1250.4
+    },
+    {
+     "id": "v1",
+     "station": 2300,
+     "elevation": 1262.4,
+     "curve": {
+      "kind": "parabola",
+      "length": 180
+     }
+    },
+    {
+     "id": "v2",
+     "station": 2650,
+     "elevation": 1251.9,
+     "curve": {
+      "kind": "circle",
+      "radius": 6000
+     }
+    },
+    {
+     "id": "v3",
+     "station": 3000,
+     "elevation": 1265.9,
+     "curve": {
+      "kind": "asymmetric",
+      "lengthIn": 100,
+      "lengthOut": 140
+     }
+    },
+    {
+     "id": "b",
+     "station": 3400,
+     "elevation": 1257.9
+    }
+   ],
+   "curves": [
+    {
+     "pvi": "v1",
+     "gIn": 0.04,
+     "gOut": -0.03,
+     "start": [
+      2210.0,
+      1258.8000000000002
+     ],
+     "end": [
+      2390.0,
+      1259.7
+     ],
+     "a": -7.0,
+     "k": 25.714285714285715,
+     "crest": true,
+     "extreme": [
+      2312.8571428571427,
+      1260.857142857143
+     ]
+    },
+    {
+     "pvi": "v2",
+     "gIn": -0.03,
+     "gOut": 0.04,
+     "start": [
+      2440.099677348197,
+      1258.1970096795542
+     ],
+     "end": [
+      2859.8269620754522,
+      1260.2930784830182
+     ],
+     "a": 7.0,
+     "k": 59.96104067532221,
+     "crest": false,
+     "extreme": [
+      2620.018731982223,
+      1255.4988308137547
+     ]
+    },
+    {
+     "pvi": "v3",
+     "gIn": 0.04,
+     "gOut": -0.02,
+     "start": [
+      2900.0,
+      1261.9
+     ],
+     "end": [
+      3140.0,
+      1263.1000000000001
+     ],
+     "a": -6.0,
+     "k": 40.0,
+     "crest": true,
+     "extreme": [
+      3028.0,
+      1264.22
+     ]
+    }
+   ],
+   "at": [
+    {
+     "station": 2000,
+     "value": [
+      1250.4,
+      0.04,
+      0.0
+     ]
+    },
+    {
+     "station": 2210,
+     "value": [
+      1258.8000000000002,
+      0.04,
+      -0.00038888888888888887
+     ]
+    },
+    {
+     "station": 2300,
+     "value": [
+      1260.825,
+      0.005,
+      -0.00038888888888888887
+     ]
+    },
+    {
+     "station": 2390,
+     "value": [
+      1259.7,
+      -0.03,
+      0.0
+     ]
+    },
+    {
+     "station": 2600,
+     "value": [
+      1255.53222670921,
+      -0.003336473901126087,
+      0.00016666944968893506
+     ]
+    },
+    {
+     "station": 2650,
+     "value": [
+      1255.5737376506704,
+      0.004996940387129288,
+      0.0001666729090589416
+     ]
+    },
+    {
+     "station": 2700,
+     "value": [
+      1256.0319381001807,
+      0.01333139584700689,
+      0.00016671110016957635
+     ]
+    },
+    {
+     "station": 2900,
+     "value": [
+      1261.9,
+      0.04,
+      -0.00035
+     ]
+    },
+    {
+     "station": 3000,
+     "value": [
+      1264.15,
+      0.005,
+      -0.00017857142857142857
+     ]
+    },
+    {
+     "station": 3140,
+     "value": [
+      1263.1000000000001,
+      -0.02,
+      0.0
+     ]
+    },
+    {
+     "station": 3400,
+     "value": [
+      1257.9,
+      -0.02,
+      0.0
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Kurplar uç uca",
+   "pvis": [
+    {
+     "id": "a",
+     "station": 0,
+     "elevation": 100
+    },
+    {
+     "id": "v1",
+     "station": 200,
+     "elevation": 104,
+     "curve": {
+      "kind": "parabola",
+      "length": 100
+     }
+    },
+    {
+     "id": "v2",
+     "station": 300,
+     "elevation": 102,
+     "curve": {
+      "kind": "parabola",
+      "length": 100
+     }
+    },
+    {
+     "id": "b",
+     "station": 500,
+     "elevation": 106
+    }
+   ],
+   "curves": [
+    {
+     "pvi": "v1",
+     "gIn": 0.02,
+     "gOut": -0.02,
+     "start": [
+      150.0,
+      103.0
+     ],
+     "end": [
+      250.0,
+      103.0
+     ],
+     "a": -4.0,
+     "k": 25.0,
+     "crest": true,
+     "extreme": [
+      200.0,
+      103.5
+     ]
+    },
+    {
+     "pvi": "v2",
+     "gIn": -0.02,
+     "gOut": 0.02,
+     "start": [
+      250.0,
+      103.0
+     ],
+     "end": [
+      350.0,
+      103.0
+     ],
+     "a": 4.0,
+     "k": 25.0,
+     "crest": false,
+     "extreme": [
+      300.0,
+      102.5
+     ]
+    }
+   ],
+   "at": [
+    {
+     "station": 150,
+     "value": [
+      103.0,
+      0.02,
+      -0.0004
+     ]
+    },
+    {
+     "station": 250,
+     "value": [
+      103.0,
+      -0.02,
+      0.0004
+     ]
+    },
+    {
+     "station": 300,
+     "value": [
+      102.5,
+      0.0,
+      0.0004
+     ]
+    },
+    {
+     "station": 350,
+     "value": [
+      103.0,
+      0.02,
+      0.0
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Kırık PVI, kurpsuz",
+   "pvis": [
+    {
+     "id": "a",
+     "station": 0,
+     "elevation": 100
+    },
+    {
+     "id": "v1",
+     "station": 200,
+     "elevation": 104
+    },
+    {
+     "id": "b",
+     "station": 500,
+     "elevation": 101
+    }
+   ],
+   "curves": [],
+   "at": [
+    {
+     "station": 100,
+     "value": [
+      102.0,
+      0.02,
+      0.0
+     ]
+    },
+    {
+     "station": 200,
+     "value": [
+      104.0,
+      -0.01,
+      0.0
+     ]
+    },
+    {
+     "station": 350,
+     "value": [
+      102.5,
+      -0.01,
+      0.0
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Kurplar biniyor",
+   "pvis": [
+    {
+     "id": "a",
+     "station": 0,
+     "elevation": 100
+    },
+    {
+     "id": "v1",
+     "station": 200,
+     "elevation": 104,
+     "curve": {
+      "kind": "parabola",
+      "length": 160
+     }
+    },
+    {
+     "id": "v2",
+     "station": 300,
+     "elevation": 102,
+     "curve": {
+      "kind": "parabola",
+      "length": 100
+     }
+    },
+    {
+     "id": "b",
+     "station": 500,
+     "elevation": 106
+    }
+   ],
+   "error": {
+    "kind": "Overlap",
+    "a": "v1",
+    "b": "v2",
+    "excess": 30.0
+   }
+  },
+  {
+   "name": "Kurp başlangıçtan taşıyor",
+   "pvis": [
+    {
+     "id": "a",
+     "station": 0,
+     "elevation": 100
+    },
+    {
+     "id": "v1",
+     "station": 50,
+     "elevation": 101,
+     "curve": {
+      "kind": "parabola",
+      "length": 160
+     }
+    },
+    {
+     "id": "b",
+     "station": 500,
+     "elevation": 96
+    }
+   ],
+   "error": {
+    "kind": "Overlap",
+    "a": "a",
+    "b": "v1",
+    "excess": 30.0
+   }
+  },
+  {
+   "name": "Kurp bitişten taşıyor",
+   "pvis": [
+    {
+     "id": "a",
+     "station": 0,
+     "elevation": 100
+    },
+    {
+     "id": "v1",
+     "station": 450,
+     "elevation": 109,
+     "curve": {
+      "kind": "asymmetric",
+      "lengthIn": 50,
+      "lengthOut": 80
+     }
+    },
+    {
+     "id": "b",
+     "station": 500,
+     "elevation": 106
+    }
+   ],
+   "error": {
+    "kind": "Overlap",
+    "a": "v1",
+    "b": "b",
+    "excess": 30.0
+   }
+  },
+  {
+   "name": "Km geri gidiyor",
+   "pvis": [
+    {
+     "id": "a",
+     "station": 0,
+     "elevation": 100
+    },
+    {
+     "id": "v1",
+     "station": 300,
+     "elevation": 94
+    },
+    {
+     "id": "b",
+     "station": 250,
+     "elevation": 106
+    }
+   ],
+   "error": {
+    "kind": "NotIncreasing",
+    "pvi": "b"
+   }
+  },
+  {
+   "name": "Aynı kimlik",
+   "pvis": [
+    {
+     "id": "a",
+     "station": 0,
+     "elevation": 100
+    },
+    {
+     "id": "a",
+     "station": 300,
+     "elevation": 94
+    },
+    {
+     "id": "b",
+     "station": 700,
+     "elevation": 106
+    }
+   ],
+   "error": {
+    "kind": "DuplicateId",
+    "pvi": "a"
+   }
+  },
+  {
+   "name": "Tek PVI",
+   "pvis": [
+    {
+     "id": "a",
+     "station": 0,
+     "elevation": 100
+    }
+   ],
+   "error": {
+    "kind": "TooFewPoints"
+   }
+  },
+  {
+   "name": "Başlangıçta kurp",
+   "pvis": [
+    {
+     "id": "a",
+     "station": 0,
+     "elevation": 100,
+     "curve": {
+      "kind": "parabola",
+      "length": 50
+     }
+    },
+    {
+     "id": "b",
+     "station": 300,
+     "elevation": 94
+    }
+   ],
+   "error": {
+    "kind": "BadCurve",
+    "pvi": "a"
+   }
+  },
+  {
+   "name": "Sıfır uzunluk",
+   "pvis": [
+    {
+     "id": "a",
+     "station": 0,
+     "elevation": 100
+    },
+    {
+     "id": "v1",
+     "station": 300,
+     "elevation": 94,
+     "curve": {
+      "kind": "parabola",
+      "length": 0
+     }
+    },
+    {
+     "id": "b",
+     "station": 700,
+     "elevation": 106
+    }
+   ],
+   "error": {
+    "kind": "BadCurve",
+    "pvi": "v1"
+   }
+  },
+  {
+   "name": "Sıfır yarıçap",
+   "pvis": [
+    {
+     "id": "a",
+     "station": 0,
+     "elevation": 100
+    },
+    {
+     "id": "v1",
+     "station": 300,
+     "elevation": 94,
+     "curve": {
+      "kind": "circle",
+      "radius": 0
+     }
+    },
+    {
+     "id": "b",
+     "station": 700,
+     "elevation": 106
+    }
+   ],
+   "error": {
+    "kind": "BadCurve",
+    "pvi": "v1"
+   }
+  },
+  {
+   "name": "Eğim değişmiyor",
+   "pvis": [
+    {
+     "id": "a",
+     "station": 0,
+     "elevation": 100
+    },
+    {
+     "id": "v1",
+     "station": 300,
+     "elevation": 106,
+     "curve": {
+      "kind": "parabola",
+      "length": 100
+     }
+    },
+    {
+     "id": "b",
+     "station": 700,
+     "elevation": 114
+    }
+   ],
+   "error": {
+    "kind": "BadCurve",
+    "pvi": "v1"
+   }
+  }
+ ]
+}

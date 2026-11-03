@@ -266,10 +266,17 @@ fn a_work_brings_its_unit_and_scale_and_another_type_its_own() {
         (d.coords, d.unit(), d.scale()),
         (Coords::Real, DrawingUnit::M, 1000.0)
     );
+    // A road shares the map's coordinates and scale; its card says it is a road (plan/road.md).
+    send(&mut app, Event::Work(2));
+    let d = &state(&app).draft;
+    assert_eq!(
+        (d.work().map(|w| w.name), d.coords, d.scale()),
+        (Some("Yol projesi"), Coords::Real, 1000.0)
+    );
     send(&mut app, Event::Work(BUILDING));
     assert_eq!(state(&app).draft.scale(), 100.0);
-    // A card that is no work's does nothing: there are two (docs/adr/0802), the detail's is gone.
-    send(&mut app, Event::Work(2));
+    // A card that is no work's does nothing: there are three (docs/adr/0802, plan/road.md), the detail's is gone.
+    send(&mut app, Event::Work(3));
     assert_eq!(
         state(&app).draft.work().map(|w| w.name),
         Some("Mimari proje")

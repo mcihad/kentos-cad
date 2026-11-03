@@ -16,13 +16,13 @@ use crate::view::view;
 
 /// Where things are at 1440 × 900 and 13 px.
 const MIMARI: Point = Point::new(432.0, 220.0);
-const HARITA: Point = Point::new(820.0, 220.0);
-const HARITA_START: Point = Point::new(975.0, 401.0);
-const MIMARI_MENU: Point = Point::new(602.0, 357.0);
-const YOL: Point = Point::new(310.0, 733.0);
-const RECENT_WHOLE: Point = Point::new(975.0, 461.0);
-const UPDATES_WHOLE: Point = Point::new(1366.0, 461.0);
-const FIRST_RECENT: Point = Point::new(400.0, 495.0);
+const HARITA: Point = Point::new(676.0, 220.0);
+const HARITA_START: Point = Point::new(775.0, 346.0);
+const MIMARI_MENU: Point = Point::new(504.0, 301.0);
+const UC_BOYUT: Point = Point::new(310.0, 717.0);
+const RECENT_WHOLE: Point = Point::new(1073.0, 406.0);
+const UPDATES_WHOLE: Point = Point::new(1366.0, 406.0);
+const FIRST_RECENT: Point = Point::new(400.0, 440.0);
 const SEARCH: Point = Point::new(1090.0, 58.0);
 const ADD: Point = Point::new(1295.0, 58.0);
 const BELL: Point = Point::new(1386.0, 58.0);
@@ -80,10 +80,10 @@ fn the_pointer_wakes_a_plate_and_leaves_it() {
     assert_eq!(window.launcher.hot(), Some("kentos-mimari"));
     window.input(Input::Move(HARITA));
     assert_eq!(window.launcher.hot(), Some("kentos-harita"));
-    window.input(Input::Move(YOL));
+    window.input(Input::Move(UC_BOYUT));
     assert_eq!(
         window.launcher.hot(),
-        Some("kentos-yol"),
+        Some("kentos-3d"),
         "a coming app too"
     );
     window.input(Input::Move(TABLE));
@@ -174,7 +174,7 @@ fn apps_a_user_adds_keep_their_place() {
         .snapshot
         .settle(&mut window.launcher, view, &mut update);
     let (out, coming) = window.launcher.shelves();
-    assert_eq!((out.len(), coming.len()), (5, 3));
+    assert_eq!((out.len(), coming.len()), (6, 2));
     assert_eq!(window.launcher.columns.get(), 3);
     let portal = window.launcher.registry.get("kurum-portali").expect("read");
     assert_eq!(window.launcher.status(portal), Status::Web);
@@ -184,9 +184,9 @@ fn apps_a_user_adds_keep_their_place() {
 #[test]
 fn a_coming_app_is_chosen_but_starts_nothing() {
     let mut window = Window::new();
-    window.input(Input::Click(YOL));
-    window.input(Input::Click(YOL));
-    assert_eq!(window.launcher.selected.as_deref(), Some("kentos-yol"));
+    window.input(Input::Click(UC_BOYUT));
+    window.input(Input::Click(UC_BOYUT));
+    assert_eq!(window.launcher.selected.as_deref(), Some("kentos-3d"));
     assert!(window.said().is_empty());
 }
 

@@ -756,6 +756,7 @@ const SYSTEM: &[&str] = &[
     include_str!("../templates/imar-plani.json"),
     include_str!("../templates/gis-tematik.json"),
     include_str!("../templates/gis-atlas.json"),
+    include_str!("../templates/yol-plan-boykesit.json"),
     include_str!("../templates/baski-kalibrasyonu.json"),
 ];
 

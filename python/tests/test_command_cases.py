@@ -450,6 +450,14 @@ class Case:
                         if isinstance(got, dict):
                             got = {k: v for k, v in got.items() if k != "objects"}
                     same(got, self.block_ids(w, at), f"{at}: {name} dış başvurusu")
+            elif key == "road":
+                # A road project's terrain surfaces' definitions (plan/road.md Y2.3); None: none.
+                settings = json.loads(self.doc._session.summary())["settings"]
+                road = settings.get("road")
+                # What the road commands drew (docs/adr/0911 §1) is compared only where a case names it.
+                if isinstance(road, dict) and not (isinstance(want, dict) and ("drawings" in want or "autoRebuild" in want)):
+                    road = {k: v for k, v in road.items() if k not in ("drawings", "autoRebuild")} or None
+                same(road, want, f"{at}: road", within)
             elif key == "linearEvents":
                 # The project's links of event layers to their routes (docs/adr/0569 §2).
                 settings = json.loads(self.doc._session.summary())["settings"]

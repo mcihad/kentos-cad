@@ -274,7 +274,8 @@
        {
         "command": "tool.vertexPoints",
         "works": [
-         "map"
+         "map",
+         "road"
         ]
        },
        {
@@ -432,6 +433,308 @@
        "title": "Proje ayarları: birimler, hassasiyet ve çizim ölçeği"
       }
      }
+    ]
+   },
+   {
+    "id": "terrain",
+    "label": "Arazi",
+    "panels": [
+     {
+      "label": "Yüzey",
+      "icon": "terrainSurface",
+      "items": [
+       {
+        "command": "terrain.surfaces",
+        "size": "large"
+       },
+       {
+        "command": "terrain.new",
+        "size": "large"
+       }
+      ]
+     },
+     {
+      "label": "İşlemler",
+      "icon": "processing",
+      "items": [
+       {
+        "command": "processing.toolbox",
+        "size": "large"
+       },
+       {
+        "command": "processing.newModel",
+        "size": "small"
+       },
+       {
+        "command": "processing.history",
+        "size": "small"
+       }
+      ]
+     },
+     {
+      "label": "Arazi",
+      "icon": "contours",
+      "items": [
+       {
+        "command": "tool.spot",
+        "size": "large"
+       },
+       {
+        "command": "pointcloud.region",
+        "size": "small"
+       },
+       {
+        "command": "pointcloud.profile",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "mesh.query"
+      ]
+     }
+    ],
+    "works": [
+     "road"
+    ]
+   },
+   {
+    "id": "alignment",
+    "label": "Güzergâh",
+    "panels": [
+     {
+      "label": "Güzergâh",
+      "icon": "alignmentEditor",
+      "items": [
+       {
+        "command": "alignment.editor",
+        "size": "large"
+       },
+       {
+        "command": "alignment.new",
+        "size": "large"
+       },
+       {
+        "command": "alignment.fromLine",
+        "size": "large"
+       },
+       {
+        "command": "landxml.importAlignments",
+        "size": "large"
+       }
+      ]
+     },
+     {
+      "label": "Ön güzergâh",
+      "icon": "routeFinder",
+      "items": [
+       {
+        "command": "route.finder",
+        "size": "large"
+       }
+      ]
+     },
+     {
+      "label": "Kavşak",
+      "icon": "junctionEditor",
+      "items": [
+       {
+        "command": "junction.editor",
+        "size": "large"
+       }
+      ]
+     },
+     {
+      "label": "Boykesit",
+      "icon": "profileEditor",
+      "items": [
+       {
+        "command": "profile.editor",
+        "size": "large"
+       },
+       {
+        "command": "profile.new",
+        "size": "large"
+       },
+       {
+        "command": "profile.fromLine",
+        "size": "large"
+       }
+      ]
+     },
+     {
+      "label": "Enkesit",
+      "icon": "sectionEditor",
+      "items": [
+       {
+        "command": "section.editor",
+        "size": "large"
+       },
+       {
+        "command": "section.new",
+        "size": "large"
+       },
+       {
+        "command": "section.template",
+        "size": "large"
+       }
+      ]
+     },
+     {
+      "label": "Dever",
+      "icon": "superelevationEditor",
+      "items": [
+       {
+        "command": "superelevation.editor",
+        "size": "large"
+       },
+       {
+        "command": "superelevation.new",
+        "size": "large"
+       }
+      ]
+     }
+    ],
+    "works": [
+     "road"
+    ]
+   },
+   {
+    "id": "corridor",
+    "label": "Koridor",
+    "panels": [
+     {
+      "label": "Koridor",
+      "icon": "corridorEditor",
+      "items": [
+       {
+        "command": "corridor.editor",
+        "size": "large"
+       },
+       {
+        "command": "corridor.new",
+        "size": "large"
+       },
+       {
+        "command": "corridor.slopePlan",
+        "size": "large"
+       }
+      ]
+     },
+     {
+      "label": "Kübaj",
+      "icon": "volumeEditor",
+      "items": [
+       {
+        "command": "volume.editor",
+        "size": "large"
+       },
+       {
+        "command": "volume.new",
+        "size": "large"
+       },
+       {
+        "command": "volume.export",
+        "size": "large"
+       }
+      ]
+     },
+     {
+      "label": "Brükner",
+      "icon": "haulEditor",
+      "items": [
+       {
+        "command": "haul.editor",
+        "size": "large"
+       },
+       {
+        "command": "haul.new",
+        "size": "large"
+       }
+      ]
+     },
+     {
+      "label": "Aplikasyon",
+      "icon": "stakeoutTable",
+      "items": [
+       {
+        "command": "stakeout.table",
+        "size": "large"
+       },
+       {
+        "command": "landxml.export",
+        "size": "large"
+       },
+       {
+        "command": "ifc.export",
+        "size": "large"
+       }
+      ]
+     },
+     {
+      "label": "Pafta",
+      "icon": "roadSheets",
+      "items": [
+       {
+        "command": "road.sheets",
+        "size": "large"
+       }
+      ]
+     },
+     {
+      "label": "Görünüş",
+      "icon": "roadViews",
+      "items": [
+       {
+        "command": "road.views",
+        "size": "large"
+       }
+      ]
+     },
+     {
+      "label": "Yapılar",
+      "icon": "guardrailEditor",
+      "items": [
+       {
+        "command": "guardrail.editor",
+        "size": "large"
+       },
+       {
+        "command": "culvert.editor",
+        "size": "large"
+       },
+       {
+        "command": "retainingWall.editor",
+        "size": "large"
+       }
+      ]
+     },
+     {
+      "label": "Metraj",
+      "icon": "payItemsEditor",
+      "items": [
+       {
+        "command": "payItems.editor",
+        "size": "large"
+       }
+      ]
+     },
+     {
+      "label": "3B",
+      "icon": "scene3dView",
+      "items": [
+       {
+        "command": "scene3d.view",
+        "size": "large"
+       },
+       {
+        "command": "gltf.export",
+        "size": "large"
+       }
+      ]
+     }
+    ],
+    "works": [
+     "road"
     ]
    },
    {
@@ -714,7 +1017,8 @@
      }
     ],
     "works": [
-     "map"
+     "map",
+     "road"
     ]
    },
    {
@@ -803,7 +1107,8 @@
         "command": "raster.add",
         "size": "small",
         "works": [
-         "map"
+         "map",
+         "road"
         ]
        },
        {
@@ -816,19 +1121,22 @@
        {
         "command": "raster.georef",
         "works": [
-         "map"
+         "map",
+         "road"
         ]
        },
        {
         "command": "raster.mosaic",
         "works": [
-         "map"
+         "map",
+         "road"
         ]
        },
        {
         "command": "raster.gpkgRead",
         "works": [
-         "map"
+         "map",
+         "road"
         ]
        }
       ],
@@ -913,7 +1221,8 @@
        "source.postgis"
       ],
       "works": [
-       "map"
+       "map",
+       "road"
       ]
      },
      {
@@ -1136,7 +1445,8 @@
         "command": "tool.northArrow",
         "size": "small",
         "works": [
-         "map"
+         "map",
+         "road"
         ]
        }
       ]
@@ -3909,7 +4219,8 @@
       }
      ],
      "works": [
-      "map"
+      "map",
+      "road"
      ]
     },
     {
@@ -4052,7 +4363,8 @@
       }
      ],
      "works": [
-      "map"
+      "map",
+      "road"
      ]
     }
    ]
@@ -4208,7 +4520,8 @@
        "command": "tool.vertexPoints",
        "size": "small",
        "works": [
-        "map"
+        "map",
+        "road"
        ]
       },
       {
@@ -4219,7 +4532,8 @@
        "command": "tool.stationLabels",
        "size": "small",
        "works": [
-        "map"
+        "map",
+        "road"
        ],
        "modes": [
         "cad"
@@ -4301,7 +4615,8 @@
       }
      ],
      "works": [
-      "map"
+      "map",
+      "road"
      ]
     }
    ]
@@ -4620,7 +4935,8 @@
       }
      ],
      "works": [
-      "map"
+      "map",
+      "road"
      ]
     }
    ]
@@ -5409,7 +5725,8 @@
       }
      ],
      "works": [
-      "map"
+      "map",
+      "road"
      ]
     },
     {
@@ -5461,8 +5778,8 @@
          ]
         }
        ],
-       "modes": [
-        "gis"
+       "works": [
+        "road"
        ]
       },
       {
@@ -5479,13 +5796,14 @@
          ]
         }
        ],
-       "modes": [
-        "gis"
+       "works": [
+        "road"
        ]
       }
      ],
      "works": [
-      "map"
+      "map",
+      "road"
      ]
     },
     {
@@ -5566,7 +5884,8 @@
       }
      ],
      "works": [
-      "map"
+      "map",
+      "road"
      ]
     },
     {
@@ -5752,7 +6071,8 @@
       }
      ],
      "works": [
-      "map"
+      "map",
+      "road"
      ]
     }
    ]

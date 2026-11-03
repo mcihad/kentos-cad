@@ -55,6 +55,23 @@ pub struct NewProject {
     pub annotation: Option<kentos_contracts::AnnotationHeights>,
     /// What a CAD project is drawn for (docs/adr/0801): its KentOS program and ribbon; a CBS project has none.
     pub cad_work: Option<kentos_contracts::CadWork>,
+    /// What the project's elevations rest on (docs/adr/0519); none: not said. A road's are TUDKA-99's orthometric
+    /// heights by default ([`road_heights`], plan/road.md ROAD-NUM-02/03).
+    pub heights: Option<kentos_contracts::HeightReference>,
+}
+
+/// A new road's elevations (plan/road.md ROAD-NUM-03): Türkiye's levelling heights, orthometric above the Antalya
+/// datum (TUDKA-99, EPSG:5775), with HGM's geoid model TG-20 between them and a GNSS receiver's ellipsoidal heights.
+/// The grid is not named by its bytes here: the project says the model, the device's grid library holds the file.
+pub fn road_heights() -> kentos_contracts::HeightReference {
+    kentos_contracts::HeightReference {
+        kind: kentos_contracts::HeightKind::Orthometric,
+        vertical_srid: Some(5775),
+        geoid: Some(kentos_contracts::GeoidModel {
+            name: "TG-20".to_owned(),
+            sha256: None,
+        }),
+    }
 }
 
 /// The default units of a project (the web's `PROJECT_SETTINGS_DEFAULTS`).
@@ -72,6 +89,7 @@ pub fn default_settings(srid: u32) -> ProjectSettings {
         profile_files: Vec::new(),
         heights: None,
         coordinate_epoch: None,
+        road: None,
         named_ucs: Vec::new(),
         named_views: Vec::new(),
         forms: Vec::new(),
@@ -144,6 +162,8 @@ pub fn new_project(o: &NewProject) -> Result<DocumentSnapshotV1, String> {
                 .drawing_unit
                 .filter(|u| crs.is_local() && *u != DrawingUnit::M),
             annotation: o.annotation.clone(),
+            // A local drawing has no heights' system: they rest on nothing but itself.
+            heights: o.heights.clone().filter(|_| !crs.is_local()),
             ..default_settings(crs.srid)
         },
         origin: work_area_centre(crs),
@@ -535,6 +555,7 @@ mod tests {
                     .map(|u| serde_json::from_value(u.clone()).expect("a unit")),
                 annotation: None,
                 cad_work: None,
+                heights: None,
             };
             let want: DocumentSnapshotV1 =
                 serde_json::from_value(case["snapshot"].clone()).expect("the web's drawing reads");
@@ -555,6 +576,7 @@ mod tests {
             drawing_unit: None,
             annotation: None,
             cad_work: None,
+            heights: None,
         });
         assert!(refused.expect_err("unknown").contains("EPSG:1234"));
         let b = sheet_around(Vec2 { x: 0.0, y: 0.0 }, 1000.0, false);

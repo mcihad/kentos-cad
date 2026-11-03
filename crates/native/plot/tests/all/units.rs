@@ -36,6 +36,7 @@ fn drawing(unit: DrawingUnit, class_unit: DrawingUnit) -> Document {
         drawing_unit: Some(unit),
         annotation: None,
         cad_work: None,
+        heights: None,
     })
     .expect("a new project");
     let layer = snapshot.active_layer.clone();

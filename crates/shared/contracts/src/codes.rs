@@ -601,6 +601,231 @@ codes! {
     UNKNOWN_EVENT_LINK = "unknown_event_link", Failed, false, "Projede bu kimlikte olay bağı yok.";
     /// A write left the events of a link that keeps them on their routes out of place (docs/adr/0569 §3).
     EVENTS_DIRTY = "events_dirty", Warning, false, "Olay bağı olayları rotalarında tutuyor ama bu yazma bazılarını yerine koyamadı (rota yok, ölçü sayı değil ya da rotanın dışında, katman kilitli); Olay kaymasını denetle nedenleri söyler.";
+    /// A road command in a project that is not a road project (plan/road.md Y2.3).
+    NOT_A_ROAD_PROJECT = "not_a_road_project", Failed, false, "Bu komut yalnız yol projesinde (KentOS Yol, cadWork road) çalışır.";
+    /// A terrain surface's definition, or the project's surfaces with it, against their rules.
+    INVALID_TERRAIN = "invalid_terrain", Failed, false, "Yüzeyin tanımı ya da onunla projenin yüzeyleri kurallarına uymuyor.";
+    /// `set` without the surface, or a query's places without the surface they are on.
+    NO_TERRAIN = "no_terrain", Failed, false, "Yüzey verilmedi.";
+    /// A surface the project does not have.
+    UNKNOWN_TERRAIN = "unknown_terrain", Failed, false, "Projede bu kimlikte ya da adda yüzey yok.";
+    /// No surface is made of what its sources give (too few points, two heights at one place, crossing breaklines,
+    /// a boundary outside the points).
+    TERRAIN_UNBUILDABLE = "terrain_unbuildable", Failed, false, "Kaynaklardan yüzey kurulamıyor; ileti nedenini ve yerini söyler.";
+    /// A query's places: not finite, a line of one place, too many.
+    INVALID_PLACES = "invalid_places", Failed, false, "Yerler sonlu sayılar olmalı; hat en az iki yerden oluşur, en çok 100 000 yer.";
+    /// Contour lines of an interval not above zero, a base not finite, or too many levels (plan/road.md Y2.5).
+    INVALID_CONTOURS = "invalid_contours", Failed, false, "Eş yükselti aralığı 0'dan büyük olmalı; yüzeyi en çok 10 000 düzey keser.";
+    /// No level of the interval crosses the surface.
+    NO_CONTOURS = "no_contours", Failed, false, "Bu aralıkla yüzeyi kesen eş yükselti eğrisi yok.";
+    /// A LandXML file with no surface, none of the name asked, or one without points (plan/road.md Y2.5).
+    LANDXML_NO_SURFACE = "landxml_no_surface", Failed, false, "LandXML dosyasında alınacak yüzey yok.";
+    /// A LandXML file with no alignment KentOS takes: none in it, a name it does not have, none whose elements make
+    /// KentOS's PIs (docs/adr/0908 §7).
+    LANDXML_NO_ALIGNMENT = "landxml_no_alignment", Failed, false, "LandXML dosyasında alınacak aks yok.";
+    /// A warning: what a LandXML surface says and is not taken (a face naming a missing point, a point id twice, a
+    /// second outer boundary).
+    LANDXML_LEFT = "landxml_left", Warning, false, "LandXML yüzeyinin bir kısmı alınmadı; ileti nedenini söyler.";
+    /// An alignment's definition, or PIs that make no alignment (docs/adr/0901 §3).
+    INVALID_ALIGNMENT = "invalid_alignment", Failed, false, "Aks tanımı ya da PI'ları geçerli değil; ileti nedenini ve yerini söyler.";
+    /// No alignment of the id or name.
+    UNKNOWN_ALIGNMENT = "unknown_alignment", Failed, false, "Bu kimlikte ya da adda aks yok.";
+    /// A PI's clothoids turn more than its deflection.
+    ALIGNMENT_SPIRALS_LONG = "alignment_spirals_long", Failed, false, "Klotoidlerin dönüşü PI'nın sapmasından büyük; klotoidleri kısaltın ya da yarıçapı büyütün.";
+    /// Two curves' tangent lengths pass each other.
+    ALIGNMENT_CURVES_OVERLAP = "alignment_curves_overlap", Failed, false, "İki kurp birbirine biniyor; yarıçapı ya da klotoidleri küçültün, PI'ları uzaklaştırın.";
+    /// A station equation's back km is not after the one before it on the alignment.
+    INVALID_STATIONING = "invalid_stationing", Failed, false, "Km eşitliği aksın üstünde, bir öncekinden sonra olmalı.";
+    /// A parallel axis folds where a curve's radius is smaller than the offset, or crosses itself.
+    OFFSET_CUSP = "offset_cusp", Failed, false, "Paralel aks bu ötelemede kıvrılıyor; ötelemeyi küçültün ya da kurpların yarıçapını büyütün.";
+    /// An alignment a parallel axis follows or a profile lies on.
+    ALIGNMENT_IN_USE = "alignment_in_use", Failed, false, "Bu aksı izleyen paralel aks ya da ona bağlı boykesit, kesit takımı, dever çizelgesi ya da koridor var; önce onu silin.";
+    /// A station off the alignment, a km on no place.
+    STATION_OUTSIDE = "station_outside", Failed, false, "Bu km aksın üstünde değil.";
+    /// A km on more than one place, asked without its region.
+    STATION_AMBIGUOUS = "station_ambiguous", Failed, false, "Bu km aksın birden çok yerine düşüyor; km eşitliğinin bölgesini verin.";
+    /// An alignment's km labels asked with a step not above 0, a major step not a multiple of it, too many ticks.
+    INVALID_LABEL = "invalid_label", Failed, false, "İşaret aralığı ve yazı yüksekliği 0'dan büyük, km yazılan aralık işaret aralığının tam katı olmalı.";
+    /// No profile (vertical alignment) of the id or name (docs/adr/0902).
+    UNKNOWN_ROAD_PROFILE = "unknown_road_profile", Failed, false, "Bu kimlikte ya da adda boykesit yok.";
+    /// A profile's definition, or PVIs that make no vertical alignment (docs/adr/0902 §3).
+    INVALID_ROAD_PROFILE = "invalid_road_profile", Failed, false, "Boykesitin tanımı ya da PVI'ları geçerli değil; ileti nedenini ve yerini söyler.";
+    /// Two vertical curves, or a curve and an end of the profile, pass each other.
+    PROFILE_CURVES_OVERLAP = "profile_curves_overlap", Failed, false, "İki düşey kurp birbirine biniyor; kurp boyunu ya da yarıçapı küçültün, PVI'ları uzaklaştırın.";
+    /// No road template (tip kesit) of the id or name (docs/adr/0903).
+    UNKNOWN_ROAD_TEMPLATE = "unknown_road_template", Failed, false, "Bu kimlikte ya da adda tip kesit yok.";
+    /// A road template's definition, or an edit that gives too little (docs/adr/0903 §3).
+    INVALID_ROAD_TEMPLATE = "invalid_road_template", Failed, false, "Tip kesitin tanımı geçerli değil; ileti nedenini ve yerini söyler.";
+    /// A road template a sample line set uses.
+    ROAD_TEMPLATE_IN_USE = "road_template_in_use", Failed, false, "Bu tip kesiti bir kesit takımı ya da koridor kullanıyor; önce ondan kaldırın.";
+    /// No sample line set of the id or name.
+    UNKNOWN_SECTION_SET = "unknown_section_set", Failed, false, "Bu kimlikte ya da adda kesit takımı yok.";
+    /// A sample line set's definition or its stations (docs/adr/0903 §1–§2).
+    INVALID_SECTION_SET = "invalid_section_set", Failed, false, "Kesit takımının tanımı ya da km'leri geçerli değil; ileti nedenini ve yerini söyler.";
+    /// A profile a sample line set reads.
+    PROFILE_IN_USE = "profile_in_use", Failed, false, "Bu boykesiti bir kesit takımı ya da koridor kullanıyor; önce ondan kaldırın.";
+    /// A warning: the sample line set's alignment changed since it was made or rebound.
+    SECTION_SET_STALE = "section_set_stale", Warning, false, "Kesit takımının aksı takım kurulduktan sonra değişti; km'leri denetleyip aksa yeniden bağlayın.";
+    /// A warning: the set's surface is not in the project or makes no surface; no terrain, no platform.
+    SECTION_SURFACE_GONE = "section_surface_gone", Warning, false, "Kesit takımının yüzeyi projede yok ya da kurulamıyor; arazi kesiti verilmedi.";
+    /// A warning: a side's slope meets the terrain nowhere on the swath (docs/adr/0903 §4).
+    SECTION_OPEN = "section_open", Warning, false, "Bir yanın şevi şerit genişliği içinde araziyle buluşmuyor; şeridi genişletin.";
+    /// No superelevation schedule of the id or name.
+    UNKNOWN_SUPERELEVATION = "unknown_superelevation", Failed, false, "Bu kimlikte ya da adda dever çizelgesi yok.";
+    /// A superelevation schedule's definition, or a schedule that does not build (docs/adr/0904 §2).
+    INVALID_SUPERELEVATION = "invalid_superelevation", Failed, false, "Dever çizelgesi kurallarına uymuyor ya da kurulamıyor.";
+    /// A superelevation schedule a sample line set uses.
+    SUPERELEVATION_IN_USE = "superelevation_in_use", Failed, false, "Bu dever çizelgesini bir kesit takımı ya da koridor kullanıyor; önce ondan kaldırın.";
+    /// A warning: the set's superelevation schedule does not build; its lanes keep the template's slopes.
+    SECTION_SUPERELEVATION_GONE = "section_superelevation_gone", Warning, false, "Kesit takımının dever çizelgesi kurulamıyor; şeritler tip kesitin eğimiyle verildi.";
+    /// A warning: the schedule's alignment changed since it was made or rebound.
+    SUPERELEVATION_STALE = "superelevation_stale", Warning, false, "Dever çizelgesinin aksı değişti; km'leri denetleyip aksa yeniden bağlayın.";
+    /// No corridor of the id or name.
+    UNKNOWN_CORRIDOR = "unknown_corridor", Failed, false, "Bu kimlikte ya da adda koridor yok.";
+    /// A corridor's definition, its regions or its sampling (docs/adr/0905 §1–§2).
+    INVALID_ROAD_CORRIDOR = "invalid_road_corridor", Failed, false, "Koridorun tanımı, bölgeleri ya da km örneklemesi geçerli değil; ileti nedenini ve yerini söyler.";
+    /// A warning: the corridor's alignment changed since it was made or rebound.
+    CORRIDOR_STALE = "corridor_stale", Warning, false, "Koridorun aksı değişti; bölgeleri denetleyip aksa yeniden bağlayın.";
+    /// A warning: stretches of the corridor without a section or with a side open (docs/adr/0905 §3).
+    CORRIDOR_UNSOLVED = "corridor_unsolved", Warning, false, "Koridorun bazı km aralıkları çözülmedi: kesit kurulmadı ya da şev araziyle buluşmadı; ileti aralıkları söyler.";
+    /// A warning: consecutive sections cross in plan; no top surface there (docs/adr/0905 §5).
+    CORRIDOR_FOLDED = "corridor_folded", Warning, false, "Ardışık kesitler planda kesişiyor (dar kurpta geniş şerit); orada üst yüzey kurulmadı.";
+    /// A warning: the corridor's regions leave stretches without sections.
+    CORRIDOR_GAP = "corridor_gap", Warning, false, "Koridorun bölgeleri arasında kesitsiz aralık var.";
+    /// A warning: the corridor's surface is not in the project or makes no surface; no section is solved.
+    CORRIDOR_SURFACE_GONE = "corridor_surface_gone", Warning, false, "Koridorun yüzeyi projede yok ya da kurulamıyor; hiçbir kesit çözülmedi.";
+    /// No earthwork volume of the id or name.
+    UNKNOWN_VOLUME = "unknown_volume", Failed, false, "Bu kimlikte ya da adda kübaj hesabı yok.";
+    /// An earthwork volume's definition, or one its corridor no longer builds (docs/adr/0906).
+    INVALID_VOLUME = "invalid_volume", Failed, false, "Kübaj hesabının tanımı geçerli değil ya da koridoru kurulamıyor; ileti nedenini söyler.";
+    /// A corridor an earthwork volume uses.
+    CORRIDOR_IN_USE = "corridor_in_use", Failed, false, "Bu koridoru bir kübaj hesabı kullanıyor; önce kübaj hesabını silin.";
+    /// A warning: stretches where a section is not solved have no volume (docs/adr/0906 §2).
+    VOLUME_GAP = "volume_gap", Warning, false, "Kesiti çözülmeyen aralıkların hacmi yok; ileti aralıkları söyler.";
+    /// A warning: the design's area the terrain does not cover (docs/adr/0906 §3).
+    VOLUME_UNCOVERED = "volume_uncovered", Warning, false, "Tasarım yüzeyinin bir kısmını arazi örtmüyor; o alanın hacmi yok.";
+    /// A warning: stretches without factors are not converted (docs/adr/0906 §4).
+    VOLUME_UNFACTORED = "volume_unfactored", Warning, false, "Katsayı verilmeyen aralıklar dönüştürülmedi; düzeltilmiş hacim ham hacimdir.";
+    /// An approved earthwork volume's definition does not change (docs/adr/0906 §5).
+    VOLUME_APPROVED = "volume_approved", Failed, false, "Bu kübaj onaylı; değiştirmek ya da silmek için önce onayı kaldırın.";
+    /// Revoking the approval of a volume not approved.
+    VOLUME_NOT_APPROVED = "volume_not_approved", Failed, false, "Bu kübaj onaylı değil; kaldırılacak onay yok.";
+    /// A warning: an approved volume gives other figures now, its sources having changed; the report says how.
+    VOLUME_CHANGED = "volume_changed", Warning, false, "Onaylı kübaj kaynakları değiştiği için bugün başka hacim veriyor; fark raporda.";
+    /// No mass haul diagram of the id or name (docs/adr/0907).
+    UNKNOWN_HAUL = "unknown_haul", Failed, false, "Bu kimlikte ya da adda Brükner yok.";
+    /// A mass haul diagram's definition, or one whose volume does not compute.
+    INVALID_HAUL = "invalid_haul", Failed, false, "Brüknerin tanımı geçerli değil ya da kübajı hesaplanamıyor; ileti nedenini söyler.";
+    /// An earthwork volume a mass haul diagram uses.
+    VOLUME_IN_USE = "volume_in_use", Failed, false, "Bu kübaj hesabını bir Brükner kullanıyor; önce Brükneri silin.";
+    /// A warning: material left over at an end of the diagram, to be wasted or borrowed (docs/adr/0907 §3).
+    HAUL_UNBALANCED = "haul_unbalanced", Warning, false, "Brüknerin ucunda dengelenmeyen hacim var; döküm ya da ödünç gerekir.";
+    /// A LandXML file that cannot be written: a stamp that does not read, nothing to write, a chosen surface or
+    /// alignment that does not build (docs/adr/0908).
+    INVALID_LANDXML = "invalid_landxml", Failed, false, "LandXML dosyası yazılamıyor.";
+    /// An IFC file that cannot be written: a stamp that does not read, nothing to write, a chosen alignment that does
+    /// not build (docs/adr/0908 §8).
+    INVALID_IFC = "invalid_ifc", Failed, false, "IFC dosyası yazılamıyor.";
+    /// A glTF scene that cannot be written: a chosen surface or corridor that does not build or has no surface,
+    /// nothing to write (docs/adr/0910 §3).
+    INVALID_GLTF = "invalid_gltf", Failed, false, "glTF sahnesi yazılamıyor.";
+    /// A road drawing that cannot be kept: the project keeps at most 1000 drawings, a drawing at most 1 000 000
+    /// objects (docs/adr/0911 §1).
+    /// A road drawing the project does not keep (docs/adr/0911 §3).
+    UNKNOWN_DRAWING = "unknown_drawing", Failed, false, "Yol çizimi projede yok.";
+    /// A road drawing whose main source is gone; it is not drawn again (docs/adr/0911 §3).
+    DRAWING_SOURCE_GONE = "drawing_source_gone", Failed, false, "Yol çiziminin kaynağı projede yok; yeniden üretilemez.";
+    /// A road drawing changed by hand: named without `edited` it is refused; drawn again by itself it is left, said as a
+    /// warning (docs/adr/0911 §3).
+    DRAWING_EDITED = "drawing_edited", Failed, false, "Yol çiziminin nesneleri elle değişti; yeniden üretmek bu değişiklikleri siler.";
+    /// A warning: stale road drawings drawn again by themselves in the write's step (docs/adr/0911 §3).
+    DRAWINGS_REBUILT = "drawings_rebuilt", Warning, false, "Eskiyen yol çizimleri yeniden üretildi.";
+    /// A warning: a stale road drawing that could not be drawn again by itself (docs/adr/0911 §3).
+    DRAWING_NOT_REBUILT = "drawing_not_rebuilt", Warning, false, "Eskiyen bir yol çizimi kendiliğinden yeniden üretilemedi.";
+    ROAD_DRAWINGS_FULL = "road_drawings_full", Failed, false, "Yol çizimi kaydedilemiyor: proje en çok 1000 çizim ve çizim başına en çok 1 000 000 nesne tutar.";
+    /// A stakeout table that cannot be read: a range off the corridor or backwards, a step out of bounds, a code no
+    /// template gives, too many stations or points (docs/adr/0908).
+    INVALID_STAKEOUT = "invalid_stakeout", Failed, false, "Aplikasyon cetveli okunamıyor.";
+    /// Ground lengths asked for without the project's mean height, a system or one scale at a point (docs/adr/0908).
+    STAKEOUT_NO_GROUND = "stakeout_no_ground", Failed, false, "Zemin boyu için projenin ortalama elipsoit yüksekliği ve tek ölçekli bir koordinat sistemi gerekir.";
+    /// A warning: stations of the stakeout table with no section give no points (docs/adr/0908).
+    STAKEOUT_UNSOLVED = "stakeout_unsolved", Warning, false, "Aplikasyon cetvelinin bazı km'lerinde kesit yok; oralarda nokta verilmedi.";
+    /// A stakeout that cannot be sent: no point to send, a stamp that does not read, a job the format cannot carry, a
+    /// first number out of bounds (docs/adr/0908 §9).
+    INVALID_STAKEOUT_SEND = "invalid_stakeout_send", Failed, false, "Aplikasyon noktaları gönderilemiyor.";
+    /// A warning: codes the instrument's file cannot carry are left off their points (docs/adr/0908 §9).
+    STAKEOUT_CODE_DROPPED = "stakeout_code_dropped", Warning, false, "Aletin dosyasının taşıyamadığı kodlar noktalardan çıkarıldı.";
+    /// Road sheets that cannot be laid: a parallel axis, a profile on another alignment or without a layer or a place,
+    /// a range off the alignment, a scale or an overlap out of bounds, too many sheets, a set's name taken (docs/adr/0908
+    /// §10).
+    INVALID_ROAD_SHEETS = "invalid_road_sheets", Failed, false, "Yol paftaları yerleştirilemiyor.";
+    /// A warning: on some sheets the alignment or the profile view leaves its map (docs/adr/0908 §10).
+    ROAD_SHEET_OUTSIDE = "road_sheet_outside", Warning, false, "Bazı paftalarda aks ya da boykesit görünümü haritanın dışına taşıyor.";
+    /// A line that makes no alignment: not a line or an open polyline, too few points, a radius out of bounds, arcs or
+    /// tangents KentOS's PIs do not take, curves that do not fit, a name taken (docs/adr/0908 §12).
+    INVALID_ALIGNMENT_FIT = "invalid_alignment_fit", Failed, false, "Çizgiden aks kurulamıyor.";
+    /// A warning: the alignment lies farther from the line's vertices than the tolerance (docs/adr/0908 §12).
+    ALIGNMENT_FIT_DEVIATION = "alignment_fit_deviation", Warning, false, "Aks çizginin köşelerinden toleranstan uzak.";
+    /// A drawn profile that makes no profile: not a line or an open polyline, a view value out of bounds, stations
+    /// that do not grow, arcs in a row, a PVI off the alignment, curves that do not fit, a name taken (docs/adr/0908 §13).
+    INVALID_PROFILE_FIT = "invalid_profile_fit", Failed, false, "Çizimden boykesit kurulamıyor.";
+    /// A guardrail that is not right: its rule, step or offset out of bounds, a new one without its fields, a corridor
+    /// that does not build (docs/adr/0909 §1).
+    INVALID_GUARDRAIL = "invalid_guardrail", Failed, false, "Otokorkuluğun tanımı geçerli değil; ileti nedenini söyler.";
+    UNKNOWN_GUARDRAIL = "unknown_guardrail", Failed, false, "Bu kimlikte ya da adda otokorkuluk yok.";
+    /// A warning: the guardrail's corridor changed since it was made or rebound (docs/adr/0909 §1).
+    GUARDRAIL_STALE = "guardrail_stale", Warning, false, "Otokorkuluğun koridoru değişti; korkulukları denetleyip koridora yeniden bağlayın.";
+    /// A culvert that is not right: its sizes, skew or fall out of bounds, a new one without its fields, its station off
+    /// the corridor or in cut, a corridor that does not build (docs/adr/0909 §2).
+    INVALID_CULVERT = "invalid_culvert", Failed, false, "Menfezin tanımı geçerli değil ya da okunamıyor; ileti nedenini söyler.";
+    UNKNOWN_CULVERT = "unknown_culvert", Failed, false, "Bu kimlikte ya da adda menfez yok.";
+    /// A warning: the culvert's corridor changed since it was made or rebound (docs/adr/0909 §2).
+    CULVERT_STALE = "culvert_stale", Warning, false, "Menfezin koridoru değişti; menfezi denetleyip koridora yeniden bağlayın.";
+    /// A warning: the road over the culvert is closer to its top than the cover asked (docs/adr/0909 §2).
+    CULVERT_COVER = "culvert_cover", Warning, false, "Menfezin üstündeki örtü istenenden az.";
+    /// A retaining wall that is not right: its stations, step or sizes out of bounds, a new one without its fields, its
+    /// stations off the corridor or without ground under its face (docs/adr/0909 §3).
+    INVALID_RETAINING_WALL = "invalid_retaining_wall", Failed, false, "İstinat duvarının tanımı geçerli değil ya da okunamıyor; ileti nedenini söyler.";
+    UNKNOWN_RETAINING_WALL = "unknown_retaining_wall", Failed, false, "Bu kimlikte ya da adda istinat duvarı yok.";
+    /// A warning: the wall's corridor changed since it was made or rebound (docs/adr/0909 §3).
+    RETAINING_WALL_STALE = "retaining_wall_stale", Warning, false, "İstinat duvarının koridoru değişti; duvarı denetleyip koridora yeniden bağlayın.";
+    /// A preliminary route asked out of bounds: its cell, margin, grade or climb, a grid too large, a layer to avoid not
+    /// in the drawing, a surface that does not build (docs/adr/0910 §1).
+    INVALID_ROUTE = "invalid_route", Failed, false, "Ön güzergâhın girdisi geçerli değil; ileti nedenini söyler.";
+    /// The route's start or end is off the terrain or in an area to avoid (docs/adr/0910 §1).
+    ROUTE_BLOCKED = "route_blocked", Failed, false, "Ön güzergâhın başı ya da sonu yüzeyin dışında ya da kaçınılacak alanda.";
+    /// No path joins the route's ends within the grade (docs/adr/0910 §1).
+    ROUTE_UNREACHED = "route_unreached", Failed, false, "İki yer arasında istenen eğimi aşmayan yol yok.";
+    /// A junction that is not right: its legs, edges or radii out of bounds, legs that do not cross, a crossing not
+    /// there, legs parallel at the crossing (docs/adr/0910 §2).
+    INVALID_JUNCTION = "invalid_junction", Failed, false, "Kavşağın tanımı geçerli değil ya da okunamıyor; ileti nedenini söyler.";
+    UNKNOWN_JUNCTION = "unknown_junction", Failed, false, "Bu kimlikte ya da adda kavşak yok.";
+    /// A warning: a leg's alignment changed since the junction was made or rebound (docs/adr/0910 §2).
+    JUNCTION_STALE = "junction_stale", Warning, false, "Kavşağın bir kolunun aksı değişti; kavşağı denetleyip yeniden bağlayın.";
+    /// A warning: a leg curves within the curb returns' reach; the returns take it straight (docs/adr/0910 §2).
+    JUNCTION_ON_CURVE = "junction_on_curve", Warning, false, "Bir kol dönüş yaylarının erimi içinde kurpta; yaylar kolu düz kabul eder.";
+    /// A pay item book that is not right: no source or version, items or rules out of bounds (docs/adr/0909 §4).
+    INVALID_PAY_BOOK = "invalid_pay_book", Failed, false, "Poz defteri geçerli değil; ileti nedenini söyler.";
+    /// The project has no pay item book (docs/adr/0909 §4).
+    NO_PAY_BOOK = "no_pay_book", Failed, false, "Projede poz defteri yok; önce Poz metrajı'nda yazın.";
+    /// A warning: a quantity comes from a structure or volume whose corridor changed (docs/adr/0909 §4).
+    PAY_SOURCE_STALE = "pay_source_stale", Warning, false, "Bir metrajın kaynağının koridoru değişti; kaynağı denetleyip yeniden bağlayın.";
+    /// A warning: a structure or volume does not read and gives no quantity (docs/adr/0909 §4).
+    PAY_SOURCE_UNREAD = "pay_source_unread", Warning, false, "Bir yapı ya da kübaj okunamıyor; metrajı yok.";
+    /// A warning: the wall's stem is somewhere higher than the highest asked (docs/adr/0909 §3).
+    RETAINING_WALL_HIGH = "retaining_wall_high", Warning, false, "İstinat duvarının gövdesi istenen en yüksekten yüksek.";
+    /// A warning: the profile lies farther from the drawn line than the tolerance (docs/adr/0908 §13).
+    PROFILE_FIT_DEVIATION = "profile_fit_deviation", Warning, false, "Boykesit çizginin köşelerinden toleranstan uzak.";
+    /// A warning: the corridor's superelevation schedule does not build; its lanes keep the templates' slopes.
+    CORRIDOR_SUPERELEVATION_GONE = "corridor_superelevation_gone", Warning, false, "Koridorun dever çizelgesi kurulamıyor; şeritler tip kesitin eğimiyle verildi.";
+    /// A warning: the profile's alignment changed since it was made or rebound.
+    PROFILE_STALE = "profile_stale", Warning, false, "Boykesitin aksı boykesit kurulduktan sonra değişti; PVI'ları denetleyip aksa yeniden bağlayın.";
+    /// A warning: the profile's surface is not in the project or makes no surface; no black elevations.
+    PROFILE_SURFACE_GONE = "profile_surface_gone", Warning, false, "Boykesitin yüzeyi projede yok ya da kurulamıyor; siyah kot verilmedi.";
+    /// A reversed alignment's equations go.
+    EQUATIONS_DROPPED = "equations_dropped", Warning, false, "Ters çevrilen aksın km eşitlikleri kaldırıldı.";
+    /// A warning: a surface names a source the drawing cannot give (missing, without heights, an arc edge …).
+    TERRAIN_SOURCE_LEFT = "terrain_source_left", Warning, false, "Yüzeyin bir kaynağı kullanılamadı; yüzey onsuz kuruldu.";
     /// A warning: a network or a locator names a layer the drawing does not have.
     UNKNOWN_LAYER = "unknown_layer", Warning, false, "Tanım çizimde olmayan bir katmanı adlıyor.";
     /// `set` without a locator.

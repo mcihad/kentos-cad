@@ -265,6 +265,78 @@ pub mod match_props;
 pub mod network_define;
 pub mod event_follow;
 pub mod linearref_define;
+pub mod file_import_landxml;
+pub mod road_terrains;
+pub mod road_alignments;
+pub mod road_alignments_create;
+pub mod road_alignments_edit;
+pub mod road_alignments_label;
+pub mod road_alignments_query;
+pub mod road_profiles;
+pub mod road_profiles_create;
+pub mod road_profiles_draw;
+pub mod road_profiles_edit;
+pub mod road_profiles_query;
+pub mod road_corridors;
+pub(crate) mod road_drawings;
+pub(crate) mod road_project;
+pub mod road_project_query;
+pub mod road_project_rebuild;
+pub mod road_project_edit;
+pub mod road_corridors_draw;
+pub mod road_corridors_edit;
+pub mod road_corridors_query;
+pub mod road_hauls;
+pub mod road_hauls_edit;
+pub mod road_hauls_query;
+pub mod road_guardrails;
+pub mod road_guardrails_draw;
+pub mod road_guardrails_edit;
+pub mod road_guardrails_query;
+pub mod road_culverts;
+pub mod road_culverts_draw;
+pub mod road_culverts_edit;
+pub mod road_culverts_query;
+pub mod road_junctions;
+pub mod road_junctions_draw;
+pub mod road_junctions_edit;
+pub mod road_junctions_query;
+pub mod road_pay;
+pub mod road_routes;
+pub mod road_routes_draw;
+pub mod road_routes_find;
+pub mod road_pay_edit;
+pub mod road_pay_query;
+pub mod road_walls;
+pub mod road_walls_draw;
+pub mod road_walls_edit;
+pub mod road_walls_query;
+pub mod road_alignments_import;
+pub mod road_alignments_fit;
+pub mod road_profiles_fit;
+pub mod road_ifc;
+pub mod road_scene;
+pub mod road_landxml;
+pub mod road_stakeout;
+pub mod road_stakeout_send;
+pub mod road_sheets;
+pub mod road_sheets_sections;
+pub mod road_volumes;
+pub mod road_volumes_approve;
+pub mod road_volumes_edit;
+pub mod road_volumes_query;
+pub mod road_sections;
+pub mod road_sections_draw;
+pub mod road_sections_edit;
+pub mod road_sections_query;
+pub mod road_superelevations;
+pub mod road_superelevations_edit;
+pub mod road_superelevations_query;
+pub mod road_templates_edit;
+pub mod road_terrains_contours;
+pub mod road_terrains_create;
+pub mod road_terrains_edit;
+pub mod road_terrains_query;
 pub mod lrs_events;
 pub mod nurbs;
 pub mod walls;
@@ -1087,6 +1159,121 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
         kentos_commands::CAD_LINEARREF_DEFINE,
         kentos_commands::CAD_LINEARREF_DEFINE_VERSION,
     ),
+    // KentOS Yol's terrain surfaces ([`road_terrains_create`], [`road_terrains_edit`], [`road_terrains_query`],
+    // plan/road.md Y2.3).
+    (
+        kentos_commands::ROAD_TERRAINS_CREATE,
+        kentos_commands::ROAD_TERRAINS_CREATE_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_TERRAINS_EDIT,
+        kentos_commands::ROAD_TERRAINS_EDIT_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_TERRAINS_QUERY,
+        kentos_commands::ROAD_TERRAINS_QUERY_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_TERRAINS_CONTOURS,
+        kentos_commands::ROAD_TERRAINS_CONTOURS_VERSION,
+    ),
+    (
+        kentos_commands::FILE_IMPORT_LANDXML,
+        kentos_commands::FILE_IMPORT_LANDXML_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_ALIGNMENTS_CREATE,
+        kentos_commands::ROAD_ALIGNMENTS_CREATE_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_ALIGNMENTS_EDIT,
+        kentos_commands::ROAD_ALIGNMENTS_EDIT_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_ALIGNMENTS_LABEL,
+        kentos_commands::ROAD_ALIGNMENTS_LABEL_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_ALIGNMENTS_QUERY,
+        kentos_commands::ROAD_ALIGNMENTS_QUERY_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_PROFILES_CREATE,
+        kentos_commands::ROAD_PROFILES_CREATE_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_PROFILES_EDIT,
+        kentos_commands::ROAD_PROFILES_EDIT_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_PROFILES_DRAW,
+        kentos_commands::ROAD_PROFILES_DRAW_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_PROFILES_QUERY,
+        kentos_commands::ROAD_PROFILES_QUERY_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_TEMPLATES_EDIT,
+        kentos_commands::ROAD_TEMPLATES_EDIT_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_SECTIONS_EDIT,
+        kentos_commands::ROAD_SECTIONS_EDIT_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_SECTIONS_QUERY,
+        kentos_commands::ROAD_SECTIONS_QUERY_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_SECTIONS_DRAW,
+        kentos_commands::ROAD_SECTIONS_DRAW_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_SUPERELEVATIONS_EDIT,
+        kentos_commands::ROAD_SUPERELEVATIONS_EDIT_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_SUPERELEVATIONS_QUERY,
+        kentos_commands::ROAD_SUPERELEVATIONS_QUERY_VERSION,
+    ),
+    (kentos_commands::ROAD_CORRIDORS_EDIT, kentos_commands::ROAD_CORRIDORS_EDIT_VERSION),
+    (kentos_commands::ROAD_CORRIDORS_QUERY, kentos_commands::ROAD_CORRIDORS_QUERY_VERSION),
+    (kentos_commands::ROAD_CORRIDORS_DRAW, kentos_commands::ROAD_CORRIDORS_DRAW_VERSION),
+    (kentos_commands::ROAD_VOLUMES_EDIT, kentos_commands::ROAD_VOLUMES_EDIT_VERSION),
+    (kentos_commands::ROAD_VOLUMES_QUERY, kentos_commands::ROAD_VOLUMES_QUERY_VERSION),
+    (kentos_commands::ROAD_VOLUMES_APPROVE, kentos_commands::ROAD_VOLUMES_APPROVE_VERSION),
+    (kentos_commands::ROAD_HAULS_EDIT, kentos_commands::ROAD_HAULS_EDIT_VERSION),
+    (kentos_commands::ROAD_HAULS_QUERY, kentos_commands::ROAD_HAULS_QUERY_VERSION),
+    (kentos_commands::ROAD_GUARDRAILS_EDIT, kentos_commands::ROAD_GUARDRAILS_EDIT_VERSION),
+    (kentos_commands::ROAD_GUARDRAILS_QUERY, kentos_commands::ROAD_GUARDRAILS_QUERY_VERSION),
+    (kentos_commands::ROAD_GUARDRAILS_DRAW, kentos_commands::ROAD_GUARDRAILS_DRAW_VERSION),
+    (kentos_commands::ROAD_CULVERTS_EDIT, kentos_commands::ROAD_CULVERTS_EDIT_VERSION),
+    (kentos_commands::ROAD_CULVERTS_QUERY, kentos_commands::ROAD_CULVERTS_QUERY_VERSION),
+    (kentos_commands::ROAD_CULVERTS_DRAW, kentos_commands::ROAD_CULVERTS_DRAW_VERSION),
+    (kentos_commands::ROAD_WALLS_EDIT, kentos_commands::ROAD_WALLS_EDIT_VERSION),
+    (kentos_commands::ROAD_WALLS_QUERY, kentos_commands::ROAD_WALLS_QUERY_VERSION),
+    (kentos_commands::ROAD_WALLS_DRAW, kentos_commands::ROAD_WALLS_DRAW_VERSION),
+    (kentos_commands::ROAD_PAY_EDIT, kentos_commands::ROAD_PAY_EDIT_VERSION),
+    (kentos_commands::ROAD_PAY_QUERY, kentos_commands::ROAD_PAY_QUERY_VERSION),
+    (kentos_commands::ROAD_ROUTES_FIND, kentos_commands::ROAD_ROUTES_FIND_VERSION),
+    (kentos_commands::ROAD_ROUTES_DRAW, kentos_commands::ROAD_ROUTES_DRAW_VERSION),
+    (kentos_commands::ROAD_JUNCTIONS_EDIT, kentos_commands::ROAD_JUNCTIONS_EDIT_VERSION),
+    (kentos_commands::ROAD_JUNCTIONS_QUERY, kentos_commands::ROAD_JUNCTIONS_QUERY_VERSION),
+    (kentos_commands::ROAD_JUNCTIONS_DRAW, kentos_commands::ROAD_JUNCTIONS_DRAW_VERSION),
+    (kentos_commands::ROAD_PROJECT_QUERY, kentos_commands::ROAD_PROJECT_QUERY_VERSION),
+    (kentos_commands::ROAD_PROJECT_REBUILD, kentos_commands::ROAD_PROJECT_REBUILD_VERSION),
+    (kentos_commands::ROAD_PROJECT_EDIT, kentos_commands::ROAD_PROJECT_EDIT_VERSION),
+    (kentos_commands::ROAD_STAKEOUT_QUERY, kentos_commands::ROAD_STAKEOUT_QUERY_VERSION),
+    (kentos_commands::FILE_EXPORT_LANDXML, kentos_commands::FILE_EXPORT_LANDXML_VERSION),
+    (kentos_commands::FILE_EXPORT_IFC, kentos_commands::FILE_EXPORT_IFC_VERSION),
+    (kentos_commands::FILE_EXPORT_GLTF, kentos_commands::FILE_EXPORT_GLTF_VERSION),
+    (kentos_commands::ROAD_STAKEOUT_SEND, kentos_commands::ROAD_STAKEOUT_SEND_VERSION),
+    (kentos_commands::ROAD_SHEETS_PLAN, kentos_commands::ROAD_SHEETS_PLAN_VERSION),
+    (kentos_commands::ROAD_SHEETS_SECTIONS, kentos_commands::ROAD_SHEETS_SECTIONS_VERSION),
+    (kentos_commands::ROAD_ALIGNMENTS_FIT, kentos_commands::ROAD_ALIGNMENTS_FIT_VERSION),
+    (kentos_commands::ROAD_PROFILES_FIT, kentos_commands::ROAD_PROFILES_FIT_VERSION),
+    (kentos_commands::ROAD_ALIGNMENTS_IMPORT, kentos_commands::ROAD_ALIGNMENTS_IMPORT_VERSION),
     // Alt ağlar ([`subnetworks`], [`subnetworks_update`], docs/adr/0557 §2).
     (
         kentos_commands::CAD_SUBNETWORKS_FIND,

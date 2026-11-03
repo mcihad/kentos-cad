@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """The KentOS modules' program names beside the one program file (docs/adr/0802 §1).
 
-KentOS Mimari, KentOS Harita and KentOS GIS are one program, `kentos-cad`, run under
+KentOS Mimari, KentOS Harita, KentOS GIS and KentOS Yol are one program, `kentos-cad`, run under
 their own names: the program reads the name it was started under. This writes
-`kentos-mimari`, `kentos-harita` and `kentos-gis` beside `kentos-cad` in a build
+`kentos-mimari`, `kentos-harita`, `kentos-gis` and `kentos-yol` beside `kentos-cad` in a build
 folder (`target/debug`, `target/release`) or an install folder: symbolic links,
 hard links where those cannot be made (Windows without the right). A file of
 the same name that is not already such a link (the separate copies older
@@ -18,7 +18,7 @@ import os
 import sys
 from pathlib import Path
 
-MODULES = ["kentos-mimari", "kentos-harita", "kentos-gis"]
+MODULES = ["kentos-mimari", "kentos-harita", "kentos-gis", "kentos-yol"]
 
 
 def exe(name: str) -> str:

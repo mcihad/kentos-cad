@@ -188,6 +188,18 @@ pub fn label(operation: Option<CreateOperation>) -> &'static str {
         Some(CreateOperation::QuickDimensions) => "Hızlı ölçü",
         // İç ölçü zinciri (docs/adr/0711).
         Some(CreateOperation::InteriorDimensions) => "İç ölçü zinciri",
+        // Eş yükselti eğrileri (plan/road.md Y2.5).
+        Some(CreateOperation::TerrainContours) => "Eş yükselti eğrileri",
+        Some(CreateOperation::LandXml) => "LandXML al",
+        Some(CreateOperation::AlignmentLabels) => "Aks km yazısı",
+        Some(CreateOperation::ProfileDrawing) => "Boykesit çiz",
+        Some(CreateOperation::SectionDrawing) => "Enkesit çiz",
+        Some(CreateOperation::SlopePlan) => "Şevli plan",
+        Some(CreateOperation::Guardrails) => "Otokorkuluk çiz",
+        Some(CreateOperation::Culverts) => "Menfez çiz",
+        Some(CreateOperation::RetainingWalls) => "İstinat duvarı çiz",
+        Some(CreateOperation::Routes) => "Ön güzergâh",
+        Some(CreateOperation::Junctions) => "Kavşak çiz",
     }
 }
 

@@ -1,0 +1,821 @@
+{
+ "format": "kentos.document",
+ "version": 2,
+ "name": "Yol",
+ "settings": {
+  "srid": 5254,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "deg",
+  "plotScale": 1000.0,
+  "workspace": "cad",
+  "cadWork": "road",
+  "drawingFont": "barlow",
+  "road": {
+   "surfaces": [
+    {
+     "id": "t-zemin",
+     "name": "Mevcut zemin",
+     "points": {
+      "layers": [
+       "zemin"
+      ]
+     },
+     "breaklines": {
+      "uids": [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e16"
+      ]
+     },
+     "boundary": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e17",
+     "tolerance": 0.005,
+     "maxEdge": 60.0
+    }
+   ],
+   "alignments": [
+    {
+     "id": "g-1",
+     "name": "Ana aks",
+     "revision": 3,
+     "pis": [
+      {
+       "id": "a",
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "id": "p1",
+       "x": 600.0,
+       "y": 0.0,
+       "radius": 400.0,
+       "spiralIn": 80.0,
+       "spiralOut": 80.0
+      },
+      {
+       "id": "b",
+       "x": 1100.0,
+       "y": 500.0
+      }
+     ],
+     "stationing": {
+      "start": 2000.0,
+      "equations": [
+       {
+        "back": 2200.0,
+        "ahead": 2500.0
+       },
+       {
+        "back": 2650.0,
+        "ahead": 2700.0,
+        "increasing": false
+       }
+      ]
+     }
+    },
+    {
+     "id": "g-2",
+     "name": "Sol kenar",
+     "revision": 1,
+     "offsetOf": {
+      "alignment": "g-1",
+      "offset": -7.5
+     }
+    },
+    {
+     "id": "g-3",
+     "name": "Bağlantı yolu",
+     "revision": 1,
+     "pis": [
+      {
+       "id": "a",
+       "x": 300.0,
+       "y": -200.0
+      },
+      {
+       "id": "b",
+       "x": 350.0,
+       "y": 200.0
+      }
+     ]
+    }
+   ],
+   "profiles": [
+    {
+     "id": "b-1",
+     "name": "Proje kotu",
+     "alignment": "g-1",
+     "alignmentRevision": 3,
+     "revision": 2,
+     "pvis": [
+      {
+       "id": "a",
+       "station": 0.0,
+       "elevation": 100.0
+      },
+      {
+       "id": "v1",
+       "station": 400.0,
+       "elevation": 104.0,
+       "length": 120.0
+      },
+      {
+       "id": "v2",
+       "station": 700.0,
+       "elevation": 101.0,
+       "radius": 3000.0
+      },
+      {
+       "id": "v3",
+       "station": 950.0,
+       "elevation": 106.0,
+       "lengthIn": 60.0,
+       "lengthOut": 40.0
+      },
+      {
+       "id": "b",
+       "station": 1150.0,
+       "elevation": 103.0
+      }
+     ],
+     "surface": "t-zemin"
+    }
+   ],
+   "templates": [
+    {
+     "id": "tk-1",
+     "name": "Tip 1",
+     "revision": 1,
+     "left": {
+      "components": [
+       {
+        "kind": "lane",
+        "width": 3.5,
+        "slope": -2.5
+       },
+       {
+        "kind": "shoulder",
+        "width": 1.0,
+        "slope": -4.0
+       }
+      ],
+      "cut": 1.0,
+      "fill": 1.5,
+      "ditch": {
+       "fore": 2.0,
+       "depth": 0.5,
+       "bottom": 0.5
+      }
+     }
+    },
+    {
+     "id": "tk-2",
+     "name": "Tip 2",
+     "left": {
+      "cut": 1.5,
+      "fill": 2.0
+     },
+     "right": {
+      "components": [
+       {
+        "kind": "lane",
+        "width": 3.0,
+        "slope": 2.0
+       }
+      ],
+      "cut": 1.0,
+      "fill": 1.5,
+      "ditch": {
+       "fore": 3.0,
+       "depth": 0.6
+      }
+     }
+    }
+   ],
+   "sections": [
+    {
+     "id": "k-1",
+     "name": "Enkesitler",
+     "alignment": "g-1",
+     "alignmentRevision": 3,
+     "revision": 1,
+     "profile": "b-1",
+     "template": "tk-1",
+     "surface": "t-zemin",
+     "left": 30.0,
+     "right": 30.0,
+     "stations": {
+      "method": "range",
+      "from": 0.0,
+      "to": 1000.0,
+      "every": 20.0,
+      "geometry": true
+     },
+     "superelevation": "d-1"
+    },
+    {
+     "id": "k-2",
+     "name": "Seçili",
+     "alignment": "g-1",
+     "left": 15.0,
+     "right": 20.0,
+     "stations": {
+      "method": "stations",
+      "stations": [
+       120.0,
+       480.5
+      ]
+     }
+    },
+    {
+     "id": "k-3",
+     "name": "Çizgilerden",
+     "alignment": "g-1",
+     "left": 10.0,
+     "right": 10.0,
+     "stations": {
+      "method": "lines",
+      "uids": [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11"
+      ]
+     }
+    }
+   ],
+   "superelevations": [
+    {
+     "id": "d-1",
+     "name": "Ana aks deveri",
+     "alignment": "g-1",
+     "alignmentRevision": 3,
+     "revision": 1,
+     "normalLeft": -2.5,
+     "normalRight": -2.5,
+     "method": {
+      "method": "curves",
+      "curves": [
+       {
+        "pi": "p1",
+        "rate": 6.0,
+        "runoff": 80.0,
+        "onTangent": 0.0,
+        "widening": 0.6
+       }
+      ]
+     }
+    },
+    {
+     "id": "d-2",
+     "name": "Satırlarla",
+     "alignment": "g-1",
+     "normalLeft": -2.0,
+     "normalRight": -2.0,
+     "method": {
+      "method": "stations",
+      "rows": [
+       {
+        "station": 100.0,
+        "left": -2.0,
+        "right": -2.0
+       },
+       {
+        "station": 200.0,
+        "left": 4.0,
+        "right": -4.0
+       }
+      ]
+     }
+    }
+   ],
+   "corridors": [
+    {
+     "id": "c-1",
+     "name": "Ana koridor",
+     "alignment": "g-1",
+     "alignmentRevision": 3,
+     "revision": 2,
+     "profile": "b-1",
+     "surface": "t-zemin",
+     "superelevation": "d-1",
+     "left": 30.0,
+     "right": 30.0,
+     "tangent": 20.0,
+     "curve": 10.0,
+     "sag": 0.02,
+     "profilePoints": true,
+     "critical": true,
+     "stations": [
+      333.3
+     ],
+     "regions": [
+      {
+       "from": 0.0,
+       "to": 400.0,
+       "template": "tk-1"
+      },
+      {
+       "from": 450.0,
+       "to": 900.0,
+       "template": "tk-2"
+      }
+     ]
+    }
+   ],
+   "volumes": [
+    {
+     "id": "v-1",
+     "name": "Ana kübaj",
+     "corridor": "c-1",
+     "revision": 2,
+     "method": "prismoidal",
+     "factors": [
+      {
+       "from": 0.0,
+       "to": 400.0,
+       "cut": 1.25,
+       "fill": 0.9
+      },
+      {
+       "from": 450.0,
+       "to": 900.0,
+       "fill": 0.95
+      }
+     ],
+     "strip": [
+      {
+       "from": 0.0,
+       "to": 400.0,
+       "depth": 0.3
+      },
+      {
+       "from": 450.0,
+       "to": 900.0,
+       "depth": 0.25
+      }
+     ],
+     "bench": {
+      "slope": 20.0,
+      "height": 0.5
+     }
+    },
+    {
+     "id": "v-2",
+     "name": "Yüzey kübajı",
+     "corridor": "c-1",
+     "method": "surfaces",
+     "approved": {
+      "revision": 1,
+      "at": "2026-11-03",
+      "note": "Uygulama projesi",
+      "cut": 1200.5,
+      "fill": 340.25,
+      "factoredCut": 1200.5,
+      "factoredFill": 340.25,
+      "rows": [
+       [
+        0.0,
+        20.0,
+        100.0,
+        10.0
+       ],
+       [
+        20.0,
+        40.0,
+        110.0,
+        12.5
+       ]
+      ]
+     }
+    }
+   ],
+   "hauls": [
+    {
+     "id": "h-1",
+     "name": "Ana Brükner",
+     "volume": "v-1",
+     "revision": 2,
+     "balance": 250.0,
+     "free": 300.0,
+     "sites": [
+      {
+       "name": "Ödünç ocağı",
+       "kind": "borrow",
+       "station": 120.0,
+       "volume": 1500.0
+      },
+      {
+       "name": "Döküm alanı",
+       "kind": "waste",
+       "station": 640.0,
+       "volume": 4200.0
+      }
+     ],
+     "cost": {
+      "currency": "TL",
+      "overhaul": 12.5,
+      "waste": 40.0,
+      "borrow": 85.0,
+      "payload": 15.0
+     }
+    }
+   ],
+   "sheetSets": [
+    {
+     "id": "ps-1",
+     "name": "Ana aks paftaları",
+     "alignment": "g-1",
+     "alignmentRevision": 3,
+     "profile": "b-1",
+     "profileRevision": 2,
+     "from": 0.0,
+     "to": 300.0,
+     "scale": 1000,
+     "sheets": [
+      {
+       "sheet": "yol-ps-1-1",
+       "from": 0.0,
+       "to": 300.0,
+       "view": [
+        [
+         0.0,
+         -400.0
+        ],
+        [
+         300.0,
+         -330.0
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "id": "ps-2",
+     "name": "Enkesit paftaları",
+     "alignment": "g-1",
+     "alignmentRevision": 3,
+     "sections": "k-1",
+     "sectionsRevision": 1,
+     "from": 100.0,
+     "to": 100.0,
+     "scale": 500,
+     "sheets": [
+      {
+       "sheet": "yol-ps-2-1",
+       "from": 100.0,
+       "to": 100.0,
+       "view": [
+        [
+         0.0,
+         -704.0
+        ],
+        [
+         185.0,
+         -600.0
+        ]
+       ]
+      }
+     ]
+    }
+   ],
+   "guardrails": [
+    {
+     "id": "o-1",
+     "name": "Ana korkuluk",
+     "corridor": "c-1",
+     "corridorRevision": 2,
+     "revision": 1,
+     "rule": {
+      "source": "Kurum tablosu, sürüm 1",
+      "warrants": [
+       {
+        "height": 3.0,
+        "slope": 3.0
+       },
+       {
+        "height": 6.0
+       }
+      ],
+      "approach": 40.0,
+      "leaving": 20.0,
+      "gap": 50.0
+     },
+     "step": 10.0,
+     "offset": 0.5
+    }
+   ],
+   "culverts": [
+    {
+     "id": "m-1",
+     "name": "Km 0+150 menfezi",
+     "corridor": "c-1",
+     "corridorRevision": 2,
+     "revision": 1,
+     "station": 150.0,
+     "skew": 15.0,
+     "shape": {
+      "kind": "box",
+      "width": 2.0,
+      "height": 1.5,
+      "thickness": 0.25,
+      "slab": 0.3,
+      "cells": 2
+     },
+     "invert": 101.0,
+     "slope": 1.0,
+     "flow": "right",
+     "extend": 1.0,
+     "cover": 0.5,
+     "material": "Betonarme",
+     "roughness": 0.013
+    },
+    {
+     "id": "m-2",
+     "name": "Boru menfez",
+     "corridor": "c-1",
+     "revision": 2,
+     "station": 250.0,
+     "shape": {
+      "kind": "pipe",
+      "diameter": 1.0,
+      "thickness": 0.12,
+      "count": 2,
+      "spacing": 0.5
+     },
+     "invert": 100.0,
+     "slope": 2.0,
+     "flow": "left"
+    }
+   ],
+   "walls": [
+    {
+     "id": "d-1",
+     "name": "Sağ istinat",
+     "corridor": "c-1",
+     "corridorRevision": 1,
+     "revision": 1,
+     "side": "right",
+     "from": 200.0,
+     "to": 280.0,
+     "step": 20.0,
+     "shape": {
+      "top": 0.3,
+      "batter": 0.1,
+      "footing": 2.4,
+      "base": 0.5,
+      "toe": 0.6,
+      "cover": 0.6,
+      "above": 0.9
+     },
+     "highest": 6.0,
+     "material": "Betonarme"
+    }
+   ],
+   "pay": {
+    "source": "Örnek idarenin birim fiyat listesi",
+    "version": "2026",
+    "revision": 1,
+    "currency": "TRY",
+    "items": [
+     {
+      "code": "Ö-1",
+      "name": "Menfez betonu",
+      "unit": "m³",
+      "price": 100.0
+     },
+     {
+      "code": "Ö-2",
+      "name": "Otokorkuluk",
+      "unit": "m"
+     }
+    ],
+    "rules": [
+     {
+      "measure": "culvertConcrete",
+      "item": "Ö-1",
+      "factor": 1.0,
+      "material": "Betonarme"
+     },
+     {
+      "measure": "guardrailLength",
+      "item": "Ö-2",
+      "factor": 1.0
+     }
+    ]
+   },
+   "junctions": [
+    {
+     "id": "j-1",
+     "name": "Bağlantı kavşağı",
+     "revision": 1,
+     "kind": "atGrade",
+     "radius": 15.0,
+     "legs": [
+      {
+       "alignment": "g-1",
+       "alignmentRevision": 3,
+       "left": 5.0,
+       "right": 5.0
+      },
+      {
+       "alignment": "g-3",
+       "alignmentRevision": 1,
+       "left": 3.5,
+       "right": 3.5
+      }
+     ]
+    }
+   ],
+   "drawings": [
+    {
+     "id": "cz-1",
+     "command": "road.corridors.draw",
+     "input": {
+      "corridor": "c-1",
+      "layerId": "0",
+      "tick": 5.0
+     },
+     "sources": [
+      {
+       "kind": "corridor",
+       "id": "c-1",
+       "digest": "0f1e2d3c4b5a6978"
+      },
+      {
+       "kind": "alignment",
+       "id": "g-1",
+       "digest": "8796a5b4c3d2e1f0"
+      },
+      {
+       "kind": "surface",
+       "id": "t-zemin",
+       "digest": "00ff00ff00ff00ff"
+      }
+     ],
+     "uids": [
+      "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11"
+     ],
+     "digest": "0123456789abcdef"
+    }
+   ],
+   "autoRebuild": true
+  }
+ },
+ "origin": {
+  "x": 0.0,
+  "y": 0.0
+ },
+ "layers": [
+  {
+   "id": "0",
+   "name": "0",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "zemin",
+   "name": "Zemin",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8B6B3E",
+    "lineType": "continuous",
+    "lineWeight": 0.18
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "0",
+ "entities": [
+  {
+   "kind": "line",
+   "id": 1,
+   "layerId": "0",
+   "attrs": {},
+   "a": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "b": {
+    "x": 12.5,
+    "y": 0.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 2,
+   "layerId": "zemin",
+   "attrs": {
+    "Ad": "Z1"
+   },
+   "p": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "z": 100.0
+  },
+  {
+   "kind": "point",
+   "id": 3,
+   "layerId": "zemin",
+   "attrs": {
+    "Ad": "Z2"
+   },
+   "p": {
+    "x": 40.0,
+    "y": 0.0
+   },
+   "z": 101.5
+  },
+  {
+   "kind": "point",
+   "id": 4,
+   "layerId": "zemin",
+   "attrs": {
+    "Ad": "Z3"
+   },
+   "p": {
+    "x": 40.0,
+    "y": 30.0
+   },
+   "z": 103.25
+  },
+  {
+   "kind": "point",
+   "id": 5,
+   "layerId": "zemin",
+   "attrs": {
+    "Ad": "Z4"
+   },
+   "p": {
+    "x": 0.0,
+    "y": 30.0
+   },
+   "z": 102.0
+  },
+  {
+   "kind": "polyline",
+   "id": 6,
+   "layerId": "zemin",
+   "attrs": {},
+   "pts": [
+    {
+     "x": 5.0,
+     "y": 15.0
+    },
+    {
+     "x": 35.0,
+     "y": 15.0
+    }
+   ],
+   "zs": [
+    101.0,
+    102.5
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 7,
+   "layerId": "0",
+   "attrs": {},
+   "pts": [
+    {
+     "x": 0.0,
+     "y": 0.0
+    },
+    {
+     "x": 40.0,
+     "y": 0.0
+    },
+    {
+     "x": 40.0,
+     "y": 30.0
+    },
+    {
+     "x": 0.0,
+     "y": 30.0
+    }
+   ]
+  }
+ ],
+ "uids": [
+  "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11",
+  "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e12",
+  "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e13",
+  "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e14",
+  "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e15",
+  "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e16",
+  "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e17"
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

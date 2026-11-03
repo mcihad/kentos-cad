@@ -3077,6 +3077,525 @@
       "status": "implemented"
     },
     {
+      "id": "terrain.surfaces",
+      "title": "Arazi yüzeyleri…",
+      "short": "Yüzeyler",
+      "icon": "terrainSurface",
+      "description": "Yol projesinin arazi yüzeyleri: her yüzeyin durumu (güncel, eskidi, kabul edilmedi, kurulamıyor), üçgen sayısı, alanı ve kot aralığı; tanımı (nokta ve kırık hat katmanları, seçimden sınır ve boşluklar, en uzun dış kenar, kot toleransı). Kaydet road.terrains.create ve road.terrains.edit ile yazar; Kabul et kaynakları değişen yüzeyi bugünkü hâliyle kabul eder. Yüzeyler çizimde üçgenleri ve kırık hatlarıyla görünür.",
+      "aliases": [
+        "YUZEY",
+        "YÜZEY",
+        "ARAZI",
+        "ARAZİ",
+        "TIN",
+        "SURFACES"
+      ],
+      "shortcuts": [],
+      "category": "Arazi",
+      "status": "implemented"
+    },
+    {
+      "id": "terrain.new",
+      "title": "Yüzey oluştur…",
+      "short": "Yüzey oluştur",
+      "icon": "terrainNew",
+      "description": "Çizimin kotlu noktalarından ve kırık hatlarından yeni bir arazi yüzeyi (kısıtlı Delaunay üçgenleri) kurar: Arazi yüzeyleri penceresini yeni bir yüzeyle açar; katmanları seçip Kaydet'e basınca road.terrains.create ile yazılır.",
+      "aliases": [
+        "YUZEYOLUSTUR",
+        "YÜZEYOLUŞTUR",
+        "CREATESURFACE"
+      ],
+      "shortcuts": [],
+      "category": "Arazi",
+      "status": "implemented"
+    },
+    {
+      "id": "alignment.editor",
+      "title": "Güzergâh…",
+      "short": "Güzergâh",
+      "icon": "alignmentEditor",
+      "description": "Yol projesinin yatay güzergâhları: PI tablosu (Y, X, kurpun yarıçapı, giriş ve çıkış klotoidinin boyu), başlangıç km'si ve km eşitlikleri; paralel aks kaynağı ve ötelemesiyle. Aks yazıldıkça kurulur: boyu, km aralığı, kurpları ya da neden kurulamadığı görünür; Noktanın km'si bir yerin km ve ötelemesini söyler. Kaydet road.alignments.create ve road.alignments.edit ile yazar, her yazma bir geri alma adımıdır; Ters çevir aksı ters çevirir. Akslar çizimde eleman türüne göre renkli, km işaretleri ve kurp noktalarıyla görünür.",
+      "aliases": [
+        "GUZERGAH",
+        "GÜZERGÂH",
+        "GÜZERGAH",
+        "YOLAKSI",
+        "ALIGNMENT"
+      ],
+      "shortcuts": [],
+      "category": "Güzergâh",
+      "status": "implemented"
+    },
+    {
+      "id": "alignment.new",
+      "title": "Aks oluştur…",
+      "short": "Yeni aks",
+      "icon": "alignmentNew",
+      "description": "Yeni bir yatay güzergâh (aliyman, kurp, klotoid) kurar: Güzergâh penceresini yeni bir aksla açar; çizimde bir çoklu çizgi seçiliyse köşeleri PI olur. Kurpların yarıçapı ve klotoidler tabloda yazılır, Kaydet road.alignments.create ile yazar.",
+      "aliases": [
+        "AKSOLUSTUR",
+        "AKSOLUŞTUR",
+        "CREATEALIGNMENT"
+      ],
+      "shortcuts": [],
+      "category": "Güzergâh",
+      "status": "implemented"
+    },
+    {
+      "id": "profile.editor",
+      "title": "Boykesit…",
+      "short": "Boykesit",
+      "icon": "profileEditor",
+      "description": "Yol projesinin düşey güzergâhları (boykesitler): bir aksın üstünde PVI tablosu (km, kot, kurp: simetrik ya da asimetrik parabol, çember). Seçilen yüzeyden arazi (siyah) kotu, PVI'lerden proje (kırmızı) kotu düşey abartmayla çizilir; altında km, mesafe, siyah ve kırmızı kot, fark ve eğim bantları. Boykesit yazıldıkça kurulur: kurpların K değeri ya da neden kurulamadığı görünür. Kaydet road.profiles.create ve road.profiles.edit ile yazar, her yazma bir geri alma adımıdır; aks değişince boykesit eskir, Aksa yeniden bağla onu aksın bugünkü hâline bağlar.",
+      "aliases": [
+        "YOLBOYKESIT",
+        "YOLBOYKESİT",
+        "DUSEYGUZERGAH",
+        "DÜŞEYGÜZERGÂH",
+        "VERTICALALIGNMENT"
+      ],
+      "shortcuts": [],
+      "category": "Boykesit",
+      "status": "implemented"
+    },
+    {
+      "id": "section.editor",
+      "title": "Enkesit…",
+      "short": "Enkesit",
+      "icon": "sectionEditor",
+      "description": "Yol projesinin tip kesitleri ve kesit hattı takımları: tip kesitin sol ve sağ yanı (şerit ve banket: genişlik ve enine eğim; yarma ve dolgu şevi, yarmada hendek) örnek bir arazide görünür; takım bir aksın km'lerinde (aralık, kurp noktaları ve PVI'ler ya da yazılan km'ler) kesit hatları kurar. Her kesitte arazi (siyah), boykesitin kotunda platform ve şevler (kırmızı), daylight ve yarma ile dolgu alanı; kesitler tek tek gezilir. Kaydet road.templates.edit ve road.sections.edit ile yazar, Çizime yaz road.sections.draw ile enkesit sayfası çizer; her yazma bir geri alma adımıdır.",
+      "aliases": [
+        "YOLENKESIT",
+        "YOLENKESİT",
+        "KESITHATTI",
+        "KESİTHATTI",
+        "SAMPLELINES"
+      ],
+      "shortcuts": [],
+      "category": "Enkesit",
+      "status": "implemented"
+    },
+    {
+      "id": "section.new",
+      "title": "Kesit takımı oluştur…",
+      "short": "Yeni takım",
+      "icon": "sectionNew",
+      "description": "Yeni bir kesit hattı takımı kurar: Enkesit penceresini ilk aksın üstünde, boykesiti, ilk tip kesiti ve yüzeyiyle, her 20 m'de ve kurp noktalarında km'lerle açar. Kaydet road.sections.edit ile yazar.",
+      "aliases": [
+        "KESITTAKIMI",
+        "KESİTTAKIMI"
+      ],
+      "shortcuts": [],
+      "category": "Enkesit",
+      "status": "implemented"
+    },
+    {
+      "id": "section.template",
+      "title": "Tip kesit oluştur…",
+      "short": "Yeni tip kesit",
+      "icon": "sectionTemplate",
+      "description": "Yeni bir tip kesit kurar: Enkesit penceresini boş bir tip kesitle açar; bileşenlerin genişliği ve eğimi, şevler ve hendek KGM'nin standardından ya da projeden yazılır, KentOS öntanımlı sayı vermez. Kaydet road.templates.edit ile yazar.",
+      "aliases": [
+        "TIPKESIT",
+        "TİPKESİT",
+        "TEMPLATE"
+      ],
+      "shortcuts": [],
+      "category": "Enkesit",
+      "status": "implemented"
+    },
+    {
+      "id": "superelevation.editor",
+      "title": "Dever…",
+      "short": "Dever",
+      "icon": "superelevationEditor",
+      "description": "Yol projesinin dever çizelgeleri: bir aksın normal enine eğimleri (sol ve sağ, dışa düşen eksi) ve her kurbun dever oranı, geçiş boyu, geçişin teğette kalan payı ve iç yan genişlemesi (orta eksen etrafında döndürme) ya da yazılan km satırları. Dever diyagramı yazdıkça çizilir: sol ve sağ eğim km boyunca, kritik km'ler (NC, LC, RC, FS) ve genişleme; çizelge kurulamazsa nedeni hemen söylenir. Kaydet road.superelevations.edit ile yazar; her yazma bir geri alma adımıdır. Oran, geçiş boyu ve genişleme KGM'nin standardından ya da projeden yazılır, KentOS öntanımlı sayı vermez.",
+      "aliases": [
+        "DEVER",
+        "SUPERELEVATION",
+        "ENINEEGIM",
+        "ENİNEEĞİM"
+      ],
+      "shortcuts": [],
+      "category": "Dever",
+      "status": "implemented"
+    },
+    {
+      "id": "superelevation.new",
+      "title": "Dever oluştur…",
+      "short": "Yeni dever",
+      "icon": "superelevationNew",
+      "description": "Yeni bir dever çizelgesi kurar: Dever penceresini ilk aksın üstünde boş bir çizelgeyle açar; Bütün kurplar aksın kurplarını satır olarak ekler. Kaydet road.superelevations.edit ile yazar.",
+      "aliases": [
+        "DEVEROLUSTUR",
+        "DEVEROLUŞTUR"
+      ],
+      "shortcuts": [],
+      "category": "Dever",
+      "status": "implemented"
+    },
+    {
+      "id": "corridor.editor",
+      "title": "Koridor…",
+      "short": "Koridor",
+      "icon": "corridorEditor",
+      "description": "Yol projesinin koridorları: bir aksın üstünde boykesit, yüzey ve isteğe bağlı dever çizelgesi; arama genişliği; km örneklemesi (aliyman ve kurp aralığı, kirişin sapma toleransı, profil noktaları, dever kritik km'leri, yazılan km'ler) ve her biri bir tip kesitle bölgeler. Koridor yazdıkça kurulur: planda üst yüzey, öznitelik çizgileri (eksen, menteşe, hendek, şev ayağı) ve çözülmeyen aralıklar; uyarılar nedenini söyler. Kaydet road.corridors.edit ile yazar, Şevli plan çiz road.corridors.draw ile çizer; her yazma bir geri alma adımıdır.",
+      "aliases": [
+        "YOLKORIDORU",
+        "ROADCORRIDOR"
+      ],
+      "shortcuts": [],
+      "category": "Koridor",
+      "status": "implemented"
+    },
+    {
+      "id": "corridor.new",
+      "title": "Koridor oluştur…",
+      "short": "Yeni koridor",
+      "icon": "corridorNew",
+      "description": "Yeni bir koridor kurar: Koridor penceresini ilk aksın üstünde, aksın boykesiti ve ilk yüzeyle açar; arama genişliği, aralıklar ve bölgeler projeden yazılır, KentOS öntanımlı sayı vermez. Kaydet road.corridors.edit ile yazar.",
+      "aliases": [
+        "KORIDOROLUSTUR",
+        "KORİDOROLUŞTUR"
+      ],
+      "shortcuts": [],
+      "category": "Koridor",
+      "status": "implemented"
+    },
+    {
+      "id": "corridor.slopePlan",
+      "title": "Şevli plan…",
+      "short": "Şevli plan",
+      "icon": "corridorSlopePlan",
+      "description": "Koridorun şevli kotlu planı: Koridor penceresinde seçilen koridor, seçilen katmana öznitelik çizgileri köşe kotlarıyla, şev taraması (şevin üstünden ayağına, uzun ve kısa sırayla) ve km'lerde kırmızı eksen kotu olarak road.corridors.draw ile çizilir; tek geri alma adımı “Şevli plan”.",
+      "aliases": [
+        "SEVLIPLAN",
+        "ŞEVLİPLAN",
+        "SLOPEPLAN"
+      ],
+      "shortcuts": [],
+      "category": "Koridor",
+      "status": "implemented"
+    },
+    {
+      "id": "volume.editor",
+      "title": "Kübaj…",
+      "short": "Kübaj",
+      "icon": "volumeEditor",
+      "description": "Yol projesinin kübaj hesapları: bir koridorun hacmi ortalama alanla, iki kesitin ortasında kurulan kesitle prizmoidal ya da koridorun üst yüzeyiyle arazi arasında; kabarma ve sıkışma katsayıları km aralıklarına. Kübaj yazdıkça hesaplanır: kütle diyagramı (birikimli düzeltilmiş kazı, dolgu ve kütle ordinatı), toplamlar, uyarılar ve kübaj cetveli. Sıyırma (bitkisel toprak kalınlığı km aralıklarına) ve diş kazısı (eğim eşiği, basamak yüksekliği) kesit yöntemlerinde. Kaydet road.volumes.edit ile yazar, Onayla ve Onayı kaldır road.volumes.approve ile; onaylı kübaj değişmez, kaynakları değişince bugünkü hacmin onaylı hâlinden farkı gösterilir. Her yazma bir geri alma adımıdır; Cetveli yaz cetveli Excel, OpenDocument ya da CSV olarak yazar.",
+      "aliases": [
+        "KUBAJ",
+        "KÜBAJ",
+        "VOLUMES"
+      ],
+      "shortcuts": [],
+      "category": "Kübaj",
+      "status": "implemented"
+    },
+    {
+      "id": "volume.new",
+      "title": "Kübaj hesabı oluştur…",
+      "short": "Yeni kübaj",
+      "icon": "volumeNew",
+      "description": "Yeni bir kübaj hesabı kurar: Kübaj penceresini ilk koridorla ve ortalama alan yöntemiyle açar; katsayılar zemin raporundan yazılır, KentOS öntanımlı sayı vermez. Kaydet road.volumes.edit ile yazar.",
+      "aliases": [
+        "KUBAJOLUSTUR",
+        "KÜBAJOLUŞTUR"
+      ],
+      "shortcuts": [],
+      "category": "Kübaj",
+      "status": "implemented"
+    },
+    {
+      "id": "volume.export",
+      "title": "Kübaj cetveli…",
+      "short": "Cetvel",
+      "icon": "volumeExport",
+      "description": "Kübaj cetvelini dosyaya yazar: Kübaj penceresinde seçilen kübajın satırları (km'ler, uzunluk, kazı, dolgu, katsayılar, düzeltilmiş hacimler, birikimli toplamlar ve kütle ordinatı) ve toplam satırı Excel çalışma kitabı, OpenDocument hesap tablosu ya da CSV olarak; çizim değişmez.",
+      "aliases": [
+        "KUBAJCETVELI",
+        "KÜBAJCETVELİ"
+      ],
+      "shortcuts": [],
+      "category": "Kübaj",
+      "status": "implemented"
+    },
+    {
+      "id": "haul.editor",
+      "title": "Brükner…",
+      "short": "Brükner",
+      "icon": "haulEditor",
+      "description": "Yol projesinin Brüknerleri: bir kübaj hesabının kütle ordinatı denge çizgisine göre; serbest taşıma uzaklığı, ödünç ve döküm alanları km ve hacimleriyle. Brükner yazdıkça okunur: eğri, döngüler (ileri, geri, dengesiz), denge noktaları, alanların basamakları; döngülerin tablosu, toplamlar ve uyarılar. Kaydet road.hauls.edit ile yazar, her yazma bir geri alma adımıdır.",
+      "aliases": [
+        "BRUCKNER",
+        "BRÜKNER",
+        "MASSHAUL"
+      ],
+      "shortcuts": [],
+      "category": "Brükner",
+      "status": "implemented"
+    },
+    {
+      "id": "haul.new",
+      "title": "Brükner oluştur…",
+      "short": "Yeni Brükner",
+      "icon": "haulNew",
+      "description": "Yeni bir Brükner kurar: Brükner penceresini ilk kübajla ve denge çizgisi 0 ile açar; serbest taşıma ve alanlar sözleşmeden yazılır, KentOS öntanımlı sayı vermez. Kaydet road.hauls.edit ile yazar.",
+      "aliases": [
+        "BRUCKNEROLUSTUR",
+        "BRÜKNEROLUŞTUR"
+      ],
+      "shortcuts": [],
+      "category": "Brükner",
+      "status": "implemented"
+    },
+    {
+      "id": "stakeout.table",
+      "title": "Aplikasyon cetveli…",
+      "short": "Aplikasyon",
+      "icon": "stakeoutTable",
+      "description": "Koridorun kodlu kesit noktaları km, kod, yan, eksenden öteleme, Y, X ve Z ile: koridorun kendi km'lerinde ya da her aralıkta, istenen kodlarla; ötelemeler plan boyu ya da ayrıca zemin boyu (projenin ölçeği ve ortalama elipsoit yüksekliğiyle). Noktalar planda çizilir; cetvel Excel, ODS ya da CSV olarak yazılır. Çizim değişmez.",
+      "aliases": [
+        "APLIKASYONCETVELI",
+        "APLİKASYONCETVELİ",
+        "STAKEOUT"
+      ],
+      "shortcuts": [],
+      "category": "Aplikasyon",
+      "status": "implemented"
+    },
+    {
+      "id": "road.sheets",
+      "title": "Yol paftaları…",
+      "short": "Yol paftaları",
+      "icon": "roadSheets",
+      "description": "Aksı plan–boykesit paftalarına dizer (Civil 3D'nin görünüm çerçeveleri gibi): her pafta aksın bir parçasını planda, aks soldan sağa akacak biçimde döndürülmüş olarak, boykesit seçilince aynı km'lerin boykesit görünümünü aynı yatay ölçekte gösterir. Çerçeveler planda önizlenir; boykesit görünümleri, pafta takımı ve paftalar tek geri alma adımıdır.",
+      "aliases": [
+        "YOLPAFTALARI",
+        "PLANBOYKESIT",
+        "PLANBOYKESİT"
+      ],
+      "shortcuts": [],
+      "category": "Aplikasyon",
+      "status": "implemented"
+    },
+    {
+      "id": "road.views",
+      "title": "Görünüşler…",
+      "short": "Görünüşler",
+      "icon": "roadViews",
+      "description": "Bir aksın planı, boykesiti ve bir km'deki enkesiti yan yana; tek km üçünü birlikte yürütür (Civil 3D'nin Section Editor görünüşleri, OpenRoads'un Dynamic Sections ve Synchronize View'u). Planda km'nin kesit çizgisi, boykesitte km'nin düşey çizgisi, enkesitte koridorun ya da kesit takımının o km'ye en yakın kesiti. Plana ya da boykesite basmak, sürüklemek, kaydırıcı, yazılan km (aksın denklemleriyle) ve kesitler arası İlk, Önceki, Sonraki, Son km'yi taşır. Çizime yazmaz.",
+      "aliases": [
+        "YOLGORUNUSLERI",
+        "ROADVIEWS"
+      ],
+      "shortcuts": [],
+      "category": "Koridor",
+      "status": "implemented"
+    },
+    {
+      "id": "alignment.fromLine",
+      "title": "Çizgiden aks…",
+      "short": "Çizgiden aks",
+      "icon": "alignmentFromLine",
+      "description": "Seçili çizgiden ya da açık çoklu çizgiden aks kurar (Civil 3D'nin Create Alignment from Objects ve Best Fit Alignment'ı gibi): Eleman eleman çizginin doğruları aliyman, yayları kurp olur, iki yay arasında aliyman yoksa söylenir; En iyi uyum sık köşeli bir eksende en büyük yarıçaptan dar kıvrılan köşeleri kurp sayar, aliymanları en küçük karelerle uydurur ve her kurbun yarıçapını köşelerine en yakın olanla seçer. Aks çizgiden ne kadar ayrıldığını söyler; çizgi kalır. Tek geri alma adımı.",
+      "aliases": [
+        "CIZGIDENAKS",
+        "ÇİZGİDENAKS",
+        "AKSUYDUR"
+      ],
+      "shortcuts": [],
+      "category": "Güzergâh",
+      "status": "implemented"
+    },
+    {
+      "id": "profile.fromLine",
+      "title": "Çizimden boykesit…",
+      "short": "Çizimden boykesit",
+      "icon": "profileFromLine",
+      "description": "Bir boykesit görünümünde çizilmiş seçili çizgiden ya da açık çoklu çizgiden boykesit kurar (DWG ya da DGN'den gelen proje kotu): görünümün kıyas kotunun ve ilk km'sinin çizimdeki yeri, km'si ve abartması yazılır; düz parçalar eğim, köşeler PVI (Kurp boyu verilirse o boyda parabol), yaylar uçları arasında düşey kurp olur. Boykesit çizgiden ne kadar ayrıldığını söyler; çizgi kalır. Tek geri alma adımı.",
+      "aliases": [
+        "CIZIMDENBOYKESIT",
+        "ÇİZİMDENBOYKESİT",
+        "BOYKESITUYDUR"
+      ],
+      "shortcuts": [],
+      "category": "Güzergâh",
+      "status": "implemented"
+    },
+    {
+      "id": "guardrail.editor",
+      "title": "Otokorkuluk…",
+      "short": "Otokorkuluk",
+      "icon": "guardrailEditor",
+      "description": "Koridor boyunca otokorkuluk: projenin kural tablosuyla (kaynağı zorunlu; KentOS sayı vermez) her kesitte yanın dolgu yüksekliği ve şevi okunur, kuralın tuttuğu bölümler yaklaşma ve ayrılma boylarıyla uzatılır, en az aralıktan yakın korkuluklar birleşir. Korkuluklar yazıldıkça şeritte ve tabloda görünür; Kaydet tek geri alma adımı, Planda çiz korkulukları km'leriyle bir katmana çizer.",
+      "aliases": [
+        "OTOKORKULUK",
+        "BARIYER",
+        "BARİYER"
+      ],
+      "shortcuts": [],
+      "category": "Koridor",
+      "status": "implemented"
+    },
+    {
+      "id": "culvert.editor",
+      "title": "Menfez…",
+      "short": "Menfez",
+      "icon": "culvertEditor",
+      "description": "Koridorun altından geçen menfez: boru (çap, et, sayı, aralık) ya da kutu (göz eni ve yüksekliği, duvar, döşeme, göz sayısı) ölçüleri projenindir, KentOS sayı vermez. Km'deki kesitte iki yan da dolguda olmalı; gövde dolgunun topukları arasında açısıyla uzanır, akış kotu çıkışa doğru eğimle iner, en az örtü yolun üstüyle karşılaştırılır. Kaydet tek geri alma adımı, Planda çiz gövdeyi km'siyle bir katmana çizer.",
+      "aliases": [
+        "MENFEZ",
+        "CULVERT"
+      ],
+      "shortcuts": [],
+      "category": "Koridor",
+      "status": "implemented"
+    },
+    {
+      "id": "retainingWall.editor",
+      "title": "İstinat duvarı…",
+      "short": "İstinat",
+      "icon": "retainingWallEditor",
+      "description": "Koridorun bir yanında iki km arasında şevin yerine duran konsol istinat duvarı: gövde üst kalınlığı ve eğimi, temelin eni, kalınlığı ve önü, örtü ve korkuluk payı projenin; KentOS sayı vermez. Her km'de yol kenarı ile altındaki zemin okunur; duvarın üstü yükseğin, temeli alçağın altındadır. Boyuna görünüş, km'lerin tablosu, boy, gövde yüzü ve beton yazıldıkça görünür; Kaydet tek geri alma adımı, Planda çiz yüzü ve temeli bir katmana çizer.",
+      "aliases": [
+        "ISTINAT",
+        "İSTİNAT",
+        "RETAININGWALL"
+      ],
+      "shortcuts": [],
+      "category": "Koridor",
+      "status": "implemented"
+    },
+    {
+      "id": "payItems.editor",
+      "title": "Poz metrajı…",
+      "short": "Poz metrajı",
+      "icon": "payItemsEditor",
+      "description": "Projenin poz defteri ve metrajı: idarenin birim fiyat listesinin pozları (numara, ad, birim, birim fiyat) ve kaynağı defterde yazılır, KentOS poz ya da fiyat vermez. Kurallar KentOS'un ölçülerini (otokorkuluk boyu, menfez boyu, borusu ve betonu, duvar boyu, yüzü ve betonu, kazı ve dolgu) çarpanıyla pozlara verir; metraj, kaynakları ve tutar yazıldıkça görünür. Kaydet tek geri alma adımı.",
+      "aliases": [
+        "POZ",
+        "POZMETRAJ",
+        "PAYITEMS"
+      ],
+      "shortcuts": [],
+      "category": "Koridor",
+      "status": "implemented"
+    },
+    {
+      "id": "route.finder",
+      "title": "Ön güzergâh…",
+      "short": "Ön güzergâh",
+      "icon": "routeFinder",
+      "description": "Arazi yüzeyinde iki yer arasında en düşük maliyetli ön güzergâh (koridor analizi): ızgaranın her adımı plan boyu artı tırmanma ağırlığı × kot farkı tutar, en dik eğimden dik adım atılmaz, seçilen katmanların alanlarına girilmez. Sınırlar kullanıcının; KentOS değer vermez. Yol yazıldıkça planda görünür; Planda çiz kotlu çizgi olarak bir katmana çizer, Aksı çizgiye oturt onu aks yapar.",
+      "aliases": [
+        "ONGUZERGAH",
+        "ÖNGÜZERGÂH",
+        "KORIDORANALIZI"
+      ],
+      "shortcuts": [],
+      "category": "Güzergâh",
+      "status": "implemented"
+    },
+    {
+      "id": "junction.editor",
+      "title": "Kavşak…",
+      "short": "Kavşak",
+      "icon": "junctionEditor",
+      "description": "İki aksın kesiştiği kavşak: kolların aksları ve kenarları, hemzemin (kollar bağlı, dört çeyrekte bordür dönüş yayı) ya da katlı (kollar bağlı değil); dönüş yarıçapı her çeyreğe ya da çeyrek çeyrek. Ölçüler projenin; KentOS değer vermez. Kesişim, kolların km'si, açı ve yaylar yazıldıkça görünür; Kaydet tek geri alma adımı, Planda çiz dönüş yaylarını bir katmana çizer.",
+      "aliases": [
+        "YOLKAVSAGI",
+        "JUNCTION"
+      ],
+      "shortcuts": [],
+      "category": "Güzergâh",
+      "status": "implemented"
+    },
+    {
+      "id": "landxml.importAlignments",
+      "title": "LandXML'den aks al…",
+      "short": "LandXML aks",
+      "icon": "landxmlImport",
+      "description": "Bir LandXML dosyasının akslarını KentOS aksı olarak alır: PI'lar doğru, daire eğrisi ve klotoid elemanlarından bulunur, kurulan aks dosyanın elemanlarıyla 1 mm içinde karşılaştırılır; km denklemleri ve boykesitleri de gelir. KentOS'un PI'larının tutamadığı aks (bileşik ya da ters kurp, ove klotoid) alınmaz ve söylenir. Tek geri alma adımı.",
+      "aliases": [
+        "LANDXMLAKSAL"
+      ],
+      "shortcuts": [],
+      "category": "Güzergâh",
+      "status": "implemented"
+    },
+    {
+      "id": "scene3d.view",
+      "title": "3B görünüm…",
+      "short": "3B görünüm",
+      "icon": "scene3dView",
+      "description": "Yol projesinin arazi yüzeylerini ve koridorlarını 3B gösterir: koridor şerit, banket, yarma ve dolgu şevi olarak renklenir; sürükleyerek döndürülür, sağ tuşla kaydırılır, tekerlekle yaklaşılır; düşey abartma yalnız görünüştür. Çizim değişmez.",
+      "aliases": [
+        "YOL3B",
+        "3BGORUNUM"
+      ],
+      "shortcuts": [],
+      "category": "Koridor",
+      "status": "implemented"
+    },
+    {
+      "id": "gltf.export",
+      "title": "glTF ver…",
+      "short": "glTF ver",
+      "icon": "gltfExport",
+      "description": "Yol projesinin arazi yüzeylerini ve koridorlarının üst yüzeylerini 3B sahne olarak glTF 2.0 (GLB) dosyasına yazar: her biri bir ağ, konumlar sahnenin kökenine göre float32, köken tam. Kurulamayan yüzey ya da koridor yazılmaz ve söylenir. Bütün yazılır ya da hiç; çizim değişmez.",
+      "aliases": [
+        "GLTFVER",
+        "GLBOUT"
+      ],
+      "shortcuts": [],
+      "category": "Koridor",
+      "status": "implemented"
+    },
+    {
+      "id": "ifc.export",
+      "title": "IFC ver…",
+      "short": "IFC ver",
+      "icon": "ifcExport",
+      "description": "Yol projesinin akslarını ve boykesitlerini IFC 4.3 (IFC4X3_ADD2) dosyasına yazar: iş mantığı ve geometri (doğru, daire eğrisi, klotoid; sabit eğim, parabol, daire), km'ler ve projenin koordinat sistemi. Paralel aks yazılmaz ve söylenir. Bütün yazılır ya da hiç; çizim değişmez.",
+      "aliases": [
+        "IFCVER",
+        "IFCOUT"
+      ],
+      "shortcuts": [],
+      "category": "Aplikasyon",
+      "status": "implemented"
+    },
+    {
+      "id": "landxml.export",
+      "title": "LandXML ver…",
+      "short": "LandXML ver",
+      "icon": "landxmlExport",
+      "description": "Yol projesinin arazi yüzeylerini (TIN), akslarını (doğru, daire eğrisi, klotoid ve km denklemleri) ve boykesitlerini LandXML 1.2 dosyasına yazar; Civil 3D, OpenRoads ve Netcad okur. Paralel aks LandXML'de olmadığından yazılmaz ve söylenir. Bütün yazılır ya da hiç; çizim değişmez.",
+      "aliases": [
+        "LANDXMLVER",
+        "LANDXMLOUT"
+      ],
+      "shortcuts": [],
+      "category": "Aplikasyon",
+      "status": "implemented"
+    },
+    {
+      "id": "profile.new",
+      "title": "Boykesit oluştur…",
+      "short": "Yeni boykesit",
+      "icon": "profileNew",
+      "description": "Yeni bir düşey güzergâh kurar: Boykesit penceresini aksın üstünde yeni bir boykesitle açar; Araziden uçlar ilk ve son PVI'yi aksın uçlarına ve arazinin kotuna koyar. Kaydet road.profiles.create ile yazar.",
+      "aliases": [
+        "BOYKESITOLUSTUR",
+        "BOYKESİTOLUŞTUR",
+        "CREATEPROFILE"
+      ],
+      "shortcuts": [],
+      "category": "Boykesit",
+      "status": "implemented"
+    },
+    {
       "id": "raster.mosaic",
       "title": "Sanal mozaik",
       "icon": "rasterMosaic",
@@ -4063,7 +4582,42 @@
     "moduleUpdate": "<rect x=\"2.5\" y=\"2.5\" width=\"6\" height=\"6\" rx=\"0.5\"/><rect x=\"11.5\" y=\"11.5\" width=\"6\" height=\"6\" rx=\"0.5\" stroke-dasharray=\"1.6 1.2\"/><path d=\"M8.5 5.5h5v4M11.5 7.5l2 2 2-2\" stroke-width=\"1.2\"/>",
     "moduleDetach": "<rect x=\"2.5\" y=\"2.5\" width=\"7\" height=\"7\" rx=\"0.5\"/><rect x=\"11\" y=\"11\" width=\"6.5\" height=\"6.5\" rx=\"0.5\"/><path d=\"M10.5 10.5l1-1M12.5 8.5l1-1\" stroke-width=\"1.2\"/>",
     "designOptions": "<rect x=\"2.5\" y=\"3\" width=\"7\" height=\"14\" rx=\"0.5\"/><rect x=\"10.5\" y=\"3\" width=\"7\" height=\"14\" rx=\"0.5\" stroke-dasharray=\"1.6 1.2\"/><path d=\"M5 7h2M13 11h2\" stroke-width=\"1.2\"/>",
-    "roomElevation": "<rect x=\"2.5\" y=\"4.5\" width=\"15\" height=\"11\" rx=\"0.5\"/><rect x=\"4.5\" y=\"8.5\" width=\"3\" height=\"7\" stroke-width=\"1\"/><rect x=\"10.5\" y=\"7.5\" width=\"5\" height=\"4\" stroke-width=\"1\"/><path d=\"M2.5 17.5h15\" stroke-width=\"0.9\" stroke-dasharray=\"1.6 1.2\"/>"
+    "roomElevation": "<rect x=\"2.5\" y=\"4.5\" width=\"15\" height=\"11\" rx=\"0.5\"/><rect x=\"4.5\" y=\"8.5\" width=\"3\" height=\"7\" stroke-width=\"1\"/><rect x=\"10.5\" y=\"7.5\" width=\"5\" height=\"4\" stroke-width=\"1\"/><path d=\"M2.5 17.5h15\" stroke-width=\"0.9\" stroke-dasharray=\"1.6 1.2\"/>",
+    "alignmentEditor": "<path d=\"M2 16.5 6.5 12c2.6-2.6 5.6-4 11.5-4\" stroke-width=\"1.5\"/><path d=\"M4.1 13l1.7 1.7M8.4 9.6l1.2 2.1M12.9 7.9l.5 2.3\" stroke-width=\"1\"/><path d=\"M2 16.5 9 4.5 18 8\" stroke-width=\".7\" stroke-dasharray=\"1.5 1.2\"/>",
+    "alignmentNew": "<path d=\"M2 16 6 12c2.3-2.3 5-3.6 10-3.6\" stroke-width=\"1.5\"/><path d=\"M3.9 12.6l1.6 1.6M7.9 9.4l1.1 2\" stroke-width=\"1\"/><path d=\"M15.5 12.2v6.3M12.4 15.4h6.3\" stroke-width=\"1.5\"/>",
+    "corridorEditor": "<path d=\"M3 17C6 9 10 6 17 4\" stroke-width=\"1.4\"/><path d=\"M7 18.5C9.5 12 13 9.5 18.5 8\" stroke-width=\"1.4\"/><path d=\"M4.2 13.5 8.6 15M7 9.3 10.8 12M11.3 6.2 14.4 9.6\" stroke-width=\".8\"/>",
+    "corridorNew": "<path d=\"M3 15C5.5 9 8.5 6.5 13 5\" stroke-width=\"1.4\"/><path d=\"M6.5 16.5C8.4 12 11 9.6 14 8.6\" stroke-width=\"1.4\"/><path d=\"M4.4 11.8 7.8 13.4M8 8.2 10.6 10.8\" stroke-width=\".8\"/><path d=\"M15.5 12.2v6.3M12.4 15.4h6.3\" stroke-width=\"1.5\"/>",
+    "corridorSlopePlan": "<path d=\"M2.5 6h15\" stroke-width=\"1.5\"/><path d=\"M4 6v9M7 6v4.5M10 6v9M13 6v4.5M16 6v9\" stroke-width=\".9\"/><path d=\"M2.5 15.5h15\" stroke-width=\".8\" stroke-dasharray=\"1.4 1\"/>",
+    "volumeEditor": "<path d=\"M2.5 9c2.5-3.2 4.6-3.2 7 0s4.6 2.6 8-.6\" stroke-width=\"1.3\"/><path d=\"M2.5 12.5h15\" stroke-width=\"1.5\"/><path d=\"M4.8 8.4v4.1M7.2 7.1v5.4M12.6 10.3v2.2M15.1 9.8v2.7\" stroke-width=\".8\"/>",
+    "volumeNew": "<path d=\"M2.5 8c2-2.6 3.8-2.6 5.8 0s3.6 2 6-.4\" stroke-width=\"1.3\"/><path d=\"M2.5 11h11\" stroke-width=\"1.5\"/><path d=\"M4.6 7.4V11M6.6 6.4V11M11.3 8.6V11\" stroke-width=\".8\"/><path d=\"M15.5 12.2v6.3M12.4 15.4h6.3\" stroke-width=\"1.5\"/>",
+    "volumeExport": "<rect x=\"2.5\" y=\"3.5\" width=\"10.5\" height=\"13\" rx=\"1\" stroke-width=\"1.2\"/><path d=\"M2.5 7.5H13M2.5 11H13M6.8 3.5v13\" stroke-width=\".8\"/><path d=\"M14.5 13.5h4M16.8 11.6l1.9 1.9-1.9 1.9\" stroke-width=\"1.3\"/>",
+    "haulEditor": "<path d=\"M2.5 14.5h15\" stroke-width=\".9\" stroke-dasharray=\"1.6 1.1\"/><path d=\"M2.5 14.5C5 5 7 4.5 9 9.5s3 7 5 3.5 2.5-4 3.5-4.5\" stroke-width=\"1.5\"/><circle cx=\"9.9\" cy=\"14.5\" r=\"1\"/>",
+    "landxmlImport": "<path d=\"M4 2.5h7.5L15 6v11.5H4z\" stroke-width=\"1.2\"/><path d=\"M11.5 2.5V6H15\" stroke-width=\"1\"/><path d=\"M6.5 14.5C8 10 10 9 12.5 8.5\" stroke-width=\"1.5\"/><path d=\"M10.5 7.2l2.3 1.2-1.4 2.2\" stroke-width=\"1.2\"/>",
+    "scene3dView": "<path d=\"M2 15l5-7 3.5 4 3-3.5L18 15z\" stroke-width=\"1.2\"/><path d=\"M7.5 15l2.5-4.5 2.5 4.5\" stroke-width=\"1.1\"/><ellipse cx=\"10\" cy=\"4.5\" rx=\"6\" ry=\"1.8\" stroke-width=\"1\"/><path d=\"M14.5 3.2l1.5 1.3-1.8.9\" stroke-width=\"1\"/>",
+    "gltfExport": "<path d=\"M2.5 6l6-3 6 3v6.5l-6 3-6-3z\" stroke-width=\"1.2\"/><path d=\"M2.5 6l6 3 6-3M8.5 9v6.5\" stroke-width=\"1\"/><path d=\"M2.5 12.5l3-1.5 3 1 3-2 3 2\" stroke-width=\"1\"/><path d=\"M13 17.5h5.5M16 15l2.5 2.5-2.5 2.5\" stroke-width=\"1.5\"/>",
+    "ifcExport": "<path d=\"M3 4.5l7-2.5 7 2.5v7l-7 2.5-7-2.5z\" stroke-width=\"1.2\"/><path d=\"M3 4.5l7 2.5 7-2.5M10 7v7\" stroke-width=\"1\"/><path d=\"M12 17h6M15.5 14.5l2.5 2.5-2.5 2.5\" stroke-width=\"1.5\"/>",
+    "landxmlExport": "<path d=\"M4 2.5h7.5L15 6v5\" stroke-width=\"1.2\"/><path d=\"M11.5 2.5V6H15\" stroke-width=\"1\"/><path d=\"M4 2.5v15h6\" stroke-width=\"1.2\"/><path d=\"M6 8.5h5M6 11h3\" stroke-width=\"1\"/><path d=\"M12 15.5h6M15.5 13l2.5 2.5-2.5 2.5\" stroke-width=\"1.5\"/>",
+    "alignmentFromLine": "<circle cx=\"3\" cy=\"15.5\" r=\"1\"/><circle cx=\"7\" cy=\"9\" r=\"1\"/><circle cx=\"12\" cy=\"12\" r=\"1\"/><circle cx=\"17\" cy=\"4.5\" r=\"1\"/><path d=\"M3 15.5C5.5 10.5 7.5 9 10 10.5s4.5 0 7-6\" stroke-width=\"1.6\"/>",
+    "profileFromLine": "<path d=\"M2 17.5h16\" stroke-width=\"1\"/><circle cx=\"3\" cy=\"13.5\" r=\"1\"/><circle cx=\"8\" cy=\"6.5\" r=\"1\"/><circle cx=\"17\" cy=\"12.5\" r=\"1\"/><path d=\"M3 13.5C5.5 9 7.5 7.5 10 8s4.5 2.5 7 4.5\" stroke-width=\"1.6\"/>",
+    "junctionEditor": "<path d=\"M2 7.5h4.5a1.5 1.5 0 0 0 1.5-1.5V2M12 2v4a1.5 1.5 0 0 0 1.5 1.5H18M18 12.5h-4.5a1.5 1.5 0 0 0-1.5 1.5v4M8 18v-4a1.5 1.5 0 0 0-1.5-1.5H2\" stroke-width=\"1.3\"/><path d=\"M2 10h16M10 2v16\" stroke-width=\".8\" stroke-dasharray=\"1.4 1.4\"/>",
+    "routeFinder": "<circle cx=\"4\" cy=\"15\" r=\"1.6\" stroke-width=\"1.2\"/><circle cx=\"16\" cy=\"5\" r=\"1.6\" stroke-width=\"1.2\"/><path d=\"M5.3 13.8 8 11l-.5-3 3-1 1.5 2 3-2.4\" stroke-width=\"1.3\"/><path d=\"M10 13.5h4.5v3H10z\" stroke-width=\"1\" stroke-dasharray=\"1.4 1.2\"/>",
+    "payItemsEditor": "<path d=\"M4 3h9l3 3v11H4z\" stroke-width=\"1.3\"/><path d=\"M13 3v3h3\" stroke-width=\"1.1\"/><path d=\"M6.5 9h7M6.5 11.5h7M6.5 14h4\" stroke-width=\"1.1\"/><path d=\"M13.5 14h0\" stroke-width=\"1.6\"/>",
+    "retainingWallEditor": "<path d=\"M2 6.5h7l2 2\" stroke-width=\"1.4\"/><path d=\"M9 6.5v9.5h3.2L11 6.5\" stroke-width=\"1.3\"/><path d=\"M7 16h7.5v1.5H7z\" stroke-width=\"1.1\"/><path d=\"M12.5 11h5.5\" stroke-width=\"1\" stroke-dasharray=\"1.5 1.5\"/>",
+    "culvertEditor": "<path d=\"M2 7.5h16\" stroke-width=\"1.4\"/><path d=\"M2 7.5 1 9.5M18 7.5l1 2\" stroke-width=\"1\"/><circle cx=\"10\" cy=\"13\" r=\"3.2\" stroke-width=\"1.4\"/><path d=\"M2 17.5h16\" stroke-width=\"1\" stroke-dasharray=\"1.5 1.5\"/>",
+    "guardrailEditor": "<path d=\"M2 9.5h16M2 12.5h16\" stroke-width=\"1.4\"/><path d=\"M4 7v10M10 7v10M16 7v10\" stroke-width=\"1.2\"/>",
+    "roadSheets": "<rect x=\"2.5\" y=\"2.5\" width=\"15\" height=\"15\" rx=\"1\" stroke-width=\"1.3\"/><path d=\"M2.5 10h15\" stroke-width=\"1\"/><path d=\"M4.5 8c2.5-3.5 5-1 7-3.5s2.5-1 4-1.5\" stroke-width=\"1.3\"/><path d=\"M4.5 15.5l4-2.5 3 1 4-3\" stroke-width=\"1.3\"/>",
+    "stakeoutTable": "<path d=\"M2 14l3-2h10l3 2\" stroke-width=\"1.5\"/><path d=\"M5 12V5.5M10 12V4M15 12V5.5\" stroke-width=\"1.2\"/><path d=\"M5 5.5l2.2 1-2.2 1M10 4l2.2 1-2.2 1M15 5.5l2.2 1-2.2 1\" stroke-width=\"1\"/>",
+    "haulNew": "<path d=\"M2.5 12h10\" stroke-width=\".9\" stroke-dasharray=\"1.6 1.1\"/><path d=\"M2.5 12C4.5 4.5 6 4 7.5 8s2.2 5.5 4 2.5\" stroke-width=\"1.5\"/><path d=\"M15.5 12.2v6.3M12.4 15.4h6.3\" stroke-width=\"1.5\"/>",
+    "superelevationEditor": "<path d=\"M2 12h3.5L9 7h5l4 0\" stroke-width=\"1.5\"/><path d=\"M2 12h3.5L9 15h5l4 0\" stroke-width=\"1\"/><path d=\"M2 12h16\" stroke-width=\".6\" stroke-dasharray=\"1.2 1\"/>",
+    "superelevationNew": "<path d=\"M2 11h3L8 7h4\" stroke-width=\"1.5\"/><path d=\"M2 11h3L8 14h4\" stroke-width=\"1\"/><path d=\"M15.5 12.2v6.3M12.4 15.4h6.3\" stroke-width=\"1.5\"/>",
+    "sectionEditor": "<path d=\"M2 9.5 18 12.5\" stroke-width=\".8\"/><path d=\"M3 15.5 6.5 11h7l3.5 4.5\" stroke-width=\"1.5\"/><path d=\"M10 3.5v14\" stroke-width=\".7\" stroke-dasharray=\"1.5 1.2\"/>",
+    "sectionNew": "<path d=\"M2 8.5 12 10.5\" stroke-width=\".8\"/><path d=\"M2.5 13.5 5.5 10h5l2 2.5\" stroke-width=\"1.5\"/><path d=\"M15.5 12.2v6.3M12.4 15.4h6.3\" stroke-width=\"1.5\"/>",
+    "sectionTemplate": "<path d=\"M2 10.5h3.5l1.5-1h6l1.5 1H18\" stroke-width=\"1.5\"/><path d=\"M5.5 10.5 2 15M14.5 10.5 18 15\" stroke-width=\"1\"/><path d=\"M10 4v4\" stroke-width=\".7\" stroke-dasharray=\"1.2 1\"/>",
+    "profileEditor": "<path d=\"M2.5 3v14.5H18\" stroke-width=\"1\"/><path d=\"M4 14l4-6 4 3 5-6\" stroke-width=\"1.5\"/>",
+    "profileNew": "<path d=\"M2.5 3v14.5H11\" stroke-width=\"1\"/><path d=\"M4 12l3-5 3 2.5\" stroke-width=\"1.5\"/><path d=\"M15.5 10.2v6.3M12.4 13.4h6.3\" stroke-width=\"1.5\"/>",
+    "terrainSurface": "<path d=\"M2.5 15.5 8 4l9.5 3.5-2 9z\" stroke-width=\"1.1\"/><path d=\"M8 4l1 7.5 8.5-4M2.5 15.5 9 11.5l6.5 5\" stroke-width=\".8\"/><path d=\"M4.6 10.4 9 11.5l4.6 1.4\" stroke-width=\"1.9\"/>",
+    "terrainNew": "<path d=\"M2 13 6.8 3.5 14 6l-1.6 7z\" stroke-width=\"1.1\"/><path d=\"M6.8 3.5 8 9.2 14 6M2 13l6-3.8 4.4 3.8\" stroke-width=\".8\"/><path d=\"M15.5 12.2v6.3M12.4 15.4h6.3\" stroke-width=\"1.5\"/>",
+    "roadViews": "<rect x=\"2.5\" y=\"2.5\" width=\"15\" height=\"15\" rx=\"1\" stroke-width=\"1.3\"/><path d=\"M2.5 10.5h15M9.5 2.5v8\" stroke-width=\"1\"/><path d=\"M4 8.5c1.5-.4 2.6-2.4 4-4\" stroke-width=\"1.3\"/><path d=\"M11 8.5l2-2.2 3 1\" stroke-width=\"1.3\"/><path d=\"M3.8 15.8l2.6-2.4h7.2l2.6 2.4\" stroke-width=\"1.3\"/><path d=\"M10 11.5v5\" stroke-width=\"1\" stroke-dasharray=\"1.2 1.2\"/>"
   },
   "tabs": [
     {

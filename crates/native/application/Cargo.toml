@@ -46,6 +46,8 @@ sha2 = { workspace = true }
 kentos-services = { path = "../../shared/services" }
 # A point cloud's source metadata and its points by a lasting id (docs/adr/0536): the point cloud core reads the files.
 kentos-pointcloud = { path = "../../shared/pointcloud" }
+# KentOS Yol's core: the terrain surface (plan/road.md Y2.3).
+kentos-road = { path = "../../shared/road" }
 # A GeoPackage's JPEG tiles (docs/adr/0627 §1), a JPEG picture and a JPEG-compressed TIFF read by the headless server
 # as the desktop reads them (docs/adr/0573): the desktop's decoder (the owner's approval, 2026-09-27; docs/adr/0092).
 zune-jpeg = { workspace = true }

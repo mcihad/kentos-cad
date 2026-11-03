@@ -66,6 +66,18 @@
     "label": "Giriş"
    },
    {
+    "id": "terrain",
+    "label": "Arazi"
+   },
+   {
+    "id": "alignment",
+    "label": "Güzergâh"
+   },
+   {
+    "id": "corridor",
+    "label": "Koridor"
+   },
+   {
     "id": "plan",
     "label": "Plan"
    },

@@ -129,8 +129,9 @@ fn open(app: &mut App, path: &Path) {
 fn ribbons() {
     let dir = scratch("moduller-serit");
     for (work, word, tabs) in [
-        (CadWork::Architecture, "mimari", ["arch", "view"]),
-        (CadWork::Map, "harita", ["plan", "survey"]),
+        (CadWork::Architecture, "mimari", &["arch", "view"][..]),
+        (CadWork::Map, "harita", &["plan", "survey"][..]),
+        (CadWork::Road, "yol", &["terrain", "survey", "insert"][..]),
     ] {
         let path = saved_as(
             &dir,
@@ -139,7 +140,7 @@ fn ribbons() {
             Some(work),
         );
         for (size, theme, suffix) in frames() {
-            for tab in tabs {
+            for &tab in tabs {
                 let name = format!("moduller-serit-{word}-{tab}{suffix}");
                 if !wanted(&name) {
                     continue;
@@ -187,6 +188,11 @@ fn start_screens() {
                     Some(Module::Architecture),
                 ),
                 (
+                    "/home/kullanici/Projeler/D-200 Sivas çevre yolu.kcad",
+                    "8.512 nesne · TUREF / TM36",
+                    Some(Module::Road),
+                ),
+                (
                     "/home/kullanici/Projeler/Merdiven detayı.kcad",
                     "96 nesne · Yerel (koordinat sistemi yok)",
                     Some(Module::Architecture),
@@ -208,14 +214,14 @@ fn wizards() {
     use crate::project::wizard::Event as W;
     for m in Module::ALL {
         for (size, theme, suffix) in frames_and_large() {
-            for (step, word) in [(None, ""), (Some(0), "-tur")] {
+            for (step, word) in [(None, ""), (Some(0), "-tur"), (Some(2), "-ozet")] {
                 let name = format!("moduller-sihirbaz-{}{word}{suffix}", m.id());
                 if !wanted(&name) {
                     continue;
                 }
                 let mut app = program(Some(m), theme);
                 update(&mut app, Message::Run("file.new"));
-                if m == Module::Map {
+                if matches!(m, Module::Map | Module::Road) {
                     update(
                         &mut app,
                         Message::Project(Box::new(crate::project::Event::New(W::Province(58)))),

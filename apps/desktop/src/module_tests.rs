@@ -426,7 +426,7 @@ fn a_cad_module_asks_a_cad_file_without_a_work_before_it_opens_it() {
 }
 
 #[test]
-fn kentos_gis_hands_a_cad_drawing_to_either_cad_program_and_a_cad_module_takes_a_dxf_as_its_work() {
+fn kentos_gis_hands_a_cad_drawing_to_any_cad_program_and_a_cad_module_takes_a_dxf_as_its_work() {
     let dir = scratch("modul-cbs");
     let dxf = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/formats/v1/dxf-units/mm.dxf");
@@ -436,7 +436,7 @@ fn kentos_gis_hands_a_cad_drawing_to_either_cad_program_and_a_cad_module_takes_a
         open(&mut app, file);
         assert_eq!(
             app.asking_hand_over(),
-            Some(&[Module::Architecture, Module::Map][..]),
+            Some(&[Module::Architecture, Module::Map, Module::Road][..]),
             "{}",
             file.display()
         );
@@ -1011,7 +1011,7 @@ fn run_refuses_another_modules_command_and_says_which_program_has_it() {
     let said = last_said(&app);
     assert_eq!(
         said,
-        "“İşlem araç kutusu” KentOS Mimari'de yok; KentOS Harita'da ve KentOS GIS'te var."
+        "“İşlem araç kutusu” KentOS Mimari'de yok; KentOS Harita'da, KentOS GIS'te ve KentOS Yol'da var."
     );
     assert!(!app.available("processing.toolbox"));
     assert_eq!(app.why_disabled("processing.toolbox"), Some(said));

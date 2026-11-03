@@ -1530,6 +1530,565 @@ const ENTRIES: &[Entry] = &[
         warnings: &["unknown_layer"],
         targets: none,
     },
+    // KentOS Yol's terrain surfaces (plan/road.md Y2.3).
+    Entry {
+        id: "road.terrains.create",
+        refusals: &[
+            &["not_a_road_project", "invalid_terrain"],
+            REVISION,
+            &["terrain_unbuildable"],
+        ],
+        warnings: &["terrain_source_left"],
+        targets: none,
+    },
+    Entry {
+        id: "road.terrains.edit",
+        refusals: &[
+            &["not_a_road_project", "no_terrain", "no_id", "invalid_terrain"],
+            REVISION,
+            &["unknown_terrain", "terrain_unbuildable"],
+        ],
+        warnings: &["terrain_source_left"],
+        targets: none,
+    },
+    Entry {
+        id: "road.terrains.contours",
+        refusals: &[
+            &["road_drawings_full", "not_a_road_project", "invalid_contours"],
+            LAYER,
+            REVISION,
+            &["unknown_terrain", "terrain_unbuildable", "no_contours"],
+        ],
+        warnings: &["layer_hidden"],
+        targets: none,
+    },
+    Entry {
+        id: "file.import.landxml",
+        refusals: &[
+            &["not_a_road_project", "file_not_found", "import_unreadable", "landxml_no_surface"],
+            LAYER,
+            &["invalid_terrain"],
+            REVISION,
+            &["terrain_unbuildable"],
+        ],
+        warnings: &["landxml_left", "layer_hidden"],
+        targets: none,
+    },
+    Entry {
+        id: "road.terrains.query",
+        refusals: &[&["not_a_road_project", "unknown_terrain", "no_terrain", "invalid_places"]],
+        warnings: &[],
+        targets: none,
+    },
+    // KentOS Yol's horizontal alignments (plan/road.md Y3, docs/adr/0901).
+    Entry {
+        id: "road.alignments.create",
+        refusals: &[
+            &[
+                "not_a_road_project",
+                "invalid_alignment",
+                "alignment_spirals_long",
+                "alignment_curves_overlap",
+                "invalid_stationing",
+                "offset_cusp",
+            ],
+            REVISION,
+        ],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "road.alignments.edit",
+        refusals: &[
+            &[
+                "not_a_road_project",
+                "unknown_alignment",
+                "invalid_alignment",
+                "alignment_spirals_long",
+                "alignment_curves_overlap",
+                "invalid_stationing",
+                "offset_cusp",
+                "alignment_in_use",
+            ],
+            REVISION,
+        ],
+        warnings: &["equations_dropped"],
+        targets: none,
+    },
+    Entry {
+        id: "road.alignments.label",
+        refusals: &[
+            &["road_drawings_full", "not_a_road_project", "unknown_alignment", "invalid_label"],
+            LAYER,
+            REVISION,
+        ],
+        warnings: &["layer_hidden"],
+        targets: none,
+    },
+    Entry {
+        id: "road.alignments.query",
+        refusals: &[&[
+            "not_a_road_project",
+            "unknown_alignment",
+            "invalid_places",
+            "station_outside",
+            "station_ambiguous",
+        ]],
+        warnings: &[],
+        targets: none,
+    },
+    // KentOS Yol's vertical alignments (plan/road.md Y4, docs/adr/0902).
+    Entry {
+        id: "road.profiles.create",
+        refusals: &[
+            &[
+                "not_a_road_project",
+                "unknown_alignment",
+                "unknown_terrain",
+                "invalid_road_profile",
+                "profile_curves_overlap",
+            ],
+            REVISION,
+        ],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "road.profiles.edit",
+        refusals: &[
+            &[
+                "not_a_road_project",
+                "unknown_road_profile",
+                "unknown_terrain",
+                "invalid_road_profile",
+                "profile_curves_overlap",
+                "profile_in_use",
+            ],
+            REVISION,
+        ],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "road.profiles.draw",
+        refusals: &[&["road_drawings_full", "not_a_road_project", "unknown_road_profile", "invalid_label"], LAYER, REVISION],
+        warnings: &["layer_hidden", "profile_stale", "profile_surface_gone"],
+        targets: none,
+    },
+    Entry {
+        id: "road.profiles.query",
+        refusals: &[&[
+            "not_a_road_project",
+            "unknown_road_profile",
+            "invalid_places",
+            "station_outside",
+            "no_terrain",
+        ]],
+        warnings: &["profile_stale", "profile_surface_gone"],
+        targets: none,
+    },
+    // KentOS Yol's cross sections and templates (plan/road.md Y5, docs/adr/0903).
+    Entry {
+        id: "road.templates.edit",
+        refusals: &[
+            &["not_a_road_project", "unknown_road_template", "invalid_road_template", "road_template_in_use"],
+            REVISION,
+        ],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "road.sections.edit",
+        refusals: &[
+            &[
+                "not_a_road_project",
+                "unknown_section_set",
+                "unknown_alignment",
+                "unknown_road_profile",
+                "unknown_road_template",
+                "unknown_superelevation",
+                "unknown_terrain",
+                "invalid_section_set",
+            ],
+            REVISION,
+        ],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "road.sections.query",
+        refusals: &[&["not_a_road_project", "unknown_section_set", "invalid_section_set", "invalid_places"]],
+        warnings: &["section_set_stale", "section_surface_gone", "section_open", "section_superelevation_gone"],
+        targets: none,
+    },
+    Entry {
+        id: "road.sections.draw",
+        refusals: &[
+            &[
+                "road_drawings_full",
+                "not_a_road_project",
+                "unknown_section_set",
+                "invalid_label",
+                "invalid_section_set",
+                "invalid_places",
+                "no_terrain",
+            ],
+            LAYER,
+            REVISION,
+        ],
+        warnings: &["layer_hidden", "section_set_stale", "section_open"],
+        targets: none,
+    },
+    // KentOS Yol's superelevation (plan/road.md Y6, docs/adr/0904).
+    Entry {
+        id: "road.superelevations.edit",
+        refusals: &[
+            &[
+                "not_a_road_project",
+                "unknown_superelevation",
+                "unknown_alignment",
+                "invalid_superelevation",
+                "superelevation_in_use",
+            ],
+            REVISION,
+        ],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "road.superelevations.query",
+        refusals: &[&[
+            "not_a_road_project",
+            "unknown_superelevation",
+            "invalid_places",
+            "station_outside",
+            "invalid_superelevation",
+        ]],
+        warnings: &["superelevation_stale"],
+        targets: none,
+    },
+    // KentOS Yol's corridors (plan/road.md Y7, docs/adr/0905).
+    Entry {
+        id: "road.corridors.edit",
+        refusals: &[
+            &[
+                "not_a_road_project",
+                "unknown_corridor",
+                "unknown_alignment",
+                "unknown_road_profile",
+                "unknown_terrain",
+                "unknown_superelevation",
+                "unknown_road_template",
+                "invalid_road_corridor",
+                "corridor_in_use",
+            ],
+            REVISION,
+        ],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "road.corridors.draw",
+        refusals: &[
+            &[
+                "road_drawings_full",
+                "not_a_road_project",
+                "unknown_corridor",
+                "invalid_label",
+                "invalid_road_corridor",
+                "no_terrain",
+                "layer_not_found",
+                "not_a_layer",
+                "layer_locked",
+            ],
+            REVISION,
+        ],
+        warnings: &["layer_hidden", "corridor_stale", "corridor_unsolved", "corridor_gap", "corridor_superelevation_gone"],
+        targets: none,
+    },
+    Entry {
+        id: "road.corridors.query",
+        refusals: &[&["not_a_road_project", "unknown_corridor", "invalid_road_corridor"]],
+        warnings: &[
+            "corridor_stale",
+            "corridor_unsolved",
+            "corridor_folded",
+            "corridor_gap",
+            "corridor_surface_gone",
+            "corridor_superelevation_gone",
+        ],
+        targets: none,
+    },
+    // KentOS Yol's earthwork volumes (plan/road.md Y8, docs/adr/0906).
+    Entry {
+        id: "road.volumes.edit",
+        refusals: &[
+            &["not_a_road_project", "unknown_volume", "volume_approved", "volume_in_use", "unknown_corridor", "invalid_volume"],
+            REVISION,
+        ],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "road.volumes.query",
+        refusals: &[&["not_a_road_project", "unknown_volume", "invalid_volume"]],
+        warnings: &["corridor_stale", "volume_gap", "volume_uncovered", "volume_unfactored", "volume_changed"],
+        targets: none,
+    },
+    // KentOS Yol's mass haul diagrams (plan/road.md Y9, docs/adr/0907).
+    Entry {
+        id: "road.hauls.edit",
+        refusals: &[&["not_a_road_project", "unknown_haul", "unknown_volume", "invalid_haul"], REVISION],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "road.hauls.query",
+        refusals: &[&["not_a_road_project", "unknown_haul", "invalid_haul"]],
+        warnings: &["corridor_stale", "volume_gap", "haul_unbalanced"],
+        targets: none,
+    },
+    // KentOS Yol's guardrails (plan/road.md Y11.1, docs/adr/0909 §1).
+    Entry {
+        id: "road.guardrails.edit",
+        refusals: &[&["not_a_road_project", "unknown_guardrail", "unknown_corridor", "invalid_guardrail"], REVISION],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "road.guardrails.query",
+        refusals: &[&["not_a_road_project", "unknown_guardrail", "invalid_guardrail"]],
+        warnings: &["guardrail_stale", "corridor_stale", "corridor_surface_gone", "corridor_unsolved"],
+        targets: none,
+    },
+    Entry {
+        id: "road.guardrails.draw",
+        refusals: &[&["road_drawings_full", "not_a_road_project", "unknown_guardrail", "invalid_guardrail"], LAYER, REVISION],
+        warnings: &["layer_hidden", "guardrail_stale", "corridor_stale", "corridor_unsolved"],
+        targets: none,
+    },
+    // KentOS Yol's culverts (plan/road.md Y11.2, docs/adr/0909 §2).
+    Entry {
+        id: "road.culverts.edit",
+        refusals: &[&["not_a_road_project", "unknown_culvert", "unknown_corridor", "invalid_culvert"], REVISION],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "road.culverts.query",
+        refusals: &[&["not_a_road_project", "unknown_culvert", "invalid_culvert"]],
+        warnings: &["culvert_stale", "culvert_cover", "corridor_stale", "corridor_unsolved"],
+        targets: none,
+    },
+    Entry {
+        id: "road.culverts.draw",
+        refusals: &[&["road_drawings_full", "not_a_road_project", "unknown_culvert", "invalid_culvert"], LAYER, REVISION],
+        warnings: &["layer_hidden", "culvert_stale", "culvert_cover", "corridor_stale", "corridor_unsolved"],
+        targets: none,
+    },
+    // KentOS Yol's retaining walls (plan/road.md Y11.3, docs/adr/0909 §3).
+    Entry {
+        id: "road.walls.edit",
+        refusals: &[&["not_a_road_project", "unknown_retaining_wall", "unknown_corridor", "invalid_retaining_wall"], REVISION],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "road.walls.query",
+        refusals: &[&["not_a_road_project", "unknown_retaining_wall", "invalid_retaining_wall"]],
+        warnings: &["retaining_wall_stale", "retaining_wall_high", "corridor_stale", "corridor_unsolved"],
+        targets: none,
+    },
+    Entry {
+        id: "road.walls.draw",
+        refusals: &[&["road_drawings_full", "not_a_road_project", "unknown_retaining_wall", "invalid_retaining_wall"], LAYER, REVISION],
+        warnings: &["layer_hidden", "retaining_wall_stale", "retaining_wall_high", "corridor_stale", "corridor_unsolved"],
+        targets: none,
+    },
+    // KentOS Yol's pay item quantities (plan/road.md Y11.4, docs/adr/0909 §4).
+    Entry {
+        id: "road.pay.edit",
+        refusals: &[&["not_a_road_project", "no_pay_book", "invalid_pay_book"], REVISION],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "road.pay.query",
+        refusals: &[&["not_a_road_project", "no_pay_book", "invalid_pay_book"]],
+        warnings: &["pay_source_stale", "pay_source_unread"],
+        targets: none,
+    },
+    // KentOS Yol's preliminary routes (plan/road.md Y12.1, docs/adr/0910 §1).
+    Entry {
+        id: "road.routes.find",
+        refusals: &[&["not_a_road_project", "unknown_terrain", "invalid_route", "route_blocked", "route_unreached"]],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "road.routes.draw",
+        refusals: &[&["not_a_road_project", "unknown_terrain", "invalid_route", "route_blocked", "route_unreached"], LAYER, REVISION],
+        warnings: &["layer_hidden"],
+        targets: none,
+    },
+    // KentOS Yol's junctions (plan/road.md Y12.2, docs/adr/0910 §2).
+    Entry {
+        id: "road.junctions.edit",
+        refusals: &[&["not_a_road_project", "unknown_junction", "unknown_alignment", "invalid_junction"], REVISION],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "road.junctions.query",
+        refusals: &[&["not_a_road_project", "unknown_junction", "invalid_junction"]],
+        warnings: &["junction_stale", "junction_on_curve"],
+        targets: none,
+    },
+    Entry {
+        id: "road.junctions.draw",
+        refusals: &[&["road_drawings_full", "not_a_road_project", "unknown_junction", "invalid_junction"], LAYER, REVISION],
+        warnings: &["layer_hidden", "junction_stale", "junction_on_curve"],
+        targets: none,
+    },
+    // KentOS Yol's project tree (plan/road.md Y13, docs/adr/0911 §2).
+    Entry {
+        id: "road.project.query",
+        refusals: &[&["not_a_road_project"]],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "road.project.rebuild",
+        refusals: &[
+            &["not_a_road_project", "unknown_drawing", "drawing_source_gone", "drawing_edited", "road_drawings_full", "layer_locked"],
+            REVISION,
+        ],
+        warnings: &["corridor_unsolved"],
+        targets: none,
+    },
+    Entry {
+        id: "road.project.edit",
+        refusals: &[&["not_a_road_project", "nothing_to_set"], REVISION],
+        warnings: &["drawings_rebuilt", "drawing_edited", "drawing_not_rebuilt"],
+        targets: none,
+    },
+    // KentOS Yol's LandXML export (plan/road.md Y10.2, docs/adr/0908 §6).
+    Entry {
+        id: "file.export.landxml",
+        refusals: &[&[
+            "not_a_road_project",
+            "invalid_file_path",
+            "file_exists",
+            "unknown_terrain",
+            "unknown_alignment",
+            "invalid_landxml",
+        ]],
+        warnings: &["export_losses"],
+        targets: none,
+    },
+    Entry {
+        id: "road.alignments.import",
+        refusals: &[
+            &["not_a_road_project", "file_not_found", "import_unreadable", "landxml_no_alignment", "invalid_alignment"],
+            REVISION,
+        ],
+        warnings: &["landxml_left"],
+        targets: none,
+    },
+    Entry {
+        id: "file.export.ifc",
+        refusals: &[&["not_a_road_project", "invalid_file_path", "file_exists", "unknown_alignment", "invalid_ifc"]],
+        warnings: &["export_losses"],
+        targets: none,
+    },
+    // KentOS Yol's 3D scene (plan/road.md Y12.3, docs/adr/0910 §3).
+    Entry {
+        id: "file.export.gltf",
+        refusals: &[&[
+            "not_a_road_project",
+            "invalid_file_path",
+            "file_exists",
+            "unknown_terrain",
+            "unknown_corridor",
+            "invalid_gltf",
+        ]],
+        warnings: &["export_losses"],
+        targets: none,
+    },
+    // KentOS Yol's stakeout table (plan/road.md Y10, docs/adr/0908).
+    Entry {
+        id: "road.stakeout.query",
+        refusals: &[&["not_a_road_project", "unknown_corridor", "invalid_stakeout", "stakeout_no_ground"]],
+        warnings: &[
+            "corridor_stale",
+            "corridor_unsolved",
+            "corridor_surface_gone",
+            "stakeout_unsolved",
+        ],
+        targets: none,
+    },
+    Entry {
+        id: "road.stakeout.send",
+        refusals: &[&[
+            "not_a_road_project",
+            "unknown_corridor",
+            "invalid_stakeout",
+            "invalid_file_path",
+            "file_exists",
+            "invalid_stakeout_send",
+        ]],
+        warnings: &[
+            "corridor_stale",
+            "corridor_unsolved",
+            "stakeout_unsolved",
+            "stakeout_code_dropped",
+            "export_losses",
+        ],
+        targets: none,
+    },
+    Entry {
+        id: "road.sheets.plan",
+        refusals: &[
+            &["not_a_road_project", "unknown_alignment", "unknown_road_profile", "invalid_road_sheets", "unknown_template"],
+            &["invalid_options", "not_fixed_map", "bad_drawing_info"],
+            LAYER,
+            REVISION,
+        ],
+        warnings: &["road_sheet_outside", "layer_hidden", "profile_stale"],
+        targets: none,
+    },
+    Entry {
+        id: "road.sheets.sections",
+        refusals: &[
+            &["not_a_road_project", "unknown_section_set", "invalid_label", "invalid_places", "no_terrain"],
+            &["invalid_road_sheets", "unknown_template", "invalid_options", "not_fixed_map", "bad_drawing_info"],
+            LAYER,
+            REVISION,
+        ],
+        warnings: &["layer_hidden", "section_set_stale", "section_open"],
+        targets: none,
+    },
+    Entry {
+        id: "road.alignments.fit",
+        refusals: &[&["not_a_road_project", "entity_not_found", "invalid_alignment_fit"], REVISION],
+        warnings: &["alignment_fit_deviation"],
+        targets: none,
+    },
+    Entry {
+        id: "road.profiles.fit",
+        refusals: &[
+            &["not_a_road_project", "unknown_alignment", "unknown_terrain", "entity_not_found", "invalid_profile_fit"],
+            REVISION,
+        ],
+        warnings: &["profile_fit_deviation"],
+        targets: none,
+    },
+    Entry {
+        id: "road.volumes.approve",
+        refusals: &[&["not_a_road_project", "unknown_volume", "volume_not_approved", "invalid_volume"], REVISION],
+        warnings: &[],
+        targets: none,
+    },
     // Alt ağlar (docs/adr/0557 §2).
     Entry {
         id: "cad.subnetworks.find",

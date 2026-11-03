@@ -580,6 +580,62 @@ pub const PORTED: &[&str] = &[
     "network.subnetworks",
     // docs/adr/0569: Olay bağları (event_links_window.rs).
     "linearRef.eventLinks",
+    // plan/road.md Y2.4: Arazi yüzeyleri and Yüzey oluştur (terrain_window.rs).
+    "terrain.surfaces",
+    "terrain.new",
+    // plan/road.md Y3: Güzergâh and Yeni aks (alignment_window.rs).
+    "alignment.editor",
+    "alignment.new",
+    // plan/road.md Y4: Boykesit and Boykesit oluştur (profile_window.rs).
+    "profile.editor",
+    "profile.new",
+    // plan/road.md Y5: Enkesit, Kesit takımı oluştur and Tip kesit oluştur (section_window.rs).
+    "section.editor",
+    "section.new",
+    "section.template",
+    // plan/road.md Y6: Dever and Dever oluştur (superelevation_window.rs).
+    "superelevation.editor",
+    "superelevation.new",
+    // plan/road.md Y7: Koridor, Koridor oluştur and Şevli plan (corridor_window.rs).
+    "corridor.editor",
+    "corridor.new",
+    "corridor.slopePlan",
+    // plan/road.md Y8: Kübaj, Kübaj hesabı oluştur and Kübaj cetveli (volume_window.rs).
+    "volume.editor",
+    "volume.new",
+    "volume.export",
+    // plan/road.md Y9: Brükner and Brükner oluştur (haul_window.rs).
+    "haul.editor",
+    "haul.new",
+    // plan/road.md Y10: Aplikasyon cetveli (stakeout_window.rs).
+    "stakeout.table",
+    // plan/road.md Y10.5: Yol paftaları (road_sheets_window.rs).
+    "road.sheets",
+    // plan/road.md Y13.4: Görünüşler (road_views_window.rs).
+    "road.views",
+    // plan/road.md Y10.6: Çizgiden aks (road_alignment_fit_window.rs).
+    "alignment.fromLine",
+    // plan/road.md Y10.6b: Çizimden boykesit (road_profile_fit_window.rs).
+    "profile.fromLine",
+    // plan/road.md Y11.1: Otokorkuluk (guardrail_window.rs).
+    "guardrail.editor",
+    // plan/road.md Y11.2: Menfez (culvert_window.rs).
+    "culvert.editor",
+    // plan/road.md Y11.3: İstinat duvarı (retaining_wall_window.rs).
+    "retainingWall.editor",
+    // plan/road.md Y11.4: Poz metrajı (pay_window.rs).
+    "payItems.editor",
+    // plan/road.md Y12.1: Ön güzergâh (route_window.rs).
+    "route.finder",
+    // plan/road.md Y12.2: Kavşak (junction_window.rs).
+    "junction.editor",
+    // plan/road.md Y10.2: LandXML ver (road_exchange.rs).
+    "landxml.export",
+    "landxml.importAlignments",
+    "ifc.export",
+    // plan/road.md Y12.3: glTF ver (road_exchange.rs) and 3B görünüm (scene3d_window.rs).
+    "gltf.export",
+    "scene3d.view",
     // docs/adr/0773: Bina programı (program_window.rs).
     "arch.program",
     // docs/adr/0313: Çizgi tipleri (line_types_window.rs).
@@ -1557,7 +1613,12 @@ impl Catalog {
                 let mut ids: HashSet<&'static str> =
                     tabs.into_iter().flat_map(Tab::commands).collect();
                 ids.extend(everywhere.iter().copied());
-                if module == kentos_launch::Module::Map {
+                // KentOS Yol works on a map's coordinates and layers (plan/road.md ROAD-MOD): a layer's system,
+                // GIS files, sources, labels and typed layers are a road's too.
+                if matches!(
+                    module,
+                    kentos_launch::Module::Map | kentos_launch::Module::Road
+                ) {
                     ids.extend(map_only.iter().copied());
                 }
                 ids.extend(

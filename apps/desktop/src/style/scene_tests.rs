@@ -149,6 +149,7 @@ fn drawing(n: usize, renderer: Option<Value>) -> Document {
             profile_files: Vec::new(),
             heights: None,
             coordinate_epoch: None,
+            road: None,
             named_ucs: Vec::new(),
             named_views: Vec::new(),
             view_templates: Vec::new(),

@@ -754,6 +754,22 @@ fn report_of_ops(ops: &[Op]) -> StepReport {
             | Op::Materials { .. }
             | Op::BuildingProgram { .. }
             | Op::ArchModules { .. }
+            | Op::RoadAlignments { .. }
+            | Op::RoadProfiles { .. }
+            | Op::RoadTemplates { .. }
+            | Op::RoadSections { .. }
+            | Op::RoadSuperelevations { .. }
+            | Op::RoadCorridors { .. }
+            | Op::RoadVolumes { .. }
+            | Op::RoadHauls { .. }
+            | Op::RoadSheetSets { .. }
+            | Op::RoadGuardrails { .. }
+            | Op::RoadCulverts { .. }
+            | Op::RoadWalls { .. }
+            | Op::RoadPay { .. }
+            | Op::RoadJunctions { .. }
+            | Op::RoadDrawings { .. }
+            | Op::RoadAutoRebuild { .. }
             | Op::ViewArea { .. }
             | Op::ArchOptions { .. }
             | Op::OptionCombos { .. }

@@ -16,6 +16,7 @@ fn rectangular_walls_use_the_native_command_with_a_nonmutating_plan_and_one_undo
         drawing_unit: None,
         annotation: None,
         cad_work: None,
+        heights: None,
     })
     .unwrap();
     let layer = session.summary()["activeLayer"]
@@ -52,6 +53,7 @@ fn measured_partition_uses_explicit_source_and_clear_spacing_through_headless() 
         name: "Bölme kabulü".into(), srid: 0, plot_scale: 100.0, workspace: Workspace::Cad,
         drawing_font: DrawingFont::Barlow, province: None, drawing_unit: None, annotation: None,
         cad_work: None,
+        heights: None,
     }).unwrap();
     let layer = session.summary()["activeLayer"].clone();
     let source = session.run("cad.walls.rectangle", Some(1), Op::Execute, json!({

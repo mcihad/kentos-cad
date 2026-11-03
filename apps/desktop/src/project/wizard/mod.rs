@@ -106,6 +106,8 @@ pub enum Event {
     Choose(Workspace),
     /// What a CAD drawing is for: a work's card, by its place in [`WORKS`] (docs/adr/0626 §1).
     Work(usize),
+    /// A road's Kotlar (plan/road.md ROAD-NUM-03): ellipsoidal heights, or TUDKA-99's orthometric ones.
+    Heights(bool),
     /// A province's row; the chosen one again chooses none.
     Province(u32),
     Search(String),
@@ -186,6 +188,8 @@ impl State {
 
     /// The step at `index`, if every step before it can be left.
     fn go(&mut self, index: usize) {
+        // A module's program has no type step (docs/adr/0802): nothing before its first step is gone to.
+        let index = index.max(self.first_step());
         let Some(to) = STEPS.get(index) else { return };
         for s in &STEPS[..index] {
             if let Some(why) = self.draft.blocked(*s) {
@@ -304,6 +308,7 @@ impl App {
                 s.status = None;
                 return focus(s);
             }
+            Event::Heights(ellipsoidal) => d.ellipsoidal_heights = ellipsoidal,
             Event::Province(code) => {
                 d.province = (d.province != Some(code)).then_some(code);
                 // Another province suggests its own zone: a system chosen before follows it again.
@@ -489,6 +494,7 @@ impl App {
         let title = match s.limit {
             Some(kentos_launch::Module::Map) => "Yeni harita projesi",
             Some(kentos_launch::Module::Gis) => "Yeni CBS projesi",
+            Some(kentos_launch::Module::Road) => "Yeni yol projesi",
             Some(kentos_launch::Module::Architecture) => "Yeni mimari proje",
             None => "Yeni proje",
         };

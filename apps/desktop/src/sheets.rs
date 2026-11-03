@@ -3822,10 +3822,7 @@ mod tests {
         );
 
         let (types, first, shown) = of(Some(Module::Map));
-        assert_eq!(
-            types,
-            [Cad, LandReadjustment, ZoningPlan, Subdivision, Road]
-        );
+        assert_eq!(types, [Cad, LandReadjustment, ZoningPlan, Subdivision]);
         assert_eq!(first, "sys:genel-a3-yatay", "a map sheet");
         for id in [
             "sys:imar-plani",
@@ -3838,6 +3835,11 @@ mod tests {
         for id in ["sys:cad-mimari", "sys:gis-tematik", "sys:gis-atlas"] {
             assert!(!shown.iter().any(|s| s == id), "{id}: {shown:?}");
         }
+
+        // KentOS Yol's sheets are a road's (plan/road.md); its own templates come with its plan, profile and
+        // section sheets (Y10).
+        let (types, _, _) = of(Some(Module::Road));
+        assert_eq!(types, [Road]);
 
         let (types, first, shown) = of(Some(Module::Gis));
         assert_eq!(types, [Gis]);

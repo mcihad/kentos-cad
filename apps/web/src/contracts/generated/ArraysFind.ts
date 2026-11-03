@@ -16,28 +16,28 @@ import type { ArrayFindKind } from "./ArrayFindKind";
  * With kind=lattice, independently directed regular axes are inferred from observed displacements.
  * Items keep their common direction; source-to-slot identity and gaps use the same adoption gate.
  */
-export type ArraysFind = {
+export type ArraysFind = { 
 /**
  * Existing seed insert UUID. May be an interior place of a candidate.
  */
-source: string,
+source: string, 
 /**
  * Omitted: line. Grid is world-X/Y; polar is an explicit full-circle interpretation.
  */
-kind?: ArrayFindKind,
+kind?: ArrayFindKind, 
 /**
  * Existing line, arc, circle or single-part 2D polyline UUID; required only with kind=path.
  * The guide is retained and followed by the adopted array. Its stored start/direction are used.
  */
-path?: string,
+path?: string, 
 /**
  * Absent searches the document; empty searches only the seed. At most 2048 objects.
  */
-uids?: Array<string>,
+uids?: Array<string>, 
 /**
  * Absolute position tolerance in metres, above zero to 0.001; absent: 0.000001.
  */
-tolerance?: number,
+tolerance?: number, 
 /**
  * Candidate limit, 1 to 100; absent: 100. Work/result limits report `truncated`.
  */

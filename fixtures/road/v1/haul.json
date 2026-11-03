@@ -1,0 +1,1306 @@
+{
+ "format": "kentos.road-haul-cases",
+ "version": 1,
+ "note": "scripts/fixtures/road_haul_cases.py yazar: kütle eğrisi kesirlerle katman katman okunur; KentOS kodu yok.",
+ "cases": [
+  {
+   "name": "Tek tepe: serbest taşıma yok",
+   "points": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     100.0,
+     1000.0
+    ],
+    [
+     200.0,
+     0.0
+    ]
+   ],
+   "balance": 0.0,
+   "free": 0.0,
+   "expect": {
+    "balance": [],
+    "loops": [
+     {
+      "from": 0.0,
+      "to": 200.0,
+      "forward": true,
+      "volume": 1000.0,
+      "moment": 100000.0,
+      "overVolume": 1000.0,
+      "overMoment": 100000.0,
+      "unbalanced": 0.0
+     }
+    ],
+    "volume": 1000.0,
+    "moment": 100000.0,
+    "overVolume": 1000.0,
+    "overMoment": 100000.0,
+    "waste": 0.0,
+    "borrow": 0.0
+   }
+  },
+  {
+   "name": "Tek tepe: serbest taşıma 50 m",
+   "points": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     100.0,
+     1000.0
+    ],
+    [
+     200.0,
+     0.0
+    ]
+   ],
+   "balance": 0.0,
+   "free": 50.0,
+   "expect": {
+    "balance": [],
+    "loops": [
+     {
+      "from": 0.0,
+      "to": 200.0,
+      "forward": true,
+      "volume": 1000.0,
+      "moment": 100000.0,
+      "overVolume": 750.0,
+      "overMoment": 56250.0,
+      "unbalanced": 0.0
+     }
+    ],
+    "volume": 1000.0,
+    "moment": 100000.0,
+    "overVolume": 750.0,
+    "overMoment": 56250.0,
+    "waste": 0.0,
+    "borrow": 0.0
+   }
+  },
+  {
+   "name": "Tek tepe: serbest taşıma tepenin enini aşar",
+   "points": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     100.0,
+     1000.0
+    ],
+    [
+     200.0,
+     0.0
+    ]
+   ],
+   "balance": 0.0,
+   "free": 300.0,
+   "expect": {
+    "balance": [],
+    "loops": [
+     {
+      "from": 0.0,
+      "to": 200.0,
+      "forward": true,
+      "volume": 1000.0,
+      "moment": 100000.0,
+      "overVolume": 0.0,
+      "overMoment": 0.0,
+      "unbalanced": 0.0
+     }
+    ],
+    "volume": 1000.0,
+    "moment": 100000.0,
+    "overVolume": 0.0,
+    "overMoment": 0.0,
+    "waste": 0.0,
+    "borrow": 0.0
+   }
+  },
+  {
+   "name": "Yamuk tepe",
+   "points": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     50.0,
+     600.0
+    ],
+    [
+     150.0,
+     600.0
+    ],
+    [
+     200.0,
+     0.0
+    ]
+   ],
+   "balance": 0.0,
+   "free": 80.0,
+   "expect": {
+    "balance": [],
+    "loops": [
+     {
+      "from": 0.0,
+      "to": 200.0,
+      "forward": true,
+      "volume": 600.0,
+      "moment": 90000.0,
+      "overVolume": 600.0,
+      "overMoment": 42000.0,
+      "unbalanced": 0.0
+     }
+    ],
+    "volume": 600.0,
+    "moment": 90000.0,
+    "overVolume": 600.0,
+    "overMoment": 42000.0,
+    "waste": 0.0,
+    "borrow": 0.0
+   }
+  },
+  {
+   "name": "İleri sonra geri",
+   "points": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     100.0,
+     800.0
+    ],
+    [
+     200.0,
+     0.0
+    ],
+    [
+     300.0,
+     -500.0
+    ],
+    [
+     400.0,
+     0.0
+    ]
+   ],
+   "balance": 0.0,
+   "free": 60.0,
+   "expect": {
+    "balance": [
+     200.0
+    ],
+    "loops": [
+     {
+      "from": 0.0,
+      "to": 200.0,
+      "forward": true,
+      "volume": 800.0,
+      "moment": 80000.0,
+      "overVolume": 560.0,
+      "overMoment": 39200.0,
+      "unbalanced": 0.0
+     },
+     {
+      "from": 200.0,
+      "to": 400.0,
+      "forward": false,
+      "volume": 500.0,
+      "moment": 50000.0,
+      "overVolume": 350.0,
+      "overMoment": 24500.0,
+      "unbalanced": 0.0
+     }
+    ],
+    "volume": 1300.0,
+    "moment": 130000.0,
+    "overVolume": 910.0,
+    "overMoment": 63700.0,
+    "waste": 0.0,
+    "borrow": 0.0
+   }
+  },
+  {
+   "name": "Bir döngüde iki tepe",
+   "points": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     100.0,
+     900.0
+    ],
+    [
+     150.0,
+     300.0
+    ],
+    [
+     250.0,
+     1200.0
+    ],
+    [
+     400.0,
+     0.0
+    ]
+   ],
+   "balance": 0.0,
+   "free": 100.0,
+   "expect": {
+    "balance": [],
+    "loops": [
+     {
+      "from": 0.0,
+      "to": 400.0,
+      "forward": true,
+      "volume": 1800.0,
+      "moment": 240000.0,
+      "overVolume": 862.1848739495798,
+      "overMoment": 106890.75630252101,
+      "unbalanced": 0.0
+     }
+    ],
+    "volume": 1800.0,
+    "moment": 240000.0,
+    "overVolume": 862.1848739495798,
+    "overMoment": 106890.75630252101,
+    "waste": 0.0,
+    "borrow": 0.0
+   }
+  },
+  {
+   "name": "Sonda fazla kazı: döküm",
+   "points": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     100.0,
+     700.0
+    ],
+    [
+     200.0,
+     400.0
+    ]
+   ],
+   "balance": 0.0,
+   "free": 40.0,
+   "expect": {
+    "balance": [],
+    "loops": [
+     {
+      "from": 0.0,
+      "to": 200.0,
+      "forward": true,
+      "volume": 300.0,
+      "moment": 21428.571428571428,
+      "overVolume": 216.0,
+      "overMoment": 11108.57142857143,
+      "unbalanced": 400.0
+     }
+    ],
+    "volume": 300.0,
+    "moment": 21428.571428571428,
+    "overVolume": 216.0,
+    "overMoment": 11108.57142857143,
+    "waste": 400.0,
+    "borrow": 0.0
+   }
+  },
+  {
+   "name": "Başta eksik: ödünç",
+   "points": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     80.0,
+     -300.0
+    ],
+    [
+     200.0,
+     500.0
+    ],
+    [
+     300.0,
+     0.0
+    ]
+   ],
+   "balance": 0.0,
+   "free": 50.0,
+   "expect": {
+    "balance": [
+     125.0
+    ],
+    "loops": [
+     {
+      "from": 0.0,
+      "to": 125.0,
+      "forward": false,
+      "volume": 300.0,
+      "moment": 18750.0,
+      "overVolume": 180.0,
+      "overMoment": 6750.0,
+      "unbalanced": 0.0
+     },
+     {
+      "from": 125.0,
+      "to": 300.0,
+      "forward": true,
+      "volume": 500.0,
+      "moment": 43750.0,
+      "overVolume": 357.14285714285717,
+      "overMoment": 22321.428571428572,
+      "unbalanced": 0.0
+     }
+    ],
+    "volume": 800.0,
+    "moment": 62500.0,
+    "overVolume": 537.1428571428571,
+    "overMoment": 29071.428571428572,
+    "waste": 0.0,
+    "borrow": 0.0
+   }
+  },
+  {
+   "name": "Denge çizgisi kaydırılmış",
+   "points": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     100.0,
+     900.0
+    ],
+    [
+     200.0,
+     300.0
+    ],
+    [
+     300.0,
+     700.0
+    ]
+   ],
+   "balance": 300.0,
+   "free": 70.0,
+   "expect": {
+    "balance": [
+     33.333333333333336,
+     200.0
+    ],
+    "loops": [
+     {
+      "from": 0.0,
+      "to": 33.333333333333336,
+      "forward": false,
+      "volume": 0.0,
+      "moment": 0.0,
+      "overVolume": 0.0,
+      "overMoment": 0.0,
+      "unbalanced": 300.0
+     },
+     {
+      "from": 33.333333333333336,
+      "to": 200.0,
+      "forward": true,
+      "volume": 600.0,
+      "moment": 50000.0,
+      "overVolume": 348.0,
+      "overMoment": 16820.0,
+      "unbalanced": 0.0
+     },
+     {
+      "from": 200.0,
+      "to": 300.0,
+      "forward": true,
+      "volume": 0.0,
+      "moment": 0.0,
+      "overVolume": 0.0,
+      "overMoment": 0.0,
+      "unbalanced": 400.0
+     }
+    ],
+    "volume": 600.0,
+    "moment": 50000.0,
+    "overVolume": 348.0,
+    "overMoment": 16820.0,
+    "waste": 400.0,
+    "borrow": 300.0
+   }
+  },
+  {
+   "name": "Döküm alanı: basamak",
+   "points": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     100.0,
+     800.0
+    ],
+    [
+     100.0,
+     200.0
+    ],
+    [
+     200.0,
+     0.0
+    ]
+   ],
+   "balance": 0.0,
+   "free": 30.0,
+   "expect": {
+    "balance": [],
+    "loops": [
+     {
+      "from": 0.0,
+      "to": 200.0,
+      "forward": true,
+      "volume": 800.0,
+      "moment": 50000.0,
+      "overVolume": 560.0,
+      "overMoment": 29600.0,
+      "unbalanced": 0.0
+     }
+    ],
+    "volume": 800.0,
+    "moment": 50000.0,
+    "overVolume": 560.0,
+    "overMoment": 29600.0,
+    "waste": 0.0,
+    "borrow": 0.0
+   }
+  },
+  {
+   "name": "Ödünç alanı: basamak",
+   "points": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     60.0,
+     -400.0
+    ],
+    [
+     60.0,
+     0.0
+    ],
+    [
+     150.0,
+     500.0
+    ],
+    [
+     250.0,
+     0.0
+    ]
+   ],
+   "balance": 0.0,
+   "free": 50.0,
+   "expect": {
+    "balance": [
+     60.0
+    ],
+    "loops": [
+     {
+      "from": 0.0,
+      "to": 60.0,
+      "forward": false,
+      "volume": 400.0,
+      "moment": 12000.0,
+      "overVolume": 66.66666666666667,
+      "overMoment": 333.3333333333333,
+      "unbalanced": 0.0
+     },
+     {
+      "from": 60.0,
+      "to": 250.0,
+      "forward": true,
+      "volume": 500.0,
+      "moment": 47500.0,
+      "overVolume": 368.42105263157896,
+      "overMoment": 25789.473684210527,
+      "unbalanced": 0.0
+     }
+    ],
+    "volume": 900.0,
+    "moment": 59500.0,
+    "overVolume": 435.0877192982456,
+    "overMoment": 26122.80701754386,
+    "waste": 0.0,
+    "borrow": 0.0
+   }
+  },
+  {
+   "name": "Sıfıra değen köşe",
+   "points": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     100.0,
+     500.0
+    ],
+    [
+     150.0,
+     0.0
+    ],
+    [
+     250.0,
+     600.0
+    ],
+    [
+     350.0,
+     0.0
+    ]
+   ],
+   "balance": 0.0,
+   "free": 40.0,
+   "expect": {
+    "balance": [
+     150.0
+    ],
+    "loops": [
+     {
+      "from": 0.0,
+      "to": 150.0,
+      "forward": true,
+      "volume": 500.0,
+      "moment": 37500.0,
+      "overVolume": 366.6666666666667,
+      "overMoment": 20166.666666666668,
+      "unbalanced": 0.0
+     },
+     {
+      "from": 150.0,
+      "to": 350.0,
+      "forward": true,
+      "volume": 600.0,
+      "moment": 60000.0,
+      "overVolume": 480.0,
+      "overMoment": 38400.0,
+      "unbalanced": 0.0
+     }
+    ],
+    "volume": 1100.0,
+    "moment": 97500.0,
+    "overVolume": 846.6666666666666,
+    "overMoment": 58566.666666666664,
+    "waste": 0.0,
+    "borrow": 0.0
+   }
+  },
+  {
+   "name": "Kesirli istasyonlar",
+   "points": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     12.5,
+     137.25
+    ],
+    [
+     40.125,
+     -20.5
+    ],
+    [
+     75.0,
+     0.0
+    ]
+   ],
+   "balance": 0.0,
+   "free": 7.5,
+   "expect": {
+    "balance": [
+     36.53506339144216
+    ],
+    "loops": [
+     {
+      "from": 0.0,
+      "to": 36.53506339144216,
+      "forward": true,
+      "volume": 137.25,
+      "moment": 2507.218725237718,
+      "overVolume": 109.0750112509421,
+      "overMoment": 1583.499933046685,
+      "unbalanced": 0.0
+     },
+     {
+      "from": 36.53506339144216,
+      "to": 75.0,
+      "forward": false,
+      "volume": 20.5,
+      "moment": 394.26560023771793,
+      "overVolume": 16.502853155208552,
+      "overMoment": 255.50490090568584,
+      "unbalanced": 0.0
+     }
+    ],
+    "volume": 157.75,
+    "moment": 2901.484325475436,
+    "overVolume": 125.57786440615065,
+    "overMoment": 1839.004833952371,
+    "waste": 0.0,
+    "borrow": 0.0
+   }
+  },
+  {
+   "name": "Düz: hacim yok",
+   "points": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     100.0,
+     0.0
+    ],
+    [
+     200.0,
+     0.0
+    ]
+   ],
+   "balance": 0.0,
+   "free": 10.0,
+   "expect": {
+    "balance": [
+     100.0
+    ],
+    "loops": [],
+    "volume": 0.0,
+    "moment": 0.0,
+    "overVolume": 0.0,
+    "overMoment": 0.0,
+    "waste": 0.0,
+    "borrow": 0.0
+   }
+  },
+  {
+   "name": "İki nokta",
+   "points": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     50.0,
+     200.0
+    ]
+   ],
+   "balance": 0.0,
+   "free": 10.0,
+   "expect": {
+    "balance": [],
+    "loops": [
+     {
+      "from": 0.0,
+      "to": 50.0,
+      "forward": true,
+      "volume": 0.0,
+      "moment": 0.0,
+      "overVolume": 0.0,
+      "overMoment": 0.0,
+      "unbalanced": 200.0
+     }
+    ],
+    "volume": 0.0,
+    "moment": 0.0,
+    "overVolume": 0.0,
+    "overMoment": 0.0,
+    "waste": 200.0,
+    "borrow": 0.0
+   }
+  },
+  {
+   "name": "Rastgele 1",
+   "points": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     8.0,
+     -243.0
+    ],
+    [
+     43.0,
+     -479.0
+    ],
+    [
+     58.0,
+     -679.0
+    ],
+    [
+     73.0,
+     -354.0
+    ],
+    [
+     93.0,
+     -716.0
+    ],
+    [
+     130.0,
+     -1038.0
+    ],
+    [
+     130.0,
+     -920.0
+    ],
+    [
+     168.0,
+     -883.0
+    ],
+    [
+     205.0,
+     -1053.0
+    ],
+    [
+     240.0,
+     -1281.0
+    ],
+    [
+     251.0,
+     -1416.0
+    ],
+    [
+     270.0,
+     -1564.0
+    ]
+   ],
+   "balance": 0.0,
+   "free": 60.0,
+   "expect": {
+    "balance": [],
+    "loops": [
+     {
+      "from": 0.0,
+      "to": 270.0,
+      "forward": false,
+      "volume": 480.0,
+      "moment": 9054.451797557638,
+      "overVolume": 0.0,
+      "overMoment": 0.0,
+      "unbalanced": 1564.0
+     }
+    ],
+    "volume": 480.0,
+    "moment": 9054.451797557638,
+    "overVolume": 0.0,
+    "overMoment": 0.0,
+    "waste": 0.0,
+    "borrow": 1564.0
+   }
+  },
+  {
+   "name": "Rastgele 2",
+   "points": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     21.0,
+     -67.0
+    ],
+    [
+     29.0,
+     -233.0
+    ],
+    [
+     57.0,
+     -418.0
+    ],
+    [
+     63.0,
+     -277.0
+    ],
+    [
+     63.0,
+     -359.0
+    ],
+    [
+     98.0,
+     -530.0
+    ],
+    [
+     114.0,
+     -365.0
+    ],
+    [
+     122.0,
+     -210.0
+    ],
+    [
+     156.0,
+     -549.0
+    ]
+   ],
+   "balance": -110.0,
+   "free": 25.0,
+   "expect": {
+    "balance": [
+     23.072289156626507
+    ],
+    "loops": [
+     {
+      "from": 0.0,
+      "to": 23.072289156626507,
+      "forward": true,
+      "volume": 0.0,
+      "moment": 0.0,
+      "overVolume": 0.0,
+      "overMoment": 0.0,
+      "unbalanced": 110.0
+     },
+     {
+      "from": 23.072289156626507,
+      "to": 156.0,
+      "forward": false,
+      "volume": 461.0,
+      "moment": 16699.246987951807,
+      "overVolume": 249.19254107412178,
+      "overMoment": 7821.840224525285,
+      "unbalanced": 439.0
+     }
+    ],
+    "volume": 461.0,
+    "moment": 16699.246987951807,
+    "overVolume": 249.19254107412178,
+    "overMoment": 7821.840224525285,
+    "waste": 110.0,
+    "borrow": 439.0
+   }
+  },
+  {
+   "name": "Rastgele 3",
+   "points": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     32.0,
+     28.0
+    ],
+    [
+     32.0,
+     171.0
+    ],
+    [
+     52.0,
+     128.0
+    ],
+    [
+     66.0,
+     84.0
+    ],
+    [
+     92.0,
+     390.0
+    ],
+    [
+     92.0,
+     328.0
+    ],
+    [
+     117.0,
+     172.0
+    ],
+    [
+     146.0,
+     123.0
+    ],
+    [
+     146.0,
+     -52.0
+    ],
+    [
+     177.0,
+     -338.0
+    ],
+    [
+     177.0,
+     -154.0
+    ],
+    [
+     214.0,
+     -425.0
+    ],
+    [
+     214.0,
+     -610.0
+    ],
+    [
+     229.0,
+     -666.0
+    ],
+    [
+     229.0,
+     -848.0
+    ],
+    [
+     266.0,
+     -1161.0
+    ],
+    [
+     304.0,
+     -857.0
+    ],
+    [
+     344.0,
+     -737.0
+    ],
+    [
+     344.0,
+     -753.0
+    ]
+   ],
+   "balance": 0.0,
+   "free": 25.0,
+   "expect": {
+    "balance": [
+     146.0
+    ],
+    "loops": [
+     {
+      "from": 0.0,
+      "to": 146.0,
+      "forward": true,
+      "volume": 477.0,
+      "moment": 21611.5,
+      "overVolume": 275.82031192794904,
+      "overMoment": 12551.351236240267,
+      "unbalanced": 0.0
+     },
+     {
+      "from": 146.0,
+      "to": 344.0,
+      "forward": false,
+      "volume": 608.0,
+      "moment": 24468.353146853147,
+      "overVolume": 321.2085385878489,
+      "overMoment": 13318.393267651889,
+      "unbalanced": 737.0
+     }
+    ],
+    "volume": 1085.0,
+    "moment": 46079.853146853144,
+    "overVolume": 597.028850515798,
+    "overMoment": 25869.744503892154,
+    "waste": 0.0,
+    "borrow": 737.0
+   }
+  },
+  {
+   "name": "Rastgele 4",
+   "points": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     8.0,
+     213.0
+    ],
+    [
+     8.0,
+     332.0
+    ],
+    [
+     41.0,
+     438.0
+    ],
+    [
+     41.0,
+     583.0
+    ],
+    [
+     69.0,
+     238.0
+    ],
+    [
+     75.0,
+     -140.0
+    ],
+    [
+     100.0,
+     -462.0
+    ],
+    [
+     140.0,
+     -591.0
+    ],
+    [
+     150.0,
+     -869.0
+    ],
+    [
+     150.0,
+     -946.0
+    ],
+    [
+     169.0,
+     -842.0
+    ],
+    [
+     188.0,
+     -898.0
+    ],
+    [
+     208.0,
+     -610.0
+    ],
+    [
+     234.0,
+     -828.0
+    ],
+    [
+     240.0,
+     -749.0
+    ]
+   ],
+   "balance": 0.0,
+   "free": 0.0,
+   "expect": {
+    "balance": [
+     72.77777777777777
+    ],
+    "loops": [
+     {
+      "from": 0.0,
+      "to": 72.77777777777777,
+      "forward": true,
+      "volume": 583.0,
+      "moment": 25500.555555555555,
+      "overVolume": 583.0,
+      "overMoment": 25500.555555555555,
+      "unbalanced": 0.0
+     },
+     {
+      "from": 72.77777777777777,
+      "to": 240.0,
+      "forward": false,
+      "volume": 471.0,
+      "moment": 15031.662530526039,
+      "overVolume": 471.0,
+      "overMoment": 15031.662530526039,
+      "unbalanced": 749.0
+     }
+    ],
+    "volume": 1054.0,
+    "moment": 40532.21808608159,
+    "overVolume": 1054.0,
+    "overMoment": 40532.21808608159,
+    "waste": 0.0,
+    "borrow": 749.0
+   }
+  },
+  {
+   "name": "Rastgele 5",
+   "points": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     33.0,
+     199.0
+    ],
+    [
+     72.0,
+     181.0
+    ],
+    [
+     102.0,
+     85.0
+    ],
+    [
+     134.0,
+     -162.0
+    ],
+    [
+     153.0,
+     -311.0
+    ],
+    [
+     190.0,
+     85.0
+    ],
+    [
+     207.0,
+     88.0
+    ],
+    [
+     242.0,
+     20.0
+    ],
+    [
+     258.0,
+     -319.0
+    ],
+    [
+     272.0,
+     69.0
+    ],
+    [
+     311.0,
+     293.0
+    ]
+   ],
+   "balance": 0.0,
+   "free": 0.0,
+   "expect": {
+    "balance": [
+     113.01214574898785,
+     182.0580808080808,
+     242.9439528023599,
+     269.5103092783505
+    ],
+    "loops": [
+     {
+      "from": 0.0,
+      "to": 113.01214574898785,
+      "forward": true,
+      "volume": 199.0,
+      "moment": 15151.516194331984,
+      "overVolume": 199.0,
+      "overMoment": 15151.516194331984,
+      "unbalanced": 0.0
+     },
+     {
+      "from": 113.01214574898785,
+      "to": 182.0580808080808,
+      "forward": false,
+      "volume": 311.0,
+      "moment": 10712.047759988549,
+      "overVolume": 311.0,
+      "overMoment": 10712.047759988549,
+      "unbalanced": 0.0
+     },
+     {
+      "from": 182.0580808080808,
+      "to": 242.9439528023599,
+      "forward": true,
+      "volume": 88.0,
+      "moment": 3707.4710936801644,
+      "overVolume": 88.0,
+      "overMoment": 3707.4710936801644,
+      "unbalanced": 0.0
+     },
+     {
+      "from": 242.9439528023599,
+      "to": 269.5103092783505,
+      "forward": false,
+      "volume": 319.0,
+      "moment": 4237.3338579205065,
+      "overVolume": 319.0,
+      "overMoment": 4237.3338579205065,
+      "unbalanced": 0.0
+     },
+     {
+      "from": 269.5103092783505,
+      "to": 311.0,
+      "forward": true,
+      "volume": 0.0,
+      "moment": 0.0,
+      "overVolume": 0.0,
+      "overMoment": 0.0,
+      "unbalanced": 293.0
+     }
+    ],
+    "volume": 917.0,
+    "moment": 33808.368905921205,
+    "overVolume": 917.0,
+    "overMoment": 33808.368905921205,
+    "waste": 293.0,
+    "borrow": 0.0
+   }
+  },
+  {
+   "name": "Rastgele 6",
+   "points": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     6.0,
+     -13.0
+    ],
+    [
+     30.0,
+     118.0
+    ],
+    [
+     66.0,
+     362.0
+    ],
+    [
+     100.0,
+     243.0
+    ],
+    [
+     121.0,
+     361.0
+    ],
+    [
+     151.0,
+     585.0
+    ],
+    [
+     188.0,
+     635.0
+    ]
+   ],
+   "balance": 0.0,
+   "free": 25.0,
+   "expect": {
+    "balance": [
+     8.381679389312977
+    ],
+    "loops": [
+     {
+      "from": 0.0,
+      "to": 8.381679389312977,
+      "forward": false,
+      "volume": 13.0,
+      "moment": 54.48091603053435,
+      "overVolume": 0.0,
+      "overMoment": 0.0,
+      "unbalanced": 0.0
+     },
+     {
+      "from": 8.381679389312977,
+      "to": 188.0,
+      "forward": true,
+      "volume": 119.0,
+      "moment": 3067.6639344262294,
+      "overVolume": 61.2972972972973,
+      "overMoment": 813.9477182100132,
+      "unbalanced": 635.0
+     }
+    ],
+    "volume": 132.0,
+    "moment": 3122.144850456764,
+    "overVolume": 61.2972972972973,
+    "overMoment": 813.9477182100132,
+    "waste": 635.0,
+    "borrow": 0.0
+   }
+  }
+ ]
+}

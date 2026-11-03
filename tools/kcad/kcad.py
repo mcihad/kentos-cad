@@ -495,6 +495,7 @@ SCHEMA_WITH_BLOCK_PUBLICATIONS = 158  # ADR 0856: component family/type/release
 SCHEMA_WITH_BLOCK_PARAMETER_GROUPS = 159  # ADR 0858: ordered property headings
 SCHEMA_WITH_BLOCK_TYPE_VALUES = 160  # ADR 0863: common drawing-type parameter values
 SCHEMA_WITH_LATTICE_ARRAYS = 161  # ADR 0882: independently directed grid axes
+SCHEMA_WITH_ROAD_WORK = 162  # plan/road.md Y1.1: cadWork may be road (KentOS Yol)
 SCHEMA_WITH_INSTANCE_STOREYS = 155
 SCHEDULE_UNIT_FIELDS = ("unitKind", "building", "wing", "recordedArea", "shareWeight")
 UNIT_KINDS = ("unit", "common", "outdoor")
@@ -823,7 +824,7 @@ def field_records_ok(raw, count):
     return at == len(raw)
 
 
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS, SCHEMA_WITH_JOIN_SOURCES, SCHEMA_WITH_DATASETS, SCHEMA_WITH_WITHHELD_FIELDS, SCHEMA_WITH_SPACE_COLUMNS, SCHEMA_WITH_SPACE_SCOPE, SCHEMA_WITH_SPACE_SOURCES, SCHEMA_WITH_SPACE_SEPARATORS, SCHEMA_WITH_SPACE_CHOICES, SCHEMA_WITH_DIMENSION_SETS, SCHEMA_WITH_DIMENSION_SET_EDGES, SCHEMA_WITH_RAILINGS, SCHEMA_WITH_SPACE_VOIDS, SCHEMA_WITH_STAIR_ARCS, SCHEMA_WITH_DIMENSION_CROSS, SCHEMA_WITH_RECESSES, SCHEMA_WITH_LEVEL_STATE, SCHEMA_WITH_DIMENSION_LEVELS, SCHEMA_WITH_SCHEDULE_COLUMNS, SCHEMA_WITH_SLABS, SCHEMA_WITH_RAMP_LEVELS, SCHEMA_WITH_STAIR_LEVELS, SCHEMA_WITH_GRID_COLUMN_FORMS, SCHEMA_WITH_CASEWORK, SCHEMA_WITH_DIMENSION_SET_SPANS, SCHEMA_WITH_DIMENSION_SET_SCALES, SCHEMA_WITH_AUDIT_EXCEPTIONS, SCHEMA_WITH_FIXTURES, SCHEMA_WITH_PROFILE_FILES, SCHEMA_WITH_FIELD_COLUMNS, SCHEMA_WITH_TABLE_CONSTRAINTS, SCHEMA_WITH_CAD_WORK, SCHEMA_WITH_LAYER_INDEXES, SCHEMA_WITH_ARCH_BONDS, SCHEMA_WITH_BUILDING_PARTS, SCHEMA_WITH_OPENING_TYPES, SCHEMA_WITH_BUILDING_PROGRAM, SCHEMA_WITH_VIEW_RECIPES, SCHEMA_WITH_MODULES, SCHEMA_WITH_RECIPE_DETAIL, SCHEMA_WITH_SPECIAL_DOORS, SCHEMA_WITH_MODULE_UNITS, SCHEMA_WITH_VIEW_TEMPLATES, SCHEMA_WITH_PROGRAM_SHARES, SCHEMA_WITH_MATERIALS, SCHEMA_WITH_OPTIONS, SCHEMA_WITH_MULTI_SLIDE, SCHEMA_WITH_UNIT_SCHEDULES, SCHEMA_WITH_MODULE_STOREYS, SCHEMA_WITH_SLIDE_MORE, SCHEMA_WITH_OPTION_COMBOS, SCHEMA_WITH_INSTANCE_STOREYS, SCHEMA_WITH_ARC_EDGE_BONDS, SCHEMA_WITH_BLOCK_PUBLICATIONS, SCHEMA_WITH_BLOCK_PARAMETER_GROUPS, SCHEMA_WITH_BLOCK_TYPE_VALUES, SCHEMA_WITH_LATTICE_ARRAYS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS, SCHEMA_WITH_JOIN_SOURCES, SCHEMA_WITH_DATASETS, SCHEMA_WITH_WITHHELD_FIELDS, SCHEMA_WITH_SPACE_COLUMNS, SCHEMA_WITH_SPACE_SCOPE, SCHEMA_WITH_SPACE_SOURCES, SCHEMA_WITH_SPACE_SEPARATORS, SCHEMA_WITH_SPACE_CHOICES, SCHEMA_WITH_DIMENSION_SETS, SCHEMA_WITH_DIMENSION_SET_EDGES, SCHEMA_WITH_RAILINGS, SCHEMA_WITH_SPACE_VOIDS, SCHEMA_WITH_STAIR_ARCS, SCHEMA_WITH_DIMENSION_CROSS, SCHEMA_WITH_RECESSES, SCHEMA_WITH_LEVEL_STATE, SCHEMA_WITH_DIMENSION_LEVELS, SCHEMA_WITH_SCHEDULE_COLUMNS, SCHEMA_WITH_SLABS, SCHEMA_WITH_RAMP_LEVELS, SCHEMA_WITH_STAIR_LEVELS, SCHEMA_WITH_GRID_COLUMN_FORMS, SCHEMA_WITH_CASEWORK, SCHEMA_WITH_DIMENSION_SET_SPANS, SCHEMA_WITH_DIMENSION_SET_SCALES, SCHEMA_WITH_AUDIT_EXCEPTIONS, SCHEMA_WITH_FIXTURES, SCHEMA_WITH_PROFILE_FILES, SCHEMA_WITH_FIELD_COLUMNS, SCHEMA_WITH_TABLE_CONSTRAINTS, SCHEMA_WITH_CAD_WORK, SCHEMA_WITH_LAYER_INDEXES, SCHEMA_WITH_ARCH_BONDS, SCHEMA_WITH_BUILDING_PARTS, SCHEMA_WITH_OPENING_TYPES, SCHEMA_WITH_BUILDING_PROGRAM, SCHEMA_WITH_VIEW_RECIPES, SCHEMA_WITH_MODULES, SCHEMA_WITH_RECIPE_DETAIL, SCHEMA_WITH_SPECIAL_DOORS, SCHEMA_WITH_MODULE_UNITS, SCHEMA_WITH_VIEW_TEMPLATES, SCHEMA_WITH_PROGRAM_SHARES, SCHEMA_WITH_MATERIALS, SCHEMA_WITH_OPTIONS, SCHEMA_WITH_MULTI_SLIDE, SCHEMA_WITH_UNIT_SCHEDULES, SCHEMA_WITH_MODULE_STOREYS, SCHEMA_WITH_SLIDE_MORE, SCHEMA_WITH_OPTION_COMBOS, SCHEMA_WITH_INSTANCE_STOREYS, SCHEMA_WITH_ARC_EDGE_BONDS, SCHEMA_WITH_BLOCK_PUBLICATIONS, SCHEMA_WITH_BLOCK_PARAMETER_GROUPS, SCHEMA_WITH_BLOCK_TYPE_VALUES, SCHEMA_WITH_LATTICE_ARRAYS, SCHEMA_WITH_ROAD_WORK)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -3442,6 +3443,7 @@ class _Schema:
         self.field_columns = version >= SCHEMA_WITH_FIELD_COLUMNS
         self.table_constraints = version >= SCHEMA_WITH_TABLE_CONSTRAINTS
         self.cad_work = version >= SCHEMA_WITH_CAD_WORK
+        self.road_work = version >= SCHEMA_WITH_ROAD_WORK
         self.layer_indexes = version >= SCHEMA_WITH_LAYER_INDEXES
         self.arc_edge_bonds = version >= SCHEMA_WITH_ARC_EDGE_BONDS
         self.block_publications = version >= SCHEMA_WITH_BLOCK_PUBLICATIONS
@@ -4248,7 +4250,7 @@ class _Schema:
                 "angleUnit": (self.enum(("grad", "deg")), True),
                 "plotScale": (self.float, True),
                 "workspace": (self.enum(("hybrid", "cad", "gis", "plan3d", "disaster")), False),
-                **({"cadWork": (self.enum(("architecture", "map", "detail")), False)} if self.cad_work else {}),
+                **({"cadWork": (self.enum(("architecture", "map", "detail") + (("road",) if self.road_work else ())), False)} if self.cad_work else {}),
                 **({"secondSrid": (self.uint(32), False)} if self.second_srid else {}),
                 "drawingFont": (self.enum(("barlow", "arimo", "overpass", "quicksand", "architects-daughter", "courier-prime", "plex-mono")), False),
                 **({"drawingUnit": (self.enum(("mm", "cm", "m", "in", "ft") if self.imperial else ("mm", "cm", "m")), False)} if self.drawing_unit else {}),
@@ -4292,8 +4294,13 @@ class _Schema:
                 **({"mapSrid": (self.uint(32), False)} if self.source_crs else {}),
                 **({"autoSelect": (self.bool, False)} if self.layer_geometry else {}),
                 **({"heights": (self.heights_, False), "coordinateEpoch": (self.epoch_, False)} if self.heights else {}),
+                **({"road": (self.road_, False)} if self.road_work else {}),
             }
         )(v)
+        # A road's settings are a road project's (plan/road.md Y2.2).
+        if "road" in s and s.get("cadWork") != "road":
+            self.path.append("road")
+            self.fail("bad_value", "yol ayarları yalnız yol projesinin olur (cadWork road)")
         # A second coordinate system is another system than the project's own; a project without one has none (a
         # definition of its own is one, docs/adr/0168 §1).
         has_system = s["srid"] != 0 or "customCrs" in s
@@ -9361,6 +9368,665 @@ class _Schema:
         if len(blocks) != len(set(blocks)):
             self.fail("bad_value", "bir bloğun kullanım alanı bir kez yazılır")
         return p
+
+    def road_(self, v):
+        """A road project's terrain surfaces' definitions (plan/road.md Y2.2): what each is made of, never its
+        triangles; ids and names (case aside) unique, points or breaklines named, the boundary no void."""
+        def word(x):
+            t = self.text(x)
+            if not t or len(t) > 64 or any(c.isspace() for c in t):
+                self.fail("bad_value", "boş olmayan, boşluksuz, en çok 64 karakterlik bir kimlik olmalı")
+            return t
+
+        def words(x):
+            got = self.array(word)(x)
+            if len(set(got)) != len(got):
+                self.fail("bad_value", "bir kimlik iki kez yazılmış")
+            return got
+
+        def positive(most):
+            def read(x):
+                f = self.float(x)
+                if not (f > 0 and (most is None or f <= most)):
+                    self.fail("bad_value", "0'dan büyük olmalı" + (f", en çok {most}" if most else ""))
+                return f
+            return read
+
+        def digest(x):
+            t = self.text(x)
+            if len(t) != 64 or any(c not in "0123456789abcdef" for c in t):
+                self.fail("bad_value", "özet 64 küçük onaltılık rakam olmalı")
+            return t
+
+        sources = self.fields({"layers": (words, False), "uids": (words, False)})
+
+        def nonempty_sources(x):
+            got = sources(x)
+            if not got:
+                self.fail("bad_value", "boş kaynak yazılmaz")
+            return got
+
+        def surface(x):
+            t = self.fields({"id": (word, True), "name": (self.text, True), "points": (nonempty_sources, False),
+                             "breaklines": (nonempty_sources, False), "boundary": (word, False),
+                             "voids": (words, False), "tolerance": (positive(1.0), False),
+                             "maxEdge": (positive(None), False), "built": (digest, False)})(x)
+            name = t["name"]
+            if not name or name.strip() != name or len(name) > 120:
+                self.fail("bad_value", "yüzeyin adı boş, boşluklu ya da çok uzun")
+            if "points" not in t and "breaklines" not in t:
+                self.fail("bad_value", "yüzeyin noktası ya da kırık hattı olmalı")
+            if "boundary" in t and t["boundary"] in t.get("voids", []):
+                self.fail("bad_value", "sınır aynı zamanda boşluk olamaz")
+            if "voids" in t and not t["voids"]:
+                self.fail("bad_value", "boş boşluk listesi yazılmaz")
+            return t
+
+        def finite(x):
+            f = self.float(x)
+            if not math.isfinite(f):
+                self.fail("bad_value", "sonlu bir sayı olmalı")
+            return f
+
+        def not_negative(x):
+            f = finite(x)
+            if f < 0:
+                self.fail("bad_value", "eksi olamaz")
+            return f
+
+        def pi(x):
+            return self.fields({"id": (word, True), "x": (finite, True), "y": (finite, True),
+                                "radius": (not_negative, False), "spiralIn": (not_negative, False),
+                                "spiralOut": (not_negative, False)})(x)
+
+        equation = self.fields({"back": (finite, True), "ahead": (finite, True), "increasing": (self.bool, False)})
+
+        def alignment(x):
+            # Docs/adr/0901: an alignment of its PIs or a parallel axis of one; its km; its revision.
+            t = self.fields({"id": (word, True), "name": (self.text, True), "revision": (self.uint(32), False),
+                             "pis": (self.array(pi), False),
+                             "offsetOf": (self.fields({"alignment": (word, True), "offset": (finite, True)}), False),
+                             "stationing": (self.fields({"start": (finite, False),
+                                                         "equations": (self.array(equation), False)}), False)})(x)
+            name = t["name"]
+            if not name or name.strip() != name or len(name) > 120:
+                self.fail("bad_value", "aksın adı boş, boşluklu ya da çok uzun")
+            pis = t.get("pis", [])
+            if ("offsetOf" in t) == bool(pis):
+                self.fail("bad_value", "aks ya PI'larıyla ya bir aksa paralel kurulur")
+            if pis and not 2 <= len(pis) <= 10000:
+                self.fail("bad_value", "aksın 2 ile 10000 arası noktası olur")
+            if len({p["id"] for p in pis}) != len(pis):
+                self.fail("bad_value", "aksta iki noktanın kimliği aynı")
+            if "offsetOf" in t:
+                if "stationing" in t:
+                    self.fail("bad_value", "paralel aksın km'si kaynağınındır")
+                if not (t["offsetOf"]["offset"] != 0 and abs(t["offsetOf"]["offset"]) <= 1000):
+                    self.fail("bad_value", "öteleme 0 olmayan, en çok 1000 m bir sayı olmalı")
+            return t
+
+        def pvi(x):
+            t = self.fields({"id": (word, True), "station": (finite, True), "elevation": (finite, True),
+                             "length": (not_negative, False), "lengthIn": (not_negative, False),
+                             "lengthOut": (not_negative, False), "radius": (not_negative, False)})(x)
+            asym = t.get("lengthIn", 0) > 0 or t.get("lengthOut", 0) > 0
+            if sum([t.get("length", 0) > 0, asym, t.get("radius", 0) > 0]) > 1:
+                self.fail("bad_value", "bir PVI'de tek kurp olur")
+            if asym and not (t.get("lengthIn", 0) > 0 and t.get("lengthOut", 0) > 0):
+                self.fail("bad_value", "asimetrik kurbun iki kolu birlikte verilir")
+            return t
+
+        def profile(x):
+            # Docs/adr/0902: a vertical alignment's PVIs on an alignment, the revision it was made against, a surface.
+            t = self.fields({"id": (word, True), "name": (self.text, True), "alignment": (word, True),
+                             "alignmentRevision": (self.uint(32), False), "revision": (self.uint(32), False),
+                             "pvis": (self.array(pvi), True), "surface": (word, False)})(x)
+            name = t["name"]
+            if not name or name.strip() != name or len(name) > 120:
+                self.fail("bad_value", "boykesitin adı boş, boşluklu ya da çok uzun")
+            if not 2 <= len(t["pvis"]) <= 10000:
+                self.fail("bad_value", "boykesitin 2 ile 10000 arası PVI'si olur")
+            if len({p["id"] for p in t["pvis"]}) != len(t["pvis"]):
+                self.fail("bad_value", "boykesitte iki PVI'nin kimliği aynı")
+            return t
+
+        def side(x):
+            # Docs/adr/0903 §3: a template's side, its components outward from the axis and its end condition.
+            comp = self.fields({"kind": (self.enum(("lane", "shoulder")), True), "width": (finite, True),
+                                "slope": (finite, True)})
+            ditch = self.fields({"fore": (finite, True), "depth": (finite, True), "bottom": (finite, False)})
+            t = self.fields({"components": (self.array(comp), False), "cut": (finite, True), "fill": (finite, True),
+                             "ditch": (ditch, False)})(x)
+            if len(t.get("components", [])) > 32:
+                self.fail("bad_value", "bir yanda en çok 32 bileşen olur")
+            for c in t.get("components", []):
+                if not c["width"] > 0 or abs(c["slope"]) > 100:
+                    self.fail("bad_value", "bileşenin genişliği 0'dan büyük, enine eğimi en çok %100 olur")
+            d = t.get("ditch")
+            if not (t["cut"] > 0 and t["fill"] > 0) or (d and not (d["fore"] > 0 and d["depth"] > 0 and d.get("bottom", 0) >= 0)):
+                self.fail("bad_value", "şevler ve hendeğin iç şevi ile derinliği 0'dan büyük, tabanı eksi olmamalı")
+            return t
+
+        def template(x):
+            t = self.fields({"id": (word, True), "name": (self.text, True), "revision": (self.uint(32), False),
+                             "left": (side, True), "right": (side, False)})(x)
+            name = t["name"]
+            if not name or name.strip() != name or len(name) > 120:
+                self.fail("bad_value", "tip kesitin adı boş, boşluklu ya da çok uzun")
+            return t
+
+        def stations(x):
+            # Docs/adr/0903 §2: a range, the stations written, or the lines crossing the alignment.
+            if not isinstance(x, dict) or x.get("method") not in ("range", "stations", "lines"):
+                self.fail("bad_value", "kesit takımının km yöntemi range, stations ya da lines olur")
+            m = x["method"]
+            if m == "range":
+                t = self.fields({"method": (self.text, True), "from": (finite, True), "to": (finite, True),
+                                 "every": (finite, True), "geometry": (self.bool, False)})(x)
+                if not (t["from"] < t["to"] and t["every"] > 0):
+                    self.fail("bad_value", "km aralığının başı sonundan küçük, aralığı 0'dan büyük olmalı")
+                return t
+            if m == "stations":
+                t = self.fields({"method": (self.text, True), "stations": (self.array(finite), True)})(x)
+                if not 1 <= len(t["stations"]) <= 10000:
+                    self.fail("bad_value", "1 ile 10000 arası km olur")
+                return t
+            t = self.fields({"method": (self.text, True), "uids": (self.array(self.text), True)})(x)
+            if not 1 <= len(t["uids"]) <= 10000:
+                self.fail("bad_value", "1 ile 10000 arası çizgi olur")
+            return t
+
+        def section_set(x):
+            t = self.fields({"id": (word, True), "name": (self.text, True), "alignment": (word, True),
+                             "alignmentRevision": (self.uint(32), False), "revision": (self.uint(32), False),
+                             "profile": (word, False), "template": (word, False), "surface": (word, False),
+                             "superelevation": (word, False),
+                             "left": (finite, True), "right": (finite, True), "stations": (stations, True)})(x)
+            name = t["name"]
+            if not name or name.strip() != name or len(name) > 120:
+                self.fail("bad_value", "kesit takımının adı boş, boşluklu ya da çok uzun")
+            if not (0 < t["left"] <= 1000 and 0 < t["right"] <= 1000):
+                self.fail("bad_value", "şerit genişliği 0'dan büyük, en çok 1000 m olmalı")
+            return t
+
+        def super_method(x):
+            # Docs/adr/0904 §2: from the curves or from rows of stations.
+            if not isinstance(x, dict) or x.get("method") not in ("curves", "stations"):
+                self.fail("bad_value", "dever çizelgesinin yöntemi curves ya da stations olur")
+            if x["method"] == "curves":
+                curve = self.fields({"pi": (word, True), "rate": (finite, True), "runoff": (finite, True),
+                                     "onTangent": (finite, True), "widening": (finite, False)})
+                t = self.fields({"method": (self.text, True), "curves": (self.array(curve), True)})(x)
+                if not 1 <= len(t["curves"]) <= 10000:
+                    self.fail("bad_value", "1 ile 10000 arası kurp olur")
+                return t
+            row = self.fields({"station": (finite, True), "left": (finite, True), "right": (finite, True)})
+            t = self.fields({"method": (self.text, True), "rows": (self.array(row), True)})(x)
+            if not 1 <= len(t["rows"]) <= 10000:
+                self.fail("bad_value", "1 ile 10000 arası satır olur")
+            return t
+
+        def superelevation(x):
+            t = self.fields({"id": (word, True), "name": (self.text, True), "alignment": (word, True),
+                             "alignmentRevision": (self.uint(32), False), "revision": (self.uint(32), False),
+                             "normalLeft": (finite, True), "normalRight": (finite, True),
+                             "method": (super_method, True)})(x)
+            name = t["name"]
+            if not name or name.strip() != name or len(name) > 120:
+                self.fail("bad_value", "dever çizelgesinin adı boş, boşluklu ya da çok uzun")
+            if abs(t["normalLeft"]) > 100 or abs(t["normalRight"]) > 100:
+                self.fail("bad_value", "normal enine eğim en çok %100 olur")
+            return t
+
+        def corridor_region(x):
+            return self.fields({"from": (finite, True), "to": (finite, True), "template": (word, True)})(x)
+
+        def corridor(x):
+            # Docs/adr/0905 §1: an alignment's regions with their templates and how often it is sampled.
+            t = self.fields({"id": (word, True), "name": (self.text, True), "alignment": (word, True),
+                             "alignmentRevision": (self.uint(32), False), "revision": (self.uint(32), False),
+                             "profile": (word, True), "surface": (word, True), "superelevation": (word, False),
+                             "left": (finite, True), "right": (finite, True), "tangent": (finite, True),
+                             "curve": (finite, True), "sag": (finite, False), "profilePoints": (self.bool, False),
+                             "critical": (self.bool, False), "stations": (self.array(finite), False),
+                             "regions": (self.array(corridor_region), True)})(x)
+            name = t["name"]
+            if not name or name.strip() != name or len(name) > 120:
+                self.fail("bad_value", "koridorun adı boş, boşluklu ya da çok uzun")
+            if not (0 < t["left"] <= 1000 and 0 < t["right"] <= 1000):
+                self.fail("bad_value", "arama genişliği 0'dan büyük, en çok 1000 m olmalı")
+            if not (0 < t["tangent"] <= 1000 and 0 < t["curve"] <= 1000):
+                self.fail("bad_value", "aralık 0'dan büyük, en çok 1000 m olur")
+            if "sag" in t and not 0 < t["sag"] <= 10:
+                self.fail("bad_value", "sapma toleransı 0'dan büyük, en çok 10 m olur")
+            if not 1 <= len(t["regions"]) <= 256:
+                self.fail("bad_value", "1 ile 256 arası bölge olur")
+            return t
+
+        def volume_factor(x):
+            t = self.fields({"from": (finite, True), "to": (finite, True), "cut": (finite, False),
+                             "fill": (finite, False)})(x)
+            if not t["to"] > t["from"]:
+                self.fail("bad_value", "katsayı satırının sonu başından sonra olmalı")
+            if any(not 0 < t[k] <= 10 for k in ("cut", "fill") if k in t):
+                self.fail("bad_value", "katsayı 0'dan büyük, en çok 10 olur")
+            return t
+
+        def volume_strip(x):
+            t = self.fields({"from": (finite, True), "to": (finite, True), "depth": (finite, True)})(x)
+            if not t["to"] > t["from"]:
+                self.fail("bad_value", "sıyırma satırının sonu başından sonra olmalı")
+            if not 0 < t["depth"] <= 5:
+                self.fail("bad_value", "bitkisel toprak kalınlığı 0'dan büyük, en çok 5 m olur")
+            return t
+
+        def volume_bench(x):
+            t = self.fields({"slope": (finite, True), "height": (finite, True)})(x)
+            if not (0 < t["slope"] <= 1000 and 0 < t["height"] <= 10):
+                self.fail("bad_value", "diş kazısının eğimi ya da basamak yüksekliği aralığın dışında")
+            return t
+
+        def volume_approval(x):
+            # Docs/adr/0906 §5: the figures as approved.
+            t = self.fields({"revision": (self.uint(32), True), "at": (self.text, True), "note": (self.text, False),
+                             "cut": (finite, True), "fill": (finite, True), "factoredCut": (finite, True),
+                             "factoredFill": (finite, True), "strip": (finite, False), "bench": (finite, False),
+                             "rows": (self.array(self.array(finite)), True)})(x)
+            if not re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}", t["at"]):
+                self.fail("bad_value", "onay günü YYYY-AA-GG biçiminde olmalı")
+            if len(t.get("note", "")) > 500 or len(t["rows"]) > 20000 or any(len(r) != 4 for r in t["rows"]):
+                self.fail("bad_value", "onayın notu ya da satırları kuralın dışında")
+            return t
+
+        def volume(x):
+            # Docs/adr/0906 §4, §6: a corridor's earthwork volume by a method, its factors, topsoil and benches.
+            t = self.fields({"id": (word, True), "name": (self.text, True), "corridor": (word, True),
+                             "revision": (self.uint(32), False),
+                             "method": (self.enum(("endArea", "prismoidal", "surfaces")), True),
+                             "factors": (self.array(volume_factor), False),
+                             "strip": (self.array(volume_strip), False), "bench": (volume_bench, False),
+                             "approved": (volume_approval, False)})(x)
+            strips = t.get("strip", [])
+            if len(strips) > 1000 or any(b["from"] < a["to"] for a, b in zip(strips, strips[1:])):
+                self.fail("bad_value", "sıyırma satırları artan km'lerle, birbirine binmeden, en çok 1000")
+            if t["method"] == "surfaces" and ("strip" in t or "bench" in t):
+                self.fail("bad_value", "sıyırma ve diş kazısı yalnız kesit yöntemleriyle")
+            name = t["name"]
+            if not name or name.strip() != name or len(name) > 120:
+                self.fail("bad_value", "kübaj hesabının adı boş, boşluklu ya da çok uzun")
+            rows = t.get("factors", [])
+            if len(rows) > 1000 or any(b["from"] < a["to"] for a, b in zip(rows, rows[1:])):
+                self.fail("bad_value", "katsayı satırları artan km'lerle, birbirine binmeden, en çok 1000")
+            return t
+
+        def haul_site(x):
+            t = self.fields({"name": (self.text, True), "kind": (self.enum(("borrow", "waste")), True),
+                             "station": (finite, True), "volume": (finite, True)})(x)
+            if not t["name"] or t["name"].strip() != t["name"] or not 0 < t["volume"] <= 1e12:
+                self.fail("bad_value", "ödünç ya da döküm alanının adı ya da hacmi kuralın dışında")
+            return t
+
+        def haul_cost(x):
+            t = self.fields({"currency": (self.text, True), "overhaul": (finite, False), "waste": (finite, False),
+                             "borrow": (finite, False), "payload": (finite, False)})(x)
+            cur = t["currency"]
+            if not cur or cur.strip() != cur or len(cur) > 12:
+                self.fail("bad_value", "para birimi boş, boşluklu ya da çok uzun")
+            if any(not 0 <= t[k] <= 1e9 for k in ("overhaul", "waste", "borrow") if k in t):
+                self.fail("bad_value", "birim fiyat 0 ya da daha büyük olmalı")
+            if "payload" in t and not 0 < t["payload"] <= 1000:
+                self.fail("bad_value", "kamyon yükü 0'dan büyük, en çok 1000 m³ olur")
+            return t
+
+        def haul(x):
+            # Docs/adr/0907: a volume's mass haul diagram, its balance line, free haul, sites and prices.
+            t = self.fields({"id": (word, True), "name": (self.text, True), "volume": (word, True),
+                             "revision": (self.uint(32), False), "balance": (finite, False), "free": (finite, False),
+                             "sites": (self.array(haul_site), False), "cost": (haul_cost, False)})(x)
+            name = t["name"]
+            if not name or name.strip() != name or len(name) > 120:
+                self.fail("bad_value", "Brüknerin adı boş, boşluklu ya da çok uzun")
+            if "free" in t and not 0 < t["free"] <= 100000:
+                self.fail("bad_value", "serbest taşıma 0'dan büyük, en çok 100 km olur")
+            if len(t.get("sites", [])) > 64:
+                self.fail("bad_value", "en çok 64 ödünç ve döküm alanı olur")
+            return t
+
+        def road_sheet(x):
+            t = self.fields({"sheet": (word, True), "from": (finite, True), "to": (finite, True),
+                             "view": (self.array(self.array(finite)), False)})(x)
+            if not t["from"] <= t["to"]:
+                self.fail("bad_value", "paftanın aralığının başı sonundan sonra olamaz")
+            if "view" in t and (len(t["view"]) != 2 or any(len(c) != 2 for c in t["view"])):
+                self.fail("bad_value", "boykesit görünümünün çerçevesi iki köşedir")
+            return t
+
+        def sheet_set(x):
+            # Docs/adr/0908 §10: a plan–profile sheet set along an alignment, with its sources' revisions.
+            t = self.fields({"id": (word, True), "name": (self.text, True), "alignment": (word, True),
+                             "alignmentRevision": (self.uint(32), False), "profile": (word, False),
+                             "profileRevision": (self.uint(32), False), "sections": (word, False),
+                             "sectionsRevision": (self.uint(32), False), "from": (finite, True), "to": (finite, True),
+                             "scale": (self.uint(32), True), "overlap": (finite, False),
+                             "sheets": (self.array(road_sheet), True)})(x)
+            name = t["name"]
+            if not name or name.strip() != name or len(name) > 120:
+                self.fail("bad_value", "pafta takımının adı boş, boşluklu ya da çok uzun")
+            if not t["from"] <= t["to"] or not 1 <= t["scale"] <= 1_000_000 or t.get("overlap", 0) < 0:
+                self.fail("bad_value", "pafta takımının aralığı, ölçeği ya da bindirmesi kuralın dışında")
+            if not 1 <= len(t["sheets"]) <= 500 or len({y["sheet"] for y in t["sheets"]}) != len(t["sheets"]):
+                self.fail("bad_value", "pafta takımında 1 ile 500 arası, kimlikleri tek pafta olur")
+            return t
+
+        def guardrail(x):
+            # Docs/adr/0909 §1: a guardrail along a corridor by the project's own rule, with its source.
+            warrant = self.fields({"height": (finite, True), "slope": (finite, False)})
+            rule = self.fields({"source": (self.text, True), "warrants": (self.array(warrant), True),
+                                "approach": (finite, True), "leaving": (finite, True), "gap": (finite, True)})
+            t = self.fields({"id": (word, True), "name": (self.text, True), "corridor": (word, True),
+                             "corridorRevision": (self.uint(32), False), "revision": (self.uint(32), False),
+                             "rule": (rule, True), "step": (finite, True), "offset": (finite, False)})(x)
+            name, r = t["name"], t["rule"]
+            if not name or name.strip() != name or len(name) > 120:
+                self.fail("bad_value", "otokorkuluğun adı boş, boşluklu ya da çok uzun")
+            if not r["source"] or r["source"].strip() != r["source"] or len(r["source"]) > 200:
+                self.fail("bad_value", "otokorkuluk kuralının kaynağı boş, boşluklu ya da çok uzun")
+            if not 1 <= len(r["warrants"]) <= 32 or any(not 0 <= w["height"] <= 1000 or not 0 < w.get("slope", 1) <= 1000
+                                                         for w in r["warrants"]):
+                self.fail("bad_value", "otokorkuluk kuralının satırları kuralın dışında")
+            if any(not 0 <= r[f] <= 10_000 for f in ("approach", "leaving", "gap")) or not 0 < t["step"] <= 1000 \
+                    or abs(t.get("offset", 0)) > 100:
+                self.fail("bad_value", "otokorkuluğun uzunlukları, okuma aralığı ya da uzaklığı kuralın dışında")
+            return t
+
+        def culvert(x):
+            # Docs/adr/0909 §2: a culvert across a corridor, a pipe or box barrel of the project's sizes.
+            def shape(y):
+                if not isinstance(y, dict) or y.get("kind") not in ("pipe", "box"):
+                    self.fail("bad_value", "menfezin kesiti boru ya da kutudur")
+                if y["kind"] == "pipe":
+                    s = self.fields({"kind": (self.text, True), "diameter": (finite, True), "thickness": (finite, True),
+                                     "count": (self.uint(32), True), "spacing": (finite, False)})(y)
+                    sizes, n = [s["diameter"], s["thickness"]], s["count"]
+                    if not 0 <= s.get("spacing", 0) <= 100:
+                        self.fail("bad_value", "borular arası boşluk kuralın dışında")
+                else:
+                    s = self.fields({"kind": (self.text, True), "width": (finite, True), "height": (finite, True),
+                                     "thickness": (finite, True), "slab": (finite, True), "cells": (self.uint(32), True)})(y)
+                    sizes, n = [s["width"], s["height"], s["thickness"], s["slab"]], s["cells"]
+                if any(not 0 < v <= 100 for v in sizes) or not 1 <= n <= 20:
+                    self.fail("bad_value", "menfezin ölçüleri ya da göz ve boru sayısı kuralın dışında")
+                return s
+            t = self.fields({"id": (word, True), "name": (self.text, True), "corridor": (word, True),
+                             "corridorRevision": (self.uint(32), False), "revision": (self.uint(32), False),
+                             "station": (finite, True), "skew": (finite, False), "shape": (shape, True),
+                             "invert": (finite, True), "slope": (finite, True),
+                             "flow": (self.enum(("right", "left")), True), "extend": (finite, False),
+                             "cover": (finite, False), "material": (self.text, False), "roughness": (finite, False)})(x)
+            name = t["name"]
+            if not name or name.strip() != name or len(name) > 120:
+                self.fail("bad_value", "menfezin adı boş, boşluklu ya da çok uzun")
+            if not abs(t.get("skew", 0)) < 90 or not 0 <= t["slope"] <= 100 or not 0 <= t.get("extend", 0) <= 100 \
+                    or not 0 <= t.get("cover", 0) <= 100 or not 0 < t.get("roughness", 0.5) <= 1:
+                self.fail("bad_value", "menfezin açısı, eğimi, uzatması, örtüsü ya da pürüzlülüğü kuralın dışında")
+            return t
+
+        def wall(x):
+            # Docs/adr/0909 §3: a retaining wall along a corridor's side, a cantilever cross of the project's sizes.
+            def shape(y):
+                s = self.fields({"top": (finite, True), "batter": (finite, False), "footing": (finite, True),
+                                 "base": (finite, True), "toe": (finite, False), "cover": (finite, False),
+                                 "above": (finite, False)})(y)
+                if any(not 0 < s[k] <= 100 for k in ("top", "footing", "base")) or not 0 <= s.get("batter", 0) <= 10 \
+                        or any(not 0 <= s.get(k, 0) <= 100 for k in ("toe", "cover", "above")) \
+                        or s.get("toe", 0) + s["top"] > s["footing"] + 1e-9:
+                    self.fail("bad_value", "istinat duvarının ölçüleri kuralın dışında")
+                return s
+            t = self.fields({"id": (word, True), "name": (self.text, True), "corridor": (word, True),
+                             "corridorRevision": (self.uint(32), False), "revision": (self.uint(32), False),
+                             "side": (self.enum(("left", "right")), True), "from": (finite, True), "to": (finite, True),
+                             "step": (finite, True), "shape": (shape, True), "highest": (finite, False),
+                             "material": (self.text, False)})(x)
+            name = t["name"]
+            if not name or name.strip() != name or len(name) > 120:
+                self.fail("bad_value", "istinat duvarının adı boş, boşluklu ya da çok uzun")
+            if not t["from"] < t["to"] or not 0 < t["step"] <= 1000 or (t["to"] - t["from"]) / t["step"] > 5000 \
+                    or not 0 < t.get("highest", 1) <= 100:
+                self.fail("bad_value", "istinat duvarının km'leri, okuma aralığı ya da en yükseği kuralın dışında")
+            return t
+
+        def junction(x):
+            # Docs/adr/0910 §2: a junction of two alignments, at grade with its curb returns' radii or separated.
+            leg = self.fields({"alignment": (word, True), "alignmentRevision": (self.uint(32), False),
+                               "left": (finite, True), "right": (finite, True)})
+            t = self.fields({"id": (word, True), "name": (self.text, True), "revision": (self.uint(32), False),
+                             "kind": (self.enum(("atGrade", "separated")), True), "legs": (self.array(leg), True),
+                             "at": (self.uint(32), False), "radius": (finite, False),
+                             "radii": (self.array(finite), False)})(x)
+            name = t["name"]
+            if not name or name.strip() != name or len(name) > 120:
+                self.fail("bad_value", "kavşağın adı boş, boşluklu ya da çok uzun")
+            legs = t["legs"]
+            if len(legs) != 2 or legs[0]["alignment"] == legs[1]["alignment"] or t.get("at", 0) > 64 or any(
+                    not 0 < g[k] <= 100 for g in legs for k in ("left", "right")):
+                self.fail("bad_value", "kavşağın iki kolu ayrı akslarda, kenarları (0, 100] m olur")
+            size = lambda v: 0 < v <= 1000  # noqa: E731
+            if t["kind"] == "atGrade":
+                if not size(t.get("radius", 0)) or ("radii" in t and (len(t["radii"]) != 4
+                                                                     or not all(size(v) for v in t["radii"]))):
+                    self.fail("bad_value", "hemzemin kavşağın yarıçapları kuralın dışında")
+            elif "radius" in t or "radii" in t:
+                self.fail("bad_value", "katlı kavşakta dönüş yayı olmaz")
+            return t
+
+        def pay(x):
+            # Docs/adr/0909 §4: the pay item book, the agency's items and the rules giving them KentOS's quantities.
+            measures = ("guardrailLength", "culvertLength", "culvertPipes", "culvertConcrete", "wallLength", "wallFace",
+                        "wallConcrete", "volumeCut", "volumeFill", "volumeFactoredCut", "volumeFactoredFill")
+            item = self.fields({"code": (self.text, True), "name": (self.text, True), "unit": (self.text, True),
+                                "price": (finite, False)})
+            rule = self.fields({"measure": (self.enum(measures), True), "item": (self.text, True),
+                                "factor": (finite, True), "material": (self.text, False)})
+            t = self.fields({"source": (self.text, True), "version": (self.text, True),
+                             "revision": (self.uint(32), False), "currency": (self.text, False),
+                             "items": (self.array(item), True), "rules": (self.array(rule), False)})(x)
+
+            def ok(s, most):
+                return bool(s.strip()) and s.strip() == s and len(s) <= most
+            if not ok(t["source"], 200) or not ok(t["version"], 64) or not ok(t.get("currency", "x"), 12):
+                self.fail("bad_value", "poz defterinin kaynağı, sürümü ya da para birimi kuralın dışında")
+            if not 1 <= len(t["items"]) <= 2000 or len(t.get("rules", [])) > 2000:
+                self.fail("bad_value", "poz defterinde 1 ile 2000 arası poz ve en çok 2000 kural olur")
+            codes = [i["code"] for i in t["items"]]
+            if len(set(codes)) != len(codes) or any(not ok(i["code"], 64) or not ok(i["name"], 300)
+                                                    or not ok(i["unit"], 16) or not 0 <= i.get("price", 0) <= 1e12
+                                                    for i in t["items"]):
+                self.fail("bad_value", "poz defterinin pozları kuralın dışında")
+            for r_ in t.get("rules", []):
+                if r_["item"] not in codes or not 0 < r_["factor"] <= 1e6:
+                    self.fail("bad_value", "poz defterinin kuralı defterde olmayan poza ya da kuralın dışında çarpanla")
+                if "material" in r_ and (not r_["measure"].startswith(("culvert", "wall")) or not ok(r_["material"], 120)):
+                    self.fail("bad_value", "malzeme yalnız menfez ve istinat duvarı ölçülerinde olur")
+            return t
+
+        def drawing(x):
+            # Docs/adr/0911 §1: what a road command drew, its sources' stamps and its objects.
+            commands = ("road.alignments.label", "road.profiles.draw", "road.sections.draw", "road.corridors.draw",
+                        "road.guardrails.draw", "road.culverts.draw", "road.walls.draw", "road.junctions.draw",
+                        "road.terrains.contours")
+            kinds = ("surface", "alignment", "profile", "template", "sections", "superelevation", "corridor",
+                     "guardrail", "culvert", "wall", "junction")
+            source = self.fields({"kind": (self.enum(kinds), True), "id": (self.text, True), "digest": (self.text, True)})
+            t = self.fields({"id": (self.text, True), "command": (self.enum(commands), True), "input": (self.any, True),
+                             "sources": (self.array(source), True), "uids": (self.array(self.text), False),
+                             "digest": (self.text, True)})(x)
+            stamp = lambda s: len(s) == 16 and all(c in "0123456789abcdef" for c in s)  # noqa: E731
+            if not isinstance(t["input"], dict):
+                self.fail("bad_value", "çizimin girdisi bir nesne olur")
+            if not 1 <= len(t["sources"]) <= 256 or not stamp(t["digest"]) or \
+                    any(not stamp(s["digest"]) for s in t["sources"]) or \
+                    len({(s["kind"], s["id"]) for s in t["sources"]}) != len(t["sources"]):
+                self.fail("bad_value", "çizimin 1 ile 256 arası ayrı kaynağı olur, özetleri 16 onaltılık hane")
+            if len(t.get("uids", [])) > 1_000_000:
+                self.fail("bad_value", "çizimin en çok 1 000 000 nesnesi olur")
+            return t
+
+        r = self.fields({"surfaces": (self.array(surface), False), "alignments": (self.array(alignment), False),
+                         "profiles": (self.array(profile), False), "templates": (self.array(template), False),
+                         "sections": (self.array(section_set), False),
+                         "superelevations": (self.array(superelevation), False),
+                         "corridors": (self.array(corridor), False),
+                         "volumes": (self.array(volume), False), "hauls": (self.array(haul), False),
+                         "sheetSets": (self.array(sheet_set), False),
+                         "guardrails": (self.array(guardrail), False),
+                         "culverts": (self.array(culvert), False),
+                         "walls": (self.array(wall), False), "pay": (pay, False),
+                         "junctions": (self.array(junction), False),
+                         "drawings": (self.array(drawing), False), "autoRebuild": (self.bool, False)})(v)
+        got = r.get("surfaces", [])
+        lines = r.get("alignments", [])
+        profiles = r.get("profiles", [])
+        templates = r.get("templates", [])
+        sets = r.get("sections", [])
+        supers = r.get("superelevations", [])
+        corridors = r.get("corridors", [])
+        volumes = r.get("volumes", [])
+        hauls = r.get("hauls", [])
+        sheet_sets = r.get("sheetSets", [])
+        guardrails = r.get("guardrails", [])
+        culverts = r.get("culverts", [])
+        walls = r.get("walls", [])
+        if not (got or lines or profiles or templates or sets or supers or corridors or volumes or hauls or sheet_sets
+                or guardrails or culverts or walls or "pay" in r or r.get("junctions") or r.get("drawings")
+                or r.get("autoRebuild")):
+            self.fail("bad_value", "boş yol ayarı yazılmaz")
+        if len(got) > 64 or ("surfaces" in r and not got):
+            self.fail("bad_value", "yol ayarında 1 ile 64 arası yüzey olur")
+        if len({x["id"] for x in got}) != len(got) or len({x["name"].lower() for x in got}) != len(got):
+            self.fail("bad_value", "iki yüzeyin kimliği ya da adı aynı")
+        if "alignments" in r and not lines or len(lines) > 256:
+            self.fail("bad_value", "yol ayarında 1 ile 256 arası aks olur")
+        if len({x["id"] for x in lines}) != len(lines) or len({x["name"].lower() for x in lines}) != len(lines):
+            self.fail("bad_value", "iki aksın kimliği ya da adı aynı")
+        for x in lines:
+            if "offsetOf" in x:
+                src = next((y for y in lines if y["id"] == x["offsetOf"]["alignment"]), None)
+                if src is None or "offsetOf" in src:
+                    self.fail("bad_value", "paralel aks yalnız PI'larıyla kurulan aksa bağlanır")
+        if "profiles" in r and not profiles or len(profiles) > 256:
+            self.fail("bad_value", "yol ayarında 1 ile 256 arası boykesit olur")
+        if len({x["id"] for x in profiles}) != len(profiles) or len({x["name"].lower() for x in profiles}) != len(profiles):
+            self.fail("bad_value", "iki boykesitin kimliği ya da adı aynı")
+        for x in profiles:
+            src = next((y for y in lines if y["id"] == x["alignment"]), None)
+            if src is None or "offsetOf" in src:
+                self.fail("bad_value", "boykesit yalnız PI'larıyla kurulan aksa bağlanır")
+        if "templates" in r and not templates or len(templates) > 256:
+            self.fail("bad_value", "yol ayarında 1 ile 256 arası tip kesit olur")
+        if len({x["id"] for x in templates}) != len(templates) or len({x["name"].lower() for x in templates}) != len(templates):
+            self.fail("bad_value", "iki tip kesitin kimliği ya da adı aynı")
+        if "sections" in r and not sets or len(sets) > 256:
+            self.fail("bad_value", "yol ayarında 1 ile 256 arası kesit takımı olur")
+        if len({x["id"] for x in sets}) != len(sets) or len({x["name"].lower() for x in sets}) != len(sets):
+            self.fail("bad_value", "iki kesit takımının kimliği ya da adı aynı")
+        for x in sets:
+            src = next((y for y in lines if y["id"] == x["alignment"]), None)
+            if src is None or "offsetOf" in src:
+                self.fail("bad_value", "kesit takımı yalnız PI'larıyla kurulan aksa bağlanır")
+            prof = next((y for y in profiles if y["id"] == x.get("profile")), None) if "profile" in x else None
+            if "profile" in x and (prof is None or prof["alignment"] != x["alignment"]):
+                self.fail("bad_value", "kesit takımının boykesiti projede yok ya da takımın aksında değil")
+            if "template" in x and all(y["id"] != x["template"] for y in templates):
+                self.fail("bad_value", "kesit takımının tip kesiti projede yok")
+            sup = next((y for y in supers if y["id"] == x.get("superelevation")), None) if "superelevation" in x else None
+            if "superelevation" in x and (sup is None or sup["alignment"] != x["alignment"]):
+                self.fail("bad_value", "kesit takımının dever çizelgesi projede yok ya da takımın aksında değil")
+        if "superelevations" in r and not supers or len(supers) > 256:
+            self.fail("bad_value", "yol ayarında 1 ile 256 arası dever çizelgesi olur")
+        if len({x["id"] for x in supers}) != len(supers) or len({x["name"].lower() for x in supers}) != len(supers):
+            self.fail("bad_value", "iki dever çizelgesinin kimliği ya da adı aynı")
+        for x in supers:
+            src = next((y for y in lines if y["id"] == x["alignment"]), None)
+            if src is None or "offsetOf" in src:
+                self.fail("bad_value", "dever çizelgesi yalnız PI'larıyla kurulan aksa bağlanır")
+        if "corridors" in r and not corridors or len(corridors) > 256:
+            self.fail("bad_value", "yol ayarında 1 ile 256 arası koridor olur")
+        if len({x["id"] for x in corridors}) != len(corridors) or len({x["name"].lower() for x in corridors}) != len(corridors):
+            self.fail("bad_value", "iki koridorun kimliği ya da adı aynı")
+        for x in corridors:
+            src = next((y for y in lines if y["id"] == x["alignment"]), None)
+            if src is None or "offsetOf" in src:
+                self.fail("bad_value", "koridor yalnız PI'larıyla kurulan aksa bağlanır")
+            prof = next((y for y in profiles if y["id"] == x["profile"]), None)
+            if prof is None or prof["alignment"] != x["alignment"]:
+                self.fail("bad_value", "koridorun boykesiti projede yok ya da koridorun aksında değil")
+            if "superelevation" in x:
+                sup = next((y for y in supers if y["id"] == x["superelevation"]), None)
+                if sup is None or sup["alignment"] != x["alignment"]:
+                    self.fail("bad_value", "koridorun dever çizelgesi projede yok ya da koridorun aksında değil")
+            if any(all(y["id"] != g["template"] for y in templates) for g in x["regions"]):
+                self.fail("bad_value", "koridor bölgesinin tip kesiti projede yok")
+        if "volumes" in r and not volumes or len(volumes) > 256:
+            self.fail("bad_value", "yol ayarında 1 ile 256 arası kübaj hesabı olur")
+        if len({x["id"] for x in volumes}) != len(volumes) or len({x["name"].lower() for x in volumes}) != len(volumes):
+            self.fail("bad_value", "iki kübaj hesabının kimliği ya da adı aynı")
+        if any(all(y["id"] != x["corridor"] for y in corridors) for x in volumes):
+            self.fail("bad_value", "kübaj hesabının koridoru projede yok")
+        if "hauls" in r and not hauls or len(hauls) > 256:
+            self.fail("bad_value", "yol ayarında 1 ile 256 arası Brükner olur")
+        if len({x["id"] for x in hauls}) != len(hauls) or len({x["name"].lower() for x in hauls}) != len(hauls):
+            self.fail("bad_value", "iki Brüknerin kimliği ya da adı aynı")
+        if any(all(y["id"] != x["volume"] for y in volumes) for x in hauls):
+            self.fail("bad_value", "Brüknerin kübaj hesabı projede yok")
+        if "sheetSets" in r and not sheet_sets or len(sheet_sets) > 256:
+            self.fail("bad_value", "yol ayarında 1 ile 256 arası pafta takımı olur")
+        if len({x["id"] for x in sheet_sets}) != len(sheet_sets) or \
+                len({x["name"].lower() for x in sheet_sets}) != len(sheet_sets):
+            self.fail("bad_value", "iki pafta takımının kimliği ya da adı aynı")
+        for x in sheet_sets:
+            a = next((y for y in lines if y["id"] == x["alignment"]), None)
+            if a is None or "offsetOf" in a:
+                self.fail("bad_value", "pafta takımının aksı projede yok ya da paralel aks")
+            if "profile" in x and all(y["id"] != x["profile"] or y["alignment"] != x["alignment"] for y in profiles):
+                self.fail("bad_value", "pafta takımının boykesiti projede aynı aksta yok")
+            if "sections" in x and all(y["id"] != x["sections"] or y["alignment"] != x["alignment"] for y in sets):
+                self.fail("bad_value", "pafta takımının kesit takımı projede aynı aksta yok")
+        if "guardrails" in r and not guardrails or len(guardrails) > 256:
+            self.fail("bad_value", "yol ayarında 1 ile 256 arası otokorkuluk olur")
+        if len({x["id"] for x in guardrails}) != len(guardrails) or \
+                len({x["name"].lower() for x in guardrails}) != len(guardrails):
+            self.fail("bad_value", "iki otokorkuluğun kimliği ya da adı aynı")
+        if any(all(y["id"] != x["corridor"] for y in corridors) for x in guardrails):
+            self.fail("bad_value", "otokorkuluğun koridoru projede yok")
+        if "culverts" in r and not culverts or len(culverts) > 1000:
+            self.fail("bad_value", "yol ayarında 1 ile 1000 arası menfez olur")
+        if len({x["id"] for x in culverts}) != len(culverts) or \
+                len({x["name"].lower() for x in culverts}) != len(culverts):
+            self.fail("bad_value", "iki menfezin kimliği ya da adı aynı")
+        if any(all(y["id"] != x["corridor"] for y in corridors) for x in culverts):
+            self.fail("bad_value", "menfezin koridoru projede yok")
+        if "walls" in r and not walls or len(walls) > 1000:
+            self.fail("bad_value", "yol ayarında 1 ile 1000 arası istinat duvarı olur")
+        if len({x["id"] for x in walls}) != len(walls) or len({x["name"].lower() for x in walls}) != len(walls):
+            self.fail("bad_value", "iki istinat duvarının kimliği ya da adı aynı")
+        if any(all(y["id"] != x["corridor"] for y in corridors) for x in walls):
+            self.fail("bad_value", "istinat duvarının koridoru projede yok")
+        drawings = r.get("drawings", [])
+        if "drawings" in r and not drawings or len(drawings) > 1000 or \
+                len({d["id"] for d in drawings}) != len(drawings):
+            self.fail("bad_value", "yol ayarında 1 ile 1000 arası, kimlikleri ayrı yol çizimi olur")
+        junctions = r.get("junctions", [])
+        if "junctions" in r and not junctions or len(junctions) > 1000:
+            self.fail("bad_value", "yol ayarında 1 ile 1000 arası kavşak olur")
+        if len({x["id"] for x in junctions}) != len(junctions) or \
+                len({x["name"].lower() for x in junctions}) != len(junctions):
+            self.fail("bad_value", "iki kavşağın kimliği ya da adı aynı")
+        for x in junctions:
+            for g in x["legs"]:
+                a = next((y for y in lines if y["id"] == g["alignment"]), None)
+                if a is None or "offsetOf" in a:
+                    self.fail("bad_value", "kavşağın kolu projede PI'larıyla kurulan bir aks olmalı")
+        return r
 
     def arch_(self, v):
         """The project's levels and the walls' detail (docs/adr/0339 §3); an empty one is not written."""

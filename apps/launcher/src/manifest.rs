@@ -750,7 +750,7 @@ mod tests {
         assert_eq!(web.warnings.len(), 1, "files left out, said");
 
         let soon = read(
-            r#"{"format": "kentos.launcher-app/1", "id": "kentos-yol", "name": "KentOS YOL", "state": "soon"}"#,
+            r#"{"format": "kentos.launcher-app/1", "id": "kentos-afet", "name": "KentOS Afet", "state": "soon"}"#,
             Origin::Builtin,
         )
         .expect("reads")
@@ -813,8 +813,8 @@ mod tests {
                 "http:// ya da https://",
             ),
             (
-                r#"{"format": "kentos.launcher-app/1", "id": "a", "launch": {"kind": "kentos", "module": "yol"}}"#,
-                "“yol” bir KentOS modülü değil",
+                r#"{"format": "kentos.launcher-app/1", "id": "a", "launch": {"kind": "kentos", "module": "afet"}}"#,
+                "“afet” bir KentOS modülü değil",
             ),
         ];
         for (text, want) in cases {

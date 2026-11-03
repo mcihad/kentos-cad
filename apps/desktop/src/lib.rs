@@ -118,6 +118,7 @@ mod blocks_files;
 mod blocks_library;
 mod blocks_panel;
 mod navigator;
+mod road_project_panel;
 mod bottom;
 mod calc;
 mod catalog;
@@ -254,6 +255,73 @@ mod leader_tools;
 mod layer_merge;
 mod joins_window;
 mod event_links_window;
+mod alignment_layer;
+mod alignment_window;
+mod profile_window;
+mod section_window;
+mod superelevation_window;
+mod corridor_window;
+mod volume_window;
+mod haul_window;
+mod stakeout_window;
+mod road_alignment_fit_window;
+mod guardrail_window;
+mod culvert_window;
+mod retaining_wall_window;
+mod pay_window;
+mod route_window;
+mod junction_window;
+mod scene3d_window;
+#[cfg(test)]
+mod junction_window_tests;
+#[cfg(test)]
+mod scene3d_window_tests;
+#[cfg(test)]
+mod road_project_panel_tests;
+#[cfg(test)]
+mod route_window_tests;
+#[cfg(test)]
+mod pay_window_tests;
+#[cfg(test)]
+mod retaining_wall_window_tests;
+#[cfg(test)]
+mod culvert_window_tests;
+#[cfg(test)]
+mod guardrail_window_tests;
+#[cfg(test)]
+mod road_profile_fit_window_tests;
+mod road_profile_fit_window;
+#[cfg(test)]
+mod road_alignment_fit_window_tests;
+mod road_sheets_window;
+mod road_views_window;
+mod road_exchange;
+#[cfg(test)]
+mod alignment_window_tests;
+#[cfg(test)]
+mod profile_window_tests;
+#[cfg(test)]
+mod section_window_tests;
+#[cfg(test)]
+mod superelevation_window_tests;
+#[cfg(test)]
+mod corridor_window_tests;
+#[cfg(test)]
+mod volume_window_tests;
+#[cfg(test)]
+mod haul_window_tests;
+#[cfg(test)]
+mod stakeout_window_tests;
+#[cfg(test)]
+mod road_sheets_window_tests;
+#[cfg(test)]
+mod road_views_window_tests;
+#[cfg(test)]
+mod road_exchange_tests;
+mod terrain_layer;
+mod terrain_window;
+#[cfg(test)]
+mod terrain_window_tests;
 mod program_window;
 mod layer_order;
 mod layer_purge;

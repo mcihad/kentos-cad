@@ -54,18 +54,21 @@ pub enum Panel {
     Sources,
     /// Gezgin: levels, views, sheets and schedules, and where the selected object shows (navigator.rs, docs/adr/0778).
     Navigator,
+    /// Yol projesi: the road project's sources and drawings with their states (road_project_panel.rs, docs/adr/0911 §4).
+    RoadProject,
     Properties,
 }
 
 impl Panel {
     /// Every panel, in the dock's order at start (a module's program docks its own, module_surfaces.rs).
-    pub(crate) const ALL: [Panel; 7] = [
+    pub(crate) const ALL: [Panel; 8] = [
         Panel::Layers,
         Panel::Processing,
         Panel::Blocks,
         Panel::Templates,
         Panel::Sources,
         Panel::Navigator,
+        Panel::RoadProject,
         Panel::Properties,
     ];
 
@@ -77,6 +80,7 @@ impl Panel {
             Panel::Templates => "Şablonlar",
             Panel::Sources => "Kaynaklar",
             Panel::Navigator => "Gezgin",
+            Panel::RoadProject => "Yol projesi",
             Panel::Properties => "Öznitelikler",
         }
     }
@@ -89,6 +93,7 @@ impl Panel {
             Panel::Templates => crate::icons::from_web(Some("templates")),
             Panel::Sources => crate::icons::from_web(Some("dataSources")),
             Panel::Navigator => crate::icons::from_web(Some("navigator")),
+            Panel::RoadProject => crate::icons::from_web(Some("corridorEditor")),
             Panel::Properties => Icon::Properties,
         }
     }
@@ -104,6 +109,7 @@ impl Panel {
             Panel::Templates,
             Panel::Sources,
             Panel::Navigator,
+            Panel::RoadProject,
         ] {
             if crate::module_surfaces::shows_panel_in(program, panel) {
                 docks.dock(panel, Side::Right);
@@ -268,6 +274,46 @@ pub enum Dialog {
     Joins,
     /// Olay bağları (event_links_window.rs, docs/adr/0569); the window is `App::event_links_window`.
     EventLinks,
+    /// Arazi yüzeyleri (terrain_window.rs, plan/road.md Y2.4); the window is `App::terrain_window`.
+    Terrains,
+    /// Güzergâh (alignment_window.rs, plan/road.md Y3); the window is `App::alignment_window`.
+    Alignments,
+    /// Boykesit (profile_window.rs, plan/road.md Y4); the window is `App::profile_window`.
+    Profiles,
+    /// Enkesit (section_window.rs, plan/road.md Y5); the window is `App::section_window`.
+    Sections,
+    /// Dever (superelevation_window.rs, plan/road.md Y6); the window is `App::superelevation_window`.
+    Superelevations,
+    /// Koridor (corridor_window.rs, plan/road.md Y7); the window is `App::corridor_window`.
+    Corridors,
+    /// Kübaj (volume_window.rs, plan/road.md Y8); the window is `App::volume_window`.
+    Volumes,
+    /// Brükner (haul_window.rs, plan/road.md Y9); the window is `App::haul_window`.
+    Hauls,
+    /// Aplikasyon cetveli (stakeout_window.rs, plan/road.md Y10); the window is `App::stakeout_window`.
+    Stakeout,
+    /// Yol paftaları (road_sheets_window.rs, plan/road.md Y10.5); the window is `App::road_sheets_window`.
+    RoadSheets,
+    /// Görünüşler (road_views_window.rs, plan/road.md Y13.4); the window is `App::road_views_window`.
+    RoadViews,
+    /// Çizgiden aks (road_alignment_fit_window.rs, plan/road.md Y10.6); the window is `App::road_alignment_fit_window`.
+    RoadAlignmentFit,
+    /// Çizimden boykesit (road_profile_fit_window.rs, plan/road.md Y10.6b); the window is `App::road_profile_fit_window`.
+    RoadProfileFit,
+    /// Otokorkuluk (guardrail_window.rs, plan/road.md Y11.1); the window is `App::guardrail_window`.
+    Guardrails,
+    /// Menfez (culvert_window.rs, plan/road.md Y11.2); the window is `App::culvert_window`.
+    Culverts,
+    /// İstinat duvarı (retaining_wall_window.rs, plan/road.md Y11.3); the window is `App::retaining_wall_window`.
+    RetainingWalls,
+    /// Poz metrajı (pay_window.rs, plan/road.md Y11.4); the window is `App::pay_window`.
+    Pay,
+    /// Ön güzergâh (route_window.rs, plan/road.md Y12.1); the window is `App::route_window`.
+    Route,
+    /// Kavşak (junction_window.rs, plan/road.md Y12.2); the window is `App::junction_window`.
+    Junctions,
+    /// 3B görünüm (scene3d_window.rs, plan/road.md Y12.3d); the window is `App::scene3d_window`.
+    Scene3d,
     /// Bina programı (program_window.rs, docs/adr/0773); the window is `App::program_window`.
     Program,
     /// Mahalleri birleştir's decision, asked before writing (quantities.rs, docs/adr/0773 §4).
@@ -551,6 +597,7 @@ pub enum Message {
     /// Bloklar panel (blocks_panel.rs).
     BlocksPanel(crate::blocks_panel::Event),
     Navigator(crate::navigator::Event),
+    RoadProject(crate::road_project_panel::Event),
     /// Şablonlar panel (templates_panel.rs).
     TemplatesPanel(crate::templates_panel::Event),
     /// Kaynaklar panel (sources/, docs/adr/0199 §7).
@@ -614,6 +661,52 @@ pub enum Message {
     Joins(crate::joins_window::Event),
     /// An event of Olay bağları (event_links_window.rs, docs/adr/0569).
     EventLinks(crate::event_links_window::Event),
+    /// An event of Arazi yüzeyleri (terrain_window.rs, plan/road.md Y2.4).
+    Terrains(crate::terrain_window::Event),
+    /// An event of Güzergâh (alignment_window.rs, plan/road.md Y3).
+    Alignments(crate::alignment_window::Event),
+    /// An event of Boykesit (profile_window.rs, plan/road.md Y4).
+    Profiles(crate::profile_window::Event),
+    /// An event of Enkesit (section_window.rs, plan/road.md Y5).
+    Sections(crate::section_window::Event),
+    /// An event of Dever (superelevation_window.rs, plan/road.md Y6).
+    Superelevations(crate::superelevation_window::Event),
+    /// An event of Koridor (corridor_window.rs, plan/road.md Y7).
+    Corridors(crate::corridor_window::Event),
+    /// An event of Kübaj (volume_window.rs, plan/road.md Y8).
+    Volumes(crate::volume_window::Event),
+    /// An event of Brükner (haul_window.rs, plan/road.md Y9).
+    Hauls(crate::haul_window::Event),
+    /// An event of Aplikasyon cetveli (stakeout_window.rs, plan/road.md Y10).
+    Stakeout(crate::stakeout_window::Event),
+    /// An event of Yol paftaları (road_sheets_window.rs, plan/road.md Y10.5).
+    RoadSheets(crate::road_sheets_window::Event),
+    RoadViews(crate::road_views_window::Event),
+    /// An event of Çizgiden aks (road_alignment_fit_window.rs, plan/road.md Y10.6).
+    RoadAlignmentFit(crate::road_alignment_fit_window::Event),
+    /// An event of Çizimden boykesit (road_profile_fit_window.rs, plan/road.md Y10.6b).
+    RoadProfileFit(crate::road_profile_fit_window::Event),
+    /// An event of Otokorkuluk (guardrail_window.rs, plan/road.md Y11.1).
+    Guardrails(crate::guardrail_window::Event),
+    /// An event of Menfez (culvert_window.rs, plan/road.md Y11.2).
+    Culverts(crate::culvert_window::Event),
+    /// An event of İstinat duvarı (retaining_wall_window.rs, plan/road.md Y11.3).
+    RetainingWalls(crate::retaining_wall_window::Event),
+    /// An event of Poz metrajı (pay_window.rs, plan/road.md Y11.4).
+    Pay(crate::pay_window::Event),
+    /// An event of Ön güzergâh (route_window.rs, plan/road.md Y12.1).
+    Route(crate::route_window::Event),
+    /// An event of Kavşak (junction_window.rs, plan/road.md Y12.2).
+    Junctions(crate::junction_window::Event),
+    /// An event of 3B görünüm (scene3d_window.rs, plan/road.md Y12.3d).
+    Scene3d(crate::scene3d_window::Event),
+    /// LandXML ver's file, or none when the dialog was closed (road_exchange.rs, plan/road.md Y10.2).
+    LandxmlExport(Option<std::path::PathBuf>),
+    /// LandXML'den aks al's file, or none (road_exchange.rs, plan/road.md Y10.2).
+    LandxmlAlignments(Option<std::path::PathBuf>),
+    /// IFC ver's file, or none (road_exchange.rs, plan/road.md Y10.3).
+    IfcExport(Option<std::path::PathBuf>),
+    GltfExport(Option<std::path::PathBuf>),
     /// An event of Bina programı (program_window.rs, docs/adr/0773).
     Program(crate::program_window::Event),
     TableStyles(crate::forms::table_styles::Event),
@@ -876,6 +969,7 @@ pub struct App {
     /// The Bloklar panel (blocks_panel.rs).
     pub(crate) blocks_panel: crate::blocks_panel::PanelState,
     pub(crate) navigator: crate::navigator::PanelState,
+    pub(crate) road_project: crate::road_project_panel::PanelState,
     /// The Şablonlar panel (templates_panel.rs), and the templates drawn with
     /// in this session, the newest first (templates.rs).
     pub(crate) templates_panel: crate::templates_panel::PanelState,
@@ -1170,6 +1264,45 @@ pub struct App {
     pub(crate) joins_window: Option<crate::joins_window::Window>,
     /// Olay bağları (event_links_window.rs, docs/adr/0569).
     pub(crate) event_links_window: Option<crate::event_links_window::Window>,
+    /// Arazi yüzeyleri (terrain_window.rs, plan/road.md Y2.4).
+    pub(crate) terrain_window: Option<crate::terrain_window::Window>,
+    /// Güzergâh (alignment_window.rs, plan/road.md Y3).
+    pub(crate) alignment_window: Option<crate::alignment_window::Window>,
+    /// Boykesit (profile_window.rs, plan/road.md Y4).
+    pub(crate) profile_window: Option<crate::profile_window::Window>,
+    /// Enkesit (section_window.rs, plan/road.md Y5).
+    pub(crate) section_window: Option<crate::section_window::Window>,
+    /// Dever (superelevation_window.rs, plan/road.md Y6).
+    pub(crate) superelevation_window: Option<Box<crate::superelevation_window::Window>>,
+    /// Koridor (corridor_window.rs, plan/road.md Y7).
+    pub(crate) corridor_window: Option<Box<crate::corridor_window::Window>>,
+    /// Kübaj (volume_window.rs, plan/road.md Y8).
+    pub(crate) volume_window: Option<Box<crate::volume_window::Window>>,
+    /// Brükner (haul_window.rs, plan/road.md Y9).
+    pub(crate) haul_window: Option<Box<crate::haul_window::Window>>,
+    /// Aplikasyon cetveli (stakeout_window.rs, plan/road.md Y10).
+    pub(crate) stakeout_window: Option<Box<crate::stakeout_window::Window>>,
+    /// Yol paftaları (road_sheets_window.rs, plan/road.md Y10.5).
+    pub(crate) road_sheets_window: Option<Box<crate::road_sheets_window::Window>>,
+    pub(crate) road_views_window: Option<Box<crate::road_views_window::Window>>,
+    /// Çizgiden aks (road_alignment_fit_window.rs, plan/road.md Y10.6).
+    pub(crate) road_alignment_fit_window: Option<Box<crate::road_alignment_fit_window::Window>>,
+    /// Çizimden boykesit (road_profile_fit_window.rs, plan/road.md Y10.6b).
+    pub(crate) road_profile_fit_window: Option<Box<crate::road_profile_fit_window::Window>>,
+    /// Otokorkuluk (guardrail_window.rs, plan/road.md Y11.1).
+    pub(crate) guardrail_window: Option<Box<crate::guardrail_window::Window>>,
+    /// Menfez (culvert_window.rs, plan/road.md Y11.2).
+    pub(crate) culvert_window: Option<Box<crate::culvert_window::Window>>,
+    /// İstinat duvarı (retaining_wall_window.rs, plan/road.md Y11.3).
+    pub(crate) retaining_wall_window: Option<Box<crate::retaining_wall_window::Window>>,
+    /// Poz metrajı (pay_window.rs, plan/road.md Y11.4).
+    pub(crate) pay_window: Option<Box<crate::pay_window::Window>>,
+    /// Ön güzergâh (route_window.rs, plan/road.md Y12.1).
+    pub(crate) route_window: Option<Box<crate::route_window::Window>>,
+    /// Kavşak (junction_window.rs, plan/road.md Y12.2).
+    pub(crate) junction_window: Option<Box<crate::junction_window::Window>>,
+    /// 3B görünüm (scene3d_window.rs, plan/road.md Y12.3d).
+    pub(crate) scene3d_window: Option<Box<crate::scene3d_window::Window>>,
     /// Bina programı (program_window.rs, docs/adr/0773).
     pub(crate) program_window: Option<crate::program_window::Window>,
     /// Mahalleri birleştir asked: its input and its decision's words (docs/adr/0773 §4).
@@ -1424,6 +1557,7 @@ impl App {
             blocks: crate::blocks::Blocks::default(),
             blocks_panel: crate::blocks_panel::PanelState::default(),
             navigator: crate::navigator::PanelState::default(),
+            road_project: crate::road_project_panel::PanelState::default(),
             templates_panel: crate::templates_panel::PanelState::default(),
             sources: crate::sources::SourcesPanel::default(),
             db_editor: None,
@@ -1591,6 +1725,26 @@ impl App {
             relations_window: None,
             joins_window: None,
             event_links_window: None,
+            terrain_window: None,
+            alignment_window: None,
+            profile_window: None,
+            section_window: None,
+            superelevation_window: None,
+            corridor_window: None,
+            volume_window: None,
+            haul_window: None,
+            stakeout_window: None,
+            road_sheets_window: None,
+            road_views_window: None,
+            road_alignment_fit_window: None,
+            road_profile_fit_window: None,
+            guardrail_window: None,
+            culvert_window: None,
+            retaining_wall_window: None,
+            pay_window: None,
+            route_window: None,
+            junction_window: None,
+            scene3d_window: None,
             program_window: None,
             space_merging: None,
             table_styles: None,
@@ -2274,6 +2428,7 @@ impl App {
             Message::Blocks(event) => self.blocks_event(event),
             Message::BlocksPanel(event) => return self.blocks_panel_event(event),
             Message::Navigator(event) => return self.navigator_event(event),
+            Message::RoadProject(e) => return self.road_project_event(e),
             Message::TemplatesPanel(event) => return self.templates_panel_event(event),
             Message::Sources(event) => return self.sources_event(event),
             Message::Db(event) => return self.db_event(event),
@@ -2309,6 +2464,30 @@ impl App {
             Message::Relations(event) => return self.relations_event(event),
             Message::Joins(event) => return self.joins_event(event),
             Message::EventLinks(event) => return self.event_links_event(event),
+            Message::Terrains(event) => return self.terrain_event(event),
+            Message::Alignments(event) => return self.alignment_event(event),
+            Message::Profiles(event) => return self.profile_event(event),
+            Message::Sections(event) => return self.section_event(event),
+            Message::Superelevations(event) => return self.superelevation_event(event),
+            Message::Corridors(event) => return self.corridor_event(event),
+            Message::Volumes(event) => return self.volume_event(event),
+            Message::Hauls(event) => return self.haul_event(event),
+            Message::Stakeout(event) => return self.stakeout_event(event),
+            Message::RoadSheets(event) => return self.road_sheets_event(event),
+            Message::RoadViews(event) => return self.road_views_event(event),
+            Message::RoadAlignmentFit(event) => return self.road_alignment_fit_event(event),
+            Message::RoadProfileFit(event) => return self.road_profile_fit_event(event),
+            Message::Guardrails(event) => return self.guardrail_event(event),
+            Message::Culverts(event) => return self.culvert_event(event),
+            Message::RetainingWalls(event) => return self.retaining_wall_event(event),
+            Message::Pay(event) => return self.pay_event(event),
+            Message::Route(event) => return self.route_event(event),
+            Message::Junctions(event) => return self.junction_event(event),
+            Message::Scene3d(event) => return self.scene3d_event(event),
+            Message::LandxmlExport(path) => return self.landxml_chosen(path),
+            Message::LandxmlAlignments(path) => return self.landxml_alignments_chosen(path),
+            Message::IfcExport(path) => return self.ifc_chosen(path),
+            Message::GltfExport(path) => return self.gltf_chosen(path),
             Message::Program(event) => return self.program_event(event),
             Message::TableStyles(event) => return self.table_styles_event(event),
             Message::Subtypes(event) => return self.subtypes_event(event),
@@ -3322,6 +3501,51 @@ impl App {
             "network.subnetworks" => self.open_subnetworks(),
             // Olay bağları (event_links_window.rs, docs/adr/0569 §5).
             "linearRef.eventLinks" => self.open_event_links(),
+            // Arazi yüzeyleri and Yüzey oluştur (terrain_window.rs, plan/road.md Y2.4).
+            "terrain.surfaces" => self.open_terrains(),
+            "terrain.new" => self.new_terrain(),
+            // Güzergâh and Yeni aks (alignment_window.rs, plan/road.md Y3).
+            "alignment.editor" => self.open_alignments(),
+            "alignment.new" => self.new_alignment(),
+            // Boykesit and Boykesit oluştur (profile_window.rs, plan/road.md Y4).
+            "profile.editor" => self.open_profiles(),
+            "profile.new" => self.new_profile(),
+            // Enkesit, Kesit takımı oluştur and Tip kesit oluştur (section_window.rs, plan/road.md Y5).
+            "section.editor" => self.open_sections(),
+            "section.new" => self.new_section_set(),
+            "section.template" => self.new_template(),
+            // Dever and Dever oluştur (superelevation_window.rs, plan/road.md Y6).
+            "superelevation.editor" => self.open_superelevations(),
+            "superelevation.new" => self.new_superelevation(),
+            // Koridor, Koridor oluştur and Şevli plan (corridor_window.rs, plan/road.md Y7).
+            "corridor.editor" => self.open_corridors(),
+            "corridor.new" => self.new_corridor(),
+            "corridor.slopePlan" => self.corridor_slope_plan(),
+            // Kübaj, Kübaj hesabı oluştur and Kübaj cetveli (volume_window.rs, plan/road.md Y8).
+            "volume.editor" => self.open_volumes(),
+            "volume.new" => self.new_volume(),
+            "volume.export" => self.volume_sheet(),
+            // Brükner and Brükner oluştur (haul_window.rs, plan/road.md Y9).
+            "haul.editor" => self.open_hauls(),
+            "haul.new" => self.new_haul(),
+            // Aplikasyon cetveli (stakeout_window.rs, plan/road.md Y10).
+            "stakeout.table" => self.open_stakeout(),
+            "road.sheets" => self.open_road_sheets(),
+            "road.views" => self.open_road_views(),
+            "alignment.fromLine" => self.open_road_alignment_fit(),
+            "profile.fromLine" => self.open_road_profile_fit(),
+            "guardrail.editor" => self.open_guardrails(),
+            "culvert.editor" => self.open_culverts(),
+            "retainingWall.editor" => self.open_retaining_walls(),
+            "payItems.editor" => self.open_pay(),
+            "route.finder" => self.open_route(),
+            "junction.editor" => self.open_junctions(),
+            "scene3d.view" => self.open_scene3d(),
+            // LandXML ver (road_exchange.rs, plan/road.md Y10.2).
+            "landxml.export" => return self.export_landxml(),
+            "landxml.importAlignments" => return self.import_landxml_alignments(),
+            "ifc.export" => return self.export_ifc(),
+            "gltf.export" => return self.export_gltf(),
             // Bina programı (program_window.rs, docs/adr/0773).
             "arch.program" => self.open_program(),
             // Çizgi tipleri (docs/adr/0313 §7).

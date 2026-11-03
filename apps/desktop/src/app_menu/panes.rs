@@ -123,6 +123,9 @@ impl App {
                 Some(kentos_launch::Module::Gis) => {
                     "CBS projesi: il, dilim ve proje adı".to_owned()
                 }
+                Some(kentos_launch::Module::Road) => {
+                    "Yol projesi: il, dilim ve proje adı".to_owned()
+                }
                 None => "Mod, koordinat sistemi ve ölçek".to_owned(),
             },
             "Aç" => ".kcad çizim dosyası".to_owned(),

@@ -7,21 +7,21 @@
  * text_to_attributes preserves differing words as per-insert values, with named mappings.
  * Unsupported appearance/data/relations are refused before any write, never detached.
  */
-export type BlocksConvert = { name: string,
+export type BlocksConvert = { name: string, 
 /**
  * Source UUIDs. Definition pieces follow their document drawing order.
  */
-source: Array<string>,
+source: Array<string>, 
 /**
  * Chosen candidate member sets, at most 1000. Order within a set is immaterial.
  * Each must have exactly as many distinct objects as the source. Sets cannot share objects.
  */
-groups: Array<Array<string>>, rotations?: boolean, mirrors?: boolean, scales?: boolean,
+groups: Array<Array<string>>, rotations?: boolean, mirrors?: boolean, scales?: boolean, 
 /**
  * Preserve trailing plain single-line text variations as named block attributes.
  * Requires representable font/appearance/order and verification of each actual placed text.
  */
-textToAttributes?: boolean,
+textToAttributes?: boolean, 
 /**
  * Absolute model tolerance in metres, as cad.blocks.find; absent: 0.000001.
  */

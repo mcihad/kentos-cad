@@ -26,6 +26,7 @@ fn plan(unit: DrawingUnit) -> Session {
         drawing_unit: Some(unit),
         annotation: None,
         cad_work: None,
+        heights: None,
     })
     .expect("a new plan")
 }

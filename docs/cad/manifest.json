@@ -95,6 +95,57 @@
    "tests": 0
   },
   {
+   "id": "alignment.editor",
+   "kind": "command",
+   "title": "Güzergâh…",
+   "level": "semantic",
+   "via": [
+    "road.alignments.create",
+    "road.alignments.edit",
+    "road.alignments.query",
+    "road.alignments.label"
+   ],
+   "operation": null,
+   "python": "Connection: road.alignments.create, Connection: road.alignments.edit, Connection: road.alignments.query, Connection: road.alignments.label",
+   "mcp": "road.alignments.create, road.alignments.edit, road.alignments.query, road.alignments.label",
+   "note": "Km'yi çizime yaz road.alignments.label ile yazar. Güzergâh penceresi PI'ları ve km'yi yazdıkça çekirdekle kurar; Kaydet ve Ters çevir road.alignments.create ve .edit ile yazar, Noktanın km'si road.alignments.query ile sorar (plan/road.md Y3, ADR 0901).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "alignment.fromLine",
+   "kind": "command",
+   "title": "Çizgiden aks…",
+   "level": "semantic",
+   "via": [
+    "road.alignments.fit"
+   ],
+   "operation": null,
+   "python": "Connection: road.alignments.fit",
+   "mcp": "road.alignments.fit",
+   "note": "Seçili çizgiyle açılır, road.alignments.fit'in planıyla önizler ve onunla yazar; tek geri alma adımı (plan/road.md Y10.6, ADR 0908 §12).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "alignment.new",
+   "kind": "command",
+   "title": "Aks oluştur…",
+   "level": "semantic",
+   "via": [
+    "road.alignments.create"
+   ],
+   "operation": null,
+   "python": "Connection: road.alignments.create",
+   "mcp": "road.alignments.create",
+   "note": null,
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "analysis.slope",
    "kind": "command",
    "title": "Eğim analizi…",
@@ -1679,6 +1730,56 @@
    "tests": 0
   },
   {
+   "id": "corridor.editor",
+   "kind": "command",
+   "title": "Koridor…",
+   "level": "semantic",
+   "via": [
+    "road.corridors.edit",
+    "road.corridors.query",
+    "road.corridors.draw"
+   ],
+   "operation": null,
+   "python": "Connection: road.corridors.edit, Connection: road.corridors.query, Connection: road.corridors.draw",
+   "mcp": "road.corridors.edit, road.corridors.query, road.corridors.draw",
+   "note": "Koridor penceresi koridoru yazdıkça çekirdekle kurar ve planda gösterir; Kaydet ve Aksa yeniden bağla road.corridors.edit ile, Şevli plan çiz road.corridors.draw ile yazar (plan/road.md Y7, ADR 0905).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "corridor.new",
+   "kind": "command",
+   "title": "Koridor oluştur…",
+   "level": "semantic",
+   "via": [
+    "road.corridors.edit"
+   ],
+   "operation": null,
+   "python": "Connection: road.corridors.edit",
+   "mcp": "road.corridors.edit",
+   "note": null,
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "corridor.slopePlan",
+   "kind": "command",
+   "title": "Şevli plan…",
+   "level": "semantic",
+   "via": [
+    "road.corridors.draw"
+   ],
+   "operation": null,
+   "python": "Connection: road.corridors.draw",
+   "mcp": "road.corridors.draw",
+   "note": null,
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "crs.points",
    "kind": "command",
    "title": "Nokta listesi içe aktar…",
@@ -1739,6 +1840,23 @@
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
+  },
+  {
+   "id": "culvert.editor",
+   "kind": "command",
+   "title": "Menfez…",
+   "level": "semantic",
+   "via": [
+    "road.culverts.edit",
+    "road.culverts.draw"
+   ],
+   "operation": null,
+   "python": "Connection: road.culverts.edit, Connection: road.culverts.draw",
+   "mcp": "road.culverts.edit, road.culverts.draw",
+   "note": "Ölçüler yazıldıkça road.culverts.edit'in planıyla okuma kopyasında önizler; Kaydet ve Sil road.culverts.edit, Planda çiz road.culverts.draw ile yazar (plan/road.md Y11.2, ADR 0909 §2).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "data.chart",
@@ -4073,6 +4191,39 @@
    "tests": 0
   },
   {
+   "id": "gltf.export",
+   "kind": "command",
+   "title": "glTF ver…",
+   "level": "semantic",
+   "via": [
+    "file.export.gltf"
+   ],
+   "operation": null,
+   "python": "kentos.cad.file.export.gltf",
+   "mcp": "file.export.gltf",
+   "note": "glTF ver dosyanın yerini sorar ve file.export.gltf ile yazar; çizim değişmez (plan/road.md Y12.3, ADR 0910).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "guardrail.editor",
+   "kind": "command",
+   "title": "Otokorkuluk…",
+   "level": "semantic",
+   "via": [
+    "road.guardrails.edit",
+    "road.guardrails.draw"
+   ],
+   "operation": null,
+   "python": "Connection: road.guardrails.edit, Connection: road.guardrails.draw",
+   "mcp": "road.guardrails.edit, road.guardrails.draw",
+   "note": "Kural yazıldıkça road.guardrails.edit'in planıyla okuma kopyasında önizler; Kaydet road.guardrails.edit, Planda çiz road.guardrails.draw ile yazar (plan/road.md Y11.1, ADR 0909 §1).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "hatchPatterns.manage",
    "kind": "command",
    "title": "Tarama desenleri",
@@ -4084,6 +4235,39 @@
    "python": "kentos.cad.hatchpatterns.edit",
    "mcp": "cad.hatchpatterns.edit",
    "note": "Yükleme (birimiyle), silme ve dışa aktarma komuta verilir; desen taramaya cad.entities.hatch ve cad.hatches.edit'in pattern'iyle adıyla verilir (ADR 0331 §1).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "haul.editor",
+   "kind": "command",
+   "title": "Brükner…",
+   "level": "semantic",
+   "via": [
+    "road.hauls.edit",
+    "road.hauls.query"
+   ],
+   "operation": null,
+   "python": "Connection: road.hauls.edit, Connection: road.hauls.query",
+   "mcp": "road.hauls.edit, road.hauls.query",
+   "note": "Brükner penceresi Brükneri yazdıkça çekirdekle okur ve çizer; Kaydet road.hauls.edit ile yazar (plan/road.md Y9, ADR 0907).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "haul.new",
+   "kind": "command",
+   "title": "Brükner oluştur…",
+   "level": "semantic",
+   "via": [
+    "road.hauls.edit"
+   ],
+   "operation": null,
+   "python": "Connection: road.hauls.edit",
+   "mcp": "road.hauls.edit",
+   "note": null,
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0
@@ -4115,6 +4299,71 @@
    "scope": "none",
    "desktop": "implemented",
    "tests": 2
+  },
+  {
+   "id": "ifc.export",
+   "kind": "command",
+   "title": "IFC ver…",
+   "level": "semantic",
+   "via": [
+    "file.export.ifc"
+   ],
+   "operation": null,
+   "python": "kentos.cad.file.export.ifc",
+   "mcp": "file.export.ifc",
+   "note": "IFC ver dosyanın yerini sorar ve file.export.ifc ile yazar; çizim değişmez (plan/road.md Y10.3, ADR 0908).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "junction.editor",
+   "kind": "command",
+   "title": "Kavşak…",
+   "level": "semantic",
+   "via": [
+    "road.junctions.edit",
+    "road.junctions.draw"
+   ],
+   "operation": null,
+   "python": "Connection: road.junctions.edit, Connection: road.junctions.draw",
+   "mcp": "road.junctions.edit, road.junctions.draw",
+   "note": "Kollar ve yarıçaplar yazıldıkça road.junctions.edit'in planıyla okuma kopyasında önizler; Kaydet ve Sil road.junctions.edit, Planda çiz road.junctions.draw ile yazar (plan/road.md Y12.2, ADR 0910 §2).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "landxml.export",
+   "kind": "command",
+   "title": "LandXML ver…",
+   "level": "semantic",
+   "via": [
+    "file.export.landxml"
+   ],
+   "operation": null,
+   "python": "kentos.cad.file.export.landxml",
+   "mcp": "file.export.landxml",
+   "note": "LandXML ver dosyanın yerini sorar ve file.export.landxml ile yazar; çizim değişmez (plan/road.md Y10.2, ADR 0908).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "landxml.importAlignments",
+   "kind": "command",
+   "title": "LandXML'den aks al…",
+   "level": "semantic",
+   "via": [
+    "road.alignments.import"
+   ],
+   "operation": null,
+   "python": "Connection: road.alignments.import",
+   "mcp": "road.alignments.import",
+   "note": "Dosyayı sorar ve road.alignments.import ile alır; tek geri alma adımı (plan/road.md Y10.2, ADR 0908).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "layer.crs",
@@ -4794,6 +5043,23 @@
    "tests": 0
   },
   {
+   "id": "payItems.editor",
+   "kind": "command",
+   "title": "Poz metrajı…",
+   "level": "semantic",
+   "via": [
+    "road.pay.edit",
+    "road.pay.query"
+   ],
+   "operation": null,
+   "python": "Connection: road.pay.edit, Connection: road.pay.query",
+   "mcp": "road.pay.edit, road.pay.query",
+   "note": "Defter yazıldıkça road.pay.edit'in denetimi ve road.pay.query'nin cevabıyla okuma kopyasında önizler; Kaydet ve Sil road.pay.edit ile yazar (plan/road.md Y11.4, ADR 0909 §4).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "point.editor",
    "kind": "command",
    "title": "Nokta editörü",
@@ -4905,7 +5171,7 @@
    "python": null,
    "mcp": null,
    "note": null,
-   "scope": "gis",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 1
   },
@@ -7398,6 +7664,57 @@
    "tests": 1
   },
   {
+   "id": "profile.editor",
+   "kind": "command",
+   "title": "Boykesit…",
+   "level": "semantic",
+   "via": [
+    "road.profiles.create",
+    "road.profiles.edit",
+    "road.profiles.query",
+    "road.profiles.draw"
+   ],
+   "operation": null,
+   "python": "Connection: road.profiles.create, Connection: road.profiles.edit, Connection: road.profiles.query, Connection: road.profiles.draw",
+   "mcp": "road.profiles.create, road.profiles.edit, road.profiles.query, road.profiles.draw",
+   "note": "Boykesit penceresi PVI'leri yazdıkça çekirdekle kurar ve arazi boykesitini yüzeyden çizer; Kaydet ve Aksa yeniden bağla road.profiles.create ve .edit ile, Çizime yaz road.profiles.draw ile yazar (plan/road.md Y4, ADR 0902).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "profile.fromLine",
+   "kind": "command",
+   "title": "Çizimden boykesit…",
+   "level": "semantic",
+   "via": [
+    "road.profiles.fit"
+   ],
+   "operation": null,
+   "python": "Connection: road.profiles.fit",
+   "mcp": "road.profiles.fit",
+   "note": "Seçili çizgiyle açılır, görünümün yeri, km'si, kıyas kotu ve abartması yazıldıkça road.profiles.fit'in planıyla önizler ve onunla yazar; tek geri alma adımı (plan/road.md Y10.6b, ADR 0908 §13).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "profile.new",
+   "kind": "command",
+   "title": "Boykesit oluştur…",
+   "level": "semantic",
+   "via": [
+    "road.profiles.create"
+   ],
+   "operation": null,
+   "python": "Connection: road.profiles.create",
+   "mcp": "road.profiles.create",
+   "note": null,
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "profile.window",
    "kind": "command",
    "title": "Veri profili",
@@ -7533,6 +7850,75 @@
    "tests": 0
   },
   {
+   "id": "retainingWall.editor",
+   "kind": "command",
+   "title": "İstinat duvarı…",
+   "level": "semantic",
+   "via": [
+    "road.walls.edit",
+    "road.walls.draw"
+   ],
+   "operation": null,
+   "python": "Connection: road.walls.edit, Connection: road.walls.draw",
+   "mcp": "road.walls.edit, road.walls.draw",
+   "note": "Ölçüler yazıldıkça road.walls.edit'in planıyla okuma kopyasında önizler; Kaydet ve Sil road.walls.edit, Planda çiz road.walls.draw ile yazar (plan/road.md Y11.3, ADR 0909 §3).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "road.sheets",
+   "kind": "command",
+   "title": "Yol paftaları…",
+   "level": "semantic",
+   "via": [
+    "road.sheets.plan"
+   ],
+   "operation": null,
+   "python": "Connection: road.sheets.plan",
+   "mcp": "road.sheets.plan",
+   "note": "Yol paftaları road.sheets.plan'ın planıyla önizler ve onunla yazar: boykesit görünümleri, pafta takımı ve paftalar tek geri alma adımı (plan/road.md Y10.5, ADR 0908 §10).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "road.views",
+   "kind": "command",
+   "title": "Görünüşler…",
+   "level": "query",
+   "via": [
+    "road.alignments.query",
+    "road.profiles.query",
+    "road.sections.query",
+    "road.corridors.query"
+   ],
+   "operation": null,
+   "python": "Connection: road.alignments.query, Connection: road.profiles.query, Connection: road.sections.query, Connection: road.corridors.query",
+   "mcp": "road.alignments.query, road.profiles.query, road.sections.query, road.corridors.query",
+   "note": "Görünüşler çizimi değiştirmez: aksın yeri ve km'si road.alignments.query'nin, boykesit road.profiles.query'nin, kesitler road.sections.query'nin ve road.corridors.query'nin okuduğudur (plan/road.md Y13.4, ADR 0911 §5).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "route.finder",
+   "kind": "command",
+   "title": "Ön güzergâh…",
+   "level": "semantic",
+   "via": [
+    "road.routes.find",
+    "road.routes.draw"
+   ],
+   "operation": null,
+   "python": "Connection: road.routes.find, Connection: road.routes.draw",
+   "mcp": "road.routes.find, road.routes.draw",
+   "note": "Girdi yazıldıkça road.routes.find ile önizler; Planda çiz road.routes.draw ile yazar (plan/road.md Y12.1, ADR 0910 §1).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "scenario.apply",
    "kind": "command",
    "title": "Senaryoyu uygula…",
@@ -7605,6 +7991,72 @@
    "scope": "gis",
    "desktop": "implemented",
    "tests": 1
+  },
+  {
+   "id": "scene3d.view",
+   "kind": "command",
+   "title": "3B görünüm…",
+   "level": "session",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": "3B görünüm yalnız görüntüler: arazi yüzeyleri ve koridorlar ortak 3B çekirdekle seçilip çizilir; çizim değişmez, kamera oturumundur (plan/road.md Y12.3d, ADR 0910 §6).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "section.editor",
+   "kind": "command",
+   "title": "Enkesit…",
+   "level": "semantic",
+   "via": [
+    "road.templates.edit",
+    "road.sections.edit",
+    "road.sections.query",
+    "road.sections.draw",
+    "road.sheets.sections"
+   ],
+   "operation": null,
+   "python": "Connection: road.templates.edit, Connection: road.sections.edit, Connection: road.sections.query, Connection: road.sections.draw, Connection: road.sheets.sections",
+   "mcp": "road.templates.edit, road.sections.edit, road.sections.query, road.sections.draw, road.sheets.sections",
+   "note": "Enkesit penceresi tip kesiti ve takımı yazdıkça kesitleri çekirdekle kurar; Kaydet ve Aksa yeniden bağla road.templates.edit ve road.sections.edit ile, Çizime yaz road.sections.draw ile, Paftalara diz road.sheets.sections ile yazar (plan/road.md Y5, Y10.5b, ADR 0903, 0908).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "section.new",
+   "kind": "command",
+   "title": "Kesit takımı oluştur…",
+   "level": "semantic",
+   "via": [
+    "road.sections.edit"
+   ],
+   "operation": null,
+   "python": "Connection: road.sections.edit",
+   "mcp": "road.sections.edit",
+   "note": null,
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "section.template",
+   "kind": "command",
+   "title": "Tip kesit oluştur…",
+   "level": "semantic",
+   "via": [
+    "road.templates.edit"
+   ],
+   "operation": null,
+   "python": "Connection: road.templates.edit",
+   "mcp": "road.templates.edit",
+   "note": null,
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "server.check",
@@ -8786,6 +9238,23 @@
    "tests": 0
   },
   {
+   "id": "stakeout.table",
+   "kind": "command",
+   "title": "Aplikasyon cetveli…",
+   "level": "semantic",
+   "via": [
+    "road.stakeout.query",
+    "road.stakeout.send"
+   ],
+   "operation": null,
+   "python": "Connection: road.stakeout.query, Connection: road.stakeout.send",
+   "mcp": "road.stakeout.query, road.stakeout.send",
+   "note": "Aplikasyon cetveli road.stakeout.query ile okur, ADR 0223'ün yazıcısıyla dosyaya yazar ve road.stakeout.send ile alete (LandXML string yol ya da alet dosyası) gönderir; çizim değişmez (plan/road.md Y10, ADR 0908).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "standards.apply",
    "kind": "command",
    "title": "Standardı uygula",
@@ -8940,6 +9409,39 @@
    "tests": 0
   },
   {
+   "id": "superelevation.editor",
+   "kind": "command",
+   "title": "Dever…",
+   "level": "semantic",
+   "via": [
+    "road.superelevations.edit",
+    "road.superelevations.query"
+   ],
+   "operation": null,
+   "python": "Connection: road.superelevations.edit, Connection: road.superelevations.query",
+   "mcp": "road.superelevations.edit, road.superelevations.query",
+   "note": "Dever penceresi çizelgeyi yazdıkça çekirdekle kurar ve diyagramı çizer; Kaydet ve Aksa yeniden bağla road.superelevations.edit ile yazar (plan/road.md Y6, ADR 0904).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "superelevation.new",
+   "kind": "command",
+   "title": "Dever oluştur…",
+   "level": "semantic",
+   "via": [
+    "road.superelevations.edit"
+   ],
+   "operation": null,
+   "python": "Connection: road.superelevations.edit",
+   "mcp": "road.superelevations.edit",
+   "note": null,
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "table.blockSchedule",
    "kind": "command",
    "title": "Blok çizelgesi tablosu",
@@ -9090,6 +9592,42 @@
    "scope": "shared",
    "desktop": "implemented",
    "tests": 2
+  },
+  {
+   "id": "terrain.new",
+   "kind": "command",
+   "title": "Yüzey oluştur…",
+   "level": "semantic",
+   "via": [
+    "road.terrains.create"
+   ],
+   "operation": null,
+   "python": "Connection: road.terrains.create",
+   "mcp": "road.terrains.create",
+   "note": null,
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "terrain.surfaces",
+   "kind": "command",
+   "title": "Arazi yüzeyleri…",
+   "level": "semantic",
+   "via": [
+    "road.terrains.create",
+    "road.terrains.edit",
+    "road.terrains.query",
+    "road.terrains.contours",
+    "file.import.landxml"
+   ],
+   "operation": null,
+   "python": "Connection: road.terrains.create, Connection: road.terrains.edit, Connection: road.terrains.query, Connection: road.terrains.contours, kentos.cad.file.import_.landxml",
+   "mcp": "road.terrains.create, road.terrains.edit, road.terrains.query, road.terrains.contours, file.import.landxml",
+   "note": "Arazi yüzeyleri penceresi road.terrains.query ile okur; Kaydet, Kabul et, Eğrileri çiz ve LandXML al road.terrains.create, .edit, .contours ve file.import.landxml ile yazar (plan/road.md Y2.4, Y2.5).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "text.check",
@@ -14651,6 +15189,56 @@
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
+  },
+  {
+   "id": "volume.editor",
+   "kind": "command",
+   "title": "Kübaj…",
+   "level": "semantic",
+   "via": [
+    "road.volumes.edit",
+    "road.volumes.query",
+    "road.volumes.approve"
+   ],
+   "operation": null,
+   "python": "Connection: road.volumes.edit, Connection: road.volumes.query, Connection: road.volumes.approve",
+   "mcp": "road.volumes.edit, road.volumes.query, road.volumes.approve",
+   "note": "Kübaj penceresi kübajı yazdıkça çekirdekle hesaplar, kütle diyagramını ve cetveli gösterir; Kaydet road.volumes.edit ile, Onayla ve Onayı kaldır road.volumes.approve ile yazar, Cetveli yaz road.volumes.query'nin cetvelini dosyaya yazar (plan/road.md Y8, ADR 0906).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "volume.export",
+   "kind": "command",
+   "title": "Kübaj cetveli…",
+   "level": "query",
+   "via": [
+    "road.volumes.query"
+   ],
+   "operation": null,
+   "python": "Connection: road.volumes.query",
+   "mcp": "road.volumes.query",
+   "note": "Cetvel çizimi değiştirmez; dosyaya ADR 0223'ün yazıcısıyla yazılır.",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "volume.new",
+   "kind": "command",
+   "title": "Kübaj hesabı oluştur…",
+   "level": "semantic",
+   "via": [
+    "road.volumes.edit"
+   ],
+   "operation": null,
+   "python": "Connection: road.volumes.edit",
+   "mcp": "road.volumes.edit",
+   "note": null,
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "workspace.cad",

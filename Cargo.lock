@@ -2692,6 +2692,8 @@ dependencies = [
  "kentos-processing",
  "kentos-project",
  "kentos-render-wgpu",
+ "kentos-road",
+ "kentos-scene3d",
  "kentos-services",
  "kentos-sheet",
  "kentos-sheet-ui",
@@ -2919,6 +2921,7 @@ dependencies = [
  "kentos-commands",
  "kentos-domain",
  "kentos-headless",
+ "kentos-kcad",
  "kentos-native-application",
  "kentos-postgis",
  "miniz_oxide 0.9.1",
@@ -2944,6 +2947,7 @@ dependencies = [
  "kentos-processing",
  "kentos-project",
  "kentos-qml",
+ "kentos-road",
  "kentos-services",
  "kentos-sheet",
  "kentos-style-core",
@@ -3168,12 +3172,31 @@ dependencies = [
  "kentos-contracts",
  "kentos-geometry-core",
  "kentos-native-style",
+ "kentos-scene3d",
  "naga",
+ "png 0.18.1",
  "pollster",
  "serde",
  "serde_json",
  "tiny-skia",
  "wgpu",
+]
+
+[[package]]
+name = "kentos-road"
+version = "0.1.0"
+dependencies = [
+ "kentos-contracts",
+ "kentos-geometry-core",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "kentos-scene3d"
+version = "0.1.0"
+dependencies = [
+ "serde_json",
 ]
 
 [[package]]

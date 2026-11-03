@@ -123,6 +123,7 @@ impl App {
                     (Panel::Sources, _) => pane,
                     // Gezgin's sections scroll with the pane (navigator.rs).
                     (Panel::Navigator, _) => pane.scrollable(),
+                    (Panel::RoadProject, _) => pane.scrollable(),
                     (Panel::Properties, Some(doc)) => match self.properties_meta(doc) {
                         Some(meta) => pane.meta(label::caption(meta)),
                         None => pane,
@@ -857,6 +858,23 @@ impl App {
                 let writing = self.paragraph_view();
                 let active: Element<'_, Message> = ContextMenu::controlled(
                     stack![area]
+                        // A road project's terrain surfaces over the drawing (terrain_layer.rs, plan/road.md Y2.4).
+                        .extend(crate::terrain_layer::layer(
+                            &doc.model,
+                            &self.viewport.camera,
+                            mark_colors(self.canvas()).fg,
+                            Tokens::of(&self.theme()).danger,
+                        ))
+                        // A road project's alignments, km and curve points (alignment_layer.rs, plan/road.md Y3).
+                        .extend(crate::alignment_layer::layer(
+                            &doc.model,
+                            &self.viewport.camera,
+                            crate::alignment_layer::Colors {
+                                ink: mark_colors(self.canvas()).fg,
+                                accent: Tokens::of(&self.theme()).accent,
+                                warning: Tokens::of(&self.theme()).warning,
+                            },
+                        ))
                         .extend(service_labels)
                         .push(labels)
                         // Kaydırmalı karşılaştır: the other view right of the divider (split_view.rs, docs/adr/0523 §3).
@@ -1046,6 +1064,7 @@ impl App {
             Panel::Sources => self.sources_view(),
             // Gezgin: the project's tree (navigator.rs, docs/adr/0778).
             Panel::Navigator => self.navigator_view(),
+            Panel::RoadProject => self.road_project_view(),
             // Öznitelikler, editable as the web's (properties/, docs/adr/0063).
             Panel::Properties => self.architecture_properties_view(doc),
         }
@@ -2007,6 +2026,26 @@ impl App {
             Asking::Relations => self.relations_view(),
             Asking::Joins => self.joins_view(),
             Asking::EventLinks => self.event_links_view(),
+            Asking::Terrains => self.terrain_view(),
+            Asking::Alignments => self.alignment_view(),
+            Asking::Profiles => self.road_profile_view(),
+            Asking::Sections => self.road_section_view(),
+            Asking::Superelevations => self.road_superelevation_view(),
+            Asking::Corridors => self.road_corridor_view(),
+            Asking::Volumes => self.road_volume_view(),
+            Asking::Hauls => self.road_haul_view(),
+            Asking::Stakeout => self.road_stakeout_view(),
+            Asking::RoadSheets => self.road_sheets_view(),
+            Asking::RoadViews => self.road_views_view(),
+            Asking::RoadAlignmentFit => self.road_alignment_fit_view(),
+            Asking::RoadProfileFit => self.road_profile_fit_view(),
+            Asking::Guardrails => self.guardrail_view(),
+            Asking::Culverts => self.culvert_view(),
+            Asking::RetainingWalls => self.retaining_wall_view(),
+            Asking::Pay => self.pay_view(),
+            Asking::Route => self.route_view(),
+            Asking::Junctions => self.junction_view(),
+            Asking::Scene3d => self.scene3d_view(),
             Asking::Program => self.program_view(),
             Asking::SpaceMerge => self.space_merge_question(),
             Asking::TableStyles => self.table_styles_view(),

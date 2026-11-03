@@ -94,7 +94,7 @@ use kentos_native_application::{
     images_clip, labels_pin, labels_report, layers_compose, layers_contingents, layers_edit,
     layers_filter, layers_find, layers_indexes, layers_info, layers_labels, layers_renderer,
     layers_rules, layers_service, layers_set, layers_states, layers_subtypes, layers_table,
-    layers_time, layers_translate, leaders_edit, legends, levels_assign, line, linearref_define,
+    layers_time, layers_translate, leaders_edit, legends, levels_assign, line, linearref_define, file_import_landxml, road_alignments_create, road_scene, road_alignments_edit, road_alignments_label, road_alignments_query, road_profiles_create, road_profiles_draw, road_profiles_edit, road_profiles_query, road_sections_draw, road_sections_edit, road_sections_query, road_superelevations_edit, road_superelevations_query, road_corridors_draw, road_corridors_edit, road_corridors_query, road_volumes_approve, road_volumes_edit, road_volumes_query, road_hauls_edit, road_hauls_query, road_guardrails_edit, road_guardrails_query, road_guardrails_draw, road_culverts_edit, road_culverts_query, road_culverts_draw, road_walls_edit, road_walls_query, road_walls_draw, road_pay_edit, road_pay_query, road_routes_find, road_routes_draw, road_junctions_edit, road_junctions_query, road_junctions_draw, road_project_query, road_project_rebuild, road_project_edit, road_alignments_import, road_alignments_fit, road_profiles_fit, road_ifc, road_landxml, road_stakeout, road_stakeout_send, road_sheets, road_sheets_sections, road_templates_edit, road_terrains_contours, road_terrains_create, road_terrains_edit, road_terrains_query,
     network_define, north, nurbs, objects_derive, offset, openings_create, openings_distances,
     openings_edit, opening_types_edit, materials_edit, openings_query, modules_edit, modules_query, options_edit, options_query, elevations_edit, elevations_query, parcels, point, points_construct, polygon, polygon_regular, polyline,
     rectangle_create, revcloud_create, revisions, roads_edit, scenarios_edit, sector_create, set,
@@ -3524,6 +3524,342 @@ impl Input for kentos_commands::LinearRefDefine {
     }
 }
 
+// KentOS Yol's alignments (plan/road.md Y3): no number is put at an error's path.
+impl Input for kentos_commands::AlignmentsCreate {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::AlignmentsEdit {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::AlignmentsLabel {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::AlignmentsQuery {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+// KentOS Yol's profiles (plan/road.md Y4): no number is put at an error's path.
+impl Input for kentos_commands::ProfilesCreate {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::ProfilesEdit {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::ProfilesDraw {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::SuperelevationsEdit {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::SuperelevationsQuery {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::CorridorsEdit {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::CorridorsQuery {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::CorridorsDraw {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::VolumesEdit {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::VolumesQuery {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::VolumesApprove {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::HaulsEdit {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::CulvertsEdit {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::CulvertsQuery {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::CulvertsDraw {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::RetainingWallsEdit {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::RetainingWallsQuery {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::RetainingWallsDraw {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::PayEdit {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::PayQuery {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::RoutesFind {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::RoutesDraw {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::JunctionsEdit {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::JunctionsQuery {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+impl Input for kentos_commands::RoadProjectQuery {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+impl Input for kentos_commands::RoadProjectRebuild {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+impl Input for kentos_commands::RoadProjectEdit {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::JunctionsDraw {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::GuardrailsEdit {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::GuardrailsQuery {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::GuardrailsDraw {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::HaulsQuery {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::AlignmentsImport {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::ExportGltf {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::ExportIfc {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::ExportLandxml {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::AlignmentsFit {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::ProfilesFit {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::RoadSheetsSections {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::RoadSheetsPlan {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::StakeoutSend {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::StakeoutQuery {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::SectionsDraw {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::TemplatesEdit {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::SectionsEdit {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::SectionsQuery {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::ProfilesQuery {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+// KentOS Yol's terrain surfaces (plan/road.md Y2.3): no number is put at an error's path.
+impl Input for kentos_commands::TerrainsCreate {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::TerrainsEdit {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::TerrainsContours {
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        (path == "interval").then_some(&mut self.interval)
+    }
+}
+
+impl Input for kentos_commands::ImportLandxml {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::TerrainsQuery {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
 impl Input for EntitiesOffset {
     /// `by.distance`, `by.side.x`, `by.point.y` (which the step's input must give).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
@@ -4629,6 +4965,174 @@ fn run_op(
         kentos_commands::CAD_LINEARREF_DEFINE => {
             run!(linearref_define, kentos_commands::LinearRefDefine)
         }
+        kentos_commands::ROAD_TERRAINS_CREATE => {
+            run!(road_terrains_create, kentos_commands::TerrainsCreate)
+        }
+        kentos_commands::ROAD_TERRAINS_EDIT => {
+            run!(road_terrains_edit, kentos_commands::TerrainsEdit)
+        }
+        kentos_commands::ROAD_TERRAINS_QUERY => {
+            run!(road_terrains_query, kentos_commands::TerrainsQuery)
+        }
+        kentos_commands::ROAD_TERRAINS_CONTOURS => {
+            run!(road_terrains_contours, kentos_commands::TerrainsContours)
+        }
+        kentos_commands::FILE_IMPORT_LANDXML => {
+            run!(file_import_landxml, kentos_commands::ImportLandxml)
+        }
+        kentos_commands::ROAD_ALIGNMENTS_CREATE => {
+            run!(road_alignments_create, kentos_commands::AlignmentsCreate)
+        }
+        kentos_commands::ROAD_ALIGNMENTS_EDIT => {
+            run!(road_alignments_edit, kentos_commands::AlignmentsEdit)
+        }
+        kentos_commands::ROAD_ALIGNMENTS_QUERY => {
+            run!(road_alignments_query, kentos_commands::AlignmentsQuery)
+        }
+        kentos_commands::ROAD_ALIGNMENTS_LABEL => {
+            run!(road_alignments_label, kentos_commands::AlignmentsLabel)
+        }
+        kentos_commands::ROAD_PROFILES_CREATE => {
+            run!(road_profiles_create, kentos_commands::ProfilesCreate)
+        }
+        kentos_commands::ROAD_PROFILES_EDIT => {
+            run!(road_profiles_edit, kentos_commands::ProfilesEdit)
+        }
+        kentos_commands::ROAD_PROFILES_QUERY => {
+            run!(road_profiles_query, kentos_commands::ProfilesQuery)
+        }
+        kentos_commands::ROAD_PROFILES_DRAW => {
+            run!(road_profiles_draw, kentos_commands::ProfilesDraw)
+        }
+        kentos_commands::ROAD_TEMPLATES_EDIT => {
+            run!(road_templates_edit, kentos_commands::TemplatesEdit)
+        }
+        kentos_commands::ROAD_SECTIONS_EDIT => {
+            run!(road_sections_edit, kentos_commands::SectionsEdit)
+        }
+        kentos_commands::ROAD_SECTIONS_QUERY => {
+            run!(road_sections_query, kentos_commands::SectionsQuery)
+        }
+        kentos_commands::ROAD_SECTIONS_DRAW => {
+            run!(road_sections_draw, kentos_commands::SectionsDraw)
+        }
+        kentos_commands::ROAD_SUPERELEVATIONS_EDIT => {
+            run!(road_superelevations_edit, kentos_commands::SuperelevationsEdit)
+        }
+        kentos_commands::ROAD_SUPERELEVATIONS_QUERY => {
+            run!(road_superelevations_query, kentos_commands::SuperelevationsQuery)
+        }
+        kentos_commands::ROAD_CORRIDORS_EDIT => {
+            run!(road_corridors_edit, kentos_commands::CorridorsEdit)
+        }
+        kentos_commands::ROAD_CORRIDORS_QUERY => {
+            run!(road_corridors_query, kentos_commands::CorridorsQuery)
+        }
+        kentos_commands::ROAD_CORRIDORS_DRAW => {
+            run!(road_corridors_draw, kentos_commands::CorridorsDraw)
+        }
+        kentos_commands::ROAD_VOLUMES_EDIT => {
+            run!(road_volumes_edit, kentos_commands::VolumesEdit)
+        }
+        kentos_commands::ROAD_VOLUMES_QUERY => {
+            run!(road_volumes_query, kentos_commands::VolumesQuery)
+        }
+        kentos_commands::ROAD_VOLUMES_APPROVE => {
+            run!(road_volumes_approve, kentos_commands::VolumesApprove)
+        }
+        kentos_commands::ROAD_HAULS_EDIT => {
+            run!(road_hauls_edit, kentos_commands::HaulsEdit)
+        }
+        kentos_commands::ROAD_HAULS_QUERY => {
+            run!(road_hauls_query, kentos_commands::HaulsQuery)
+        }
+        kentos_commands::ROAD_GUARDRAILS_EDIT => {
+            run!(road_guardrails_edit, kentos_commands::GuardrailsEdit)
+        }
+        kentos_commands::ROAD_GUARDRAILS_QUERY => {
+            run!(road_guardrails_query, kentos_commands::GuardrailsQuery)
+        }
+        kentos_commands::ROAD_GUARDRAILS_DRAW => {
+            run!(road_guardrails_draw, kentos_commands::GuardrailsDraw)
+        }
+        kentos_commands::ROAD_CULVERTS_EDIT => {
+            run!(road_culverts_edit, kentos_commands::CulvertsEdit)
+        }
+        kentos_commands::ROAD_CULVERTS_QUERY => {
+            run!(road_culverts_query, kentos_commands::CulvertsQuery)
+        }
+        kentos_commands::ROAD_CULVERTS_DRAW => {
+            run!(road_culverts_draw, kentos_commands::CulvertsDraw)
+        }
+        kentos_commands::ROAD_WALLS_EDIT => {
+            run!(road_walls_edit, kentos_commands::RetainingWallsEdit)
+        }
+        kentos_commands::ROAD_WALLS_QUERY => {
+            run!(road_walls_query, kentos_commands::RetainingWallsQuery)
+        }
+        kentos_commands::ROAD_WALLS_DRAW => {
+            run!(road_walls_draw, kentos_commands::RetainingWallsDraw)
+        }
+        kentos_commands::ROAD_PAY_EDIT => {
+            run!(road_pay_edit, kentos_commands::PayEdit)
+        }
+        kentos_commands::ROAD_PAY_QUERY => {
+            run!(road_pay_query, kentos_commands::PayQuery)
+        }
+        kentos_commands::ROAD_ROUTES_FIND => {
+            run!(road_routes_find, kentos_commands::RoutesFind)
+        }
+        kentos_commands::ROAD_ROUTES_DRAW => {
+            run!(road_routes_draw, kentos_commands::RoutesDraw)
+        }
+        kentos_commands::ROAD_JUNCTIONS_EDIT => {
+            run!(road_junctions_edit, kentos_commands::JunctionsEdit)
+        }
+        kentos_commands::ROAD_JUNCTIONS_QUERY => {
+            run!(road_junctions_query, kentos_commands::JunctionsQuery)
+        }
+        kentos_commands::ROAD_PROJECT_QUERY => {
+            run!(road_project_query, kentos_commands::RoadProjectQuery)
+        }
+        kentos_commands::ROAD_PROJECT_REBUILD => {
+            run!(road_project_rebuild, kentos_commands::RoadProjectRebuild)
+        }
+        kentos_commands::ROAD_PROJECT_EDIT => {
+            run!(road_project_edit, kentos_commands::RoadProjectEdit)
+        }
+        kentos_commands::ROAD_JUNCTIONS_DRAW => {
+            run!(road_junctions_draw, kentos_commands::JunctionsDraw)
+        }
+        kentos_commands::ROAD_STAKEOUT_QUERY => {
+            run!(road_stakeout, kentos_commands::StakeoutQuery)
+        }
+        kentos_commands::FILE_EXPORT_LANDXML => {
+            run!(road_landxml, kentos_commands::ExportLandxml)
+        }
+        kentos_commands::FILE_EXPORT_GLTF => {
+            run!(road_scene, kentos_commands::ExportGltf)
+        }
+        kentos_commands::FILE_EXPORT_IFC => {
+            run!(road_ifc, kentos_commands::ExportIfc)
+        }
+        kentos_commands::ROAD_STAKEOUT_SEND => {
+            run!(road_stakeout_send, kentos_commands::StakeoutSend)
+        }
+        kentos_commands::ROAD_SHEETS_PLAN => {
+            run!(road_sheets, kentos_commands::RoadSheetsPlan)
+        }
+        kentos_commands::ROAD_SHEETS_SECTIONS => {
+            run!(road_sheets_sections, kentos_commands::RoadSheetsSections)
+        }
+        kentos_commands::ROAD_ALIGNMENTS_FIT => {
+            run!(road_alignments_fit, kentos_commands::AlignmentsFit)
+        }
+        kentos_commands::ROAD_PROFILES_FIT => {
+            run!(road_profiles_fit, kentos_commands::ProfilesFit)
+        }
+        kentos_commands::ROAD_ALIGNMENTS_IMPORT => {
+            run!(road_alignments_import, kentos_commands::AlignmentsImport)
+        }
         kentos_commands::CAD_SUBNETWORKS_FIND => {
             run!(subnetworks, kentos_commands::SubnetworksFind)
         }
@@ -5630,6 +6134,31 @@ fn check(
                 let got = serde_json::to_value(&doc.settings().address_locators)
                     .map_err(|e| format!("{at}: {e}"))?;
                 expect_same(&got, &fill(want, doc, state, at)?, "adres verileri", at)?;
+            }
+            // A road project's terrain surfaces' definitions (plan/road.md Y2.3); null: none.
+            "road" => {
+                let mut got = serde_json::to_value(&doc.settings().road)
+                    .map_err(|e| format!("{at}: {e}"))?;
+                let wanted = fill(want, doc, state, at)?;
+                // What the road commands drew (docs/adr/0911 §1) is compared only where a case names it.
+                for key in ["drawings", "autoRebuild"] {
+                    if wanted.get(key).is_none()
+                        && let Some(o) = got.as_object_mut()
+                    {
+                        o.remove(key);
+                    }
+                }
+                if got.as_object().is_some_and(serde_json::Map::is_empty) {
+                    got = Value::Null;
+                }
+                match within {
+                    // An alignment fitted to a line (docs/adr/0908 §12): its PIs within the step's `within`.
+                    Some(w) if !close(&got, &wanted, w) => {
+                        return Err(format!("{at}: yol ayarları (±{w}): beklenen {wanted}, bulunan {got}"));
+                    }
+                    Some(_) => {}
+                    None => expect_same(&got, &wanted, "yol ayarları", at)?,
+                }
             }
             // The project's links of event layers to their routes (docs/adr/0569 §2).
             "linearEvents" => {

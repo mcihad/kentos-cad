@@ -347,7 +347,7 @@ fn icon_sheet<'a>() -> Element<'a, Message> {
             (Glyph::Mimari, Tone::Purple, "mimari · KentOS Mimari"),
             (Glyph::Harita, Tone::Blue, "harita · KentOS Harita"),
             (Glyph::Cbs, Tone::Green, "cbs · KentOS GIS"),
-            (Glyph::Yol, Tone::Yellow, "yol · KentOS YOL"),
+            (Glyph::Yol, Tone::Yellow, "yol · KentOS Yol"),
             (Glyph::Model3d, Tone::Teal, "3d · KentOS 3D"),
             (Glyph::Afet, Tone::Red, "afet · KentOS Afet"),
             (Glyph::Rapor, Tone::Orange, "rapor · Belge"),

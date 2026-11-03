@@ -494,6 +494,7 @@ class Document:
         name: str | None = None,
         *,
         workspace: Workspace | WorkspaceName = Workspace.GIS,
+        cad_work: Literal["architecture", "map", "road"] | None = None,
         coords: Literal["local", "real"] | None = None,
         srid: int | None = None,
         province: int | None = None,
@@ -505,6 +506,10 @@ class Document:
         0245): its type's layer tree, start view and units.
 
         - ``workspace``: CBS (``gis``) or CAD (``cad``).
+        - ``cad_work``: what a CAD project is drawn for: ``architecture`` (KentOS Mimari, local), ``map`` (KentOS
+          Harita) or ``road`` (KentOS Yol, plan/road.md); a map and a road need a system (``srid`` or
+          ``province``), a road's heights start as TUDKA-99's orthometric ones (EPSG:5775) with the TG-20 geoid.
+          By default a local CAD project is a building's, one with a system a map's.
         - ``coords``: a CAD project's coordinates, ``local`` (no system,
           SRID 0, from 0,0) or ``real``; by default local for CAD without a
           ``srid``, real otherwise. A CBS project always has a system.
@@ -528,6 +533,7 @@ class Document:
         }
         optional = {
             "name": name,
+            "cadWork": cad_work,
             "coords": coords,
             "srid": None if srid is None else int(srid),
             "province": None if province is None else int(province),

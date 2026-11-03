@@ -1,0 +1,2129 @@
+{
+ "cases": [
+  {
+   "name": "Düz arazide dolgu: iki yan dolgu şevi",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    }
+   },
+   "axis": 102.0,
+   "ground": [
+    {
+     "offset": -40,
+     "z": 100,
+     "gap": false
+    },
+    {
+     "offset": 40,
+     "z": 100,
+     "gap": false
+    }
+   ],
+   "left": {
+    "points": [
+     [
+      0.0,
+      102.0
+     ],
+     [
+      -3.5,
+      101.9125
+     ],
+     [
+      -4.5,
+      101.8725
+     ],
+     [
+      -7.30875,
+      100.0
+     ]
+    ],
+    "hinge": [
+     -4.5,
+     101.8725
+    ],
+    "daylight": [
+     -7.30875,
+     100.0
+    ],
+    "kind": "fill"
+   },
+   "right": {
+    "points": [
+     [
+      0.0,
+      102.0
+     ],
+     [
+      3.5,
+      101.9125
+     ],
+     [
+      4.5,
+      101.8725
+     ],
+     [
+      7.30875,
+      100.0
+     ]
+    ],
+    "hinge": [
+     4.5,
+     101.8725
+    ],
+    "daylight": [
+     7.30875,
+     100.0
+    ],
+    "kind": "fill"
+   },
+   "cut": 0.0,
+   "fill": 22.738134375
+  },
+  {
+   "name": "Düz arazide yarma: iki yan yarma şevi",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    }
+   },
+   "axis": 97.0,
+   "ground": [
+    {
+     "offset": -40,
+     "z": 100,
+     "gap": false
+    },
+    {
+     "offset": 40,
+     "z": 100,
+     "gap": false
+    }
+   ],
+   "left": {
+    "points": [
+     [
+      0.0,
+      97.0
+     ],
+     [
+      -3.5,
+      96.9125
+     ],
+     [
+      -4.5,
+      96.8725
+     ],
+     [
+      -7.6275,
+      100.0
+     ]
+    ],
+    "hinge": [
+     -4.5,
+     96.8725
+    ],
+    "daylight": [
+     -7.6275,
+     100.0
+    ],
+    "kind": "cut"
+   },
+   "right": {
+    "points": [
+     [
+      0.0,
+      97.0
+     ],
+     [
+      3.5,
+      96.9125
+     ],
+     [
+      4.5,
+      96.8725
+     ],
+     [
+      7.6275,
+      100.0
+     ]
+    ],
+    "hinge": [
+     4.5,
+     96.8725
+    ],
+    "daylight": [
+     7.6275,
+     100.0
+    ],
+    "kind": "cut"
+   },
+   "cut": 37.30250625,
+   "fill": 0.0
+  },
+  {
+   "name": "Hendekli yarma",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5,
+     "ditch": {
+      "fore": 2.0,
+      "depth": 0.8,
+      "bottom": 0.5
+     }
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5,
+     "ditch": {
+      "fore": 2.0,
+      "depth": 0.8,
+      "bottom": 0.5
+     }
+    }
+   },
+   "axis": 97.0,
+   "ground": [
+    {
+     "offset": -40,
+     "z": 100,
+     "gap": false
+    },
+    {
+     "offset": 40,
+     "z": 100,
+     "gap": false
+    }
+   ],
+   "left": {
+    "points": [
+     [
+      0.0,
+      97.0
+     ],
+     [
+      -3.5,
+      96.9125
+     ],
+     [
+      -4.5,
+      96.8725
+     ],
+     [
+      -6.1,
+      96.0725
+     ],
+     [
+      -6.6,
+      96.0725
+     ],
+     [
+      -10.5275,
+      100.0
+     ]
+    ],
+    "hinge": [
+     -4.5,
+     96.8725
+    ],
+    "daylight": [
+     -10.5275,
+     100.0
+    ],
+    "kind": "cut"
+   },
+   "right": {
+    "points": [
+     [
+      0.0,
+      97.0
+     ],
+     [
+      3.5,
+      96.9125
+     ],
+     [
+      4.5,
+      96.8725
+     ],
+     [
+      6.1,
+      96.0725
+     ],
+     [
+      6.6,
+      96.0725
+     ],
+     [
+      10.5275,
+      100.0
+     ]
+    ],
+    "hinge": [
+     4.5,
+     96.8725
+    ],
+    "daylight": [
+     10.5275,
+     100.0
+    ],
+    "kind": "cut"
+   },
+   "cut": 58.162006250000005,
+   "fill": 0.0
+  },
+  {
+   "name": "V hendek (tabansız)",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5,
+     "ditch": {
+      "fore": 1.5,
+      "depth": 0.6,
+      "bottom": 0
+     }
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5,
+     "ditch": {
+      "fore": 1.5,
+      "depth": 0.6,
+      "bottom": 0
+     }
+    }
+   },
+   "axis": 96.0,
+   "ground": [
+    {
+     "offset": -40,
+     "z": 100,
+     "gap": false
+    },
+    {
+     "offset": 40,
+     "z": 100,
+     "gap": false
+    }
+   ],
+   "left": {
+    "points": [
+     [
+      0.0,
+      96.0
+     ],
+     [
+      -3.5,
+      95.9125
+     ],
+     [
+      -4.5,
+      95.8725
+     ],
+     [
+      -5.4,
+      95.2725
+     ],
+     [
+      -10.1275,
+      100.0
+     ]
+    ],
+    "hinge": [
+     -4.5,
+     95.8725
+    ],
+    "daylight": [
+     -10.1275,
+     100.0
+    ],
+    "kind": "cut"
+   },
+   "right": {
+    "points": [
+     [
+      0.0,
+      96.0
+     ],
+     [
+      3.5,
+      95.9125
+     ],
+     [
+      4.5,
+      95.8725
+     ],
+     [
+      5.4,
+      95.2725
+     ],
+     [
+      10.1275,
+      100.0
+     ]
+    ],
+    "hinge": [
+     4.5,
+     95.8725
+    ],
+    "daylight": [
+     10.1275,
+     100.0
+    ],
+    "kind": "cut"
+   },
+   "cut": 66.84000625,
+   "fill": 0.0
+  },
+  {
+   "name": "Yamaç: solda yarma, sağda dolgu",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5,
+     "ditch": {
+      "fore": 2.0,
+      "depth": 0.8,
+      "bottom": 0.5
+     }
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5,
+     "ditch": {
+      "fore": 2.0,
+      "depth": 0.8,
+      "bottom": 0.5
+     }
+    }
+   },
+   "axis": 100.0,
+   "ground": [
+    {
+     "offset": -40,
+     "z": 108,
+     "gap": false
+    },
+    {
+     "offset": 0,
+     "z": 100,
+     "gap": false
+    },
+    {
+     "offset": 40,
+     "z": 92,
+     "gap": false
+    }
+   ],
+   "left": {
+    "points": [
+     [
+      0.0,
+      100.0
+     ],
+     [
+      -3.5,
+      99.9125
+     ],
+     [
+      -4.5,
+      99.8725
+     ],
+     [
+      -6.1,
+      99.0725
+     ],
+     [
+      -6.6,
+      99.0725
+     ],
+     [
+      -9.409375,
+      101.881875
+     ]
+    ],
+    "hinge": [
+     -4.5,
+     99.8725
+    ],
+    "daylight": [
+     -9.409375,
+     101.881875
+    ],
+    "kind": "cut"
+   },
+   "right": {
+    "points": [
+     [
+      0.0,
+      100.0
+     ],
+     [
+      3.5,
+      99.9125
+     ],
+     [
+      4.5,
+      99.8725
+     ],
+     [
+      6.1553571428571425,
+      98.76892857142857
+     ]
+    ],
+    "hinge": [
+     4.5,
+     99.8725
+    ],
+    "daylight": [
+     6.1553571428571425,
+     98.76892857142857
+    ],
+    "kind": "fill"
+   },
+   "cut": 9.08141015625,
+   "fill": 2.4037566964285713
+  },
+  {
+   "name": "Kırıklı arazi: şev ilk buluşmada durur",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    }
+   },
+   "axis": 101.0,
+   "ground": [
+    {
+     "offset": -40,
+     "z": 99,
+     "gap": false
+    },
+    {
+     "offset": -20,
+     "z": 101.5,
+     "gap": false
+    },
+    {
+     "offset": -12,
+     "z": 99.2,
+     "gap": false
+    },
+    {
+     "offset": -6,
+     "z": 100.4,
+     "gap": false
+    },
+    {
+     "offset": 0,
+     "z": 100,
+     "gap": false
+    },
+    {
+     "offset": 8,
+     "z": 99.6,
+     "gap": false
+    },
+    {
+     "offset": 15,
+     "z": 98.0,
+     "gap": false
+    },
+    {
+     "offset": 30,
+     "z": 103,
+     "gap": false
+    },
+    {
+     "offset": 40,
+     "z": 99,
+     "gap": false
+    }
+   ],
+   "left": {
+    "points": [
+     [
+      0.0,
+      101.0
+     ],
+     [
+      -3.5,
+      100.9125
+     ],
+     [
+      -4.5,
+      100.8725
+     ],
+     [
+      -5.280681818181812,
+      100.35204545454546
+     ]
+    ],
+    "hinge": [
+     -4.5,
+     100.8725
+    ],
+    "daylight": [
+     -5.280681818181812,
+     100.35204545454546
+    ],
+    "kind": "fill"
+   },
+   "right": {
+    "points": [
+     [
+      0.0,
+      101.0
+     ],
+     [
+      3.5,
+      100.9125
+     ],
+     [
+      4.5,
+      100.8725
+     ],
+     [
+      6.279729729729737,
+      99.68601351351352
+     ]
+    ],
+    "hinge": [
+     4.5,
+     100.8725
+    ],
+    "daylight": [
+     6.279729729729737,
+     99.68601351351352
+    ],
+    "kind": "fill"
+   },
+   "cut": 0.0,
+   "fill": 9.510096859643735
+  },
+  {
+   "name": "Menteşede arazi aynı kotta: dolgu, daylight menteşede",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 4.0,
+       "slope": -3.125
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -6.25
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 4.0,
+       "slope": -3.125
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -6.25
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    }
+   },
+   "axis": 100.25,
+   "ground": [
+    {
+     "offset": -40,
+     "z": 100.0625,
+     "gap": false
+    },
+    {
+     "offset": 40,
+     "z": 100.0625,
+     "gap": false
+    }
+   ],
+   "left": {
+    "points": [
+     [
+      0.0,
+      100.25
+     ],
+     [
+      -4.0,
+      100.125
+     ],
+     [
+      -5.0,
+      100.0625
+     ]
+    ],
+    "hinge": [
+     -5.0,
+     100.0625
+    ],
+    "daylight": [
+     -5.0,
+     100.0625
+    ],
+    "kind": "fill"
+   },
+   "right": {
+    "points": [
+     [
+      0.0,
+      100.25
+     ],
+     [
+      4.0,
+      100.125
+     ],
+     [
+      5.0,
+      100.0625
+     ]
+    ],
+    "hinge": [
+     5.0,
+     100.0625
+    ],
+    "daylight": [
+     5.0,
+     100.0625
+    ],
+    "kind": "fill"
+   },
+   "cut": 0.0,
+   "fill": 1.0625
+  },
+  {
+   "name": "Şevler şeride sığmıyor: yanlar açık",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    }
+   },
+   "axis": 120.0,
+   "ground": [
+    {
+     "offset": -12,
+     "z": 100,
+     "gap": false
+    },
+    {
+     "offset": 12,
+     "z": 100,
+     "gap": false
+    }
+   ],
+   "left": {
+    "points": [
+     [
+      0.0,
+      120.0
+     ],
+     [
+      -3.5,
+      119.9125
+     ],
+     [
+      -4.5,
+      119.8725
+     ]
+    ],
+    "hinge": [
+     -4.5,
+     119.8725
+    ],
+    "daylight": null,
+    "kind": "open"
+   },
+   "right": {
+    "points": [
+     [
+      0.0,
+      120.0
+     ],
+     [
+      3.5,
+      119.9125
+     ],
+     [
+      4.5,
+      119.8725
+     ]
+    ],
+    "hinge": [
+     4.5,
+     119.8725
+    ],
+    "daylight": null,
+    "kind": "open"
+   },
+   "cut": 0.0,
+   "fill": 179.47875
+  },
+  {
+   "name": "Menteşede arazi yok: açık",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    }
+   },
+   "axis": 100.0,
+   "ground": [
+    {
+     "offset": -3,
+     "z": 99,
+     "gap": false
+    },
+    {
+     "offset": 3,
+     "z": 99,
+     "gap": false
+    }
+   ],
+   "left": {
+    "points": [
+     [
+      0.0,
+      100.0
+     ],
+     [
+      -3.5,
+      99.9125
+     ],
+     [
+      -4.5,
+      99.8725
+     ]
+    ],
+    "hinge": [
+     -4.5,
+     99.8725
+    ],
+    "daylight": null,
+    "kind": "open"
+   },
+   "right": {
+    "points": [
+     [
+      0.0,
+      100.0
+     ],
+     [
+      3.5,
+      99.9125
+     ],
+     [
+      4.5,
+      99.8725
+     ]
+    ],
+    "hinge": [
+     4.5,
+     99.8725
+    ],
+    "daylight": null,
+    "kind": "open"
+   },
+   "cut": 0.0,
+   "fill": 5.775
+  },
+  {
+   "name": "Boşluklu arazi: sağ şev boşluğu atlar",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    }
+   },
+   "axis": 102.0,
+   "ground": [
+    {
+     "offset": -40,
+     "z": 100,
+     "gap": false
+    },
+    {
+     "offset": 0,
+     "z": 100,
+     "gap": false
+    },
+    {
+     "offset": 6,
+     "z": 100,
+     "gap": false
+    },
+    {
+     "offset": 10,
+     "z": 95,
+     "gap": true
+    },
+    {
+     "offset": 40,
+     "z": 95,
+     "gap": false
+    }
+   ],
+   "left": {
+    "points": [
+     [
+      0.0,
+      102.0
+     ],
+     [
+      -3.5,
+      101.9125
+     ],
+     [
+      -4.5,
+      101.8725
+     ],
+     [
+      -7.30875,
+      100.0
+     ]
+    ],
+    "hinge": [
+     -4.5,
+     101.8725
+    ],
+    "daylight": [
+     -7.30875,
+     100.0
+    ],
+    "kind": "fill"
+   },
+   "right": {
+    "points": [
+     [
+      0.0,
+      102.0
+     ],
+     [
+      3.5,
+      101.9125
+     ],
+     [
+      4.5,
+      101.8725
+     ],
+     [
+      14.80875,
+      95.0
+     ]
+    ],
+    "hinge": [
+     4.5,
+     101.8725
+    ],
+    "daylight": [
+     14.80875,
+     95.0
+    ],
+    "kind": "fill"
+   },
+   "cut": 0.0,
+   "fill": 29.875217708333334
+  },
+  {
+   "name": "Asimetrik tip kesit",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.0,
+       "slope": -2.0
+      }
+     ],
+     "cut": 2.0,
+     "fill": 2.0
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.5,
+       "slope": -5
+      }
+     ],
+     "cut": 0.5,
+     "fill": 3.0
+    }
+   },
+   "axis": 100.0,
+   "ground": [
+    {
+     "offset": -50,
+     "z": 101.5,
+     "gap": false
+    },
+    {
+     "offset": 0,
+     "z": 100.5,
+     "gap": false
+    },
+    {
+     "offset": 50,
+     "z": 99,
+     "gap": false
+    }
+   ],
+   "left": {
+    "points": [
+     [
+      0.0,
+      100.0
+     ],
+     [
+      -3.0,
+      99.94
+     ],
+     [
+      -4.291666666666667,
+      100.58583333333333
+     ]
+    ],
+    "hinge": [
+     -3.0,
+     99.94
+    ],
+    "daylight": [
+     -4.291666666666667,
+     100.58583333333333
+    ],
+    "kind": "cut"
+   },
+   "right": {
+    "points": [
+     [
+      0.0,
+      100.0
+     ],
+     [
+      3.5,
+      99.9125
+     ],
+     [
+      7.0,
+      99.825
+     ],
+     [
+      8.5,
+      99.75
+     ],
+     [
+      8.74384236453202,
+      100.23768472906404
+     ]
+    ],
+    "hinge": [
+     8.5,
+     99.75
+    ],
+    "daylight": [
+     8.74384236453202,
+     100.23768472906404
+    ],
+    "kind": "cut"
+   },
+   "cut": 6.238267651888342,
+   "fill": 0.0
+  },
+  {
+   "name": "Bileşensiz yan: menteşe eksende",
+   "template": {
+    "left": {
+     "components": [],
+     "cut": 1.0,
+     "fill": 1.5
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    }
+   },
+   "axis": 101.0,
+   "ground": [
+    {
+     "offset": -40,
+     "z": 100,
+     "gap": false
+    },
+    {
+     "offset": 40,
+     "z": 100,
+     "gap": false
+    }
+   ],
+   "left": {
+    "points": [
+     [
+      0.0,
+      101.0
+     ],
+     [
+      -1.5,
+      100.0
+     ]
+    ],
+    "hinge": [
+     0.0,
+     101.0
+    ],
+    "daylight": [
+     -1.5,
+     100.0
+    ],
+    "kind": "fill"
+   },
+   "right": {
+    "points": [
+     [
+      0.0,
+      101.0
+     ],
+     [
+      3.5,
+      100.9125
+     ],
+     [
+      4.5,
+      100.8725
+     ],
+     [
+      5.80875,
+      100.0
+     ]
+    ],
+    "hinge": [
+     4.5,
+     100.8725
+    ],
+    "daylight": [
+     5.80875,
+     100.0
+    ],
+    "kind": "fill"
+   },
+   "cut": 0.0,
+   "fill": 5.5603171875
+  },
+  {
+   "name": "Dik yarma şevi 1/2, yatık dolgu 3",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 0.5,
+     "fill": 3.0
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 0.5,
+     "fill": 3.0
+    }
+   },
+   "axis": 100.0,
+   "ground": [
+    {
+     "offset": -40,
+     "z": 104,
+     "gap": false
+    },
+    {
+     "offset": 0,
+     "z": 101,
+     "gap": false
+    },
+    {
+     "offset": 40,
+     "z": 96,
+     "gap": false
+    }
+   ],
+   "left": {
+    "points": [
+     [
+      0.0,
+      100.0
+     ],
+     [
+      -3.5,
+      99.9125
+     ],
+     [
+      -4.5,
+      99.8725
+     ],
+     [
+      -5.261038961038961,
+      101.39457792207793
+     ]
+    ],
+    "hinge": [
+     -4.5,
+     99.8725
+    ],
+    "daylight": [
+     -5.261038961038961,
+     101.39457792207793
+    ],
+    "kind": "cut"
+   },
+   "right": {
+    "points": [
+     [
+      0.0,
+      100.0
+     ],
+     [
+      3.5,
+      99.9125
+     ],
+     [
+      4.5,
+      99.8725
+     ],
+     [
+      4.765882352941176,
+      100.40426470588235
+     ]
+    ],
+    "hinge": [
+     4.5,
+     99.8725
+    ],
+    "daylight": [
+     4.765882352941176,
+     100.40426470588235
+    ],
+    "kind": "cut"
+   },
+   "cut": 9.647572803666922,
+   "fill": 0.0
+  },
+  {
+   "name": "Ters eğimli şerit (dever gibi)",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": 4.0
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -4.0
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    }
+   },
+   "axis": 100.0,
+   "ground": [
+    {
+     "offset": -30,
+     "z": 99,
+     "gap": false
+    },
+    {
+     "offset": 30,
+     "z": 99,
+     "gap": false
+    }
+   ],
+   "left": {
+    "points": [
+     [
+      0.0,
+      100.0
+     ],
+     [
+      -3.5,
+      100.14
+     ],
+     [
+      -5.21,
+      99.0
+     ]
+    ],
+    "hinge": [
+     -3.5,
+     100.14
+    ],
+    "daylight": [
+     -5.21,
+     99.0
+    ],
+    "kind": "fill"
+   },
+   "right": {
+    "points": [
+     [
+      0.0,
+      100.0
+     ],
+     [
+      3.5,
+      99.86
+     ],
+     [
+      4.79,
+      99.0
+     ]
+    ],
+    "hinge": [
+     3.5,
+     99.86
+    ],
+    "daylight": [
+     4.79,
+     99.0
+    ],
+    "kind": "fill"
+   },
+   "cut": 0.0,
+   "fill": 8.5294
+  },
+  {
+   "name": "Büyük kotlar",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5,
+     "ditch": {
+      "fore": 2.0,
+      "depth": 0.8,
+      "bottom": 0.5
+     }
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5,
+     "ditch": {
+      "fore": 2.0,
+      "depth": 0.8,
+      "bottom": 0.5
+     }
+    }
+   },
+   "axis": 1251.37,
+   "ground": [
+    {
+     "offset": -30,
+     "z": 1252.9,
+     "gap": false
+    },
+    {
+     "offset": -5,
+     "z": 1251.0,
+     "gap": false
+    },
+    {
+     "offset": 5,
+     "z": 1250.6,
+     "gap": false
+    },
+    {
+     "offset": 30,
+     "z": 1249.2,
+     "gap": false
+    }
+   ],
+   "left": {
+    "points": [
+     [
+      0.0,
+      1251.37
+     ],
+     [
+      -3.5,
+      1251.2824999999998
+     ],
+     [
+      -4.5,
+      1251.2424999999998
+     ],
+     [
+      -4.87146226415079,
+      1250.994858490566
+     ]
+    ],
+    "hinge": [
+     -4.5,
+     1251.2424999999998
+    ],
+    "daylight": [
+     -4.87146226415079,
+     1250.994858490566
+    ],
+    "kind": "fill"
+   },
+   "right": {
+    "points": [
+     [
+      0.0,
+      1251.37
+     ],
+     [
+      3.5,
+      1251.2824999999998
+     ],
+     [
+      4.5,
+      1251.2424999999998
+     ],
+     [
+      5.506277292576385,
+      1250.5716484716156
+     ]
+    ],
+    "hinge": [
+     4.5,
+     1251.2424999999998
+    ],
+    "daylight": [
+     5.506277292576385,
+     1250.5716484716156
+    ],
+    "kind": "fill"
+   },
+   "cut": 0.0,
+   "fill": 4.968683120313283
+  },
+  {
+   "name": "Hendek arazinin altına iniyor",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5,
+     "ditch": {
+      "fore": 2.0,
+      "depth": 0.8,
+      "bottom": 0.5
+     }
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5,
+     "ditch": {
+      "fore": 2.0,
+      "depth": 0.8,
+      "bottom": 0.5
+     }
+    }
+   },
+   "axis": 99.5,
+   "ground": [
+    {
+     "offset": -40,
+     "z": 100.2,
+     "gap": false
+    },
+    {
+     "offset": 40,
+     "z": 100.2,
+     "gap": false
+    }
+   ],
+   "left": {
+    "points": [
+     [
+      0.0,
+      99.5
+     ],
+     [
+      -3.5,
+      99.4125
+     ],
+     [
+      -4.5,
+      99.3725
+     ],
+     [
+      -6.1,
+      98.5725
+     ],
+     [
+      -6.6,
+      98.5725
+     ],
+     [
+      -8.227500000000003,
+      100.2
+     ]
+    ],
+    "hinge": [
+     -4.5,
+     99.3725
+    ],
+    "daylight": [
+     -8.227500000000003,
+     100.2
+    ],
+    "kind": "cut"
+   },
+   "right": {
+    "points": [
+     [
+      0.0,
+      99.5
+     ],
+     [
+      3.5,
+      99.4125
+     ],
+     [
+      4.5,
+      99.3725
+     ],
+     [
+      6.1,
+      98.5725
+     ],
+     [
+      6.6,
+      98.5725
+     ],
+     [
+      8.227500000000003,
+      100.2
+     ]
+    ],
+    "hinge": [
+     4.5,
+     99.3725
+    ],
+    "daylight": [
+     8.227500000000003,
+     100.2
+    ],
+    "kind": "cut"
+   },
+   "cut": 15.025506250000047,
+   "fill": 0.0
+  },
+  {
+   "name": "Yalnız sağ yanda arazi",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    }
+   },
+   "axis": 102.0,
+   "ground": [
+    {
+     "offset": 0.5,
+     "z": 100,
+     "gap": false
+    },
+    {
+     "offset": 40,
+     "z": 100,
+     "gap": false
+    }
+   ],
+   "left": {
+    "points": [
+     [
+      0.0,
+      102.0
+     ],
+     [
+      -3.5,
+      101.9125
+     ],
+     [
+      -4.5,
+      101.8725
+     ]
+    ],
+    "hinge": [
+     -4.5,
+     101.8725
+    ],
+    "daylight": null,
+    "kind": "open"
+   },
+   "right": {
+    "points": [
+     [
+      0.0,
+      102.0
+     ],
+     [
+      3.5,
+      101.9125
+     ],
+     [
+      4.5,
+      101.8725
+     ],
+     [
+      7.30875,
+      100.0
+     ]
+    ],
+    "hinge": [
+     4.5,
+     101.8725
+    ],
+    "daylight": [
+     7.30875,
+     100.0
+    ],
+    "kind": "fill"
+   },
+   "cut": 0.0,
+   "fill": 10.3721921875
+  },
+  {
+   "name": "Sıfır genişlik: geçersiz",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 0.0,
+       "slope": -2
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    }
+   },
+   "axis": 100.0,
+   "ground": [
+    {
+     "offset": -40,
+     "z": 100,
+     "gap": false
+    },
+    {
+     "offset": 40,
+     "z": 100,
+     "gap": false
+    }
+   ],
+   "error": {
+    "right": false,
+    "component": 0
+   }
+  },
+  {
+   "name": "Sıfır yarma şevi: geçersiz",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 0.0,
+     "fill": 1.5
+    }
+   },
+   "axis": 100.0,
+   "ground": [
+    {
+     "offset": -40,
+     "z": 100,
+     "gap": false
+    },
+    {
+     "offset": 40,
+     "z": 100,
+     "gap": false
+    }
+   ],
+   "error": {
+    "right": true,
+    "component": null
+   }
+  },
+  {
+   "name": "Eksi hendek tabanı: geçersiz",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5,
+     "ditch": {
+      "fore": 2.0,
+      "depth": 0.8,
+      "bottom": -1
+     }
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    }
+   },
+   "axis": 100.0,
+   "ground": [
+    {
+     "offset": -40,
+     "z": 100,
+     "gap": false
+    },
+    {
+     "offset": 40,
+     "z": 100,
+     "gap": false
+    }
+   ],
+   "error": {
+    "right": false,
+    "component": null
+   }
+  }
+ ]
+}

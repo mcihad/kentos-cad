@@ -27,6 +27,7 @@ import type { ProjectForm } from "./ProjectForm";
 import type { ProjectProfileFile } from "./ProjectProfileFile";
 import type { ProjectRelation } from "./ProjectRelation";
 import type { ProjectVariable } from "./ProjectVariable";
+import type { RoadSettings } from "./RoadSettings";
 import type { ServiceConnection } from "./ServiceConnection";
 import type { SourceBase } from "./SourceBase";
 import type { SourceLink } from "./SourceLink";
@@ -240,4 +241,9 @@ heights?: HeightReference,
  * The coordinates' epoch (decimal year, docs/adr/0519 §1): when a dynamic system's coordinates hold; absent: not
  * said. Only a project with a coordinate system has one.
  */
-coordinateEpoch?: number, };
+coordinateEpoch?: number, 
+/**
+ * A road project's own settings (plan/road.md Y2.2): its terrain surfaces' definitions; absent: none. Only a CAD
+ * project drawn for a road has them (`.kcad` schema 158).
+ */
+road?: RoadSettings, };

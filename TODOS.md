@@ -51,6 +51,10 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- plan/road.md Y1–Y13 (ADR 0900–0911): KentOS Yol bütünüyle masaüstünde; web'de yol projesi türü, Arazi, Güzergâh
+  ve Koridor sekmeleri, pencereler, Yol projesi paneli ve Görünüşler yok. Çekirdek (`kentos-road`) paylaşılır;
+  web'e dönüşte dar WASM bağlayıcısıyla ve aynı ortak durumlarla gelir.
+
 - ADR 0866–0867: tekrarlanan çizgi/2B çoklu çizgi/çember/yay koleksiyonlarını yazısız ve
   durdurulabilir bulma, kaynak sırasındaki UUID eşlemesi ve adayları
   çizimin yanında inceleyip seçme akışı native/Python/MCP kapsamındadır.
@@ -3643,6 +3647,13 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   [ADR 0519](docs/adr/0519-vertical-crs-and-epoch.md).**
 
 ## 17. Arazi, yol ve altyapı projeleri — P2/P3
+
+**Durum (3 Kasım 2026):** KentOS Yol modülü [plan/road.md](plan/road.md) Y1–Y13 ile birleşti
+([ADR 0900](docs/adr/0900-road-terrain-surface.md)–[0911](docs/adr/0911-road-project-tree-views-and-rebuild.md)):
+`CIVIL-01`, `02`, `04`–`09`, `11`, `13`, `14` [~] (çekirdek, komutlar, ortak durumlar, Python, MCP ve masaüstü
+pencereleri var; KGM standart profili sahibin kaynağını, gerçek pencerede elle kabul ve büyük proje ölçümleri
+bekliyor). `CIVIL-03` (nokta bulutundan arazi işi), `10` (drenaj ağı ve hidrolik) ve `12`'nin maliyet ve çevresel
+kısıt karşılaştırması açık; ön güzergâh (`road.routes.*`) `12`'nin ilk parçası. Web'de yok (ADR 0228, §0.2).
 
 Bu modül çizilmiş bir polyline'ı yol tasarımı saymayacak. Aks, boykesit, enkesit ve koridorun kaynak parametreleri; türetilmiş mesh ve metrajdan ayrı tutulacak. IFC 4.3 altyapı kapsamı ve `IfcAlignment` uyumu için dış veri eşleme tasarımı yapılabilir. [IFC altyapı kapsamı](https://standards.buildingsmart.org/IFC/RELEASE/IFC4_3/HTML/content/scope.htm), [IfcAlignment](https://standards.buildingsmart.org/IFC/RELEASE/IFC4_3/HTML/lexical/IfcAlignment.htm).
 

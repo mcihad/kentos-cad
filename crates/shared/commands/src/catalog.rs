@@ -6658,6 +6658,1550 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // KentOS Yol's terrain surfaces (plan/road.md Y2.3, docs/adr/0900 §11), held together by
+        // fixtures/commands/v1/road.terrains.{create,edit,query}.json.
+        CommandDescriptor {
+            id: crate::ROAD_TERRAINS_CREATE.into(),
+            version: crate::ROAD_TERRAINS_CREATE_VERSION,
+            title: "Arazi yüzeyi oluştur".into(),
+            summary: "Yol projesinde (cadWork road) çizimin noktalarından ve kırık hatlarından kısıtlı Delaunay üçgenleriyle (kentos.cdt/1) bir arazi yüzeyi kurar ve tanımını projenin yol ayarlarına sona yazar, kabul edilmiş olarak (built: kaynaklarının özeti). \
+                      Kaynaklar: points ve breaklines için katman ya da grup kimlikleri (layers; grubun bütün katmanları) ve nesne kimlikleri (uids). Nokta nesnesinin kotlu yerleri nokta olur; çizginin, çoklu çizginin ve alanın her köşesi kotlu yolu kırık hattır (alanın halkaları kapalı). boundary ve voids düz kenarlı bir alanın ya da kapalı çoklu çizginin kimliğidir; köşeleri yüzeyin kotunu alır. tolerance aynı yerdeki iki kaydın tek köşe olacağı kot farkı (m, varsayılan 0,001), maxEdge dış kenarı bundan uzun dış üçgenlerin atılacağı uzunluk (m). \
+                      Üçgenler kaydedilmez: yüzey her açılışta kaynaklarından yeniden kurulur. Kullanılamayan her kaynak (çizimde yok, kotu eksik, yaylı kenar, türü uymuyor, kapalı değil) terrain_source_left uyarısıdır; yüzey onsuz kurulur. Kurulamayan yüzey (çok az nokta, bir yerde iki kot, kesişen kırık hatlar, noktaların dışında sınır) terrain_unbuildable ile reddedilir, ileti yeri söyler. \
+                      id verilmezse t-1, t-2 … ilk boş olanıdır; kimlik ve ad (büyük küçük harf ayrımsız) projede tektir. Proje ayarıdır: çizimi kirli yapar, geri alma adımı değildir. Retler: not_a_road_project, invalid_terrain, invalid_revision, revision_conflict, terrain_unbuildable."
+                .into(),
+            aliases: vec!["yuzeyolustur".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::TerrainsCreate>(),
+            output: schema::<crate::TerrainsWritten>(),
+            plan: Some(schema::<crate::TerrainsWritten>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Zemin katmanının noktalarından, eksen kırık hattıyla, parsel sınırında mevcut zemin".into(),
+                input: json!({
+                    "name": "Mevcut zemin",
+                    "points": { "layers": ["zemin"] },
+                    "breaklines": { "layers": ["kirik"] },
+                    "boundary": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e17",
+                    "maxEdge": 60.0
+                }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_TERRAINS_EDIT.into(),
+            version: crate::ROAD_TERRAINS_EDIT_VERSION,
+            title: "Arazi yüzeyini düzenle".into(),
+            summary: "Yol projesinin bir arazi yüzeyini düzenler. set: surface tanımı aynı kimlikli yüzeyin yerini alır (built verilmez; yüzey son kabul edildiği özeti korur, tanımı değişen yüzey kabul edilene dek eskidir). \
+                      accept: id'li yüzey kaynaklarından yeniden kurulur ve kabul edilir (built kaynakların bugünkü özeti olur); kurulamıyorsa terrain_unbuildable. remove: id'li yüzey kalkar. \
+                      Cevap projenin yüzeyleri ve (set ve accept'te) yüzeyin bugünkü durumudur: current, stale, new ya da unbuildable, özeti, kullanılamayan kaynakları ve ölçüleri. Proje ayarıdır, geri alma adımı değildir. \
+                      Retler: not_a_road_project, no_terrain, no_id, invalid_terrain, invalid_revision, revision_conflict, unknown_terrain, terrain_unbuildable."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::TerrainsEdit>(),
+            output: schema::<crate::TerrainsWritten>(),
+            plan: Some(schema::<crate::TerrainsWritten>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Kaynakları değişen yüzeyi yeniden kabul et".into(),
+                    input: json!({ "operation": "accept", "id": "t-1" }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Yüzeyi sil".into(),
+                    input: json!({ "operation": "remove", "id": "t-1" }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_TERRAINS_QUERY.into(),
+            version: crate::ROAD_TERRAINS_QUERY_VERSION,
+            title: "Arazi yüzeyini sorgula".into(),
+            summary: "Yol projesinin arazi yüzeylerini kaynaklarından bugün kurulduğu gibi verir; hiçbir şey yazmaz. Her yüzeyin durumu (current: son kabul edildiği kaynaklarla aynı; stale: kaynakları ya da tanımı değişti; new: hiç kabul edilmedi; unbuildable: kurulamıyor, problem nedenini ve yerini söyler), kaynaklarının özeti, kullanılamayan kaynakları ve ölçüleri (köşe, üçgen, kısıt kenarı, plan alanı m², en düşük ve en yüksek kot, birleşen, bölünen, kırpılan). \
+                      surface (kimlik ya da ad) verilince yalnız o yüzey; at yerlerin kotları (inside, outside, void; dışarıda ve boşlukta kot yok, dışa uzatılmaz), along iki ya da daha çok yerli hattın kesiti: hattın köşeleri ve üçgen kenarlarını kestiği her yer, başından uzaklığı (station), kotu, ve önceki yerden bu yere hattın yüzeyin dışında kalıp kalmadığı (gap). \
+                      Retler: not_a_road_project, unknown_terrain, no_terrain, invalid_places."
+                .into(),
+            aliases: vec!["kotsor".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::TerrainsQuery>(),
+            output: schema::<crate::TerrainsQueried>(),
+            plan: Some(schema::<crate::TerrainsQueried>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Projenin yüzeyleri ve durumları".into(),
+                    input: json!({}),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Bir yerin kotu ve bir hattın kesiti".into(),
+                    input: json!({ "surface": "Mevcut zemin", "at": [[20.0, 15.0]], "along": [[0.0, 10.0], [40.0, 20.0]] }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_TERRAINS_CONTOURS.into(),
+            version: crate::ROAD_TERRAINS_CONTOURS_VERSION,
+            title: "Eş yükselti eğrileri".into(),
+            summary: "Yol projesinin bir arazi yüzeyinin (surface: kimliği ya da adı) eş yükselti eğrilerini bir katmana 3B çoklu çizgi olarak yazar: base'ten (yoksa 0) her interval metrede (m) bir düzey, base'ten sayılan her majorEvery'inci düzey (yoksa 5, 0: hiçbiri) kalın ana eğri; Civil 3D'nin yüzeyden ana ve ara eğri çıkarması gibi. \
+                      Düzey bir üçgenin köşeleri iki yanında olan kenarını keser (düzeydeki köşe üstte sayılır: köşeden geçen eğri bir kez çizilir); kesişim kenarın kendi doğrusundan, iki üçgende aynı yerde; parçalar kenarlarından zincirlenir, kapanan eğri kapalı çoklu çizgidir. Eğriler düzeye, sonra ilk yerlerine göre sıralıdır; açık eğri küçük ucundan, kapalı eğri en küçük yerinden başlar. \
+                      Tek geri alma adımı “Eş yükselti eğrileri”. Retler: not_a_road_project, invalid_contours, layer_not_found, not_a_layer, layer_locked, invalid_revision, revision_conflict, unknown_terrain, terrain_unbuildable, no_contours."
+                .into(),
+            aliases: vec!["esyukselti".into(), "contours".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::TerrainsContours>(),
+            output: schema::<crate::TerrainsContoured>(),
+            plan: Some(schema::<crate::TerrainsContoured>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Mevcut zeminin 0,5 m'lik eğrileri, her 2 m'de bir ana eğri".into(),
+                input: json!({ "surface": "Mevcut zemin", "interval": 0.5, "majorEvery": 4, "layerId": "esyukselti" }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::FILE_IMPORT_LANDXML.into(),
+            version: crate::FILE_IMPORT_LANDXML_VERSION,
+            title: "LandXML al".into(),
+            summary: "Bir LandXML dosyasının TIN yüzeyini yol projesine alır (surface: dosyadaki adı; yoksa ilki): noktaları (P, “kuzey doğu kot”) nokta, kırık hatları 3B çoklu çizgi, ilk dış sınırı ve boşlukları alan olarak bir katmana (layerId) tek geri alma adımında “LandXML al”; sonra bunlardan bir arazi yüzeyi tanımlar ve kabul eder (road.terrains.create'in tanımı, name: adı; proje ayarı). \
+                      Koordinatlar dosyanın birimiyle (Units linearUnit: meter, foot, USSurveyFoot …) metreye çevrilir. Dosyanın üçgenleri (Faces) saklanmaz: yüzey kentos.cdt/1 ile noktalardan ve kırık hatlardan yeniden kurulur; cevabın differs'i dosyanın yok sayılmayan üçgenlerinin ağırlık merkezlerinde iki yüzeyin en büyük kot farkıdır. Kurulamayan yüzey hiçbir şey almaz. \
+                      Uyarılar: landxml_left (olmayan noktayı anan üçgen, iki kez yazılmış nokta kimliği, ikinci dış sınır). Retler: not_a_road_project, file_not_found, import_unreadable, landxml_no_surface, layer_not_found, not_a_layer, layer_locked, invalid_terrain, invalid_revision, revision_conflict, terrain_unbuildable."
+                .into(),
+            aliases: vec!["landxml".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ImportLandxml>(),
+            output: schema::<crate::LandxmlImported>(),
+            plan: Some(schema::<crate::LandxmlImported>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Mevcut zemin yüzeyini zemin katmanına al".into(),
+                input: json!({ "path": "/proje/zemin.xml", "layerId": "zemin", "name": "Mevcut zemin" }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_ALIGNMENTS_CREATE.into(),
+            version: crate::ROAD_ALIGNMENTS_CREATE_VERSION,
+            title: "Aks oluştur".into(),
+            summary: "Yol projesinde (cadWork road) PI'lardan bir yatay güzergâh (aks) kurar ve tanımını projenin yol ayarlarına yazar: aliyman, kurp ve klotoid tek analitik biçimde (kentos.alignment/1). \
+                      pis başlangıç, ara PI'lar ve bitiştir; her ara PI'da radius (yoksa kurp yok, kırık nokta), spiralIn ve spiralOut (giriş ve çıkış klotoidinin boyu, m; A² = R·L). Eşit olmayan klotoidlerde kurpun merkezi iki teğetin içe R+p kadar ötelenmiş doğrularının kesişimidir. \
+                      offsetOf {alignment, offset} bir aksın paralelini kurar (sağa artı, sola eksi, m): kendi geometrisi saklanmaz, kaynağını izler, km'si kaynağınındır; bir kurpun yarıçapı ötelemeden küçükse ya da kendini keserse offset_cusp. \
+                      stationing başlangıç km'si (start) ve km eşitlikleri (back: eşitliğin olduğu yerin önceki km'si, ahead: sonraki km, increasing: km sonra artar mı). Elemanların kimlikleri PI'larınkinden türer (p3/aliyman, p3/giris, p3/kurp, p3/cikis). \
+                      Cevap aksın raporudur: boy (projenin düzleminde), zemin boyu (ölçek ve yükseklik çarpanıyla, sistem ve ortalama elipsoit yüksekliği varsa), km'ler, elemanlar, kurplar (sapma, teğet boyları, TS–SC–CS–ST km'leri), ters ve bileşik kurplar ve integralin PI geometrisine artığı. \
+                      Tek geri alma adımı “Aks oluştur”. id verilmezse g-1, g-2 … ilk boş olanıdır. Retler: not_a_road_project, invalid_alignment, alignment_spirals_long, alignment_curves_overlap, invalid_stationing, offset_cusp, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["aksolustur".into(), "guzergah".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::AlignmentsCreate>(),
+            output: schema::<crate::AlignmentsWritten>(),
+            plan: Some(schema::<crate::AlignmentsWritten>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Üç PI, ortadakinde 400 m kurp ve 80 m klotoidler, km 2+000'den".into(),
+                    input: json!({
+                        "name": "Ana aks",
+                        "pis": [
+                            { "id": "a", "x": 1000.0, "y": 2000.0 },
+                            { "id": "p1", "x": 1600.0, "y": 2000.0, "radius": 400.0, "spiralIn": 80.0, "spiralOut": 80.0 },
+                            { "id": "b", "x": 2100.0, "y": 2500.0 }
+                        ],
+                        "stationing": { "start": 2000.0 }
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Ana aksın 7,5 m sağında paralel aks".into(),
+                    input: json!({ "name": "Sağ kenar", "offsetOf": { "alignment": "g-1", "offset": 7.5 } }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_ALIGNMENTS_EDIT.into(),
+            version: crate::ROAD_ALIGNMENTS_EDIT_VERSION,
+            title: "Aksı düzenle".into(),
+            summary: "Yol projesinin bir aksını (alignment: kimliği ya da adı) düzenler. set: verilen alanlar (name, pis, stationing, paralel aksta offset) aksınkinin yerini alır; boş stationing km'yi sıfırlar. reverse: aks ters çevrilir (PI'lar ters sırada, her PI'nın giriş ve çıkış klotoidi yer değiştirir; başlangıç km'si kalır, eşitlikler gider: equations_dropped). remove: aks kalkar, onu izleyen paralel aks varken alignment_in_use. \
+                      Cevabın mapping'i düzenlemenin km'lere ne yaptığıdır: her eleman kimliğiyle kept (aynı yerde aynı), moved (aynı ama km'si kaydı), changed (geometrisi değişti), added, removed ya da reversed; önceki ve sonraki km aralığıyla. dependents aksı izleyen paralel akslardır; düzenleme onlardan birini kıvırırsa offset_cusp ile reddedilir. Aksın revizyonu her değişiklikte bir artar. \
+                      Tek geri alma adımı “Aksı düzenle”. Retler: not_a_road_project, unknown_alignment, invalid_alignment, alignment_spirals_long, alignment_curves_overlap, invalid_stationing, offset_cusp, alignment_in_use, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::AlignmentsEdit>(),
+            output: schema::<crate::AlignmentsWritten>(),
+            plan: Some(schema::<crate::AlignmentsWritten>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Km eşitliği ekle: 2+200 geri, 2+500 ileri".into(),
+                    input: json!({ "alignment": "Ana aks", "operation": "set",
+                        "stationing": { "start": 2000.0, "equations": [{ "back": 2200.0, "ahead": 2500.0 }] } }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Aksı ters çevir".into(),
+                    input: json!({ "alignment": "g-1", "operation": "reverse" }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_ALIGNMENTS_LABEL.into(),
+            version: crate::ROAD_ALIGNMENTS_LABEL_VERSION,
+            title: "Aks km yazısı".into(),
+            summary: "Yol projesinin bir aksının (alignment: kimliği ya da adı) km'sini bir katmana çizgi ve yazı nesneleri olarak yazar, paftaya ve DXF'e gider: km eşitliklerinden okunan her yuvarlak every metrelik km'de (yoksa 20) aksı kesen kısa işaret, her major'da (yoksa 100; every'nin tam katı) uzun işaret ve sağında km yazısı (2+100), başlangıç ve bitişte milimetresine km, curves açıksa (varsayılan) kurpların TS, SC, CS, ST noktaları (klotoidsiz kurpta TC, CT) solda km'leriyle. \
+                      Kâğıtta işaret her yana 1,5 mm (uzun 3 mm), yazı height mm (yoksa 2,5) yüksekliğinde, çizim ölçeğiyle. Cevap yazılanların aks boyunca sırasıdır: türü (tick, major, start, end ya da noktanın adı), aksın kendi km'si, km yazısı ve metni. \
+                      Tek geri alma adımı “Aks km yazısı”. Retler: not_a_road_project, unknown_alignment, invalid_label, layer_not_found, not_a_layer, service_layer, layer_locked, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["kmyaz".into(), "aksyazi".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::AlignmentsLabel>(),
+            output: schema::<crate::AlignmentsLabelled>(),
+            plan: Some(schema::<crate::AlignmentsLabelled>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana aksın km'si her 20 m'de işaret, her 100 m'de yazı".into(),
+                input: json!({ "alignment": "Ana aks", "layerId": "km" }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_PROFILES_CREATE.into(),
+            version: crate::ROAD_PROFILES_CREATE_VERSION,
+            title: "Boykesit oluştur".into(),
+            summary: "Yol projesinde (cadWork road) bir aksın (alignment: kimliği ya da adı; PI'larıyla kurulan aks, paralel aks değil) üstünde PVI'lerden bir düşey güzergâh (boykesit) kurar ve tanımını projenin yol ayarlarına yazar (kentos.profile/1). \
+                      pvis başlangıç, ara PVI'ler ve bitiştir; station aksın kendi km'si (başından yatay uzunluk, km yazısı değil), elevation kot. Her ara PVI'de tek kurp: length simetrik parabol (yatay boy), lengthIn ve lengthOut birlikte asimetrik parabol (PVI'den önceki ve sonraki kol), radius km–kot düzleminde gerçek çember (teğet boyu R·tan(Δθ/2)); hiçbiri yoksa kırık PVI. \
+                      surface (kimliği ya da adı) siyah kotların okunacağı arazi yüzeyidir. Boykesit kurulduğu andaki aks revizyonunu tutar; aks sonra değişirse boykesit eskir (profile_stale), PVI'ler kendiliğinden kaydırılmaz. \
+                      Cevap boykesitin raporudur: eğimler (oran), kurplar (tür, giriş ve çıkış eğimi, başı ve sonu, boyu, A yüzde, K = L/|A| m/%, tepe ya da çukur, en yüksek ya da en alçak noktası). \
+                      Tek geri alma adımı “Boykesit oluştur”. id verilmezse b-1, b-2 … ilk boş olanıdır. Retler: not_a_road_project, unknown_alignment, unknown_terrain, invalid_road_profile, profile_curves_overlap, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["boykesit".into(), "duseyguzergah".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ProfilesCreate>(),
+            output: schema::<crate::ProfilesWritten>(),
+            plan: Some(schema::<crate::ProfilesWritten>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana aksta üç PVI, ortadakinde 160 m parabol, mevcut zeminle".into(),
+                input: json!({
+                    "name": "Proje kotu",
+                    "alignment": "Ana aks",
+                    "surface": "Mevcut zemin",
+                    "pvis": [
+                        { "id": "a", "station": 0.0, "elevation": 100.0 },
+                        { "id": "v1", "station": 300.0, "elevation": 94.0, "length": 160.0 },
+                        { "id": "b", "station": 700.0, "elevation": 106.0 }
+                    ]
+                }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_PROFILES_EDIT.into(),
+            version: crate::ROAD_PROFILES_EDIT_VERSION,
+            title: "Boykesiti düzenle".into(),
+            summary: "Yol projesinin bir boykesitini (profile: kimliği ya da adı) düzenler. set: verilen alanlar (name, pvis, surface; boş surface yüzeyi kaldırır) boykesitinkinin yerini alır. rebind: boykesit aksının bugünkü revizyonunu alır, eskimiş olmaktan çıkar; PVI'ler kaydırılmaz. remove: boykesit kalkar. \
+                      Boykesitin revizyonu her değişiklikte bir artar. Tek geri alma adımı “Boykesiti düzenle”. Retler: not_a_road_project, unknown_road_profile, unknown_terrain, invalid_road_profile, profile_curves_overlap, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ProfilesEdit>(),
+            output: schema::<crate::ProfilesWritten>(),
+            plan: Some(schema::<crate::ProfilesWritten>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Ortadaki PVI'yi 1 m indir, kurbu 4000 m yarıçaplı çember yap".into(),
+                    input: json!({ "profile": "Proje kotu", "operation": "set", "pvis": [
+                        { "id": "a", "station": 0.0, "elevation": 100.0 },
+                        { "id": "v1", "station": 300.0, "elevation": 93.0, "radius": 4000.0 },
+                        { "id": "b", "station": 700.0, "elevation": 106.0 }
+                    ] }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Değişen aksa yeniden bağla".into(),
+                    input: json!({ "profile": "b-1", "operation": "rebind" }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_PROFILES_DRAW.into(),
+            version: crate::ROAD_PROFILES_DRAW_VERSION,
+            title: "Boykesit çiz".into(),
+            summary: "Yol projesinin bir boykesitini (profile: kimliği ya da adı) bir katmana çizgi ve yazı nesneleri olarak yazar, paftaya ve DXF'e gider: ilk PVI'den son PVI'ye çerçeve (sol altı at: ilk PVI'nin km'si ve datum kotu; km'nin bir metresi bir çizim birimi, kotun bir metresi exaggeration birim, yoksa 10), kot ızgarası ve kotları, arazi (siyah; yüzeyin dışı çizilmez), proje çizgisi (kırmızı; kurp 16 parçada) ve her kurbun boyları ve K'sı. \
+                      Çerçevenin altında bantlar: Km, Siyah kot, Kırmızı kot, Fark (kırmızı − siyah), her every metrelik yuvarlak km'de (yoksa 50) ve uçlarda, Eğim PVI'ler arasında. Yazılar height mm (yoksa 2,5) yüksekliğinde, çizim ölçeğiyle. datum verilmezse gösterilen en alçak kotun bir metre altı (aşağı yuvarlanmış), tepe en yükseğin bir metre üstü. \
+                      Cevap çerçevenin köşeleri, datum, tepe, abartma, ızgara aralığı ve bantların sütunlarıdır. Tek geri alma adımı “Boykesit çiz”. Retler: not_a_road_project, unknown_road_profile, invalid_label, layer_not_found, not_a_layer, service_layer, layer_locked, invalid_revision, revision_conflict; uyarılar layer_hidden, profile_stale, profile_surface_gone."
+                .into(),
+            aliases: vec!["boykesitciz".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ProfilesDraw>(),
+            output: schema::<crate::ProfilesDrawn>(),
+            plan: Some(schema::<crate::ProfilesDrawn>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Proje kotunu 1000, -500'den başlayarak çiz, her 20 m'de bant".into(),
+                input: json!({ "profile": "Proje kotu", "layerId": "boykesit", "at": [1000.0, -500.0], "every": 20.0 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_PROFILES_QUERY.into(),
+            version: crate::ROAD_PROFILES_QUERY_VERSION,
+            title: "Boykesiti sorgula".into(),
+            summary: "Yol projesinin boykesitlerini bugün kuruldukları gibi verir; hiçbir şey yazmaz. profile verilmezse her boykesitin raporu; verilince yalnız onunki ve soruları: stations aksın kendi km'lerinde, every her every metrelik yuvarlak km'de kırmızı kot (proje kotu), eğim, siyah kot (yüzeyden; yüzeyin dışında ya da yüzey yoksa yok) ve fark (kırmızı − siyah: dolgu artı, yarma eksi); kırmızı kot boykesitin ilk ve son PVI'si arasında vardır. \
+                      terrain aksın yüzeydeki arazi boykesitini verir: aksın üçgen kenarlarını kestiği her yer (kesin, kenarın kotuyla), elemanların uçları ve aksın uçları; yüzeyin dışı gap'tir, kot uydurulmaz. Kurp boyunca iki nokta arası doğrusal okunmaz: ara km'ler stations ile sorulur. \
+                      Uyarılar: profile_stale (aks boykesitten sonra değişti), profile_surface_gone (yüzey yok ya da kurulamıyor). Retler: not_a_road_project, unknown_road_profile, invalid_places, station_outside, no_terrain ve aks ya da boykesit artık kurulamıyorsa geometrinin retleri."
+                .into(),
+            aliases: vec!["kotsor".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ProfilesQuery>(),
+            output: schema::<crate::ProfilesQueried>(),
+            plan: Some(schema::<crate::ProfilesQueried>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Her 20 m'de kırmızı ve siyah kot".into(),
+                    input: json!({ "profile": "Proje kotu", "every": 20.0 }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Arazi boykesiti".into(),
+                    input: json!({ "profile": "b-1", "terrain": true }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_TEMPLATES_EDIT.into(),
+            version: crate::ROAD_TEMPLATES_EDIT_VERSION,
+            title: "Tip kesiti düzenle".into(),
+            summary: "Yol projesinin tip kesitini (template: kimliği ya da adı; yoksa yeni) yazar ya da kaldırır. Bir yan eksenden dışa bileşenlerdir: şerit (lane) ve banket (shoulder), her biri genişlik (m) ve enine eğim (yüzde, dışa düşen eksi); uç koşulu yarma şevi cut ve dolgu şevi fill (bir düşeye yatay, 1,5 = 3/2) ve isteğe bağlı hendek (ditch: iç şev fore, derinlik depth, taban bottom) yalnız yarmada. \
+                      right verilmezse ya da mirror ile sağ yan solun aynısıdır. Değerleri KGM'nin standardından ya da projeden kullanıcı yazar; öntanımlı sayı yoktur. set: yeni tip kesitin kimliği verilen ya da ilk boş tk-n, adı ve sol yanı gerekir; var olanın verilen alanları onunkinin yerini alır, revizyonu bir artar. remove: tip kesit kalkar. \
+                      Tek geri alma adımı “Tip kesit”. Retler: not_a_road_project, unknown_road_template, invalid_road_template, road_template_in_use, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["tipkesit".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::TemplatesEdit>(),
+            output: schema::<crate::TemplatesWritten>(),
+            plan: Some(schema::<crate::TemplatesWritten>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "İki şeritli tip kesit, simetrik, yarmada hendekli".into(),
+                input: json!({ "operation": "set", "name": "Tip 1", "left": {
+                    "components": [
+                        { "kind": "lane", "width": 3.5, "slope": -2.5 },
+                        { "kind": "shoulder", "width": 1.0, "slope": -4.0 }
+                    ],
+                    "cut": 1.0, "fill": 1.5,
+                    "ditch": { "fore": 2.0, "depth": 0.5, "bottom": 0.5 }
+                } }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_SECTIONS_EDIT.into(),
+            version: crate::ROAD_SECTIONS_EDIT_VERSION,
+            title: "Kesit takımını düzenle".into(),
+            summary: "Yol projesinin kesit hattı takımını (set: kimliği ya da adı; yoksa yeni) yazar, aksına yeniden bağlar ya da kaldırır. Bir kesit hattı aksın bir km'sinde aksa diktir, sola left, sağa right metre. Km'ler: range (from, to, her every metrelik yuvarlak km, uçlar ve geometry ile kurp noktaları ve boykesitin PVI'leri), stations (yazılan km'ler) ya da lines (çizimdeki çizgi ve çoklu çizgilerin aksı ilk kestiği yer); 1 mm içindekiler bir. \
+                      Takım bir aksın, isteğe bağlı boykesitinin (profile), tip kesitinin (template) ve yüzeyinin (surface) kesitleridir; adlarla da verilir, boş değer kaldırır. Yeni takımın kimliği verilen ya da ilk boş k-n; name, alignment, left, right ve stations gerekir; aksının bugünkü revizyonunu tutar. rebind: aksın bugünkü revizyonunu alır. Kesitler saklanmaz, road.sections.query ile her seferinde çıkar. \
+                      Tek geri alma adımı “Kesit takımı”. Retler: not_a_road_project, unknown_section_set, unknown_alignment, unknown_road_profile, unknown_road_template, unknown_terrain, invalid_section_set, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["kesithatti".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::SectionsEdit>(),
+            output: schema::<crate::SectionsWritten>(),
+            plan: Some(schema::<crate::SectionsWritten>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana aksın 0–600 m arasında her 20 m'sinde, kurp noktalarında, 30 m şeritli takım".into(),
+                input: json!({ "operation": "set", "name": "Enkesitler", "alignment": "Ana aks", "profile": "Proje kotu",
+                    "template": "Tip 1", "surface": "Mevcut zemin", "left": 30.0, "right": 30.0,
+                    "stations": { "method": "range", "from": 0.0, "to": 600.0, "every": 20.0, "geometry": true } }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_SECTIONS_QUERY.into(),
+            version: crate::ROAD_SECTIONS_QUERY_VERSION,
+            title: "Enkesitleri sorgula".into(),
+            summary: "Yol projesinin kesit hattı takımlarını ve enkesitlerini bugün kuruldukları gibi verir; hiçbir şey yazmaz. set verilmezse her takımın raporu; verilince yalnız onunki ve kesitleri (stations ile yalnız takımın o km'lerindekiler): kesit hattının uçları, arazi (yüzeyin üçgen kenarlarını kestiği her yer, kesin; yüzeyin dışı gap), boykesitin kırmızı kotunda tip kesitin platformu ve şevleri. \
+                      Menteşede arazi üstteyse yarma (hendek, yarma şevi yukarı), değilse dolgu (dolgu şevi aşağı); şevin araziyle ilk buluştuğu yer daylight, kesin. Yarma ve dolgu alanı (m²) iki uç arasında proje ile arazi arasındaki alanın kapalı biçimde integrali. Şerit içinde araziyle buluşmayan yan open'dır, kot uydurulmaz. \
+                      Raporda km'si artık çıkmayan (çizgisi silinmiş ya da aksı kesmeyen) takımın km listesi boştur; kesitleri sorulunca neden söylenir. Uyarılar: section_set_stale, section_surface_gone, section_open. Retler: not_a_road_project, unknown_section_set, invalid_section_set, invalid_places ve aks ya da boykesit artık kurulamıyorsa geometrinin retleri."
+                .into(),
+            aliases: vec!["enkesitsor".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::SectionsQuery>(),
+            output: schema::<crate::SectionsQueried>(),
+            plan: Some(schema::<crate::SectionsQueried>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bir takımın iki km'deki enkesiti".into(),
+                input: json!({ "set": "Enkesitler", "stations": [100.0, 120.0] }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_SECTIONS_DRAW.into(),
+            version: crate::ROAD_SECTIONS_DRAW_VERSION,
+            title: "Enkesit çiz".into(),
+            summary: "Yol projesinin bir kesit takımının enkesitlerini (set: kimliği ya da adı; stations ile yalnız takımın o km'lerindekiler) bir katmana çizgi ve yazı nesneleri olarak yazar, paftaya ve DXF'e gider: görünüşler at'tan (sayfanın sol üstü) başlayarak satırlarda columns tane (yoksa 5), soldan sağa sonra aşağı. Bir görünüş şerit genişliğinde (ötelemenin bir metresi bir çizim birimi) ve takımın en uzun kot aralığı boyunda (kotun bir metresi exaggeration birim, yoksa 1); kıyas kotu en alçak kotun bir metre altı, aşağı yuvarlanmış. \
+                      Her görünüşte çerçeve, kot ve öteleme ızgaraları ve sayıları, arazi (siyah; yüzeyin dışı çizilmez), platform ve şevler (kırmızı), eksen, üstünde km, altında eksen kotu ile yarma ve dolgu alanı. Yazılar height mm (yoksa 2,5) yüksekliğinde, çizim ölçeğiyle. \
+                      Cevap her görünüşün km'si, çerçevesi, kıyas ve tepe kotu, alanları ile ızgara aralıklarıdır. Tek geri alma adımı “Enkesit çiz”. Retler: not_a_road_project, unknown_section_set, invalid_label, invalid_section_set, invalid_places, no_terrain, layer_not_found, not_a_layer, service_layer, layer_locked, invalid_revision, revision_conflict; uyarılar layer_hidden, section_set_stale, section_open."
+                .into(),
+            aliases: vec!["enkesitciz".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::SectionsDraw>(),
+            output: schema::<crate::SectionsDrawn>(),
+            plan: Some(schema::<crate::SectionsDrawn>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Enkesitleri 2000, -500'den başlayarak satırda 4 görünüşle çiz".into(),
+                input: json!({ "set": "Enkesitler", "layerId": "enkesit", "at": [2000.0, -500.0], "columns": 4 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_SUPERELEVATIONS_EDIT.into(),
+            version: crate::ROAD_SUPERELEVATIONS_EDIT_VERSION,
+            title: "Deveri düzenle".into(),
+            summary: "Yol projesinin dever çizelgesini (superelevation: kimliği ya da adı; yoksa yeni) yazar, aksına yeniden bağlar ya da kaldırır. Enine eğim her yanda eksenden dışa yüzdedir, dışa düşen eksi; normalLeft ve normalRight normal eğimdir. method curves: her kurp için oran rate (yüzde), geçiş boyu runoff (m, düz taçtan tam devere), teğet payı onTangent (0–1, geçişin kurptan önce kalan payı) ve iç yanda genişleme widening (m); orta eksen etrafında döndürülür: dış yan normalden (NC) düz taca (LC), iç yanla aynı eğime (RC), sonra ikisi birlikte tam devere (FS). method stations: km, sol ve sağ eğim satırları; aralarında doğrusal. \
+                      Değerleri KGM'nin standardından ya da projeden kullanıcı yazar; öntanımlı sayı yoktur. Kurbu olmayan PI, normal eğimden küçük oran, kurba sığmayan tam dever, binen geçişler ve aksın dışına taşan geçiş reddedilir; sessiz çözüm yoktur. Yeni çizelgenin kimliği verilen ya da ilk boş d-n. \
+                      Tek geri alma adımı “Dever”. Retler: not_a_road_project, unknown_superelevation, unknown_alignment, invalid_superelevation, superelevation_in_use, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["dever".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::SuperelevationsEdit>(),
+            output: schema::<crate::SuperelevationsWritten>(),
+            plan: Some(schema::<crate::SuperelevationsWritten>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana aksın p1 kurbunda %6 dever, 60 m geçiş klotoidde".into(),
+                input: json!({ "operation": "set", "name": "Ana aks deveri", "alignment": "Ana aks", "normalLeft": -2.5,
+                    "normalRight": -2.5, "method": { "method": "curves", "curves": [
+                        { "pi": "p1", "rate": 6.0, "runoff": 60.0, "onTangent": 0.0 } ] } }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_SUPERELEVATIONS_QUERY.into(),
+            version: crate::ROAD_SUPERELEVATIONS_QUERY_VERSION,
+            title: "Deveri sorgula".into(),
+            summary: "Yol projesinin dever çizelgelerini bugün kuruldukları gibi verir; hiçbir şey yazmaz. superelevation verilmezse her çizelgenin raporu (her yanın kırılma noktaları ve genişlemesi, kurpların kritik km'leri NC, LC, RC, FS; kurulamıyorsa nedeni); verilince yalnız onunki ve stations ile o km'lerde sol ve sağ eğim ve genişleme. \
+                      Uyarı: superelevation_stale (aks çizelgeden sonra değişti). Retler: not_a_road_project, unknown_superelevation, invalid_places, station_outside, invalid_superelevation."
+                .into(),
+            aliases: vec!["deversor".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::SuperelevationsQuery>(),
+            output: schema::<crate::SuperelevationsQueried>(),
+            plan: Some(schema::<crate::SuperelevationsQueried>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "İki km'de eğimler".into(),
+                input: json!({ "superelevation": "Ana aks deveri", "stations": [300.0, 400.0] }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_CORRIDORS_EDIT.into(),
+            version: crate::ROAD_CORRIDORS_EDIT_VERSION,
+            title: "Koridoru düzenle".into(),
+            summary: "Yol projesinin koridorunu (corridor: kimliği ya da adı; yoksa yeni) yazar, aksına yeniden bağlar ya da kaldırır. Koridor bir aksın üstündedir: boykesiti (profile) eksen kotunu, yüzeyi (surface) şevin buluştuğu araziyi verir; isteğe bağlı dever çizelgesi (superelevation) şeritlerin eğimini; left ve right her yanda arama genişliğidir (m). Bölgeler (regions: from, to aksın istasyonu, m; template tip kesit) kesişmez, boşluk bırakabilir. \
+                      Km örneklemesi: bölgenin başı ve sonu, aliymanda tangent aralığının katları, kurp ve klotoidde elemanın curve aralığıyla (sag verilirse kirişin yaydan sapması en çok sag olacak adımla) eşit bölünmesi, yatay geometri noktaları; profilePoints ile boykesitin PVI'leri, düşey kurp uçları, tepe ve çukuru; critical ile dever kritik km'leri; stations ile kullanıcının km'leri. Sonuç saklanmaz, her okumada kurulur. \
+                      superelevation \"\" çizelgeyi, sag 0 toleransı kaldırır. Yeni koridorun kimliği verilen ya da ilk boş c-n. Tek geri alma adımı “Koridor”. Retler: not_a_road_project, unknown_corridor, unknown_alignment, unknown_road_profile, unknown_terrain, unknown_superelevation, unknown_road_template, invalid_road_corridor, corridor_in_use (bir kübaj hesabının kullandığı koridor silinmez), invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["koridor".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::CorridorsEdit>(),
+            output: schema::<crate::CorridorsWritten>(),
+            plan: Some(schema::<crate::CorridorsWritten>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana aksta tek bölgeli koridor, her 20 m ve kurpta 10 m".into(),
+                input: json!({ "operation": "set", "name": "Ana koridor", "alignment": "Ana aks", "profile": "Proje kotu",
+                    "surface": "Mevcut zemin", "left": 25.0, "right": 25.0, "tangent": 20.0, "curve": 10.0,
+                    "regions": [ { "from": 0.0, "to": 300.0, "template": "tk-1" } ] }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_CORRIDORS_DRAW.into(),
+            version: crate::ROAD_CORRIDORS_DRAW_VERSION,
+            title: "Şevli plan çiz".into(),
+            summary: "Yol projesinin koridorunu (corridor: kimliği ya da adı) bir katmana şevli kotlu plan olarak çizer: eksen dışındaki öznitelik çizgileri (şerit ve banket kenarları, menteşe, hendek, şev ayağı) köşe kotlarıyla çoklu çizgi; iki ardışık km'de çözülmüş her yanda, aralarındaki tick metrenin (yoksa 5 m) her katında şevin üstünden (yarmada şev ayağı, dolguda menteşe) ayağına doğru şev taraması, çift katlar tam, tekler yarım; çözülmüş her km'de eksen kotu (kırmızı, iki basamak), yol boyunca okunur. Yazı height kâğıt mm (yoksa 2,5). \
+                      Tek geri alma adımı “Şevli plan”. Uyarılar: koridorunkiler ve layer_hidden. Retler: not_a_road_project, unknown_corridor, invalid_label, invalid_road_corridor, no_terrain, layer_not_found, not_a_layer, layer_locked, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["sevliplan".into(), "şevliplan".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::CorridorsDraw>(),
+            output: schema::<crate::CorridorsDrawn>(),
+            plan: Some(schema::<crate::CorridorsDrawn>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana koridorun şevli planı, şev taraması 5 m'de".into(),
+                input: json!({ "corridor": "Ana koridor", "layerId": "0", "tick": 5.0 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_CORRIDORS_QUERY.into(),
+            version: crate::ROAD_CORRIDORS_QUERY_VERSION,
+            title: "Koridoru sorgula".into(),
+            summary: "Yol projesinin koridorlarını bugün kurar ve verir; hiçbir şey yazmaz. Her koridorun km'leri (nedenleriyle), bölgeleri arasındaki boşluklar, çözülmeyen aralıklar (kesit kurulmadı ya da şev araziyle buluşmadı; sol ve sağ ayrı), kesitlerin planda kesiştiği aralıklar, öznitelik çizgileri (axis, left.c1 …, left.hinge, left.ditchToe, left.ditchBottom, left.daylight; km aralığı ve 3B uzunluk), üst yüzeyin üçgen sayısı ve plan alanı; kurulamıyorsa nedeni. corridor ile yalnız biri; points öznitelik çizgilerinin noktalarını, triangles üst yüzeyin üçgenlerini de verir. \
+                      Uyarılar: corridor_stale, corridor_unsolved, corridor_folded, corridor_gap, corridor_surface_gone, corridor_superelevation_gone. Retler: not_a_road_project, unknown_corridor, invalid_road_corridor."
+                .into(),
+            aliases: vec!["koridorsor".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::CorridorsQuery>(),
+            output: schema::<crate::CorridorsQueried>(),
+            plan: Some(schema::<crate::CorridorsQueried>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bir koridorun öznitelik çizgileri noktalarıyla".into(),
+                input: json!({ "corridor": "Ana koridor", "points": true }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_VOLUMES_EDIT.into(),
+            version: crate::ROAD_VOLUMES_EDIT_VERSION,
+            title: "Kübaj hesabını düzenle".into(),
+            summary: "Yol projesinin kübaj hesabını (volume: kimliği ya da adı; yoksa yeni) yazar ya da kaldırır. Kübaj bir koridorun (corridor) hacmidir; yöntem (method): endArea ardışık iki kesit arasında ortalama alan L·(A₀ + A₁)/2, prismoidal iki kesitin ortasında kurulan kesitle L·(A₀ + 4Aₘ + A₁)/6, surfaces koridorun üst yüzeyiyle arazisi arasındaki hacim (üçgenler planda üst üste konur). Kazı ve dolgu ayrıdır. \
+                      factors km aralıklarına (from, to aksın istasyonu, m) kazının kabarma (cut) ve dolgunun sıkışma (fill) çarpanını verir; artan, birbirine binmeyen satırlar, çarpan 0'dan büyük, en çok 10; KentOS öntanımlı katsayı vermez. Kesit yöntemlerinde strip km aralıklarına bitkisel toprak kalınlığı (depth, m) verir: kübaj zeminin kalınlık kadar indirilmiş hâline göre, bitkisel toprak hacmi ayrı kalem; bench diş kazısıdır (slope: arazinin enine eğimi bu yüzdeden dikken dolgunun altında, height: basamak yüksekliği; hacmi genişlik × yükseklik/2), ayrı kalem, kazı ve dolguya katılmaz; bench null kaldırır. Kübaj koridorunu izler, başka koridora bağlanmaz, yeniden bağlanmaz. Sonuç saklanmaz, her okumada hesaplanır. \
+                      Yeni hesabın kimliği verilen ya da ilk boş v-n. Tek geri alma adımı “Kübaj”. Onaylı kübaj değiştirilmez ve silinmez (volume_approved); önce road.volumes.approve revoke. Bir Brüknerin kullandığı kübaj silinmez (volume_in_use). Retler: not_a_road_project, unknown_volume, volume_approved, volume_in_use, unknown_corridor, invalid_volume, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["kubaj".into(), "kübaj".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::VolumesEdit>(),
+            output: schema::<crate::VolumesWritten>(),
+            plan: Some(schema::<crate::VolumesWritten>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana koridorun ortalama alanla kübajı, km 0 – 300 kabarma 1,25 ve sıkışma 0,90".into(),
+                input: json!({ "operation": "set", "name": "Ana kübaj", "corridor": "Ana koridor", "method": "endArea",
+                    "factors": [ { "from": 0.0, "to": 300.0, "cut": 1.25, "fill": 0.9 } ] }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_VOLUMES_QUERY.into(),
+            version: crate::ROAD_VOLUMES_QUERY_VERSION,
+            title: "Kübajı sorgula".into(),
+            summary: "Yol projesinin kübaj hesaplarını bugün hesaplar ve kübaj cetvelini verir; hiçbir şey yazmaz. Her hesabın satırları ardışık iki kesit arasıdır: km'ler, kazı ve dolgu (m³; kesiti çözülmeyen aralıkta yok), aralığın ortasının katsayıları, kabarma ve sıkışmayla düzeltilmiş kazı ve dolgunun birikimli toplamları ve farkı (kütle ordinatı). Toplamlar ham ve düzeltilmiş; surfaces yönteminde kazı ve dolgu plan alanları ve arazinin örtmediği alan; hacmi olmayan aralıklar; sıyırma ve diş kazısı varsa bitkisel toprak ve diş kazısı hacimleri (satırda ve toplamda); hesaplanamıyorsa nedeni. volume ile yalnız biri. \
+                      Onaylı kübajda onay (approval): onaylı toplamlar, bugünkü toplamların farkı ve değişen, eklenen ya da kalkan aralıklar. Uyarılar: corridor_stale, volume_gap, volume_uncovered, volume_unfactored, volume_changed. Retler: not_a_road_project, unknown_volume, invalid_volume."
+                .into(),
+            aliases: vec!["kubajsor".into(), "kübajsor".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::VolumesQuery>(),
+            output: schema::<crate::VolumesQueried>(),
+            plan: Some(schema::<crate::VolumesQueried>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana kübajın cetveli".into(),
+                input: json!({ "volume": "Ana kübaj" }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_VOLUMES_APPROVE.into(),
+            version: crate::ROAD_VOLUMES_APPROVE_VERSION,
+            title: "Kübajı onayla".into(),
+            summary: "Yol projesinin kübaj hesabını (volume: kimliği ya da adı) bugün hesaplandığı gibi onaylar: toplamlar ve ardışık iki kesit arası her aralığın kazı ve dolgusu, onay günü (at, YYYY-AA-GG) ve isteğe bağlı not (note) kübajın tanımına yazılır. Onaylı kübajın tanımı değişmez ve silinmez; kaynakları (koridor, aks, boykesit, arazi) değişirse road.volumes.query bugünkü hacmi onaylı hâliyle karşılaştırır. revoke onayı kaldırır. \
+                      Tek geri alma adımı “Kübaj onayı”. Retler: not_a_road_project, unknown_volume, volume_not_approved, invalid_volume, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["kubajonayla".into(), "kübajonayla".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::VolumesApprove>(),
+            output: schema::<crate::VolumesWritten>(),
+            plan: Some(schema::<crate::VolumesWritten>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana kübajı onayla".into(),
+                input: json!({ "volume": "Ana kübaj", "at": "2026-11-03", "note": "Uygulama projesi" }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_HAULS_EDIT.into(),
+            version: crate::ROAD_HAULS_EDIT_VERSION,
+            title: "Brükneri düzenle".into(),
+            summary: "Yol projesinin Brüknerini (haul: kimliği ya da adı; yoksa yeni) yazar ya da kaldırır. Brükner bir kübaj hesabının (volume) kütle ordinatıdır (birikimli düzeltilmiş kazı eksi dolgu): denge çizgisi balance (m³, öntanımlı 0), serbest taşıma uzaklığı free (m; null kaldırır, yoksa bütün taşıma fazla taşımadır), ödünç ve döküm alanları sites (name, kind borrow ya da waste, station aksın istasyonu, volume m³; ödünç eğriyi yükseltir, döküm düşürür). cost birim fiyatlar: currency para birimi, overhaul fazla taşımanın para/(m³·km)'si, waste ve borrow döküm ve ödüncün para/m³'ü, payload kamyon yükü (m³); null kaldırır. KentOS öntanımlı serbest taşıma ya da fiyat vermez. Brükner kübajını izler, yeniden bağlanmaz ve başka kübaja geçmez. \
+                      Yeni Brüknerin kimliği verilen ya da ilk boş h-n. Tek geri alma adımı “Brükner”. Retler: not_a_road_project, unknown_haul, unknown_volume, invalid_haul, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["bruckner".into(), "brükner".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::HaulsEdit>(),
+            output: schema::<crate::HaulsWritten>(),
+            plan: Some(schema::<crate::HaulsWritten>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana kübajın Brüknerini serbest taşıma 300 m ve bir döküm alanıyla".into(),
+                input: json!({ "operation": "set", "name": "Ana Brükner", "volume": "Ana kübaj", "free": 300.0,
+                    "sites": [ { "name": "Döküm 1", "kind": "waste", "station": 450.0, "volume": 2000.0 } ] }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_HAULS_QUERY.into(),
+            version: crate::ROAD_HAULS_QUERY_VERSION,
+            title: "Brükneri sorgula".into(),
+            summary: "Yol projesinin Brüknerlerini bugün okur; hiçbir şey yazmaz. Kütle eğrisi denge çizgisine göre katman katman okunur: denge noktaları, döngüler (ileri ya da geri; km'ler, dengelenen hacim, taşıma momenti m³·m, ortalama taşıma uzaklığı, serbest taşımayı aşan hacim ve moment, ucunda varacak yeri olmayan hacim), toplamlar, döküm ve ödünç; yöntem (method: layers, katman okuması; en iyileme değil); fiyatlıysa maliyet (fazla taşıma, döküm, ödünç, toplam, kamyon seferi); okunamıyorsa nedeni. haul ile yalnız biri; points kütle eğrisinin noktalarını (km, m³; ödünç ve döküm alanında basamak) da verir. \
+                      Uyarılar: corridor_stale, volume_gap, haul_unbalanced. Retler: not_a_road_project, unknown_haul, invalid_haul."
+                .into(),
+            aliases: vec!["brucknersor".into(), "brüknersor".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::HaulsQuery>(),
+            output: schema::<crate::HaulsQueried>(),
+            plan: Some(schema::<crate::HaulsQueried>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana Brükner noktalarıyla".into(),
+                input: json!({ "haul": "Ana Brükner", "points": true }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_GUARDRAILS_EDIT.into(),
+            version: crate::ROAD_GUARDRAILS_EDIT_VERSION,
+            title: "Otokorkuluğu düzenle".into(),
+            summary: "Yol projesinin otokorkuluğunu (guardrail: kimliği ya da adı; yoksa yeni) yazar, koridoruna yeniden bağlar ya da kaldırır. Otokorkuluk bir koridorun (corridor) her step metrede okunan kesitlerinden çıkar: bir yanın dolgu yüksekliği şev başının şev topuğundan yüksekliği, şevi aradaki yatayın o yüksekliğe oranı (1:n). Kural (rule) projenin kendi tablosudur, KentOS sayı vermez: source standardın ve tablosunun adı (zorunlu), warrants satırları (height en az dolgu yüksekliği m, slope verilirse 1:slope'tan dik şev; herhangi bir satır tutarsa korkuluk gerekir), approach ve leaving gerekli bölümden önce ve sonra eklenen boylar (sağda trafik km yönünde, solda tersine: yaklaşma ucu solda km'nin arkasıdır), gap iki korkuluk arasında bırakılabilecek en az aralık (daha yakınlar birleşir). offset korkuluğun şev başından dışa uzaklığı. \
+                      Yeni otokorkuluğun kimliği verilen ya da ilk boş o-n; rebind koridorun bugünkü sürümünü alır. Tek geri alma adımı “Otokorkuluk”. Retler: not_a_road_project, unknown_guardrail, unknown_corridor, invalid_guardrail, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["otokorkuluk".into(), "bariyer".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::GuardrailsEdit>(),
+            output: schema::<crate::GuardrailsWritten>(),
+            plan: Some(schema::<crate::GuardrailsWritten>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana koridorun otokorkuluğu, kurumun tablosuyla".into(),
+                input: json!({ "operation": "set", "name": "Ana korkuluk", "corridor": "Ana koridor", "step": 10.0,
+                    "rule": { "source": "Kurum tablosu, sürüm 1", "warrants": [ { "height": 3.0, "slope": 3.0 } ],
+                        "approach": 40.0, "leaving": 20.0, "gap": 50.0 } }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_GUARDRAILS_QUERY.into(),
+            version: crate::ROAD_GUARDRAILS_QUERY_VERSION,
+            title: "Otokorkuluğu sorgula".into(),
+            summary: "Yol projesinin otokorkuluklarını bugün okur; hiçbir şey yazmaz. Her biri için kuralın kaynağı, okunan kesit sayısı, solda ve sağda km sırasıyla korkuluklar (km'ler ve km yazıları, boy, korkuluğun gerekli olduğu bölüm, koruduğu en yüksek dolgu ve en dik şev) ve her yanın toplam boyu; koridoru değiştiyse guardrail_stale; koridorun kendi uyarıları (corridor_stale, corridor_surface_gone, corridor_unsolved) da gelir. guardrail ile yalnız biri; koridoru okunamıyorsa invalid_guardrail. \
+                      Retler: not_a_road_project, unknown_guardrail, invalid_guardrail."
+                .into(),
+            aliases: vec!["otokorkuluksor".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::GuardrailsQuery>(),
+            output: schema::<crate::GuardrailsQueried>(),
+            plan: Some(schema::<crate::GuardrailsQueried>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana korkuluk".into(),
+                input: json!({ "guardrail": "Ana korkuluk" }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_GUARDRAILS_DRAW.into(),
+            version: crate::ROAD_GUARDRAILS_DRAW_VERSION,
+            title: "Otokorkuluk çiz".into(),
+            summary: "Otokorkuluğun korkuluklarını planda layerId katmanına çoklu çizgi olarak çizer: her kesitte şev başı artı offset dışa, uçları korkuluğun başladığı ve bittiği km'de (şev başı yandaki kesitler arasında doğrusal okunur), koridorun aksına yerleştirilmiş; labels ile her korkuluğun ortasında km'si ve boyu yazılır. Tek geri alma adımı “Otokorkuluk çiz”. \
+                      Uyarılar: layer_hidden, guardrail_stale, corridor_stale, corridor_unsolved. Retler: invalid_revision, revision_conflict, not_a_road_project, unknown_guardrail, invalid_guardrail, layer_not_found, not_a_layer, layer_locked."
+                .into(),
+            aliases: vec!["otokorkulukciz".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::GuardrailsDraw>(),
+            output: schema::<crate::GuardrailsDrawn>(),
+            plan: Some(schema::<crate::GuardrailsDrawn>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana korkuluk yazılarıyla".into(),
+                input: json!({ "guardrail": "Ana korkuluk", "layerId": "korkuluk", "labels": true }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_CULVERTS_EDIT.into(),
+            version: crate::ROAD_CULVERTS_EDIT_VERSION,
+            title: "Menfezi düzenle".into(),
+            summary: "Yol projesinin menfezini (culvert: kimliği ya da adı; yoksa yeni) yazar, koridoruna yeniden bağlar ya da kaldırır. Menfez bir koridorun (corridor) km'sinde (station, aksın istasyonu) yolu kesen gövdedir: skew aksın dikinden sapma (derece, sağ ucu ileride artı, ±90'dan küçük), shape boru (kind pipe: diameter iç çap, thickness et, count boru sayısı, spacing borular arası boşluk) ya da kutu (kind box: width ve height göz içi, thickness yan duvar, slab taban ve tavan, cells göz sayısı); invert aksın altındaki akış kotu, slope akış eğimi (%), flow suyun aktığı yan (right ya da left); extend her uçta şev topuğunun ötesine boy, cover istenen en az örtü (denetlenir), material ve roughness (Manning n) tipli öznitelik. Ölçüler projenin; KentOS öntanımlı ölçü vermez. Menfezin km'sinde kesitin iki yanı dolguda olmalı. null cover, material ve roughness'ı kaldırır. \
+                      Yeni menfezin kimliği verilen ya da ilk boş m-n; rebind koridorun bugünkü sürümünü alır. Tek geri alma adımı “Menfez”. Retler: not_a_road_project, unknown_culvert, unknown_corridor, invalid_culvert, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["menfez".into(), "culvert".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::CulvertsEdit>(),
+            output: schema::<crate::CulvertsWritten>(),
+            plan: Some(schema::<crate::CulvertsWritten>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana koridorda iki gözlü kutu menfez".into(),
+                input: json!({ "operation": "set", "name": "Km 1+380 menfezi", "corridor": "Ana koridor", "station": 380.0,
+                    "shape": { "kind": "box", "width": 2.0, "height": 1.5, "thickness": 0.25, "slab": 0.3, "cells": 2 },
+                    "invert": 101.0, "slope": 1.0, "flow": "right", "extend": 1.0, "cover": 0.5 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_CULVERTS_QUERY.into(),
+            version: crate::ROAD_CULVERTS_QUERY_VERSION,
+            title: "Menfezi sorgula".into(),
+            summary: "Yol projesinin menfezlerini bugün okur; hiçbir şey yazmaz. Her biri için km ve km yazısı, gövdenin iki şev topuğu arası eğik boyu (artı uçlardaki ek boy) ve dış genişliği, uçları (sol ve sağ: gövde boyunca uzaklık, kesitteki öteleme, plandaki yer, akış kotu), suyun girdiği yan (inlet), yolun şev başları arasındaki üst yüzeyinden gövdenin üstüne en az örtü ve ötelemesi, metraj (boru boyu ve gövde betonu). Okunamayan menfez listede boy 0 ile gelir; tek sorulursa invalid_culvert. \
+                      Uyarılar: culvert_stale, culvert_cover ve koridorun kendi uyarıları. Retler: not_a_road_project, unknown_culvert, invalid_culvert."
+                .into(),
+            aliases: vec!["menfezsor".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::CulvertsQuery>(),
+            output: schema::<crate::CulvertsQueried>(),
+            plan: Some(schema::<crate::CulvertsQueried>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bütün menfezler".into(),
+                input: json!({}),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_CULVERTS_DRAW.into(),
+            version: crate::ROAD_CULVERTS_DRAW_VERSION,
+            title: "Menfez çiz".into(),
+            summary: "Menfezin gövdesini planda layerId katmanına çizer: dış genişliğin yarısı kadar iki yandaki kenarları uçlarıyla kapalı çoklu çizgi ve uçları arasında ekseni; labels ile gövde boyunca km, kesit ve boy. Tek geri alma adımı “Menfez çiz”. \
+                      Uyarılar: layer_hidden ve okumanın uyarıları. Retler: invalid_revision, revision_conflict, not_a_road_project, unknown_culvert, invalid_culvert, layer_not_found, not_a_layer, layer_locked."
+                .into(),
+            aliases: vec!["menfezciz".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::CulvertsDraw>(),
+            output: schema::<crate::CulvertsDrawn>(),
+            plan: Some(schema::<crate::CulvertsDrawn>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Menfez yazısıyla".into(),
+                input: json!({ "culvert": "m-1", "layerId": "menfez", "labels": true }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_WALLS_EDIT.into(),
+            version: crate::ROAD_WALLS_EDIT_VERSION,
+            title: "İstinat duvarını düzenle".into(),
+            summary: "Yol projesinin istinat duvarını (wall: kimliği ya da adı; yoksa yeni) yazar, koridoruna yeniden bağlar ya da kaldırır. Duvar bir koridorun (corridor) bir yanında (side: left ya da right) from ile to km'leri (aksın istasyonları) arasında yolun şev başında şevin yerine duran konsol duvardır; step her kaç metrede okunduğu (aralığın uçları da). shape: top gövdenin üst kalınlığı, batter gövdenin metrede genişlemesi (arka yüzün eğimi), footing temelin genişliği, base kalınlığı, toe yüzün önüne taşan temel, cover temelin üstündeki zemin, above yol kenarı ile zeminin yükseğinin üstünde kalan (korkuluk payı). Her km'de duvarın üstü yol kenarı ile yüzün altındaki zeminin yükseği artı above, temelin üstü alçağı eksi cover. highest istenen en yüksek gövde (aşılırsa uyarı), material tipli öznitelik. Ölçüler projenin; KentOS öntanımlı ölçü vermez. null highest ve material'ı kaldırır. \
+                      Yeni duvarın kimliği verilen ya da ilk boş d-n; rebind koridorun bugünkü sürümünü alır. Tek geri alma adımı “İstinat duvarı”. Retler: not_a_road_project, unknown_retaining_wall, unknown_corridor, invalid_retaining_wall, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["istinat".into(), "retainingwall".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::RetainingWallsEdit>(),
+            output: schema::<crate::RetainingWallsWritten>(),
+            plan: Some(schema::<crate::RetainingWallsWritten>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana koridorun sağında 100 m duvar".into(),
+                input: json!({ "operation": "set", "name": "Sağ istinat", "corridor": "Ana koridor", "side": "right",
+                    "from": 300.0, "to": 400.0, "step": 10.0,
+                    "shape": { "top": 0.3, "batter": 0.1, "footing": 2.4, "base": 0.5, "toe": 0.6, "cover": 0.6, "above": 0.9 },
+                    "highest": 6.0 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_WALLS_QUERY.into(),
+            version: crate::ROAD_WALLS_QUERY_VERSION,
+            title: "İstinat duvarını sorgula".into(),
+            summary: "Yol projesinin istinat duvarlarını bugün okur; hiçbir şey yazmaz. Her biri için her km'de (rows) km yazısı, yüzün ötelemesi (sağa artı) ve plandaki yeri, yol kenarının ve altındaki zeminin kotu, gövdenin üstü, temelin üstü, gövde yüksekliği, kesitin beton alanı ve dolgu tutup tutmadığı; boyunca yüz boyunca plan boyu, gövde yüzü alanı, beton hacmi (ortalama alan), en yüksek gövde ve km'si. Okunamayan duvar listede boy 0 ile gelir; tek sorulursa invalid_retaining_wall. \
+                      Uyarılar: retaining_wall_stale, retaining_wall_high ve koridorun kendi uyarıları. Retler: not_a_road_project, unknown_retaining_wall, invalid_retaining_wall."
+                .into(),
+            aliases: vec!["istinatsor".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::RetainingWallsQuery>(),
+            output: schema::<crate::RetainingWallsQueried>(),
+            plan: Some(schema::<crate::RetainingWallsQueried>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bütün istinat duvarları".into(),
+                input: json!({}),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_WALLS_DRAW.into(),
+            version: crate::ROAD_WALLS_DRAW_VERSION,
+            title: "İstinat duvarı çiz".into(),
+            summary: "İstinat duvarını planda layerId katmanına çizer: km'lerdeki yüz yerlerinden geçen açık çoklu çizgi ve temelin ön ve arka kenarlarıyla kapalı dış çizgisi; labels ile ortasında km aralığı ve en yüksek gövde. Tek geri alma adımı “İstinat duvarı çiz”. \
+                      Uyarılar: layer_hidden ve okumanın uyarıları. Retler: invalid_revision, revision_conflict, not_a_road_project, unknown_retaining_wall, invalid_retaining_wall, layer_not_found, not_a_layer, layer_locked."
+                .into(),
+            aliases: vec!["istinatciz".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::RetainingWallsDraw>(),
+            output: schema::<crate::RetainingWallsDrawn>(),
+            plan: Some(schema::<crate::RetainingWallsDrawn>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Duvar yazısıyla".into(),
+                input: json!({ "wall": "d-1", "layerId": "duvar", "labels": true }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_PAY_EDIT.into(),
+            version: crate::ROAD_PAY_EDIT_VERSION,
+            title: "Poz defterini düzenle".into(),
+            summary: "Yol projesinin poz defterini yazar ya da kaldırır. Defter kurumun birim fiyat listesidir: source (listenin adı ve yılı, zorunlu), version (sürümü), currency (para birimi), items (her biri code poz numarası kurumun yazdığı gibi, name, unit birimi yazıldığı gibi, isteğe bağlı price birim fiyat) ve rules (her biri measure KentOS'un ölçüsü: guardrailLength, culvertLength, culvertPipes, culvertConcrete, wallLength, wallFace, wallConcrete, volumeCut, volumeFill, volumeFactoredCut, volumeFactoredFill; item pozun numarası; factor çarpan; isteğe bağlı material yalnız o malzemedeki menfez ve duvarlar). KentOS poz ve fiyat vermez. set verilen alanları yazar (yeni defter source, version ve items ister), remove kaldırır; null currency'yi kaldırır. \
+                      Tek geri alma adımı “Poz defteri”. Retler: not_a_road_project, no_pay_book, invalid_pay_book, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["pozdefteri".into(), "payitems".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::PayEdit>(),
+            output: schema::<crate::PayWritten>(),
+            plan: Some(schema::<crate::PayWritten>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Kurumun listesinden iki poz ve kuralları".into(),
+                input: json!({ "operation": "set", "source": "İdarenin birim fiyat listesi", "version": "2026",
+                    "currency": "TRY", "items": [
+                        { "code": "A-1", "name": "Menfez betonu", "unit": "m³" },
+                        { "code": "A-2", "name": "Otokorkuluk", "unit": "m" } ],
+                    "rules": [
+                        { "measure": "culvertConcrete", "item": "A-1", "factor": 1.0 },
+                        { "measure": "guardrailLength", "item": "A-2", "factor": 1.0 } ] }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_PAY_QUERY.into(),
+            version: crate::ROAD_PAY_QUERY_VERSION,
+            title: "Poz metrajını sorgula".into(),
+            summary: "Poz defterinin her pozunun metrajını bugün okur; hiçbir şey yazmaz. Her kural, ölçüsünü projenin her otokorkuluğundan, menfezinden, istinat duvarından ya da kübajından (malzemesi verilmişse yalnız o malzemedekiler) okur ve çarpanıyla çarpar; poz satırı kaynak satırlarının (lines: tür, kimlik, ad, ölçü, değer, çarpan, miktar, eskimiş mi) toplamıdır; birim fiyatı varsa tutar. total fiyatlı pozların tutarlarının toplamı, unpriced metrajı olup fiyatı olmayan poz sayısıdır. item ile tek poz. \
+                      Uyarılar: pay_source_stale (kaynağın koridoru değişti), pay_source_unread (kaynak okunamıyor, metrajı yok). Retler: not_a_road_project, no_pay_book, invalid_pay_book."
+                .into(),
+            aliases: vec!["pozmetraj".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::PayQuery>(),
+            output: schema::<crate::PayQueried>(),
+            plan: Some(schema::<crate::PayQueried>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bütün pozlar".into(),
+                input: json!({}),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_ROUTES_FIND.into(),
+            version: crate::ROAD_ROUTES_FIND_VERSION,
+            title: "Ön güzergâh bul".into(),
+            summary: "Yol projesinin arazi yüzeyinde (surface: kimliği ya da adı) iki yer (from, to) arasında en düşük maliyetli ön güzergâhı bulur; hiçbir şey yazmaz. Yerlerin çevresinde margin payıyla cell aralıklı ızgaranın düğümlerinde yüzeyin kotu okunur (mikrometreye yuvarlanır); yüzeyin dışındaki ve avoid katmanlarının alanlarındaki düğümlere girilmez. Bir adım (16 komşu: düz, çapraz ve at hamlesi) plan boyu artı climb × aştığı kot farkı tutar; grade'ten (yüzde) dik adım atılmaz. Eşit maliyette önce bulunan yol kalır. tolerance ile yol Douglas–Peucker'la sadeleşir. Cevap: noktalar (başı ve sonu sorulan yerler), plan boyu, toplam kot farkı, en dik bölüm (yüzde), maliyet, düğüm sayısı ve yerleşen düğümler. Sınırlar kullanıcının; KentOS sınır değeri vermez. Bulunan yol aks değildir: Aksı çizgiye oturt (road.alignments.fit) ile aks olur. \
+                      Retler: not_a_road_project, unknown_terrain, invalid_route, route_blocked, route_unreached."
+                .into(),
+            aliases: vec!["onguzergah".into(), "routefind".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::RoutesFind>(),
+            output: schema::<crate::RouteFound>(),
+            plan: Some(schema::<crate::RouteFound>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "İki köy arasında, yasak alandan kaçarak".into(),
+                input: json!({ "surface": "Mevcut zemin", "from": { "x": 100.0, "y": 100.0 }, "to": { "x": 400.0, "y": 300.0 },
+                    "cell": 5.0, "margin": 50.0, "grade": 8.0, "climb": 10.0, "avoid": ["yasak"], "tolerance": 2.0 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_ROUTES_DRAW.into(),
+            version: crate::ROAD_ROUTES_DRAW_VERSION,
+            title: "Ön güzergâh çiz".into(),
+            summary: "road.routes.find'in bulduğu ön güzergâhı layerId katmanına noktalarının kotlarıyla tek çoklu çizgi olarak çizer; çizgi Aksı çizgiye oturt ile aks olur. Tek geri alma adımı “Ön güzergâh”. \
+                      Uyarılar: layer_hidden. Retler: invalid_revision, revision_conflict, road.routes.find'inkiler, layer_not_found, not_a_layer, layer_locked."
+                .into(),
+            aliases: vec!["onguzergahciz".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::RoutesDraw>(),
+            output: schema::<crate::RoutesDrawn>(),
+            plan: Some(schema::<crate::RoutesDrawn>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ön güzergâhı çiz".into(),
+                input: json!({ "surface": "Mevcut zemin", "from": { "x": 100.0, "y": 100.0 }, "to": { "x": 400.0, "y": 300.0 },
+                    "cell": 5.0, "margin": 50.0, "grade": 8.0, "climb": 10.0, "layerId": "guzergah" }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_JUNCTIONS_EDIT.into(),
+            version: crate::ROAD_JUNCTIONS_EDIT_VERSION,
+            title: "Kavşağı düzenle".into(),
+            summary: "Yol projesinin kavşağını (junction: kimliği ya da adı; yoksa yeni) yazar, kollarının akslarına yeniden bağlar ya da kaldırır. Kavşak iki aksın (legs: her biri alignment kimliği ya da adı, left ve right kenarların aksa uzaklığı) kesişimidir; at kaçıncı kesişim (0: birinci kolun km sırasıyla ilki), kind atGrade (hemzemin: kollar bağlı, dört çeyrekte bordür dönüş yayı) ya da separated (katlı: kollar bağlı değil, yay yok); radius her çeyreğin yarıçapı, radii dört çeyreğin kendi yarıçapları (birinci kolun sağı ile ikincinin sağı, sağ ile sol, sol ile sol, sol ile sağ). Ölçüler projenin; KentOS öntanımlı ölçü vermez. null radii'yi kaldırır. \
+                      Yeni kavşağın kimliği verilen ya da ilk boş j-n; kollar aksların bugünkü sürümünü alır, rebind de. Tek geri alma adımı “Kavşak”. Retler: not_a_road_project, unknown_junction, unknown_alignment, invalid_junction, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["kavsak".into(), "junction".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::JunctionsEdit>(),
+            output: schema::<crate::JunctionsWritten>(),
+            plan: Some(schema::<crate::JunctionsWritten>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana aks ile yan aksın hemzemin kavşağı".into(),
+                input: json!({ "operation": "set", "name": "K-1", "kind": "atGrade", "radius": 12.0,
+                    "legs": [ { "alignment": "Ana aks", "left": 5.0, "right": 5.0 },
+                              { "alignment": "Yan aks", "left": 3.5, "right": 3.5 } ] }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_JUNCTIONS_QUERY.into(),
+            version: crate::ROAD_JUNCTIONS_QUERY_VERSION,
+            title: "Kavşağı sorgula".into(),
+            summary: "Yol projesinin kavşaklarını bugün okur; hiçbir şey yazmaz. Her biri için kesişimin yeri, kolların km'si, km yazısı ve doğrultusu, aralarındaki açı, bağlı olup olmadığı (connected: yalnız hemzemin) ve hemzeminde dört çeyreğin bordür dönüş yayı (kolların yanları, yarıçap, merkez, iki teğet noktası ve kollar boyunca km'leri, yayın açısı ve boyu). Kollar kesişimde teğetleri boyunca düz kabul edilir. Okunamayan kavşak listede kolsuz gelir; tek sorulursa invalid_junction. \
+                      Uyarılar: junction_stale (bir kolun aksı değişti), junction_on_curve (bir kol yayların erimi içinde kurpta). Retler: not_a_road_project, unknown_junction, invalid_junction."
+                .into(),
+            aliases: vec!["kavsaksor".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::JunctionsQuery>(),
+            output: schema::<crate::JunctionsQueried>(),
+            plan: Some(schema::<crate::JunctionsQueried>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bütün kavşaklar".into(),
+                input: json!({}),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_JUNCTIONS_DRAW.into(),
+            version: crate::ROAD_JUNCTIONS_DRAW_VERSION,
+            title: "Kavşak çiz".into(),
+            summary: "Hemzemin kavşağın dört bordür dönüş yayını planda layerId katmanına yay olarak çizer; labels ile kesişimde adı ve açısı. Katlı kavşağın yayı yoktur (invalid_junction). Tek geri alma adımı “Kavşak çiz”. \
+                      Uyarılar: layer_hidden ve okumanın uyarıları. Retler: invalid_revision, revision_conflict, not_a_road_project, unknown_junction, invalid_junction, layer_not_found, not_a_layer, layer_locked."
+                .into(),
+            aliases: vec!["kavsakciz".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::JunctionsDraw>(),
+            output: schema::<crate::JunctionsDrawn>(),
+            plan: Some(schema::<crate::JunctionsDrawn>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Kavşak yazısıyla".into(),
+                input: json!({ "junction": "j-1", "layerId": "kavsak", "labels": true }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_PROJECT_QUERY.into(),
+            version: crate::ROAD_PROJECT_QUERY_VERSION,
+            title: "Yol projesini sorgula".into(),
+            summary: "Yol projesinin ağacını bugün okur; hiçbir şey yazmaz: yüzeyler, akslar (altında boykesitleri, kesit takımları, deverleri, kavşakları), tip kesitler, koridorlar (altında kübajları ve Brükner'leri, korkulukları, menfezleri, duvarları), pafta takımları, poz defteri; yol komutlarının çizimleri ana kaynaklarının altında. Her satırın türü, kimliği, adı, ebeveyninin sırası, durumu (current, new, stale, unbuildable, unsolved, approved, changed, missing, edited, gone) ve nedenleri. Çizim, kaynaklarından biri çizildiğinden beri değişince stale, nesnelerinden biri silinince missing, elle değişince edited, ana kaynağı silinince gone olur. deep yüzeyleri ve koridorları kurar, onaylı kübajları ve Brükner'leri hesaplar. \
+                      Retler: not_a_road_project."
+                .into(),
+            aliases: vec!["yolprojesi".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::RoadProjectQuery>(),
+            output: schema::<crate::RoadProjectTree>(),
+            plan: Some(schema::<crate::RoadProjectTree>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Kurarak, sorunlarıyla".into(),
+                input: json!({ "deep": true }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_PROJECT_REBUILD.into(),
+            version: crate::ROAD_PROJECT_REBUILD_VERSION,
+            title: "Yol çizimlerini yeniden üret".into(),
+            summary: "Yol komutlarının çizimlerini çizildikleri girdiyle yeniden yazar: eski nesneleri silinir, aynı katmana yenileri yazılır, kaydın kaynak damgaları ve nesneleri yenilenir; tek geri alma adımı “Yeniden üret”. drawings verilmezse eskiyen ve nesnesi eksik bütün çizimler; elle değişenler ve kaynağı silinenler left'te nedeniyle kalır. Adıyla verilen elle değişmiş çizim yalnız edited ile yeniden üretilir (değişiklikleri silinir). Çizim komutunun kendi retleri (katman yok ya da kilitli, kaynak çizilmiyor) bütün yazmayı geri alır. \
+                      Retler: invalid_revision, revision_conflict, not_a_road_project, unknown_drawing, drawing_source_gone, drawing_edited ve çizim komutlarının retleri."
+                .into(),
+            aliases: vec!["yenidenuret".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::RoadProjectRebuild>(),
+            output: schema::<crate::RoadProjectRebuilt>(),
+            plan: Some(schema::<crate::RoadProjectRebuilt>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Eskiyen bütün çizimler".into(),
+                input: json!({}),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_PROJECT_EDIT.into(),
+            version: crate::ROAD_PROJECT_EDIT_VERSION,
+            title: "Kendiliğinden yeniden üret".into(),
+            summary: "autoRebuild açıkken bir yazma, eskittiği yol çizimlerini kendi adımında yeniden üretir (uyarı drawings_rebuilt); elle değişenler (drawing_edited) ve üretilemeyenler (drawing_not_rebuilt) kalır ve söylenir. Tek geri alma adımı “Kendiliğinden yeniden üret”. \
+                      Retler: invalid_revision, revision_conflict, not_a_road_project, nothing_to_set."
+                .into(),
+            aliases: vec!["otouret".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::RoadProjectEdit>(),
+            output: schema::<crate::RoadProjectEdited>(),
+            plan: Some(schema::<crate::RoadProjectEdited>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Aç".into(),
+                input: json!({ "autoRebuild": true }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::FILE_EXPORT_LANDXML.into(),
+            version: crate::FILE_EXPORT_LANDXML_VERSION,
+            title: "LandXML dışa aktar".into(),
+            summary: "Yol projesinin arazi yüzeylerini (TIN: noktalar ve üçgenler), akslarını (doğru, daire eğrisi ve klotoid; km denklemleri) ve akslarının boykesitlerini (PVI'lar; simetrik ve asimetrik parabol, daire eğrisi) LandXML 1.2 dosyasına yazar; Civil 3D, OpenRoads ve Netcad okur. Yer kuzey doğu sırasıyla, uzunluk metre, doğrultu ve açı ondalık derece (doğrultu kuzeyden saat yönünde); elemanların ve PVI'ların km'leri iç km'dir (başlangıç km'si + aks boyunca uzaklık). surfaces ve alignments id ya da adla (yoksa hepsi, boş liste hiçbiri); withoutProfiles boykesitleri yazmaz; stamp dosyanın tarihi ve saati (yoksa şimdi, UTC). Paralel aks LandXML'de olmadığından yazılmaz (export_losses). Bütün yazılır ya da hiç: yanına yazılır, okuyucuyla geri okunur, sonra yerine konur; plan yazmadan söyler. Çizimi değiştirmez ve geri alma adımı değildir. \
+                      Retler: not_a_road_project, invalid_file_path, file_exists, unknown_terrain, unknown_alignment, invalid_landxml."
+                .into(),
+            aliases: vec!["landxmlver".into(), "landxmlout".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ExportLandxml>(),
+            output: schema::<crate::LandxmlExported>(),
+            plan: Some(schema::<crate::LandxmlExported>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana aks boykesitleriyle ve zemin yüzeyi".into(),
+                input: json!({ "path": "/veri/yol.xml", "surfaces": ["Mevcut zemin"], "alignments": ["Ana aks"], "overwrite": true }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::FILE_EXPORT_GLTF.into(),
+            version: crate::FILE_EXPORT_GLTF_VERSION,
+            title: "glTF dışa aktar".into(),
+            summary: "Yol projesinin arazi yüzeylerini ve koridorlarının üst yüzeylerini 3B sahne olarak glTF 2.0 ikili (GLB) dosyasına yazar: her biri bir ağ (üçgenler, normalsiz: okuyucu düz normal kurar), malzemesi türüne göre. Konumlar float32, sahnenin kökenine göre; köken (sınırların ortası, tam metreye) kök düğümün translation'ında tam (f64) yazılır, böylece milyonlarca metrelik koordinat milimetresini korur; error her köşenin float32 konumu ile kaynağı arasındaki en büyük eksen farkıdır. glTF'in ekseni +Y yukarı: (doğu, yukarı, −kuzey); metre. surfaces ve corridors id ya da adla (yoksa hepsi, boş liste hiçbiri); adla seçilen kurulamazsa ret, seçilmeyen kurulamazsa export_losses. Bütün yazılır ya da hiç; çizimi değiştirmez. \
+                      Retler: not_a_road_project, invalid_file_path, file_exists, unknown_terrain, unknown_corridor, invalid_gltf."
+                .into(),
+            aliases: vec!["gltfver".into(), "glbout".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ExportGltf>(),
+            output: schema::<crate::GltfExported>(),
+            plan: Some(schema::<crate::GltfExported>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Zemin ve ana koridor".into(),
+                input: json!({ "path": "/veri/yol.glb", "surfaces": ["Mevcut zemin"], "corridors": ["Ana koridor"], "overwrite": true }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::FILE_EXPORT_IFC.into(),
+            version: crate::FILE_EXPORT_IFC_VERSION,
+            title: "IFC dışa aktar".into(),
+            summary: "Yol projesinin akslarını ve boykesitlerini IFC 4.3 (IFC4X3_ADD2) dosyasına yazar: iş mantığı (IfcAlignmentHorizontal ve IfcAlignmentVertical, IfcAlignmentSegment'leri ve tasarım değerleri: başlangıç noktası ve doğrultusu, yarıçaplar (saat yönü tersine artı, 0 sonsuz), boy; düşeyde başlangıç uzaklığı, yatay boy, kot, eğimler, yarıçap) ve geometri (IfcCompositeCurve ve IfcGradientCurve: IfcCurveSegment'ler IfcLine, IfcCircle, IfcClothoid, IfcPolynomialCurve üstünde; IfcOpenShell'in eşlemesi); her düzen sıfır boylu parçayla biter. İlk boykesit aksın, öbürleri alt aksların düşeyidir. Başlangıç km'si ve km denklemleri Pset_Stationing'li IfcReferent'tir; projenin sistemi IfcMapConversion ile IfcProjectedCRS'e. Uzunluk metre, açı radyan. alignments id ya da adla (yoksa hepsi); withoutProfiles boykesitleri yazmaz; stamp tarih ve saat. Paralel aks yazılmaz (export_losses). Bütün yazılır ya da hiç; çizimi değiştirmez. \
+                      Retler: not_a_road_project, invalid_file_path, file_exists, unknown_alignment, invalid_ifc."
+                .into(),
+            aliases: vec!["ifcver".into(), "ifcout".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ExportIfc>(),
+            output: schema::<crate::IfcExported>(),
+            plan: Some(schema::<crate::IfcExported>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana aks boykesitleriyle".into(),
+                input: json!({ "path": "/veri/yol.ifc", "alignments": ["Ana aks"], "overwrite": true }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_ALIGNMENTS_IMPORT.into(),
+            version: crate::ROAD_ALIGNMENTS_IMPORT_VERSION,
+            title: "LandXML'den aks al".into(),
+            summary: "LandXML dosyasının akslarını KentOS aksı olarak alır: PI'lar elemanlardan bulunur (her aliymanlar arası kurp grubu bir PI: giriş ve çıkış teğetlerinin buluştuğu yer, daire eğrisinin yarıçapı, klotoidlerin boyu; açıyla buluşan iki aliyman kurpsuz PI), PI'lardan kurulan aks dosyanın elemanlarıyla uç uca karşılaştırılır (en çok 1 mm; cevabın deviation'ı). Km denklemleri ve withoutProfiles verilmezse boykesitleri (PVI'lar ve parabol, asimetrik parabol, daire eğrisi; km'ler iç km'den aksın boyuna çevrilir) de gelir. alignments dosyanın akslarını adla seçer (yoksa hepsi). Aralarında aliyman olmayan bileşik ya da ters kurp, ove klotoid, klotoid olmayan geçiş eğrisi, düzensiz çizgi ve zincir alınmaz, landxml_left ile söylenir. Tek geri alma adımı “LandXML aks al”. \
+                      Retler: not_a_road_project, file_not_found, import_unreadable, landxml_no_alignment, invalid_alignment, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["landxmlaksal".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::AlignmentsImport>(),
+            output: schema::<crate::AlignmentsImported>(),
+            plan: Some(schema::<crate::AlignmentsImported>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Dosyanın ana aksı boykesitleriyle".into(),
+                input: json!({ "path": "/veri/yol.xml", "alignments": ["Ana aks"] }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_STAKEOUT_QUERY.into(),
+            version: crate::ROAD_STAKEOUT_QUERY_VERSION,
+            title: "Aplikasyon cetveli".into(),
+            summary: "Koridorun kodlu kesit noktalarını km'leriyle verir; hiçbir şey yazmaz. Her nokta: km ve km yazısı, bölge, kod (axis, left.c1 … left.cN, ditchToe, ditchBottom, hinge, daylight), yan (left, axis, right), eksenden öteleme (sağa artı, plan boyu), x, y, z. from ve to ile km aralığı (yoksa bölgelerin uçları); step ile her step metrede (step'in katları ve aralığın uçları, her bölgede), yoksa koridorun kendi km'leri; codes ile yalnız o kodlar (tam kod ya da her iki yan için kodun sözcüğü). distances: grid (öntanımlı) ya da ground: öteleme ayrıca zemin boyu olarak (eksenden noktaya çizginin ölçeği ve projenin ortalama elipsoit yüksekliğinin çarpanına bölünür); method bunu söyler. \
+                      Uyarılar: koridorun kendi uyarıları (corridor_stale, corridor_unsolved …), stakeout_unsolved. Retler: not_a_road_project, unknown_corridor, invalid_stakeout, stakeout_no_ground."
+                .into(),
+            aliases: vec!["aplikasyoncetveli".into(), "yolaplikasyon".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::StakeoutQuery>(),
+            output: schema::<crate::StakeoutQueried>(),
+            plan: Some(schema::<crate::StakeoutQueried>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana koridorun her 20 metresi, şev ve hendek noktaları zemin boyuyla".into(),
+                input: json!({ "corridor": "Ana koridor", "step": 20.0, "codes": ["axis", "hinge", "daylight"], "distances": "ground" }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_STAKEOUT_SEND.into(),
+            version: crate::ROAD_STAKEOUT_SEND_VERSION,
+            title: "Aplikasyonu alete gönder".into(),
+            summary: "Aplikasyon cetvelinin noktalarını (road.stakeout.query'nin corridor, from, to, step ve codes'u; yerler plan koordinatı) alete dosya olarak yazar. format: landxml (LandXML 1.2 string yol: koridorun aksı, yalnız kendi boykesiti ve her kodun noktaları km sırasıyla PlanFeature olarak; bir km'de kodu olmayan dize orada kesilir, tek noktalı dize yazılmaz; Trimble Access, Leica Captivate ve Topcon MAGNET okur), gsi16, gsi8, gts7, jobxml, nikon, csv (ADR 0169'un alet yazıcıları). Noktalar first'ten (yoksa 1) sırayla numaralanır, kodu taşınamayan noktanın kodu düşer (stakeout_code_dropped), noktası taşınamayan nokta yazılmaz (left, export_losses). job JobXML'in iş adı ve Nikon RAW'ın notu (yoksa koridorun adı); stamp tarih ve saat. Bütün yazılır ya da hiç; çizimi değiştirmez. \
+                      Retler: not_a_road_project, unknown_corridor, invalid_stakeout, invalid_file_path, file_exists, invalid_stakeout_send."
+                .into(),
+            aliases: vec!["aplikasyongonder".into(), "aletegonder".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::StakeoutSend>(),
+            output: schema::<crate::StakeoutSent>(),
+            plan: Some(schema::<crate::StakeoutSent>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Ana koridor string yol olarak".into(),
+                    input: json!({ "corridor": "Ana koridor", "step": 20.0, "format": "landxml", "path": "/veri/ana.xml" }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Şev noktaları Leica GSI-16 olarak".into(),
+                    input: json!({ "corridor": "Ana koridor", "step": 20.0, "codes": ["daylight"], "format": "gsi16", "path": "/veri/sev.gsi" }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_SHEETS_PLAN.into(),
+            version: crate::ROAD_SHEETS_PLAN_VERSION,
+            title: "Yol paftaları".into(),
+            summary: "Aksı plan–boykesit paftalarına dizer (Civil 3D'nin Create View Frames ve Create Sheets'i gibi): bir paftanın aralığı şablonun plan haritasının genişliğinin scale ölçeğindeki zemin boyudur, her plan haritası aralığın kirişinin ortasında, aks soldan sağa akacak biçimde döndürülür; overlap kadar bindirilir. profile verilince (aynı aksta) her paftanın km'lerinin boykesit görünümü (road.profiles.draw'ın from ve to'suyla) layerId katmanına çizilir, ilki at'ta, her biri bir öncekinin bantlarının altına; şablonun ikinci haritası onu aynı ölçekte gösterir, bir km planda ve boykesitte üst üste düşer. Şablon yoksa sys:yol-plan-boykesit; paftalar first'ten (yoksa Y-101) numaralanır, Yol › aks altında. Pafta takımı aksın ve boykesitin revizyonlarıyla yol ayarlarında saklanır. Boykesit görünümleri, takım ve paftalar tek geri alma adımı “Yol paftaları” (paftanın kendi düzenlemeleri geri alma adımı değildir). \
+                      Uyarılar: road_sheet_outside, layer_hidden, profile_stale. Retler: invalid_revision, revision_conflict, not_a_road_project, unknown_alignment, unknown_road_profile, invalid_road_sheets, katmanın retleri, unknown_template, invalid_options, not_fixed_map, bad_drawing_info."
+                .into(),
+            aliases: vec!["yolpaftalari".into(), "planboykesit".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::RoadSheetsPlan>(),
+            output: schema::<crate::RoadSheetsLaid>(),
+            plan: Some(schema::<crate::RoadSheetsLaid>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana aks 1:1000, boykesitiyle".into(),
+                input: json!({ "alignment": "Ana aks", "profile": "Proje kotu", "layerId": "0", "at": [0.0, -500.0], "scale": 1000 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_SHEETS_SECTIONS.into(),
+            version: crate::ROAD_SHEETS_SECTIONS_VERSION,
+            title: "Enkesit paftaları".into(),
+            summary: "Kesit takımının enkesit görünümlerini paftalara dizer (Civil 3D'nin üretim enkesit görünümleri ve Create Section Sheets'i gibi): bir takımın görünümleri aynı boydadır (road.sections.draw: şerit genişliği × en yüksek kot aralığı), her pafta şablonun haritasının scale ölçeğindeki zemin boyuna sığan kadar sütun ve satır alır; görünümler layerId katmanına grup grup çizilir, ilk grubun sol üstü at'ta, her biri bir öncekinin bir harita yüksekliği ve aralık altında; her paftanın haritası kendi grubunu gösterir. stations (yoksa takımın hepsi), exaggeration, height road.sections.draw'ınki. Şablon yoksa sys:cad-teknik; paftalar first'ten (yoksa E-101) numaralanır. Takım kesit takımının revizyonuyla yol ayarlarında saklanır; görünümler, takım ve paftalar tek geri alma adımı “Enkesit paftaları”. \
+                      Retler: invalid_revision, revision_conflict, not_a_road_project, unknown_section_set, invalid_label, invalid_places, no_terrain, katmanın retleri, invalid_road_sheets, unknown_template, invalid_options, not_fixed_map, bad_drawing_info."
+                .into(),
+            aliases: vec!["enkesitpaftalari".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::RoadSheetsSections>(),
+            output: schema::<crate::RoadSheetsLaid>(),
+            plan: Some(schema::<crate::RoadSheetsLaid>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Enkesitler 1:200".into(),
+                input: json!({ "set": "Enkesitler", "layerId": "0", "at": [0.0, -1000.0], "scale": 200 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_ALIGNMENTS_FIT.into(),
+            version: crate::ROAD_ALIGNMENTS_FIT_VERSION,
+            title: "Çizgiden aks".into(),
+            summary: "Çizimin bir çizgisinden ya da açık çoklu çizgisinden aks kurar (DWG ya da DGN'den gelen yol ekseni); çizgi silinmez. method elements (Civil 3D'nin Create Alignment from Objects'i): düz parçalar aliyman, yay parçaları (büküm) daire kurbu; yaysız buluşan iki aliymana radius verilirse o yarıçapta kurp. method bestFit (Create Best Fit Alignment): köşe, komşularıyla geçen çember maxRadius'tan küçükse kurpta, değilse aliymanda; her aliyman koşusundan en küçük karelerle doğru, doğruların kesişimleri PI, kurbun yarıçapı iki doğruya teğet yayın köşelere en yakın olanı; klotoid yok. reverse çizginin sonundan başlatır; name (yoksa ‹n›. aks), start başlangıç km'si. Cevap aksın PI'larını, aliyman ve kurp sayısını, boyunu ve çizginin köşelerinin (ve yayların ortasının) aksa en büyük uzaklığını yeriyle verir; tolerance aşılırsa alignment_fit_deviation. Tek geri alma adımı “Çizgiden aks”. \
+                      Retler: invalid_revision, revision_conflict, not_a_road_project, entity_not_found, invalid_alignment_fit."
+                .into(),
+            aliases: vec!["cizgidenaks".into(), "aksuydur".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::AlignmentsFit>(),
+            output: schema::<crate::AlignmentFitted>(),
+            plan: Some(schema::<crate::AlignmentFitted>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "DWG'den gelen eksen, en iyi uyumla".into(),
+                input: json!({ "uid": "0191f0aa-0000-7000-8000-000000000001", "method": "bestFit", "maxRadius": 1000.0, "tolerance": 0.05 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_PROFILES_FIT.into(),
+            version: crate::ROAD_PROFILES_FIT_VERSION,
+            title: "Çizimden boykesit".into(),
+            summary: "Bir boykesit görünümünde çizilmiş çizgiden ya da açık çoklu çizgiden boykesit kurar (DWG ya da DGN'den gelen proje kotu); çizgi silinmez. Görünüm road.profiles.draw'ınki gibidir: at noktası station'da (aksın başından uzaklık, yoksa 0) ve datum kotundadır, bir metre km bir çizim birimi, bir metre kot exaggeration birim (yoksa 1). Düz parçalar eğim, iki eğimin köşesi PVI (length verilirse o boyda simetrik parabol), yay parçası iki ucu arasında düşey kurp: PVI uçlardaki teğetlerin kesişimi, PVI ortadaysa simetrik, değilse asimetrik parabol; eğimin değişmediği köşe PVI değildir; art arda iki yay ret. Sağdan sola çizilmiş çizgi soldan sağa okunur. name (yoksa ‹n›. boykesit), surface siyah kotun yüzeyi. Cevap boykesitin PVI'larını, eğim ve kurp sayısını, km aralığını ve çizginin köşelerinin (ve yayların ortasının) boykesite en büyük düşey uzaklığını km ve kotuyla verir; tolerance aşılırsa profile_fit_deviation. Tek geri alma adımı “Çizimden boykesit”. \
+                      Retler: invalid_revision, revision_conflict, not_a_road_project, unknown_alignment, unknown_terrain, entity_not_found, invalid_profile_fit."
+                .into(),
+            aliases: vec!["cizimdenboykesit".into(), "boykesituydur".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ProfilesFit>(),
+            output: schema::<crate::ProfileFitted>(),
+            plan: Some(schema::<crate::ProfileFitted>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "1:10 abartmalı görünümde çizilmiş proje kotu".into(),
+                input: json!({ "uid": "0191f0aa-0000-7000-8000-000000000001", "alignment": "Ana aks", "at": [0.0, -500.0], "datum": 90.0, "exaggeration": 10.0, "length": 80.0 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_ALIGNMENTS_QUERY.into(),
+            version: crate::ROAD_ALIGNMENTS_QUERY_VERSION,
+            title: "Aksı sorgula".into(),
+            summary: "Yol projesinin akslarını bugün kuruldukları gibi verir; hiçbir şey yazmaz. alignment verilmezse her aksın raporu; verilince yalnız onunki ve soruları: stations aksın kendi km'lerindeki (başından yatay uzunluk) yerler; kms km yazısındaki yerler (bir km birden çok yere düşerse region verilmezse station_ambiguous); every her every metrelik yuvarlak km'nin yeri (planın km işaretleri); points her noktanın km ve ötelemesi (sağa artı): en yakın ayak, bütün ayaklar uzaklık sırasıyla, eşit uzaklıkta küçük km önce; ayak yoksa beyond: start ya da end. \
+                      Her yer: km, km yazısı (2+345.678), bölge, x, y, doğrultu (rad, doğudan saat yönü tersine), eğrilik (1/m, sola artı) ve eleman. Paralel aksın yerleri kaynağının km'lerindedir. \
+                      Retler: not_a_road_project, unknown_alignment, invalid_places, station_outside, station_ambiguous ve aks artık kurulamıyorsa geometrinin retleri."
+                .into(),
+            aliases: vec!["kmsor".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::AlignmentsQuery>(),
+            output: schema::<crate::AlignmentsQueried>(),
+            plan: Some(schema::<crate::AlignmentsQueried>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Bir noktanın km ve ötelemesi".into(),
+                    input: json!({ "alignment": "Ana aks", "points": [[1520.0, 2030.0]] }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Her 100 m'nin km işareti".into(),
+                    input: json!({ "alignment": "Ana aks", "every": 100.0 }),
+                    output: None,
+                },
+            ],
+        },
         // Topolojiyi denetle (docs/adr/0589), held together by fixtures/commands/v1/cad.topology.check.json.
         CommandDescriptor {
             id: crate::CAD_TOPOLOGY_CHECK.into(),
@@ -12189,6 +13733,146 @@ mod tests {
                         serde_json::from_value::<crate::LinearRefDefine>(e.input.clone())
                             .map(|_| ())
                     }
+                    crate::ROAD_TERRAINS_CREATE => {
+                        serde_json::from_value::<crate::TerrainsCreate>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_TERRAINS_EDIT => {
+                        serde_json::from_value::<crate::TerrainsEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_TERRAINS_QUERY => {
+                        serde_json::from_value::<crate::TerrainsQuery>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_TERRAINS_CONTOURS => {
+                        serde_json::from_value::<crate::TerrainsContours>(e.input.clone()).map(|_| ())
+                    }
+                    crate::FILE_IMPORT_LANDXML => {
+                        serde_json::from_value::<crate::ImportLandxml>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_ALIGNMENTS_CREATE => {
+                        serde_json::from_value::<crate::AlignmentsCreate>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_ALIGNMENTS_EDIT => {
+                        serde_json::from_value::<crate::AlignmentsEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_ALIGNMENTS_QUERY => {
+                        serde_json::from_value::<crate::AlignmentsQuery>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_ALIGNMENTS_LABEL => {
+                        serde_json::from_value::<crate::AlignmentsLabel>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_PROFILES_CREATE => {
+                        serde_json::from_value::<crate::ProfilesCreate>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_PROFILES_EDIT => {
+                        serde_json::from_value::<crate::ProfilesEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_PROFILES_QUERY => {
+                        serde_json::from_value::<crate::ProfilesQuery>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_PROFILES_DRAW => {
+                        serde_json::from_value::<crate::ProfilesDraw>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_TEMPLATES_EDIT => {
+                        serde_json::from_value::<crate::TemplatesEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_SECTIONS_EDIT => {
+                        serde_json::from_value::<crate::SectionsEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_SECTIONS_QUERY => {
+                        serde_json::from_value::<crate::SectionsQuery>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_SECTIONS_DRAW => {
+                        serde_json::from_value::<crate::SectionsDraw>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_SUPERELEVATIONS_EDIT => {
+                        serde_json::from_value::<crate::SuperelevationsEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_SUPERELEVATIONS_QUERY => {
+                        serde_json::from_value::<crate::SuperelevationsQuery>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_CORRIDORS_EDIT => {
+                        serde_json::from_value::<crate::CorridorsEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_CORRIDORS_QUERY => {
+                        serde_json::from_value::<crate::CorridorsQuery>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_CORRIDORS_DRAW => {
+                        serde_json::from_value::<crate::CorridorsDraw>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_VOLUMES_EDIT => {
+                        serde_json::from_value::<crate::VolumesEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_VOLUMES_QUERY => {
+                        serde_json::from_value::<crate::VolumesQuery>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_VOLUMES_APPROVE => {
+                        serde_json::from_value::<crate::VolumesApprove>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_HAULS_EDIT => serde_json::from_value::<crate::HaulsEdit>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_HAULS_QUERY => serde_json::from_value::<crate::HaulsQuery>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_GUARDRAILS_EDIT => {
+                        serde_json::from_value::<crate::GuardrailsEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_GUARDRAILS_QUERY => {
+                        serde_json::from_value::<crate::GuardrailsQuery>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_GUARDRAILS_DRAW => {
+                        serde_json::from_value::<crate::GuardrailsDraw>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_CULVERTS_EDIT => {
+                        serde_json::from_value::<crate::CulvertsEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_CULVERTS_QUERY => {
+                        serde_json::from_value::<crate::CulvertsQuery>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_CULVERTS_DRAW => {
+                        serde_json::from_value::<crate::CulvertsDraw>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_WALLS_EDIT => {
+                        serde_json::from_value::<crate::RetainingWallsEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_WALLS_QUERY => {
+                        serde_json::from_value::<crate::RetainingWallsQuery>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_WALLS_DRAW => {
+                        serde_json::from_value::<crate::RetainingWallsDraw>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_PAY_EDIT => serde_json::from_value::<crate::PayEdit>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_PAY_QUERY => serde_json::from_value::<crate::PayQuery>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_ROUTES_FIND => serde_json::from_value::<crate::RoutesFind>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_ROUTES_DRAW => serde_json::from_value::<crate::RoutesDraw>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_JUNCTIONS_EDIT => serde_json::from_value::<crate::JunctionsEdit>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_JUNCTIONS_QUERY => serde_json::from_value::<crate::JunctionsQuery>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_PROJECT_QUERY => serde_json::from_value::<crate::RoadProjectQuery>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_PROJECT_REBUILD => serde_json::from_value::<crate::RoadProjectRebuild>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_PROJECT_EDIT => serde_json::from_value::<crate::RoadProjectEdit>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_JUNCTIONS_DRAW => serde_json::from_value::<crate::JunctionsDraw>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_STAKEOUT_QUERY => {
+                        serde_json::from_value::<crate::StakeoutQuery>(e.input.clone()).map(|_| ())
+                    }
+                    crate::FILE_EXPORT_LANDXML => {
+                        serde_json::from_value::<crate::ExportLandxml>(e.input.clone()).map(|_| ())
+                    }
+                    crate::FILE_EXPORT_IFC => serde_json::from_value::<crate::ExportIfc>(e.input.clone()).map(|_| ()),
+                    crate::FILE_EXPORT_GLTF => serde_json::from_value::<crate::ExportGltf>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_STAKEOUT_SEND => {
+                        serde_json::from_value::<crate::StakeoutSend>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_SHEETS_PLAN => {
+                        serde_json::from_value::<crate::RoadSheetsPlan>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_SHEETS_SECTIONS => {
+                        serde_json::from_value::<crate::RoadSheetsSections>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_ALIGNMENTS_FIT => {
+                        serde_json::from_value::<crate::AlignmentsFit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_PROFILES_FIT => {
+                        serde_json::from_value::<crate::ProfilesFit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_ALIGNMENTS_IMPORT => {
+                        serde_json::from_value::<crate::AlignmentsImport>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_SUBNETWORKS_FIND => {
                         serde_json::from_value::<crate::SubnetworksFind>(e.input.clone())
                             .map(|_| ())
@@ -12827,6 +14511,158 @@ mod tests {
                         crate::CAD_LINEARREF_DEFINE => {
                             serde_json::from_value::<crate::LinearRefDefined>(output.clone())
                                 .map(|_| ())
+                        }
+                        crate::ROAD_TERRAINS_CREATE | crate::ROAD_TERRAINS_EDIT => {
+                            serde_json::from_value::<crate::TerrainsWritten>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_TERRAINS_QUERY => {
+                            serde_json::from_value::<crate::TerrainsQueried>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_TERRAINS_CONTOURS => {
+                            serde_json::from_value::<crate::TerrainsContoured>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::FILE_IMPORT_LANDXML => {
+                            serde_json::from_value::<crate::LandxmlImported>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_ALIGNMENTS_CREATE | crate::ROAD_ALIGNMENTS_EDIT => {
+                            serde_json::from_value::<crate::AlignmentsWritten>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_ALIGNMENTS_QUERY => {
+                            serde_json::from_value::<crate::AlignmentsQueried>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_ALIGNMENTS_LABEL => {
+                            serde_json::from_value::<crate::AlignmentsLabelled>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_PROFILES_CREATE | crate::ROAD_PROFILES_EDIT => {
+                            serde_json::from_value::<crate::ProfilesWritten>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_PROFILES_QUERY => {
+                            serde_json::from_value::<crate::ProfilesQueried>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_PROFILES_DRAW => {
+                            serde_json::from_value::<crate::ProfilesDrawn>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_TEMPLATES_EDIT => {
+                            serde_json::from_value::<crate::TemplatesWritten>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_SECTIONS_EDIT => {
+                            serde_json::from_value::<crate::SectionsWritten>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_SECTIONS_QUERY => {
+                            serde_json::from_value::<crate::SectionsQueried>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_SECTIONS_DRAW => {
+                            serde_json::from_value::<crate::SectionsDrawn>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_SUPERELEVATIONS_EDIT => {
+                            serde_json::from_value::<crate::SuperelevationsWritten>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_SUPERELEVATIONS_QUERY => {
+                            serde_json::from_value::<crate::SuperelevationsQueried>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_CORRIDORS_EDIT => {
+                            serde_json::from_value::<crate::CorridorsWritten>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_CORRIDORS_QUERY => {
+                            serde_json::from_value::<crate::CorridorsQueried>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_CORRIDORS_DRAW => {
+                            serde_json::from_value::<crate::CorridorsDrawn>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_VOLUMES_EDIT => {
+                            serde_json::from_value::<crate::VolumesWritten>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_VOLUMES_QUERY => {
+                            serde_json::from_value::<crate::VolumesQueried>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_VOLUMES_APPROVE => {
+                            serde_json::from_value::<crate::VolumesWritten>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_HAULS_EDIT => {
+                            serde_json::from_value::<crate::HaulsWritten>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_HAULS_QUERY => {
+                            serde_json::from_value::<crate::HaulsQueried>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_GUARDRAILS_EDIT => {
+                            serde_json::from_value::<crate::GuardrailsWritten>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_GUARDRAILS_QUERY => {
+                            serde_json::from_value::<crate::GuardrailsQueried>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_GUARDRAILS_DRAW => {
+                            serde_json::from_value::<crate::GuardrailsDrawn>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_CULVERTS_EDIT => {
+                            serde_json::from_value::<crate::CulvertsWritten>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_CULVERTS_QUERY => {
+                            serde_json::from_value::<crate::CulvertsQueried>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_CULVERTS_DRAW => {
+                            serde_json::from_value::<crate::CulvertsDrawn>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_WALLS_EDIT => {
+                            serde_json::from_value::<crate::RetainingWallsWritten>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_WALLS_QUERY => {
+                            serde_json::from_value::<crate::RetainingWallsQueried>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_WALLS_DRAW => {
+                            serde_json::from_value::<crate::RetainingWallsDrawn>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_PAY_EDIT => serde_json::from_value::<crate::PayWritten>(output.clone()).map(|_| ()),
+                        crate::ROAD_PAY_QUERY => serde_json::from_value::<crate::PayQueried>(output.clone()).map(|_| ()),
+                        crate::ROAD_ROUTES_FIND => serde_json::from_value::<crate::RouteFound>(output.clone()).map(|_| ()),
+                        crate::ROAD_ROUTES_DRAW => serde_json::from_value::<crate::RoutesDrawn>(output.clone()).map(|_| ()),
+                        crate::ROAD_JUNCTIONS_EDIT => serde_json::from_value::<crate::JunctionsWritten>(output.clone()).map(|_| ()),
+                        crate::ROAD_JUNCTIONS_QUERY => serde_json::from_value::<crate::JunctionsQueried>(output.clone()).map(|_| ()),
+                        crate::ROAD_PROJECT_QUERY => serde_json::from_value::<crate::RoadProjectTree>(output.clone()).map(|_| ()),
+                        crate::ROAD_PROJECT_REBUILD => serde_json::from_value::<crate::RoadProjectRebuilt>(output.clone()).map(|_| ()),
+                        crate::ROAD_PROJECT_EDIT => serde_json::from_value::<crate::RoadProjectEdited>(output.clone()).map(|_| ()),
+                        crate::ROAD_JUNCTIONS_DRAW => serde_json::from_value::<crate::JunctionsDrawn>(output.clone()).map(|_| ()),
+                        crate::ROAD_STAKEOUT_QUERY => {
+                            serde_json::from_value::<crate::StakeoutQueried>(output.clone()).map(|_| ())
+                        }
+                        crate::FILE_EXPORT_LANDXML => {
+                            serde_json::from_value::<crate::LandxmlExported>(output.clone()).map(|_| ())
+                        }
+                        crate::FILE_EXPORT_IFC => {
+                            serde_json::from_value::<crate::IfcExported>(output.clone()).map(|_| ())
+                        }
+                        crate::FILE_EXPORT_GLTF => {
+                            serde_json::from_value::<crate::GltfExported>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_STAKEOUT_SEND => {
+                            serde_json::from_value::<crate::StakeoutSent>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_SHEETS_PLAN | crate::ROAD_SHEETS_SECTIONS => {
+                            serde_json::from_value::<crate::RoadSheetsLaid>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_ALIGNMENTS_FIT => {
+                            serde_json::from_value::<crate::AlignmentFitted>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_PROFILES_FIT => {
+                            serde_json::from_value::<crate::ProfileFitted>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_ALIGNMENTS_IMPORT => {
+                            serde_json::from_value::<crate::AlignmentsImported>(output.clone()).map(|_| ())
                         }
                         crate::CAD_ADDRESSES_DEFINE => {
                             serde_json::from_value::<crate::AddressesDefined>(output.clone())

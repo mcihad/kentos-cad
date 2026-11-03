@@ -1343,6 +1343,7 @@ fn every_program_opens_a_link_of_its_own() {
         Some(Module::Architecture),
         Some(Module::Map),
         Some(Module::Gis),
+        Some(Module::Road),
     ];
     let mut open: Vec<App> = programs
         .into_iter()

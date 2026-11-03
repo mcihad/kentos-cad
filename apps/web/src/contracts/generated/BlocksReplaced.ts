@@ -8,11 +8,11 @@ export type BlocksReplaced = {
 /**
  * With a publication library: the resolved drawing target, distinct from the library's source id.
  */
-target?: BlockId,
+target?: BlockId, 
 /**
  * With a publication library: definitions actually added, including nested dependencies.
  */
-added?: Array<BlockId>,
+added?: Array<BlockId>, 
 /**
  * The inserts that place `to` now, in the drawing's order.
  */

@@ -111,6 +111,28 @@ pub enum CreateOperation {
     QuickDimensions,
     /// İç ölçü zinciri (docs/adr/0711): the faces a cut crosses, measured as a chain.
     InteriorDimensions,
+    /// Eş yükselti eğrileri (plan/road.md Y2.5): a terrain surface's contour lines.
+    TerrainContours,
+    /// LandXML al (plan/road.md Y2.5): a LandXML surface's points, breaklines and boundaries.
+    LandXml,
+    /// `road.alignments.label` (plan/road.md Y3): an alignment's km ticks and words, “Aks km yazısı”.
+    AlignmentLabels,
+    /// `road.profiles.draw` (plan/road.md Y4): a profile's frame, grid, terrain, design line and bands, “Boykesit çiz”.
+    ProfileDrawing,
+    /// `road.sections.draw` (plan/road.md Y5): a sample line set's section views, “Enkesit çiz”.
+    SectionDrawing,
+    /// `road.corridors.draw` (plan/road.md Y7): a corridor's slope plan, “Şevli plan”.
+    SlopePlan,
+    /// `road.guardrails.draw` (plan/road.md Y11.1): a guardrail's runs in plan, “Otokorkuluk çiz”.
+    Guardrails,
+    /// `road.culverts.draw` (plan/road.md Y11.2): a culvert's barrel in plan, “Menfez çiz”.
+    Culverts,
+    /// `road.walls.draw` (plan/road.md Y11.3): a retaining wall's face and footing in plan, “İstinat duvarı çiz”.
+    RetainingWalls,
+    /// `road.routes.draw` (plan/road.md Y12.1): a preliminary route as a 3D polyline, “Ön güzergâh”.
+    Routes,
+    /// `road.junctions.draw` (plan/road.md Y12.2): a junction's curb returns in plan, “Kavşak çiz”.
+    Junctions,
 }
 
 /// One new object: its geometry and what else it carries. The layer is the

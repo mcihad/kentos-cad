@@ -9,45 +9,45 @@
  * Value variations are separate opt-ins; block definitions and non-tag object data remain strict.
  * Nested expansion is bounded to 200000 work units; unsupported members refuse the whole source.
  */
-export type BlocksFind = {
+export type BlocksFind = { 
 /**
  * Ordered source object UUIDs, at most 128; repeated UUIDs are taken once.
  */
-source: Array<string>,
+source: Array<string>, 
 /**
  * Search object UUIDs, at most 50 000; absent searches the document, empty searches nothing.
  */
-uids?: Array<string>,
+uids?: Array<string>, 
 /**
  * Also recognize rotated collections; absent: true.
  */
-rotations?: boolean,
+rotations?: boolean, 
 /**
  * Also recognize reflected collections; absent: false.
  */
-mirrors?: boolean,
+mirrors?: boolean, 
 /**
  * Also recognize uniformly scaled collections; absent: false.
  */
-scales?: boolean,
+scales?: boolean, 
 /**
  * Explicitly ignore layer, appearance and object data in comparisons; absent: false.
  */
-geometryOnly?: boolean,
+geometryOnly?: boolean, 
 /**
  * Explicitly compare single-line text poses/styles while allowing different words; absent: false.
  * A match never discards values. Conversion requires explicit text_to_attributes.
  */
-textVariants?: boolean,
+textVariants?: boolean, 
 /**
  * Ignore only values of declared block attribute tags; other object data stay strict.
  * Absent: false. Conversion revalidates representability independently.
  */
-attributeVariants?: boolean,
+attributeVariants?: boolean, 
 /**
  * Absolute model tolerance, metres, above zero to 0.001; absent: 0.000001 (0.001 mm).
  */
-tolerance?: number,
+tolerance?: number, 
 /**
  * Result count limit, 1 to 1000; absent: 1000. `truncated` means the scan is incomplete.
  */

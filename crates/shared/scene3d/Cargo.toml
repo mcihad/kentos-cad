@@ -1,0 +1,14 @@
+[package]
+name = "kentos-scene3d"
+description = "KentOS's 3D scene core (plan/3d.md D1, docs/adr/0910 §3): the f64 camera, the frustum, tiles with their own f64 origins, screen-space error LOD selection and the chunking of large meshes into bounded tiles; no GPU, one core for every 3D view"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Pure, like the other shared cores (CLAUDE.md §14): no GPU, window, file system or network. The renderer
+# (crates/render/wgpu's scene3d) draws what it selects; the hosts feed it the camera and the source meshes.
+[dependencies]
+
+[dev-dependencies]
+serde_json = { workspace = true }

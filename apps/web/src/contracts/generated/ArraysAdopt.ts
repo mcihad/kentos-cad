@@ -6,16 +6,16 @@ import type { ArrayLayout } from "./ArrayLayout";
  * Explicit, reviewed layout and slot membership; this command does not infer a pattern.
  * Only metadata is added. Missing slots stay missing; overrides must be explicitly kept.
  */
-export type ArraysAdopt = {
+export type ArraysAdopt = { 
 /**
  * Existing prototype insert UUID. Must occupy slot zero and must not be kept.
  */
-source: string, layout: ArrayLayout,
+source: string, layout: ArrayLayout, 
 /**
  * Exactly one entry per layout place, in layout order. Empty entries are missing places.
  * At least two entries must be present and not kept. A UID may occur only once.
  */
-items: Array<ArrayItem>,
+items: Array<ArrayItem>, 
 /**
  * Maximum position discrepancy in model metres; absent: 0.000001 (0.001 mm).
  * Adoption never moves an insert to hide a discrepancy. Angles compare modulo a full turn

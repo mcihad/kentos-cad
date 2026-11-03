@@ -69,6 +69,7 @@ pub(crate) fn open_in(m: Module) -> &'static str {
         Module::Architecture => "KentOS Mimari'de aç",
         Module::Map => "KentOS Harita'da aç",
         Module::Gis => "KentOS GIS'te aç",
+        Module::Road => "KentOS Yol'da aç",
     }
 }
 
@@ -78,6 +79,7 @@ pub(crate) fn in_program(m: Module) -> &'static str {
         Module::Architecture => "KentOS Mimari'de",
         Module::Map => "KentOS Harita'da",
         Module::Gis => "KentOS GIS'te",
+        Module::Road => "KentOS Yol'da",
     }
 }
 
@@ -87,6 +89,16 @@ pub(crate) fn of_program(m: Module) -> &'static str {
         Module::Architecture => "KentOS Mimari'nin",
         Module::Map => "KentOS Harita'nın",
         Module::Gis => "KentOS GIS'in",
+        Module::Road => "KentOS Yol'un",
+    }
+}
+
+/// “KentOS Harita'da, KentOS GIS'te ve KentOS Yol'da”: a list in a sentence, commas and the last joined by “ve”.
+pub(crate) fn and_list(parts: &[&str]) -> String {
+    match parts {
+        [] => String::new(),
+        [one] => (*one).to_owned(),
+        [rest @ .., last] => format!("{} ve {last}", rest.join(", ")),
     }
 }
 
@@ -175,7 +187,10 @@ impl App {
                 Task::none()
             }
             (None, Some(Workspace::Cad)) if program == Module::Gis => {
-                self.ask_hand_over(&opened, vec![Module::Architecture, Module::Map]);
+                self.ask_hand_over(
+                    &opened,
+                    vec![Module::Architecture, Module::Map, Module::Road],
+                );
                 Task::none()
             }
             (None, Some(Workspace::Cad)) if opened.external => {
@@ -256,7 +271,7 @@ impl App {
             format!(
                 "“{title}” {} yok; {} var.",
                 in_program(here),
-                others.join(" ve ")
+                and_list(&others)
             )
         })
     }
@@ -308,7 +323,7 @@ impl App {
             format!(
                 "“{label}” {} yok; {} var.",
                 in_program(here),
-                others.join(" ve ")
+                and_list(&others)
             )
         })
     }
@@ -385,10 +400,11 @@ mod tests {
         }
         assert_eq!(works_of(Module::Architecture), [CadWork::Architecture]);
         assert_eq!(works_of(Module::Map), [CadWork::Map]);
+        assert_eq!(works_of(Module::Road), [CadWork::Road]);
         assert!(works_of(Module::Gis).is_empty());
         assert_eq!(
             Module::ALL.map(type_of),
-            [Workspace::Cad, Workspace::Cad, Workspace::Gis]
+            [Workspace::Cad, Workspace::Cad, Workspace::Gis, Workspace::Cad]
         );
     }
 

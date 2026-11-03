@@ -72,6 +72,10 @@ def T(i, label, panels, works=()):
     return t
 MAP = ["map"]
 ARCHITECTURE = ["architecture"]
+# A road (plan/road.md, KentOS Yol): a map's survey, basemaps, rasters and terrain are a road's too; its parcels, zoning,
+# addresses, topology and overlap are not.
+ROAD = ["road"]
+MAP_ROAD = ["map", "road"]
 # A contextual tab's panel, button, menu block or ▾ command one project type alone shows (docs/adr/0802), as `modes`
 # names a contextual tab's types: CAD's drafting (Koordinat yaz, Km yaz, ölçekli açıklama) a CBS selection does not
 # offer, and CBS's analysis (mekânsal istatistik, uygunluk, uzaktan algılama) no CAD work offers.
@@ -168,7 +172,7 @@ def survey_tab(cad):
             P("Oturtma", "vectorFit", [S("transform.fit"), S("transform.edgematch"), S("crs.transform")]),
         ])
     # A CAD project's Ölçme is a map's (docs/adr/0801, 0802): KentOS Mimari has no tab of surveying, its queries are
-    # Görünüm's Sorgu. A route's station is a map's query.
+    # Görünüm's Sorgu. A route's station is a map's and a road's query.
     return T("survey", "Ölçme", [
     P("Sorgu", "measure", QUERY + [S("tool.stationOffset")]),
     P("Saha", "fieldBook", [L("calc.fieldbook"), S("file.import.gnss"), S("field.send")]),
@@ -176,7 +180,7 @@ def survey_tab(cad):
     P("Kestirme ve dengeleme", "surveyNetwork", [S("calc.forward"), S("calc.resection"), S("calc.network"), S("calc.levelNetwork")]),
     P("Noktalar", "point", [L("point.editor"), S("crs.points"), S("cogo.check"), S("cogo.update")]),
     P("Oturtma", "vectorFit", [S("transform.fit"), S("transform.edgematch"), S("crs.transform")]),
-    ], works=MAP)
+    ], works=MAP_ROAD)
 
 def view_tab(cad):
     panels = [
@@ -228,7 +232,7 @@ CAD = [
             SP("rectangle"), S("tool.polygon"), S("tool.point"), S("tool.ellipse"), S("tool.spline")],
           overflow=["tool.nurbs", "tool.xline", "tool.ray", "tool.parallel", "tool.perpIn", "tool.perpOut", "tool.donut",
             "tool.revcloud", "tool.wipeout", "tool.sector", W("tool.rangeRings", MAP), "tool.tangentLine",
-            "tool.fourthCorner", "tool.divide", "tool.pointsBetween", "tool.intersectPoint", W("tool.vertexPoints", MAP),
+            "tool.fourthCorner", "tool.divide", "tool.pointsBetween", "tool.intersectPoint", W("tool.vertexPoints", MAP_ROAD),
             W("tool.adjoin", MAP), W("tool.boundary", ARCHITECTURE)], keep=True),
         P("Değiştir", "move", [S("tool.move"), S("tool.rotate"), SP("trim"), S("tool.copy"), S("tool.mirror"),
             SP("corner"), S("tool.offset"), S("tool.scale"), S("tool.erase")],
@@ -243,6 +247,51 @@ CAD = [
         P("Özellikler", "styles", [B("properties")],
           launcher=toCmd("file.settings", "Proje ayarları: birimler, hassasiyet ve çizim ölçeği")),
     ]),
+    # KentOS Yol's terrain (plan/road.md §25.1 Y1.2): its processing toolbox and the terrain's queries; the surface
+    # (Y2), its TIN, contours and slopes, comes with its own commands. İşlemler's tools stay in the contextual tabs.
+    T("terrain", "Arazi", [
+        # The terrain surfaces (plan/road.md Y2.4): their window and a new one.
+        P("Yüzey", "terrainSurface", [L("terrain.surfaces"), L("terrain.new")]),
+        P("İşlemler", "processing", [L("processing.toolbox"), S("processing.newModel"), S("processing.history")]),
+        P("Arazi", "contours", [L("tool.spot"), S("pointcloud.region"), S("pointcloud.profile")],
+          overflow=["mesh.query"]),
+    ], works=ROAD),
+    # KentOS Yol's horizontal alignments (plan/road.md Y3, docs/adr/0901): the Güzergâh window and a new alignment.
+    T("alignment", "Güzergâh", [
+        P("Güzergâh", "alignmentEditor", [L("alignment.editor"), L("alignment.new"), L("alignment.fromLine"),
+                                                   L("landxml.importAlignments")]),
+        # The preliminary route (plan/road.md Y12.1, docs/adr/0910 §1).
+        P("Ön güzergâh", "routeFinder", [L("route.finder")]),
+        # The junctions (plan/road.md Y12.2, docs/adr/0910 §2).
+        P("Kavşak", "junctionEditor", [L("junction.editor")]),
+        # The vertical alignments (plan/road.md Y4, docs/adr/0902): the Boykesit window and a new profile.
+        P("Boykesit", "profileEditor", [L("profile.editor"), L("profile.new"), L("profile.fromLine")]),
+        # The cross sections (plan/road.md Y5, docs/adr/0903): the Enkesit window, a new set and a new template.
+        P("Enkesit", "sectionEditor", [L("section.editor"), L("section.new"), L("section.template")]),
+        # The superelevation (plan/road.md Y6, docs/adr/0904): the Dever window and a new schedule.
+        P("Dever", "superelevationEditor", [L("superelevation.editor"), L("superelevation.new")]),
+    ], works=ROAD),
+    # KentOS Yol's corridors (plan/road.md Y7, docs/adr/0905): the Koridor window, a new corridor and the slope plan;
+    # the earthwork volumes on it.
+    T("corridor", "Koridor", [
+        P("Koridor", "corridorEditor", [L("corridor.editor"), L("corridor.new"), L("corridor.slopePlan")]),
+        # The earthwork volumes (plan/road.md Y8, docs/adr/0906): the Kübaj window, a new volume and its sheet.
+        P("Kübaj", "volumeEditor", [L("volume.editor"), L("volume.new"), L("volume.export")]),
+        # The mass haul diagrams (plan/road.md Y9, docs/adr/0907): the Brükner window and a new diagram.
+        P("Brükner", "haulEditor", [L("haul.editor"), L("haul.new")]),
+        # The stakeout table (plan/road.md Y10, docs/adr/0908).
+        P("Aplikasyon", "stakeoutTable", [L("stakeout.table"), L("landxml.export"), L("ifc.export")]),
+        # The plan–profile sheets (plan/road.md Y10.5, docs/adr/0908 §10).
+        P("Pafta", "roadSheets", [L("road.sheets")]),
+        # The split plan, profile and section views at one km (plan/road.md Y13.4, docs/adr/0911 §5).
+        P("Görünüş", "roadViews", [L("road.views")]),
+        # The road's structures: guardrails and culverts (plan/road.md Y11, docs/adr/0909).
+        P("Yapılar", "guardrailEditor", [L("guardrail.editor"), L("culvert.editor"), L("retainingWall.editor")]),
+        # The pay item quantities (plan/road.md Y11.4, docs/adr/0909 §4).
+        P("Metraj", "payItemsEditor", [L("payItems.editor")]),
+        # The 3D scene (plan/road.md Y12.3, docs/adr/0910 §3): the terrain and the corridors to glTF.
+        P("3B", "scene3dView", [L("scene3d.view"), L("gltf.export")]),
+    ], works=ROAD),
     T("plan", "Plan", [
         P("Yol", "planRoad", [L("tool.planRoad"), S("tool.roadJunctions"), S("tool.medianClose"), S("tool.centerline")]),
         P("Ada ve parsel", "parcel", [L("tool.parcel"), L("tool.boundary"), S("tool.polygonize"), S("tool.adjoin"),
@@ -260,17 +309,18 @@ CAD = [
     T("insert", "Ekle", [
         P("Blok", "blockInsert", [L("tool.blockInsert"), S("tool.blockDefine"), S("block.panel"), S("block.library"),
             S("block.edit")],
-          overflow=["block.insertFile", "block.attributes", "block.sync", "block.freeze", "block.card", "block.schedule",
+          overflow=["block.find", "array.find", "block.insertFile", "block.attributes", "block.sync", "block.freeze", "block.card", "block.schedule",
             "block.writeFile", "block.redefineFromFile", "block.import", "block.export", "block.purge"]),
         P("Şablonlar", "templates", [B("templates")], launcher=toCmd("template.panel", "Şablonlar paneli")),
         P("Dış başvuru", "xrefAttach", [L("xref.attach"), S("xref.manager"), S("tool.xclip")]),
         # Rasters, basemaps, map services, a database's tables and addresses are a map's, as in CBS (docs/adr/0802); a
         # building keeps pictures and point clouds (a scan), named so. STAC's satellite scenes are CBS's analysis.
-        P("Resim ve raster", "imageInsert", [S("tool.imageInsert"), S("raster.add", MAP), S("pointcloud.add")],
-          overflow=["tool.imageClip", W("raster.georef", MAP), W("raster.mosaic", MAP), W("raster.gpkgRead", MAP)],
+        P("Resim ve raster", "imageInsert", [S("tool.imageInsert"), S("raster.add", MAP_ROAD), S("pointcloud.add")],
+          overflow=["tool.imageClip", W("raster.georef", MAP_ROAD), W("raster.mosaic", MAP_ROAD),
+            W("raster.gpkgRead", MAP_ROAD)],
           labels={"architecture": "Resim ve nokta bulutu"}),
         P("Harita", "basemap", [BASEMAPS, S("service.add"), S("service.feed")],
-          overflow=["service.info", "service.connections", "source.postgis"], works=MAP),
+          overflow=["service.info", "service.connections", "source.postgis"], works=MAP_ROAD),
         # A layer's map tips and actions ({$enlem}) are a map's (docs/adr/0802); Bilgi keeps its plain card.
         P("Ekler", "attachment", [S("attachment.add"), S("attachment.addLink"), S("file.import.photos", MAP)],
           overflow=[W("layer.info", MAP)]),
@@ -293,7 +343,7 @@ CAD = [
           overflow=["table.link", "table.blockSchedule"]),
         P("Tarama", "hatch", [L("tool.hatch"), S("tool.hatchSelected"), S("tool.hatchEdit")]),
         # A map sheet's north arrow (docs/adr/0802): KentOS Mimari has it in Belgele › İşaret.
-        P("İşaretleme", "revcloud", [S("tool.revcloud"), S("tool.wipeout"), S("tool.northArrow", MAP)]),
+        P("İşaretleme", "revcloud", [S("tool.revcloud"), S("tool.wipeout"), S("tool.northArrow", MAP_ROAD)]),
         P("Ölçek", "annotationMake", [S("annotation.make"), S("tool.annotativePlace")],
           overflow=["annotation.reset", "annotation.unmake"]),
     ]),
@@ -534,8 +584,8 @@ CONTEXTUAL = [
             S("tool.setElevation")]),
         # Survey points at the corners and a route's chainage (Km yaz) are a map's (docs/adr/0802); Km yaz is CAD
         # drafting, a CBS route has Doğrusal referans.
-        P("Dönüştür", "conversion", [S("tool.toArea"), S("tool.vertexPoints", MAP), S("tool.divide"),
-            S("tool.stationLabels", MAP, IN_CAD), SP("textAlong")]),
+        P("Dönüştür", "conversion", [S("tool.toArea"), S("tool.vertexPoints", MAP_ROAD), S("tool.divide"),
+            S("tool.stationLabels", MAP_ROAD, IN_CAD), SP("textAlong")]),
         P("İşlemler", "processing", [
             M("Geometri", [("", [pr("geometry.buffer"), pr("geometry.simplify"), pr("geometry.clip"),
                 pr("geometry.intersection"), pr("geometry.difference"), pr("geometry.union"),
@@ -640,7 +690,7 @@ CONTEXTUAL = [
     {"id": "ctx.raster", "label": "Raster", "kinds": ["raster"], "panels": [
         SEL,
         P("Raster", "rasterAdd", [L("raster.style"), S("raster.georef"), S(pr("raster.cog")), S("raster.gpkgWrite"),
-            S("raster.mosaic")], works=MAP),
+            S("raster.mosaic")], works=MAP_ROAD),
         P("Yüzey", "aspect", [
             M("Yüzey analizi", [("", [pr("surface.slope"), pr("surface.aspect"), pr("surface.hillshade"),
                 pr("surface.colorRelief"), pr("surface.contours")]),
@@ -648,10 +698,12 @@ CONTEXTUAL = [
               size='large'),
             M("Hidroloji", [("", [pr("hydrology.fill"), pr("hydrology.flowDirection"), pr("hydrology.flowAccumulation"),
                 pr("hydrology.wetness"), pr("hydrology.pourPoint"), pr("hydrology.watershed"), pr("hydrology.basins"),
-                pr("hydrology.streams")])], size='large', modes=IN_GIS),
+                pr("hydrology.streams")])], size='large', works=ROAD),
+            # A road's drainage and its route's first study (Netpro's Koridor analizi, plan/road.md ROAD-ALIGN-13):
+            # CBS's and KentOS Yol's, not a map's.
             M("Uzaklık ve maliyet", [("", [pr("distance.euclidean"), pr("distance.cost"), pr("distance.path"),
-                pr("distance.corridor")])], size='large', modes=IN_GIS),
-        ], works=MAP),
+                pr("distance.corridor")])], size='large', works=ROAD),
+        ], works=MAP_ROAD),
         P("Raster işlemleri", "clipRaster", [
             M("Hesap", [("", [pr("raster.calculator"), pr("raster.reclassify")], (), IN_GIS),
                 ("", [pr("raster.clipByMask"), pr("raster.mosaic"), pr("raster.resample")])], size='large'),
@@ -659,7 +711,7 @@ CONTEXTUAL = [
                 pr("raster.focalStatistics")])], size='large', modes=IN_GIS),
             M("Vektöre", [("", [pr("raster.toPolygons")]), ("", [pr("raster.toLines"), pr("raster.toPoints")], (), IN_GIS),
                 ("", [pr("scan.captureLine"), pr("scan.closeArea"), pr("scan.contourElevations")])], size='large'),
-        ], works=MAP),
+        ], works=MAP_ROAD),
         P("Uygulamalar", "weightedOverlay", [
             M("Uygunluk", [("", [pr("suitability.weightedOverlay"), pr("suitability.weightedSum"),
                 pr("suitability.fuzzyMembership"), pr("suitability.fuzzyOverlay"), pr("suitability.pairwise"),
@@ -723,7 +775,7 @@ ARCH_TABS = ("ctx.wall", "ctx.opening", "ctx.space", "ctx.slab", "ctx.arch")
 for tab in CONTEXTUAL:
     for panel in tab["panels"]:
         if panel["label"] == "İşlemler" or (tab["id"] == "ctx.point" and panel["label"] == "Nokta"):
-            panel["works"] = list(MAP)
+            panel["works"] = list(MAP_ROAD)
         elif tab["id"] in ARCH_TABS and panel["label"] not in ("Seçim", "Düzenle"):
             panel["works"] = list(ARCHITECTURE)
 

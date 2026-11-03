@@ -30,6 +30,8 @@ mod hatch;
 mod weights;
 #[path = "gpu/precision.rs"]
 mod precision;
+#[path = "gpu/scene3d.rs"]
+mod scene3d;
 
 const SAMPLE: &str = include_str!("../../../../fixtures/document/v1/sample.json");
 const E: f64 = 487_012.346;
@@ -462,6 +464,7 @@ fn on_a_real_gpu() {
     compose::layer_composition_and_effects_match_the_reference(&mut gpu);
     hatch::dense_hairlines_do_not_disappear(&mut gpu);
     weights::paper_widths_are_held(&mut gpu);
+    scene3d::the_3d_scene_draws_precisely(&mut gpu);
 }
 
 #[test]
@@ -849,4 +852,11 @@ fn the_sample_draws_with_every_pipeline_and_the_cache_uploads_once(gpu: &mut Gpu
         gpu.renderer.trim();
     }
     assert_eq!(gpu.renderer.view_count(), 0);
+}
+
+#[test]
+#[ignore = "a measurement on a real GPU, run by hand in release"]
+fn scene3d_timing() {
+    let mut gpu = Gpu::open();
+    scene3d::timing(&mut gpu);
 }

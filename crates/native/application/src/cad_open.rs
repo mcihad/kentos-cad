@@ -168,6 +168,7 @@ pub fn read_in(
             drawing_unit: Some(unit),
             annotation: None,
             cad_work: None,
+            heights: None,
         })?;
     // Keep the CAD zero layer, then reproduce the source layer tree without an import group.
     snapshot.layers.truncate(1);

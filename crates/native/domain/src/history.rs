@@ -320,6 +320,83 @@ pub(crate) enum Op {
         before: crate::view_area::ViewArea,
         after: crate::view_area::ViewArea,
     },
+    /// A road project's horizontal alignments (docs/adr/0901 §10), before and after: a setting kept in the undo
+    /// history, so the Güzergâh editor's every write is one step.
+    RoadAlignments {
+        before: Vec<kentos_contracts::AlignmentDef>,
+        after: Vec<kentos_contracts::AlignmentDef>,
+    },
+    /// A road project's vertical alignments (docs/adr/0902 §9), before and after.
+    RoadProfiles {
+        before: Vec<kentos_contracts::ProfileDef>,
+        after: Vec<kentos_contracts::ProfileDef>,
+    },
+    /// A road project's templates and sample line sets (docs/adr/0903 §6), before and after.
+    RoadTemplates {
+        before: Vec<kentos_contracts::TemplateDef>,
+        after: Vec<kentos_contracts::TemplateDef>,
+    },
+    RoadSections {
+        before: Vec<kentos_contracts::SectionSetDef>,
+        after: Vec<kentos_contracts::SectionSetDef>,
+    },
+    /// A road project's superelevation schedules (docs/adr/0904 §5), before and after.
+    RoadSuperelevations {
+        before: Vec<kentos_contracts::SuperelevationDef>,
+        after: Vec<kentos_contracts::SuperelevationDef>,
+    },
+    /// A road project's corridors (docs/adr/0905 §1), before and after.
+    RoadCorridors {
+        before: Vec<kentos_contracts::CorridorDef>,
+        after: Vec<kentos_contracts::CorridorDef>,
+    },
+    /// A road project's earthwork volumes (docs/adr/0906), before and after.
+    RoadVolumes {
+        before: Vec<kentos_contracts::VolumeDef>,
+        after: Vec<kentos_contracts::VolumeDef>,
+    },
+    /// A road project's mass haul diagrams (docs/adr/0907), before and after.
+    RoadHauls {
+        before: Vec<kentos_contracts::HaulDef>,
+        after: Vec<kentos_contracts::HaulDef>,
+    },
+    /// A road project's plan–profile sheet sets (docs/adr/0908 §10), before and after.
+    RoadSheetSets {
+        before: Vec<kentos_contracts::RoadSheetSetDef>,
+        after: Vec<kentos_contracts::RoadSheetSetDef>,
+    },
+    /// A road project's guardrails (docs/adr/0909 §1), before and after.
+    RoadGuardrails {
+        before: Vec<kentos_contracts::GuardrailDef>,
+        after: Vec<kentos_contracts::GuardrailDef>,
+    },
+    /// A road project's culverts (docs/adr/0909 §2), before and after.
+    RoadCulverts {
+        before: Vec<kentos_contracts::CulvertDef>,
+        after: Vec<kentos_contracts::CulvertDef>,
+    },
+    /// A road project's junctions (docs/adr/0910 §2), before and after.
+    RoadJunctions {
+        before: Vec<kentos_contracts::JunctionDef>,
+        after: Vec<kentos_contracts::JunctionDef>,
+    },
+    /// What a road project's commands drew (docs/adr/0911 §1), before and after.
+    RoadDrawings {
+        before: Vec<kentos_contracts::RoadDrawingDef>,
+        after: Vec<kentos_contracts::RoadDrawingDef>,
+    },
+    /// Whether a road project draws its stale drawings again by itself (docs/adr/0911 §3), before and after.
+    RoadAutoRebuild { before: bool, after: bool },
+    /// A road project's pay item book (docs/adr/0909 §4), before and after.
+    RoadPay {
+        before: Option<kentos_contracts::PayBookDef>,
+        after: Option<kentos_contracts::PayBookDef>,
+    },
+    /// A road project's retaining walls (docs/adr/0909 §3), before and after.
+    RoadWalls {
+        before: Vec<kentos_contracts::RetainingWallDef>,
+        after: Vec<kentos_contracts::RetainingWallDef>,
+    },
     /// The project's room modules (docs/adr/0775), before and after: a setting, written in the step with the objects
     /// placed or updated, so undo gives both back.
     ArchModules {
@@ -640,6 +717,67 @@ impl Op {
                 after: *before,
             },
             Op::ArchModules { before, after } => Op::ArchModules {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::RoadAlignments { before, after } => Op::RoadAlignments {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::RoadProfiles { before, after } => Op::RoadProfiles {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::RoadTemplates { before, after } => Op::RoadTemplates {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::RoadSections { before, after } => Op::RoadSections {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::RoadSuperelevations { before, after } => Op::RoadSuperelevations {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::RoadCorridors { before, after } => Op::RoadCorridors {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::RoadVolumes { before, after } => Op::RoadVolumes {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::RoadHauls { before, after } => Op::RoadHauls {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::RoadSheetSets { before, after } => Op::RoadSheetSets {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::RoadGuardrails { before, after } => Op::RoadGuardrails {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::RoadCulverts { before, after } => Op::RoadCulverts {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::RoadJunctions { before, after } => Op::RoadJunctions {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::RoadDrawings { before, after } => Op::RoadDrawings {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::RoadAutoRebuild { before, after } => Op::RoadAutoRebuild { before: *after, after: *before },
+            Op::RoadPay { before, after } => Op::RoadPay {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::RoadWalls { before, after } => Op::RoadWalls {
                 before: after.clone(),
                 after: before.clone(),
             },
@@ -1289,6 +1427,22 @@ impl Document {
                 | Op::Materials { .. }
                 | Op::BuildingProgram { .. }
                 | Op::ArchModules { .. }
+                | Op::RoadAlignments { .. }
+                | Op::RoadProfiles { .. }
+                | Op::RoadTemplates { .. }
+                | Op::RoadSections { .. }
+                | Op::RoadSuperelevations { .. }
+                | Op::RoadCorridors { .. }
+                | Op::RoadVolumes { .. }
+                | Op::RoadHauls { .. }
+                | Op::RoadSheetSets { .. }
+                | Op::RoadGuardrails { .. }
+                | Op::RoadCulverts { .. }
+                | Op::RoadWalls { .. }
+                | Op::RoadPay { .. }
+                | Op::RoadJunctions { .. }
+                | Op::RoadDrawings { .. }
+                | Op::RoadAutoRebuild { .. }
                 | Op::ViewArea { .. }
                 | Op::ArchOptions { .. }
                 | Op::OptionCombos { .. }
@@ -1595,6 +1749,102 @@ impl Document {
                 let mut arch = self.settings.arch.take().unwrap_or_default();
                 arch.modules = after.clone();
                 self.settings.arch = (!arch.is_empty()).then_some(arch);
+                return;
+            }
+            Op::RoadAlignments { after, .. } => {
+                let mut road = self.settings.road.take().unwrap_or_default();
+                road.alignments = after.clone();
+                self.settings.road = (!road.is_empty()).then_some(road);
+                return;
+            }
+            Op::RoadProfiles { after, .. } => {
+                let mut road = self.settings.road.take().unwrap_or_default();
+                road.profiles = after.clone();
+                self.settings.road = (!road.is_empty()).then_some(road);
+                return;
+            }
+            Op::RoadTemplates { after, .. } => {
+                let mut road = self.settings.road.take().unwrap_or_default();
+                road.templates = after.clone();
+                self.settings.road = (!road.is_empty()).then_some(road);
+                return;
+            }
+            Op::RoadSections { after, .. } => {
+                let mut road = self.settings.road.take().unwrap_or_default();
+                road.sections = after.clone();
+                self.settings.road = (!road.is_empty()).then_some(road);
+                return;
+            }
+            Op::RoadSuperelevations { after, .. } => {
+                let mut road = self.settings.road.take().unwrap_or_default();
+                road.superelevations = after.clone();
+                self.settings.road = (!road.is_empty()).then_some(road);
+                return;
+            }
+            Op::RoadCorridors { after, .. } => {
+                let mut road = self.settings.road.take().unwrap_or_default();
+                road.corridors = after.clone();
+                self.settings.road = (!road.is_empty()).then_some(road);
+                return;
+            }
+            Op::RoadVolumes { after, .. } => {
+                let mut road = self.settings.road.take().unwrap_or_default();
+                road.volumes = after.clone();
+                self.settings.road = (!road.is_empty()).then_some(road);
+                return;
+            }
+            Op::RoadHauls { after, .. } => {
+                let mut road = self.settings.road.take().unwrap_or_default();
+                road.hauls = after.clone();
+                self.settings.road = (!road.is_empty()).then_some(road);
+                return;
+            }
+            Op::RoadSheetSets { after, .. } => {
+                let mut road = self.settings.road.take().unwrap_or_default();
+                road.sheet_sets = after.clone();
+                self.settings.road = (!road.is_empty()).then_some(road);
+                return;
+            }
+            Op::RoadGuardrails { after, .. } => {
+                let mut road = self.settings.road.take().unwrap_or_default();
+                road.guardrails = after.clone();
+                self.settings.road = (!road.is_empty()).then_some(road);
+                return;
+            }
+            Op::RoadCulverts { after, .. } => {
+                let mut road = self.settings.road.take().unwrap_or_default();
+                road.culverts = after.clone();
+                self.settings.road = (!road.is_empty()).then_some(road);
+                return;
+            }
+            Op::RoadJunctions { after, .. } => {
+                let mut road = self.settings.road.take().unwrap_or_default();
+                road.junctions = after.clone();
+                self.settings.road = (!road.is_empty()).then_some(road);
+                return;
+            }
+            Op::RoadDrawings { after, .. } => {
+                let mut road = self.settings.road.take().unwrap_or_default();
+                road.drawings = after.clone();
+                self.settings.road = (!road.is_empty()).then_some(road);
+                return;
+            }
+            Op::RoadAutoRebuild { after, .. } => {
+                let mut road = self.settings.road.take().unwrap_or_default();
+                road.auto_rebuild = *after;
+                self.settings.road = (!road.is_empty()).then_some(road);
+                return;
+            }
+            Op::RoadPay { after, .. } => {
+                let mut road = self.settings.road.take().unwrap_or_default();
+                road.pay = after.clone();
+                self.settings.road = (!road.is_empty()).then_some(road);
+                return;
+            }
+            Op::RoadWalls { after, .. } => {
+                let mut road = self.settings.road.take().unwrap_or_default();
+                road.walls = after.clone();
+                self.settings.road = (!road.is_empty()).then_some(road);
                 return;
             }
             Op::ArchOptions { after, .. } => {

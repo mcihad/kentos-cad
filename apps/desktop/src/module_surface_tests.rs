@@ -174,7 +174,7 @@ fn an_opener_of_a_tab_a_program_has_not_says_where_it_is() {
     assert!(app.command_expanded);
     assert_eq!(
         last_said(&app),
-        "“Tablo” KentOS Mimari'de yok; KentOS Harita'da ve KentOS GIS'te var."
+        "“Tablo” KentOS Mimari'de yok; KentOS Harita'da, KentOS GIS'te ve KentOS Yol'da var."
     );
     app.open_statistics(None);
     assert_eq!(app.bottom_tab, BottomTab::History);
@@ -299,7 +299,7 @@ fn f4_and_the_openers_keep_to_the_programs_panels() {
     assert!(!gis.docks.contains(Panel::Blocks));
     assert_eq!(
         last_said(&gis),
-        "“Bloklar” KentOS GIS'te yok; KentOS Mimari'de ve KentOS Harita'da var."
+        "“Bloklar” KentOS GIS'te yok; KentOS Mimari'de, KentOS Harita'da ve KentOS Yol'da var."
     );
     // Kaynaklar in KentOS Mimari: the same.
     let mut mimari = drawn(MIMARI);
@@ -707,7 +707,7 @@ fn kentos_mimari_takes_drawings_dropped_on_it_and_names_the_programs_for_the_res
     assert_eq!(
         last_said(&app),
         "“parsel.shp” KentOS Mimari'de açılmaz: KentOS Mimari çizimleri (KCAD, DWG, DXF, NCZ) açar, PDF'i içe aktarır. \
-         Shapefile KentOS Harita'da ve KentOS GIS'te açılır."
+         Shapefile KentOS Harita'da, KentOS GIS'te ve KentOS Yol'da açılır."
     );
     let _ = app.sources_event(crate::sources::Event::Dropped(dir.join("not.docx")));
     assert_eq!(
@@ -917,7 +917,7 @@ fn kentos_mimari_s_point_calculator_has_no_survey_constructions() {
     assert!(!app.session.nested(), "no km is asked for");
     assert_eq!(
         last_said(&app),
-        "“Km ve sapma” KentOS Mimari'de yok; KentOS Harita'da ve KentOS GIS'te var."
+        "“Km ve sapma” KentOS Mimari'de yok; KentOS Harita'da, KentOS GIS'te ve KentOS Yol'da var."
     );
     let _ = app.update(Message::PointCalc(CalcKind::Mid));
     assert!(app.session.nested(), "a construction it has runs");

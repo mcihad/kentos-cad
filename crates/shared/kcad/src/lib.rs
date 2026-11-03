@@ -750,11 +750,14 @@ pub const SCHEMA_WITH_BLOCK_PARAMETER_GROUPS: u32 = 159;
 pub const SCHEMA_WITH_BLOCK_TYPE_VALUES: u32 = 160;
 /// Schema 161 (ADR 0882): associative 2D grids with independent column/row axis directions.
 pub const SCHEMA_WITH_LATTICE_ARRAYS: u32 = 161;
+/// Schema 162 (plan/road.md Y1.1): a road project's work (the settings' `cadWork: road`, KentOS Yol); written only
+/// when a CAD project is drawn for a road.
+pub const SCHEMA_WITH_ROAD_WORK: u32 = 162;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 159] = [
+pub const SCHEMAS: [u32; 160] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -914,6 +917,7 @@ pub const SCHEMAS: [u32; 159] = [
     SCHEMA_WITH_BLOCK_PARAMETER_GROUPS,
     SCHEMA_WITH_BLOCK_TYPE_VALUES,
     SCHEMA_WITH_LATTICE_ARRAYS,
+    SCHEMA_WITH_ROAD_WORK,
 ];
 
 /// The file a drawing is saved as.

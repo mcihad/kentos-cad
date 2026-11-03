@@ -21,9 +21,10 @@ use crate::provinces::province;
 use crate::wizard::{Coords, Draft, Kind, Step};
 
 /// The fields a request may have, as the refusal of another names them.
-pub const FIELDS: [&str; 8] = [
+pub const FIELDS: [&str; 9] = [
     "name",
     "workspace",
+    "cadWork",
     "coords",
     "srid",
     "province",
@@ -38,6 +39,8 @@ pub struct NewRequest {
     pub name: Option<String>,
     /// The project's type: CAD or CBS (others are not made yet).
     pub workspace: Option<Workspace>,
+    /// What a CAD project is drawn for (docs/adr/0801; a road, plan/road.md); none: its coordinates say.
+    pub cad_work: Option<kentos_contracts::CadWork>,
     /// A CAD project's coordinates: local (no system, SRID 0) or real.
     pub coords: Option<Coords>,
     /// The coordinate system; 0 is the local one.
@@ -97,6 +100,7 @@ impl NewRequest {
         Ok(Self {
             name: field(fields, "name", "metin")?,
             workspace: field(fields, "workspace", "cad ya da gis")?,
+            cad_work: field(fields, "cadWork", "architecture, map ya da road")?,
             coords: field(fields, "coords", "local ya da real")?,
             srid: field(
                 fields,
@@ -129,6 +133,19 @@ impl NewRequest {
                 ));
             }
         };
+        use kentos_contracts::CadWork;
+        if self.cad_work.is_some() && kind != Kind::Cad {
+            return Err(invalid(
+                "cadWork yalnız CAD projesinde (workspace cad) verilir.",
+            ));
+        }
+        // A map and a road are drawn on a coordinate system (docs/adr/0802, plan/road.md).
+        let on_system = matches!(self.cad_work, Some(CadWork::Map | CadWork::Road));
+        if on_system && (self.coords == Some(Coords::Local) || self.srid == Some(LOCAL_SRID)) {
+            return Err(invalid(
+                "Harita ve yol projesi koordinat sistemlidir: coords real ve bir srid ya da province verin.",
+            ));
+        }
         let coords = match (kind, self.coords, self.srid) {
             (Kind::Gis, Some(Coords::Local), _) | (Kind::Gis, None, Some(LOCAL_SRID)) => {
                 return Err(invalid(
@@ -146,6 +163,7 @@ impl NewRequest {
                 ));
             }
             (_, Some(c), _) => c,
+            (Kind::Cad, None, None) if on_system => Coords::Real,
             (Kind::Cad, None, None | Some(LOCAL_SRID)) => Coords::Local,
             (_, None, _) => Coords::Real,
         };
@@ -193,6 +211,8 @@ impl NewRequest {
             // none, so a system is asked, never guessed.
             fallback_srid: LOCAL_SRID,
             annotation: None,
+            chosen_work: self.cad_work,
+            ellipsoidal_heights: false,
         };
         if !local && draft.srid.or_else(|| draft.suggested_srid()).is_none() {
             return Err(invalid(
@@ -237,6 +257,8 @@ mod tests {
             font: DrawingFont::Barlow,
             fallback_srid: 5256,
             annotation: None,
+            chosen_work: None,
+            ellipsoidal_heights: false,
         };
         assert_eq!(p, d.options());
         assert_eq!(
@@ -308,6 +330,36 @@ mod tests {
         )
         .expect("a drawing");
         assert_eq!(snapshot.settings.cad_work, Some(CadWork::Architecture));
+    }
+
+    /// A road (plan/road.md Y1.3) is asked for by its work: on the province's system, its heights TUDKA-99's
+    /// orthometric ones with the TG-20 geoid; a road without a system, or a CBS project's work, is refused.
+    #[test]
+    fn a_road_is_asked_by_its_work_and_starts_on_turkiyes_heights() {
+        use kentos_contracts::{CadWork, HeightKind};
+        let road = made(json!({ "workspace": "cad", "cadWork": "road", "province": 58 })).expect("a road");
+        assert_eq!(
+            (road.cad_work, road.srid, road.plot_scale),
+            (Some(CadWork::Road), 5256, 1000.0)
+        );
+        let drawing = crate::new_project::new_project(&road).expect("a drawing");
+        let heights = drawing.settings.heights.expect("its heights");
+        assert_eq!(
+            (heights.kind, heights.vertical_srid, heights.geoid.map(|g| g.name)),
+            (HeightKind::Orthometric, Some(5775), Some("TG-20".to_owned()))
+        );
+        assert_eq!(drawing.settings.cad_work, Some(CadWork::Road));
+        // A map asked by its work is what its coordinates already said; a building keeps no heights.
+        let map = made(json!({ "workspace": "cad", "cadWork": "map", "srid": 5254 })).expect("a map");
+        assert_eq!((map.cad_work, map.heights), (Some(CadWork::Map), None));
+        let refused = |input: Value| made(input).expect_err("refused").message;
+        assert!(refused(json!({ "workspace": "cad", "cadWork": "road" })).contains("srid gerekli"));
+        assert!(
+            refused(json!({ "workspace": "cad", "cadWork": "road", "coords": "local" }))
+                .contains("koordinat sistemlidir")
+        );
+        assert!(refused(json!({ "cadWork": "road", "srid": 5256 })).contains("yalnız CAD projesinde"));
+        assert!(refused(json!({ "workspace": "cad", "cadWork": "yol" })).contains("cadWork"));
     }
 
     #[test]

@@ -84,9 +84,10 @@ pub struct Work {
     pub unit: DrawingUnit,
 }
 
-/// The two a CAD project is made for (docs/adr/0802; the owner: “bizde iki tür cad var mimari ve harita”): a
-/// building in metres at 1:100, a map or a zoning plan on the province's system in metres at 1:1000.
-pub const WORKS: [Work; 2] = [
+/// What a CAD project is made for (docs/adr/0802; the owner: “bizde iki tür cad var mimari ve harita”): a
+/// building in metres at 1:100, a map or a zoning plan on the province's system in metres at 1:1000; and a road
+/// (plan/road.md, KentOS Yol), on the province's system too, which only its own module's program makes.
+pub const WORKS: [Work; 3] = [
     Work {
         work: CadWork::Architecture,
         name: "Mimari proje",
@@ -100,6 +101,14 @@ pub const WORKS: [Work; 2] = [
         name: "Harita / imar planı",
         note: "Vaziyet, imar, halihazır ve altyapı. Metre, 1:1000; ilin koordinat sisteminde.",
         icon: "parcel",
+        coords: Coords::Real,
+        unit: DrawingUnit::M,
+    },
+    Work {
+        work: CadWork::Road,
+        name: "Yol projesi",
+        note: "Arazi, güzergâh, boykesit, enkesit ve kübaj. Metre, 1:1000; ilin koordinat sisteminde.",
+        icon: "planRoad",
         coords: Coords::Real,
         unit: DrawingUnit::M,
     },
@@ -129,6 +138,14 @@ pub struct Draft {
     /// (docs/adr/0205 §1, 0622 §2).
     #[serde(default)]
     pub annotation: Option<AnnotationHeights>,
+    /// The work chosen on its card: two works share real coordinates (a map and a road, plan/road.md), so the
+    /// card says which; none: the work its coordinates say.
+    #[serde(default)]
+    pub chosen_work: Option<CadWork>,
+    /// A road's elevations are a GNSS receiver's ellipsoidal heights, not TUDKA-99's orthometric ones (plan/road.md
+    /// ROAD-NUM-03): the wizard's Kotlar.
+    #[serde(default)]
+    pub ellipsoidal_heights: bool,
 }
 
 /// Map scales for a CBS project, drawing scales for a CAD one (1:N).
@@ -311,6 +328,8 @@ impl Draft {
                 5256
             },
             annotation: None,
+            chosen_work: None,
+            ellipsoidal_heights: false,
         }
     }
 
@@ -319,9 +338,12 @@ impl Draft {
         if self.kind != Kind::Cad {
             return None;
         }
-        // Two CAD works (docs/adr/0802): a drawing of its own is a building's whatever its unit, one on a
-        // coordinate system a map's.
-        WORKS.iter().find(|w| w.coords == self.coords)
+        // A drawing of its own is a building's whatever its unit (docs/adr/0802); one on a coordinate system the
+        // work its card chose, else a map's.
+        WORKS
+            .iter()
+            .find(|w| Some(w.work) == self.chosen_work && w.coords == self.coords)
+            .or_else(|| WORKS.iter().find(|w| w.coords == self.coords))
     }
 
     /// The CAD work the project is made for (docs/adr/0801, 0802): its work's, none for a CBS draft.
@@ -329,8 +351,25 @@ impl Draft {
         self.work().map(|w| w.work)
     }
 
+    /// What a new road's elevations rest on (plan/road.md ROAD-NUM-02/03): TUDKA-99's orthometric heights with the
+    /// TG-20 geoid, or ellipsoidal heights; none for any other work, whose heights are not asked.
+    pub fn heights(&self) -> Option<kentos_contracts::HeightReference> {
+        (self.cad_work() == Some(CadWork::Road)).then(|| {
+            if self.ellipsoidal_heights {
+                kentos_contracts::HeightReference {
+                    kind: kentos_contracts::HeightKind::Ellipsoidal,
+                    vertical_srid: None,
+                    geoid: None,
+                }
+            } else {
+                crate::new_project::road_heights()
+            }
+        })
+    }
+
     /// The draft made for `work`: its coordinates and unit, the scale its own.
     pub fn choose_work(&mut self, work: &Work) {
+        self.chosen_work = Some(work.work);
         self.coords = work.coords;
         self.unit = work.unit;
         self.plot_scale = None;
@@ -480,6 +519,9 @@ impl Draft {
         if let (false, Some(p)) = (local, p) {
             lines.push(("İl", p.name.clone()));
         }
+        if let Some(h) = self.heights() {
+            lines.push(("Kotlar", h.title()));
+        }
         lines.push(("Birim", lower_tr(unit_choice(self.unit()).name)));
         lines.push((
             match self.kind {
@@ -529,6 +571,7 @@ impl Draft {
             drawing_unit: local.then_some(self.unit),
             annotation: self.annotation.clone().and_then(AnnotationHeights::sanitized),
             cad_work: self.cad_work(),
+            heights: self.heights(),
         }
     }
 }
@@ -675,6 +718,7 @@ mod tests {
             [
                 ("Mimari proje", LOCAL_SRID, DrawingUnit::M, 100.0, Some(DrawingUnit::M)),
                 ("Harita / imar planı", 5256, DrawingUnit::M, 1000.0, None),
+                ("Yol projesi", 5256, DrawingUnit::M, 1000.0, None),
             ]
         );
         // Each work names the project's work (docs/adr/0801), the contract's in the same order and words.

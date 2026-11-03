@@ -104,7 +104,7 @@ use crate::{
     layers_find, layers_indexes, layers_info, layers_labels, layers_renderer, layers_rules,
     layers_service, layers_set, layers_states, layers_subtypes, layers_table, layers_time,
     layers_translate, leaders_edit, legends, levels_assign, library_edit, line, line_types_edit,
-    linearref_define, maplibre, network_define, north, nurbs, objects_derive, offset,
+    linearref_define, file_import_landxml, road_alignments_create, road_scene, road_alignments_edit, road_alignments_label, road_alignments_query, road_profiles_create, road_profiles_draw, road_profiles_edit, road_profiles_query, road_sections_draw, road_sections_edit, road_sections_query, road_superelevations_edit, road_superelevations_query, road_corridors_draw, road_corridors_edit, road_corridors_query, road_volumes_approve, road_volumes_edit, road_volumes_query, road_hauls_edit, road_hauls_query, road_guardrails_edit, road_guardrails_query, road_guardrails_draw, road_culverts_edit, road_culverts_query, road_culverts_draw, road_walls_edit, road_walls_query, road_walls_draw, road_pay_edit, road_pay_query, road_routes_find, road_routes_draw, road_junctions_edit, road_junctions_query, road_junctions_draw, road_project_query, road_project_rebuild, road_project_edit, road_alignments_import, road_alignments_fit, road_profiles_fit, road_ifc, road_landxml, road_stakeout, road_stakeout_send, road_sheets, road_sheets_sections, road_templates_edit, road_terrains_contours, road_terrains_create, road_terrains_edit, road_terrains_query, maplibre, network_define, north, nurbs, objects_derive, offset,
     openings_create, openings_distances, openings_edit, opening_types_edit, materials_edit, openings_query, modules_edit, modules_query, options_edit, options_query, elevations_edit, elevations_query, parameters_edit, parcels, point,
     points_construct, polygon, polygon_regular, polyline, qml, ramps_create, rasters_georef,
     rasters_mosaic, rasters_reproject, rectangle_create, revcloud_create, revisions, roads_edit,
@@ -207,6 +207,174 @@ macro_rules! by_command {
             kentos_commands::CAD_NETWORK_DEFINE => $then!(network_define, NetworkDefine),
             kentos_commands::CAD_LINEARREF_DEFINE => {
                 $then!(linearref_define, kentos_commands::LinearRefDefine)
+            }
+            kentos_commands::ROAD_TERRAINS_CREATE => {
+                $then!(road_terrains_create, kentos_commands::TerrainsCreate)
+            }
+            kentos_commands::ROAD_TERRAINS_EDIT => {
+                $then!(road_terrains_edit, kentos_commands::TerrainsEdit)
+            }
+            kentos_commands::ROAD_TERRAINS_QUERY => {
+                $then!(road_terrains_query, kentos_commands::TerrainsQuery)
+            }
+            kentos_commands::ROAD_TERRAINS_CONTOURS => {
+                $then!(road_terrains_contours, kentos_commands::TerrainsContours)
+            }
+            kentos_commands::FILE_IMPORT_LANDXML => {
+                $then!(file_import_landxml, kentos_commands::ImportLandxml)
+            }
+            kentos_commands::ROAD_ALIGNMENTS_CREATE => {
+                $then!(road_alignments_create, kentos_commands::AlignmentsCreate)
+            }
+            kentos_commands::ROAD_ALIGNMENTS_EDIT => {
+                $then!(road_alignments_edit, kentos_commands::AlignmentsEdit)
+            }
+            kentos_commands::ROAD_ALIGNMENTS_QUERY => {
+                $then!(road_alignments_query, kentos_commands::AlignmentsQuery)
+            }
+            kentos_commands::ROAD_ALIGNMENTS_LABEL => {
+                $then!(road_alignments_label, kentos_commands::AlignmentsLabel)
+            }
+            kentos_commands::ROAD_PROFILES_CREATE => {
+                $then!(road_profiles_create, kentos_commands::ProfilesCreate)
+            }
+            kentos_commands::ROAD_PROFILES_EDIT => {
+                $then!(road_profiles_edit, kentos_commands::ProfilesEdit)
+            }
+            kentos_commands::ROAD_PROFILES_QUERY => {
+                $then!(road_profiles_query, kentos_commands::ProfilesQuery)
+            }
+            kentos_commands::ROAD_PROFILES_DRAW => {
+                $then!(road_profiles_draw, kentos_commands::ProfilesDraw)
+            }
+            kentos_commands::ROAD_TEMPLATES_EDIT => {
+                $then!(road_templates_edit, kentos_commands::TemplatesEdit)
+            }
+            kentos_commands::ROAD_SECTIONS_EDIT => {
+                $then!(road_sections_edit, kentos_commands::SectionsEdit)
+            }
+            kentos_commands::ROAD_SECTIONS_QUERY => {
+                $then!(road_sections_query, kentos_commands::SectionsQuery)
+            }
+            kentos_commands::ROAD_SECTIONS_DRAW => {
+                $then!(road_sections_draw, kentos_commands::SectionsDraw)
+            }
+            kentos_commands::ROAD_SUPERELEVATIONS_EDIT => {
+                $then!(road_superelevations_edit, kentos_commands::SuperelevationsEdit)
+            }
+            kentos_commands::ROAD_SUPERELEVATIONS_QUERY => {
+                $then!(road_superelevations_query, kentos_commands::SuperelevationsQuery)
+            }
+            kentos_commands::ROAD_CORRIDORS_EDIT => {
+                $then!(road_corridors_edit, kentos_commands::CorridorsEdit)
+            }
+            kentos_commands::ROAD_CORRIDORS_QUERY => {
+                $then!(road_corridors_query, kentos_commands::CorridorsQuery)
+            }
+            kentos_commands::ROAD_CORRIDORS_DRAW => {
+                $then!(road_corridors_draw, kentos_commands::CorridorsDraw)
+            }
+            kentos_commands::ROAD_VOLUMES_EDIT => {
+                $then!(road_volumes_edit, kentos_commands::VolumesEdit)
+            }
+            kentos_commands::ROAD_VOLUMES_QUERY => {
+                $then!(road_volumes_query, kentos_commands::VolumesQuery)
+            }
+            kentos_commands::ROAD_VOLUMES_APPROVE => {
+                $then!(road_volumes_approve, kentos_commands::VolumesApprove)
+            }
+            kentos_commands::ROAD_HAULS_EDIT => {
+                $then!(road_hauls_edit, kentos_commands::HaulsEdit)
+            }
+            kentos_commands::ROAD_HAULS_QUERY => {
+                $then!(road_hauls_query, kentos_commands::HaulsQuery)
+            }
+            kentos_commands::ROAD_GUARDRAILS_EDIT => {
+                $then!(road_guardrails_edit, kentos_commands::GuardrailsEdit)
+            }
+            kentos_commands::ROAD_GUARDRAILS_QUERY => {
+                $then!(road_guardrails_query, kentos_commands::GuardrailsQuery)
+            }
+            kentos_commands::ROAD_GUARDRAILS_DRAW => {
+                $then!(road_guardrails_draw, kentos_commands::GuardrailsDraw)
+            }
+            kentos_commands::ROAD_CULVERTS_EDIT => {
+                $then!(road_culverts_edit, kentos_commands::CulvertsEdit)
+            }
+            kentos_commands::ROAD_CULVERTS_QUERY => {
+                $then!(road_culverts_query, kentos_commands::CulvertsQuery)
+            }
+            kentos_commands::ROAD_CULVERTS_DRAW => {
+                $then!(road_culverts_draw, kentos_commands::CulvertsDraw)
+            }
+            kentos_commands::ROAD_WALLS_EDIT => {
+                $then!(road_walls_edit, kentos_commands::RetainingWallsEdit)
+            }
+            kentos_commands::ROAD_WALLS_QUERY => {
+                $then!(road_walls_query, kentos_commands::RetainingWallsQuery)
+            }
+            kentos_commands::ROAD_WALLS_DRAW => {
+                $then!(road_walls_draw, kentos_commands::RetainingWallsDraw)
+            }
+            kentos_commands::ROAD_PAY_EDIT => {
+                $then!(road_pay_edit, kentos_commands::PayEdit)
+            }
+            kentos_commands::ROAD_PAY_QUERY => {
+                $then!(road_pay_query, kentos_commands::PayQuery)
+            }
+            kentos_commands::ROAD_ROUTES_FIND => {
+                $then!(road_routes_find, kentos_commands::RoutesFind)
+            }
+            kentos_commands::ROAD_ROUTES_DRAW => {
+                $then!(road_routes_draw, kentos_commands::RoutesDraw)
+            }
+            kentos_commands::ROAD_JUNCTIONS_EDIT => {
+                $then!(road_junctions_edit, kentos_commands::JunctionsEdit)
+            }
+            kentos_commands::ROAD_JUNCTIONS_QUERY => {
+                $then!(road_junctions_query, kentos_commands::JunctionsQuery)
+            }
+            kentos_commands::ROAD_JUNCTIONS_DRAW => {
+                $then!(road_junctions_draw, kentos_commands::JunctionsDraw)
+            }
+            kentos_commands::ROAD_PROJECT_QUERY => {
+                $then!(road_project_query, kentos_commands::RoadProjectQuery)
+            }
+            kentos_commands::ROAD_PROJECT_REBUILD => {
+                $then!(road_project_rebuild, kentos_commands::RoadProjectRebuild)
+            }
+            kentos_commands::ROAD_PROJECT_EDIT => {
+                $then!(road_project_edit, kentos_commands::RoadProjectEdit)
+            }
+            kentos_commands::ROAD_STAKEOUT_QUERY => {
+                $then!(road_stakeout, kentos_commands::StakeoutQuery)
+            }
+            kentos_commands::FILE_EXPORT_LANDXML => {
+                $then!(road_landxml, kentos_commands::ExportLandxml)
+            }
+            kentos_commands::FILE_EXPORT_IFC => {
+                $then!(road_ifc, kentos_commands::ExportIfc)
+            }
+            kentos_commands::FILE_EXPORT_GLTF => {
+                $then!(road_scene, kentos_commands::ExportGltf)
+            }
+            kentos_commands::ROAD_STAKEOUT_SEND => {
+                $then!(road_stakeout_send, kentos_commands::StakeoutSend)
+            }
+            kentos_commands::ROAD_SHEETS_PLAN => {
+                $then!(road_sheets, kentos_commands::RoadSheetsPlan)
+            }
+            kentos_commands::ROAD_SHEETS_SECTIONS => {
+                $then!(road_sheets_sections, kentos_commands::RoadSheetsSections)
+            }
+            kentos_commands::ROAD_ALIGNMENTS_FIT => {
+                $then!(road_alignments_fit, kentos_commands::AlignmentsFit)
+            }
+            kentos_commands::ROAD_PROFILES_FIT => {
+                $then!(road_profiles_fit, kentos_commands::ProfilesFit)
+            }
+            kentos_commands::ROAD_ALIGNMENTS_IMPORT => {
+                $then!(road_alignments_import, kentos_commands::AlignmentsImport)
             }
             kentos_commands::CAD_SUBNETWORKS_FIND => {
                 $then!(subnetworks, kentos_commands::SubnetworksFind)

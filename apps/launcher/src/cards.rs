@@ -176,8 +176,10 @@ mod tests {
         assert_eq!(found("harita"), ["kentos-harita"]);
         assert_eq!(found("HARİTA"), ["kentos-harita"]);
         assert_eq!(found("plan, kesit"), ["kentos-mimari"], "the note too");
-        // KentOS Mimari draws a building's sections and elevations; the detail work is gone (docs/adr/0802 §2).
-        assert_eq!(found("kesit"), ["kentos-mimari"]);
+        // KentOS Mimari draws a building's sections and elevations, KentOS Yol a road's (plan/road.md); the detail
+        // work is gone (docs/adr/0802 §2).
+        assert_eq!(found("kesit"), ["kentos-mimari", "kentos-yol"]);
+        assert_eq!(found("kübaj"), ["kentos-yol"]);
         assert_eq!(found("GÖRÜNÜŞ"), ["kentos-mimari"]);
         assert!(found("detay").is_empty());
         assert_eq!(found("kentos yol"), ["kentos-yol"], "every word");

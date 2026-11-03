@@ -168,6 +168,8 @@ where
                             warnings.extend(crate::subnetwork_follow::follow(inner.doc, command));
                             // The events of the links that keep them on their routes (docs/adr/0569 §3).
                             warnings.extend(crate::event_follow::follow(inner.doc, command));
+                            // The stale road drawings drawn again by themselves (docs/adr/0911 §3).
+                            warnings.extend(crate::road_project_rebuild::follow(inner.doc, command));
                             Ok((output, warnings, followed.relaxed))
                         }
                         Err(stop) => Err(Box::new(stop.into())),

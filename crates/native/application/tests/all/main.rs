@@ -3,6 +3,10 @@
 //! One binary links once where each file was linked on its own.
 
 mod blocks_find;
+mod ifc_files;
+mod gltf_files;
+mod landxml_files;
+mod stakeout_send_files;
 mod blocks_convert;
 mod block_formula_values;
 mod block_nested_attribute_renames;

@@ -85,6 +85,7 @@ pub fn list(catalog: &Value) -> Vec<Value> {
                 json!({
                     "name": { "type": "string", "description": "Projenin adı; verilmezse “Yeni proje”." },
                     "workspace": { "type": "string", "enum": ["cad", "gis"], "description": "Proje türü (docs/adr/0165): cad ya da gis; verilmezse gis." },
+                    "cadWork": { "type": "string", "enum": ["architecture", "map", "road"], "description": "CAD projesinin işi (docs/adr/0801): architecture (Mimari, yerel), map (Harita) ya da road (KentOS Yol); map ve road koordinat sistemlidir, srid ya da province ister. Yol projesinin kotları TUDKA-99 ortometrik (EPSG:5775) ve TG-20 geoidiyle başlar. Verilmezse koordinatlardan: yerel Mimari, sistemli Harita." },
                     "coords": { "type": "string", "enum": ["local", "real"], "description": "CAD projesinin koordinatları: local (sistem yok, SRID 0) ya da real. Verilmezse srid'den: srid yok ya da 0 ise local; CBS projesi her zaman real." },
                     "srid": { "type": "integer", "minimum": 0, "description": "Koordinat sistemi (5254…5259 TUREF/TM, 32635…32638 UTM …; 0 yerel). Koordinat sistemli projede srid ya da province gerekir." },
                     "province": { "type": "integer", "minimum": 1, "maximum": 81, "description": "İlin plaka kodu: proje onun merkezinde açılır; srid yoksa ilin TUREF dilimi alınır. Yerel projede verilmez." },
@@ -735,6 +736,24 @@ fn command_tool(c: &Value) -> Value {
             | "cad.network.define"
             // Its remove takes an event link away (docs/adr/0569 §2).
             | "cad.linearref.define"
+            // Its remove takes a terrain surface's definition away; its set changes one (plan/road.md Y2.3).
+            | "road.terrains.edit"
+            // Its set and reverse change an alignment, its remove takes one away (docs/adr/0901).
+            | "road.alignments.edit"
+            | "road.profiles.edit"
+            | "road.templates.edit"
+            | "road.sections.edit"
+            | "road.superelevations.edit"
+            | "road.corridors.edit"
+            | "road.volumes.edit"
+            | "road.volumes.approve"
+            | "road.hauls.edit"
+            | "road.guardrails.edit"
+            | "road.culverts.edit"
+            | "road.walls.edit"
+            | "road.pay.edit"
+            | "road.junctions.edit"
+            | "road.project.rebuild"
             // It overwrites the attribute's values and takes them away from what no subnetwork reaches (docs/adr/0557 §2).
             | "cad.subnetworks.update"
             // Its remove takes address data's definition away (docs/adr/0229 §14).
@@ -825,6 +844,10 @@ fn command_tool(c: &Value) -> Value {
             | "file.export.parquet"
             | "file.export.gml"
             | "file.export.xyz"
+            | "file.export.landxml"
+            | "file.export.ifc"
+            | "file.export.gltf"
+            | "road.stakeout.send"
             | "file.export.atlas"
             | "file.import.csv"
             | "file.import.fgb"
@@ -1123,7 +1146,10 @@ fn on_desktop(server: &mut Server, handle: &str, name: &str, args: &Value) -> Re
                 format!("{command}: masaüstündeki çizimi kullanıcı dışa aktarır; ondan isteyin."),
             ));
         }
-        command if command.starts_with("cad.") => ("call", envelope_of(command, args)),
+        // KentOS Yol's commands go the same way (plan/road.md Y2.3).
+        command if command.starts_with("cad.") || command.starts_with("road.") => {
+            ("call", envelope_of(command, args))
+        }
         "drawing.job.start" => ("start", job_envelope(args)),
         "drawing.job.status" | "drawing.job.wait" => ("job", json!({ "id": args.get("id") })),
         "drawing.job.cancel" => ("cancel", json!({ "id": args.get("id") })),

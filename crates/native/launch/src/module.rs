@@ -1,5 +1,5 @@
-//! The KentOS modules (docs/adr/0801, 0802): KentOS Mimari, KentOS Harita and
-//! KentOS GIS, each an application of its own under its own name
+//! The KentOS modules (docs/adr/0801, 0802): KentOS Mimari, KentOS Harita,
+//! KentOS GIS and KentOS Yol (plan/road.md), each an application of its own under its own name
 //! ([`Module::program`]): one program file, `kentos-cad`, is all of them at
 //! once and each under its name or `--modul`. A project belongs to a module by its type and its CAD work
 //! (`ProjectSettings.workspace`, `cadWork`).
@@ -20,11 +20,19 @@ pub enum Module {
     /// GIS: a CBS project.
     #[serde(rename = "cbs")]
     Gis,
+    /// Yol: road design, terrain, alignments, sections and earthworks (a CAD project's `road` work, plan/road.md).
+    #[serde(rename = "yol")]
+    Road,
 }
 
 impl Module {
     /// Every module, in the launcher's order.
-    pub const ALL: [Module; 3] = [Module::Architecture, Module::Map, Module::Gis];
+    pub const ALL: [Module; 4] = [
+        Module::Architecture,
+        Module::Map,
+        Module::Gis,
+        Module::Road,
+    ];
 
     /// The id the command line and the recent files write.
     pub const fn id(self) -> &'static str {
@@ -32,6 +40,7 @@ impl Module {
             Module::Architecture => "mimari",
             Module::Map => "harita",
             Module::Gis => "cbs",
+            Module::Road => "yol",
         }
     }
 
@@ -46,6 +55,7 @@ impl Module {
             Module::Architecture => "KentOS Mimari",
             Module::Map => "KentOS Harita",
             Module::Gis => "KentOS GIS",
+            Module::Road => "KentOS Yol",
         }
     }
 
@@ -56,6 +66,7 @@ impl Module {
             Module::Architecture => "kentos-mimari",
             Module::Map => "kentos-harita",
             Module::Gis => "kentos-gis",
+            Module::Road => "kentos-yol",
         }
     }
 
@@ -76,13 +87,14 @@ impl Module {
             Module::Architecture => "Mimari CAD: plan, kesit ve görünüş",
             Module::Map => "Harita CAD: vaziyet, imar ve halihazır",
             Module::Gis => "Coğrafi bilgi sistemi",
+            Module::Road => "Yol projelendirme: arazi, güzergâh, kesit ve kübaj",
         }
     }
 
     /// The type its projects have, as a project file writes it (`ProjectSettings.workspace`): `cad` or `gis`.
     pub const fn project_type(self) -> &'static str {
         match self {
-            Module::Architecture | Module::Map => "cad",
+            Module::Architecture | Module::Map | Module::Road => "cad",
             Module::Gis => "gis",
         }
     }
@@ -93,14 +105,15 @@ impl Module {
         match self {
             Module::Architecture => &["architecture"],
             Module::Map => &["map"],
+            Module::Road => &["road"],
             Module::Gis => &[],
         }
     }
 
     /// The cloud catalog's project types its projects have (docs/adr/0802), as the server names them (`type`,
     /// `ProjectType::name`), the one a new cloud project starts with first: KentOS Mimari's a building's; KentOS
-    /// Harita's every CAD type that is not a building's (general CAD, land readjustment, zoning plan, subdivision,
-    /// road); KentOS GIS's CBS. No type is two modules'.
+    /// Harita's every CAD type that is neither a building's nor a road's (general CAD, land readjustment, zoning plan,
+    /// subdivision); KentOS Yol's a road's (plan/road.md); KentOS GIS's CBS. No type is two modules'.
     pub const fn project_types(self) -> &'static [&'static str] {
         match self {
             Module::Architecture => &["architecture"],
@@ -109,8 +122,8 @@ impl Module {
                 "landReadjustment",
                 "zoningPlan",
                 "subdivision",
-                "road",
             ],
+            Module::Road => &["road"],
             Module::Gis => &["gis"],
         }
     }
@@ -155,7 +168,10 @@ mod tests {
         }
         assert_eq!(Module::from_id("Mimari"), None, "ids are exact");
         let programs: Vec<&str> = Module::ALL.iter().map(|m| m.program()).collect();
-        assert_eq!(programs, ["kentos-mimari", "kentos-harita", "kentos-gis"]);
+        assert_eq!(
+            programs,
+            ["kentos-mimari", "kentos-harita", "kentos-gis", "kentos-yol"]
+        );
         assert_eq!(Module::from_id(""), None);
     }
 
@@ -169,8 +185,9 @@ mod tests {
             of(Some("cad"), Some("architecture")),
             Some(Module::Architecture)
         );
-        assert_eq!(of(Some("cad"), Some("detail")), None, "two CAD works only");
+        assert_eq!(of(Some("cad"), Some("detail")), None, "three CAD works only");
         assert_eq!(of(Some("cad"), Some("map")), Some(Module::Map));
+        assert_eq!(of(Some("cad"), Some("road")), Some(Module::Road));
         // Not asked yet, or not known: no module.
         assert_eq!(of(Some("cad"), None), None);
         assert_eq!(of(Some("cad"), Some("survey")), None);
@@ -196,10 +213,10 @@ mod tests {
                 "cad",
                 "landReadjustment",
                 "zoningPlan",
-                "subdivision",
-                "road"
+                "subdivision"
             ]
         );
+        assert_eq!(Module::Road.project_types(), ["road"]);
         assert_eq!(Module::Gis.project_types(), ["gis"]);
         // The seven catalog types the server knows, each one module's; a type it does not know, none's.
         let every = [
@@ -246,6 +263,7 @@ mod tests {
         assert_eq!(named("/opt/kentos/bin/kentos-harita"), Some(Module::Map));
         assert_eq!(named("KENTOS-GIS.EXE"), Some(Module::Gis));
         assert_eq!(named("./kentos-mimari"), Some(Module::Architecture));
+        assert_eq!(named("KentOS-Yol"), Some(Module::Road));
         assert_eq!(named("kentos-cad"), None, "every module at once");
         assert_eq!(named("kentos-launcher"), None);
         assert_eq!(named(""), None);

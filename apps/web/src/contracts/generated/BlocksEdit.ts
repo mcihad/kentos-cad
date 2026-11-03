@@ -46,15 +46,15 @@ import type { Vec2 } from "./Vec2";
  * `replace` the layer checks of `cad.blocks.define`; `remove`: `block_in_use`
  * (inserts of it in the drawing or in another definition).
  */
-export type BlocksEdit = {
+export type BlocksEdit = { 
 /**
  * `card`: publisher-assigned family/type/release; absent keeps it.
  */
-publication?: BlockPublication,
+publication?: BlockPublication, 
 /**
  * `card`: explicitly detach the publication identity; incompatible with `publication`.
  */
-clearPublication?: boolean, operation: BlockEditOperation,
+clearPublication?: boolean, operation: BlockEditOperation, 
 /**
  * The definition; every operation but `purge`.
  */

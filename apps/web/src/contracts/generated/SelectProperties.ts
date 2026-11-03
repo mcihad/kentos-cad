@@ -4,17 +4,17 @@
  * All present criteria must match. Heights are real model metres; expression readings
  * use the project's drawing unit, just as layer filters do. No drawing or selection is written.
  */
-export type SelectProperties = {
+export type SelectProperties = { 
 /**
  * Optional picked block-piece path (zero-based definition indexes, as cad.entities.pick returns).
  * Colour criteria inspect that piece through each placement; the result is the owning insert UID.
  * Never edits a definition. Height/expression criteria cannot be combined with this path.
  */
-blockPath?: Array<number>, textHeightMin?: number, textHeightMax?: number,
+blockPath?: Array<number>, textHeightMin?: number, textHeightMax?: number, 
 /**
  * Own CAD colour (hex or palette token), or "byLayer" for no explicit colour.
  */
-assignedColor?: string,
+assignedColor?: string, 
 /**
  * CAD paint after layer inheritance, before theme palette conversion. This is not a GIS thematic pixel colour.
  */
