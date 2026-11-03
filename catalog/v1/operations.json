@@ -2753,6 +2753,14 @@
       ],
       "note": "Ölçüler yazıldıkça road.walls.edit'in planıyla okuma kopyasında önizler; Kaydet ve Sil road.walls.edit, Planda çiz road.walls.draw ile yazar (plan/road.md Y11.3, ADR 0909 §3)."
     },
+    "drainage.editor": {
+      "level": "semantic",
+      "via": [
+        "road.drainage.query",
+        "road.drainage.draw"
+      ],
+      "note": "Önizle road.drainage.query ile okur (hiçbir şey yazılmaz); Planda çiz road.drainage.draw ile yazar (plan/road.md Y16.3, ADR 0914 §3)."
+    },
     "terrain.cloud": {
       "level": "semantic",
       "via": [

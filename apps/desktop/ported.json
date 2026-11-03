@@ -424,6 +424,7 @@
     "retainingWall.editor",
     "platform.editor",
     "terrain.cloud",
+    "drainage.editor",
     "payItems.editor",
     "route.finder",
     "junction.editor",

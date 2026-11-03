@@ -468,6 +468,16 @@
       ]
      },
      {
+      "label": "Drenaj",
+      "icon": "drainageEditor",
+      "items": [
+       {
+        "command": "drainage.editor",
+        "size": "large"
+       }
+      ]
+     },
+     {
       "label": "İşlemler",
       "icon": "processing",
       "items": [

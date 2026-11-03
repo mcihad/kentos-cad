@@ -70,3 +70,11 @@ birimler `discharge` (m³/s), `velocity` (m/s), `rainfall` (mm/sa). 28 + 24 orta
 yeri ve boyu, havzanın hücreleri ve en uzak akış yolu kapalı biçimle; elmas çukurda gölet 5 m derin, 50 m², 250/3 m³;
 düzlemde kenara; Manning ve Rasyonel ADR'nin formülleriyle; menfezlerin ölçüleri road_culvert_cases.py'nin; KentOS kodu
 yok). Python `kentos.cad.road.drainage`, MCP.
+
+Y16.3 (yapıldı, masaüstü): §3. Arazi sekmesinde Drenaj paneli, `drainage.editor` (`apps/desktop/src/drainage_window.rs`):
+yüzey, boşaltım noktası (Y,X yazılır ya da seçili noktadan; boşsa seçilen menfezin girişi), menfez, ızgara aralığı, erim,
+C, i, göletin en az derinliği. Önizle `road.drainage.query` ile okur: planda havzanın hücrelerinin sınırı, en uzak
+hücreden akış yolu, boşaltım noktası ve göletler (alanlarıyla orantılı daire, derinliği); havzanın alanı, akış yolunun
+boyu, düşüsü ve eğimi, Rasyonel debi, menfezin dolu akış kapasitesi ve oranı; göletlerin dip kotu, seviyesi, derinliği,
+alanı ve hacmi; uyarılar. Değer değişince önizleme düşer; Planda çiz yalnız çizilecek bir şey varken açıktır.
+Testler `drainage_window_tests.rs`, resimler `.run/gui-evidence/yol-y16-drenaj-*`.

@@ -2727,6 +2727,23 @@
    "tests": 0
   },
   {
+   "id": "drainage.editor",
+   "kind": "command",
+   "title": "Drenaj…",
+   "level": "semantic",
+   "via": [
+    "road.drainage.query",
+    "road.drainage.draw"
+   ],
+   "operation": null,
+   "python": "Connection: road.drainage.query, Connection: road.drainage.draw",
+   "mcp": "road.drainage.query, road.drainage.draw",
+   "note": "Önizle road.drainage.query ile okur (hiçbir şey yazılmaz); Planda çiz road.drainage.draw ile yazar (plan/road.md Y16.3, ADR 0914 §3).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "edit.autoSelect",
    "kind": "command",
    "title": "Otomatik seçim",

@@ -254,6 +254,8 @@ CAD = [
         P("Yüzey", "terrainSurface", [L("terrain.surfaces"), L("terrain.new"), L("terrain.cloud")]),
         # The graded pads (plan/road.md Y14, docs/adr/0912): the Platform window.
         P("Tesviye", "platformEditor", [L("platform.editor")]),
+        # The surface's drainage (plan/road.md Y16, docs/adr/0914): the Drenaj window.
+        P("Drenaj", "drainageEditor", [L("drainage.editor")]),
         P("İşlemler", "processing", [L("processing.toolbox"), S("processing.newModel"), S("processing.history")]),
         P("Arazi", "contours", [L("tool.spot"), S("pointcloud.region"), S("pointcloud.profile")],
           overflow=["mesh.query"]),
