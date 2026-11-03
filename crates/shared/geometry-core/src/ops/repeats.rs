@@ -302,16 +302,23 @@ pub fn find(
                     };
                     let t = options.tolerance;
                     nearby.clear();
-                    index.search(
-                        &Bounds {
-                            min_x: p.x - t,
-                            min_y: p.y - t,
-                            max_x: p.x + t,
-                            max_y: p.y + t,
-                        },
-                        &mut nearby,
-                    );
-                    nearby.sort_unstable();
+                    // The anchor identity is already fixed by this trial. Searching coincident
+                    // objects here adds quadratic work without adding a possible assignment.
+                    // Its geometry and application-owned properties are still checked below.
+                    if source[member] == anchor {
+                        nearby.push(target as u32);
+                    } else {
+                        index.search(
+                            &Bounds {
+                                min_x: p.x - t,
+                                min_y: p.y - t,
+                                max_x: p.x + t,
+                                max_y: p.y + t,
+                            },
+                            &mut nearby,
+                        );
+                        nearby.sort_unstable();
+                    }
                     let mut matches = Vec::new();
                     for &j in &nearby {
                         found.comparisons += 1;
@@ -321,11 +328,6 @@ pub fn find(
                         }
                         if stopped() {
                             return Err(Error::Cancelled);
-                        }
-                        // This trial belongs to this anchor identity. Otherwise coincident duplicates always
-                        // choose the first object, hiding the other occurrences despite their distinct UUIDs.
-                        if source[member] == anchor && j as usize != target {
-                            continue;
                         }
                         if compatible(source[member], j as usize)
                             && equal(&mapped, &scene[j as usize], t)
@@ -567,6 +569,42 @@ mod tests {
             found.comparisons < 100_000,
             "{}: no full scene scan per source member",
             found.comparisons
+        );
+    }
+
+    #[test]
+    fn dense_coincident_anchors_keep_distinct_identities_without_quadratic_scans() {
+        let mut scene = vec![
+            Shape::Circle {
+                c: Vec2::new(0.0, 0.0),
+                r: 0.4
+            };
+            10_000
+        ];
+        // A different radius and rejected properties must still fail the complete check.
+        scene[0] = Shape::Circle {
+            c: Vec2::new(0.0, 0.0),
+            r: 0.5,
+        };
+        let found = find(&scene, &[1], Options::default(), |_, j| j != 2, || false).unwrap();
+        assert_eq!(found.matches.len(), 1000);
+        assert!(found.truncated, "the explicit result limit still applies");
+        assert_eq!(found.matches[0].members, vec![1]);
+        assert_eq!(found.matches[1].members, vec![3]);
+        assert_eq!(found.matches[999].members, vec![1001]);
+        assert!(
+            found.comparisons < 3000,
+            "{} comparisons",
+            found.comparisons
+        );
+        assert_eq!(
+            found
+                .matches
+                .iter()
+                .map(|m| m.members[0])
+                .collect::<HashSet<_>>()
+                .len(),
+            1000
         );
     }
 

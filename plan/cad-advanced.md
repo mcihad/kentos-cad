@@ -901,6 +901,16 @@ bayt bayt aynıdır; bağlı ölçü korunur. İptal/geç sonuç otomatik testle
 doğrulandı; bu küçük kabul çiziminde elle Durdur testi yapılmış sayılmaz.
 Ekran görüntüleri ve ayrıntılı kabul kayıtları depo dışında tutulur.
 
+**Yoğun örtüşme kabulü:** 10 000 üst üste çember, ayrı kaynak ve farklı
+yarıçaplı benzerle ankraj taraması iyileştirildi. Aynı veriyle 2 000 001
+karşılaştırma/199 kısmi aday yerine 2 002 karşılaştırma/1 000 kısmi aday;
+kimlikler, geometri/veri denetimi ve sonuç sınırı korunur. Çekirdeğin tüm
+601 testi (6 bilinçli atlanan), 3 native sorgu testi, 21 ortak durum,
+4 masaüstü testi, 59 Python blok testi ve ilgili paketlerin Clippy kontrolü
+geçti. Gerçek küçük pencerede dört haneli sayaç taşması düzeltildi;
+kısmi sonuç başlığı, 0/1 000 aday seçimi ve son kaydın kaynakla bayt
+eşitliği doğrulandı. Kaynak türü genişletme ve dönüşüm işleri açık kalır.
+
 ### CAD-ADV-08 — Sınır, tarama ve maskeyi hatasını açıklayabilen bir üretim sistemine getir [ ]
 
 **Öncelik:** P0 ilişki/görünürlük; P1 kapsam. **Kod:** [C14], [C15], [C03].

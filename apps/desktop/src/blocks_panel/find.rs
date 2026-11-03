@@ -6,7 +6,7 @@ use crate::{
 };
 use iced::{
     Element, Fill, Task,
-    widget::{button, column, container, responsive, row, scrollable, text, tooltip},
+    widget::{Space, button, column, container, responsive, row, scrollable, text, tooltip},
 };
 use kentos_commands::{BlocksFind, BlocksFound, CommandResult};
 use kentos_ui::{
@@ -470,7 +470,15 @@ fn panel_at_height(app: &App, height: f32) -> Element<'_, Message> {
     let header = row![
         label::body(w.output.as_ref().map_or_else(
             || "Tekrarlanan bileşenler".to_owned(),
-            |o| format!("{} eşleşme · Kaynak: {}", o.matches.len(), w.source.len())
+            |o| {
+                if !current {
+                    "Sonuç güncel değil".to_owned()
+                } else if o.truncated {
+                    format!("Kısmi: {} eşleşme", o.matches.len())
+                } else {
+                    format!("{} eşleşme · Kaynak: {}", o.matches.len(), w.source.len())
+                }
+            }
         ))
         .width(Fill),
         words::secondary("Bloklara dön", Some(msg(Event::Back)))
@@ -479,19 +487,19 @@ fn panel_at_height(app: &App, height: f32) -> Element<'_, Message> {
     .align_y(iced::Center);
     let controls = if let Some(output) = &w.output {
         row![
-            words::check(
-                w.chosen.iter().all(|v| *v),
-                "Tümü",
-                (!output.matches.is_empty()).then(|| msg(Event::All))
-            ),
             tip(
-                label::caption(format!("{chosen}/{}", output.matches.len())).width(Fill),
+                words::check(
+                    w.chosen.iter().all(|v| *v),
+                    "Tümü",
+                    (!output.matches.is_empty()).then(|| msg(Event::All))
+                ),
                 Tip::new(format!(
                     "{} adayın {chosen} tanesi seçili",
                     output.matches.len()
                 )),
                 tooltip::Position::Top
             ),
+            Space::new().width(Fill),
             words::secondary("Yeni kaynak", Some(msg(Event::NewSource))),
             words::secondary("Ayarlar", Some(msg(Event::Settings)))
         ]
@@ -603,10 +611,10 @@ fn panel_at_height(app: &App, height: f32) -> Element<'_, Message> {
         column![
             head,
             list,
-            words::primary(
-                "Seçilenleri sahnede seç",
-                (current && chosen > 0).then(|| msg(Event::Select))
-            )
+            button(label::body(format!("{chosen} adayı sahnede seç")))
+                .on_press_maybe((current && chosen > 0).then(|| msg(Event::Select)))
+                .padding(kentos_ui::theme::metrics::action())
+                .style(style::button::primary)
         ]
         .spacing(8)
         .height(Fill),

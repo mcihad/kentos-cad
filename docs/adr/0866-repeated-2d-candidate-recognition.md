@@ -95,6 +95,18 @@ yinelenen öğe çokluğunu ve iptal/sınırı sınar. Bağımsız Python ürete
 ortak komut durumları yazılır; Rust/Python/MCP ve gerçek GUI kabulü ayrıca
 planın ilerleme kaydında bildirilir. Ham görüntüler Git'e eklenmez.
 
+Yoğun örtüşme kabulünde, sabit aday ankrajını bulmak için tekrar bütün yakın
+kimliklerin tarandığı görüldü. Ankraj üyesi artık yalnız o aday kimliğiyle
+karşılaştırılır; analitik geometri ve katman/veri koşulları yine sınanır.
+10 000 üst üste çember, ayrı kaynak ve farklı yarıçaplı benzer içeren aynı
+dosyada önce 2 000 001 karşılaştırmayla 199 aday dönerken şimdi 2 002
+karşılaştırmayla 1 000 aday döner. Sonuç sınırı korunur, kısmi sonuç açık
+bildirilir. Süre makine yüküne bağlı olduğundan kabul ölçütü duvar saati
+yerine karşılaştırma sayısı, doğru kimlikler ve değişmeyen çizimdir.
+Kısmi sonuç ve çizim değişiminden sonra geçersiz kalan sonuç doğrudan
+panel başlığında belirtilir. Seçilen aday sayısı eylem düğmesinde gösterilir;
+dört haneli sayılar küçük panelde ayar düğmeleriyle üst üste binmez.
+
 Bu dilimde bloklaştırma, alt nesneye bağlı ölçü/field/tarama/grup/tablo
 ilişkilerinin taşınması ve tanınan grid/kutupsal/yol dizisinin benimsenmesi
 **yapılmış sayılmaz**. Kaynak ID→yeni alt nesne eşlemesi, çakışma incelemesi,
