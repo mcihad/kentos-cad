@@ -66,7 +66,7 @@ impl Document {
             let mut after = (**before).clone();
             point(&mut after.p);
             match &mut after.layout {
-                ArrayLayout::Grid { dx, dy, .. } | ArrayLayout::Line { dx, dy, .. } => {
+                ArrayLayout::Grid { dx, dy, .. } | ArrayLayout::Lattice { dx, dy, .. } | ArrayLayout::Line { dx, dy, .. } => {
                     *dx = scale.apply(*dx);
                     *dy = scale.apply(*dy);
                 }

@@ -473,16 +473,18 @@ class ArrayFindKind(_StrEnum):
 
     - ``line``
     - ``grid``: World X/Y rectangular rows and columns; rotated/skew grids are not inferred.
+    - ``lattice``: Rotated or skew regular rows/columns; both observed axes remain explicit in the proposal.
     - ``polar``: Explicit full-circle interpretation; at least four occupied places and an observed adjacent pair.
     - ``path``: Fixed spacing along an explicitly selected 2D guide, in its stored direction.
     """
     LINE = "line"
     GRID = "grid"
+    LATTICE = "lattice"
     POLAR = "polar"
     PATH = "path"
 
 
-ArrayFindKindName = Literal["line", "grid", "polar", "path"]
+ArrayFindKindName = Literal["line", "grid", "lattice", "polar", "path"]
 """The names of :class:`ArrayFindKind`, for a plain string."""
 
 
@@ -7387,6 +7389,7 @@ class ArrayLayout(_Union):
     One of:
 
     - :class:`GridArrayLayout` (``kind: grid``)
+    - :class:`LatticeArrayLayout` (``kind: lattice``)
     - :class:`PolarArrayLayout` (``kind: polar``)
     - :class:`LineArrayLayout` (``kind: line``)
     - :class:`PathArrayLayout` (``kind: path``)
@@ -14312,7 +14315,8 @@ class ArraysFind(_Model):
     orientation is verified by the existing adoption engine. Partial-arc intent is not inferred.
     With kind=path, the selected seed must be at the guide start. Observed adjacent arc-length
     gaps suggest fixed spacing; trailing unobserved places and reversed guide intent are not inferred.
-    Rotated/skew grids are not implemented by this version.
+    With kind=lattice, independently directed regular axes are inferred from observed displacements.
+    Items keep their common direction; source-to-slot identity and gaps use the same adoption gate.
     Attributes:
         source: Existing seed insert UUID. May be an interior place of a candidate.
         kind: Omitted: line. Grid is world-X/Y; polar is an explicit full-circle interpretation.
@@ -15847,12 +15851,16 @@ class BlockUnit(_Model):
 @dataclass(kw_only=True, slots=True)
 class BlocksConvert(_Model):
     """Converts only the chosen, non-overlapping groups after re-verifying their geometry and relations.
-    First scope: plain analytic 2D CAD objects on one untyped, data-free layer, with ordinary bound
-    dimensions. Unsupported appearance/data/relations are refused before any write, never detached.
+    Plain analytic 2D CAD objects, representable single-line text and static nested blocks on one
+    untyped, data-free layer. Ordinary bound dimensions retain full nested paths. Explicit
+    text_to_attributes preserves differing words as per-insert values, with named mappings.
+    Unsupported appearance/data/relations are refused before any write, never detached.
     Attributes:
         source: Source UUIDs. Definition pieces follow their document drawing order.
         groups: Chosen candidate member sets, at most 1000. Order within a set is immaterial.
             Each must have exactly as many distinct objects as the source. Sets cannot share objects.
+        text_to_attributes: Preserve trailing plain single-line text variations as named block attributes.
+            Requires representable font/appearance/order and verification of each actual placed text.
         tolerance: Absolute model tolerance in metres, as cad.blocks.find; absent: 0.000001. Unit: length.
     """
     name: str
@@ -15862,6 +15870,7 @@ class BlocksConvert(_Model):
     mirrors: bool | None | Unset = UNSET
     rotations: bool | None | Unset = UNSET
     scales: bool | None | Unset = UNSET
+    text_to_attributes: bool | None | Unset = UNSET
     tolerance: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -15877,6 +15886,8 @@ class BlocksConvert(_Model):
             out["rotations"] = self.rotations
         if self.scales is not UNSET:
             out["scales"] = self.scales
+        if self.text_to_attributes is not UNSET:
+            out["textToAttributes"] = self.text_to_attributes
         if self.tolerance is not UNSET:
             out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
         return out
@@ -15891,6 +15902,7 @@ class BlocksConvert(_Model):
             mirrors=data.get("mirrors", UNSET),
             rotations=data.get("rotations", UNSET),
             scales=data.get("scales", UNSET),
+            text_to_attributes=data.get("textToAttributes", UNSET),
             tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
         )
 
@@ -16375,30 +16387,40 @@ class BlocksFind(_Model):
     Supports analytic line/circle/arc and single-part 2D polyline sources (up to 4096 vertices each).
     Polylines retain closure, analytic bulges and taper widths; paths with Z/M, holes, extra parts or
     a room-separator role are refused. Source plus search scope is limited to 200000 polyline vertices.
-    Unsupported members refuse the whole source.
+    Plain single-line text and uniformly placed static block identities are also supported.
+    Value variations are separate opt-ins; block definitions and non-tag object data remain strict.
+    Nested expansion is bounded to 200000 work units; unsupported members refuse the whole source.
     Attributes:
         source: Ordered source object UUIDs, at most 128; repeated UUIDs are taken once.
+        attribute_variants: Ignore only values of declared block attribute tags; other object data stay strict.
+            Absent: false. Conversion revalidates representability independently.
         geometry_only: Explicitly ignore layer, appearance and object data in comparisons; absent: false.
         limit: Result count limit, 1 to 1000; absent: 1000. `truncated` means the scan is incomplete. Unit: count.
         mirrors: Also recognize reflected collections; absent: false.
         rotations: Also recognize rotated collections; absent: true.
         scales: Also recognize uniformly scaled collections; absent: false.
+        text_variants: Explicitly compare single-line text poses/styles while allowing different words; absent: false.
+            A match never discards values. Conversion requires explicit text_to_attributes.
         tolerance: Absolute model tolerance, metres, above zero to 0.001; absent: 0.000001 (0.001 mm). Unit: length.
         uids: Search object UUIDs, at most 50 000; absent searches the document, empty searches nothing.
     """
     source: list[str]
+    attribute_variants: bool | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     geometry_only: bool | None | Unset = UNSET
     limit: int | None | Unset = UNSET
     mirrors: bool | None | Unset = UNSET
     rotations: bool | None | Unset = UNSET
     scales: bool | None | Unset = UNSET
+    text_variants: bool | None | Unset = UNSET
     tolerance: float | None | Unset = UNSET
     uids: list[str] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["source"] = list(self.source)
+        if self.attribute_variants is not UNSET:
+            out["attributeVariants"] = self.attribute_variants
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
         if self.geometry_only is not UNSET:
@@ -16411,6 +16433,8 @@ class BlocksFind(_Model):
             out["rotations"] = self.rotations
         if self.scales is not UNSET:
             out["scales"] = self.scales
+        if self.text_variants is not UNSET:
+            out["textVariants"] = self.text_variants
         if self.tolerance is not UNSET:
             out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
         if self.uids is not UNSET:
@@ -16421,12 +16445,14 @@ class BlocksFind(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> BlocksFind:
         return cls(
             source=list(data["source"]),
+            attribute_variants=data.get("attributeVariants", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
             geometry_only=data.get("geometryOnly", UNSET),
             limit=data.get("limit", UNSET),
             mirrors=data.get("mirrors", UNSET),
             rotations=data.get("rotations", UNSET),
             scales=data.get("scales", UNSET),
+            text_variants=data.get("textVariants", UNSET),
             tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
             uids=UNSET if "uids" not in data else None if data["uids"] is None else list(data["uids"]),
         )
@@ -62949,16 +62975,20 @@ class RepeatMemberMap(_Model):
     Attributes:
         insert: The first member in drawing order retains its root UUID as the insert.
         path: Zero-based definition-piece path, NOT the definition's one-based local object id. Unit: index.
+        attribute: For a converted text value, the destination attribute tag; path is then empty, not a SubRef leaf.
     """
     from_: str
     insert: str
     path: list[int]
+    attribute: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["from"] = self.from_
         out["insert"] = self.insert
         out["path"] = list(self.path)
+        if self.attribute is not UNSET:
+            out["attribute"] = self.attribute
         return out
 
     @classmethod
@@ -62967,6 +62997,7 @@ class RepeatMemberMap(_Model):
             from_=data["from"],
             insert=data["insert"],
             path=list(data["path"]),
+            attribute=data.get("attribute", UNSET),
         )
 
 
@@ -83128,6 +83159,49 @@ class GridArrayLayout(ArrayLayout):
 
 
 @dataclass(kw_only=True, slots=True)
+class LatticeArrayLayout(ArrayLayout):
+    """Regular 2D rows/columns with independently directed axes. Distances dx/dy are metres;
+    angles are degrees counter-clockwise from world east, independent of the item rotation.
+    Order and item identity are row-major, exactly as Grid. Parallel axes are refused.
+    Attributes:
+        rows: Unit: count.
+        cols: Unit: count.
+        dx: Unit: length.
+        dy: Unit: length.
+        column_angle: Unit: deg.
+        row_angle: Unit: deg.
+    """
+    TAG_VALUE: ClassVar[str] = "lattice"
+    rows: int
+    cols: int
+    dx: float
+    dy: float
+    column_angle: float
+    row_angle: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "lattice"}
+        out["rows"] = self.rows
+        out["cols"] = self.cols
+        out["dx"] = float(self.dx)
+        out["dy"] = float(self.dy)
+        out["columnAngle"] = float(self.column_angle)
+        out["rowAngle"] = float(self.row_angle)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LatticeArrayLayout:
+        return cls(
+            rows=data["rows"],
+            cols=data["cols"],
+            dx=float(data["dx"]),
+            dy=float(data["dy"]),
+            column_angle=float(data["columnAngle"]),
+            row_angle=float(data["rowAngle"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PolarArrayLayout(ArrayLayout):
     """Kutupsal dizi: `count` items around `center`, 2 to 1000, the
     originals among them, over `fill` degrees (counter-clockwise; minus
@@ -100517,7 +100591,7 @@ _AREA_WORK: dict[str, type[AreaWork]] = {"union": UnionAreaWork, "intersect": In
 _ARRAY_EDIT: dict[str, type[ArrayEdit]] = {"layout": LayoutArrayEdit, "placement": PlacementArrayEdit, "replace": ReplaceArrayEdit, "remove": RemoveArrayEdit, "reset": ResetArrayEdit}
 
 
-_ARRAY_LAYOUT: dict[str, type[ArrayLayout]] = {"grid": GridArrayLayout, "polar": PolarArrayLayout, "line": LineArrayLayout, "path": PathArrayLayout}
+_ARRAY_LAYOUT: dict[str, type[ArrayLayout]] = {"grid": GridArrayLayout, "lattice": LatticeArrayLayout, "polar": PolarArrayLayout, "line": LineArrayLayout, "path": PathArrayLayout}
 
 
 _BLOCK_ACTION: dict[str, type[BlockAction]] = {"move": MoveBlockAction, "stretch": StretchBlockAction, "scale": ScaleBlockAction, "array": ArrayBlockAction, "rotate": RotateBlockAction, "flip": FlipBlockAction}
@@ -102240,6 +102314,7 @@ __all__ = [
     "LandxmlSurfaceWritten",
     "LatePolicy",
     "LatePolicyName",
+    "LatticeArrayLayout",
     "LayerAction",
     "LayerCompose",
     "LayerDerivation",

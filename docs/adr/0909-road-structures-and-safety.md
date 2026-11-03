@@ -41,7 +41,7 @@ Tarih: 2026-11-03. plan/road.md Y11 (ROAD-DRAIN-01, 02, 11; ROAD-JUNC-12). Durum
    `rebind` koridorun bugünkü sürümünü alır. Komutlar `road.guardrails.edit` (tek adım “Otokorkuluk”),
    `road.guardrails.query` ve `road.guardrails.draw` (korkuluk şev başı artı `offset` dışa, uçları kesitler arasında
    doğrusal okunan şev başında, aksın yerleşimiyle; `labels` ile km ve boy; tek adım “Otokorkuluk çiz”).
-   `.kcad` şema 161'in `guardrails`'i. Masaüstünde Koridor › Güvenlik › Otokorkuluk.
+   `.kcad` şema 162'in `guardrails`'i. Masaüstünde Koridor › Güvenlik › Otokorkuluk.
 
 2. **Menfez (ROAD-DRAIN-01, 02, 11).** Menfez yol ayarlarında `culverts[]`'tır, bir koridorun km'sinde aksı kesen
    kalıcı bir varlıktır (kimliği, koridoru ve koridorun sürümü; koridor değişince `culvert_stale`): `station`,
@@ -93,12 +93,12 @@ Tarih: 2026-11-03. plan/road.md Y11 (ROAD-DRAIN-01, 02, 11; ROAD-JUNC-12). Durum
 Y11.1 (yapıldı, otokorkuluk): `road.guardrails.edit` 29, `.query` 20, `.draw` 21 ortak durum
 (`road_guardrail_cases.py`; kesitler road_stakeout_cases.py'nin, yerler road_alignment_cases.py'nin 40 basamaklı
 başvurusundan, kural ADR'den; KentOS kodu yok; kuralın sayıları durumlarındır, bir standardın değil). Çekirdek
-`kentos_road::guardrail`, KCAD şema 161'in `guardrails`'i bağımsız okuyucuda (`broken/road-guardrail-unknown-corridor.kcad`).
+`kentos_road::guardrail`, KCAD şema 162'in `guardrails`'i bağımsız okuyucuda (`broken/road-guardrail-unknown-corridor.kcad`).
 Python, MCP, masaüstünde Koridor › Yapılar › Otokorkuluk.
 
 Y11.2 (yapıldı, menfez): `road.culverts.edit` 29, `.query` 20, `.draw` 21 ortak durum (`road_culvert_cases.py`; kesit
 road_stakeout_cases.py'nin, yerler road_alignment_cases.py'nin başvurusundan, gövde, örtü ve metraj §2'den; KentOS kodu
-yok; boru ve kutu ölçüleri durumlarındır). Çekirdek `kentos_road::culvert`, KCAD şema 161'in `culverts`'i bağımsız
+yok; boru ve kutu ölçüleri durumlarındır). Çekirdek `kentos_road::culvert`, KCAD şema 162'in `culverts`'i bağımsız
 okuyucuda (`broken/road-culvert-right-angle.kcad`). Python, MCP (`tests/road_structures.rs`: durumların çizimi dosyaya
 yazılıp açılır; örnek `road-work.kcad`'in koridoru şev buluşturmadığından menfezleri okunmaz, `invalid_culvert`).
 Masaüstünde Koridor › Yapılar › Menfez: ölçüler yazıldıkça gövde boyuna kesitte (yükseklikler en çok beş kat), uçların
@@ -107,7 +107,7 @@ palye hendeği §4 ve sonraya.
 
 Y11.3 (yapıldı, istinat duvarı): `road.walls.edit` 30, `.query` 20, `.draw` 21 ortak durum (`road_wall_cases.py`; kesit
 ve kesit çizgisindeki zemin road_section_command_cases.py'nin, yerler road_alignment_cases.py'nin başvurusundan, duvar
-§3'ten; KentOS kodu yok; ölçüler durumlarındır). Çekirdek `kentos_road::wall`, KCAD şema 161'in `walls`'ı bağımsız
+§3'ten; KentOS kodu yok; ölçüler durumlarındır). Çekirdek `kentos_road::wall`, KCAD şema 162'in `walls`'ı bağımsız
 okuyucuda (`broken/road-wall-toe-past-footing.kcad`). Python, MCP (`tests/road_structures.rs`), masaüstünde Koridor ›
 Yapılar › İstinat: ölçüler yazıldıkça boyuna görünüş (yol kenarı, zemin, duvarın üstü ve temeli), km'lerin tablosu
 (dolgu ya da yarma, kotlar, gövde, alan), boy, gövde yüzü, beton; Kaydet, Sil, Planda çiz. Duvarın kesite işlenmesi

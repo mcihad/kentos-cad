@@ -114,7 +114,10 @@ impl App {
                     (Panel::Processing, Some(_)) => {
                         pane.meta(label::caption(self.processing_meta()))
                     }
-                    (Panel::Blocks, Some(_)) => pane.actions(self.blocks_panel_actions()),
+                    (Panel::Blocks, Some(_)) => match self.blocks_panel_actions() {
+                        Some(actions) => pane.actions(actions),
+                        None => pane,
+                    },
                     (Panel::Templates, _) => pane.actions(self.templates_panel_actions()),
                     // Kaynaklar's list scrolls itself (sources/view.rs).
                     (Panel::Sources, _) => pane,

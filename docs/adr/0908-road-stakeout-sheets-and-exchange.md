@@ -121,7 +121,7 @@ Tarih: 2026-11-03. plan/road.md Y10 (ROAD-SEC-09…11; ROAD-IO-05, 06, 13, 14). 
     KentOS'un şablonu `sys:yol-plan-boykesit` (A3 yatay, `cad-teknik`'in çerçevesi, antedi ve revizyon tablosuyla, üstte
     plan, altta boykesit haritası). Paftalar `first`'ten (yoksa Y-101) numaralanır, “Km a – b” başlığıyla Yol › aks
     altına girer. Pafta takımı yol ayarlarında `sheetSets[]` olarak aksın ve boykesitin revizyonlarıyla, paftaların
-    kimlikleri, aralıkları ve görünümlerin çerçeveleriyle saklanır (şema 161; önbellek resmi yok, harita her çizimde
+    kimlikleri, aralıkları ve görünümlerin çerçeveleriyle saklanır (şema 162; önbellek resmi yok, harita her çizimde
     modelden okur). Boykesit görünümleri, takım ve paftalar tek geri alma adımı “Yol paftaları”; paftanın kendi
     düzenlemeleri ADR 0251'deki gibi geri alma adımı değildir: geri alınınca görünümler ve takım gider, paftalar kalır.
 
@@ -194,7 +194,7 @@ XSD'sine geçerli, 13 dizinin her yeri başvurudan en çok 1e-6 m; Python, MCP, 
 Y10.5 (yapıldı, plan–boykesit): `road.profiles.draw`'ın km aralığıyla 36 durum (9'u yeni, `road_profile_command_cases.py`);
 `road.sheets.plan` 33 ortak durum (`road_sheets_cases.py`; aksın noktaları ve km'si road_alignment_cases.py'nin 40
 basamaklı başvurusundan, görünümler road_profile_command_cases.py'nin `drawing`'inden, haritanın boyu şablonun
-dosyasından; pafta kitabının paftaları, numaraları ve haritaları da denetlenir); KCAD şema 161'in `sheetSets`'i bağımsız
+dosyasından; pafta kitabının paftaları, numaraları ve haritaları da denetlenir); KCAD şema 162'in `sheetSets`'i bağımsız
 okuyucuda; Python, MCP, masaüstünde Koridor › Pafta › Yol paftaları.
 
 Y10.5b (yapıldı, enkesit): `road.sheets.sections` 27 ortak durum (`road_sheets_sections_cases.py`; görünümler

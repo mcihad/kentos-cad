@@ -56,7 +56,7 @@ interface Checked {
 const lockedMessage = (n: number) => `${n} nesne kilitli katmanda olduğu için atlandı. Kopyalamak için katmanın kilidini Katmanlar panelinden açın.`;
 
 /** The undo step's name: the tool's (docs/adr/0047). */
-export const arrayLabel = (layout: ArrayLayout): string => (layout.kind === 'grid' ? 'Dizi' : layout.kind === 'polar' ? 'Kutupsal dizi' : 'Yol boyunca dizi');
+export const arrayLabel = (layout: ArrayLayout): string => (layout.kind === 'grid' || layout.kind === 'lattice' ? 'Dizi' : layout.kind === 'line' ? 'Kopyala' : layout.kind === 'polar' ? 'Kutupsal dizi' : 'Yol boyunca dizi');
 
 const refuse = (code: string, message: string, path: string): Stop => failed(error(code, message, path));
 
@@ -75,6 +75,23 @@ function checkLayout(l: ArrayLayout): Stop | null {
       return refuse('invalid_spacing', 'Sütunlar arasındaki aralık (dY) sıfır; kopyalar üst üste düşer. Sıfırdan farklı bir aralık verin.', 'layout.dx');
     if (l.rows > 1 && Math.abs(l.dy) < NONE)
       return refuse('invalid_spacing', 'Satırlar arasındaki aralık (dX) sıfır; kopyalar üst üste düşer. Sıfırdan farklı bir aralık verin.', 'layout.dy');
+    return null;
+  }
+  if (l.kind === 'lattice') {
+    const grid = checkLayout({ kind: 'grid', rows: l.rows, cols: l.cols, dx: l.dx, dy: l.dy });
+    if (grid) return grid;
+    const stop = notFiniteValue(l.columnAngle, 'Sütun yönü', 'Sonlu bir açı verin.', 'layout.columnAngle') ?? notFiniteValue(l.rowAngle, 'Satır yönü', 'Sonlu bir açı verin.', 'layout.rowAngle');
+    if (stop) return stop;
+    const mod = (n: number) => ((n % 360) + 360) % 360;
+    if (Math.abs(Math.sin((mod(l.rowAngle) - mod(l.columnAngle)) * Math.PI / 180)) < 1e-6)
+      return refuse('invalid_spacing', 'Satır ve sütun eksenleri paralel olamaz; iki farklı yön verin.', 'layout');
+    return null;
+  }
+  if (l.kind === 'line') {
+    const stop = notFiniteValue(l.dx, 'Doğu (Y) yönündeki yer değiştirme', 'Yer değiştirmeyi sonlu bir sayıyla verin.', 'layout.dx') ?? notFiniteValue(l.dy, 'Kuzey (X) yönündeki yer değiştirme', 'Yer değiştirmeyi sonlu bir sayıyla verin.', 'layout.dy');
+    if (stop) return stop;
+    if (!Number.isInteger(l.count) || l.count < 2 || l.count > 10000) return refuse('invalid_count', 'Adet 2 ile 10 000 arasında bir tam sayı olmalı; asıllar da sayılır. Başka bir adet verin.', 'layout.count');
+    if (Math.abs(l.dx) < NONE && Math.abs(l.dy) < NONE) return refuse('invalid_spacing', 'Yer değiştirme sıfır; kopyalar asılların üstüne düşer. Sıfırdan farklı bir yer değiştirme verin.', 'layout');
     return null;
   }
   if (l.kind === 'path') {

@@ -350,3 +350,101 @@ fn aggregate_vertex_limit_is_inherited_from_the_same_recognition_gate_without_a_
     assert_eq!(doc.to_snapshot_v2(), before);
     assert!(!doc.can_undo());
 }
+
+
+fn text_variants_drawing() -> Document {
+    let raw:Value=serde_json::from_str(include_str!("../../../../../fixtures/commands/v1/cad.blocks.find.json")).unwrap();
+    let mut setup=raw["setup"].clone();let mut entities=Vec::new();
+    for k in 0..4 {
+        let angle=k as f64*std::f64::consts::PI/6.;let (s,c)=angle.sin_cos();let x=k as f64*10.;
+        entities.push(json!({"kind":"line","id":k*2+1,"layerId":"a","attrs":{},"a":{"x":x,"y":0.},"b":{"x":x+2.*c,"y":2.*s}}));
+        entities.push(json!({"kind":"text","id":k*2+2,"layerId":"a","attrs":{},"p":{"x":x+0.5*c-0.2*s,"y":0.5*s+0.2*c},"text":format!("A{k:02}"),"height":0.2,"rotation":angle.to_degrees()}));
+    }
+    setup["entities"]=json!(entities);
+    Document::from_snapshot(DocumentSnapshotV1::from_json(&setup.to_string()).unwrap()).unwrap()
+}
+
+#[test]
+fn rotated_text_variations_become_distinct_attribute_values_with_explicit_maps_and_one_undo() {
+    let mut doc=text_variants_drawing();
+    add_dimension(&mut doc,1,json!({"kind":"end"}),json!({"x":2.,"y":0.}));
+    let before=doc.to_snapshot_v2();let bytes=kentos_kcad::encode_verified(&before).unwrap();
+    let retained:Vec<_>=(0..4).map(|k|doc.uid(Slot(k*2+1))).collect();
+    let source=vec![uid(&doc,1),uid(&doc,2)];
+    let exact=kentos_commands::BlocksFind {source:source.clone(),..Default::default()};
+    let CommandResult::Completed {output,..}=kentos_native_application::blocks_find::inspect(&doc,&exact,||false) else{panic!()};
+    assert_eq!(output.matches.len(),1);
+    let variants=kentos_commands::BlocksFind {text_variants:Some(true),..exact};
+    let CommandResult::Completed {output,warnings}=kentos_native_application::blocks_find::inspect(&doc,&variants,||false) else{panic!()};
+    assert_eq!(warnings.len(),1);assert_eq!(output.matches.len(),4,"{output:?}");
+    let groups=(0..4).map(|k|vec![uid(&doc,k*2+1),uid(&doc,k*2+2)]).collect();
+    let mut request=BlocksConvert {name:"Numaralı parça".into(),source,groups,text_to_attributes:Some(true),..Default::default()};
+    let plan=blocks_convert::inspect(&doc,&request,||false);
+    let CommandResult::Completed {output,..}=plan else{panic!("{plan:?}")};
+    assert_eq!(output.block.attributes.len(),1);assert_eq!(output.block.entities.len(),1);
+    assert_eq!(output.mapping.iter().filter(|m|m.attribute.is_some()).count(),4);
+    assert!(output.mapping.iter().filter(|m|m.attribute.is_some()).all(|m|m.path.is_empty()));
+    assert_eq!(output.dimensions.len(),1);assert_eq!(doc.to_snapshot_v2(),before);
+    request.text_to_attributes=Some(false);
+    assert!(matches!(blocks_convert::inspect(&doc,&request,||false),CommandResult::Failed {..}));
+    request.text_to_attributes=Some(true);
+    let result=blocks_convert::execute(&mut ExecutionContext::new(&mut doc),request);
+    assert!(matches!(result,CommandResult::Completed {..}),"{result:?}");
+    let after=doc.to_snapshot_v2();assert_eq!(doc.blocks().len(),1);
+    for k in 0..4 {let Entity::Insert(i)=doc.get(Slot(k*2+1)).unwrap() else{panic!()};assert_eq!(i.base.attrs.get("TEXT_1"),Some(&format!("A{k:02}")));assert_eq!(doc.uid(Slot(k*2+1)),retained[k as usize]);}
+    doc.undo();assert_eq!(kentos_kcad::encode_verified(&doc.to_snapshot_v2()).unwrap(),bytes);doc.redo();assert_eq!(doc.to_snapshot_v2(),after);
+}
+
+
+#[test]
+fn nesting_an_existing_block_preserves_its_definition_and_prepends_dimension_paths() {
+    let mut raw=fixture();
+    let leaf="01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001";
+    let nested="01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4002";
+    raw["blocks"]=json!([
+        {"id":leaf,"name":"Yaprak","base":{"x":0.,"y":0.},"entities":[{"kind":"circle","id":1,"layerId":"a","attrs":{},"c":{"x":0.,"y":0.},"r":0.25}]},
+        {"id":nested,"name":"İç bileşen","base":{"x":0.,"y":0.},"entities":[{"kind":"insert","id":1,"layerId":"a","attrs":{},"block":leaf,"p":{"x":0.,"y":0.},"scale":1.,"rotation":0.}]}
+    ]);
+    raw["entities"]=json!([
+        {"kind":"insert","id":1,"layerId":"a","attrs":{},"block":nested,"p":{"x":0.,"y":0.},"scale":1.,"rotation":0.3},
+        {"kind":"insert","id":2,"layerId":"a","attrs":{},"block":nested,"p":{"x":10.,"y":0.},"scale":1.,"rotation":0.7},
+        {"kind":"dimension","id":3,"layerId":"a","attrs":{},"a":{"x":0.,"y":0.},"b":{"x":10.,"y":0.},"offset":1.,"height":0.1}
+    ]);
+    let mut doc=Document::from_snapshot(DocumentSnapshotV1::from_json(&raw.to_string()).unwrap()).unwrap();
+    let mut dim=serde_json::to_value(doc.get(Slot(3)).unwrap()).unwrap();
+    dim["refs"]=json!({"a":{"uid":uid(&doc,1),"path":[0,0],"place":{"kind":"center"}},"b":{"uid":uid(&doc,2),"path":[0,0],"place":{"kind":"center"}}});
+    doc.update(Slot(3),serde_json::from_value(dim).unwrap());let before=doc.to_snapshot_v2();
+    let request=BlocksConvert {name:"Tekrar kullanılan iç blok".into(),source:vec![uid(&doc,1)],groups:vec![vec![uid(&doc,1)],vec![uid(&doc,2)]],..Default::default()};
+    let review=blocks_convert::inspect(&doc,&request,||false);
+    let CommandResult::Completed {output,..}=review else{panic!("{review:?}")};
+    assert_eq!(output.dimensions.len(),2);assert!(output.dimensions.iter().all(|m|m.after.path==[0,0,0]));
+    let result=blocks_convert::execute(&mut ExecutionContext::new(&mut doc),request);assert!(matches!(result,CommandResult::Completed {..}),"{result:?}");
+    assert_eq!(&doc.to_snapshot_v2().blocks[..2],before.blocks.as_slice());let after=doc.to_snapshot_v2();
+    doc.undo();assert_eq!(doc.to_snapshot_v2(),before);doc.redo();assert_eq!(doc.to_snapshot_v2(),after);
+}
+
+#[test]
+fn an_unrepresentable_text_face_cannot_be_erased_by_attribute_conversion() {
+    let mut doc=text_variants_drawing();let mut e=doc.get(Slot(2)).unwrap().clone();let Entity::Text(t)=&mut e else{panic!()};t.face.bold=true;t.face.font=Some(kentos_commands::DrawingFont::Arimo);doc.update(Slot(2),e);
+    let before=doc.to_snapshot_v2();assert!(kentos_kcad::encode_verified(&before).is_ok());let request=BlocksConvert {name:"Korunmalı".into(),source:vec![uid(&doc,1),uid(&doc,2)],groups:vec![vec![uid(&doc,1),uid(&doc,2)]],text_to_attributes:Some(true),..Default::default()};
+    let result=blocks_convert::execute(&mut ExecutionContext::new(&mut doc),request);
+    assert!(matches!(result,CommandResult::Failed {error} if error.message.contains("yazı tipi")));assert_eq!(doc.to_snapshot_v2(),before);
+}
+
+#[test]
+fn declared_nested_values_survive_but_arbitrary_root_data_cannot_disappear() {
+    let mut raw=fixture();let id="01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001";
+    raw["blocks"]=json!([{"id":id,"name":"Etiketli","base":{"x":0.,"y":0.},"entities":[{"kind":"line","id":1,"layerId":"a","attrs":{},"a":{"x":0.,"y":0.},"b":{"x":2.,"y":0.}}],"attributes":[{"tag":"CODE","value":"Varsayılan","p":{"x":0.,"y":0.3},"height":0.2,"rotation":0.}]}]);
+    raw["entities"]=json!([{"kind":"insert","id":1,"layerId":"a","attrs":{"CODE":"Özel"},"block":id,"p":{"x":0.,"y":0.},"scale":1.,"rotation":0.},{"kind":"insert","id":2,"layerId":"a","attrs":{"CODE":"Özel"},"block":id,"p":{"x":10.,"y":0.},"scale":1.,"rotation":0.}]);
+    let mut doc=open(raw.clone());let before=doc.to_snapshot_v2();
+    let request=BlocksConvert {name:"Korunan iç değer".into(),source:vec![uid(&doc,1)],groups:vec![vec![uid(&doc,1)],vec![uid(&doc,2)]],..Default::default()};
+    let result=blocks_convert::execute(&mut ExecutionContext::new(&mut doc),request);assert!(matches!(result,CommandResult::Completed {..}),"{result:?}");
+    let Entity::Insert(inner)=&doc.blocks()[1].entities[0] else{panic!()};assert_eq!(inner.base.attrs.get("CODE"),Some(&"Özel".into()));
+    assert_eq!(doc.blocks()[0].as_ref(),&before.blocks[0]);doc.undo();assert_eq!(doc.to_snapshot_v2(),before);
+    raw["entities"][1]["attrs"]["CODE"]=json!("Başka");let mut doc=open(raw.clone());
+    let request=BlocksConvert {name:"Değerler farklı".into(),source:vec![uid(&doc,1)],groups:vec![vec![uid(&doc,1)],vec![uid(&doc,2)]],..Default::default()};
+    refused(&mut doc,request,"doğrulanamadı");
+    raw["entities"][1]["attrs"]["CODE"]=json!("Özel");for i in 0..2 {raw["entities"][i]["attrs"]["DATA"]=json!("kaybolmamalı");}
+    let mut doc=open(raw);let request=BlocksConvert {name:"Genel veri".into(),source:vec![uid(&doc,1)],groups:vec![vec![uid(&doc,1)],vec![uid(&doc,2)]],..Default::default()};
+    refused(&mut doc,request,"öznitelik");
+}

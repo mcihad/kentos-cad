@@ -28,6 +28,21 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **KentOS Yol: arazi, aks, boykesit, enkesit, koridor, kübaj ve yol projesi (3 Kasım 2026; [plan/road.md](plan/road.md), [ADR 0900](docs/adr/0900-road-terrain-surface.md)–[0911](docs/adr/0911-road-project-tree-views-and-rebuild.md)).**
+  Ayrı ürün modülü (`CadWork::Road`, `Module::Road`, `kentos-yol`; dal `road-01-yuzey`'den birleşti). Hesap
+  `crates/shared/road` (`kentos-road`: kısıtlı Delaunay `kentos.cdt/1`, aks ve km denklemleri, düşey kurplar, tip kesit
+  ve kesit hattı, dever, koridor, uç alan/prizmoidal ve yüzey hacmi, Brükner, menfez, duvar, otokorkuluk, kavşak, ön
+  güzergâh); imar planı da kullanabilsin diye paylaşılır. Projenin yol ayarları `settings.road` (`.kcad` şema 162,
+  yalnız yol projesinde; yüzeyler, akslar, boykesitler, tip kesitler, kesit takımları, deverler, koridorlar, kübajlar,
+  Brüknerler, pafta takımları, korkuluk, menfez, duvar, poz defteri, kavşaklar, yol çizimlerinin kaydı); sonuçlar
+  yazılmaz, açılışta kaynaklardan kurulur. Komutlar `road.*` (terrains, alignments, profiles, templates, sections,
+  superelevations, corridors, volumes, hauls, stakeout, sheets, guardrails, culverts, walls, pay, junctions, routes,
+  project) ve `file.import/export.landxml`, `file.export.ifc` (IFC 4.3 IfcAlignment); her biri ≥20 bağımsız Python
+  başvurulu ortak durumla, Python `kentos.road`, MCP. Masaüstünde Arazi, Güzergâh ve Koridor sekmeleri ve pencereleri,
+  3B sahne, Yol projesi paneli (KentOS UI'ın durum hapı ve durum ağacıyla, eskiyen çizimleri yeniden üretme,
+  kendiliğinden yeniden üret) ve Görünüşler (plan, boykesit ve enkesit tek km'de). Standart profili (KGM) sahibin
+  kaynağını bekler, değer uydurulmaz. Resimler snapshot'la; gerçek pencerede elle kabul açık.
+
 - **Oda modülleri ve kontrollü tekrar kullanımı (31 Ekim 2026; [ADR 0775](docs/adr/0775-room-modules-and-controlled-reuse.md), ADV-05 [~]).**
   Tek kattaki düz duvarlı oda (duvar, açıklık, mahal, donatı, ölçü, etiket, yazı) modül olur: tanım `settings.arch.modules`'ta
   kendi çerçevesinde (`.kcad` şema 142 opt-in, `FORMATS_VERSION` 102), örnek ayrı kimlik eşlemesiyle sıradan mimari nesneler;

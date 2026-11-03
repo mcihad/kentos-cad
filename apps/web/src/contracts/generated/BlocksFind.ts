@@ -5,7 +5,9 @@
  * Supports analytic line/circle/arc and single-part 2D polyline sources (up to 4096 vertices each).
  * Polylines retain closure, analytic bulges and taper widths; paths with Z/M, holes, extra parts or
  * a room-separator role are refused. Source plus search scope is limited to 200000 polyline vertices.
- * Unsupported members refuse the whole source.
+ * Plain single-line text and uniformly placed static block identities are also supported.
+ * Value variations are separate opt-ins; block definitions and non-tag object data remain strict.
+ * Nested expansion is bounded to 200000 work units; unsupported members refuse the whole source.
  */
 export type BlocksFind = { 
 /**
@@ -32,6 +34,16 @@ scales?: boolean,
  * Explicitly ignore layer, appearance and object data in comparisons; absent: false.
  */
 geometryOnly?: boolean, 
+/**
+ * Explicitly compare single-line text poses/styles while allowing different words; absent: false.
+ * A match never discards values. Conversion requires explicit text_to_attributes.
+ */
+textVariants?: boolean, 
+/**
+ * Ignore only values of declared block attribute tags; other object data stay strict.
+ * Absent: false. Conversion revalidates representability independently.
+ */
+attributeVariants?: boolean, 
 /**
  * Absolute model tolerance, metres, above zero to 0.001; absent: 0.000001 (0.001 mm).
  */

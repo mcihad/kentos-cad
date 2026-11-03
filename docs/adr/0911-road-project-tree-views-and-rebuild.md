@@ -62,7 +62,7 @@ Tarih: 2026-11-03. plan/road.md Y13 (ROAD-MOD-04, ROAD-MOD-05, ROAD-MOD-06). Dur
      özetinin (`sources::gather`: girdisi ve yöntemi; kabul edilip edilmediği değil) ilk 16 hanesi. Sürüm numarası
      yerine tanımın kendisi: her alanın değişmesi görünür, sürüm artırmayı unutan bir yazma gözden kaçmaz.
    - *Nesnelerin özeti:* yazılan nesnelerin JSON'larının sırasıyla damgası; elle değişen çizim böyle anlaşılır.
-   - Kayıt yazmanın geri alma adımındadır (`Op::RoadDrawings`); `.kcad` şema 161'in yol ayarında (birleşmedi).
+   - Kayıt yazmanın geri alma adımındadır (`Op::RoadDrawings`); `.kcad` şema 162'nin yol ayarında.
      En çok 1000 çizim, çizim başına en çok 1 000 000 nesne.
 2. **Proje ağacı `road.project.query` (salt okunur).** Yol projesinin kaynakları ağaç sırasıyla: yüzeyler (altında
    eş yükselti eğrileri ve ön güzergâh çizimleri), akslar (altında boykesitler, kesit takımları, deverler, kavşaklar

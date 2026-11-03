@@ -12,6 +12,7 @@ use kentos_domain::{Document, Uuid};
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 
 mod grid;
+mod lattice;
 mod polar;
 mod path;
 
@@ -277,6 +278,8 @@ fn search(
         matches = path::find(doc, input, &points, seed, tolerance, checked.limit, &mut budget, &mut stopped)?;
     } else if input.kind == Some(ArrayFindKind::Polar) {
         matches = polar::find(doc, &points, seed, tolerance, checked.limit, &mut budget, &mut stopped)?;
+    } else if input.kind == Some(ArrayFindKind::Lattice) {
+        matches = lattice::find(doc,&points,seed,tolerance,checked.limit,&mut budget,&mut stopped)?;
     } else if input.kind == Some(ArrayFindKind::Grid) {
         matches = grid::find(
             doc,

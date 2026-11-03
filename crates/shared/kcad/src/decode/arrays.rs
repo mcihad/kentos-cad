@@ -14,10 +14,11 @@ use crate::error::{Code, KcadError};
 /// The most places a layout's count says (the contract's largest).
 const COUNT_MAX: u64 = kentos_contracts::ARRAY_PLACES_MAX as u64;
 
-fn layout(r: &mut Reader<'_>) -> Result<ArrayLayout, KcadError> {
+fn layout(r: &mut Reader<'_>, schema:u32) -> Result<ArrayLayout, KcadError> {
     #[derive(Clone, Copy)]
     enum Kind {
         Grid,
+        Lattice,
         Polar,
         Line,
         Path,
@@ -25,6 +26,7 @@ fn layout(r: &mut Reader<'_>) -> Result<ArrayLayout, KcadError> {
     let (mut kind, mut rows, mut cols, mut dx, mut dy) = (None, None, None, None, None);
     let (mut center, mut count, mut fill, mut rotate, mut fit) = (None, None, None, None, false);
     let (mut path, mut spacing, mut align) = (None, None, None);
+    let (mut column_angle,mut row_angle)=(None,None);
     map(r, |r, key| {
         match key {
             "kind" => {
@@ -32,6 +34,7 @@ fn layout(r: &mut Reader<'_>) -> Result<ArrayLayout, KcadError> {
                     r,
                     &[
                         ("grid", Kind::Grid),
+                        ("lattice", Kind::Lattice),
                         ("polar", Kind::Polar),
                         ("line", Kind::Line),
                         ("path", Kind::Path),
@@ -42,6 +45,8 @@ fn layout(r: &mut Reader<'_>) -> Result<ArrayLayout, KcadError> {
             "cols" => cols = Some(r.uint(COUNT_MAX)? as u32),
             "count" => count = Some(r.uint(COUNT_MAX)? as u32),
             "dx" => dx = Some(r.float()?),
+            "columnAngle" => column_angle=Some(r.float()?),
+            "rowAngle" => row_angle=Some(r.float()?),
             "dy" => dy = Some(r.float()?),
             "fill" => fill = Some(r.float()?),
             "spacing" => spacing = Some(r.float()?),
@@ -66,7 +71,9 @@ fn layout(r: &mut Reader<'_>) -> Result<ArrayLayout, KcadError> {
         }
         Ok(())
     };
-    Ok(match required(r, kind, "kind")? {
+    let kind=required(r,kind,"kind")?;
+    if !matches!(kind,Kind::Lattice) {extra(r,column_angle.is_some()||row_angle.is_some(),"columnAngle/rowAngle")?;}
+    Ok(match kind {
         Kind::Grid => {
             extra(
                 r,
@@ -85,6 +92,11 @@ fn layout(r: &mut Reader<'_>) -> Result<ArrayLayout, KcadError> {
                 dx: required(r, dx, "dx")?,
                 dy: required(r, dy, "dy")?,
             }
+        }
+        Kind::Lattice => {
+            if schema<crate::SCHEMA_WITH_LATTICE_ARRAYS {return Err(r.fail(Code::BadValue,"eğik ızgara şema 161 veya üstünü gerektirir"));}
+            extra(r,center.is_some()||count.is_some()||fill.is_some()||rotate.is_some()||fit||path.is_some()||spacing.is_some()||align.is_some(),"başka dizi türünün alanı")?;
+            ArrayLayout::Lattice {rows:required(r,rows,"rows")?,cols:required(r,cols,"cols")?,dx:required(r,dx,"dx")?,dy:required(r,dy,"dy")?,column_angle:required(r,column_angle,"columnAngle")?,row_angle:required(r,row_angle,"rowAngle")?}
         }
         Kind::Polar => {
             extra(
@@ -160,7 +172,7 @@ fn item(r: &mut Reader<'_>) -> Result<ArrayItem, KcadError> {
     Ok(out)
 }
 
-fn array(r: &mut Reader<'_>) -> Result<AssocArray, KcadError> {
+fn array(r: &mut Reader<'_>, schema:u32) -> Result<AssocArray, KcadError> {
     let (mut p, mut id, mut block, mut items, mut scale) = (None, None, None, None, None);
     let (mut layout_, mut mirror, mut layer_id, mut rotation) = (None, false, None, None);
     map(r, |r, key| {
@@ -170,7 +182,7 @@ fn array(r: &mut Reader<'_>) -> Result<AssocArray, KcadError> {
             "block" => block = Some(BlockId(id16(r)?)),
             "items" => items = Some(list(r, |r, _| item(r))?),
             "scale" => scale = Some(r.float()?),
-            "layout" => layout_ = Some(layout(r)?),
+            "layout" => layout_ = Some(layout(r,schema)?),
             "mirror" => {
                 if !r.bool()? {
                     return Err(r.fail(Code::BadValue, "mirror yalnız doğruyken yazılır"));
@@ -196,9 +208,9 @@ fn array(r: &mut Reader<'_>) -> Result<AssocArray, KcadError> {
     })
 }
 
-pub(super) fn arrays(r: &mut Reader<'_>) -> Result<Vec<AssocArray>, KcadError> {
+pub(super) fn arrays(r: &mut Reader<'_>, schema:u32) -> Result<Vec<AssocArray>, KcadError> {
     let at = r.position();
-    let out = list(r, |r, _| array(r))?;
+    let out = list(r, |r, _| array(r,schema))?;
     if out.is_empty() {
         return Err(r.fail_at(Code::BadValue, at, "boş dizi listesi yazılmaz"));
     }

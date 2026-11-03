@@ -4108,6 +4108,9 @@ impl Input for EntitiesArray {
                 "dy" => Some(dy),
                 _ => None,
             },
+            ArrayLayout::Lattice {dx,dy,column_angle,row_angle,..} => match rest {
+                "dx"=>Some(dx),"dy"=>Some(dy),"columnAngle"=>Some(column_angle),"rowAngle"=>Some(row_angle),_=>None,
+            },
             ArrayLayout::Polar { center, fill, .. } => match rest {
                 "fill" => Some(fill),
                 _ => coordinate(center, "center", rest),

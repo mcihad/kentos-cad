@@ -416,6 +416,7 @@
     "haul.new",
     "stakeout.table",
     "road.sheets",
+    "road.views",
     "alignment.fromLine",
     "profile.fromLine",
     "guardrail.editor",

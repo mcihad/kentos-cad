@@ -1149,6 +1149,12 @@ fn curved_path(e: &mut kentos_commands::Entity) {
     if let kentos_commands::Entity::Polyline(p) | kentos_commands::Entity::Polygon(p)=e {p.bulges=Some(vec![1.,0.,0.]);}
 }
 const FORMS: &[(&str, &str, Form)] = &[
+    ("cad.blocks.find", "text", |e| {
+        if let kentos_commands::Entity::Text(t)=e {
+            t.label_of=None;t.label_scale=None;t.annotative=None;t.path=None;
+            t.paragraph=Default::default();t.text="TEST".into();t.height=1.;t.rotation=0.;
+        }
+    }),
     ("cad.dimensions.create", "polyline", curved_path),
     ("cad.dimensions.create", "polygon", curved_path),
     ("cad.entities.fillet", "polyline", straight_path),

@@ -170,7 +170,7 @@ masaüstünde Güzergâh › Ön güzergâh. Ayarı yazılmaz, `.kcad` değişme
 
 Y12.2 (yapıldı, kavşak): `road.junctions.edit` 29, `.query` 20, `.draw` 21 ortak durum (`road_junction_cases.py`;
 akslar road_alignment_cases.py'nin 40 basamaklı başvurusundan, kesişim 40 basamakta Newton'la, yaylar §2'den; KentOS
-kodu yok). Çekirdek `kentos_road::junction`, KCAD şema 161'in `junctions`'ı bağımsız okuyucuda
+kodu yok). Çekirdek `kentos_road::junction`, KCAD şema 162'in `junctions`'ı bağımsız okuyucuda
 (`broken/road-junction-on-parallel-axis.kcad`; örnek `road-work.kcad`'e bağlantı yolu aksı ve kavşağı eklendi). Python,
 MCP (`tests/road_routes.rs`: örneğin kavşağı sorulur, genişletilir, çizilir, katlıya çevrilir), masaüstünde Güzergâh ›
 Kavşak: kollar, kenarlar, tür, yarıçap ve çeyrek yarıçapları; yazıldıkça kesişimin çizimi, km'ler, açı ve çeyreklerin

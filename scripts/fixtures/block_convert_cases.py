@@ -84,6 +84,22 @@ def main():
         dict(op="execute",input=baseline,result=dict(status="completed",output="$any",warnings=[]),expect=expect(True)),
         dict(op="undo",returns="Tekrarları bloğa dönüştür",expect=dict(ids=list(range(1,9)),canUndo=False)),
         dict(op="redo",returns="Tekrarları bloğa dönüştür",expect=dict(ids=list(range(1,9)),canUndo=True))]))
+    words = deepcopy(setup)
+    words['entities'] = []
+    for k,word in enumerate(['A01','A02','A03']):
+        words['entities'].extend([
+            dict(kind='line',id=k*2+1,layerId='a',attrs={},a=dict(x=k*10,y=0),b=dict(x=k*10+2,y=0)),
+            dict(kind='text',id=k*2+2,layerId='a',attrs={},p=dict(x=k*10+.5,y=.3),text=word,height=.2,rotation=0)])
+    for op in ['plan','execute']:
+        cases.append(dict(name=f'{op}: üç farklı yazı değeri açık seçimle öznitelik olur',setup=words,
+            steps=[dict(op=op,input=dict(name='Numaralı',source=[uid(1),uid(2)],
+                groups=[[uid(1),uid(2)],[uid(3),uid(4)],[uid(5),uid(6)]],textToAttributes=True),
+                result=dict(status='completed',output='$any',warnings=[]),
+                expect=dict(ids=([1,3,5] if op=='execute' else list(range(1,7))),canUndo=op=='execute',dirty=op=='execute',revision='changed' if op=='execute' else 'same'))]))
+    cases.append(dict(name='yazı farkı açık değer eşlemesi olmadan silinemez',setup=words,steps=[dict(op='execute',
+        input=dict(name='Korunan',source=[uid(1),uid(2)],groups=[[uid(1),uid(2)],[uid(3),uid(4)]]),
+        result=dict(status='failed',error=dict(code='recognition_conversion_refused',message='$any',path='groups[1]')),
+        expect=dict(ids=list(range(1,7)),canUndo=False,dirty=False,revision='same'))]))
     result = dict(format="kentos.command-cases",version=1,command="cad.blocks.convert",commandVersion=1,
                   title="Tekrarları bloğa dönüştür",note="Independent script; exact topology/relations and snapshot equality are tested in blocks_convert.rs.",setup=setup,cases=cases)
     target=ROOT/"fixtures/commands/v1/cad.blocks.convert.json"

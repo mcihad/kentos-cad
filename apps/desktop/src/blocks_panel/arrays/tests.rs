@@ -585,7 +585,11 @@ fn a_polar_candidate_reviews_the_circle_and_explicit_keep_then_commits_one_undo(
     assert_eq!((plan.missing,plan.kept),(1,1));
     assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(),before);
     let _=app.array_find_event(Event::Apply);
-    for _ in 0..5000 {let _=app.array_find_event(Event::Tick);if app.blocks_panel.arrays.is_none(){break;}std::thread::yield_now();}
+    let deadline=std::time::Instant::now()+std::time::Duration::from_secs(5);
+    while std::time::Instant::now()<deadline {
+        let _=app.array_find_event(Event::Tick);if app.blocks_panel.arrays.is_none(){break;}
+        std::thread::sleep(std::time::Duration::from_millis(1));
+    }
     assert!(app.blocks_panel.arrays.is_none());
     let model=&mut app.document.as_mut().unwrap().model;let after=model.to_snapshot_v2();
     assert_eq!(after.entities,before.entities);assert_eq!(after.uids,before.uids);
@@ -625,8 +629,36 @@ fn a_selected_source_and_guide_open_path_search_and_review_the_native_proposal()
     assert!(matches!(r.input.layout,ArrayLayout::Path {count:8,align:true,..}));
     let _=app.array_find_event(Event::Assign);complete_review(&mut app);
     let _=app.array_find_event(Event::Apply);
-    for _ in 0..5000 {let _=app.array_find_event(Event::Tick);if app.blocks_panel.arrays.is_none(){break;}std::thread::yield_now();}
+    let deadline=std::time::Instant::now()+std::time::Duration::from_secs(5);
+    while std::time::Instant::now()<deadline {
+        let _=app.array_find_event(Event::Tick);if app.blocks_panel.arrays.is_none(){break;}
+        std::thread::sleep(std::time::Duration::from_millis(1));
+    }
     assert!(app.blocks_panel.arrays.is_none());let model=&mut app.document.as_mut().unwrap().model;
     let after=model.to_snapshot_v2();assert_eq!(after.entities,before.entities);assert_eq!(after.uids,before.uids);
     assert!(after.arrays[0].items[2].kept);model.undo();assert_eq!(model.to_snapshot_v2(),before);model.redo();assert_eq!(model.to_snapshot_v2(),after);
+}
+
+
+#[test]
+fn lattice_settings_find_and_review_preserve_roots_and_expose_independent_directions() {
+    let mut app=app_with_array_source();
+    let fixture:Value=serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"),"/../../fixtures/commands/v1/cad.arrays.adopt.json"))).unwrap();
+    let mut raw=fixture["setup"].clone();let mut entities=Vec::new();
+    for r in 0..3 {for c in 0..4 {
+        if [(0,2),(2,0)].contains(&(r,c)) {continue;}
+        let (a,b)=(23_f64.to_radians(),81_f64.to_radians());
+        entities.push(json!({"kind":"insert","id":entities.len()+1,"layerId":"a","attrs":{},"block":raw["blocks"][0]["id"],
+            "p":{"x":c as f64*2.*a.cos()+r as f64*3.*b.cos(),"y":c as f64*2.*a.sin()+r as f64*3.*b.sin()},"scale":1.,"rotation":0.}));
+    }}
+    raw["entities"]=json!(entities);
+    let model=Model::from_snapshot(DocumentSnapshotV1::from_json(&raw.to_string()).unwrap()).unwrap();
+    app.document=Some(crate::document::Document::from_v2(model.to_snapshot_v2(),None).unwrap());
+    app.selection.set([Slot(6)]);let before=app.document.as_ref().unwrap().model.to_snapshot_v2();
+    app.open_array_find();let _=app.array_find_event(Event::PatternKind(ArrayFindKind::Lattice));complete_search(&mut app);
+    let index=app.blocks_panel.arrays.as_ref().unwrap().output.as_ref().unwrap().matches.iter().position(|p|p.present==10&&p.missing==2).unwrap();
+    let _=app.array_find_event(Event::Review(index));complete_review(&mut app);
+    let w=app.blocks_panel.arrays.as_ref().unwrap();let r=w.review.as_ref().unwrap();
+    assert!(matches!(r.input.layout,ArrayLayout::Lattice {..}));assert!(r.plan.is_some());
+    assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(),before);
 }

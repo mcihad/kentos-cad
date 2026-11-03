@@ -26,6 +26,18 @@ pub(crate) const TITLE: &str = "Tekrarlanan bileşenleri bul";
 static NEXT: AtomicU64 = AtomicU64::new(1);
 
 #[derive(Debug)]
+struct OptionsSnapshot {
+    rotations: bool,
+    mirrors: bool,
+    scales: bool,
+    strict: bool,
+    hidden: bool,
+    tolerance: f64,
+    text_variants: bool,
+    attribute_variants: bool,
+}
+
+#[derive(Debug)]
 pub(super) struct Window {
     source: Vec<String>,
     session: u64,
@@ -35,10 +47,12 @@ pub(super) struct Window {
     mirrors: bool,
     scales: bool,
     strict: bool,
+    text_variants: bool,
+    attribute_variants: bool,
     hidden: bool,
     tolerance: f64,
     /// Editing settings must not silently discard the previous accepted results when cancelled.
-    previous_options: Option<(bool, bool, bool, bool, bool, f64)>,
+    previous_options: Option<OptionsSnapshot>,
     token: u64,
     cancel: Arc<AtomicBool>,
     busy: bool,
@@ -68,6 +82,8 @@ pub enum Event {
     Mirrors,
     Scales,
     Strict,
+    TextVariants,
+    AttributeVariants,
     Hidden,
     Tolerance(f64),
     Ready(u64, Box<CommandResult<BlocksFound>>),
@@ -115,6 +131,8 @@ impl Window {
             mirrors: Some(self.mirrors),
             scales: Some(self.scales),
             geometry_only: Some(!self.strict),
+            text_variants: Some(self.text_variants),
+            attribute_variants: Some(self.attribute_variants),
             tolerance: Some(self.tolerance),
             limit: Some(1000),
             expected_revision: Some(self.revision.clone()),
@@ -142,14 +160,16 @@ impl App {
             let w = self.blocks_panel.find.as_mut().unwrap();
             if !w.busy {
                 if w.output.is_some() && w.previous_options.is_none() {
-                    w.previous_options = Some((
-                        w.rotations,
-                        w.mirrors,
-                        w.scales,
-                        w.strict,
-                        w.hidden,
-                        w.tolerance,
-                    ));
+                    w.previous_options = Some(OptionsSnapshot {
+                        rotations: w.rotations,
+                        mirrors: w.mirrors,
+                        scales: w.scales,
+                        strict: w.strict,
+                        hidden: w.hidden,
+                        tolerance: w.tolerance,
+                        text_variants: w.text_variants,
+                        attribute_variants: w.attribute_variants,
+                    });
                 }
                 self.dialog = Some(Dialog::BlockFind);
             }
@@ -167,6 +187,8 @@ impl App {
             mirrors: false,
             scales: false,
             strict: true,
+            text_variants: false,
+            attribute_variants: false,
             hidden: false,
             tolerance: 0.000_001,
             previous_options: None,
@@ -185,7 +207,7 @@ impl App {
         if let Some(w) = self.blocks_panel.find.as_mut() { w.conversion = None; }
         self.dialog = None;
         if let Some(w) = self.blocks_panel.find.as_mut()
-            && let Some((rotations, mirrors, scales, strict, hidden, tolerance)) =
+            && let Some(OptionsSnapshot { rotations, mirrors, scales, strict, hidden, tolerance, text_variants, attribute_variants }) =
                 w.previous_options.take()
         {
             w.rotations = rotations;
@@ -194,6 +216,8 @@ impl App {
             w.strict = strict;
             w.hidden = hidden;
             w.tolerance = tolerance;
+            w.text_variants = text_variants;
+            w.attribute_variants = attribute_variants;
         }
         if self
             .blocks_panel
@@ -365,6 +389,8 @@ impl App {
                         Event::Mirrors => w.mirrors = !w.mirrors,
                         Event::Scales => w.scales = !w.scales,
                         Event::Strict => w.strict = !w.strict,
+                        Event::TextVariants => w.text_variants = !w.text_variants,
+                        Event::AttributeVariants => w.attribute_variants = !w.attribute_variants,
                         Event::Hidden => w.hidden = !w.hidden,
                         Event::Tolerance(t) => w.tolerance = t,
                         _ => return Task::none(),
@@ -381,11 +407,13 @@ impl App {
             return text("").into();
         };
         let mut body=column![
-            words::text_line(Kind::Info,format!("Kaynak: {} nesne. Tek bir bileşenin çizgi, 2B çoklu çizgi, çember ve yaylarını kullanın. Arama çizimi değiştirmez.",w.source.len())),
+            words::text_line(Kind::Info,format!("Kaynak: {} nesne. Tek bir bileşenin çizgi, 2B çoklu çizgi, çember, yay, tek satırlı yazı ve bloklarını kullanın. Arama çizimi değiştirmez.",w.source.len())),
             words::check(w.rotations,"Döndürülmüş eşleri de bul",Some(msg(Event::Rotations))),
             words::check(w.mirrors,"Aynalanmış eşleri de bul",Some(msg(Event::Mirrors))),
             words::check(w.scales,"Farklı boyuttaki ölçekli eşleri de bul",Some(msg(Event::Scales))),
             words::check(w.strict,"Katman, görünüş ve öznitelikler de aynı olsun",Some(msg(Event::Strict))),
+            words::check(w.text_variants,"Yazı değerleri farklı olabilir",Some(msg(Event::TextVariants))),
+            words::check(w.attribute_variants,"Blok öznitelik değerleri farklı olabilir",Some(msg(Event::AttributeVariants))),
             words::check(w.hidden,"Gizli ve donmuş katmanları da ara",Some(msg(Event::Hidden))),
             words::field("Geometri toleransı (mm)",NumberInput::new(w.tolerance,|t| msg(Event::Tolerance(t))).units(units::MILLIMETRE).range(0.0..=0.001).step(0.001).decimals(3),Some("Sıfırdan büyük, en çok 1 mm. Varsayılan 0,001 mm; çizim boyutlarını değiştirmez.".into())),
             label::caption("Sonuçlar Bloklar panelinde açılır; çizimde adayları ayrı ayrı inceleyip seçebilirsiniz.")
@@ -451,6 +479,8 @@ impl App {
             Control::Check(title, on) => {
                 let (now, event) = match title {
                     "Döndürülmüş eşleri de bul" => (w.rotations, Event::Rotations),
+                    "Yazı değerleri farklı olabilir" => (w.text_variants, Event::TextVariants),
+                    "Blok öznitelik değerleri farklı olabilir" => (w.attribute_variants, Event::AttributeVariants),
                     "Aynalanmış eşleri de bul" => (w.mirrors, Event::Mirrors),
                     "Farklı boyuttaki ölçekli eşleri de bul" => (w.scales, Event::Scales),
                     "Katman, görünüş ve öznitelikler de aynı olsun" => {
@@ -722,7 +752,13 @@ mod tests {
         assert_eq!(app.dialog, Some(Dialog::BlockFind));
         let _ = app.block_find_event(Event::Mirrors);
         assert!(app.blocks_panel.find.as_ref().unwrap().mirrors);
+        let _ = app.block_find_event(Event::TextVariants);
+        let _ = app.block_find_event(Event::AttributeVariants);
+        let input=app.blocks_panel.find.as_ref().unwrap().input(&app.document.as_ref().unwrap().model).unwrap();
+        assert_eq!(input.text_variants,Some(true));assert_eq!(input.attribute_variants,Some(true));
         app.close_dialog();
+        assert!(!app.blocks_panel.find.as_ref().unwrap().text_variants);
+        assert!(!app.blocks_panel.find.as_ref().unwrap().attribute_variants);
         assert!(!app.blocks_panel.find.as_ref().unwrap().mirrors);
         assert_eq!(
             app.blocks_panel

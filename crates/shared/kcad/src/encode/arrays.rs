@@ -103,6 +103,17 @@ impl<'d> Encoder<'d> {
                 self.key("rows");
                 self.w.uint(u64::from(*rows));
             }
+            ArrayLayout::Lattice {rows,cols,dx,dy,column_angle,row_angle} => {
+                self.open(7,true)?;
+                // dx dy (2), cols kind rows (4), rowAngle (8), columnAngle (11).
+                self.key("dx");self.at(Seg::Name("dx"),|e|e.float(*dx))?;
+                self.key("dy");self.at(Seg::Name("dy"),|e|e.float(*dy))?;
+                self.key("cols");self.w.uint(u64::from(*cols));
+                self.key("kind");self.w.text("lattice");
+                self.key("rows");self.w.uint(u64::from(*rows));
+                self.key("rowAngle");self.at(Seg::Name("rowAngle"),|e|e.float(*row_angle))?;
+                self.key("columnAngle");self.at(Seg::Name("columnAngle"),|e|e.float(*column_angle))?;
+            }
             ArrayLayout::Polar {
                 center,
                 count,

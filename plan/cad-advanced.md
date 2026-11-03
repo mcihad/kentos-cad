@@ -831,7 +831,7 @@ Bu işaret native masaüstü/Python/MCP kapsamının kabulüdür. Web öznitelik
 penceresinin native eşitleme kapsamıyla aynı olmadığı kodda görüldü;
 TODOS'daki web eşitliği görevi bu kapanışla tamamlanmış sayılmaz.
 
-### CAD-ADV-07 — Tekrarları tanı, blok ve ilişkili diziye kontrollü dönüştür [~]
+### CAD-ADV-07 — Tekrarları tanı, blok ve ilişkili diziye kontrollü dönüştür [x]
 
 **Öncelik:** P1. **Kod:** [C11], [C13], [C03].
 **Dayanak:** BLOCKIFY ve ARRAYDETECT, bulunan adayları kullanıcıya
@@ -885,16 +885,20 @@ kimlik eşlemesi, bağlı ölçü ve tek Undo doğrulansın.
   [ADR 0867](../docs/adr/0867-analytic-polyline-repeat-recognition.md).
   Z/M verisi, mahal ayırıcı rolü, delik ve ek parçalar açık ret alır.
   Köşe yapısı sadeleştirilmez; bir çizgi 4 096, toplam kapsam 200 000 köşedir.
-- [ ] Kaynak türlerini metin/öznitelik varyantı, iç içe blok ve
-  diğer üretim geometrilerine aynı doğruluk kapısıyla genişletme.
+- [x] 2B çoklu çizgiye ek olarak tek satırlı yazı/öznitelik varyantları ve
+  statik iç bloklar aynı doğruluk kapısından geçti (ADR 0881). Değer farkları
+  ayrı açık seçeneklerdir; metin→öznitelik dönüşümü her değeri ve gerçek
+  yerleştirilmiş biçimi doğrular. İç ölçü yolları ve aynı tanımlı değerler
+  korunur. NURBS/tarama/dinamik blok gibi kapsam dışı kaynak veya taşınamayan
+  veri/ilişki atlanarak sahte tam eşleşme ya da kayıplı dönüşüm yapılmaz.
 - [x] İlk analitik kapsamda seçili adayları bloklaştırma; eski UUID→yeni
   yerleştirme/alt nesne eşlemesi, sıradan ölçü bağlarını koruma ve desteklenmeyen
   veri/görünüş/ilişkide gerekçeli atomik ret. Gerçek GUI/Python/MCP ve tek
   Undo/Redo kabulü. Metin/öznitelik, iç blok ve diğer geometri/ilişki türleri
   tamamlanmış sayılmaz; kaynak genişletme maddesi açık kalır (ADR 0871).
-- [~] Grid/kutupsal/yol örüntüsünü mevcut `AssocArray` modeline benimsetme;
+- [x] Grid/kutupsal/yol örüntüsünü mevcut `AssocArray` modeline benimsetme;
   iki eksik öğe, elle değişen öğe, koru/sil/reset ve sayı/aralık değişikliğinde
-  bağların ve kimliklerin korunması. Bütün CAD-ADV-07 bu kabulden önce kapanmaz.
+  bağların ve kimliklerin korunması. Dönük/eğik grid dahil son kabul ADR 0882 ile tamamlandı.
 
 **İlk dilimin doğrulaması:** çekirdek 5, native uygulama 366, masaüstü 1 628,
 MCP 67 ve Python 479 test geçti; native ortak komut kabulü 21 durumdur.
@@ -1189,9 +1193,76 @@ doğruladı; yeni kılavuzdaki konum/açılar bağımsız hesapla denetlendi.
 Ret → yeni kaynak → başarılı inceleme teslim programında tekrarlandı.
 Ekranlar 425–433 depo dışındadır. Bu dilim tüm 07'yi kapatmaz.
 
-**Açık kalan:** dönük/eğik grid; metin/öznitelik,
-iç blok ve diğer kaynak/ilişki genişletmesi. Bu dilimler CAD-ADV-07'nin
-tamamını kapatmaz.
+**Bu dilim sonundaki durum:** dönük/eğik grid açık kalmıştı. Yazı/iç blok
+ADR 0881, son düzen ailesi ADR 0882 kabulüyle aşağıda tamamlandı.
+
+
+**İlerleme — yazı değerleri ve statik iç blok kabulü (3 Kasım 2026):**
+[ADR 0881](../docs/adr/0881-repeat-text-values-and-nested-blocks.md).
+Ayrı yazı/öznitelik seçenekleri, açık metin→öznitelik eşlemesi, gerçek dünya
+pozu doğrulaması, iç blok tanım/değer koruması ve [0,0]→[0,0,0] ölçü yolu
+aktarımı tamamlandı. Tanımların bütünüyle açılması 200000 iş birimi ve
+iptal sınırıyla denetlenir; aday kutusu içeriği kapsar. Temsil edilemeyen
+font/bağ ve farklı iç değerler çizimi değiştirmeden gerekçeli ret alır.
+
+420 native, 16 çekirdek, 76 MCP, 8 panel ve 12 doğrudan Python testi;
+63 bağımsız native/Python ortak durum, katalog/TS/SDK/manifest ve tüm hedef
+Clippy/derleme doğrulandı. Gerçek son programda dört farklı döndürülmüş yazı,
+bağlı 2000 mm ölçü, iki iç blok ve 4000 mm ölçü, inspector'da tek değer
+düzenleme, inceleme/ret ve tek Undo/Redo sınandı. Bağımsız KCAD okuyucusunda
+UUID/değer/yol koruması ve dosya eşitlikleri doğrulandı. Ham ekranlar 434–453
+depo dışındadır. Bu tarihli dilimden sonraki son kabul aşağıdadır.
+
+
+**Tamamlandı — dönük/eğik 2B ızgara ve son kabul (3 Kasım 2026):**
+[ADR 0882](../docs/adr/0882-directed-2d-grid-recognition.md),
+[kullanım/API](../docs/cad/repeated-components.md).
+
+- [x] Eski dünya-X/Y `Grid` korunarak bağımsız yönlü `Lattice` eklendi.
+  Dünya doğusundan derece eksenler, metre aralıklar ve öğenin kendi yönü
+  ayrıdır. Tanıma açık seçilir; tam açıklıkla FP64 uyarlaması yapılır,
+  son kabul özgün mutlak toleransta mevcut benimseme motorundan geçer.
+- [x] Görünür ayarlar, iki eksenli sonuç kartı, boş hücre şeması, ayrı
+  İncele/Uygula, okunabilir derece menüsü ve uzunluk birimli açıya ret.
+  Sonuç satırının yüksekliği iki ekseni kesmeyecek şekilde ayrıldı.
+- [x] Satır/sütun adresleri, eski UUID'ler, korunan/boş hücreler, ölçü
+  bağları, sil/reset ve tek Undo/Redo; Python tipli API, native Job,
+  MCP kataloğu, web kopya komutu ve KCAD 161 sözleşmesi birlikte teslim.
+  Eski ızgaraların dosya baytları aynı kalır.
+
+**Doğrulama:** 424 native uygulama, 235 KCAD, 13 panel, 132 MCP,
+7 ilgili çekirdek, iki ilgili etkileşim testi; 16 doğrudan Python ve
+169 bağımsız dizi komut durumu içeren ortak Python kabulü; 38 web dizi
+kabulü başarılıdır. Katalog 4, TS bağlamaları 1050, SDK üretim denetimi,
+bağımsız dosya okuyucusu, ilgili tüm hedeflerde Clippy ve masaüstü derleme
+geçti. Son gösterim düzeltmesinden sonra etkileşim testi/Clippy/derleme
+tekrar geçti. Web genel tip kontrolü önceden var olan hatalar nedeniyle
+yeşil değildir: sanal `HEAD` karşılaştırması 275→267 hata, yeni hata sıfır.
+Bu genel kontrol tamamlanmış gösterilmez.
+
+Gerçek son uygulamada 23°/81° iki eksen, iki boş hücre, ayrı inceleme ve
+iptal, 35° yön düzenlemesi, `2500mm`→2,5 m aralık, 3→4 satır, bir öğe
+silme ve üç hücreyi sıfırlama denendi. Son sürümde yeniden açılmış dizi
+ve düzeltilmiş 23.0000°/81.0000° menüsü görüldü. Kaydedilen dosyalarda
+bağımsız trigonometri, eski UUID'ler ve bağlı ölçü uçları denetlendi;
+iptal, bütün ilgili Undo/Redo dosyaları bayt bayt eşittir.
+
+Ayrıca ±4 milyar metre WCS çevresinde 3/5 mm aralıkla 52 öğe/iki boş hücre
+sahnede açıldı, bulundu, bağlandı ve yakınlaştırıldı. Yalnız dizi metaverisi
+eklenir; Undo/Redo ve yakınlaştırma sonrası dosyalar birebir aynıdır.
+Bağımsız dünya hesabında en büyük sapma 0,000000476837158203125 m olup
+0,000001 m kabul toleransının altındadır. 32 768 çift/96 vektör/2 milyon iş
+ve sonuç sınırları arayüzde kısmi sonuç olarak açıklanır; bu stres çiziminde
+kısmi uyarı görüldü ve gizlenmedi. Ham ekranlar 454–469 ve kabul dosyaları
+depo dışındadır; ekran görüntüsü Git'e eklenmedi.
+
+**Kapsam:** kontrollü ve yeniden üretilebilir 2B tanıma teslim edildi.
+Dinamik/NURBS/tarama gibi ilan edilmiş destek dışı kaynaklar, taşınamayan
+veri/ilişkiler veya tolerans altı sayısal ayrışma sessizce yaklaşık kabul
+edilmez. AI görsel benzerliği opsiyonel gelecek çalışmadır; bu maddede
+zorunlu değildir. Önceki dilimlerdeki açık durumlar yukarıdaki son kabulle
+kapanmıştır; CAD-ADV-07 tamamlandı.
+
 
 ### CAD-ADV-08 — Sınır, tarama ve maskeyi hatasını açıklayabilen bir üretim sistemine getir [ ]
 

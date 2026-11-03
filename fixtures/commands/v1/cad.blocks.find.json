@@ -1815,6 +1815,971 @@
           }
         }
       ]
+    },
+    {
+      "name": "yazı değerleri varsayılan olarak aynıdır",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Tekrar arama",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "a",
+            "name": "A",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "a",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "a",
+            "attrs": {},
+            "p": {
+              "x": 0,
+              "y": 0
+            },
+            "text": "A01",
+            "height": 0.2,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "a",
+            "attrs": {},
+            "p": {
+              "x": 10,
+              "y": 0
+            },
+            "text": "A02",
+            "height": 0.2,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "a",
+            "attrs": {},
+            "p": {
+              "x": 20,
+              "y": 0
+            },
+            "text": "A01",
+            "height": 0.2,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 4,
+            "layerId": "a",
+            "attrs": {},
+            "p": {
+              "x": 30,
+              "y": 0
+            },
+            "text": "A03",
+            "height": 0.2,
+            "rotation": 0
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": [
+              "$uidOf:1"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "source": [
+                "$uidOf:1"
+              ],
+              "matches": [
+                {
+                  "members": [
+                    "$uidOf:1"
+                  ],
+                  "origin": {
+                    "x": 0,
+                    "y": 0
+                  },
+                  "at": {
+                    "x": 0,
+                    "y": 0
+                  },
+                  "rotation": 0,
+                  "scale": 1,
+                  "mirror": false,
+                  "bounds": "$any",
+                  "overlaps": false
+                },
+                {
+                  "members": [
+                    "$uidOf:3"
+                  ],
+                  "origin": {
+                    "x": 0,
+                    "y": 0
+                  },
+                  "at": {
+                    "x": 20,
+                    "y": 0
+                  },
+                  "rotation": 0,
+                  "scale": 1,
+                  "mirror": false,
+                  "bounds": "$any",
+                  "overlaps": false
+                }
+              ],
+              "truncated": false,
+              "comparisons": "$any",
+              "related": {},
+              "revision": "$any"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "yazı çeşitleri açık seçenekle bulunur değerler değişmez",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Tekrar arama",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "a",
+            "name": "A",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "a",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "a",
+            "attrs": {},
+            "p": {
+              "x": 0,
+              "y": 0
+            },
+            "text": "A01",
+            "height": 0.2,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "a",
+            "attrs": {},
+            "p": {
+              "x": 10,
+              "y": 0
+            },
+            "text": "A02",
+            "height": 0.2,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "a",
+            "attrs": {},
+            "p": {
+              "x": 20,
+              "y": 0
+            },
+            "text": "A01",
+            "height": 0.2,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 4,
+            "layerId": "a",
+            "attrs": {},
+            "p": {
+              "x": 30,
+              "y": 0
+            },
+            "text": "A03",
+            "height": 0.2,
+            "rotation": 0
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": [
+              "$uidOf:1"
+            ],
+            "textVariants": true
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "source": [
+                "$uidOf:1"
+              ],
+              "matches": [
+                {
+                  "members": [
+                    "$uidOf:1"
+                  ],
+                  "origin": {
+                    "x": 0,
+                    "y": 0
+                  },
+                  "at": {
+                    "x": 0,
+                    "y": 0
+                  },
+                  "rotation": 0,
+                  "scale": 1,
+                  "mirror": false,
+                  "bounds": "$any",
+                  "overlaps": false
+                },
+                {
+                  "members": [
+                    "$uidOf:2"
+                  ],
+                  "origin": {
+                    "x": 0,
+                    "y": 0
+                  },
+                  "at": {
+                    "x": 10,
+                    "y": 0
+                  },
+                  "rotation": 0,
+                  "scale": 1,
+                  "mirror": false,
+                  "bounds": "$any",
+                  "overlaps": false
+                },
+                {
+                  "members": [
+                    "$uidOf:3"
+                  ],
+                  "origin": {
+                    "x": 0,
+                    "y": 0
+                  },
+                  "at": {
+                    "x": 20,
+                    "y": 0
+                  },
+                  "rotation": 0,
+                  "scale": 1,
+                  "mirror": false,
+                  "bounds": "$any",
+                  "overlaps": false
+                },
+                {
+                  "members": [
+                    "$uidOf:4"
+                  ],
+                  "origin": {
+                    "x": 0,
+                    "y": 0
+                  },
+                  "at": {
+                    "x": 30,
+                    "y": 0
+                  },
+                  "rotation": 0,
+                  "scale": 1,
+                  "mirror": false,
+                  "bounds": "$any",
+                  "overlaps": false
+                }
+              ],
+              "truncated": false,
+              "comparisons": "$any",
+              "related": {},
+              "revision": "$any"
+            },
+            "warnings": [
+              {
+                "code": "recognition_geometry_only",
+                "message": "$any",
+                "path": "textVariants"
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "yazı çeşitleri biçim farkını yok saymaz",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Tekrar arama",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "a",
+            "name": "A",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "a",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "a",
+            "attrs": {},
+            "p": {
+              "x": 0,
+              "y": 0
+            },
+            "text": "A01",
+            "height": 0.2,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "a",
+            "attrs": {},
+            "p": {
+              "x": 10,
+              "y": 0
+            },
+            "text": "A02",
+            "height": 0.2,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "a",
+            "attrs": {},
+            "p": {
+              "x": 20,
+              "y": 0
+            },
+            "text": "A01",
+            "height": 0.2,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 4,
+            "layerId": "a",
+            "attrs": {},
+            "p": {
+              "x": 30,
+              "y": 0
+            },
+            "text": "A03",
+            "height": 0.2,
+            "rotation": 0,
+            "bold": true,
+            "font": "arimo"
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": [
+              "$uidOf:1"
+            ],
+            "textVariants": true
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "source": [
+                "$uidOf:1"
+              ],
+              "matches": [
+                {
+                  "members": [
+                    "$uidOf:1"
+                  ],
+                  "origin": {
+                    "x": 0,
+                    "y": 0
+                  },
+                  "at": {
+                    "x": 0,
+                    "y": 0
+                  },
+                  "rotation": 0,
+                  "scale": 1,
+                  "mirror": false,
+                  "bounds": "$any",
+                  "overlaps": false
+                },
+                {
+                  "members": [
+                    "$uidOf:2"
+                  ],
+                  "origin": {
+                    "x": 0,
+                    "y": 0
+                  },
+                  "at": {
+                    "x": 10,
+                    "y": 0
+                  },
+                  "rotation": 0,
+                  "scale": 1,
+                  "mirror": false,
+                  "bounds": "$any",
+                  "overlaps": false
+                },
+                {
+                  "members": [
+                    "$uidOf:3"
+                  ],
+                  "origin": {
+                    "x": 0,
+                    "y": 0
+                  },
+                  "at": {
+                    "x": 20,
+                    "y": 0
+                  },
+                  "rotation": 0,
+                  "scale": 1,
+                  "mirror": false,
+                  "bounds": "$any",
+                  "overlaps": false
+                }
+              ],
+              "truncated": false,
+              "comparisons": "$any",
+              "related": {},
+              "revision": "$any"
+            },
+            "warnings": [
+              {
+                "code": "recognition_geometry_only",
+                "message": "$any",
+                "path": "textVariants"
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "blok öznitelik değeri varsayılan olarak korunur",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Tekrar arama",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "a",
+            "name": "A",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "a",
+        "entities": [
+          {
+            "kind": "insert",
+            "id": 1,
+            "layerId": "a",
+            "attrs": {
+              "CODE": "A",
+              "DATA": "same"
+            },
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 0,
+              "y": 0
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "insert",
+            "id": 2,
+            "layerId": "a",
+            "attrs": {
+              "CODE": "B",
+              "DATA": "same"
+            },
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 10,
+              "y": 0
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "insert",
+            "id": 3,
+            "layerId": "a",
+            "attrs": {
+              "CODE": "C",
+              "DATA": "different"
+            },
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 20,
+              "y": 0
+            },
+            "scale": 1,
+            "rotation": 0
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": [
+          {
+            "id": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "name": "Etiketli parça",
+            "base": {
+              "x": 0,
+              "y": 0
+            },
+            "entities": [
+              {
+                "kind": "line",
+                "id": 1,
+                "layerId": "a",
+                "attrs": {},
+                "a": {
+                  "x": 0,
+                  "y": 0
+                },
+                "b": {
+                  "x": 1,
+                  "y": 0
+                }
+              }
+            ],
+            "attributes": [
+              {
+                "tag": "CODE",
+                "value": "A",
+                "p": {
+                  "x": 0,
+                  "y": 0.2
+                },
+                "height": 0.2,
+                "rotation": 0
+              }
+            ]
+          }
+        ]
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": [
+              "$uidOf:1"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "source": [
+                "$uidOf:1"
+              ],
+              "matches": [
+                {
+                  "members": [
+                    "$uidOf:1"
+                  ],
+                  "origin": {
+                    "x": 0,
+                    "y": 0
+                  },
+                  "at": {
+                    "x": 0,
+                    "y": 0
+                  },
+                  "rotation": 0,
+                  "scale": 1,
+                  "mirror": false,
+                  "bounds": "$any",
+                  "overlaps": false
+                }
+              ],
+              "truncated": false,
+              "comparisons": "$any",
+              "related": {},
+              "revision": "$any"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "yalnız tanımlı blok etiketlerinin değerleri çeşit olabilir diğer veri korunur",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Tekrar arama",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "a",
+            "name": "A",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "a",
+        "entities": [
+          {
+            "kind": "insert",
+            "id": 1,
+            "layerId": "a",
+            "attrs": {
+              "CODE": "A",
+              "DATA": "same"
+            },
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 0,
+              "y": 0
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "insert",
+            "id": 2,
+            "layerId": "a",
+            "attrs": {
+              "CODE": "B",
+              "DATA": "same"
+            },
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 10,
+              "y": 0
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "insert",
+            "id": 3,
+            "layerId": "a",
+            "attrs": {
+              "CODE": "C",
+              "DATA": "different"
+            },
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 20,
+              "y": 0
+            },
+            "scale": 1,
+            "rotation": 0
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": [
+          {
+            "id": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "name": "Etiketli parça",
+            "base": {
+              "x": 0,
+              "y": 0
+            },
+            "entities": [
+              {
+                "kind": "line",
+                "id": 1,
+                "layerId": "a",
+                "attrs": {},
+                "a": {
+                  "x": 0,
+                  "y": 0
+                },
+                "b": {
+                  "x": 1,
+                  "y": 0
+                }
+              }
+            ],
+            "attributes": [
+              {
+                "tag": "CODE",
+                "value": "A",
+                "p": {
+                  "x": 0,
+                  "y": 0.2
+                },
+                "height": 0.2,
+                "rotation": 0
+              }
+            ]
+          }
+        ]
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": [
+              "$uidOf:1"
+            ],
+            "attributeVariants": true
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "source": [
+                "$uidOf:1"
+              ],
+              "matches": [
+                {
+                  "members": [
+                    "$uidOf:1"
+                  ],
+                  "origin": {
+                    "x": 0,
+                    "y": 0
+                  },
+                  "at": {
+                    "x": 0,
+                    "y": 0
+                  },
+                  "rotation": 0,
+                  "scale": 1,
+                  "mirror": false,
+                  "bounds": "$any",
+                  "overlaps": false
+                },
+                {
+                  "members": [
+                    "$uidOf:2"
+                  ],
+                  "origin": {
+                    "x": 0,
+                    "y": 0
+                  },
+                  "at": {
+                    "x": 10,
+                    "y": 0
+                  },
+                  "rotation": 0,
+                  "scale": 1,
+                  "mirror": false,
+                  "bounds": "$any",
+                  "overlaps": false
+                }
+              ],
+              "truncated": false,
+              "comparisons": "$any",
+              "related": {},
+              "revision": "$any"
+            },
+            "warnings": [
+              {
+                "code": "recognition_geometry_only",
+                "message": "$any",
+                "path": "attributeVariants"
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
     }
   ]
 }

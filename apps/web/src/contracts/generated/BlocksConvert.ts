@@ -2,8 +2,10 @@
 
 /**
  * Converts only the chosen, non-overlapping groups after re-verifying their geometry and relations.
- * First scope: plain analytic 2D CAD objects on one untyped, data-free layer, with ordinary bound
- * dimensions. Unsupported appearance/data/relations are refused before any write, never detached.
+ * Plain analytic 2D CAD objects, representable single-line text and static nested blocks on one
+ * untyped, data-free layer. Ordinary bound dimensions retain full nested paths. Explicit
+ * text_to_attributes preserves differing words as per-insert values, with named mappings.
+ * Unsupported appearance/data/relations are refused before any write, never detached.
  */
 export type BlocksConvert = { name: string, 
 /**
@@ -15,6 +17,11 @@ source: Array<string>,
  * Each must have exactly as many distinct objects as the source. Sets cannot share objects.
  */
 groups: Array<Array<string>>, rotations?: boolean, mirrors?: boolean, scales?: boolean, 
+/**
+ * Preserve trailing plain single-line text variations as named block attributes.
+ * Requires representable font/appearance/order and verification of each actual placed text.
+ */
+textToAttributes?: boolean, 
 /**
  * Absolute model tolerance in metres, as cad.blocks.find; absent: 0.000001.
  */

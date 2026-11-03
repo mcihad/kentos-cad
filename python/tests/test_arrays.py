@@ -42,6 +42,30 @@ def closed_path_drawing():
 
 
 class ArrayTests(unittest.TestCase):
+    def test_lattice_query_job_adoption_and_edits_share_typed_api_and_identity(self):
+        raw=json.loads((ROOT / "fixtures/commands/v1/cad.arrays.adopt.json").read_text())["setup"]
+        raw["entities"]=[]
+        for r in range(3):
+            for c in range(4):
+                if (r,c) in [(0,2),(2,0)]: continue
+                raw["entities"].append(dict(kind="insert",id=len(raw["entities"])+1,layerId="a",attrs={},
+                    block=raw["blocks"][0]["id"],scale=1,rotation=0,
+                    p=dict(x=c*2*math.cos(math.radians(23))+r*3*math.cos(math.radians(81)),
+                           y=c*2*math.sin(math.radians(23))+r*3*math.sin(math.radians(81)))))
+        doc=cad.Document.from_bytes(json.dumps(raw).encode()); roots={r.entity.id:r.uid for r in doc.entities()}; before=doc.to_bytes()
+        found=cad.arrays.find(doc,source=roots[6],kind=cad.ArrayFindKind.LATTICE)
+        p=next(m.adoption for m in found.matches if (m.present,m.missing)==(10,2))
+        self.assertIsInstance(p.layout,cad.LatticeArrayLayout)
+        self.assertEqual(doc.to_bytes(),before)
+        answer=doc.start("cad.arrays.find",cad.ArraysFind(source=roots[6],kind=cad.ArrayFindKind.LATTICE)).result()
+        self.assertEqual(answer.status,"completed")
+        self.assertEqual(answer.output.matches[0].adoption.to_json(),found.matches[0].adoption.to_json())
+        args=dict(source=p.source,layout=p.layout,items=p.items,tolerance=p.tolerance,expected_revision=p.expected_revision)
+        self.assertEqual(cad.arrays.adopt.plan(doc,**args).missing,2)
+        cad.arrays.adopt(doc,**args); self.assertEqual({r.entity.id:r.uid for r in doc.entities()},roots)
+        after=doc.to_bytes();self.assertEqual(cad.Document.from_bytes(after).to_bytes(),after)
+        doc.undo();self.assertEqual(doc.to_bytes(),before);doc.redo();self.assertEqual(doc.to_bytes(),after)
+
     def test_polar_query_job_and_adoption_preserve_existing_roots_for_both_orientations(self):
         fixture=json.loads((ROOT / "fixtures/commands/v1/cad.arrays.find.json").read_text())
         cases=[c for c in fixture["cases"] if c["name"].startswith(("kutupsal: iki eksik", "kutupsal: iç kaynak"))]

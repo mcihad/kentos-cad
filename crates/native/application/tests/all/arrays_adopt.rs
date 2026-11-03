@@ -521,3 +521,38 @@ fn metadata_only_job_refuses_concurrent_geometry_edits_and_undo_redo_generations
     doc.undo();
     assert_eq!(doc.to_snapshot_v2(), before);
 }
+
+
+#[test]
+fn skew_grid_edits_keep_row_column_identity_overrides_gaps_and_bound_dimensions() {
+    let angle=30_f64.to_radians();
+    let coords:Vec<_>=(0..6).filter(|k|*k!=2).map(|k| {
+        let (c,r)=((k%3) as f64,(k/3) as f64);
+        (k,c*2.*angle.cos(),c*2.*angle.sin()+r*3.,0.)
+    }).collect();
+    let mut doc=drawing(&coords);
+    let bound=uid(&doc,3);
+    let dim=doc.add(serde_json::from_value(json!({"kind":"dimension","id":0,"layerId":"a","attrs":{},
+        "a":{"x":0.,"y":3.},"b":{"x":20.,"y":3.},"offset":1.,"height":0.1,
+        "refs":{"a":{"uid":bound,"path":[0],"place":{"kind":"start"}}}})).unwrap()).unwrap();
+    let layout=ArrayLayout::Lattice {rows:2,cols:3,dx:2.,dy:3.,column_angle:30.,row_angle:90.};
+    let input=request(&doc,layout,6,&[1]);let id=accept(&mut doc,input);
+    let adopted=doc.to_snapshot_v2();
+    let original=doc.arrays()[0].items.clone();let held=at(&doc,&uid(&doc,1));
+    edit(&mut doc,&id,ArrayEdit::Layout {layout:ArrayLayout::Lattice {rows:3,cols:4,dx:4.,dy:5.,column_angle:0.,row_angle:60.}});
+    for (old,new) in [(0,0),(1,1),(2,2),(3,4),(4,5),(5,6)] {assert_eq!(doc.arrays()[0].items[new],original[old]);}
+    assert_eq!(at(&doc,&uid(&doc,1)),held);
+    let p=at(&doc,&bound);assert!((p.x-2.5).abs()<1e-12 && (p.y-5.*60_f64.to_radians().sin()).abs()<1e-12);
+    let Some(Entity::Dimension(d))=doc.get(dim) else {panic!()};assert_eq!(d.a,p);assert!(d.refs.as_ref().unwrap().a.as_ref().unwrap().live());
+    let edited=doc.to_snapshot_v2();doc.undo();assert_eq!(doc.to_snapshot_v2(),adopted);doc.redo();assert_eq!(doc.to_snapshot_v2(),edited);
+    edit(&mut doc,&id,ArrayEdit::Remove {items:vec![5]});let removed=doc.to_snapshot_v2();
+    edit(&mut doc,&id,ArrayEdit::Reset {items:None});
+    assert!(doc.arrays()[0].items.iter().all(|i|i.uid.is_some()&&!i.kept));
+    assert_eq!(doc.arrays()[0].items[4].uid,original[3].uid);
+    assert_ne!(doc.arrays()[0].items[5].uid,original[4].uid);
+    // KCAD compacts vacant runtime slots after deletion; persistent UIDs and array addresses survive.
+    let snapshot=doc.to_snapshot_v2();let bytes=kentos_kcad::encode_verified(&snapshot).unwrap();
+    let reopened=kentos_kcad::decode(&bytes).unwrap();assert_eq!(reopened.uids,snapshot.uids);assert_eq!(reopened.arrays,snapshot.arrays);
+    assert_eq!(kentos_kcad::encode_verified(&reopened).unwrap(),bytes);
+    doc.undo();assert_eq!(doc.to_snapshot_v2(),removed);
+}

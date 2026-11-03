@@ -1,6 +1,6 @@
 # Tekrarlanan 2B bileşenleri bulma
 
-Tek bir bileşenin çizgi, 2B çoklu çizgi, çember ve yaylarını seçip Bloklar panelindeki
+Tek bir bileşenin çizgi, 2B çoklu çizgi, çember, yay, düz yazı ve statik bloklarını seçip Bloklar panelindeki
 **Tekrarlanan bileşenleri bul…** düğmesine basın. Bul, adayları panelde açar;
 çizimi kullanmaya devam edebilirsiniz. Göster bir adayı seçip yakınlaştırır.
 İstediğiniz adayları işaretleyip **… adayı sahnede seç** ile seçimi alın.
@@ -17,7 +17,7 @@ Tek parçalı, deliksiz çoklu çizgide açık/kapalı durum, yaylı kenarlar ve
 başlangıç/bitiş genişlikleri karşılaştırılır. Kapalı çizginin başlangıç
 köşesi veya çizim yönü farklı olabilir. Köşe sayısını değiştiren yeniden
 parçalama/sadeleştirme yapılmaz. Z/M verisi veya mahal ayırıcı rolü taşıyan
-çizgi, ek parçalar, metin, blok ve NURBS kaynakta açıkça reddedilir;
+çizgi, ek parçalar ve desteklenmeyen NURBS gibi türler kaynakta açıkça reddedilir;
 bu öğeler kaynaktan sessizce çıkarılmaz. Kaynak en çok 128, arama kapsamı
 50 000 nesne; her çoklu çizgi en çok 4 096, kaynak ve kapsam birlikte
 200 000 çoklu çizgi köşesidir. Kısmi sonuç başlığı varsa kapsamı daraltın. Durdur veya
@@ -57,8 +57,8 @@ Adı, kök→yerleştirme sayısını ve korunacak ölçü noktalarını kontrol
 İnceleme çizimi değiştirmez; **Dönüştür** tek geri alma adımıdır. Ad değişince
 yeniden inceleme gerekir. Durdur/Esc kabul edilmemiş işi bırakır.
 
-İlk dönüşüm kapsamı tek, veri ve tür şeması olmayan CAD katmanındaki sürekli
-çizgili nesnelerdir. Öznitelik/sembol/ek dosya, özel çizgi tipi, parçalara
+Dönüşüm kapsamı tek, veri ve tür şeması olmayan CAD katmanındaki sürekli
+çizgili analitik nesneler, düz yazı ve statik iç bloklardır. Genel nesne verisi/sembol/ek dosya, özel çizgi tipi, parçalara
 karışan çizim sırası, tablo veya taşınamayan ilişki varsa gerekçe gösterilir;
 bağlar silinmez. Aramada geometriye göre eşleşmiş olmak bu denetimi kaldırmaz.
 İlişkili diziye dönüşüm bu düğmenin kapsamı değildir.
@@ -281,3 +281,66 @@ Bu arama sabit aralık önerir; yolu adede göre bölme veya uzayınca yeni öğ
 ekleme niyetini kendiliğinden çıkarmaz. Mevcut **Diziyi düzenle → Aralık/Adet**
 ayrı işlemdir. Tek Undo/Redo, Python Job ve MCP aynı native uygulamadır.
 [Karar ve gerçek kabul](../adr/0880-explicit-guide-pattern-recognition.md).
+
+
+## Yazı çeşitleri ve iç bloklar
+
+Aramada **Yazı değerleri farklı olabilir** ve **Blok öznitelik değerleri
+farklı olabilir** ayrı seçeneklerdir. Yalnız değer karşılaştırmasını
+gevşetir; yazı biçimi, blok tanımı ve diğer nesne verileri korunur.
+Dönüşümde **Metin değerlerini blok öznitelikleri olarak koru** ayrıca
+seçilmelidir; seçeneği değiştirince yeniden inceleyin. Her yerleştirme
+kendi metnini `TEXT_n` alanında tutar. Son sıradaki düz tek satırlı yazıların
+temsil edilemeyen font/maske/biçimi veya ilişkisi varsa ret gerekçesi görünür.
+İç bloklar mevcut tanımı ve aynı öznitelik değerlerini korur; farklı iç
+öznitelik değerlerini bir değere indirgeme yapılmaz.
+
+```python
+found = cad.blocks.find(doc, source=source, text_variants=True)
+args = dict(name="Numaralı parçalar", source=source,
+            groups=[found.matches[i].members for i in reviewed_indices],
+            text_to_attributes=True)
+review = cad.blocks.convert.plan(doc, **args)
+for m in review.mapping:
+    print(m.from_, m.insert, m.attribute if m.attribute else m.path)
+# Kullanıcı kabul ettiğinde:
+done = cad.blocks.convert(doc, **args, expected_revision=review.revision)
+```
+
+Metin eşlemesinde `attribute="TEXT_1", path=[]` vardır: öznitelik değeri
+normal SubRef yaprağı değildir. Özniteliğe dönüştürülen yazıya bağlı ölçü
+bu nedenle reddedilir. Mevcut iç geometrinin ölçü yollarına yeni parça yolu
+eklenir ve dünya noktası tekrar denetlenir. Aynı örnek `doc.start` ile iş,
+MCP ile `op=plan`/korunan `expected.plan` olarak kullanılabilir.
+[Karar ve kesin sınırlar](../adr/0881-repeat-text-values-and-nested-blocks.md).
+
+
+## Dönük/eğik ızgara
+
+Bloklar → Dizileri bul → **Dönük/eğik ızgara** iki gözlenmiş düzenli ekseni
+arar. Dünya X/Y ızgarası ayrı seçenek olarak kalır. Aday kartı iki yönü,
+aralıkları, satır/sütun sayısını, eksik/korunan hücreleri açıkça gösterir.
+Yönler nesneleri döndürmez. İnceleme ve açık Uygula öncesi belge değişmez.
+En az iki satır, iki sütun, dört dolu yer, her eksende komşu dolu çift ve
+bir dolu sınır köşesi gerekir; görünmeyen yarım aralık varsayılmaz.
+
+```python
+found = cad.arrays.find(doc, source=uid, kind=cad.ArrayFindKind.LATTICE)
+p = found.matches[0].adoption
+# İnceleme için tipli alanları kullanın:
+args = dict(source=p.source, layout=p.layout, items=p.items,
+            tolerance=p.tolerance, expected_revision=p.expected_revision)
+plan = cad.arrays.adopt.plan(doc, **args)
+# Kullanıcı onayından sonra:
+result = cad.arrays.adopt(doc, **args)
+```
+
+`LatticeArrayLayout(rows=3, cols=4, dx=2, dy=3, column_angle=23,
+row_angle=81)` API'de metre/derecedir; JSON alanları `columnAngle` ve
+`rowAngle` olur. `cad.arrays.edit` satır/sütun kimliklerini korur. GUI'de
+Diziyi düzenle içindeki **Sütun yönü** / **Satır yönü** derece kabul eder;
+uzunluk birimli açı reddedilir. MCP aynı katalog, plan ve revision kapısını
+kullanır. Uzun arama durdurulabilir; 32 768 gözlenen çift, 96 eksen vektörü,
+2 milyon iş veya sonuç sınırında `truncated` açıkça bildirilir. Kesin kabul
+her zaman özgün mutlak toleransta yapılır; tam açıklık uyarlaması toleransı
+gevşetmez. Dosya 161 gerektirir; eski yazılım sessizce yanlış açmaz.

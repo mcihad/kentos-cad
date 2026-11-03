@@ -300,7 +300,7 @@ def settings(s):
                 "workspace": (enum(("hybrid", "cad", "gis", "plan3d", "disaster")), False),
                 # Schema 135 (docs/adr/0801): what a CAD project is drawn for.
                 "cadWork": (enum(("architecture", "map", "road")), False),
-                # Schema 161 (plan/road.md Y2.2): a road project's terrain surfaces' definitions, as their JSON.
+                # Schema 162 (plan/road.md Y2.2): a road project's terrain surfaces' definitions, as their JSON.
                 "road": (opaque, False),
                 "drawingFont": (enum(("barlow", "arimo", "overpass", "quicksand", "architects-daughter", "courier-prime", "plex-mono")), False),
                 # Schema 50 (docs/adr/0262 §1): inches and feet too, written only in schema 50.
@@ -2206,6 +2206,8 @@ def assoc_arrays(arrs):
         out = {"kind": text(kind)}
         if kind == "grid":
             out.update(rows=uint(lay["rows"]), cols=uint(lay["cols"]), dx=f64(lay["dx"]), dy=f64(lay["dy"]))
+        elif kind == "lattice":
+            out.update(rows=uint(lay["rows"]),cols=uint(lay["cols"]),dx=f64(lay["dx"]),dy=f64(lay["dy"]),columnAngle=f64(lay["columnAngle"]),rowAngle=f64(lay["rowAngle"]))
         elif kind == "polar":
             out.update(center=point(lay["center"]), count=uint(lay["count"]), fill=f64(lay["fill"]), rotate=boolean(lay["rotate"]))
         elif kind == "line":
@@ -2350,6 +2352,8 @@ def document(d):
     has_sets = 114 if any("edge" in item for item in sets) else bool(sets)
     assert d.get("casework", [None]), "boş mutfak dizisi listesi yazılmaz"
     schema = schema_of(d["entities"], d.get("blocks"), d["layers"], d["settings"], "sheets" in d, "requests" in d, "arrays" in d, "constraints" in d, has_sets)
+    if any(a["layout"]["kind"] == "lattice" for a in d.get("arrays", [])):
+        schema = max(schema, 161)
     if any(b.get("card", {}).get("publication") is not None for b in d.get("blocks", [])):
         schema = max(schema, 158)
     if any(b.get("dynamic", {}).get("parameterGroups") for b in d.get("blocks", [])):
@@ -2396,7 +2400,7 @@ def document(d):
         schema = max(schema, 135)
     if d["settings"].get("cadWork") == "road":
         # A road project's work (plan/road.md Y1.1).
-        schema = max(schema, 161)
+        schema = max(schema, 162)
 
     def indexed(nodes):
         return any(n.get("indexes") or indexed(n.get("children", [])) for n in nodes)
@@ -3267,7 +3271,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-162.kcad"] = container(root(cmap(parts), version=uint(162)))
+    files["schema-version-163.kcad"] = container(root(cmap(parts), version=uint(163)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4826,6 +4830,18 @@ def build():
     out["subref-extras.kcad"] = container(document(load("subref-extras.json")))
     out["views.kcad"] = container(document(load("views.json")))
     out["arrays.kcad"] = container(document(load("arrays.json")))
+    lattice=load("arrays-lattice.json")
+    payload=document(lattice)
+    out["arrays-lattice.kcad"]=container(payload)
+    assert payload.count(b"\x67version\x18\xa1")==1
+    out["broken/lattice-in-schema-160.kcad"]=container(payload.replace(b"\x67version\x18\xa1",b"\x67version\x18\xa0"))
+    assert payload.count(b"\x67lattice")==1
+    out["broken/lattice-angles-on-grid.kcad"]=container(payload.replace(b"\x67lattice",b"\x64grid"))
+    bad=copy.deepcopy(lattice);bad["arrays"][0]["layout"]["rowAngle"]=23.
+    out["broken/lattice-parallel-axes.kcad"]=container(document(bad))
+    bad=copy.deepcopy(lattice);bad["arrays"][0]["layout"]["dy"]=0.
+    out["broken/lattice-zero-row-gap.kcad"]=container(document(bad))
+
     # The associative arrays are schema 53's (docs/adr/0300 §1): in schema 52 an unknown field; an unknown block, items not
     # one per place, an insert in two items or not in the drawing, a scale of zero refused.
     def arrays_broken(change):
@@ -5554,26 +5570,26 @@ def build():
     untyped = copy.deepcopy(worked)
     del untyped["settings"]["workspace"]
     out["broken/cad-work-no-type.kcad"] = container(document(untyped))
-    # Schema 161 (plan/road.md Y1.1): a road project, KentOS Yol's; schema 160 refuses the work.
+    # Schema 162 (plan/road.md Y1.1): a road project, KentOS Yol's; schema 161 refuses the work.
     rd = document(load("road-work.json"))
-    assert rd.count(b"\x67version\x18\xa1") == 1, "the road work is schema 161"
+    assert rd.count(b"\x67version\x18\xa2") == 1, "the road work is schema 162"
     out["road-work.kcad"] = container(rd)
     # The work alone: the surfaces would be refused first (their key sorts before `cadWork`).
     bare = load("road-work.json")
     del bare["settings"]["road"]
-    out["broken/road-work-in-schema-160.kcad"] = container(
-        document(bare).replace(b"\x67version\x18\xa1", b"\x67version\x18\xa0"))
-    # Schema 161 (plan/road.md Y2.2): the terrain surfaces are a road project's only; a map project's are refused.
+    out["broken/road-work-in-schema-161.kcad"] = container(
+        document(bare).replace(b"\x67version\x18\xa2", b"\x67version\x18\xa1"))
+    # Schema 162 (plan/road.md Y2.2): the terrain surfaces are a road project's only; a map project's are refused.
     mp = load("road-work.json")
     mp["settings"]["cadWork"] = "map"
     mpd = document(mp)
     assert mpd.count(b"\x67version\x18\x87") == 1, "a map project with a road's settings would be schema 135"
-    out["broken/road-settings-of-a-map-project.kcad"] = container(mpd.replace(b"\x67version\x18\x87", b"\x67version\x18\xa1"))
-    # Schema 161 (plan/road.md Y4, docs/adr/0902): a profile lies on an alignment of its own PIs, not a parallel axis.
+    out["broken/road-settings-of-a-map-project.kcad"] = container(mpd.replace(b"\x67version\x18\x87", b"\x67version\x18\xa2"))
+    # Schema 162 (plan/road.md Y4, docs/adr/0902): a profile lies on an alignment of its own PIs, not a parallel axis.
     onp = load("road-work.json")
     onp["settings"]["road"]["profiles"][0]["alignment"] = "g-2"
     out["broken/road-profile-on-parallel-axis.kcad"] = container(document(onp))
-    # Schema 161 (plan/road.md Y5, docs/adr/0903): a sample line set lies on an alignment of its own PIs and names a
+    # Schema 162 (plan/road.md Y5, docs/adr/0903): a sample line set lies on an alignment of its own PIs and names a
     # template of the project.
     snp = load("road-work.json")
     snp["settings"]["road"]["sections"][1]["alignment"] = "g-2"
@@ -5581,53 +5597,53 @@ def build():
     sut = load("road-work.json")
     sut["settings"]["road"]["sections"][0]["template"] = "tk-yok"
     out["broken/road-section-unknown-template.kcad"] = container(document(sut))
-    # Schema 161 (plan/road.md Y6, docs/adr/0904): a superelevation schedule lies on an alignment of its own PIs.
+    # Schema 162 (plan/road.md Y6, docs/adr/0904): a superelevation schedule lies on an alignment of its own PIs.
     sup = load("road-work.json")
     sup["settings"]["road"]["superelevations"][1]["alignment"] = "g-2"
     out["broken/road-superelevation-on-parallel-axis.kcad"] = container(document(sup))
-    # Schema 161 (plan/road.md Y7, docs/adr/0905): a corridor lies on an alignment of its own PIs.
+    # Schema 162 (plan/road.md Y7, docs/adr/0905): a corridor lies on an alignment of its own PIs.
     cor = load("road-work.json")
     cor["settings"]["road"]["corridors"][0]["alignment"] = "g-2"
     out["broken/road-corridor-on-parallel-axis.kcad"] = container(document(cor))
-    # Schema 161 (plan/road.md Y8, docs/adr/0906): an earthwork volume names a corridor of the project.
+    # Schema 162 (plan/road.md Y8, docs/adr/0906): an earthwork volume names a corridor of the project.
     vol = load("road-work.json")
     vol["settings"]["road"]["volumes"][0]["corridor"] = "c-yok"
     out["broken/road-volume-unknown-corridor.kcad"] = container(document(vol))
-    # Schema 161 (plan/road.md Y8, docs/adr/0906 §5): an approval's day is YYYY-MM-DD.
+    # Schema 162 (plan/road.md Y8, docs/adr/0906 §5): an approval's day is YYYY-MM-DD.
     apv = load("road-work.json")
     apv["settings"]["road"]["volumes"][1]["approved"]["at"] = "3 Kasım 2026"
     out["broken/road-volume-bad-approval-day.kcad"] = container(document(apv))
-    # Schema 161 (plan/road.md Y13, docs/adr/0911 §1): a road drawing's stamps are 16 hex digits.
+    # Schema 162 (plan/road.md Y13, docs/adr/0911 §1): a road drawing's stamps are 16 hex digits.
     drw = load("road-work.json")
     drw["settings"]["road"]["drawings"][0]["sources"][0]["digest"] = "0F1E2D3C4B5A6978"
     out["broken/road-drawing-bad-stamp.kcad"] = container(document(drw))
-    # Schema 161 (plan/road.md Y9, docs/adr/0907): a mass haul diagram names an earthwork volume of the project.
+    # Schema 162 (plan/road.md Y9, docs/adr/0907): a mass haul diagram names an earthwork volume of the project.
     hau = load("road-work.json")
     hau["settings"]["road"]["hauls"][0]["volume"] = "v-yok"
     out["broken/road-haul-unknown-volume.kcad"] = container(document(hau))
-    # Schema 161 (plan/road.md Y10.5, docs/adr/0908 §10): a sheet set lies on an alignment built from its PIs.
+    # Schema 162 (plan/road.md Y10.5, docs/adr/0908 §10): a sheet set lies on an alignment built from its PIs.
     sst = load("road-work.json")
     sst["settings"]["road"]["sheetSets"][0]["alignment"] = "g-2"
     sst["settings"]["road"]["sheetSets"][0].pop("profile")
     sst["settings"]["road"]["sheetSets"][0].pop("profileRevision")
     out["broken/road-sheet-set-on-parallel-axis.kcad"] = container(document(sst))
-    # Schema 161 (plan/road.md Y11.1, docs/adr/0909 §1): a guardrail names a corridor of the project.
+    # Schema 162 (plan/road.md Y11.1, docs/adr/0909 §1): a guardrail names a corridor of the project.
     grd = load("road-work.json")
     grd["settings"]["road"]["guardrails"][0]["corridor"] = "c-yok"
     out["broken/road-guardrail-unknown-corridor.kcad"] = container(document(grd))
-    # Schema 161 (plan/road.md Y11.2, docs/adr/0909 §2): a culvert's skew is within ±90°.
+    # Schema 162 (plan/road.md Y11.2, docs/adr/0909 §2): a culvert's skew is within ±90°.
     clv = load("road-work.json")
     clv["settings"]["road"]["culverts"][0]["skew"] = 90.0
     out["broken/road-culvert-right-angle.kcad"] = container(document(clv))
-    # Schema 161 (plan/road.md Y11.3, docs/adr/0909 §3): a retaining wall's toe and stem fit its footing.
+    # Schema 162 (plan/road.md Y11.3, docs/adr/0909 §3): a retaining wall's toe and stem fit its footing.
     wal = load("road-work.json")
     wal["settings"]["road"]["walls"][0]["shape"]["toe"] = 3.0
     out["broken/road-wall-toe-past-footing.kcad"] = container(document(wal))
-    # Schema 161 (plan/road.md Y11.4, docs/adr/0909 §4): a pay rule names an item of the book.
+    # Schema 162 (plan/road.md Y11.4, docs/adr/0909 §4): a pay rule names an item of the book.
     pay = load("road-work.json")
     pay["settings"]["road"]["pay"]["rules"][0]["item"] = "Z-9"
     out["broken/road-pay-rule-unknown-item.kcad"] = container(document(pay))
-    # Schema 161 (plan/road.md Y12.2, docs/adr/0910 §2): a junction's legs are alignments of their PIs.
+    # Schema 162 (plan/road.md Y12.2, docs/adr/0910 §2): a junction's legs are alignments of their PIs.
     jun = load("road-work.json")
     jun["settings"]["road"]["junctions"][0]["legs"][1]["alignment"] = "g-2"
     out["broken/road-junction-on-parallel-axis.kcad"] = container(document(jun))

@@ -1406,6 +1406,7 @@ __all__ = [
     "LandxmlSurfaceWritten",
     "LatePolicy",
     "LatePolicyName",
+    "LatticeArrayLayout",
     "LayerAction",
     "LayerCompose",
     "LayerDerivation",

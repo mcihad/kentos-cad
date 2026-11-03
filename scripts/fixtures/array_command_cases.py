@@ -695,6 +695,14 @@ def compact(v):
     return json.dumps(v, ensure_ascii=False, separators=(", ", ": "))
 
 
+# Directed grid independent quadrant-axis oracle: columns north, rows west.
+lattice = dict(kind="lattice", rows=2, cols=3, dx=2, dy=3, columnAngle=90, rowAngle=180)
+made = copies([10], [translation(-r*3, c*2) for r in range(2) for c in range(3) if r or c])
+cases.append(dict(name="Lattice: bağımsız 90/180 derece eksenler, nesne yönü sabit ve tek Undo",
+    steps=[dict(op="execute",input=dict(uids=[U(10)],layout=lattice),result=done(made),expect=written(made)),
+           dict(op="undo",returns="Dizi",expect=dict(ids=IDS,canUndo=False,canRedo=True)),
+           dict(op="redo",returns="Dizi",expect=dict(ids=IDS+[s for s,_ in made],canUndo=True,canRedo=False))]))
+
 def write(command, title, note, cases):
     fixture = {"format": "kentos.command-cases", "version": 1, "command": command, "commandVersion": 1, "title": title, "note": note, "setup": SETUP, "cases": cases}
     out = ["{"]

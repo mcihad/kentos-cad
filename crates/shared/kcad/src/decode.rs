@@ -296,7 +296,7 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
     map(r, |r, key| {
         match key {
             "name" => name = Some(text(r)?),
-            "arrays" if has.arrays => arrays_ = Some(arrays::arrays(r)?),
+            "arrays" if has.arrays => arrays_ = Some(arrays::arrays(r,schema)?),
             "blocks" if has.blocks => blocks = Some(blocks::definitions(r, has)?),
             "layers" => layers = Some(list(r, |r, _| layer(r, has))?),
             "origin" => origin = Some(point(r)?),

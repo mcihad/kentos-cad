@@ -151,10 +151,22 @@ fn the_readers_errors_name_their_places() {
             "arrays/0/items/2/uid",
         ),
         ("broken/arrays-scale-zero.kcad", Code::BadValue, "ölçeği"),
-        ("broken/schema-version-162.kcad", Code::SchemaVersion, ""),
+        ("broken/schema-version-163.kcad", Code::SchemaVersion, ""),
     ] {
         let err = kentos_kcad::decode(&read(file)).expect_err(file);
         assert_eq!(err.code, code, "{file}: {err}");
         assert!(err.message.contains(place), "{file}: {err}");
+    }
+}
+
+
+#[test]
+fn directed_axes_use_schema_161_without_changing_old_grid_bytes() {
+    let doc=content("arrays-lattice.json");let bytes=read("arrays-lattice.kcad");
+    assert_eq!(schema(&bytes),161);assert_eq!(kentos_kcad::decode(&bytes).unwrap(),doc);
+    assert_eq!(kentos_kcad::encode_verified(&doc).unwrap(),bytes);
+    let old=read("arrays.kcad");assert_eq!(kentos_kcad::encode_verified(&kentos_kcad::decode(&old).unwrap()).unwrap(),old);
+    for file in ["lattice-in-schema-160","lattice-angles-on-grid","lattice-parallel-axes","lattice-zero-row-gap"] {
+        assert_eq!(kentos_kcad::decode(&read(&format!("broken/{file}.kcad"))).unwrap_err().code,Code::BadValue,"{file}");
     }
 }

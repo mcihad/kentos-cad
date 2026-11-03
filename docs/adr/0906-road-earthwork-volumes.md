@@ -67,7 +67,7 @@ alanları ve örtülmeyen alan; hacmi olmayan aralıklar). Prizmoidalin orta kes
 kurulan arazi ızgarasıyla (`volume::Ground`) ölçer. Kübajın kullandığı koridor silinmez (`corridor_in_use`). Katsayı
 satırı aralığın ortasını içeren satırdır (son satırın sonu dahil); katsayısız aralıkta düzeltilmiş hacim ham hacimdir
 ve `volume_unfactored` uyarısı verilir. 30 + 22 ortak durum (`road_volume_command_cases.py`: yüzeyler arası hacim
-`road_volume_cases.py`'nin kesirli bindirmesiyle şerit şerit); `.kcad` şema 161'in `volumes`'ı ve bozuk örneği; Python,
+`road_volume_cases.py`'nin kesirli bindirmesiyle şerit şerit); `.kcad` şema 162'in `volumes`'ı ve bozuk örneği; Python,
 MCP. Yolda bulunan: koridorun şerit üçgenlemesi eşit köşegenlerde (dikdörtgen) yuvarlamaya göre farklı köşegen
 seçiyordu; eşitlik artık 1 nm içinde (`corridor::SAME_DIAGONAL`, ADR 0905 §5) ve iki tarafta aynı.
 
@@ -79,7 +79,7 @@ toplamlar, kütle ordinatı ve toplam satırı) ADR 0223'ün yazıcısıyla Exce
 Sıyırma, diş kazısı, onay ve fark sonraki aşamadır (Y8.4).
 
 Y8.4: §6. Çekirdekte `section::template::earthwork` (indirilmiş zemine göre kazı ve dolgu, bitkisel toprak, diş
-kazısı); kübajın `strip` ve `bench`'i (`.kcad` şema 161), satırda ve toplamda hacimleri, cetvelde sütunları; pencerede
+kazısı); kübajın `strip` ve `bench`'i (`.kcad` şema 162), satırda ve toplamda hacimleri, cetvelde sütunları; pencerede
 Sıyırma tablosu ve Diş kazısı alanları. 37 + 28 ortak durum (`road_volume_command_cases.py`: kesitin kendisi enkesit
 başvurusundan, toprak işi kesirlerle). Onay ve fark Y8.5'tedir.
 
@@ -89,7 +89,7 @@ Y8.5: §5'in onayı ve farkı. `road.volumes.approve` (onay: bugünkü toplamlar
 değişebilir: `.query` raporun `approval`'ında onaylı hâli, toplamların farkını ve değişen (1 cm³'ten çok), eklenen ya da
 kalkan aralıkları verir, `volume_changed` uyarısıyla; istasyonlar 1e-6 m içinde eşleşir. Gün girdinin açık alanıdır
 (komut saati okumaz); masaüstü cihazın bugününü verir. Kübaj penceresinde Onayla, Onayı kaldır ve en üstte onay
-durumu. 39 + 31 + 20 ortak durum; `.kcad` şema 161'in `approved`'ı ve bozuk günü; Python, MCP.
+durumu. 39 + 31 + 20 ortak durum; `.kcad` şema 162'in `approved`'ı ve bozuk günü; Python, MCP.
 
 ## Sonra
 

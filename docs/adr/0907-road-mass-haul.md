@@ -58,7 +58,7 @@ taşıma, dengesiz hacim, toplamlar, döküm ve ödünç; `points` ile kütle e�
 başında 0, her aralığın sonunda kütle ordinatı, aralıklar arasında düz; ödünç ve döküm alanları km sırasıyla basamak
 (aynı km'de verildikleri sırayla), kübajın km'leri dışındaki alan `invalid_haul`. Bir Brüknerin kullandığı kübaj
 silinmez (`volume_in_use`). Uyarılar kübajın `corridor_stale`, `volume_gap`'i ve `haul_unbalanced`. Taşıma momentinin
-birimi `volume-m` (m³·m). 28 + 22 ortak durum (`road_haul_command_cases.py`); `.kcad` şema 161'in `hauls`'u ve bozuk
+birimi `volume-m` (m³·m). 28 + 22 ortak durum (`road_haul_command_cases.py`); `.kcad` şema 162'in `hauls`'u ve bozuk
 örneği; Python, MCP.
 
 Y9.3 (yapıldı): Brükner penceresi (`haul_window.rs`; `haul.editor`, `haul.new`; Koridor sekmesinde Brükner paneli):
@@ -72,7 +72,7 @@ bunları kendi birimleriyle verir: fazla taşıma = fazla taşıma momenti/1000 
 ödünç hacmi × fiyat, toplam fiyatı verilenlerin toplamı; kamyon seferi = ⌈(dengelenen + döküm + ödünç)/yük⌉ (yuvarlama
 payı 1e-9). Hiçbir fiyat öntanımlı değil, verilmeyen kalem toplama girmez; rapor okumanın yöntemini (`method: layers`)
 söyler. `road.hauls.edit`'in `cost`'u (null kaldırır), `money`, `money/volume`, `money/volume-km` birimleri; 34 + 26 ortak
-durum, `.kcad` şema 161'in `cost`'u, Python, MCP. Pencerede Para birimi, üç fiyat ve Kamyon yükü; maliyet satırı
+durum, `.kcad` şema 162'in `cost`'u, Python, MCP. Pencerede Para birimi, üç fiyat ve Kamyon yükü; maliyet satırı
 toplamların altında. Karbon katsayısı ve en düşük maliyetli akışla taşıma planı açık.
 
 ## Sonra
