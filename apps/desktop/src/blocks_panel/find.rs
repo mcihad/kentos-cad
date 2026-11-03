@@ -20,6 +20,8 @@ use std::sync::{
     atomic::{AtomicBool, AtomicU64, Ordering},
 };
 
+mod convert;
+
 pub(crate) const TITLE: &str = "Tekrarlanan bileşenleri bul";
 static NEXT: AtomicU64 = AtomicU64::new(1);
 
@@ -44,6 +46,7 @@ pub(super) struct Window {
     chosen: Vec<bool>,
     warnings: Vec<String>,
     refused: Option<String>,
+    conversion: Option<convert::Window>,
 }
 impl Drop for Window {
     fn drop(&mut self) {
@@ -54,6 +57,8 @@ impl Drop for Window {
 #[derive(Clone, Debug)]
 pub enum Event {
     Settings,
+    Convert,
+    Conversion(convert::Event),
     NewSource,
     Run,
     Stop,
@@ -170,10 +175,12 @@ impl App {
             chosen: Vec::new(),
             warnings: Vec::new(),
             refused: None,
+            conversion: None,
         });
         self.dialog = Some(Dialog::BlockFind);
     }
     pub(crate) fn block_find_close_options(&mut self) {
+        if let Some(w) = self.blocks_panel.find.as_mut() { w.conversion = None; }
         self.dialog = None;
         if let Some(w) = self.blocks_panel.find.as_mut()
             && let Some((rotations, mirrors, scales, strict, hidden, tolerance)) =
@@ -245,6 +252,8 @@ impl App {
     }
     pub(super) fn block_find_event(&mut self, e: Event) -> Task<Message> {
         match e {
+            Event::Convert => return self.block_convert_open(),
+            Event::Conversion(e) => return self.block_convert_event(e),
             Event::Back => self.close_block_find(),
             Event::CloseOptions => self.block_find_close_options(),
             Event::NewSource => {
@@ -365,6 +374,7 @@ impl App {
         Task::none()
     }
     pub(crate) fn block_find_view(&self) -> Element<'_, Message> {
+        if self.blocks_panel.find.as_ref().is_some_and(|w| w.conversion.is_some()) { return self.block_convert_view(); }
         let Some(w) = &self.blocks_panel.find else {
             return text("").into();
         };
@@ -418,6 +428,7 @@ impl App {
         let Some(w) = &self.blocks_panel.find else {
             return Ok(None);
         };
+        if w.conversion.is_some() { return self.block_convert_control(control); }
         let e = match control {
             Control::Press("Vazgeç") => Event::CloseOptions,
             Control::Press("Bul")
@@ -627,10 +638,13 @@ fn panel_at_height(app: &App, height: f32) -> Element<'_, Message> {
         column![
             head,
             list,
-            button(label::body(format!("{chosen} adayı sahnede seç")))
-                .on_press_maybe((current && chosen > 0).then(|| msg(Event::Select)))
-                .padding(kentos_ui::theme::metrics::action())
-                .style(style::button::primary)
+            row![
+                button(label::body(format!("Göster ({chosen})")))
+                    .on_press_maybe((current && chosen > 0).then(|| msg(Event::Select)))
+                    .padding(kentos_ui::theme::metrics::action())
+                    .style(style::button::secondary),
+                words::primary("Bloğa dönüştür…", (current && chosen > 0).then(|| msg(Event::Convert)))
+            ].spacing(6).align_y(iced::Center)
         ]
         .spacing(8)
         .height(Fill),
@@ -646,7 +660,7 @@ mod tests {
     use super::*;
     use kentos_domain::Slot;
 
-    fn test_app() -> App {
+    pub(super) fn test_app() -> App {
         let fixture: serde_json::Value = serde_json::from_str(include_str!(
             "../../../../fixtures/commands/v1/cad.blocks.find.json"
         ))
@@ -662,7 +676,7 @@ mod tests {
         app.selection.set([Slot(1)]);
         app
     }
-    fn complete(app: &mut App) {
+    pub(super) fn complete(app: &mut App) {
         let _ = app.block_find_event(Event::Run);
         assert_eq!(app.dialog, None, "results leave the canvas interactive");
         let w = app.blocks_panel.find.as_ref().unwrap();

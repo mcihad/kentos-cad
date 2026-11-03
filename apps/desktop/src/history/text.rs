@@ -11,7 +11,7 @@ const INPUT_WIDTH: usize = 240;
 
 /// The product commands' Turkish titles, the catalog's (`commandCatalog.json`;
 /// a test holds them to it).
-pub(crate) const TITLES: [(&str, &str); 298] = [
+pub(crate) const TITLES: [(&str, &str); 299] = [
     ("cad.polygon.create", "Kapalı alan oluştur"),
     ("cad.line.create", "Çizgi oluştur"),
     ("cad.polyline.create", "Çoklu çizgi oluştur"),
@@ -154,6 +154,7 @@ pub(crate) const TITLES: [(&str, &str); 298] = [
     ("cad.entities.create", "Nesneleri ekle"),
     ("cad.entities.set", "Nesnelerin özelliklerini değiştir"),
     ("cad.blocks.find", "Tekrarlanan bileşenleri bul"),
+    ("cad.blocks.convert", "Tekrarları bloğa dönüştür"),
     ("cad.blocks.define", "Blok tanımla"),
     ("cad.blocks.edit", "Blok tanımını değiştir"),
     ("file.import.block", "Dosyadan blok al"),
@@ -577,6 +578,30 @@ fn label(key: &str) -> String {
 
 /// The input in words: “Katman: «Yapı» · Merkez: 487020, 4420015 · Yarıçap: 7.5”;
 /// the nesting said once, absent and empty fields left out, cut at its width.
+pub(crate) fn inputs_for(
+    command: Option<&str>,
+    input: &Value,
+    layer: &dyn Fn(&str) -> Option<String>,
+) -> String {
+    if command == Some(kentos_commands::CAD_BLOCKS_CONVERT)
+        && let Ok(i) = serde_json::from_value::<kentos_commands::BlocksConvert>(input.clone())
+    {
+        // This command's tolerance is metres, independent of the project's display unit.
+        // Keep significant digits: the generic four-decimal summary made 0.001 mm say 0.
+        let mm = (i.tolerance.unwrap_or(kentos_commands::RECOGNITION_TOLERANCE) * 1000.)
+            .to_string()
+            .replace('.', ",");
+        let name = value("name", &Value::String(i.name), layer, false);
+        let on = |b| if b { "evet" } else { "hayır" };
+        return format!(
+            "Ad: {name} · {} aday · Kaynak: {} parça · Tolerans: {mm} mm · Döndürme: {} · Aynalama: {} · Farklı boyut: {}",
+            i.groups.len(), i.source.len(), on(i.rotations.unwrap_or(true)),
+            on(i.mirrors.unwrap_or(false)), on(i.scales.unwrap_or(false))
+        );
+    }
+    inputs(input, layer)
+}
+
 pub(crate) fn inputs(input: &Value, layer: &dyn Fn(&str) -> Option<String>) -> String {
     let Some(map) = input.as_object() else {
         return String::new();
@@ -750,6 +775,22 @@ mod tests {
             ),
             "Kapalı: evet · Noktalar: 3 nokta"
         );
+    }
+
+    #[test]
+    fn repeat_conversion_history_names_millimetres_without_rounding_a_positive_tolerance_to_zero() {
+        let mut input = json!({"name":"Yaylı tekrar", "source":["source"],
+            "groups":[["source"],["other"]],"mirrors":true});
+        let before = input.clone();
+        let said = inputs_for(Some(kentos_commands::CAD_BLOCKS_CONVERT), &input, &|_| None);
+        assert!(said.contains("2 aday · Kaynak: 1 parça · Tolerans: 0,001 mm"), "{said}");
+        assert!(said.contains("Döndürme: evet · Aynalama: evet · Farklı boyut: hayır"));
+        assert_eq!(input, before, "only the readable summary changes; replay keeps model metres");
+        input["tolerance"] = json!(1e-12);
+        let said = inputs_for(Some(kentos_commands::CAD_BLOCKS_CONVERT), &input, &|_| None);
+        assert!(said.contains("Tolerans: 0,000000001 mm"), "{said}");
+        assert_eq!(inputs_for(Some("cad.circle.create"), &input, &|_| None),
+            inputs(&input, &|_| None), "other commands keep their existing summary");
     }
 
     #[test]

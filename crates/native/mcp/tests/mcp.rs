@@ -4531,3 +4531,38 @@ fn guarded_common_block_values_save_and_undo_without_writing_instance_overrides(
     assert_eq!(std::fs::read(&path).unwrap(), before);
     std::fs::remove_dir_all(dir).unwrap();
 }
+
+#[test]
+fn chosen_repeat_conversion_preserves_dimension_identity_and_a_guarded_single_undo_for_agents() {
+    let dir=std::env::temp_dir().join(format!("kentos-mcp-repeat-convert-{}",std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();let source=dir.join("source.kcad");let after=dir.join("after.kcad");
+    let mut server=Server::new();
+    let made=call(&mut server,"drawing.new",json!({"workspace":"cad","drawingUnit":"mm"}))["structuredContent"].clone();
+    let drawing=made["drawing"].clone();let layer=made["summary"]["activeLayer"].clone();
+    let mut ids=Vec::new();
+    for (a,b) in [(0.,2.),(12.,10.)] {
+        let line=call(&mut server,"cad.line.create",json!({"drawing":drawing,"layerId":layer,"a":{"x":a,"y":0.},"b":{"x":b,"y":0.}}))["structuredContent"].clone();
+        assert_eq!(line["status"],"completed","{line}");ids.push(line["output"]["uid"].clone());
+    }
+    let dim=call(&mut server,"cad.entities.create",json!({"drawing":drawing,"layerId":layer,"objects":[{"geometry":{"kind":"dimension","a":{"x":12.,"y":0.},"b":{"x":15.,"y":1.},"offset":1.,"height":0.1}}]}))["structuredContent"].clone();
+    assert_eq!(dim["status"],"completed","{dim}");let dim=dim["output"]["created"][0].clone();
+    let bound=call(&mut server,"cad.dimensions.reassociate",json!({"drawing":drawing,"uid":dim,"points":[{"point":"a","to":{"uid":ids[1],"place":{"kind":"start"}}}]}))["structuredContent"].clone();
+    assert_eq!(bound["status"],"completed","{bound}");
+    call(&mut server,"drawing.save",json!({"drawing":drawing,"path":source}));let before=std::fs::read(&source).unwrap();
+    let mut input=json!({"drawing":drawing,"name":"Tekrar","source":[ids[0]],"groups":[[ids[0]],[ids[1]]],"rotations":false,"op":"plan"});
+    let plan=call(&mut server,"cad.blocks.convert",input.clone())["structuredContent"].clone();
+    assert_eq!(plan["status"],"completed","{plan}");assert_eq!(plan["output"]["mapping"].as_array().unwrap().len(),2);
+    assert_eq!(plan["output"]["dimensions"][0]["after"]["path"],json!([0]));
+    assert_eq!(plan["output"]["dimensions"][0]["after"]["place"]["kind"],"end");
+    call(&mut server,"drawing.save",json!({"drawing":drawing,"path":source}));assert_eq!(std::fs::read(&source).unwrap(),before);
+    input["op"]=json!("execute");input["expected"]=json!({"plan":plan["planId"]});
+    let written=call(&mut server,"cad.blocks.convert",input)["structuredContent"].clone();assert_eq!(written["status"],"completed","{written}");
+    assert_eq!(written["output"]["mapping"],plan["output"]["mapping"]);
+    let records=call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"].clone();
+    for uid in &ids {assert!(records.as_array().unwrap().iter().any(|r|r["uid"]==*uid && r["entity"]["kind"]=="insert"));}
+    let d=records.as_array().unwrap().iter().find(|r|r["uid"]==dim).unwrap();assert!(d["entity"]["refs"]["a"]["broken"].is_null());assert_eq!(d["entity"]["a"]["x"],12.);
+    call(&mut server,"drawing.save",json!({"drawing":drawing,"path":after}));let converted=std::fs::read(&after).unwrap();
+    call(&mut server,"drawing.undo",json!({"drawing":drawing}));call(&mut server,"drawing.save",json!({"drawing":drawing,"path":source}));assert_eq!(std::fs::read(&source).unwrap(),before);
+    call(&mut server,"drawing.redo",json!({"drawing":drawing}));call(&mut server,"drawing.save",json!({"drawing":drawing,"path":after}));assert_eq!(std::fs::read(&after).unwrap(),converted);
+    std::fs::remove_dir_all(dir).unwrap();
+}

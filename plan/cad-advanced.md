@@ -887,9 +887,11 @@ kimlik eşlemesi, bağlı ölçü ve tek Undo doğrulansın.
   Köşe yapısı sadeleştirilmez; bir çizgi 4 096, toplam kapsam 200 000 köşedir.
 - [ ] Kaynak türlerini metin/öznitelik varyantı, iç içe blok ve
   diğer üretim geometrilerine aynı doğruluk kapısıyla genişletme.
-- [ ] Seçili adayları bloklaştırma; eski UUID→yeni yerleştirme/alt nesne
-  eşlemesi, ilişkileri koruma veya kaybı önceden açıklayıp atomik ret,
-  gerçek GUI/Python/MCP ve tek Undo/Redo kabulü.
+- [x] İlk analitik kapsamda seçili adayları bloklaştırma; eski UUID→yeni
+  yerleştirme/alt nesne eşlemesi, sıradan ölçü bağlarını koruma ve desteklenmeyen
+  veri/görünüş/ilişkide gerekçeli atomik ret. Gerçek GUI/Python/MCP ve tek
+  Undo/Redo kabulü. Metin/öznitelik, iç blok ve diğer geometri/ilişki türleri
+  tamamlanmış sayılmaz; kaynak genişletme maddesi açık kalır (ADR 0871).
 - [ ] Grid/kutupsal/yol örüntüsünü mevcut `AssocArray` modeline benimsetme;
   iki eksik öğe, elle değişen öğe, koru/sil/reset ve sayı/aralık değişikliğinde
   bağların ve kimliklerin korunması. Bütün CAD-ADV-07 bu kabulden önce kapanmaz.
@@ -962,6 +964,45 @@ sonra kapanış yayının orta noktası (800,425) mm olarak bağlandı, canlı k
 ve blokla taşındı. Taşıma Undo, bağlama Undo ve Redo kayıtları ilgili başlangıç
 ve son dosyalarıyla bayt bayt aynıdır. Çizgi gerçekten açılınca yalnız kapanış
 kenarı bağının kopması Python testindedir. Genel dönüştürme işi açık kalır.
+
+**Seçilmiş aday dönüşümü — [ADR 0871](../docs/adr/0871-selected-repeat-conversion-and-topological-maps.md):**
+`cad.blocks.convert` ve Bloklar panelindeki **Bloğa dönüştür…**, yalnız işaretli
+adayları yeniden doğrulayıp tek blok tanımına geçirir. İnceleme; ad, aday/parça
+sayısı, kök→alt nesne eşlemesi, ölçü bağı ve gerçek nokta sapmasını açıklar.
+Her adayın ilk UUID/slot'u yerleştirme olarak korunur; kalan kökler tanımın
+parçalarına eşlenir. Döndürülmüş/aynalanmış yaylarda dünya geometrisi, ters ve
+döngüsel çoklu çizgide köşe/kenar topolojisi esas alınır. Belirsiz kenar,
+güncel olmayan ölçü noktası, türetilmiş ölçü kuralı, field/grup/tarama/dizi
+ve diğer taşınamayan ilişkiler sessizce koparılmaz. İlk kapsam aynı veri
+davranışsız CAD katmanındaki sürekli çizgili analitik nesnelerdir; öznitelik,
+kural tabanlı görünüş, kesikli çizgi fazı, araya başka nesne giren parça sırası
+ve tablo bulunan çizim gerekçeli ret alır. Daha geniş destek açık iştir.
+
+İnceleme/yazma arka plandadır; iptal ve değişen belge/geç sonuç koruması
+masaüstü testlerindedir. Kaynak 128, grup 1 000, ilişki denetimi yapılan çizim
+50 000 nesneyle sınırlıdır; eksik tarama doğrulanmış başarı sayılmaz.
+50 000 nesneli bağımsız kabul çiziminde 1 000 tek parçalı adayın dönüşümü
+bu makinenin debug derlemesinde yaklaşık 0,36 saniye sürdü; tek Undo başlangıç
+verisini tam geri getirdi. Bu ölçüm genel performans garantisi değildir.
+
+Gerçek arayüzde 40 yaylı/genişlikli adayın toplu dönüşümü ve yalnız bir adayın
+seçilmesi denendi. Diğer 39 aday tekli dönüşümde değişmedi; bütün kök UUID'leri
+korundu. Kaynak 2 000 mm ölçü canlı kaldı, fareyle taşınan blokla birlikte
+yer değiştirdi. Toplu/tekli dönüşümün Undo/Redo dosyaları ve taşıma Undo'su
+ilgili başlangıç/son dosyalarına bayt bayt eşittir. Boş ad, ad değiştirince
+yeniden inceleme, ayrıntı aç/kapat, Esc ile vazgeçme ve küçük pencerede büyük
+yazı kontrol edildi. Geçmişte komutun Türkçe adı ve toleransın metre girdi
+yerine okunur mm özeti bulunur; public Python tekrar girdisi değişmez.
+
+Çekirdeğin 610 birim ve 316 ana entegrasyon, uygulamanın 99 birim ve 378 ana
+entegrasyon, MCP ana yüzeyinin 69 ve Python'un 487 testi geçti; dönüşümün
+ortak komut dosyası 30 bağımsız durum içerir. Masaüstünün 1 632 testi 8 MiB
+test yığını/dört paralel iş ile geçti; önceki varsayılan turdaki yığın taşması
+ve GeoPackage yazma hatası gizlenmez. Son Geçmiş birim özeti değişikliğinde
+11 odak testi yeniden geçti. Derleme ve Clippy sonuçları teslim kaydında
+tutulur. Ekranlar, gerçek GUI dosyaları ve ayrıntılı kayıtlar depo dışındadır.
+İlişkili diziye benimsetme ve kaynak/ilişki genişletme tamamlanmadan
+CAD-ADV-07 bütünü kapatılmaz.
 
 ### CAD-ADV-08 — Sınır, tarama ve maskeyi hatasını açıklayabilen bir üretim sistemine getir [ ]
 

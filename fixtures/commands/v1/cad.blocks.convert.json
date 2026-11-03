@@ -1,0 +1,1683 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.blocks.convert",
+  "commandVersion": 1,
+  "title": "Tekrarları bloğa dönüştür",
+  "note": "Independent script; exact topology/relations and snapshot equality are tested in blocks_convert.rs.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Tekrar arama",
+    "settings": {
+      "srid": 0,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 50,
+      "workspace": "cad"
+    },
+    "origin": {
+      "x": 0,
+      "y": 0
+    },
+    "layers": [
+      {
+        "id": "a",
+        "name": "A",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.18
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "a",
+    "entities": [
+      {
+        "kind": "line",
+        "id": 1,
+        "layerId": "a",
+        "attrs": {},
+        "a": {
+          "x": 0,
+          "y": 0
+        },
+        "b": {
+          "x": 2,
+          "y": 0
+        }
+      },
+      {
+        "kind": "line",
+        "id": 2,
+        "layerId": "a",
+        "attrs": {},
+        "a": {
+          "x": 10,
+          "y": 0
+        },
+        "b": {
+          "x": 12,
+          "y": 0
+        }
+      },
+      {
+        "kind": "line",
+        "id": 3,
+        "layerId": "a",
+        "attrs": {
+          "TYPE": "B"
+        },
+        "a": {
+          "x": 20,
+          "y": 0
+        },
+        "b": {
+          "x": 22,
+          "y": 0
+        }
+      },
+      {
+        "kind": "point",
+        "id": 4,
+        "layerId": "a",
+        "attrs": {},
+        "p": {
+          "x": 30,
+          "y": 0
+        }
+      },
+      {
+        "kind": "polyline",
+        "id": 5,
+        "layerId": "a",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 40,
+            "y": 0
+          },
+          {
+            "x": 42,
+            "y": 0
+          },
+          {
+            "x": 41.5,
+            "y": 1
+          }
+        ],
+        "closed": true
+      },
+      {
+        "kind": "polyline",
+        "id": 6,
+        "layerId": "a",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 52,
+            "y": 0
+          },
+          {
+            "x": 50,
+            "y": 0
+          },
+          {
+            "x": 51.5,
+            "y": 1
+          }
+        ],
+        "closed": true
+      },
+      {
+        "kind": "polyline",
+        "id": 7,
+        "layerId": "a",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 60,
+            "y": 0
+          },
+          {
+            "x": 62,
+            "y": 0
+          },
+          {
+            "x": 61.5,
+            "y": 1
+          }
+        ],
+        "closed": false
+      },
+      {
+        "kind": "polyline",
+        "id": 8,
+        "layerId": "a",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 70,
+            "y": 0
+          },
+          {
+            "x": 72,
+            "y": 0
+          },
+          {
+            "x": 71.5,
+            "y": 1
+          }
+        ],
+        "closed": true,
+        "zs": [
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "cases": [
+    {
+      "name": "plan: iki seçilmiş eş; kök UUID ve yerel slotlar korunur",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "name": "Tekrar",
+            "source": [
+              "$uidOf:1"
+            ],
+            "groups": [
+              [
+                "$uidOf:1"
+              ],
+              [
+                "$uidOf:2"
+              ]
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "plan: kaynak dönüştürülmeden yalnız hedef seçilebilir",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "name": "Tekrar",
+            "source": [
+              "$uidOf:1"
+            ],
+            "groups": [
+              [
+                "$uidOf:2"
+              ]
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "plan: kapalı çoklu çizginin ters köşe sırası",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "name": "Kapalı",
+            "source": [
+              "$uidOf:5"
+            ],
+            "groups": [
+              [
+                "$uidOf:5"
+              ],
+              [
+                "$uidOf:6"
+              ]
+            ],
+            "rotations": false
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "execute: iki seçilmiş eş; kök UUID ve yerel slotlar korunur",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Tekrar",
+            "source": [
+              "$uidOf:1"
+            ],
+            "groups": [
+              [
+                "$uidOf:1"
+              ],
+              [
+                "$uidOf:2"
+              ]
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "execute: kaynak dönüştürülmeden yalnız hedef seçilebilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Tekrar",
+            "source": [
+              "$uidOf:1"
+            ],
+            "groups": [
+              [
+                "$uidOf:2"
+              ]
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "execute: kapalı çoklu çizginin ters köşe sırası",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Kapalı",
+            "source": [
+              "$uidOf:5"
+            ],
+            "groups": [
+              [
+                "$uidOf:5"
+              ],
+              [
+                "$uidOf:6"
+              ]
+            ],
+            "rotations": false
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "açık dönüşüm ölçütleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Tekrar",
+            "source": [
+              "$uidOf:1"
+            ],
+            "groups": [
+              [
+                "$uidOf:1"
+              ],
+              [
+                "$uidOf:2"
+              ]
+            ],
+            "rotations": false,
+            "mirrors": false,
+            "scales": false,
+            "tolerance": 1e-06
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "boş ad",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": " ",
+            "source": [
+              "$uidOf:1"
+            ],
+            "groups": [
+              [
+                "$uidOf:1"
+              ],
+              [
+                "$uidOf:2"
+              ]
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "empty_name",
+              "message": "$any",
+              "path": "name"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "seçim yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Tekrar",
+            "source": [
+              "$uidOf:1"
+            ],
+            "groups": []
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "recognition_conversion_refused",
+              "message": "$any",
+              "path": "groups"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kaynak yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Tekrar",
+            "source": [],
+            "groups": [
+              [
+                "$uidOf:1"
+              ],
+              [
+                "$uidOf:2"
+              ]
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "recognition_conversion_refused",
+              "message": "$any",
+              "path": "groups"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kaynak sınırı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Tekrar",
+            "source": [
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1",
+              "$uidOf:1"
+            ],
+            "groups": [
+              [
+                "$uidOf:1"
+              ],
+              [
+                "$uidOf:2"
+              ]
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "recognition_conversion_refused",
+              "message": "$any",
+              "path": "groups"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "aynı nesneyi paylaşan adaylar",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Tekrar",
+            "source": [
+              "$uidOf:1"
+            ],
+            "groups": [
+              [
+                "$uidOf:1"
+              ],
+              [
+                "$uidOf:1"
+              ]
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "recognition_conversion_refused",
+              "message": "$any",
+              "path": "groups[1]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "eksik aday",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Tekrar",
+            "source": [
+              "$uidOf:1"
+            ],
+            "groups": [
+              []
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "recognition_conversion_refused",
+              "message": "$any",
+              "path": "groups[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kaynak sayısından fazla üye",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Tekrar",
+            "source": [
+              "$uidOf:1"
+            ],
+            "groups": [
+              [
+                "$uidOf:1",
+                "$uidOf:2"
+              ]
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "recognition_conversion_refused",
+              "message": "$any",
+              "path": "groups[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "aynı kaynak iki kez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Tekrar",
+            "source": [
+              "$uidOf:1",
+              "$uidOf:1"
+            ],
+            "groups": [
+              [
+                "$uidOf:1",
+                "$uidOf:2"
+              ]
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "recognition_conversion_refused",
+              "message": "$any",
+              "path": "source"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "bozuk kaynak UUID",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Tekrar",
+            "source": [
+              "bad"
+            ],
+            "groups": [
+              [
+                "$uidOf:1"
+              ]
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_uid",
+              "message": "$any",
+              "path": "source[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "bozuk aday UUID",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Tekrar",
+            "source": [
+              "$uidOf:1"
+            ],
+            "groups": [
+              [
+                "bad"
+              ]
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_uid",
+              "message": "$any",
+              "path": "uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "olmayan kaynak",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Tekrar",
+            "source": [
+              "01925f3e-7c1a-7d2b-9e4f-000000000999"
+            ],
+            "groups": [
+              [
+                "$uidOf:1"
+              ],
+              [
+                "$uidOf:2"
+              ]
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "entity_not_found",
+              "message": "$any",
+              "path": "source[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "geçersiz tolerans 0",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Tekrar",
+            "source": [
+              "$uidOf:1"
+            ],
+            "groups": [
+              [
+                "$uidOf:1"
+              ],
+              [
+                "$uidOf:2"
+              ]
+            ],
+            "tolerance": 0
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_tolerance",
+              "message": "$any",
+              "path": "tolerance"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "geçersiz tolerans -1",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Tekrar",
+            "source": [
+              "$uidOf:1"
+            ],
+            "groups": [
+              [
+                "$uidOf:1"
+              ],
+              [
+                "$uidOf:2"
+              ]
+            ],
+            "tolerance": -1
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_tolerance",
+              "message": "$any",
+              "path": "tolerance"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "geçersiz tolerans 1",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Tekrar",
+            "source": [
+              "$uidOf:1"
+            ],
+            "groups": [
+              [
+                "$uidOf:1"
+              ],
+              [
+                "$uidOf:2"
+              ]
+            ],
+            "tolerance": 1
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_tolerance",
+              "message": "$any",
+              "path": "tolerance"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "desteklenmeyen öğe atlanmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Tekrar",
+            "source": [
+              "$uidOf:4"
+            ],
+            "groups": [
+              [
+                "$uidOf:4"
+              ]
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "recognition_unsupported",
+              "message": "$any",
+              "path": "source[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Z verisi düzleştirilmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Tekrar",
+            "source": [
+              "$uidOf:8"
+            ],
+            "groups": [
+              [
+                "$uidOf:8"
+              ]
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "recognition_unsupported",
+              "message": "$any",
+              "path": "source[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "görünüş/veri farkı arama sonucu olsa da kaybedilmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Tekrar",
+            "source": [
+              "$uidOf:1"
+            ],
+            "groups": [
+              [
+                "$uidOf:3"
+              ]
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "recognition_conversion_refused",
+              "message": "$any",
+              "path": "groups[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kapalı ve açık çizgi birleştirilmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Tekrar",
+            "source": [
+              "$uidOf:5"
+            ],
+            "groups": [
+              [
+                "$uidOf:7"
+              ]
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "recognition_conversion_refused",
+              "message": "$any",
+              "path": "groups[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "bozuk revizyon",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Tekrar",
+            "source": [
+              "$uidOf:1"
+            ],
+            "groups": [
+              [
+                "$uidOf:1"
+              ],
+              [
+                "$uidOf:2"
+              ]
+            ],
+            "expectedRevision": "bad"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "$any",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "eski revizyon",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Tekrar",
+            "source": [
+              "$uidOf:1"
+            ],
+            "groups": [
+              [
+                "$uidOf:1"
+              ],
+              [
+                "$uidOf:2"
+              ]
+            ],
+            "expectedRevision": "999"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "$any",
+              "path": "expectedRevision",
+              "revision": "$any"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kilitli katman değişmez",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.layers.set",
+          "input": {
+            "operation": "locked",
+            "layer": "a",
+            "value": true
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "name": "Tekrar",
+            "source": [
+              "$uidOf:1"
+            ],
+            "groups": [
+              [
+                "$uidOf:1"
+              ],
+              [
+                "$uidOf:2"
+              ]
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_locked",
+              "message": "$any",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "dirty": true,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "var olan tanımın üzerine yazılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Tekrar",
+            "source": [
+              "$uidOf:1"
+            ],
+            "groups": [
+              [
+                "$uidOf:1"
+              ]
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "name": "Tekrar",
+            "source": [
+              "$uidOf:2"
+            ],
+            "groups": [
+              [
+                "$uidOf:2"
+              ]
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "duplicate_block",
+              "message": "$any",
+              "path": "name"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": true,
+            "dirty": true,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "tek geri alma ve yineleme",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Tekrar",
+            "source": [
+              "$uidOf:1"
+            ],
+            "groups": [
+              [
+                "$uidOf:1"
+              ],
+              [
+                "$uidOf:2"
+              ]
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Tekrarları bloğa dönüştür",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Tekrarları bloğa dönüştür",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": true
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1836,6 +1836,7 @@ impl App {
             },
             // The status bar's message: when it goes, and its fades (message_log.rs).
             self.log_subscription(Instant::now()),
+            self.block_convert_subscription(),
             // The kept layout, written after its last change; the window's size.
             self.layout_subscription(),
             // Genel bakış's picture, drawn again a moment after a change (navigation_cards.rs).

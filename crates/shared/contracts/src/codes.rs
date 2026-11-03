@@ -469,6 +469,8 @@ codes! {
     POINTCLOUD_FIXED = "pointcloud_fixed", Failed, false, "Nokta bulutunun yeri dosyalarınındır; taşınmaz, döndürülmez, ölçeklenmez, kopyalanmaz.";
 
     // ── Blocks ──────────────────────────────────────────────────────────
+    /// A chosen repeat cannot be converted without losing topology, appearance or root relations.
+    RECOGNITION_CONVERSION_REFUSED = "recognition_conversion_refused", Failed, false, "Seçilen tekrarların alt nesne eşlemesi veya ilişki/görünüş koruması doğrulanamadı; hiçbir şey yazılmadı.";
     /// The selected source contains a shape not supported by deterministic candidate recognition.
     RECOGNITION_UNSUPPORTED = "recognition_unsupported", Failed, false, "Tekrar arama kaynağı yalnız sıfır uzunluklu olmayan çizgi, çember ve yay içerir; desteklenmeyen öğe atlanmaz.";
     /// Recognition's small source collection limit, before reading or copying a large selection.

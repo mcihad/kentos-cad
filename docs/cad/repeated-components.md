@@ -49,3 +49,36 @@ mirrors=True))`; `Job.cancel()`/`Job.wait()` mevcut iş arayüzüdür. MCP aynı
 `cad.blocks.find` komutunu, `op=plan`, `drawing.job.start/status/cancel`
 yüzeylerini kullanır. [Karar ve kapsam](../adr/0866-repeated-2d-candidate-recognition.md).
 [Çoklu çizgi eşlemesi](../adr/0867-analytic-polyline-repeat-recognition.md).
+
+## Seçilmiş adayları dönüştürme
+
+İşaretlenmiş adaylar için **Bloğa dönüştür…** düğmesi ayrı inceleme açar.
+Adı, kök→yerleştirme sayısını ve korunacak ölçü noktalarını kontrol edin.
+İnceleme çizimi değiştirmez; **Dönüştür** tek geri alma adımıdır. Ad değişince
+yeniden inceleme gerekir. Durdur/Esc kabul edilmemiş işi bırakır.
+
+İlk dönüşüm kapsamı tek, veri ve tür şeması olmayan CAD katmanındaki sürekli
+çizgili nesnelerdir. Öznitelik/sembol/ek dosya, özel çizgi tipi, parçalara
+karışan çizim sırası, tablo veya taşınamayan ilişki varsa gerekçe gösterilir;
+bağlar silinmez. Aramada geometriye göre eşleşmiş olmak bu denetimi kaldırmaz.
+İlişkili diziye dönüşüm bu düğmenin kapsamı değildir.
+
+```python
+# Grupları kullanıcı incelemesiyle açıkça seçin; bütün eşleşmeleri kendiliğinden dönüştürmeyin.
+chosen = [found.matches[0].members, found.matches[1].members]
+args = dict(name="Teknik sembol", source=source, groups=chosen, mirrors=True,
+            expected_revision=found.revision)
+review = cad.blocks.convert.plan(doc, **args)
+for point in review.dimensions:
+    print(point.uid, point.before, point.after, point.deviation)  # sapma metre
+# Kabul verildiğinde aynı girdiler yeniden doğrulanır.
+done = cad.blocks.convert(doc, **args)
+```
+
+`mapping` eski kök UUID'sini korunacak yerleştirme UUID'sine ve 0 tabanlı
+tanım parçasına bağlar. Her adayın ilk nesnesi yerleştirmede kimliğini korur.
+Ters/döngüsel kenara bağlı ölçünün yeri ve oranı da açıkça eşlenir; belirsiz
+köşe numarası rastgele seçilmez. Uzun işler için `doc.start("cad.blocks.convert",
+cad.BlocksConvert(**args))` kullanılabilir. MCP aynı komutta `op=plan`,
+korunan plan kimliği ve `drawing.job.*` iş yüzeylerini sunar.
+[Karar, sınırlar ve ilişki denetimi](../adr/0871-selected-repeat-conversion-and-topological-maps.md).

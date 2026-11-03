@@ -7,7 +7,7 @@
       "title": "Tekrarlanan bileşenleri bul…",
       "short": "Tekrarları bul",
       "icon": "search",
-      "description": "Seçilen çizgi, 2B çoklu çizgi, çember ve yay bileşeninin tam eşlerini arar. Döndürme, aynalama, ölçek ve veri politikası açıkça seçilir; sonuçlar çizimi kullanmaya devam edebildiğiniz Bloklar panelinde incelenir. Hiçbir geometri veya bağ değiştirilmez.",
+      "description": "Seçilen çizgi, 2B çoklu çizgi, çember ve yay bileşeninin tam eşlerini arar. Döndürme, aynalama, ölçek ve veri politikası açıkça seçilir; sonuçlar çizimi kullanmaya devam edebildiğiniz Bloklar panelinde incelenir. Arama geometriyi değiştirmez. Seçilen adaylar dönüşüm incelemesinden sonra ölçü bağlarıyla birlikte tek adımda bloğa dönüştürülebilir.",
       "aliases": ["TEKRARBUL", "FINDREPEATS"],
       "shortcuts": [],
       "category": "Blok",

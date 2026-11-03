@@ -1415,6 +1415,11 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.blocks.convert",
+        refusals: &[&["empty_name", "recognition_conversion_refused", "invalid_uid", "entity_not_found", "invalid_tolerance", "recognition_unsupported", "recognition_scope_limit", "duplicate_block", "block_refused", "layer_locked", "layer_not_found", "not_a_layer"], REVISION],
+        warnings: &[], targets: none,
+    },
+    Entry {
         id: "cad.blocks.find",
         refusals: &[&["no_entities", "invalid_uid", "entity_not_found", "invalid_tolerance", "invalid_limit", "recognition_unsupported", "recognition_source_limit", "recognition_scope_limit"], REVISION],
         warnings: &["recognition_truncated", "recognition_geometry_only"],

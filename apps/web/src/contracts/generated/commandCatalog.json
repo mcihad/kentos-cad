@@ -31243,6 +31243,225 @@
       ]
     },
     {
+      "id": "cad.blocks.convert",
+      "version": 1,
+      "title": "Tekrarları bloğa dönüştür",
+      "summary": "Seçilmiş, nesne paylaşmayan tekrarları bir blok tanımına dönüştürür. Geometri ve katman/görünüş yeniden doğrulanır; geometryOnly aramasının sonucu veri kaybına izin değildir. Her adayın ilk nesnesi UUID ve çizim yerini blok yerleştirmesi olarak korur; diğer kökler sıfır tabanlı blok parçasına açık mapping ile gider. Sıradan bağlı ölçülerin köşe/kenar/oran yerleri ters ve döngüsel yönleriyle taşınır; belirsiz eşleme reddedilir. Plan tanımı, yerleştirmeleri, eski/yeni bağları, sapmaları ve silinecek kökleri yazmadan gösterir. İlk kapsam tek, görünür, veri/şema içermeyen CAD katmanındaki sürekli çizgili analitik çizgi/çember/yay/2B çoklu çizgilerdir; öznitelik/sembol, özel çizgi fazı, interleaved çizim sırası, tablo ve taşınamayan kök ilişkisi yazmadan açıklanır. Her seçilmiş aday yeniden tam doğrulanır; istemcinin matrisine güvenilmez. En çok 1000 grup ve 50000 çizim nesnesi; arama ve bağ eşleme durdurulabilir, iş sınırı atomik ret verir. units=m tanımı metre modelini korur; proje gösterim birimi değişmez. Tek geri alma adımı. expectedRevision eskiyse hiçbir şey yazılmaz.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Converts only the chosen, non-overlapping groups after re-verifying their geometry and relations.\nFirst scope: plain analytic 2D CAD objects on one untyped, data-free layer, with ordinary bound\ndimensions. Unsupported appearance/data/relations are refused before any write, never detached.",
+        "properties": {
+          "expectedRevision": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "groups": {
+            "description": "Chosen candidate member sets, at most 1000. Order within a set is immaterial.\nEach must have exactly as many distinct objects as the source. Sets cannot share objects.",
+            "items": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "array"
+          },
+          "mirrors": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "rotations": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "scales": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "source": {
+            "description": "Source UUIDs. Definition pieces follow their document drawing order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "tolerance": {
+            "description": "Absolute model tolerance in metres, as cad.blocks.find; absent: 0.000001.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          }
+        },
+        "required": [
+          "name",
+          "source",
+          "groups"
+        ],
+        "title": "BlocksConvert",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "block": {
+            "$ref": "#/$defs/BlockId"
+          },
+          "dimensions": {
+            "items": {
+              "$ref": "#/$defs/RepeatDimensionMap"
+            },
+            "type": "array"
+          },
+          "inserts": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "mapping": {
+            "items": {
+              "$ref": "#/$defs/RepeatMemberMap"
+            },
+            "type": "array"
+          },
+          "removed": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "block",
+          "inserts",
+          "mapping",
+          "dimensions",
+          "removed",
+          "revision"
+        ],
+        "title": "BlocksConverted",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "block": {
+            "$ref": "#/$defs/BlockDefinition",
+            "description": "Nil block UUID in a read-only plan; allocated only at execution."
+          },
+          "dimensions": {
+            "items": {
+              "$ref": "#/$defs/RepeatDimensionMap"
+            },
+            "type": "array"
+          },
+          "mapping": {
+            "items": {
+              "$ref": "#/$defs/RepeatMemberMap"
+            },
+            "type": "array"
+          },
+          "placements": {
+            "items": {
+              "$ref": "#/$defs/RepeatPlacement"
+            },
+            "type": "array"
+          },
+          "rebound": {
+            "description": "Complete proposed dimension records for review; execution follows the same geometry.",
+            "items": {
+              "$ref": "#/$defs/Entity"
+            },
+            "type": "array"
+          },
+          "removed": {
+            "description": "Removed roots, excluding the identities retained as inserts.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "block",
+          "placements",
+          "mapping",
+          "dimensions",
+          "rebound",
+          "removed",
+          "revision"
+        ],
+        "title": "BlocksConvertPlan",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "empty_name",
+          "recognition_conversion_refused",
+          "invalid_uid",
+          "entity_not_found",
+          "invalid_tolerance",
+          "recognition_unsupported",
+          "recognition_scope_limit",
+          "duplicate_block",
+          "block_refused",
+          "layer_locked",
+          "layer_not_found",
+          "not_a_layer",
+          "invalid_revision",
+          "revision_conflict"
+        ]
+      },
+      "examples": [
+        {
+          "title": "İncelenen tek bir teknik sembol grubunu dönüştür",
+          "input": {
+            "groups": [
+              [
+                "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
+              ]
+            ],
+            "name": "Teknik sembol",
+            "source": [
+              "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.blocks.define",
       "version": 1,
       "title": "Blok tanımla",
@@ -67769,6 +67988,12 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Nokta bulutunun yeri dosyalarınındır; taşınmaz, döndürülmez, ölçeklenmez, kopyalanmaz."
+    },
+    {
+      "code": "recognition_conversion_refused",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Seçilen tekrarların alt nesne eşlemesi veya ilişki/görünüş koruması doğrulanamadı; hiçbir şey yazılmadı."
     },
     {
       "code": "recognition_unsupported",
@@ -128176,6 +128401,79 @@
       "required": [
         "from",
         "to"
+      ],
+      "type": "object"
+    },
+    "RepeatDimensionMap": {
+      "properties": {
+        "after": {
+          "$ref": "#/$defs/SubRef"
+        },
+        "before": {
+          "$ref": "#/$defs/SubRef"
+        },
+        "deviation": {
+          "description": "Displacement caused by the chosen absolute matching tolerance, metres.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "point": {
+          "description": "a, b or c.",
+          "type": "string"
+        },
+        "uid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "point",
+        "before",
+        "after",
+        "deviation"
+      ],
+      "type": "object"
+    },
+    "RepeatMemberMap": {
+      "properties": {
+        "from": {
+          "type": "string"
+        },
+        "insert": {
+          "description": "The first member in drawing order retains its root UUID as the insert.",
+          "type": "string"
+        },
+        "path": {
+          "description": "Zero-based definition-piece path, NOT the definition's one-based local object id.",
+          "items": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": "array",
+          "x-unit": "index"
+        }
+      },
+      "required": [
+        "from",
+        "insert",
+        "path"
+      ],
+      "type": "object"
+    },
+    "RepeatPlacement": {
+      "properties": {
+        "entity": {
+          "$ref": "#/$defs/Entity"
+        },
+        "uid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "entity"
       ],
       "type": "object"
     },

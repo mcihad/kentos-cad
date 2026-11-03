@@ -5983,6 +5983,15 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        CommandDescriptor {
+            id: crate::CAD_BLOCKS_CONVERT.into(), version: crate::CAD_BLOCKS_CONVERT_VERSION,
+            title: "Tekrarları bloğa dönüştür".into(),
+            summary: "Seçilmiş, nesne paylaşmayan tekrarları bir blok tanımına dönüştürür. Geometri ve katman/görünüş yeniden doğrulanır; geometryOnly aramasının sonucu veri kaybına izin değildir. Her adayın ilk nesnesi UUID ve çizim yerini blok yerleştirmesi olarak korur; diğer kökler sıfır tabanlı blok parçasına açık mapping ile gider. Sıradan bağlı ölçülerin köşe/kenar/oran yerleri ters ve döngüsel yönleriyle taşınır; belirsiz eşleme reddedilir. Plan tanımı, yerleştirmeleri, eski/yeni bağları, sapmaları ve silinecek kökleri yazmadan gösterir. İlk kapsam tek, görünür, veri/şema içermeyen CAD katmanındaki sürekli çizgili analitik çizgi/çember/yay/2B çoklu çizgilerdir; öznitelik/sembol, özel çizgi fazı, interleaved çizim sırası, tablo ve taşınamayan kök ilişkisi yazmadan açıklanır. Her seçilmiş aday yeniden tam doğrulanır; istemcinin matrisine güvenilmez. En çok 1000 grup ve 50000 çizim nesnesi; arama ve bağ eşleme durdurulabilir, iş sınırı atomik ret verir. units=m tanımı metre modelini korur; proje gösterim birimi değişmez. Tek geri alma adımı. expectedRevision eskiyse hiçbir şey yazılmaz.".into(),
+            aliases: vec![], effect: CommandEffect::Document, hosts:vec![CommandHost::Desktop], headless:true,
+            requires:vec![CommandRequirement::Document],permissions:vec![],undo:CommandUndo::Step,cost:CommandCost::Interactive,
+            input:schema::<crate::BlocksConvert>(),output:schema::<crate::BlocksConverted>(),plan:Some(schema::<crate::BlocksConvertPlan>()),capabilities:None,
+            examples:vec![CommandExample{title:"İncelenen tek bir teknik sembol grubunu dönüştür".into(),input:json!({"name":"Teknik sembol","source":["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"],"groups":[["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"]]}),output:None}],
+        },
         // Blok oluştur and the Bloklar panel (docs/adr/0144), held together by
         // fixtures/commands/v1/cad.blocks.define.json and cad.blocks.edit.json.
         CommandDescriptor {
@@ -12107,6 +12116,9 @@ mod tests {
                     }
                     crate::CAD_BLOCKS_QUERY => {
                         serde_json::from_value::<crate::BlocksQuery>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_BLOCKS_CONVERT => {
+                        serde_json::from_value::<crate::BlocksConvert>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_BLOCKS_FIND => {
                         serde_json::from_value::<crate::BlocksFind>(e.input.clone()).map(|_| ())

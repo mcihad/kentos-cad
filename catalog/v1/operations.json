@@ -618,9 +618,9 @@
       "was": "cad.blocks.define"
     },
     "block.find": {
-      "level": "query",
-      "via": ["cad.blocks.find"],
-      "note": "Yazısız ve durdurulabilir eşleşme arama; sonuç seçimi ayrı kullanıcı eylemidir (ADR 0866)."
+      "level": "semantic",
+      "via": ["cad.blocks.find", "cad.blocks.convert"],
+      "note": "Arama yazısız ve durdurulabilir; seçilmiş adaylar ayrı ilişki/görünüş incelemesi ve tek onayla bir blok tanımına dönüştürülür. Kök→parça ve ölçü eşlemesi ortak komutta, tek Undo adımındadır (ADR 0871)."
     },
     "block.panel": {
       "level": "host"
