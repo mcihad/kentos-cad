@@ -1924,6 +1924,25 @@ const ENTRIES: &[Entry] = &[
         warnings: &["layer_hidden"],
         targets: none,
     },
+    // KentOS Yol's junctions (plan/road.md Y12.2, docs/adr/0910 §2).
+    Entry {
+        id: "road.junctions.edit",
+        refusals: &[&["not_a_road_project", "unknown_junction", "unknown_alignment", "invalid_junction"], REVISION],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "road.junctions.query",
+        refusals: &[&["not_a_road_project", "unknown_junction", "invalid_junction"]],
+        warnings: &["junction_stale", "junction_on_curve"],
+        targets: none,
+    },
+    Entry {
+        id: "road.junctions.draw",
+        refusals: &[&["not_a_road_project", "unknown_junction", "invalid_junction"], LAYER, REVISION],
+        warnings: &["layer_hidden", "junction_stale", "junction_on_curve"],
+        targets: none,
+    },
     // KentOS Yol's LandXML export (plan/road.md Y10.2, docs/adr/0908 §6).
     Entry {
         id: "file.export.landxml",

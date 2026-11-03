@@ -58,3 +58,28 @@ fn a_route_is_found_drawn_and_fitted() {
         "name":"Ön güzergâh aksı","maxRadius":200.0}));
     assert_eq!(fitted["isError"], false, "{fitted}");
 }
+
+/// The road project's sample drawing's junction (docs/adr/0910 §2): asked, widened and drawn.
+#[test]
+fn the_sample_junction_is_asked_widened_and_drawn() {
+    let mut server = Server::new();
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/kcad/v2/road-work.kcad");
+    let opened = call(&mut server, "drawing.open", json!({"path":path}));
+    assert_eq!(opened["isError"], false, "{opened}");
+    let drawing = opened["structuredContent"]["drawing"].clone();
+    let asked = call(&mut server, "road.junctions.query", json!({"drawing":drawing,"junction":"j-1"}));
+    assert_eq!(asked["isError"], false, "{asked}");
+    let j = &asked["structuredContent"]["output"]["junctions"][0];
+    assert_eq!(j["returns"].as_array().map(Vec::len), Some(4), "{asked}");
+    assert_eq!(j["connected"], true);
+    let first = j["returns"][0]["length"].as_f64().expect("a length");
+    let wider = call(&mut server, "road.junctions.edit", json!({"drawing":drawing,"operation":"set","junction":"j-1","radius":25.0}));
+    assert_eq!(wider["isError"], false, "{wider}");
+    let longer = wider["structuredContent"]["output"]["junction"]["returns"][0]["length"].as_f64().expect("a length");
+    assert!(longer > first, "{first} → {longer}");
+    let drawn = call(&mut server, "road.junctions.draw", json!({"drawing":drawing,"junction":"j-1","layerId":"0","labels":true}));
+    assert_eq!(drawn["isError"], false, "{drawn}");
+    assert_eq!(drawn["structuredContent"]["output"]["uids"].as_array().map(Vec::len), Some(5), "{drawn}");
+    let separated = call(&mut server, "road.junctions.edit", json!({"drawing":drawing,"operation":"set","junction":"j-1","kind":"separated"}));
+    assert_eq!(separated["structuredContent"]["output"]["junction"]["connected"], false, "{separated}");
+}

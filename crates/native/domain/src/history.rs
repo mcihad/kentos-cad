@@ -375,6 +375,11 @@ pub(crate) enum Op {
         before: Vec<kentos_contracts::CulvertDef>,
         after: Vec<kentos_contracts::CulvertDef>,
     },
+    /// A road project's junctions (docs/adr/0910 §2), before and after.
+    RoadJunctions {
+        before: Vec<kentos_contracts::JunctionDef>,
+        after: Vec<kentos_contracts::JunctionDef>,
+    },
     /// A road project's pay item book (docs/adr/0909 §4), before and after.
     RoadPay {
         before: Option<kentos_contracts::PayBookDef>,
@@ -749,6 +754,10 @@ impl Op {
                 after: before.clone(),
             },
             Op::RoadCulverts { before, after } => Op::RoadCulverts {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::RoadJunctions { before, after } => Op::RoadJunctions {
                 before: after.clone(),
                 after: before.clone(),
             },
@@ -1419,6 +1428,7 @@ impl Document {
                 | Op::RoadCulverts { .. }
                 | Op::RoadWalls { .. }
                 | Op::RoadPay { .. }
+                | Op::RoadJunctions { .. }
                 | Op::ViewArea { .. }
                 | Op::ArchOptions { .. }
                 | Op::OptionCombos { .. }
@@ -1790,6 +1800,12 @@ impl Document {
             Op::RoadCulverts { after, .. } => {
                 let mut road = self.settings.road.take().unwrap_or_default();
                 road.culverts = after.clone();
+                self.settings.road = (!road.is_empty()).then_some(road);
+                return;
+            }
+            Op::RoadJunctions { after, .. } => {
+                let mut road = self.settings.road.take().unwrap_or_default();
+                road.junctions = after.clone();
                 self.settings.road = (!road.is_empty()).then_some(road);
                 return;
             }

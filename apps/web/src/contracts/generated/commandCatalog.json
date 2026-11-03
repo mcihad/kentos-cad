@@ -41561,6 +41561,415 @@
       ]
     },
     {
+      "id": "road.junctions.edit",
+      "version": 1,
+      "title": "Kavşağı düzenle",
+      "summary": "Yol projesinin kavşağını (junction: kimliği ya da adı; yoksa yeni) yazar, kollarının akslarına yeniden bağlar ya da kaldırır. Kavşak iki aksın (legs: her biri alignment kimliği ya da adı, left ve right kenarların aksa uzaklığı) kesişimidir; at kaçıncı kesişim (0: birinci kolun km sırasıyla ilki), kind atGrade (hemzemin: kollar bağlı, dört çeyrekte bordür dönüş yayı) ya da separated (katlı: kollar bağlı değil, yay yok); radius her çeyreğin yarıçapı, radii dört çeyreğin kendi yarıçapları (birinci kolun sağı ile ikincinin sağı, sağ ile sol, sol ile sol, sol ile sağ). Ölçüler projenin; KentOS öntanımlı ölçü vermez. null radii'yi kaldırır. Yeni kavşağın kimliği verilen ya da ilk boş j-n; kollar aksların bugünkü sürümünü alır, rebind de. Tek geri alma adımı “Kavşak”. Retler: not_a_road_project, unknown_junction, unknown_alignment, invalid_junction, invalid_revision, revision_conflict.",
+      "aliases": [
+        "kavsak",
+        "junction"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.junctions.edit` v1: the junction by its id or name (absent: a new one). A new one needs `name`,\n`kind` and `legs` (each leg's alignment by id or name), and at grade `radius`. Rebind takes the legs' alignments'\npresent revisions. `radii` null takes it off.\n\nRefusals, in this order: `not_a_road_project`, `unknown_junction` (rebind or remove one not in the project),\n`unknown_alignment`, `invalid_junction` (a new one without its fields, set with nothing to set, the definition by\n`road_problem`: two legs on two alignments, edges and radii in bounds; legs that do not cross, a crossing not there,\nlegs parallel at it), `invalid_revision`, `revision_conflict`.",
+        "properties": {
+          "at": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "index"
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "junction": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/JunctionKind"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "legs": {
+            "items": {
+              "$ref": "#/$defs/JunctionLegDef"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "operation": {
+            "$ref": "#/$defs/RoadEditOperation"
+          },
+          "radii": {
+            "description": "Each quadrant's radius; null takes them off.",
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "type": [
+              "array",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "radius": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          }
+        },
+        "required": [
+          "operation"
+        ],
+        "title": "JunctionsEdit",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.junctions.edit` v1.",
+        "properties": {
+          "junction": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/JunctionReport"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The junction written, read; absent when removed."
+          },
+          "junctions": {
+            "items": {
+              "$ref": "#/$defs/JunctionListed"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "junctions",
+          "revision"
+        ],
+        "title": "JunctionsWritten",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.junctions.edit` v1.",
+        "properties": {
+          "junction": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/JunctionReport"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The junction written, read; absent when removed."
+          },
+          "junctions": {
+            "items": {
+              "$ref": "#/$defs/JunctionListed"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "junctions",
+          "revision"
+        ],
+        "title": "JunctionsWritten",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_junction",
+          "unknown_alignment",
+          "invalid_junction",
+          "invalid_revision",
+          "revision_conflict"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Ana aks ile yan aksın hemzemin kavşağı",
+          "input": {
+            "kind": "atGrade",
+            "legs": [
+              {
+                "alignment": "Ana aks",
+                "left": 5.0,
+                "right": 5.0
+              },
+              {
+                "alignment": "Yan aks",
+                "left": 3.5,
+                "right": 3.5
+              }
+            ],
+            "name": "K-1",
+            "operation": "set",
+            "radius": 12.0
+          }
+        }
+      ]
+    },
+    {
+      "id": "road.junctions.query",
+      "version": 1,
+      "title": "Kavşağı sorgula",
+      "summary": "Yol projesinin kavşaklarını bugün okur; hiçbir şey yazmaz. Her biri için kesişimin yeri, kolların km'si, km yazısı ve doğrultusu, aralarındaki açı, bağlı olup olmadığı (connected: yalnız hemzemin) ve hemzeminde dört çeyreğin bordür dönüş yayı (kolların yanları, yarıçap, merkez, iki teğet noktası ve kollar boyunca km'leri, yayın açısı ve boyu). Kollar kesişimde teğetleri boyunca düz kabul edilir. Okunamayan kavşak listede kolsuz gelir; tek sorulursa invalid_junction. Uyarılar: junction_stale (bir kolun aksı değişti), junction_on_curve (bir kol yayların erimi içinde kurpta). Retler: not_a_road_project, unknown_junction, invalid_junction.",
+      "aliases": [
+        "kavsaksor"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.junctions.query` v1: every junction read, or one (`junction`: its id or name).\n\nRefusals: `not_a_road_project`, `unknown_junction`, `invalid_junction` (the one asked does not read). Warnings:\n`junction_stale`, `junction_on_curve`.",
+        "properties": {
+          "junction": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "title": "JunctionsQuery",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.junctions.query` v1: the junctions read (one that does not read with no legs).",
+        "properties": {
+          "junctions": {
+            "items": {
+              "$ref": "#/$defs/JunctionReport"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "junctions"
+        ],
+        "title": "JunctionsQueried",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.junctions.query` v1: the junctions read (one that does not read with no legs).",
+        "properties": {
+          "junctions": {
+            "items": {
+              "$ref": "#/$defs/JunctionReport"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "junctions"
+        ],
+        "title": "JunctionsQueried",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_junction",
+          "invalid_junction"
+        ],
+        "warnings": [
+          "junction_stale",
+          "junction_on_curve"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bütün kavşaklar",
+          "input": {}
+        }
+      ]
+    },
+    {
+      "id": "road.junctions.draw",
+      "version": 1,
+      "title": "Kavşak çiz",
+      "summary": "Hemzemin kavşağın dört bordür dönüş yayını planda layerId katmanına yay olarak çizer; labels ile kesişimde adı ve açısı. Katlı kavşağın yayı yoktur (invalid_junction). Tek geri alma adımı “Kavşak çiz”. Uyarılar: layer_hidden ve okumanın uyarıları. Retler: invalid_revision, revision_conflict, not_a_road_project, unknown_junction, invalid_junction, layer_not_found, not_a_layer, layer_locked.",
+      "aliases": [
+        "kavsakciz"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.junctions.draw` v1: an at-grade junction's curb returns drawn on `layerId`, each an arc; with\n`labels` a text at the crossing saying its name and the angle.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `unknown_junction`,\n`invalid_junction` (a separated one has no returns), `layer_not_found`, `not_a_layer`, `layer_locked`. Warnings:\n`layer_hidden`, and the read's.",
+        "properties": {
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "junction": {
+            "type": "string"
+          },
+          "labels": {
+            "type": "boolean"
+          },
+          "layerId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "junction",
+          "layerId"
+        ],
+        "title": "JunctionsDraw",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.junctions.draw` v1, and its plan: the junction and the objects written (in the plan, none).",
+        "properties": {
+          "junction": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "junction",
+          "uids",
+          "revision"
+        ],
+        "title": "JunctionsDrawn",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.junctions.draw` v1, and its plan: the junction and the objects written (in the plan, none).",
+        "properties": {
+          "junction": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "junction",
+          "uids",
+          "revision"
+        ],
+        "title": "JunctionsDrawn",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_junction",
+          "invalid_junction",
+          "layer_not_found",
+          "not_a_layer",
+          "layer_locked",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "layer_hidden",
+          "junction_stale",
+          "junction_on_curve"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Kavşak yazısıyla",
+          "input": {
+            "junction": "j-1",
+            "labels": true,
+            "layerId": "kavsak"
+          }
+        }
+      ]
+    },
+    {
       "id": "file.export.landxml",
       "version": 1,
       "title": "LandXML dışa aktar",
@@ -78206,6 +78615,30 @@
       "meaning": "İki yer arasında istenen eğimi aşmayan yol yok."
     },
     {
+      "code": "invalid_junction",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kavşağın tanımı geçerli değil ya da okunamıyor; ileti nedenini söyler."
+    },
+    {
+      "code": "unknown_junction",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu kimlikte ya da adda kavşak yok."
+    },
+    {
+      "code": "junction_stale",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Kavşağın bir kolunun aksı değişti; kavşağı denetleyip yeniden bağlayın."
+    },
+    {
+      "code": "junction_on_curve",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bir kol dönüş yaylarının erimi içinde kurpta; yaylar kolu düz kabul eder."
+    },
+    {
       "code": "invalid_pay_book",
       "kind": "failed",
       "retryable": false,
@@ -95511,6 +95944,11 @@
           "const": "routes",
           "description": "`road.routes.draw` (plan/road.md Y12.1): a preliminary route as a 3D polyline, “Ön güzergâh”.",
           "type": "string"
+        },
+        {
+          "const": "junctions",
+          "description": "`road.junctions.draw` (plan/road.md Y12.2): a junction's curb returns in plan, “Kavşak çiz”.",
+          "type": "string"
         }
       ]
     },
@@ -112419,6 +112857,70 @@
         }
       ]
     },
+    "JunctionDef": {
+      "additionalProperties": false,
+      "description": "A junction of two alignments (docs/adr/0910 §2): its legs, which of their crossings (`at`, 0 the first along the\nfirst leg), how they meet, and at grade the curb returns' radius (`radius`, every quadrant) and, when given, each\nquadrant's own (`radii`, four: first leg's right with the second's right, right with left, left with left, left with\nright).",
+      "properties": {
+        "at": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "index"
+        },
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/JunctionKind"
+        },
+        "legs": {
+          "items": {
+            "$ref": "#/$defs/JunctionLegDef"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        },
+        "radii": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "radius": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "kind",
+        "legs"
+      ],
+      "type": "object"
+    },
+    "JunctionKind": {
+      "description": "How a junction's legs meet: at grade (joined, the curb returns built) or separated (one over the other, not joined).",
+      "enum": [
+        "atGrade",
+        "separated"
+      ],
+      "type": "string"
+    },
     "JunctionLayer": {
       "description": "A junction layer: its points' role and, optionally, which of them it takes and which are closed.",
       "properties": {
@@ -112445,6 +112947,243 @@
       "required": [
         "layer",
         "role"
+      ],
+      "type": "object"
+    },
+    "JunctionLeg": {
+      "description": "A leg at the crossing: its alignment, station and km there, its direction (degrees from east, counter-clockwise)\nand whether its alignment changed since.",
+      "properties": {
+        "alignment": {
+          "type": "string"
+        },
+        "direction": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "deg"
+        },
+        "kmText": {
+          "type": "string"
+        },
+        "stale": {
+          "type": "boolean"
+        },
+        "station": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "alignment",
+        "station",
+        "kmText",
+        "direction",
+        "stale"
+      ],
+      "type": "object"
+    },
+    "JunctionLegDef": {
+      "additionalProperties": false,
+      "description": "A junction's leg: its alignment and that alignment's revision it was made from, and its edges' offsets from the\nalignment (left and right, metres, positive).",
+      "properties": {
+        "alignment": {
+          "type": "string"
+        },
+        "alignmentRevision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "left": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "right": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "alignment",
+        "left",
+        "right"
+      ],
+      "type": "object"
+    },
+    "JunctionListed": {
+      "description": "A junction in the project's list.",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/JunctionKind"
+        },
+        "name": {
+          "type": "string"
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "kind",
+        "revision"
+      ],
+      "type": "object"
+    },
+    "JunctionPlace": {
+      "description": "A place: plan and, on a leg, its station.",
+      "properties": {
+        "station": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "x": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "y": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "station"
+      ],
+      "type": "object"
+    },
+    "JunctionReport": {
+      "description": "A junction as read now: its names, how its legs meet and whether they are joined (`connected`, at grade only),\nwhether an alignment changed since, the crossing's place, its legs and the angle between them (degrees, 0–180),\nand at grade its four curb returns.",
+      "properties": {
+        "angle": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "deg"
+        },
+        "connected": {
+          "type": "boolean"
+        },
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/JunctionKind"
+        },
+        "legs": {
+          "items": {
+            "$ref": "#/$defs/JunctionLeg"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        },
+        "returns": {
+          "items": {
+            "$ref": "#/$defs/JunctionReturn"
+          },
+          "type": "array"
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "stale": {
+          "type": "boolean"
+        },
+        "x": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "y": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "revision",
+        "kind",
+        "connected",
+        "stale",
+        "x",
+        "y",
+        "legs",
+        "angle",
+        "returns"
+      ],
+      "type": "object"
+    },
+    "JunctionReturn": {
+      "description": "A quadrant's curb return: the sides of the two legs it lies outward of, its radius and centre, its tangent points\non the first and the second leg's edge (with their stations along the legs), its sweep (degrees, counter-clockwise\npositive from the first tangent point) and its length.",
+      "properties": {
+        "a": {
+          "type": "string"
+        },
+        "b": {
+          "type": "string"
+        },
+        "cx": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "cy": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "length": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "onA": {
+          "$ref": "#/$defs/JunctionPlace"
+        },
+        "onB": {
+          "$ref": "#/$defs/JunctionPlace"
+        },
+        "radius": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "sweep": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "deg"
+        }
+      },
+      "required": [
+        "a",
+        "b",
+        "radius",
+        "cx",
+        "cy",
+        "onA",
+        "onB",
+        "sweep",
+        "length"
       ],
       "type": "object"
     },
@@ -142199,6 +142938,13 @@
           "description": "The mass haul diagrams (docs/adr/0907).",
           "items": {
             "$ref": "#/$defs/HaulDef"
+          },
+          "type": "array"
+        },
+        "junctions": {
+          "description": "The junctions (docs/adr/0910 §2), each of two alignments.",
+          "items": {
+            "$ref": "#/$defs/JunctionDef"
           },
           "type": "array"
         },

@@ -131,6 +131,8 @@ pub enum CreateOperation {
     RetainingWalls,
     /// `road.routes.draw` (plan/road.md Y12.1): a preliminary route as a 3D polyline, “Ön güzergâh”.
     Routes,
+    /// `road.junctions.draw` (plan/road.md Y12.2): a junction's curb returns in plan, “Kavşak çiz”.
+    Junctions,
 }
 
 /// One new object: its geometry and what else it carries. The layer is the

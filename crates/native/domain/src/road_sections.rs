@@ -112,6 +112,27 @@ impl Document {
         })
     }
 
+    /// The project's junctions (docs/adr/0910 §2).
+    pub fn road_junctions(&self) -> &[kentos_contracts::JunctionDef] {
+        self.settings.road.as_ref().map_or(&[], |r| r.junctions.as_slice())
+    }
+
+    /// Gives the project the junctions `next` as one change named `label`, as [`Self::set_road_templates`].
+    pub fn set_road_junctions(&mut self, next: Vec<kentos_contracts::JunctionDef>, label: &str) -> Result<bool, Refusal> {
+        let judged = RoadSettings { junctions: next.clone(), ..self.settings.road.clone().unwrap_or_default() };
+        if let Some((path, problem)) = judged.problem() {
+            return Err(Refusal(format!("{path}: {problem}")));
+        }
+        let before = self.road_junctions().to_vec();
+        if before == next {
+            return Ok(false);
+        }
+        self.transact(label, |doc| {
+            doc.record(vec![Op::RoadJunctions { before, after: next }], label);
+            Ok(true)
+        })
+    }
+
     /// The project's pay item book (docs/adr/0909 §4).
     pub fn road_pay(&self) -> Option<&kentos_contracts::PayBookDef> {
         self.settings.road.as_ref().and_then(|r| r.pay.as_ref())

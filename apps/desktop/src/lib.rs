@@ -268,6 +268,9 @@ mod culvert_window;
 mod retaining_wall_window;
 mod pay_window;
 mod route_window;
+mod junction_window;
+#[cfg(test)]
+mod junction_window_tests;
 #[cfg(test)]
 mod route_window_tests;
 #[cfg(test)]

@@ -776,6 +776,14 @@ codes! {
     ROUTE_BLOCKED = "route_blocked", Failed, false, "Ön güzergâhın başı ya da sonu yüzeyin dışında ya da kaçınılacak alanda.";
     /// No path joins the route's ends within the grade (docs/adr/0910 §1).
     ROUTE_UNREACHED = "route_unreached", Failed, false, "İki yer arasında istenen eğimi aşmayan yol yok.";
+    /// A junction that is not right: its legs, edges or radii out of bounds, legs that do not cross, a crossing not
+    /// there, legs parallel at the crossing (docs/adr/0910 §2).
+    INVALID_JUNCTION = "invalid_junction", Failed, false, "Kavşağın tanımı geçerli değil ya da okunamıyor; ileti nedenini söyler.";
+    UNKNOWN_JUNCTION = "unknown_junction", Failed, false, "Bu kimlikte ya da adda kavşak yok.";
+    /// A warning: a leg's alignment changed since the junction was made or rebound (docs/adr/0910 §2).
+    JUNCTION_STALE = "junction_stale", Warning, false, "Kavşağın bir kolunun aksı değişti; kavşağı denetleyip yeniden bağlayın.";
+    /// A warning: a leg curves within the curb returns' reach; the returns take it straight (docs/adr/0910 §2).
+    JUNCTION_ON_CURVE = "junction_on_curve", Warning, false, "Bir kol dönüş yaylarının erimi içinde kurpta; yaylar kolu düz kabul eder.";
     /// A pay item book that is not right: no source or version, items or rules out of bounds (docs/adr/0909 §4).
     INVALID_PAY_BOOK = "invalid_pay_book", Failed, false, "Poz defteri geçerli değil; ileti nedenini söyler.";
     /// The project has no pay item book (docs/adr/0909 §4).

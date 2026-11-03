@@ -80,6 +80,23 @@
       "alignment": "g-1",
       "offset": -7.5
      }
+    },
+    {
+     "id": "g-3",
+     "name": "Bağlantı yolu",
+     "revision": 1,
+     "pis": [
+      {
+       "id": "a",
+       "x": 300.0,
+       "y": -200.0
+      },
+      {
+       "id": "b",
+       "x": 350.0,
+       "y": 200.0
+      }
+     ]
     }
    ],
    "profiles": [
@@ -582,7 +599,30 @@
       "factor": 1.0
      }
     ]
-   }
+   },
+   "junctions": [
+    {
+     "id": "j-1",
+     "name": "Bağlantı kavşağı",
+     "revision": 1,
+     "kind": "atGrade",
+     "radius": 15.0,
+     "legs": [
+      {
+       "alignment": "g-1",
+       "alignmentRevision": 3,
+       "left": 5.0,
+       "right": 5.0
+      },
+      {
+       "alignment": "g-3",
+       "alignmentRevision": 1,
+       "left": 3.5,
+       "right": 3.5
+      }
+     ]
+    }
+   ]
   }
  },
  "origin": {

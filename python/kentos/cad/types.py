@@ -1288,6 +1288,7 @@ class CreateOperation(_StrEnum):
     - ``culverts``: `road.culverts.draw` (plan/road.md Y11.2): a culvert's barrel in plan, “Menfez çiz”.
     - ``retainingWalls``: `road.walls.draw` (plan/road.md Y11.3): a retaining wall's face and footing in plan, “İstinat duvarı çiz”.
     - ``routes``: `road.routes.draw` (plan/road.md Y12.1): a preliminary route as a 3D polyline, “Ön güzergâh”.
+    - ``junctions``: `road.junctions.draw` (plan/road.md Y12.2): a junction's curb returns in plan, “Kavşak çiz”.
     """
     PARALLEL = "parallel"
     PERPENDICULAR_IN = "perpendicularIn"
@@ -1334,9 +1335,10 @@ class CreateOperation(_StrEnum):
     CULVERTS = "culverts"
     RETAINING_WALLS = "retainingWalls"
     ROUTES = "routes"
+    JUNCTIONS = "junctions"
 
 
-CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions", "terrainContours", "landXml", "alignmentLabels", "profileDrawing", "sectionDrawing", "slopePlan", "guardrails", "culverts", "retainingWalls", "routes"]
+CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions", "terrainContours", "landXml", "alignmentLabels", "profileDrawing", "sectionDrawing", "slopePlan", "guardrails", "culverts", "retainingWalls", "routes", "junctions"]
 """The names of :class:`CreateOperation`, for a plain string."""
 
 
@@ -2697,6 +2699,16 @@ class JoinSide(_StrEnum):
 
 JoinSideName = Literal["left", "right", "aggregate"]
 """The names of :class:`JoinSide`, for a plain string."""
+
+
+class JunctionKind(_StrEnum):
+    """How a junction's legs meet: at grade (joined, the curb returns built) or separated (one over the other, not joined)."""
+    AT_GRADE = "atGrade"
+    SEPARATED = "separated"
+
+
+JunctionKindName = Literal["atGrade", "separated"]
+"""The names of :class:`JunctionKind`, for a plain string."""
 
 
 class JunctionRole(_StrEnum):
@@ -37671,6 +37683,57 @@ class JoinsQuery(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class JunctionDef(_Model):
+    """A junction of two alignments (docs/adr/0910 §2): its legs, which of their crossings (`at`, 0 the first along the
+    first leg), how they meet, and at grade the curb returns' radius (`radius`, every quadrant) and, when given, each
+    quadrant's own (`radii`, four: first leg's right with the second's right, right with left, left with left, left with
+    right).
+    Attributes:
+        at: Unit: index.
+        radii: Unit: m.
+        radius: Unit: m.
+        revision: Unit: version.
+    """
+    id: str
+    name: str
+    kind: JunctionKind | JunctionKindName
+    legs: list[JunctionLegDef]
+    at: int | Unset = UNSET
+    radii: list[float] | None | Unset = UNSET
+    radius: float | Unset = UNSET
+    revision: int | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["kind"] = _enum_out(self.kind)
+        out["legs"] = [e0.to_json() for e0 in self.legs]
+        if self.at is not UNSET:
+            out["at"] = self.at
+        if self.radii is not UNSET:
+            out["radii"] = None if self.radii is None else [float(e0) for e0 in self.radii]
+        if self.radius is not UNSET:
+            out["radius"] = float(self.radius)
+        if self.revision is not UNSET:
+            out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JunctionDef:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            kind=_enum_in(JunctionKind, data["kind"]),
+            legs=[JunctionLegDef.from_json(e0) for e0 in data["legs"]],
+            at=data.get("at", UNSET),
+            radii=UNSET if "radii" not in data else None if data["radii"] is None else [float(e0) for e0 in data["radii"]],
+            radius=float(data["radius"]) if "radius" in data else UNSET,
+            revision=data.get("revision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class JunctionLayer(_Model):
     """A junction layer: its points' role and, optionally, which of them it takes and which are closed.
     Attributes:
@@ -37698,6 +37761,419 @@ class JunctionLayer(_Model):
             role=_enum_in(JunctionRole, data["role"]),
             closed=data.get("closed", UNSET),
             filter=data.get("filter", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JunctionLeg(_Model):
+    """A leg at the crossing: its alignment, station and km there, its direction (degrees from east, counter-clockwise)
+    and whether its alignment changed since.
+    Attributes:
+        station: Unit: m.
+        direction: Unit: deg.
+    """
+    alignment: str
+    station: float
+    km_text: str
+    direction: float
+    stale: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["alignment"] = self.alignment
+        out["station"] = float(self.station)
+        out["kmText"] = self.km_text
+        out["direction"] = float(self.direction)
+        out["stale"] = self.stale
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JunctionLeg:
+        return cls(
+            alignment=data["alignment"],
+            station=float(data["station"]),
+            km_text=data["kmText"],
+            direction=float(data["direction"]),
+            stale=data["stale"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JunctionLegDef(_Model):
+    """A junction's leg: its alignment and that alignment's revision it was made from, and its edges' offsets from the
+    alignment (left and right, metres, positive).
+    Attributes:
+        left: Unit: m.
+        right: Unit: m.
+        alignment_revision: Unit: version.
+    """
+    alignment: str
+    left: float
+    right: float
+    alignment_revision: int | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["alignment"] = self.alignment
+        out["left"] = float(self.left)
+        out["right"] = float(self.right)
+        if self.alignment_revision is not UNSET:
+            out["alignmentRevision"] = self.alignment_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JunctionLegDef:
+        return cls(
+            alignment=data["alignment"],
+            left=float(data["left"]),
+            right=float(data["right"]),
+            alignment_revision=data.get("alignmentRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JunctionListed(_Model):
+    """A junction in the project's list.
+    Attributes:
+        revision: Unit: version.
+    """
+    id: str
+    name: str
+    kind: JunctionKind | JunctionKindName
+    revision: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["kind"] = _enum_out(self.kind)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JunctionListed:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            kind=_enum_in(JunctionKind, data["kind"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JunctionPlace(_Model):
+    """A place: plan and, on a leg, its station.
+    Attributes:
+        x: Unit: length.
+        y: Unit: length.
+        station: Unit: m.
+    """
+    x: float
+    y: float
+    station: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["x"] = float(self.x)
+        out["y"] = float(self.y)
+        out["station"] = float(self.station)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JunctionPlace:
+        return cls(
+            x=float(data["x"]),
+            y=float(data["y"]),
+            station=float(data["station"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JunctionReport(_Model):
+    """A junction as read now: its names, how its legs meet and whether they are joined (`connected`, at grade only),
+    whether an alignment changed since, the crossing's place, its legs and the angle between them (degrees, 0–180),
+    and at grade its four curb returns.
+    Attributes:
+        revision: Unit: version.
+        x: Unit: length.
+        y: Unit: length.
+        angle: Unit: deg.
+    """
+    id: str
+    name: str
+    revision: int
+    kind: JunctionKind | JunctionKindName
+    connected: bool
+    stale: bool
+    x: float
+    y: float
+    legs: list[JunctionLeg]
+    angle: float
+    returns: list[JunctionReturn]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["revision"] = self.revision
+        out["kind"] = _enum_out(self.kind)
+        out["connected"] = self.connected
+        out["stale"] = self.stale
+        out["x"] = float(self.x)
+        out["y"] = float(self.y)
+        out["legs"] = [e0.to_json() for e0 in self.legs]
+        out["angle"] = float(self.angle)
+        out["returns"] = [e0.to_json() for e0 in self.returns]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JunctionReport:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            revision=data["revision"],
+            kind=_enum_in(JunctionKind, data["kind"]),
+            connected=data["connected"],
+            stale=data["stale"],
+            x=float(data["x"]),
+            y=float(data["y"]),
+            legs=[JunctionLeg.from_json(e0) for e0 in data["legs"]],
+            angle=float(data["angle"]),
+            returns=[JunctionReturn.from_json(e0) for e0 in data["returns"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JunctionReturn(_Model):
+    """A quadrant's curb return: the sides of the two legs it lies outward of, its radius and centre, its tangent points
+    on the first and the second leg's edge (with their stations along the legs), its sweep (degrees, counter-clockwise
+    positive from the first tangent point) and its length.
+    Attributes:
+        radius: Unit: m.
+        cx: Unit: length.
+        cy: Unit: length.
+        sweep: Unit: deg.
+        length: Unit: m.
+    """
+    a: str
+    b: str
+    radius: float
+    cx: float
+    cy: float
+    on_a: JunctionPlace
+    on_b: JunctionPlace
+    sweep: float
+    length: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["a"] = self.a
+        out["b"] = self.b
+        out["radius"] = float(self.radius)
+        out["cx"] = float(self.cx)
+        out["cy"] = float(self.cy)
+        out["onA"] = self.on_a.to_json()
+        out["onB"] = self.on_b.to_json()
+        out["sweep"] = float(self.sweep)
+        out["length"] = float(self.length)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JunctionReturn:
+        return cls(
+            a=data["a"],
+            b=data["b"],
+            radius=float(data["radius"]),
+            cx=float(data["cx"]),
+            cy=float(data["cy"]),
+            on_a=JunctionPlace.from_json(data["onA"]),
+            on_b=JunctionPlace.from_json(data["onB"]),
+            sweep=float(data["sweep"]),
+            length=float(data["length"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JunctionsDraw(_Model):
+    """Input of `road.junctions.draw` v1: an at-grade junction's curb returns drawn on `layerId`, each an arc; with
+    `labels` a text at the crossing saying its name and the angle.
+
+    Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `unknown_junction`,
+    `invalid_junction` (a separated one has no returns), `layer_not_found`, `not_a_layer`, `layer_locked`. Warnings:
+    `layer_hidden`, and the read's.
+    """
+    junction: str
+    layer_id: str
+    expected_revision: str | None | Unset = UNSET
+    labels: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["junction"] = self.junction
+        out["layerId"] = self.layer_id
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.labels is not UNSET:
+            out["labels"] = self.labels
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JunctionsDraw:
+        return cls(
+            junction=data["junction"],
+            layer_id=data["layerId"],
+            expected_revision=data.get("expectedRevision", UNSET),
+            labels=data.get("labels", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JunctionsDrawn(_Model):
+    """Output of `road.junctions.draw` v1, and its plan: the junction and the objects written (in the plan, none)."""
+    junction: str
+    uids: list[str]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["junction"] = self.junction
+        out["uids"] = list(self.uids)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JunctionsDrawn:
+        return cls(
+            junction=data["junction"],
+            uids=list(data["uids"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JunctionsEdit(_Model):
+    """Input of `road.junctions.edit` v1: the junction by its id or name (absent: a new one). A new one needs `name`,
+    `kind` and `legs` (each leg's alignment by id or name), and at grade `radius`. Rebind takes the legs' alignments'
+    present revisions. `radii` null takes it off.
+
+    Refusals, in this order: `not_a_road_project`, `unknown_junction` (rebind or remove one not in the project),
+    `unknown_alignment`, `invalid_junction` (a new one without its fields, set with nothing to set, the definition by
+    `road_problem`: two legs on two alignments, edges and radii in bounds; legs that do not cross, a crossing not there,
+    legs parallel at it), `invalid_revision`, `revision_conflict`.
+    Attributes:
+        at: Unit: index.
+        radii: Each quadrant's radius; null takes them off. Unit: m.
+        radius: Unit: m.
+    """
+    operation: RoadEditOperation | RoadEditOperationName
+    at: int | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    junction: str | None | Unset = UNSET
+    kind: JunctionKind | JunctionKindName | None | Unset = UNSET
+    legs: list[JunctionLegDef] | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    radii: list[float] | None | Unset = UNSET
+    radius: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = _enum_out(self.operation)
+        if self.at is not UNSET:
+            out["at"] = self.at
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.junction is not UNSET:
+            out["junction"] = self.junction
+        if self.kind is not UNSET:
+            out["kind"] = None if self.kind is None else _enum_out(self.kind)
+        if self.legs is not UNSET:
+            out["legs"] = None if self.legs is None else [e0.to_json() for e0 in self.legs]
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.radii is not UNSET:
+            out["radii"] = None if self.radii is None else [float(e0) for e0 in self.radii]
+        if self.radius is not UNSET:
+            out["radius"] = None if self.radius is None else float(self.radius)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JunctionsEdit:
+        return cls(
+            operation=_enum_in(RoadEditOperation, data["operation"]),
+            at=data.get("at", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            junction=data.get("junction", UNSET),
+            kind=UNSET if "kind" not in data else None if data["kind"] is None else _enum_in(JunctionKind, data["kind"]),
+            legs=UNSET if "legs" not in data else None if data["legs"] is None else [JunctionLegDef.from_json(e0) for e0 in data["legs"]],
+            name=data.get("name", UNSET),
+            radii=UNSET if "radii" not in data else None if data["radii"] is None else [float(e0) for e0 in data["radii"]],
+            radius=UNSET if "radius" not in data else None if data["radius"] is None else float(data["radius"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JunctionsQueried(_Model):
+    """Output of `road.junctions.query` v1: the junctions read (one that does not read with no legs)."""
+    junctions: list[JunctionReport]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["junctions"] = [e0.to_json() for e0 in self.junctions]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JunctionsQueried:
+        return cls(
+            junctions=[JunctionReport.from_json(e0) for e0 in data["junctions"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JunctionsQuery(_Model):
+    """Input of `road.junctions.query` v1: every junction read, or one (`junction`: its id or name).
+
+    Refusals: `not_a_road_project`, `unknown_junction`, `invalid_junction` (the one asked does not read). Warnings:
+    `junction_stale`, `junction_on_curve`.
+    """
+    junction: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.junction is not UNSET:
+            out["junction"] = self.junction
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JunctionsQuery:
+        return cls(
+            junction=data.get("junction", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JunctionsWritten(_Model):
+    """Output of `road.junctions.edit` v1.
+    Attributes:
+        junction: The junction written, read; absent when removed.
+    """
+    junctions: list[JunctionListed]
+    revision: str
+    junction: JunctionReport | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["junctions"] = [e0.to_json() for e0 in self.junctions]
+        out["revision"] = self.revision
+        if self.junction is not UNSET:
+            out["junction"] = None if self.junction is None else self.junction.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JunctionsWritten:
+        return cls(
+            junctions=[JunctionListed.from_json(e0) for e0 in data["junctions"]],
+            revision=data["revision"],
+            junction=UNSET if "junction" not in data else None if data["junction"] is None else JunctionReport.from_json(data["junction"]),
         )
 
 
@@ -63143,6 +63619,7 @@ class RoadSettings(_Model):
         culverts: The culverts (docs/adr/0909 §2), each across a corridor.
         guardrails: The guardrails (docs/adr/0909 §1), each along a corridor.
         hauls: The mass haul diagrams (docs/adr/0907).
+        junctions: The junctions (docs/adr/0910 §2), each of two alignments.
         pay: The pay item book (docs/adr/0909 §4): the agency's items and the rules that give them KentOS's quantities.
         profiles: The vertical alignments (docs/adr/0902), each on an alignment, in the order the project tree shows them.
         sections: The sample line sets (docs/adr/0903 §2), in the order the project tree shows them.
@@ -63158,6 +63635,7 @@ class RoadSettings(_Model):
     culverts: list[CulvertDef] | Unset = UNSET
     guardrails: list[GuardrailDef] | Unset = UNSET
     hauls: list[HaulDef] | Unset = UNSET
+    junctions: list[JunctionDef] | Unset = UNSET
     pay: PayBookDef | None | Unset = UNSET
     profiles: list[ProfileDef] | Unset = UNSET
     sections: list[SectionSetDef] | Unset = UNSET
@@ -63180,6 +63658,8 @@ class RoadSettings(_Model):
             out["guardrails"] = [e0.to_json() for e0 in self.guardrails]
         if self.hauls is not UNSET:
             out["hauls"] = [e0.to_json() for e0 in self.hauls]
+        if self.junctions is not UNSET:
+            out["junctions"] = [e0.to_json() for e0 in self.junctions]
         if self.pay is not UNSET:
             out["pay"] = None if self.pay is None else self.pay.to_json()
         if self.profiles is not UNSET:
@@ -63208,6 +63688,7 @@ class RoadSettings(_Model):
             culverts=[CulvertDef.from_json(e0) for e0 in data["culverts"]] if "culverts" in data else UNSET,
             guardrails=[GuardrailDef.from_json(e0) for e0 in data["guardrails"]] if "guardrails" in data else UNSET,
             hauls=[HaulDef.from_json(e0) for e0 in data["hauls"]] if "hauls" in data else UNSET,
+            junctions=[JunctionDef.from_json(e0) for e0 in data["junctions"]] if "junctions" in data else UNSET,
             pay=UNSET if "pay" not in data else None if data["pay"] is None else PayBookDef.from_json(data["pay"]),
             profiles=[ProfileDef.from_json(e0) for e0 in data["profiles"]] if "profiles" in data else UNSET,
             sections=[SectionSetDef.from_json(e0) for e0 in data["sections"]] if "sections" in data else UNSET,
@@ -101136,10 +101617,25 @@ __all__ = [
     "JoinsOp",
     "JoinsQuery",
     "JoinsWallsOperation",
+    "JunctionDef",
+    "JunctionKind",
+    "JunctionKindName",
     "JunctionLayer",
+    "JunctionLeg",
+    "JunctionLegDef",
+    "JunctionListed",
+    "JunctionPlace",
+    "JunctionReport",
+    "JunctionReturn",
     "JunctionRole",
     "JunctionRoleName",
+    "JunctionsDraw",
+    "JunctionsDrawn",
+    "JunctionsEdit",
+    "JunctionsQueried",
+    "JunctionsQuery",
     "JunctionsRoadWork",
+    "JunctionsWritten",
     "KeySourcesEditOp",
     "KmAsk",
     "KmPlaces",

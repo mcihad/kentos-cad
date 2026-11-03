@@ -5623,6 +5623,10 @@ def build():
     pay = load("road-work.json")
     pay["settings"]["road"]["pay"]["rules"][0]["item"] = "Z-9"
     out["broken/road-pay-rule-unknown-item.kcad"] = container(document(pay))
+    # Schema 161 (plan/road.md Y12.2, docs/adr/0910 §2): a junction's legs are alignments of their PIs.
+    jun = load("road-work.json")
+    jun["settings"]["road"]["junctions"][0]["legs"][1]["alignment"] = "g-2"
+    out["broken/road-junction-on-parallel-axis.kcad"] = container(document(jun))
     # Schema 136 (docs/adr/0758): a layer's indexes, a key over two fields, a plain one and a key taking empty values as
     # the same; schema 135 refuses them, an empty list, a group's, one over a field the layer lacks, empty values the
     # same on a plain index and a default written are refused too.

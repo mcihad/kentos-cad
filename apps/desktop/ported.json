@@ -423,6 +423,7 @@
     "retainingWall.editor",
     "payItems.editor",
     "route.finder",
+    "junction.editor",
     "landxml.export",
     "landxml.importAlignments",
     "ifc.export",

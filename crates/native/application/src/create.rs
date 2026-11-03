@@ -199,6 +199,7 @@ pub fn label(operation: Option<CreateOperation>) -> &'static str {
         Some(CreateOperation::Culverts) => "Menfez çiz",
         Some(CreateOperation::RetainingWalls) => "İstinat duvarı çiz",
         Some(CreateOperation::Routes) => "Ön güzergâh",
+        Some(CreateOperation::Junctions) => "Kavşak çiz",
     }
 }
 

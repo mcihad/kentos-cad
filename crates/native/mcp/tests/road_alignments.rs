@@ -46,7 +46,7 @@ fn an_alignment_is_made_asked_and_kept_while_followed() {
     );
     assert_eq!(made["isError"], false, "{made}");
     let report = &made["structuredContent"]["output"]["alignment"];
-    assert_eq!(report["id"], "g-3");
+    assert_eq!(report["id"], "g-4");
     assert_eq!(report["elements"].as_array().map(Vec::len), Some(5));
 
     let asked = call(

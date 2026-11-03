@@ -11,6 +11,7 @@ from . import corridors
 from . import culverts
 from . import guardrails
 from . import hauls
+from . import junctions
 from . import pay
 from . import profiles
 from . import routes
@@ -24,4 +25,4 @@ from . import volumes
 from . import walls
 
 
-__all__ = ["alignments", "corridors", "culverts", "guardrails", "hauls", "pay", "profiles", "routes", "sections", "sheets", "stakeout", "superelevations", "templates", "terrains", "volumes", "walls"]
+__all__ = ["alignments", "corridors", "culverts", "guardrails", "hauls", "junctions", "pay", "profiles", "routes", "sections", "sheets", "stakeout", "superelevations", "templates", "terrains", "volumes", "walls"]

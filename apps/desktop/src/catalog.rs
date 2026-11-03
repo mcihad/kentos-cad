@@ -625,6 +625,8 @@ pub const PORTED: &[&str] = &[
     "payItems.editor",
     // plan/road.md Y12.1: Ön güzergâh (route_window.rs).
     "route.finder",
+    // plan/road.md Y12.2: Kavşak (junction_window.rs).
+    "junction.editor",
     // plan/road.md Y10.2: LandXML ver (road_exchange.rs).
     "landxml.export",
     "landxml.importAlignments",

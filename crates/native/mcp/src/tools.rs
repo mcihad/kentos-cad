@@ -752,6 +752,7 @@ fn command_tool(c: &Value) -> Value {
             | "road.culverts.edit"
             | "road.walls.edit"
             | "road.pay.edit"
+            | "road.junctions.edit"
             // It overwrites the attribute's values and takes them away from what no subnetwork reaches (docs/adr/0557 §2).
             | "cad.subnetworks.update"
             // Its remove takes address data's definition away (docs/adr/0229 §14).

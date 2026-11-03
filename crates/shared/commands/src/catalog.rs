@@ -7751,6 +7751,83 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::ROAD_JUNCTIONS_EDIT.into(),
+            version: crate::ROAD_JUNCTIONS_EDIT_VERSION,
+            title: "Kavşağı düzenle".into(),
+            summary: "Yol projesinin kavşağını (junction: kimliği ya da adı; yoksa yeni) yazar, kollarının akslarına yeniden bağlar ya da kaldırır. Kavşak iki aksın (legs: her biri alignment kimliği ya da adı, left ve right kenarların aksa uzaklığı) kesişimidir; at kaçıncı kesişim (0: birinci kolun km sırasıyla ilki), kind atGrade (hemzemin: kollar bağlı, dört çeyrekte bordür dönüş yayı) ya da separated (katlı: kollar bağlı değil, yay yok); radius her çeyreğin yarıçapı, radii dört çeyreğin kendi yarıçapları (birinci kolun sağı ile ikincinin sağı, sağ ile sol, sol ile sol, sol ile sağ). Ölçüler projenin; KentOS öntanımlı ölçü vermez. null radii'yi kaldırır. \
+                      Yeni kavşağın kimliği verilen ya da ilk boş j-n; kollar aksların bugünkü sürümünü alır, rebind de. Tek geri alma adımı “Kavşak”. Retler: not_a_road_project, unknown_junction, unknown_alignment, invalid_junction, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["kavsak".into(), "junction".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::JunctionsEdit>(),
+            output: schema::<crate::JunctionsWritten>(),
+            plan: Some(schema::<crate::JunctionsWritten>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana aks ile yan aksın hemzemin kavşağı".into(),
+                input: json!({ "operation": "set", "name": "K-1", "kind": "atGrade", "radius": 12.0,
+                    "legs": [ { "alignment": "Ana aks", "left": 5.0, "right": 5.0 },
+                              { "alignment": "Yan aks", "left": 3.5, "right": 3.5 } ] }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_JUNCTIONS_QUERY.into(),
+            version: crate::ROAD_JUNCTIONS_QUERY_VERSION,
+            title: "Kavşağı sorgula".into(),
+            summary: "Yol projesinin kavşaklarını bugün okur; hiçbir şey yazmaz. Her biri için kesişimin yeri, kolların km'si, km yazısı ve doğrultusu, aralarındaki açı, bağlı olup olmadığı (connected: yalnız hemzemin) ve hemzeminde dört çeyreğin bordür dönüş yayı (kolların yanları, yarıçap, merkez, iki teğet noktası ve kollar boyunca km'leri, yayın açısı ve boyu). Kollar kesişimde teğetleri boyunca düz kabul edilir. Okunamayan kavşak listede kolsuz gelir; tek sorulursa invalid_junction. \
+                      Uyarılar: junction_stale (bir kolun aksı değişti), junction_on_curve (bir kol yayların erimi içinde kurpta). Retler: not_a_road_project, unknown_junction, invalid_junction."
+                .into(),
+            aliases: vec!["kavsaksor".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::JunctionsQuery>(),
+            output: schema::<crate::JunctionsQueried>(),
+            plan: Some(schema::<crate::JunctionsQueried>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bütün kavşaklar".into(),
+                input: json!({}),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_JUNCTIONS_DRAW.into(),
+            version: crate::ROAD_JUNCTIONS_DRAW_VERSION,
+            title: "Kavşak çiz".into(),
+            summary: "Hemzemin kavşağın dört bordür dönüş yayını planda layerId katmanına yay olarak çizer; labels ile kesişimde adı ve açısı. Katlı kavşağın yayı yoktur (invalid_junction). Tek geri alma adımı “Kavşak çiz”. \
+                      Uyarılar: layer_hidden ve okumanın uyarıları. Retler: invalid_revision, revision_conflict, not_a_road_project, unknown_junction, invalid_junction, layer_not_found, not_a_layer, layer_locked."
+                .into(),
+            aliases: vec!["kavsakciz".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::JunctionsDraw>(),
+            output: schema::<crate::JunctionsDrawn>(),
+            plan: Some(schema::<crate::JunctionsDrawn>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Kavşak yazısıyla".into(),
+                input: json!({ "junction": "j-1", "layerId": "kavsak", "labels": true }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::FILE_EXPORT_LANDXML.into(),
             version: crate::FILE_EXPORT_LANDXML_VERSION,
             title: "LandXML dışa aktar".into(),
@@ -13653,6 +13730,9 @@ mod tests {
                     crate::ROAD_PAY_QUERY => serde_json::from_value::<crate::PayQuery>(e.input.clone()).map(|_| ()),
                     crate::ROAD_ROUTES_FIND => serde_json::from_value::<crate::RoutesFind>(e.input.clone()).map(|_| ()),
                     crate::ROAD_ROUTES_DRAW => serde_json::from_value::<crate::RoutesDraw>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_JUNCTIONS_EDIT => serde_json::from_value::<crate::JunctionsEdit>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_JUNCTIONS_QUERY => serde_json::from_value::<crate::JunctionsQuery>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_JUNCTIONS_DRAW => serde_json::from_value::<crate::JunctionsDraw>(e.input.clone()).map(|_| ()),
                     crate::ROAD_STAKEOUT_QUERY => {
                         serde_json::from_value::<crate::StakeoutQuery>(e.input.clone()).map(|_| ())
                     }
@@ -14436,6 +14516,9 @@ mod tests {
                         crate::ROAD_PAY_QUERY => serde_json::from_value::<crate::PayQueried>(output.clone()).map(|_| ()),
                         crate::ROAD_ROUTES_FIND => serde_json::from_value::<crate::RouteFound>(output.clone()).map(|_| ()),
                         crate::ROAD_ROUTES_DRAW => serde_json::from_value::<crate::RoutesDrawn>(output.clone()).map(|_| ()),
+                        crate::ROAD_JUNCTIONS_EDIT => serde_json::from_value::<crate::JunctionsWritten>(output.clone()).map(|_| ()),
+                        crate::ROAD_JUNCTIONS_QUERY => serde_json::from_value::<crate::JunctionsQueried>(output.clone()).map(|_| ()),
+                        crate::ROAD_JUNCTIONS_DRAW => serde_json::from_value::<crate::JunctionsDrawn>(output.clone()).map(|_| ()),
                         crate::ROAD_STAKEOUT_QUERY => {
                             serde_json::from_value::<crate::StakeoutQueried>(output.clone()).map(|_| ())
                         }

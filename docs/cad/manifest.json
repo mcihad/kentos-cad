@@ -4285,6 +4285,23 @@
    "tests": 0
   },
   {
+   "id": "junction.editor",
+   "kind": "command",
+   "title": "Kavşak…",
+   "level": "semantic",
+   "via": [
+    "road.junctions.edit",
+    "road.junctions.draw"
+   ],
+   "operation": null,
+   "python": "Connection: road.junctions.edit, Connection: road.junctions.draw",
+   "mcp": "road.junctions.edit, road.junctions.draw",
+   "note": "Kollar ve yarıçaplar yazıldıkça road.junctions.edit'in planıyla okuma kopyasında önizler; Kaydet ve Sil road.junctions.edit, Planda çiz road.junctions.draw ile yazar (plan/road.md Y12.2, ADR 0910 §2).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "landxml.export",
    "kind": "command",
    "title": "LandXML ver…",

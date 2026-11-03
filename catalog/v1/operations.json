@@ -2769,6 +2769,14 @@
       ],
       "note": "Girdi yazıldıkça road.routes.find ile önizler; Planda çiz road.routes.draw ile yazar (plan/road.md Y12.1, ADR 0910 §1)."
     },
+    "junction.editor": {
+      "level": "semantic",
+      "via": [
+        "road.junctions.edit",
+        "road.junctions.draw"
+      ],
+      "note": "Kollar ve yarıçaplar yazıldıkça road.junctions.edit'in planıyla okuma kopyasında önizler; Kaydet ve Sil road.junctions.edit, Planda çiz road.junctions.draw ile yazar (plan/road.md Y12.2, ADR 0910 §2)."
+    },
     "landxml.importAlignments": {
       "level": "semantic",
       "via": [

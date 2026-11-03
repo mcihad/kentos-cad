@@ -9784,6 +9784,30 @@ class _Schema:
                 self.fail("bad_value", "istinat duvarının km'leri, okuma aralığı ya da en yükseği kuralın dışında")
             return t
 
+        def junction(x):
+            # Docs/adr/0910 §2: a junction of two alignments, at grade with its curb returns' radii or separated.
+            leg = self.fields({"alignment": (word, True), "alignmentRevision": (self.uint(32), False),
+                               "left": (finite, True), "right": (finite, True)})
+            t = self.fields({"id": (word, True), "name": (self.text, True), "revision": (self.uint(32), False),
+                             "kind": (self.enum(("atGrade", "separated")), True), "legs": (self.array(leg), True),
+                             "at": (self.uint(32), False), "radius": (finite, False),
+                             "radii": (self.array(finite), False)})(x)
+            name = t["name"]
+            if not name or name.strip() != name or len(name) > 120:
+                self.fail("bad_value", "kavşağın adı boş, boşluklu ya da çok uzun")
+            legs = t["legs"]
+            if len(legs) != 2 or legs[0]["alignment"] == legs[1]["alignment"] or t.get("at", 0) > 64 or any(
+                    not 0 < g[k] <= 100 for g in legs for k in ("left", "right")):
+                self.fail("bad_value", "kavşağın iki kolu ayrı akslarda, kenarları (0, 100] m olur")
+            size = lambda v: 0 < v <= 1000  # noqa: E731
+            if t["kind"] == "atGrade":
+                if not size(t.get("radius", 0)) or ("radii" in t and (len(t["radii"]) != 4
+                                                                     or not all(size(v) for v in t["radii"]))):
+                    self.fail("bad_value", "hemzemin kavşağın yarıçapları kuralın dışında")
+            elif "radius" in t or "radii" in t:
+                self.fail("bad_value", "katlı kavşakta dönüş yayı olmaz")
+            return t
+
         def pay(x):
             # Docs/adr/0909 §4: the pay item book, the agency's items and the rules giving them KentOS's quantities.
             measures = ("guardrailLength", "culvertLength", "culvertPipes", "culvertConcrete", "wallLength", "wallFace",
@@ -9823,7 +9847,8 @@ class _Schema:
                          "sheetSets": (self.array(sheet_set), False),
                          "guardrails": (self.array(guardrail), False),
                          "culverts": (self.array(culvert), False),
-                         "walls": (self.array(wall), False), "pay": (pay, False)})(v)
+                         "walls": (self.array(wall), False), "pay": (pay, False),
+                         "junctions": (self.array(junction), False)})(v)
         got = r.get("surfaces", [])
         lines = r.get("alignments", [])
         profiles = r.get("profiles", [])
@@ -9838,7 +9863,7 @@ class _Schema:
         culverts = r.get("culverts", [])
         walls = r.get("walls", [])
         if not (got or lines or profiles or templates or sets or supers or corridors or volumes or hauls or sheet_sets
-                or guardrails or culverts or walls or "pay" in r):
+                or guardrails or culverts or walls or "pay" in r or r.get("junctions")):
             self.fail("bad_value", "boş yol ayarı yazılmaz")
         if len(got) > 64 or ("surfaces" in r and not got):
             self.fail("bad_value", "yol ayarında 1 ile 64 arası yüzey olur")
@@ -9951,6 +9976,17 @@ class _Schema:
             self.fail("bad_value", "iki istinat duvarının kimliği ya da adı aynı")
         if any(all(y["id"] != x["corridor"] for y in corridors) for x in walls):
             self.fail("bad_value", "istinat duvarının koridoru projede yok")
+        junctions = r.get("junctions", [])
+        if "junctions" in r and not junctions or len(junctions) > 1000:
+            self.fail("bad_value", "yol ayarında 1 ile 1000 arası kavşak olur")
+        if len({x["id"] for x in junctions}) != len(junctions) or \
+                len({x["name"].lower() for x in junctions}) != len(junctions):
+            self.fail("bad_value", "iki kavşağın kimliği ya da adı aynı")
+        for x in junctions:
+            for g in x["legs"]:
+                a = next((y for y in lines if y["id"] == g["alignment"]), None)
+                if a is None or "offsetOf" in a:
+                    self.fail("bad_value", "kavşağın kolu projede PI'larıyla kurulan bir aks olmalı")
         return r
 
     def arch_(self, v):

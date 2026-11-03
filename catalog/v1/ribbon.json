@@ -534,6 +534,16 @@
       ]
      },
      {
+      "label": "Kavşak",
+      "icon": "junctionEditor",
+      "items": [
+       {
+        "command": "junction.editor",
+        "size": "large"
+       }
+      ]
+     },
+     {
       "label": "Boykesit",
       "icon": "profileEditor",
       "items": [

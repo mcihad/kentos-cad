@@ -24,6 +24,7 @@ pub mod corridor;
 pub mod culvert;
 pub mod guardrail;
 pub mod haul;
+pub mod junction;
 pub mod profile;
 pub mod route;
 pub mod section;

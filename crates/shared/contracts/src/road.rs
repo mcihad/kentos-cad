@@ -105,6 +105,10 @@ pub struct RoadSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<RetainingWallDef>>", optional))]
     pub walls: Vec<RetainingWallDef>,
+    /// The junctions (docs/adr/0910 §2), each of two alignments.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<JunctionDef>>", optional))]
+    pub junctions: Vec<JunctionDef>,
     /// The pay item book (docs/adr/0909 §4): the agency's items and the rules that give them KentOS's quantities.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -128,6 +132,7 @@ impl RoadSettings {
             && self.culverts.is_empty()
             && self.walls.is_empty()
             && self.pay.is_none()
+            && self.junctions.is_empty()
     }
 
     /// What is wrong with it, by the field's path and in words; none when it is right.
@@ -988,6 +993,7 @@ pub fn road_problem(road: &RoadSettings) -> Option<(String, String)> {
         .or_else(|| culverts_problem(road))
         .or_else(|| walls_problem(road))
         .or_else(|| pay_problem(road))
+        .or_else(|| junctions_problem(road))
 }
 
 fn side_problem(s: &TemplateSideDef, at: &str) -> Option<(String, String)> {
@@ -1721,6 +1727,135 @@ fn walls_problem(road: &RoadSettings) -> Option<(String, String)> {
         }
         if w.material.as_ref().is_some_and(|m| m.trim().is_empty() || m.trim() != m || m.chars().count() > 120) {
             return fail(at("material"), "malzeme boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 120 karakter");
+        }
+    }
+    None
+}
+
+/// The most junctions a project holds.
+pub const MAX_JUNCTIONS: usize = 1000;
+
+/// How a junction's legs meet: at grade (joined, the curb returns built) or separated (one over the other, not joined).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum JunctionKind {
+    AtGrade,
+    Separated,
+}
+
+/// A junction's leg: its alignment and that alignment's revision it was made from, and its edges' offsets from the
+/// alignment (left and right, metres, positive).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct JunctionLegDef {
+    pub alignment: String,
+    #[serde(default, skip_serializing_if = "is_zero_u32")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub alignment_revision: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub left: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub right: f64,
+}
+
+/// A junction of two alignments (docs/adr/0910 §2): its legs, which of their crossings (`at`, 0 the first along the
+/// first leg), how they meet, and at grade the curb returns' radius (`radius`, every quadrant) and, when given, each
+/// quadrant's own (`radii`, four: first leg's right with the second's right, right with left, left with left, left with
+/// right).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct JunctionDef {
+    pub id: String,
+    pub name: String,
+    #[serde(default, skip_serializing_if = "is_zero_u32")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub revision: u32,
+    pub kind: JunctionKind,
+    pub legs: Vec<JunctionLegDef>,
+    #[serde(default, skip_serializing_if = "is_zero_u32")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub at: u32,
+    #[serde(default, skip_serializing_if = "is_zero_f64")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub radius: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub radii: Option<Vec<f64>>,
+}
+
+fn junctions_problem(road: &RoadSettings) -> Option<(String, String)> {
+    let fail = |path: String, words: &str| Some((path, words.to_string()));
+    let list = &road.junctions;
+    if list.len() > MAX_JUNCTIONS {
+        return fail("junctions".into(), &format!("en çok {MAX_JUNCTIONS} kavşak olur"));
+    }
+    let mut ids = std::collections::BTreeSet::new();
+    let mut names = std::collections::BTreeSet::new();
+    let size = |v: f64| v.is_finite() && v > 0.0 && v <= 1000.0;
+    for (i, j) in list.iter().enumerate() {
+        let at = |field: &str| format!("junctions[{i}].{field}");
+        if !word_ok(&j.id) {
+            return fail(at("id"), "kavşağın kimliği boş olmayan, en çok 64 karakterlik bir sözcük olmalı");
+        }
+        if !ids.insert(j.id.as_str()) {
+            return fail(at("id"), "bu kimlikte başka bir kavşak var");
+        }
+        let name = j.name.trim();
+        if name.is_empty() || name != j.name || j.name.chars().count() > 120 {
+            return fail(at("name"), "kavşağın adı boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 120 karakter");
+        }
+        if !names.insert(name.to_lowercase()) {
+            return fail(at("name"), "bu adda başka bir kavşak var");
+        }
+        if j.legs.len() != 2 {
+            return fail(at("legs"), "kavşağın iki kolu olur");
+        }
+        if j.legs[0].alignment == j.legs[1].alignment {
+            return fail(at("legs"), "kavşağın iki kolu ayrı akslarda olur");
+        }
+        for (k, leg) in j.legs.iter().enumerate() {
+            match road.alignments.iter().find(|a| a.id == leg.alignment) {
+                None => return fail(format!("junctions[{i}].legs[{k}].alignment"), "kolun aksı projede yok"),
+                Some(a) if a.offset_of.is_some() => {
+                    return fail(format!("junctions[{i}].legs[{k}].alignment"), "kolun aksı PI'larıyla kurulan bir aks olur");
+                }
+                _ => {}
+            }
+            if !(size(leg.left) && size(leg.right)) || leg.left > 100.0 || leg.right > 100.0 {
+                return fail(format!("junctions[{i}].legs[{k}].left"), "kolun kenarları 0'dan büyük, en çok 100 m olur");
+            }
+        }
+        if j.at > 64 {
+            return fail(at("at"), "kesişimin sırası en çok 64 olur");
+        }
+        match j.kind {
+            JunctionKind::AtGrade => {
+                if !size(j.radius) {
+                    return fail(at("radius"), "hemzemin kavşağın dönüş yarıçapı 0'dan büyük, en çok 1000 m olur");
+                }
+                if j.radii.as_ref().is_some_and(|r| r.len() != 4 || r.iter().any(|v| !size(*v))) {
+                    return fail(at("radii"), "çeyreklerin yarıçapı dört olur, her biri 0'dan büyük, en çok 1000 m");
+                }
+            }
+            JunctionKind::Separated => {
+                if j.radius != 0.0 || j.radii.is_some() {
+                    return fail(at("radius"), "katlı kavşakta dönüş yayı olmaz");
+                }
+            }
         }
     }
     None
