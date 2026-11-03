@@ -2709,6 +2709,13 @@
       ],
       "note": "Brükner penceresi Brükneri yazdıkça çekirdekle okur ve çizer; Kaydet road.hauls.edit ile yazar (plan/road.md Y9, ADR 0907)."
     },
+    "stakeout.table": {
+      "level": "semantic",
+      "via": [
+        "road.stakeout.query"
+      ],
+      "note": "Aplikasyon cetveli road.stakeout.query ile okur ve ADR 0223'ün yazıcısıyla dosyaya yazar; çizim değişmez (plan/road.md Y10, ADR 0908)."
+    },
     "haul.new": {
       "level": "semantic",
       "via": [

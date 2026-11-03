@@ -280,6 +280,30 @@ fn coded(side: &Side, built: &SideSection, right: bool) -> Vec<(String, f64, f64
     out
 }
 
+/// A coded point of a cross for the stakeout table (docs/adr/0908): its code (`axis`, `left.c1`, …, as the feature
+/// lines name it), its offset from the axis (right positive), its plan place and elevation.
+#[derive(Clone, Debug, PartialEq)]
+pub struct StakePoint {
+    pub code: String,
+    pub offset: f64,
+    pub at: [f64; 2],
+    pub z: f64,
+}
+
+/// A cross's coded points left to right (the axis, then each side's points as the feature lines code them), none where
+/// the cross has no section. Points at the same offset keep the feature lines' order.
+pub fn stake_points(template: &Template, cross: &Cross) -> Vec<StakePoint> {
+    let Some(sec) = &cross.section else { return Vec::new() };
+    let mut out = vec![StakePoint { code: "axis".into(), offset: 0.0, at: place(&cross.line, 0.0), z: sec.axis }];
+    for (side, b, right) in [(&template.left, &sec.left, false), (&template.right, &sec.right, true)] {
+        for (code, o, z) in coded(side, b, right) {
+            out.push(StakePoint { code, offset: o, at: place(&cross.line, o), z });
+        }
+    }
+    out.sort_by(|a, b| a.offset.total_cmp(&b.offset));
+    out
+}
+
 /// The cross's line on the top surface, left to right: the whole side, or to the hinge on an open side.
 fn top_line(line: &SampleLine, section: &Section, components: [usize; 2]) -> Vec<[f64; 3]> {
     let upto = |s: &SideSection, n: usize| -> Vec<[f64; 2]> {

@@ -7379,6 +7379,31 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::ROAD_STAKEOUT_QUERY.into(),
+            version: crate::ROAD_STAKEOUT_QUERY_VERSION,
+            title: "Aplikasyon cetveli".into(),
+            summary: "Koridorun kodlu kesit noktalarını km'leriyle verir; hiçbir şey yazmaz. Her nokta: km ve km yazısı, bölge, kod (axis, left.c1 … left.cN, ditchToe, ditchBottom, hinge, daylight), yan (left, axis, right), eksenden öteleme (sağa artı, plan boyu), x, y, z. from ve to ile km aralığı (yoksa bölgelerin uçları); step ile her step metrede (step'in katları ve aralığın uçları, her bölgede), yoksa koridorun kendi km'leri; codes ile yalnız o kodlar (tam kod ya da her iki yan için kodun sözcüğü). distances: grid (öntanımlı) ya da ground: öteleme ayrıca zemin boyu olarak (eksenden noktaya çizginin ölçeği ve projenin ortalama elipsoit yüksekliğinin çarpanına bölünür); method bunu söyler. \
+                      Uyarılar: koridorun kendi uyarıları (corridor_stale, corridor_unsolved …), stakeout_unsolved. Retler: not_a_road_project, unknown_corridor, invalid_stakeout, stakeout_no_ground."
+                .into(),
+            aliases: vec!["aplikasyoncetveli".into(), "yolaplikasyon".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::StakeoutQuery>(),
+            output: schema::<crate::StakeoutQueried>(),
+            plan: Some(schema::<crate::StakeoutQueried>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana koridorun her 20 metresi, şev ve hendek noktaları zemin boyuyla".into(),
+                input: json!({ "corridor": "Ana koridor", "step": 20.0, "codes": ["axis", "hinge", "daylight"], "distances": "ground" }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::ROAD_ALIGNMENTS_QUERY.into(),
             version: crate::ROAD_ALIGNMENTS_QUERY_VERSION,
             title: "Aksı sorgula".into(),
@@ -13009,6 +13034,9 @@ mod tests {
                     }
                     crate::ROAD_HAULS_EDIT => serde_json::from_value::<crate::HaulsEdit>(e.input.clone()).map(|_| ()),
                     crate::ROAD_HAULS_QUERY => serde_json::from_value::<crate::HaulsQuery>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_STAKEOUT_QUERY => {
+                        serde_json::from_value::<crate::StakeoutQuery>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_SUBNETWORKS_FIND => {
                         serde_json::from_value::<crate::SubnetworksFind>(e.input.clone())
                             .map(|_| ())
@@ -13735,6 +13763,9 @@ mod tests {
                         }
                         crate::ROAD_HAULS_QUERY => {
                             serde_json::from_value::<crate::HaulsQueried>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_STAKEOUT_QUERY => {
+                            serde_json::from_value::<crate::StakeoutQueried>(output.clone()).map(|_| ())
                         }
                         crate::CAD_ADDRESSES_DEFINE => {
                             serde_json::from_value::<crate::AddressesDefined>(output.clone())

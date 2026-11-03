@@ -38895,6 +38895,188 @@
       ]
     },
     {
+      "id": "road.stakeout.query",
+      "version": 1,
+      "title": "Aplikasyon cetveli",
+      "summary": "Koridorun kodlu kesit noktalarını km'leriyle verir; hiçbir şey yazmaz. Her nokta: km ve km yazısı, bölge, kod (axis, left.c1 … left.cN, ditchToe, ditchBottom, hinge, daylight), yan (left, axis, right), eksenden öteleme (sağa artı, plan boyu), x, y, z. from ve to ile km aralığı (yoksa bölgelerin uçları); step ile her step metrede (step'in katları ve aralığın uçları, her bölgede), yoksa koridorun kendi km'leri; codes ile yalnız o kodlar (tam kod ya da her iki yan için kodun sözcüğü). distances: grid (öntanımlı) ya da ground: öteleme ayrıca zemin boyu olarak (eksenden noktaya çizginin ölçeği ve projenin ortalama elipsoit yüksekliğinin çarpanına bölünür); method bunu söyler. Uyarılar: koridorun kendi uyarıları (corridor_stale, corridor_unsolved …), stakeout_unsolved. Retler: not_a_road_project, unknown_corridor, invalid_stakeout, stakeout_no_ground.",
+      "aliases": [
+        "aplikasyoncetveli",
+        "yolaplikasyon"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.stakeout.query` v1: the corridor by its id or name; its stations between `from` and `to` (its\nregions' ends without them), or every `step` metres there (the multiples of `step` and the range's ends, in each\nregion); only the points whose code is in `codes` (a whole code such as `left.daylight`, or a code's word such as\n`daylight` for both sides); the offsets as plan or ground lengths.\n\nRefusals, in this order: `not_a_road_project`, `unknown_corridor`, `invalid_stakeout` (a range not on the corridor or\nbackwards, a step not in [0.1, 10000] m, a code no template gives, more than 20 000 stations or 200 000 points; a\ncorridor that does not build), `stakeout_no_ground` (ground lengths without the project's mean height, a system or\none scale at a point). Warnings: the corridor's own (`corridor_stale`, `corridor_gap`, `corridor_unsolved`,\n`corridor_folded`, …), `stakeout_unsolved` (stations with no section, which give no points).",
+        "properties": {
+          "codes": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "corridor": {
+            "type": "string"
+          },
+          "distances": {
+            "$ref": "#/$defs/StakeoutDistances"
+          },
+          "from": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "step": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "to": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          }
+        },
+        "required": [
+          "corridor"
+        ],
+        "title": "StakeoutQuery",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.stakeout.query` v1: the corridor, how the offsets are given, the stations read and the points in\nstation order (a station shared by two regions once for each), left to right.",
+        "properties": {
+          "corridor": {
+            "type": "string"
+          },
+          "distances": {
+            "$ref": "#/$defs/StakeoutDistances"
+          },
+          "method": {
+            "description": "How the offsets are given, in words.",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/$defs/StakeRow"
+            },
+            "type": "array"
+          },
+          "stations": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "corridor",
+          "name",
+          "distances",
+          "method",
+          "stations",
+          "rows"
+        ],
+        "title": "StakeoutQueried",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.stakeout.query` v1: the corridor, how the offsets are given, the stations read and the points in\nstation order (a station shared by two regions once for each), left to right.",
+        "properties": {
+          "corridor": {
+            "type": "string"
+          },
+          "distances": {
+            "$ref": "#/$defs/StakeoutDistances"
+          },
+          "method": {
+            "description": "How the offsets are given, in words.",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/$defs/StakeRow"
+            },
+            "type": "array"
+          },
+          "stations": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "corridor",
+          "name",
+          "distances",
+          "method",
+          "stations",
+          "rows"
+        ],
+        "title": "StakeoutQueried",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_corridor",
+          "invalid_stakeout",
+          "stakeout_no_ground"
+        ],
+        "warnings": [
+          "corridor_stale",
+          "corridor_unsolved",
+          "corridor_surface_gone",
+          "stakeout_unsolved"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Ana koridorun her 20 metresi, şev ve hendek noktaları zemin boyuyla",
+          "input": {
+            "codes": [
+              "axis",
+              "hinge",
+              "daylight"
+            ],
+            "corridor": "Ana koridor",
+            "distances": "ground",
+            "step": 20.0
+          }
+        }
+      ]
+    },
+    {
       "id": "road.alignments.query",
       "version": 1,
       "title": "Aksı sorgula",
@@ -73256,6 +73438,24 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Brüknerin ucunda dengelenmeyen hacim var; döküm ya da ödünç gerekir."
+    },
+    {
+      "code": "invalid_stakeout",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Aplikasyon cetveli okunamıyor."
+    },
+    {
+      "code": "stakeout_no_ground",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Zemin boyu için projenin ortalama elipsoit yüksekliği ve tek ölçekli bir koordinat sistemi gerekir."
+    },
+    {
+      "code": "stakeout_unsolved",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Aplikasyon cetvelinin bazı km'lerinde kesit yok; oralarda nokta verilmedi."
     },
     {
       "code": "corridor_superelevation_gone",
@@ -143080,6 +143280,88 @@
         "rule"
       ],
       "type": "object"
+    },
+    "StakeRow": {
+      "description": "A stakeout point: its station and km, its region, its code and side, its offset from the axis (right positive; on\nthe grid), its plan place and elevation, and its offset as a ground length where the table asks for it.",
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "groundOffset": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "kmText": {
+          "type": "string"
+        },
+        "offset": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "region": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "side": {
+          "$ref": "#/$defs/StakeSide"
+        },
+        "station": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "x": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "y": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "z": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "station",
+        "kmText",
+        "region",
+        "code",
+        "side",
+        "offset",
+        "x",
+        "y",
+        "z"
+      ],
+      "type": "object"
+    },
+    "StakeSide": {
+      "description": "A point's side of the axis.",
+      "enum": [
+        "left",
+        "axis",
+        "right"
+      ],
+      "type": "string"
+    },
+    "StakeoutDistances": {
+      "description": "How the table gives the offsets: as the plan (grid) lengths, or as ground lengths (each over the line's scale and\nthe project's mean height's factor).",
+      "enum": [
+        "grid",
+        "ground"
+      ],
+      "type": "string"
     },
     "StandardDimensionStyle": {
       "description": "A dimension style the standard asks for.",

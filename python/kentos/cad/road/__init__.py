@@ -11,10 +11,11 @@ from . import corridors
 from . import hauls
 from . import profiles
 from . import sections
+from . import stakeout
 from . import superelevations
 from . import templates
 from . import terrains
 from . import volumes
 
 
-__all__ = ["alignments", "corridors", "hauls", "profiles", "sections", "superelevations", "templates", "terrains", "volumes"]
+__all__ = ["alignments", "corridors", "hauls", "profiles", "sections", "stakeout", "superelevations", "templates", "terrains", "volumes"]

@@ -414,6 +414,7 @@
     "volume.export",
     "haul.editor",
     "haul.new",
+    "stakeout.table",
     "arch.program",
     "lineTypes.manage",
     "hatchPatterns.manage",

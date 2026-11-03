@@ -1826,6 +1826,18 @@ const ENTRIES: &[Entry] = &[
         warnings: &["corridor_stale", "volume_gap", "haul_unbalanced"],
         targets: none,
     },
+    // KentOS Yol's stakeout table (plan/road.md Y10, docs/adr/0908).
+    Entry {
+        id: "road.stakeout.query",
+        refusals: &[&["not_a_road_project", "unknown_corridor", "invalid_stakeout", "stakeout_no_ground"]],
+        warnings: &[
+            "corridor_stale",
+            "corridor_unsolved",
+            "corridor_surface_gone",
+            "stakeout_unsolved",
+        ],
+        targets: none,
+    },
     Entry {
         id: "road.volumes.approve",
         refusals: &[&["not_a_road_project", "unknown_volume", "volume_not_approved", "invalid_volume"], REVISION],

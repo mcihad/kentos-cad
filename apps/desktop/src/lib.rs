@@ -261,6 +261,7 @@ mod superelevation_window;
 mod corridor_window;
 mod volume_window;
 mod haul_window;
+mod stakeout_window;
 #[cfg(test)]
 mod alignment_window_tests;
 #[cfg(test)]
@@ -275,6 +276,8 @@ mod corridor_window_tests;
 mod volume_window_tests;
 #[cfg(test)]
 mod haul_window_tests;
+#[cfg(test)]
+mod stakeout_window_tests;
 mod terrain_layer;
 mod terrain_window;
 #[cfg(test)]

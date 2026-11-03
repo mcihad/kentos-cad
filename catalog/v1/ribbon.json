@@ -619,6 +619,16 @@
         "size": "large"
        }
       ]
+     },
+     {
+      "label": "Aplikasyon",
+      "icon": "stakeoutTable",
+      "items": [
+       {
+        "command": "stakeout.table",
+        "size": "large"
+       }
+      ]
      }
     ],
     "works": [

@@ -274,6 +274,8 @@ CAD = [
         P("Kübaj", "volumeEditor", [L("volume.editor"), L("volume.new"), L("volume.export")]),
         # The mass haul diagrams (plan/road.md Y9, docs/adr/0907): the Brükner window and a new diagram.
         P("Brükner", "haulEditor", [L("haul.editor"), L("haul.new")]),
+        # The stakeout table (plan/road.md Y10, docs/adr/0908).
+        P("Aplikasyon", "stakeoutTable", [L("stakeout.table")]),
     ], works=ROAD),
     T("plan", "Plan", [
         P("Yol", "planRoad", [L("tool.planRoad"), S("tool.roadJunctions"), S("tool.medianClose"), S("tool.centerline")]),

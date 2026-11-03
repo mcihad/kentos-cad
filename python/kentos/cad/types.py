@@ -6058,6 +6058,29 @@ StackModeName = Literal["always", "ifNeeded"]
 """The names of :class:`StackMode`, for a plain string."""
 
 
+class StakeSide(_StrEnum):
+    """A point's side of the axis."""
+    LEFT = "left"
+    AXIS = "axis"
+    RIGHT = "right"
+
+
+StakeSideName = Literal["left", "axis", "right"]
+"""The names of :class:`StakeSide`, for a plain string."""
+
+
+class StakeoutDistances(_StrEnum):
+    """How the table gives the offsets: as the plan (grid) lengths, or as ground lengths (each over the line's scale and
+    the project's mean height's factor).
+    """
+    GRID = "grid"
+    GROUND = "ground"
+
+
+StakeoutDistancesName = Literal["grid", "ground"]
+"""The names of :class:`StakeoutDistances`, for a plain string."""
+
+
 class StandardIssueKind(_StrEnum):
     """What a finding is about.
 
@@ -67979,6 +68002,149 @@ class StairsPlan(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class StakeRow(_Model):
+    """A stakeout point: its station and km, its region, its code and side, its offset from the axis (right positive; on
+    the grid), its plan place and elevation, and its offset as a ground length where the table asks for it.
+    Attributes:
+        station: Unit: m.
+        region: Unit: count.
+        offset: Unit: m.
+        x: Unit: m.
+        y: Unit: m.
+        z: Unit: m.
+        ground_offset: Unit: m.
+    """
+    station: float
+    km_text: str
+    region: int
+    code: str
+    side: StakeSide | StakeSideName
+    offset: float
+    x: float
+    y: float
+    z: float
+    ground_offset: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["station"] = float(self.station)
+        out["kmText"] = self.km_text
+        out["region"] = self.region
+        out["code"] = self.code
+        out["side"] = _enum_out(self.side)
+        out["offset"] = float(self.offset)
+        out["x"] = float(self.x)
+        out["y"] = float(self.y)
+        out["z"] = float(self.z)
+        if self.ground_offset is not UNSET:
+            out["groundOffset"] = None if self.ground_offset is None else float(self.ground_offset)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StakeRow:
+        return cls(
+            station=float(data["station"]),
+            km_text=data["kmText"],
+            region=data["region"],
+            code=data["code"],
+            side=_enum_in(StakeSide, data["side"]),
+            offset=float(data["offset"]),
+            x=float(data["x"]),
+            y=float(data["y"]),
+            z=float(data["z"]),
+            ground_offset=UNSET if "groundOffset" not in data else None if data["groundOffset"] is None else float(data["groundOffset"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StakeoutQueried(_Model):
+    """Output of `road.stakeout.query` v1: the corridor, how the offsets are given, the stations read and the points in
+    station order (a station shared by two regions once for each), left to right.
+    Attributes:
+        method: How the offsets are given, in words.
+        stations: Unit: count.
+    """
+    corridor: str
+    name: str
+    distances: StakeoutDistances | StakeoutDistancesName
+    method: str
+    stations: int
+    rows: list[StakeRow]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["corridor"] = self.corridor
+        out["name"] = self.name
+        out["distances"] = _enum_out(self.distances)
+        out["method"] = self.method
+        out["stations"] = self.stations
+        out["rows"] = [e0.to_json() for e0 in self.rows]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StakeoutQueried:
+        return cls(
+            corridor=data["corridor"],
+            name=data["name"],
+            distances=_enum_in(StakeoutDistances, data["distances"]),
+            method=data["method"],
+            stations=data["stations"],
+            rows=[StakeRow.from_json(e0) for e0 in data["rows"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StakeoutQuery(_Model):
+    """Input of `road.stakeout.query` v1: the corridor by its id or name; its stations between `from` and `to` (its
+    regions' ends without them), or every `step` metres there (the multiples of `step` and the range's ends, in each
+    region); only the points whose code is in `codes` (a whole code such as `left.daylight`, or a code's word such as
+    `daylight` for both sides); the offsets as plan or ground lengths.
+
+    Refusals, in this order: `not_a_road_project`, `unknown_corridor`, `invalid_stakeout` (a range not on the corridor or
+    backwards, a step not in [0.1, 10000] m, a code no template gives, more than 20 000 stations or 200 000 points; a
+    corridor that does not build), `stakeout_no_ground` (ground lengths without the project's mean height, a system or
+    one scale at a point). Warnings: the corridor's own (`corridor_stale`, `corridor_gap`, `corridor_unsolved`,
+    `corridor_folded`, …), `stakeout_unsolved` (stations with no section, which give no points).
+    Attributes:
+        from_: Unit: m.
+        step: Unit: m.
+        to: Unit: m.
+    """
+    corridor: str
+    codes: list[str] | None | Unset = UNSET
+    distances: StakeoutDistances | StakeoutDistancesName | Unset = UNSET
+    from_: float | None | Unset = UNSET
+    step: float | None | Unset = UNSET
+    to: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["corridor"] = self.corridor
+        if self.codes is not UNSET:
+            out["codes"] = None if self.codes is None else list(self.codes)
+        if self.distances is not UNSET:
+            out["distances"] = _enum_out(self.distances)
+        if self.from_ is not UNSET:
+            out["from"] = None if self.from_ is None else float(self.from_)
+        if self.step is not UNSET:
+            out["step"] = None if self.step is None else float(self.step)
+        if self.to is not UNSET:
+            out["to"] = None if self.to is None else float(self.to)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StakeoutQuery:
+        return cls(
+            corridor=data["corridor"],
+            codes=UNSET if "codes" not in data else None if data["codes"] is None else list(data["codes"]),
+            distances=_enum_in(StakeoutDistances, data["distances"]) if "distances" in data else UNSET,
+            from_=UNSET if "from" not in data else None if data["from"] is None else float(data["from"]),
+            step=UNSET if "step" not in data else None if data["step"] is None else float(data["step"]),
+            to=UNSET if "to" not in data else None if data["to"] is None else float(data["to"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class StandardDimensionStyle(_Model):
     """A dimension style the standard asks for.
     Attributes:
@@ -98705,6 +98871,13 @@ __all__ = [
     "StairsCreate",
     "StairsCreated",
     "StairsPlan",
+    "StakeRow",
+    "StakeSide",
+    "StakeSideName",
+    "StakeoutDistances",
+    "StakeoutDistancesName",
+    "StakeoutQueried",
+    "StakeoutQuery",
     "StandardDimensionStyle",
     "StandardIssue",
     "StandardIssueKind",

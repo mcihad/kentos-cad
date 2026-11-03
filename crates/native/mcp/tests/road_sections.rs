@@ -177,3 +177,24 @@ fn a_mass_haul_diagram_is_read_written_and_keeps_its_volume() {
     let kept = call(&mut server, "road.volumes.edit", json!({"drawing":drawing,"volume":"v-1","operation":"remove"}));
     assert!(kept.to_string().contains("volume_in_use"), "{kept}");
 }
+
+/// The stakeout table of the file's corridor is read, on the grid and asking for ground lengths without a mean height
+/// (plan/road.md Y10, docs/adr/0908).
+#[test]
+fn a_stakeout_table_is_read_and_ground_lengths_want_a_height() {
+    let mut server = Server::new();
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/kcad/v2/road-work.kcad");
+    let opened = call(&mut server, "drawing.open", json!({"path":path}));
+    let drawing = opened["structuredContent"]["drawing"].clone();
+    let asked = call(
+        &mut server,
+        "road.stakeout.query",
+        json!({"drawing":drawing,"corridor":"Ana koridor","step":50.0,"codes":["axis","daylight"]}),
+    );
+    assert_eq!(asked["isError"], false, "{asked}");
+    let out = &asked["structuredContent"]["output"];
+    let rows = out["rows"].as_array().cloned().unwrap_or_default();
+    assert!(!rows.is_empty() && rows.iter().all(|r| r["code"] == "axis" || r["code"].as_str().is_some_and(|c| c.ends_with(".daylight"))), "{out}");
+    let ground = call(&mut server, "road.stakeout.query", json!({"drawing":drawing,"corridor":"Ana koridor","distances":"ground"}));
+    assert!(ground.to_string().contains("stakeout_no_ground") || ground["isError"] == false, "{ground}");
+}

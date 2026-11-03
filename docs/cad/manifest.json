@@ -8956,6 +8956,22 @@
    "tests": 0
   },
   {
+   "id": "stakeout.table",
+   "kind": "command",
+   "title": "Aplikasyon cetveli…",
+   "level": "semantic",
+   "via": [
+    "road.stakeout.query"
+   ],
+   "operation": null,
+   "python": "Connection: road.stakeout.query",
+   "mcp": "road.stakeout.query",
+   "note": "Aplikasyon cetveli road.stakeout.query ile okur ve ADR 0223'ün yazıcısıyla dosyaya yazar; çizim değişmez (plan/road.md Y10, ADR 0908).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "standards.apply",
    "kind": "command",
    "title": "Standardı uygula",
