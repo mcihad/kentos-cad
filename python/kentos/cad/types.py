@@ -439,16 +439,18 @@ class ArrayFindKind(_StrEnum):
 
     - ``line``
     - ``grid``: World X/Y rectangular rows and columns; rotated/skew grids are not inferred.
+    - ``lattice``: Rotated or skew regular rows/columns; both observed axes remain explicit in the proposal.
     - ``polar``: Explicit full-circle interpretation; at least four occupied places and an observed adjacent pair.
     - ``path``: Fixed spacing along an explicitly selected 2D guide, in its stored direction.
     """
     LINE = "line"
     GRID = "grid"
+    LATTICE = "lattice"
     POLAR = "polar"
     PATH = "path"
 
 
-ArrayFindKindName = Literal["line", "grid", "polar", "path"]
+ArrayFindKindName = Literal["line", "grid", "lattice", "polar", "path"]
 """The names of :class:`ArrayFindKind`, for a plain string."""
 
 
@@ -7034,6 +7036,7 @@ class ArrayLayout(_Union):
     One of:
 
     - :class:`GridArrayLayout` (``kind: grid``)
+    - :class:`LatticeArrayLayout` (``kind: lattice``)
     - :class:`PolarArrayLayout` (``kind: polar``)
     - :class:`LineArrayLayout` (``kind: line``)
     - :class:`PathArrayLayout` (``kind: path``)
@@ -12897,7 +12900,8 @@ class ArraysFind(_Model):
     orientation is verified by the existing adoption engine. Partial-arc intent is not inferred.
     With kind=path, the selected seed must be at the guide start. Observed adjacent arc-length
     gaps suggest fixed spacing; trailing unobserved places and reversed guide intent are not inferred.
-    Rotated/skew grids are not implemented by this version.
+    With kind=lattice, independently directed regular axes are inferred from observed displacements.
+    Items keep their common direction; source-to-slot identity and gaps use the same adoption gate.
     Attributes:
         source: Existing seed insert UUID. May be an interior place of a candidate.
         kind: Omitted: line. Grid is world-X/Y; polar is an explicit full-circle interpretation.
@@ -73281,6 +73285,49 @@ class GridArrayLayout(ArrayLayout):
 
 
 @dataclass(kw_only=True, slots=True)
+class LatticeArrayLayout(ArrayLayout):
+    """Regular 2D rows/columns with independently directed axes. Distances dx/dy are metres;
+    angles are degrees counter-clockwise from world east, independent of the item rotation.
+    Order and item identity are row-major, exactly as Grid. Parallel axes are refused.
+    Attributes:
+        rows: Unit: count.
+        cols: Unit: count.
+        dx: Unit: length.
+        dy: Unit: length.
+        column_angle: Unit: deg.
+        row_angle: Unit: deg.
+    """
+    TAG_VALUE: ClassVar[str] = "lattice"
+    rows: int
+    cols: int
+    dx: float
+    dy: float
+    column_angle: float
+    row_angle: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "lattice"}
+        out["rows"] = self.rows
+        out["cols"] = self.cols
+        out["dx"] = float(self.dx)
+        out["dy"] = float(self.dy)
+        out["columnAngle"] = float(self.column_angle)
+        out["rowAngle"] = float(self.row_angle)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LatticeArrayLayout:
+        return cls(
+            rows=data["rows"],
+            cols=data["cols"],
+            dx=float(data["dx"]),
+            dy=float(data["dy"]),
+            column_angle=float(data["columnAngle"]),
+            row_angle=float(data["rowAngle"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PolarArrayLayout(ArrayLayout):
     """Kutupsal dizi: `count` items around `center`, 2 to 1000, the
     originals among them, over `fill` degrees (counter-clockwise; minus
@@ -90490,7 +90537,7 @@ _AREA_WORK: dict[str, type[AreaWork]] = {"union": UnionAreaWork, "intersect": In
 _ARRAY_EDIT: dict[str, type[ArrayEdit]] = {"layout": LayoutArrayEdit, "placement": PlacementArrayEdit, "replace": ReplaceArrayEdit, "remove": RemoveArrayEdit, "reset": ResetArrayEdit}
 
 
-_ARRAY_LAYOUT: dict[str, type[ArrayLayout]] = {"grid": GridArrayLayout, "polar": PolarArrayLayout, "line": LineArrayLayout, "path": PathArrayLayout}
+_ARRAY_LAYOUT: dict[str, type[ArrayLayout]] = {"grid": GridArrayLayout, "lattice": LatticeArrayLayout, "polar": PolarArrayLayout, "line": LineArrayLayout, "path": PathArrayLayout}
 
 
 _BLOCK_ACTION: dict[str, type[BlockAction]] = {"move": MoveBlockAction, "stretch": StretchBlockAction, "scale": ScaleBlockAction, "array": ArrayBlockAction, "rotate": RotateBlockAction, "flip": FlipBlockAction}
@@ -92095,6 +92142,7 @@ __all__ = [
     "LabelsReported",
     "LatePolicy",
     "LatePolicyName",
+    "LatticeArrayLayout",
     "LayerAction",
     "LayerCompose",
     "LayerDerivation",

@@ -746,3 +746,50 @@ fn path_duplicate_slot_is_ambiguous_and_cancellation_discards_all_proposals() {
     let result=arrays_find::inspect(&doc,&input,||{calls+=1;calls>40});
     assert!(matches!(result,CommandResult::Cancelled),"{result:?}");assert_eq!(doc.to_snapshot_v2(),before);
 }
+
+fn lattice_request(doc:&Document,slot:u32)->ArraysFind {
+    let mut input=request(doc,slot);input.kind=Some(kentos_commands::ArrayFindKind::Lattice);input
+}
+#[test]
+fn skew_lattice_has_two_observed_axes_two_holes_and_metadata_only_adoption() {
+    let (ac,ar)=(23_f64.to_radians(),81_f64.to_radians());let mut ps=Vec::new();
+    for r in 0..3 {for c in 0..4 {
+        if [(0,2),(2,0)].contains(&(r,c)) {continue;}
+        ps.push((c as f64*2.*ac.cos()+r as f64*3.*ar.cos(),c as f64*2.*ac.sin()+r as f64*3.*ar.sin()));
+    }}
+    ps.push((1.25,-0.7));let mut doc=drawing(&ps);let before=doc.to_snapshot_v2();
+    let found=find(&doc,&lattice_request(&doc,6));
+    let candidate=found.matches.iter().find(|p|p.present==10&&p.missing==2).unwrap_or_else(||panic!("{found:?}"));
+    assert!(matches!(candidate.adoption.layout,ArrayLayout::Lattice {..}));
+    assert_eq!(candidate.adoption.items.iter().filter(|i|i.uid.is_none()).count(),2);
+    assert!(candidate.adoption.items.iter().all(|i|!i.kept));
+    let answer=arrays_adopt::execute(&mut ExecutionContext::new(&mut doc),candidate.adoption.clone());assert!(matches!(answer,CommandResult::Completed {..}),"{answer:?}");
+    let after=doc.to_snapshot_v2();assert_eq!(after.entities,before.entities);assert_eq!(after.uids,before.uids);assert_eq!(after.blocks,before.blocks);
+    let bytes=kentos_kcad::encode_verified(&after).unwrap();assert_eq!(kentos_kcad::decode(&bytes).unwrap(),after);
+    doc.undo();assert_eq!(doc.to_snapshot_v2(),before);doc.redo();assert_eq!(doc.to_snapshot_v2(),after);
+}
+
+#[test]
+fn a_millimetre_lattice_at_large_world_coordinates_uses_the_full_observed_span() {
+    let (ac,ar)=(23_f64.to_radians(),81_f64.to_radians());let mut ps=Vec::new();
+    for r in 0..3 {for c in 0..18 {
+        if [(0,2),(2,16)].contains(&(r,c)) {continue;}
+        ps.push((4e9+c as f64*0.003*ac.cos()+r as f64*0.005*ar.cos(),-4e9+c as f64*0.003*ac.sin()+r as f64*0.005*ar.sin()));
+    }}
+    let doc=drawing(&ps);let found=find(&doc,&lattice_request(&doc,6));
+    assert!(found.matches.iter().any(|p|p.present==52&&p.missing==2),"{} patterns, best {:?}; {} comparisons",found.matches.len(),found.matches.first().map(|p|(p.present,p.missing)),found.comparisons);
+    for p in &found.matches {assert!(p.deviation<=1e-6);}
+}
+
+
+#[test]
+fn lattice_refinement_never_loosens_the_absolute_acceptance_tolerance_and_stop_is_read_only() {
+    let mut ps=Vec::new();for r in 0..3 {for c in 0..8 {ps.push((c as f64*1.8+r as f64*0.4,c as f64*0.8+r as f64*2.7));}}
+    ps[23].0+=0.00002;
+    let doc=drawing(&ps);let input=lattice_request(&doc,1);let result=find(&doc,&input);
+    assert!(result.matches.iter().all(|p|p.present<24&&p.deviation<=1e-6));
+    let before=doc.to_snapshot_v2();let mut calls=0;
+    assert!(matches!(arrays_find::inspect(&doc,&input,||{calls+=1;calls>50}),CommandResult::Cancelled));
+    assert_eq!(doc.to_snapshot_v2(),before);
+    let mut narrow=input;narrow.uids=Some(vec![]);assert!(find(&doc,&narrow).matches.is_empty());
+}

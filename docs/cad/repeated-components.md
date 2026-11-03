@@ -313,3 +313,34 @@ bu nedenle reddedilir. Mevcut iç geometrinin ölçü yollarına yeni parça yol
 eklenir ve dünya noktası tekrar denetlenir. Aynı örnek `doc.start` ile iş,
 MCP ile `op=plan`/korunan `expected.plan` olarak kullanılabilir.
 [Karar ve kesin sınırlar](../adr/0881-repeat-text-values-and-nested-blocks.md).
+
+
+## Dönük/eğik ızgara
+
+Bloklar → Dizileri bul → **Dönük/eğik ızgara** iki gözlenmiş düzenli ekseni
+arar. Dünya X/Y ızgarası ayrı seçenek olarak kalır. Aday kartı iki yönü,
+aralıkları, satır/sütun sayısını, eksik/korunan hücreleri açıkça gösterir.
+Yönler nesneleri döndürmez. İnceleme ve açık Uygula öncesi belge değişmez.
+En az iki satır, iki sütun, dört dolu yer, her eksende komşu dolu çift ve
+bir dolu sınır köşesi gerekir; görünmeyen yarım aralık varsayılmaz.
+
+```python
+found = cad.arrays.find(doc, source=uid, kind=cad.ArrayFindKind.LATTICE)
+p = found.matches[0].adoption
+# İnceleme için tipli alanları kullanın:
+args = dict(source=p.source, layout=p.layout, items=p.items,
+            tolerance=p.tolerance, expected_revision=p.expected_revision)
+plan = cad.arrays.adopt.plan(doc, **args)
+# Kullanıcı onayından sonra:
+result = cad.arrays.adopt(doc, **args)
+```
+
+`LatticeArrayLayout(rows=3, cols=4, dx=2, dy=3, column_angle=23,
+row_angle=81)` API'de metre/derecedir; JSON alanları `columnAngle` ve
+`rowAngle` olur. `cad.arrays.edit` satır/sütun kimliklerini korur. GUI'de
+Diziyi düzenle içindeki **Sütun yönü** / **Satır yönü** derece kabul eder;
+uzunluk birimli açı reddedilir. MCP aynı katalog, plan ve revision kapısını
+kullanır. Uzun arama durdurulabilir; 32 768 gözlenen çift, 96 eksen vektörü,
+2 milyon iş veya sonuç sınırında `truncated` açıkça bildirilir. Kesin kabul
+her zaman özgün mutlak toleransta yapılır; tam açıklık uyarlaması toleransı
+gevşetmez. Dosya 161 gerektirir; eski yazılım sessizce yanlış açmaz.

@@ -32,18 +32,19 @@ if TYPE_CHECKING:
 
 class _ArraysAdopt(LocalCommand[ArraysAdopt, ArraysAdopted, ArraysAdoptPlan]):
     """``cad.arrays.adopt`` v1. Mevcut blokları diziye bağla: İncelenen mevcut blok
-    yerleştirmelerini verilen grid, doğru, kutupsal veya yol düzenine bağlar. Örüntü
-    tahmin etmez: source sıfır numaralı normal öğe, items her yer için bir kayıt olmalı.
-    Boş kayıt eksik öğe; kept açıkça korunan elle değiştirilmiş öğedir. En az iki normal
-    öğe gereklidir. Yalnız ilişkili dizi kaydı eklenir; geometri, UUID, çizim sırası,
-    blok tanımı ve mevcut bağlar değişmez. Normal öğelerin bloğu, aynası, ölçeği ve yönü
-    düzene uymalıdır; konum toleransı metre (varsayılan 0.000001), açı toleransı 1e-10
-    rad, ölçek toleransı 1e-12 bağıl. Sapma kendiliğinden düzeltilmez. İlk kapsam ortak
-    görünüşlü, verisiz, tekdüze ölçekli statik blok yerleştirmeleri; dinamik/dış
-    referanslı/öznitelik tanımlı blok, mimari kayıt, kırpma, farklı katman/görünüş veya
-    başka dizinin öğesi açıkça reddedilir. Mevcut cad.arrays.edit
-    sayı/aralık/korunan/silinmiş/reset semantiği kullanılır. İnceleme yazısız, uygulama
-    tek geri alma adımıdır. expectedRevision eskiyse hiçbir şey yazılmaz.
+    yerleştirmelerini verilen grid, bağımsız yönlü lattice, doğru, kutupsal veya yol
+    düzenine bağlar. Örüntü tahmin etmez: source sıfır numaralı normal öğe, items her
+    yer için bir kayıt olmalı. Boş kayıt eksik öğe; kept açıkça korunan elle
+    değiştirilmiş öğedir. En az iki normal öğe gereklidir. Yalnız ilişkili dizi kaydı
+    eklenir; geometri, UUID, çizim sırası, blok tanımı ve mevcut bağlar değişmez. Normal
+    öğelerin bloğu, aynası, ölçeği ve yönü düzene uymalıdır; konum toleransı metre
+    (varsayılan 0.000001), açı toleransı 1e-10 rad, ölçek toleransı 1e-12 bağıl. Sapma
+    kendiliğinden düzeltilmez. İlk kapsam ortak görünüşlü, verisiz, tekdüze ölçekli
+    statik blok yerleştirmeleri; dinamik/dış referanslı/öznitelik tanımlı blok, mimari
+    kayıt, kırpma, farklı katman/görünüş veya başka dizinin öğesi açıkça reddedilir.
+    Mevcut cad.arrays.edit sayı/aralık/korunan/silinmiş/reset semantiği kullanılır.
+    İnceleme yazısız, uygulama tek geri alma adımıdır. expectedRevision eskiyse hiçbir
+    şey yazılmaz.
     """
     __slots__ = ()
     id = "cad.arrays.adopt"
@@ -68,18 +69,18 @@ class _ArraysAdopt(LocalCommand[ArraysAdopt, ArraysAdopted, ArraysAdoptPlan]):
         expected: Expected | None = None,
     ) -> ArraysAdopted:
         """Mevcut blokları diziye bağla: İncelenen mevcut blok yerleştirmelerini verilen grid,
-        doğru, kutupsal veya yol düzenine bağlar. Örüntü tahmin etmez: source sıfır numaralı
-        normal öğe, items her yer için bir kayıt olmalı. Boş kayıt eksik öğe; kept açıkça
-        korunan elle değiştirilmiş öğedir. En az iki normal öğe gereklidir. Yalnız ilişkili
-        dizi kaydı eklenir; geometri, UUID, çizim sırası, blok tanımı ve mevcut bağlar
-        değişmez. Normal öğelerin bloğu, aynası, ölçeği ve yönü düzene uymalıdır; konum
-        toleransı metre (varsayılan 0.000001), açı toleransı 1e-10 rad, ölçek toleransı
-        1e-12 bağıl. Sapma kendiliğinden düzeltilmez. İlk kapsam ortak görünüşlü, verisiz,
-        tekdüze ölçekli statik blok yerleştirmeleri; dinamik/dış referanslı/öznitelik
-        tanımlı blok, mimari kayıt, kırpma, farklı katman/görünüş veya başka dizinin öğesi
-        açıkça reddedilir. Mevcut cad.arrays.edit sayı/aralık/korunan/silinmiş/reset
-        semantiği kullanılır. İnceleme yazısız, uygulama tek geri alma adımıdır.
-        expectedRevision eskiyse hiçbir şey yazılmaz.
+        bağımsız yönlü lattice, doğru, kutupsal veya yol düzenine bağlar. Örüntü tahmin
+        etmez: source sıfır numaralı normal öğe, items her yer için bir kayıt olmalı. Boş
+        kayıt eksik öğe; kept açıkça korunan elle değiştirilmiş öğedir. En az iki normal öğe
+        gereklidir. Yalnız ilişkili dizi kaydı eklenir; geometri, UUID, çizim sırası, blok
+        tanımı ve mevcut bağlar değişmez. Normal öğelerin bloğu, aynası, ölçeği ve yönü
+        düzene uymalıdır; konum toleransı metre (varsayılan 0.000001), açı toleransı 1e-10
+        rad, ölçek toleransı 1e-12 bağıl. Sapma kendiliğinden düzeltilmez. İlk kapsam ortak
+        görünüşlü, verisiz, tekdüze ölçekli statik blok yerleştirmeleri; dinamik/dış
+        referanslı/öznitelik tanımlı blok, mimari kayıt, kırpma, farklı katman/görünüş veya
+        başka dizinin öğesi açıkça reddedilir. Mevcut cad.arrays.edit
+        sayı/aralık/korunan/silinmiş/reset semantiği kullanılır. İnceleme yazısız, uygulama
+        tek geri alma adımıdır. expectedRevision eskiyse hiçbir şey yazılmaz.
 
         Args:
             doc: The drawing it works on.
@@ -336,18 +337,20 @@ class _ArraysFind(LocalCommand[ArraysFind, ArraysFound, ArraysFound]):
     dönen yönler doğrulanır. path için mevcut 2B kılavuz UUID zorunludur; kaynak kılavuz
     başlangıcındadır. Kayıtlı yönde gözlenen sabit yay uzunluğu aralıkları ve sabit veya
     teğeti izleyen yönler aranır. Son dolu yerin ötesi, ters yön ve başlangıç kayması
-    varsayılmaz. Dönük/eğik grid bu sürümde aranmaz. Doğrusal için en az üç dolu yer ve
-    gözlenen bir komşu çift; grid için en az iki satır, iki sütun, dört dolu yer, iki
-    eksende gözlenen komşu çift ve dolu bir sınır köşesi gerekir. Her ikinci yer doluysa
-    gizli ara yer varsayılmaz. Aday adoption girdisi cad.arrays.adopt ile yeniden
-    incelenip açıkça uygulanabilir; arama hiçbir nesne, seçim veya dizi kaydı
-    değiştirmez. Eksik yerler boş kalır; eşleşmeyen öğe kendiliğinden kept olmaz.
-    eligible ve UUID→ret nedeni excluded listeleri kapsamı açıklar. Birbiriyle çakışan
-    adaylar overlaps ile belirtilir. uids yoksa belge, boşsa yalnız kaynak aranır; en
-    çok 2048 nesne. Tolerans metre, varsayılan 0.000001, en çok 0.001; limit 1..100. İki
-    milyon karşılaştırma veya aday sınırı kısmi arama truncated üretir. Grid aralık
-    keşfi 500000 çift ya da bir eksende 128 aralık adayına ulaşırsa da kısmi bildirilir.
-    Uzun arama native Job ile durdurulabilir. expectedRevision eskiyse yazısız ret.
+    varsayılmaz. lattice açık seçimi, bağımsız gözlenmiş iki yönde dönük/eğik düzeni
+    arar; öğe yönleri değişmez. Lattice en çok 32768 çift ve 96 farklı eksen vektörü
+    inceler, sınırlar kısmi bildirilir. Doğrusal için en az üç dolu yer ve gözlenen bir
+    komşu çift; grid için en az iki satır, iki sütun, dört dolu yer, iki eksende
+    gözlenen komşu çift ve dolu bir sınır köşesi gerekir. Her ikinci yer doluysa gizli
+    ara yer varsayılmaz. Aday adoption girdisi cad.arrays.adopt ile yeniden incelenip
+    açıkça uygulanabilir; arama hiçbir nesne, seçim veya dizi kaydı değiştirmez. Eksik
+    yerler boş kalır; eşleşmeyen öğe kendiliğinden kept olmaz. eligible ve UUID→ret
+    nedeni excluded listeleri kapsamı açıklar. Birbiriyle çakışan adaylar overlaps ile
+    belirtilir. uids yoksa belge, boşsa yalnız kaynak aranır; en çok 2048 nesne.
+    Tolerans metre, varsayılan 0.000001, en çok 0.001; limit 1..100. İki milyon
+    karşılaştırma veya aday sınırı kısmi arama truncated üretir. Grid aralık keşfi
+    500000 çift ya da bir eksende 128 aralık adayına ulaşırsa da kısmi bildirilir. Uzun
+    arama native Job ile durdurulabilir. expectedRevision eskiyse yazısız ret.
     """
     __slots__ = ()
     id = "cad.arrays.find"
@@ -380,19 +383,21 @@ class _ArraysFind(LocalCommand[ArraysFind, ArraysFound, ArraysFound]):
         gözlenen açısal komşuluk ve sabit veya merkezle dönen yönler doğrulanır. path için
         mevcut 2B kılavuz UUID zorunludur; kaynak kılavuz başlangıcındadır. Kayıtlı yönde
         gözlenen sabit yay uzunluğu aralıkları ve sabit veya teğeti izleyen yönler aranır.
-        Son dolu yerin ötesi, ters yön ve başlangıç kayması varsayılmaz. Dönük/eğik grid bu
-        sürümde aranmaz. Doğrusal için en az üç dolu yer ve gözlenen bir komşu çift; grid
-        için en az iki satır, iki sütun, dört dolu yer, iki eksende gözlenen komşu çift ve
-        dolu bir sınır köşesi gerekir. Her ikinci yer doluysa gizli ara yer varsayılmaz.
-        Aday adoption girdisi cad.arrays.adopt ile yeniden incelenip açıkça uygulanabilir;
-        arama hiçbir nesne, seçim veya dizi kaydı değiştirmez. Eksik yerler boş kalır;
-        eşleşmeyen öğe kendiliğinden kept olmaz. eligible ve UUID→ret nedeni excluded
-        listeleri kapsamı açıklar. Birbiriyle çakışan adaylar overlaps ile belirtilir. uids
-        yoksa belge, boşsa yalnız kaynak aranır; en çok 2048 nesne. Tolerans metre,
-        varsayılan 0.000001, en çok 0.001; limit 1..100. İki milyon karşılaştırma veya aday
-        sınırı kısmi arama truncated üretir. Grid aralık keşfi 500000 çift ya da bir eksende
-        128 aralık adayına ulaşırsa da kısmi bildirilir. Uzun arama native Job ile
-        durdurulabilir. expectedRevision eskiyse yazısız ret.
+        Son dolu yerin ötesi, ters yön ve başlangıç kayması varsayılmaz. lattice açık
+        seçimi, bağımsız gözlenmiş iki yönde dönük/eğik düzeni arar; öğe yönleri değişmez.
+        Lattice en çok 32768 çift ve 96 farklı eksen vektörü inceler, sınırlar kısmi
+        bildirilir. Doğrusal için en az üç dolu yer ve gözlenen bir komşu çift; grid için en
+        az iki satır, iki sütun, dört dolu yer, iki eksende gözlenen komşu çift ve dolu bir
+        sınır köşesi gerekir. Her ikinci yer doluysa gizli ara yer varsayılmaz. Aday
+        adoption girdisi cad.arrays.adopt ile yeniden incelenip açıkça uygulanabilir; arama
+        hiçbir nesne, seçim veya dizi kaydı değiştirmez. Eksik yerler boş kalır; eşleşmeyen
+        öğe kendiliğinden kept olmaz. eligible ve UUID→ret nedeni excluded listeleri kapsamı
+        açıklar. Birbiriyle çakışan adaylar overlaps ile belirtilir. uids yoksa belge, boşsa
+        yalnız kaynak aranır; en çok 2048 nesne. Tolerans metre, varsayılan 0.000001, en çok
+        0.001; limit 1..100. İki milyon karşılaştırma veya aday sınırı kısmi arama truncated
+        üretir. Grid aralık keşfi 500000 çift ya da bir eksende 128 aralık adayına ulaşırsa
+        da kısmi bildirilir. Uzun arama native Job ile durdurulabilir. expectedRevision
+        eskiyse yazısız ret.
 
         Args:
             doc: The drawing it works on.

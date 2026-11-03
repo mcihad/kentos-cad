@@ -592,6 +592,7 @@ pub(crate) fn inputs_for(
         let kept = i.items.iter().filter(|i| i.kept).count();
         let kind = match i.layout {
             kentos_commands::ArrayLayout::Grid { .. } => "Izgara",
+            kentos_commands::ArrayLayout::Lattice { .. } => "Dönük/eğik ızgara",
             kentos_commands::ArrayLayout::Line { .. } => "Sıra",
             kentos_commands::ArrayLayout::Polar { .. } => "Kutupsal",
             kentos_commands::ArrayLayout::Path { .. } => "Yol boyunca",

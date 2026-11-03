@@ -1072,3 +1072,22 @@ fn nurbs_break_uses_the_semantic_target_filter_and_keeps_exact_curve_pieces() {
     assert_eq!(b.doc.undo().as_deref(), Some("Kır"));
     assert_eq!(b.doc.to_snapshot_v2(), before);
 }
+
+
+#[test]
+fn lattice_axis_input_is_explicit_degrees_and_every_edit_is_one_undo() {
+    use kentos_commands::{ArrayLayout,CommandResult,EntitiesArray};
+    use kentos_native_application::{ExecutionContext,array};
+    let mut b=bench(&[]);let source=b.add_circle("cizim",[-40.,20.],1.);
+    let source_uid=b.doc.uid(source).unwrap().to_string();
+    assert!(matches!(array::execute(&mut ExecutionContext::new(&mut b.doc),EntitiesArray {
+        uids:vec![source_uid],layout:ArrayLayout::Lattice {rows:2,cols:3,dx:5.,dy:6.,column_angle:20.,row_angle:90.},
+        associative:true,expected_revision:None}),CommandResult::Completed {..}));
+    b.start("arrayEdit");b.click(-39.,20.);assert!(b.options().contains(&"Y")&&b.options().contains(&"N"));
+    assert!(b.type_text("Y"));let before=b.doc.to_snapshot_v2();
+    assert!(b.type_text("30mm"));assert_eq!(b.doc.to_snapshot_v2(),before);
+    assert!(b.type_text("30°"));let after=b.doc.to_snapshot_v2();
+    assert!(matches!(b.doc.arrays()[0].layout,ArrayLayout::Lattice {column_angle:30.,row_angle:90.,..}));
+    assert_eq!(b.doc.arrays()[0].items,before.arrays[0].items);
+    b.doc.undo();assert_eq!(b.doc.to_snapshot_v2(),before);b.doc.redo();assert_eq!(b.doc.to_snapshot_v2(),after);
+}

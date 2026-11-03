@@ -211,7 +211,7 @@ fn write_execute(
 /// The undo step's name: the tool's (docs/adr/0047).
 pub fn label(layout: &ArrayLayout) -> &'static str {
     match layout {
-        ArrayLayout::Grid { .. } => "Dizi",
+        ArrayLayout::Grid { .. } | ArrayLayout::Lattice { .. } => "Dizi",
         ArrayLayout::Polar { .. } => "Kutupsal dizi",
         ArrayLayout::Path { .. } => "Yol boyunca dizi",
         ArrayLayout::Line { .. } => "Kopyala",
@@ -227,6 +227,7 @@ pub fn array_numbers(layout: &ArrayLayout) -> (&'static str, Vec<f64>) {
         ArrayLayout::Grid { rows, cols, dx, dy } => {
             ("grid", vec![f64::from(rows), f64::from(cols), dx, dy])
         }
+        ArrayLayout::Lattice {rows,cols,dx,dy,column_angle,row_angle} => ("lattice",vec![f64::from(rows),f64::from(cols),dx,dy,column_angle,row_angle]),
         ArrayLayout::Line { count, dx, dy, fit } => (
             "line",
             vec![f64::from(count), dx, dy, if fit { 1.0 } else { 0.0 }],
@@ -303,6 +304,14 @@ pub(crate) fn check_layout(layout: &ArrayLayout) -> Result<(), Stop> {
                     "Satırlar arasındaki aralık (dX) sıfır; kopyalar üst üste düşer. Sıfırdan farklı bir aralık verin.",
                     "layout.dy",
                 ));
+            }
+        }
+        ArrayLayout::Lattice {rows,cols,dx,dy,column_angle,row_angle} => {
+            check_layout(&ArrayLayout::Grid {rows,cols,dx,dy})?;
+            checks::finite(column_angle,"Sütun yönü","Sonlu bir açı verin.","layout.columnAngle")?;
+            checks::finite(row_angle,"Satır yönü","Sonlu bir açı verin.","layout.rowAngle")?;
+            if (row_angle.rem_euclid(360.)-column_angle.rem_euclid(360.)).to_radians().sin().abs()<1e-6 {
+                return Err(refuse(codes::INVALID_SPACING,"Satır ve sütun eksenleri paralel olamaz; iki farklı yön verin.","layout"));
             }
         }
         ArrayLayout::Line { count, dx, dy, .. } => {

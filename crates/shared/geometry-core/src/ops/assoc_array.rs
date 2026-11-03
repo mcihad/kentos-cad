@@ -9,7 +9,7 @@ use crate::entity::Shape;
 use crate::geom::affine::{Affine, apply};
 use crate::jsmath::atan2;
 use crate::tools::editing::{
-    grid_array_transforms, line_array_transforms, path_array_transforms, polar_array_transforms,
+    grid_array_transforms, lattice_array_transforms, line_array_transforms, path_array_transforms, polar_array_transforms,
 };
 use crate::vec2::Vec2;
 
@@ -30,6 +30,7 @@ pub enum Layout<'a> {
         dx: f64,
         dy: f64,
     },
+    Lattice {rows:u32,cols:u32,dx:f64,dy:f64,column_angle:f64,row_angle:f64},
     Line {
         count: u32,
         dx: f64,
@@ -71,6 +72,15 @@ pub fn item_placements(source: Placement, layout: &Layout<'_>) -> Option<Vec<Pla
                 return None;
             }
             grid_array_transforms(f64::from(rows), f64::from(cols), dx, dy)
+        }
+        Layout::Lattice {rows,cols,dx,dy,column_angle,row_angle} => {
+            let n=u64::from(rows)*u64::from(cols);
+            if rows==0 || cols==0 || !(2..=10_000).contains(&n)
+                || ![dx,dy,column_angle,row_angle].iter().all(|v|v.is_finite())
+                || crate::jsmath::sin((row_angle.rem_euclid(360.)-column_angle.rem_euclid(360.))*crate::jsmath::PI/180.).abs()<1e-6 {
+                return None;
+            }
+            lattice_array_transforms(f64::from(rows),f64::from(cols),dx,dy,column_angle,row_angle)
         }
         Layout::Line { count, dx, dy, fit } => {
             if !(2..=10_000).contains(&count) {

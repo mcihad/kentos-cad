@@ -48,6 +48,27 @@ pub enum ArrayLayout {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         dy: f64,
     },
+    /// Regular 2D rows/columns with independently directed axes. Distances dx/dy are metres;
+    /// angles are degrees counter-clockwise from world east, independent of the item rotation.
+    /// Order and item identity are row-major, exactly as Grid. Parallel axes are refused.
+    Lattice {
+        #[cfg_attr(feature = "schema", schemars(range(min = 1, max = 10000)))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+        rows: u32,
+        #[cfg_attr(feature = "schema", schemars(range(min = 1, max = 10000)))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+        cols: u32,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        dx: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        dy: f64,
+        #[serde(rename = "columnAngle")]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
+        column_angle: f64,
+        #[serde(rename = "rowAngle")]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
+        row_angle: f64,
+    },
     /// Kutupsal dizi: `count` items around `center`, 2 to 1000, the
     /// originals among them, over `fill` degrees (counter-clockwise; minus
     /// clockwise; 360 a full turn). A full turn shares the circle out; a

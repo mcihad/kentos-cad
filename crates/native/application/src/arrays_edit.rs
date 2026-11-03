@@ -266,7 +266,7 @@ fn placed(array: &AssocArray, at: &Placement, like: Option<&InsertEntity>, slot:
 /// The rows and columns of a grid layout.
 fn grid(layout: &ArrayLayout) -> Option<(u32, u32)> {
     match *layout {
-        ArrayLayout::Grid { rows, cols, .. } => Some((rows, cols)),
+        ArrayLayout::Grid { rows, cols, .. } | ArrayLayout::Lattice { rows, cols, .. } => Some((rows, cols)),
         _ => None,
     }
 }

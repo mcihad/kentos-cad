@@ -178,6 +178,7 @@ fn kind_name(kind: ArrayFindKind) -> &'static str {
     match kind {
         ArrayFindKind::Line => "Doğrusal",
         ArrayFindKind::Grid => "Dikdörtgen (X/Y)",
+        ArrayFindKind::Lattice => "Dönük/eğik ızgara",
         ArrayFindKind::Polar => "Kutupsal (tam çember)",
         ArrayFindKind::Path => "Yol boyunca (sabit aralık)",
     }
@@ -188,6 +189,10 @@ fn layout_text(layout: &ArrayLayout, f: &kentos_interaction::Format) -> String {
             "{rows} satır × {cols} sütun · Sütun {} · Satır {}",
             f.length(dx.abs()),
             f.length(dy.abs())
+        ),
+        ArrayLayout::Lattice {rows,cols,dx,dy,column_angle,row_angle} => format!(
+            "{rows} satır × {cols} sütun\nSütun {} / {} · Satır {} / {}\nDünya doğusu 0°; öğelerin kendi yönü korunur.",
+            f.length(dx.abs()),f.bearing(column_angle*400./360.),f.length(dy.abs()),f.bearing(row_angle*400./360.)
         ),
         ArrayLayout::Polar { center, count, fill, rotate } => format!(
             "{} yer · {} · Açısal aralık {}\nMerkez (dünya X/Y): {} / {}\n{}",
@@ -204,7 +209,7 @@ fn layout_text(layout: &ArrayLayout, f: &kentos_interaction::Format) -> String {
     }
 }
 fn place_schema(layout: &ArrayLayout, items: &[ArrayItem]) -> String {
-    if let ArrayLayout::Grid { cols, .. } = *layout {
+    if let ArrayLayout::Grid { cols, .. } | ArrayLayout::Lattice { cols, .. } = *layout {
         let mut rows = items
             .chunks(cols.max(1) as usize)
             .take(8)
@@ -223,7 +228,7 @@ fn place_schema(layout: &ArrayLayout, items: &[ArrayItem]) -> String {
     }
 }
 fn keep_position(r: &Review) -> Element<'_, Message> {
-    if let ArrayLayout::Grid { rows, cols, .. } = r.input.layout {
+    if let ArrayLayout::Grid { rows, cols, .. } | ArrayLayout::Lattice { rows, cols, .. } = r.input.layout {
         let index = (r.place - 1.).max(0.) as u32;
         column![
             row![
@@ -386,12 +391,13 @@ impl App {
                 body=body.push(words::text_line(Kind::Warn,"Çizimde tek bir blok yerleştirmesi seçip yeniden açın. Bir bloğun tanımını değil, çizimdeki örneğini seçin."));
             }
             body=body.push(label::body("Aynı bloğun görünür yerleştirmelerinde seçilen düzen aranır. Sonuçlar çizimi değiştirmeden Bloklar panelinde açılır."))
-                .push(words::field("Düzen türü", pick_list(["Doğrusal", "Dikdörtgen (X/Y)", "Kutupsal (tam çember)", "Yol boyunca (sabit aralık)"], Some(kind_name(w.kind)), |name| msg(Event::PatternKind(match name { "Dikdörtgen (X/Y)" => ArrayFindKind::Grid, "Kutupsal (tam çember)" => ArrayFindKind::Polar, "Yol boyunca (sabit aralık)" => ArrayFindKind::Path, _ => ArrayFindKind::Line }))).width(Fill), Some("Doğrusal ve yol en az üç; dikdörtgen ve kutupsal en az dört mevcut öğe gerektirir.".into())))
+                .push(words::field("Düzen türü", pick_list(["Doğrusal", "Dikdörtgen (X/Y)", "Dönük/eğik ızgara", "Kutupsal (tam çember)", "Yol boyunca (sabit aralık)"], Some(kind_name(w.kind)), |name| msg(Event::PatternKind(match name { "Dikdörtgen (X/Y)" => ArrayFindKind::Grid, "Dönük/eğik ızgara" => ArrayFindKind::Lattice, "Kutupsal (tam çember)" => ArrayFindKind::Polar, "Yol boyunca (sabit aralık)" => ArrayFindKind::Path, _ => ArrayFindKind::Line }))).width(Fill), Some("Doğrusal ve yol en az üç; dikdörtgen ve kutupsal en az dört mevcut öğe gerektirir.".into())))
                 .push(words::field("Tolerans (mm)",NumberInput::new(w.tolerance,|n|msg(Event::Tolerance(n))).units(units::MILLIMETRE).range(0.0..=0.001).step(0.001).decimals(3),Some("Sıfırdan büyük, en çok 1 mm. Varsayılan 0,001 mm; çizim ölçeğini değiştirmez.".into())))
                 .push(words::check(w.hidden,"Gizli ve donmuş katmanları da ara",Some(msg(Event::Hidden))))
                 .push(label::caption(match w.kind {
                     ArrayFindKind::Line => "Gözlenen komşu aralıklar aranır. Eksik yerler doldurulmaz; başka tanım, ölçek veya öğe yönü birleştirilmez.",
                     ArrayFindKind::Grid => "Dikdörtgen arama dünya X/Y eksenlerindedir; dönük/eğik gridler bulunmaz. Bir köşe dolu olmalıdır. Dönük blok varyantları ve başka tanımlar birleştirilmez.",
+                    ArrayFindKind::Lattice => "Gözlenen iki bağımsız eksen aranır; yönler ve aralıklar incelemede gösterilir. Öğelerin kendi yönü değişmez; dolu bir köşe ve iki yönde gerçek komşular gerekir.",
                     ArrayFindKind::Polar => "Tam çember yorumudur; kısmi yay niyeti çıkarılmaz. Öğe yönleri ve gözlenen açısal aralık doğrulanır. Eksik yerler boş kalır; kaynak 1'den saat yönünün tersine ilerlenir.",
                     ArrayFindKind::Path => "Kılavuzun kayıtlı yönü kullanılır; kaynak başlangıçta olmalıdır. Gözlenen eşit aralık korunur; son dolu öğeden ötesi varsayılmaz.",
                 }));
@@ -502,7 +508,7 @@ impl App {
             Control::Press("Bloğu göster") => Event::ShowKept,
             Control::Pick("Düzen türü", name) => Event::PatternKind(match name {
                 "Doğrusal" => ArrayFindKind::Line,
-                "Dikdörtgen (X/Y)" => ArrayFindKind::Grid,
+                "Dikdörtgen (X/Y)" => ArrayFindKind::Grid, "Dönük/eğik ızgara" => ArrayFindKind::Lattice,
                 "Kutupsal (tam çember)" => ArrayFindKind::Polar,
                 "Yol boyunca (sabit aralık)" => ArrayFindKind::Path,
                 _ => return Err("Düzen türü listede yok".into()),
@@ -607,10 +613,10 @@ fn panel_height(app: &App, height: f32) -> Element<'_, Message> {
     if output.matches.is_empty() {
         top=top.push(label::body("Seçilen düzene uyan aday bulunamadı. Ayarlardaki kapsam ve düzen koşullarını gözden geçirin."));
     }
-    let row_height = typography::scaled(96.);
+    let row_height = typography::scaled(if w.kind == ArrayFindKind::Lattice { 128. } else { 96. });
     let list = VirtualList::new(output.matches.len(), row_height, move |index| {
         let candidate = &output.matches[index];
-        let title = if let ArrayLayout::Grid { rows, cols, .. } = candidate.adoption.layout {
+        let title = if let ArrayLayout::Grid { rows, cols, .. } | ArrayLayout::Lattice { rows, cols, .. } = candidate.adoption.layout {
             format!(
                 "{}{rows} × {cols} · {} dolu · {} boş",
                 if candidate.overlaps {
@@ -641,6 +647,8 @@ fn panel_height(app: &App, height: f32) -> Element<'_, Message> {
                     f.length(dy.abs())
                 ))
                 .into()
+            } else if let ArrayLayout::Lattice {dx,dy,column_angle,row_angle,..}=candidate.adoption.layout {
+                label::caption(format!("Sütun {} / {}\nSatır {} / {} · Yön korunur",f.length(dx.abs()),f.bearing(column_angle*400./360.),f.length(dy.abs()),f.bearing(row_angle*400./360.))).into()
             } else if let ArrayLayout::Polar { count, rotate, .. } = candidate.adoption.layout {
                 label::caption(format!("{} aralık · {}{}", f.bearing(400. / count.max(1) as f64),
                     if rotate { "Öğeler döner" } else { "Yön korunur" },
@@ -1045,7 +1053,7 @@ impl App {
             Event::KeepRow(value) | Event::KeepCol(value) if !w.busy => {
                 let row = matches!(event, Event::KeepRow(_));
                 if let Some(r) = &mut w.review
-                    && let ArrayLayout::Grid { rows, cols, .. } = r.input.layout
+                    && let ArrayLayout::Grid { rows, cols, .. } | ArrayLayout::Lattice { rows, cols, .. } = r.input.layout
                 {
                     let max = if row { rows } else { cols };
                     if !value.is_finite() || value.fract() != 0. || value < 1. || value > max as f64

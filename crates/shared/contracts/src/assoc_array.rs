@@ -73,7 +73,7 @@ pub struct AssocArray {
 /// How many places a layout has: rows × columns, or its count.
 pub fn array_places(layout: &ArrayLayout) -> u64 {
     match *layout {
-        ArrayLayout::Grid { rows, cols, .. } => u64::from(rows) * u64::from(cols),
+        ArrayLayout::Grid { rows, cols, .. } | ArrayLayout::Lattice { rows, cols, .. } => u64::from(rows) * u64::from(cols),
         ArrayLayout::Polar { count, .. }
         | ArrayLayout::Line { count, .. }
         | ArrayLayout::Path { count, .. } => u64::from(count),
@@ -156,6 +156,9 @@ fn problem(
             ArrayLayout::Grid { dx, dy, .. } | ArrayLayout::Line { dx, dy, .. } => {
                 dx.is_finite() && dy.is_finite()
             }
+            ArrayLayout::Lattice { dx, dy, column_angle, row_angle, .. } => {
+                dx.is_finite() && dy.is_finite() && column_angle.is_finite() && row_angle.is_finite()
+            }
             ArrayLayout::Polar { center, fill, .. } => {
                 center.x.is_finite() && center.y.is_finite() && fill.is_finite()
             }
@@ -163,6 +166,12 @@ fn problem(
         };
         if !finite {
             return Some((at, "dizinin yerleşiminde sonlu olmayan sayı var"));
+        }
+        if let ArrayLayout::Lattice {rows,cols,dx,dy,column_angle,row_angle}=a.layout {
+            let separation=(row_angle.rem_euclid(360.)-column_angle.rem_euclid(360.)).to_radians().sin().abs();
+            if rows==0 || cols==0 || (cols>1 && dx.abs()<1e-9) || (rows>1 && dy.abs()<1e-9) || separation<1e-6 {
+                return Some((at,"eğik ızgara eksenleri paralel olamaz; gerekli aralıklar sıfırdan farklı olmalı"));
+            }
         }
         if let ArrayLayout::Path { path, spacing, .. } = &a.layout {
             if EntityId::parse(path).is_none() {

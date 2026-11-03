@@ -1297,6 +1297,7 @@ __all__ = [
     "LabelsReported",
     "LatePolicy",
     "LatePolicyName",
+    "LatticeArrayLayout",
     "LayerAction",
     "LayerCompose",
     "LayerDerivation",

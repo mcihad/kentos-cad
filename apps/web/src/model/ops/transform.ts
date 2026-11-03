@@ -221,6 +221,8 @@ export function transformObjects<E extends Entity>(list: readonly E[], t: Transf
  */
 export function arrayNumbers(layout: ArrayLayout): [string, number[]] {
   if (layout.kind === 'grid') return ['grid', [layout.rows, layout.cols, layout.dx, layout.dy]];
+  if (layout.kind === 'lattice') return ['lattice', [layout.rows, layout.cols, layout.dx, layout.dy, layout.columnAngle, layout.rowAngle]];
+  if (layout.kind === 'line') return ['line', [layout.count, layout.dx, layout.dy, layout.fit ? 1 : 0]];
   if (layout.kind === 'path') return ['affines', []];
   return ['polar', [layout.center.x, layout.center.y, layout.count, layout.fill, layout.rotate ? 1 : 0]];
 }

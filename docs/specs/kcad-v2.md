@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `160`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-161.kcad`) |
+| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `161`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-162.kcad`) |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -1906,3 +1906,17 @@ Anahtar sırasına dikkat: `name` (4) < `layers` (6) < `origin` < `styles` < `en
 - `cargo run -q -p kentos-kcad --bin kcad -- inspect|validate DOSYA` ve `migrate ESKİ.kcad YENİ.kcad`: Rust aracı.
 - `python3 scripts/fixtures/kcad_v2_reference.py --check`: örnek dosyaları bağımsız yazıcıyla yeniden üretir, diskle karşılaştırır ve her birini okuyucuyla `expected.json`'a göre okur.
 - Rust (`crates/shared/kcad/tests`) ve tarayıcı (`apps/web/src/io/kcad.wasm.test.ts`) aynı dosyaları okur; geçerli çizimleri **bayt bayt aynı** yazar.
+
+
+### Şema 161 — bağımsız yönlü 2B ilişkili ızgara
+
+`arrays[].layout.kind = "lattice"`: `rows`, `cols`, `dx`, `dy`,
+`columnAngle`, `rowAngle`. Aralıklar metre, açılar dünya doğusundan saat
+tersine derecedir; öğe yönüyle bağımsızdır. `Grid` alanları ve eski baytları
+aynı kalır. Yalnız lattice içeren belge 161 ister. İki aktif eksen paralel
+olamaz (`abs(sin(Δ)) >= 1e-6`); aktif aralık sıfır olamaz; en çok 10 000 yer.
+Sıra satır önceliklidir; eksik ve `kept` hücreler mevcut `ArrayItem`
+sözleşmesidir. Kanonik CBOR alan sırası: `dx`, `dy`, `cols`, `kind`, `rows`,
+`rowAngle`, `columnAngle`. 160 ve altında lattice, diğer kind üzerinde açı
+alanları ve geçersiz eksenler `bad_value` ile reddedilir. Bağımsız altın dosya
+`arrays-lattice.kcad`; dört bozuk dosya her iki okuyucuyla denetlenir.

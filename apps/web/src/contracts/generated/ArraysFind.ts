@@ -13,7 +13,8 @@ import type { ArrayFindKind } from "./ArrayFindKind";
  * orientation is verified by the existing adoption engine. Partial-arc intent is not inferred.
  * With kind=path, the selected seed must be at the guide start. Observed adjacent arc-length
  * gaps suggest fixed spacing; trailing unobserved places and reversed guide intent are not inferred.
- * Rotated/skew grids are not implemented by this version.
+ * With kind=lattice, independently directed regular axes are inferred from observed displacements.
+ * Items keep their common direction; source-to-slot identity and gaps use the same adoption gate.
  */
 export type ArraysFind = {
 /**

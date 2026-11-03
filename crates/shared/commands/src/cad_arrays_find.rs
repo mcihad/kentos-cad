@@ -19,6 +19,8 @@ pub enum ArrayFindKind {
     Line,
     /// World X/Y rectangular rows and columns; rotated/skew grids are not inferred.
     Grid,
+    /// Rotated or skew regular rows/columns; both observed axes remain explicit in the proposal.
+    Lattice,
     /// Explicit full-circle interpretation; at least four occupied places and an observed adjacent pair.
     Polar,
     /// Fixed spacing along an explicitly selected 2D guide, in its stored direction.
@@ -36,7 +38,8 @@ pub enum ArrayFindKind {
 /// orientation is verified by the existing adoption engine. Partial-arc intent is not inferred.
 /// With kind=path, the selected seed must be at the guide start. Observed adjacent arc-length
 /// gaps suggest fixed spacing; trailing unobserved places and reversed guide intent are not inferred.
-/// Rotated/skew grids are not implemented by this version.
+/// With kind=lattice, independently directed regular axes are inferred from observed displacements.
+/// Items keep their common direction; source-to-slot identity and gaps use the same adoption gate.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]

@@ -2204,6 +2204,8 @@ def assoc_arrays(arrs):
         out = {"kind": text(kind)}
         if kind == "grid":
             out.update(rows=uint(lay["rows"]), cols=uint(lay["cols"]), dx=f64(lay["dx"]), dy=f64(lay["dy"]))
+        elif kind == "lattice":
+            out.update(rows=uint(lay["rows"]),cols=uint(lay["cols"]),dx=f64(lay["dx"]),dy=f64(lay["dy"]),columnAngle=f64(lay["columnAngle"]),rowAngle=f64(lay["rowAngle"]))
         elif kind == "polar":
             out.update(center=point(lay["center"]), count=uint(lay["count"]), fill=f64(lay["fill"]), rotate=boolean(lay["rotate"]))
         elif kind == "line":
@@ -2348,6 +2350,8 @@ def document(d):
     has_sets = 114 if any("edge" in item for item in sets) else bool(sets)
     assert d.get("casework", [None]), "boş mutfak dizisi listesi yazılmaz"
     schema = schema_of(d["entities"], d.get("blocks"), d["layers"], d["settings"], "sheets" in d, "requests" in d, "arrays" in d, "constraints" in d, has_sets)
+    if any(a["layout"]["kind"] == "lattice" for a in d.get("arrays", [])):
+        schema = max(schema, 161)
     if any(b.get("card", {}).get("publication") is not None for b in d.get("blocks", [])):
         schema = max(schema, 158)
     if any(b.get("dynamic", {}).get("parameterGroups") for b in d.get("blocks", [])):
@@ -3262,7 +3266,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-161.kcad"] = container(root(cmap(parts), version=uint(161)))
+    files["schema-version-162.kcad"] = container(root(cmap(parts), version=uint(162)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4821,6 +4825,18 @@ def build():
     out["subref-extras.kcad"] = container(document(load("subref-extras.json")))
     out["views.kcad"] = container(document(load("views.json")))
     out["arrays.kcad"] = container(document(load("arrays.json")))
+    lattice=load("arrays-lattice.json")
+    payload=document(lattice)
+    out["arrays-lattice.kcad"]=container(payload)
+    assert payload.count(b"\x67version\x18\xa1")==1
+    out["broken/lattice-in-schema-160.kcad"]=container(payload.replace(b"\x67version\x18\xa1",b"\x67version\x18\xa0"))
+    assert payload.count(b"\x67lattice")==1
+    out["broken/lattice-angles-on-grid.kcad"]=container(payload.replace(b"\x67lattice",b"\x64grid"))
+    bad=copy.deepcopy(lattice);bad["arrays"][0]["layout"]["rowAngle"]=23.
+    out["broken/lattice-parallel-axes.kcad"]=container(document(bad))
+    bad=copy.deepcopy(lattice);bad["arrays"][0]["layout"]["dy"]=0.
+    out["broken/lattice-zero-row-gap.kcad"]=container(document(bad))
+
     # The associative arrays are schema 53's (docs/adr/0300 §1): in schema 52 an unknown field; an unknown block, items not
     # one per place, an insert in two items or not in the drawing, a scale of zero refused.
     def arrays_broken(change):
