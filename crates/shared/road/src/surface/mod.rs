@@ -7,6 +7,7 @@ mod analysis;
 mod contours;
 mod figures;
 mod mesh;
+mod quality;
 mod query;
 
 use std::collections::HashMap;
@@ -19,6 +20,7 @@ use serde::{Deserialize, Serialize};
 pub use analysis::{AnalysisError, Band, BandParts, Bands, GridSlope, MAX_CELLS as MAX_GRID_CELLS, Measure, Roughness};
 pub use contours::{ContourError, ContourLine, MAX_LEVELS, Slope};
 pub use figures::{Figures, SectionPoint};
+pub use quality::{Gaps, NearPair, Spike};
 pub use query::{Height, Place};
 
 use mesh::{Mesh, Walk};

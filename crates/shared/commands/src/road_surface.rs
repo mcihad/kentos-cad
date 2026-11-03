@@ -250,3 +250,216 @@ pub struct TerrainsCompared {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub outside_area: Option<f64>,
 }
+
+pub const ROAD_TERRAINS_QUALITY: &str = "road.terrains.quality";
+pub const ROAD_TERRAINS_QUALITY_VERSION: u32 = 1;
+
+/// The most near pairs and spikes one answer lists (their counts are whole).
+pub const MOST_QUALITY_ITEMS: usize = 1000;
+
+/// Spikes asked for: corners more than `limit` (m) off the mean height of the other corners within `radius` (m).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TerrainSpikesAsk {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub radius: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub limit: f64,
+}
+
+/// Check points: the points of `layer` and those of `uids`, their class the attribute `classField`'s value (none: one
+/// class).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TerrainCheckpointsAsk {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub layer: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub uids: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub class_field: Option<String>,
+}
+
+/// Input of `road.terrains.quality` v1: a surface's survey quality (ROAD-SURVEY-04, 05): `near` (m: corners closer in
+/// plan, a duplicate shot), `spikes`, `gaps` (m: triangles with a longer edge, too sparse a survey), `checkpoints`
+/// (their heights against the surface by class). The limits are the user's; nothing is changed.
+///
+/// Refusals, in this order: `not_a_road_project`, `invalid_analysis` (nothing asked, a limit not positive, a spike
+/// limit negative, check points with neither a layer nor uids), `unknown_terrain`, `terrain_unbuildable`,
+/// `layer_not_found`, `entity_not_found`, `invalid_analysis` (a check point's object not a point).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TerrainsQuality {
+    pub surface: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub near: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub spikes: Option<TerrainSpikesAsk>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub gaps: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub checkpoints: Option<TerrainCheckpointsAsk>,
+}
+
+/// Two corners closer than the limit: their places and heights, the plan distance and the height difference (b − a).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TerrainNearPair {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub a: [f64; 3],
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub b: [f64; 3],
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub distance: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub dz: f64,
+}
+
+/// A spike: the corner, the mean height round it, the difference (z − mean) and the corners round it.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TerrainSpike {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub at: [f64; 3],
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub mean: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub difference: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub neighbours: u32,
+}
+
+/// The coverage gaps: triangles with an edge over the limit, their plan area, the surface's longest edge.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TerrainGaps {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub triangles: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub area: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub longest: f64,
+}
+
+/// A check point: its object, place, height, class, the surface's height there and the difference (point − surface);
+/// none off the surface.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TerrainCheckpoint {
+    pub uid: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub at: [f64; 2],
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub z: f64,
+    pub class: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub surface_z: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub difference: Option<f64>,
+}
+
+/// A class's statistics over its points on the surface: how many on and off it, the mean, the standard deviation
+/// (n − 1), the RMSE, the least and the largest difference.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TerrainCheckClass {
+    pub class: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub count: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub outside: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub mean: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub std: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub rmse: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub min: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub max: f64,
+}
+
+/// The check points: each one, each class's statistics (by name) and all of them together.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TerrainCheckpoints {
+    pub points: Vec<TerrainCheckpoint>,
+    pub classes: Vec<TerrainCheckClass>,
+    pub all: TerrainCheckClass,
+}
+
+/// Output of `road.terrains.quality` v1: the surface's corners and triangles and what was asked; the lists hold at
+/// most [`MOST_QUALITY_ITEMS`], their counts are whole.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TerrainsQualityRead {
+    pub surface: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub corners: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub triangles: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub near_count: Option<u32>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<TerrainNearPair>>", optional))]
+    pub near: Vec<TerrainNearPair>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub spike_count: Option<u32>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<TerrainSpike>>", optional))]
+    pub spikes: Vec<TerrainSpike>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub gaps: Option<TerrainGaps>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub checkpoints: Option<TerrainCheckpoints>,
+}

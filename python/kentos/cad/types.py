@@ -77737,6 +77737,146 @@ class TerrainBands(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class TerrainCheckClass(_Model):
+    """A class's statistics over its points on the surface: how many on and off it, the mean, the standard deviation
+    (n − 1), the RMSE, the least and the largest difference.
+    Attributes:
+        count: Unit: count.
+        outside: Unit: count.
+        mean: Unit: m.
+        std: Unit: m.
+        rmse: Unit: m.
+        min: Unit: m.
+        max: Unit: m.
+    """
+    class_: str
+    count: int
+    outside: int
+    mean: float
+    std: float
+    rmse: float
+    min: float
+    max: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["class"] = self.class_
+        out["count"] = self.count
+        out["outside"] = self.outside
+        out["mean"] = float(self.mean)
+        out["std"] = float(self.std)
+        out["rmse"] = float(self.rmse)
+        out["min"] = float(self.min)
+        out["max"] = float(self.max)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainCheckClass:
+        return cls(
+            class_=data["class"],
+            count=data["count"],
+            outside=data["outside"],
+            mean=float(data["mean"]),
+            std=float(data["std"]),
+            rmse=float(data["rmse"]),
+            min=float(data["min"]),
+            max=float(data["max"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TerrainCheckpoint(_Model):
+    """A check point: its object, place, height, class, the surface's height there and the difference (point − surface);
+    none off the surface.
+    Attributes:
+        at: Unit: length.
+        z: Unit: elevation.
+        difference: Unit: m.
+        surface_z: Unit: elevation.
+    """
+    uid: str
+    at: list[float]
+    z: float
+    class_: str
+    difference: float | None | Unset = UNSET
+    surface_z: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["at"] = [float(e0) for e0 in self.at]
+        out["z"] = float(self.z)
+        out["class"] = self.class_
+        if self.difference is not UNSET:
+            out["difference"] = None if self.difference is None else float(self.difference)
+        if self.surface_z is not UNSET:
+            out["surfaceZ"] = None if self.surface_z is None else float(self.surface_z)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainCheckpoint:
+        return cls(
+            uid=data["uid"],
+            at=[float(e0) for e0 in data["at"]],
+            z=float(data["z"]),
+            class_=data["class"],
+            difference=UNSET if "difference" not in data else None if data["difference"] is None else float(data["difference"]),
+            surface_z=UNSET if "surfaceZ" not in data else None if data["surfaceZ"] is None else float(data["surfaceZ"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TerrainCheckpoints(_Model):
+    """The check points: each one, each class's statistics (by name) and all of them together."""
+    points: list[TerrainCheckpoint]
+    classes: list[TerrainCheckClass]
+    all: TerrainCheckClass
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["points"] = [e0.to_json() for e0 in self.points]
+        out["classes"] = [e0.to_json() for e0 in self.classes]
+        out["all"] = self.all.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainCheckpoints:
+        return cls(
+            points=[TerrainCheckpoint.from_json(e0) for e0 in data["points"]],
+            classes=[TerrainCheckClass.from_json(e0) for e0 in data["classes"]],
+            all=TerrainCheckClass.from_json(data["all"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TerrainCheckpointsAsk(_Model):
+    """Check points: the points of `layer` and those of `uids`, their class the attribute `classField`'s value (none: one
+    class).
+    """
+    class_field: str | None | Unset = UNSET
+    layer: str | None | Unset = UNSET
+    uids: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.class_field is not UNSET:
+            out["classField"] = self.class_field
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        if self.uids is not UNSET:
+            out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainCheckpointsAsk:
+        return cls(
+            class_field=data.get("classField", UNSET),
+            layer=data.get("layer", UNSET),
+            uids=list(data["uids"]) if "uids" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class TerrainContour(_Model):
     """A contour line as written: its level, whether major and closed, its places.
     Attributes:
@@ -77874,6 +78014,34 @@ class TerrainFigures(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class TerrainGaps(_Model):
+    """The coverage gaps: triangles with an edge over the limit, their plan area, the surface's longest edge.
+    Attributes:
+        triangles: Unit: count.
+        area: Unit: area.
+        longest: Unit: m.
+    """
+    triangles: int
+    area: float
+    longest: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["triangles"] = self.triangles
+        out["area"] = float(self.area)
+        out["longest"] = float(self.longest)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainGaps:
+        return cls(
+            triangles=data["triangles"],
+            area=float(data["area"]),
+            longest=float(data["longest"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class TerrainGridSlope(_Model):
     """A raster's slope against the triangles': the cell, the cells compared, the mean (raster − triangle) and mean
     absolute difference, the largest absolute one and where; percent.
@@ -77982,6 +78150,38 @@ class TerrainLeft(_Model):
             id=data["id"],
             role=data["role"],
             why=data["why"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TerrainNearPair(_Model):
+    """Two corners closer than the limit: their places and heights, the plan distance and the height difference (b − a).
+    Attributes:
+        a: Unit: length.
+        b: Unit: length.
+        distance: Unit: m.
+        dz: Unit: m.
+    """
+    a: list[float]
+    b: list[float]
+    distance: float
+    dz: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["a"] = [float(e0) for e0 in self.a]
+        out["b"] = [float(e0) for e0 in self.b]
+        out["distance"] = float(self.distance)
+        out["dz"] = float(self.dz)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainNearPair:
+        return cls(
+            a=[float(e0) for e0 in data["a"]],
+            b=[float(e0) for e0 in data["b"]],
+            distance=float(data["distance"]),
+            dz=float(data["dz"]),
         )
 
 
@@ -78122,6 +78322,62 @@ class TerrainSectionPoint(_Model):
             y=float(data["y"]),
             gap=data.get("gap", UNSET),
             z=UNSET if "z" not in data else None if data["z"] is None else float(data["z"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TerrainSpike(_Model):
+    """A spike: the corner, the mean height round it, the difference (z − mean) and the corners round it.
+    Attributes:
+        at: Unit: length.
+        mean: Unit: elevation.
+        difference: Unit: m.
+        neighbours: Unit: count.
+    """
+    at: list[float]
+    mean: float
+    difference: float
+    neighbours: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["at"] = [float(e0) for e0 in self.at]
+        out["mean"] = float(self.mean)
+        out["difference"] = float(self.difference)
+        out["neighbours"] = self.neighbours
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainSpike:
+        return cls(
+            at=[float(e0) for e0 in data["at"]],
+            mean=float(data["mean"]),
+            difference=float(data["difference"]),
+            neighbours=data["neighbours"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TerrainSpikesAsk(_Model):
+    """Spikes asked for: corners more than `limit` (m) off the mean height of the other corners within `radius` (m).
+    Attributes:
+        radius: Unit: m.
+        limit: Unit: m.
+    """
+    radius: float
+    limit: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["radius"] = float(self.radius)
+        out["limit"] = float(self.limit)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainSpikesAsk:
+        return cls(
+            radius=float(data["radius"]),
+            limit=float(data["limit"]),
         )
 
 
@@ -78703,6 +78959,103 @@ class TerrainsFromCloudWritten(_Model):
             uids=list(data["uids"]),
             surface=TerrainReport.from_json(data["surface"]),
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TerrainsQuality(_Model):
+    """Input of `road.terrains.quality` v1: a surface's survey quality (ROAD-SURVEY-04, 05): `near` (m: corners closer in
+    plan, a duplicate shot), `spikes`, `gaps` (m: triangles with a longer edge, too sparse a survey), `checkpoints`
+    (their heights against the surface by class). The limits are the user's; nothing is changed.
+
+    Refusals, in this order: `not_a_road_project`, `invalid_analysis` (nothing asked, a limit not positive, a spike
+    limit negative, check points with neither a layer nor uids), `unknown_terrain`, `terrain_unbuildable`,
+    `layer_not_found`, `entity_not_found`, `invalid_analysis` (a check point's object not a point).
+    Attributes:
+        gaps: Unit: m.
+        near: Unit: m.
+    """
+    surface: str
+    checkpoints: TerrainCheckpointsAsk | None | Unset = UNSET
+    gaps: float | None | Unset = UNSET
+    near: float | None | Unset = UNSET
+    spikes: TerrainSpikesAsk | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["surface"] = self.surface
+        if self.checkpoints is not UNSET:
+            out["checkpoints"] = None if self.checkpoints is None else self.checkpoints.to_json()
+        if self.gaps is not UNSET:
+            out["gaps"] = None if self.gaps is None else float(self.gaps)
+        if self.near is not UNSET:
+            out["near"] = None if self.near is None else float(self.near)
+        if self.spikes is not UNSET:
+            out["spikes"] = None if self.spikes is None else self.spikes.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainsQuality:
+        return cls(
+            surface=data["surface"],
+            checkpoints=UNSET if "checkpoints" not in data else None if data["checkpoints"] is None else TerrainCheckpointsAsk.from_json(data["checkpoints"]),
+            gaps=UNSET if "gaps" not in data else None if data["gaps"] is None else float(data["gaps"]),
+            near=UNSET if "near" not in data else None if data["near"] is None else float(data["near"]),
+            spikes=UNSET if "spikes" not in data else None if data["spikes"] is None else TerrainSpikesAsk.from_json(data["spikes"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TerrainsQualityRead(_Model):
+    """Output of `road.terrains.quality` v1: the surface's corners and triangles and what was asked; the lists hold at
+    most [`MOST_QUALITY_ITEMS`], their counts are whole.
+    Attributes:
+        corners: Unit: count.
+        triangles: Unit: count.
+        near_count: Unit: count.
+        spike_count: Unit: count.
+    """
+    surface: str
+    corners: int
+    triangles: int
+    checkpoints: TerrainCheckpoints | None | Unset = UNSET
+    gaps: TerrainGaps | None | Unset = UNSET
+    near: list[TerrainNearPair] | Unset = UNSET
+    near_count: int | None | Unset = UNSET
+    spike_count: int | None | Unset = UNSET
+    spikes: list[TerrainSpike] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["surface"] = self.surface
+        out["corners"] = self.corners
+        out["triangles"] = self.triangles
+        if self.checkpoints is not UNSET:
+            out["checkpoints"] = None if self.checkpoints is None else self.checkpoints.to_json()
+        if self.gaps is not UNSET:
+            out["gaps"] = None if self.gaps is None else self.gaps.to_json()
+        if self.near is not UNSET:
+            out["near"] = [e0.to_json() for e0 in self.near]
+        if self.near_count is not UNSET:
+            out["nearCount"] = self.near_count
+        if self.spike_count is not UNSET:
+            out["spikeCount"] = self.spike_count
+        if self.spikes is not UNSET:
+            out["spikes"] = [e0.to_json() for e0 in self.spikes]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainsQualityRead:
+        return cls(
+            surface=data["surface"],
+            corners=data["corners"],
+            triangles=data["triangles"],
+            checkpoints=UNSET if "checkpoints" not in data else None if data["checkpoints"] is None else TerrainCheckpoints.from_json(data["checkpoints"]),
+            gaps=UNSET if "gaps" not in data else None if data["gaps"] is None else TerrainGaps.from_json(data["gaps"]),
+            near=[TerrainNearPair.from_json(e0) for e0 in data["near"]] if "near" in data else UNSET,
+            near_count=data.get("nearCount", UNSET),
+            spike_count=data.get("spikeCount", UNSET),
+            spikes=[TerrainSpike.from_json(e0) for e0 in data["spikes"]] if "spikes" in data else UNSET,
         )
 
 
@@ -105912,19 +106265,27 @@ __all__ = [
     "TerminalDevice",
     "TerrainBand",
     "TerrainBands",
+    "TerrainCheckClass",
+    "TerrainCheckpoint",
+    "TerrainCheckpoints",
+    "TerrainCheckpointsAsk",
     "TerrainContour",
     "TerrainDifferenceAt",
     "TerrainDifferenceBand",
     "TerrainFigures",
+    "TerrainGaps",
     "TerrainGridSlope",
     "TerrainHeight",
     "TerrainLeft",
+    "TerrainNearPair",
     "TerrainPlace",
     "TerrainPlaceName",
     "TerrainProblem",
     "TerrainReport",
     "TerrainRoughness",
     "TerrainSectionPoint",
+    "TerrainSpike",
+    "TerrainSpikesAsk",
     "TerrainState",
     "TerrainStateName",
     "TerrainSurfaceDef",
@@ -105940,6 +106301,8 @@ __all__ = [
     "TerrainsEditOperationName",
     "TerrainsFromCloud",
     "TerrainsFromCloudWritten",
+    "TerrainsQuality",
+    "TerrainsQualityRead",
     "TerrainsQueried",
     "TerrainsQuery",
     "TerrainsWritten",

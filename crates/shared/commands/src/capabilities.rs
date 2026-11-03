@@ -1957,6 +1957,19 @@ const ENTRIES: &[Entry] = &[
         warnings: &["compare_uncovered"],
         targets: none,
     },
+    Entry {
+        id: "road.terrains.quality",
+        refusals: &[&[
+            "not_a_road_project",
+            "invalid_analysis",
+            "unknown_terrain",
+            "terrain_unbuildable",
+            "layer_not_found",
+            "entity_not_found",
+        ]],
+        warnings: &[],
+        targets: none,
+    },
     // KentOS Yol's design vehicle swept path (plan/road.md Y17, docs/adr/0915).
     Entry {
         id: "road.swept.query",

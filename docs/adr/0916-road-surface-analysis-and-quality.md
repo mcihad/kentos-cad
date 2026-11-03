@@ -23,6 +23,16 @@ Tarih: 2026-11-04. plan/road.md Y18 (ROAD-TIN-12, 13, 16–18; ROAD-SURVEY-04, 0
 - **Netcad:** NETPRO'nun eğim haritası ve yüzey karşılaştırması için çevrimiçi resmî kılavuz bulunamadı; Mersin
   Üniversitesi'nin NETPRO kitabı kübajı enkesitlerin yarma ve dolgu alanlarıyla anlatır
   ([NETPRO kitabı](https://publish.mersin.edu.tr/index.php/geoengbooks/article/download/722/620)).
+- **Ölçme kalitesi:** ASPRS'in Konum Doğruluğu Standartları'nın 2. baskısı (2023, 2024'te 2. sürüm) doğruluğu yalnız
+  RMSE ile bildirir, %95 güven düzeyini bırakır; bitkisiz zeminin doğruluğu (NVA) karşılanır, bitkili zeminin (VVA)
+  bildirilir; kontrol noktası en az 30
+  ([LiDAR Magazine: Edition 2](https://lidarmag.com/2023/10/06/the-asprs-positional-accuracy-standards-edition-2/),
+  [USGS: adopt updated accuracy standards](https://www.usgs.gov/ngp-standards-and-specifications/adopt-updated-accuracy-standards)).
+  Esri'nin Locate Outliers'ı noktayı komşularıyla kot ya da eğim farkından aykırı sayar, çıplak zemin verisinde
+  ([Locate Outliers](https://doc.esri.com/en/arcgis-pro/latest/tool-reference/3d-analyst/locate-outliers.html)); Civil
+  3D'de noktalar yüzeyle karşılaştırılıp fark sütunu sıralanır, sivriyi yapan nokta silinir (NRCS'in
+  [LiDAR karşılaştırma yöntemi](https://www.nrcs.usda.gov/sites/default/files/2023-06/HowTo-%20LiDAR%20Comparison%20C3D.pdf)).
+  KentOS sınırı kendi koymaz, standardın sayısını kural yapmaz; sınıf sınıf istatistik verir.
 - **Pürüzlülük:** Sappington, Longshore ve Thomson'ın (2007) vektör pürüzlülük ölçüsü (VRM): eğim ve bakı birim
   vektörlere ayrılır, pencerede bileşkenin boyu; 1 − |Σn|/N, 0 düz, 1'e doğru pürüzlü
   ([GRASS r.vector.ruggedness](https://grass.osgeo.org/grass84/manuals/addons/r.vector.ruggedness.html)).
@@ -68,3 +78,12 @@ aralıklarının alanı); `road.terrains.compare` (`road_terrains_compare.rs`): 
 tabanın dışında kalan alan (uyarı `compare_uncovered`), uçlar, aralıklar. 22 ortak durum
 (`scripts/fixtures/road_terrain_compare_cases.py`: iki kafesin dikdörtgenlerle üst üste konuşu, her dikdörtgende fark
 doğrusal; düzlem üstünde yarısı dışarıda kazı, teras üstünde set; KentOS kodu yok). Python, MCP.
+
+Y18.4 (yapıldı, ölçme kalitesi): §4. Çekirdekte `Surface::near_pairs`, `spikes` (köşenin kotu erim içindeki öbür
+köşelerin ortalamasından; kotlar küçükten büyüğe toplanır, eşit cevaplar bit bit eşit), `gaps`;
+`road.terrains.quality` (`road_terrains_quality.rs`): yakın çiftler, sivri noktalar, boşluklar (listeler en çok 1000,
+sayıları bütün), kontrol noktaları (katman ya da nesneler, `classField` ile sınıf; her noktanın farkı, sınıf sınıf ve
+hepsinin sayısı, yüzey dışı, ortalama, standart sapma (n − 1), RMSE, uçlar). 29 ortak durum
+(`scripts/fixtures/road_terrain_quality_cases.py`: seyrek kafes, sivri kafes ve iki kez ölçülen nokta, terasta iki
+sınıflı kontrol noktaları; KentOS kodu yok). Python, MCP. Yolda bulunan: Python 3.12'nin `sum()`'ı telafili toplar,
+Rust'ın düz toplamından son basamakta ayrılır; başvuru düz toplar.

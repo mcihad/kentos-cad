@@ -7,6 +7,7 @@ mod corridor;
 mod cutout;
 mod drainage;
 mod profiles;
+mod quality;
 mod sections;
 mod templates;
 mod verticals;

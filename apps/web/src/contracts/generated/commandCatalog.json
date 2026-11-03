@@ -41735,6 +41735,262 @@
       ]
     },
     {
+      "id": "road.terrains.quality",
+      "version": 1,
+      "title": "Ölçme kalitesini denetle",
+      "summary": "Bir arazi yüzeyinin ölçme kalitesini okur; hiçbir şey değiştirmez, ham kayıtlar kalır. near (m): planda bundan yakın köşe çiftleri (aynı yerin iki ölçüsü), yerleri, uzaklıkları ve kot farkları. spikes (radius, limit m): kotu radius içindeki öbür köşelerin ortalamasından limit'ten çok ayrılan köşeler (sivri nokta), en çok ayrılan önce. gaps (m): bir kenarı bundan uzun üçgenler (seyrek ölçü), sayısı, alanı ve yüzeyin en uzun kenarı. checkpoints (layer ve uids: kotlu noktalar; classField ile sınıfları, ör. sert zemin ve bitkili): her noktanın yüzeye farkı (nokta − yüzey) ve her sınıfın ve hepsinin sayısı, yüzey dışı, ortalaması, standart sapması (n − 1), RMSE'si, en küçük ve en büyük farkı; tek RMSE değil, sınıf sınıf. Listeler en çok 1000, sayıları bütün. Sınırlar kullanıcının; KentOS değer vermez. Retler: not_a_road_project, invalid_analysis, unknown_terrain, terrain_unbuildable, layer_not_found, entity_not_found.",
+      "aliases": [
+        "olcmekalitesi",
+        "kontrolnoktasi",
+        "sivrinokta"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.terrains.quality` v1: a surface's survey quality (ROAD-SURVEY-04, 05): `near` (m: corners closer in\nplan, a duplicate shot), `spikes`, `gaps` (m: triangles with a longer edge, too sparse a survey), `checkpoints`\n(their heights against the surface by class). The limits are the user's; nothing is changed.\n\nRefusals, in this order: `not_a_road_project`, `invalid_analysis` (nothing asked, a limit not positive, a spike\nlimit negative, check points with neither a layer nor uids), `unknown_terrain`, `terrain_unbuildable`,\n`layer_not_found`, `entity_not_found`, `invalid_analysis` (a check point's object not a point).",
+        "properties": {
+          "checkpoints": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TerrainCheckpointsAsk"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "gaps": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "near": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "spikes": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TerrainSpikesAsk"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "surface": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "surface"
+        ],
+        "title": "TerrainsQuality",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.terrains.quality` v1: the surface's corners and triangles and what was asked; the lists hold at\nmost [`MOST_QUALITY_ITEMS`], their counts are whole.",
+        "properties": {
+          "checkpoints": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TerrainCheckpoints"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "corners": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "gaps": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TerrainGaps"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "near": {
+            "items": {
+              "$ref": "#/$defs/TerrainNearPair"
+            },
+            "type": "array"
+          },
+          "nearCount": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "spikeCount": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "spikes": {
+            "items": {
+              "$ref": "#/$defs/TerrainSpike"
+            },
+            "type": "array"
+          },
+          "surface": {
+            "type": "string"
+          },
+          "triangles": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "surface",
+          "corners",
+          "triangles"
+        ],
+        "title": "TerrainsQualityRead",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.terrains.quality` v1: the surface's corners and triangles and what was asked; the lists hold at\nmost [`MOST_QUALITY_ITEMS`], their counts are whole.",
+        "properties": {
+          "checkpoints": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TerrainCheckpoints"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "corners": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "gaps": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TerrainGaps"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "near": {
+            "items": {
+              "$ref": "#/$defs/TerrainNearPair"
+            },
+            "type": "array"
+          },
+          "nearCount": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "spikeCount": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "spikes": {
+            "items": {
+              "$ref": "#/$defs/TerrainSpike"
+            },
+            "type": "array"
+          },
+          "surface": {
+            "type": "string"
+          },
+          "triangles": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "surface",
+          "corners",
+          "triangles"
+        ],
+        "title": "TerrainsQualityRead",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "invalid_analysis",
+          "unknown_terrain",
+          "terrain_unbuildable",
+          "layer_not_found",
+          "entity_not_found"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Kontrol noktaları sınıflarıyla",
+          "input": {
+            "checkpoints": {
+              "classField": "Sınıf",
+              "layer": "kontrol"
+            },
+            "gaps": 30.0,
+            "near": 0.05,
+            "spikes": {
+              "limit": 0.5,
+              "radius": 5.0
+            },
+            "surface": "Mevcut zemin"
+          }
+        }
+      ]
+    },
+    {
       "id": "road.terrains.cloud",
       "version": 1,
       "title": "Buluttan arazi",
@@ -159423,6 +159679,161 @@
       ],
       "type": "object"
     },
+    "TerrainCheckClass": {
+      "description": "A class's statistics over its points on the surface: how many on and off it, the mean, the standard deviation\n(n − 1), the RMSE, the least and the largest difference.",
+      "properties": {
+        "class": {
+          "type": "string"
+        },
+        "count": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "max": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "mean": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "min": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "outside": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "rmse": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "std": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "class",
+        "count",
+        "outside",
+        "mean",
+        "std",
+        "rmse",
+        "min",
+        "max"
+      ],
+      "type": "object"
+    },
+    "TerrainCheckpoint": {
+      "description": "A check point: its object, place, height, class, the surface's height there and the difference (point − surface);\nnone off the surface.",
+      "properties": {
+        "at": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array",
+          "x-unit": "length"
+        },
+        "class": {
+          "type": "string"
+        },
+        "difference": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "surfaceZ": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "elevation"
+        },
+        "uid": {
+          "type": "string"
+        },
+        "z": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "elevation"
+        }
+      },
+      "required": [
+        "uid",
+        "at",
+        "z",
+        "class"
+      ],
+      "type": "object"
+    },
+    "TerrainCheckpoints": {
+      "description": "The check points: each one, each class's statistics (by name) and all of them together.",
+      "properties": {
+        "all": {
+          "$ref": "#/$defs/TerrainCheckClass"
+        },
+        "classes": {
+          "items": {
+            "$ref": "#/$defs/TerrainCheckClass"
+          },
+          "type": "array"
+        },
+        "points": {
+          "items": {
+            "$ref": "#/$defs/TerrainCheckpoint"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "points",
+        "classes",
+        "all"
+      ],
+      "type": "object"
+    },
+    "TerrainCheckpointsAsk": {
+      "description": "Check points: the points of `layer` and those of `uids`, their class the attribute `classField`'s value (none: one\nclass).",
+      "properties": {
+        "classField": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "layer": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "uids": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
     "TerrainContour": {
       "description": "A contour line as written: its level, whether major and closed, its places.",
       "properties": {
@@ -159585,6 +159996,33 @@
       ],
       "type": "object"
     },
+    "TerrainGaps": {
+      "description": "The coverage gaps: triangles with an edge over the limit, their plan area, the surface's longest edge.",
+      "properties": {
+        "area": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "longest": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "triangles": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        }
+      },
+      "required": [
+        "triangles",
+        "area",
+        "longest"
+      ],
+      "type": "object"
+    },
     "TerrainGridSlope": {
       "description": "A raster's slope against the triangles': the cell, the cells compared, the mean (raster − triangle) and mean\nabsolute difference, the largest absolute one and where; percent.",
       "properties": {
@@ -159706,6 +160144,48 @@
         "id",
         "role",
         "why"
+      ],
+      "type": "object"
+    },
+    "TerrainNearPair": {
+      "description": "Two corners closer than the limit: their places and heights, the plan distance and the height difference (b − a).",
+      "properties": {
+        "a": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "type": "array",
+          "x-unit": "length"
+        },
+        "b": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "type": "array",
+          "x-unit": "length"
+        },
+        "distance": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "dz": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "a",
+        "b",
+        "distance",
+        "dz"
       ],
       "type": "object"
     },
@@ -159870,6 +160350,64 @@
         "station",
         "x",
         "y"
+      ],
+      "type": "object"
+    },
+    "TerrainSpike": {
+      "description": "A spike: the corner, the mean height round it, the difference (z − mean) and the corners round it.",
+      "properties": {
+        "at": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "type": "array",
+          "x-unit": "length"
+        },
+        "difference": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "mean": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "elevation"
+        },
+        "neighbours": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        }
+      },
+      "required": [
+        "at",
+        "mean",
+        "difference",
+        "neighbours"
+      ],
+      "type": "object"
+    },
+    "TerrainSpikesAsk": {
+      "description": "Spikes asked for: corners more than `limit` (m) off the mean height of the other corners within `radius` (m).",
+      "properties": {
+        "limit": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "radius": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "radius",
+        "limit"
       ],
       "type": "object"
     },
