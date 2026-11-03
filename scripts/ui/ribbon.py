@@ -252,6 +252,8 @@ CAD = [
     T("terrain", "Arazi", [
         # The terrain surfaces (plan/road.md Y2.4): their window and a new one.
         P("Yüzey", "terrainSurface", [L("terrain.surfaces"), L("terrain.new"), L("terrain.cloud")]),
+        # The surface's analysis, difference and survey quality (plan/road.md Y18, docs/adr/0916).
+        P("Analiz", "terrainAnalysis", [L("terrain.analysis")]),
         # The graded pads (plan/road.md Y14, docs/adr/0912): the Platform window.
         P("Tesviye", "platformEditor", [L("platform.editor")]),
         # The surface's drainage (plan/road.md Y16, docs/adr/0914): the Drenaj window.

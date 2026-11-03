@@ -314,6 +314,8 @@ pub enum Dialog {
     Drainage,
     /// Araç izi (swept_window.rs, plan/road.md Y17.3); the window is `App::swept_window`.
     Swept,
+    /// Yüzey analizi (surface_analysis_window.rs, plan/road.md Y18.5); the window is `App::surface_analysis_window`.
+    SurfaceAnalysis,
     /// Poz metrajı (pay_window.rs, plan/road.md Y11.4); the window is `App::pay_window`.
     Pay,
     /// Ön güzergâh (route_window.rs, plan/road.md Y12.1); the window is `App::route_window`.
@@ -707,6 +709,8 @@ pub enum Message {
     Drainage(crate::drainage_window::Event),
     /// An event of Araç izi (swept_window.rs, plan/road.md Y17.3).
     Swept(crate::swept_window::Event),
+    /// An event of Yüzey analizi (surface_analysis_window.rs, plan/road.md Y18.5).
+    SurfaceAnalysis(crate::surface_analysis_window::Event),
     /// An event of Poz metrajı (pay_window.rs, plan/road.md Y11.4).
     Pay(crate::pay_window::Event),
     /// An event of Ön güzergâh (route_window.rs, plan/road.md Y12.1).
@@ -1317,6 +1321,8 @@ pub struct App {
     pub(crate) drainage_window: Option<Box<crate::drainage_window::Window>>,
     /// Araç izi (swept_window.rs, plan/road.md Y17.3).
     pub(crate) swept_window: Option<Box<crate::swept_window::Window>>,
+    /// Yüzey analizi (surface_analysis_window.rs, plan/road.md Y18.5).
+    pub(crate) surface_analysis_window: Option<Box<crate::surface_analysis_window::Window>>,
     /// Poz metrajı (pay_window.rs, plan/road.md Y11.4).
     pub(crate) pay_window: Option<Box<crate::pay_window::Window>>,
     /// Ön güzergâh (route_window.rs, plan/road.md Y12.1).
@@ -1766,6 +1772,7 @@ impl App {
             terrain_cloud_window: None,
             drainage_window: None,
             swept_window: None,
+            surface_analysis_window: None,
             pay_window: None,
             route_window: None,
             junction_window: None,
@@ -2508,6 +2515,7 @@ impl App {
             Message::TerrainCloud(event) => return self.terrain_cloud_event(event),
             Message::Drainage(event) => return self.drainage_event(event),
             Message::Swept(event) => return self.swept_event(event),
+            Message::SurfaceAnalysis(event) => return self.surface_analysis_event(event),
             Message::Pay(event) => return self.pay_event(event),
             Message::Route(event) => return self.route_event(event),
             Message::Junctions(event) => return self.junction_event(event),
@@ -3568,6 +3576,7 @@ impl App {
             "terrain.cloud" => self.open_terrain_cloud(),
             "drainage.editor" => self.open_drainage(),
             "swept.editor" => self.open_swept(),
+            "terrain.analysis" => self.open_surface_analysis(),
             "payItems.editor" => self.open_pay(),
             "route.finder" => self.open_route(),
             "junction.editor" => self.open_junctions(),

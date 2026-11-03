@@ -2042,6 +2042,7 @@ impl App {
             Asking::TerrainCloud => self.terrain_cloud_view(),
             Asking::Drainage => self.drainage_view(),
             Asking::Swept => self.swept_view(),
+            Asking::SurfaceAnalysis => self.surface_analysis_view(),
             Asking::Pay => self.pay_view(),
             Asking::Route => self.route_view(),
             Asking::Junctions => self.junction_view(),

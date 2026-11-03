@@ -631,6 +631,8 @@ pub const PORTED: &[&str] = &[
     "drainage.editor",
     // plan/road.md Y17.3: Araç izi (swept_window.rs).
     "swept.editor",
+    // plan/road.md Y18.5: Yüzey analizi (surface_analysis_window.rs).
+    "terrain.analysis",
     // plan/road.md Y11.4: Poz metrajı (pay_window.rs).
     "payItems.editor",
     // plan/road.md Y12.1: Ön güzergâh (route_window.rs).

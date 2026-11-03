@@ -458,6 +458,16 @@
       ]
      },
      {
+      "label": "Analiz",
+      "icon": "terrainAnalysis",
+      "items": [
+       {
+        "command": "terrain.analysis",
+        "size": "large"
+       }
+      ]
+     },
+     {
       "label": "Tesviye",
       "icon": "platformEditor",
       "items": [

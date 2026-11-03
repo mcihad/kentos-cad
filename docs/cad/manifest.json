@@ -9630,6 +9630,24 @@
    "tests": 2
   },
   {
+   "id": "terrain.analysis",
+   "kind": "command",
+   "title": "Yüzey analizi…",
+   "level": "semantic",
+   "via": [
+    "road.terrains.analysis",
+    "road.terrains.compare",
+    "road.terrains.quality"
+   ],
+   "operation": null,
+   "python": "Connection: road.terrains.analysis, Connection: road.terrains.compare, Connection: road.terrains.quality",
+   "mcp": "road.terrains.analysis, road.terrains.compare, road.terrains.quality",
+   "note": "Önizle kipine göre road.terrains.analysis, road.terrains.compare ya da road.terrains.quality ile okur; hiçbir şey yazmaz (plan/road.md Y18.5, ADR 0916 §5).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "terrain.cloud",
    "kind": "command",
    "title": "Buluttan arazi…",

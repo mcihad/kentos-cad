@@ -271,6 +271,7 @@ mod platform_window;
 mod terrain_cloud_window;
 mod drainage_window;
 mod swept_window;
+mod surface_analysis_window;
 mod pay_window;
 mod route_window;
 mod junction_window;
@@ -295,6 +296,8 @@ mod terrain_cloud_window_tests;
 mod drainage_window_tests;
 #[cfg(test)]
 mod swept_window_tests;
+#[cfg(test)]
+mod surface_analysis_window_tests;
 #[cfg(test)]
 mod culvert_window_tests;
 #[cfg(test)]

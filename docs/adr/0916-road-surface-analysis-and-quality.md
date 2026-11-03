@@ -1,6 +1,6 @@
 # 0916 — KentOS Yol: yüzeyin analizi, farkı ve ölçme kalitesi
 
-Tarih: 2026-11-04. plan/road.md Y18 (ROAD-TIN-12, 13, 16–18; ROAD-SURVEY-04, 05, 09). Durum: taslak, aşamalar aşağıda.
+Tarih: 2026-11-04. plan/road.md Y18 (ROAD-TIN-12, 13, 16–18; ROAD-SURVEY-04, 05, 09). Durum: kabul (Y18.1–Y18.5), açıklar aşağıda.
 
 ## Dayanak
 
@@ -87,3 +87,11 @@ hepsinin sayısı, yüzey dışı, ortalama, standart sapma (n − 1), RMSE, uç
 (`scripts/fixtures/road_terrain_quality_cases.py`: seyrek kafes, sivri kafes ve iki kez ölçülen nokta, terasta iki
 sınıflı kontrol noktaları; KentOS kodu yok). Python, MCP. Yolda bulunan: Python 3.12'nin `sum()`'ı telafili toplar,
 Rust'ın düz toplamından son basamakta ayrılır; başvuru düz toplar.
+
+Y18.5 (yapıldı, masaüstü): §5. Arazi sekmesinde Analiz paneli, `terrain.analysis`
+(`apps/desktop/src/surface_analysis_window.rs`): Kip (Analiz, Fark, Kalite) ve Yüzey; Analiz'de ölçü (kot, eğim, bakı),
+sınırlar, pürüzlülük, raster hücresi: planda aralıklar yeşilden kırmızıya, tabloda plan ve 3B alan ve pay; Fark'ta
+karşılaştırma yüzeyi ve aralıklar: kazı, dolgu, net, tabanın dışı, fark aralıkları çubuklarla; Kalite'de yakın, sivri
+erimi ve sınırı, boşluk kenarı, kontrol katmanı ve sınıf alanı: kontrol noktaları farklarıyla planda, sınıf sınıf
+istatistik. Hiçbir şey yazılmaz. Testler `surface_analysis_window_tests.rs`, resimler
+`.run/gui-evidence/yol-y18-yuzey-analizi-*`.

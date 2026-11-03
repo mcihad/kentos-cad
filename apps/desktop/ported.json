@@ -426,6 +426,7 @@
     "terrain.cloud",
     "drainage.editor",
     "swept.editor",
+    "terrain.analysis",
     "payItems.editor",
     "route.finder",
     "junction.editor",
