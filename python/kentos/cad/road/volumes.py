@@ -13,9 +13,11 @@ from ..protocol import Expected  # noqa: F401
 from ..types import (  # noqa: F401
     RoadEditOperation,
     RoadEditOperationName,
+    VolumeBenchDef,
     VolumeFactorDef,
     VolumeMethod,
     VolumeMethodName,
+    VolumeStripDef,
     VolumesEdit,
     VolumesQueried,
     VolumesQuery,
@@ -35,10 +37,15 @@ class _RoadVolumesEdit(LocalCommand[VolumesEdit, VolumesWritten, VolumesWritten]
     üst üste konur). Kazı ve dolgu ayrıdır. factors km aralıklarına (from, to aksın
     istasyonu, m) kazının kabarma (cut) ve dolgunun sıkışma (fill) çarpanını verir;
     artan, birbirine binmeyen satırlar, çarpan 0'dan büyük, en çok 10; KentOS öntanımlı
-    katsayı vermez. Kübaj koridorunu izler, başka koridora bağlanmaz, yeniden bağlanmaz.
-    Sonuç saklanmaz, her okumada hesaplanır. Yeni hesabın kimliği verilen ya da ilk boş
-    v-n. Tek geri alma adımı “Kübaj”. Retler: not_a_road_project, unknown_volume,
-    unknown_corridor, invalid_volume, invalid_revision, revision_conflict.
+    katsayı vermez. Kesit yöntemlerinde strip km aralıklarına bitkisel toprak kalınlığı
+    (depth, m) verir: kübaj zeminin kalınlık kadar indirilmiş hâline göre, bitkisel
+    toprak hacmi ayrı kalem; bench diş kazısıdır (slope: arazinin enine eğimi bu
+    yüzdeden dikken dolgunun altında, height: basamak yüksekliği; hacmi genişlik ×
+    yükseklik/2), ayrı kalem, kazı ve dolguya katılmaz; bench null kaldırır. Kübaj
+    koridorunu izler, başka koridora bağlanmaz, yeniden bağlanmaz. Sonuç saklanmaz, her
+    okumada hesaplanır. Yeni hesabın kimliği verilen ya da ilk boş v-n. Tek geri alma
+    adımı “Kübaj”. Retler: not_a_road_project, unknown_volume, unknown_corridor,
+    invalid_volume, invalid_revision, revision_conflict.
     """
     __slots__ = ()
     id = "road.volumes.edit"
@@ -55,11 +62,13 @@ class _RoadVolumesEdit(LocalCommand[VolumesEdit, VolumesWritten, VolumesWritten]
         /,
         *,
         operation: RoadEditOperation | RoadEditOperationName,
+        bench: VolumeBenchDef | None | Unset = UNSET,
         corridor: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         factors: Sequence[VolumeFactorDef] | None | Unset = UNSET,
         method: VolumeMethod | VolumeMethodName | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
+        strip: Sequence[VolumeStripDef] | None | Unset = UNSET,
         volume: str | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -71,20 +80,27 @@ class _RoadVolumesEdit(LocalCommand[VolumesEdit, VolumesWritten, VolumesWritten]
         yüzeyiyle arazisi arasındaki hacim (üçgenler planda üst üste konur). Kazı ve dolgu
         ayrıdır. factors km aralıklarına (from, to aksın istasyonu, m) kazının kabarma (cut)
         ve dolgunun sıkışma (fill) çarpanını verir; artan, birbirine binmeyen satırlar,
-        çarpan 0'dan büyük, en çok 10; KentOS öntanımlı katsayı vermez. Kübaj koridorunu
-        izler, başka koridora bağlanmaz, yeniden bağlanmaz. Sonuç saklanmaz, her okumada
-        hesaplanır. Yeni hesabın kimliği verilen ya da ilk boş v-n. Tek geri alma adımı
-        “Kübaj”. Retler: not_a_road_project, unknown_volume, unknown_corridor,
-        invalid_volume, invalid_revision, revision_conflict.
+        çarpan 0'dan büyük, en çok 10; KentOS öntanımlı katsayı vermez. Kesit yöntemlerinde
+        strip km aralıklarına bitkisel toprak kalınlığı (depth, m) verir: kübaj zeminin
+        kalınlık kadar indirilmiş hâline göre, bitkisel toprak hacmi ayrı kalem; bench diş
+        kazısıdır (slope: arazinin enine eğimi bu yüzdeden dikken dolgunun altında, height:
+        basamak yüksekliği; hacmi genişlik × yükseklik/2), ayrı kalem, kazı ve dolguya
+        katılmaz; bench null kaldırır. Kübaj koridorunu izler, başka koridora bağlanmaz,
+        yeniden bağlanmaz. Sonuç saklanmaz, her okumada hesaplanır. Yeni hesabın kimliği
+        verilen ya da ilk boş v-n. Tek geri alma adımı “Kübaj”. Retler: not_a_road_project,
+        unknown_volume, unknown_corridor, invalid_volume, invalid_revision,
+        revision_conflict.
 
         Args:
             doc: The drawing it works on.
             operation:
+            bench: The fill's foundation benched; null takes it off.
             corridor:
             expected_revision:
             factors:
             method:
             name:
+            strip: The topsoil stripped by stations; an empty list takes it off.
             volume:
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -100,11 +116,13 @@ class _RoadVolumesEdit(LocalCommand[VolumesEdit, VolumesWritten, VolumesWritten]
         """
         return self.execute_input(doc, VolumesEdit(
             operation=operation,
+            bench=bench,
             corridor=corridor,
             expected_revision=expected_revision,
             factors=_opt(factors, lambda x: list(x)),
             method=method,
             name=name,
+            strip=_opt(strip, lambda x: list(x)),
             volume=volume,
         ), request_id=request_id, expected=expected)
 
@@ -114,11 +132,13 @@ class _RoadVolumesEdit(LocalCommand[VolumesEdit, VolumesWritten, VolumesWritten]
         /,
         *,
         operation: RoadEditOperation | RoadEditOperationName,
+        bench: VolumeBenchDef | None | Unset = UNSET,
         corridor: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         factors: Sequence[VolumeFactorDef] | None | Unset = UNSET,
         method: VolumeMethod | VolumeMethodName | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
+        strip: Sequence[VolumeStripDef] | None | Unset = UNSET,
         volume: str | None | Unset = UNSET,
     ) -> VolumesWritten:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -126,11 +146,13 @@ class _RoadVolumesEdit(LocalCommand[VolumesEdit, VolumesWritten, VolumesWritten]
         """
         return self.plan_input(doc, VolumesEdit(
             operation=operation,
+            bench=bench,
             corridor=corridor,
             expected_revision=expected_revision,
             factors=_opt(factors, lambda x: list(x)),
             method=method,
             name=name,
+            strip=_opt(strip, lambda x: list(x)),
             volume=volume,
         ))
 
@@ -140,11 +162,13 @@ class _RoadVolumesEdit(LocalCommand[VolumesEdit, VolumesWritten, VolumesWritten]
         /,
         *,
         operation: RoadEditOperation | RoadEditOperationName,
+        bench: VolumeBenchDef | None | Unset = UNSET,
         corridor: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         factors: Sequence[VolumeFactorDef] | None | Unset = UNSET,
         method: VolumeMethod | VolumeMethodName | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
+        strip: Sequence[VolumeStripDef] | None | Unset = UNSET,
         volume: str | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -152,11 +176,13 @@ class _RoadVolumesEdit(LocalCommand[VolumesEdit, VolumesWritten, VolumesWritten]
         """
         return self.validate_input(doc, VolumesEdit(
             operation=operation,
+            bench=bench,
             corridor=corridor,
             expected_revision=expected_revision,
             factors=_opt(factors, lambda x: list(x)),
             method=method,
             name=name,
+            strip=_opt(strip, lambda x: list(x)),
             volume=volume,
         ))
 
@@ -166,11 +192,13 @@ class _RoadVolumesEdit(LocalCommand[VolumesEdit, VolumesWritten, VolumesWritten]
         /,
         *,
         operation: RoadEditOperation | RoadEditOperationName,
+        bench: VolumeBenchDef | None | Unset = UNSET,
         corridor: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         factors: Sequence[VolumeFactorDef] | None | Unset = UNSET,
         method: VolumeMethod | VolumeMethodName | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
+        strip: Sequence[VolumeStripDef] | None | Unset = UNSET,
         volume: str | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -183,11 +211,13 @@ class _RoadVolumesEdit(LocalCommand[VolumesEdit, VolumesWritten, VolumesWritten]
         """
         return self.answer_input(doc, VolumesEdit(
             operation=operation,
+            bench=bench,
             corridor=corridor,
             expected_revision=expected_revision,
             factors=_opt(factors, lambda x: list(x)),
             method=method,
             name=name,
+            strip=_opt(strip, lambda x: list(x)),
             volume=volume,
         ), op=op, request_id=request_id, expected=expected)
 
@@ -203,8 +233,9 @@ class _RoadVolumesQuery(LocalCommand[VolumesQuery, VolumesQueried, VolumesQuerie
     aralığın ortasının katsayıları, kabarma ve sıkışmayla düzeltilmiş kazı ve dolgunun
     birikimli toplamları ve farkı (kütle ordinatı). Toplamlar ham ve düzeltilmiş;
     surfaces yönteminde kazı ve dolgu plan alanları ve arazinin örtmediği alan; hacmi
-    olmayan aralıklar; hesaplanamıyorsa nedeni. volume ile yalnız biri. Uyarılar:
-    corridor_stale, volume_gap, volume_uncovered, volume_unfactored. Retler:
+    olmayan aralıklar; sıyırma ve diş kazısı varsa bitkisel toprak ve diş kazısı
+    hacimleri (satırda ve toplamda); hesaplanamıyorsa nedeni. volume ile yalnız biri.
+    Uyarılar: corridor_stale, volume_gap, volume_uncovered, volume_unfactored. Retler:
     not_a_road_project, unknown_volume, invalid_volume.
     """
     __slots__ = ()
@@ -230,10 +261,11 @@ class _RoadVolumesQuery(LocalCommand[VolumesQuery, VolumesQueried, VolumesQuerie
         kazı ve dolgu (m³; kesiti çözülmeyen aralıkta yok), aralığın ortasının katsayıları,
         kabarma ve sıkışmayla düzeltilmiş kazı ve dolgunun birikimli toplamları ve farkı
         (kütle ordinatı). Toplamlar ham ve düzeltilmiş; surfaces yönteminde kazı ve dolgu
-        plan alanları ve arazinin örtmediği alan; hacmi olmayan aralıklar; hesaplanamıyorsa
-        nedeni. volume ile yalnız biri. Uyarılar: corridor_stale, volume_gap,
-        volume_uncovered, volume_unfactored. Retler: not_a_road_project, unknown_volume,
-        invalid_volume.
+        plan alanları ve arazinin örtmediği alan; hacmi olmayan aralıklar; sıyırma ve diş
+        kazısı varsa bitkisel toprak ve diş kazısı hacimleri (satırda ve toplamda);
+        hesaplanamıyorsa nedeni. volume ile yalnız biri. Uyarılar: corridor_stale,
+        volume_gap, volume_uncovered, volume_unfactored. Retler: not_a_road_project,
+        unknown_volume, invalid_volume.
 
         Args:
             doc: The drawing it works on.

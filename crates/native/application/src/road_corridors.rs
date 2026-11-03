@@ -96,19 +96,25 @@ impl Sampler {
     /// The cross at station `s` with `template`: its sample line and the section, none where the line does not lie on
     /// the alignment.
     pub fn cross(&self, template: &tpl::Template, s: f64) -> Option<Cross> {
+        self.sample(template, s).map(|(cross, _)| cross)
+    }
+
+    /// The cross at station `s` with the terrain along its line (empty where there is no surface).
+    pub fn sample(&self, template: &tpl::Template, s: f64) -> Option<(Cross, Vec<kentos_road::section::GroundPoint>)> {
         let line = sample_line(&self.alignment.core, s, self.left, self.right)?;
+        let mut terrain = Vec::new();
         let section = match (&self.surface, self.vertical.at(s)) {
             (Some(surf), Some((z, _, _))) => {
-                let g = ground(surf, &line);
+                terrain = ground(surf, &line);
                 let tt = match &self.schedule {
                     Some((sch, normal)) => superelevated(template, sch, *normal, s),
                     None => template.clone(),
                 };
-                tpl::build(&tt, z, &g).ok()
+                tpl::build(&tt, z, &terrain).ok()
             }
             _ => None,
         };
-        Some(Cross { line, section })
+        Some((Cross { line, section }, terrain))
     }
 }
 

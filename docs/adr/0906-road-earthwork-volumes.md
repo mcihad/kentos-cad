@@ -35,6 +35,17 @@ Tarih: 2026-11-03. plan/road.md Y8 (ROAD-VOL-01…21). Durum: taslak, aşamalar 
 4. **Kübaj kuralları (ROAD-VOL-19).** Adlı, sürümlü kural: hangi koridor, hangi iki yüzey (koridorun üst yüzeyi ya da
    formasyonu; arazi ya da bitkisel toprağın altı), hangi yöntem, hangi km aralığı. Kabarma ve sıkışma katsayıları km
    aralıklarına tablo olarak (ROAD-VOL-21); gevşek ve sıkışık hacim açık dönüşümle.
+6. **Sıyırma ve diş kazısı (ROAD-VOL-20).** Bitkisel toprak km aralıklarına kalınlıkla verilir (kesitin km'sini içeren
+   satır; son satırın sonu dahil). Kesitin izinde (tasarım çizgisinin açıklığı, arazinin olduğu yerde) zemin kalınlık
+   kadar indirilir; kazı ve dolgu indirilmiş zemine göre hesaplanır, bitkisel toprak ayrı kalemdir: kalınlık × iz
+   genişliği. Bu, Trimble'ın takeoff yolundaki “bitkisel toprağı alınmış arazi” yüzeyi ve Civil 3D'nin datum ile arazi
+   karşılaştırmasıdır ([Trimble, topsoil strip/replace](https://help.fieldsystems.trimble.com/tbc/12644.htm),
+   [Civil 3D quantity takeoff](https://help.autodesk.com/cloudhelp/2015/ENU/Civil3D-Tutorials/files/GUID-764CEBBB-F573-40B1-9611-9C55B0D9B9CB.htm)).
+   Diş kazısı: indirilmiş zeminin enine eğimi verilen yüzdeden dik olduğu yerde dolgunun altına yükseklik `h` basamak
+   kazılır; testere dişinin ortalama derinliği `h/2` olduğundan kesitte alanı o genişlik × `h/2`'dir (eğimden bağımsız).
+   Eşik ve basamak yüksekliği projenin yönetmeliğinden ve zemin raporundan gelir; KentOS sayı vermez. Diş kazısı ayrı
+   kalemdir, aynı malzemeyle doldurulur sayılır: kazıya ve dolguya katılmaz. Yüzeyler arası yöntemde sıyırma ve diş
+   kazısı yoktur (izin poligonu sonraki aşama).
 5. **Cetvel ve onay (ROAD-VOL-17, 18, 21).** Kübaj cetveli km satırlarıyla (alanlar, hacimler, birikimli toplamlar),
    XLSX/ODS/CSV ADR 0223'ün yazıcısıyla. Onaylanan kübaj değişmez; kaynak değişince yeni hesap ve fark.
 
@@ -66,6 +77,11 @@ dolgu, kütle ordinatı, hacimsiz aralıklar), toplamlar, uyarılar ve cetvel. K
 Cetveli yaz cetveli (`road_volumes::sheet`: km, uzunluk, kazı, dolgu, katsayılar, düzeltilmiş hacimler, birikimli
 toplamlar, kütle ordinatı ve toplam satırı) ADR 0223'ün yazıcısıyla Excel, OpenDocument ya da CSV olarak yazar.
 Sıyırma, diş kazısı, onay ve fark sonraki aşamadır (Y8.4).
+
+Y8.4: §6. Çekirdekte `section::template::earthwork` (indirilmiş zemine göre kazı ve dolgu, bitkisel toprak, diş
+kazısı); kübajın `strip` ve `bench`'i (`.kcad` şema 161), satırda ve toplamda hacimleri, cetvelde sütunları; pencerede
+Sıyırma tablosu ve Diş kazısı alanları. 37 + 28 ortak durum (`road_volume_command_cases.py`: kesitin kendisi enkesit
+başvurusundan, toprak işi kesirlerle). Onay ve fark Y8.5'tedir.
 
 ## Sonra
 

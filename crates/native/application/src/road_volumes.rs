@@ -7,6 +7,7 @@
 use kentos_commands::{CommandWarning, VolumeDef, VolumeListed, VolumeMethod, VolumeReport, VolumeRow};
 use kentos_domain::Document;
 use kentos_road::alignment::km_text;
+use kentos_road::section::template as tpl;
 use kentos_road::volume::{Ground, Triangle, prismoidal};
 
 use crate::checks::Stop;
@@ -58,11 +59,22 @@ fn factors_at(def: &VolumeDef, m: f64) -> (Option<f64>, Option<f64>) {
         .map_or((None, None), |(_, f)| (f.cut, f.fill))
 }
 
-/// One stretch's raw volumes: none where it has none.
+/// The topsoil depth at station `s`: the strip row with `from ≤ s < to` (the last row's end included); 0 off them.
+fn depth_at(def: &VolumeDef, s: f64) -> f64 {
+    let n = def.strip.len();
+    def.strip
+        .iter()
+        .enumerate()
+        .find(|(i, f)| f.from <= s && (s < f.to || (*i + 1 == n && s <= f.to)))
+        .map_or(0.0, |(_, f)| f.depth)
+}
+
+/// One stretch's raw volumes: none where it has none; the topsoil and the benches where the volume has them.
 struct Raw {
     from: f64,
     to: f64,
     volumes: Option<(f64, f64)>,
+    extra: Option<(f64, f64)>,
 }
 
 /// The volume computed now, with its warnings; refused where its corridor does not build.
@@ -76,7 +88,40 @@ pub(crate) fn compute(doc: &Document, def: &VolumeDef) -> Result<(VolumeReport, 
         made.warnings.iter().filter(|w| w.code == codes::CORRIDOR_STALE).cloned().collect();
     let mut raws: Vec<Raw> = Vec::new();
     let (mut cut_area, mut fill_area, mut uncovered) = (0.0, 0.0, 0.0);
+    let bench = def.bench.as_ref().map(|b| tpl::Bench { slope: b.slope, height: b.height });
+    let worked = !def.strip.is_empty() || bench.is_some();
     match def.method {
+        // With stripping or benching, each section's earthwork against its terrain stripped and benched.
+        VolumeMethod::EndArea | VolumeMethod::Prismoidal if worked => {
+            for region in &made.regions {
+                let work = |s: f64| {
+                    let (cross, terrain) = made.sampler.sample(&region.template, s)?;
+                    cross.section.map(|sec| tpl::earthwork(&sec, &terrain, depth_at(def, s), bench))
+                };
+                for w in region.crosses.windows(2) {
+                    let (s0, s1) = (w[0].line.station, w[1].line.station);
+                    let l = s1 - s0;
+                    let ends = match (&w[0].section, &w[1].section) {
+                        (Some(_), Some(_)) => work(s0).zip(work(s1)),
+                        _ => None,
+                    };
+                    let both = ends.and_then(|(a, b)| match def.method {
+                        VolumeMethod::EndArea => {
+                            let avg = |x: f64, y: f64| l * (x + y) / 2.0;
+                            Some(((avg(a.cut, b.cut), avg(a.fill, b.fill)), (avg(a.strip, b.strip), avg(a.bench, b.bench))))
+                        }
+                        _ => work((s0 + s1) / 2.0).map(|m| {
+                            let p = |x: f64, y: f64, z: f64| prismoidal(x, y, z, l);
+                            (
+                                (p(a.cut, m.cut, b.cut), p(a.fill, m.fill, b.fill)),
+                                (p(a.strip, m.strip, b.strip), p(a.bench, m.bench, b.bench)),
+                            )
+                        }),
+                    });
+                    raws.push(Raw { from: s0, to: s1, volumes: both.map(|v| v.0), extra: both.map(|v| v.1) });
+                }
+            }
+        }
         VolumeMethod::EndArea | VolumeMethod::Prismoidal => {
             for region in &made.regions {
                 for w in region.crosses.windows(2) {
@@ -93,7 +138,7 @@ pub(crate) fn compute(doc: &Document, def: &VolumeDef) -> Result<(VolumeReport, 
                         },
                         _ => None,
                     };
-                    raws.push(Raw { from: s0, to: s1, volumes });
+                    raws.push(Raw { from: s0, to: s1, volumes, extra: None });
                 }
             }
         }
@@ -122,13 +167,14 @@ pub(crate) fn compute(doc: &Document, def: &VolumeDef) -> Result<(VolumeReport, 
                         uncovered += v.uncovered;
                         (v.cut, v.fill)
                     });
-                    raws.push(Raw { from: s0, to: s1, volumes });
+                    raws.push(Raw { from: s0, to: s1, volumes, extra: None });
                 }
             }
         }
     }
     let text = |s: f64| km_text(made.sampler.alignment.km(s), 3);
     let (mut cut, mut fill, mut fcut, mut ffill) = (0.0, 0.0, 0.0, 0.0);
+    let (mut strip, mut benched) = (0.0, 0.0);
     let mut unfactored = 0usize;
     let mut rows = Vec::with_capacity(raws.len());
     for r in &raws {
@@ -146,6 +192,10 @@ pub(crate) fn compute(doc: &Document, def: &VolumeDef) -> Result<(VolumeReport, 
                 unfactored += 1;
             }
         }
+        if let Some((a, b)) = r.extra {
+            strip += a;
+            benched += b;
+        }
         rows.push(VolumeRow {
             from: r.from,
             to: r.to,
@@ -155,6 +205,8 @@ pub(crate) fn compute(doc: &Document, def: &VolumeDef) -> Result<(VolumeReport, 
             fill: f,
             cut_factor: cf,
             fill_factor: ff,
+            strip: (!def.strip.is_empty()).then_some(r.extra.map(|e| e.0)).flatten(),
+            bench: def.bench.as_ref().and(r.extra.map(|e| e.1)),
             total_cut: fcut,
             total_fill: ffill,
             mass: fcut - ffill,
@@ -212,6 +264,8 @@ pub(crate) fn compute(doc: &Document, def: &VolumeDef) -> Result<(VolumeReport, 
         cut_area: surfaces.then_some(cut_area),
         fill_area: surfaces.then_some(fill_area),
         uncovered: surfaces.then_some(uncovered),
+        strip: (!def.strip.is_empty()).then_some(strip),
+        bench: def.bench.as_ref().map(|_| benched),
         gaps: joined,
         problem: None,
     };
@@ -235,6 +289,8 @@ pub(crate) fn broken(def: &VolumeDef, why: String) -> VolumeReport {
         cut_area: None,
         fill_area: None,
         uncovered: None,
+        strip: None,
+        bench: None,
         gaps: Vec::new(),
         problem: Some(why),
     }
@@ -269,18 +325,28 @@ fn decimal(v: f64) -> String {
 }
 
 /// The volume sheet as a workbook's sheet (docs/adr/0906 §5, docs/adr/0223's writer): a row between each two
-/// consecutive sections (its km, length, cut and fill, the factors, the factored cut and fill, the running totals and
-/// the mass ordinate; empty cells where a stretch has no volume or no factor), then the totals.
+/// consecutive sections (its km, length, cut and fill, the topsoil and the benches where the volume has them, the
+/// factors, the factored cut and fill, the running totals and the mass ordinate; empty cells where a stretch has no
+/// volume or no factor), then the totals.
 pub fn sheet(report: &VolumeReport) -> kentos_commands::WorkbookSheet {
     use kentos_commands::{CellKind, WorkbookColumn};
+    let (strips, benches) = (report.strip.is_some(), report.bench.is_some());
     let column = |name: &str, kind: CellKind, decimals: Option<u32>| WorkbookColumn { name: name.into(), kind, decimals };
     let n = |name: &str| column(name, CellKind::Number, Some(3));
-    let columns = vec![
+    let mut columns = vec![
         column("Başlangıç km", CellKind::Text, None),
         column("Bitiş km", CellKind::Text, None),
         n("Uzunluk (m)"),
         n("Kazı (m³)"),
         n("Dolgu (m³)"),
+    ];
+    if strips {
+        columns.push(n("Bitkisel toprak (m³)"));
+    }
+    if benches {
+        columns.push(n("Diş kazısı (m³)"));
+    }
+    columns.extend([
         n("Kabarma"),
         n("Sıkışma"),
         n("Düzeltilmiş kazı (m³)"),
@@ -288,18 +354,20 @@ pub fn sheet(report: &VolumeReport) -> kentos_commands::WorkbookSheet {
         n("Birikimli kazı (m³)"),
         n("Birikimli dolgu (m³)"),
         n("Kütle (m³)"),
-    ];
+    ]);
     let opt = |v: Option<f64>| v.map(decimal).unwrap_or_default();
     let mut rows: Vec<Vec<String>> = report
         .rows
         .iter()
         .map(|r| {
-            vec![
-                r.from_text.clone(),
-                r.to_text.clone(),
-                decimal(r.to - r.from),
-                opt(r.cut),
-                opt(r.fill),
+            let mut row = vec![r.from_text.clone(), r.to_text.clone(), decimal(r.to - r.from), opt(r.cut), opt(r.fill)];
+            if strips {
+                row.push(opt(r.strip));
+            }
+            if benches {
+                row.push(opt(r.bench));
+            }
+            row.extend([
                 opt(r.cut_factor),
                 opt(r.fill_factor),
                 opt(r.cut.map(|c| c * r.cut_factor.unwrap_or(1.0))),
@@ -307,16 +375,19 @@ pub fn sheet(report: &VolumeReport) -> kentos_commands::WorkbookSheet {
                 decimal(r.total_cut),
                 decimal(r.total_fill),
                 decimal(r.mass),
-            ]
+            ]);
+            row
         })
         .collect();
     let length: f64 = report.rows.iter().filter(|r| r.cut.is_some()).map(|r| r.to - r.from).sum();
-    rows.push(vec![
-        "Toplam".into(),
-        String::new(),
-        decimal(length),
-        decimal(report.cut),
-        decimal(report.fill),
+    let mut total = vec!["Toplam".into(), String::new(), decimal(length), decimal(report.cut), decimal(report.fill)];
+    if let Some(v) = report.strip {
+        total.push(decimal(v));
+    }
+    if let Some(v) = report.bench {
+        total.push(decimal(v));
+    }
+    total.extend([
         String::new(),
         String::new(),
         decimal(report.factored_cut),
@@ -325,6 +396,7 @@ pub fn sheet(report: &VolumeReport) -> kentos_commands::WorkbookSheet {
         decimal(report.factored_fill),
         decimal(report.factored_cut - report.factored_fill),
     ]);
+    rows.push(total);
     let name: String = report.name.chars().filter(|c| !"[]:*?/\\".contains(*c)).take(31).collect();
     kentos_commands::WorkbookSheet { name: if name.is_empty() { "Kübaj".into() } else { name }, columns, rows }
 }

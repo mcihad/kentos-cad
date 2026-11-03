@@ -25,7 +25,8 @@ use iced::widget::canvas::{self, Path, Stroke, Text};
 use iced::widget::{Column, column, container, row, scrollable, space};
 use iced::{Center, Color, Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{
-    CommandWarning, RoadEditOperation, VolumeDef, VolumeFactorDef, VolumeMethod, VolumeReport, VolumesEdit, WorkbookFormat,
+    CommandWarning, RoadEditOperation, VolumeBenchDef, VolumeDef, VolumeFactorDef, VolumeMethod, VolumeReport,
+    VolumeStripDef, VolumesEdit, WorkbookFormat,
 };
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, road_volumes, road_volumes_edit};
@@ -47,6 +48,8 @@ const REMOVE: &str = "Sil";
 const ADD: &str = "Satır ekle";
 const REMOVE_ROW: &str = "Satırı sil";
 const WRITE: &str = "Cetveli yaz…";
+const ADD_STRIP: &str = "Sıyırma ekle";
+const REMOVE_STRIP: &str = "Sıyırmayı sil";
 const DIAGRAM: &str = "Kütle diyagramı";
 const SHEET: &str = "Cetvel";
 
@@ -94,6 +97,10 @@ pub struct Row {
     method: VolumeMethod,
     /// From, to, the cut's and the fill's factor.
     factors: Vec<[String; 4]>,
+    /// From, to and the topsoil's depth.
+    strip: Vec<[String; 3]>,
+    /// The bench's slope (%) and height; both empty: no benching.
+    bench: [String; 2],
 }
 
 impl Row {
@@ -109,6 +116,8 @@ impl Row {
                 .iter()
                 .map(|f| [trimmed(f.from), trimmed(f.to), f.cut.map(trimmed).unwrap_or_default(), f.fill.map(trimmed).unwrap_or_default()])
                 .collect(),
+            strip: d.strip.iter().map(|f| [trimmed(f.from), trimmed(f.to), trimmed(f.depth)]).collect(),
+            bench: d.bench.as_ref().map_or_else(Default::default, |b| [trimmed(b.slope), trimmed(b.height)]),
         }
     }
 
@@ -129,7 +138,30 @@ impl Row {
                 fill: may(&f[3], "sıkışması")?,
             });
         }
-        Ok(VolumeDef { id: self.id.clone(), name: self.name.clone(), corridor, revision: self.revision, method: self.method, factors })
+        let mut strip = Vec::new();
+        for (i, f) in self.strip.iter().enumerate() {
+            let n = i + 1;
+            let need = |t: &str, what: &str| match number(t) {
+                Ok(Some(v)) => Ok(v),
+                _ => Err(format!("{n}. sıyırma satırının {what} bir sayı olmalı.")),
+            };
+            strip.push(VolumeStripDef { from: need(&f[0], "başı")?, to: need(&f[1], "sonu")?, depth: need(&f[2], "kalınlığı")? });
+        }
+        let bench = match (number(&self.bench[0]), number(&self.bench[1])) {
+            (Ok(None), Ok(None)) => None,
+            (Ok(Some(slope)), Ok(Some(height))) => Some(VolumeBenchDef { slope, height }),
+            _ => return Err("Diş kazısı için eğimi (%) ve basamak yüksekliğini sayı olarak birlikte yazın.".into()),
+        };
+        Ok(VolumeDef {
+            id: self.id.clone(),
+            name: self.name.clone(),
+            corridor,
+            revision: self.revision,
+            method: self.method,
+            factors,
+            strip,
+            bench,
+        })
     }
 }
 
@@ -147,6 +179,7 @@ pub struct Window {
     kept: Vec<VolumeDef>,
     pub(crate) chosen: Option<usize>,
     line: Option<usize>,
+    strip_line: Option<usize>,
     pub(crate) preview: Preview,
     format: WorkbookFormat,
     /// The sheet shown in place of the mass diagram.
@@ -163,6 +196,13 @@ pub enum Event {
     Method(VolumeMethod),
     /// A factor row's from (0), to (1), cut (2) or fill (3).
     Factor(usize, usize, String),
+    /// A strip row's from (0), to (1) or depth (2).
+    Strip(usize, usize, String),
+    StripLine(usize),
+    AddStrip,
+    RemoveStrip,
+    /// The bench's slope (0) or height (1).
+    Bench(usize, String),
     Line(usize),
     Add,
     RemoveRow,
@@ -199,6 +239,7 @@ impl App {
             rows: kept.iter().map(Row::of).collect(),
             kept,
             line: None,
+            strip_line: None,
             preview: Preview::default(),
             format: WorkbookFormat::Xlsx,
             sheet: false,
@@ -263,6 +304,8 @@ impl App {
                         corridor: Some(id.clone()),
                         method: VolumeMethod::EndArea,
                         factors: Vec::new(),
+                        strip: Vec::new(),
+                        bench: Default::default(),
                     });
                     w.chosen = Some(w.rows.len() - 1);
                     w.line = None;
@@ -308,6 +351,34 @@ impl App {
                     w.line = Some(n);
                 }
             }
+            Event::Strip(j, k, t) => {
+                if let Some(x) = chosen_row(w).and_then(|r| r.strip.get_mut(j)) {
+                    x[k.min(2)] = t;
+                }
+                w.strip_line = Some(j);
+            }
+            Event::StripLine(j) => w.strip_line = Some(j),
+            Event::AddStrip => {
+                if let Some(r) = chosen_row(w) {
+                    let from = r.strip.last().map(|x| x[1].clone()).unwrap_or_else(|| "0".into());
+                    r.strip.push([from, String::new(), String::new()]);
+                    let n = r.strip.len() - 1;
+                    w.strip_line = Some(n);
+                }
+            }
+            Event::RemoveStrip => {
+                if let Some(j) = w.strip_line {
+                    if let Some(r) = chosen_row(w).filter(|r| j < r.strip.len()) {
+                        r.strip.remove(j);
+                    }
+                    w.strip_line = None;
+                }
+            }
+            Event::Bench(k, t) => {
+                if let Some(r) = chosen_row(w) {
+                    r.bench[k.min(1)] = t;
+                }
+            }
             Event::RemoveRow => {
                 if let Some(j) = w.line {
                     if let Some(r) = chosen_row(w).filter(|r| j < r.factors.len()) {
@@ -341,6 +412,8 @@ impl App {
             corridor: None,
             method: None,
             factors: None,
+            strip: None,
+            bench: None,
             expected_revision: None,
         }
     }
@@ -389,6 +462,8 @@ impl App {
                 corridor: kept.is_none().then(|| d.corridor.clone()),
                 method: Some(d.method),
                 factors: Some(d.factors.clone()),
+                strip: Some(d.strip.clone()),
+                bench: Some(d.bench.clone()),
                 ..Self::blank_volume_edit(RoadEditOperation::Set, &d.id)
             };
             if !self.volume_write(edit) {
@@ -526,6 +601,62 @@ impl App {
             ]
             .spacing(16),
         );
+        let sections = r.method != VolumeMethod::Surfaces;
+        let swidths = [80.0, 80.0, 90.0];
+        let mut strips = Column::new().spacing(3);
+        strips = strips.push(
+            ["Baş (m)", "Son (m)", "Kalınlık (m)"]
+                .iter()
+                .zip(swidths)
+                .fold(row![].spacing(4), |row, (h, wd)| row.push(label::caption(*h).style(muted).width(wd))),
+        );
+        for (j, f) in r.strip.iter().enumerate() {
+            let cell = |k: usize, hint: &'a str| {
+                kentos_ui::widget::text_field(hint, &f[k]).on_input(move |v| msg(Event::Strip(j, k, v))).width(swidths[k])
+            };
+            strips = strips.push(
+                row![
+                    cell(0, "0"),
+                    cell(1, ""),
+                    cell(2, ""),
+                    iced::widget::button(label::caption(if w.strip_line == Some(j) { "●" } else { "○" }))
+                        .on_press(msg(Event::StripLine(j)))
+                        .padding([2, 6])
+                        .style(style::button::row(w.strip_line == Some(j))),
+                ]
+                .spacing(4)
+                .align_y(Center),
+            );
+        }
+        let bench_field = |k: usize, hint: &'a str| {
+            kentos_ui::widget::text_field(hint, &r.bench[k]).on_input(move |v| msg(Event::Bench(k, v))).width(80)
+        };
+        col = col.push(
+            row![
+                words::field("Sıyırma: bitkisel toprak (km aralığı)", strips, None),
+                column![
+                    words::secondary(ADD_STRIP, sections.then(|| msg(Event::AddStrip))),
+                    words::ghost(REMOVE_STRIP, w.strip_line.map(|_| msg(Event::RemoveStrip))),
+                ]
+                .spacing(6),
+                column![
+                    label::caption("Diş kazısı").style(muted),
+                    row![
+                        words::field("Eğim (%)", bench_field(0, ""), None),
+                        words::field("Basamak (m)", bench_field(1, ""), None),
+                    ]
+                    .spacing(6),
+                    label::caption(if sections {
+                        "Arazinin enine eğimi bu yüzdeden dikken\ndolgunun altında basamak kazılır."
+                    } else {
+                        "Sıyırma ve diş kazısı yalnız\nkesit yöntemleriyle hesaplanır."
+                    })
+                    .style(muted),
+                ]
+                .spacing(4),
+            ]
+            .spacing(16),
+        );
         let tab = |words: &'static str, on: bool| {
             iced::widget::button(label::caption(words)).on_press(msg(Event::Show(on))).padding([3, 10]).style(style::button::row(w.sheet == on))
         };
@@ -546,6 +677,12 @@ impl App {
                     grouped(rep.factored_fill, 1),
                     grouped(rep.factored_cut - rep.factored_fill, 1),
                 );
+                if let Some(v) = rep.strip {
+                    sum.push_str(&format!(" · bitkisel toprak {} m³", grouped(v, 1)));
+                }
+                if let Some(v) = rep.bench {
+                    sum.push_str(&format!(" · diş kazısı {} m³", grouped(v, 1)));
+                }
                 if let (Some(c), Some(f)) = (rep.cut_area, rep.fill_area) {
                     sum.push_str(&format!(" · plan alanı yarma {} m², dolgu {} m²", grouped(c, 0), grouped(f, 0)));
                 }
@@ -571,6 +708,8 @@ impl App {
             Control::Press(ADD) => Some(msg(Event::Add)),
             Control::Press(REMOVE_ROW) => Some(msg(Event::RemoveRow)),
             Control::Press(WRITE) => Some(msg(Event::Write)),
+            Control::Press(ADD_STRIP) => Some(msg(Event::AddStrip)),
+            Control::Press(REMOVE_STRIP) => Some(msg(Event::RemoveStrip)),
             Control::Press(DIAGRAM) => Some(msg(Event::Show(false))),
             Control::Press(SHEET) => Some(msg(Event::Show(true))),
             Control::Press(words) => match w.rows.iter().position(|r| r.name == words) {
@@ -589,24 +728,35 @@ impl App {
 /// The sheet's rows as the window shows them: km, cut and fill, the factors, the running totals and the mass ordinate.
 fn sheet_table(rep: &VolumeReport) -> Element<'_, Message> {
     let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
-    let widths = [84.0, 84.0, 74.0, 74.0, 44.0, 44.0, 84.0, 84.0, 84.0];
-    let head = ["Baş km", "Son km", "Kazı", "Dolgu", "Kab.", "Sık.", "Σ kazı", "Σ dolgu", "Kütle"];
-    let header = head.iter().zip(widths).fold(row![].spacing(6), |row, (h, wd)| row.push(label::caption(*h).style(muted).width(wd)));
+    let (strips, benches) = (rep.strip.is_some(), rep.bench.is_some());
+    let mut head: Vec<(&str, f32)> = vec![("Baş km", 84.0), ("Son km", 84.0), ("Kazı", 70.0), ("Dolgu", 70.0)];
+    if strips {
+        head.push(("B. toprak", 70.0));
+    }
+    if benches {
+        head.push(("Diş", 56.0));
+    }
+    head.extend([("Kab.", 40.0), ("Sık.", 40.0), ("Σ kazı", 80.0), ("Σ dolgu", 80.0), ("Kütle", 80.0)]);
+    let widths: Vec<f32> = head.iter().map(|h| h.1).collect();
+    let header = head.iter().fold(row![].spacing(6), |row, (h, wd)| row.push(label::caption(*h).style(muted).width(*wd)));
     let mut rows = Column::new().spacing(2);
     let opt = |v: Option<f64>, d: usize| v.map_or_else(|| "—".to_owned(), |x| grouped(x, d));
     for r in &rep.rows {
-        let cells = [
-            r.from_text.clone(),
-            r.to_text.clone(),
-            opt(r.cut, 1),
-            opt(r.fill, 1),
+        let mut cells = vec![r.from_text.clone(), r.to_text.clone(), opt(r.cut, 1), opt(r.fill, 1)];
+        if strips {
+            cells.push(opt(r.strip, 1));
+        }
+        if benches {
+            cells.push(opt(r.bench, 1));
+        }
+        cells.extend([
             r.cut_factor.map_or_else(|| "—".into(), |x| trimmed(x).replace('.', ",")),
             r.fill_factor.map_or_else(|| "—".into(), |x| trimmed(x).replace('.', ",")),
             grouped(r.total_cut, 1),
             grouped(r.total_fill, 1),
             grouped(r.mass, 1),
-        ];
-        rows = rows.push(cells.into_iter().zip(widths).fold(row![].spacing(6), |row, (c, wd)| row.push(label::caption(c).width(wd))));
+        ]);
+        rows = rows.push(cells.into_iter().zip(widths.iter().copied()).fold(row![].spacing(6), |row, (c, wd)| row.push(label::caption(c).width(wd))));
     }
     column![header, scrollable(rows).height(typography::scaled(146.0))].spacing(4).padding([6, 8]).into()
 }

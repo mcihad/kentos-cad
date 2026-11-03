@@ -9601,12 +9601,32 @@ class _Schema:
                 self.fail("bad_value", "katsayı 0'dan büyük, en çok 10 olur")
             return t
 
+        def volume_strip(x):
+            t = self.fields({"from": (finite, True), "to": (finite, True), "depth": (finite, True)})(x)
+            if not t["to"] > t["from"]:
+                self.fail("bad_value", "sıyırma satırının sonu başından sonra olmalı")
+            if not 0 < t["depth"] <= 5:
+                self.fail("bad_value", "bitkisel toprak kalınlığı 0'dan büyük, en çok 5 m olur")
+            return t
+
+        def volume_bench(x):
+            t = self.fields({"slope": (finite, True), "height": (finite, True)})(x)
+            if not (0 < t["slope"] <= 1000 and 0 < t["height"] <= 10):
+                self.fail("bad_value", "diş kazısının eğimi ya da basamak yüksekliği aralığın dışında")
+            return t
+
         def volume(x):
-            # Docs/adr/0906 §4: a corridor's earthwork volume by a method, its factors by stations.
+            # Docs/adr/0906 §4, §6: a corridor's earthwork volume by a method, its factors, topsoil and benches.
             t = self.fields({"id": (word, True), "name": (self.text, True), "corridor": (word, True),
                              "revision": (self.uint(32), False),
                              "method": (self.enum(("endArea", "prismoidal", "surfaces")), True),
-                             "factors": (self.array(volume_factor), False)})(x)
+                             "factors": (self.array(volume_factor), False),
+                             "strip": (self.array(volume_strip), False), "bench": (volume_bench, False)})(x)
+            strips = t.get("strip", [])
+            if len(strips) > 1000 or any(b["from"] < a["to"] for a, b in zip(strips, strips[1:])):
+                self.fail("bad_value", "sıyırma satırları artan km'lerle, birbirine binmeden, en çok 1000")
+            if t["method"] == "surfaces" and ("strip" in t or "bench" in t):
+                self.fail("bad_value", "sıyırma ve diş kazısı yalnız kesit yöntemleriyle")
             name = t["name"]
             if not name or name.strip() != name or len(name) > 120:
                 self.fail("bad_value", "kübaj hesabının adı boş, boşluklu ya da çok uzun")

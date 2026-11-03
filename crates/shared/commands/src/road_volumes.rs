@@ -12,7 +12,7 @@ use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
-use crate::{RoadEditOperation, VolumeFactorDef, VolumeMethod};
+use crate::{RoadEditOperation, VolumeBenchDef, VolumeFactorDef, VolumeMethod, VolumeStripDef};
 
 pub const ROAD_VOLUMES_EDIT: &str = "road.volumes.edit";
 pub const ROAD_VOLUMES_EDIT_VERSION: u32 = 1;
@@ -24,8 +24,9 @@ pub const ROAD_VOLUMES_QUERY_VERSION: u32 = 1;
 ///
 /// Refusals, in this order: `not_a_road_project`, `invalid_volume` (rebind), `unknown_volume` (remove one not in the
 /// project), `unknown_corridor`, `invalid_volume` (another corridor, a new one without its fields, set with nothing to
-/// set, the definition by `road_problem`: factors not positive, over 10 or over overlapping stretches; a corridor that
-/// does not build), `invalid_revision`, `revision_conflict`.
+/// set, the definition by `road_problem`: factors not positive, over 10 or over overlapping stretches; strip rows
+/// overlapping or a depth not in (0, 5] m; a bench's slope not in (0, 1000] % or its height not in (0, 10] m; stripping or
+/// benching between surfaces; a corridor that does not build), `invalid_revision`, `revision_conflict`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -48,6 +49,15 @@ pub struct VolumesEdit {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub factors: Option<Vec<VolumeFactorDef>>,
+    /// The topsoil stripped by stations; an empty list takes it off.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub strip: Option<Vec<VolumeStripDef>>,
+    /// The fill's foundation benched; null takes it off.
+    #[serde(default, with = "crate::cad_properties::nullable", skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<VolumeBenchDef>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<VolumeBenchDef>"))]
+    pub bench: Option<Option<VolumeBenchDef>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
@@ -85,6 +95,16 @@ pub struct VolumeRow {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub fill_factor: Option<f64>,
+    /// The topsoil stripped over it (m³), where the volume strips.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub strip: Option<f64>,
+    /// The benches cut over it (m³), where the volume benches.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub bench: Option<f64>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub total_cut: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
@@ -130,6 +150,16 @@ pub struct VolumeReport {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub uncovered: Option<f64>,
+    /// The topsoil stripped in all (m³), where the volume strips.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub strip: Option<f64>,
+    /// The benches cut in all (m³), where the volume benches.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub bench: Option<f64>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub gaps: Vec<[f64; 2]>,
     #[serde(default, skip_serializing_if = "Option::is_none")]

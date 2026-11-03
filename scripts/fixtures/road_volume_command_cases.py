@@ -15,6 +15,7 @@ overlay in fractions, strip by strip. The desktop (crates/native/application/tes
 import copy
 import json
 import sys
+from fractions import Fraction as F
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -22,6 +23,7 @@ import road_corridor_cases as cref  # noqa: E402
 import road_corridor_command_cases as ccmd  # noqa: E402
 import road_profile_command_cases as pcmd  # noqa: E402
 import road_section_command_cases as scmd  # noqa: E402
+import road_template_cases as tref  # noqa: E402
 import road_volume_cases as vref  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -68,8 +70,8 @@ def factors_at(v, m):
     return None, None
 
 
-def mid_areas(c, r, s):
-    """The cut and fill areas of the section at station `s` of corridor `c`'s region `r`; none where none is built."""
+def section_row(c, r, s):
+    """The section reference's row at station `s` of corridor `c`'s region `r`."""
     sup = c.get("superelevation")
     if sup:
         d = next(x for x in ccmd.SUPERS if x["id"] == sup)
@@ -77,8 +79,67 @@ def mid_areas(c, r, s):
             sup = None
     fake = {"name": c["name"], "alignment": c["alignment"], "surface": c["surface"], "profile": c["profile"],
             "template": r["template"], "superelevation": sup, "left": c["left"], "right": c["right"]}
-    row = scmd.sections(fake, [s], ccmd.TEMPLATES)[0][0]
+    return scmd.sections(fake, [s], ccmd.TEMPLATES)[0][0]
+
+
+def mid_areas(c, r, s):
+    """The cut and fill areas of the section at station `s` of corridor `c`'s region `r`; none where none is built."""
+    row = section_row(c, r, s)
     return (row["cut"], row["fill"]) if "left" in row else None
+
+
+def depth_at(v, s):
+    rows = v.get("strip", [])
+    for i, f in enumerate(rows):
+        if f["from"] <= s and (s < f["to"] or (i + 1 == len(rows) and s <= f["to"])):
+            return f["depth"]
+    return 0.0
+
+
+def earthwork(c, r, s, v):
+    """A section's cut, fill, topsoil and benches (docs/adr/0906 §6) in fractions: the design line against the terrain
+    lowered by the topsoil depth; the topsoil the depth times the footprint where the terrain is; the benches half their
+    height times the width where the stripped terrain under a fill falls steeper than the bench's slope. None where no
+    section is built."""
+    row = section_row(c, r, s)
+    if "left" not in row:
+        return None
+    depth = F(depth_at(v, s))
+    design = [(F(o), F(z)) for o, z in reversed(row["left"]["points"])] + [(F(o), F(z)) for o, z in row["right"]["points"][1:]]
+    ground = [{"offset": F(g["offset"]), "z": None if g.get("z") is None else F(g["z"]) - depth, "gap": g["gap"]}
+              for g in row["ground"]]
+    cut, fill = tref.areas(design, ground)
+    t = [(g["offset"], g["z"], g["gap"]) for g in ground]
+    lo, hi = design[0][0], design[-1][0]
+    stops = sorted({p[0] for p in design} | {g["offset"] for g in ground if lo <= g["offset"] <= hi})
+
+    def line(o):
+        for a, b in zip(design, design[1:]):
+            if a[0] <= o <= b[0]:
+                return b[1] if a[0] == b[0] else a[1] + (b[1] - a[1]) * (o - a[0]) / (b[0] - a[0])
+
+    covered = benched = F(0)
+    bench = v.get("bench")
+    for a, b in zip(stops, stops[1:]):
+        if tref.height(t, (a + b) / 2) is None:
+            continue
+        ga, gb = tref.height(t, a), tref.height(t, b)
+        if ga is None or gb is None:
+            continue
+        covered += b - a
+        if bench is None or abs((gb - ga) / (b - a)) * 100 < F(bench["slope"]):
+            continue
+        fa, fb = line(a) - ga, line(b) - gb
+        if fa > 0 and fb > 0:
+            benched += b - a
+        elif fa > 0:
+            benched += (b - a) * fa / (fa - fb)
+        elif fb > 0:
+            benched += (b - a) * fb / (fb - fa)
+    out = {"cut": float(cut), "fill": float(fill), "strip": float(depth * covered), "bench": 0.0}
+    if bench is not None:
+        out["bench"] = float(benched * F(bench["height"]) / 2)
+    return out
 
 
 def bbox(t):
@@ -115,14 +176,24 @@ def compute(v, corridors=CORRIDORS):
     if method == "surfaces" and c["surface"] != "t-1":
         raise Refused("invalid_volume", f"“{c['name']}” koridorunun yüzeyi kurulamıyor; yüzeyler arası hacim hesaplanamaz.",
                       "corridor")
+    worked = bool(v.get("strip")) or v.get("bench") is not None
     for ri, reg in enumerate(regs):
         region = c["regions"][ri]
         for x, y in zip(reg["crosses"], reg["crosses"][1:]):
             s0, s1 = x["station"], y["station"]
             length = s1 - s0
             a, b = x["section"], y["section"]
-            vol = None
-            if a is not None and b is not None:
+            vol = extra = None
+            if a is not None and b is not None and worked:
+                ea, eb = earthwork(c, region, s0, v), earthwork(c, region, s1, v)
+                if method == "endArea":
+                    q = {k: length * (ea[k] + eb[k]) / 2 for k in ea}
+                else:
+                    em = earthwork(c, region, (s0 + s1) / 2, v)
+                    q = None if em is None else {k: length * (ea[k] + 4 * em[k] + eb[k]) / 6 for k in ea}
+                if q is not None:
+                    vol, extra = (q["cut"], q["fill"]), (q["strip"], q["bench"])
+            elif a is not None and b is not None:
                 if method == "endArea":
                     vol = (length * (a["cut"] + b["cut"]) / 2, length * (a["fill"] + b["fill"]) / 2)
                 elif method == "prismoidal":
@@ -139,12 +210,12 @@ def compute(v, corridors=CORRIDORS):
                         areas["fill"] += r["fillArea"]
                         areas["uncovered"] += r["uncovered"]
                         vol = (r["cut"], r["fill"])
-            raws.append((s0, s1, vol))
+            raws.append((s0, s1, vol, extra))
     text = lambda s: ccmd.km_text(c["alignment"], s)  # noqa: E731
-    cut = fill = fcut = ffill = 0.0
+    cut = fill = fcut = ffill = strip = benched = 0.0
     unfactored = 0
     rows = []
-    for s0, s1, vol in raws:
+    for s0, s1, vol, extra in raws:
         cf, ff = factors_at(v, (s0 + s1) / 2)
         row = {"from": s0, "to": s1, "fromText": text(s0), "toText": text(s1)}
         if vol is not None:
@@ -155,13 +226,20 @@ def compute(v, corridors=CORRIDORS):
             if cf is None or ff is None:
                 unfactored += 1
             row["cut"], row["fill"] = vol
+        if extra is not None:
+            strip += extra[0]
+            benched += extra[1]
+            if v.get("strip"):
+                row["strip"] = extra[0]
+            if v.get("bench") is not None:
+                row["bench"] = extra[1]
         if cf is not None:
             row["cutFactor"] = cf
         if ff is not None:
             row["fillFactor"] = ff
         row.update({"totalCut": fcut, "totalFill": ffill, "mass": fcut - ffill})
         rows.append(row)
-    gaps = sorted([list(g) for g in cr["gaps"]] + [[s0, s1] for s0, s1, vol in raws if vol is None], key=lambda g: g[0])
+    gaps = sorted([list(g) for g in cr["gaps"]] + [[s0, s1] for s0, s1, vol, _ in raws if vol is None], key=lambda g: g[0])
     joined = []
     for g in gaps:
         if joined and g[0] <= joined[-1][1] + 1e-9:
@@ -183,6 +261,10 @@ def compute(v, corridors=CORRIDORS):
               "factoredCut": fcut, "factoredFill": ffill, "gaps": joined}
     if method == "surfaces":
         report.update({"cutArea": areas["cut"], "fillArea": areas["fill"], "uncovered": areas["uncovered"]})
+    if v.get("strip"):
+        report["strip"] = strip
+    if v.get("bench") is not None:
+        report["bench"] = benched
     return report, warnings
 
 
@@ -272,6 +354,17 @@ def edit_cases():
     ok("Doğrulama yazmaz", {"operation": "set", "volume": "v-2", "method": "endArea"},
        put(1, {**V2, "method": "endArea", "revision": 2}), "v-2", op="validate")
 
+    strips = [{"from": 0.0, "to": 300.0, "depth": 0.3}, {"from": 300.0, "to": 600.0, "depth": 0.2}]
+    bench = {"slope": 12.0, "height": 0.5}
+    ok("Sıyırma ve diş kazısıyla yeni kübaj", {**base, "strip": strips, "bench": bench},
+       START + [new("v-3", strip=strips, bench=bench)], "v-3")
+    ok("Sıyırma eklenir", {"operation": "set", "volume": "v-1", "strip": strips[:1]},
+       put(0, {**V1, "strip": strips[:1], "revision": 2}), "v-1")
+    vb = {**V1, "bench": bench, "revision": 1}
+    cases.append(case("Diş kazısı null ile kaldırılır", [step(
+        "execute", {"operation": "set", "volume": "v-1", "bench": None},
+        completed({"volumes": listed([{**V1, "revision": 2}, V2]), "revision": "$current", "volume": report({**V1, "revision": 2})}),
+        {**STEPPED, "road": road_of([{**V1, "revision": 2}, V2])})], setup([vb, V2])))
     no("Yol projesi değil", {"operation": "remove", "volume": "v-1"}, NOT_ROAD, setup(work="map"))
     no("Yeniden bağlanmaz", {"operation": "rebind", "volume": "v-1"},
        failed("invalid_volume", "Kübaj hesabı koridorunu izler, yeniden bağlanmaz; koridoru aksa yeniden bağlayın.", "operation"))
@@ -283,7 +376,7 @@ def edit_cases():
        failed("invalid_volume", "“Ana kübaj” kübaj hesabının koridoru değiştirilmez; başka koridor için yeni bir kübaj "
                                 "hesabı yazın.", "corridor"))
     no("Değiştirilecek bir şey yok", {"operation": "set", "volume": "v-1"},
-       failed("invalid_volume", "Değiştirilecek bir şey yok: name, method ya da factors verin."))
+       failed("invalid_volume", "Değiştirilecek bir şey yok: name, method, factors, strip ya da bench verin."))
     no("Yeni kübajın yöntemi yok", {k: val for k, val in base.items() if k != "method"},
        failed("invalid_volume", "Yeni kübaj hesabı için name, corridor ve method verilmeli.", "method"))
     no("Aynı ad", {**base, "name": "YAN kübaj"}, rulefail("bu adda başka bir kübaj hesabı var", "name"))
@@ -304,6 +397,15 @@ def edit_cases():
     no("Kurulamayan yüzeyle yüzeyler arası", {**base, "method": "surfaces"},
        failed("invalid_volume", "“Ana koridor” koridorunun yüzeyi kurulamıyor; yüzeyler arası hacim hesaplanamaz.", "corridor"),
        setup(START, [{**ccmd.C1, "surface": "t-2"}, ccmd.C2]))
+    no("Yüzeyler arasında sıyırma olmaz", {"operation": "set", "volume": "v-2", "strip": strips},
+       rulefail("sıyırma ve diş kazısı yalnız kesit yöntemleriyle (ortalama alan, prizmoidal) hesaplanır", "method"))
+    no("Binen sıyırma satırları", {**base, "strip": [{"from": 0.0, "to": 200.0, "depth": 0.3},
+                                                    {"from": 100.0, "to": 300.0, "depth": 0.3}]},
+       rulefail("sıyırma satırları artan km'lerle, birbirine binmeden yazılır", "strip[1]"))
+    no("Çok kalın bitkisel toprak", {**base, "strip": [{"from": 0.0, "to": 200.0, "depth": 6.0}]},
+       rulefail("bitkisel toprak kalınlığı 0'dan büyük, en çok 5 m olur", "strip[0]"))
+    no("Sıfır eğimli diş kazısı", {**base, "bench": {"slope": 0.0, "height": 0.5}},
+       rulefail("diş kazısının eğimi 0'dan büyük, en çok %1000; basamak yüksekliği 0'dan büyük, en çok 10 m olur", "bench"))
     no("Geçersiz beklenen sürüm", {"operation": "remove", "volume": "v-2", "expectedRevision": "on"}, BAD_REVISION)
     no("Eski sürüme göre hazırlanmış", {"operation": "remove", "volume": "v-2", "expectedRevision": "41"}, CONFLICT)
     return file("road.volumes.edit", "Kübaj hesabını düzenle", setup(), cases)
@@ -368,6 +470,14 @@ def query_cases():
     c_wide = {**ccmd.C1, "left": 120.0, "right": 120.0, "regions": [{"from": 0.0, "to": 200.0, "template": "tk-1"}]}
     q("Arazinin örtmediği tasarım", {"volume": "v-1"}, [v(method="surfaces"), V2], [c_wide, ccmd.C2])
     q("Devere bağlı koridor, prizmoidal", {"volume": "v-2"}, [V1, {**V2, "method": "prismoidal"}])
+    strips = [{"from": 0.0, "to": 300.0, "depth": 0.3}, {"from": 300.0, "to": 600.0, "depth": 0.2}]
+    q("Sıyırma: bitkisel toprak ve indirilmiş zemine göre kübaj", {"volume": "v-1"}, [v(strip=strips), V2])
+    q("Diş kazısı", {"volume": "v-1"}, [v(bench={"slope": 3.0, "height": 0.5}), V2])
+    q("Prizmoidal, sıyırma ve diş kazısı", {"volume": "v-1"},
+      [v(method="prismoidal", strip=strips[:1], bench={"slope": 2.0, "height": 0.6}), V2])
+    q("Sıyırma yalnız bir aralıkta", {"volume": "v-1"}, [v(strip=[{"from": 150.0, "to": 250.0, "depth": 0.25}]), V2])
+    q("Dik eşikte diş kazısı yok", {"volume": "v-1"}, [v(bench={"slope": 900.0, "height": 0.5}), V2])
+    q("Devere bağlı koridorda sıyırma", {"volume": "v-2"}, [V1, {**V2, "method": "endArea", "strip": strips}])
     q("Plan cevabı verir", {"volume": "v-1"}, op="plan")
     q("Doğrulama uyarıları verir", {"volume": "v-2"}, op="validate")
     q("Kübaj yok: boş liste", {}, [])

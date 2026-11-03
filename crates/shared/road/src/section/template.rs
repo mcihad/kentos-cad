@@ -259,3 +259,63 @@ pub fn build(template: &Template, axis: f64, ground: &[GroundPoint]) -> Result<S
     let (cut, fill) = areas(&design, ground);
     Ok(Section { axis, left, right, cut, fill })
 }
+
+/// The fill's foundation benched (diş kazısı, docs/adr/0906 §6): where the ground falls across steeper than `slope`
+/// percent under a fill, steps `height` (m) high are cut into it.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Bench {
+    pub slope: f64,
+    pub height: f64,
+}
+
+/// A section's earthwork with stripping and benching (m²): the cut and fill against the ground stripped, the topsoil
+/// stripped and the benches cut.
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub struct Earthwork {
+    pub cut: f64,
+    pub fill: f64,
+    pub strip: f64,
+    pub bench: f64,
+}
+
+/// The section's earthwork (docs/adr/0906 §6): the topsoil `strip` (m) thick taken off under its footprint (its design
+/// line's span, where the terrain is), so the cut and fill are against the ground lowered by it and the topsoil is
+/// `strip` times the footprint's width; then, where the stripped ground under a fill falls steeper than the bench's
+/// slope, steps of its height whose sawtooth leaves half the height on average: the bench is that width times half the
+/// height. The bench is its own quantity: it is refilled with what it gave, neither cut nor fill.
+pub fn earthwork(section: &Section, ground: &[GroundPoint], strip: f64, bench: Option<Bench>) -> Earthwork {
+    let design: Vec<[f64; 2]> = section.left.points.iter().rev().chain(section.right.points.iter().skip(1)).copied().collect();
+    let lowered: Vec<GroundPoint> = ground.iter().map(|g| GroundPoint { z: g.z.map(|z| z - strip), ..*g }).collect();
+    let (cut, fill) = areas(&design, &lowered);
+    let t: Vec<(f64, Option<f64>, bool)> = lowered.iter().map(|g| (g.offset, g.z, g.gap)).collect();
+    let (lo, hi) = (design[0][0], design[design.len() - 1][0]);
+    let mut stops: Vec<f64> = design.iter().map(|p| p[0]).chain(ground.iter().map(|g| g.offset)).filter(|o| *o >= lo && *o <= hi).collect();
+    stops.sort_by(f64::total_cmp);
+    stops.dedup();
+    let line = |o: f64| {
+        let i = design.partition_point(|p| p[0] < o).clamp(1, design.len() - 1);
+        let (a, b) = (design[i - 1], design[i]);
+        if b[0] == a[0] { b[1] } else { a[1] + (b[1] - a[1]) * (o - a[0]) / (b[0] - a[0]) }
+    };
+    let (mut covered, mut benched) = (0.0, 0.0);
+    for w in stops.windows(2) {
+        let (a, b) = (w[0], w[1]);
+        if height(&t, 0.5 * (a + b)).is_none() {
+            continue;
+        }
+        let (Some(ga), Some(gb)) = (height(&t, a), height(&t, b)) else { continue };
+        covered += b - a;
+        let Some(bn) = bench else { continue };
+        if ((gb - ga) / (b - a)).abs() * 100.0 < bn.slope {
+            continue;
+        }
+        let (fa, fb) = (line(a) - ga, line(b) - gb);
+        benched += match (fa > 0.0, fb > 0.0) {
+            (true, true) => b - a,
+            (false, false) => 0.0,
+            (true, false) => (b - a) * fa / (fa - fb),
+            (false, true) => (b - a) * fb / (fb - fa),
+        };
+    }
+    Earthwork { cut, fill, strip: strip * covered, bench: bench.map_or(0.0, |bn| benched * bn.height / 2.0) }
+}

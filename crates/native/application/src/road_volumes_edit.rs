@@ -52,8 +52,12 @@ fn check(doc: &kentos_domain::Document, input: &VolumesEdit) -> Result<Checked, 
                     "corridor",
                 ));
             }
-            if input.name.is_none() && input.method.is_none() && input.factors.is_none() {
-                return Err(fail(codes::INVALID_VOLUME, "Değiştirilecek bir şey yok: name, method ya da factors verin.".into(), ""));
+            if input.name.is_none() && input.method.is_none() && input.factors.is_none() && input.strip.is_none() && input.bench.is_none() {
+                return Err(fail(
+                    codes::INVALID_VOLUME,
+                    "Değiştirilecek bir şey yok: name, method, factors, strip ya da bench verin.".into(),
+                    "",
+                ));
             }
             let mut d = old.clone();
             if let Some(n) = &input.name {
@@ -64,6 +68,12 @@ fn check(doc: &kentos_domain::Document, input: &VolumesEdit) -> Result<Checked, 
             }
             if let Some(f) = &input.factors {
                 d.factors = f.clone();
+            }
+            if let Some(v) = &input.strip {
+                d.strip = v.clone();
+            }
+            if let Some(b) = &input.bench {
+                d.bench = b.clone();
             }
             if d != *old {
                 d.revision = old.revision.saturating_add(1);
@@ -92,6 +102,8 @@ fn check(doc: &kentos_domain::Document, input: &VolumesEdit) -> Result<Checked, 
                 revision: 1,
                 method: m,
                 factors: input.factors.clone().unwrap_or_default(),
+                strip: input.strip.clone().unwrap_or_default(),
+                bench: input.bench.clone().flatten(),
             });
             Some(id)
         }

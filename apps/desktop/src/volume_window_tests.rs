@@ -65,6 +65,28 @@ fn a_saved_volume_keeps_its_corridor_and_a_bad_factor_is_refused() {
 }
 
 #[test]
+fn stripping_and_benching_are_typed_and_saved() {
+    let mut app = app();
+    let _ = app.update(Message::Run("volume.editor"));
+    send(&mut app, W::Choose(0));
+    let before = app.volume_window.as_ref().and_then(|w| w.preview.report.as_ref()).map(|r| r.cut).unwrap_or_default();
+    send(&mut app, W::AddStrip);
+    send(&mut app, W::Strip(0, 1, "600".into()));
+    send(&mut app, W::Strip(0, 2, "0,3".into()));
+    send(&mut app, W::Bench(0, "3".into()));
+    send(&mut app, W::Bench(1, "0,5".into()));
+    let w = app.volume_window.as_ref().expect("open");
+    let rep = w.preview.report.as_ref().unwrap_or_else(|| panic!("computes: {:?}", w.preview.why));
+    assert!(rep.strip.is_some_and(|v| v > 100.0) && rep.bench.is_some_and(|v| v > 10.0), "{:?} {:?}", rep.strip, rep.bench);
+    assert!(rep.cut < before, "the stripped ground leaves less cut: {} → {}", before, rep.cut);
+    send(&mut app, W::Save);
+    let doc = model(&mut app);
+    assert_eq!(doc.road_volumes()[0].strip[0].depth, 0.3);
+    assert_eq!(doc.road_volumes()[0].bench.as_ref().map(|b| b.height), Some(0.5));
+    assert_eq!(doc.undo().as_deref(), Some("Kübaj"));
+}
+
+#[test]
 fn the_sheet_is_written_as_a_workbook_and_a_csv() {
     let mut app = app();
     let doc = model(&mut app);
@@ -125,6 +147,13 @@ fn screens() {
         // Between the surfaces of the side corridor, the stale one.
         send(&mut app, W::Show(true));
         shot(&mut app, "kubaj-cetvel");
+        // Stripped and benched: the topsoil and the benches in the sheet.
+        send(&mut app, W::AddStrip);
+        send(&mut app, W::Strip(0, 1, "600".into()));
+        send(&mut app, W::Strip(0, 2, "0,3".into()));
+        send(&mut app, W::Bench(0, "3".into()));
+        send(&mut app, W::Bench(1, "0,5".into()));
+        shot(&mut app, "kubaj-siyirma");
         send(&mut app, W::Choose(1));
         send(&mut app, W::Show(false));
         shot(&mut app, "kubaj-yuzey");

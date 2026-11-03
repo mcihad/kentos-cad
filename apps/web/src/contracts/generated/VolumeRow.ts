@@ -5,4 +5,12 @@
  * where a section is not solved), the factors over it (none: not converted), the factored cut and fill, and the
  * running totals of the factored cut, the factored fill and their difference (the mass ordinate) to its end.
  */
-export type VolumeRow = { from: number, to: number, fromText: string, toText: string, cut?: number, fill?: number, cutFactor?: number, fillFactor?: number, totalCut: number, totalFill: number, mass: number, };
+export type VolumeRow = { from: number, to: number, fromText: string, toText: string, cut?: number, fill?: number, cutFactor?: number, fillFactor?: number, 
+/**
+ * The topsoil stripped over it (m³), where the volume strips.
+ */
+strip?: number, 
+/**
+ * The benches cut over it (m³), where the volume benches.
+ */
+bench?: number, totalCut: number, totalFill: number, mass: number, };

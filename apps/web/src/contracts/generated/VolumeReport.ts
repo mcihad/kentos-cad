@@ -7,4 +7,12 @@ import type { VolumeRow } from "./VolumeRow";
  * sections), the totals of the cut and fill and their factored volumes, the surfaces' plan areas (between surfaces),
  * the stretches without volume; why it does not compute when it does not.
  */
-export type VolumeReport = { id: string, name: string, revision: number, corridor: string, method: VolumeMethod, stale: boolean, rows: Array<VolumeRow>, cut: number, fill: number, factoredCut: number, factoredFill: number, cutArea?: number, fillArea?: number, uncovered?: number, gaps: Array<[number, number]>, problem?: string, };
+export type VolumeReport = { id: string, name: string, revision: number, corridor: string, method: VolumeMethod, stale: boolean, rows: Array<VolumeRow>, cut: number, fill: number, factoredCut: number, factoredFill: number, cutArea?: number, fillArea?: number, uncovered?: number, 
+/**
+ * The topsoil stripped in all (m³), where the volume strips.
+ */
+strip?: number, 
+/**
+ * The benches cut in all (m³), where the volume benches.
+ */
+bench?: number, gaps: Array<[number, number]>, problem?: string, };

@@ -702,6 +702,35 @@ pub struct VolumeFactorDef {
     pub fill: Option<f64>,
 }
 
+/// The topsoil stripped over a stretch of stations (docs/adr/0906 §6): its depth (m) under the earthwork's footprint.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct VolumeStripDef {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub from: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub to: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub depth: f64,
+}
+
+/// The fill's foundation benched (diş kazısı, docs/adr/0906 §6): where the ground falls across steeper than `slope`
+/// percent under a fill, steps `height` (m) high; both the project's (its regulation, its soil report).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct VolumeBenchDef {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    pub slope: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub height: f64,
+}
+
 /// An earthwork volume (docs/adr/0906, Netpro's kübaj hesabı): a corridor's, by a method, with the factors by stations.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -720,6 +749,14 @@ pub struct VolumeDef {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<VolumeFactorDef>>", optional))]
     pub factors: Vec<VolumeFactorDef>,
+    /// The topsoil stripped by stations (a section method's).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<VolumeStripDef>>", optional))]
+    pub strip: Vec<VolumeStripDef>,
+    /// The fill's foundation benched (a section method's).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub bench: Option<VolumeBenchDef>,
 }
 
 /// What is wrong with a road project's settings, by the field's path and in words.
@@ -1041,6 +1078,30 @@ fn volumes_problem(road: &RoadSettings) -> Option<(String, String)> {
             if [f.cut, f.fill].iter().flatten().any(|k| !(k.is_finite() && *k > 0.0 && *k <= 10.0)) {
                 return fail(path, "katsayı 0'dan büyük, en çok 10 olur");
             }
+        }
+        let sections = v.method != VolumeMethod::Surfaces;
+        if !sections && (!v.strip.is_empty() || v.bench.is_some()) {
+            return fail(at("method"), "sıyırma ve diş kazısı yalnız kesit yöntemleriyle (ortalama alan, prizmoidal) hesaplanır");
+        }
+        if v.strip.len() > MAX_VOLUME_FACTORS {
+            return fail(at("strip"), &format!("en çok {MAX_VOLUME_FACTORS} sıyırma satırı olur"));
+        }
+        for (j, f) in v.strip.iter().enumerate() {
+            let path = at(&format!("strip[{j}]"));
+            if !(f.from.is_finite() && f.to.is_finite() && f.to > f.from) {
+                return fail(path, "sıyırma satırının sonu başından sonra olmalı");
+            }
+            if j > 0 && f.from < v.strip[j - 1].to {
+                return fail(path, "sıyırma satırları artan km'lerle, birbirine binmeden yazılır");
+            }
+            if !(f.depth.is_finite() && f.depth > 0.0 && f.depth <= 5.0) {
+                return fail(path, "bitkisel toprak kalınlığı 0'dan büyük, en çok 5 m olur");
+            }
+        }
+        if let Some(b) = &v.bench
+            && !(b.slope.is_finite() && b.slope > 0.0 && b.slope <= 1000.0 && b.height.is_finite() && b.height > 0.0 && b.height <= 10.0)
+        {
+            return fail(at("bench"), "diş kazısının eğimi 0'dan büyük, en çok %1000; basamak yüksekliği 0'dan büyük, en çok 10 m olur");
         }
     }
     None

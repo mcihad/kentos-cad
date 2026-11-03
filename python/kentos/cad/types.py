@@ -74253,17 +74253,46 @@ class VisibilityState(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class VolumeBenchDef(_Model):
+    """The fill's foundation benched (diş kazısı, docs/adr/0906 §6): where the ground falls across steeper than `slope`
+    percent under a fill, steps `height` (m) high; both the project's (its regulation, its soil report).
+    Attributes:
+        slope: Unit: percent.
+        height: Unit: elevation.
+    """
+    slope: float
+    height: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["slope"] = float(self.slope)
+        out["height"] = float(self.height)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VolumeBenchDef:
+        return cls(
+            slope=float(data["slope"]),
+            height=float(data["height"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class VolumeDef(_Model):
     """An earthwork volume (docs/adr/0906, Netpro's kübaj hesabı): a corridor's, by a method, with the factors by stations.
     Attributes:
+        bench: The fill's foundation benched (a section method's).
         revision: Unit: version.
+        strip: The topsoil stripped by stations (a section method's).
     """
     id: str
     name: str
     corridor: str
     method: VolumeMethod | VolumeMethodName
+    bench: VolumeBenchDef | None | Unset = UNSET
     factors: list[VolumeFactorDef] | Unset = UNSET
     revision: int | Unset = UNSET
+    strip: list[VolumeStripDef] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -74271,10 +74300,14 @@ class VolumeDef(_Model):
         out["name"] = self.name
         out["corridor"] = self.corridor
         out["method"] = _enum_out(self.method)
+        if self.bench is not UNSET:
+            out["bench"] = None if self.bench is None else self.bench.to_json()
         if self.factors is not UNSET:
             out["factors"] = [e0.to_json() for e0 in self.factors]
         if self.revision is not UNSET:
             out["revision"] = self.revision
+        if self.strip is not UNSET:
+            out["strip"] = [e0.to_json() for e0 in self.strip]
         return out
 
     @classmethod
@@ -74284,8 +74317,10 @@ class VolumeDef(_Model):
             name=data["name"],
             corridor=data["corridor"],
             method=_enum_in(VolumeMethod, data["method"]),
+            bench=UNSET if "bench" not in data else None if data["bench"] is None else VolumeBenchDef.from_json(data["bench"]),
             factors=[VolumeFactorDef.from_json(e0) for e0 in data["factors"]] if "factors" in data else UNSET,
             revision=data.get("revision", UNSET),
+            strip=[VolumeStripDef.from_json(e0) for e0 in data["strip"]] if "strip" in data else UNSET,
         )
 
 
@@ -74368,8 +74403,10 @@ class VolumeReport(_Model):
         factored_cut: Unit: volume.
         factored_fill: Unit: volume.
         gaps: Unit: m.
+        bench: The benches cut in all (m³), where the volume benches. Unit: volume.
         cut_area: Unit: area.
         fill_area: Unit: area.
+        strip: The topsoil stripped in all (m³), where the volume strips. Unit: volume.
         uncovered: Unit: area.
     """
     id: str
@@ -74384,9 +74421,11 @@ class VolumeReport(_Model):
     factored_cut: float
     factored_fill: float
     gaps: list[list[float]]
+    bench: float | None | Unset = UNSET
     cut_area: float | None | Unset = UNSET
     fill_area: float | None | Unset = UNSET
     problem: str | None | Unset = UNSET
+    strip: float | None | Unset = UNSET
     uncovered: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -74403,12 +74442,16 @@ class VolumeReport(_Model):
         out["factoredCut"] = float(self.factored_cut)
         out["factoredFill"] = float(self.factored_fill)
         out["gaps"] = [[float(e1) for e1 in e0] for e0 in self.gaps]
+        if self.bench is not UNSET:
+            out["bench"] = None if self.bench is None else float(self.bench)
         if self.cut_area is not UNSET:
             out["cutArea"] = None if self.cut_area is None else float(self.cut_area)
         if self.fill_area is not UNSET:
             out["fillArea"] = None if self.fill_area is None else float(self.fill_area)
         if self.problem is not UNSET:
             out["problem"] = self.problem
+        if self.strip is not UNSET:
+            out["strip"] = None if self.strip is None else float(self.strip)
         if self.uncovered is not UNSET:
             out["uncovered"] = None if self.uncovered is None else float(self.uncovered)
         return out
@@ -74428,9 +74471,11 @@ class VolumeReport(_Model):
             factored_cut=float(data["factoredCut"]),
             factored_fill=float(data["factoredFill"]),
             gaps=[[float(e1) for e1 in e0] for e0 in data["gaps"]],
+            bench=UNSET if "bench" not in data else None if data["bench"] is None else float(data["bench"]),
             cut_area=UNSET if "cutArea" not in data else None if data["cutArea"] is None else float(data["cutArea"]),
             fill_area=UNSET if "fillArea" not in data else None if data["fillArea"] is None else float(data["fillArea"]),
             problem=data.get("problem", UNSET),
+            strip=UNSET if "strip" not in data else None if data["strip"] is None else float(data["strip"]),
             uncovered=UNSET if "uncovered" not in data else None if data["uncovered"] is None else float(data["uncovered"]),
         )
 
@@ -74446,10 +74491,12 @@ class VolumeRow(_Model):
         total_cut: Unit: volume.
         total_fill: Unit: volume.
         mass: Unit: volume.
+        bench: The benches cut over it (m³), where the volume benches. Unit: volume.
         cut: Unit: volume.
         cut_factor: Unit: 1.
         fill: Unit: volume.
         fill_factor: Unit: 1.
+        strip: The topsoil stripped over it (m³), where the volume strips. Unit: volume.
     """
     from_: float
     to: float
@@ -74458,10 +74505,12 @@ class VolumeRow(_Model):
     total_cut: float
     total_fill: float
     mass: float
+    bench: float | None | Unset = UNSET
     cut: float | None | Unset = UNSET
     cut_factor: float | None | Unset = UNSET
     fill: float | None | Unset = UNSET
     fill_factor: float | None | Unset = UNSET
+    strip: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -74472,6 +74521,8 @@ class VolumeRow(_Model):
         out["totalCut"] = float(self.total_cut)
         out["totalFill"] = float(self.total_fill)
         out["mass"] = float(self.mass)
+        if self.bench is not UNSET:
+            out["bench"] = None if self.bench is None else float(self.bench)
         if self.cut is not UNSET:
             out["cut"] = None if self.cut is None else float(self.cut)
         if self.cut_factor is not UNSET:
@@ -74480,6 +74531,8 @@ class VolumeRow(_Model):
             out["fill"] = None if self.fill is None else float(self.fill)
         if self.fill_factor is not UNSET:
             out["fillFactor"] = None if self.fill_factor is None else float(self.fill_factor)
+        if self.strip is not UNSET:
+            out["strip"] = None if self.strip is None else float(self.strip)
         return out
 
     @classmethod
@@ -74492,10 +74545,40 @@ class VolumeRow(_Model):
             total_cut=float(data["totalCut"]),
             total_fill=float(data["totalFill"]),
             mass=float(data["mass"]),
+            bench=UNSET if "bench" not in data else None if data["bench"] is None else float(data["bench"]),
             cut=UNSET if "cut" not in data else None if data["cut"] is None else float(data["cut"]),
             cut_factor=UNSET if "cutFactor" not in data else None if data["cutFactor"] is None else float(data["cutFactor"]),
             fill=UNSET if "fill" not in data else None if data["fill"] is None else float(data["fill"]),
             fill_factor=UNSET if "fillFactor" not in data else None if data["fillFactor"] is None else float(data["fillFactor"]),
+            strip=UNSET if "strip" not in data else None if data["strip"] is None else float(data["strip"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class VolumeStripDef(_Model):
+    """The topsoil stripped over a stretch of stations (docs/adr/0906 §6): its depth (m) under the earthwork's footprint.
+    Attributes:
+        from_: Unit: m.
+        to: Unit: m.
+        depth: Unit: elevation.
+    """
+    from_: float
+    to: float
+    depth: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = float(self.from_)
+        out["to"] = float(self.to)
+        out["depth"] = float(self.depth)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VolumeStripDef:
+        return cls(
+            from_=float(data["from"]),
+            to=float(data["to"]),
+            depth=float(data["depth"]),
         )
 
 
@@ -74506,20 +74589,28 @@ class VolumesEdit(_Model):
 
     Refusals, in this order: `not_a_road_project`, `invalid_volume` (rebind), `unknown_volume` (remove one not in the
     project), `unknown_corridor`, `invalid_volume` (another corridor, a new one without its fields, set with nothing to
-    set, the definition by `road_problem`: factors not positive, over 10 or over overlapping stretches; a corridor that
-    does not build), `invalid_revision`, `revision_conflict`.
+    set, the definition by `road_problem`: factors not positive, over 10 or over overlapping stretches; strip rows
+    overlapping or a depth not in (0, 5] m; a bench's slope not in (0, 1000] % or its height not in (0, 10] m; stripping or
+    benching between surfaces; a corridor that does not build), `invalid_revision`, `revision_conflict`.
+    Attributes:
+        bench: The fill's foundation benched; null takes it off.
+        strip: The topsoil stripped by stations; an empty list takes it off.
     """
     operation: RoadEditOperation | RoadEditOperationName
+    bench: VolumeBenchDef | None | Unset = UNSET
     corridor: str | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     factors: list[VolumeFactorDef] | None | Unset = UNSET
     method: VolumeMethod | VolumeMethodName | None | Unset = UNSET
     name: str | None | Unset = UNSET
+    strip: list[VolumeStripDef] | None | Unset = UNSET
     volume: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["operation"] = _enum_out(self.operation)
+        if self.bench is not UNSET:
+            out["bench"] = None if self.bench is None else self.bench.to_json()
         if self.corridor is not UNSET:
             out["corridor"] = self.corridor
         if self.expected_revision is not UNSET:
@@ -74530,6 +74621,8 @@ class VolumesEdit(_Model):
             out["method"] = None if self.method is None else _enum_out(self.method)
         if self.name is not UNSET:
             out["name"] = self.name
+        if self.strip is not UNSET:
+            out["strip"] = None if self.strip is None else [e0.to_json() for e0 in self.strip]
         if self.volume is not UNSET:
             out["volume"] = self.volume
         return out
@@ -74538,11 +74631,13 @@ class VolumesEdit(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> VolumesEdit:
         return cls(
             operation=_enum_in(RoadEditOperation, data["operation"]),
+            bench=UNSET if "bench" not in data else None if data["bench"] is None else VolumeBenchDef.from_json(data["bench"]),
             corridor=data.get("corridor", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
             factors=UNSET if "factors" not in data else None if data["factors"] is None else [VolumeFactorDef.from_json(e0) for e0 in data["factors"]],
             method=UNSET if "method" not in data else None if data["method"] is None else _enum_in(VolumeMethod, data["method"]),
             name=data.get("name", UNSET),
+            strip=UNSET if "strip" not in data else None if data["strip"] is None else [VolumeStripDef.from_json(e0) for e0 in data["strip"]],
             volume=data.get("volume", UNSET),
         )
 
@@ -98077,6 +98172,7 @@ __all__ = [
     "ViewsOp",
     "VisibilityBlockParameter",
     "VisibilityState",
+    "VolumeBenchDef",
     "VolumeDef",
     "VolumeFactorDef",
     "VolumeListed",
@@ -98084,6 +98180,7 @@ __all__ = [
     "VolumeMethodName",
     "VolumeReport",
     "VolumeRow",
+    "VolumeStripDef",
     "VolumesEdit",
     "VolumesQueried",
     "VolumesQuery",
