@@ -42,6 +42,33 @@ def closed_path_drawing():
 
 
 class ArrayTests(unittest.TestCase):
+    def test_grid_query_enum_job_and_metadata_only_adoption_share_the_same_public_api(self):
+        fixture=json.loads((ROOT / "fixtures/commands/v1/cad.arrays.find.json").read_text())
+        case=next(c for c in fixture["cases"] if c["name"].startswith("grid iki"))
+        doc=cad.Document.from_bytes(json.dumps(case["setup"]).encode())
+        ids={r.entity.id:r.uid for r in doc.entities()}
+        before=doc.to_bytes()
+        found=cad.arrays.find(doc,source=ids[4],kind=cad.ArrayFindKind.GRID)
+        self.assertEqual(doc.to_bytes(),before)
+        self.assertEqual(len(found.matches),1)
+        p=found.matches[0].adoption
+        self.assertIsInstance(p.layout,cad.GridArrayLayout)
+        self.assertEqual((p.layout.rows,p.layout.cols,p.layout.dx,p.layout.dy),(3,3,2,3))
+        job=doc.start("cad.arrays.find",cad.ArraysFind(source=ids[4],kind=cad.ArrayFindKind.GRID))
+        answer=job.result()
+        self.assertEqual(answer.status,"completed")
+        self.assertEqual(answer.output.matches[0].adoption.to_json(),p.to_json())
+        args=dict(source=p.source,layout=p.layout,items=p.items,tolerance=p.tolerance,expected_revision=p.expected_revision)
+        planned=cad.arrays.adopt.plan(doc,**args)
+        self.assertEqual((planned.missing,planned.kept),(2,0))
+        self.assertEqual(doc.to_bytes(),before)
+        made=cad.arrays.adopt(doc,**args)
+        self.assertEqual(len(made.retained),7)
+        after=doc.to_bytes()
+        doc.undo();self.assertEqual(doc.to_bytes(),before)
+        doc.redo();self.assertEqual(doc.to_bytes(),after)
+
+
     def test_linear_find_is_read_only_and_reviewed_outlier_is_explicitly_kept_before_adoption(self):
         fixture = json.loads((ROOT / "fixtures/commands/v1/cad.arrays.adopt.json").read_text())
         doc = cad.Document.from_bytes(json.dumps(fixture["setup"]).encode())

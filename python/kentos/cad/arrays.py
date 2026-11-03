@@ -12,6 +12,8 @@ from ._runtime import CommandNote, LocalCommand, Outcome, UNSET, Unset, _opt  # 
 from .protocol import Expected  # noqa: F401
 from .types import (  # noqa: F401
     ArrayEdit,
+    ArrayFindKind,
+    ArrayFindKindName,
     ArrayItem,
     ArrayLayout,
     ArraysAdopt,
@@ -326,24 +328,27 @@ edit = _ArraysEdit()
 
 
 class _ArraysFind(LocalCommand[ArraysFind, ArraysFound, ArraysFound]):
-    """``cad.arrays.find`` v1. Doğrusal blok dizilerini bul: Kaynak statik blok
-    yerleştirmesini içeren doğrusal örüntüleri yazısız bulur. İlk sürüm aynı blok
-    tanımı, katman, görünüş, ayna, yön ve ölçekli verisiz yerleştirmeler içindir;
-    grid/kutupsal/yol araması içermez. En az üç dolu yer ve gözlenen bir komşu çift
-    gerekir. Her ikinci yer doluysa gizli ara yer varsayılmaz. Aday adoption girdisi
-    cad.arrays.adopt ile yeniden incelenip açıkça uygulanabilir; arama hiçbir nesne,
-    seçim veya dizi kaydı değiştirmez. Eksik yerler boş kalır; eşleşmeyen öğe
-    kendiliğinden kept olmaz. eligible ve UUID→ret nedeni excluded listeleri kapsamı
-    açıklar. Birbiriyle çakışan adaylar overlaps ile belirtilir. uids yoksa belge, boşsa
-    yalnız kaynak aranır; en çok 2048 nesne. Tolerans metre, varsayılan 0.000001, en çok
-    0.001; limit 1..100. İki milyon karşılaştırma veya aday sınırı kısmi arama truncated
-    üretir. Uzun arama native Job ile durdurulabilir. expectedRevision eskiyse yazısız
-    ret.
+    """``cad.arrays.find`` v1. Blok dizi örüntülerini bul: Kaynak statik blok
+    yerleştirmesini içeren örüntüleri yazısız bulur. kind verilmezse line, grid
+    seçilirse dünya X/Y dikdörtgen düzeni aranır. İlk sürüm aynı blok tanımı, katman,
+    görünüş, ayna, yön ve ölçekli verisiz yerleştirmeler içindir; dönük/eğik grid,
+    kutupsal ve yol araması içermez. Doğrusal için en az üç dolu yer ve gözlenen bir
+    komşu çift; grid için en az iki satır, iki sütun, dört dolu yer, iki eksende
+    gözlenen komşu çift ve dolu bir sınır köşesi gerekir. Her ikinci yer doluysa gizli
+    ara yer varsayılmaz. Aday adoption girdisi cad.arrays.adopt ile yeniden incelenip
+    açıkça uygulanabilir; arama hiçbir nesne, seçim veya dizi kaydı değiştirmez. Eksik
+    yerler boş kalır; eşleşmeyen öğe kendiliğinden kept olmaz. eligible ve UUID→ret
+    nedeni excluded listeleri kapsamı açıklar. Birbiriyle çakışan adaylar overlaps ile
+    belirtilir. uids yoksa belge, boşsa yalnız kaynak aranır; en çok 2048 nesne.
+    Tolerans metre, varsayılan 0.000001, en çok 0.001; limit 1..100. İki milyon
+    karşılaştırma veya aday sınırı kısmi arama truncated üretir. Grid aralık keşfi
+    500000 çift ya da bir eksende 128 aralık adayına ulaşırsa da kısmi bildirilir. Uzun
+    arama native Job ile durdurulabilir. expectedRevision eskiyse yazısız ret.
     """
     __slots__ = ()
     id = "cad.arrays.find"
     version = 1
-    title = "Doğrusal blok dizilerini bul"
+    title = "Blok dizi örüntülerini bul"
     scope = "document"
     input_type = ArraysFind
     output_type = ArraysFound
@@ -356,29 +361,35 @@ class _ArraysFind(LocalCommand[ArraysFind, ArraysFound, ArraysFound]):
         *,
         source: str,
         expected_revision: str | None | Unset = UNSET,
+        kind: ArrayFindKind | ArrayFindKindName | None | Unset = UNSET,
         limit: int | None | Unset = UNSET,
         tolerance: float | None | Unset = UNSET,
         uids: Sequence[str] | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> ArraysFound:
-        """Doğrusal blok dizilerini bul: Kaynak statik blok yerleştirmesini içeren doğrusal
-        örüntüleri yazısız bulur. İlk sürüm aynı blok tanımı, katman, görünüş, ayna, yön ve
-        ölçekli verisiz yerleştirmeler içindir; grid/kutupsal/yol araması içermez. En az üç
-        dolu yer ve gözlenen bir komşu çift gerekir. Her ikinci yer doluysa gizli ara yer
-        varsayılmaz. Aday adoption girdisi cad.arrays.adopt ile yeniden incelenip açıkça
-        uygulanabilir; arama hiçbir nesne, seçim veya dizi kaydı değiştirmez. Eksik yerler
-        boş kalır; eşleşmeyen öğe kendiliğinden kept olmaz. eligible ve UUID→ret nedeni
-        excluded listeleri kapsamı açıklar. Birbiriyle çakışan adaylar overlaps ile
-        belirtilir. uids yoksa belge, boşsa yalnız kaynak aranır; en çok 2048 nesne.
-        Tolerans metre, varsayılan 0.000001, en çok 0.001; limit 1..100. İki milyon
-        karşılaştırma veya aday sınırı kısmi arama truncated üretir. Uzun arama native Job
-        ile durdurulabilir. expectedRevision eskiyse yazısız ret.
+        """Blok dizi örüntülerini bul: Kaynak statik blok yerleştirmesini içeren örüntüleri
+        yazısız bulur. kind verilmezse line, grid seçilirse dünya X/Y dikdörtgen düzeni
+        aranır. İlk sürüm aynı blok tanımı, katman, görünüş, ayna, yön ve ölçekli verisiz
+        yerleştirmeler içindir; dönük/eğik grid, kutupsal ve yol araması içermez. Doğrusal
+        için en az üç dolu yer ve gözlenen bir komşu çift; grid için en az iki satır, iki
+        sütun, dört dolu yer, iki eksende gözlenen komşu çift ve dolu bir sınır köşesi
+        gerekir. Her ikinci yer doluysa gizli ara yer varsayılmaz. Aday adoption girdisi
+        cad.arrays.adopt ile yeniden incelenip açıkça uygulanabilir; arama hiçbir nesne,
+        seçim veya dizi kaydı değiştirmez. Eksik yerler boş kalır; eşleşmeyen öğe
+        kendiliğinden kept olmaz. eligible ve UUID→ret nedeni excluded listeleri kapsamı
+        açıklar. Birbiriyle çakışan adaylar overlaps ile belirtilir. uids yoksa belge, boşsa
+        yalnız kaynak aranır; en çok 2048 nesne. Tolerans metre, varsayılan 0.000001, en çok
+        0.001; limit 1..100. İki milyon karşılaştırma veya aday sınırı kısmi arama truncated
+        üretir. Grid aralık keşfi 500000 çift ya da bir eksende 128 aralık adayına ulaşırsa
+        da kısmi bildirilir. Uzun arama native Job ile durdurulabilir. expectedRevision
+        eskiyse yazısız ret.
 
         Args:
             doc: The drawing it works on.
             source: Existing seed insert UUID. May be an interior place of a candidate.
             expected_revision:
+            kind: Omitted: line. Explicit grid reuses the existing axis-aligned ArrayLayout::Grid.
             limit: Candidate limit, 1 to 100; absent: 100. Work/result limits report `truncated`. Unit: count.
             tolerance: Absolute position tolerance in metres, above zero to 0.001; absent: 0.000001. Unit: length.
             uids: Absent searches the document; empty searches only the seed. At most 2048 objects.
@@ -397,6 +408,7 @@ class _ArraysFind(LocalCommand[ArraysFind, ArraysFound, ArraysFound]):
         return self.execute_input(doc, ArraysFind(
             source=source,
             expected_revision=expected_revision,
+            kind=kind,
             limit=limit,
             tolerance=tolerance,
             uids=_opt(uids, lambda x: list(x)),
@@ -409,6 +421,7 @@ class _ArraysFind(LocalCommand[ArraysFind, ArraysFound, ArraysFound]):
         *,
         source: str,
         expected_revision: str | None | Unset = UNSET,
+        kind: ArrayFindKind | ArrayFindKindName | None | Unset = UNSET,
         limit: int | None | Unset = UNSET,
         tolerance: float | None | Unset = UNSET,
         uids: Sequence[str] | None | Unset = UNSET,
@@ -419,6 +432,7 @@ class _ArraysFind(LocalCommand[ArraysFind, ArraysFound, ArraysFound]):
         return self.plan_input(doc, ArraysFind(
             source=source,
             expected_revision=expected_revision,
+            kind=kind,
             limit=limit,
             tolerance=tolerance,
             uids=_opt(uids, lambda x: list(x)),
@@ -431,6 +445,7 @@ class _ArraysFind(LocalCommand[ArraysFind, ArraysFound, ArraysFound]):
         *,
         source: str,
         expected_revision: str | None | Unset = UNSET,
+        kind: ArrayFindKind | ArrayFindKindName | None | Unset = UNSET,
         limit: int | None | Unset = UNSET,
         tolerance: float | None | Unset = UNSET,
         uids: Sequence[str] | None | Unset = UNSET,
@@ -441,6 +456,7 @@ class _ArraysFind(LocalCommand[ArraysFind, ArraysFound, ArraysFound]):
         return self.validate_input(doc, ArraysFind(
             source=source,
             expected_revision=expected_revision,
+            kind=kind,
             limit=limit,
             tolerance=tolerance,
             uids=_opt(uids, lambda x: list(x)),
@@ -453,6 +469,7 @@ class _ArraysFind(LocalCommand[ArraysFind, ArraysFound, ArraysFound]):
         *,
         source: str,
         expected_revision: str | None | Unset = UNSET,
+        kind: ArrayFindKind | ArrayFindKindName | None | Unset = UNSET,
         limit: int | None | Unset = UNSET,
         tolerance: float | None | Unset = UNSET,
         uids: Sequence[str] | None | Unset = UNSET,
@@ -468,6 +485,7 @@ class _ArraysFind(LocalCommand[ArraysFind, ArraysFound, ArraysFound]):
         return self.answer_input(doc, ArraysFind(
             source=source,
             expected_revision=expected_revision,
+            kind=kind,
             limit=limit,
             tolerance=tolerance,
             uids=_opt(uids, lambda x: list(x)),
@@ -475,7 +493,7 @@ class _ArraysFind(LocalCommand[ArraysFind, ArraysFound, ArraysFound]):
 
 
 find = _ArraysFind()
-"""Doğrusal blok dizilerini bul (``cad.arrays.find``)."""
+"""Blok dizi örüntülerini bul (``cad.arrays.find``)."""
 
 
 __all__ = ["adopt", "edit", "find"]

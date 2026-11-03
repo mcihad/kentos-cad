@@ -4347,8 +4347,8 @@
     {
       "id": "cad.arrays.find",
       "version": 1,
-      "title": "Doğrusal blok dizilerini bul",
-      "summary": "Kaynak statik blok yerleştirmesini içeren doğrusal örüntüleri yazısız bulur. İlk sürüm aynı blok tanımı, katman, görünüş, ayna, yön ve ölçekli verisiz yerleştirmeler içindir; grid/kutupsal/yol araması içermez. En az üç dolu yer ve gözlenen bir komşu çift gerekir. Her ikinci yer doluysa gizli ara yer varsayılmaz. Aday adoption girdisi cad.arrays.adopt ile yeniden incelenip açıkça uygulanabilir; arama hiçbir nesne, seçim veya dizi kaydı değiştirmez. Eksik yerler boş kalır; eşleşmeyen öğe kendiliğinden kept olmaz. eligible ve UUID→ret nedeni excluded listeleri kapsamı açıklar. Birbiriyle çakışan adaylar overlaps ile belirtilir. uids yoksa belge, boşsa yalnız kaynak aranır; en çok 2048 nesne. Tolerans metre, varsayılan 0.000001, en çok 0.001; limit 1..100. İki milyon karşılaştırma veya aday sınırı kısmi arama truncated üretir. Uzun arama native Job ile durdurulabilir. expectedRevision eskiyse yazısız ret.",
+      "title": "Blok dizi örüntülerini bul",
+      "summary": "Kaynak statik blok yerleştirmesini içeren örüntüleri yazısız bulur. kind verilmezse line, grid seçilirse dünya X/Y dikdörtgen düzeni aranır. İlk sürüm aynı blok tanımı, katman, görünüş, ayna, yön ve ölçekli verisiz yerleştirmeler içindir; dönük/eğik grid, kutupsal ve yol araması içermez. Doğrusal için en az üç dolu yer ve gözlenen bir komşu çift; grid için en az iki satır, iki sütun, dört dolu yer, iki eksende gözlenen komşu çift ve dolu bir sınır köşesi gerekir. Her ikinci yer doluysa gizli ara yer varsayılmaz. Aday adoption girdisi cad.arrays.adopt ile yeniden incelenip açıkça uygulanabilir; arama hiçbir nesne, seçim veya dizi kaydı değiştirmez. Eksik yerler boş kalır; eşleşmeyen öğe kendiliğinden kept olmaz. eligible ve UUID→ret nedeni excluded listeleri kapsamı açıklar. Birbiriyle çakışan adaylar overlaps ile belirtilir. uids yoksa belge, boşsa yalnız kaynak aranır; en çok 2048 nesne. Tolerans metre, varsayılan 0.000001, en çok 0.001; limit 1..100. İki milyon karşılaştırma veya aday sınırı kısmi arama truncated üretir. Grid aralık keşfi 500000 çift ya da bir eksende 128 aralık adayına ulaşırsa da kısmi bildirilir. Uzun arama native Job ile durdurulabilir. expectedRevision eskiyse yazısız ret.",
       "aliases": [],
       "effect": "query",
       "hosts": [
@@ -4364,13 +4364,24 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Finds linear patterns containing the seed insert. First delivery: static, data-free inserts\nof the same block, appearance, mirror, rotation and scale. No rotation of the items is inferred.\nAt least three occupied places and an observed adjacent pair are required. Every second\nplace being occupied is indistinguishable from twice the spacing: no hidden places are invented.\nGrid, polar and path detection are not implemented by this version.",
+        "description": "Finds linear patterns containing the seed insert. First delivery: static, data-free inserts\nof the same block, appearance, mirror, rotation and scale. No rotation of the items is inferred.\nAt least three occupied places and an observed adjacent pair are required. Every second\nplace being occupied is indistinguishable from twice the spacing: no hidden places are invented.\nWith kind=grid, searches world-X/Y rectangular patterns with at least two rows,\ntwo columns, four occupied places and observed adjacent pairs in both directions.\nA bounding corner must be occupied to reuse it as the existing array source.\nRotated/skew grids, polar and path detection are not implemented by this version.",
         "properties": {
           "expectedRevision": {
             "type": [
               "string",
               "null"
             ]
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ArrayFindKind"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Omitted: line. Explicit grid reuses the existing axis-aligned ArrayLayout::Grid."
           },
           "limit": {
             "description": "Candidate limit, 1 to 100; absent: 100. Work/result limits report `truncated`.",
@@ -77516,6 +77527,22 @@
             "kind"
           ],
           "type": "object"
+        }
+      ]
+    },
+    "ArrayFindKind": {
+      "description": "Requested pattern family. Omitted kind preserves the original linear search.",
+      "oneOf": [
+        {
+          "enum": [
+            "line"
+          ],
+          "type": "string"
+        },
+        {
+          "const": "grid",
+          "description": "World X/Y rectangular rows and columns; rotated/skew grids are not inferred.",
+          "type": "string"
         }
       ]
     },

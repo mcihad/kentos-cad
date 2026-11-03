@@ -644,7 +644,7 @@
   {
    "id": "array.find",
    "kind": "command",
-   "title": "Doğrusal dizileri bul…",
+   "title": "Dizi örüntülerini bul…",
    "level": "semantic",
    "via": [
     "cad.arrays.find",
@@ -653,7 +653,7 @@
    "operation": null,
    "python": "kentos.cad.arrays.find, kentos.cad.arrays.adopt",
    "mcp": "cad.arrays.find, cad.arrays.adopt",
-   "note": "Yazısız doğrusal aday araması, sahnede gösterme, açık korunan yer eşlemesi ve ayrı inceleme. Mevcut kökleri değiştirmeden tek Undo adımıyla dizi kaydı eklenir; sorgu ve bağlama durdurulabilir (ADR0874/0875).",
+   "note": "Yazısız doğrusal/dünya X-Y grid aday araması, sahnede gösterme, açık korunan yer eşlemesi ve ayrı inceleme. Mevcut kökleri değiştirmeden tek Undo adımıyla dizi kaydı eklenir; sorgu ve bağlama durdurulabilir (ADR0874/0875/0876).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0

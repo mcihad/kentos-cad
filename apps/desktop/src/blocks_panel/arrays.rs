@@ -9,8 +9,8 @@ use iced::{
     widget::{button, column, container, pick_list, row, scrollable, text},
 };
 use kentos_commands::{
-    ArrayItem, ArrayLayout, ArraysAdopt, ArraysAdoptPlan, ArraysAdopted, ArraysFind, ArraysFound,
-    CallEnvelope, CallOp, CommandResult, Entity,
+    ArrayFindKind, ArrayItem, ArrayLayout, ArraysAdopt, ArraysAdoptPlan, ArraysAdopted, ArraysFind,
+    ArraysFound, CallEnvelope, CallOp, CommandResult, Entity,
 };
 use kentos_native_application::jobs::Job;
 use kentos_ui::{
@@ -26,7 +26,7 @@ use std::{
     },
 };
 
-pub(crate) const TITLE: &str = "Doğrusal dizileri bul";
+pub(crate) const TITLE: &str = "Dizi örüntülerini bul";
 static NEXT: AtomicU64 = AtomicU64::new(1);
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -56,7 +56,8 @@ pub(super) struct Window {
     revision: String,
     hidden: bool,
     tolerance: f64,
-    previous: Option<(bool, f64)>,
+    kind: ArrayFindKind,
+    previous: Option<(bool, f64, ArrayFindKind)>,
     token: u64,
     cancel: Arc<AtomicBool>,
     busy: bool,
@@ -109,6 +110,7 @@ impl Window {
             .collect();
         Some(ArraysFind {
             source: source.clone(),
+            kind: (self.kind != ArrayFindKind::Line).then_some(self.kind),
             uids: Some(uids),
             tolerance: Some(self.tolerance),
             limit: Some(100),
@@ -166,6 +168,77 @@ fn spacing(layout: &ArrayLayout) -> f64 {
         _ => 0.,
     }
 }
+fn kind_name(kind: ArrayFindKind) -> &'static str {
+    match kind {
+        ArrayFindKind::Line => "Doğrusal",
+        ArrayFindKind::Grid => "Dikdörtgen (X/Y)",
+    }
+}
+fn layout_text(layout: &ArrayLayout, f: &kentos_interaction::Format) -> String {
+    match *layout {
+        ArrayLayout::Grid { rows, cols, dx, dy } => format!(
+            "{rows} satır × {cols} sütun · Sütun {} · Satır {}",
+            f.length(dx.abs()),
+            f.length(dy.abs())
+        ),
+        _ => format!("Aralık: {}", f.length(spacing(layout))),
+    }
+}
+fn place_schema(layout: &ArrayLayout, items: &[ArrayItem]) -> String {
+    if let ArrayLayout::Grid { cols, .. } = *layout {
+        let mut rows = items
+            .chunks(cols.max(1) as usize)
+            .take(8)
+            .map(|r| places(r, 8))
+            .collect::<Vec<_>>();
+        if items.len() / cols.max(1) as usize > 8 {
+            rows.push("…".into());
+        }
+        rows.join("\n")
+    } else {
+        places(items, 18)
+    }
+}
+fn keep_position(r: &Review) -> Element<'_, Message> {
+    if let ArrayLayout::Grid { rows, cols, .. } = r.input.layout {
+        let index = (r.place - 1.).max(0.) as u32;
+        column![
+            row![
+                words::field(
+                    "Satır",
+                    NumberInput::new((index / cols + 1) as f64, |n| msg(Event::KeepRow(n)))
+                        .range(1.0..=rows as f64)
+                        .step(1.)
+                        .decimals(0),
+                    None
+                ),
+                words::field(
+                    "Sütun",
+                    NumberInput::new((index % cols + 1) as f64, |n| msg(Event::KeepCol(n)))
+                        .range(1.0..=cols as f64)
+                        .step(1.)
+                        .decimals(0),
+                    None
+                ),
+            ]
+            .spacing(8),
+            label::caption(
+                "Satır ve sütunlar kaynak köşeden 1 ile başlar. Yalnız boş yere atama yapılır."
+            )
+        ]
+        .spacing(6)
+        .into()
+    } else {
+        words::field(
+            "Dizideki yer",
+            NumberInput::new(r.place, |n| msg(Event::KeepPlace(n)))
+                .range(1.0..=r.input.items.len() as f64)
+                .step(1.)
+                .decimals(0),
+            Some("Yerler soldan/ilk uçtan 1 ile başlar. Dolu yerin üzerine yazılmaz.".into()),
+        )
+    }
+}
 fn available_choices(r: &Review) -> Vec<Choice> {
     let used: HashSet<_> = r
         .input
@@ -210,8 +283,8 @@ impl App {
                             "{} yer · {present} mevcut blok · {missing} boş · {kept} korunan",
                             r.input.items.len()
                         )),
-                        label::body(format!("Aralık: {}", f.length(spacing(&r.input.layout)))),
-                        label::body(places(&r.input.items, 18)),
+                        label::body(layout_text(&r.input.layout, &f)),
+                        label::body(place_schema(&r.input.layout, &r.input.items)),
                         label::caption("Yerleşim şeması: ● Mevcut · ○ Boş · ◇ Korunan")
                     ]
                     .spacing(8),
@@ -237,7 +310,7 @@ impl App {
             }
             if r.keep_options && !choices.is_empty() && !w.busy {
                 body=body.push(words::field("Eşleşmeyen blok",pick_list(choices,r.choice.clone(),|c|msg(Event::KeepObject(c))).width(Fill),Some("Bu bloğu yalnız seçtiğiniz boş yere, mevcut konumunu koruyarak bağlayın.".into())))
-                    .push(words::field("Dizideki yer",NumberInput::new(r.place,|n|msg(Event::KeepPlace(n))).range(1.0..=r.input.items.len() as f64).step(1.).decimals(0),Some("Yerler soldan/ilk uçtan 1 ile başlar. Dolu yerin üzerine yazılmaz.".into())))
+                    .push(keep_position(r))
                     .push(row![words::secondary("Bloğu göster",r.choice.as_ref().map(|_|msg(Event::ShowKept))),words::secondary("Bu yere koru",r.choice.as_ref().map(|_|msg(Event::Assign)))].spacing(8));
             }
             for (k, item) in r.input.items.iter().enumerate().filter(|(_, i)| i.kept) {
@@ -273,23 +346,24 @@ impl App {
             if w.source.is_none() {
                 body=body.push(words::text_line(Kind::Warn,"Çizimde tek bir blok yerleştirmesi seçip yeniden açın. Bir bloğun tanımını değil, çizimdeki örneğini seçin."));
             }
-            body=body.push(label::body("Aynı bloğun görünür yerleştirmelerinde düzenli sıralar aranır. Sonuçlar çizimi değiştirmeden Bloklar panelinde açılır."))
+            body=body.push(label::body("Aynı bloğun görünür yerleştirmelerinde seçilen düzen aranır. Sonuçlar çizimi değiştirmeden Bloklar panelinde açılır."))
+                .push(words::field("Düzen türü", pick_list(["Doğrusal", "Dikdörtgen (X/Y)"], Some(kind_name(w.kind)), |name| msg(Event::PatternKind(if name == "Doğrusal" { ArrayFindKind::Line } else { ArrayFindKind::Grid }))).width(Fill), Some("Doğrusal en az üç öğe; dikdörtgen en az iki satır, iki sütun ve dört öğe gerektirir.".into())))
                 .push(words::field("Tolerans (mm)",NumberInput::new(w.tolerance,|n|msg(Event::Tolerance(n))).units(units::MILLIMETRE).range(0.0..=0.001).step(0.001).decimals(3),Some("Sıfırdan büyük, en çok 1 mm. Varsayılan 0,001 mm; çizim ölçeğini değiştirmez.".into())))
                 .push(words::check(w.hidden,"Gizli ve donmuş katmanları da ara",Some(msg(Event::Hidden))))
-                .push(label::caption("En az üç dolu yer gerekir. İlk kapsam doğrusal dizilerdir; dönük blok varyantları ve diğer blok tanımları birleştirilmez."));
+                .push(label::caption("Dikdörtgen arama dünya X/Y eksenlerindedir; dönük/eğik gridler bulunmaz. Bir köşe dolu olmalıdır. Dönük blok varyantları ve başka tanımlar birleştirilmez."));
         }
+        let mut frame = Frame::new(self.array_find_title()).scroll(body);
+        // Validation feedback must remain visible while the optional keep form scrolls.
         if !current {
-            body = body.push(words::text_line(
+            frame = frame.push(words::text_line(
                 Kind::Warn,
                 "Çizim değişti; eski aday uygulanamaz. Kapatıp yeniden arayın.",
             ));
         }
         if let Some(why) = &w.refused {
-            body = body.push(words::text_line(Kind::Warn, why.clone()));
+            frame = frame.push(words::text_line(Kind::Warn, why.clone()));
         }
-        let mut frame = Frame::new(self.array_find_title())
-            .scroll(body)
-            .action(words::secondary("Vazgeç", Some(msg(Event::CloseDialog))));
+        frame = frame.action(words::secondary("Vazgeç", Some(msg(Event::CloseDialog))));
         if w.busy {
             frame = frame.action(words::secondary("Durdur", Some(msg(Event::Stop))));
         } else if let Some(r) = &w.review {
@@ -377,10 +451,17 @@ impl App {
             }
             Control::Press("Bu yere koru") => Event::Assign,
             Control::Press("Bloğu göster") => Event::ShowKept,
+            Control::Pick("Düzen türü", name) => Event::PatternKind(match name {
+                "Doğrusal" => ArrayFindKind::Line,
+                "Dikdörtgen (X/Y)" => ArrayFindKind::Grid,
+                _ => return Err("Düzen türü listede yok".into()),
+            }),
             Control::Fill("Tolerans (mm)", s) => Event::Tolerance(
                 kentos_ui::widget::number::evaluate(s, units::MILLIMETRE)
                     .map_err(|e| e.to_string())?,
             ),
+            Control::Fill("Satır", s) => Event::KeepRow(s.parse().map_err(|_| "Satır okunamadı")?),
+            Control::Fill("Sütun", s) => Event::KeepCol(s.parse().map_err(|_| "Sütun okunamadı")?),
             Control::Fill("Dizideki yer", s) => {
                 Event::KeepPlace(s.parse().map_err(|_| "Yer numarası okunamadı")?)
             }
@@ -419,7 +500,7 @@ fn panel_height(app: &App, height: f32) -> Element<'_, Message> {
     // The default split dock has room for one summary line above a candidate.
     // Source details belong to the settings/review window; Back is already in the footer.
     let heading = w.output.as_ref().map_or_else(
-        || "Doğrusal diziler".to_owned(),
+        || "Dizi örüntüleri".to_owned(),
         |o| {
             if o.truncated {
                 format!("Kısmi sonuç: {} aday", o.matches.len())
@@ -469,19 +550,39 @@ fn panel_height(app: &App, height: f32) -> Element<'_, Message> {
         .into();
     };
     if output.matches.is_empty() {
-        top=top.push(label::body("Düzenli sıra bulunamadı. En az üç aynı yerleştirme ve gözlenmiş bir komşu çift gerekir."));
+        top=top.push(label::body("Seçilen düzene uyan aday bulunamadı. Ayarlardaki kapsam ve düzen koşullarını gözden geçirin."));
     }
     let row_height = typography::scaled(96.);
     let list = VirtualList::new(output.matches.len(), row_height, move |index| {
         let candidate = &output.matches[index];
-        container(
-            column![
-                label::body(format!(
-                    "Sıra {} · {} dolu · {} boş",
-                    index + 1,
-                    candidate.present,
-                    candidate.missing
-                )),
+        let title = if let ArrayLayout::Grid { rows, cols, .. } = candidate.adoption.layout {
+            format!(
+                "{}{rows} × {cols} · {} dolu · {} boş",
+                if candidate.overlaps {
+                    "Ortak öğe · "
+                } else {
+                    ""
+                },
+                candidate.present,
+                candidate.missing
+            )
+        } else {
+            format!(
+                "Sıra {} · {} dolu · {} boş",
+                index + 1,
+                candidate.present,
+                candidate.missing
+            )
+        };
+        let detail: Element<'_, Message> =
+            if let ArrayLayout::Grid { dx, dy, .. } = candidate.adoption.layout {
+                label::caption(format!(
+                    "Sütun {} · Satır {}",
+                    f.length(dx.abs()),
+                    f.length(dy.abs())
+                ))
+                .into()
+            } else {
                 row![
                     label::caption(format!(
                         "Aralık {}{}",
@@ -495,7 +596,13 @@ fn panel_height(app: &App, height: f32) -> Element<'_, Message> {
                     .width(Fill),
                     label::caption(places(&candidate.adoption.items, 8))
                 ]
-                .spacing(6),
+                .spacing(6)
+                .into()
+            };
+        container(
+            column![
+                label::body(title),
+                detail,
                 row![
                     words::secondary("Göster", current.then(|| msg(Event::Show(index)))),
                     words::primary("İncele…", current.then(|| msg(Event::Review(index))))
@@ -537,6 +644,7 @@ pub enum Event {
     Stop,
     Hidden,
     Tolerance(f64),
+    PatternKind(ArrayFindKind),
     Ready(u64, Box<CommandResult<ArraysFound>>),
     Show(usize),
     Review(usize),
@@ -544,6 +652,8 @@ pub enum Event {
     KeepOptions,
     KeepObject(Choice),
     KeepPlace(f64),
+    KeepRow(f64),
+    KeepCol(f64),
     Assign,
     Unassign(usize),
     ShowKept,
@@ -593,6 +703,7 @@ impl App {
             revision: doc.model.revision().to_string(),
             hidden: false,
             tolerance: 1e-6,
+            kind: ArrayFindKind::Line,
             previous: None,
             token: 0,
             cancel: Arc::new(AtomicBool::new(false)),
@@ -630,9 +741,10 @@ impl App {
         if let Some(w) = &mut self.blocks_panel.arrays {
             w.stop();
             w.review = None;
-            if let Some((hidden, tolerance)) = w.previous.take() {
+            if let Some((hidden, tolerance, kind)) = w.previous.take() {
                 w.hidden = hidden;
                 w.tolerance = tolerance;
+                w.kind = kind;
             }
             if w.output.is_none() {
                 self.blocks_panel.arrays = None;
@@ -684,8 +796,12 @@ impl App {
         match event {
             Event::Settings if !w.busy => {
                 w.review = None;
-                w.previous = Some((w.hidden, w.tolerance));
+                w.previous = Some((w.hidden, w.tolerance, w.kind));
                 self.dialog = Some(Dialog::ArrayFind);
+            }
+            Event::PatternKind(kind) if !w.busy => {
+                w.kind = kind;
+                w.refused = None;
             }
             Event::Tolerance(t) if !w.busy => {
                 w.tolerance = t;
@@ -845,6 +961,26 @@ impl App {
             Event::KeepPlace(place) if !w.busy => {
                 if let Some(r) = &mut w.review {
                     r.place = place;
+                }
+            }
+            Event::KeepRow(value) | Event::KeepCol(value) if !w.busy => {
+                let row = matches!(event, Event::KeepRow(_));
+                if let Some(r) = &mut w.review
+                    && let ArrayLayout::Grid { rows, cols, .. } = r.input.layout
+                {
+                    let max = if row { rows } else { cols };
+                    if !value.is_finite() || value.fract() != 0. || value < 1. || value > max as f64
+                    {
+                        w.refused = Some("Satır ve sütun geçerli tam sayı olmalı.".into());
+                        return Task::none();
+                    }
+                    let old = (r.place - 1.).max(0.) as u32;
+                    let (r0, c0) = if row {
+                        (value as u32 - 1, old % cols)
+                    } else {
+                        (old / cols, value as u32 - 1)
+                    };
+                    r.place = (r0 * cols + c0 + 1) as f64;
                 }
             }
             Event::Assign if !w.busy => {

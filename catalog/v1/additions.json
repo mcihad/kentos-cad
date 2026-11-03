@@ -4,10 +4,10 @@
   "commands": [
     {
       "id": "array.find",
-      "title": "Doğrusal dizileri bul…",
+      "title": "Dizi örüntülerini bul…",
       "short": "Dizileri bul",
       "icon": "search",
-      "description": "Seçilen statik bloğun doğrusal yerleşimlerini yazısız arar. Adaylar sahnede gösterilir; eksik yerler ve elle taşınmış öğeler ayrı incelemeden sonra aynı kimliklerle ilişkilendirilir. Bağlama durdurulabilir ve tek adımda geri alınır. İlk kapsam doğrusal dizilerdir.",
+      "description": "Seçilen statik bloğun doğrusal veya dünya X/Y dikdörtgen yerleşimlerini yazısız arar. Adaylar sahnede gösterilir; eksik yerler ve elle taşınmış öğeler ayrı incelemeden sonra aynı kimliklerle ilişkilendirilir. Bağlama durdurulabilir ve tek adımda geri alınır. Dönük/eğik grid, kutupsal ve yol araması bu kapsamda değildir.",
       "aliases": [
         "DIZIBUL",
         "DİZİBUL",

@@ -1103,7 +1103,37 @@ sonra 26 Bloklar paneli testi ve tüm hedeflerin Clippy denetimi başarılıdır
 Manifestte 946 satır tutarlıdır. Ekranlar, ikili özetleri ve kabul dosyaları
 repo dışındadır. Grafik aramanın ilk kapsamı hâlâ doğrusal statik bloklardır.
 
-**Açık kalan:** otomatik grid/kutupsal/yol aday bulma; metin/öznitelik,
+**Dünya X/Y grid tanıma — [ADR 0876](../docs/adr/0876-axis-aligned-grid-pattern-review.md):**
+`cad.arrays.find` opsiyonel `kind=grid` ile mevcut eksen paralel grid modeline
+öneri üretir; alan verilmezse önceki doğrusal davranış aynıdır. En az iki
+satır, iki sütun, dört dolu yer, iki yönde gözlenen komşu çift ve dolu bir
+sınır köşesi gerekir. Boş köşe doldurulmaz; dolu köşeden işaretli aralıkla
+başlanır. Gizli yarım aralık, çakışan UUID ve dönük/eğik grid varsayılmaz.
+Yerel Float64 hesap ve ortak bağlama denetimi kullanılır. Ek keşif sınırları
+500 000 çift / eksende 128 aralık adayı; aşımı açık kısmi sonuçtur.
+
+Masaüstünde Düzen türü, satır/sütunlu şema ve kaymış öğenin korunacağı ayrı
+Satır/Sütun alanları vardır. Gerçek fareyle iç kaynaktan 3×4 aday, yanlış
+kaynak yere atama/ret/düzeltme ve bağlama denendi. Uzun formda görünmeyen
+hata mesajı düğmelerin üstünde sabitlenip gerçek ekranda doğrulandı. Bağlama
+on kök UUID'sini, tanımı, proje ayarlarını ve ölçü bağlarını korur; iki boş
+ve tek korunan öğe kalır. Menüden sütun 2000→2500 mm, satır 3000→4000 mm
+ayrı düzenlendi; korunan blok yerinde, bağlı ölçü 2500 mm'dir. Beş dosya
+çifti vazgeçme/bağlama/aralık Undo/Redo'da birebir eşittir. Ham ekranlar ve
+bağımsız dosya kontrolleri repo dışındadır.
+
+Grid doğrulamasında 15 native tanıma, 99 birim + 400 entegrasyon ve ayrıca
+filtresiz masaüstü fixture kontrolü başarılıdır. 31 bağımsız durum native/Python,
+13 Python dizi, 128 MCP, 28 panel, 12 geçmiş ve dokuz UI katalog testi geçti.
+SDK/fixture/manifest (946 satır), TS bağlamaları ve ilgili tüm hedeflerde son
+Clippy denetimi başarılıdır. Geniş koşudaki filtre, masaüstüne özel fixture
+klasörünü boş bıraktı; bu tek koşu ayrıca filtresiz doğrulandı.
+
+Son teslim kaynağında dokuz dizi arayüz testi tekrar başarılıdır. Son derlemeyle
+arayüzden grid arama/inceleme/açık atama/bağlama tekrarlandı; bağımsız okuyucu
+özgün köklerin aynılığını ve incelenen üyeliğin korunduğunu doğruladı.
+
+**Açık kalan:** dönük/eğik grid, kutupsal/yol aday bulma; metin/öznitelik,
 iç blok ve diğer kaynak/ilişki genişletmesi. Bu dilimler CAD-ADV-07'nin
 tamamını kapatmaz.
 

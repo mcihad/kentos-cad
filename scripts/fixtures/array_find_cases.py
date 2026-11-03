@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Independent read-only linear-array protocol cases. No KentOS runtime imports."""
+"""Independent read-only line/grid array protocol cases. No KentOS runtime imports."""
 import argparse
 from copy import deepcopy
 import json
@@ -48,6 +48,28 @@ def main():
             code="recognition_truncated",message="$any",path="uids")]),
         expect=dict(held,ids=[1,2,3,4,5]))]))
 
+    success("line açık seçim geriye uyumlu aynı sonucu verir",dict(source=uid(1),kind="line"),result)
+    success("grid seçimi doğrusal sırayı grid gibi sunmaz",dict(source=uid(1),kind="grid"),empty)
+    def grid_case(name,coords,source,layout,slots):
+        grid=deepcopy(setup)
+        grid["entities"]=[dict(kind="insert",id=k+1,layerId="a",attrs={},
+            block=setup["blocks"][0]["id"],p=dict(x=x,y=y),scale=1,rotation=0)
+            for k,(x,y) in enumerate(coords)]
+        n=sum(i is not None for i in slots)
+        candidate=dict(adoption=dict(source=uid(slots[0]),layout=layout,
+            items=[dict(uid=uid(i)) if i else {} for i in slots],tolerance=.000001,expectedRevision="$any"),
+            present=n,missing=len(slots)-n,deviation=0,overlaps=False)
+        expected=dict(result,matches=[candidate])
+        cases.append(dict(name=name,setup=grid,steps=[dict(op="execute",input=dict(source=uid(source),kind="grid"),
+            result=dict(status="completed",output=expected,warnings=[]),
+            expect=dict(held,ids=list(range(1,len(coords)+1))))]))
+    grid_case("grid iki boş yer ve eşleşmeyen blok ile yazısız önerilir",
+        [(0,0),(2,0),(0,3),(2,3),(4,3),(0,6),(4,6),(1.3,.7)],4,
+        dict(kind="grid",rows=3,cols=3,dx=2,dy=3),[1,2,None,3,4,5,6,None,7])
+    grid_case("grid boş başlangıcı doldurmaz dolu köşeden ters sütunla başlar",
+        [(2,0),(4,0),(0,3),(2,3),(4,3)],4,
+        dict(kind="grid",rows=2,cols=3,dx=-2,dy=3),[2,1,None,5,4,3])
+
     def refuse(name, input_, code, path, conflict=False, raw=None, numbers=None):
         err=dict(code=code,message="$any",path=path)
         if conflict:err["revision"]="$any"
@@ -76,7 +98,7 @@ def main():
     data=deepcopy(setup);data["entities"][0]["attrs"]={"CODE":"A"}
     refuse("kaynak verisi atlanamaz",dict(source=uid(1)),"array_adoption_refused","source",raw=data)
     result=dict(format="kentos.command-cases",version=1,command="cad.arrays.find",commandVersion=1,
-        title="Doğrusal blok dizilerini bul",note="ADR0874. Independent expectations; geometry, ambiguity, cancellation and adoption roundtrip in native acceptance.",
+        title="Blok dizi örüntülerini bul",note="ADR0874. Independent expectations; geometry, ambiguity, cancellation and adoption roundtrip in native acceptance.",
         setup=setup,cases=cases)
     target=ROOT/"fixtures/commands/v1/cad.arrays.find.json"
     text=json.dumps(result,ensure_ascii=False,indent=2)+"\n"

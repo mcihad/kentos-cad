@@ -21,6 +21,7 @@ fn drawing(points: &[(f64, f64)]) -> Document {
 fn request(doc: &Document, slot: u32) -> ArraysFind {
     ArraysFind {
         source: doc.uid(Slot(slot)).unwrap().to_string(),
+        kind: None,
         uids: None,
         tolerance: None,
         limit: None,
@@ -286,5 +287,180 @@ fn dense_non_patterns_reach_the_work_budget_and_can_be_stopped_during_geometry_s
         calls > 10000
     });
     assert!(matches!(answer, CommandResult::Cancelled));
+    assert_eq!(doc.to_snapshot_v2(), before);
+}
+
+fn grid_request(doc: &Document, slot: u32) -> ArraysFind {
+    let mut input = request(doc, slot);
+    input.kind = Some(kentos_commands::ArrayFindKind::Grid);
+    input
+}
+
+#[test]
+fn grid_with_two_gaps_interior_seed_and_unmatched_block_adopts_metadata_only() {
+    let mut ps = Vec::new();
+    for row in 0..3 {
+        for col in 0..4 {
+            if [(0, 2), (2, 0)].contains(&(row, col)) {
+                continue;
+            }
+            ps.push((col as f64 * 2., row as f64 * 3.));
+        }
+    }
+    ps.push((2.25, 0.75));
+    let mut doc = drawing(&ps);
+    let before = doc.to_snapshot_v2();
+    let found = find(&doc, &grid_request(&doc, 6));
+    assert!(!found.truncated);
+    assert_eq!(found.matches.len(), 1, "{found:?}");
+    let p = &found.matches[0];
+    assert_eq!((p.present, p.missing), (10, 2));
+    assert_eq!(
+        p.adoption.layout,
+        ArrayLayout::Grid {
+            rows: 3,
+            cols: 4,
+            dx: 2.,
+            dy: 3.
+        }
+    );
+    assert_eq!(p.adoption.source, doc.uid(Slot(1)).unwrap().to_string());
+    assert!(p.adoption.items[2].uid.is_none() && p.adoption.items[8].uid.is_none());
+    assert!(p.adoption.items.iter().all(|i| !i.kept));
+    assert_eq!(found.eligible.len(), 11);
+    let answer = arrays_adopt::execute(&mut ExecutionContext::new(&mut doc), p.adoption.clone());
+    assert!(
+        matches!(answer, CommandResult::Completed { .. }),
+        "{answer:?}"
+    );
+    let after = doc.to_snapshot_v2();
+    assert_eq!(after.entities, before.entities);
+    assert_eq!(after.uids, before.uids);
+    assert_eq!(after.blocks, before.blocks);
+    assert_eq!(after.settings, before.settings);
+    doc.undo();
+    assert_eq!(doc.to_snapshot_v2(), before);
+    doc.redo();
+    assert_eq!(doc.to_snapshot_v2(), after);
+}
+
+#[test]
+fn grid_uses_an_occupied_corner_and_signed_spacing_without_filling_a_missing_origin() {
+    let doc = drawing(&[(2., 0.), (4., 0.), (0., 3.), (2., 3.), (4., 3.)]);
+    let found = find(&doc, &grid_request(&doc, 4));
+    assert_eq!(found.matches.len(), 1, "{found:?}");
+    let p = &found.matches[0];
+    assert_eq!(p.adoption.source, doc.uid(Slot(2)).unwrap().to_string());
+    assert_eq!(
+        p.adoption.layout,
+        ArrayLayout::Grid {
+            rows: 2,
+            cols: 3,
+            dx: -2.,
+            dy: 3.
+        }
+    );
+    assert_eq!((p.present, p.missing), (5, 1));
+    assert!(p.adoption.items[2].uid.is_none());
+}
+
+#[test]
+fn grid_never_invents_half_steps_missing_bounding_corners_or_rotated_axes() {
+    let doc = drawing(&[(0., 0.), (4., 0.), (8., 0.), (0., 3.), (4., 3.), (8., 3.)]);
+    let found = find(&doc, &grid_request(&doc, 2));
+    assert_eq!(found.matches.len(), 1);
+    assert_eq!(
+        found.matches[0].adoption.layout,
+        ArrayLayout::Grid {
+            rows: 2,
+            cols: 3,
+            dx: 4.,
+            dy: 3.
+        }
+    );
+    assert_eq!(found.matches[0].missing, 0);
+    for ps in [
+        vec![(1., 1.), (0., 1.), (2., 1.), (1., 0.), (1., 2.)],
+        vec![(0., 0.), (1., 1.), (-1., 1.), (0., 2.)],
+        vec![(0., 0.), (2., 0.), (0., 3.)],
+        vec![(0., 0.), (2., 0.), (4., 0.), (6., 0.)],
+    ] {
+        let doc = drawing(&ps);
+        assert!(
+            find(&doc, &grid_request(&doc, 1)).matches.is_empty(),
+            "{ps:?}"
+        );
+    }
+}
+
+#[test]
+fn grid_colliding_ids_are_not_arbitrarily_chosen_and_scope_order_is_irrelevant() {
+    let doc = drawing(&[(0., 0.), (2., 0.), (0., 3.), (2., 3.), (0., 0.)]);
+    assert!(find(&doc, &grid_request(&doc, 1)).matches.is_empty());
+    let doc = drawing(&[(0., 0.), (2., 0.), (0., 3.), (2., 3.)]);
+    let baseline = find(&doc, &grid_request(&doc, 3));
+    let mut input = grid_request(&doc, 3);
+    input.uids = Some(
+        [4, 3, 2, 1, 4]
+            .map(|i| doc.uid(Slot(i)).unwrap().to_string())
+            .to_vec(),
+    );
+    assert_eq!(find(&doc, &input), baseline);
+    let mut calls = 0;
+    let answer = arrays_find::inspect(&doc, &input, || {
+        calls += 1;
+        calls == 17
+    });
+    assert!(matches!(answer, CommandResult::Cancelled), "{answer:?}");
+}
+
+#[test]
+fn grid_small_spacing_at_map_coordinates_preserves_the_shared_adoption_gate() {
+    let ps: Vec<_> = (0..3)
+        .flat_map(|r| {
+            (0..4).filter_map(move |c| {
+                if (r, c) == (1, 2) {
+                    None
+                } else {
+                    Some((487_000. + c as f64 * 0.02, 4_420_000. + r as f64 * 0.03))
+                }
+            })
+        })
+        .collect();
+    let doc = drawing(&ps);
+    let found = find(&doc, &grid_request(&doc, 6));
+    assert!(!found.matches.is_empty(), "{found:?}");
+    let p = &found.matches[0];
+    assert_eq!((p.present, p.missing), (11, 1));
+    let ArrayLayout::Grid { rows, cols, dx, dy } = p.adoption.layout else {
+        panic!("grid")
+    };
+    assert_eq!((rows, cols), (3, 4));
+    assert!((dx - 0.02).abs() < 1e-9 && (dy - 0.03).abs() < 1e-9);
+    assert!(matches!(
+        arrays_adopt::inspect(&doc, &p.adoption, || false),
+        CommandResult::Completed { .. }
+    ));
+}
+
+#[test]
+fn grid_interval_discovery_bounds_are_partial_and_remain_cancellable() {
+    let ps: Vec<_> = (0..140).map(|i| ((i * i) as f64, 0.)).collect();
+    let doc = drawing(&ps);
+    let input = grid_request(&doc, 1);
+    let result = arrays_find::inspect(&doc, &input, || false);
+    let CommandResult::Completed { output, warnings } = result else {
+        panic!("{result:?}")
+    };
+    assert!(output.truncated);
+    assert!(output.comparisons <= 2_000_000);
+    assert_eq!(warnings[0].code, "recognition_truncated");
+    let before = doc.to_snapshot_v2();
+    let mut count = 0;
+    let result = arrays_find::inspect(&doc, &input, || {
+        count += 1;
+        count > 400
+    });
+    assert!(matches!(result, CommandResult::Cancelled));
     assert_eq!(doc.to_snapshot_v2(), before);
 }

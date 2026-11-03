@@ -22,7 +22,7 @@ pub(crate) const TITLES: [(&str, &str); 301] = [
     ("cad.entities.transform", "Nesneleri dönüştür"),
     ("cad.entities.edit", "Nesneleri düzenle"),
     ("cad.entities.array", "Nesneleri diziye kopyala"),
-    ("cad.arrays.find", "Doğrusal blok dizilerini bul"),
+    ("cad.arrays.find", "Blok dizi örüntülerini bul"),
     ("cad.arrays.adopt", "Mevcut blokları diziye bağla"),
     ("cad.arrays.edit", "Diziyi düzenle"),
     ("cad.constraints.edit", "Kısıtlar"),
