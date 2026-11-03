@@ -2745,6 +2745,14 @@
       ],
       "note": "Ölçüler yazıldıkça road.culverts.edit'in planıyla okuma kopyasında önizler; Kaydet ve Sil road.culverts.edit, Planda çiz road.culverts.draw ile yazar (plan/road.md Y11.2, ADR 0909 §2)."
     },
+    "retainingWall.editor": {
+      "level": "semantic",
+      "via": [
+        "road.walls.edit",
+        "road.walls.draw"
+      ],
+      "note": "Ölçüler yazıldıkça road.walls.edit'in planıyla okuma kopyasında önizler; Kaydet ve Sil road.walls.edit, Planda çiz road.walls.draw ile yazar (plan/road.md Y11.3, ADR 0909 §3)."
+    },
     "landxml.importAlignments": {
       "level": "semantic",
       "via": [

@@ -291,6 +291,10 @@ pub mod road_culverts;
 pub mod road_culverts_draw;
 pub mod road_culverts_edit;
 pub mod road_culverts_query;
+pub mod road_walls;
+pub mod road_walls_draw;
+pub mod road_walls_edit;
+pub mod road_walls_query;
 pub mod road_alignments_import;
 pub mod road_alignments_fit;
 pub mod road_profiles_fit;
@@ -1230,6 +1234,9 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (kentos_commands::ROAD_CULVERTS_EDIT, kentos_commands::ROAD_CULVERTS_EDIT_VERSION),
     (kentos_commands::ROAD_CULVERTS_QUERY, kentos_commands::ROAD_CULVERTS_QUERY_VERSION),
     (kentos_commands::ROAD_CULVERTS_DRAW, kentos_commands::ROAD_CULVERTS_DRAW_VERSION),
+    (kentos_commands::ROAD_WALLS_EDIT, kentos_commands::ROAD_WALLS_EDIT_VERSION),
+    (kentos_commands::ROAD_WALLS_QUERY, kentos_commands::ROAD_WALLS_QUERY_VERSION),
+    (kentos_commands::ROAD_WALLS_DRAW, kentos_commands::ROAD_WALLS_DRAW_VERSION),
     (kentos_commands::ROAD_STAKEOUT_QUERY, kentos_commands::ROAD_STAKEOUT_QUERY_VERSION),
     (kentos_commands::FILE_EXPORT_LANDXML, kentos_commands::FILE_EXPORT_LANDXML_VERSION),
     (kentos_commands::FILE_EXPORT_IFC, kentos_commands::FILE_EXPORT_IFC_VERSION),

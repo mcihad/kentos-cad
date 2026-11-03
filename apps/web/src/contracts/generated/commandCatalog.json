@@ -40375,6 +40375,450 @@
       ]
     },
     {
+      "id": "road.walls.edit",
+      "version": 1,
+      "title": "İstinat duvarını düzenle",
+      "summary": "Yol projesinin istinat duvarını (wall: kimliği ya da adı; yoksa yeni) yazar, koridoruna yeniden bağlar ya da kaldırır. Duvar bir koridorun (corridor) bir yanında (side: left ya da right) from ile to km'leri (aksın istasyonları) arasında yolun şev başında şevin yerine duran konsol duvardır; step her kaç metrede okunduğu (aralığın uçları da). shape: top gövdenin üst kalınlığı, batter gövdenin metrede genişlemesi (arka yüzün eğimi), footing temelin genişliği, base kalınlığı, toe yüzün önüne taşan temel, cover temelin üstündeki zemin, above yol kenarı ile zeminin yükseğinin üstünde kalan (korkuluk payı). Her km'de duvarın üstü yol kenarı ile yüzün altındaki zeminin yükseği artı above, temelin üstü alçağı eksi cover. highest istenen en yüksek gövde (aşılırsa uyarı), material tipli öznitelik. Ölçüler projenin; KentOS öntanımlı ölçü vermez. null highest ve material'ı kaldırır. Yeni duvarın kimliği verilen ya da ilk boş d-n; rebind koridorun bugünkü sürümünü alır. Tek geri alma adımı “İstinat duvarı”. Retler: not_a_road_project, unknown_retaining_wall, unknown_corridor, invalid_retaining_wall, invalid_revision, revision_conflict.",
+      "aliases": [
+        "istinat",
+        "retainingwall"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.walls.edit` v1: the wall by its id or name (absent: a new one). A new one needs `name`, `corridor`,\n`side`, `from`, `to`, `step` and `shape`. Rebind takes the corridor's present revision. `highest` and `material`\nnull take them off.\n\nRefusals, in this order: `not_a_road_project`, `unknown_retaining_wall` (rebind or remove one not in the project),\n`unknown_corridor`, `invalid_retaining_wall` (a new one without its fields, set with nothing to set, the definition by\n`road_problem`: stations out of order, a step, sizes or batter out of bounds, a toe and stem wider than the footing;\nstations off the corridor or without a section, no ground under the face, a corridor that does not build),\n`invalid_revision`, `revision_conflict`.",
+        "properties": {
+          "corridor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "from": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "highest": {
+            "description": "The highest stem asked; null takes it off.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "material": {
+            "description": "The wall's material; null takes it off.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "operation": {
+            "$ref": "#/$defs/RoadEditOperation"
+          },
+          "shape": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/WallShapeDef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "side": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/WallSide"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "step": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "to": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "wall": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "operation"
+        ],
+        "title": "RetainingWallsEdit",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.walls.edit` v1.",
+        "properties": {
+          "revision": {
+            "type": "string"
+          },
+          "wall": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RetainingWallReport"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The wall written, read; absent when removed."
+          },
+          "walls": {
+            "items": {
+              "$ref": "#/$defs/RetainingWallListed"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "walls",
+          "revision"
+        ],
+        "title": "RetainingWallsWritten",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.walls.edit` v1.",
+        "properties": {
+          "revision": {
+            "type": "string"
+          },
+          "wall": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RetainingWallReport"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The wall written, read; absent when removed."
+          },
+          "walls": {
+            "items": {
+              "$ref": "#/$defs/RetainingWallListed"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "walls",
+          "revision"
+        ],
+        "title": "RetainingWallsWritten",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_retaining_wall",
+          "unknown_corridor",
+          "invalid_retaining_wall",
+          "invalid_revision",
+          "revision_conflict"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Ana koridorun sağında 100 m duvar",
+          "input": {
+            "corridor": "Ana koridor",
+            "from": 300.0,
+            "highest": 6.0,
+            "name": "Sağ istinat",
+            "operation": "set",
+            "shape": {
+              "above": 0.9,
+              "base": 0.5,
+              "batter": 0.1,
+              "cover": 0.6,
+              "footing": 2.4,
+              "toe": 0.6,
+              "top": 0.3
+            },
+            "side": "right",
+            "step": 10.0,
+            "to": 400.0
+          }
+        }
+      ]
+    },
+    {
+      "id": "road.walls.query",
+      "version": 1,
+      "title": "İstinat duvarını sorgula",
+      "summary": "Yol projesinin istinat duvarlarını bugün okur; hiçbir şey yazmaz. Her biri için her km'de (rows) km yazısı, yüzün ötelemesi (sağa artı) ve plandaki yeri, yol kenarının ve altındaki zeminin kotu, gövdenin üstü, temelin üstü, gövde yüksekliği, kesitin beton alanı ve dolgu tutup tutmadığı; boyunca yüz boyunca plan boyu, gövde yüzü alanı, beton hacmi (ortalama alan), en yüksek gövde ve km'si. Okunamayan duvar listede boy 0 ile gelir; tek sorulursa invalid_retaining_wall. Uyarılar: retaining_wall_stale, retaining_wall_high ve koridorun kendi uyarıları. Retler: not_a_road_project, unknown_retaining_wall, invalid_retaining_wall.",
+      "aliases": [
+        "istinatsor"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.walls.query` v1: every wall read, or one (`wall`: its id or name).\n\nRefusals: `not_a_road_project`, `unknown_retaining_wall`, `invalid_retaining_wall` (the one asked does not read). Warnings:\n`retaining_wall_stale`, `retaining_wall_high`, and the corridor's own.",
+        "properties": {
+          "wall": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "title": "RetainingWallsQuery",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.walls.query` v1: the walls read (one that does not read with no rows: `length` 0).",
+        "properties": {
+          "walls": {
+            "items": {
+              "$ref": "#/$defs/RetainingWallReport"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "walls"
+        ],
+        "title": "RetainingWallsQueried",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.walls.query` v1: the walls read (one that does not read with no rows: `length` 0).",
+        "properties": {
+          "walls": {
+            "items": {
+              "$ref": "#/$defs/RetainingWallReport"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "walls"
+        ],
+        "title": "RetainingWallsQueried",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_retaining_wall",
+          "invalid_retaining_wall"
+        ],
+        "warnings": [
+          "retaining_wall_stale",
+          "retaining_wall_high",
+          "corridor_stale",
+          "corridor_unsolved"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bütün istinat duvarları",
+          "input": {}
+        }
+      ]
+    },
+    {
+      "id": "road.walls.draw",
+      "version": 1,
+      "title": "İstinat duvarı çiz",
+      "summary": "İstinat duvarını planda layerId katmanına çizer: km'lerdeki yüz yerlerinden geçen açık çoklu çizgi ve temelin ön ve arka kenarlarıyla kapalı dış çizgisi; labels ile ortasında km aralığı ve en yüksek gövde. Tek geri alma adımı “İstinat duvarı çiz”. Uyarılar: layer_hidden ve okumanın uyarıları. Retler: invalid_revision, revision_conflict, not_a_road_project, unknown_retaining_wall, invalid_retaining_wall, layer_not_found, not_a_layer, layer_locked.",
+      "aliases": [
+        "istinatciz"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.walls.draw` v1: the wall drawn on `layerId`: its face along its stations and its footing's outline;\nwith `labels` a text at its middle saying its km range and highest stem.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `unknown_retaining_wall`,\n`invalid_retaining_wall`, `layer_not_found`, `not_a_layer`, `layer_locked`. Warnings: `layer_hidden`, and the read's.",
+        "properties": {
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "labels": {
+            "type": "boolean"
+          },
+          "layerId": {
+            "type": "string"
+          },
+          "wall": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "wall",
+          "layerId"
+        ],
+        "title": "RetainingWallsDraw",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.walls.draw` v1, and its plan: the wall, its length and the objects written (in the plan, none).",
+        "properties": {
+          "length": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "wall": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "wall",
+          "length",
+          "uids",
+          "revision"
+        ],
+        "title": "RetainingWallsDrawn",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.walls.draw` v1, and its plan: the wall, its length and the objects written (in the plan, none).",
+        "properties": {
+          "length": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "wall": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "wall",
+          "length",
+          "uids",
+          "revision"
+        ],
+        "title": "RetainingWallsDrawn",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_retaining_wall",
+          "invalid_retaining_wall",
+          "layer_not_found",
+          "not_a_layer",
+          "layer_locked",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "layer_hidden",
+          "retaining_wall_stale",
+          "retaining_wall_high",
+          "corridor_stale",
+          "corridor_unsolved"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Duvar yazısıyla",
+          "input": {
+            "labels": true,
+            "layerId": "duvar",
+            "wall": "d-1"
+          }
+        }
+      ]
+    },
+    {
       "id": "file.export.landxml",
       "version": 1,
       "title": "LandXML dışa aktar",
@@ -76984,6 +77428,30 @@
       "meaning": "Menfezin üstündeki örtü istenenden az."
     },
     {
+      "code": "invalid_retaining_wall",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "İstinat duvarının tanımı geçerli değil ya da okunamıyor; ileti nedenini söyler."
+    },
+    {
+      "code": "unknown_retaining_wall",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu kimlikte ya da adda istinat duvarı yok."
+    },
+    {
+      "code": "retaining_wall_stale",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "İstinat duvarının koridoru değişti; duvarı denetleyip koridora yeniden bağlayın."
+    },
+    {
+      "code": "retaining_wall_high",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "İstinat duvarının gövdesi istenen en yüksekten yüksek."
+    },
+    {
       "code": "profile_fit_deviation",
       "kind": "warning",
       "retryable": false,
@@ -94232,6 +94700,11 @@
         {
           "const": "culverts",
           "description": "`road.culverts.draw` (plan/road.md Y11.2): a culvert's barrel in plan, “Menfez çiz”.",
+          "type": "string"
+        },
+        {
+          "const": "retainingWalls",
+          "description": "`road.walls.draw` (plan/road.md Y11.3): a retaining wall's face and footing in plan, “İstinat duvarı çiz”.",
           "type": "string"
         }
       ]
@@ -140175,6 +140648,282 @@
       ],
       "type": "string"
     },
+    "RetainingWallDef": {
+      "additionalProperties": false,
+      "description": "A retaining wall along a corridor's side (docs/adr/0909 §3): its corridor and that corridor's revision it was made\nfrom, its side and stations, the step it is read at, its cross, the highest stem asked (a warning, not a refusal) and\nits material (typed, kept).",
+      "properties": {
+        "corridor": {
+          "type": "string"
+        },
+        "corridorRevision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "from": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "highest": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "id": {
+          "type": "string"
+        },
+        "material": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "shape": {
+          "$ref": "#/$defs/WallShapeDef"
+        },
+        "side": {
+          "$ref": "#/$defs/WallSide"
+        },
+        "step": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "to": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "corridor",
+        "side",
+        "from",
+        "to",
+        "step",
+        "shape"
+      ],
+      "type": "object"
+    },
+    "RetainingWallListed": {
+      "description": "A wall in the project's list.",
+      "properties": {
+        "corridor": {
+          "type": "string"
+        },
+        "from": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "side": {
+          "$ref": "#/$defs/WallSide"
+        },
+        "to": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "corridor",
+        "side",
+        "from",
+        "to",
+        "revision"
+      ],
+      "type": "object"
+    },
+    "RetainingWallReport": {
+      "description": "A wall as read now: its names, whether its corridor changed since (`stale`), its side and stations, its rows, its\nplan length along its face, its stem's face area, its concrete, and its highest stem and that stem's station.",
+      "properties": {
+        "concrete": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "corridor": {
+          "type": "string"
+        },
+        "face": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "from": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "highest": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "highestAt": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "id": {
+          "type": "string"
+        },
+        "length": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "name": {
+          "type": "string"
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "rows": {
+          "items": {
+            "$ref": "#/$defs/RetainingWallRow"
+          },
+          "type": "array"
+        },
+        "side": {
+          "$ref": "#/$defs/WallSide"
+        },
+        "stale": {
+          "type": "boolean"
+        },
+        "to": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "corridor",
+        "revision",
+        "stale",
+        "side",
+        "from",
+        "to",
+        "rows",
+        "length",
+        "face",
+        "concrete",
+        "highest",
+        "highestAt"
+      ],
+      "type": "object"
+    },
+    "RetainingWallRow": {
+      "description": "A wall at a station: its km, its face's offset (right positive) and plan place, the road's edge and the ground\nthere, its stem's top, its footing's top, its stem's height, its cross's concrete area and whether it holds a fill.",
+      "properties": {
+        "area": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "fill": {
+          "type": "boolean"
+        },
+        "footing": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "elevation"
+        },
+        "ground": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "elevation"
+        },
+        "height": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "kmText": {
+          "type": "string"
+        },
+        "offset": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "road": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "elevation"
+        },
+        "station": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "top": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "elevation"
+        },
+        "x": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "y": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "station",
+        "kmText",
+        "offset",
+        "x",
+        "y",
+        "road",
+        "ground",
+        "top",
+        "footing",
+        "height",
+        "area",
+        "fill"
+      ],
+      "type": "object"
+    },
     "RevcloudFrame": {
       "description": "What a revision cloud goes round (AutoCAD REVCLOUD's Rectangular, Polygonal and Object).",
       "oneOf": [
@@ -140439,6 +141188,13 @@
           "description": "The earthwork volumes (docs/adr/0906), each of a corridor, in the order the project tree shows them.",
           "items": {
             "$ref": "#/$defs/VolumeDef"
+          },
+          "type": "array"
+        },
+        "walls": {
+          "description": "The retaining walls (docs/adr/0909 §3), each along a corridor's side.",
+          "items": {
+            "$ref": "#/$defs/RetainingWallDef"
           },
           "type": "array"
         }
@@ -157911,6 +158667,61 @@
         "rule"
       ],
       "type": "object"
+    },
+    "WallShapeDef": {
+      "additionalProperties": false,
+      "description": "A retaining wall's cross (docs/adr/0909 §3): the stem's top thickness and its batter (m/m), the footing's width,\nthickness and toe, the ground over the footing and what stands above the higher of the road's edge and the ground.",
+      "properties": {
+        "above": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "base": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "batter": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "cover": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "footing": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "toe": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "top": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "top",
+        "footing",
+        "base"
+      ],
+      "type": "object"
+    },
+    "WallSide": {
+      "description": "A corridor's side a wall stands on.",
+      "enum": [
+        "left",
+        "right"
+      ],
+      "type": "string"
     },
     "WallStyleDef": {
       "additionalProperties": false,

@@ -374,6 +374,9 @@ COMMANDS: dict[str, Any] = {
     "road.volumes.approve": road.volumes.approve,
     "road.volumes.edit": road.volumes.edit,
     "road.volumes.query": road.volumes.query,
+    "road.walls.draw": road.walls.draw,
+    "road.walls.edit": road.walls.edit,
+    "road.walls.query": road.walls.query,
 }
 """The command id → its wrapper (``kentos.cad.polygon.create`` …)."""
 

@@ -3421,6 +3421,21 @@
       "status": "implemented"
     },
     {
+      "id": "retainingWall.editor",
+      "title": "İstinat duvarı…",
+      "short": "İstinat",
+      "icon": "retainingWallEditor",
+      "description": "Koridorun bir yanında iki km arasında şevin yerine duran konsol istinat duvarı: gövde üst kalınlığı ve eğimi, temelin eni, kalınlığı ve önü, örtü ve korkuluk payı projenin; KentOS sayı vermez. Her km'de yol kenarı ile altındaki zemin okunur; duvarın üstü yükseğin, temeli alçağın altındadır. Boyuna görünüş, km'lerin tablosu, boy, gövde yüzü ve beton yazıldıkça görünür; Kaydet tek geri alma adımı, Planda çiz yüzü ve temeli bir katmana çizer.",
+      "aliases": [
+        "ISTINAT",
+        "İSTİNAT",
+        "RETAININGWALL"
+      ],
+      "shortcuts": [],
+      "category": "Koridor",
+      "status": "implemented"
+    },
+    {
       "id": "landxml.importAlignments",
       "title": "LandXML'den aks al…",
       "short": "LandXML aks",
@@ -4478,6 +4493,7 @@
     "landxmlExport": "<path d=\"M4 2.5h7.5L15 6v5\" stroke-width=\"1.2\"/><path d=\"M11.5 2.5V6H15\" stroke-width=\"1\"/><path d=\"M4 2.5v15h6\" stroke-width=\"1.2\"/><path d=\"M6 8.5h5M6 11h3\" stroke-width=\"1\"/><path d=\"M12 15.5h6M15.5 13l2.5 2.5-2.5 2.5\" stroke-width=\"1.5\"/>",
     "alignmentFromLine": "<circle cx=\"3\" cy=\"15.5\" r=\"1\"/><circle cx=\"7\" cy=\"9\" r=\"1\"/><circle cx=\"12\" cy=\"12\" r=\"1\"/><circle cx=\"17\" cy=\"4.5\" r=\"1\"/><path d=\"M3 15.5C5.5 10.5 7.5 9 10 10.5s4.5 0 7-6\" stroke-width=\"1.6\"/>",
     "profileFromLine": "<path d=\"M2 17.5h16\" stroke-width=\"1\"/><circle cx=\"3\" cy=\"13.5\" r=\"1\"/><circle cx=\"8\" cy=\"6.5\" r=\"1\"/><circle cx=\"17\" cy=\"12.5\" r=\"1\"/><path d=\"M3 13.5C5.5 9 7.5 7.5 10 8s4.5 2.5 7 4.5\" stroke-width=\"1.6\"/>",
+    "retainingWallEditor": "<path d=\"M2 6.5h7l2 2\" stroke-width=\"1.4\"/><path d=\"M9 6.5v9.5h3.2L11 6.5\" stroke-width=\"1.3\"/><path d=\"M7 16h7.5v1.5H7z\" stroke-width=\"1.1\"/><path d=\"M12.5 11h5.5\" stroke-width=\"1\" stroke-dasharray=\"1.5 1.5\"/>",
     "culvertEditor": "<path d=\"M2 7.5h16\" stroke-width=\"1.4\"/><path d=\"M2 7.5 1 9.5M18 7.5l1 2\" stroke-width=\"1\"/><circle cx=\"10\" cy=\"13\" r=\"3.2\" stroke-width=\"1.4\"/><path d=\"M2 17.5h16\" stroke-width=\"1\" stroke-dasharray=\"1.5 1.5\"/>",
     "guardrailEditor": "<path d=\"M2 9.5h16M2 12.5h16\" stroke-width=\"1.4\"/><path d=\"M4 7v10M10 7v10M16 7v10\" stroke-width=\"1.2\"/>",
     "roadSheets": "<rect x=\"2.5\" y=\"2.5\" width=\"15\" height=\"15\" rx=\"1\" stroke-width=\"1.3\"/><path d=\"M2.5 10h15\" stroke-width=\"1\"/><path d=\"M4.5 8c2.5-3.5 5-1 7-3.5s2.5-1 4-1.5\" stroke-width=\"1.3\"/><path d=\"M4.5 15.5l4-2.5 3 1 4-3\" stroke-width=\"1.3\"/>",

@@ -5,6 +5,7 @@ import type { CulvertDef } from "./CulvertDef";
 import type { GuardrailDef } from "./GuardrailDef";
 import type { HaulDef } from "./HaulDef";
 import type { ProfileDef } from "./ProfileDef";
+import type { RetainingWallDef } from "./RetainingWallDef";
 import type { RoadSheetSetDef } from "./RoadSheetSetDef";
 import type { SectionSetDef } from "./SectionSetDef";
 import type { SuperelevationDef } from "./SuperelevationDef";
@@ -63,4 +64,8 @@ guardrails?: Array<GuardrailDef>,
 /**
  * The culverts (docs/adr/0909 §2), each across a corridor.
  */
-culverts?: Array<CulvertDef>, };
+culverts?: Array<CulvertDef>, 
+/**
+ * The retaining walls (docs/adr/0909 §3), each along a corridor's side.
+ */
+walls?: Array<RetainingWallDef>, };

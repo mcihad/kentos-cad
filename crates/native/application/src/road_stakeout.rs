@@ -50,7 +50,7 @@ fn side_words(templates: &[&Template], right: bool) -> Vec<String> {
 }
 
 /// The stations of a region between `lo` and `hi`: the range's ends and the multiples of `step` strictly between.
-fn stepped(lo: f64, hi: f64, step: f64) -> Vec<f64> {
+pub(crate) fn stepped(lo: f64, hi: f64, step: f64) -> Vec<f64> {
     let mut out = vec![lo];
     let mut k = (lo / step).floor();
     loop {

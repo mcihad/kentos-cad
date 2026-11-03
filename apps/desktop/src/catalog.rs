@@ -619,6 +619,8 @@ pub const PORTED: &[&str] = &[
     "guardrail.editor",
     // plan/road.md Y11.2: Menfez (culvert_window.rs).
     "culvert.editor",
+    // plan/road.md Y11.3: İstinat duvarı (retaining_wall_window.rs).
+    "retainingWall.editor",
     // plan/road.md Y10.2: LandXML ver (road_exchange.rs).
     "landxml.export",
     "landxml.importAlignments",

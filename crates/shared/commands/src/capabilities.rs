@@ -1879,6 +1879,25 @@ const ENTRIES: &[Entry] = &[
         warnings: &["layer_hidden", "culvert_stale", "culvert_cover", "corridor_stale", "corridor_unsolved"],
         targets: none,
     },
+    // KentOS Yol's retaining walls (plan/road.md Y11.3, docs/adr/0909 §3).
+    Entry {
+        id: "road.walls.edit",
+        refusals: &[&["not_a_road_project", "unknown_retaining_wall", "unknown_corridor", "invalid_retaining_wall"], REVISION],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "road.walls.query",
+        refusals: &[&["not_a_road_project", "unknown_retaining_wall", "invalid_retaining_wall"]],
+        warnings: &["retaining_wall_stale", "retaining_wall_high", "corridor_stale", "corridor_unsolved"],
+        targets: none,
+    },
+    Entry {
+        id: "road.walls.draw",
+        refusals: &[&["not_a_road_project", "unknown_retaining_wall", "invalid_retaining_wall"], LAYER, REVISION],
+        warnings: &["layer_hidden", "retaining_wall_stale", "retaining_wall_high", "corridor_stale", "corridor_unsolved"],
+        targets: none,
+    },
     // KentOS Yol's LandXML export (plan/road.md Y10.2, docs/adr/0908 §6).
     Entry {
         id: "file.export.landxml",

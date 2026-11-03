@@ -101,6 +101,10 @@ pub struct RoadSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<CulvertDef>>", optional))]
     pub culverts: Vec<CulvertDef>,
+    /// The retaining walls (docs/adr/0909 §3), each along a corridor's side.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<RetainingWallDef>>", optional))]
+    pub walls: Vec<RetainingWallDef>,
 }
 
 impl RoadSettings {
@@ -118,6 +122,7 @@ impl RoadSettings {
             && self.sheet_sets.is_empty()
             && self.guardrails.is_empty()
             && self.culverts.is_empty()
+            && self.walls.is_empty()
     }
 
     /// What is wrong with it, by the field's path and in words; none when it is right.
@@ -976,6 +981,7 @@ pub fn road_problem(road: &RoadSettings) -> Option<(String, String)> {
         .or_else(|| sheet_sets_problem(road))
         .or_else(|| guardrails_problem(road))
         .or_else(|| culverts_problem(road))
+        .or_else(|| walls_problem(road))
 }
 
 fn side_problem(s: &TemplateSideDef, at: &str) -> Option<(String, String)> {
@@ -1565,6 +1571,150 @@ fn culverts_problem(road: &RoadSettings) -> Option<(String, String)> {
         }
         if c.roughness.is_some_and(|n| !(n.is_finite() && n > 0.0 && n <= 1.0)) {
             return fail(at("roughness"), "Manning pürüzlülüğü 0'dan büyük, en çok 1 olur");
+        }
+    }
+    None
+}
+
+/// The most retaining walls a project holds, and stations a wall is read at.
+pub const MAX_RETAINING_WALLS: usize = 1000;
+pub const MAX_RETAINING_WALL_STATIONS: usize = 5000;
+
+/// A corridor's side a wall stands on.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum WallSide {
+    Left,
+    Right,
+}
+
+/// A retaining wall's cross (docs/adr/0909 §3): the stem's top thickness and its batter (m/m), the footing's width,
+/// thickness and toe, the ground over the footing and what stands above the higher of the road's edge and the ground.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct WallShapeDef {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub top: f64,
+    #[serde(default, skip_serializing_if = "is_zero_f64")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub batter: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub footing: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub base: f64,
+    #[serde(default, skip_serializing_if = "is_zero_f64")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub toe: f64,
+    #[serde(default, skip_serializing_if = "is_zero_f64")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub cover: f64,
+    #[serde(default, skip_serializing_if = "is_zero_f64")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub above: f64,
+}
+
+/// A retaining wall along a corridor's side (docs/adr/0909 §3): its corridor and that corridor's revision it was made
+/// from, its side and stations, the step it is read at, its cross, the highest stem asked (a warning, not a refusal) and
+/// its material (typed, kept).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RetainingWallDef {
+    pub id: String,
+    pub name: String,
+    pub corridor: String,
+    #[serde(default, skip_serializing_if = "is_zero_u32")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub corridor_revision: u32,
+    #[serde(default, skip_serializing_if = "is_zero_u32")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub revision: u32,
+    pub side: WallSide,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub from: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub to: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub step: f64,
+    pub shape: WallShapeDef,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub highest: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub material: Option<String>,
+}
+
+fn walls_problem(road: &RoadSettings) -> Option<(String, String)> {
+    let fail = |path: String, words: &str| Some((path, words.to_string()));
+    let list = &road.walls;
+    if list.len() > MAX_RETAINING_WALLS {
+        return fail("walls".into(), &format!("en çok {MAX_RETAINING_WALLS} istinat duvarı olur"));
+    }
+    let mut ids = std::collections::BTreeSet::new();
+    let mut names = std::collections::BTreeSet::new();
+    let size = |v: f64| v.is_finite() && v > 0.0 && v <= 100.0;
+    let room = |v: f64| v.is_finite() && (0.0..=100.0).contains(&v);
+    for (i, w) in list.iter().enumerate() {
+        let at = |field: &str| format!("walls[{i}].{field}");
+        if !word_ok(&w.id) {
+            return fail(at("id"), "duvarın kimliği boş olmayan, en çok 64 karakterlik bir sözcük olmalı");
+        }
+        if !ids.insert(w.id.as_str()) {
+            return fail(at("id"), "bu kimlikte başka bir istinat duvarı var");
+        }
+        let name = w.name.trim();
+        if name.is_empty() || name != w.name || w.name.chars().count() > 120 {
+            return fail(at("name"), "duvarın adı boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 120 karakter");
+        }
+        if !names.insert(name.to_lowercase()) {
+            return fail(at("name"), "bu adda başka bir istinat duvarı var");
+        }
+        if road.corridors.iter().all(|x| x.id != w.corridor) {
+            return fail(at("corridor"), "duvarın koridoru projede yok");
+        }
+        if !(w.from.is_finite() && w.to.is_finite() && w.from < w.to) {
+            return fail(at("to"), "duvarın bitiş km'si başlangıcından büyük olmalı");
+        }
+        if !(w.step.is_finite() && w.step > 0.0 && w.step <= 1000.0) {
+            return fail(at("step"), "duvarın okunduğu aralık 0'dan büyük, en çok 1000 m olur");
+        }
+        if (w.to - w.from) / w.step > MAX_RETAINING_WALL_STATIONS as f64 {
+            return fail(at("step"), &format!("duvar en çok {MAX_RETAINING_WALL_STATIONS} km'de okunur; aralığı büyütün"));
+        }
+        let s = &w.shape;
+        if !size(s.top) || !size(s.footing) || !size(s.base) {
+            return fail(at("shape"), "gövdenin üst kalınlığı, temelin genişliği ve kalınlığı 0'dan büyük, en çok 100 m olur");
+        }
+        if !(s.batter.is_finite() && (0.0..=10.0).contains(&s.batter)) {
+            return fail(at("shape.batter"), "gövdenin eğimi 0 ile 10 arası olur (metrede yatay metre)");
+        }
+        if !room(s.toe) || !room(s.cover) || !room(s.above) {
+            return fail(at("shape"), "temelin önü, örtü ve korkuluk payı 0 ile 100 m arası olur");
+        }
+        if s.toe + s.top > s.footing + 1e-9 {
+            return fail(at("shape.toe"), "temelin önü ve gövdenin üst kalınlığı temelin genişliğine sığmalı");
+        }
+        if w.highest.is_some_and(|v| !size(v)) {
+            return fail(at("highest"), "en yüksek gövde 0'dan büyük, en çok 100 m olur");
+        }
+        if w.material.as_ref().is_some_and(|m| m.trim().is_empty() || m.trim() != m || m.chars().count() > 120) {
+            return fail(at("material"), "malzeme boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 120 karakter");
         }
     }
     None

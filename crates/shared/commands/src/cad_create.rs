@@ -127,6 +127,8 @@ pub enum CreateOperation {
     Guardrails,
     /// `road.culverts.draw` (plan/road.md Y11.2): a culvert's barrel in plan, “Menfez çiz”.
     Culverts,
+    /// `road.walls.draw` (plan/road.md Y11.3): a retaining wall's face and footing in plan, “İstinat duvarı çiz”.
+    RetainingWalls,
 }
 
 /// One new object: its geometry and what else it carries. The layer is the

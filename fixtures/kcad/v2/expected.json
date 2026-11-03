@@ -123,6 +123,7 @@
     {"file": "broken/road-sheet-set-on-parallel-axis.kcad", "sniff": "kcad", "error": "bad_value"},
     {"file": "broken/road-guardrail-unknown-corridor.kcad", "sniff": "kcad", "error": "bad_value"},
     {"file": "broken/road-culvert-right-angle.kcad", "sniff": "kcad", "error": "bad_value"},
+    {"file": "broken/road-wall-toe-past-footing.kcad", "sniff": "kcad", "error": "bad_value"},
     {"file": "arch-bonds.kcad", "sniff": "kcad", "content": "arch-bonds.json"},
     {"file": "broken/arch-bonds-in-schema-136.kcad", "sniff": "kcad", "error": "bad_value"},
     {"file": "broken/arch-bonds-coincident.kcad", "sniff": "kcad", "error": "bad_value"},

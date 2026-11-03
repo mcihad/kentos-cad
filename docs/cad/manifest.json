@@ -7784,6 +7784,23 @@
    "tests": 0
   },
   {
+   "id": "retainingWall.editor",
+   "kind": "command",
+   "title": "İstinat duvarı…",
+   "level": "semantic",
+   "via": [
+    "road.walls.edit",
+    "road.walls.draw"
+   ],
+   "operation": null,
+   "python": "Connection: road.walls.edit, Connection: road.walls.draw",
+   "mcp": "road.walls.edit, road.walls.draw",
+   "note": "Ölçüler yazıldıkça road.walls.edit'in planıyla okuma kopyasında önizler; Kaydet ve Sil road.walls.edit, Planda çiz road.walls.draw ile yazar (plan/road.md Y11.3, ADR 0909 §3).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "road.sheets",
    "kind": "command",
    "title": "Yol paftaları…",

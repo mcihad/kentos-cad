@@ -671,6 +671,10 @@
        {
         "command": "culvert.editor",
         "size": "large"
+       },
+       {
+        "command": "retainingWall.editor",
+        "size": "large"
        }
       ]
      }

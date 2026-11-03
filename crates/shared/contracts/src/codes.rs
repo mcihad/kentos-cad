@@ -763,6 +763,14 @@ codes! {
     CULVERT_STALE = "culvert_stale", Warning, false, "Menfezin koridoru değişti; menfezi denetleyip koridora yeniden bağlayın.";
     /// A warning: the road over the culvert is closer to its top than the cover asked (docs/adr/0909 §2).
     CULVERT_COVER = "culvert_cover", Warning, false, "Menfezin üstündeki örtü istenenden az.";
+    /// A retaining wall that is not right: its stations, step or sizes out of bounds, a new one without its fields, its
+    /// stations off the corridor or without ground under its face (docs/adr/0909 §3).
+    INVALID_RETAINING_WALL = "invalid_retaining_wall", Failed, false, "İstinat duvarının tanımı geçerli değil ya da okunamıyor; ileti nedenini söyler.";
+    UNKNOWN_RETAINING_WALL = "unknown_retaining_wall", Failed, false, "Bu kimlikte ya da adda istinat duvarı yok.";
+    /// A warning: the wall's corridor changed since it was made or rebound (docs/adr/0909 §3).
+    RETAINING_WALL_STALE = "retaining_wall_stale", Warning, false, "İstinat duvarının koridoru değişti; duvarı denetleyip koridora yeniden bağlayın.";
+    /// A warning: the wall's stem is somewhere higher than the highest asked (docs/adr/0909 §3).
+    RETAINING_WALL_HIGH = "retaining_wall_high", Warning, false, "İstinat duvarının gövdesi istenen en yüksekten yüksek.";
     /// A warning: the profile lies farther from the drawn line than the tolerance (docs/adr/0908 §13).
     PROFILE_FIT_DEVIATION = "profile_fit_deviation", Warning, false, "Boykesit çizginin köşelerinden toleranstan uzak.";
     /// A warning: the corridor's superelevation schedule does not build; its lanes keep the templates' slopes.

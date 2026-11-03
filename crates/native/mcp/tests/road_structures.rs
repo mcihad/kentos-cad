@@ -63,3 +63,40 @@ fn culverts_are_asked_changed_drawn_and_removed() {
     assert_eq!(missing["isError"], true, "{missing}");
     assert!(missing.to_string().contains("unknown_culvert"), "{missing}");
 }
+
+#[test]
+fn retaining_walls_are_asked_changed_and_drawn() {
+    let mut server = Server::new();
+    let listed = server
+        .handle(&json!({"jsonrpc":"2.0","id":2,"method":"tools/list","params":{"_meta":meta()}}))
+        .unwrap();
+    let tools = listed["result"]["tools"].as_array().expect("tools");
+    let tool = |name: &str| tools.iter().find(|t| t["name"] == name).cloned().unwrap_or_default();
+    assert_eq!(tool("road.walls.query")["annotations"]["readOnlyHint"], true);
+    assert_eq!(tool("road.walls.edit")["annotations"]["destructiveHint"], true);
+
+    let cases: Value =
+        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/road.walls.edit.json")).expect("cases");
+    let snapshot = serde_json::from_value(cases["setup"].clone()).expect("the drawing reads");
+    let path = std::env::temp_dir().join(format!("kentos-road-walls-{}.kcad", std::process::id()));
+    std::fs::write(&path, kentos_kcad::encode(&snapshot).expect("encodes")).expect("writes");
+    let opened = call(&mut server, "drawing.open", json!({"path":path}));
+    let _ = std::fs::remove_file(&path);
+    assert_eq!(opened["isError"], false, "{opened}");
+    let drawing = opened["structuredContent"]["drawing"].clone();
+
+    let asked = call(&mut server, "road.walls.query", json!({"drawing":drawing,"wall":"d-1"}));
+    assert_eq!(asked["isError"], false, "{asked}");
+    let wall = &asked["structuredContent"]["output"]["walls"][0];
+    assert_eq!(wall["rows"].as_array().map(Vec::len), Some(5), "{asked}");
+    let concrete = wall["concrete"].as_f64().expect("concrete");
+
+    let wider = call(&mut server, "road.walls.edit", json!({"drawing":drawing,"operation":"set","wall":"d-1",
+        "shape":{"top":0.3,"batter":0.1,"footing":3.2,"base":0.5,"toe":0.8,"cover":0.6,"above":0.9}}));
+    assert_eq!(wider["isError"], false, "{wider}");
+    assert!(wider["structuredContent"]["output"]["wall"]["concrete"].as_f64().expect("concrete") > concrete, "{wider}");
+
+    let drawn = call(&mut server, "road.walls.draw", json!({"drawing":drawing,"wall":"d-1","layerId":"korkuluk","labels":true}));
+    assert_eq!(drawn["isError"], false, "{drawn}");
+    assert_eq!(drawn["structuredContent"]["output"]["uids"].as_array().map(Vec::len), Some(3), "{drawn}");
+}

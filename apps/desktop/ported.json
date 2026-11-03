@@ -420,6 +420,7 @@
     "profile.fromLine",
     "guardrail.editor",
     "culvert.editor",
+    "retainingWall.editor",
     "landxml.export",
     "landxml.importAlignments",
     "ifc.export",

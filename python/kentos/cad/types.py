@@ -1272,6 +1272,7 @@ class CreateOperation(_StrEnum):
     - ``slopePlan``: `road.corridors.draw` (plan/road.md Y7): a corridor's slope plan, “Şevli plan”.
     - ``guardrails``: `road.guardrails.draw` (plan/road.md Y11.1): a guardrail's runs in plan, “Otokorkuluk çiz”.
     - ``culverts``: `road.culverts.draw` (plan/road.md Y11.2): a culvert's barrel in plan, “Menfez çiz”.
+    - ``retainingWalls``: `road.walls.draw` (plan/road.md Y11.3): a retaining wall's face and footing in plan, “İstinat duvarı çiz”.
     """
     PARALLEL = "parallel"
     PERPENDICULAR_IN = "perpendicularIn"
@@ -1316,9 +1317,10 @@ class CreateOperation(_StrEnum):
     SLOPE_PLAN = "slopePlan"
     GUARDRAILS = "guardrails"
     CULVERTS = "culverts"
+    RETAINING_WALLS = "retainingWalls"
 
 
-CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions", "terrainContours", "landXml", "alignmentLabels", "profileDrawing", "sectionDrawing", "slopePlan", "guardrails", "culverts"]
+CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions", "terrainContours", "landXml", "alignmentLabels", "profileDrawing", "sectionDrawing", "slopePlan", "guardrails", "culverts", "retainingWalls"]
 """The names of :class:`CreateOperation`, for a plain string."""
 
 
@@ -6949,6 +6951,16 @@ class WallReference(_StrEnum):
 
 WallReferenceName = Literal["path", "center", "leftFace", "rightFace", "coreLeft", "coreRight"]
 """The names of :class:`WallReference`, for a plain string."""
+
+
+class WallSide(_StrEnum):
+    """A corridor's side a wall stands on."""
+    LEFT = "left"
+    RIGHT = "right"
+
+
+WallSideName = Literal["left", "right"]
+"""The names of :class:`WallSide`, for a plain string."""
 
 
 class WallsFromMode(_StrEnum):
@@ -62026,6 +62038,444 @@ class ReportItem(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class RetainingWallDef(_Model):
+    """A retaining wall along a corridor's side (docs/adr/0909 §3): its corridor and that corridor's revision it was made
+    from, its side and stations, the step it is read at, its cross, the highest stem asked (a warning, not a refusal) and
+    its material (typed, kept).
+    Attributes:
+        from_: Unit: m.
+        to: Unit: m.
+        step: Unit: m.
+        corridor_revision: Unit: version.
+        highest: Unit: m.
+        revision: Unit: version.
+    """
+    id: str
+    name: str
+    corridor: str
+    side: WallSide | WallSideName
+    from_: float
+    to: float
+    step: float
+    shape: WallShapeDef
+    corridor_revision: int | Unset = UNSET
+    highest: float | None | Unset = UNSET
+    material: str | None | Unset = UNSET
+    revision: int | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["corridor"] = self.corridor
+        out["side"] = _enum_out(self.side)
+        out["from"] = float(self.from_)
+        out["to"] = float(self.to)
+        out["step"] = float(self.step)
+        out["shape"] = self.shape.to_json()
+        if self.corridor_revision is not UNSET:
+            out["corridorRevision"] = self.corridor_revision
+        if self.highest is not UNSET:
+            out["highest"] = None if self.highest is None else float(self.highest)
+        if self.material is not UNSET:
+            out["material"] = self.material
+        if self.revision is not UNSET:
+            out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RetainingWallDef:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            corridor=data["corridor"],
+            side=_enum_in(WallSide, data["side"]),
+            from_=float(data["from"]),
+            to=float(data["to"]),
+            step=float(data["step"]),
+            shape=WallShapeDef.from_json(data["shape"]),
+            corridor_revision=data.get("corridorRevision", UNSET),
+            highest=UNSET if "highest" not in data else None if data["highest"] is None else float(data["highest"]),
+            material=data.get("material", UNSET),
+            revision=data.get("revision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RetainingWallListed(_Model):
+    """A wall in the project's list.
+    Attributes:
+        from_: Unit: m.
+        to: Unit: m.
+        revision: Unit: version.
+    """
+    id: str
+    name: str
+    corridor: str
+    side: WallSide | WallSideName
+    from_: float
+    to: float
+    revision: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["corridor"] = self.corridor
+        out["side"] = _enum_out(self.side)
+        out["from"] = float(self.from_)
+        out["to"] = float(self.to)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RetainingWallListed:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            corridor=data["corridor"],
+            side=_enum_in(WallSide, data["side"]),
+            from_=float(data["from"]),
+            to=float(data["to"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RetainingWallReport(_Model):
+    """A wall as read now: its names, whether its corridor changed since (`stale`), its side and stations, its rows, its
+    plan length along its face, its stem's face area, its concrete, and its highest stem and that stem's station.
+    Attributes:
+        revision: Unit: version.
+        from_: Unit: m.
+        to: Unit: m.
+        length: Unit: m.
+        face: Unit: area.
+        concrete: Unit: volume.
+        highest: Unit: m.
+        highest_at: Unit: m.
+    """
+    id: str
+    name: str
+    corridor: str
+    revision: int
+    stale: bool
+    side: WallSide | WallSideName
+    from_: float
+    to: float
+    rows: list[RetainingWallRow]
+    length: float
+    face: float
+    concrete: float
+    highest: float
+    highest_at: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["corridor"] = self.corridor
+        out["revision"] = self.revision
+        out["stale"] = self.stale
+        out["side"] = _enum_out(self.side)
+        out["from"] = float(self.from_)
+        out["to"] = float(self.to)
+        out["rows"] = [e0.to_json() for e0 in self.rows]
+        out["length"] = float(self.length)
+        out["face"] = float(self.face)
+        out["concrete"] = float(self.concrete)
+        out["highest"] = float(self.highest)
+        out["highestAt"] = float(self.highest_at)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RetainingWallReport:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            corridor=data["corridor"],
+            revision=data["revision"],
+            stale=data["stale"],
+            side=_enum_in(WallSide, data["side"]),
+            from_=float(data["from"]),
+            to=float(data["to"]),
+            rows=[RetainingWallRow.from_json(e0) for e0 in data["rows"]],
+            length=float(data["length"]),
+            face=float(data["face"]),
+            concrete=float(data["concrete"]),
+            highest=float(data["highest"]),
+            highest_at=float(data["highestAt"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RetainingWallRow(_Model):
+    """A wall at a station: its km, its face's offset (right positive) and plan place, the road's edge and the ground
+    there, its stem's top, its footing's top, its stem's height, its cross's concrete area and whether it holds a fill.
+    Attributes:
+        station: Unit: m.
+        offset: Unit: m.
+        x: Unit: length.
+        y: Unit: length.
+        road: Unit: elevation.
+        ground: Unit: elevation.
+        top: Unit: elevation.
+        footing: Unit: elevation.
+        height: Unit: m.
+        area: Unit: area.
+    """
+    station: float
+    km_text: str
+    offset: float
+    x: float
+    y: float
+    road: float
+    ground: float
+    top: float
+    footing: float
+    height: float
+    area: float
+    fill: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["station"] = float(self.station)
+        out["kmText"] = self.km_text
+        out["offset"] = float(self.offset)
+        out["x"] = float(self.x)
+        out["y"] = float(self.y)
+        out["road"] = float(self.road)
+        out["ground"] = float(self.ground)
+        out["top"] = float(self.top)
+        out["footing"] = float(self.footing)
+        out["height"] = float(self.height)
+        out["area"] = float(self.area)
+        out["fill"] = self.fill
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RetainingWallRow:
+        return cls(
+            station=float(data["station"]),
+            km_text=data["kmText"],
+            offset=float(data["offset"]),
+            x=float(data["x"]),
+            y=float(data["y"]),
+            road=float(data["road"]),
+            ground=float(data["ground"]),
+            top=float(data["top"]),
+            footing=float(data["footing"]),
+            height=float(data["height"]),
+            area=float(data["area"]),
+            fill=data["fill"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RetainingWallsDraw(_Model):
+    """Input of `road.walls.draw` v1: the wall drawn on `layerId`: its face along its stations and its footing's outline;
+    with `labels` a text at its middle saying its km range and highest stem.
+
+    Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `unknown_retaining_wall`,
+    `invalid_retaining_wall`, `layer_not_found`, `not_a_layer`, `layer_locked`. Warnings: `layer_hidden`, and the read's.
+    """
+    wall: str
+    layer_id: str
+    expected_revision: str | None | Unset = UNSET
+    labels: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["wall"] = self.wall
+        out["layerId"] = self.layer_id
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.labels is not UNSET:
+            out["labels"] = self.labels
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RetainingWallsDraw:
+        return cls(
+            wall=data["wall"],
+            layer_id=data["layerId"],
+            expected_revision=data.get("expectedRevision", UNSET),
+            labels=data.get("labels", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RetainingWallsDrawn(_Model):
+    """Output of `road.walls.draw` v1, and its plan: the wall, its length and the objects written (in the plan, none).
+    Attributes:
+        length: Unit: m.
+    """
+    wall: str
+    length: float
+    uids: list[str]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["wall"] = self.wall
+        out["length"] = float(self.length)
+        out["uids"] = list(self.uids)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RetainingWallsDrawn:
+        return cls(
+            wall=data["wall"],
+            length=float(data["length"]),
+            uids=list(data["uids"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RetainingWallsEdit(_Model):
+    """Input of `road.walls.edit` v1: the wall by its id or name (absent: a new one). A new one needs `name`, `corridor`,
+    `side`, `from`, `to`, `step` and `shape`. Rebind takes the corridor's present revision. `highest` and `material`
+    null take them off.
+
+    Refusals, in this order: `not_a_road_project`, `unknown_retaining_wall` (rebind or remove one not in the project),
+    `unknown_corridor`, `invalid_retaining_wall` (a new one without its fields, set with nothing to set, the definition by
+    `road_problem`: stations out of order, a step, sizes or batter out of bounds, a toe and stem wider than the footing;
+    stations off the corridor or without a section, no ground under the face, a corridor that does not build),
+    `invalid_revision`, `revision_conflict`.
+    Attributes:
+        from_: Unit: m.
+        highest: The highest stem asked; null takes it off. Unit: m.
+        material: The wall's material; null takes it off.
+        step: Unit: m.
+        to: Unit: m.
+    """
+    operation: RoadEditOperation | RoadEditOperationName
+    corridor: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    from_: float | None | Unset = UNSET
+    highest: float | None | Unset = UNSET
+    material: str | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    shape: WallShapeDef | None | Unset = UNSET
+    side: WallSide | WallSideName | None | Unset = UNSET
+    step: float | None | Unset = UNSET
+    to: float | None | Unset = UNSET
+    wall: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = _enum_out(self.operation)
+        if self.corridor is not UNSET:
+            out["corridor"] = self.corridor
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.from_ is not UNSET:
+            out["from"] = None if self.from_ is None else float(self.from_)
+        if self.highest is not UNSET:
+            out["highest"] = None if self.highest is None else float(self.highest)
+        if self.material is not UNSET:
+            out["material"] = self.material
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.shape is not UNSET:
+            out["shape"] = None if self.shape is None else self.shape.to_json()
+        if self.side is not UNSET:
+            out["side"] = None if self.side is None else _enum_out(self.side)
+        if self.step is not UNSET:
+            out["step"] = None if self.step is None else float(self.step)
+        if self.to is not UNSET:
+            out["to"] = None if self.to is None else float(self.to)
+        if self.wall is not UNSET:
+            out["wall"] = self.wall
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RetainingWallsEdit:
+        return cls(
+            operation=_enum_in(RoadEditOperation, data["operation"]),
+            corridor=data.get("corridor", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            from_=UNSET if "from" not in data else None if data["from"] is None else float(data["from"]),
+            highest=UNSET if "highest" not in data else None if data["highest"] is None else float(data["highest"]),
+            material=data.get("material", UNSET),
+            name=data.get("name", UNSET),
+            shape=UNSET if "shape" not in data else None if data["shape"] is None else WallShapeDef.from_json(data["shape"]),
+            side=UNSET if "side" not in data else None if data["side"] is None else _enum_in(WallSide, data["side"]),
+            step=UNSET if "step" not in data else None if data["step"] is None else float(data["step"]),
+            to=UNSET if "to" not in data else None if data["to"] is None else float(data["to"]),
+            wall=data.get("wall", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RetainingWallsQueried(_Model):
+    """Output of `road.walls.query` v1: the walls read (one that does not read with no rows: `length` 0)."""
+    walls: list[RetainingWallReport]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["walls"] = [e0.to_json() for e0 in self.walls]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RetainingWallsQueried:
+        return cls(
+            walls=[RetainingWallReport.from_json(e0) for e0 in data["walls"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RetainingWallsQuery(_Model):
+    """Input of `road.walls.query` v1: every wall read, or one (`wall`: its id or name).
+
+    Refusals: `not_a_road_project`, `unknown_retaining_wall`, `invalid_retaining_wall` (the one asked does not read). Warnings:
+    `retaining_wall_stale`, `retaining_wall_high`, and the corridor's own.
+    """
+    wall: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.wall is not UNSET:
+            out["wall"] = self.wall
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RetainingWallsQuery:
+        return cls(
+            wall=data.get("wall", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RetainingWallsWritten(_Model):
+    """Output of `road.walls.edit` v1.
+    Attributes:
+        wall: The wall written, read; absent when removed.
+    """
+    walls: list[RetainingWallListed]
+    revision: str
+    wall: RetainingWallReport | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["walls"] = [e0.to_json() for e0 in self.walls]
+        out["revision"] = self.revision
+        if self.wall is not UNSET:
+            out["wall"] = None if self.wall is None else self.wall.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RetainingWallsWritten:
+        return cls(
+            walls=[RetainingWallListed.from_json(e0) for e0 in data["walls"]],
+            revision=data["revision"],
+            wall=UNSET if "wall" not in data else None if data["wall"] is None else RetainingWallReport.from_json(data["wall"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class RevcloudCreate(_Model):
     """`cad.revcloud.create`'s input (Revizyon bulutu): the ring of `frame`, counter-clockwise, each side divided into
     chords of about `arc` (`max(1, round(side / arc))` of them, equal), every chord an outward arc of bulge 0.5; written
@@ -62323,6 +62773,7 @@ class RoadSettings(_Model):
         surfaces: The terrain surfaces, in the order the project tree shows them.
         templates: The templates (docs/adr/0903 §3), in the order the project tree shows them.
         volumes: The earthwork volumes (docs/adr/0906), each of a corridor, in the order the project tree shows them.
+        walls: The retaining walls (docs/adr/0909 §3), each along a corridor's side.
     """
     alignments: list[AlignmentDef] | Unset = UNSET
     corridors: list[CorridorDef] | Unset = UNSET
@@ -62336,6 +62787,7 @@ class RoadSettings(_Model):
     surfaces: list[TerrainSurfaceDef] | Unset = UNSET
     templates: list[TemplateDef] | Unset = UNSET
     volumes: list[VolumeDef] | Unset = UNSET
+    walls: list[RetainingWallDef] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -62363,6 +62815,8 @@ class RoadSettings(_Model):
             out["templates"] = [e0.to_json() for e0 in self.templates]
         if self.volumes is not UNSET:
             out["volumes"] = [e0.to_json() for e0 in self.volumes]
+        if self.walls is not UNSET:
+            out["walls"] = [e0.to_json() for e0 in self.walls]
         return out
 
     @classmethod
@@ -62380,6 +62834,7 @@ class RoadSettings(_Model):
             surfaces=[TerrainSurfaceDef.from_json(e0) for e0 in data["surfaces"]] if "surfaces" in data else UNSET,
             templates=[TemplateDef.from_json(e0) for e0 in data["templates"]] if "templates" in data else UNSET,
             volumes=[VolumeDef.from_json(e0) for e0 in data["volumes"]] if "volumes" in data else UNSET,
+            walls=[RetainingWallDef.from_json(e0) for e0 in data["walls"]] if "walls" in data else UNSET,
         )
 
 
@@ -79024,6 +79479,55 @@ class WallRow(_Model):
             pockets_volume=UNSET if "pocketsVolume" not in data else None if data["pocketsVolume"] is None else float(data["pocketsVolume"]),
             style=data.get("style", UNSET),
             volume=UNSET if "volume" not in data else None if data["volume"] is None else float(data["volume"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WallShapeDef(_Model):
+    """A retaining wall's cross (docs/adr/0909 §3): the stem's top thickness and its batter (m/m), the footing's width,
+    thickness and toe, the ground over the footing and what stands above the higher of the road's edge and the ground.
+    Attributes:
+        top: Unit: m.
+        footing: Unit: m.
+        base: Unit: m.
+        above: Unit: m.
+        batter: Unit: 1.
+        cover: Unit: m.
+        toe: Unit: m.
+    """
+    top: float
+    footing: float
+    base: float
+    above: float | Unset = UNSET
+    batter: float | Unset = UNSET
+    cover: float | Unset = UNSET
+    toe: float | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["top"] = float(self.top)
+        out["footing"] = float(self.footing)
+        out["base"] = float(self.base)
+        if self.above is not UNSET:
+            out["above"] = float(self.above)
+        if self.batter is not UNSET:
+            out["batter"] = float(self.batter)
+        if self.cover is not UNSET:
+            out["cover"] = float(self.cover)
+        if self.toe is not UNSET:
+            out["toe"] = float(self.toe)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WallShapeDef:
+        return cls(
+            top=float(data["top"]),
+            footing=float(data["footing"]),
+            base=float(data["base"]),
+            above=float(data["above"]) if "above" in data else UNSET,
+            batter=float(data["batter"]) if "batter" in data else UNSET,
+            cover=float(data["cover"]) if "cover" in data else UNSET,
+            toe=float(data["toe"]) if "toe" in data else UNSET,
         )
 
 
@@ -101209,6 +101713,16 @@ __all__ = [
     "ResourceKindName",
     "RestoreHiddenDimensionSetEdit",
     "RestoreModulesOperation",
+    "RetainingWallDef",
+    "RetainingWallListed",
+    "RetainingWallReport",
+    "RetainingWallRow",
+    "RetainingWallsDraw",
+    "RetainingWallsDrawn",
+    "RetainingWallsEdit",
+    "RetainingWallsQueried",
+    "RetainingWallsQuery",
+    "RetainingWallsWritten",
     "RetargetViewMarksOperation",
     "RetireCodeMigrationStep",
     "RevcloudCreate",
@@ -101960,6 +102474,9 @@ __all__ = [
     "WallReference",
     "WallReferenceName",
     "WallRow",
+    "WallShapeDef",
+    "WallSide",
+    "WallSideName",
     "WallStyleDef",
     "WallStyleMaterialTarget",
     "WallsCreate",

@@ -19,6 +19,7 @@ from . import superelevations
 from . import templates
 from . import terrains
 from . import volumes
+from . import walls
 
 
-__all__ = ["alignments", "corridors", "culverts", "guardrails", "hauls", "profiles", "sections", "sheets", "stakeout", "superelevations", "templates", "terrains", "volumes"]
+__all__ = ["alignments", "corridors", "culverts", "guardrails", "hauls", "profiles", "sections", "sheets", "stakeout", "superelevations", "templates", "terrains", "volumes", "walls"]

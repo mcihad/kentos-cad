@@ -7565,6 +7565,84 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::ROAD_WALLS_EDIT.into(),
+            version: crate::ROAD_WALLS_EDIT_VERSION,
+            title: "İstinat duvarını düzenle".into(),
+            summary: "Yol projesinin istinat duvarını (wall: kimliği ya da adı; yoksa yeni) yazar, koridoruna yeniden bağlar ya da kaldırır. Duvar bir koridorun (corridor) bir yanında (side: left ya da right) from ile to km'leri (aksın istasyonları) arasında yolun şev başında şevin yerine duran konsol duvardır; step her kaç metrede okunduğu (aralığın uçları da). shape: top gövdenin üst kalınlığı, batter gövdenin metrede genişlemesi (arka yüzün eğimi), footing temelin genişliği, base kalınlığı, toe yüzün önüne taşan temel, cover temelin üstündeki zemin, above yol kenarı ile zeminin yükseğinin üstünde kalan (korkuluk payı). Her km'de duvarın üstü yol kenarı ile yüzün altındaki zeminin yükseği artı above, temelin üstü alçağı eksi cover. highest istenen en yüksek gövde (aşılırsa uyarı), material tipli öznitelik. Ölçüler projenin; KentOS öntanımlı ölçü vermez. null highest ve material'ı kaldırır. \
+                      Yeni duvarın kimliği verilen ya da ilk boş d-n; rebind koridorun bugünkü sürümünü alır. Tek geri alma adımı “İstinat duvarı”. Retler: not_a_road_project, unknown_retaining_wall, unknown_corridor, invalid_retaining_wall, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["istinat".into(), "retainingwall".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::RetainingWallsEdit>(),
+            output: schema::<crate::RetainingWallsWritten>(),
+            plan: Some(schema::<crate::RetainingWallsWritten>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana koridorun sağında 100 m duvar".into(),
+                input: json!({ "operation": "set", "name": "Sağ istinat", "corridor": "Ana koridor", "side": "right",
+                    "from": 300.0, "to": 400.0, "step": 10.0,
+                    "shape": { "top": 0.3, "batter": 0.1, "footing": 2.4, "base": 0.5, "toe": 0.6, "cover": 0.6, "above": 0.9 },
+                    "highest": 6.0 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_WALLS_QUERY.into(),
+            version: crate::ROAD_WALLS_QUERY_VERSION,
+            title: "İstinat duvarını sorgula".into(),
+            summary: "Yol projesinin istinat duvarlarını bugün okur; hiçbir şey yazmaz. Her biri için her km'de (rows) km yazısı, yüzün ötelemesi (sağa artı) ve plandaki yeri, yol kenarının ve altındaki zeminin kotu, gövdenin üstü, temelin üstü, gövde yüksekliği, kesitin beton alanı ve dolgu tutup tutmadığı; boyunca yüz boyunca plan boyu, gövde yüzü alanı, beton hacmi (ortalama alan), en yüksek gövde ve km'si. Okunamayan duvar listede boy 0 ile gelir; tek sorulursa invalid_retaining_wall. \
+                      Uyarılar: retaining_wall_stale, retaining_wall_high ve koridorun kendi uyarıları. Retler: not_a_road_project, unknown_retaining_wall, invalid_retaining_wall."
+                .into(),
+            aliases: vec!["istinatsor".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::RetainingWallsQuery>(),
+            output: schema::<crate::RetainingWallsQueried>(),
+            plan: Some(schema::<crate::RetainingWallsQueried>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bütün istinat duvarları".into(),
+                input: json!({}),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_WALLS_DRAW.into(),
+            version: crate::ROAD_WALLS_DRAW_VERSION,
+            title: "İstinat duvarı çiz".into(),
+            summary: "İstinat duvarını planda layerId katmanına çizer: km'lerdeki yüz yerlerinden geçen açık çoklu çizgi ve temelin ön ve arka kenarlarıyla kapalı dış çizgisi; labels ile ortasında km aralığı ve en yüksek gövde. Tek geri alma adımı “İstinat duvarı çiz”. \
+                      Uyarılar: layer_hidden ve okumanın uyarıları. Retler: invalid_revision, revision_conflict, not_a_road_project, unknown_retaining_wall, invalid_retaining_wall, layer_not_found, not_a_layer, layer_locked."
+                .into(),
+            aliases: vec!["istinatciz".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::RetainingWallsDraw>(),
+            output: schema::<crate::RetainingWallsDrawn>(),
+            plan: Some(schema::<crate::RetainingWallsDrawn>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Duvar yazısıyla".into(),
+                input: json!({ "wall": "d-1", "layerId": "duvar", "labels": true }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::FILE_EXPORT_LANDXML.into(),
             version: crate::FILE_EXPORT_LANDXML_VERSION,
             title: "LandXML dışa aktar".into(),
@@ -13454,6 +13532,15 @@ mod tests {
                     crate::ROAD_CULVERTS_DRAW => {
                         serde_json::from_value::<crate::CulvertsDraw>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_WALLS_EDIT => {
+                        serde_json::from_value::<crate::RetainingWallsEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_WALLS_QUERY => {
+                        serde_json::from_value::<crate::RetainingWallsQuery>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_WALLS_DRAW => {
+                        serde_json::from_value::<crate::RetainingWallsDraw>(e.input.clone()).map(|_| ())
+                    }
                     crate::ROAD_STAKEOUT_QUERY => {
                         serde_json::from_value::<crate::StakeoutQuery>(e.input.clone()).map(|_| ())
                     }
@@ -14223,6 +14310,15 @@ mod tests {
                         }
                         crate::ROAD_CULVERTS_DRAW => {
                             serde_json::from_value::<crate::CulvertsDrawn>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_WALLS_EDIT => {
+                            serde_json::from_value::<crate::RetainingWallsWritten>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_WALLS_QUERY => {
+                            serde_json::from_value::<crate::RetainingWallsQueried>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_WALLS_DRAW => {
+                            serde_json::from_value::<crate::RetainingWallsDrawn>(output.clone()).map(|_| ())
                         }
                         crate::ROAD_STAKEOUT_QUERY => {
                             serde_json::from_value::<crate::StakeoutQueried>(output.clone()).map(|_| ())

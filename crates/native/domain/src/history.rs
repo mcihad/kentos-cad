@@ -375,6 +375,11 @@ pub(crate) enum Op {
         before: Vec<kentos_contracts::CulvertDef>,
         after: Vec<kentos_contracts::CulvertDef>,
     },
+    /// A road project's retaining walls (docs/adr/0909 §3), before and after.
+    RoadWalls {
+        before: Vec<kentos_contracts::RetainingWallDef>,
+        after: Vec<kentos_contracts::RetainingWallDef>,
+    },
     /// The project's room modules (docs/adr/0775), before and after: a setting, written in the step with the objects
     /// placed or updated, so undo gives both back.
     ArchModules {
@@ -739,6 +744,10 @@ impl Op {
                 after: before.clone(),
             },
             Op::RoadCulverts { before, after } => Op::RoadCulverts {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::RoadWalls { before, after } => Op::RoadWalls {
                 before: after.clone(),
                 after: before.clone(),
             },
@@ -1399,6 +1408,7 @@ impl Document {
                 | Op::RoadSheetSets { .. }
                 | Op::RoadGuardrails { .. }
                 | Op::RoadCulverts { .. }
+                | Op::RoadWalls { .. }
                 | Op::ViewArea { .. }
                 | Op::ArchOptions { .. }
                 | Op::OptionCombos { .. }
@@ -1770,6 +1780,12 @@ impl Document {
             Op::RoadCulverts { after, .. } => {
                 let mut road = self.settings.road.take().unwrap_or_default();
                 road.culverts = after.clone();
+                self.settings.road = (!road.is_empty()).then_some(road);
+                return;
+            }
+            Op::RoadWalls { after, .. } => {
+                let mut road = self.settings.road.take().unwrap_or_default();
+                road.walls = after.clone();
                 self.settings.road = (!road.is_empty()).then_some(road);
                 return;
             }

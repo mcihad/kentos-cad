@@ -9760,6 +9760,30 @@ class _Schema:
                 self.fail("bad_value", "menfezin açısı, eğimi, uzatması, örtüsü ya da pürüzlülüğü kuralın dışında")
             return t
 
+        def wall(x):
+            # Docs/adr/0909 §3: a retaining wall along a corridor's side, a cantilever cross of the project's sizes.
+            def shape(y):
+                s = self.fields({"top": (finite, True), "batter": (finite, False), "footing": (finite, True),
+                                 "base": (finite, True), "toe": (finite, False), "cover": (finite, False),
+                                 "above": (finite, False)})(y)
+                if any(not 0 < s[k] <= 100 for k in ("top", "footing", "base")) or not 0 <= s.get("batter", 0) <= 10 \
+                        or any(not 0 <= s.get(k, 0) <= 100 for k in ("toe", "cover", "above")) \
+                        or s.get("toe", 0) + s["top"] > s["footing"] + 1e-9:
+                    self.fail("bad_value", "istinat duvarının ölçüleri kuralın dışında")
+                return s
+            t = self.fields({"id": (word, True), "name": (self.text, True), "corridor": (word, True),
+                             "corridorRevision": (self.uint(32), False), "revision": (self.uint(32), False),
+                             "side": (self.enum(("left", "right")), True), "from": (finite, True), "to": (finite, True),
+                             "step": (finite, True), "shape": (shape, True), "highest": (finite, False),
+                             "material": (self.text, False)})(x)
+            name = t["name"]
+            if not name or name.strip() != name or len(name) > 120:
+                self.fail("bad_value", "istinat duvarının adı boş, boşluklu ya da çok uzun")
+            if not t["from"] < t["to"] or not 0 < t["step"] <= 1000 or (t["to"] - t["from"]) / t["step"] > 5000 \
+                    or not 0 < t.get("highest", 1) <= 100:
+                self.fail("bad_value", "istinat duvarının km'leri, okuma aralığı ya da en yükseği kuralın dışında")
+            return t
+
         r = self.fields({"surfaces": (self.array(surface), False), "alignments": (self.array(alignment), False),
                          "profiles": (self.array(profile), False), "templates": (self.array(template), False),
                          "sections": (self.array(section_set), False),
@@ -9768,7 +9792,8 @@ class _Schema:
                          "volumes": (self.array(volume), False), "hauls": (self.array(haul), False),
                          "sheetSets": (self.array(sheet_set), False),
                          "guardrails": (self.array(guardrail), False),
-                         "culverts": (self.array(culvert), False)})(v)
+                         "culverts": (self.array(culvert), False),
+                         "walls": (self.array(wall), False)})(v)
         got = r.get("surfaces", [])
         lines = r.get("alignments", [])
         profiles = r.get("profiles", [])
@@ -9781,8 +9806,9 @@ class _Schema:
         sheet_sets = r.get("sheetSets", [])
         guardrails = r.get("guardrails", [])
         culverts = r.get("culverts", [])
+        walls = r.get("walls", [])
         if not (got or lines or profiles or templates or sets or supers or corridors or volumes or hauls or sheet_sets
-                or guardrails or culverts):
+                or guardrails or culverts or walls):
             self.fail("bad_value", "boş yol ayarı yazılmaz")
         if len(got) > 64 or ("surfaces" in r and not got):
             self.fail("bad_value", "yol ayarında 1 ile 64 arası yüzey olur")
@@ -9889,6 +9915,12 @@ class _Schema:
             self.fail("bad_value", "iki menfezin kimliği ya da adı aynı")
         if any(all(y["id"] != x["corridor"] for y in corridors) for x in culverts):
             self.fail("bad_value", "menfezin koridoru projede yok")
+        if "walls" in r and not walls or len(walls) > 1000:
+            self.fail("bad_value", "yol ayarında 1 ile 1000 arası istinat duvarı olur")
+        if len({x["id"] for x in walls}) != len(walls) or len({x["name"].lower() for x in walls}) != len(walls):
+            self.fail("bad_value", "iki istinat duvarının kimliği ya da adı aynı")
+        if any(all(y["id"] != x["corridor"] for y in corridors) for x in walls):
+            self.fail("bad_value", "istinat duvarının koridoru projede yok")
         return r
 
     def arch_(self, v):

@@ -16,6 +16,11 @@ Tarih: 2026-11-03. plan/road.md Y11 (ROAD-DRAIN-01, 02, 11; ROAD-JUNC-12). Durum
 - **Türkiye:** KGM'nin *Karayolu Tasarım El Kitabı* ve otokorkuluk standardı (TS EN 1317) ücretli basılı
   yayınlardır; ikincil kaynaktan sınır değeri alınmaz (plan/road.md ROAD-DEC-01). KentOS kuralın biçimini verir,
   sayılarını kurum girer; kuralın kaynağı zorunludur.
+- **İstinat duvarı:** Autodesk Civil 3D'nin RetainWallTapered alt montajı
+  ([Subassembly Reference](https://help.autodesk.com/cloudhelp/2025/ENU/Civil3D-Subassembly-Ref/files/GUID-AB42AE09-E74B-4348-B5FA-7209AB33EB34.htm))
+  duvar yüksekliğini temelin üstünden zeminin ya da bağlantı noktasının yüksek olanına ölçer; temel örtüsü (temelin
+  üstünden bitmiş zemine), temel eni ve gövde eğimi parametredir. KentOS aynı ölçme biçimini alır, ölçüleri vermez:
+  gövde, temel ve örtü projenindir; temel enini yüksekliğe bağlayan kural (Civil 3D'nin örneği) yoktur.
 
 ## Karar
 
@@ -52,6 +57,22 @@ Tarih: 2026-11-03. plan/road.md Y11 (ROAD-DRAIN-01, 02, 11; ROAD-JUNC-12). Durum
    Komutlar `road.culverts.edit` (tek adım “Menfez”), `road.culverts.query`, `road.culverts.draw` (planda gövdenin
    iki dış kenarı, ekseni ve uçları; `labels` ile km, kesit ve boy).
 
+3. **İstinat duvarı (ROAD-DRAIN-11).** İstinat duvarı yol ayarlarında `walls[]`'tır: bir koridorun bir yanında
+   (`side`) `from` ile `to` km'leri arasında yolun şev başında şevin yerine duran konsol duvar; kimliği, koridoru ve
+   koridorun sürümü (koridor değişince `retaining_wall_stale`), `step` (her kaç metrede okunduğu; aralığın uçları da),
+   kesit `shape` (`top` gövdenin üst kalınlığı, `batter` metrede genişlemesi, `footing` temelin eni, `base`
+   kalınlığı, `toe` yüzün önüne taşan temel, `cover` temelin üstündeki zemin, `above` korkuluk payı), isteğe bağlı
+   `highest` (istenen en yüksek gövde; aşılırsa `retaining_wall_high`) ve `material`. Her km'de yanın şev başı (yol
+   kenarı) ile kesit çizgisindeki zemin, şev başının ötelemesinde (kesit çizgisinin zemin noktaları arasında
+   doğrusal) okunur; duvarın üstü ikisinin yükseği artı `above`, temelin üstü alçağı eksi `cover`, gövde yüksekliği
+   aradaki; yol kenarı zeminden yüksekse duvar dolgu tutar, yüz yoldan dışa bakar, değilse yarmayı tutar, yüz yola
+   bakar. Kesitin beton alanı gövdenin yamuğu (üstte `top`, altta `top + batter × H`) artı temelin dikdörtgenidir.
+   Boyunca: yüzün plan boyu, gövde yüzü alanı (her aralığın boyu × yüksekliklerin ortalaması), beton (boy × alanların
+   ortalaması); en yüksek gövde ve km'si. Kesitsiz km, zeminsiz yüz ret. Komutlar `road.walls.edit` (tek adım
+   “İstinat duvarı”), `road.walls.query`, `road.walls.draw` (planda km'lerdeki yüz yerlerinden açık çizgi ve temelin
+   ön ve arka kenarlarıyla kapalı dış çizgi; `labels` ile km aralığı ve en yüksek gövde). Kodlar `cad.walls`'ınkilerle
+   çakışmasın diye `invalid_retaining_wall`, `unknown_retaining_wall`.
+
 ## Aşamalar
 
 Y11.1 (yapıldı, otokorkuluk): `road.guardrails.edit` 29, `.query` 20, `.draw` 21 ortak durum
@@ -68,6 +89,14 @@ yazılıp açılır; örnek `road-work.kcad`'in koridoru şev buluşturmadığı
 Masaüstünde Koridor › Yapılar › Menfez: ölçüler yazıldıkça gövde boyuna kesitte (yükseklikler en çok beş kat), uçların
 ötelemesi, yeri ve akış kotu; Kaydet, Sil, Planda çiz. Menfezin bağlı kesite ve metraja eskitme olarak işlenmesi ve
 palye hendeği §4 ve sonraya.
+
+Y11.3 (yapıldı, istinat duvarı): `road.walls.edit` 30, `.query` 20, `.draw` 21 ortak durum (`road_wall_cases.py`; kesit
+ve kesit çizgisindeki zemin road_section_command_cases.py'nin, yerler road_alignment_cases.py'nin başvurusundan, duvar
+§3'ten; KentOS kodu yok; ölçüler durumlarındır). Çekirdek `kentos_road::wall`, KCAD şema 161'in `walls`'ı bağımsız
+okuyucuda (`broken/road-wall-toe-past-footing.kcad`). Python, MCP (`tests/road_structures.rs`), masaüstünde Koridor ›
+Yapılar › İstinat: ölçüler yazıldıkça boyuna görünüş (yol kenarı, zemin, duvarın üstü ve temeli), km'lerin tablosu
+(dolgu ya da yarma, kotlar, gövde, alan), boy, gövde yüzü, beton; Kaydet, Sil, Planda çiz. Duvarın kesite işlenmesi
+(şevin yerine), iksa ve gabion türleri sonraya.
 
 ## Sonra
 
