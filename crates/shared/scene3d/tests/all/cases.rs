@@ -211,3 +211,63 @@ fn the_chunk_cases() {
         }
     }
 }
+
+/// The picks: a view of a terrain and a road at TM coordinates, exaggerated; each pixel's ray meets, among the tiles
+/// drawn, the source triangle the brute force says, at its point within a micrometre, or nothing.
+#[test]
+fn the_pick_cases() {
+    use kentos_scene3d::pick;
+    let all = cases();
+    for c in all["picks"].as_array().unwrap() {
+        let name = c["name"].as_str().unwrap();
+        let owned: Vec<Owned> = c["meshes"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|m| {
+                let vs = m["vertices"].as_array().unwrap().iter().map(v3).collect();
+                let ts = m["triangles"].as_array().unwrap().iter().map(|t| [0, 1, 2].map(|k| t[k].as_u64().unwrap() as u32)).collect();
+                (m["part"].as_u64().unwrap() as u32, vs, ts, m["smooth"].as_bool().unwrap_or(false))
+            })
+            .collect();
+        let meshes: Vec<SourceMesh> =
+            owned.iter().map(|(part, vs, ts, smooth)| SourceMesh { part: *part, vertices: vs, triangles: ts, smooth: *smooth }).collect();
+        let limits = Limits {
+            max_triangles: c["limits"]["maxTriangles"].as_u64().unwrap() as usize,
+            max_extent: f(&c["limits"]["maxExtent"]),
+        };
+        let chunked = chunk(&meshes, limits, 1);
+        let drawn = indices(&c["drawn"]);
+        let cam = camera(&c["camera"]);
+        let vp = viewport(&c["viewport"]);
+        let ex = exaggeration(&c["exaggeration"]);
+        let mut hits = 0;
+        for r in c["rays"].as_array().unwrap() {
+            let (o, d) = cam.ray(f(&r["pixel"][0]), f(&r["pixel"][1]), &vp);
+            let got = pick(
+                &chunked.hierarchy,
+                &drawn,
+                |id| chunked.contents.get((id - 1) as usize),
+                |m, t| {
+                    let (_, vs, ts, _) = &owned[m as usize];
+                    Some(ts[t as usize].map(|k| vs[k as usize]))
+                },
+                o,
+                d,
+                &ex,
+            );
+            match (got, r["hit"].as_object()) {
+                (None, None) => {}
+                (Some(h), Some(w)) => {
+                    hits += 1;
+                    assert_eq!((h.mesh, h.triangle), (w["mesh"].as_u64().unwrap() as u32, w["triangle"].as_u64().unwrap() as u32), "{name}: {}", r["pixel"]);
+                    for a in 0..3 {
+                        assert!((h.point[a] - f(&w["point"][a])).abs() < 1e-6, "{name}: {:?} vs {}", h.point, w["point"]);
+                    }
+                }
+                (g, w) => panic!("{name}: {} → {g:?}, not {w:?}", r["pixel"]),
+            }
+        }
+        assert!(hits > 10, "{name}: {hits} hits");
+    }
+}

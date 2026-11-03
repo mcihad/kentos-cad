@@ -84,6 +84,17 @@ pub struct Scene {
     bounds: Aabb,
     sources: usize,
     triangles: usize,
+    /// Each source mesh the tiles were cut from (their lineage's mesh index): what it is, its source's name, its
+    /// vertices (f64, the source's) and triangles; a pick meets these.
+    meshes: Vec<Picked3d>,
+}
+
+/// A source mesh a pick can meet: its part, its source's name, vertices and triangles.
+struct Picked3d {
+    part: u32,
+    name: String,
+    vertices: Arc<Vec<[f64; 3]>>,
+    triangles: Vec<[u32; 3]>,
 }
 
 impl fmt::Debug for Scene {
@@ -98,9 +109,12 @@ impl Scene {
     fn of(parts: &[road_scene::ScenePart], smooth: bool) -> Scene {
         // A corridor is cut by its triangles' roles: one source mesh a role, the vertices shared.
         let mut owned: Vec<Owned<'_>> = Vec::new();
+        let mut names: Vec<(String, Arc<Vec<[f64; 3]>>)> = Vec::new();
         for p in parts {
+            let shared = Arc::new(p.vertices.clone());
             if p.kind == SceneMeshKind::Terrain || p.roles.len() != p.triangles.len() {
                 owned.push((0, &p.vertices, p.triangles.clone(), smooth && p.kind == SceneMeshKind::Terrain));
+                names.push((p.name.clone(), shared));
                 continue;
             }
             let mut by: HashMap<u32, Vec<[u32; 3]>> = HashMap::new();
@@ -111,6 +125,7 @@ impl Scene {
             keys.sort_unstable();
             for k in keys {
                 owned.push((k, &p.vertices, by.remove(&k).unwrap_or_default(), false));
+                names.push((p.name.clone(), shared.clone()));
             }
         }
         let meshes: Vec<SourceMesh> =
@@ -118,12 +133,46 @@ impl Scene {
         let first = 1;
         let chunked = chunk(&meshes, Limits::default(), first);
         let bounds = chunked.hierarchy.roots.first().map_or(Aabb::EMPTY, |&r| chunked.hierarchy.tiles[r as usize].bounds);
-        Scene { chunked, first, bounds, sources: parts.len(), triangles: parts.iter().map(|p| p.triangles.len()).sum() }
+        let meshes = owned
+            .iter()
+            .zip(names)
+            .map(|((part, _, t, _), (name, vertices))| Picked3d { part: *part, name, vertices, triangles: t.clone() })
+            .collect();
+        Scene { chunked, first, bounds, sources: parts.len(), triangles: parts.iter().map(|p| p.triangles.len()).sum(), meshes }
+    }
+
+    /// The point a ray (in the shown space) meets first among the tiles `select` draws for `camera`: the source's
+    /// coordinates, its height real, and what it is on.
+    fn pick(&self, camera: &Camera, vp: &Viewport, ex: &Exaggeration, x: f64, y: f64) -> Option<Picked> {
+        let drawn = select(&self.chunked.hierarchy, camera, vp, ex, Settings { max_screen_error: MAX_SCREEN_ERROR }, |_| true).draw;
+        let (o, d) = camera.ray(x, y, vp);
+        let hit = kentos_scene3d::pick(
+            &self.chunked.hierarchy,
+            &drawn,
+            |id| self.content(id),
+            |m, t| {
+                let s = self.meshes.get(m as usize)?;
+                let tri = s.triangles.get(t as usize)?;
+                Some([s.vertices.get(tri[0] as usize).copied()?, s.vertices.get(tri[1] as usize).copied()?, s.vertices.get(tri[2] as usize).copied()?])
+            },
+            o,
+            d,
+            ex,
+        )?;
+        let s = &self.meshes[hit.mesh as usize];
+        Some(Picked { point: hit.point, what: format!("{} · {}", s.name, PARTS[s.part as usize].0) })
     }
 
     fn content(&self, id: u64) -> Option<&Content> {
         self.chunked.contents.get(id.checked_sub(self.first)? as usize)
     }
+}
+
+/// A point picked in the scene: the source's coordinates (height real) and what it is on.
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct Picked {
+    pub(crate) point: [f64; 3],
+    pub(crate) what: String,
 }
 
 /// What the last frame drew: tiles, triangles, contents waiting, bytes on the GPU (read by the tests; the window's line
@@ -153,6 +202,8 @@ pub struct Window {
     pub(crate) distance: f64,
     pub(crate) exaggeration: String,
     pub(crate) see_through: bool,
+    /// The point last picked, none before a click.
+    pub(crate) picked: Option<Picked>,
     pub(crate) seen: Arc<Mutex<Seen>>,
     pending: Arc<AtomicBool>,
 }
@@ -162,6 +213,8 @@ pub enum Event {
     Orbit(f32, f32),
     Pan(f32, f32),
     Dolly(f32),
+    /// A click at a place of the view (logical pixels from its top left) of a size.
+    Pick(f32, f32, f32, f32),
     View(usize),
     Fit,
     Exaggeration(String),
@@ -181,6 +234,14 @@ impl Window {
     /// The scene's triangles, as its sources have them.
     pub(crate) fn scene_triangles(&self) -> usize {
         self.scene.triangles
+    }
+
+    /// The middle of the `n`th triangle of a source mesh of `part` (its real height): a point the pictures click.
+    pub(crate) fn point_on(&self, part: u32, n: usize) -> Option<[f64; 3]> {
+        let m = self.scene.meshes.iter().find(|m| m.part == part)?;
+        let t = m.triangles.get(n.min(m.triangles.len().checked_sub(1)?))?;
+        let [a, b, c] = t.map(|k| m.vertices[k as usize]);
+        Some([(a[0] + b[0] + c[0]) / 3.0, (a[1] + b[1] + c[1]) / 3.0, (a[2] + b[2] + c[2]) / 3.0])
     }
 
     /// The parts its tiles carry.
@@ -246,6 +307,7 @@ impl App {
             distance: 1.0,
             exaggeration: "3".into(),
             see_through: false,
+            picked: None,
             seen: Arc::default(),
             pending: Arc::default(),
         };
@@ -271,6 +333,10 @@ impl App {
                 w.target[1] -= (right[1] * f64::from(dx) - ahead[1] * f64::from(dy)) * k;
             }
             Event::Dolly(steps) => w.distance = (w.distance * 0.85f64.powf(f64::from(steps))).clamp(1.0, 1.0e6),
+            Event::Pick(x, y, width, height) => {
+                let vp = Viewport { width: f64::from(width), height: f64::from(height) };
+                w.picked = w.scene.pick(&w.camera(), &vp, &w.exaggeration(), f64::from(x), f64::from(y));
+            }
             Event::View(i) => {
                 let (_, a, e) = VIEWS[i.min(VIEWS.len() - 1)];
                 w.fit(a, e);
@@ -345,7 +411,13 @@ impl App {
         // legend under it, the line and the buttons always at the dialog's foot.
         let sized = kentos_ui::widget::sizable::sizes::get(TITLE).is_some();
         let room = (self.window_size.height - typography::scaled(330.0)).clamp(typography::scaled(240.0), typography::scaled(520.0));
-        let view = container(shader(program).width(Fill).height(Fill))
+        let marker = iced::widget::canvas(Marker {
+            camera: w.camera(),
+            point: w.picked.as_ref().map(|p| w.exaggeration().shown(p.point)),
+        })
+        .width(Fill)
+        .height(Fill);
+        let view = container(iced::widget::stack![shader(program).width(Fill).height(Fill), marker])
             .padding(1)
             .width(Fill)
             .height(Fill)
@@ -368,6 +440,11 @@ impl App {
             });
             legend = legend.push(row![swatch, label::caption(name)].spacing(5).align_y(iced::alignment::Vertical::Center));
         }
+        legend = legend.push(space::horizontal().width(Fill));
+        legend = legend.push(match &w.picked {
+            Some(p) => label::caption(format!("Seçilen nokta: Y {:.3}  X {:.3}  Z {:.3} · {}", p.point[0], p.point[1], p.point[2], p.what)),
+            None => label::caption("Bir noktaya tıklayın: koordinatı ve neyin üstünde olduğu burada yazar.").style(muted),
+        });
         let area = container(Column::new().spacing(8).push(view).push(legend).height(Fill))
             .height(Fill)
             .max_height(if sized { f32::INFINITY } else { room + typography::scaled(26.0) });
@@ -432,9 +509,22 @@ struct Program {
 /// A drag in progress (where, whether it pans) and the view's key in the pipeline.
 pub struct State {
     view: u64,
-    drag: Option<(iced::Point, bool)>,
+    /// A press in progress: where the pointer was last, whether it pans, where it went down and whether it moved
+    /// past a click.
+    drag: Option<Press>,
     shift: bool,
 }
+
+#[derive(Clone, Copy)]
+struct Press {
+    last: iced::Point,
+    pan: bool,
+    down: iced::Point,
+    moved: bool,
+}
+
+/// A press that moves less than this (logical pixels) is a click: it picks.
+const CLICK: f32 = 3.0;
 
 static NEXT_VIEW: AtomicU64 = AtomicU64::new(1);
 
@@ -461,16 +551,27 @@ impl shader::Program<Message> for Program {
             }
             iced::Event::Mouse(mouse::Event::ButtonPressed(b @ (mouse::Button::Left | mouse::Button::Right))) => {
                 let at = cursor.position_in(bounds)?;
-                state.drag = Some((at, *b == mouse::Button::Right || state.shift));
+                state.drag = Some(Press { last: at, pan: *b == mouse::Button::Right || state.shift, down: at, moved: false });
                 Some(shader::Action::capture())
             }
-            iced::Event::Mouse(mouse::Event::ButtonReleased(_)) => state.drag.take().map(|_| shader::Action::capture()),
+            iced::Event::Mouse(mouse::Event::ButtonReleased(_)) => {
+                let p = state.drag.take()?;
+                if p.moved || p.pan {
+                    return Some(shader::Action::capture());
+                }
+                Some(shader::Action::publish(msg(Event::Pick(p.down.x, p.down.y, bounds.width, bounds.height))).and_capture())
+            }
             iced::Event::Mouse(mouse::Event::CursorMoved { position }) => {
-                let (from, pan) = state.drag?;
+                let mut p = state.drag?;
                 let at = iced::Point::new(position.x - bounds.x, position.y - bounds.y);
-                let (dx, dy) = (at.x - from.x, at.y - from.y);
-                state.drag = Some((at, pan));
-                let e = if pan { Event::Pan(dx, dy) } else { Event::Orbit(dx, dy) };
+                if !p.moved && (at.x - p.down.x).hypot(at.y - p.down.y) < CLICK {
+                    return Some(shader::Action::capture());
+                }
+                p.moved = true;
+                let (dx, dy) = (at.x - p.last.x, at.y - p.last.y);
+                p.last = at;
+                state.drag = Some(p);
+                let e = if p.pan { Event::Pan(dx, dy) } else { Event::Orbit(dx, dy) };
                 Some(shader::Action::publish(msg(e)).and_capture())
             }
             iced::Event::Mouse(mouse::Event::WheelScrolled { delta }) => {
@@ -640,3 +741,28 @@ impl shader::Primitive for Frame3d {
         r.render(&mut pass);
     }
 }
+
+/// The point picked, ringed where the camera shows it.
+struct Marker {
+    camera: Camera,
+    point: Option<[f64; 3]>,
+}
+
+impl iced::widget::canvas::Program<Message> for Marker {
+    type State = ();
+
+    fn draw(&self, _: &(), renderer: &iced::Renderer, theme: &Theme, bounds: Rectangle, _: mouse::Cursor) -> Vec<iced::widget::canvas::Geometry> {
+        use iced::widget::canvas::{Frame, Path, Stroke};
+        let Some(p) = self.point else { return Vec::new() };
+        let vp = Viewport { width: f64::from(bounds.width), height: f64::from(bounds.height) };
+        let Some((x, y, _)) = self.camera.project(p, &vp) else { return Vec::new() };
+        let mut frame = Frame::new(renderer, bounds.size());
+        let at = iced::Point::new(x as f32, y as f32);
+        let accent = Tokens::of(theme).accent;
+        frame.stroke(&Path::circle(at, 7.0), Stroke::default().with_color(Color::WHITE).with_width(4.0));
+        frame.stroke(&Path::circle(at, 7.0), Stroke::default().with_color(accent).with_width(2.0));
+        frame.fill(&Path::circle(at, 2.0), accent);
+        vec![frame.into_geometry()]
+    }
+}
+

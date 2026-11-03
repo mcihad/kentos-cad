@@ -147,6 +147,20 @@ Tarih: 2026-11-03. plan/road.md Y12 (ROAD-ALIGN-13; ROAD-JUNC; 3d.md bağlantıs
      altında, bilgi satırı ve düğmeler en altta (sahibin isteği); boyutsuz pencerede uygulama penceresinin bıraktığı
      yer (240–520 piksel).
 
+7. **3B'de nokta seçme (`kentos_scene3d::pick`).** Görünümde tıklanan pikselin ışını çizilen karolarla buluşur;
+   karoların gösterilen kutuları (abartmalı) ışının girdiği sırayla bakılır, en yakın isabet sonraki karonun girişinden
+   önceyse arama biter. Karonun üçgenleri GPU'nun float32'siyle değil, soy kaydıyla (ağ, üçgen) kaynağın kendi f64
+   köşeleriyle denenir: Möller ve Trumbore'un ışın–üçgen testi (iki yüz), köşeler önce ışının başlangıcına göre
+   alınır; TM'de milyonlarca metrelik koordinatın milimetresi kalır. Dönen nokta kaynağındır, kotu gerçektir (abartma
+   geri alınır); eşit uzaklıkta küçük (ağ, üçgen) seçilir.
+   - *Neden derinlik tamponundan değil:* CesiumJS'in `pickPosition`'ı konumu derinlik tamponundan ve pencere
+     konumundan kurar ([Cesium](https://cesium.com/learn/cesiumjs/ref-doc/Scene.html#pickPosition)); float32
+     derinlikten kurulan nokta uzakta santimetreleri yitirir ve hangi nesne olduğunu söylemez. plan/3d.md'nin
+     SCENE-PICK-04'ü gibi resim adaydır, kaynak karar verir; resim olmadan da çalışır (başsız ve testte).
+   - *Pencerede:* sürüklemeden bırakılan tıklama (3 pikselden az hareket) seçer; renk açıklamasının sağında “Seçilen
+     nokta: Y … X … Z … · kaynak · rol” (Y doğu, X kuzey; Türk ölçmeciliğinin sırası), noktada vurgu renginde halka;
+     gökyüzü seçimi temizler.
+
 ## Aşamalar
 
 Y12.1 (yapıldı, ön güzergâh): `road.routes.find` 26, `.draw` 22 ortak durum (`road_route_cases.py`; arazinin kotları
@@ -193,6 +207,14 @@ kesitlerin bileşen türleriyle) ve Rust'ta aynı. Arazinin kesilmesi 11 durumda
 üstünde ve koridorun dışında, birbirine binmez. 2 milyon arazi üçgeni, 800 koridor üçgeni 385 ms (release, M5).
 Köşe normalleri ortak durumlarda bit bit. Masaüstünde pencere testleri ve resimleri (`scene3d_window_tests.rs`,
 `KENTOS_SNAPSHOT_BACKEND=wgpu`): dört yön, yakın ve saydam, kesilmemiş, düz yüzler, tam ekran, koyu ve dar.
+
+Y12.3e (yapıldı, 3B'de nokta seçme): §7. Bölmenin soy kaydı artık (ağ, üçgen). Ortak durum
+(`scene3d_cases.py`'nin `picks`'i): TM'de 16 × 16 arazi ve 24 üçgenlik yol, 2 kat abartma, 64 üçgenlik karolar;
+40 rastgele piksel ve yol üçgenlerinin ortaları, 52 ışın (36 isabet, 13'ü yolda); her ışının ilk üçgeni bütün
+ağların bütün üçgenlerinde kaba kuvvetle bulunur, üçgen kenarına 1e-6'dan yakın geçen ışın alınmaz; Rust aynı (ağ,
+üçgen) ve noktayı 1e-6 m içinde verir. Süre (release, M5): 4 milyon üçgenlik TM arazisinde bir tıklama 0,12–0,36 ms.
+Masaüstünde Üst bakıştan ortaya tıklama sahnede bir nokta, gökyüzü hiçbir şey; görünür ilk şerit üçgeni 1 mm içinde
+“Şerit” olarak seçilir; resim `yol-3b-gorunum-secilen-nokta-*`.
 
 ## Sonra
 

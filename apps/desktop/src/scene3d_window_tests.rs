@@ -54,6 +54,15 @@ fn the_window_opens_on_the_scene_and_its_camera_follows() {
     assert!(w.camera().target[2] > low);
     send(&mut app, W::Exaggeration("yok".into()));
     assert_eq!(app.scene3d_window.as_ref().expect("the window").exaggeration().factor, 1.0);
+    // A click in the middle of the view from above picks the terrain or a corridor, a point inside the scene.
+    send(&mut app, W::View(3));
+    send(&mut app, W::Pick(600.0, 300.0, 1200.0, 600.0));
+    let w = app.scene3d_window.as_ref().expect("the window");
+    let p = w.picked.clone().expect("a point");
+    assert!(p.point[0] > 0.0 && p.point[0] < 600.0 && p.point[1] > 0.0 && p.point[1] < 400.0, "{p:?}");
+    assert!(p.point[2] > 90.0 && p.point[2] < 130.0, "{p:?}");
+    send(&mut app, W::Pick(2.0, 2.0, 1200.0, 600.0));
+    assert!(app.scene3d_window.as_ref().expect("the window").picked.is_none(), "the sky picks nothing");
     send(&mut app, W::Close);
     assert!(app.scene3d_window.is_none());
 }
@@ -118,6 +127,24 @@ fn screens() {
             shot(&mut app, "yakin-duz-yuzler");
             send(&mut app, W::Flat);
             send(&mut app, W::View(0));
+            // A click on a lane: its point and what it is on (the ray is the same viewport's, so it meets the lane
+            // unless the ground in a cut hides it: the first lane seen).
+            let vp = kentos_scene3d::Viewport { width: 1240.0, height: 560.0 };
+            let mut on_lane = false;
+            for n in (30..400).step_by(11) {
+                let w = app.scene3d_window.as_ref().expect("the window");
+                let (cam, ex) = (w.camera(), w.exaggeration());
+                let Some(lane) = w.point_on(1, n) else { break };
+                let Some((x, y, _)) = cam.project(ex.shown(lane), &vp) else { continue };
+                send(&mut app, W::Pick(x as f32, y as f32, 1240.0, 560.0));
+                let p = app.scene3d_window.as_ref().expect("the window").picked.clone();
+                if p.is_some_and(|p| p.what.contains("Şerit") && (p.point[0] - lane[0]).hypot(p.point[1] - lane[1]) < 1e-3) {
+                    on_lane = true;
+                    break;
+                }
+            }
+            assert!(on_lane, "a lane is seen and picked to the millimetre");
+            shot(&mut app, "secilen-nokta");
             // Full screen: the scene takes the room, the buttons stay at the foot.
             use kentos_ui::widget::sizable::sizes;
             sizes::set(crate::scene3d_window::TITLE, sizes::Kept { width: 1180.0, height: 700.0, maximized: true });

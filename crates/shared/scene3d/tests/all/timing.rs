@@ -70,6 +70,19 @@ fn timing() {
             s.culled,
             t.elapsed().as_secs_f64() * 1e3 / 100.0
         );
+        // A click in the middle of the picture and at a quarter of it: the tiles drawn, then their source triangles.
+        let by_id: std::collections::HashMap<u64, &kentos_scene3d::Content> = c.contents.iter().map(|k| (k.id, k)).collect();
+        let source = |_m: u32, i: u32| ts.get(i as usize).map(|t| t.map(|k| vs[k as usize]));
+        let t = Instant::now();
+        let mut hits = 0;
+        for k in 0..20 {
+            let (x, y) = if k % 2 == 0 { (960.0, 540.0) } else { (480.0, 810.0) };
+            let (o, d) = cam.ray(x, y, &vp);
+            hits += usize::from(
+                kentos_scene3d::pick(&c.hierarchy, &s.draw, |id| by_id.get(&id).copied(), source, o, d, &Exaggeration::NONE).is_some(),
+            );
+        }
+        println!("seçme ({name}): {hits}/20 isabet: {:.2} ms", t.elapsed().as_secs_f64() * 1e3 / 20.0);
     }
     // A deep quadtree, every tile a content, the error halving: a flight over it.
     let mut tiles = Vec::new();

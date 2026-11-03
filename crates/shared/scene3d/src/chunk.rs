@@ -3,7 +3,7 @@
 //! most `max_triangles` and spans at most `max_extent` metres. Each leaf is a content: its vertices once, as float32
 //! offsets from its own f64 origin (its bounds' middle), so the rounding is bounded by the tile's extent and not by
 //! the source's coordinates; its triangles grouped by the part they came from (a renderer draws a part's range with
-//! one style); each triangle's source (part, triangle) kept, the lineage a pick refines through. The inner tiles have
+//! one style); each triangle's source (mesh, triangle) kept, the lineage a pick refines through. The inner tiles have
 //! no content (they always refine) and bound their children; a leaf's geometric error is 0: it is the source.
 //!
 //! The order is total and the cut does not depend on the input's order within a key: a triangle's key is its centroid
@@ -61,7 +61,7 @@ pub struct Content {
     pub indices: Vec<u32>,
     /// Each part's indices, in part order.
     pub ranges: Vec<(u32, std::ops::Range<u32>)>,
-    /// Each triangle's source: its part and its index in the part's mesh.
+    /// Each triangle's source: its mesh (the index into the meshes given) and its index in that mesh's triangles.
     pub sources: Vec<(u32, u32)>,
     /// The largest gap along an axis between a vertex's offset and its float32, in metres.
     pub encoding_error: f64,
@@ -267,7 +267,7 @@ impl Cut<'_> {
             if let Some(r) = ranges.last_mut() {
                 r.1.end = indices.len() as u32;
             }
-            sources.push((m.part, t.index));
+            sources.push((t.mesh, t.index));
         }
         Content { id: 0, origin, bounds, positions, parts, normals, indices, ranges, sources, encoding_error: error }
     }

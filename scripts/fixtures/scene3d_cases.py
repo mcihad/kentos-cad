@@ -355,7 +355,7 @@ def chunk(meshes, limits, first_id):
                     seen[(t["mesh"], k)] = len(positions) - 1
                 indices.append(seen[(t["mesh"], k)])
             ranges[-1][2] = len(indices)
-            sources.append([m["part"], t["index"]])
+            sources.append([t["mesh"], t["index"]])
         return {"id": first_id + len(contents), "origin": origin, "bounds": bnd, "positions": positions,
                 "parts": parts, "normals": normal_of, "indices": indices, "ranges": ranges, "sources": sources, "encodingError": err}
 
@@ -555,11 +555,81 @@ def chunked_selection():
     ]
 
 
+def ray_triangle(o, d, t):
+    """Möller–Trumbore, both faces, the corners relative to the origin first; the distance, or None."""
+    a, b, c = (sub(p, o) for p in t)
+    e1, e2 = sub(b, a), sub(c, a)
+    p = cross(d, e2)
+    det = dot(e1, p)
+    if abs(det) < 1e-300:
+        return None
+    inv = 1 / det
+    s = mul(a, -1)
+    u = dot(s, p) * inv
+    if u < 0 or u > 1:
+        return None
+    q = cross(s, e1)
+    v = dot(d, q) * inv
+    if v < 0 or u + v > 1:
+        return None
+    dist = dot(e2, q) * inv
+    return (dist, u, v) if dist > 0 else None
+
+
+def picks():
+    """Rays through pixels of a view of a terrain and a road at TM coordinates, exaggerated: the first source triangle
+    each meets, by brute force over every triangle of every mesh (none for the sky); pixels whose ray passes within
+    1e-6 of a triangle's edge are left out (two triangles meet there)."""
+    rng = random.Random(9)
+    terrain = grid(16, 480.0, (512000.0, 4401000.0), lambda x, y: 1200 + 0.02 * (x - 512000) + 3 * math.sin((y - 4401000) / 60),
+                   rng, 0)
+    road = {"part": 1, "vertices": [], "triangles": [], "smooth": False}
+    for k in range(13):
+        x = 512000.0 + 40.0 * k
+        y = 4401200.0 + 60 * math.sin(k / 3)
+        road["vertices"] += [[x, y - 6, 1215.0 + 0.5 * k], [x, y + 6, 1215.0 + 0.5 * k]]
+    for k in range(12):
+        a = 2 * k
+        road["triangles"] += [[a, a + 2, a + 3], [a, a + 3, a + 1]]
+    meshes = [terrain, road]
+    h, contents = chunk(meshes, {"maxTriangles": 64, "maxExtent": 1000.0}, 1)
+    ex = {"factor": 2.0, "datum": 1190.0}
+    cam = orbit(shown(ex, [512240.0, 4401240.0, 1210.0]), 210, 35, 600, persp())
+    vp = {"width": 800.0, "height": 600.0}
+    out = []
+    pixels = [[round(rng.random() * 800, 3), round(rng.random() * 600, 3)] for _ in range(40)]
+    # And the middles of the road's triangles where they are seen: the road is thin in the picture.
+    for t in road["triangles"][::2]:
+        mid = [sum(road["vertices"][k][a] for k in t) / 3 for a in range(3)]
+        q = project(cam, vp, shown(ex, mid))
+        if q is not None:
+            pixels.append([round(q[0], 3), round(q[1], 3)])
+    for px in pixels:
+        o, d = ray(cam, vp, *px)
+        best = None
+        for mi, m in enumerate(meshes):
+            for ti, t in enumerate(m["triangles"]):
+                r = ray_triangle(o, d, [shown(ex, m["vertices"][k]) for k in t])
+                if r and (best is None or r[0] < best[0]):
+                    best = (r[0], mi, ti, r[1], r[2])
+        if best is not None and min(best[3], best[4], 1 - best[3] - best[4]) < 1e-6:
+            continue
+        hit = None
+        if best is not None:
+            p = add(o, mul(d, best[0]))
+            hit = {"mesh": best[1], "triangle": best[2], "distance": best[0],
+                   "point": [p[0], p[1], ex["datum"] + (p[2] - ex["datum"]) / ex["factor"]]}
+        out.append({"pixel": px, "hit": hit})
+    return {"name": "TM'de arazi ve yol, abartmalı", "meshes": meshes, "limits": {"maxTriangles": 64, "maxExtent": 1000.0},
+            "camera": cam, "viewport": vp, "exaggeration": ex, "drawn": [i for i, t in enumerate(h["tiles"]) if t["content"]],
+            "rays": out}
+
+
 def main():
     data = {"format": "kentos.scene3d-cases", "version": 1,
             "note": "scripts/fixtures/scene3d_cases.py yazar; kamera, frustum, ekran uzayı hatası (CesiumJS'in kuralı), "
                     "3D Tiles 1.1'in inceltmesi ve karolara bölme ADR 0910 §3'ün kurallarından, KentOS kodu olmadan.",
-            "cameras": cameras(), "selections": selections() + chunked_selection(), "chunks": chunks()}
+            "cameras": cameras(), "selections": selections() + chunked_selection(), "chunks": chunks(), "picks": [picks()]}
     text = json.dumps(data, ensure_ascii=False, indent=1) + "\n"
     if "--check" in sys.argv:
         if OUT.read_text(encoding="utf-8") != text:

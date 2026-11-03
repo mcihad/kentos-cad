@@ -13,6 +13,8 @@
 //!   a pixel's size), a parent kept until the children that replace it are ready, the asks by error.
 //! - [`chunk`]: large triangle meshes cut into tiles of bounded triangles and extent, each with its own f64 origin and
 //!   float32 positions relative to it, their source triangles kept (the lineage a pick refines through).
+//! - [`pick`]: the first source triangle a pixel's ray meets among the tiles drawn, in f64 with the source's own
+//!   coordinates, and the point, its height real.
 //!
 //! Precision (plan/3d.md §5, SCENE-PREC): the source stays f64. A tile's positions are float32 offsets from its own
 //! origin, bounded by the tile's extent; the camera's eye is f64 and only a tile's origin minus the eye reaches the GPU,
@@ -21,10 +23,12 @@
 pub mod camera;
 pub mod chunk;
 pub mod math;
+pub mod pick;
 pub mod select;
 pub mod tile;
 
 pub use camera::{Camera, Exaggeration, Frustum, Projection, Viewport, Visibility};
 pub use chunk::{Chunked, Content, Limits, SourceMesh, chunk};
+pub use pick::{Hit, pick, ray_box, ray_triangle};
 pub use select::{Selection, Settings, screen_error, select};
 pub use tile::{Aabb, ContentRef, Hierarchy, Refine, Tile, TileKey};
