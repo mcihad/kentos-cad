@@ -1841,6 +1841,25 @@ const ENTRIES: &[Entry] = &[
         warnings: &["corridor_stale", "volume_gap", "haul_unbalanced"],
         targets: none,
     },
+    // KentOS Yol's guardrails (plan/road.md Y11.1, docs/adr/0909 §1).
+    Entry {
+        id: "road.guardrails.edit",
+        refusals: &[&["not_a_road_project", "unknown_guardrail", "unknown_corridor", "invalid_guardrail"], REVISION],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "road.guardrails.query",
+        refusals: &[&["not_a_road_project", "unknown_guardrail", "invalid_guardrail"]],
+        warnings: &["guardrail_stale", "corridor_stale", "corridor_surface_gone", "corridor_unsolved"],
+        targets: none,
+    },
+    Entry {
+        id: "road.guardrails.draw",
+        refusals: &[&["not_a_road_project", "unknown_guardrail", "invalid_guardrail"], LAYER, REVISION],
+        warnings: &["layer_hidden", "guardrail_stale", "corridor_stale", "corridor_unsolved"],
+        targets: none,
+    },
     // KentOS Yol's LandXML export (plan/road.md Y10.2, docs/adr/0908 §6).
     Entry {
         id: "file.export.landxml",

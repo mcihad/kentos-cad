@@ -5,16 +5,16 @@
  * First scope: plain analytic 2D CAD objects on one untyped, data-free layer, with ordinary bound
  * dimensions. Unsupported appearance/data/relations are refused before any write, never detached.
  */
-export type BlocksConvert = { name: string,
+export type BlocksConvert = { name: string, 
 /**
  * Source UUIDs. Definition pieces follow their document drawing order.
  */
-source: Array<string>,
+source: Array<string>, 
 /**
  * Chosen candidate member sets, at most 1000. Order within a set is immaterial.
  * Each must have exactly as many distinct objects as the source. Sets cannot share objects.
  */
-groups: Array<Array<string>>, rotations?: boolean, mirrors?: boolean, scales?: boolean,
+groups: Array<Array<string>>, rotations?: boolean, mirrors?: boolean, scales?: boolean, 
 /**
  * Absolute model tolerance in metres, as cad.blocks.find; absent: 0.000001.
  */

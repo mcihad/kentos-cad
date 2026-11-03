@@ -7411,6 +7411,83 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::ROAD_GUARDRAILS_EDIT.into(),
+            version: crate::ROAD_GUARDRAILS_EDIT_VERSION,
+            title: "Otokorkuluğu düzenle".into(),
+            summary: "Yol projesinin otokorkuluğunu (guardrail: kimliği ya da adı; yoksa yeni) yazar, koridoruna yeniden bağlar ya da kaldırır. Otokorkuluk bir koridorun (corridor) her step metrede okunan kesitlerinden çıkar: bir yanın dolgu yüksekliği şev başının şev topuğundan yüksekliği, şevi aradaki yatayın o yüksekliğe oranı (1:n). Kural (rule) projenin kendi tablosudur, KentOS sayı vermez: source standardın ve tablosunun adı (zorunlu), warrants satırları (height en az dolgu yüksekliği m, slope verilirse 1:slope'tan dik şev; herhangi bir satır tutarsa korkuluk gerekir), approach ve leaving gerekli bölümden önce ve sonra eklenen boylar (sağda trafik km yönünde, solda tersine: yaklaşma ucu solda km'nin arkasıdır), gap iki korkuluk arasında bırakılabilecek en az aralık (daha yakınlar birleşir). offset korkuluğun şev başından dışa uzaklığı. \
+                      Yeni otokorkuluğun kimliği verilen ya da ilk boş o-n; rebind koridorun bugünkü sürümünü alır. Tek geri alma adımı “Otokorkuluk”. Retler: not_a_road_project, unknown_guardrail, unknown_corridor, invalid_guardrail, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["otokorkuluk".into(), "bariyer".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::GuardrailsEdit>(),
+            output: schema::<crate::GuardrailsWritten>(),
+            plan: Some(schema::<crate::GuardrailsWritten>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana koridorun otokorkuluğu, kurumun tablosuyla".into(),
+                input: json!({ "operation": "set", "name": "Ana korkuluk", "corridor": "Ana koridor", "step": 10.0,
+                    "rule": { "source": "Kurum tablosu, sürüm 1", "warrants": [ { "height": 3.0, "slope": 3.0 } ],
+                        "approach": 40.0, "leaving": 20.0, "gap": 50.0 } }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_GUARDRAILS_QUERY.into(),
+            version: crate::ROAD_GUARDRAILS_QUERY_VERSION,
+            title: "Otokorkuluğu sorgula".into(),
+            summary: "Yol projesinin otokorkuluklarını bugün okur; hiçbir şey yazmaz. Her biri için kuralın kaynağı, okunan kesit sayısı, solda ve sağda km sırasıyla korkuluklar (km'ler ve km yazıları, boy, korkuluğun gerekli olduğu bölüm, koruduğu en yüksek dolgu ve en dik şev) ve her yanın toplam boyu; koridoru değiştiyse guardrail_stale; koridorun kendi uyarıları (corridor_stale, corridor_surface_gone, corridor_unsolved) da gelir. guardrail ile yalnız biri; koridoru okunamıyorsa invalid_guardrail. \
+                      Retler: not_a_road_project, unknown_guardrail, invalid_guardrail."
+                .into(),
+            aliases: vec!["otokorkuluksor".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::GuardrailsQuery>(),
+            output: schema::<crate::GuardrailsQueried>(),
+            plan: Some(schema::<crate::GuardrailsQueried>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana korkuluk".into(),
+                input: json!({ "guardrail": "Ana korkuluk" }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_GUARDRAILS_DRAW.into(),
+            version: crate::ROAD_GUARDRAILS_DRAW_VERSION,
+            title: "Otokorkuluk çiz".into(),
+            summary: "Otokorkuluğun korkuluklarını planda layerId katmanına çoklu çizgi olarak çizer: her kesitte şev başı artı offset dışa, uçları korkuluğun başladığı ve bittiği km'de (şev başı yandaki kesitler arasında doğrusal okunur), koridorun aksına yerleştirilmiş; labels ile her korkuluğun ortasında km'si ve boyu yazılır. Tek geri alma adımı “Otokorkuluk çiz”. \
+                      Uyarılar: layer_hidden, guardrail_stale, corridor_stale, corridor_unsolved. Retler: invalid_revision, revision_conflict, not_a_road_project, unknown_guardrail, invalid_guardrail, layer_not_found, not_a_layer, layer_locked."
+                .into(),
+            aliases: vec!["otokorkulukciz".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::GuardrailsDraw>(),
+            output: schema::<crate::GuardrailsDrawn>(),
+            plan: Some(schema::<crate::GuardrailsDrawn>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana korkuluk yazılarıyla".into(),
+                input: json!({ "guardrail": "Ana korkuluk", "layerId": "korkuluk", "labels": true }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::FILE_EXPORT_LANDXML.into(),
             version: crate::FILE_EXPORT_LANDXML_VERSION,
             title: "LandXML dışa aktar".into(),
@@ -13282,6 +13359,15 @@ mod tests {
                     }
                     crate::ROAD_HAULS_EDIT => serde_json::from_value::<crate::HaulsEdit>(e.input.clone()).map(|_| ()),
                     crate::ROAD_HAULS_QUERY => serde_json::from_value::<crate::HaulsQuery>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_GUARDRAILS_EDIT => {
+                        serde_json::from_value::<crate::GuardrailsEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_GUARDRAILS_QUERY => {
+                        serde_json::from_value::<crate::GuardrailsQuery>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_GUARDRAILS_DRAW => {
+                        serde_json::from_value::<crate::GuardrailsDraw>(e.input.clone()).map(|_| ())
+                    }
                     crate::ROAD_STAKEOUT_QUERY => {
                         serde_json::from_value::<crate::StakeoutQuery>(e.input.clone()).map(|_| ())
                     }
@@ -14033,6 +14119,15 @@ mod tests {
                         }
                         crate::ROAD_HAULS_QUERY => {
                             serde_json::from_value::<crate::HaulsQueried>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_GUARDRAILS_EDIT => {
+                            serde_json::from_value::<crate::GuardrailsWritten>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_GUARDRAILS_QUERY => {
+                            serde_json::from_value::<crate::GuardrailsQueried>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_GUARDRAILS_DRAW => {
+                            serde_json::from_value::<crate::GuardrailsDrawn>(output.clone()).map(|_| ())
                         }
                         crate::ROAD_STAKEOUT_QUERY => {
                             serde_json::from_value::<crate::StakeoutQueried>(output.clone()).map(|_| ())

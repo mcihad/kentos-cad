@@ -9707,13 +9707,35 @@ class _Schema:
                 self.fail("bad_value", "pafta takımında 1 ile 500 arası, kimlikleri tek pafta olur")
             return t
 
+        def guardrail(x):
+            # Docs/adr/0909 §1: a guardrail along a corridor by the project's own rule, with its source.
+            warrant = self.fields({"height": (finite, True), "slope": (finite, False)})
+            rule = self.fields({"source": (self.text, True), "warrants": (self.array(warrant), True),
+                                "approach": (finite, True), "leaving": (finite, True), "gap": (finite, True)})
+            t = self.fields({"id": (word, True), "name": (self.text, True), "corridor": (word, True),
+                             "corridorRevision": (self.uint(32), False), "revision": (self.uint(32), False),
+                             "rule": (rule, True), "step": (finite, True), "offset": (finite, False)})(x)
+            name, r = t["name"], t["rule"]
+            if not name or name.strip() != name or len(name) > 120:
+                self.fail("bad_value", "otokorkuluğun adı boş, boşluklu ya da çok uzun")
+            if not r["source"] or r["source"].strip() != r["source"] or len(r["source"]) > 200:
+                self.fail("bad_value", "otokorkuluk kuralının kaynağı boş, boşluklu ya da çok uzun")
+            if not 1 <= len(r["warrants"]) <= 32 or any(not 0 <= w["height"] <= 1000 or not 0 < w.get("slope", 1) <= 1000
+                                                         for w in r["warrants"]):
+                self.fail("bad_value", "otokorkuluk kuralının satırları kuralın dışında")
+            if any(not 0 <= r[f] <= 10_000 for f in ("approach", "leaving", "gap")) or not 0 < t["step"] <= 1000 \
+                    or abs(t.get("offset", 0)) > 100:
+                self.fail("bad_value", "otokorkuluğun uzunlukları, okuma aralığı ya da uzaklığı kuralın dışında")
+            return t
+
         r = self.fields({"surfaces": (self.array(surface), False), "alignments": (self.array(alignment), False),
                          "profiles": (self.array(profile), False), "templates": (self.array(template), False),
                          "sections": (self.array(section_set), False),
                          "superelevations": (self.array(superelevation), False),
                          "corridors": (self.array(corridor), False),
                          "volumes": (self.array(volume), False), "hauls": (self.array(haul), False),
-                         "sheetSets": (self.array(sheet_set), False)})(v)
+                         "sheetSets": (self.array(sheet_set), False),
+                         "guardrails": (self.array(guardrail), False)})(v)
         got = r.get("surfaces", [])
         lines = r.get("alignments", [])
         profiles = r.get("profiles", [])
@@ -9724,7 +9746,9 @@ class _Schema:
         volumes = r.get("volumes", [])
         hauls = r.get("hauls", [])
         sheet_sets = r.get("sheetSets", [])
-        if not (got or lines or profiles or templates or sets or supers or corridors or volumes or hauls or sheet_sets):
+        guardrails = r.get("guardrails", [])
+        if not (got or lines or profiles or templates or sets or supers or corridors or volumes or hauls or sheet_sets
+                or guardrails):
             self.fail("bad_value", "boş yol ayarı yazılmaz")
         if len(got) > 64 or ("surfaces" in r and not got):
             self.fail("bad_value", "yol ayarında 1 ile 64 arası yüzey olur")
@@ -9817,6 +9841,13 @@ class _Schema:
                 self.fail("bad_value", "pafta takımının boykesiti projede aynı aksta yok")
             if "sections" in x and all(y["id"] != x["sections"] or y["alignment"] != x["alignment"] for y in sets):
                 self.fail("bad_value", "pafta takımının kesit takımı projede aynı aksta yok")
+        if "guardrails" in r and not guardrails or len(guardrails) > 256:
+            self.fail("bad_value", "yol ayarında 1 ile 256 arası otokorkuluk olur")
+        if len({x["id"] for x in guardrails}) != len(guardrails) or \
+                len({x["name"].lower() for x in guardrails}) != len(guardrails):
+            self.fail("bad_value", "iki otokorkuluğun kimliği ya da adı aynı")
+        if any(all(y["id"] != x["corridor"] for y in corridors) for x in guardrails):
+            self.fail("bad_value", "otokorkuluğun koridoru projede yok")
         return r
 
     def arch_(self, v):

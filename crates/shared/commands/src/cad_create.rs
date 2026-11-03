@@ -123,6 +123,8 @@ pub enum CreateOperation {
     SectionDrawing,
     /// `road.corridors.draw` (plan/road.md Y7): a corridor's slope plan, “Şevli plan”.
     SlopePlan,
+    /// `road.guardrails.draw` (plan/road.md Y11.1): a guardrail's runs in plan, “Otokorkuluk çiz”.
+    Guardrails,
 }
 
 /// One new object: its geometry and what else it carries. The layer is the

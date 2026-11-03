@@ -7,19 +7,19 @@
  * place being occupied is indistinguishable from twice the spacing: no hidden places are invented.
  * Grid, polar and path detection are not implemented by this version.
  */
-export type ArraysFind = {
+export type ArraysFind = { 
 /**
  * Existing seed insert UUID. May be an interior place of a candidate.
  */
-source: string,
+source: string, 
 /**
  * Absent searches the document; empty searches only the seed. At most 2048 objects.
  */
-uids?: Array<string>,
+uids?: Array<string>, 
 /**
  * Absolute position tolerance in metres, above zero to 0.001; absent: 0.000001.
  */
-tolerance?: number,
+tolerance?: number, 
 /**
  * Candidate limit, 1 to 100; absent: 100. Work/result limits report `truncated`.
  */

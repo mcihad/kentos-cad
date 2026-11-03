@@ -418,6 +418,7 @@
     "road.sheets",
     "alignment.fromLine",
     "profile.fromLine",
+    "guardrail.editor",
     "landxml.export",
     "landxml.importAlignments",
     "ifc.export",

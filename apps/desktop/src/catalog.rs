@@ -615,6 +615,8 @@ pub const PORTED: &[&str] = &[
     "alignment.fromLine",
     // plan/road.md Y10.6b: Çizimden boykesit (road_profile_fit_window.rs).
     "profile.fromLine",
+    // plan/road.md Y11.1: Otokorkuluk (guardrail_window.rs).
+    "guardrail.editor",
     // plan/road.md Y10.2: LandXML ver (road_exchange.rs).
     "landxml.export",
     "landxml.importAlignments",

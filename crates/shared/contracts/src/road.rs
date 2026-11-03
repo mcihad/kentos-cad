@@ -93,6 +93,10 @@ pub struct RoadSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<RoadSheetSetDef>>", optional))]
     pub sheet_sets: Vec<RoadSheetSetDef>,
+    /// The guardrails (docs/adr/0909 §1), each along a corridor.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<GuardrailDef>>", optional))]
+    pub guardrails: Vec<GuardrailDef>,
 }
 
 impl RoadSettings {
@@ -108,6 +112,7 @@ impl RoadSettings {
             && self.volumes.is_empty()
             && self.hauls.is_empty()
             && self.sheet_sets.is_empty()
+            && self.guardrails.is_empty()
     }
 
     /// What is wrong with it, by the field's path and in words; none when it is right.
@@ -964,6 +969,7 @@ pub fn road_problem(road: &RoadSettings) -> Option<(String, String)> {
         .or_else(|| volumes_problem(road))
         .or_else(|| hauls_problem(road))
         .or_else(|| sheet_sets_problem(road))
+        .or_else(|| guardrails_problem(road))
 }
 
 fn side_problem(s: &TemplateSideDef, at: &str) -> Option<(String, String)> {
@@ -1317,6 +1323,129 @@ fn sheet_sets_problem(road: &RoadSettings) -> Option<(String, String)> {
 }
 
 pub const MAX_HAULS: usize = 256;
+/// The most guardrails a project holds, and rows a guardrail's rule holds.
+pub const MAX_GUARDRAILS: usize = 256;
+pub const MAX_GUARDRAIL_WARRANTS: usize = 32;
+
+/// A row of a guardrail rule (docs/adr/0909 §1): a barrier where the fill is at least `height` high and, with `slope`,
+/// steeper than 1:`slope` (its run per rise at most that).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct GuardrailWarrantDef {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub height: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub slope: Option<f64>,
+}
+
+/// A guardrail rule (docs/adr/0909 §1): the standard's table it comes from (`source`, required: KentOS has no number of
+/// its own), its rows, the lengths added before (the approach end) and after a warranted stretch, the least gap left
+/// between two runs.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct GuardrailRuleDef {
+    pub source: String,
+    pub warrants: Vec<GuardrailWarrantDef>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub approach: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub leaving: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub gap: f64,
+}
+
+/// A guardrail (docs/adr/0909 §1): its corridor and the corridor's revision it was made from, its rule, the step its
+/// crosses are read at, and how far outward from the hinge the rail stands.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct GuardrailDef {
+    pub id: String,
+    pub name: String,
+    pub corridor: String,
+    #[serde(default, skip_serializing_if = "is_zero_u32")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub corridor_revision: u32,
+    #[serde(default, skip_serializing_if = "is_zero_u32")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub revision: u32,
+    pub rule: GuardrailRuleDef,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub step: f64,
+    #[serde(default, skip_serializing_if = "is_zero_f64")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub offset: f64,
+}
+
+fn guardrails_problem(road: &RoadSettings) -> Option<(String, String)> {
+    let fail = |path: String, words: &str| Some((path, words.to_string()));
+    let list = &road.guardrails;
+    if list.len() > MAX_GUARDRAILS {
+        return fail("guardrails".into(), &format!("en çok {MAX_GUARDRAILS} otokorkuluk olur"));
+    }
+    let mut ids = std::collections::BTreeSet::new();
+    let mut names = std::collections::BTreeSet::new();
+    for (i, g) in list.iter().enumerate() {
+        let at = |field: &str| format!("guardrails[{i}].{field}");
+        if !word_ok(&g.id) {
+            return fail(at("id"), "otokorkuluğun kimliği boş olmayan, en çok 64 karakterlik bir sözcük olmalı");
+        }
+        if !ids.insert(g.id.as_str()) {
+            return fail(at("id"), "bu kimlikte başka bir otokorkuluk var");
+        }
+        let name = g.name.trim();
+        if name.is_empty() || name != g.name || g.name.chars().count() > 120 {
+            return fail(at("name"), "otokorkuluğun adı boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 120 karakter");
+        }
+        if !names.insert(name.to_lowercase()) {
+            return fail(at("name"), "bu adda başka bir otokorkuluk var");
+        }
+        if road.corridors.iter().all(|c| c.id != g.corridor) {
+            return fail(at("corridor"), "otokorkuluğun koridoru projede yok");
+        }
+        let r = &g.rule;
+        let source = r.source.trim();
+        if source.is_empty() || source != r.source || r.source.chars().count() > 200 {
+            return fail(at("rule.source"), "kuralın kaynağı boş olmamalı (standart ve tablosu), başında ve sonunda boşluk olmamalı, en çok 200 karakter");
+        }
+        if r.warrants.is_empty() || r.warrants.len() > MAX_GUARDRAIL_WARRANTS {
+            return fail(at("rule.warrants"), &format!("kuralın 1 ile {MAX_GUARDRAIL_WARRANTS} arası satırı olur"));
+        }
+        for (j, w) in r.warrants.iter().enumerate() {
+            if !(w.height.is_finite() && (0.0..=1000.0).contains(&w.height)) {
+                return fail(at(&format!("rule.warrants[{j}].height")), "dolgu yüksekliği 0 ile 1000 m arası olur");
+            }
+            if w.slope.is_some_and(|s| !(s.is_finite() && s > 0.0 && s <= 1000.0)) {
+                return fail(at(&format!("rule.warrants[{j}].slope")), "şev (bir düşeye yatay) 0'dan büyük, en çok 1000 olur");
+            }
+        }
+        for (field, v) in [("approach", r.approach), ("leaving", r.leaving), ("gap", r.gap)] {
+            if !(v.is_finite() && (0.0..=10_000.0).contains(&v)) {
+                return fail(at(&format!("rule.{field}")), "uzunluk 0 ile 10 000 m arası olur");
+            }
+        }
+        if !(g.step.is_finite() && g.step > 0.0 && g.step <= 1000.0) {
+            return fail(at("step"), "okuma aralığı 0'dan büyük, en çok 1000 m olur");
+        }
+        if !(g.offset.is_finite() && g.offset.abs() <= 100.0) {
+            return fail(at("offset"), "korkuluğun şev başından uzaklığı en çok 100 m olur");
+        }
+    }
+    None
+}
 pub const MAX_HAUL_SITES: usize = 64;
 
 fn hauls_problem(road: &RoadSettings) -> Option<(String, String)> {

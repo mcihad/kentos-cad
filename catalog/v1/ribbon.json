@@ -659,6 +659,16 @@
         "size": "large"
        }
       ]
+     },
+     {
+      "label": "Güvenlik",
+      "icon": "guardrailEditor",
+      "items": [
+       {
+        "command": "guardrail.editor",
+        "size": "large"
+       }
+      ]
      }
     ],
     "works": [

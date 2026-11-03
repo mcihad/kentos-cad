@@ -1270,6 +1270,7 @@ class CreateOperation(_StrEnum):
     - ``profileDrawing``: `road.profiles.draw` (plan/road.md Y4): a profile's frame, grid, terrain, design line and bands, “Boykesit çiz”.
     - ``sectionDrawing``: `road.sections.draw` (plan/road.md Y5): a sample line set's section views, “Enkesit çiz”.
     - ``slopePlan``: `road.corridors.draw` (plan/road.md Y7): a corridor's slope plan, “Şevli plan”.
+    - ``guardrails``: `road.guardrails.draw` (plan/road.md Y11.1): a guardrail's runs in plan, “Otokorkuluk çiz”.
     """
     PARALLEL = "parallel"
     PERPENDICULAR_IN = "perpendicularIn"
@@ -1312,9 +1313,10 @@ class CreateOperation(_StrEnum):
     PROFILE_DRAWING = "profileDrawing"
     SECTION_DRAWING = "sectionDrawing"
     SLOPE_PLAN = "slopePlan"
+    GUARDRAILS = "guardrails"
 
 
-CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions", "terrainContours", "landXml", "alignmentLabels", "profileDrawing", "sectionDrawing", "slopePlan"]
+CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions", "terrainContours", "landXml", "alignmentLabels", "profileDrawing", "sectionDrawing", "slopePlan", "guardrails"]
 """The names of :class:`CreateOperation`, for a plain string."""
 
 
@@ -33255,6 +33257,436 @@ class GridsPlan(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class GuardrailDef(_Model):
+    """A guardrail (docs/adr/0909 §1): its corridor and the corridor's revision it was made from, its rule, the step its
+    crosses are read at, and how far outward from the hinge the rail stands.
+    Attributes:
+        step: Unit: m.
+        corridor_revision: Unit: version.
+        offset: Unit: m.
+        revision: Unit: version.
+    """
+    id: str
+    name: str
+    corridor: str
+    rule: GuardrailRuleDef
+    step: float
+    corridor_revision: int | Unset = UNSET
+    offset: float | Unset = UNSET
+    revision: int | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["corridor"] = self.corridor
+        out["rule"] = self.rule.to_json()
+        out["step"] = float(self.step)
+        if self.corridor_revision is not UNSET:
+            out["corridorRevision"] = self.corridor_revision
+        if self.offset is not UNSET:
+            out["offset"] = float(self.offset)
+        if self.revision is not UNSET:
+            out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GuardrailDef:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            corridor=data["corridor"],
+            rule=GuardrailRuleDef.from_json(data["rule"]),
+            step=float(data["step"]),
+            corridor_revision=data.get("corridorRevision", UNSET),
+            offset=float(data["offset"]) if "offset" in data else UNSET,
+            revision=data.get("revision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GuardrailListed(_Model):
+    """A guardrail in the project's list.
+    Attributes:
+        revision: Unit: version.
+    """
+    id: str
+    name: str
+    corridor: str
+    revision: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["corridor"] = self.corridor
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GuardrailListed:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            corridor=data["corridor"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GuardrailReport(_Model):
+    """A guardrail as read now: its definition's names, whether its corridor changed since (`stale`), the rule's source,
+    the crosses read, its runs left then right in station order, and each side's total length.
+    Attributes:
+        revision: Unit: version.
+        crosses: Unit: count.
+        left: Unit: m.
+        right: Unit: m.
+    """
+    id: str
+    name: str
+    corridor: str
+    revision: int
+    stale: bool
+    source: str
+    crosses: int
+    runs: list[GuardrailRun]
+    left: float
+    right: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["corridor"] = self.corridor
+        out["revision"] = self.revision
+        out["stale"] = self.stale
+        out["source"] = self.source
+        out["crosses"] = self.crosses
+        out["runs"] = [e0.to_json() for e0 in self.runs]
+        out["left"] = float(self.left)
+        out["right"] = float(self.right)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GuardrailReport:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            corridor=data["corridor"],
+            revision=data["revision"],
+            stale=data["stale"],
+            source=data["source"],
+            crosses=data["crosses"],
+            runs=[GuardrailRun.from_json(e0) for e0 in data["runs"]],
+            left=float(data["left"]),
+            right=float(data["right"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GuardrailRuleDef(_Model):
+    """A guardrail rule (docs/adr/0909 §1): the standard's table it comes from (`source`, required: KentOS has no number of
+    its own), its rows, the lengths added before (the approach end) and after a warranted stretch, the least gap left
+    between two runs.
+    Attributes:
+        approach: Unit: m.
+        leaving: Unit: m.
+        gap: Unit: m.
+    """
+    source: str
+    warrants: list[GuardrailWarrantDef]
+    approach: float
+    leaving: float
+    gap: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["source"] = self.source
+        out["warrants"] = [e0.to_json() for e0 in self.warrants]
+        out["approach"] = float(self.approach)
+        out["leaving"] = float(self.leaving)
+        out["gap"] = float(self.gap)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GuardrailRuleDef:
+        return cls(
+            source=data["source"],
+            warrants=[GuardrailWarrantDef.from_json(e0) for e0 in data["warrants"]],
+            approach=float(data["approach"]),
+            leaving=float(data["leaving"]),
+            gap=float(data["gap"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GuardrailRun(_Model):
+    """A guardrail run on a side (`left` or `right`): where it starts and ends (stations and km), its length, the stretch
+    where the barrier is warranted within it, and the highest fill and steepest slope (1:n) it guards.
+    Attributes:
+        from_: Unit: m.
+        to: Unit: m.
+        length: Unit: m.
+        warranted: Unit: m.
+        height: Unit: m.
+        slope: Unit: 1.
+    """
+    side: str
+    from_: float
+    to: float
+    from_text: str
+    to_text: str
+    length: float
+    warranted: list[float]
+    height: float
+    slope: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["side"] = self.side
+        out["from"] = float(self.from_)
+        out["to"] = float(self.to)
+        out["fromText"] = self.from_text
+        out["toText"] = self.to_text
+        out["length"] = float(self.length)
+        out["warranted"] = [float(e0) for e0 in self.warranted]
+        out["height"] = float(self.height)
+        out["slope"] = float(self.slope)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GuardrailRun:
+        return cls(
+            side=data["side"],
+            from_=float(data["from"]),
+            to=float(data["to"]),
+            from_text=data["fromText"],
+            to_text=data["toText"],
+            length=float(data["length"]),
+            warranted=[float(e0) for e0 in data["warranted"]],
+            height=float(data["height"]),
+            slope=float(data["slope"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GuardrailWarrantDef(_Model):
+    """A row of a guardrail rule (docs/adr/0909 §1): a barrier where the fill is at least `height` high and, with `slope`,
+    steeper than 1:`slope` (its run per rise at most that).
+    Attributes:
+        height: Unit: m.
+        slope: Unit: 1.
+    """
+    height: float
+    slope: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["height"] = float(self.height)
+        if self.slope is not UNSET:
+            out["slope"] = None if self.slope is None else float(self.slope)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GuardrailWarrantDef:
+        return cls(
+            height=float(data["height"]),
+            slope=UNSET if "slope" not in data else None if data["slope"] is None else float(data["slope"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GuardrailsDraw(_Model):
+    """Input of `road.guardrails.draw` v1: the guardrail's runs drawn on `layerId` as polylines at the rail's place (each
+    cross's hinge plus the guardrail's offset outward, its ends between crosses where the run starts and ends), with
+    `labels` a text at each run's middle saying its km and length.
+
+    Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `unknown_guardrail`,
+    `invalid_guardrail` (its corridor does not build), `layer_not_found`, `not_a_layer`, `layer_locked`. Warnings:
+    `layer_hidden`, `guardrail_stale`, `corridor_stale`, `corridor_unsolved`.
+    """
+    guardrail: str
+    layer_id: str
+    expected_revision: str | None | Unset = UNSET
+    labels: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["guardrail"] = self.guardrail
+        out["layerId"] = self.layer_id
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.labels is not UNSET:
+            out["labels"] = self.labels
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GuardrailsDraw:
+        return cls(
+            guardrail=data["guardrail"],
+            layer_id=data["layerId"],
+            expected_revision=data.get("expectedRevision", UNSET),
+            labels=data.get("labels", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GuardrailsDrawn(_Model):
+    """Output of `road.guardrails.draw` v1, and its plan: the runs drawn, their total length and the objects written (in
+    the plan, none).
+    Attributes:
+        runs: Unit: count.
+        length: Unit: m.
+    """
+    guardrail: str
+    runs: int
+    length: float
+    uids: list[str]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["guardrail"] = self.guardrail
+        out["runs"] = self.runs
+        out["length"] = float(self.length)
+        out["uids"] = list(self.uids)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GuardrailsDrawn:
+        return cls(
+            guardrail=data["guardrail"],
+            runs=data["runs"],
+            length=float(data["length"]),
+            uids=list(data["uids"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GuardrailsEdit(_Model):
+    """Input of `road.guardrails.edit` v1: the guardrail by its id or name (absent: a new one). A new one needs `name`,
+    `corridor`, `rule` and `step`. Rebind takes the corridor's present revision.
+
+    Refusals, in this order: `not_a_road_project`, `unknown_guardrail` (rebind or remove one not in the project),
+    `unknown_corridor`, `invalid_guardrail` (a new one without its fields, set with nothing to set, the definition by
+    `road_problem`: a rule without its source or rows, a height, slope or length out of bounds, a step or an offset out
+    of bounds; a corridor that does not build), `invalid_revision`, `revision_conflict`.
+    Attributes:
+        offset: Unit: m.
+        step: Unit: m.
+    """
+    operation: RoadEditOperation | RoadEditOperationName
+    corridor: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    guardrail: str | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    offset: float | None | Unset = UNSET
+    rule: GuardrailRuleDef | None | Unset = UNSET
+    step: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = _enum_out(self.operation)
+        if self.corridor is not UNSET:
+            out["corridor"] = self.corridor
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.guardrail is not UNSET:
+            out["guardrail"] = self.guardrail
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.offset is not UNSET:
+            out["offset"] = None if self.offset is None else float(self.offset)
+        if self.rule is not UNSET:
+            out["rule"] = None if self.rule is None else self.rule.to_json()
+        if self.step is not UNSET:
+            out["step"] = None if self.step is None else float(self.step)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GuardrailsEdit:
+        return cls(
+            operation=_enum_in(RoadEditOperation, data["operation"]),
+            corridor=data.get("corridor", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            guardrail=data.get("guardrail", UNSET),
+            name=data.get("name", UNSET),
+            offset=UNSET if "offset" not in data else None if data["offset"] is None else float(data["offset"]),
+            rule=UNSET if "rule" not in data else None if data["rule"] is None else GuardrailRuleDef.from_json(data["rule"]),
+            step=UNSET if "step" not in data else None if data["step"] is None else float(data["step"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GuardrailsQueried(_Model):
+    """Output of `road.guardrails.query` v1."""
+    guardrails: list[GuardrailReport]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["guardrails"] = [e0.to_json() for e0 in self.guardrails]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GuardrailsQueried:
+        return cls(
+            guardrails=[GuardrailReport.from_json(e0) for e0 in data["guardrails"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GuardrailsQuery(_Model):
+    """Input of `road.guardrails.query` v1: every guardrail read, or one (`guardrail`: its id or name).
+
+    Refusals: `not_a_road_project`, `unknown_guardrail`, `invalid_guardrail` (its corridor does not build). Warnings:
+    `guardrail_stale`, and the corridor's own (`corridor_stale`, `corridor_surface_gone`, `corridor_unsolved`).
+    """
+    guardrail: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.guardrail is not UNSET:
+            out["guardrail"] = self.guardrail
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GuardrailsQuery:
+        return cls(
+            guardrail=data.get("guardrail", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GuardrailsWritten(_Model):
+    """Output of `road.guardrails.edit` v1.
+    Attributes:
+        guardrail: The guardrail written, read; absent when removed.
+    """
+    guardrails: list[GuardrailListed]
+    revision: str
+    guardrail: GuardrailReport | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["guardrails"] = [e0.to_json() for e0 in self.guardrails]
+        out["revision"] = self.revision
+        if self.guardrail is not UNSET:
+            out["guardrail"] = None if self.guardrail is None else self.guardrail.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GuardrailsWritten:
+        return cls(
+            guardrails=[GuardrailListed.from_json(e0) for e0 in data["guardrails"]],
+            revision=data["revision"],
+            guardrail=UNSET if "guardrail" not in data else None if data["guardrail"] is None else GuardrailReport.from_json(data["guardrail"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class HatchAssoc(_Model):
     """The objects a hatch follows (docs/adr/0186 §6, 0328 §3): a hatch made inside a closed object follows the
     object (`outer`), its islands, the texts and inserts left open; a hatch made in the face line work closes
@@ -61400,6 +61832,7 @@ class RoadSettings(_Model):
     Attributes:
         alignments: The horizontal alignments (docs/adr/0901), in the order the project tree shows them.
         corridors: The corridors (docs/adr/0905), each on an alignment, in the order the project tree shows them.
+        guardrails: The guardrails (docs/adr/0909 §1), each along a corridor.
         hauls: The mass haul diagrams (docs/adr/0907).
         profiles: The vertical alignments (docs/adr/0902), each on an alignment, in the order the project tree shows them.
         sections: The sample line sets (docs/adr/0903 §2), in the order the project tree shows them.
@@ -61411,6 +61844,7 @@ class RoadSettings(_Model):
     """
     alignments: list[AlignmentDef] | Unset = UNSET
     corridors: list[CorridorDef] | Unset = UNSET
+    guardrails: list[GuardrailDef] | Unset = UNSET
     hauls: list[HaulDef] | Unset = UNSET
     profiles: list[ProfileDef] | Unset = UNSET
     sections: list[SectionSetDef] | Unset = UNSET
@@ -61426,6 +61860,8 @@ class RoadSettings(_Model):
             out["alignments"] = [e0.to_json() for e0 in self.alignments]
         if self.corridors is not UNSET:
             out["corridors"] = [e0.to_json() for e0 in self.corridors]
+        if self.guardrails is not UNSET:
+            out["guardrails"] = [e0.to_json() for e0 in self.guardrails]
         if self.hauls is not UNSET:
             out["hauls"] = [e0.to_json() for e0 in self.hauls]
         if self.profiles is not UNSET:
@@ -61449,6 +61885,7 @@ class RoadSettings(_Model):
         return cls(
             alignments=[AlignmentDef.from_json(e0) for e0 in data["alignments"]] if "alignments" in data else UNSET,
             corridors=[CorridorDef.from_json(e0) for e0 in data["corridors"]] if "corridors" in data else UNSET,
+            guardrails=[GuardrailDef.from_json(e0) for e0 in data["guardrails"]] if "guardrails" in data else UNSET,
             hauls=[HaulDef.from_json(e0) for e0 in data["hauls"]] if "hauls" in data else UNSET,
             profiles=[ProfileDef.from_json(e0) for e0 in data["profiles"]] if "profiles" in data else UNSET,
             sections=[SectionSetDef.from_json(e0) for e0 in data["sections"]] if "sections" in data else UNSET,
@@ -98857,6 +99294,18 @@ __all__ = [
     "GroupPaperOp",
     "GroupReason",
     "GroupReasonName",
+    "GuardrailDef",
+    "GuardrailListed",
+    "GuardrailReport",
+    "GuardrailRuleDef",
+    "GuardrailRun",
+    "GuardrailWarrantDef",
+    "GuardrailsDraw",
+    "GuardrailsDrawn",
+    "GuardrailsEdit",
+    "GuardrailsQueried",
+    "GuardrailsQuery",
+    "GuardrailsWritten",
     "HatchAssoc",
     "HatchCurve",
     "HatchDrawOrder",

@@ -457,6 +457,32 @@
       }
      ]
     }
+   ],
+   "guardrails": [
+    {
+     "id": "o-1",
+     "name": "Ana korkuluk",
+     "corridor": "c-1",
+     "corridorRevision": 2,
+     "revision": 1,
+     "rule": {
+      "source": "Kurum tablosu, sürüm 1",
+      "warrants": [
+       {
+        "height": 3.0,
+        "slope": 3.0
+       },
+       {
+        "height": 6.0
+       }
+      ],
+      "approach": 40.0,
+      "leaving": 20.0,
+      "gap": 50.0
+     },
+     "step": 10.0,
+     "offset": 0.5
+    }
    ]
   }
  },

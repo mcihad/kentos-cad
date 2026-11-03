@@ -21,6 +21,7 @@
 
 pub mod alignment;
 pub mod corridor;
+pub mod guardrail;
 pub mod haul;
 pub mod profile;
 pub mod section;

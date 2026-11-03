@@ -5,15 +5,15 @@ import type { RepeatDimensionMap } from "./RepeatDimensionMap";
 import type { RepeatMemberMap } from "./RepeatMemberMap";
 import type { RepeatPlacement } from "./RepeatPlacement";
 
-export type BlocksConvertPlan = {
+export type BlocksConvertPlan = { 
 /**
  * Nil block UUID in a read-only plan; allocated only at execution.
  */
-block: BlockDefinition, placements: Array<RepeatPlacement>, mapping: Array<RepeatMemberMap>, dimensions: Array<RepeatDimensionMap>,
+block: BlockDefinition, placements: Array<RepeatPlacement>, mapping: Array<RepeatMemberMap>, dimensions: Array<RepeatDimensionMap>, 
 /**
  * Complete proposed dimension records for review; execution follows the same geometry.
  */
-rebound: Array<Entity>,
+rebound: Array<Entity>, 
 /**
  * Removed roots, excluding the identities retained as inserts.
  */

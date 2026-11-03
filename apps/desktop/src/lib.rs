@@ -263,6 +263,9 @@ mod volume_window;
 mod haul_window;
 mod stakeout_window;
 mod road_alignment_fit_window;
+mod guardrail_window;
+#[cfg(test)]
+mod guardrail_window_tests;
 #[cfg(test)]
 mod road_profile_fit_window_tests;
 mod road_profile_fit_window;

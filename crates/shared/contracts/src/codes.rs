@@ -749,6 +749,12 @@ codes! {
     /// A drawn profile that makes no profile: not a line or an open polyline, a view value out of bounds, stations
     /// that do not grow, arcs in a row, a PVI off the alignment, curves that do not fit, a name taken (docs/adr/0908 §13).
     INVALID_PROFILE_FIT = "invalid_profile_fit", Failed, false, "Çizimden boykesit kurulamıyor.";
+    /// A guardrail that is not right: its rule, step or offset out of bounds, a new one without its fields, a corridor
+    /// that does not build (docs/adr/0909 §1).
+    INVALID_GUARDRAIL = "invalid_guardrail", Failed, false, "Otokorkuluğun tanımı geçerli değil; ileti nedenini söyler.";
+    UNKNOWN_GUARDRAIL = "unknown_guardrail", Failed, false, "Bu kimlikte ya da adda otokorkuluk yok.";
+    /// A warning: the guardrail's corridor changed since it was made or rebound (docs/adr/0909 §1).
+    GUARDRAIL_STALE = "guardrail_stale", Warning, false, "Otokorkuluğun koridoru değişti; korkulukları denetleyip koridora yeniden bağlayın.";
     /// A warning: the profile lies farther from the drawn line than the tolerance (docs/adr/0908 §13).
     PROFILE_FIT_DEVIATION = "profile_fit_deviation", Warning, false, "Boykesit çizginin köşelerinden toleranstan uzak.";
     /// A warning: the corridor's superelevation schedule does not build; its lanes keep the templates' slopes.

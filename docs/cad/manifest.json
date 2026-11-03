@@ -4158,6 +4158,23 @@
    "tests": 0
   },
   {
+   "id": "guardrail.editor",
+   "kind": "command",
+   "title": "Otokorkuluk…",
+   "level": "semantic",
+   "via": [
+    "road.guardrails.edit",
+    "road.guardrails.draw"
+   ],
+   "operation": null,
+   "python": "Connection: road.guardrails.edit, Connection: road.guardrails.draw",
+   "mcp": "road.guardrails.edit, road.guardrails.draw",
+   "note": "Kural yazıldıkça road.guardrails.edit'in planıyla okuma kopyasında önizler; Kaydet road.guardrails.edit, Planda çiz road.guardrails.draw ile yazar (plan/road.md Y11.1, ADR 0909 §1).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "hatchPatterns.manage",
    "kind": "command",
    "title": "Tarama desenleri",

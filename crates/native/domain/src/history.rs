@@ -365,6 +365,11 @@ pub(crate) enum Op {
         before: Vec<kentos_contracts::RoadSheetSetDef>,
         after: Vec<kentos_contracts::RoadSheetSetDef>,
     },
+    /// A road project's guardrails (docs/adr/0909 §1), before and after.
+    RoadGuardrails {
+        before: Vec<kentos_contracts::GuardrailDef>,
+        after: Vec<kentos_contracts::GuardrailDef>,
+    },
     /// The project's room modules (docs/adr/0775), before and after: a setting, written in the step with the objects
     /// placed or updated, so undo gives both back.
     ArchModules {
@@ -721,6 +726,10 @@ impl Op {
                 after: before.clone(),
             },
             Op::RoadSheetSets { before, after } => Op::RoadSheetSets {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::RoadGuardrails { before, after } => Op::RoadGuardrails {
                 before: after.clone(),
                 after: before.clone(),
             },
@@ -1379,6 +1388,7 @@ impl Document {
                 | Op::RoadVolumes { .. }
                 | Op::RoadHauls { .. }
                 | Op::RoadSheetSets { .. }
+                | Op::RoadGuardrails { .. }
                 | Op::ViewArea { .. }
                 | Op::ArchOptions { .. }
                 | Op::OptionCombos { .. }
@@ -1738,6 +1748,12 @@ impl Document {
             Op::RoadSheetSets { after, .. } => {
                 let mut road = self.settings.road.take().unwrap_or_default();
                 road.sheet_sets = after.clone();
+                self.settings.road = (!road.is_empty()).then_some(road);
+                return;
+            }
+            Op::RoadGuardrails { after, .. } => {
+                let mut road = self.settings.road.take().unwrap_or_default();
+                road.guardrails = after.clone();
                 self.settings.road = (!road.is_empty()).then_some(road);
                 return;
             }

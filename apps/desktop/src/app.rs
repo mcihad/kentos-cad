@@ -292,6 +292,8 @@ pub enum Dialog {
     RoadAlignmentFit,
     /// Çizimden boykesit (road_profile_fit_window.rs, plan/road.md Y10.6b); the window is `App::road_profile_fit_window`.
     RoadProfileFit,
+    /// Otokorkuluk (guardrail_window.rs, plan/road.md Y11.1); the window is `App::guardrail_window`.
+    Guardrails,
     /// Bina programı (program_window.rs, docs/adr/0773); the window is `App::program_window`.
     Program,
     /// Mahalleri birleştir's decision, asked before writing (quantities.rs, docs/adr/0773 §4).
@@ -661,6 +663,8 @@ pub enum Message {
     RoadAlignmentFit(crate::road_alignment_fit_window::Event),
     /// An event of Çizimden boykesit (road_profile_fit_window.rs, plan/road.md Y10.6b).
     RoadProfileFit(crate::road_profile_fit_window::Event),
+    /// An event of Otokorkuluk (guardrail_window.rs, plan/road.md Y11.1).
+    Guardrails(crate::guardrail_window::Event),
     /// LandXML ver's file, or none when the dialog was closed (road_exchange.rs, plan/road.md Y10.2).
     LandxmlExport(Option<std::path::PathBuf>),
     /// LandXML'den aks al's file, or none (road_exchange.rs, plan/road.md Y10.2).
@@ -1246,6 +1250,8 @@ pub struct App {
     pub(crate) road_alignment_fit_window: Option<Box<crate::road_alignment_fit_window::Window>>,
     /// Çizimden boykesit (road_profile_fit_window.rs, plan/road.md Y10.6b).
     pub(crate) road_profile_fit_window: Option<Box<crate::road_profile_fit_window::Window>>,
+    /// Otokorkuluk (guardrail_window.rs, plan/road.md Y11.1).
+    pub(crate) guardrail_window: Option<Box<crate::guardrail_window::Window>>,
     /// Bina programı (program_window.rs, docs/adr/0773).
     pub(crate) program_window: Option<crate::program_window::Window>,
     /// Mahalleri birleştir asked: its input and its decision's words (docs/adr/0773 §4).
@@ -1678,6 +1684,7 @@ impl App {
             road_sheets_window: None,
             road_alignment_fit_window: None,
             road_profile_fit_window: None,
+            guardrail_window: None,
             program_window: None,
             space_merging: None,
             table_styles: None,
@@ -2407,6 +2414,7 @@ impl App {
             Message::RoadSheets(event) => return self.road_sheets_event(event),
             Message::RoadAlignmentFit(event) => return self.road_alignment_fit_event(event),
             Message::RoadProfileFit(event) => return self.road_profile_fit_event(event),
+            Message::Guardrails(event) => return self.guardrail_event(event),
             Message::LandxmlExport(path) => return self.landxml_chosen(path),
             Message::LandxmlAlignments(path) => return self.landxml_alignments_chosen(path),
             Message::IfcExport(path) => return self.ifc_chosen(path),
@@ -3454,6 +3462,7 @@ impl App {
             "road.sheets" => self.open_road_sheets(),
             "alignment.fromLine" => self.open_road_alignment_fit(),
             "profile.fromLine" => self.open_road_profile_fit(),
+            "guardrail.editor" => self.open_guardrails(),
             // LandXML ver (road_exchange.rs, plan/road.md Y10.2).
             "landxml.export" => return self.export_landxml(),
             "landxml.importAlignments" => return self.import_landxml_alignments(),

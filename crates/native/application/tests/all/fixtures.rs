@@ -93,7 +93,7 @@ use kentos_native_application::{
     images_clip, labels_pin, labels_report, layers_compose, layers_contingents, layers_edit,
     layers_filter, layers_find, layers_indexes, layers_info, layers_labels, layers_renderer,
     layers_rules, layers_service, layers_set, layers_states, layers_subtypes, layers_table,
-    layers_time, layers_translate, leaders_edit, legends, levels_assign, line, linearref_define, file_import_landxml, road_alignments_create, road_alignments_edit, road_alignments_label, road_alignments_query, road_profiles_create, road_profiles_draw, road_profiles_edit, road_profiles_query, road_sections_draw, road_sections_edit, road_sections_query, road_superelevations_edit, road_superelevations_query, road_corridors_draw, road_corridors_edit, road_corridors_query, road_volumes_approve, road_volumes_edit, road_volumes_query, road_hauls_edit, road_hauls_query, road_alignments_import, road_alignments_fit, road_profiles_fit, road_ifc, road_landxml, road_stakeout, road_stakeout_send, road_sheets, road_sheets_sections, road_templates_edit, road_terrains_contours, road_terrains_create, road_terrains_edit, road_terrains_query,
+    layers_time, layers_translate, leaders_edit, legends, levels_assign, line, linearref_define, file_import_landxml, road_alignments_create, road_alignments_edit, road_alignments_label, road_alignments_query, road_profiles_create, road_profiles_draw, road_profiles_edit, road_profiles_query, road_sections_draw, road_sections_edit, road_sections_query, road_superelevations_edit, road_superelevations_query, road_corridors_draw, road_corridors_edit, road_corridors_query, road_volumes_approve, road_volumes_edit, road_volumes_query, road_hauls_edit, road_hauls_query, road_guardrails_edit, road_guardrails_query, road_guardrails_draw, road_alignments_import, road_alignments_fit, road_profiles_fit, road_ifc, road_landxml, road_stakeout, road_stakeout_send, road_sheets, road_sheets_sections, road_templates_edit, road_terrains_contours, road_terrains_create, road_terrains_edit, road_terrains_query,
     network_define, north, nurbs, objects_derive, offset, openings_create, openings_distances,
     openings_edit, opening_types_edit, materials_edit, openings_query, modules_edit, modules_query, options_edit, options_query, elevations_edit, elevations_query, parcels, point, points_construct, polygon, polygon_regular, polyline,
     rectangle_create, revcloud_create, revisions, roads_edit, scenarios_edit, sector_create, set,
@@ -3616,6 +3616,24 @@ impl Input for kentos_commands::HaulsEdit {
     }
 }
 
+impl Input for kentos_commands::GuardrailsEdit {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::GuardrailsQuery {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::GuardrailsDraw {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
 impl Input for kentos_commands::HaulsQuery {
     fn number(&mut self, _: &str) -> Option<&mut f64> {
         None
@@ -4918,6 +4936,15 @@ fn run_op(
         }
         kentos_commands::ROAD_HAULS_QUERY => {
             run!(road_hauls_query, kentos_commands::HaulsQuery)
+        }
+        kentos_commands::ROAD_GUARDRAILS_EDIT => {
+            run!(road_guardrails_edit, kentos_commands::GuardrailsEdit)
+        }
+        kentos_commands::ROAD_GUARDRAILS_QUERY => {
+            run!(road_guardrails_query, kentos_commands::GuardrailsQuery)
+        }
+        kentos_commands::ROAD_GUARDRAILS_DRAW => {
+            run!(road_guardrails_draw, kentos_commands::GuardrailsDraw)
         }
         kentos_commands::ROAD_STAKEOUT_QUERY => {
             run!(road_stakeout, kentos_commands::StakeoutQuery)

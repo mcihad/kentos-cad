@@ -279,6 +279,8 @@ CAD = [
         P("Aplikasyon", "stakeoutTable", [L("stakeout.table"), L("landxml.export"), L("ifc.export")]),
         # The plan–profile sheets (plan/road.md Y10.5, docs/adr/0908 §10).
         P("Pafta", "roadSheets", [L("road.sheets")]),
+        # The guardrails (plan/road.md Y11.1, docs/adr/0909 §1).
+        P("Güvenlik", "guardrailEditor", [L("guardrail.editor")]),
     ], works=ROAD),
     T("plan", "Plan", [
         P("Yol", "planRoad", [L("tool.planRoad"), S("tool.roadJunctions"), S("tool.medianClose"), S("tool.centerline")]),
