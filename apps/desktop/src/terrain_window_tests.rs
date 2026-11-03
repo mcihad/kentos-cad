@@ -72,10 +72,15 @@ fn the_window_makes_a_surface_and_accepts_it_again() {
     let doc = &app.document.as_ref().expect("doc").model;
     assert!(doc.entities().count() > before, "the lines are drawn");
     assert!(doc.can_undo());
-    // Removed and saved: the road settings go.
+    // Removed and saved: the surface goes; the contour lines' record stays, its source gone (docs/adr/0911 §2), so the
+    // Yol projesi panel says “Kaynağı yok”.
     send(&mut app, W::Remove);
     send(&mut app, W::Save);
-    assert!(app.document.as_ref().expect("doc").model.settings().road.is_none());
+    let road = app.document.as_ref().expect("doc").model.settings().road.clone().expect("the drawing's record");
+    assert!(road.surfaces.is_empty());
+    let tree = kentos_native_application::road_project_query::preview(&app.document.as_ref().expect("doc").model, false)
+        .expect("a road project");
+    assert!(tree.nodes.iter().any(|n| n.kind == kentos_commands::RoadNodeKind::Drawing && n.state == kentos_commands::RoadNodeState::Gone));
 }
 
 #[test]

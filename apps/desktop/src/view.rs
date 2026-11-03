@@ -2029,6 +2029,7 @@ impl App {
             Asking::Hauls => self.road_haul_view(),
             Asking::Stakeout => self.road_stakeout_view(),
             Asking::RoadSheets => self.road_sheets_view(),
+            Asking::RoadViews => self.road_views_view(),
             Asking::RoadAlignmentFit => self.road_alignment_fit_view(),
             Asking::RoadProfileFit => self.road_profile_fit_view(),
             Asking::Guardrails => self.guardrail_view(),

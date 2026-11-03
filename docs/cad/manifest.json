@@ -7867,6 +7867,25 @@
    "tests": 0
   },
   {
+   "id": "road.views",
+   "kind": "command",
+   "title": "Görünüşler…",
+   "level": "query",
+   "via": [
+    "road.alignments.query",
+    "road.profiles.query",
+    "road.sections.query",
+    "road.corridors.query"
+   ],
+   "operation": null,
+   "python": "Connection: road.alignments.query, Connection: road.profiles.query, Connection: road.sections.query, Connection: road.corridors.query",
+   "mcp": "road.alignments.query, road.profiles.query, road.sections.query, road.corridors.query",
+   "note": "Görünüşler çizimi değiştirmez: aksın yeri ve km'si road.alignments.query'nin, boykesit road.profiles.query'nin, kesitler road.sections.query'nin ve road.corridors.query'nin okuduğudur (plan/road.md Y13.4, ADR 0911 §5).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "route.finder",
    "kind": "command",
    "title": "Ön güzergâh…",

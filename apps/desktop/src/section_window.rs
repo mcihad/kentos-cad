@@ -1384,12 +1384,13 @@ fn kind_words(k: Kind) -> &'static str {
 const CHART_HEIGHT: f32 = 230.0;
 
 /// A section drawn: the terrain, the platform and slopes, the daylight points, the axis and the grids.
-struct Chart<'a> {
-    row: Option<&'a SectionRow>,
+/// A section drawn (the split views draw one too, road_views_window.rs).
+pub(crate) struct Chart<'a> {
+    pub(crate) row: Option<&'a SectionRow>,
     /// A template on the sample ground, for the template's look.
-    sample: Option<(Vec<GroundPoint>, tpl::Section)>,
+    pub(crate) sample: Option<(Vec<GroundPoint>, tpl::Section)>,
     /// The vertical exaggeration; none fills the height.
-    exaggeration: Option<f64>,
+    pub(crate) exaggeration: Option<f64>,
 }
 
 impl canvas::Program<Message> for Chart<'_> {

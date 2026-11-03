@@ -2816,6 +2816,16 @@
       ],
       "note": "Yol paftaları road.sheets.plan'ın planıyla önizler ve onunla yazar: boykesit görünümleri, pafta takımı ve paftalar tek geri alma adımı (plan/road.md Y10.5, ADR 0908 §10)."
     },
+    "road.views": {
+      "level": "query",
+      "via": [
+        "road.alignments.query",
+        "road.profiles.query",
+        "road.sections.query",
+        "road.corridors.query"
+      ],
+      "note": "Görünüşler çizimi değiştirmez: aksın yeri ve km'si road.alignments.query'nin, boykesit road.profiles.query'nin, kesitler road.sections.query'nin ve road.corridors.query'nin okuduğudur (plan/road.md Y13.4, ADR 0911 §5)."
+    },
     "stakeout.table": {
       "level": "semantic",
       "via": [

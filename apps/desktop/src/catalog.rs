@@ -611,6 +611,8 @@ pub const PORTED: &[&str] = &[
     "stakeout.table",
     // plan/road.md Y10.5: Yol paftaları (road_sheets_window.rs).
     "road.sheets",
+    // plan/road.md Y13.4: Görünüşler (road_views_window.rs).
+    "road.views",
     // plan/road.md Y10.6: Çizgiden aks (road_alignment_fit_window.rs).
     "alignment.fromLine",
     // plan/road.md Y10.6b: Çizimden boykesit (road_profile_fit_window.rs).

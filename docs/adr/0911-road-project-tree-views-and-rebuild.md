@@ -96,10 +96,17 @@ Tarih: 2026-11-03. plan/road.md Y13 (ROAD-MOD-04, ROAD-MOD-05, ROAD-MOD-06). Dur
    açar (Yüzeyler, Güzergâh, Boykesit, Enkesit, Dever, Kavşak, Koridor, Kübaj, Brükner, Otokorkuluk, Menfez, İstinat,
    Yol paftaları, Poz metrajı), çizimin satırı nesnelerini seçer ve gösterir; çizimin ↻'si yeniden üretir, elle
    değişende “Üstüne yaz” (edited). “Eskidi” yerine “Güncel değil” (sahibin isteği; Civil 3D'nin “Out of date”'i).
-5. **Bölünmüş görünüşler.** Seçili aksın boykesiti ve km'sindeki enkesit planın yanında, aynı pencerede: km kaydırıcısı
-   (ya da yazılan km) üç görünüşü birlikte yürütür; planda aksa dik km çizgisi, boykesitte km'nin düşey çizgisi,
-   enkesitte o km'nin kesiti (kesit takımının ya da koridorun). Boykesitin düşey abartması yalnız görünüşündür
-   (ROAD-PROFILE-06).
+5. **Bölünmüş görünüşler.** Görünüşler penceresi (`road.views`, Koridor sekmesinin Görünüş paneli): seçili aksın planı,
+   boykesiti ve bir km'deki enkesiti yan yana, tek km üçünü birlikte yürütür (Civil 3D'nin Section Editor'ünde plan,
+   profil ve kesit görünüşleri ve km kaydırıcı çizgisi; OpenRoads'un Dynamic Sections'ı, Synchronize View'u ve Locate
+   Station Via Datapoint'i). Planda aks, km'nin noktası ve gösterilen kesitin kesit çizgisi (km'de değilse kesikli);
+   boykesitte km'nin kesikli düşey çizgisi ve siyah ile kırmızı kotun noktaları; enkesitte koridorun (her bölgenin kendi
+   tip kesitiyle, `CorridorSections`) ya da kesit takımının km'ye en yakın kesiti, km'si, sırası, yarma ve dolgu alanı.
+   Km: plana ya da boykesite basmak ve sürüklemek (aksın en yakın noktası, boykesitin yatay ölçeği), kaydırıcı, yazılan
+   km (“1+150” ya da metre; aksın km denklemleriyle), kesitler arası İlk, Önceki, Sonraki, Son. Boykesitin düşey
+   abartması yalnız görünüşündür (ROAD-PROFILE-06); kısa pencerede boykesit bantsız çizilir, abartma sığdığı kadar.
+   Pencere çizime yazmaz; Python ve MCP aynı bilgiyi `road.alignments.query`, `road.profiles.query`,
+   `road.sections.query` ve `road.corridors.query` ile okur.
 
 ## Aşamalar
 
@@ -124,7 +131,13 @@ ağacı KentOS UI'da (`widget/status.rs`, `widget/status_tree.rs`; açılış ve
 bildirim sayfasında örnekleriyle; panel `road_project_panel.rs`, ağacı sürümü ya da derinliği değişince yeniden okur.
 Masaüstü testi: iki çizim güncel değil, Hepsini yeniden üret ikisini tek adımda yazar, geri alma geri getirir,
 Kendiliğinden yeniden üret açılır, Kurarak denetle çözülmeyen kesiti bulur, koridorun satırı Koridor'u açar. Resimler
-açık geniş ve koyu dar (`.run/gui-evidence/yol-proje-agaci-*`, `vitrin-durum-agaci*`). Y13.4: §5.
+açık geniş ve koyu dar (`.run/gui-evidence/yol-proje-agaci-*`, `vitrin-durum-agaci*`). Y13.4 (yapıldı, görünüşler):
+§5. `road_views_window.rs`; Boykesit penceresinin grafiği km çizgisi, basma ve sürükleme ve kısa biçimi alır, Enkesit
+penceresininki ortak; kesit satırı tek yerde kurulur (`road_sections::row_of`), koridorun kesiti onunla. Masaüstü testi:
+pencere ilk aksın boykesiti ve koridoruyla açılır, kesitler arası adımlar, iki kesit arasında en yakını, yazılan km'nin
+iki yazılışı aynı km'ye gider, aks dışındaki km söylenir, kesit takımına geçiş. Resimler açık geniş ve koyu dar
+(`.run/gui-evidence/yol-gorunusler-*`). Y13.1'in kaydı yüzeyi silinen eş yükselti çiziminin satırını tutar (“Kaynağı
+yok”): Yüzeyler penceresinin testi buna göre.
 
 ## Sonra
 

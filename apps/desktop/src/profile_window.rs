@@ -26,7 +26,7 @@
 
 use iced::widget::canvas::{self, LineDash, Path, Stroke, Text};
 use iced::widget::{Column, column, container, row, scrollable, space};
-use iced::{Center, Color, Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
+use iced::{Center, Color, Element, Fill, Pixels, Point, Rectangle, Renderer, Size, Task, Theme, mouse};
 use kentos_commands::{ProfileDef, ProfilePvi, ProfilesCreate, ProfilesEdit, ProfilesEditOperation};
 use kentos_interaction::Level;
 use kentos_native_application::{
@@ -233,7 +233,7 @@ fn tick_step(length: f64) -> f64 {
         .unwrap_or(10_000.0)
 }
 
-fn ground_of(doc: &kentos_domain::Document, alignment: &str, surface: Option<&str>) -> Ground {
+pub(crate) fn ground_of(doc: &kentos_domain::Document, alignment: &str, surface: Option<&str>) -> Ground {
     let mut g = Ground {
         alignment: alignment.to_owned(),
         surface: surface.map(str::to_owned),
@@ -863,6 +863,9 @@ impl App {
             names: r.pvis.iter().map(|p| p.id.clone()).collect(),
             chosen: w.pvi,
             exaggeration,
+            cursor: None,
+            on_station: None,
+            compact: false,
         };
         col = col.push(
             container(canvas(chart).width(Fill).height(typography::scaled(CHART_HEIGHT)))
@@ -969,17 +972,77 @@ const BANDS: [&str; 6] = ["Km", "Mesafe", "Siyah kot", "Kırmızı kot", "Fark",
 const BAND: f32 = 18.0;
 const LEFT: f32 = 92.0;
 
-/// The profile drawn: the terrain, the design line, its PVIs and curves, and the bands under them.
-struct Chart<'a> {
+/// The profile drawn: the terrain, the design line, its PVIs and curves, and the bands under them; for the split views
+/// (road_views_window.rs) a km's vertical line, and a press telling the station under it.
+pub(crate) struct Chart<'a> {
     ground: &'a Ground,
     vertical: Option<Vertical>,
     pvis: Vec<(f64, f64)>,
     names: Vec<String>,
     chosen: Option<usize>,
     exaggeration: f64,
+    cursor: Option<f64>,
+    on_station: Option<fn(f64) -> Message>,
+    /// The split views' short chart: no bands, the length across the width, the exaggeration as far as it fits.
+    compact: bool,
 }
 
-impl Chart<'_> {
+/// Where the chart draws: the plot, its horizontal scale (px per m) and the length shown.
+struct Plot {
+    area: Rectangle,
+    sx: f64,
+    length: f64,
+}
+
+impl<'a> Chart<'a> {
+    /// A profile on its terrain, for the split views: the design from `def` (none when it does not build), the km line
+    /// at `cursor`, a press telling its station.
+    pub(crate) fn of(
+        ground: &'a Ground,
+        def: Option<&ProfileDef>,
+        exaggeration: f64,
+        cursor: Option<f64>,
+        on_station: fn(f64) -> Message,
+    ) -> Self {
+        let pvis: Vec<(f64, f64)> = def.map_or_else(Vec::new, |d| d.pvis.iter().map(|p| (p.station, p.elevation)).collect());
+        let vertical = def.and_then(|d| core::vertical::build(&kentos_native_application::road_profiles::pvis_of(d)).ok());
+        Chart {
+            ground,
+            vertical,
+            pvis,
+            names: Vec::new(),
+            chosen: None,
+            exaggeration,
+            cursor,
+            on_station: Some(on_station),
+            compact: false,
+        }
+    }
+
+    /// Short: no bands, the length across the width.
+    pub(crate) fn compact(mut self, compact: bool) -> Self {
+        self.compact = compact;
+        self
+    }
+
+    /// The bands' top in a chart `height` high.
+    fn bands_top(&self, height: f32) -> f32 {
+        if self.compact { height } else { height - BAND * BANDS.len() as f32 }
+    }
+
+    /// The plot and its scale in `bounds`, none when there is nothing to draw.
+    fn plot(&self, bounds: Size) -> Option<Plot> {
+        let bands_top = self.bands_top(bounds.height);
+        // The plot starts a little right of the bands' names, so the first km's values stay clear of them.
+        let area = Rectangle { x: LEFT + 30.0, y: 10.0, width: bounds.width - LEFT - 60.0, height: bands_top - 22.0 };
+        let length = self.ground.length.max(self.pvis.last().map_or(0.0, |p| p.0));
+        let (lo, hi) = self.range().filter(|_| length > 0.0)?;
+        // One horizontal scale fits the length; the vertical is it times the exaggeration, unless the heights do not fit.
+        let across = area.width as f64 / length;
+        let sx = if self.compact { across } else { across.min(area.height as f64 / ((hi - lo) * self.exaggeration)) };
+        Some(Plot { area, sx, length })
+    }
+
     /// The elevations shown: the terrain's and the design's, a little wider.
     fn range(&self) -> Option<(f64, f64)> {
         let zs = self
@@ -998,16 +1061,45 @@ impl Chart<'_> {
 }
 
 impl canvas::Program<Message> for Chart<'_> {
-    type State = ();
+    /// Whether the km line is being dragged.
+    type State = bool;
 
-    fn draw(&self, _: &(), renderer: &Renderer, theme: &Theme, bounds: Rectangle, _: mouse::Cursor) -> Vec<canvas::Geometry> {
+    fn update(
+        &self,
+        dragging: &mut bool,
+        event: &iced::Event,
+        bounds: Rectangle,
+        cursor: mouse::Cursor,
+    ) -> Option<canvas::Action<Message>> {
+        let on = self.on_station?;
+        let station = |at: Point| {
+            let p = self.plot(bounds.size())?;
+            Some(((f64::from(at.x - p.area.x)) / p.sx).clamp(0.0, p.length))
+        };
+        match event {
+            iced::Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left)) => {
+                let s = station(cursor.position_in(bounds)?)?;
+                *dragging = true;
+                Some(canvas::Action::publish(on(s)).and_capture())
+            }
+            iced::Event::Mouse(mouse::Event::CursorMoved { .. }) if *dragging => {
+                let at = cursor.position()?;
+                let s = station(Point::new(at.x - bounds.x, at.y - bounds.y))?;
+                Some(canvas::Action::publish(on(s)).and_capture())
+            }
+            iced::Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left)) if *dragging => {
+                *dragging = false;
+                Some(canvas::Action::request_redraw())
+            }
+            _ => None,
+        }
+    }
+
+    fn draw(&self, _: &bool, renderer: &Renderer, theme: &Theme, bounds: Rectangle, _: mouse::Cursor) -> Vec<canvas::Geometry> {
         let t = Tokens::of(theme);
         let mut frame = canvas::Frame::new(renderer, bounds.size());
-        let bands_top = bounds.height - BAND * BANDS.len() as f32;
-        // The plot starts a little right of the bands' names, so the first km's values stay clear of them.
-        let plot = Rectangle { x: LEFT + 30.0, y: 10.0, width: bounds.width - LEFT - 60.0, height: bands_top - 22.0 };
-        let length = self.ground.length.max(self.pvis.last().map_or(0.0, |p| p.0));
-        let Some((lo, hi)) = self.range().filter(|_| length > 0.0) else {
+        let bands_top = self.bands_top(bounds.height);
+        let (Some(Plot { area: plot, sx, length }), Some((lo, hi))) = (self.plot(bounds.size()), self.range()) else {
             frame.fill_text(Text {
                 content: "PVI'leri ve yüzeyi verince boykesit burada çizilir.".into(),
                 position: Point::new(LEFT, 20.0),
@@ -1018,9 +1110,11 @@ impl canvas::Program<Message> for Chart<'_> {
             });
             return vec![frame.into_geometry()];
         };
-        // One horizontal scale fits the length; the vertical is it times the exaggeration, unless the heights do not fit.
-        let sx = (plot.width as f64 / length).min(plot.height as f64 / ((hi - lo) * self.exaggeration));
-        let sy = sx * self.exaggeration;
+        let sy = if self.compact {
+            (sx * self.exaggeration).min(f64::from(plot.height) / (hi - lo))
+        } else {
+            sx * self.exaggeration
+        };
         let x = |s: f64| plot.x + (s * sx) as f32;
         let y = |z: f64| plot.y + plot.height - ((z - lo) * sy) as f32;
         let thin = |c: Color| Stroke::default().with_color(c).with_width(1.0);
@@ -1118,13 +1212,14 @@ impl canvas::Program<Message> for Chart<'_> {
             }
         }
         // The bands.
-        for (k, name) in BANDS.iter().enumerate() {
+        let names: &[&str] = if self.compact { &[] } else { &BANDS };
+        for (k, name) in names.iter().enumerate() {
             let top = bands_top + BAND * k as f32;
             frame.stroke(&Path::line(Point::new(0.0, top), Point::new(bounds.width, top)), thin(t.border));
             word(&mut frame, (*name).to_owned(), Point::new(6.0, top + 3.0), if k == 3 { red } else { t.muted }, false);
         }
         let mut before: Option<f64> = None;
-        for (s, km) in &self.ground.ticks {
+        for (s, km) in self.ground.ticks.iter().filter(|_| !self.compact) {
             let cx = x(*s);
             let black = self.ground.at(*s);
             let design = self.vertical.as_ref().and_then(|v| v.at(*s)).map(|r| r.0);
@@ -1143,9 +1238,18 @@ impl canvas::Program<Message> for Chart<'_> {
             }
             before = Some(*s);
         }
+        // The km of the split views: a line through the plot and the bands, its km and elevations at its foot.
+        if let Some(c) = self.cursor.filter(|c| (0.0..=length).contains(c)) {
+            let cx = x(c);
+            let line = Stroke { line_dash: LineDash { segments: &[5.0, 3.0], offset: 0 }, ..thin(t.accent) };
+            frame.stroke(&Path::line(Point::new(cx, plot.y), Point::new(cx, bands_top)), Stroke { width: 1.4, ..line });
+            for z in [self.ground.at(c), self.vertical.as_ref().and_then(|v| v.at(c)).map(|r| r.0)].into_iter().flatten() {
+                frame.fill(&Path::circle(Point::new(cx, y(z)), 3.0), t.accent);
+            }
+        }
         // The grades between the PVIs.
         let grade_top = bands_top + BAND * 5.0;
-        for w in self.pvis.windows(2) {
+        for w in self.pvis.windows(2).filter(|_| !self.compact) {
             let ((s0, z0), (s1, z1)) = (w[0], w[1]);
             if s1 <= s0 {
                 continue;

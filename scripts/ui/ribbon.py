@@ -283,6 +283,8 @@ CAD = [
         P("Aplikasyon", "stakeoutTable", [L("stakeout.table"), L("landxml.export"), L("ifc.export")]),
         # The plan–profile sheets (plan/road.md Y10.5, docs/adr/0908 §10).
         P("Pafta", "roadSheets", [L("road.sheets")]),
+        # The split plan, profile and section views at one km (plan/road.md Y13.4, docs/adr/0911 §5).
+        P("Görünüş", "roadViews", [L("road.views")]),
         # The road's structures: guardrails and culverts (plan/road.md Y11, docs/adr/0909).
         P("Yapılar", "guardrailEditor", [L("guardrail.editor"), L("culvert.editor"), L("retainingWall.editor")]),
         # The pay item quantities (plan/road.md Y11.4, docs/adr/0909 §4).

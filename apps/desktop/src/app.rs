@@ -294,6 +294,8 @@ pub enum Dialog {
     Stakeout,
     /// Yol paftaları (road_sheets_window.rs, plan/road.md Y10.5); the window is `App::road_sheets_window`.
     RoadSheets,
+    /// Görünüşler (road_views_window.rs, plan/road.md Y13.4); the window is `App::road_views_window`.
+    RoadViews,
     /// Çizgiden aks (road_alignment_fit_window.rs, plan/road.md Y10.6); the window is `App::road_alignment_fit_window`.
     RoadAlignmentFit,
     /// Çizimden boykesit (road_profile_fit_window.rs, plan/road.md Y10.6b); the window is `App::road_profile_fit_window`.
@@ -678,6 +680,7 @@ pub enum Message {
     Stakeout(crate::stakeout_window::Event),
     /// An event of Yol paftaları (road_sheets_window.rs, plan/road.md Y10.5).
     RoadSheets(crate::road_sheets_window::Event),
+    RoadViews(crate::road_views_window::Event),
     /// An event of Çizgiden aks (road_alignment_fit_window.rs, plan/road.md Y10.6).
     RoadAlignmentFit(crate::road_alignment_fit_window::Event),
     /// An event of Çizimden boykesit (road_profile_fit_window.rs, plan/road.md Y10.6b).
@@ -1279,6 +1282,7 @@ pub struct App {
     pub(crate) stakeout_window: Option<Box<crate::stakeout_window::Window>>,
     /// Yol paftaları (road_sheets_window.rs, plan/road.md Y10.5).
     pub(crate) road_sheets_window: Option<Box<crate::road_sheets_window::Window>>,
+    pub(crate) road_views_window: Option<Box<crate::road_views_window::Window>>,
     /// Çizgiden aks (road_alignment_fit_window.rs, plan/road.md Y10.6).
     pub(crate) road_alignment_fit_window: Option<Box<crate::road_alignment_fit_window::Window>>,
     /// Çizimden boykesit (road_profile_fit_window.rs, plan/road.md Y10.6b).
@@ -1728,6 +1732,7 @@ impl App {
             haul_window: None,
             stakeout_window: None,
             road_sheets_window: None,
+            road_views_window: None,
             road_alignment_fit_window: None,
             road_profile_fit_window: None,
             guardrail_window: None,
@@ -2465,6 +2470,7 @@ impl App {
             Message::Hauls(event) => return self.haul_event(event),
             Message::Stakeout(event) => return self.stakeout_event(event),
             Message::RoadSheets(event) => return self.road_sheets_event(event),
+            Message::RoadViews(event) => return self.road_views_event(event),
             Message::RoadAlignmentFit(event) => return self.road_alignment_fit_event(event),
             Message::RoadProfileFit(event) => return self.road_profile_fit_event(event),
             Message::Guardrails(event) => return self.guardrail_event(event),
@@ -3520,6 +3526,7 @@ impl App {
             // Aplikasyon cetveli (stakeout_window.rs, plan/road.md Y10).
             "stakeout.table" => self.open_stakeout(),
             "road.sheets" => self.open_road_sheets(),
+            "road.views" => self.open_road_views(),
             "alignment.fromLine" => self.open_road_alignment_fit(),
             "profile.fromLine" => self.open_road_profile_fit(),
             "guardrail.editor" => self.open_guardrails(),

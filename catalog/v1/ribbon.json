@@ -681,6 +681,16 @@
       ]
      },
      {
+      "label": "Görünüş",
+      "icon": "roadViews",
+      "items": [
+       {
+        "command": "road.views",
+        "size": "large"
+       }
+      ]
+     },
+     {
       "label": "Yapılar",
       "icon": "guardrailEditor",
       "items": [

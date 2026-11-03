@@ -93,6 +93,11 @@ pub(crate) struct Sampler {
 }
 
 impl Sampler {
+    /// The design elevation at station `s` (the profile's).
+    pub fn elevation(&self, s: f64) -> Option<f64> {
+        self.vertical.at(s).map(|r| r.0)
+    }
+
     /// The cross at station `s` with `template`: its sample line and the section, none where the line does not lie on
     /// the alignment.
     pub fn cross(&self, template: &tpl::Template, s: f64) -> Option<Cross> {
@@ -385,6 +390,41 @@ pub(crate) fn report(doc: &Document, def: &CorridorDef) -> CorridorReport {
 
 /// A corridor built now: its report and the core's result, or why it does not build.
 pub type MadeCorridor = Result<(CorridorReport, core::Built), String>;
+
+/// A corridor built once for looking along it (plan/road.md Y13.4, docs/adr/0911 §5): its stations, and its section
+/// at any station of a region with that region's template, as the section sets' rows are.
+pub struct CorridorSections {
+    made: Made,
+}
+
+impl CorridorSections {
+    /// The corridor `id` built now, or why it does not build.
+    pub fn of(doc: &Document, id: &str) -> Result<Self, String> {
+        let def = doc.road_corridors().iter().find(|c| c.id == id).ok_or_else(|| format!("({id}) koridoru projede yok."))?;
+        make(doc, def, false).map(|made| Self { made }).map_err(words)
+    }
+
+    /// The stations the corridor is sampled at, in order.
+    pub fn stations(&self) -> Vec<f64> {
+        let mut out: Vec<f64> = self.made.regions.iter().flat_map(|r| r.crosses.iter().map(|c| c.line.station)).collect();
+        out.sort_by(f64::total_cmp);
+        out.dedup_by(|a, b| (*a - *b).abs() < 1e-9);
+        out
+    }
+
+    /// The section at station `s`: the template of the region it is in (its sampled ends), none off every region or
+    /// where the sample line does not lie on the alignment.
+    pub fn row_at(&self, s: f64) -> Option<kentos_commands::SectionRow> {
+        let region = self.made.regions.iter().find(|r| {
+            let (a, b) = (r.crosses.first().map(|c| c.line.station), r.crosses.last().map(|c| c.line.station));
+            matches!((a, b), (Some(a), Some(b)) if s >= a - 1e-9 && s <= b + 1e-9)
+        })?;
+        let sampler = &self.made.sampler;
+        let (cross, terrain) = sampler.sample(&region.template, s)?;
+        let km = sampler.alignment.km(s);
+        Some(crate::road_sections::row_of(s, km, cross.line.ends, sampler.elevation(s), &terrain, cross.section.as_ref()))
+    }
+}
 
 /// The road project's corridors built now, for the desktop's Koridor window and its plan (plan/road.md Y7).
 pub fn made_corridors(doc: &Document) -> Vec<(CorridorDef, MadeCorridor)> {

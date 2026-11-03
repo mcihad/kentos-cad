@@ -257,6 +257,30 @@ pub(crate) fn surface_of(doc: &Document, def: &SectionSetDef) -> Option<Result<S
     Some(terrains::make(doc, sdef).surface.map_err(|_| gone(format!("“{}” kurulamıyor", sdef.name))))
 }
 
+/// A section as a row: its station and km, its sample line's ends, the axis's elevation, the terrain along it, and
+/// the platform's sides and areas where it builds.
+pub(crate) fn row_of(
+    s: f64,
+    km: f64,
+    ends: [[f64; 2]; 2],
+    axis: Option<f64>,
+    g: &[kentos_road::section::GroundPoint],
+    section: Option<&tpl::Section>,
+) -> SectionRow {
+    SectionRow {
+        station: s,
+        km,
+        km_text: km_text(km, 3),
+        ends,
+        axis,
+        ground: g.iter().map(|p| SectionGround { offset: p.offset, z: p.z, gap: p.gap }).collect(),
+        left: section.map(|x| side_row(&x.left)),
+        right: section.map(|x| side_row(&x.right)),
+        cut: section.map(|x| x.cut),
+        fill: section.map(|x| x.fill),
+    }
+}
+
 fn side_row(s: &tpl::SideSection) -> SectionSide {
     SectionSide {
         kind: match s.kind {
@@ -376,18 +400,7 @@ fn sections_with(
                 }
             }
         }
-        rows.push(SectionRow {
-            station: s,
-            km,
-            km_text: km_text(km, 3),
-            ends: line.ends,
-            axis,
-            ground: g.iter().map(|p| SectionGround { offset: p.offset, z: p.z, gap: p.gap }).collect(),
-            left: built_section.as_ref().map(|x| side_row(&x.left)),
-            right: built_section.as_ref().map(|x| side_row(&x.right)),
-            cut: built_section.as_ref().map(|x| x.cut),
-            fill: built_section.as_ref().map(|x| x.fill),
-        });
+        rows.push(row_of(s, km, line.ends, axis, &g, built_section.as_ref()));
     }
     if !open.is_empty() {
         warnings.push(CommandWarning {

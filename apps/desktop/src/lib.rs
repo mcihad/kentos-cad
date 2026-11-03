@@ -293,6 +293,7 @@ mod road_profile_fit_window;
 #[cfg(test)]
 mod road_alignment_fit_window_tests;
 mod road_sheets_window;
+mod road_views_window;
 mod road_exchange;
 #[cfg(test)]
 mod alignment_window_tests;
@@ -312,6 +313,8 @@ mod haul_window_tests;
 mod stakeout_window_tests;
 #[cfg(test)]
 mod road_sheets_window_tests;
+#[cfg(test)]
+mod road_views_window_tests;
 #[cfg(test)]
 mod road_exchange_tests;
 mod terrain_layer;
