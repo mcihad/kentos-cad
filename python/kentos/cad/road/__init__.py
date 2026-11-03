@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from . import alignments
 from . import corridors
+from . import hauls
 from . import profiles
 from . import sections
 from . import superelevations
@@ -16,4 +17,4 @@ from . import terrains
 from . import volumes
 
 
-__all__ = ["alignments", "corridors", "profiles", "sections", "superelevations", "templates", "terrains", "volumes"]
+__all__ = ["alignments", "corridors", "hauls", "profiles", "sections", "superelevations", "templates", "terrains", "volumes"]

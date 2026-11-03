@@ -36,6 +36,7 @@ pub const UNITS: &[(&str, &str)] = &[
     ),
     ("elevation", "Düşey metre: kot, z, yükseklik."),
     ("volume", "Hacim: m³ (alan × düşey metre)."),
+    ("volume-m", "Taşıma momenti: m³·m (hacim × taşıma uzaklığı)."),
     (
         "m",
         "Her sistemde metre: izdüşümün parametreleri, ölçme doğrulukları.",

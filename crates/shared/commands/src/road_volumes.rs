@@ -25,7 +25,8 @@ pub const ROAD_VOLUMES_APPROVE_VERSION: u32 = 1;
 /// `corridor` and `method`. A volume is not rebound: it follows its corridor.
 ///
 /// Refusals, in this order: `not_a_road_project`, `invalid_volume` (rebind), `unknown_volume` (remove one not in the
-/// project), `volume_approved` (change or remove an approved one), `unknown_corridor`, `invalid_volume` (another corridor, a new one without its fields, set with nothing to
+/// project), `volume_approved` (change or remove an approved one), `volume_in_use` (remove one a mass haul diagram
+/// uses), `unknown_corridor`, `invalid_volume` (another corridor, a new one without its fields, set with nothing to
 /// set, the definition by `road_problem`: factors not positive, over 10 or over overlapping stretches; strip rows
 /// overlapping or a depth not in (0, 5] m; a bench's slope not in (0, 1000] % or its height not in (0, 10] m; stripping or
 /// benching between surfaces; a corridor that does not build), `invalid_revision`, `revision_conflict`.

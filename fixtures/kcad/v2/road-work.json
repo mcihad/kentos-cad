@@ -368,6 +368,30 @@
       ]
      }
     }
+   ],
+   "hauls": [
+    {
+     "id": "h-1",
+     "name": "Ana Brükner",
+     "volume": "v-1",
+     "revision": 2,
+     "balance": 250.0,
+     "free": 300.0,
+     "sites": [
+      {
+       "name": "Ödünç ocağı",
+       "kind": "borrow",
+       "station": 120.0,
+       "volume": 1500.0
+      },
+      {
+       "name": "Döküm alanı",
+       "kind": "waste",
+       "station": 640.0,
+       "volume": 4200.0
+      }
+     ]
+    }
    ]
   }
  },

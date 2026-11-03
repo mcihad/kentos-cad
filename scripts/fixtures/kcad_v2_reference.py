@@ -5597,6 +5597,10 @@ def build():
     apv = load("road-work.json")
     apv["settings"]["road"]["volumes"][1]["approved"]["at"] = "3 Kasım 2026"
     out["broken/road-volume-bad-approval-day.kcad"] = container(document(apv))
+    # Schema 161 (plan/road.md Y9, docs/adr/0907): a mass haul diagram names an earthwork volume of the project.
+    hau = load("road-work.json")
+    hau["settings"]["road"]["hauls"][0]["volume"] = "v-yok"
+    out["broken/road-haul-unknown-volume.kcad"] = container(document(hau))
     # Schema 136 (docs/adr/0758): a layer's indexes, a key over two fields, a plain one and a key taking empty values as
     # the same; schema 135 refuses them, an empty list, a group's, one over a field the layer lacks, empty values the
     # same on a plain index and a default written are refused too.

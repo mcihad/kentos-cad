@@ -1789,7 +1789,10 @@ const ENTRIES: &[Entry] = &[
     // KentOS Yol's earthwork volumes (plan/road.md Y8, docs/adr/0906).
     Entry {
         id: "road.volumes.edit",
-        refusals: &[&["not_a_road_project", "unknown_volume", "volume_approved", "unknown_corridor", "invalid_volume"], REVISION],
+        refusals: &[
+            &["not_a_road_project", "unknown_volume", "volume_approved", "volume_in_use", "unknown_corridor", "invalid_volume"],
+            REVISION,
+        ],
         warnings: &[],
         targets: none,
     },
@@ -1797,6 +1800,19 @@ const ENTRIES: &[Entry] = &[
         id: "road.volumes.query",
         refusals: &[&["not_a_road_project", "unknown_volume", "invalid_volume"]],
         warnings: &["corridor_stale", "volume_gap", "volume_uncovered", "volume_unfactored", "volume_changed"],
+        targets: none,
+    },
+    // KentOS Yol's mass haul diagrams (plan/road.md Y9, docs/adr/0907).
+    Entry {
+        id: "road.hauls.edit",
+        refusals: &[&["not_a_road_project", "unknown_haul", "unknown_volume", "invalid_haul"], REVISION],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "road.hauls.query",
+        refusals: &[&["not_a_road_project", "unknown_haul", "invalid_haul"]],
+        warnings: &["corridor_stale", "volume_gap", "haul_unbalanced"],
         targets: none,
     },
     Entry {

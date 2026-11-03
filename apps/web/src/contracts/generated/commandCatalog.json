@@ -37945,7 +37945,7 @@
       "id": "road.volumes.edit",
       "version": 1,
       "title": "Kübaj hesabını düzenle",
-      "summary": "Yol projesinin kübaj hesabını (volume: kimliği ya da adı; yoksa yeni) yazar ya da kaldırır. Kübaj bir koridorun (corridor) hacmidir; yöntem (method): endArea ardışık iki kesit arasında ortalama alan L·(A₀ + A₁)/2, prismoidal iki kesitin ortasında kurulan kesitle L·(A₀ + 4Aₘ + A₁)/6, surfaces koridorun üst yüzeyiyle arazisi arasındaki hacim (üçgenler planda üst üste konur). Kazı ve dolgu ayrıdır. factors km aralıklarına (from, to aksın istasyonu, m) kazının kabarma (cut) ve dolgunun sıkışma (fill) çarpanını verir; artan, birbirine binmeyen satırlar, çarpan 0'dan büyük, en çok 10; KentOS öntanımlı katsayı vermez. Kesit yöntemlerinde strip km aralıklarına bitkisel toprak kalınlığı (depth, m) verir: kübaj zeminin kalınlık kadar indirilmiş hâline göre, bitkisel toprak hacmi ayrı kalem; bench diş kazısıdır (slope: arazinin enine eğimi bu yüzdeden dikken dolgunun altında, height: basamak yüksekliği; hacmi genişlik × yükseklik/2), ayrı kalem, kazı ve dolguya katılmaz; bench null kaldırır. Kübaj koridorunu izler, başka koridora bağlanmaz, yeniden bağlanmaz. Sonuç saklanmaz, her okumada hesaplanır. Yeni hesabın kimliği verilen ya da ilk boş v-n. Tek geri alma adımı “Kübaj”. Onaylı kübaj değiştirilmez ve silinmez (volume_approved); önce road.volumes.approve revoke. Retler: not_a_road_project, unknown_volume, volume_approved, unknown_corridor, invalid_volume, invalid_revision, revision_conflict.",
+      "summary": "Yol projesinin kübaj hesabını (volume: kimliği ya da adı; yoksa yeni) yazar ya da kaldırır. Kübaj bir koridorun (corridor) hacmidir; yöntem (method): endArea ardışık iki kesit arasında ortalama alan L·(A₀ + A₁)/2, prismoidal iki kesitin ortasında kurulan kesitle L·(A₀ + 4Aₘ + A₁)/6, surfaces koridorun üst yüzeyiyle arazisi arasındaki hacim (üçgenler planda üst üste konur). Kazı ve dolgu ayrıdır. factors km aralıklarına (from, to aksın istasyonu, m) kazının kabarma (cut) ve dolgunun sıkışma (fill) çarpanını verir; artan, birbirine binmeyen satırlar, çarpan 0'dan büyük, en çok 10; KentOS öntanımlı katsayı vermez. Kesit yöntemlerinde strip km aralıklarına bitkisel toprak kalınlığı (depth, m) verir: kübaj zeminin kalınlık kadar indirilmiş hâline göre, bitkisel toprak hacmi ayrı kalem; bench diş kazısıdır (slope: arazinin enine eğimi bu yüzdeden dikken dolgunun altında, height: basamak yüksekliği; hacmi genişlik × yükseklik/2), ayrı kalem, kazı ve dolguya katılmaz; bench null kaldırır. Kübaj koridorunu izler, başka koridora bağlanmaz, yeniden bağlanmaz. Sonuç saklanmaz, her okumada hesaplanır. Yeni hesabın kimliği verilen ya da ilk boş v-n. Tek geri alma adımı “Kübaj”. Onaylı kübaj değiştirilmez ve silinmez (volume_approved); önce road.volumes.approve revoke. Bir Brüknerin kullandığı kübaj silinmez (volume_in_use). Retler: not_a_road_project, unknown_volume, volume_approved, volume_in_use, unknown_corridor, invalid_volume, invalid_revision, revision_conflict.",
       "aliases": [
         "kubaj",
         "kübaj"
@@ -37963,7 +37963,7 @@
       "cost": "instant",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `road.volumes.edit` v1: the earthwork volume by its id or name (absent: a new one). A new one needs `name`,\n`corridor` and `method`. A volume is not rebound: it follows its corridor.\n\nRefusals, in this order: `not_a_road_project`, `invalid_volume` (rebind), `unknown_volume` (remove one not in the\nproject), `volume_approved` (change or remove an approved one), `unknown_corridor`, `invalid_volume` (another corridor, a new one without its fields, set with nothing to\nset, the definition by `road_problem`: factors not positive, over 10 or over overlapping stretches; strip rows\noverlapping or a depth not in (0, 5] m; a bench's slope not in (0, 1000] % or its height not in (0, 10] m; stripping or\nbenching between surfaces; a corridor that does not build), `invalid_revision`, `revision_conflict`.",
+        "description": "Input of `road.volumes.edit` v1: the earthwork volume by its id or name (absent: a new one). A new one needs `name`,\n`corridor` and `method`. A volume is not rebound: it follows its corridor.\n\nRefusals, in this order: `not_a_road_project`, `invalid_volume` (rebind), `unknown_volume` (remove one not in the\nproject), `volume_approved` (change or remove an approved one), `volume_in_use` (remove one a mass haul diagram\nuses), `unknown_corridor`, `invalid_volume` (another corridor, a new one without its fields, set with nothing to\nset, the definition by `road_problem`: factors not positive, over 10 or over overlapping stretches; strip rows\noverlapping or a depth not in (0, 5] m; a bench's slope not in (0, 1000] % or its height not in (0, 10] m; stripping or\nbenching between surfaces; a corridor that does not build), `invalid_revision`, `revision_conflict`.",
         "properties": {
           "bench": {
             "anyOf": [
@@ -38109,6 +38109,7 @@
           "not_a_road_project",
           "unknown_volume",
           "volume_approved",
+          "volume_in_use",
           "unknown_corridor",
           "invalid_volume",
           "invalid_revision",
@@ -38363,6 +38364,278 @@
             "at": "2026-11-03",
             "note": "Uygulama projesi",
             "volume": "Ana kübaj"
+          }
+        }
+      ]
+    },
+    {
+      "id": "road.hauls.edit",
+      "version": 1,
+      "title": "Brükneri düzenle",
+      "summary": "Yol projesinin Brüknerini (haul: kimliği ya da adı; yoksa yeni) yazar ya da kaldırır. Brükner bir kübaj hesabının (volume) kütle ordinatıdır (birikimli düzeltilmiş kazı eksi dolgu): denge çizgisi balance (m³, öntanımlı 0), serbest taşıma uzaklığı free (m; null kaldırır, yoksa bütün taşıma fazla taşımadır), ödünç ve döküm alanları sites (name, kind borrow ya da waste, station aksın istasyonu, volume m³; ödünç eğriyi yükseltir, döküm düşürür). KentOS öntanımlı serbest taşıma vermez. Brükner kübajını izler, yeniden bağlanmaz ve başka kübaja geçmez. Yeni Brüknerin kimliği verilen ya da ilk boş h-n. Tek geri alma adımı “Brükner”. Retler: not_a_road_project, unknown_haul, unknown_volume, invalid_haul, invalid_revision, revision_conflict.",
+      "aliases": [
+        "bruckner",
+        "brükner"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.hauls.edit` v1: the diagram by its id or name (absent: a new one). A new one needs `name` and\n`volume`. A diagram follows its volume: it is not rebound to another.\n\nRefusals, in this order: `not_a_road_project`, `invalid_haul` (rebind), `unknown_haul` (remove one not in the\nproject), `unknown_volume`, `invalid_haul` (another volume, a new one without its fields, set with nothing to set,\nthe definition by `road_problem`: a free haul not in (0, 100 km], a site without a name or with a volume not above\n0; a volume that does not compute or a site off its stations), `invalid_revision`, `revision_conflict`.",
+        "properties": {
+          "balance": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "volume"
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "free": {
+            "description": "The free haul distance; null takes it off.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "haul": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "operation": {
+            "$ref": "#/$defs/RoadEditOperation"
+          },
+          "sites": {
+            "items": {
+              "$ref": "#/$defs/HaulSiteDef"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "volume": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "operation"
+        ],
+        "title": "HaulsEdit",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.hauls.edit` v1.",
+        "properties": {
+          "haul": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/HaulReport"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The diagram written, read; absent when removed."
+          },
+          "hauls": {
+            "items": {
+              "$ref": "#/$defs/HaulListed"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "hauls",
+          "revision"
+        ],
+        "title": "HaulsWritten",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.hauls.edit` v1.",
+        "properties": {
+          "haul": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/HaulReport"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The diagram written, read; absent when removed."
+          },
+          "hauls": {
+            "items": {
+              "$ref": "#/$defs/HaulListed"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "hauls",
+          "revision"
+        ],
+        "title": "HaulsWritten",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_haul",
+          "unknown_volume",
+          "invalid_haul",
+          "invalid_revision",
+          "revision_conflict"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Ana kübajın Brüknerini serbest taşıma 300 m ve bir döküm alanıyla",
+          "input": {
+            "free": 300.0,
+            "name": "Ana Brükner",
+            "operation": "set",
+            "sites": [
+              {
+                "kind": "waste",
+                "name": "Döküm 1",
+                "station": 450.0,
+                "volume": 2000.0
+              }
+            ],
+            "volume": "Ana kübaj"
+          }
+        }
+      ]
+    },
+    {
+      "id": "road.hauls.query",
+      "version": 1,
+      "title": "Brükneri sorgula",
+      "summary": "Yol projesinin Brüknerlerini bugün okur; hiçbir şey yazmaz. Kütle eğrisi denge çizgisine göre katman katman okunur: denge noktaları, döngüler (ileri ya da geri; km'ler, dengelenen hacim, taşıma momenti m³·m, ortalama taşıma uzaklığı, serbest taşımayı aşan hacim ve moment, ucunda varacak yeri olmayan hacim), toplamlar, döküm ve ödünç; okunamıyorsa nedeni. haul ile yalnız biri; points kütle eğrisinin noktalarını (km, m³; ödünç ve döküm alanında basamak) da verir. Uyarılar: corridor_stale, volume_gap, haul_unbalanced. Retler: not_a_road_project, unknown_haul, invalid_haul.",
+      "aliases": [
+        "brucknersor",
+        "brüknersor"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.hauls.query` v1: every diagram read, or one (`haul`: its id or name) with its ordinate's points.\n\nRefusals: `not_a_road_project`, `unknown_haul`, `invalid_haul` (`points` without a diagram; the one asked does not\nread). Warnings: `corridor_stale`, `volume_gap`, `haul_unbalanced`.",
+        "properties": {
+          "haul": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "points": {
+            "type": "boolean"
+          }
+        },
+        "title": "HaulsQuery",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.hauls.query` v1.",
+        "properties": {
+          "hauls": {
+            "items": {
+              "$ref": "#/$defs/HaulReport"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "hauls"
+        ],
+        "title": "HaulsQueried",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.hauls.query` v1.",
+        "properties": {
+          "hauls": {
+            "items": {
+              "$ref": "#/$defs/HaulReport"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "hauls"
+        ],
+        "title": "HaulsQueried",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_haul",
+          "invalid_haul"
+        ],
+        "warnings": [
+          "corridor_stale",
+          "volume_gap",
+          "haul_unbalanced"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Ana Brükner noktalarıyla",
+          "input": {
+            "haul": "Ana Brükner",
+            "points": true
           }
         }
       ]
@@ -72677,6 +72950,30 @@
       "meaning": "Onaylı kübaj kaynakları değiştiği için bugün başka hacim veriyor; fark raporda."
     },
     {
+      "code": "unknown_haul",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu kimlikte ya da adda Brükner yok."
+    },
+    {
+      "code": "invalid_haul",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Brüknerin tanımı geçerli değil ya da kübajı hesaplanamıyor; ileti nedenini söyler."
+    },
+    {
+      "code": "volume_in_use",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu kübaj hesabını bir Brükner kullanıyor; önce Brükneri silin."
+    },
+    {
+      "code": "haul_unbalanced",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Brüknerin ucunda dengelenmeyen hacim var; döküm ya da ödünç gerekir."
+    },
+    {
       "code": "corridor_superelevation_gone",
       "kind": "warning",
       "retryable": false,
@@ -77848,6 +78145,10 @@
     {
       "unit": "volume",
       "meaning": "Hacim: m³ (alan × düşey metre)."
+    },
+    {
+      "unit": "volume-m",
+      "meaning": "Taşıma momenti: m³·m (hacim × taşıma uzaklığı)."
     },
     {
       "unit": "m",
@@ -103821,6 +104122,310 @@
           "type": "string"
         }
       ]
+    },
+    "HaulDef": {
+      "additionalProperties": false,
+      "description": "A mass haul diagram (docs/adr/0907): an earthwork volume's mass ordinate against a balance line (m³), with a free\nhaul distance (m; absent: none, every haul is overhaul) and borrow and waste sites.",
+      "properties": {
+        "balance": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "free": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "sites": {
+          "items": {
+            "$ref": "#/$defs/HaulSiteDef"
+          },
+          "type": "array"
+        },
+        "volume": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "volume"
+      ],
+      "type": "object"
+    },
+    "HaulListed": {
+      "description": "A mass haul diagram in a list.",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "volume": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "volume",
+        "revision"
+      ],
+      "type": "object"
+    },
+    "HaulLoop": {
+      "description": "A loop between two balance points, or an end stretch that does not close: its stations and km, its direction, the\nvolume balanced in it, the haul moment, the average haul (none where nothing is balanced), the overhaul's volume and\nmoment beyond the free haul distance, and the volume with no destination (waste forward, borrow backward).",
+      "properties": {
+        "average": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "forward": {
+          "type": "boolean"
+        },
+        "from": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "fromText": {
+          "type": "string"
+        },
+        "moment": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume-m"
+        },
+        "overMoment": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume-m"
+        },
+        "overVolume": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "to": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "toText": {
+          "type": "string"
+        },
+        "unbalanced": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "volume": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        }
+      },
+      "required": [
+        "from",
+        "to",
+        "fromText",
+        "toText",
+        "forward",
+        "volume",
+        "moment",
+        "overVolume",
+        "overMoment",
+        "unbalanced"
+      ],
+      "type": "object"
+    },
+    "HaulReport": {
+      "description": "A mass haul diagram as it reads now: its sources, whether its volume's corridor is stale, the ordinate's points\n(station, m³; with `points`), the balance points, the loops, the totals; why it does not read when it does not.",
+      "properties": {
+        "average": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "balance": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "balancePoints": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "type": "array",
+          "x-unit": "m"
+        },
+        "borrow": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "free": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "hauled": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "id": {
+          "type": "string"
+        },
+        "loops": {
+          "items": {
+            "$ref": "#/$defs/HaulLoop"
+          },
+          "type": "array"
+        },
+        "moment": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume-m"
+        },
+        "name": {
+          "type": "string"
+        },
+        "overMoment": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume-m"
+        },
+        "overVolume": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "points": {
+          "items": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "type": "array",
+          "x-unit": "m"
+        },
+        "problem": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "stale": {
+          "type": "boolean"
+        },
+        "volume": {
+          "type": "string"
+        },
+        "waste": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "revision",
+        "volume",
+        "balance",
+        "stale",
+        "balancePoints",
+        "loops",
+        "hauled",
+        "moment",
+        "overVolume",
+        "overMoment",
+        "waste",
+        "borrow"
+      ],
+      "type": "object"
+    },
+    "HaulSiteDef": {
+      "additionalProperties": false,
+      "description": "A borrow site or a waste site on a mass haul diagram (docs/adr/0907 §1): its name, kind, station and the volume\n(m³, in the volume sheet's state) it gives (borrow) or takes (waste) there.",
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/HaulSiteKind"
+        },
+        "name": {
+          "type": "string"
+        },
+        "station": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "volume": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        }
+      },
+      "required": [
+        "name",
+        "kind",
+        "station",
+        "volume"
+      ],
+      "type": "object"
+    },
+    "HaulSiteKind": {
+      "description": "A site's kind: material brought in (borrow, ödünç) or taken away (waste, döküm).",
+      "enum": [
+        "borrow",
+        "waste"
+      ],
+      "type": "string"
     },
     "HeightKind": {
       "description": "What a drawing's elevations are.",
@@ -134594,6 +135199,13 @@
           "description": "The corridors (docs/adr/0905), each on an alignment, in the order the project tree shows them.",
           "items": {
             "$ref": "#/$defs/CorridorDef"
+          },
+          "type": "array"
+        },
+        "hauls": {
+          "description": "The mass haul diagrams (docs/adr/0907).",
+          "items": {
+            "$ref": "#/$defs/HaulDef"
           },
           "type": "array"
         },

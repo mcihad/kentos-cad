@@ -47,7 +47,15 @@ fn check(doc: &kentos_domain::Document, input: &VolumesEdit) -> Result<Checked, 
         None => None,
     };
     let target = match (input.operation, found) {
-        (RoadEditOperation::Remove, Some((at, _))) => {
+        (RoadEditOperation::Remove, Some((at, old))) => {
+            let users: Vec<&str> = doc.road_hauls().iter().filter(|h| h.volume == old.id).map(|h| h.name.as_str()).collect();
+            if !users.is_empty() {
+                return Err(fail(
+                    codes::VOLUME_IN_USE,
+                    format!("“{}” kübajını şu Brüknerler kullanıyor: {}; önce onları silin.", old.name, users.join(", ")),
+                    "volume",
+                ));
+            }
             list.remove(at);
             None
         }

@@ -80,6 +80,14 @@ struct Raw {
 
 /// The volume computed now, with its warnings; refused where its corridor does not build.
 pub(crate) fn compute(doc: &Document, def: &VolumeDef) -> Result<(VolumeReport, Vec<CommandWarning>), Stop> {
+    compute_on(doc, def).map(|(r, w, _)| (r, w))
+}
+
+/// The volume computed now with its warnings and the alignment its corridor lies on (a mass haul diagram's km).
+pub(crate) fn compute_on(
+    doc: &Document,
+    def: &VolumeDef,
+) -> Result<(VolumeReport, Vec<CommandWarning>, crate::road_alignments::Built), Stop> {
     let cdef = doc.road_corridors().iter().find(|c| c.id == def.corridor).ok_or_else(|| {
         fail(codes::UNKNOWN_CORRIDOR, format!("“{}” kimlikli koridor projede yok.", def.corridor), "corridor")
     })?;
@@ -287,7 +295,7 @@ pub(crate) fn compute(doc: &Document, def: &VolumeDef) -> Result<(VolumeReport, 
         }
         report.approval = Some(approval);
     }
-    Ok((report, warnings))
+    Ok((report, warnings, made.sampler.alignment))
 }
 
 /// Within this (m³) two figures of a volume are the same; within this (m) two stations.

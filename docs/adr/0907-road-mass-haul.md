@@ -52,6 +52,15 @@ Y9.1 (yapıldı): 21 durum (`road_haul_cases.py`): tek tepe üç serbest taşım
 döngüde iki tepe, sonda döküm, başta ödünç, kaydırılmış denge çizgisi, döküm ve ödünç basamakları, sıfıra değen köşe,
 kesirli km'ler, düz eğri, rastgele altı eğri.
 
+Y9.2 (yapıldı): `road.hauls.edit` (set, remove; kübaja bağlı, yeniden bağlanmaz ve başka kübaja geçmez; tek adım
+“Brükner”) ve `.query` (denge noktaları, döngüler km'leriyle, dengelenen hacim, moment, ortalama taşıma, fazla
+taşıma, dengesiz hacim, toplamlar, döküm ve ödünç; `points` ile kütle eğrisi). Eğri kübaj cetvelinden: ilk aralığın
+başında 0, her aralığın sonunda kütle ordinatı, aralıklar arasında düz; ödünç ve döküm alanları km sırasıyla basamak
+(aynı km'de verildikleri sırayla), kübajın km'leri dışındaki alan `invalid_haul`. Bir Brüknerin kullandığı kübaj
+silinmez (`volume_in_use`). Uyarılar kübajın `corridor_stale`, `volume_gap`'i ve `haul_unbalanced`. Taşıma momentinin
+birimi `volume-m` (m³·m). 28 + 22 ortak durum (`road_haul_command_cases.py`); `.kcad` şema 161'in `hauls`'u ve bozuk
+örneği; Python, MCP.
+
 ## Sonra
 
 Katmanların sıralı taramayla hızlandırılması (bugün köşe düzeyi başına bir tarama), en düşük maliyetli akışla

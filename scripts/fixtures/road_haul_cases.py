@@ -106,9 +106,10 @@ def piece(pts, b, sign, a, c):
 
 
 def check_closed(g, vol, mom):
-    """A closed loop: the moment is ∫ g ds, the volume the upward variation of g."""
+    """A closed loop: the moment is ∫ g ds, the volume the upward variation of g from 0 (a loop starting at a site's
+    step starts at its height)."""
     area = sum((p[1] + q[1]) / 2 * (q[0] - p[0]) for p, q in zip(g, g[1:]))
-    up = sum(max(F(0), q[1] - p[1]) for p, q in zip(g, g[1:]))
+    up = max(F(0), g[0][1]) + sum(max(F(0), q[1] - p[1]) for p, q in zip(g, g[1:]))
     assert area == mom, (area, mom)
     assert up == vol, (up, vol)
 

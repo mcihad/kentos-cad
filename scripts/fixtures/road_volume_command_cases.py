@@ -462,6 +462,10 @@ def edit_cases():
     no("Onaylı kübaj silinmez", {"operation": "remove", "volume": "Ana kübaj"},
        failed("volume_approved", "“Ana kübaj” kübajı onaylı; değiştirmek ya da silmek için önce onayı kaldırın.", "volume"),
        setup([a1, V2]))
+    used = setup()
+    used["settings"]["road"]["hauls"] = [{"id": "h-1", "name": "Ana Brükner", "volume": "v-1", "revision": 1}]
+    no("Brüknerin kullandığı kübaj silinmez", {"operation": "remove", "volume": "v-1"},
+       failed("volume_in_use", "“Ana kübaj” kübajını şu Brüknerler kullanıyor: Ana Brükner; önce onları silin.", "volume"), used)
     no("Geçersiz beklenen sürüm", {"operation": "remove", "volume": "v-2", "expectedRevision": "on"}, BAD_REVISION)
     no("Eski sürüme göre hazırlanmış", {"operation": "remove", "volume": "v-2", "expectedRevision": "41"}, CONFLICT)
     return file("road.volumes.edit", "Kübaj hesabını düzenle", setup(), cases)

@@ -44,6 +44,7 @@ UNITS: dict[str, str] = {
     "area": "Projenin düzleminde alan: m², coğrafi sistemde derece² (units.area).",
     "elevation": "Düşey metre: kot, z, yükseklik.",
     "volume": "Hacim: m³ (alan × düşey metre).",
+    "volume-m": "Taşıma momenti: m³·m (hacim × taşıma uzaklığı).",
     "m": "Her sistemde metre: izdüşümün parametreleri, ölçme doğrulukları.",
     "measure": "Rotanın ölçüsü (M), rotanın kendi biriminde.",
     "constraint": "Ölçü kısıtının değeri: uzunlukta metre, açıda radyan.",
@@ -2449,6 +2450,16 @@ class HatchWay(_StrEnum):
 
 HatchWayName = Literal["object", "lines"]
 """The names of :class:`HatchWay`, for a plain string."""
+
+
+class HaulSiteKind(_StrEnum):
+    """A site's kind: material brought in (borrow, ödünç) or taken away (waste, döküm)."""
+    BORROW = "borrow"
+    WASTE = "waste"
+
+
+HaulSiteKindName = Literal["borrow", "waste"]
+"""The names of :class:`HaulSiteKind`, for a plain string."""
 
 
 class HeightKind(_StrEnum):
@@ -32972,6 +32983,383 @@ class HatchesPlan(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class HaulDef(_Model):
+    """A mass haul diagram (docs/adr/0907): an earthwork volume's mass ordinate against a balance line (m³), with a free
+    haul distance (m; absent: none, every haul is overhaul) and borrow and waste sites.
+    Attributes:
+        balance: Unit: volume.
+        free: Unit: m.
+        revision: Unit: version.
+    """
+    id: str
+    name: str
+    volume: str
+    balance: float | Unset = UNSET
+    free: float | None | Unset = UNSET
+    revision: int | Unset = UNSET
+    sites: list[HaulSiteDef] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["volume"] = self.volume
+        if self.balance is not UNSET:
+            out["balance"] = float(self.balance)
+        if self.free is not UNSET:
+            out["free"] = None if self.free is None else float(self.free)
+        if self.revision is not UNSET:
+            out["revision"] = self.revision
+        if self.sites is not UNSET:
+            out["sites"] = [e0.to_json() for e0 in self.sites]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HaulDef:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            volume=data["volume"],
+            balance=float(data["balance"]) if "balance" in data else UNSET,
+            free=UNSET if "free" not in data else None if data["free"] is None else float(data["free"]),
+            revision=data.get("revision", UNSET),
+            sites=[HaulSiteDef.from_json(e0) for e0 in data["sites"]] if "sites" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class HaulListed(_Model):
+    """A mass haul diagram in a list.
+    Attributes:
+        revision: Unit: version.
+    """
+    id: str
+    name: str
+    volume: str
+    revision: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["volume"] = self.volume
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HaulListed:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            volume=data["volume"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class HaulLoop(_Model):
+    """A loop between two balance points, or an end stretch that does not close: its stations and km, its direction, the
+    volume balanced in it, the haul moment, the average haul (none where nothing is balanced), the overhaul's volume and
+    moment beyond the free haul distance, and the volume with no destination (waste forward, borrow backward).
+    Attributes:
+        from_: Unit: m.
+        to: Unit: m.
+        volume: Unit: volume.
+        moment: Unit: volume-m.
+        over_volume: Unit: volume.
+        over_moment: Unit: volume-m.
+        unbalanced: Unit: volume.
+        average: Unit: m.
+    """
+    from_: float
+    to: float
+    from_text: str
+    to_text: str
+    forward: bool
+    volume: float
+    moment: float
+    over_volume: float
+    over_moment: float
+    unbalanced: float
+    average: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = float(self.from_)
+        out["to"] = float(self.to)
+        out["fromText"] = self.from_text
+        out["toText"] = self.to_text
+        out["forward"] = self.forward
+        out["volume"] = float(self.volume)
+        out["moment"] = float(self.moment)
+        out["overVolume"] = float(self.over_volume)
+        out["overMoment"] = float(self.over_moment)
+        out["unbalanced"] = float(self.unbalanced)
+        if self.average is not UNSET:
+            out["average"] = None if self.average is None else float(self.average)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HaulLoop:
+        return cls(
+            from_=float(data["from"]),
+            to=float(data["to"]),
+            from_text=data["fromText"],
+            to_text=data["toText"],
+            forward=data["forward"],
+            volume=float(data["volume"]),
+            moment=float(data["moment"]),
+            over_volume=float(data["overVolume"]),
+            over_moment=float(data["overMoment"]),
+            unbalanced=float(data["unbalanced"]),
+            average=UNSET if "average" not in data else None if data["average"] is None else float(data["average"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class HaulReport(_Model):
+    """A mass haul diagram as it reads now: its sources, whether its volume's corridor is stale, the ordinate's points
+    (station, m³; with `points`), the balance points, the loops, the totals; why it does not read when it does not.
+    Attributes:
+        revision: Unit: version.
+        balance: Unit: volume.
+        balance_points: Unit: m.
+        hauled: Unit: volume.
+        moment: Unit: volume-m.
+        over_volume: Unit: volume.
+        over_moment: Unit: volume-m.
+        waste: Unit: volume.
+        borrow: Unit: volume.
+        average: Unit: m.
+        free: Unit: m.
+        points: Unit: m.
+    """
+    id: str
+    name: str
+    revision: int
+    volume: str
+    balance: float
+    stale: bool
+    balance_points: list[float]
+    loops: list[HaulLoop]
+    hauled: float
+    moment: float
+    over_volume: float
+    over_moment: float
+    waste: float
+    borrow: float
+    average: float | None | Unset = UNSET
+    free: float | None | Unset = UNSET
+    points: list[list[float]] | Unset = UNSET
+    problem: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["revision"] = self.revision
+        out["volume"] = self.volume
+        out["balance"] = float(self.balance)
+        out["stale"] = self.stale
+        out["balancePoints"] = [float(e0) for e0 in self.balance_points]
+        out["loops"] = [e0.to_json() for e0 in self.loops]
+        out["hauled"] = float(self.hauled)
+        out["moment"] = float(self.moment)
+        out["overVolume"] = float(self.over_volume)
+        out["overMoment"] = float(self.over_moment)
+        out["waste"] = float(self.waste)
+        out["borrow"] = float(self.borrow)
+        if self.average is not UNSET:
+            out["average"] = None if self.average is None else float(self.average)
+        if self.free is not UNSET:
+            out["free"] = None if self.free is None else float(self.free)
+        if self.points is not UNSET:
+            out["points"] = [[float(e1) for e1 in e0] for e0 in self.points]
+        if self.problem is not UNSET:
+            out["problem"] = self.problem
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HaulReport:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            revision=data["revision"],
+            volume=data["volume"],
+            balance=float(data["balance"]),
+            stale=data["stale"],
+            balance_points=[float(e0) for e0 in data["balancePoints"]],
+            loops=[HaulLoop.from_json(e0) for e0 in data["loops"]],
+            hauled=float(data["hauled"]),
+            moment=float(data["moment"]),
+            over_volume=float(data["overVolume"]),
+            over_moment=float(data["overMoment"]),
+            waste=float(data["waste"]),
+            borrow=float(data["borrow"]),
+            average=UNSET if "average" not in data else None if data["average"] is None else float(data["average"]),
+            free=UNSET if "free" not in data else None if data["free"] is None else float(data["free"]),
+            points=[[float(e1) for e1 in e0] for e0 in data["points"]] if "points" in data else UNSET,
+            problem=data.get("problem", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class HaulSiteDef(_Model):
+    """A borrow site or a waste site on a mass haul diagram (docs/adr/0907 §1): its name, kind, station and the volume
+    (m³, in the volume sheet's state) it gives (borrow) or takes (waste) there.
+    Attributes:
+        station: Unit: m.
+        volume: Unit: volume.
+    """
+    name: str
+    kind: HaulSiteKind | HaulSiteKindName
+    station: float
+    volume: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["kind"] = _enum_out(self.kind)
+        out["station"] = float(self.station)
+        out["volume"] = float(self.volume)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HaulSiteDef:
+        return cls(
+            name=data["name"],
+            kind=_enum_in(HaulSiteKind, data["kind"]),
+            station=float(data["station"]),
+            volume=float(data["volume"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class HaulsEdit(_Model):
+    """Input of `road.hauls.edit` v1: the diagram by its id or name (absent: a new one). A new one needs `name` and
+    `volume`. A diagram follows its volume: it is not rebound to another.
+
+    Refusals, in this order: `not_a_road_project`, `invalid_haul` (rebind), `unknown_haul` (remove one not in the
+    project), `unknown_volume`, `invalid_haul` (another volume, a new one without its fields, set with nothing to set,
+    the definition by `road_problem`: a free haul not in (0, 100 km], a site without a name or with a volume not above
+    0; a volume that does not compute or a site off its stations), `invalid_revision`, `revision_conflict`.
+    Attributes:
+        balance: Unit: volume.
+        free: The free haul distance; null takes it off. Unit: m.
+    """
+    operation: RoadEditOperation | RoadEditOperationName
+    balance: float | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    free: float | None | Unset = UNSET
+    haul: str | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    sites: list[HaulSiteDef] | None | Unset = UNSET
+    volume: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = _enum_out(self.operation)
+        if self.balance is not UNSET:
+            out["balance"] = None if self.balance is None else float(self.balance)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.free is not UNSET:
+            out["free"] = None if self.free is None else float(self.free)
+        if self.haul is not UNSET:
+            out["haul"] = self.haul
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.sites is not UNSET:
+            out["sites"] = None if self.sites is None else [e0.to_json() for e0 in self.sites]
+        if self.volume is not UNSET:
+            out["volume"] = self.volume
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HaulsEdit:
+        return cls(
+            operation=_enum_in(RoadEditOperation, data["operation"]),
+            balance=UNSET if "balance" not in data else None if data["balance"] is None else float(data["balance"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            free=UNSET if "free" not in data else None if data["free"] is None else float(data["free"]),
+            haul=data.get("haul", UNSET),
+            name=data.get("name", UNSET),
+            sites=UNSET if "sites" not in data else None if data["sites"] is None else [HaulSiteDef.from_json(e0) for e0 in data["sites"]],
+            volume=data.get("volume", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class HaulsQueried(_Model):
+    """Output of `road.hauls.query` v1."""
+    hauls: list[HaulReport]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["hauls"] = [e0.to_json() for e0 in self.hauls]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HaulsQueried:
+        return cls(
+            hauls=[HaulReport.from_json(e0) for e0 in data["hauls"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class HaulsQuery(_Model):
+    """Input of `road.hauls.query` v1: every diagram read, or one (`haul`: its id or name) with its ordinate's points.
+
+    Refusals: `not_a_road_project`, `unknown_haul`, `invalid_haul` (`points` without a diagram; the one asked does not
+    read). Warnings: `corridor_stale`, `volume_gap`, `haul_unbalanced`.
+    """
+    haul: str | None | Unset = UNSET
+    points: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.haul is not UNSET:
+            out["haul"] = self.haul
+        if self.points is not UNSET:
+            out["points"] = self.points
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HaulsQuery:
+        return cls(
+            haul=data.get("haul", UNSET),
+            points=data.get("points", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class HaulsWritten(_Model):
+    """Output of `road.hauls.edit` v1.
+    Attributes:
+        haul: The diagram written, read; absent when removed.
+    """
+    hauls: list[HaulListed]
+    revision: str
+    haul: HaulReport | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["hauls"] = [e0.to_json() for e0 in self.hauls]
+        out["revision"] = self.revision
+        if self.haul is not UNSET:
+            out["haul"] = None if self.haul is None else self.haul.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HaulsWritten:
+        return cls(
+            hauls=[HaulListed.from_json(e0) for e0 in data["hauls"]],
+            revision=data["revision"],
+            haul=UNSET if "haul" not in data else None if data["haul"] is None else HaulReport.from_json(data["haul"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class HeightReference(_Model):
     """What a drawing's elevations rest on: their kind, and for orthometric heights the vertical system (one of
     [`VERTICAL_SYSTEMS`] by its EPSG code) and the geoid model. An ellipsoidal height names neither: its ellipsoid is
@@ -59651,6 +60039,7 @@ class RoadSettings(_Model):
     Attributes:
         alignments: The horizontal alignments (docs/adr/0901), in the order the project tree shows them.
         corridors: The corridors (docs/adr/0905), each on an alignment, in the order the project tree shows them.
+        hauls: The mass haul diagrams (docs/adr/0907).
         profiles: The vertical alignments (docs/adr/0902), each on an alignment, in the order the project tree shows them.
         sections: The sample line sets (docs/adr/0903 §2), in the order the project tree shows them.
         superelevations: The superelevation schedules (docs/adr/0904), each on an alignment, in the order the project tree shows them.
@@ -59660,6 +60049,7 @@ class RoadSettings(_Model):
     """
     alignments: list[AlignmentDef] | Unset = UNSET
     corridors: list[CorridorDef] | Unset = UNSET
+    hauls: list[HaulDef] | Unset = UNSET
     profiles: list[ProfileDef] | Unset = UNSET
     sections: list[SectionSetDef] | Unset = UNSET
     superelevations: list[SuperelevationDef] | Unset = UNSET
@@ -59673,6 +60063,8 @@ class RoadSettings(_Model):
             out["alignments"] = [e0.to_json() for e0 in self.alignments]
         if self.corridors is not UNSET:
             out["corridors"] = [e0.to_json() for e0 in self.corridors]
+        if self.hauls is not UNSET:
+            out["hauls"] = [e0.to_json() for e0 in self.hauls]
         if self.profiles is not UNSET:
             out["profiles"] = [e0.to_json() for e0 in self.profiles]
         if self.sections is not UNSET:
@@ -59692,6 +60084,7 @@ class RoadSettings(_Model):
         return cls(
             alignments=[AlignmentDef.from_json(e0) for e0 in data["alignments"]] if "alignments" in data else UNSET,
             corridors=[CorridorDef.from_json(e0) for e0 in data["corridors"]] if "corridors" in data else UNSET,
+            hauls=[HaulDef.from_json(e0) for e0 in data["hauls"]] if "hauls" in data else UNSET,
             profiles=[ProfileDef.from_json(e0) for e0 in data["profiles"]] if "profiles" in data else UNSET,
             sections=[SectionSetDef.from_json(e0) for e0 in data["sections"]] if "sections" in data else UNSET,
             superelevations=[SuperelevationDef.from_json(e0) for e0 in data["superelevations"]] if "superelevations" in data else UNSET,
@@ -74794,7 +75187,8 @@ class VolumesEdit(_Model):
     `corridor` and `method`. A volume is not rebound: it follows its corridor.
 
     Refusals, in this order: `not_a_road_project`, `invalid_volume` (rebind), `unknown_volume` (remove one not in the
-    project), `volume_approved` (change or remove an approved one), `unknown_corridor`, `invalid_volume` (another corridor, a new one without its fields, set with nothing to
+    project), `volume_approved` (change or remove an approved one), `volume_in_use` (remove one a mass haul diagram
+    uses), `unknown_corridor`, `invalid_volume` (another corridor, a new one without its fields, set with nothing to
     set, the definition by `road_problem`: factors not positive, over 10 or over overlapping stretches; strip rows
     overlapping or a depth not in (0, 5] m; a bench's slope not in (0, 1000] % or its height not in (0, 10] m; stripping or
     benching between surfaces; a corridor that does not build), `invalid_revision`, `revision_conflict`.
@@ -96424,6 +96818,17 @@ __all__ = [
     "HatchesEdit",
     "HatchesEdited",
     "HatchesPlan",
+    "HaulDef",
+    "HaulListed",
+    "HaulLoop",
+    "HaulReport",
+    "HaulSiteDef",
+    "HaulSiteKind",
+    "HaulSiteKindName",
+    "HaulsEdit",
+    "HaulsQueried",
+    "HaulsQuery",
+    "HaulsWritten",
     "HeaderTableEdit",
     "HeightKind",
     "HeightKindName",

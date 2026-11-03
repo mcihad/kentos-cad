@@ -694,6 +694,14 @@ codes! {
     VOLUME_NOT_APPROVED = "volume_not_approved", Failed, false, "Bu kübaj onaylı değil; kaldırılacak onay yok.";
     /// A warning: an approved volume gives other figures now, its sources having changed; the report says how.
     VOLUME_CHANGED = "volume_changed", Warning, false, "Onaylı kübaj kaynakları değiştiği için bugün başka hacim veriyor; fark raporda.";
+    /// No mass haul diagram of the id or name (docs/adr/0907).
+    UNKNOWN_HAUL = "unknown_haul", Failed, false, "Bu kimlikte ya da adda Brükner yok.";
+    /// A mass haul diagram's definition, or one whose volume does not compute.
+    INVALID_HAUL = "invalid_haul", Failed, false, "Brüknerin tanımı geçerli değil ya da kübajı hesaplanamıyor; ileti nedenini söyler.";
+    /// An earthwork volume a mass haul diagram uses.
+    VOLUME_IN_USE = "volume_in_use", Failed, false, "Bu kübaj hesabını bir Brükner kullanıyor; önce Brükneri silin.";
+    /// A warning: material left over at an end of the diagram, to be wasted or borrowed (docs/adr/0907 §3).
+    HAUL_UNBALANCED = "haul_unbalanced", Warning, false, "Brüknerin ucunda dengelenmeyen hacim var; döküm ya da ödünç gerekir.";
     /// A warning: the corridor's superelevation schedule does not build; its lanes keep the templates' slopes.
     CORRIDOR_SUPERELEVATION_GONE = "corridor_superelevation_gone", Warning, false, "Koridorun dever çizelgesi kurulamıyor; şeritler tip kesitin eğimiyle verildi.";
     /// A warning: the profile's alignment changed since it was made or rebound.

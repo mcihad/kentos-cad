@@ -1,7 +1,7 @@
 //! A road project's templates and sample line sets (docs/adr/0903 §6): settings the drawing keeps in its undo
 //! history, so every write of the Enkesit window and of `road.templates.*` and `road.sections.*` is one undo step.
 
-use kentos_contracts::{CorridorDef, RoadSettings, SectionSetDef, SuperelevationDef, TemplateDef, VolumeDef};
+use kentos_contracts::{CorridorDef, HaulDef, RoadSettings, SectionSetDef, SuperelevationDef, TemplateDef, VolumeDef};
 
 use crate::Refusal;
 use crate::document::Document;
@@ -40,6 +40,27 @@ impl Document {
         }
         self.transact(label, |doc| {
             doc.record(vec![Op::RoadVolumes { before, after: next }], label);
+            Ok(true)
+        })
+    }
+
+    /// The project's mass haul diagrams (docs/adr/0907).
+    pub fn road_hauls(&self) -> &[HaulDef] {
+        self.settings.road.as_ref().map_or(&[], |r| r.hauls.as_slice())
+    }
+
+    /// Gives the project the mass haul diagrams `next` as one change named `label`, as [`Self::set_road_templates`].
+    pub fn set_road_hauls(&mut self, next: Vec<HaulDef>, label: &str) -> Result<bool, Refusal> {
+        let judged = RoadSettings { hauls: next.clone(), ..self.settings.road.clone().unwrap_or_default() };
+        if let Some((path, problem)) = judged.problem() {
+            return Err(Refusal(format!("{path}: {problem}")));
+        }
+        let before = self.road_hauls().to_vec();
+        if before == next {
+            return Ok(false);
+        }
+        self.transact(label, |doc| {
+            doc.record(vec![Op::RoadHauls { before, after: next }], label);
             Ok(true)
         })
     }

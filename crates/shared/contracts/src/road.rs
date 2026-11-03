@@ -85,6 +85,10 @@ pub struct RoadSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<VolumeDef>>", optional))]
     pub volumes: Vec<VolumeDef>,
+    /// The mass haul diagrams (docs/adr/0907).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<HaulDef>>", optional))]
+    pub hauls: Vec<HaulDef>,
 }
 
 impl RoadSettings {
@@ -98,6 +102,7 @@ impl RoadSettings {
             && self.superelevations.is_empty()
             && self.corridors.is_empty()
             && self.volumes.is_empty()
+            && self.hauls.is_empty()
     }
 
     /// What is wrong with it, by the field's path and in words; none when it is right.
@@ -800,6 +805,65 @@ pub struct VolumeDef {
     pub approved: Option<VolumeApprovalDef>,
 }
 
+/// A borrow site or a waste site on a mass haul diagram (docs/adr/0907 §1): its name, kind, station and the volume
+/// (m³, in the volume sheet's state) it gives (borrow) or takes (waste) there.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct HaulSiteDef {
+    pub name: String,
+    pub kind: HaulSiteKind,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub station: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub volume: f64,
+}
+
+/// A site's kind: material brought in (borrow, ödünç) or taken away (waste, döküm).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum HaulSiteKind {
+    Borrow,
+    Waste,
+}
+
+/// A mass haul diagram (docs/adr/0907): an earthwork volume's mass ordinate against a balance line (m³), with a free
+/// haul distance (m; absent: none, every haul is overhaul) and borrow and waste sites.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct HaulDef {
+    pub id: String,
+    pub name: String,
+    pub volume: String,
+    #[serde(default, skip_serializing_if = "is_zero_u32")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub revision: u32,
+    #[serde(default, skip_serializing_if = "is_zero_f64")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub balance: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub free: Option<f64>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<HaulSiteDef>>", optional))]
+    pub sites: Vec<HaulSiteDef>,
+}
+
+fn is_zero_f64(v: &f64) -> bool {
+    *v == 0.0
+}
+
 /// What is wrong with a road project's settings, by the field's path and in words.
 pub fn road_problem(road: &RoadSettings) -> Option<(String, String)> {
     let fail = |path: String, words: &str| Some((path, words.to_string()));
@@ -861,6 +925,7 @@ pub fn road_problem(road: &RoadSettings) -> Option<(String, String)> {
         .or_else(|| superelevations_problem(road))
         .or_else(|| corridors_problem(road))
         .or_else(|| volumes_problem(road))
+        .or_else(|| hauls_problem(road))
 }
 
 fn side_problem(s: &TemplateSideDef, at: &str) -> Option<(String, String)> {
@@ -1079,6 +1144,62 @@ fn superelevations_problem(road: &RoadSettings) -> Option<(String, String)> {
 
 /// What is wrong with the earthwork volumes: each of a corridor in the project, its factors positive and over
 /// stretches in increasing stations that do not overlap.
+/// At most so many mass haul diagrams, and so many sites on one.
+pub const MAX_HAULS: usize = 256;
+pub const MAX_HAUL_SITES: usize = 64;
+
+fn hauls_problem(road: &RoadSettings) -> Option<(String, String)> {
+    let fail = |path: String, words: &str| Some((path, words.to_string()));
+    let list = &road.hauls;
+    if list.len() > MAX_HAULS {
+        return fail("hauls".into(), &format!("en çok {MAX_HAULS} Brükner olur"));
+    }
+    let mut ids = std::collections::BTreeSet::new();
+    let mut names = std::collections::BTreeSet::new();
+    for (i, h) in list.iter().enumerate() {
+        let at = |field: &str| format!("hauls[{i}].{field}");
+        if !word_ok(&h.id) {
+            return fail(at("id"), "Brüknerin kimliği boş olmayan, en çok 64 karakterlik bir sözcük olmalı");
+        }
+        if !ids.insert(h.id.as_str()) {
+            return fail(at("id"), "bu kimlikte başka bir Brükner var");
+        }
+        let name = h.name.trim();
+        if name.is_empty() || name != h.name || h.name.chars().count() > 120 {
+            return fail(at("name"), "Brüknerin adı boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 120 karakter");
+        }
+        if !names.insert(name.to_lowercase()) {
+            return fail(at("name"), "bu adda başka bir Brükner var");
+        }
+        if road.volumes.iter().all(|v| v.id != h.volume) {
+            return fail(at("volume"), "Brüknerin kübaj hesabı projede yok");
+        }
+        if !h.balance.is_finite() || h.balance.abs() > 1e12 {
+            return fail(at("balance"), "denge çizgisi sonlu bir hacim olmalı");
+        }
+        if h.free.is_some_and(|f| !(f.is_finite() && f > 0.0 && f <= 100_000.0)) {
+            return fail(at("free"), "serbest taşıma uzaklığı 0'dan büyük, en çok 100 km olur");
+        }
+        if h.sites.len() > MAX_HAUL_SITES {
+            return fail(at("sites"), &format!("en çok {MAX_HAUL_SITES} ödünç ve döküm alanı olur"));
+        }
+        for (j, site) in h.sites.iter().enumerate() {
+            let path = at(&format!("sites[{j}]"));
+            let nm = site.name.trim();
+            if nm.is_empty() || nm != site.name || site.name.chars().count() > 120 {
+                return fail(path, "alanın adı boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 120 karakter");
+            }
+            if !site.station.is_finite() {
+                return fail(path, "alanın km'si sonlu olmalı");
+            }
+            if !(site.volume.is_finite() && site.volume > 0.0 && site.volume <= 1e12) {
+                return fail(path, "alanın hacmi 0'dan büyük olmalı");
+            }
+        }
+    }
+    None
+}
+
 fn volumes_problem(road: &RoadSettings) -> Option<(String, String)> {
     let fail = |path: String, words: &str| Some((path, words.to_string()));
     let list = &road.volumes;

@@ -150,3 +150,27 @@ fn a_volume_is_asked_written_and_keeps_its_corridor() {
     let side = call(&mut server, "road.volumes.query", json!({"drawing":drawing,"volume":"v-2"}));
     assert!(side.to_string().contains("volume_changed"), "{side}");
 }
+
+/// The file's mass haul diagram is read with its sites, a new one is written, and the volume it uses is kept
+/// (plan/road.md Y9, docs/adr/0907).
+#[test]
+fn a_mass_haul_diagram_is_read_written_and_keeps_its_volume() {
+    let mut server = Server::new();
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/kcad/v2/road-work.kcad");
+    let opened = call(&mut server, "drawing.open", json!({"path":path}));
+    let drawing = opened["structuredContent"]["drawing"].clone();
+    let asked = call(&mut server, "road.hauls.query", json!({"drawing":drawing,"haul":"Ana Brükner","points":true}));
+    assert_eq!(asked["isError"], false, "{asked}");
+    let out = &asked["structuredContent"]["output"]["hauls"][0];
+    assert!(out["loops"].as_array().is_some_and(|l| !l.is_empty()), "{out}");
+    let points = out["points"].as_array().cloned().unwrap_or_default();
+    assert!(points.windows(2).any(|w| w[0][0] == w[1][0]), "a site's step: {out}");
+    let made = call(
+        &mut server,
+        "road.hauls.edit",
+        json!({"drawing":drawing,"operation":"set","name":"Yüzey Brükneri","volume":"v-2","free":200.0}),
+    );
+    assert_eq!(made["structuredContent"]["output"]["haul"]["id"], "h-2", "{made}");
+    let kept = call(&mut server, "road.volumes.edit", json!({"drawing":drawing,"volume":"v-1","operation":"remove"}));
+    assert!(kept.to_string().contains("volume_in_use"), "{kept}");
+}

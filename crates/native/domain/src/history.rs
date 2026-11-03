@@ -355,6 +355,11 @@ pub(crate) enum Op {
         before: Vec<kentos_contracts::VolumeDef>,
         after: Vec<kentos_contracts::VolumeDef>,
     },
+    /// A road project's mass haul diagrams (docs/adr/0907), before and after.
+    RoadHauls {
+        before: Vec<kentos_contracts::HaulDef>,
+        after: Vec<kentos_contracts::HaulDef>,
+    },
     /// The project's room modules (docs/adr/0775), before and after: a setting, written in the step with the objects
     /// placed or updated, so undo gives both back.
     ArchModules {
@@ -703,6 +708,10 @@ impl Op {
                 after: before.clone(),
             },
             Op::RoadVolumes { before, after } => Op::RoadVolumes {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::RoadHauls { before, after } => Op::RoadHauls {
                 before: after.clone(),
                 after: before.clone(),
             },
@@ -1359,6 +1368,7 @@ impl Document {
                 | Op::RoadSuperelevations { .. }
                 | Op::RoadCorridors { .. }
                 | Op::RoadVolumes { .. }
+                | Op::RoadHauls { .. }
                 | Op::ViewArea { .. }
                 | Op::ArchOptions { .. }
                 | Op::OptionCombos { .. }
@@ -1706,6 +1716,12 @@ impl Document {
             Op::RoadVolumes { after, .. } => {
                 let mut road = self.settings.road.take().unwrap_or_default();
                 road.volumes = after.clone();
+                self.settings.road = (!road.is_empty()).then_some(road);
+                return;
+            }
+            Op::RoadHauls { after, .. } => {
+                let mut road = self.settings.road.take().unwrap_or_default();
+                road.hauls = after.clone();
                 self.settings.road = (!road.is_empty()).then_some(road);
                 return;
             }

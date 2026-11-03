@@ -9648,12 +9648,33 @@ class _Schema:
                 self.fail("bad_value", "katsayı satırları artan km'lerle, birbirine binmeden, en çok 1000")
             return t
 
+        def haul_site(x):
+            t = self.fields({"name": (self.text, True), "kind": (self.enum(("borrow", "waste")), True),
+                             "station": (finite, True), "volume": (finite, True)})(x)
+            if not t["name"] or t["name"].strip() != t["name"] or not 0 < t["volume"] <= 1e12:
+                self.fail("bad_value", "ödünç ya da döküm alanının adı ya da hacmi kuralın dışında")
+            return t
+
+        def haul(x):
+            # Docs/adr/0907: a volume's mass haul diagram, its balance line, free haul and sites.
+            t = self.fields({"id": (word, True), "name": (self.text, True), "volume": (word, True),
+                             "revision": (self.uint(32), False), "balance": (finite, False), "free": (finite, False),
+                             "sites": (self.array(haul_site), False)})(x)
+            name = t["name"]
+            if not name or name.strip() != name or len(name) > 120:
+                self.fail("bad_value", "Brüknerin adı boş, boşluklu ya da çok uzun")
+            if "free" in t and not 0 < t["free"] <= 100000:
+                self.fail("bad_value", "serbest taşıma 0'dan büyük, en çok 100 km olur")
+            if len(t.get("sites", [])) > 64:
+                self.fail("bad_value", "en çok 64 ödünç ve döküm alanı olur")
+            return t
+
         r = self.fields({"surfaces": (self.array(surface), False), "alignments": (self.array(alignment), False),
                          "profiles": (self.array(profile), False), "templates": (self.array(template), False),
                          "sections": (self.array(section_set), False),
                          "superelevations": (self.array(superelevation), False),
                          "corridors": (self.array(corridor), False),
-                         "volumes": (self.array(volume), False)})(v)
+                         "volumes": (self.array(volume), False), "hauls": (self.array(haul), False)})(v)
         got = r.get("surfaces", [])
         lines = r.get("alignments", [])
         profiles = r.get("profiles", [])
@@ -9662,7 +9683,8 @@ class _Schema:
         supers = r.get("superelevations", [])
         corridors = r.get("corridors", [])
         volumes = r.get("volumes", [])
-        if not (got or lines or profiles or templates or sets or supers or corridors or volumes):
+        hauls = r.get("hauls", [])
+        if not (got or lines or profiles or templates or sets or supers or corridors or volumes or hauls):
             self.fail("bad_value", "boş yol ayarı yazılmaz")
         if len(got) > 64 or ("surfaces" in r and not got):
             self.fail("bad_value", "yol ayarında 1 ile 64 arası yüzey olur")
@@ -9736,6 +9758,12 @@ class _Schema:
             self.fail("bad_value", "iki kübaj hesabının kimliği ya da adı aynı")
         if any(all(y["id"] != x["corridor"] for y in corridors) for x in volumes):
             self.fail("bad_value", "kübaj hesabının koridoru projede yok")
+        if "hauls" in r and not hauls or len(hauls) > 256:
+            self.fail("bad_value", "yol ayarında 1 ile 256 arası Brükner olur")
+        if len({x["id"] for x in hauls}) != len(hauls) or len({x["name"].lower() for x in hauls}) != len(hauls):
+            self.fail("bad_value", "iki Brüknerin kimliği ya da adı aynı")
+        if any(all(y["id"] != x["volume"] for y in volumes) for x in hauls):
+            self.fail("bad_value", "Brüknerin kübaj hesabı projede yok")
         return r
 
     def arch_(self, v):

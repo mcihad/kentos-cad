@@ -7232,7 +7232,7 @@ pub fn catalog() -> CommandCatalog {
             title: "Kübaj hesabını düzenle".into(),
             summary: "Yol projesinin kübaj hesabını (volume: kimliği ya da adı; yoksa yeni) yazar ya da kaldırır. Kübaj bir koridorun (corridor) hacmidir; yöntem (method): endArea ardışık iki kesit arasında ortalama alan L·(A₀ + A₁)/2, prismoidal iki kesitin ortasında kurulan kesitle L·(A₀ + 4Aₘ + A₁)/6, surfaces koridorun üst yüzeyiyle arazisi arasındaki hacim (üçgenler planda üst üste konur). Kazı ve dolgu ayrıdır. \
                       factors km aralıklarına (from, to aksın istasyonu, m) kazının kabarma (cut) ve dolgunun sıkışma (fill) çarpanını verir; artan, birbirine binmeyen satırlar, çarpan 0'dan büyük, en çok 10; KentOS öntanımlı katsayı vermez. Kesit yöntemlerinde strip km aralıklarına bitkisel toprak kalınlığı (depth, m) verir: kübaj zeminin kalınlık kadar indirilmiş hâline göre, bitkisel toprak hacmi ayrı kalem; bench diş kazısıdır (slope: arazinin enine eğimi bu yüzdeden dikken dolgunun altında, height: basamak yüksekliği; hacmi genişlik × yükseklik/2), ayrı kalem, kazı ve dolguya katılmaz; bench null kaldırır. Kübaj koridorunu izler, başka koridora bağlanmaz, yeniden bağlanmaz. Sonuç saklanmaz, her okumada hesaplanır. \
-                      Yeni hesabın kimliği verilen ya da ilk boş v-n. Tek geri alma adımı “Kübaj”. Onaylı kübaj değiştirilmez ve silinmez (volume_approved); önce road.volumes.approve revoke. Retler: not_a_road_project, unknown_volume, volume_approved, unknown_corridor, invalid_volume, invalid_revision, revision_conflict."
+                      Yeni hesabın kimliği verilen ya da ilk boş v-n. Tek geri alma adımı “Kübaj”. Onaylı kübaj değiştirilmez ve silinmez (volume_approved); önce road.volumes.approve revoke. Bir Brüknerin kullandığı kübaj silinmez (volume_in_use). Retler: not_a_road_project, unknown_volume, volume_approved, volume_in_use, unknown_corridor, invalid_volume, invalid_revision, revision_conflict."
                 .into(),
             aliases: vec!["kubaj".into(), "kübaj".into()],
             effect: CommandEffect::Document,
@@ -7300,6 +7300,57 @@ pub fn catalog() -> CommandCatalog {
             examples: vec![CommandExample {
                 title: "Ana kübajı onayla".into(),
                 input: json!({ "volume": "Ana kübaj", "at": "2026-11-03", "note": "Uygulama projesi" }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_HAULS_EDIT.into(),
+            version: crate::ROAD_HAULS_EDIT_VERSION,
+            title: "Brükneri düzenle".into(),
+            summary: "Yol projesinin Brüknerini (haul: kimliği ya da adı; yoksa yeni) yazar ya da kaldırır. Brükner bir kübaj hesabının (volume) kütle ordinatıdır (birikimli düzeltilmiş kazı eksi dolgu): denge çizgisi balance (m³, öntanımlı 0), serbest taşıma uzaklığı free (m; null kaldırır, yoksa bütün taşıma fazla taşımadır), ödünç ve döküm alanları sites (name, kind borrow ya da waste, station aksın istasyonu, volume m³; ödünç eğriyi yükseltir, döküm düşürür). KentOS öntanımlı serbest taşıma vermez. Brükner kübajını izler, yeniden bağlanmaz ve başka kübaja geçmez. \
+                      Yeni Brüknerin kimliği verilen ya da ilk boş h-n. Tek geri alma adımı “Brükner”. Retler: not_a_road_project, unknown_haul, unknown_volume, invalid_haul, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["bruckner".into(), "brükner".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::HaulsEdit>(),
+            output: schema::<crate::HaulsWritten>(),
+            plan: Some(schema::<crate::HaulsWritten>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana kübajın Brüknerini serbest taşıma 300 m ve bir döküm alanıyla".into(),
+                input: json!({ "operation": "set", "name": "Ana Brükner", "volume": "Ana kübaj", "free": 300.0,
+                    "sites": [ { "name": "Döküm 1", "kind": "waste", "station": 450.0, "volume": 2000.0 } ] }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_HAULS_QUERY.into(),
+            version: crate::ROAD_HAULS_QUERY_VERSION,
+            title: "Brükneri sorgula".into(),
+            summary: "Yol projesinin Brüknerlerini bugün okur; hiçbir şey yazmaz. Kütle eğrisi denge çizgisine göre katman katman okunur: denge noktaları, döngüler (ileri ya da geri; km'ler, dengelenen hacim, taşıma momenti m³·m, ortalama taşıma uzaklığı, serbest taşımayı aşan hacim ve moment, ucunda varacak yeri olmayan hacim), toplamlar, döküm ve ödünç; okunamıyorsa nedeni. haul ile yalnız biri; points kütle eğrisinin noktalarını (km, m³; ödünç ve döküm alanında basamak) da verir. \
+                      Uyarılar: corridor_stale, volume_gap, haul_unbalanced. Retler: not_a_road_project, unknown_haul, invalid_haul."
+                .into(),
+            aliases: vec!["brucknersor".into(), "brüknersor".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::HaulsQuery>(),
+            output: schema::<crate::HaulsQueried>(),
+            plan: Some(schema::<crate::HaulsQueried>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana Brükner noktalarıyla".into(),
+                input: json!({ "haul": "Ana Brükner", "points": true }),
                 output: None,
             }],
         },
@@ -12929,6 +12980,8 @@ mod tests {
                     crate::ROAD_VOLUMES_APPROVE => {
                         serde_json::from_value::<crate::VolumesApprove>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_HAULS_EDIT => serde_json::from_value::<crate::HaulsEdit>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_HAULS_QUERY => serde_json::from_value::<crate::HaulsQuery>(e.input.clone()).map(|_| ()),
                     crate::CAD_SUBNETWORKS_FIND => {
                         serde_json::from_value::<crate::SubnetworksFind>(e.input.clone())
                             .map(|_| ())
@@ -13649,6 +13702,12 @@ mod tests {
                         }
                         crate::ROAD_VOLUMES_APPROVE => {
                             serde_json::from_value::<crate::VolumesWritten>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_HAULS_EDIT => {
+                            serde_json::from_value::<crate::HaulsWritten>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_HAULS_QUERY => {
+                            serde_json::from_value::<crate::HaulsQueried>(output.clone()).map(|_| ())
                         }
                         crate::CAD_ADDRESSES_DEFINE => {
                             serde_json::from_value::<crate::AddressesDefined>(output.clone())

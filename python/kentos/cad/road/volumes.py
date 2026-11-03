@@ -190,8 +190,9 @@ class _RoadVolumesEdit(LocalCommand[VolumesEdit, VolumesWritten, VolumesWritten]
     koridorunu izler, başka koridora bağlanmaz, yeniden bağlanmaz. Sonuç saklanmaz, her
     okumada hesaplanır. Yeni hesabın kimliği verilen ya da ilk boş v-n. Tek geri alma
     adımı “Kübaj”. Onaylı kübaj değiştirilmez ve silinmez (volume_approved); önce
-    road.volumes.approve revoke. Retler: not_a_road_project, unknown_volume,
-    volume_approved, unknown_corridor, invalid_volume, invalid_revision,
+    road.volumes.approve revoke. Bir Brüknerin kullandığı kübaj silinmez
+    (volume_in_use). Retler: not_a_road_project, unknown_volume, volume_approved,
+    volume_in_use, unknown_corridor, invalid_volume, invalid_revision,
     revision_conflict.
     """
     __slots__ = ()
@@ -235,9 +236,10 @@ class _RoadVolumesEdit(LocalCommand[VolumesEdit, VolumesWritten, VolumesWritten]
         katılmaz; bench null kaldırır. Kübaj koridorunu izler, başka koridora bağlanmaz,
         yeniden bağlanmaz. Sonuç saklanmaz, her okumada hesaplanır. Yeni hesabın kimliği
         verilen ya da ilk boş v-n. Tek geri alma adımı “Kübaj”. Onaylı kübaj değiştirilmez
-        ve silinmez (volume_approved); önce road.volumes.approve revoke. Retler:
-        not_a_road_project, unknown_volume, volume_approved, unknown_corridor,
-        invalid_volume, invalid_revision, revision_conflict.
+        ve silinmez (volume_approved); önce road.volumes.approve revoke. Bir Brüknerin
+        kullandığı kübaj silinmez (volume_in_use). Retler: not_a_road_project,
+        unknown_volume, volume_approved, volume_in_use, unknown_corridor, invalid_volume,
+        invalid_revision, revision_conflict.
 
         Args:
             doc: The drawing it works on.
