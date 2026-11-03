@@ -3476,6 +3476,39 @@ fn explicit_nested_attribute_scope_is_guarded_and_preserves_every_reference() {
 }
 
 #[test]
+fn component_export_plan_discloses_static_and_association_loss_without_writing() {
+    let dir = std::env::temp_dir().join(format!("kentos-mcp-component-export-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let source = dir.join("component.kcad");
+    let baseline = include_bytes!("../../../../fixtures/interaction/v1/block-parametric-component.kcad");
+    std::fs::write(&source, baseline).unwrap();
+    let mut server = Server::new();
+    let drawing = call(&mut server, "drawing.open", json!({"path":source}))["structuredContent"]["drawing"].clone();
+    let path = dir.join("component.dxf");
+    let planned = call(&mut server, "file.export.dxf", json!({"drawing":drawing,"path":path,"op":"plan"}))["structuredContent"].clone();
+    assert_eq!(planned["status"], "completed", "{planned}");
+    assert!(!path.exists());
+    let notes = planned["output"]["report"]["notes"].as_array().unwrap();
+    for kind in ["Dinamik blok", "Ölçü bağı"] {
+        assert!(notes.iter().any(|n| n["what"] == kind && n["severity"] == "warning"), "{notes:?}");
+    }
+    let association = notes.iter().find(|n| n["what"] == "Ölçü bağı").unwrap();
+    assert!(association["reason"].as_str().unwrap().contains("kendiliğinden izlemez"));
+    let written = call(&mut server, "file.export.dxf", json!({"drawing":drawing,"path":path}))["structuredContent"].clone();
+    assert_eq!(written["status"], "completed", "{written}");
+    assert_eq!(written["output"]["report"], planned["output"]["report"]);
+    call(&mut server, "drawing.save", json!({"drawing":drawing,"path":source}));
+    assert_eq!(std::fs::read(&source).unwrap(), baseline);
+    let back = call(&mut server, "drawing.open", json!({"path":path}))["structuredContent"]["drawing"].clone();
+    let records = call(&mut server, "drawing.entities", json!({"drawing":back}))["structuredContent"]["items"].clone();
+    let dimension = records.as_array().unwrap().iter().find(|r| r["entity"]["kind"] == "dimension").unwrap();
+    assert!(dimension["entity"]["refs"].is_null());
+    let measured = call(&mut server, "cad.dimensions.query", json!({"drawing":back}))["structuredContent"]["output"]["dimensions"][0]["measured"].as_f64().unwrap();
+    assert!((measured - 1.1).abs() < 1e-9);
+    std::fs::remove_dir_all(dir).unwrap();
+}
+
+#[test]
 fn a_block_definition_review_is_read_only_and_its_plan_guards_the_same_write() {
     let dir = std::env::temp_dir().join(format!("kentos-mcp-block-review-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();

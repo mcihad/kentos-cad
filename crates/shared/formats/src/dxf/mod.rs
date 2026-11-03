@@ -42,6 +42,10 @@ pub use dimension::layout as dimension_layout;
 pub(crate) use writer::{Definitions, Objects};
 pub use writer::{WriteInput, input_from_json, write};
 
+/// Current export keeps a dimension's measured geometry, but does not encode its object association.
+/// Shared by the writer's loss report and the desktop's pre-export disclosure.
+pub const DIMENSION_REFERENCE_LOSS: &str = "Ölçünün mevcut değeri ve çizimi korunur; ölçülen nesneye bağlı güncellenme ilişkisi aktarılmaz. Yeniden açıldığında geometri değişirse ölçü kendiliğinden izlemez. İlişkiyi korumak için kaynak çizimi KCAD olarak saklayın.";
+
 use std::collections::{BTreeMap, HashMap, HashSet};
 
 use kentos_contracts::{

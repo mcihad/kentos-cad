@@ -20,6 +20,36 @@ use kentos_formats::math::{atan2, cos, sin};
 const Y0: f64 = 452_345.123;
 const X0: f64 = 4_412_345.678;
 
+#[test]
+fn dimension_object_association_loss_is_reported_in_every_export_form_and_metadata_mode() {
+    use kentos_contracts::{DxfForm, ReportSeverity};
+    for form in [DxfForm::Native, DxfForm::Block] {
+        for metadata in [false, true] {
+            let mut entity = dimensions().remove(0);
+            let Entity::Dimension(dimension) = &mut entity else { unreachable!() };
+            dimension.refs = Some(serde_json::from_value(serde_json::json!({
+                "a":{"uid":"0192f5a1-2900-7000-8000-0000000000d1","place":{"kind":"start"}},
+                "b":{"uid":"0192f5a1-2900-7000-8000-0000000000d1","place":{"kind":"end"}}
+            })).unwrap());
+            let mut i = input(vec![entity]);
+            i.annotations.dimensions = form;
+            i.annotations.metadata = metadata;
+            let before = serde_json::to_value(&i).unwrap();
+            let (text,report) = write(&i);
+            let warning = report.notes.iter().find(|n| n.what == "Ölçü bağı").unwrap();
+            assert_eq!(warning.count,1);
+            assert_eq!(warning.severity,Some(ReportSeverity::Warning));
+            assert_eq!(warning.reason,dxf::DIMENSION_REFERENCE_LOSS);
+            assert_eq!(serde_json::to_value(&i).unwrap(),before);
+            let back = read(&text);
+            assert!(back.entities.iter().all(|e| !matches!(e, Entity::Dimension(d) if d.refs.is_some())));
+            let Entity::Dimension(d) = &mut i.entities[0] else { unreachable!() };
+            d.refs = None;
+            assert!(!write(&i).1.notes.iter().any(|n| n.what == "Ölçü bağı"));
+        }
+    }
+}
+
 
 /// The report's notes but the one each table, dimension and leader gets of how it was written (docs/adr/0327 §6).
 fn other_notes(r: &ExportReport) -> Vec<&kentos_contracts::ReportItem> {

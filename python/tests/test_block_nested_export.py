@@ -27,6 +27,29 @@ def open_raw(raw):
 
 
 class BlockNestedExport(unittest.TestCase):
+    def test_combined_component_export_discloses_dimension_association_loss_before_writing(self):
+        baseline = (ROOT / "fixtures/interaction/v1/block-parametric-component.kcad").read_bytes()
+        doc = cad.Document.from_bytes(baseline)
+        self.assertAlmostEqual(cad.dimensions.query(doc).dimensions[0].measured, 1.1)
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "component.dxf"
+            planned = cad.file.export.dxf.plan(doc, path=str(path))
+            self.assertFalse(path.exists())
+            self.assertEqual(doc.to_bytes(), baseline)
+            for kind in ("Dinamik blok", "Ölçü bağı"):
+                note = next(n for n in planned.report["notes"] if n["what"] == kind)
+                self.assertEqual(note["severity"], "warning")
+            note = next(n for n in planned.report["notes"] if n["what"] == "Ölçü bağı")
+            self.assertIn("kendiliğinden izlemez", note["reason"])
+            self.assertIn("KCAD", note["reason"])
+            written = cad.file.export.dxf(doc, path=str(path))
+            self.assertEqual(written.report, planned.report)
+            self.assertEqual(doc.to_bytes(), baseline)
+            back = cad.Document.open(path)
+            self.assertAlmostEqual(cad.dimensions.query(back).dimensions[0].measured, 1.1)
+            dimension = next(r.entity for r in back.entities() if r.entity.kind == "dimension")
+            self.assertIsNone(dimension.to_json().get("refs"))
+
     def test_default_hidden_geometry_matches_an_explicit_state_and_reset_and_single_undo(self):
         raw = snapshot()
         raw["entities"][0].pop("parameters", None)

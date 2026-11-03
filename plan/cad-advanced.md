@@ -520,7 +520,7 @@ gerçek hover, dar pencere ve zoom kontrol edildi. Temiz adayda masaüstü
 Kabul destek matrisindeki aşamalı kapsama aittir; genel NURBS/G2 ve
 kalıcı bağımsız elips eksen başvurusu uygulanmış sayılmaz.
 
-### CAD-ADV-06 — Parametrik blokları sürdürülebilir 2B bileşenlere dönüştür [~]
+### CAD-ADV-06 — Parametrik blokları sürdürülebilir 2B bileşenlere dönüştür [x]
 
 **Öncelik:** P1. **Kod:** [C11], [C12].
 **Dayanak:** Smart Blocks ve parametre/design-table düzeni; blok kaynağı
@@ -805,11 +805,31 @@ SDK/katalog kontrolü, Clippy ve derleme geçti.
 [ADR 0864](../docs/adr/0864-explicit-nested-attribute-tag-migration.md),
 [kullanım/API](../docs/cad/block-attribute-scope.md).
 
-**Kalan kabul:** Birleşik testte DXF'in yazım sonrası raporu dinamik davranış
-kaybını doğru bildiriyor; yazım öncesi pencerede bu uyarının eksik olduğu
-görüldü. Bu görünür uyarı doğrulanmadan madde kapanmaz.
-Web öznitelik penceresinin native eşitleme kapsamıyla
-aynı olmadığı kodda görüldü; bu dilim web eşitliğini tamamlanmış saymaz.
+**Kapanış — 2026-11-03:** Birleşik kabulde yukarıdaki iki görünüş,
+lookup/formül, ortak tip–örnek, iç etiket taşıma, seçilmiş yayın yükseltme,
+1100→1200 mm bağlı ölçü, gerçek Undo/Redo ve kaydet–aç doğrulandı.
+Son açık olan yazım öncesi kayıp uyarısı da tamamlandı: DXF/DWG penceresi
+dinamik davranışın statikleşmesini ve bağlı ölçünün geometriyi izleme
+ilişkisinin taşınmamasını dosya yolu seçilmeden önce bildirir. Mevcut boyut
+ve görünüşün yazılması, parametrik/ilişkisel düzenlenebilirlik sayılmaz.
+KentOS metadata seçeneği artık bütün alanları koruduğunu söylemez.
+Aynı `Ölçü bağı` uyarısı native/blok × metadata açık/kapalı ortak yazıcıda,
+Python ve MCP plan/yürütme raporunda bulunur; plan dosya yaratmaz.
+
+Gerçek fareyle büyük/en küçük pencere, gövde kaydırma, sabit eylemler,
+yalnız iç içe üst blok seçimi, Tümü kapsamına geçiş, DXF/DWG uyarıları,
+Vazgeç, gerçek DXF yazımı ve yeniden açma sınandı. GUI/Python DXF baytları
+aynı; aktarım/kapsam/Vazgeç sonrasında kaynak KCAD başlangıçla tam aynı.
+Son DXF tekrar açıldığında K-1/K-2/İÇ-1 ve 1100 mm güncel ölçü korundu;
+bu statik kaydın bağsızlığı API ve bağımsız KCAD okuyucusuyla da doğrulandı.
+51 DXF yazıcı, 1624 masaüstü, 66 MCP, 12 başsız DXF ve 56 Python blok testi,
+Clippy ve son derleme geçti. Görüntüler repo dışındadır.
+[ADR 0865](../docs/adr/0865-static-cad-export-behavior-loss-disclosure.md),
+[kullanım/API](../docs/cad/block-static-dxf.md).
+
+Bu işaret native masaüstü/Python/MCP kapsamının kabulüdür. Web öznitelik
+penceresinin native eşitleme kapsamıyla aynı olmadığı kodda görüldü;
+TODOS'daki web eşitliği görevi bu kapanışla tamamlanmış sayılmaz.
 
 ### CAD-ADV-07 — Tekrarları tanı, blok ve ilişkili diziye kontrollü dönüştür [ ]
 

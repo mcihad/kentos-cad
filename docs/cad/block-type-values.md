@@ -56,6 +56,11 @@ iki metadata alanından çıkarıp aynı korumalı tanım komutunu kullanın.
 `doc.undo()` bütün kapsam/değer/grafik değişimini tek adımda geri alır.
 Kaynak dosyayı kaydedip açınca metadata ve örnek girdileri korunur. DXF
 statik görünüşü korur; parametrik düzenlenebilirlik kaybı ayrı raporlanır.
+Aktarım penceresi bunu dosya yazılmadan önce gösterir. Nesneye bağlı ölçünün
+güncel değeri yazılır, fakat yeniden açılan DXF’te geometriyi takip eden bağı
+korunmaz; plan ve yürütme raporunda `Ölçü bağı` uyarısı yer alır. KentOS
+metadata seçeneği bu bağı koruma vaadi değildir. Düzenlenebilir kaynak ve
+ilişkiler için KCAD dosyasını saklayın. [ADR 0865](../adr/0865-static-cad-export-behavior-loss-disclosure.md).
 
 Ortak tip değerleri içeren dışa aktarılmış `kentos.blocks` kitaplığı sürüm
 3'tür. Eski uygulamalar bu dosyayı boyutlarını yanlış göstererek açmak yerine
