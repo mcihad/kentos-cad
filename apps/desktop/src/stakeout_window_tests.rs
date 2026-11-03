@@ -46,6 +46,33 @@ fn the_window_reads_the_table_as_it_is_typed() {
     assert_eq!(app.document.as_ref().expect("a drawing").model.revision(), revision, "nothing written");
 }
 
+#[test]
+fn the_points_go_to_an_instrument_and_as_a_string_road() {
+    let mut app = app();
+    let revision = app.document.as_ref().expect("a drawing").model.revision();
+    let _ = app.update(Message::Run("stakeout.table"));
+    send(&mut app, W::Field(0, "100".into()));
+    send(&mut app, W::Field(1, "200".into()));
+    send(&mut app, W::Field(2, "20".into()));
+    let folder = std::env::temp_dir().join(format!("kentos-stakeout-send-window-{}", std::process::id()));
+    std::fs::create_dir_all(&folder).unwrap();
+    // A string road: the file's name without its extension takes it.
+    send(&mut app, W::Sent(Some(folder.join("ana"))));
+    let xml = std::fs::read_to_string(folder.join("ana.xml")).expect("written");
+    assert!(xml.contains("<PlanFeatures name=\"Ana koridor\">"), "{xml}");
+    // Leica GSI-8 from 500: the long codes are left off.
+    send(&mut app, W::SendFormat(kentos_commands::StakeoutSendFormat::Gsi8));
+    send(&mut app, W::SendField(0, "500".into()));
+    send(&mut app, W::Sent(Some(folder.join("ana.gsi"))));
+    let gsi = std::fs::read_to_string(folder.join("ana.gsi")).expect("written");
+    assert!(gsi.starts_with("110001+00000500 "), "{gsi}");
+    send(&mut app, W::SendField(0, "bir".into()));
+    send(&mut app, W::Sent(Some(folder.join("yok.gsi"))));
+    assert!(!folder.join("yok.gsi").exists());
+    assert_eq!(app.document.as_ref().expect("a drawing").model.revision(), revision, "nothing written");
+    let _ = std::fs::remove_dir_all(&folder);
+}
+
 /// The window, wide and narrow, light and dark; `.run/gui-evidence/yol-y10-*`:
 ///
 /// ```text
@@ -85,6 +112,10 @@ fn screens() {
         send(&mut app, W::Field(3, "axis, hinge, daylight".into()));
         send(&mut app, W::Distances(kentos_commands::StakeoutDistances::Ground));
         shot(&mut app, "aplikasyon-zemin");
+        send(&mut app, W::SendFormat(kentos_commands::StakeoutSendFormat::Gsi16));
+        send(&mut app, W::SendField(0, "1001".into()));
+        send(&mut app, W::SendField(1, "Ana yol".into()));
+        shot(&mut app, "aplikasyon-gonder");
         send(&mut app, W::Close);
     }
 }

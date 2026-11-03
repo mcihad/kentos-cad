@@ -230,7 +230,7 @@ fn check(doc: &Document, input: &ExportIfc) -> Result<Planned, Stop> {
 }
 
 /// The text written at `path` whole or not at all: beside it, read back whole, then moved over it.
-fn write_file(path: &Path, text: &str) -> Result<(), String> {
+pub(crate) fn write_file(path: &Path, text: &str) -> Result<(), String> {
     let mut tmp = path.as_os_str().to_owned();
     tmp.push(".kentos-yaziliyor");
     let tmp = PathBuf::from(tmp);

@@ -6081,6 +6081,24 @@ StakeoutDistancesName = Literal["grid", "ground"]
 """The names of :class:`StakeoutDistances`, for a plain string."""
 
 
+class StakeoutSendFormat(_StrEnum):
+    """The file a stakeout is sent as: a LandXML string road (the corridor's alignment, its profile and the coded points
+    as strings, what Trimble Access, Leica Captivate and Topcon MAGNET read), or the points to an instrument's
+    coordinate file (docs/adr/0169 §4's writers).
+    """
+    LANDXML = "landxml"
+    GSI16 = "gsi16"
+    GSI8 = "gsi8"
+    GTS7 = "gts7"
+    JOBXML = "jobxml"
+    NIKON = "nikon"
+    CSV = "csv"
+
+
+StakeoutSendFormatName = Literal["landxml", "gsi16", "gsi8", "gts7", "jobxml", "nikon", "csv"]
+"""The names of :class:`StakeoutSendFormat`, for a plain string."""
+
+
 class StandardIssueKind(_StrEnum):
     """What a finding is about.
 
@@ -68428,6 +68446,26 @@ class StakeRow(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class StakeoutLeft(_Model):
+    """A point the format did not carry: its name and why."""
+    name: str
+    problem: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["problem"] = self.problem
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StakeoutLeft:
+        return cls(
+            name=data["name"],
+            problem=data["problem"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class StakeoutQueried(_Model):
     """Output of `road.stakeout.query` v1: the corridor, how the offsets are given, the stations read and the points in
     station order (a station shared by two regions once for each), left to right.
@@ -68512,6 +68550,141 @@ class StakeoutQuery(_Model):
             from_=UNSET if "from" not in data else None if data["from"] is None else float(data["from"]),
             step=UNSET if "step" not in data else None if data["step"] is None else float(data["step"]),
             to=UNSET if "to" not in data else None if data["to"] is None else float(data["to"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StakeoutSend(_Model):
+    """Input of `road.stakeout.send` v1: the stakeout table's points (`road.stakeout.query`'s corridor, range, step and
+    codes; places on the grid) written to `path` as `format` (`.xml` for LandXML, `.gsi`, `.xyz`, `.jxl`, `.raw`,
+    `.csv` for the instrument files). The points are named by number from `first` (1 without it); a code the format
+    cannot carry is left off the point (said). `job` is JobXML's job and Nikon RAW's comment (the corridor's name
+    without it); `stamp` (`YYYY-MM-DDThh:mm:ss`) the file's time (now without it).
+
+    Refusals, in this order: `not_a_road_project`, `unknown_corridor`, `invalid_stakeout` (as the query), an invalid
+    `path` (`invalid_file_path`: empty, relative, not the format's extension, no folder), `file_exists` (without
+    `overwrite`), `invalid_stakeout_send` (no point to send, a stamp that does not read, a job the format cannot
+    carry, a first number not in [1, 99 999 999]). Warnings: the query's, `stakeout_code_dropped` (codes left off),
+    `export_losses` (points the format cannot carry; strings of one point).
+    Attributes:
+        first: Unit: count.
+        from_: Unit: m.
+        step: Unit: m.
+        to: Unit: m.
+    """
+    corridor: str
+    format: StakeoutSendFormat | StakeoutSendFormatName
+    path: str
+    codes: list[str] | None | Unset = UNSET
+    first: int | None | Unset = UNSET
+    from_: float | None | Unset = UNSET
+    job: str | None | Unset = UNSET
+    overwrite: bool | Unset = UNSET
+    stamp: str | None | Unset = UNSET
+    step: float | None | Unset = UNSET
+    to: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["corridor"] = self.corridor
+        out["format"] = _enum_out(self.format)
+        out["path"] = self.path
+        if self.codes is not UNSET:
+            out["codes"] = None if self.codes is None else list(self.codes)
+        if self.first is not UNSET:
+            out["first"] = self.first
+        if self.from_ is not UNSET:
+            out["from"] = None if self.from_ is None else float(self.from_)
+        if self.job is not UNSET:
+            out["job"] = self.job
+        if self.overwrite is not UNSET:
+            out["overwrite"] = self.overwrite
+        if self.stamp is not UNSET:
+            out["stamp"] = self.stamp
+        if self.step is not UNSET:
+            out["step"] = None if self.step is None else float(self.step)
+        if self.to is not UNSET:
+            out["to"] = None if self.to is None else float(self.to)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StakeoutSend:
+        return cls(
+            corridor=data["corridor"],
+            format=_enum_in(StakeoutSendFormat, data["format"]),
+            path=data["path"],
+            codes=UNSET if "codes" not in data else None if data["codes"] is None else list(data["codes"]),
+            first=data.get("first", UNSET),
+            from_=UNSET if "from" not in data else None if data["from"] is None else float(data["from"]),
+            job=data.get("job", UNSET),
+            overwrite=data.get("overwrite", UNSET),
+            stamp=data.get("stamp", UNSET),
+            step=UNSET if "step" not in data else None if data["step"] is None else float(data["step"]),
+            to=UNSET if "to" not in data else None if data["to"] is None else float(data["to"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StakeoutSent(_Model):
+    """Output of `road.stakeout.send` v1: the file, its format, the corridor, the stations read, the points written and
+    those left out, the codes left off, the strings (LandXML), the alignment and the profile written (LandXML), its
+    bytes and SHA-256.
+    Attributes:
+        stations: Unit: count.
+        points: Unit: count.
+        codes_dropped: Unit: count.
+        strings: Unit: count.
+        bytes: Unit: bytes.
+    """
+    path: str
+    format: StakeoutSendFormat | StakeoutSendFormatName
+    corridor: str
+    name: str
+    stations: int
+    points: int
+    left: list[StakeoutLeft]
+    codes_dropped: int
+    strings: int
+    bytes: int
+    sha256: str
+    alignment: str | None | Unset = UNSET
+    profile: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["format"] = _enum_out(self.format)
+        out["corridor"] = self.corridor
+        out["name"] = self.name
+        out["stations"] = self.stations
+        out["points"] = self.points
+        out["left"] = [e0.to_json() for e0 in self.left]
+        out["codesDropped"] = self.codes_dropped
+        out["strings"] = self.strings
+        out["bytes"] = self.bytes
+        out["sha256"] = self.sha256
+        if self.alignment is not UNSET:
+            out["alignment"] = self.alignment
+        if self.profile is not UNSET:
+            out["profile"] = self.profile
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StakeoutSent:
+        return cls(
+            path=data["path"],
+            format=_enum_in(StakeoutSendFormat, data["format"]),
+            corridor=data["corridor"],
+            name=data["name"],
+            stations=data["stations"],
+            points=data["points"],
+            left=[StakeoutLeft.from_json(e0) for e0 in data["left"]],
+            codes_dropped=data["codesDropped"],
+            strings=data["strings"],
+            bytes=data["bytes"],
+            sha256=data["sha256"],
+            alignment=data.get("alignment", UNSET),
+            profile=data.get("profile", UNSET),
         )
 
 
@@ -99257,8 +99430,13 @@ __all__ = [
     "StakeSideName",
     "StakeoutDistances",
     "StakeoutDistancesName",
+    "StakeoutLeft",
     "StakeoutQueried",
     "StakeoutQuery",
+    "StakeoutSend",
+    "StakeoutSendFormat",
+    "StakeoutSendFormatName",
+    "StakeoutSent",
     "StandardDimensionStyle",
     "StandardIssue",
     "StandardIssueKind",

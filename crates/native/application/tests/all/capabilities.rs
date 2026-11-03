@@ -87,6 +87,7 @@ fn reached() -> BTreeMap<String, BTreeSet<String>> {
 
 /// The listed codes no shared case reaches, and why.
 const UNREACHED: &[(&str, &str, &str)] = &[
+    ("road.stakeout.send", "stakeout_unsolved", "Ortak çizimde kesitsiz km yalnız yüzeysiz koridorda olur, o da hiç nokta vermez ve gönderme reddedilir; uyarının metni road.stakeout.query'nin durumlarında sınanır, gönderme cetvelin uyarılarını olduğu gibi taşır (ADR 0908 §9)."),
     ("cad.blocks.find", "recognition_scope_limit", "50 001 nesnelik liste ortak JSON'a şişirilmez; blocks_find::limits_and_cancellation_keep_the_source_exact testinde üretilip ret ve değişmezlik sınanır (ADR 0866)"),
     ("cad.parameters.edit", "parameter_kind", "Birim boyutu ön denetimi parameter_dimensions.rs içinde validate/plan/execute eşitliği, bağımlı üs, eski pi, atomiklik ve Undo ile sınanır; ortak ADR0336 durumları eski sayısal grameri korur (ADR0840)."),
     ("cad.constraints.query", "parameter_units_legacy", "Eski pi ifadesi Number türünde olan V2 dosyası parameter_dimensions.rs içinde salt okunur uyarı, yeniden adlandırma, açık onarım ve Undo ile sınanır; yeni komutlar bu uyumsuz ifadeyi oluşturamaz (ADR0840)."),

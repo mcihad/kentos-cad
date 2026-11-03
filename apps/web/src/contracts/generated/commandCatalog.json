@@ -39532,6 +39532,314 @@
       ]
     },
     {
+      "id": "road.stakeout.send",
+      "version": 1,
+      "title": "Aplikasyonu alete gönder",
+      "summary": "Aplikasyon cetvelinin noktalarını (road.stakeout.query'nin corridor, from, to, step ve codes'u; yerler plan koordinatı) alete dosya olarak yazar. format: landxml (LandXML 1.2 string yol: koridorun aksı, yalnız kendi boykesiti ve her kodun noktaları km sırasıyla PlanFeature olarak; bir km'de kodu olmayan dize orada kesilir, tek noktalı dize yazılmaz; Trimble Access, Leica Captivate ve Topcon MAGNET okur), gsi16, gsi8, gts7, jobxml, nikon, csv (ADR 0169'un alet yazıcıları). Noktalar first'ten (yoksa 1) sırayla numaralanır, kodu taşınamayan noktanın kodu düşer (stakeout_code_dropped), noktası taşınamayan nokta yazılmaz (left, export_losses). job JobXML'in iş adı ve Nikon RAW'ın notu (yoksa koridorun adı); stamp tarih ve saat. Bütün yazılır ya da hiç; çizimi değiştirmez. Retler: not_a_road_project, unknown_corridor, invalid_stakeout, invalid_file_path, file_exists, invalid_stakeout_send.",
+      "aliases": [
+        "aplikasyongonder",
+        "aletegonder"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.stakeout.send` v1: the stakeout table's points (`road.stakeout.query`'s corridor, range, step and\ncodes; places on the grid) written to `path` as `format` (`.xml` for LandXML, `.gsi`, `.xyz`, `.jxl`, `.raw`,\n`.csv` for the instrument files). The points are named by number from `first` (1 without it); a code the format\ncannot carry is left off the point (said). `job` is JobXML's job and Nikon RAW's comment (the corridor's name\nwithout it); `stamp` (`YYYY-MM-DDThh:mm:ss`) the file's time (now without it).\n\nRefusals, in this order: `not_a_road_project`, `unknown_corridor`, `invalid_stakeout` (as the query), an invalid\n`path` (`invalid_file_path`: empty, relative, not the format's extension, no folder), `file_exists` (without\n`overwrite`), `invalid_stakeout_send` (no point to send, a stamp that does not read, a job the format cannot\ncarry, a first number not in [1, 99 999 999]). Warnings: the query's, `stakeout_code_dropped` (codes left off),\n`export_losses` (points the format cannot carry; strings of one point).",
+        "properties": {
+          "codes": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "corridor": {
+            "type": "string"
+          },
+          "first": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "format": {
+            "$ref": "#/$defs/StakeoutSendFormat"
+          },
+          "from": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "job": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "overwrite": {
+            "type": "boolean"
+          },
+          "path": {
+            "type": "string"
+          },
+          "stamp": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "step": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "to": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          }
+        },
+        "required": [
+          "corridor",
+          "format",
+          "path"
+        ],
+        "title": "StakeoutSend",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.stakeout.send` v1: the file, its format, the corridor, the stations read, the points written and\nthose left out, the codes left off, the strings (LandXML), the alignment and the profile written (LandXML), its\nbytes and SHA-256.",
+        "properties": {
+          "alignment": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "codesDropped": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "corridor": {
+            "type": "string"
+          },
+          "format": {
+            "$ref": "#/$defs/StakeoutSendFormat"
+          },
+          "left": {
+            "items": {
+              "$ref": "#/$defs/StakeoutLeft"
+            },
+            "type": "array"
+          },
+          "name": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "points": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "profile": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "stations": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "strings": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "path",
+          "format",
+          "corridor",
+          "name",
+          "stations",
+          "points",
+          "left",
+          "codesDropped",
+          "strings",
+          "bytes",
+          "sha256"
+        ],
+        "title": "StakeoutSent",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.stakeout.send` v1: the file, its format, the corridor, the stations read, the points written and\nthose left out, the codes left off, the strings (LandXML), the alignment and the profile written (LandXML), its\nbytes and SHA-256.",
+        "properties": {
+          "alignment": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "codesDropped": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "corridor": {
+            "type": "string"
+          },
+          "format": {
+            "$ref": "#/$defs/StakeoutSendFormat"
+          },
+          "left": {
+            "items": {
+              "$ref": "#/$defs/StakeoutLeft"
+            },
+            "type": "array"
+          },
+          "name": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "points": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "profile": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "stations": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "strings": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "path",
+          "format",
+          "corridor",
+          "name",
+          "stations",
+          "points",
+          "left",
+          "codesDropped",
+          "strings",
+          "bytes",
+          "sha256"
+        ],
+        "title": "StakeoutSent",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_corridor",
+          "invalid_stakeout",
+          "invalid_file_path",
+          "file_exists",
+          "invalid_stakeout_send"
+        ],
+        "warnings": [
+          "corridor_stale",
+          "corridor_unsolved",
+          "stakeout_unsolved",
+          "stakeout_code_dropped",
+          "export_losses"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Ana koridor string yol olarak",
+          "input": {
+            "corridor": "Ana koridor",
+            "format": "landxml",
+            "path": "/veri/ana.xml",
+            "step": 20.0
+          }
+        },
+        {
+          "title": "Şev noktaları Leica GSI-16 olarak",
+          "input": {
+            "codes": [
+              "daylight"
+            ],
+            "corridor": "Ana koridor",
+            "format": "gsi16",
+            "path": "/veri/sev.gsi",
+            "step": 20.0
+          }
+        }
+      ]
+    },
+    {
       "id": "road.alignments.query",
       "version": 1,
       "title": "Aksı sorgula",
@@ -73929,6 +74237,18 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Aplikasyon cetvelinin bazı km'lerinde kesit yok; oralarda nokta verilmedi."
+    },
+    {
+      "code": "invalid_stakeout_send",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Aplikasyon noktaları gönderilemiyor."
+    },
+    {
+      "code": "stakeout_code_dropped",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Aletin dosyasının taşıyamadığı kodlar noktalardan çıkarıldı."
     },
     {
       "code": "corridor_superelevation_gone",
@@ -144021,6 +144341,35 @@
       "enum": [
         "grid",
         "ground"
+      ],
+      "type": "string"
+    },
+    "StakeoutLeft": {
+      "description": "A point the format did not carry: its name and why.",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "problem": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "problem"
+      ],
+      "type": "object"
+    },
+    "StakeoutSendFormat": {
+      "description": "The file a stakeout is sent as: a LandXML string road (the corridor's alignment, its profile and the coded points\nas strings, what Trimble Access, Leica Captivate and Topcon MAGNET read), or the points to an instrument's\ncoordinate file (docs/adr/0169 §4's writers).",
+      "enum": [
+        "landxml",
+        "gsi16",
+        "gsi8",
+        "gts7",
+        "jobxml",
+        "nikon",
+        "csv"
       ],
       "type": "string"
     },

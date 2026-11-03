@@ -94,6 +94,13 @@ pub struct WAlignment {
     pub profiles: Vec<WProfile>,
 }
 
+/// A feature line (`PlanFeatures/PlanFeature`, a string of a string road): its name and its places (x, y, z).
+#[derive(Clone, Debug, PartialEq)]
+pub struct WFeature {
+    pub name: String,
+    pub points: Vec<[f64; 3]>,
+}
+
 /// What a file holds, and when and by what it is written.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct WLandXml {
@@ -105,6 +112,9 @@ pub struct WLandXml {
     pub project: String,
     pub surfaces: Vec<WSurface>,
     pub alignments: Vec<WAlignment>,
+    /// The feature lines, under one `PlanFeatures` named `features_name`.
+    pub features: Vec<WFeature>,
+    pub features_name: String,
 }
 
 fn escape(t: &str) -> String {
@@ -263,6 +273,18 @@ pub fn write(file: &WLandXml) -> String {
             o.push_str("    </Alignment>\n");
         }
         o.push_str("  </Alignments>\n");
+    }
+    if !file.features.is_empty() {
+        o.push_str(&format!("  <PlanFeatures name=\"{}\">\n", escape(&file.features_name)));
+        for f in &file.features {
+            o.push_str(&format!("    <PlanFeature name=\"{}\">\n      <CoordGeom>\n", escape(&f.name)));
+            for w in f.points.windows(2) {
+                let p = |q: [f64; 3]| format!("{} {} {}", n(q[1]), n(q[0]), n(q[2]));
+                o.push_str(&format!("        <Line><Start>{}</Start><End>{}</End></Line>\n", p(w[0]), p(w[1])));
+            }
+            o.push_str("      </CoordGeom>\n    </PlanFeature>\n");
+        }
+        o.push_str("  </PlanFeatures>\n");
     }
     o.push_str("</LandXML>\n");
     o

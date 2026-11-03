@@ -7479,6 +7479,38 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::ROAD_STAKEOUT_SEND.into(),
+            version: crate::ROAD_STAKEOUT_SEND_VERSION,
+            title: "Aplikasyonu alete gönder".into(),
+            summary: "Aplikasyon cetvelinin noktalarını (road.stakeout.query'nin corridor, from, to, step ve codes'u; yerler plan koordinatı) alete dosya olarak yazar. format: landxml (LandXML 1.2 string yol: koridorun aksı, yalnız kendi boykesiti ve her kodun noktaları km sırasıyla PlanFeature olarak; bir km'de kodu olmayan dize orada kesilir, tek noktalı dize yazılmaz; Trimble Access, Leica Captivate ve Topcon MAGNET okur), gsi16, gsi8, gts7, jobxml, nikon, csv (ADR 0169'un alet yazıcıları). Noktalar first'ten (yoksa 1) sırayla numaralanır, kodu taşınamayan noktanın kodu düşer (stakeout_code_dropped), noktası taşınamayan nokta yazılmaz (left, export_losses). job JobXML'in iş adı ve Nikon RAW'ın notu (yoksa koridorun adı); stamp tarih ve saat. Bütün yazılır ya da hiç; çizimi değiştirmez. \
+                      Retler: not_a_road_project, unknown_corridor, invalid_stakeout, invalid_file_path, file_exists, invalid_stakeout_send."
+                .into(),
+            aliases: vec!["aplikasyongonder".into(), "aletegonder".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::StakeoutSend>(),
+            output: schema::<crate::StakeoutSent>(),
+            plan: Some(schema::<crate::StakeoutSent>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Ana koridor string yol olarak".into(),
+                    input: json!({ "corridor": "Ana koridor", "step": 20.0, "format": "landxml", "path": "/veri/ana.xml" }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Şev noktaları Leica GSI-16 olarak".into(),
+                    input: json!({ "corridor": "Ana koridor", "step": 20.0, "codes": ["daylight"], "format": "gsi16", "path": "/veri/sev.gsi" }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
             id: crate::ROAD_ALIGNMENTS_QUERY.into(),
             version: crate::ROAD_ALIGNMENTS_QUERY_VERSION,
             title: "Aksı sorgula".into(),
@@ -13116,6 +13148,9 @@ mod tests {
                         serde_json::from_value::<crate::ExportLandxml>(e.input.clone()).map(|_| ())
                     }
                     crate::FILE_EXPORT_IFC => serde_json::from_value::<crate::ExportIfc>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_STAKEOUT_SEND => {
+                        serde_json::from_value::<crate::StakeoutSend>(e.input.clone()).map(|_| ())
+                    }
                     crate::ROAD_ALIGNMENTS_IMPORT => {
                         serde_json::from_value::<crate::AlignmentsImport>(e.input.clone()).map(|_| ())
                     }
@@ -13854,6 +13889,9 @@ mod tests {
                         }
                         crate::FILE_EXPORT_IFC => {
                             serde_json::from_value::<crate::IfcExported>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_STAKEOUT_SEND => {
+                            serde_json::from_value::<crate::StakeoutSent>(output.clone()).map(|_| ())
                         }
                         crate::ROAD_ALIGNMENTS_IMPORT => {
                             serde_json::from_value::<crate::AlignmentsImported>(output.clone()).map(|_| ())

@@ -1868,6 +1868,25 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "road.stakeout.send",
+        refusals: &[&[
+            "not_a_road_project",
+            "unknown_corridor",
+            "invalid_stakeout",
+            "invalid_file_path",
+            "file_exists",
+            "invalid_stakeout_send",
+        ]],
+        warnings: &[
+            "corridor_stale",
+            "corridor_unsolved",
+            "stakeout_unsolved",
+            "stakeout_code_dropped",
+            "export_losses",
+        ],
+        targets: none,
+    },
+    Entry {
         id: "road.volumes.approve",
         refusals: &[&["not_a_road_project", "unknown_volume", "volume_not_approved", "invalid_volume"], REVISION],
         warnings: &[],

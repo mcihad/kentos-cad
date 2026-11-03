@@ -840,6 +840,7 @@ fn command_tool(c: &Value) -> Value {
             | "file.export.xyz"
             | "file.export.landxml"
             | "file.export.ifc"
+            | "road.stakeout.send"
             | "file.export.atlas"
             | "file.import.csv"
             | "file.import.fgb"

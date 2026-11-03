@@ -236,3 +236,34 @@ fn a_road_project_goes_out_as_ifc() {
     assert!(text.contains("FILE_SCHEMA(('IFC4X3_ADD2'));") && text.contains("IFCALIGNMENT("), "{text}");
     let _ = std::fs::remove_file(&out);
 }
+
+/// The file's corridor is sent to an instrument, as a Leica GSI-16 file and as a LandXML string road
+/// (plan/road.md Y10.4, docs/adr/0908 §9).
+#[test]
+fn a_stakeout_is_sent_to_an_instrument() {
+    let mut server = Server::new();
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/kcad/v2/road-work.kcad");
+    let opened = call(&mut server, "drawing.open", json!({"path":path}));
+    let drawing = opened["structuredContent"]["drawing"].clone();
+    let gsi = std::env::temp_dir().join(format!("kentos-mcp-aplikasyon-{}.gsi", std::process::id()));
+    let sent = call(
+        &mut server,
+        "road.stakeout.send",
+        json!({"drawing":drawing,"corridor":"Ana koridor","step":50.0,"codes":["axis","daylight"],"format":"gsi16",
+               "path":gsi.display().to_string(),"overwrite":true}),
+    );
+    assert_eq!(sent["isError"], false, "{sent}");
+    let text = std::fs::read_to_string(&gsi).expect("written");
+    assert!(text.starts_with("*110001+") && text.contains(" 81..10"), "{text}");
+    let xml = std::env::temp_dir().join(format!("kentos-mcp-aplikasyon-{}.xml", std::process::id()));
+    let road = call(
+        &mut server,
+        "road.stakeout.send",
+        json!({"drawing":drawing,"corridor":"Ana koridor","step":20.0,"format":"landxml",
+               "path":xml.display().to_string(),"stamp":"2026-11-03T10:00:00","overwrite":true}),
+    );
+    assert_eq!(road["isError"], false, "{road}");
+    let text = std::fs::read_to_string(&xml).expect("written");
+    assert!(text.contains("<PlanFeatures name=\"Ana koridor\">") && text.contains("<Alignment name="), "{text}");
+    let _ = (std::fs::remove_file(&gsi), std::fs::remove_file(&xml));
+}

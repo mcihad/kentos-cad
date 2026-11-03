@@ -728,6 +728,11 @@ codes! {
     STAKEOUT_NO_GROUND = "stakeout_no_ground", Failed, false, "Zemin boyu için projenin ortalama elipsoit yüksekliği ve tek ölçekli bir koordinat sistemi gerekir.";
     /// A warning: stations of the stakeout table with no section give no points (docs/adr/0908).
     STAKEOUT_UNSOLVED = "stakeout_unsolved", Warning, false, "Aplikasyon cetvelinin bazı km'lerinde kesit yok; oralarda nokta verilmedi.";
+    /// A stakeout that cannot be sent: no point to send, a stamp that does not read, a job the format cannot carry, a
+    /// first number out of bounds (docs/adr/0908 §9).
+    INVALID_STAKEOUT_SEND = "invalid_stakeout_send", Failed, false, "Aplikasyon noktaları gönderilemiyor.";
+    /// A warning: codes the instrument's file cannot carry are left off their points (docs/adr/0908 §9).
+    STAKEOUT_CODE_DROPPED = "stakeout_code_dropped", Warning, false, "Aletin dosyasının taşıyamadığı kodlar noktalardan çıkarıldı.";
     /// A warning: the corridor's superelevation schedule does not build; its lanes keep the templates' slopes.
     CORRIDOR_SUPERELEVATION_GONE = "corridor_superelevation_gone", Warning, false, "Koridorun dever çizelgesi kurulamıyor; şeritler tip kesitin eğimiyle verildi.";
     /// A warning: the profile's alignment changed since it was made or rebound.

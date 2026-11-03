@@ -70,6 +70,14 @@ fn stepped(lo: f64, hi: f64, step: f64) -> Vec<f64> {
 }
 
 fn answer(doc: &Document, input: &StakeoutQuery) -> Result<(StakeoutQueried, Vec<CommandWarning>), Stop> {
+    table(doc, input).map(|(t, w, _)| (t, w))
+}
+
+/// The table, its warnings and the alignment the corridor lies on (built as the corridor reads it).
+pub(crate) fn table(
+    doc: &Document,
+    input: &StakeoutQuery,
+) -> Result<(StakeoutQueried, Vec<CommandWarning>, crate::road_alignments::Built), Stop> {
     corridors::road_project(doc)?;
     let (_, def) = corridors::find(doc.road_corridors(), &input.corridor, "corridor")?;
     let made = corridors::make(doc, def, false)
@@ -243,6 +251,7 @@ fn answer(doc: &Document, input: &StakeoutQuery) -> Result<(StakeoutQueried, Vec
             rows,
         },
         warnings,
+        made.sampler.alignment,
     ))
 }
 

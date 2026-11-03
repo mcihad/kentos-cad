@@ -15,6 +15,11 @@ Tarih: 2026-11-03. plan/road.md Y10 (ROAD-SEC-09…11; ROAD-IO-05, 06, 13, 14). 
   [Cross Section Report](https://docs.bentley.com/LiveContent/web/OpenRoads%20Designer-v2024.0.2/Help/en/topics/353439/GUID-22028E55-D2A7-441C-86FE-03414C5D252B.html).
 - **Zemin ve ızgara:** sahada ölçülen uzunluk zemindedir; ızgara uzunluğu zemin uzunluğu × çizginin ölçeği ×
   yüksekliğin çarpanıdır (ADR 0171 §3). Aplikasyonda koordinatlar ızgarada kalır, ötelemenin zemin boyu ayrıca verilir.
+- **Saha yazılımları:** Trimble Access Roads yol tanımını RXL, LandXML ve GENIO olarak alır; LandXML'den bir aks, tek
+  boykesit ve boyuna dizilerden (strings, özellik çizgileri) oluşan “string yol” kurar, uzunluklar ızgarada, aynı
+  ötelemede iki dizi önerilmez (Trimble Access Roads kılavuzu 2026.10, “Road file formats”, “LandXML string roads”).
+  Leica Captivate yol işini LandXML ya da HeXML'den, Topcon MAGNET Field LandXML'den alır. LandXML 1.2'de dizi
+  `PlanFeatures/PlanFeature`'dır, geometrisi `CoordGeom` (XSD).
 
 ## Karar
 
@@ -71,6 +76,20 @@ Tarih: 2026-11-03. plan/road.md Y10 (ROAD-SEC-09…11; ROAD-IO-05, 06, 13, 14). 
    (Station, IncomingStation) IfcReferent; azalan km söylenemez (export_losses). Proje sistemi IfcMapConversion ile
    IfcProjectedCRS'e (EPSG kodu), dönüşüm birim (koordinatlar zaten projenin sisteminde). Paralel aks yazılmaz.
 
+9. **Alete gönderme (ROAD-IO-13).** `road.stakeout.send` aplikasyon cetvelinin noktalarını (sorgunun koridoru, aralığı,
+   adımı ve kodları; plan koordinatı) dosyaya yazar. `landxml`: string yol; koridorun aksı (koridorun tuttuğu
+   revizyonla), yalnız kendi boykesiti (Trimble tek boykesit okur) ve koridorun adıyla bir `PlanFeatures`'ta her kodun
+   dizileri `PlanFeature` olarak (`CoordGeom/Line`'lar, yer “kuzey doğu kot”). Dizi kuralı: cetvelin satırlarının
+   (km, bölge) çiftleri sırasıyla kesitlerdir; bir kodun noktaları onları izler, kodu olmayan bir kesitte dizi kesilir;
+   önceki noktayla aynı nokta (iki bölgenin paylaştığı km) bir kez alınır; birden çok dizisi olan kod “kod (1)”,
+   “kod (2)” adlanır; tek noktalı dizi yazılmaz, sayısı `export_losses` ile söylenir; hiç dizi yoksa ret. Öbür
+   biçimler ADR 0169 §4'ün yazıcılarıdır (Leica GSI-16, GSI-8, Topcon GTS-7, Trimble JobXML, Nikon RAW, CSV): noktalar
+   `first`'ten (yoksa 1, en çok 99 999 999) sırayla numaralanır, kod nokta kodudur; biçimin taşıyamadığı kod (GSI-8'in
+   sekiz karakteri, GSI-16'nın on altısı) o noktalardan düşer ve `stakeout_code_dropped` söyler, biçimin taşıyamadığı
+   nokta (dokuz haneli ad, sığmayan koordinat) yazılmaz (`left`, `export_losses`), hiç nokta yazılamazsa ret. `job`
+   JobXML'in iş adı ve Nikon RAW'ın notu; verilmezse koridorun adı, biçim onu taşıyamazsa “KentOS”. Bütün yazılır ya da
+   hiç; çizim değişmez. Masaüstünde Aplikasyon cetveli penceresinin Alete gönder satırı.
+
 ## Aşamalar
 
 Y10.1 aplikasyon cetveli (komut, başvuru, Python, MCP, pencere); Y10.2 LandXML'e aks, boykesit ve yüzey yazma ve
@@ -91,6 +110,11 @@ Y10.3 (yapıldı): 20 ortak durum (`road_ifc_cases.py`); KentOS'un yazdığı `y
 `--written` ile IfcOpenShell 0.9'da: IFC4X3_ADD2 şeması ve EXPRESS kuralları temiz, her yatay parçanın iş mantığı
 başvuruyla ve her eğri parçası IfcOpenShell'in aynı iş mantığından eşlediğiyle aynı, IfcOpenShell'in geometri
 çekirdeğinin her 5 m'de değerlendirdiği 286 yer ve 346 kot başvurudan en çok 1e-6 m. Python, MCP, masaüstünde IFC ver.
+
+Y10.4 (yapıldı): 29 ortak durum (`road_stakeout_send_cases.py`; noktalar road_stakeout_cases.py'nin başvurusundan,
+alet dosyalarının metni field_write_cases.py'nin yazıcılarıyla: boy ve SHA-256 bayt bayt aynı, KentOS kodu yok);
+KentOS'un yazdığı string yol (`fixtures/road/v1/landxml/out/aplikasyon.xml`) `--written` ile xmllint'te LandXML 1.2
+XSD'sine geçerli, 13 dizinin her yeri başvurudan en çok 1e-6 m; Python, MCP, masaüstünde Alete gönder.
 
 ## Sonra
 

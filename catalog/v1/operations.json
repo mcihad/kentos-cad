@@ -2733,9 +2733,10 @@
     "stakeout.table": {
       "level": "semantic",
       "via": [
-        "road.stakeout.query"
+        "road.stakeout.query",
+        "road.stakeout.send"
       ],
-      "note": "Aplikasyon cetveli road.stakeout.query ile okur ve ADR 0223'ün yazıcısıyla dosyaya yazar; çizim değişmez (plan/road.md Y10, ADR 0908)."
+      "note": "Aplikasyon cetveli road.stakeout.query ile okur, ADR 0223'ün yazıcısıyla dosyaya yazar ve road.stakeout.send ile alete (LandXML string yol ya da alet dosyası) gönderir; çizim değişmez (plan/road.md Y10, ADR 0908)."
     },
     "haul.new": {
       "level": "semantic",

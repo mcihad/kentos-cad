@@ -8,6 +8,7 @@ use std::path::{Path, PathBuf};
 use kentos_commands::{
     CommandResult, CommandWarning, ExportLandxml, LandxmlAlignmentWritten, LandxmlExported, LandxmlSurfaceWritten,
 };
+use kentos_commands::{AlignmentDef, ProfileDef};
 use kentos_domain::Document;
 use kentos_formats::landxml_write::{
     WAlignment, WCurve, WElement, WEquation, WGeom, WLandXml, WProfile, WPvi, WSurface, write,
@@ -104,6 +105,75 @@ pub(crate) fn now() -> (String, String) {
     let (y, m, d) = kentos_geometry_core::time::civil_from_days(secs.div_euclid(86_400));
     let s = secs.rem_euclid(86_400);
     (format!("{y:04}-{m:02}-{d:02}"), format!("{:02}:{:02}:{:02}", s / 3600, s / 60 % 60, s % 60))
+}
+
+/// A built alignment as LandXML writes it, with the given profiles of it; a profile that does not build is left out
+/// and said.
+pub(crate) fn alignment_written(
+    def: &AlignmentDef,
+    b: &Built,
+    profiles: &[&ProfileDef],
+    warnings: &mut Vec<CommandWarning>,
+) -> (WAlignment, LandxmlAlignmentWritten) {
+    let (sta_start, eqs) = equations(b);
+    let mut written = LandxmlAlignmentWritten {
+        id: def.id.clone(),
+        name: def.name.clone(),
+        length: b.core.length,
+        lines: 0,
+        curves: 0,
+        spirals: 0,
+        equations: eqs.len() as u32,
+        profiles: Vec::new(),
+    };
+    let mut elements = Vec::new();
+    for e in &b.core.elements {
+        match e.kind {
+            Kind::Tangent => written.lines += 1,
+            Kind::Arc => written.curves += 1,
+            Kind::Spiral => written.spirals += 1,
+        }
+        elements.push(WElement {
+            geom: element_geometry(e),
+            station: sta_start + e.station,
+            length: e.length,
+            dir_start: e.theta0,
+            dir_end: e.theta(e.length),
+        });
+    }
+    let mut written_profiles = Vec::new();
+    for p in profiles {
+        let Ok(v) = kentos_road::profile::vertical::build(&crate::road_profiles::pvis_of(p)) else {
+            warnings.push(losses(format!("“{}” boykesiti kurulamıyor; yazılmadı.", p.name), "alignments"));
+            continue;
+        };
+        let pvis = p
+            .pvis
+            .iter()
+            .map(|q| {
+                let found = v.curves.iter().find(|c| c.pvi == q.id);
+                let curve = match found.map(|c| (c.curve, c.end[0] - c.start[0])) {
+                    Some((VCurve::Circle { radius }, length)) => WCurve::Circle { length, radius },
+                    Some((VCurve::Parabola { length }, _)) => WCurve::Parabola { length },
+                    Some((VCurve::Asymmetric { length_in, length_out }, _)) => {
+                        WCurve::Unsymmetric { length_in, length_out }
+                    }
+                    _ => WCurve::None,
+                };
+                WPvi { station: sta_start + q.station, elevation: q.elevation, curve }
+            })
+            .collect();
+        written.profiles.push(p.name.clone());
+        written_profiles.push(WProfile { name: p.name.clone(), pvis });
+    }
+    (WAlignment {
+        name: def.name.clone(),
+        sta_start,
+        length: b.core.length,
+        elements,
+        equations: eqs,
+        profiles: written_profiles,
+    }, written)
 }
 
 struct Planned {
@@ -227,68 +297,14 @@ fn check(doc: &Document, input: &ExportLandxml) -> Result<Planned, Stop> {
                 continue;
             }
         };
-        let (sta_start, eqs) = equations(&b);
-        let mut written = LandxmlAlignmentWritten {
-            id: def.id.clone(),
-            name: def.name.clone(),
-            length: b.core.length,
-            lines: 0,
-            curves: 0,
-            spirals: 0,
-            equations: eqs.len() as u32,
-            profiles: Vec::new(),
+        let profiles: Vec<&ProfileDef> = if input.without_profiles {
+            Vec::new()
+        } else {
+            doc.road_profiles().iter().filter(|p| p.alignment == def.id).collect()
         };
-        let mut elements = Vec::new();
-        for e in &b.core.elements {
-            match e.kind {
-                Kind::Tangent => written.lines += 1,
-                Kind::Arc => written.curves += 1,
-                Kind::Spiral => written.spirals += 1,
-            }
-            elements.push(WElement {
-                geom: element_geometry(e),
-                station: sta_start + e.station,
-                length: e.length,
-                dir_start: e.theta0,
-                dir_end: e.theta(e.length),
-            });
-        }
-        let mut profiles = Vec::new();
-        if !input.without_profiles {
-            for p in doc.road_profiles().iter().filter(|p| p.alignment == def.id) {
-                let Ok(v) = kentos_road::profile::vertical::build(&crate::road_profiles::pvis_of(p)) else {
-                    warnings.push(losses(format!("“{}” boykesiti kurulamıyor; yazılmadı.", p.name), "alignments"));
-                    continue;
-                };
-                let pvis = p
-                    .pvis
-                    .iter()
-                    .map(|q| {
-                        let found = v.curves.iter().find(|c| c.pvi == q.id);
-                        let curve = match found.map(|c| (c.curve, c.end[0] - c.start[0])) {
-                            Some((VCurve::Circle { radius }, length)) => WCurve::Circle { length, radius },
-                            Some((VCurve::Parabola { length }, _)) => WCurve::Parabola { length },
-                            Some((VCurve::Asymmetric { length_in, length_out }, _)) => {
-                                WCurve::Unsymmetric { length_in, length_out }
-                            }
-                            _ => WCurve::None,
-                        };
-                        WPvi { station: sta_start + q.station, elevation: q.elevation, curve }
-                    })
-                    .collect();
-                written.profiles.push(p.name.clone());
-                profiles.push(WProfile { name: p.name.clone(), pvis });
-            }
-        }
+        let (a, written) = alignment_written(def, &b, &profiles, &mut warnings);
         out.alignments.push(written);
-        file.alignments.push(WAlignment {
-            name: def.name.clone(),
-            sta_start,
-            length: b.core.length,
-            elements,
-            equations: eqs,
-            profiles,
-        });
+        file.alignments.push(a);
     }
     if !input.without_profiles {
         for p in doc.road_profiles().iter().filter(|p| !names.contains(&p.alignment.as_str())) {

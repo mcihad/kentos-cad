@@ -1,7 +1,8 @@
 //! Aplikasyon cetveli (plan/road.md Y10, docs/adr/0908, `stakeout.table`): a corridor's coded section points as Civil
 //! 3D's corridor points report and OpenRoads' cross section grade book list them: km, code, side, offset, Y, X, Z, on
 //! the grid or with the offsets also as ground lengths. The table is read as it is typed (`road.stakeout.query`), its
-//! points drawn in plan, and written as a workbook; nothing in the drawing changes.
+//! points drawn in plan, and written as a workbook, or sent to an instrument (`road.stakeout.send`, docs/adr/0908 §9):
+//! as a LandXML string road or an instrument's coordinate file; nothing in the drawing changes.
 //!
 //! ```text
 //! ┌ Aplikasyon cetveli ────────────────────────────────────────────────────────────────────────────┐
@@ -9,15 +10,21 @@
 //! │ method · n km · m nokta · warnings                                                               │
 //! │ ┌ points in plan ┐  Km  Bölge  Kod  Yan  Öteleme  Zemin  Y  X  Z                                  │
 //! │ └────────────────┘  …                                                                            │
-//! │ Biçim [▾] [Cetveli yaz]                                                                [Kapat]   │
+//! │ Biçim [▾] [Cetveli yaz] │ Alete gönder [▾]  İlk no [ ]  İş adı [ ]  [Alete gönder…]  what goes  [Kapat] │
 //! └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
 use iced::widget::canvas::{self, Path, Stroke};
-use iced::widget::{Column, column, container, row, scrollable, space};
+use iced::widget::{Column, column, container, row, scrollable};
 use iced::{Element, Fill, Point, Rectangle, Renderer, Task, Theme, mouse};
-use kentos_commands::{CommandWarning, StakeSide, StakeoutDistances, StakeoutQueried, StakeoutQuery, WorkbookFormat};
-use kentos_native_application::road_stakeout;
+use std::path::PathBuf;
+
+use kentos_commands::{
+    CommandWarning, StakeSide, StakeoutDistances, StakeoutQueried, StakeoutQuery, StakeoutSend, StakeoutSendFormat,
+    WorkbookFormat,
+};
+use kentos_interaction::Level;
+use kentos_native_application::{ExecutionContext, road_stakeout, road_stakeout_send};
 use kentos_ui::label;
 use kentos_ui::style;
 use kentos_ui::theme::{Tokens, typography};
@@ -32,6 +39,17 @@ use crate::traces::Control;
 pub const TITLE: &str = "Aplikasyon cetveli";
 const CLOSE: &str = "Kapat";
 const WRITE: &str = "Cetveli yaz";
+const SEND: &str = "Alete gönder…";
+/// The formats a stakeout is sent as, with their labels, in the order the list shows them.
+const SENDS: [(StakeoutSendFormat, &str); 7] = [
+    (StakeoutSendFormat::Landxml, "LandXML string yol"),
+    (StakeoutSendFormat::Gsi16, "Leica GSI-16"),
+    (StakeoutSendFormat::Gsi8, "Leica GSI-8"),
+    (StakeoutSendFormat::Gts7, "Topcon GTS-7"),
+    (StakeoutSendFormat::Jobxml, "Trimble JobXML"),
+    (StakeoutSendFormat::Nikon, "Nikon RAW"),
+    (StakeoutSendFormat::Csv, "CSV (Ad, Y, X, Z, Kod)"),
+];
 /// The most rows the window lists; the file has them all.
 const SHOWN: usize = 400;
 
@@ -51,6 +69,9 @@ pub struct Window {
     pub(crate) distances: StakeoutDistances,
     format: WorkbookFormat,
     pub(crate) preview: Preview,
+    pub(crate) send: StakeoutSendFormat,
+    /// The first point number and the job's name, as typed.
+    pub(crate) send_fields: [String; 2],
 }
 
 #[derive(Debug, Clone)]
@@ -61,6 +82,12 @@ pub enum Event {
     Distances(StakeoutDistances),
     Format(WorkbookFormat),
     Write,
+    SendFormat(StakeoutSendFormat),
+    /// 0 the first number, 1 the job.
+    SendField(usize, String),
+    Send,
+    /// Where the file goes, from the save dialog.
+    Sent(Option<PathBuf>),
     Close,
 }
 
@@ -105,6 +132,29 @@ impl Window {
             distances: self.distances,
         })
     }
+
+    /// The send to `path` as typed, or why it is not one.
+    pub(crate) fn send_input(&self, path: String) -> Result<StakeoutSend, String> {
+        let q = self.query()?;
+        let first = match self.send_fields[0].trim() {
+            "" => None,
+            t => Some(t.parse::<u32>().map_err(|_| format!("“{t}” bir nokta numarası değil."))?),
+        };
+        let job = self.send_fields[1].trim();
+        Ok(StakeoutSend {
+            corridor: q.corridor,
+            from: q.from,
+            to: q.to,
+            step: q.step,
+            codes: q.codes,
+            format: self.send,
+            path,
+            overwrite: true,
+            first,
+            job: (!job.is_empty()).then(|| job.to_owned()),
+            stamp: None,
+        })
+    }
 }
 
 impl App {
@@ -128,6 +178,8 @@ impl App {
             distances: StakeoutDistances::Grid,
             format: WorkbookFormat::Xlsx,
             preview: Preview::default(),
+            send: StakeoutSendFormat::Landxml,
+            send_fields: Default::default(),
         }));
         self.dialog = Some(Dialog::Stakeout);
         self.refresh_stakeout();
@@ -161,6 +213,39 @@ impl App {
                 let name = format!("{} aplikasyon cetveli", table.name);
                 return crate::table_write::save(vec![road_stakeout::sheet(table)], w.format, name);
             }
+            Event::SendFormat(f) => {
+                w.send = f;
+                return Task::none();
+            }
+            Event::SendField(k, t) => {
+                w.send_fields[k.min(1)] = t;
+                return Task::none();
+            }
+            Event::Send => {
+                if let Err(why) = w.send_input(String::new()) {
+                    self.warn(format!("Gönderilemez: {why}"));
+                    return Task::none();
+                }
+                let (ext, name) = road_stakeout_send::extension(w.send);
+                let file = format!("{} aplikasyon.{ext}", w.preview.table.as_ref().map_or("Koridor", |t| t.name.as_str()));
+                let filter = format!("{name} (.{ext})");
+                return Task::perform(
+                    async move {
+                        let f = rfd::AsyncFileDialog::new()
+                            .set_title("Aplikasyonu alete gönder")
+                            .set_file_name(file)
+                            .add_filter(filter, &[ext])
+                            .save_file()
+                            .await?;
+                        Some(f.path().to_path_buf())
+                    },
+                    |p| msg(Event::Sent(p)),
+                );
+            }
+            Event::Sent(path) => {
+                self.stakeout_sent(path);
+                return Task::none();
+            }
             Event::Close => {
                 self.stakeout_window = None;
                 self.dialog = None;
@@ -169,6 +254,30 @@ impl App {
         }
         self.refresh_stakeout();
         Task::none()
+    }
+
+    /// The file chosen: the points written by `road.stakeout.send` (the dialog asked before writing over).
+    pub(crate) fn stakeout_sent(&mut self, path: Option<PathBuf>) {
+        let Some(mut path) = path else { return };
+        let Some(w) = self.stakeout_window.as_ref() else { return };
+        let (ext, name) = road_stakeout_send::extension(w.send);
+        if path.extension().is_none() {
+            path.set_extension(ext);
+        }
+        let input = match w.send_input(path.display().to_string()) {
+            Ok(i) => i,
+            Err(why) => {
+                self.warn(format!("Gönderilemez: {why}"));
+                return;
+            }
+        };
+        let Some(doc) = self.document.as_mut() else { return };
+        let result = road_stakeout_send::execute(&mut ExecutionContext::new(&mut doc.model), input);
+        if let Some(out) = self.answered(result) {
+            let strings = if out.strings > 0 { format!(", {} dizi", out.strings) } else { String::new() };
+            let left = if out.left.is_empty() { String::new() } else { format!(", {} nokta taşınamadı", out.left.len()) };
+            self.say(Level::Success, format!("{name} yazıldı: {} nokta{strings}{left} ({}).", out.points, path.display()));
+        }
     }
 
     pub(crate) fn road_stakeout_view(&self) -> Element<'_, Message> {
@@ -240,16 +349,36 @@ impl App {
             formats.iter().position(|f| *f == w.format),
             move |i| msg(Event::Format(formats[i])),
         );
+        let on_send = Select::new(
+            SENDS.iter().map(|s| Choice::new(s.1.to_owned())),
+            SENDS.iter().position(|s| s.0 == w.send),
+            move |i| msg(Event::SendFormat(SENDS[i].0)),
+        );
+        let landxml = w.send == StakeoutSendFormat::Landxml;
+        let what = if landxml {
+            "Aks, boykesit ve her kodun dizisi (Trimble, Leica, Topcon)."
+        } else {
+            "Noktalar sırayla numaralı; taşınamayan kod düşer."
+        };
+        let send_field = |hint: &'static str, k: usize, width: f32| {
+            kentos_ui::widget::text_field(hint, &w.send_fields[k]).on_input(move |t| msg(Event::SendField(k, t))).width(width)
+        };
+        let mut line = row![
+            words::field("Biçim", container(format).width(210), None),
+            words::secondary(WRITE, w.preview.table.as_ref().map(|_| msg(Event::Write))),
+            container(iced::widget::rule::vertical(1).style(style::field::hairline)).height(32),
+            words::field("Alete gönder", container(on_send).width(200), None),
+        ]
+        .spacing(8);
+        if !landxml {
+            line = line.push(words::field("İlk no", send_field("1", 0, 80.0), None));
+            line = line.push(words::field("İş adı", send_field("koridorun adı", 1, 140.0), None));
+        }
         body = body.push(
-            row![
-                words::field("Biçim", container(format).width(240), None),
-                words::secondary(WRITE, w.preview.table.as_ref().map(|_| msg(Event::Write))),
-                space::horizontal().width(Fill),
-                label::caption("Cetvel çizimi değiştirmez.").style(muted),
-                words::secondary(CLOSE, Some(msg(Event::Close))),
-            ]
-            .spacing(8)
-            .align_y(iced::alignment::Vertical::Bottom),
+            line.push(words::primary(SEND, w.preview.table.as_ref().map(|_| msg(Event::Send))))
+                .push(container(label::caption(what).style(muted)).width(Fill))
+                .push(words::secondary(CLOSE, Some(msg(Event::Close))))
+                .align_y(iced::alignment::Vertical::Bottom),
         );
         Frame::new(TITLE).push(body).width(1180.0).modal(msg(Event::Close))
     }
@@ -261,6 +390,7 @@ impl App {
         Ok(match control {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(WRITE) => Some(msg(Event::Write)),
+            Control::Press(SEND) => Some(msg(Event::Send)),
             Control::Fill("Başlangıç km (m)", t) => Some(msg(Event::Field(0, t.to_owned()))),
             Control::Fill("Bitiş km (m)", t) => Some(msg(Event::Field(1, t.to_owned()))),
             Control::Fill("Aralık (m)", t) => Some(msg(Event::Field(2, t.to_owned()))),
