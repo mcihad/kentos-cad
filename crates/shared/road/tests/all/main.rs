@@ -6,6 +6,7 @@ mod profiles;
 mod sections;
 mod templates;
 mod verticals;
+mod haul;
 mod volume;
 mod surfaces;
 mod sources;

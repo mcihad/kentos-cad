@@ -14,11 +14,14 @@
 //!   curves' widening (docs/adr/0904).
 //! - [`volume`]: earthwork volumes, by sections (average end area, prismoidal) and between two surfaces (the
 //!   triangulations laid over each other, split where the difference changes sign) (docs/adr/0906).
+//! - [`haul`]: the mass haul (Brückner) diagram read as layers: balance points, loops, haul moments, free haul and
+//!   overhaul, borrow and waste (docs/adr/0907).
 //! - [`sources`]: a surface's input gathered from the drawing by its definition, and the digest that says whether
 //!   it is out of date (plan/road.md Y2.2).
 
 pub mod alignment;
 pub mod corridor;
+pub mod haul;
 pub mod profile;
 pub mod section;
 pub mod sources;
