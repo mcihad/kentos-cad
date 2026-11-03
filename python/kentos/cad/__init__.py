@@ -235,6 +235,8 @@ __all__ = [
     "ArrangeTransform",
     "ArrayBlockAction",
     "ArrayEdit",
+    "ArrayFindKind",
+    "ArrayFindKindName",
     "ArrayItem",
     "ArrayLayout",
     "ArrayOpeningsOperation",

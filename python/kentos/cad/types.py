@@ -468,6 +468,20 @@ ArrangeModeName = Literal["left", "center", "right", "top", "middle", "bottom", 
 """The names of :class:`ArrangeMode`, for a plain string."""
 
 
+class ArrayFindKind(_StrEnum):
+    """Requested pattern family. Omitted kind preserves the original linear search.
+
+    - ``line``
+    - ``grid``: World X/Y rectangular rows and columns; rotated/skew grids are not inferred.
+    """
+    LINE = "line"
+    GRID = "grid"
+
+
+ArrayFindKindName = Literal["line", "grid"]
+"""The names of :class:`ArrayFindKind`, for a plain string."""
+
+
 class AssetKind(_StrEnum):
     """What a linked file is.
 
@@ -14194,15 +14208,20 @@ class ArraysFind(_Model):
     of the same block, appearance, mirror, rotation and scale. No rotation of the items is inferred.
     At least three occupied places and an observed adjacent pair are required. Every second
     place being occupied is indistinguishable from twice the spacing: no hidden places are invented.
-    Grid, polar and path detection are not implemented by this version.
+    With kind=grid, searches world-X/Y rectangular patterns with at least two rows,
+    two columns, four occupied places and observed adjacent pairs in both directions.
+    A bounding corner must be occupied to reuse it as the existing array source.
+    Rotated/skew grids, polar and path detection are not implemented by this version.
     Attributes:
         source: Existing seed insert UUID. May be an interior place of a candidate.
+        kind: Omitted: line. Explicit grid reuses the existing axis-aligned ArrayLayout::Grid.
         limit: Candidate limit, 1 to 100; absent: 100. Work/result limits report `truncated`. Unit: count.
         tolerance: Absolute position tolerance in metres, above zero to 0.001; absent: 0.000001. Unit: length.
         uids: Absent searches the document; empty searches only the seed. At most 2048 objects.
     """
     source: str
     expected_revision: str | None | Unset = UNSET
+    kind: ArrayFindKind | ArrayFindKindName | None | Unset = UNSET
     limit: int | None | Unset = UNSET
     tolerance: float | None | Unset = UNSET
     uids: list[str] | None | Unset = UNSET
@@ -14212,6 +14231,8 @@ class ArraysFind(_Model):
         out["source"] = self.source
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
+        if self.kind is not UNSET:
+            out["kind"] = None if self.kind is None else _enum_out(self.kind)
         if self.limit is not UNSET:
             out["limit"] = self.limit
         if self.tolerance is not UNSET:
@@ -14225,6 +14246,7 @@ class ArraysFind(_Model):
         return cls(
             source=data["source"],
             expected_revision=data.get("expectedRevision", UNSET),
+            kind=UNSET if "kind" not in data else None if data["kind"] is None else _enum_in(ArrayFindKind, data["kind"]),
             limit=data.get("limit", UNSET),
             tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
             uids=UNSET if "uids" not in data else None if data["uids"] is None else list(data["uids"]),
@@ -99819,6 +99841,8 @@ __all__ = [
     "ArrangeTransform",
     "ArrayBlockAction",
     "ArrayEdit",
+    "ArrayFindKind",
+    "ArrayFindKindName",
     "ArrayItem",
     "ArrayLayout",
     "ArrayOpeningsOperation",

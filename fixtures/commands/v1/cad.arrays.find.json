@@ -3,7 +3,7 @@
   "version": 1,
   "command": "cad.arrays.find",
   "commandVersion": 1,
-  "title": "Doğrusal blok dizilerini bul",
+  "title": "Blok dizi örüntülerini bul",
   "note": "ADR0874. Independent expectations; geometry, ambiguity, cancellation and adoption roundtrip in native acceptance.",
   "setup": {
     "format": "kentos.document",
@@ -869,6 +869,1224 @@
               3,
               4,
               5
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same",
+            "arrays": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "line açık seçim geriye uyumlu aynı sonucu verir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": "$uidOf:1",
+            "kind": "line"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "matches": [
+                {
+                  "adoption": {
+                    "source": "$uidOf:1",
+                    "layout": {
+                      "kind": "line",
+                      "count": 8,
+                      "dx": 2,
+                      "dy": 0
+                    },
+                    "items": [
+                      {
+                        "uid": "$uidOf:1"
+                      },
+                      {
+                        "uid": "$uidOf:2"
+                      },
+                      {},
+                      {
+                        "uid": "$uidOf:3"
+                      },
+                      {
+                        "uid": "$uidOf:4"
+                      },
+                      {
+                        "uid": "$uidOf:5"
+                      },
+                      {},
+                      {
+                        "uid": "$uidOf:6"
+                      }
+                    ],
+                    "tolerance": 1e-06,
+                    "expectedRevision": "$any"
+                  },
+                  "present": 6,
+                  "missing": 2,
+                  "deviation": 0,
+                  "overlaps": false
+                }
+              ],
+              "eligible": "$any",
+              "excluded": "$any",
+              "truncated": false,
+              "comparisons": "$any",
+              "revision": "$any"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              9
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same",
+            "arrays": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "grid seçimi doğrusal sırayı grid gibi sunmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": "$uidOf:1",
+            "kind": "grid"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "matches": [],
+              "eligible": "$any",
+              "excluded": "$any",
+              "truncated": false,
+              "comparisons": "$any",
+              "revision": "$any"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              9
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same",
+            "arrays": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "grid iki boş yer ve eşleşmeyen blok ile yazısız önerilir",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Tekrar arama",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "a",
+            "name": "A",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "a",
+        "entities": [
+          {
+            "kind": "insert",
+            "id": 1,
+            "layerId": "a",
+            "attrs": {},
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 0,
+              "y": 0
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "insert",
+            "id": 2,
+            "layerId": "a",
+            "attrs": {},
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 2,
+              "y": 0
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "insert",
+            "id": 3,
+            "layerId": "a",
+            "attrs": {},
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 0,
+              "y": 3
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "insert",
+            "id": 4,
+            "layerId": "a",
+            "attrs": {},
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 2,
+              "y": 3
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "insert",
+            "id": 5,
+            "layerId": "a",
+            "attrs": {},
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 4,
+              "y": 3
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "insert",
+            "id": 6,
+            "layerId": "a",
+            "attrs": {},
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 0,
+              "y": 6
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "insert",
+            "id": 7,
+            "layerId": "a",
+            "attrs": {},
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 4,
+              "y": 6
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "insert",
+            "id": 8,
+            "layerId": "a",
+            "attrs": {},
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 1.3,
+              "y": 0.7
+            },
+            "scale": 1,
+            "rotation": 0
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": [
+          {
+            "id": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "name": "Teknik parça",
+            "base": {
+              "x": 0,
+              "y": 0
+            },
+            "units": "m",
+            "entities": [
+              {
+                "kind": "line",
+                "id": 1,
+                "layerId": "a",
+                "attrs": {},
+                "a": {
+                  "x": 0,
+                  "y": 0
+                },
+                "b": {
+                  "x": 1,
+                  "y": 0
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": "$uidOf:4",
+            "kind": "grid"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "matches": [
+                {
+                  "adoption": {
+                    "source": "$uidOf:1",
+                    "layout": {
+                      "kind": "grid",
+                      "rows": 3,
+                      "cols": 3,
+                      "dx": 2,
+                      "dy": 3
+                    },
+                    "items": [
+                      {
+                        "uid": "$uidOf:1"
+                      },
+                      {
+                        "uid": "$uidOf:2"
+                      },
+                      {},
+                      {
+                        "uid": "$uidOf:3"
+                      },
+                      {
+                        "uid": "$uidOf:4"
+                      },
+                      {
+                        "uid": "$uidOf:5"
+                      },
+                      {
+                        "uid": "$uidOf:6"
+                      },
+                      {},
+                      {
+                        "uid": "$uidOf:7"
+                      }
+                    ],
+                    "tolerance": 1e-06,
+                    "expectedRevision": "$any"
+                  },
+                  "present": 7,
+                  "missing": 2,
+                  "deviation": 0,
+                  "overlaps": false
+                }
+              ],
+              "eligible": "$any",
+              "excluded": "$any",
+              "truncated": false,
+              "comparisons": "$any",
+              "revision": "$any"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same",
+            "arrays": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "grid boş başlangıcı doldurmaz dolu köşeden ters sütunla başlar",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Tekrar arama",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "a",
+            "name": "A",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "a",
+        "entities": [
+          {
+            "kind": "insert",
+            "id": 1,
+            "layerId": "a",
+            "attrs": {},
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 2,
+              "y": 0
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "insert",
+            "id": 2,
+            "layerId": "a",
+            "attrs": {},
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 4,
+              "y": 0
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "insert",
+            "id": 3,
+            "layerId": "a",
+            "attrs": {},
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 0,
+              "y": 3
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "insert",
+            "id": 4,
+            "layerId": "a",
+            "attrs": {},
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 2,
+              "y": 3
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "insert",
+            "id": 5,
+            "layerId": "a",
+            "attrs": {},
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 4,
+              "y": 3
+            },
+            "scale": 1,
+            "rotation": 0
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": [
+          {
+            "id": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "name": "Teknik parça",
+            "base": {
+              "x": 0,
+              "y": 0
+            },
+            "units": "m",
+            "entities": [
+              {
+                "kind": "line",
+                "id": 1,
+                "layerId": "a",
+                "attrs": {},
+                "a": {
+                  "x": 0,
+                  "y": 0
+                },
+                "b": {
+                  "x": 1,
+                  "y": 0
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": "$uidOf:4",
+            "kind": "grid"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "matches": [
+                {
+                  "adoption": {
+                    "source": "$uidOf:2",
+                    "layout": {
+                      "kind": "grid",
+                      "rows": 2,
+                      "cols": 3,
+                      "dx": -2,
+                      "dy": 3
+                    },
+                    "items": [
+                      {
+                        "uid": "$uidOf:2"
+                      },
+                      {
+                        "uid": "$uidOf:1"
+                      },
+                      {},
+                      {
+                        "uid": "$uidOf:5"
+                      },
+                      {
+                        "uid": "$uidOf:4"
+                      },
+                      {
+                        "uid": "$uidOf:3"
+                      }
+                    ],
+                    "tolerance": 1e-06,
+                    "expectedRevision": "$any"
+                  },
+                  "present": 5,
+                  "missing": 1,
+                  "deviation": 0,
+                  "overlaps": false
+                }
+              ],
+              "eligible": "$any",
+              "excluded": "$any",
+              "truncated": false,
+              "comparisons": "$any",
+              "revision": "$any"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same",
+            "arrays": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "büyük koordinatta 3 mm sıra iç kaynaktan eksiksiz bulunur",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Tekrar arama",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "a",
+            "name": "A",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "a",
+        "entities": [
+          {
+            "kind": "insert",
+            "id": 1,
+            "layerId": "a",
+            "attrs": {},
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 4000000000.0,
+              "y": 1000000.0
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "insert",
+            "id": 2,
+            "layerId": "a",
+            "attrs": {},
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 4000000000.003,
+              "y": 1000000.0
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "insert",
+            "id": 3,
+            "layerId": "a",
+            "attrs": {},
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 4000000000.006,
+              "y": 1000000.0
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "insert",
+            "id": 4,
+            "layerId": "a",
+            "attrs": {},
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 4000000000.009,
+              "y": 1000000.0
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "insert",
+            "id": 5,
+            "layerId": "a",
+            "attrs": {},
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 4000000000.012,
+              "y": 1000000.0
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "insert",
+            "id": 6,
+            "layerId": "a",
+            "attrs": {},
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 4000000000.015,
+              "y": 1000000.0
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "insert",
+            "id": 7,
+            "layerId": "a",
+            "attrs": {},
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 4000000000.018,
+              "y": 1000000.0
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "insert",
+            "id": 8,
+            "layerId": "a",
+            "attrs": {},
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 4000000000.021,
+              "y": 1000000.0
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "insert",
+            "id": 9,
+            "layerId": "a",
+            "attrs": {},
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 4000000000.024,
+              "y": 1000000.0
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "insert",
+            "id": 10,
+            "layerId": "a",
+            "attrs": {},
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 4000000000.027,
+              "y": 1000000.0
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "insert",
+            "id": 11,
+            "layerId": "a",
+            "attrs": {},
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 4000000000.03,
+              "y": 1000000.0
+            },
+            "scale": 1,
+            "rotation": 0
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": [
+          {
+            "id": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "name": "Teknik parça",
+            "base": {
+              "x": 0,
+              "y": 0
+            },
+            "units": "m",
+            "entities": [
+              {
+                "kind": "line",
+                "id": 1,
+                "layerId": "a",
+                "attrs": {},
+                "a": {
+                  "x": 0,
+                  "y": 0
+                },
+                "b": {
+                  "x": 1,
+                  "y": 0
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": "$uidOf:6"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "matches": [
+                {
+                  "adoption": {
+                    "source": "$uidOf:1",
+                    "layout": {
+                      "kind": "line",
+                      "count": 11,
+                      "dx": "$any",
+                      "dy": 0
+                    },
+                    "items": [
+                      {
+                        "uid": "$uidOf:1"
+                      },
+                      {
+                        "uid": "$uidOf:2"
+                      },
+                      {
+                        "uid": "$uidOf:3"
+                      },
+                      {
+                        "uid": "$uidOf:4"
+                      },
+                      {
+                        "uid": "$uidOf:5"
+                      },
+                      {
+                        "uid": "$uidOf:6"
+                      },
+                      {
+                        "uid": "$uidOf:7"
+                      },
+                      {
+                        "uid": "$uidOf:8"
+                      },
+                      {
+                        "uid": "$uidOf:9"
+                      },
+                      {
+                        "uid": "$uidOf:10"
+                      },
+                      {
+                        "uid": "$uidOf:11"
+                      }
+                    ],
+                    "tolerance": 1e-06,
+                    "expectedRevision": "$any"
+                  },
+                  "present": 11,
+                  "missing": 0,
+                  "deviation": "$any",
+                  "overlaps": false
+                }
+              ],
+              "eligible": "$any",
+              "excluded": "$any",
+              "truncated": false,
+              "comparisons": "$any",
+              "revision": "$any"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same",
+            "arrays": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "büyük koordinatta grid yuvarlanan tek aralığı çoğaltmaz",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Tekrar arama",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "a",
+            "name": "A",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "a",
+        "entities": [
+          {
+            "kind": "insert",
+            "id": 1,
+            "layerId": "a",
+            "attrs": {},
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 4000000000.0,
+              "y": 4000000000.0
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "insert",
+            "id": 2,
+            "layerId": "a",
+            "attrs": {},
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 4000000000.03,
+              "y": 4000000000.0
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "insert",
+            "id": 3,
+            "layerId": "a",
+            "attrs": {},
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 4000000000.06,
+              "y": 4000000000.0
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "insert",
+            "id": 4,
+            "layerId": "a",
+            "attrs": {},
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 4000000000.09,
+              "y": 4000000000.0
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "insert",
+            "id": 5,
+            "layerId": "a",
+            "attrs": {},
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 4000000000.0,
+              "y": 4000000000.004
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "insert",
+            "id": 6,
+            "layerId": "a",
+            "attrs": {},
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 4000000000.03,
+              "y": 4000000000.004
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "insert",
+            "id": 7,
+            "layerId": "a",
+            "attrs": {},
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 4000000000.06,
+              "y": 4000000000.004
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "insert",
+            "id": 8,
+            "layerId": "a",
+            "attrs": {},
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 4000000000.09,
+              "y": 4000000000.004
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "insert",
+            "id": 9,
+            "layerId": "a",
+            "attrs": {},
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 4000000000.0,
+              "y": 4000000000.008
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "insert",
+            "id": 10,
+            "layerId": "a",
+            "attrs": {},
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 4000000000.03,
+              "y": 4000000000.008
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "insert",
+            "id": 11,
+            "layerId": "a",
+            "attrs": {},
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 4000000000.06,
+              "y": 4000000000.008
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "insert",
+            "id": 12,
+            "layerId": "a",
+            "attrs": {},
+            "block": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "p": {
+              "x": 4000000000.09,
+              "y": 4000000000.008
+            },
+            "scale": 1,
+            "rotation": 0
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": [
+          {
+            "id": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001",
+            "name": "Teknik parça",
+            "base": {
+              "x": 0,
+              "y": 0
+            },
+            "units": "m",
+            "entities": [
+              {
+                "kind": "line",
+                "id": 1,
+                "layerId": "a",
+                "attrs": {},
+                "a": {
+                  "x": 0,
+                  "y": 0
+                },
+                "b": {
+                  "x": 1,
+                  "y": 0
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": "$uidOf:6",
+            "kind": "grid"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "matches": [
+                {
+                  "adoption": {
+                    "source": "$uidOf:1",
+                    "layout": {
+                      "kind": "grid",
+                      "rows": 3,
+                      "cols": 4,
+                      "dx": "$any",
+                      "dy": "$any"
+                    },
+                    "items": [
+                      {
+                        "uid": "$uidOf:1"
+                      },
+                      {
+                        "uid": "$uidOf:2"
+                      },
+                      {
+                        "uid": "$uidOf:3"
+                      },
+                      {
+                        "uid": "$uidOf:4"
+                      },
+                      {
+                        "uid": "$uidOf:5"
+                      },
+                      {
+                        "uid": "$uidOf:6"
+                      },
+                      {
+                        "uid": "$uidOf:7"
+                      },
+                      {
+                        "uid": "$uidOf:8"
+                      },
+                      {
+                        "uid": "$uidOf:9"
+                      },
+                      {
+                        "uid": "$uidOf:10"
+                      },
+                      {
+                        "uid": "$uidOf:11"
+                      },
+                      {
+                        "uid": "$uidOf:12"
+                      }
+                    ],
+                    "tolerance": 1e-06,
+                    "expectedRevision": "$any"
+                  },
+                  "present": 12,
+                  "missing": 0,
+                  "deviation": "$any",
+                  "overlaps": false
+                }
+              ],
+              "eligible": "$any",
+              "excluded": "$any",
+              "truncated": false,
+              "comparisons": "$any",
+              "revision": "$any"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
             ],
             "canUndo": false,
             "dirty": false,

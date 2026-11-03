@@ -428,6 +428,8 @@ pub struct Effect {
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct StyledLayer {
     pub data: Vec<f32>,
+    /// Float32 residual companion stream, indexed exactly like data; absent means zero.
+    pub low: Vec<f32>,
     pub batches: Vec<StyledBatch>,
     /// Pictures the build made (a heat map's, docs/adr/0213 §2.6): RGBA,
     /// straight alpha, rows from the top, drawn by the batches naming them.
@@ -1273,6 +1275,7 @@ pub fn decode(out: Batches, o: &DecodeOptions) -> Result<StyledLayer, String> {
     }
     Ok(StyledLayer {
         data: out.data,
+        low: out.low,
         batches,
         pictures: out.pictures,
         dropped: out.dropped,
@@ -1647,6 +1650,14 @@ fn look_json(look: &MarkerLook) -> Value {
 }
 
 impl StyledLayer {
+    /// Reconstruct a batch for CPU/export in float64, before its view transform.
+    pub fn values(&self, range: Range<usize>) -> Option<Vec<f64>> {
+        let high = self.data.get(range.clone())?;
+        Some(high.iter().enumerate().map(|(i, &v)| {
+            f64::from(v) + f64::from(self.low.get(range.start + i).copied().unwrap_or(0.0))
+        }).collect())
+    }
+
     /// The batches as `fixtures/style/v1/batches.json` writes them.
     pub fn to_json(&self) -> Value {
         Value::Array(self.batches.iter().map(|b| self.batch_json(b)).collect())

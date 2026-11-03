@@ -1103,7 +1103,65 @@ sonra 26 Bloklar paneli testi ve tüm hedeflerin Clippy denetimi başarılıdır
 Manifestte 946 satır tutarlıdır. Ekranlar, ikili özetleri ve kabul dosyaları
 repo dışındadır. Grafik aramanın ilk kapsamı hâlâ doğrusal statik bloklardır.
 
-**Açık kalan:** otomatik grid/kutupsal/yol aday bulma; metin/öznitelik,
+**Dünya X/Y grid tanıma — [ADR 0876](../docs/adr/0876-axis-aligned-grid-pattern-review.md):**
+`cad.arrays.find` opsiyonel `kind=grid` ile mevcut eksen paralel grid modeline
+öneri üretir; alan verilmezse önceki doğrusal davranış aynıdır. En az iki
+satır, iki sütun, dört dolu yer, iki yönde gözlenen komşu çift ve dolu bir
+sınır köşesi gerekir. Boş köşe doldurulmaz; dolu köşeden işaretli aralıkla
+başlanır. Gizli yarım aralık, çakışan UUID ve dönük/eğik grid varsayılmaz.
+Yerel Float64 hesap ve ortak bağlama denetimi kullanılır. Ek keşif sınırları
+500 000 çift / eksende 128 aralık adayı; aşımı açık kısmi sonuçtur.
+
+Masaüstünde Düzen türü, satır/sütunlu şema ve kaymış öğenin korunacağı ayrı
+Satır/Sütun alanları vardır. Gerçek fareyle iç kaynaktan 3×4 aday, yanlış
+kaynak yere atama/ret/düzeltme ve bağlama denendi. Uzun formda görünmeyen
+hata mesajı düğmelerin üstünde sabitlenip gerçek ekranda doğrulandı. Bağlama
+on kök UUID'sini, tanımı, proje ayarlarını ve ölçü bağlarını korur; iki boş
+ve tek korunan öğe kalır. Menüden sütun 2000→2500 mm, satır 3000→4000 mm
+ayrı düzenlendi; korunan blok yerinde, bağlı ölçü 2500 mm'dir. Beş dosya
+çifti vazgeçme/bağlama/aralık Undo/Redo'da birebir eşittir. Ham ekranlar ve
+bağımsız dosya kontrolleri repo dışındadır.
+
+Grid doğrulamasında 15 native tanıma, 99 birim + 400 entegrasyon ve ayrıca
+filtresiz masaüstü fixture kontrolü başarılıdır. 31 bağımsız durum native/Python,
+13 Python dizi, 128 MCP, 28 panel, 12 geçmiş ve dokuz UI katalog testi geçti.
+SDK/fixture/manifest (946 satır), TS bağlamaları ve ilgili tüm hedeflerde son
+Clippy denetimi başarılıdır. Geniş koşudaki filtre, masaüstüne özel fixture
+klasörünü boş bıraktı; bu tek koşu ayrıca filtresiz doğrulandı.
+
+Son teslim kaynağında dokuz dizi arayüz testi tekrar başarılıdır. Son derlemeyle
+arayüzden grid arama/inceleme/açık atama/bağlama tekrarlandı; bağımsız okuyucu
+özgün köklerin aynılığını ve incelenen üyeliğin korunduğunu doğruladı.
+
+**Büyük koordinatta kısa aralık düzeltmesi — [ADR 0877](../docs/adr/0877-full-span-pattern-spacing-validation.md):**
+Gözlenen komşu aralıktan kurulan üyelik, toplam açıklıkla yeniden denetlenir;
+ilk tahminde dışarıda kalan uç kök yeniden taranır. Başarısız öneri sonraki
+geçerli öneriyi bastırmaz. Tolerans, kaynak koordinatı ve ölçek değiştirilmez.
+18 native tanıma, 33 ortak native/Python, 13 Python ve dört ilgili MCP testi
+başarılıdır. Gerçek arayüzde 11 blok/3 mm bulundu ve bağlandı; bağımsız
+okuyucuda yalnız dizi metaverisi değişti, Undo/Redo dosyaları birebir eşittir.
+180 bilinen yerleşim taramasında toleransı koordinat ULP'sine eşit/üstünde
+olanlarda tam örüntü eksilmedi; ULP altındaki 52 örnek açık sayısal sınırdır.
+Aynı uç koordinat testinde küçük sembol render'ı düzleşti; ayrı hata olarak
+incelenecek, bu sonuç render kabulü veya 07'nin tamamlanması sayılmaz.
+
+**Tanıma denemesinde bulunan native çizim hassasiyeti — [ADR 0878](../docs/adr/0878-styled-geometry-low-part-stream.md):**
+Büyük koordinatta 0,6×0,5 mm sembolün düzleşmesi giderildi. Native stilli
+konumlar FP32 yüksek/düşük akışla, kamera parçaları çıkarıldıktan sonra
+birleştirilir. Kaynak koordinatı, birimi ve proje ölçeği değişmez. CPU/PDF
+aynı düşük parçayı korur; PDF halka yönü ortak yerel alan hesabındadır.
+Eski/web akışı isteğe bağlı ek tamponu üretmez. 207 stil/PDF/render testi,
+üç gerçek GPU testi dahil, başarılı; altı elle performans testi atlandı.
+Son halka regresyonuyla 17 PDF testi ayrıca tekrar geçti; ilgili tüm
+hedeflerde Clippy başarılıdır. Gerçek pencerede dikdörtgen ve daireler,
+Kaydır ve tekerlek yakınlaştırması doğrulandı; kaydedilen KCAD başlangıçla
+birebir aynıdır. Web düşük akış bağlantısı, dinamik raster ve boya/desen
+koordinatı sınırları ADR'de açıkça ayrı tutulur; tüm render motorunun veya
+CAD-ADV-07'nin tamamlandığı anlamına gelmez. Ek olarak 84 masaüstü stil/
+önbellek testi geçti (dokuz elle performans testi atlandı). Son teslim
+programında kenardan seçim ve 11 öğeli arama 413–414 ekranlarıyla tekrarlandı.
+
+**Açık kalan:** dönük/eğik grid, kutupsal/yol aday bulma; metin/öznitelik,
 iç blok ve diğer kaynak/ilişki genişletmesi. Bu dilimler CAD-ADV-07'nin
 tamamını kapatmaz.
 

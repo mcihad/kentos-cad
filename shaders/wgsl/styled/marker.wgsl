@@ -6,7 +6,7 @@ struct MarkerOut {
   @location(1) @interpolate(flat) hs: vec2f,
   @location(2) @interpolate(flat) sw: f32,
 };
-@vertex fn markerVs(@builtin(vertex_index) vi: u32, @location(0) i0: vec4f, @location(1) i1: f32) -> MarkerOut {
+fn markerVertex(vi: u32, i0: vec4f, i1: f32, low: vec2f) -> MarkerOut {
   let k = unitK();
   var w = i0.w * k;
   var h = i1 * k;
@@ -29,11 +29,18 @@ struct MarkerOut {
   let ca = ca0 * tc + sa0 * ts;
   let sa = sa0 * tc - ca0 * ts;
   var o: MarkerOut;
-  o.pos = pxToClip(toPx(i0.xy) + vec2f(ca * q.x - sa * q.y, sa * q.x + ca * q.y));
+  o.pos = pxToClip(toPxLow(i0.xy, low) + vec2f(ca * q.x - sa * q.y, sa * q.x + ca * q.y));
   o.local = local;
   o.hs = vec2f(w, h) * 0.5;
   o.sw = sw;
   return o;
+}
+
+@vertex fn markerVs(@builtin(vertex_index) vi: u32, @location(0) i0: vec4f, @location(1) i1: f32) -> MarkerOut {
+  return markerVertex(vi, i0, i1, vec2f(0.0));
+}
+@vertex fn markerVsPrecise(@builtin(vertex_index) vi: u32, @location(0) i0: vec4f, @location(1) i1: f32, @location(2) low: vec2f) -> MarkerOut {
+  return markerVertex(vi, i0, i1, low);
 }
 
 // Convex shapes use mitered fields (see the GLSL twin).

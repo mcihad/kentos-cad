@@ -1,14 +1,17 @@
-//! Cancellable, bounded line-pattern proposals. No objects, selection or array records are written.
+//! Cancellable, bounded line/grid pattern proposals. No objects, selection or array records are written.
 use crate::{
     ExecutionContext, arrays_adopt,
     checks::{self, Stop, error},
 };
 use kentos_commands::{
-    ARRAY_FIND_SCOPE_MAX, ArrayItem, ArrayLayout, ArrayPattern, ArraysAdopt, ArraysFind,
-    ArraysFound, CommandResult, CommandWarning, Entity, EntityId, InsertEntity, codes,
+    ARRAY_FIND_SCOPE_MAX, ArrayFindKind, ArrayItem, ArrayLayout, ArrayPattern, ArraysAdopt,
+    ArraysAdoptPlan, ArraysFind, ArraysFound, CommandResult, CommandWarning, Entity, EntityId,
+    InsertEntity, codes,
 };
 use kentos_domain::{Document, Uuid};
 use std::collections::{BTreeMap, BTreeSet, HashSet};
+
+mod grid;
 
 const WORK_MAX: u64 = 2_000_000;
 
@@ -134,7 +137,7 @@ fn check(
 fn scope_limit() -> Stop {
     refuse(
         codes::RECOGNITION_SCOPE_LIMIT,
-        "Bu doğrusal örüntü araması en çok 2 048 nesne alır; kapsamı daraltın.",
+        "Bu dizi örüntü araması en çok 2 048 nesne alır; kapsamı daraltın.",
         "uids",
     )
 }
@@ -162,6 +165,39 @@ impl Budget {
         Ok(true)
     }
 }
+// The slot topology comes from observed adjacent intervals. Refine its displacement from
+// the full observed span, then try the original local interval as a fallback. World-space
+// rounding of one short gap must not get accumulated over every slot. The unchanged adoption
+// validator remains the only acceptance gate, at the caller's original absolute tolerance.
+fn review_layouts(
+    doc: &Document,
+    source: EntityId,
+    items: &[ArrayItem],
+    layouts: [ArrayLayout; 2],
+    tolerance: f64,
+    budget: &mut Budget,
+    stopped: &mut impl FnMut() -> bool,
+) -> Result<Option<(ArraysAdopt, ArraysAdoptPlan)>, Stop> {
+    for layout in layouts {
+        if !budget.tick(stopped)? {
+            return Ok(None);
+        }
+        let adoption = ArraysAdopt {
+            source: source.to_text(),
+            layout,
+            items: items.to_vec(),
+            tolerance: Some(tolerance),
+            expected_revision: Some(doc.revision().to_string()),
+        };
+        match arrays_adopt::inspect(doc, &adoption, &mut *stopped) {
+            CommandResult::Completed { output, .. } => return Ok(Some((adoption, output))),
+            CommandResult::Cancelled => return Err(Stop::Cancelled),
+            _ => {}
+        }
+    }
+    Ok(None)
+}
+
 fn search(
     doc: &Document,
     input: &ArraysFind,
@@ -228,145 +264,195 @@ fn search(
         work: 0,
         cut: false,
     };
-    let mut directions: Vec<(f64, f64)> = Vec::new();
     let mut matches: Vec<ArrayPattern> = Vec::new();
-    let mut seen = HashSet::new();
-    // All arithmetic is Float64 relative to the seed. A direction only groups points;
-    // the exact existing placement engine validates every returned proposal again.
-    'outer: for other in &points {
-        if !budget.tick(&mut stopped)? {
-            break;
-        }
-        let (dx, dy) = (other.x - seed.x, other.y - seed.y);
-        let length = dx.hypot(dy);
-        if !length.is_finite() || length <= tolerance {
-            continue;
-        }
-        let (mut ux, mut uy) = (dx / length, dy / length);
-        if ux < 0. || (ux == 0. && uy < 0.) {
-            ux = -ux;
-            uy = -uy;
-        }
-        // Only exact unit directions are coalesced. Tolerance bucketing could suppress
-        // a second real line at large coordinates or with a different length.
-        let mut duplicate = false;
-        for &(x, y) in &directions {
+    if input.kind == Some(ArrayFindKind::Grid) {
+        matches = grid::find(
+            doc,
+            &points,
+            seed,
+            tolerance,
+            checked.limit,
+            &mut budget,
+            &mut stopped,
+        )?;
+    } else {
+        let by_uid: BTreeMap<_, _> = points.iter().map(|p| (p.uid, *p)).collect();
+        let mut directions: Vec<(f64, f64)> = Vec::new();
+        let mut seen = HashSet::new();
+        // All arithmetic is Float64 relative to the seed. A direction only groups points;
+        // the exact existing placement engine validates every returned proposal again.
+        'outer: for other in &points {
             if !budget.tick(&mut stopped)? {
-                break 'outer;
-            }
-            if ux.to_bits() == x.to_bits() && uy.to_bits() == y.to_bits() {
-                duplicate = true;
                 break;
             }
-        }
-        if duplicate {
-            continue;
-        }
-        directions.push((ux, uy));
-        let mut line = Vec::new();
-        for point in &points {
-            if !budget.tick(&mut stopped)? {
-                break 'outer;
-            }
-            let (x, y) = (point.x - seed.x, point.y - seed.y);
-            let along = x * ux + y * uy;
-            let across = x * uy - y * ux;
-            if along.is_finite() && across.is_finite() && across.abs() <= tolerance {
-                line.push((along, *point));
-            }
-        }
-        if line.len() < 3 {
-            continue;
-        }
-        line.sort_by(|a, b| a.0.total_cmp(&b.0).then_with(|| a.1.uid.cmp(&b.1.uid)));
-        let mut steps = Vec::<f64>::new();
-        for pair in line.windows(2) {
-            let step = pair[1].0 - pair[0].0;
-            if !step.is_finite() || step <= tolerance * 2. || step <= 1e-9 {
+            let (dx, dy) = (other.x - seed.x, other.y - seed.y);
+            let length = dx.hypot(dy);
+            if !length.is_finite() || length <= tolerance {
                 continue;
             }
+            let (mut ux, mut uy) = (dx / length, dy / length);
+            if ux < 0. || (ux == 0. && uy < 0.) {
+                ux = -ux;
+                uy = -uy;
+            }
+            // Only exact unit directions are coalesced. Tolerance bucketing could suppress
+            // a second real line at large coordinates or with a different length.
             let mut duplicate = false;
-            for old in &steps {
+            for &(x, y) in &directions {
                 if !budget.tick(&mut stopped)? {
                     break 'outer;
                 }
-                if old.to_bits() == step.to_bits() {
+                if ux.to_bits() == x.to_bits() && uy.to_bits() == y.to_bits() {
                     duplicate = true;
                     break;
                 }
             }
-            if !duplicate {
-                steps.push(step);
+            if duplicate {
+                continue;
             }
-        }
-        for step in steps {
-            let mut places = BTreeMap::<i32, EntityId>::new();
-            let mut collision = false;
-            for &(along, point) in &line {
+            directions.push((ux, uy));
+            let mut line = Vec::new();
+            for point in &points {
                 if !budget.tick(&mut stopped)? {
                     break 'outer;
                 }
-                let k = (along / step).round();
-                if !k.is_finite() || k.abs() > 9999. {
+                let (x, y) = (point.x - seed.x, point.y - seed.y);
+                let along = x * ux + y * uy;
+                let across = x * uy - y * ux;
+                if along.is_finite() && across.is_finite() && across.abs() <= tolerance {
+                    line.push((along, *point));
+                }
+            }
+            if line.len() < 3 {
+                continue;
+            }
+            line.sort_by(|a, b| a.0.total_cmp(&b.0).then_with(|| a.1.uid.cmp(&b.1.uid)));
+            let mut steps = Vec::<f64>::new();
+            for pair in line.windows(2) {
+                let step = pair[1].0 - pair[0].0;
+                if !step.is_finite() || step <= tolerance * 2. || step <= 1e-9 {
                     continue;
                 }
-                let (x, y) = (seed.x + k * step * ux, seed.y + k * step * uy);
-                if (point.x - x).hypot(point.y - y) > tolerance {
+                let mut duplicate = false;
+                for old in &steps {
+                    if !budget.tick(&mut stopped)? {
+                        break 'outer;
+                    }
+                    if old.to_bits() == step.to_bits() {
+                        duplicate = true;
+                        break;
+                    }
+                }
+                if !duplicate {
+                    steps.push(step);
+                }
+            }
+            let mut step_cursor = 0;
+            while step_cursor < steps.len() {
+                let step = steps[step_cursor];
+                step_cursor += 1;
+                let mut places = BTreeMap::<i32, EntityId>::new();
+                let mut collision = false;
+                for &(along, point) in &line {
+                    if !budget.tick(&mut stopped)? {
+                        break 'outer;
+                    }
+                    let k = (along / step).round();
+                    if !k.is_finite() || k.abs() > 9999. {
+                        continue;
+                    }
+                    let (x, y) = (seed.x + k * step * ux, seed.y + k * step * uy);
+                    if (point.x - x).hypot(point.y - y) > tolerance {
+                        continue;
+                    }
+                    if places.insert(k as i32, point.uid).is_some() {
+                        collision = true;
+                        break;
+                    }
+                }
+                if collision || places.len() < 3 || !places.values().any(|u| *u == seed.uid) {
                     continue;
                 }
-                if places.insert(k as i32, point.uid).is_some() {
-                    collision = true;
-                    break;
+                let (Some((&min, &first)), Some((&max, &last))) =
+                    (places.first_key_value(), places.last_key_value())
+                else {
+                    continue;
+                };
+                if max - min >= 10000 || !places.keys().any(|k| places.contains_key(&(k + 1))) {
+                    continue;
                 }
-            }
-            if collision || places.len() < 3 || !places.values().any(|u| *u == seed.uid) {
-                continue;
-            }
-            let (Some((&min, &first)), Some((&max, _))) =
-                (places.first_key_value(), places.last_key_value())
-            else {
-                continue;
-            };
-            if max - min >= 10000 || !places.keys().any(|k| places.contains_key(&(k + 1))) {
-                continue;
-            }
-            let items: Vec<_> = (min..=max)
-                .map(|k| ArrayItem {
-                    uid: places.get(&k).copied(),
-                    kept: false,
-                })
-                .collect();
-            let key: Vec<_> = items.iter().map(|i| i.uid).collect();
-            if !seen.insert(key) {
-                continue;
-            }
-            let adoption = ArraysAdopt {
-                source: first.to_text(),
-                layout: ArrayLayout::Line {
-                    count: items.len() as u32,
-                    dx: step * ux,
-                    dy: step * uy,
-                    fit: false,
-                },
-                items,
-                tolerance: Some(tolerance),
-                expected_revision: Some(doc.revision().to_string()),
-            };
-            let plan = match arrays_adopt::inspect(doc, &adoption, &mut stopped) {
-                CommandResult::Completed { output, .. } => output,
-                CommandResult::Cancelled => return Err(Stop::Cancelled),
-                _ => continue,
-            };
-            matches.push(ArrayPattern {
-                present: places.len() as u32,
-                missing: plan.missing,
-                deviation: plan.deviation,
-                adoption,
-                overlaps: false,
-            });
-            if matches.len() > checked.limit {
-                budget.cut = true;
-                break 'outer;
+                let (Some(start), Some(end)) = (by_uid.get(&first), by_uid.get(&last)) else {
+                    continue;
+                };
+                let span = (max - min) as f64;
+                let refined = ((end.x - start.x) * ux + (end.y - start.y) * uy) / span;
+                if refined.is_finite() && refined > tolerance * 2. && refined > 1e-9 {
+                    let mut known = false;
+                    for old in &steps {
+                        if !budget.tick(&mut stopped)? {
+                            break 'outer;
+                        }
+                        if old.to_bits() == refined.to_bits() {
+                            known = true;
+                            break;
+                        }
+                    }
+                    // Recheck the whole line with the refined pitch. An endpoint that was
+                    // outside the first rounded short-gap estimate may now be a valid member.
+                    if !known {
+                        steps.push(refined);
+                    }
+                }
+                let items: Vec<_> = (min..=max)
+                    .map(|k| ArrayItem {
+                        uid: places.get(&k).copied(),
+                        kept: false,
+                    })
+                    .collect();
+                let key: Vec<_> = items.iter().map(|i| i.uid).collect();
+                if seen.contains(&key) {
+                    continue;
+                }
+                let count = items.len() as u32;
+                let layouts = [
+                    ArrayLayout::Line {
+                        count,
+                        dx: (end.x - start.x) / span,
+                        dy: (end.y - start.y) / span,
+                        fit: false,
+                    },
+                    ArrayLayout::Line {
+                        count,
+                        dx: step * ux,
+                        dy: step * uy,
+                        fit: false,
+                    },
+                ];
+                let Some((adoption, plan)) = review_layouts(
+                    doc,
+                    first,
+                    &items,
+                    layouts,
+                    tolerance,
+                    &mut budget,
+                    &mut stopped,
+                )?
+                else {
+                    continue;
+                };
+                // Only an accepted proposal suppresses a later proposal with the same members.
+                seen.insert(key);
+                matches.push(ArrayPattern {
+                    present: places.len() as u32,
+                    missing: plan.missing,
+                    deviation: plan.deviation,
+                    adoption,
+                    overlaps: false,
+                });
+                if matches.len() > checked.limit {
+                    budget.cut = true;
+                    break 'outer;
+                }
             }
         }
     }

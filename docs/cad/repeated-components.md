@@ -181,3 +181,41 @@ Python işlem çıktısı açıksa arama aynı `cad.arrays.find` girdileriyle ya
 uygulama aynı native `cad.arrays.adopt` işini kullanır. Yerleştirmeleri
 bağladıktan sonra mevcut **Diziyi düzenle → Aralık/Adet** kullanılabilir.
 [Arayüz, iptal ve kabul kararı](../adr/0875-linear-array-review-panel.md).
+
+
+## Dünya X/Y dikdörtgen örüntüleri
+
+Aynı **Dizileri bul… / DIZIBUL** penceresinde **Düzen türü → Dikdörtgen (X/Y)**
+seçin. Kaynak köşede olmak zorunda değildir. En az iki satır, iki sütun, dört
+dolu yer ve her yönde gözlenen bir komşu çift gerekir. Dolu bir sınır köşesi
+kaynak olur; eksik köşe doldurulmaz. Kart iki aralığı ayrı, inceleme şeması
+yerleri satır satır gösterir. Kaymış bloğu korumak için boş yerin **Satır**
+ve **Sütun** numaralarını seçin; kaynak köşeden 1 ile başlar. Dolu yere
+atama reddedilir; gerekçe onay düğmelerinin üstünde görünür.
+
+```python
+# Eski çağrıda kind yoksa doğrusal arama aynen sürer.
+found = cad.arrays.find(doc, source=seed_insert_uid, kind=cad.ArrayFindKind.GRID)
+# Aynı şema ve inceleme/yazma sözleşmesi kullanılır.
+proposal = found.matches[reviewed_index].adoption
+print(proposal.layout.to_json(), found.truncated)
+args = dict(source=proposal.source, layout=proposal.layout, items=proposal.items,
+            tolerance=proposal.tolerance, expected_revision=proposal.expected_revision)
+review = cad.arrays.adopt.plan(doc, **args)
+# Kullanıcının onayladığı bu öneriyi ayrı çağrıyla bağlayın.
+done = cad.arrays.adopt(doc, **args)
+```
+
+`doc.start("cad.arrays.find", cad.ArraysFind(source=seed_insert_uid,
+kind=cad.ArrayFindKind.GRID))` ve MCP aynı durdurulabilir sorgudur. İki
+milyonluk iş bütçesine ek olarak grid aralık keşfi 500 000 çift veya bir
+eksende 128 aralık adayını aşarsa sonuç **kısmidir**. Uyarıyı tam tarama
+gibi yorumlamayın. Dönük/eğik grid, kutupsal ve yol tanıma bu kapsamda
+bulunmaz. [Karar ve sınırlar](../adr/0876-axis-aligned-grid-pattern-review.md).
+
+Büyük koordinatlarda kısa aralıkların tek komşu farkındaki yuvarlaması bütün
+sıraya çoğaltılmaz: toplam gözlenen açıklık da denenir ve uç üyelik yeniden
+taranır. Aday yine aynı gerçek yerleşim doğrulayıcısından, verdiğiniz mutlak
+toleransla geçer; bloklar taşınmaz. Koordinatın temsil aralığının altındaki
+toleranslarda bütün desenleri bulma garantisi yoktur; tolerans otomatik
+büyütülmez. [Sayısal düzeltme ve ölçülen sınırlar](../adr/0877-full-span-pattern-spacing-validation.md).

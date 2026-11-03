@@ -9,11 +9,26 @@ pub const CAD_ARRAYS_FIND: &str = "cad.arrays.find";
 pub const CAD_ARRAYS_FIND_VERSION: u32 = 1;
 pub const ARRAY_FIND_SCOPE_MAX: usize = 2048;
 
+/// Requested pattern family. Omitted kind preserves the original linear search.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "ts", ts(export))]
+#[serde(rename_all = "camelCase")]
+pub enum ArrayFindKind {
+    Line,
+    /// World X/Y rectangular rows and columns; rotated/skew grids are not inferred.
+    Grid,
+}
+
 /// Finds linear patterns containing the seed insert. First delivery: static, data-free inserts
 /// of the same block, appearance, mirror, rotation and scale. No rotation of the items is inferred.
 /// At least three occupied places and an observed adjacent pair are required. Every second
 /// place being occupied is indistinguishable from twice the spacing: no hidden places are invented.
-/// Grid, polar and path detection are not implemented by this version.
+/// With kind=grid, searches world-X/Y rectangular patterns with at least two rows,
+/// two columns, four occupied places and observed adjacent pairs in both directions.
+/// A bounding corner must be occupied to reuse it as the existing array source.
+/// Rotated/skew grids, polar and path detection are not implemented by this version.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -22,6 +37,10 @@ pub const ARRAY_FIND_SCOPE_MAX: usize = 2048;
 pub struct ArraysFind {
     /// Existing seed insert UUID. May be an interior place of a candidate.
     pub source: String,
+    /// Omitted: line. Explicit grid reuses the existing axis-aligned ArrayLayout::Grid.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub kind: Option<ArrayFindKind>,
     /// Absent searches the document; empty searches only the seed. At most 2048 objects.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

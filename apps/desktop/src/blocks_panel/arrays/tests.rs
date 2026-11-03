@@ -388,3 +388,163 @@ fn queries_respect_python_echo_and_closing_the_dock_cancels_the_worker() {
     assert!(cancel.load(Ordering::Relaxed));
     assert!(app.blocks_panel.arrays.is_none());
 }
+
+#[test]
+fn grid_settings_cancel_restores_line_search_and_coordinates_address_the_requested_empty_place() {
+    let mut app = app_with_array_source();
+    app.open_array_find();
+    complete_search(&mut app);
+    let _ = app.array_find_event(Event::Settings);
+    let _ = app.array_find_event(Event::PatternKind(ArrayFindKind::Grid));
+    assert_eq!(
+        app.blocks_panel
+            .arrays
+            .as_ref()
+            .unwrap()
+            .input(&app.document.as_ref().unwrap().model)
+            .unwrap()
+            .kind,
+        Some(ArrayFindKind::Grid)
+    );
+    app.array_find_close_dialog();
+    assert_eq!(
+        app.blocks_panel.arrays.as_ref().unwrap().kind,
+        ArrayFindKind::Line
+    );
+    let _ = app.array_find_event(Event::Review(0));
+    complete_review(&mut app);
+    // A 2x4 grid's place 7 is row 2, column 3. This edits only the assignment draft.
+    app.blocks_panel
+        .arrays
+        .as_mut()
+        .unwrap()
+        .review
+        .as_mut()
+        .unwrap()
+        .input
+        .layout = ArrayLayout::Grid {
+        rows: 2,
+        cols: 4,
+        dx: 2.,
+        dy: 3.,
+    };
+    let _ = app.array_find_event(Event::KeepRow(2.));
+    let _ = app.array_find_event(Event::KeepCol(3.));
+    assert_eq!(
+        app.blocks_panel
+            .arrays
+            .as_ref()
+            .unwrap()
+            .review
+            .as_ref()
+            .unwrap()
+            .place,
+        7.
+    );
+    let _ = app.array_find_event(Event::KeepRow(0.));
+    assert!(app.blocks_panel.arrays.as_ref().unwrap().refused.is_some());
+    assert!(
+        app.array_find_control(Control::Press("Diziye bağla"))
+            .unwrap()
+            .is_none()
+    );
+    let w = app.blocks_panel.arrays.as_ref().unwrap();
+    assert_eq!(
+        place_schema(
+            &w.review.as_ref().unwrap().input.layout,
+            &w.review.as_ref().unwrap().input.items
+        )
+        .lines()
+        .count(),
+        2
+    );
+}
+
+#[test]
+fn actual_grid_search_review_row_column_keep_and_apply_reuses_the_native_job() {
+    let raw: Value = serde_json::from_str(include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/commands/v1/cad.arrays.find.json"
+    )))
+    .unwrap();
+    let case = raw["cases"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|c| c["name"].as_str().unwrap().starts_with("grid iki"))
+        .unwrap();
+    let model =
+        Model::from_snapshot(DocumentSnapshotV1::from_json(&case["setup"].to_string()).unwrap())
+            .unwrap();
+    let mut app = crate::files_testing::app_with_drawing();
+    app.document = Some(crate::document::Document::from_v2(model.to_snapshot_v2(), None).unwrap());
+    crate::files_testing::make_cad(&mut app);
+    app.selection.set([Slot(4)]);
+    let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+    app.open_array_find();
+    let _ = app.array_find_event(Event::PatternKind(ArrayFindKind::Grid));
+    complete_search(&mut app);
+    let _ = app.array_find_event(Event::Review(0));
+    complete_review(&mut app);
+    let r = app
+        .blocks_panel
+        .arrays
+        .as_ref()
+        .unwrap()
+        .review
+        .as_ref()
+        .unwrap();
+    assert_eq!(
+        r.input.layout,
+        ArrayLayout::Grid {
+            rows: 3,
+            cols: 3,
+            dx: 2.,
+            dy: 3.
+        }
+    );
+    assert_eq!(r.plan.as_ref().unwrap().missing, 2);
+    let _ = app.array_find_event(Event::KeepRow(1.));
+    let _ = app.array_find_event(Event::KeepCol(3.));
+    let _ = app.array_find_event(Event::Assign);
+    complete_review(&mut app);
+    let r = app
+        .blocks_panel
+        .arrays
+        .as_ref()
+        .unwrap()
+        .review
+        .as_ref()
+        .unwrap();
+    assert_eq!(
+        (
+            r.plan.as_ref().unwrap().missing,
+            r.plan.as_ref().unwrap().kept
+        ),
+        (1, 1)
+    );
+    assert!(r.input.items[2].kept);
+    assert_eq!(
+        app.document.as_ref().unwrap().model.to_snapshot_v2(),
+        before
+    );
+    let _ = app.array_find_event(Event::Apply);
+    for _ in 0..5000 {
+        let _ = app.array_find_event(Event::Tick);
+        if app.blocks_panel.arrays.is_none() {
+            break;
+        }
+        std::thread::sleep(std::time::Duration::from_millis(1));
+    }
+    assert!(app.blocks_panel.arrays.is_none());
+    let model = &mut app.document.as_mut().unwrap().model;
+    let after = model.to_snapshot_v2();
+    assert_eq!(after.entities, before.entities);
+    assert_eq!(after.uids, before.uids);
+    assert_eq!(after.arrays.len(), 1);
+    assert!(after.arrays[0].items[2].kept);
+    model.undo();
+    assert_eq!(model.to_snapshot_v2(), before);
+    model.redo();
+    assert_eq!(model.to_snapshot_v2(), after);
+}

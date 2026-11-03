@@ -97,6 +97,7 @@ pub struct BatchSink {
     /// The map's system (docs/adr/0583 §3): what comes in is moved there first.
     map: Option<&'static kentos_geometry_core::crs::map::MapProjection>,
     origin: Vec2,
+    position_low: bool,
     entries: Vec<Entry>,
     index: HashMap<String, usize>,
     scale: Scale,
@@ -167,6 +168,8 @@ impl<T: PartialEq + Clone> Recent<T> {
 pub struct Batches {
     pub json: String,
     pub data: Vec<f32>,
+    /// Residual of each packed value after its float32 high part. Legacy data/layout is unchanged.
+    pub low: Vec<f32>,
     pub pictures: Vec<Picture>,
     pub dropped: u64,
     /// The batches (by their place in `json`) whose stroke or hatch width is measured on the ground, not paper mm
@@ -192,6 +195,7 @@ impl BatchSink {
     pub fn new(origin: Vec2) -> BatchSink {
         BatchSink {
             origin,
+            position_low: false,
             entries: Vec::new(),
             index: HashMap::new(),
             scale: Scale::default(),
@@ -227,6 +231,11 @@ impl BatchSink {
             self.recent_fills = Recent::new();
             self.recent_markers = Recent::new();
         }
+    }
+
+    /// Emit a residual companion stream for backends which bind precise positions.
+    pub fn set_position_low(&mut self, enabled: bool) {
+        self.position_low = enabled;
     }
 
     /// A picture the build made, drawn by its key.
@@ -405,6 +414,7 @@ impl BatchSink {
         });
         let mut json = String::from("[");
         let mut data: Vec<f32> = Vec::new();
+        let mut low = Vec::new();
         let mut ground = Vec::new();
         let mut placed = 0u32;
         for i in order {
@@ -463,6 +473,16 @@ impl BatchSink {
             }
             json.push('}');
             data.extend(e.data.iter().map(|&x| x as f32));
+            if self.position_low {
+                low.extend(e.data.iter().map(|&x| {
+                    let hi = x as f32;
+                    if x.is_finite() && hi.is_finite() {
+                        (x - f64::from(hi)) as f32
+                    } else {
+                        0.0
+                    }
+                }));
+            }
             if e.ground {
                 ground.push(placed);
             }
@@ -472,6 +492,7 @@ impl BatchSink {
         Batches {
             json,
             data,
+            low,
             pictures: self.pictures,
             dropped: self.dropped,
             ground,

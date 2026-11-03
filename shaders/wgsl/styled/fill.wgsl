@@ -4,12 +4,14 @@ struct AreaOut {
   @invariant @builtin(position) pos: vec4f,
   @location(0) world: vec2f,
 };
-@vertex fn areaVs(@location(0) p: vec2f) -> AreaOut {
+fn areaVertex(p: vec2f, low: vec2f) -> AreaOut {
   var o: AreaOut;
-  o.pos = pxToClip(toPx(p));
+  o.pos = pxToClip(toPxLow(p, low));
   o.world = p;
   return o;
 }
+@vertex fn areaVs(@location(0) p: vec2f) -> AreaOut { return areaVertex(p, vec2f(0.0)); }
+@vertex fn areaVsPrecise(@location(0) p: vec2f, @location(1) low: vec2f) -> AreaOut { return areaVertex(p, low); }
 @fragment fn solidFs(i: AreaOut) -> @location(0) vec4f {
   return st.color;
 }

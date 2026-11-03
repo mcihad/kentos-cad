@@ -1,7 +1,7 @@
 //! The styled layers on the GPU (the web's `webgpu/styledRenderer.ts`):
 //! the six pipelines of the shared styled WGSL per sample count, the atlas
 //! texture, and each layer's buffers: its batches' numbers in one vertex
-//! buffer and their style blocks in one uniform buffer read at a dynamic
+//! high/low buffer pair and their style blocks in one uniform buffer read at a dynamic
 //! offset, so a batch costs a bind and a draw, never a buffer of its own.
 //!
 //! A frame first decides what shows (scale range, view box, legibility) and
@@ -201,6 +201,40 @@ pub struct StyledPipelineSpec {
     pub vertex_count: Option<u32>,
     pub blend: wgpu::BlendState,
     pub buffer: wgpu::VertexBufferLayout<'static>,
+}
+
+impl StyledPipelineSpec {
+    /// Optional version-10 low-part stream. Legacy entry points remain usable by other backends.
+    pub fn precision(&self) -> Option<(&'static str, wgpu::VertexBufferLayout<'static>)> {
+        const STROKE: [wgpu::VertexAttribute; 1] = [wgpu::VertexAttribute {
+            format: wgpu::VertexFormat::Float32x4,
+            offset: 0,
+            shader_location: 2,
+        }];
+        const MARKER: [wgpu::VertexAttribute; 1] = [wgpu::VertexAttribute {
+            format: wgpu::VertexFormat::Float32x2,
+            offset: 0,
+            shader_location: 2,
+        }];
+        const AREA: [wgpu::VertexAttribute; 1] = [wgpu::VertexAttribute {
+            format: wgpu::VertexFormat::Float32x2,
+            offset: 0,
+            shader_location: 1,
+        }];
+        let (vertex, attributes) = match self.vertex {
+            "strokeVs" => ("strokeVsPrecise", &STROKE[..]),
+            "markerVs" => ("markerVsPrecise", &MARKER[..]),
+            "areaVs" => ("areaVsPrecise", &AREA[..]),
+            _ => return None,
+        };
+        Some((
+            vertex,
+            wgpu::VertexBufferLayout {
+                attributes,
+                ..self.buffer.clone()
+            },
+        ))
+    }
 }
 
 /// The contract's pipelines, in its order: stroke, solid, hatch, pattern, tile, marker, gradient, image, raster, cloud.
@@ -422,14 +456,21 @@ impl StyledGpu {
         let (module, layout, format) = (&self.module, &self.layout, self.format);
         self.pipelines.entry(samples).or_insert_with(|| {
             let pipe = |spec: &StyledPipelineSpec| {
+                let mut buffers = vec![spec.buffer.clone()];
+                let vertex = if let Some((vertex, low)) = spec.precision() {
+                    buffers.push(low);
+                    vertex
+                } else {
+                    spec.vertex
+                };
                 device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
                     label: Some(spec.name),
                     layout: Some(layout),
                     vertex: wgpu::VertexState {
                         module,
-                        entry_point: Some(spec.vertex),
+                        entry_point: Some(vertex),
                         compilation_options: wgpu::PipelineCompilationOptions::default(),
-                        buffers: std::slice::from_ref(&spec.buffer),
+                        buffers: &buffers,
                     },
                     primitive: wgpu::PrimitiveState {
                         topology: wgpu::PrimitiveTopology::TriangleList,
@@ -603,6 +644,19 @@ impl StyledGpu {
                 usage: wgpu::BufferUsages::VERTEX,
             })
         });
+        let low = vertex.as_ref().map(|_| {
+            let values: std::borrow::Cow<'_, [f32]> = if layer.low.len() == layer.data.len() {
+                std::borrow::Cow::Borrowed(&layer.low)
+            } else {
+                std::borrow::Cow::Owned((0..layer.data.len())
+                    .map(|i| layer.low.get(i).copied().unwrap_or(0.0)).collect())
+            };
+            device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("kentos.styled.low"),
+                contents: bytemuck::cast_slice(&values),
+                usage: wgpu::BufferUsages::VERTEX,
+            })
+        });
         if blocks.is_empty() {
             blocks.resize(self.align as usize, 0);
         }
@@ -627,10 +681,11 @@ impl StyledGpu {
             id: part.id,
             source: part.clone(),
             vertex,
+            low,
             styles,
             bind,
             batches,
-            bytes: (layer.data.len() * 4 + blocks.len()) as u64,
+            bytes: (layer.data.len() * 8 + blocks.len()) as u64,
         }
     }
 
@@ -1300,6 +1355,9 @@ impl StyledGpu {
             }
             pass.set_bind_group(1, &layer.bind, &[b.offset]);
             pass.set_vertex_buffer(0, vertex.slice(b.bytes.clone()));
+            if let Some(low) = &layer.low {
+                pass.set_vertex_buffer(1, low.slice(b.bytes.clone()));
+            }
             if b.instanced {
                 pass.draw(0..6, 0..b.count);
             } else {
@@ -1433,6 +1491,7 @@ pub struct GpuLayer {
     id: u64,
     source: Arc<StyledLayerPart>,
     vertex: Option<wgpu::Buffer>,
+    low: Option<wgpu::Buffer>,
     styles: wgpu::Buffer,
     bind: wgpu::BindGroup,
     batches: Vec<GpuBatch>,
@@ -1628,7 +1687,7 @@ impl ViewStyled {
                     MarkerLook::Shape { .. } => (0, 1.0),
                 };
                 let tile = [centre[0] - b.origin[0], centre[1] - b.origin[1]];
-                for m in data.get(b.range.clone()).unwrap_or(&[]).chunks_exact(5) {
+                for (at, m) in data.get(b.range.clone()).unwrap_or(&[]).chunks_exact(5).enumerate() {
                     let mut w = f64::from(m[3]) * k;
                     let mut h = f64::from(m[4]) * k;
                     match fit {
@@ -1644,8 +1703,8 @@ impl ViewStyled {
                     let (sa, ca) = (f64::from(m[2]) - twist).sin_cos();
                     let turned = [ca * q[0] - sa * q[1], sa * q[0] + ca * q[1]];
                     let (dx, dy) = (
-                        (f64::from(m[0]) - tile[0]) * px_per_m,
-                        (f64::from(m[1]) - tile[1]) * px_per_m,
+                        (f64::from(m[0]) + f64::from(layer.source.layer.low.get(b.range.start + at * 5).copied().unwrap_or(0.0)) - tile[0]) * px_per_m,
+                        (f64::from(m[1]) + f64::from(layer.source.layer.low.get(b.range.start + at * 5 + 1).copied().unwrap_or(0.0)) - tile[1]) * px_per_m,
                     );
                     let (u, v) = (dx * tc + dy * ts, dy * tc - dx * ts);
                     let x = vw / 2.0 + u + turned[0];

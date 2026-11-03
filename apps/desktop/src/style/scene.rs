@@ -974,6 +974,7 @@ impl StyledCache {
         let part = Arc::new(StyledLayerPart {
             id: NEXT_LAYER.fetch_add(1, Ordering::Relaxed),
             layer: StyledLayer {
+                low: Vec::new(),
                 data: Vec::new(),
                 batches: vec![StyledBatch {
                     range: 0..0,

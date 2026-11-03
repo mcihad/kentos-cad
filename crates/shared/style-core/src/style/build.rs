@@ -455,6 +455,8 @@ pub struct LayerObjects<'a> {
 /// and the walls' view it is drawn at, none: the store's.
 #[derive(Clone, Copy, Debug)]
 pub struct View {
+    /// Optional residual vertex stream; false for legacy backends. This never changes model geometry.
+    pub position_low: bool,
     /// Explicit physical CAD output precision; screen/unit choices keep their existing geometry.
     pub plot_precision:bool,
     pub fills: bool,
@@ -467,7 +469,7 @@ pub struct View {
 
 impl PartialEq for View {
     fn eq(&self, o: &Self) -> bool {
-        self.plot_precision == o.plot_precision && self.fills == o.fills
+        self.position_low == o.position_low && self.plot_precision == o.plot_precision && self.fills == o.fills
             && self.area_edges == o.area_edges
             && self.walls == o.walls
             && match (self.map, o.map) {
@@ -483,6 +485,7 @@ impl Eq for View {}
 impl Default for View {
     fn default() -> Self {
         View {
+            position_low: false,
             plot_precision:false,
             fills: true,
             area_edges: true,
@@ -655,6 +658,7 @@ pub fn build_layer_in(
         }),
     };
     let mut sink = BatchSink::new(origin);
+    sink.set_position_low(view.position_low);
     sink.set_map(view.map);
     let mut buf = Vec::new();
     let mut piece_at = 0usize;
