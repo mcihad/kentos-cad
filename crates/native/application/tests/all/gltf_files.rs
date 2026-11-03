@@ -52,6 +52,7 @@ fn far_coordinates_keep_their_millimetres() {
         name: "Zemin".into(),
         vertices: vec![[512_345.678, 4_401_234.567, 1_234.5], [522_345.679, 4_401_234.568, 1_250.25], [512_345.678, 4_411_234.566, 1_240.0]],
         triangles: vec![[0, 1, 2]],
+        roles: Vec::new(),
     }];
     let o = road_scene::origin_of(&parts);
     assert_eq!(o, [517_346.0, 4_406_235.0, 1_242.0]);

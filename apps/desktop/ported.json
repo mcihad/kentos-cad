@@ -428,6 +428,7 @@
     "landxml.importAlignments",
     "ifc.export",
     "gltf.export",
+    "scene3d.view",
     "arch.program",
     "lineTypes.manage",
     "hatchPatterns.manage",

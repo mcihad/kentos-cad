@@ -288,7 +288,7 @@ CAD = [
         # The pay item quantities (plan/road.md Y11.4, docs/adr/0909 §4).
         P("Metraj", "payItemsEditor", [L("payItems.editor")]),
         # The 3D scene (plan/road.md Y12.3, docs/adr/0910 §3): the terrain and the corridors to glTF.
-        P("3B", "gltfExport", [L("gltf.export")]),
+        P("3B", "scene3dView", [L("scene3d.view"), L("gltf.export")]),
     ], works=ROAD),
     T("plan", "Plan", [
         P("Yol", "planRoad", [L("tool.planRoad"), S("tool.roadJunctions"), S("tool.medianClose"), S("tool.centerline")]),

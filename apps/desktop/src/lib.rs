@@ -269,8 +269,11 @@ mod retaining_wall_window;
 mod pay_window;
 mod route_window;
 mod junction_window;
+mod scene3d_window;
 #[cfg(test)]
 mod junction_window_tests;
+#[cfg(test)]
+mod scene3d_window_tests;
 #[cfg(test)]
 mod route_window_tests;
 #[cfg(test)]

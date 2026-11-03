@@ -631,8 +631,9 @@ pub const PORTED: &[&str] = &[
     "landxml.export",
     "landxml.importAlignments",
     "ifc.export",
-    // plan/road.md Y12.3: glTF ver (road_exchange.rs).
+    // plan/road.md Y12.3: glTF ver (road_exchange.rs) and 3B görünüm (scene3d_window.rs).
     "gltf.export",
+    "scene3d.view",
     // docs/adr/0773: Bina programı (program_window.rs).
     "arch.program",
     // docs/adr/0313: Çizgi tipleri (line_types_window.rs).

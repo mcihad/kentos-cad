@@ -2,7 +2,7 @@
 //! selects drawn with a depth buffer. It knows no Iced and no window: a host hands it the device, the queue and a
 //! render pass whose colour target it owns and whose depth target is a [`DepthTarget`].
 //!
-//! - Each content (a tile's mesh) is uploaded once, as a vertex buffer (position float32 × 3 and part u32: 16 bytes)
+//! - Each content (a tile's mesh) is uploaded once, as a vertex buffer (position float32 × 3, part u32, normal snorm8 × 4: 20 bytes)
 //!   and an index buffer, and kept by [`Residency`] within two budgets (bytes resident, bytes uploaded a frame); the
 //!   longest unused go to make room. A frame draws only what is resident: the host's selection keeps the parent in
 //!   place until its children are (SCENE-STREAM-05).
@@ -45,6 +45,7 @@ struct ViewBlock {
 struct Vertex {
     p: [f32; 3],
     part: u32,
+    n: [i8; 4],
 }
 
 /// A part's look: its colour, linear RGB and alpha (below 1: drawn see-through).
@@ -97,6 +98,11 @@ pub struct DepthTarget {
 }
 
 impl DepthTarget {
+    /// The buffer's view, to attach to a render pass.
+    pub fn view(&self) -> &wgpu::TextureView {
+        &self.view
+    }
+
     /// The depth buffer for a target of `width` × `height` pixels, kept when it already is that size.
     pub fn ensure<'a>(this: &'a mut Option<DepthTarget>, device: &wgpu::Device, width: u32, height: u32) -> &'a wgpu::TextureView {
         let want = (width.max(1), height.max(1));
@@ -138,6 +144,8 @@ pub struct Scene3dRenderer {
     pub budgets: Budgets,
     opaque_draws: Vec<Draw>,
     see_through_draws: Vec<Draw>,
+    /// Whether [`Scene3dRenderer::load`] began this frame.
+    begun: bool,
 }
 
 fn styles_buffer(device: &wgpu::Device, capacity: u64) -> wgpu::Buffer {
@@ -216,11 +224,12 @@ impl Scene3dRenderer {
                     entry_point: Some("meshVs"),
                     compilation_options: wgpu::PipelineCompilationOptions::default(),
                     buffers: &[wgpu::VertexBufferLayout {
-                        array_stride: 16,
+                        array_stride: 20,
                         step_mode: wgpu::VertexStepMode::Vertex,
                         attributes: &[
                             wgpu::VertexAttribute { format: wgpu::VertexFormat::Float32x3, offset: 0, shader_location: 0 },
                             wgpu::VertexAttribute { format: wgpu::VertexFormat::Uint32, offset: 12, shader_location: 1 },
+                            wgpu::VertexAttribute { format: wgpu::VertexFormat::Snorm8x4, offset: 16, shader_location: 2 },
                         ],
                     }],
                 },
@@ -278,6 +287,7 @@ impl Scene3dRenderer {
             budgets: Budgets::default(),
             opaque_draws: Vec::new(),
             see_through_draws: Vec::new(),
+            begun: false,
         }
     }
 
@@ -316,20 +326,34 @@ impl Scene3dRenderer {
 
     /// Uploads what the budgets allow of `frame.draws` (in their order) and writes the frame's blocks; the draws not
     /// resident are left out of this frame.
-    pub fn prepare(&mut self, device: &wgpu::Device, queue: &wgpu::Queue, frame: &Frame<'_>) -> Stats {
-        let mut stats = Stats::default();
+    /// A new frame's uploads: what the budgets allow of `asked` (the contents a selection draws, then the ones it asks
+    /// for, the most needed first). Called before [`Self::prepare`], the host selects again with what is now resident
+    /// and draws that: a content asked for is never drawn the same frame as the parent it replaces unless the
+    /// selection says so.
+    pub fn load(&mut self, device: &wgpu::Device, asked: &[&Content]) -> Stats {
         self.residency.begin();
-        let asked: Vec<(u64, u64)> = frame.draws.iter().map(|c| (c.id, c.bytes())).collect();
-        let plan = self.residency.plan(&asked, self.budgets);
+        self.begun = true;
+        self.upload(device, asked)
+    }
+
+    fn upload(&mut self, device: &wgpu::Device, asked: &[&Content]) -> Stats {
+        let mut stats = Stats::default();
+        let ids: Vec<(u64, u64)> = asked.iter().map(|c| (c.id, c.bytes())).collect();
+        let plan = self.residency.plan(&ids, self.budgets);
         for id in &plan.evict {
             self.gpu.remove(id);
         }
         stats.evicted = plan.evict.len();
         stats.waiting = plan.waiting.len();
         let upload: std::collections::HashSet<u64> = plan.upload.iter().copied().collect();
-        for c in frame.draws.iter().filter(|c| upload.contains(&c.id)) {
+        for c in asked.iter().filter(|c| upload.contains(&c.id)) {
             let vertices: Vec<Vertex> =
-                c.positions.iter().zip(&c.parts).map(|(p, part)| Vertex { p: *p, part: *part }).collect();
+                c.positions
+                    .iter()
+                    .zip(&c.parts)
+                    .zip(c.normals.iter().chain(std::iter::repeat(&[0i8; 4])))
+                    .map(|((p, part), n)| Vertex { p: *p, part: *part, n: *n })
+                    .collect();
             let gpu = Gpu {
                 vertices: device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
                     label: Some("kentos.scene3d.vertices"),
@@ -346,6 +370,18 @@ impl Scene3dRenderer {
             stats.uploaded += c.bytes();
             self.gpu.insert(c.id, gpu);
         }
+        stats
+    }
+
+    /// Writes the frame's blocks for `frame.draws` that are resident; without a [`Self::load`] this frame, it first
+    /// uploads what the budgets allow of them.
+    pub fn prepare(&mut self, device: &wgpu::Device, queue: &wgpu::Queue, frame: &Frame<'_>) -> Stats {
+        let mut stats = if std::mem::replace(&mut self.begun, false) {
+            Stats::default()
+        } else {
+            self.residency.begin();
+            self.upload(device, frame.draws)
+        };
         // The view.
         let aspect = frame.viewport.aspect();
         let light = math::normalize(frame.light);

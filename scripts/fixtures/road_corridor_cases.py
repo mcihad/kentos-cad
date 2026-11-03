@@ -107,7 +107,7 @@ def codes(comps, ditch, side):
 
 
 def coded(t, side, word):
-    comps, ditch = t[word]
+    comps, ditch = t[word][0], t[word][1]
     pts = [(f"{word}.{c}", p[0], p[1]) for c, p in list(zip(codes(comps, ditch, side), side["points"]))[1:]]
     pts.append((f"{word}.hinge", side["hinge"][0], side["hinge"][1]))
     if side["daylight"] is not None and not any(c.endswith(".daylight") for c, _, _ in pts):
@@ -127,7 +127,8 @@ def top(cross, t):
 SAME_DIAGONAL = 1e-9  # two plan diagonals within this (m) are a tie: a advances
 
 
-def strip(a, b):
+def strip(a, b, edges=None):
+    """The strip's triangles; with `edges` a list, each triangle's edge across the road as ("a", i) or ("b", j)."""
     d = lambda p, q: math.hypot(q[0] - p[0], q[1] - p[1])  # noqa: E731
     i = j = 0
     out = []
@@ -140,11 +141,28 @@ def strip(a, b):
             take = d(a[i + 1], b[j]) <= d(a[i], b[j + 1]) + SAME_DIAGONAL
         if take:
             out.append([a[i], a[i + 1], b[j]])
+            if edges is not None:
+                edges.append(("a", i))
             i += 1
         else:
             out.append([a[i], b[j + 1], b[j]])
+            if edges is not None:
+                edges.append(("b", j))
             j += 1
     return out
+
+
+def top_roles(cross, t):
+    """The roles of the top line's segments left to right: a side's k-th segment from the axis is its k-th component
+    (a lane unless the template names it a shoulder) while there are components, its slope (cut or fill) beyond."""
+    sec = cross["section"]
+    def one(word):
+        side = sec[word]
+        comps = t[word][0]
+        kinds = t[word][2] if len(t[word]) > 2 else ["lane"] * comps
+        pts = side["points"][: comps + 1] if side["kind"] == "open" else side["points"]
+        return [kinds[k] if k < comps else ("cut" if side["kind"] == "cut" else "fill") for k in range(len(pts) - 1)]
+    return list(reversed(one("left"))) + one("right")
 
 
 def area(t):
@@ -153,7 +171,7 @@ def area(t):
 
 
 def assemble(regions_):
-    features, tris, unsolved, folded = [], [], [], []
+    features, tris, roles, unsolved, folded = [], [], [], [], []
     for ri, reg in enumerate(regions_):
         t = reg["template"]
         runs = {}
@@ -189,7 +207,8 @@ def assemble(regions_):
         for x, y in zip(reg["crosses"], reg["crosses"][1:]):
             if x["section"] is None or y["section"] is None:
                 continue
-            got = strip(top(x, t), top(y, t))
+            edges = []
+            got = strip(top(x, t), top(y, t), edges)
             if any(area(g) <= 0 for g in got):
                 if folded and folded[-1][0] == ri and abs(folded[-1][2] - x["station"]) < SAME:
                     folded[-1][2] = y["station"]
@@ -197,8 +216,10 @@ def assemble(regions_):
                     folded.append([ri, x["station"], y["station"]])
                 continue
             tris += got
+            ra, rb = top_roles(x, t), top_roles(y, t)
+            roles += [(ra if e[0] == "a" else rb)[e[1]] for e in edges]
     key = lambda f: (f["region"], f["code"], f["points"][0][0])  # noqa: E731
-    return {"features": sorted(features, key=key), "triangles": tris,
+    return {"features": sorted(features, key=key), "triangles": tris, "roles": roles,
             "unsolved": sorted(unsolved, key=lambda u: (u["region"], u["right"], u["from"])), "folded": folded}
 
 
@@ -270,7 +291,7 @@ def cross(s, at, direction, sec):
 
 EAST = 0.0
 ASSEMBLE_CASES = [
-    ("İki kesit, dolgu", [{"template": {"left": [3, None], "right": [3, None]},
+    ("İki kesit, dolgu", [{"template": {"left": [3, None, ["lane", "lane", "shoulder"]], "right": [3, None, ["lane", "lane", "shoulder"]]},
       "crosses": [cross(0, [0, 0], EAST, flat(100, fill_to=12)), cross(20, [20, 0], EAST, flat(100.4, fill_to=13))]}]),
     ("Açık yan menteşede biter", [{"template": {"left": [3, None], "right": [3, None]},
       "crosses": [cross(0, [0, 0], EAST, flat(100, fill_to=12)), cross(20, [20, 0], EAST, flat(100, fill_to=None)),
@@ -278,7 +299,7 @@ ASSEMBLE_CASES = [
     ("Kesitsiz km çizgileri kırar", [{"template": {"left": [3, None], "right": [3, None]},
       "crosses": [cross(0, [0, 0], EAST, flat(100, fill_to=12)), cross(20, [20, 0], EAST, None),
                   cross(40, [40, 0], EAST, flat(100, fill_to=12)), cross(60, [60, 0], EAST, flat(100, fill_to=12))]}]),
-    ("Yarmada hendek", [{"template": {"left": [3, 1.0], "right": [3, 1.0]},
+    ("Yarmada hendek", [{"template": {"left": [3, 1.0, ["lane", "lane", "shoulder"]], "right": [3, 1.0, ["lane", "lane", "shoulder"]]},
       "crosses": [cross(0, [0, 0], EAST, cut_ditch(90)), cross(25, [25, 0], EAST, cut_ditch(90.5)),
                   cross(50, [50, 0], EAST, flat(91, fill_to=12))]}]),
     ("Kuzeye dönen aks", [{"template": {"left": [3, None], "right": [3, None]},

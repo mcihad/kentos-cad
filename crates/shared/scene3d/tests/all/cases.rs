@@ -142,7 +142,7 @@ fn the_selection_cases() {
 }
 
 /// A mesh read from a case: its part, vertices and triangles.
-type Owned = (u32, Vec<[f64; 3]>, Vec<[u32; 3]>);
+type Owned = (u32, Vec<[f64; 3]>, Vec<[u32; 3]>, bool);
 
 #[test]
 fn the_chunk_cases() {
@@ -161,11 +161,11 @@ fn the_chunk_cases() {
                     .iter()
                     .map(|t| [0, 1, 2].map(|k| t[k].as_u64().unwrap() as u32))
                     .collect();
-                (m["part"].as_u64().unwrap() as u32, vs, ts)
+                (m["part"].as_u64().unwrap() as u32, vs, ts, m["smooth"].as_bool().unwrap_or(false))
             })
             .collect();
         let meshes: Vec<SourceMesh> =
-            owned.iter().map(|(part, vs, ts)| SourceMesh { part: *part, vertices: vs, triangles: ts }).collect();
+            owned.iter().map(|(part, vs, ts, smooth)| SourceMesh { part: *part, vertices: vs, triangles: ts, smooth: *smooth }).collect();
         let limits = Limits {
             max_triangles: c["limits"]["maxTriangles"].as_u64().unwrap() as usize,
             max_extent: f(&c["limits"]["maxExtent"]),
@@ -194,6 +194,10 @@ fn the_chunk_cases() {
             let want_p: Vec<[f64; 3]> = w["positions"].as_array().unwrap().iter().map(v3).collect();
             assert_eq!(positions, want_p, "{name}: positions");
             assert_eq!(g.parts, indices(&w["parts"]), "{name}: parts");
+            let normals: Vec<[i64; 4]> = g.normals.iter().map(|n| n.map(i64::from)).collect();
+            let want_n: Vec<[i64; 4]> =
+                w["normals"].as_array().unwrap().iter().map(|n| [0, 1, 2, 3].map(|k| n[k].as_i64().unwrap())).collect();
+            assert_eq!(normals, want_n, "{name}: normals");
             assert_eq!(g.indices, indices(&w["indices"]), "{name}: indices");
             let ranges: Vec<[u32; 3]> = g.ranges.iter().map(|(p, r)| [*p, r.start, r.end]).collect();
             let want_r: Vec<[u32; 3]> =

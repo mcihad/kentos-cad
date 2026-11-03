@@ -16,13 +16,16 @@ use std::hash::{BuildHasherDefault, Hasher};
 use crate::math::V3;
 use crate::tile::{Aabb, ContentRef, Hierarchy, Refine, Tile, TileKey};
 
-/// A source mesh: its part (the host's: a surface, a corridor, an asset), its vertices in the source's coordinates
-/// and its triangles.
+/// A source mesh: its part (the host's: a surface, a corridor, an asset), its vertices in the source's coordinates,
+/// its triangles, and whether it is shaded smooth (each vertex the area-weighted normal of the triangles around it in
+/// the whole mesh, so tiles meet without a seam: a terrain) or flat (its faces' edges shown: a corridor's platform
+/// and slopes).
 #[derive(Clone, Copy, Debug)]
 pub struct SourceMesh<'a> {
     pub part: u32,
     pub vertices: &'a [V3],
     pub triangles: &'a [[u32; 3]],
+    pub smooth: bool,
 }
 
 /// How large a tile may be.
@@ -53,6 +56,8 @@ pub struct Content {
     pub positions: Vec<[f32; 3]>,
     /// Each vertex's part.
     pub parts: Vec<u32>,
+    /// Each vertex's normal, signed 8-bit (`round(n · 127)`, w 0), zero for a flat mesh's.
+    pub normals: Vec<[i8; 4]>,
     pub indices: Vec<u32>,
     /// Each part's indices, in part order.
     pub ranges: Vec<(u32, std::ops::Range<u32>)>,
@@ -63,9 +68,9 @@ pub struct Content {
 }
 
 impl Content {
-    /// Its size on the GPU: 16 bytes a vertex (position and part), 4 an index.
+    /// Its size on the GPU: 20 bytes a vertex (position, part, normal), 4 an index.
     pub fn bytes(&self) -> u64 {
-        self.positions.len() as u64 * 16 + self.indices.len() as u64 * 4
+        self.positions.len() as u64 * 20 + self.indices.len() as u64 * 4
     }
 
     /// A vertex's position in the source's coordinates, as the GPU has it (its origin plus its float32).
@@ -130,6 +135,35 @@ const PARALLEL_DEPTH: u32 = 4;
 struct Cut<'a> {
     meshes: &'a [SourceMesh<'a>],
     limits: Limits,
+    /// Each smooth mesh's vertex normals, packed; empty for a flat one.
+    normals: Vec<Vec<[i8; 4]>>,
+}
+
+/// A mesh's vertex normals: the sum of the cross products of the triangles around each vertex (twice their areas,
+/// counterclockwise from above, so a normal points up), made unit and packed signed 8-bit.
+fn vertex_normals(m: &SourceMesh<'_>) -> Vec<[i8; 4]> {
+    let mut sum = vec![[0.0f64; 3]; m.vertices.len()];
+    for t in m.triangles {
+        if t.iter().any(|&k| k as usize >= m.vertices.len()) {
+            continue;
+        }
+        let [a, b, c] = t.map(|k| m.vertices[k as usize]);
+        let n = crate::math::cross(crate::math::sub(b, a), crate::math::sub(c, a));
+        for &k in t {
+            let s = &mut sum[k as usize];
+            *s = crate::math::add(*s, n);
+        }
+    }
+    sum.iter()
+        .map(|s| {
+            let l = crate::math::length(*s);
+            if l == 0.0 {
+                return [0; 4];
+            }
+            let q = |v: f64| (v / l * 127.0).round().clamp(-127.0, 127.0) as i8;
+            [q(s[0]), q(s[1]), q(s[2]), 0]
+        })
+        .collect()
 }
 
 impl Cut<'_> {
@@ -204,8 +238,8 @@ impl Cut<'_> {
     fn content(&self, tris: &mut [Tri], bounds: Aabb) -> Content {
         let origin = bounds.center();
         tris.sort_unstable_by_key(|t| (self.meshes[t.mesh as usize].part, t.mesh, t.index));
-        let (mut positions, mut parts, mut indices, mut ranges, mut sources) =
-            (Vec::new(), Vec::new(), Vec::with_capacity(tris.len() * 3), Vec::new(), Vec::with_capacity(tris.len()));
+        let (mut positions, mut parts, mut normals, mut indices, mut ranges, mut sources) =
+            (Vec::new(), Vec::new(), Vec::new(), Vec::with_capacity(tris.len() * 3), Vec::new(), Vec::with_capacity(tris.len()));
         let mut seen: HashMap<u64, u32, BuildHasherDefault<Mix>> = HashMap::with_capacity_and_hasher(tris.len() * 2, Default::default());
         let mut error: f64 = 0.0;
         for t in tris.iter() {
@@ -225,6 +259,7 @@ impl Cut<'_> {
                     });
                     positions.push(f);
                     parts.push(m.part);
+                    normals.push(self.normals[t.mesh as usize].get(k as usize).copied().unwrap_or([0; 4]));
                     (positions.len() - 1) as u32
                 });
                 indices.push(v);
@@ -234,7 +269,7 @@ impl Cut<'_> {
             }
             sources.push((m.part, t.index));
         }
-        Content { id: 0, origin, bounds, positions, parts, indices, ranges, sources, encoding_error: error }
+        Content { id: 0, origin, bounds, positions, parts, normals, indices, ranges, sources, encoding_error: error }
     }
 }
 
@@ -286,7 +321,8 @@ pub fn chunk(meshes: &[SourceMesh<'_>], limits: Limits, first_id: u64) -> Chunke
             tris.push(Tri { mesh: mi as u32, index: ti as u32, centroid: c.map(|v| v / 3.0) });
         }
     }
-    let cut = Cut { meshes, limits };
+    let normals = meshes.iter().map(|m| if m.smooth { vertex_normals(m) } else { Vec::new() }).collect();
+    let cut = Cut { meshes, limits, normals };
     if tris.is_empty() {
         return Chunked::default();
     }

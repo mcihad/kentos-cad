@@ -1359,11 +1359,21 @@
      "template": {
       "left": [
        3,
-       null
+       null,
+       [
+        "lane",
+        "lane",
+        "shoulder"
+       ]
       ],
       "right": [
        3,
-       null
+       null,
+       [
+        "lane",
+        "lane",
+        "shoulder"
+       ]
       ]
      },
      "crosses": [
@@ -1997,6 +2007,24 @@
       100.185
      ]
     ]
+   ],
+   "roles": [
+    "fill",
+    "fill",
+    "shoulder",
+    "shoulder",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "shoulder",
+    "shoulder",
+    "fill",
+    "fill"
    ],
    "unsolved": [],
    "folded": []
@@ -3301,6 +3329,48 @@
      ]
     ]
    ],
+   "roles": [
+    "fill",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "fill",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "fill",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "fill"
+   ],
    "unsolved": [
     {
      "region": 0,
@@ -4183,6 +4253,24 @@
      ]
     ]
    ],
+   "roles": [
+    "fill",
+    "fill",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "fill",
+    "fill"
+   ],
    "unsolved": [
     {
      "region": 0,
@@ -4208,11 +4296,21 @@
      "template": {
       "left": [
        3,
-       1.0
+       1.0,
+       [
+        "lane",
+        "lane",
+        "shoulder"
+       ]
       ],
       "right": [
        3,
-       1.0
+       1.0,
+       [
+        "lane",
+        "lane",
+        "shoulder"
+       ]
       ]
      },
      "crosses": [
@@ -5570,6 +5668,52 @@
      ]
     ]
    ],
+   "roles": [
+    "cut",
+    "cut",
+    "cut",
+    "cut",
+    "cut",
+    "cut",
+    "shoulder",
+    "shoulder",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "shoulder",
+    "shoulder",
+    "cut",
+    "cut",
+    "cut",
+    "cut",
+    "cut",
+    "cut",
+    "cut",
+    "fill",
+    "cut",
+    "cut",
+    "shoulder",
+    "shoulder",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "shoulder",
+    "shoulder",
+    "cut",
+    "cut",
+    "fill",
+    "cut"
+   ],
    "unsolved": [],
    "folded": []
   },
@@ -6634,6 +6778,40 @@
      ]
     ]
    ],
+   "roles": [
+    "fill",
+    "fill",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "fill",
+    "fill",
+    "fill",
+    "fill",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "fill",
+    "fill"
+   ],
    "unsolved": [],
    "folded": []
   },
@@ -7296,6 +7474,7 @@
     }
    ],
    "triangles": [],
+   "roles": [],
    "unsolved": [],
    "folded": [
     [
@@ -8828,6 +9007,48 @@
       99.285
      ]
     ]
+   ],
+   "roles": [
+    "fill",
+    "fill",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "fill",
+    "fill",
+    "cut",
+    "cut",
+    "cut",
+    "cut",
+    "cut",
+    "cut",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "lane",
+    "cut",
+    "cut",
+    "cut",
+    "cut",
+    "cut",
+    "cut"
    ],
    "unsolved": [],
    "folded": []

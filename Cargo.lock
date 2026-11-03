@@ -2693,6 +2693,7 @@ dependencies = [
  "kentos-project",
  "kentos-render-wgpu",
  "kentos-road",
+ "kentos-scene3d",
  "kentos-services",
  "kentos-sheet",
  "kentos-sheet-ui",

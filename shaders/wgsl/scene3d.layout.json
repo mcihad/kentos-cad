@@ -1,8 +1,8 @@
 {
   "format": "kentos.wgsl-layout",
-  "version": 1,
+  "version": 2,
   "module": "scene3d",
-  "description": "KentOS's 3D scene (docs/adr/0910 §4–§5, plan/3d.md D1): triangle meshes in tiles with a depth32float buffer, reversed (cleared to 0, compare greater); one draw per tile and per part range, the tile's origin minus the eye (float64 on the host, float32 here) at a dynamic offset; the parts' colours in a storage buffer, premultiplied on output. The opaque pipeline writes depth; the see-through one tests it without writing and blends premultiplied alpha.",
+  "description": "KentOS's 3D scene (docs/adr/0910 §4–§5, plan/3d.md D1): triangle meshes in tiles with a depth32float buffer, reversed (cleared to 0, compare greater); one draw per tile and per part range, the tile's origin minus the eye (float64 on the host, float32 here) at a dynamic offset; the parts' colours in a storage buffer, premultiplied on output. Version 2: each vertex carries its normal, signed 8-bit (zero: flat, the face's normal from derivatives). The opaque pipeline writes depth; the see-through one tests it without writing and blends premultiplied alpha.",
   "sources": ["scene3d/mesh.wgsl"],
   "bindGroups": [
     {
@@ -45,9 +45,10 @@
       "blend": "none",
       "depth": { "format": "depth32float", "compare": "greater", "write": true },
       "buffers": [
-        { "stepMode": "vertex", "arrayStride": 16, "attributes": [
+        { "stepMode": "vertex", "arrayStride": 20, "attributes": [
           { "location": 0, "name": "p", "format": "float32x3", "offset": 0 },
-          { "location": 1, "name": "part", "format": "uint32", "offset": 12 }
+          { "location": 1, "name": "part", "format": "uint32", "offset": 12 },
+          { "location": 2, "name": "n", "format": "snorm8x4", "offset": 16 }
         ] }
       ]
     },
@@ -60,9 +61,10 @@
       "blend": "premultiplied",
       "depth": { "format": "depth32float", "compare": "greater", "write": false },
       "buffers": [
-        { "stepMode": "vertex", "arrayStride": 16, "attributes": [
+        { "stepMode": "vertex", "arrayStride": 20, "attributes": [
           { "location": 0, "name": "p", "format": "float32x3", "offset": 0 },
-          { "location": 1, "name": "part", "format": "uint32", "offset": 12 }
+          { "location": 1, "name": "part", "format": "uint32", "offset": 12 },
+          { "location": 2, "name": "n", "format": "snorm8x4", "offset": 16 }
         ] }
       ]
     }

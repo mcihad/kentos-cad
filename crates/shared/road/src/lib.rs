@@ -16,12 +16,14 @@
 //!   triangulations laid over each other, split where the difference changes sign) (docs/adr/0906).
 //! - [`haul`]: the mass haul (Brückner) diagram read as layers: balance points, loops, haul moments, free haul and
 //!   overhaul, borrow and waste (docs/adr/0907).
+//! - [`cutout`]: a terrain with corridors cut out of it in plan, the planes it keeps exact (docs/adr/0910 §6).
 //! - [`sources`]: a surface's input gathered from the drawing by its definition, and the digest that says whether
 //!   it is out of date (plan/road.md Y2.2).
 
 pub mod alignment;
 pub mod corridor;
 pub mod culvert;
+pub mod cutout;
 pub mod guardrail;
 pub mod haul;
 pub mod junction;

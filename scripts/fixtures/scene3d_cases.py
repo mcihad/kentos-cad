@@ -262,7 +262,33 @@ def bounds_of(points):
     return [lo, hi]
 
 
+def vertex_normals(m):
+    """A smooth mesh's vertex normals: the triangles' cross products summed at their corners in the triangles' order,
+    unit, packed signed 8-bit (round half away from zero); none for a flat mesh."""
+    if not m.get("smooth"):
+        return None
+    vs = m["vertices"]
+    s = [[0.0, 0.0, 0.0] for _ in vs]
+    for t in m["triangles"]:
+        if any(k >= len(vs) for k in t):
+            continue
+        a, b, c = (vs[k] for k in t)
+        n = cross(sub(b, a), sub(c, a))
+        for k in t:
+            s[k] = add(s[k], n)
+    out = []
+    for v in s:
+        length = math.sqrt(dot(v, v))
+        if length == 0:
+            out.append([0, 0, 0, 0])
+            continue
+        q = lambda x: int(max(-127.0, min(127.0, math.copysign(math.floor(abs(x / length * 127.0) + 0.5), x))))  # noqa: E731
+        out.append([q(v[0]), q(v[1]), q(v[2]), 0])
+    return out
+
+
 def chunk(meshes, limits, first_id):
+    normals = [vertex_normals(m) for m in meshes]
     tris = []
     for mi, m in enumerate(meshes):
         for ti, t in enumerate(m["triangles"]):
@@ -295,7 +321,7 @@ def chunk(meshes, limits, first_id):
             axis = best if sides[best] > 0 else None
         if axis is None:
             content = leaf(ts, bnd)
-            tiles[at]["content"] = {"id": content["id"], "bytes": len(content["positions"]) * 16 + len(content["indices"]) * 4}
+            tiles[at]["content"] = {"id": content["id"], "bytes": len(content["positions"]) * 20 + len(content["indices"]) * 4}
             contents.append(content)
             return at
         ts = sorted(ts, key=lambda t: (t["c"][axis], t["mesh"], t["index"]))
@@ -310,7 +336,7 @@ def chunk(meshes, limits, first_id):
     def leaf(ts, bnd):
         origin = [(bnd[0][a] + bnd[1][a]) / 2 for a in range(3)]
         ts = sorted(ts, key=lambda t: (meshes[t["mesh"]]["part"], t["mesh"], t["index"]))
-        seen, positions, parts, indices, ranges, sources = {}, [], [], [], [], []
+        seen, positions, parts, normal_of, indices, ranges, sources = {}, [], [], [], [], [], []
         err = 0.0
         for t in ts:
             m = meshes[t["mesh"]]
@@ -324,12 +350,14 @@ def chunk(meshes, limits, first_id):
                     err = max(err, max(abs(f[a] - d[a]) for a in range(3)))
                     positions.append(f)
                     parts.append(m["part"])
+                    nm = normals[t["mesh"]]
+                    normal_of.append(nm[k] if nm is not None else [0, 0, 0, 0])
                     seen[(t["mesh"], k)] = len(positions) - 1
                 indices.append(seen[(t["mesh"], k)])
             ranges[-1][2] = len(indices)
             sources.append([m["part"], t["index"]])
         return {"id": first_id + len(contents), "origin": origin, "bounds": bnd, "positions": positions,
-                "parts": parts, "indices": indices, "ranges": ranges, "sources": sources, "encodingError": err}
+                "parts": parts, "normals": normal_of, "indices": indices, "ranges": ranges, "sources": sources, "encodingError": err}
 
     roots = [tile(tris)] if tris else []
     return {"tiles": tiles, "roots": roots}, contents
@@ -479,7 +507,7 @@ def grid(n, size, origin, z, rng, part):
         for i in range(n):
             a = j * (n + 1) + i
             ts += [[a, a + 1, a + n + 2], [a, a + n + 2, a + n + 1]]
-    return {"part": part, "vertices": vs, "triangles": ts}
+    return {"part": part, "vertices": vs, "triangles": ts, "smooth": True}
 
 
 def chunk_case(name, meshes, limits, first_id=1):
@@ -498,9 +526,9 @@ def chunks():
     far_rng = random.Random(11)
     tm = grid(8, 2400.0, (512000.0, 4401000.0), lambda x, y: 1200 + 0.01 * (x - 512000), far_rng, 0)
     same = {"part": 2, "vertices": [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [1.0, 1.0, 0.0]],
-            "triangles": [[0, 1, 2], [0, 1, 2], [0, 1, 2]]}
+            "triangles": [[0, 1, 2], [0, 1, 2], [0, 1, 2]], "smooth": True}
     broken = {"part": 3, "vertices": [[0.0, 0.0, 0.0], [5.0, 0.0, 1.0], [0.0, 5.0, 2.0]],
-              "triangles": [[0, 1, 2], [0, 1, 9]]}
+              "triangles": [[0, 1, 2], [0, 1, 9]], "smooth": True}
     return [
         chunk_case("Tek karo: sınırlar içinde", [small], {"maxTriangles": 1000, "maxExtent": 1000.0}),
         chunk_case("Üçgen sınırıyla bölünür", [small], {"maxTriangles": 16, "maxExtent": 1000.0}),

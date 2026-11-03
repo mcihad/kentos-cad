@@ -2035,6 +2035,7 @@ impl App {
             Asking::Pay => self.pay_view(),
             Asking::Route => self.route_view(),
             Asking::Junctions => self.junction_view(),
+            Asking::Scene3d => self.scene3d_view(),
             Asking::Program => self.program_view(),
             Asking::SpaceMerge => self.space_merge_question(),
             Asking::TableStyles => self.table_styles_view(),

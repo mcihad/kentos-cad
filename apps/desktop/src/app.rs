@@ -304,6 +304,8 @@ pub enum Dialog {
     Route,
     /// Kavşak (junction_window.rs, plan/road.md Y12.2); the window is `App::junction_window`.
     Junctions,
+    /// 3B görünüm (scene3d_window.rs, plan/road.md Y12.3d); the window is `App::scene3d_window`.
+    Scene3d,
     /// Bina programı (program_window.rs, docs/adr/0773); the window is `App::program_window`.
     Program,
     /// Mahalleri birleştir's decision, asked before writing (quantities.rs, docs/adr/0773 §4).
@@ -685,6 +687,8 @@ pub enum Message {
     Route(crate::route_window::Event),
     /// An event of Kavşak (junction_window.rs, plan/road.md Y12.2).
     Junctions(crate::junction_window::Event),
+    /// An event of 3B görünüm (scene3d_window.rs, plan/road.md Y12.3d).
+    Scene3d(crate::scene3d_window::Event),
     /// LandXML ver's file, or none when the dialog was closed (road_exchange.rs, plan/road.md Y10.2).
     LandxmlExport(Option<std::path::PathBuf>),
     /// LandXML'den aks al's file, or none (road_exchange.rs, plan/road.md Y10.2).
@@ -1283,6 +1287,8 @@ pub struct App {
     pub(crate) route_window: Option<Box<crate::route_window::Window>>,
     /// Kavşak (junction_window.rs, plan/road.md Y12.2).
     pub(crate) junction_window: Option<Box<crate::junction_window::Window>>,
+    /// 3B görünüm (scene3d_window.rs, plan/road.md Y12.3d).
+    pub(crate) scene3d_window: Option<Box<crate::scene3d_window::Window>>,
     /// Bina programı (program_window.rs, docs/adr/0773).
     pub(crate) program_window: Option<crate::program_window::Window>,
     /// Mahalleri birleştir asked: its input and its decision's words (docs/adr/0773 §4).
@@ -1721,6 +1727,7 @@ impl App {
             pay_window: None,
             route_window: None,
             junction_window: None,
+            scene3d_window: None,
             program_window: None,
             space_merging: None,
             table_styles: None,
@@ -2456,6 +2463,7 @@ impl App {
             Message::Pay(event) => return self.pay_event(event),
             Message::Route(event) => return self.route_event(event),
             Message::Junctions(event) => return self.junction_event(event),
+            Message::Scene3d(event) => return self.scene3d_event(event),
             Message::LandxmlExport(path) => return self.landxml_chosen(path),
             Message::LandxmlAlignments(path) => return self.landxml_alignments_chosen(path),
             Message::IfcExport(path) => return self.ifc_chosen(path),
@@ -3510,6 +3518,7 @@ impl App {
             "payItems.editor" => self.open_pay(),
             "route.finder" => self.open_route(),
             "junction.editor" => self.open_junctions(),
+            "scene3d.view" => self.open_scene3d(),
             // LandXML ver (road_exchange.rs, plan/road.md Y10.2).
             "landxml.export" => return self.export_landxml(),
             "landxml.importAlignments" => return self.import_landxml_alignments(),

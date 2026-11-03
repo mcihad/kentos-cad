@@ -120,6 +120,33 @@ Tarih: 2026-11-03. plan/road.md Y12 (ROAD-ALIGN-13; ROAD-JUNC; 3d.md bağlantıs
    ve gidecekleri seçer; en uzun süre kullanılmayan gider, bu karenin çizdiği gitmez; sığmayan sonraki kareyi bekler.
    Öntanımlı bütçeler 1 GiB ve 64 MiB; ölçülmüş aygıtta ev sahibi kendi bütçesini verir (SCENE-DEC-06).
 
+6. **Masaüstünde 3B görünüm (`scene3d.view`).** Koridor › 3B › 3B görünüm; pencere ortak çekirdekle ve çiziciyle
+   çalışan ince bir uyarlayıcıdır.
+   - *Sahne:* yol projesinin yüzeyleri ve koridorlarının üst yüzeyleri (`road_scene::scene`), koridor üçgenleri tip
+     kesitteki rolleriyle (`corridor::Role`: şerit, banket, yarma şevi, dolgu şevi; üçgenin kesit boyunca kenarı
+     hangi bileşenin parçasındaysa); her rol ayrı parça ve renk, renk açıklaması pencerede.
+   - *Arazinin kesilmesi (`kentos_road::cutout`):* koridorun planda kapladığı yerde arazi çizilmez (OpenRoads ve Civil
+     3D'nin mevcut zemini koridorun izi çıkarılmış gösterdiği gibi); arazi üçgeni ona değen koridor üçgenleriyle
+     geometri çekirdeğinin kesin overlay'iyle (fark kuralı) kırpılıp yeniden üçgenlenir, yeni köşenin kotu arazi
+     üçgeninin kendi düzlemindendir; tümüyle bir koridor üçgeninin içindeki overlay'siz atılır; büyük arazide iş
+     parçacıklarında (tarayıcıda sırayla). Pencerede “Araziyi kes” (öntanımlı açık). Şevin araziye ulaşmadığı açık
+     yanda arada boşluk görünür: koridor raporunun “şev buluşmuyor”udur.
+   - *Gölgeleme:* arazi yumuşak gölgelenir: her köşenin normali kaynak ağın tamamında çevresindeki üçgenlerin alanla
+     ağırlıklı normali (karo sınırında dikiş yok), işaretli 8 bit; abartmada `diag(1, 1, 1/k)` ile döner. Civil 3D'nin
+     Realistic ve Conceptual görsel stilleri yüzler arasındaki kenarları yumuşatır
+     ([Autodesk](https://help.autodesk.com/cloudhelp/2025/ENU/Civil3D-Tutorials/files/GUID-9087C6F6-9B87-4703-A987-64C92506A017.htm)),
+     ArcGIS'te TIN gölgelemesi öntanımlı yumuşaktır, düz isteğe bağlıdır; yüzey, hacim ve kot değişmez. “Düz yüzler”
+     üçgenleri gösterir; koridor hep düzdür (bileşenlerin kırığı görünür). Köşe 20 bayt (konum, parça, normal),
+     sözleşme sürümü 2.
+   - *Kamera ve kare:* kamera pencerenindir (gerçek kotta tutulan dönme noktası, bakış, eğim, uzaklık); sürükleme
+     döndürür, sağ tuş ya da Shift kaydırır, tekerlek yaklaştırır; Kuzeydoğu, Güneybatı, Kuzeybatı, Üst, Sığdır;
+     düşey abartma datum sahnenin en alçak noktası. Her karede seçilir, çizilen ve istenen içerikler bütçeyle
+     yüklenir, yeniden seçilip çizilir; bekleyen kaldıkça yeni kare istenir. Sınır 16 piksel (CesiumJS'in öntanımlı
+     `maximumScreenSpaceError`'ı).
+   - *Pencere:* gövde esnektir; boyutlandırılınca ya da tam ekranda 3B alan kalan bütün yeri alır, renk açıklaması
+     altında, bilgi satırı ve düğmeler en altta (sahibin isteği); boyutsuz pencerede uygulama penceresinin bıraktığı
+     yer (240–520 piksel).
+
 ## Aşamalar
 
 Y12.1 (yapıldı, ön güzergâh): `road.routes.find` 26, `.draw` 22 ortak durum (`road_route_cases.py`; arazinin kotları
@@ -159,9 +186,17 @@ karede bir içerik bütçesiyle ikinci içerik bir kare bekler. Süre (release, 
 üçgenlik TM arazisinde ilk kare 67 MB yükleyip 28–37 ms, sonraki karelerde 75 karo ve 2,3 milyon üçgen ortanca 4,8 ms,
 en kötü 14 ms.
 
+Y12.3d (yapıldı, masaüstünde 3B görünüm): §6. Koridorun rolleri bağımsız başvuruda (`road_corridor_cases.py`,
+kesitlerin bileşen türleriyle) ve Rust'ta aynı. Arazinin kesilmesi 11 durumda shapely'nin (GEOS) kalan alanıyla
+1e-6 içinde aynı (`road_cutout_cases.py`): çapraz ve kesişen şeritler, ortası kalan halka, arazi üçgeniyle aynı ve
+ızgaraya oturan iz, dışarıda, hepsini örten, kenara değen, TM'de kıvrılan yol, rastgele arazi; her üçgen arazinin
+üstünde ve koridorun dışında, birbirine binmez. 2 milyon arazi üçgeni, 800 koridor üçgeni 385 ms (release, M5).
+Köşe normalleri ortak durumlarda bit bit. Masaüstünde pencere testleri ve resimleri (`scene3d_window_tests.rs`,
+`KENTOS_SNAPSHOT_BACKEND=wgpu`): dört yön, yakın ve saydam, kesilmemiş, düz yüzler, tam ekran, koyu ve dar.
+
 ## Sonra
 
-Arazinin koridorla kesilmesi (yarmada araziyi koridorun altından çıkarmak), koridorun katı modeli (üstyapı
+Koridorun katı modeli (üstyapı
 katmanları), arazinin hatlarla ve ortofotoyla kaplanması, glTF'te `KHR_mesh_quantization`, büyük sahnede karolara
 bölünmüş kökenler (SCENE-PREC-11) ve 3D Tiles; maliyetin arazi örtüsü ve kamulaştırma rasterleriyle çok ölçütlü bileşimi (ADR 0237'nin uygunluk yüzeyi
 maliyet olarak), birden çok seçenek yolun karşılaştırılması.

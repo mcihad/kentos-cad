@@ -29,7 +29,7 @@ fn square(x: f64, y: f64, s: f64, z: f64) -> Mesh {
 
 fn contents(meshes: &[(u32, Mesh)], first: u64) -> Vec<Content> {
     let src: Vec<SourceMesh> =
-        meshes.iter().map(|(part, (v, t))| SourceMesh { part: *part, vertices: v, triangles: t }).collect();
+        meshes.iter().map(|(part, (v, t))| SourceMesh { part: *part, vertices: v, triangles: t, smooth: false }).collect();
     chunk(&src, Limits::default(), first).contents
 }
 
@@ -242,7 +242,7 @@ pub(crate) fn timing(gpu: &mut Gpu) {
             ts.push([a, a + w + 1, a + w]);
         }
     }
-    let c = chunk(&[SourceMesh { part: 0, vertices: &vs, triangles: &ts }], Limits::default(), 1);
+    let c = chunk(&[SourceMesh { part: 0, vertices: &vs, triangles: &ts, smooth: true }], Limits::default(), 1);
     let mut r = Scene3dRenderer::new(&gpu.device, FORMAT);
     let size = (1920u32, 1080u32);
     let vp = Viewport { width: 1920.0, height: 1080.0 };

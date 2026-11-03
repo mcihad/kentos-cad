@@ -18,8 +18,10 @@ use crate::codes;
 use crate::road_corridors as corridors;
 use crate::road_terrains::{self as terrains, fail};
 
-/// A mesh of the scene: what it is made from, its source, its vertices (x east, y north, z up) and its triangles,
-/// counterclockwise seen from above.
+pub use kentos_road::corridor::Role as SurfaceRole;
+
+/// A mesh of the scene: what it is made from, its source, its vertices (x east, y north, z up), its triangles
+/// counterclockwise seen from above and, for a corridor, each triangle's role (lane, shoulder, cut or fill slope).
 #[derive(Clone, Debug, PartialEq)]
 pub struct ScenePart {
     pub kind: SceneMeshKind,
@@ -27,6 +29,7 @@ pub struct ScenePart {
     pub name: String,
     pub vertices: Vec<[f64; 3]>,
     pub triangles: Vec<[u32; 3]>,
+    pub roles: Vec<SurfaceRole>,
 }
 
 fn losses(message: String, path: &str) -> CommandWarning {
@@ -104,6 +107,7 @@ pub(crate) fn parts(
                 name: def.name.clone(),
                 vertices: s.vertices.clone(),
                 triangles: s.triangles.clone(),
+                roles: Vec::new(),
             }),
             Err(stop) if asked => {
                 return Err(bad("surfaces", format!("“{}” yüzeyi kurulamıyor: {}", def.name, corridors::words(stop))));
@@ -122,6 +126,7 @@ pub(crate) fn parts(
                     name: def.name.clone(),
                     vertices,
                     triangles,
+                    roles: m.built.roles.clone(),
                 });
                 continue;
             }
@@ -134,6 +139,29 @@ pub(crate) fn parts(
         warnings.push(losses(format!("“{}” koridoru {why}; yazılmadı.", def.name), "corridors"));
     }
     Ok((out, warnings))
+}
+
+/// The parts with every terrain cut by every corridor in plan (`kentos_road::cutout`): the ground a corridor removes is
+/// not drawn over its pavement; the terrain kept is the terrain's own planes.
+pub fn with_terrain_cut(parts: &[ScenePart]) -> Vec<ScenePart> {
+    let foot: Vec<[[f64; 3]; 3]> = parts
+        .iter()
+        .filter(|p| p.kind == SceneMeshKind::Corridor)
+        .flat_map(|p| p.triangles.iter().filter_map(|t| {
+            let c = t.map(|k| p.vertices.get(k as usize).copied());
+            Some([c[0]?, c[1]?, c[2]?])
+        }))
+        .collect();
+    parts
+        .iter()
+        .map(|p| {
+            if p.kind != SceneMeshKind::Terrain || foot.is_empty() {
+                return p.clone();
+            }
+            let cut = kentos_road::cutout::cut_out(&p.vertices, &p.triangles, &foot);
+            ScenePart { vertices: cut.vertices, triangles: cut.triangles, ..p.clone() }
+        })
+        .collect()
 }
 
 /// The scene's origin: its bounds' middle to the whole metre.

@@ -2784,6 +2784,10 @@
       ],
       "note": "Dosyayı sorar ve road.alignments.import ile alır; tek geri alma adımı (plan/road.md Y10.2, ADR 0908)."
     },
+    "scene3d.view": {
+      "level": "session",
+      "note": "3B görünüm yalnız görüntüler: arazi yüzeyleri ve koridorlar ortak 3B çekirdekle seçilip çizilir; çizim değişmez, kamera oturumundur (plan/road.md Y12.3d, ADR 0910 §6)."
+    },
     "gltf.export": {
       "level": "semantic",
       "via": [

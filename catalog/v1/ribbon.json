@@ -710,8 +710,12 @@
      },
      {
       "label": "3B",
-      "icon": "gltfExport",
+      "icon": "scene3dView",
       "items": [
+       {
+        "command": "scene3d.view",
+        "size": "large"
+       },
        {
         "command": "gltf.export",
         "size": "large"

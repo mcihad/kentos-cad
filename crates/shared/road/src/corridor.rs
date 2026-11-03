@@ -222,12 +222,24 @@ pub struct Stretch {
     pub to: f64,
 }
 
+/// What a top surface triangle is part of: a lane or a shoulder of the platform (the template's component it lies on),
+/// or a side's slope beyond the hinge, in cut (a ditch with it) or in fill.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum Role {
+    Lane,
+    Shoulder,
+    Cut,
+    Fill,
+}
+
 /// What a corridor's crosses make.
 #[derive(Clone, Debug, Default)]
 pub struct Built {
     pub features: Vec<Feature>,
     /// The top surface's triangles, counterclockwise in plan.
     pub triangles: Vec<[[f64; 3]; 3]>,
+    /// Each triangle's role: the role of the cross segment its edge along the cross lies on.
+    pub roles: Vec<Role>,
     pub unsolved: Vec<Stretch>,
     /// The stretches (region, from, to) where consecutive sections cross in plan and no surface is made.
     pub folded: Vec<(usize, f64, f64)>,
@@ -319,6 +331,25 @@ fn top_line(line: &SampleLine, section: &Section, components: [usize; 2]) -> Vec
             [xy[0], xy[1], p[1]]
         })
         .collect()
+}
+
+/// The roles of the segments of [`top_line`]'s line, left to right: a side's segment k from the axis is its k-th
+/// component while there are components, its slope beyond.
+fn top_roles(template: &Template, section: &Section, components: [usize; 2]) -> Vec<Role> {
+    let side = |t: &Side, s: &SideSection, n: usize| -> Vec<Role> {
+        let used = if s.kind == Kind::Open { n.min(s.points.len() - 1) + 1 } else { s.points.len() };
+        (0..used.saturating_sub(1))
+            .map(|k| match t.components.get(k) {
+                Some(crate::section::template::Component::Lane { .. }) => Role::Lane,
+                Some(crate::section::template::Component::Shoulder { .. }) => Role::Shoulder,
+                None if s.kind == Kind::Cut => Role::Cut,
+                None => Role::Fill,
+            })
+            .collect()
+    };
+    let mut out: Vec<Role> = side(&template.left, &section.left, components[0]).into_iter().rev().collect();
+    out.extend(side(&template.right, &section.right, components[1]));
+    out
 }
 
 fn plan_area(a: [f64; 3], b: [f64; 3], c: [f64; 3]) -> f64 {
@@ -432,11 +463,24 @@ pub fn assemble(regions: &[RegionCrosses]) -> Built {
             let (Some(sa), Some(sb)) = (&w[0].section, &w[1].section) else { continue };
             let a = top_line(&w[0].line, sa, counts);
             let b = top_line(&w[1].line, sb, counts);
-            let tris: Vec<[[f64; 3]; 3]> = strip(&a, &b)
-                .into_iter()
+            let (ra, rb) = (top_roles(t, sa, counts), top_roles(t, sb, counts));
+            let picked = strip(&a, &b);
+            let tris: Vec<[[f64; 3]; 3]> = picked
+                .iter()
                 .map(|t| {
                     let p = |k: usize| if k < a.len() { a[k] } else { b[k - a.len()] };
                     [p(t[0]), p(t[1]), p(t[2])]
+                })
+                .collect();
+            // A triangle's edge across the road is on `a` (its first two corners) or on `b` (its last two).
+            let roles: Vec<Role> = picked
+                .iter()
+                .map(|t| {
+                    if t[1] < a.len() {
+                        ra.get(t[0]).copied().unwrap_or(Role::Lane)
+                    } else {
+                        rb.get(t[2] - a.len()).copied().unwrap_or(Role::Lane)
+                    }
                 })
                 .collect();
             if tris.iter().any(|t| plan_area(t[0], t[1], t[2]) <= 0.0) {
@@ -449,6 +493,7 @@ pub fn assemble(regions: &[RegionCrosses]) -> Built {
             }
             let at = built.triangles.len();
             built.triangles.extend(tris);
+            built.roles.extend(roles);
             built.strips.push((ri, w[0].line.station, w[1].line.station, at..built.triangles.len()));
         }
     }

@@ -36,7 +36,7 @@ fn timing() {
         }
     }
     let t = Instant::now();
-    let c = chunk(&[SourceMesh { part: 0, vertices: &vs, triangles: &ts }], Limits::default(), 1);
+    let c = chunk(&[SourceMesh { part: 0, vertices: &vs, triangles: &ts, smooth: true }], Limits::default(), 1);
     let cut = t.elapsed();
     let error = c.contents.iter().map(|k| k.encoding_error).fold(0.0, f64::max);
     let bytes: u64 = c.contents.iter().map(|k| k.bytes()).sum();

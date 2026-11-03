@@ -2,6 +2,7 @@
 
 mod alignments;
 mod corridor;
+mod cutout;
 mod profiles;
 mod sections;
 mod templates;

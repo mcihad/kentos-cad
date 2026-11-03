@@ -45,6 +45,8 @@ kentos-interaction = { path = "../../crates/native/interaction" }
 kentos-native-application = { path = "../../crates/native/application" }
 # KentOS Yol's core: the terrain surfaces drawn over the drawing (plan/road.md Y2.4).
 kentos-road = { path = "../../crates/shared/road" }
+# The 3D view's tiles, camera and selection (scene3d_window.rs, docs/adr/0910 §4).
+kentos-scene3d = { path = "../../crates/shared/scene3d" }
 # İşlemler (docs/PROCESSING.md): the processing tools and models over the document, held to
 # the web's by fixtures/processing/v1 (docs/adr/0084).
 kentos-processing = { path = "../../crates/native/processing" }

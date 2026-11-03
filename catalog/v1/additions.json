@@ -3493,6 +3493,20 @@
       "status": "implemented"
     },
     {
+      "id": "scene3d.view",
+      "title": "3B görünüm…",
+      "short": "3B görünüm",
+      "icon": "scene3dView",
+      "description": "Yol projesinin arazi yüzeylerini ve koridorlarını 3B gösterir: koridor şerit, banket, yarma ve dolgu şevi olarak renklenir; sürükleyerek döndürülür, sağ tuşla kaydırılır, tekerlekle yaklaşılır; düşey abartma yalnız görünüştür. Çizim değişmez.",
+      "aliases": [
+        "YOL3B",
+        "3BGORUNUM"
+      ],
+      "shortcuts": [],
+      "category": "Koridor",
+      "status": "implemented"
+    },
+    {
       "id": "gltf.export",
       "title": "glTF ver…",
       "short": "glTF ver",
@@ -4547,6 +4561,7 @@
     "volumeExport": "<rect x=\"2.5\" y=\"3.5\" width=\"10.5\" height=\"13\" rx=\"1\" stroke-width=\"1.2\"/><path d=\"M2.5 7.5H13M2.5 11H13M6.8 3.5v13\" stroke-width=\".8\"/><path d=\"M14.5 13.5h4M16.8 11.6l1.9 1.9-1.9 1.9\" stroke-width=\"1.3\"/>",
     "haulEditor": "<path d=\"M2.5 14.5h15\" stroke-width=\".9\" stroke-dasharray=\"1.6 1.1\"/><path d=\"M2.5 14.5C5 5 7 4.5 9 9.5s3 7 5 3.5 2.5-4 3.5-4.5\" stroke-width=\"1.5\"/><circle cx=\"9.9\" cy=\"14.5\" r=\"1\"/>",
     "landxmlImport": "<path d=\"M4 2.5h7.5L15 6v11.5H4z\" stroke-width=\"1.2\"/><path d=\"M11.5 2.5V6H15\" stroke-width=\"1\"/><path d=\"M6.5 14.5C8 10 10 9 12.5 8.5\" stroke-width=\"1.5\"/><path d=\"M10.5 7.2l2.3 1.2-1.4 2.2\" stroke-width=\"1.2\"/>",
+    "scene3dView": "<path d=\"M2 15l5-7 3.5 4 3-3.5L18 15z\" stroke-width=\"1.2\"/><path d=\"M7.5 15l2.5-4.5 2.5 4.5\" stroke-width=\"1.1\"/><ellipse cx=\"10\" cy=\"4.5\" rx=\"6\" ry=\"1.8\" stroke-width=\"1\"/><path d=\"M14.5 3.2l1.5 1.3-1.8.9\" stroke-width=\"1\"/>",
     "gltfExport": "<path d=\"M2.5 6l6-3 6 3v6.5l-6 3-6-3z\" stroke-width=\"1.2\"/><path d=\"M2.5 6l6 3 6-3M8.5 9v6.5\" stroke-width=\"1\"/><path d=\"M2.5 12.5l3-1.5 3 1 3-2 3 2\" stroke-width=\"1\"/><path d=\"M13 17.5h5.5M16 15l2.5 2.5-2.5 2.5\" stroke-width=\"1.5\"/>",
     "ifcExport": "<path d=\"M3 4.5l7-2.5 7 2.5v7l-7 2.5-7-2.5z\" stroke-width=\"1.2\"/><path d=\"M3 4.5l7 2.5 7-2.5M10 7v7\" stroke-width=\"1\"/><path d=\"M12 17h6M15.5 14.5l2.5 2.5-2.5 2.5\" stroke-width=\"1.5\"/>",
     "landxmlExport": "<path d=\"M4 2.5h7.5L15 6v5\" stroke-width=\"1.2\"/><path d=\"M11.5 2.5V6H15\" stroke-width=\"1\"/><path d=\"M4 2.5v15h6\" stroke-width=\"1.2\"/><path d=\"M6 8.5h5M6 11h3\" stroke-width=\"1\"/><path d=\"M12 15.5h6M15.5 13l2.5 2.5-2.5 2.5\" stroke-width=\"1.5\"/>",

@@ -3,7 +3,7 @@
 
 use kentos_road::alignment::{PiInput, build};
 use kentos_road::corridor::{
-    Cross, CorridorError, Frequency, RegionCrosses, Station, Unsolved, Why, assemble, check_regions, stations,
+    Cross, CorridorError, Frequency, RegionCrosses, Role, Station, Unsolved, Why, assemble, check_regions, stations,
 };
 use kentos_road::section::SampleLine;
 use kentos_road::section::template::{Component, Ditch, Kind, Section, Side, SideSection, Template};
@@ -121,7 +121,16 @@ fn side(v: &Value) -> SideSection {
 
 fn template_side(v: &Value) -> Side {
     Side {
-        components: vec![Component::Lane { width: 1.0, slope: 0.0 }; v[0].as_u64().expect("count") as usize],
+        components: match v.get(2).and_then(Value::as_array) {
+            Some(kinds) => kinds
+                .iter()
+                .map(|k| match k.as_str() {
+                    Some("shoulder") => Component::Shoulder { width: 1.0, slope: 0.0 },
+                    _ => Component::Lane { width: 1.0, slope: 0.0 },
+                })
+                .collect(),
+            None => vec![Component::Lane { width: 1.0, slope: 0.0 }; v[0].as_u64().expect("count") as usize],
+        },
         cut: 1.0,
         fill: 1.0,
         ditch: v[1].as_f64().map(|bottom| Ditch { fore: 1.0, depth: 1.0, bottom }),
@@ -193,6 +202,18 @@ fn sections_are_joined_as_the_reference_joins_them() {
                 close(p, q, &format!("{name}: a triangle"));
             }
         }
+        let roles: Vec<&str> = built
+            .roles
+            .iter()
+            .map(|r| match r {
+                Role::Lane => "lane",
+                Role::Shoulder => "shoulder",
+                Role::Cut => "cut",
+                Role::Fill => "fill",
+            })
+            .collect();
+        let want: Vec<&str> = c["roles"].as_array().expect("roles").iter().map(|r| r.as_str().expect("a role")).collect();
+        assert_eq!(roles, want, "{name}: the triangles' roles");
         let mut unsolved = built.unsolved.clone();
         unsolved.sort_by(|a, b| (a.region, a.right).cmp(&(b.region, b.right)).then(a.from.total_cmp(&b.from)));
         let got: Vec<Value> = unsolved
