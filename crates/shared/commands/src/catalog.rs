@@ -7177,6 +7177,31 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::ROAD_CORRIDORS_DRAW.into(),
+            version: crate::ROAD_CORRIDORS_DRAW_VERSION,
+            title: "Şevli plan çiz".into(),
+            summary: "Yol projesinin koridorunu (corridor: kimliği ya da adı) bir katmana şevli kotlu plan olarak çizer: eksen dışındaki öznitelik çizgileri (şerit ve banket kenarları, menteşe, hendek, şev ayağı) köşe kotlarıyla çoklu çizgi; iki ardışık km'de çözülmüş her yanda, aralarındaki tick metrenin (yoksa 5 m) her katında şevin üstünden (yarmada şev ayağı, dolguda menteşe) ayağına doğru şev taraması, çift katlar tam, tekler yarım; çözülmüş her km'de eksen kotu (kırmızı, iki basamak), yol boyunca okunur. Yazı height kâğıt mm (yoksa 2,5). \
+                      Tek geri alma adımı “Şevli plan”. Uyarılar: koridorunkiler ve layer_hidden. Retler: not_a_road_project, unknown_corridor, invalid_label, invalid_road_corridor, no_terrain, layer_not_found, not_a_layer, layer_locked, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["sevliplan".into(), "şevliplan".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::CorridorsDraw>(),
+            output: schema::<crate::CorridorsDrawn>(),
+            plan: Some(schema::<crate::CorridorsDrawn>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana koridorun şevli planı, şev taraması 5 m'de".into(),
+                input: json!({ "corridor": "Ana koridor", "layerId": "0", "tick": 5.0 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::ROAD_CORRIDORS_QUERY.into(),
             version: crate::ROAD_CORRIDORS_QUERY_VERSION,
             title: "Koridoru sorgula".into(),
@@ -12815,6 +12840,9 @@ mod tests {
                     crate::ROAD_CORRIDORS_QUERY => {
                         serde_json::from_value::<crate::CorridorsQuery>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_CORRIDORS_DRAW => {
+                        serde_json::from_value::<crate::CorridorsDraw>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_SUBNETWORKS_FIND => {
                         serde_json::from_value::<crate::SubnetworksFind>(e.input.clone())
                             .map(|_| ())
@@ -13523,6 +13551,9 @@ mod tests {
                         }
                         crate::ROAD_CORRIDORS_QUERY => {
                             serde_json::from_value::<crate::CorridorsQueried>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_CORRIDORS_DRAW => {
+                            serde_json::from_value::<crate::CorridorsDrawn>(output.clone()).map(|_| ())
                         }
                         crate::CAD_ADDRESSES_DEFINE => {
                             serde_json::from_value::<crate::AddressesDefined>(output.clone())

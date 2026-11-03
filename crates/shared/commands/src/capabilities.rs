@@ -1755,6 +1755,24 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "road.corridors.draw",
+        refusals: &[
+            &[
+                "not_a_road_project",
+                "unknown_corridor",
+                "invalid_label",
+                "invalid_road_corridor",
+                "no_terrain",
+                "layer_not_found",
+                "not_a_layer",
+                "layer_locked",
+            ],
+            REVISION,
+        ],
+        warnings: &["layer_hidden", "corridor_stale", "corridor_unsolved", "corridor_gap", "corridor_superelevation_gone"],
+        targets: none,
+    },
+    Entry {
         id: "road.corridors.query",
         refusals: &[&["not_a_road_project", "unknown_corridor", "invalid_road_corridor"]],
         warnings: &[

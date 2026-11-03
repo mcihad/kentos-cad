@@ -1253,6 +1253,7 @@ class CreateOperation(_StrEnum):
     - ``alignmentLabels``: `road.alignments.label` (plan/road.md Y3): an alignment's km ticks and words, “Aks km yazısı”.
     - ``profileDrawing``: `road.profiles.draw` (plan/road.md Y4): a profile's frame, grid, terrain, design line and bands, “Boykesit çiz”.
     - ``sectionDrawing``: `road.sections.draw` (plan/road.md Y5): a sample line set's section views, “Enkesit çiz”.
+    - ``slopePlan``: `road.corridors.draw` (plan/road.md Y7): a corridor's slope plan, “Şevli plan”.
     """
     PARALLEL = "parallel"
     PERPENDICULAR_IN = "perpendicularIn"
@@ -1294,9 +1295,10 @@ class CreateOperation(_StrEnum):
     ALIGNMENT_LABELS = "alignmentLabels"
     PROFILE_DRAWING = "profileDrawing"
     SECTION_DRAWING = "sectionDrawing"
+    SLOPE_PLAN = "slopePlan"
 
 
-CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions", "terrainContours", "landXml", "alignmentLabels", "profileDrawing", "sectionDrawing"]
+CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions", "terrainContours", "landXml", "alignmentLabels", "profileDrawing", "sectionDrawing", "slopePlan"]
 """The names of :class:`CreateOperation`, for a plain string."""
 
 
@@ -19502,6 +19504,91 @@ class CorridorStretch(_Model):
             to=float(data["to"]),
             from_text=data["fromText"],
             to_text=data["toText"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CorridorsDraw(_Model):
+    """Input of `road.corridors.draw` v1: the corridor (its id or name) drawn on a layer as its slope plan (docs/adr/0905
+    §6): its feature lines but the axis as polylines with their elevations, the slopes' ticks every `tick` metres of
+    station from the top of the slope (the daylight in a cut, the hinge in a fill) toward its foot, long and short in
+    turn, and the axis elevation (red) at each station solved, `height` paper millimetres high (default 2.5).
+
+    Refusals: `not_a_road_project`, `unknown_corridor`, `invalid_road_corridor` (the corridor does not build),
+    `invalid_label` (a tick or a height not above 0), `no_terrain` (no section solved), `layer_not_found`,
+    `not_a_layer`, `layer_locked`, `invalid_revision`, `revision_conflict`. Warnings: the corridor's (`corridor_stale`,
+    `corridor_unsolved`, `corridor_folded`, `corridor_gap`, `corridor_superelevation_gone`), `layer_hidden`.
+    Attributes:
+        height: Unit: paper-mm.
+        tick: Unit: m.
+    """
+    corridor: str
+    layer_id: str
+    expected_revision: str | None | Unset = UNSET
+    height: float | None | Unset = UNSET
+    tick: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["corridor"] = self.corridor
+        out["layerId"] = self.layer_id
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.height is not UNSET:
+            out["height"] = None if self.height is None else float(self.height)
+        if self.tick is not UNSET:
+            out["tick"] = None if self.tick is None else float(self.tick)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CorridorsDraw:
+        return cls(
+            corridor=data["corridor"],
+            layer_id=data["layerId"],
+            expected_revision=data.get("expectedRevision", UNSET),
+            height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+            tick=UNSET if "tick" not in data else None if data["tick"] is None else float(data["tick"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CorridorsDrawn(_Model):
+    """Output of `road.corridors.draw` v1: how many feature lines, slope ticks and elevations it drew, their ids.
+    Attributes:
+        lines: Unit: count.
+        ticks: Unit: count.
+        elevations: Unit: count.
+        tick: Unit: m.
+    """
+    corridor: str
+    lines: int
+    ticks: int
+    elevations: int
+    tick: float
+    uids: list[str]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["corridor"] = self.corridor
+        out["lines"] = self.lines
+        out["ticks"] = self.ticks
+        out["elevations"] = self.elevations
+        out["tick"] = float(self.tick)
+        out["uids"] = list(self.uids)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CorridorsDrawn:
+        return cls(
+            corridor=data["corridor"],
+            lines=data["lines"],
+            ticks=data["ticks"],
+            elevations=data["elevations"],
+            tick=float(data["tick"]),
+            uids=list(data["uids"]),
+            revision=data["revision"],
         )
 
 
@@ -95057,6 +95144,8 @@ __all__ = [
     "CorridorReport",
     "CorridorStation",
     "CorridorStretch",
+    "CorridorsDraw",
+    "CorridorsDrawn",
     "CorridorsEdit",
     "CorridorsQueried",
     "CorridorsQuery",

@@ -265,6 +265,8 @@ mod profile_window_tests;
 mod section_window_tests;
 #[cfg(test)]
 mod superelevation_window_tests;
+#[cfg(test)]
+mod corridor_window_tests;
 mod terrain_layer;
 mod terrain_window;
 #[cfg(test)]

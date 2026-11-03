@@ -13,6 +13,7 @@ reference's (the terrain along the sample line at 40 digits, the template in fra
 
 import copy
 import json
+import math
 import sys
 from pathlib import Path
 
@@ -63,8 +64,8 @@ def road_of(corridors, supers=SUPERS):
     return out
 
 
-def setup(corridors=START, work="road", supers=SUPERS):
-    base = scmd.setup(work=work)
+def setup(corridors=START, work="road", supers=SUPERS, layers=None):
+    base = scmd.setup(work=work, layers=layers)
     base["name"] = "Yol koridoru"
     if work == "road":
         base["settings"]["road"] = road_of(list(corridors), supers)
@@ -219,7 +220,7 @@ def make(c, points=False, templates=TEMPLATES):
               "features": features, "triangles": len(built["triangles"]), "area": area}
     if c.get("superelevation"):
         report["superelevation"] = c["superelevation"]
-    return report, warnings, built["triangles"]
+    return report, warnings, built["triangles"], regs
 
 
 def report(c):
@@ -377,7 +378,7 @@ def query_cases():
             reports, warns = [], []
             for c in corridors:
                 try:
-                    r, w, _ = make(c)
+                    r, w, _, _ = make(c)
                     reports.append(r)
                     warns += w
                 except Refused:
@@ -385,7 +386,7 @@ def query_cases():
             out = {"corridors": reports}
         else:
             c = next(x for x in corridors if x["id"] == one or x["name"].lower() == one.lower())
-            r, warns, tris = make(c, input_.get("points", False))
+            r, warns, tris, _ = make(c, input_.get("points", False))
             out = {"corridors": [r]}
             if input_.get("triangles"):
                 out["triangles"] = tris
@@ -447,8 +448,110 @@ def query_cases():
     return file("road.corridors.query", "Koridoru sorgula", setup(), cases)
 
 
+# ── road.corridors.draw ────────────────────────────────────────────────────────────────────────────────────────────
+
+def drawing(c, tick=5.0):
+    """What the slope plan says and how many objects it writes: the feature lines but the axis, the ticks, the
+    elevations; and the warnings it gives (the corridor's but the surface's)."""
+    report, warns, _, regs = make(c, points=True)
+    lines = sum(1 for f in report["features"] if f["code"] != "axis" and len(f["points"]) >= 2)
+    ticks = 0
+    for reg in regs:
+        for a, b in zip(reg["crosses"], reg["crosses"][1:]):
+            if a["section"] is None or b["section"] is None:
+                continue
+            s0, s1 = a["station"], b["station"]
+            for side in ("left", "right"):
+                sa, sb = a["section"][side], b["section"][side]
+                if sa["daylight"] is None or sb["daylight"] is None or "open" in (sa["kind"], sb["kind"]):
+                    continue
+                k = math.ceil(s0 / tick - 1e-9)
+                while k * tick < s1 - 1e-9:
+                    ticks += 1
+                    k += 1
+    elevations = sum(1 for reg in regs for x in reg["crosses"] if x["section"] is not None)
+    out = {"corridor": c["id"], "lines": lines, "ticks": ticks, "elevations": elevations, "tick": tick}
+    return out, lines + ticks + elevations, [w for w in warns if w["code"] != "corridor_surface_gone"], regs
+
+
+def draw_cases():
+    layers = pcmd.DRAW_LAYERS
+    cases = []
+    first = len(pcmd.ENTITIES) + len(scmd.LINES) + 1
+
+    def ok(name, input_, c, op="execute", extra=(), undo=False, corridors=START, tick=5.0):
+        out, n, warns, _ = drawing(c, tick)
+        warns = list(extra) + warns
+        out = {**out, "uids": "$any" if op == "execute" else [], "revision": "$current"}
+        road = road_of(corridors)
+        if op == "validate":
+            result, expect = completed(None, warns), {**UNCHANGED, "road": road}
+        elif op == "plan":
+            result, expect = completed(out, warns), {**UNCHANGED, "road": road}
+        else:
+            result = completed(out, warns)
+            expect = {**STEPPED, "road": road, "ids": list(range(1, first + n))}
+        steps = [step(op, input_, result, expect)]
+        if undo:
+            steps.append({"op": "undo", "returns": "Şevli plan", "expect": {"ids": list(range(1, first)), "canRedo": True}})
+        cases.append(case(name, steps, None if corridors is START else setup(corridors, layers=layers)))
+
+    def no(name, input_, result, corridors=START, setup_=None):
+        road = None if setup_ is not None else road_of(corridors)
+        cases.append(case(name, [step("execute", input_, result, {**UNCHANGED, "road": road})],
+                          setup_ or (None if corridors is START else setup(corridors, layers=layers))))
+
+    hidden = {"code": "layer_hidden", "message": "“Gizli” katmanı gizli; çizilen nesne görünmeyecek.", "path": "layerId"}
+    base = {"corridor": "c-1", "layerId": "0"}
+    ok("Ana koridorun şevli planı", base, C1)
+    ok("Şev taraması 2 m'de", {**base, "tick": 2.0}, C1, tick=2.0)
+    ok("Seyrek tarama, büyük yazı", {**base, "tick": 20.0, "height": 3.5}, C1, tick=20.0)
+    ok("Koridor adıyla", {**base, "corridor": "ana KORIDOR"}, C1)
+    ok("Eskiyen yan koridor, devere bağlı", {**base, "corridor": "c-2"}, C2)
+    narrow = {**C1, "left": 6.0, "right": 6.0}
+    ok("Dar şerit: açık yanlarda tarama yok", base, narrow, corridors=[narrow, C2])
+    gap = {**C1, "regions": [{"from": 0.0, "to": 150.0, "template": "tk-1"}, {"from": 250.0, "to": 400.0, "template": "tk-2"}]}
+    ok("Bölgeler arasında boşluk", base, gap, corridors=[gap, C2])
+    part = {**C1, "profile": "b-3", "regions": [{"from": 50.0, "to": 450.0, "template": "tk-1"}]}
+    ok("Boykesitin dışı çizilmez", base, part, corridors=[part, C2])
+    sup = {**C1, "superelevation": "d-1", "critical": True, "regions": [{"from": 100.0, "to": 300.0, "template": "tk-1"}]}
+    ok("Dever ve kritik km'ler", base, sup, corridors=[sup, C2])
+    bad = {**C1, "superelevation": "d-3"}
+    ok("Kurulamayan dever uyarıyla", base, bad, corridors=[bad, C2])
+    ok("Grubun içindeki katmana", {**base, "layerId": "yol-boykesit"}, C1)
+    ok("Gizli katmana uyarıyla", {**base, "layerId": "gizli"}, C1, extra=[hidden])
+    ok("Plan yazmaz", base, C1, op="plan")
+    ok("Doğrulama yazmaz", {**base, "corridor": "c-2"}, C2, op="validate")
+    ok("Tek geri alma adımı", {**base, "tick": 10.0}, C1, undo=True, tick=10.0)
+
+    no("Yol projesi değil", base, NOT_ROAD, setup_=setup(work="map", layers=layers))
+    no("Olmayan koridor", {**base, "corridor": "yok"},
+       failed("unknown_corridor", "“yok” kimlikli ya da adlı koridor projede yok.", "corridor"))
+    no("Sıfır tarama aralığı", {**base, "tick": 0.0},
+       failed("invalid_label", "Şev taramasının aralığı (tick) 0'dan büyük olmalı.", "tick"))
+    no("Eksi yazı yüksekliği", {**base, "height": -1.0},
+       failed("invalid_label", "Yazı yüksekliği (height) 0'dan büyük olmalı.", "height"))
+    broken = {**C1, "regions": [{"from": 0.0, "to": 100.0, "template": "tk-1"}, {"from": 50.0, "to": 200.0, "template": "tk-1"}]}
+    no("Kurulamayan koridor", base,
+       failed("invalid_road_corridor", "1. ve 2. bölge kesişiyor; bölgeler en çok uç uca gelir.", "regions[1]"), [broken, C2])
+    nosurf = {**C1, "surface": "t-2"}
+    no("Hiçbir kesit çözülmedi", base,
+       failed("no_terrain", "“Ana koridor” koridorunda hiçbir kesit çözülmedi: yüzeyi ve boykesiti denetleyin.", "corridor"),
+       [nosurf, C2])
+    no("Olmayan katman", {**base, "layerId": "yok"},
+       failed("layer_not_found", "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.", "layerId"))
+    no("Katman grubu", {**base, "layerId": "grup"},
+       failed("not_a_layer", "“Yol” bir katman grubu; nesne yalnız katmana eklenir. Grubun içinden bir katman seçin.", "layerId"))
+    no("Kilitli katman", {**base, "layerId": "kilitli"},
+       failed("layer_locked", "“Kilitli” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.", "layerId"))
+    no("Geçersiz beklenen sürüm", {**base, "expectedRevision": "on"}, BAD_REVISION)
+    no("Eski sürüme göre hazırlanmış", {**base, "expectedRevision": "41"}, CONFLICT)
+    return file("road.corridors.draw", "Şevli plan çiz", setup(layers=layers), cases)
+
+
 def main():
-    files = {"road.corridors.edit.json": edit_cases(), "road.corridors.query.json": query_cases()}
+    files = {"road.corridors.edit.json": edit_cases(), "road.corridors.query.json": query_cases(),
+             "road.corridors.draw.json": draw_cases()}
     check = "--check" in sys.argv[1:]
     bad = []
     for name, data in files.items():

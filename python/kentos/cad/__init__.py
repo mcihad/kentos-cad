@@ -566,6 +566,8 @@ __all__ = [
     "CorridorReport",
     "CorridorStation",
     "CorridorStretch",
+    "CorridorsDraw",
+    "CorridorsDrawn",
     "CorridorsEdit",
     "CorridorsQueried",
     "CorridorsQuery",

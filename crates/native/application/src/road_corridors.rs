@@ -75,6 +75,8 @@ pub(crate) struct Made {
     pub report: CorridorReport,
     pub built: core::Built,
     pub warnings: Vec<CommandWarning>,
+    /// Each region's crosses: the sample lines and the sections built there.
+    pub regions: Vec<RegionCrosses>,
 }
 
 fn warning(code: &str, message: String) -> CommandWarning {
@@ -298,7 +300,7 @@ pub(crate) fn make_with(
         area,
         problem: None,
     };
-    Ok(Made { report, built: made, warnings })
+    Ok(Made { report, built: made, warnings, regions })
 }
 
 /// The corridor built now with the project's templates.

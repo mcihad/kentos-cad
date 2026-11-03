@@ -121,6 +121,8 @@ pub enum CreateOperation {
     ProfileDrawing,
     /// `road.sections.draw` (plan/road.md Y5): a sample line set's section views, “Enkesit çiz”.
     SectionDrawing,
+    /// `road.corridors.draw` (plan/road.md Y7): a corridor's slope plan, “Şevli plan”.
+    SlopePlan,
 }
 
 /// One new object: its geometry and what else it carries. The layer is the

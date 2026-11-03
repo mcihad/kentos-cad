@@ -18,6 +18,8 @@ pub const ROAD_CORRIDORS_EDIT: &str = "road.corridors.edit";
 pub const ROAD_CORRIDORS_EDIT_VERSION: u32 = 1;
 pub const ROAD_CORRIDORS_QUERY: &str = "road.corridors.query";
 pub const ROAD_CORRIDORS_QUERY_VERSION: u32 = 1;
+pub const ROAD_CORRIDORS_DRAW: &str = "road.corridors.draw";
+pub const ROAD_CORRIDORS_DRAW_VERSION: u32 = 1;
 
 /// Input of `road.corridors.edit` v1: the corridor by its id or name (absent: a new one). A new one needs `name`,
 /// `alignment`, `profile`, `surface`, `left`, `right`, `tangent`, `curve` and `regions`; it holds its alignment's
@@ -253,4 +255,55 @@ pub struct CorridorsQueried {
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<[[f64; 3]; 3]>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub triangles: Vec<[[f64; 3]; 3]>,
+}
+
+/// Input of `road.corridors.draw` v1: the corridor (its id or name) drawn on a layer as its slope plan (docs/adr/0905
+/// §6): its feature lines but the axis as polylines with their elevations, the slopes' ticks every `tick` metres of
+/// station from the top of the slope (the daylight in a cut, the hinge in a fill) toward its foot, long and short in
+/// turn, and the axis elevation (red) at each station solved, `height` paper millimetres high (default 2.5).
+///
+/// Refusals: `not_a_road_project`, `unknown_corridor`, `invalid_road_corridor` (the corridor does not build),
+/// `invalid_label` (a tick or a height not above 0), `no_terrain` (no section solved), `layer_not_found`,
+/// `not_a_layer`, `layer_locked`, `invalid_revision`, `revision_conflict`. Warnings: the corridor's (`corridor_stale`,
+/// `corridor_unsolved`, `corridor_folded`, `corridor_gap`, `corridor_superelevation_gone`), `layer_hidden`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CorridorsDraw {
+    pub corridor: String,
+    pub layer_id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub tick: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
+    pub height: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
+/// Output of `road.corridors.draw` v1: how many feature lines, slope ticks and elevations it drew, their ids.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CorridorsDrawn {
+    pub corridor: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub lines: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub ticks: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub elevations: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub tick: f64,
+    pub uids: Vec<String>,
+    pub revision: String,
 }

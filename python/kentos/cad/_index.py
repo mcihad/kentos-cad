@@ -333,6 +333,7 @@ COMMANDS: dict[str, Any] = {
     "road.alignments.edit": road.alignments.edit,
     "road.alignments.label": road.alignments.label,
     "road.alignments.query": road.alignments.query,
+    "road.corridors.draw": road.corridors.draw,
     "road.corridors.edit": road.corridors.edit,
     "road.corridors.query": road.corridors.query,
     "road.profiles.create": road.profiles.create,
