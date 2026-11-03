@@ -12689,6 +12689,43 @@ class ArrayItem(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ArrayPattern(_Model):
+    """
+    Attributes:
+        adoption: Review this exact proposal before calling cad.arrays.adopt. Never executed by the search.
+            The first occupied endpoint becomes source; missing places stay empty, kept is never inferred.
+        present: Unit: count.
+        missing: Unit: count.
+        deviation: Unit: length.
+        overlaps: Shares an existing insert with another returned proposal. They cannot both be adopted.
+    """
+    adoption: ArraysAdopt
+    present: int
+    missing: int
+    deviation: float
+    overlaps: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["adoption"] = self.adoption.to_json()
+        out["present"] = self.present
+        out["missing"] = self.missing
+        out["deviation"] = float(self.deviation)
+        out["overlaps"] = self.overlaps
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArrayPattern:
+        return cls(
+            adoption=ArraysAdopt.from_json(data["adoption"]),
+            present=data["present"],
+            missing=data["missing"],
+            deviation=float(data["deviation"]),
+            overlaps=data["overlaps"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ArraysAdopt(_Model):
     """Explicit, reviewed layout and slot membership; this command does not infer a pattern.
     Only metadata is added. Missing slots stay missing; overrides must be explicitly kept.
@@ -12825,6 +12862,86 @@ class ArraysEdit(_Model):
             array=data["array"],
             edit=ArrayEdit.from_json(data["edit"]),
             expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ArraysFind(_Model):
+    """Finds linear patterns containing the seed insert. First delivery: static, data-free inserts
+    of the same block, appearance, mirror, rotation and scale. No rotation of the items is inferred.
+    At least three occupied places and an observed adjacent pair are required. Every second
+    place being occupied is indistinguishable from twice the spacing: no hidden places are invented.
+    Grid, polar and path detection are not implemented by this version.
+    Attributes:
+        source: Existing seed insert UUID. May be an interior place of a candidate.
+        limit: Candidate limit, 1 to 100; absent: 100. Work/result limits report `truncated`. Unit: count.
+        tolerance: Absolute position tolerance in metres, above zero to 0.001; absent: 0.000001. Unit: length.
+        uids: Absent searches the document; empty searches only the seed. At most 2048 objects.
+    """
+    source: str
+    expected_revision: str | None | Unset = UNSET
+    limit: int | None | Unset = UNSET
+    tolerance: float | None | Unset = UNSET
+    uids: list[str] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["source"] = self.source
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.limit is not UNSET:
+            out["limit"] = self.limit
+        if self.tolerance is not UNSET:
+            out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
+        if self.uids is not UNSET:
+            out["uids"] = None if self.uids is None else list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArraysFind:
+        return cls(
+            source=data["source"],
+            expected_revision=data.get("expectedRevision", UNSET),
+            limit=data.get("limit", UNSET),
+            tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
+            uids=UNSET if "uids" not in data else None if data["uids"] is None else list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ArraysFound(_Model):
+    """
+    Attributes:
+        eligible: Compatible scope members, sorted by UUID. Not being in a proposal means unmatched, not kept.
+        excluded: Scope UUID -> explicit exclusion reason: not_insert, template_differs, layer_locked or array_member.
+        comparisons: Unit: count.
+    """
+    matches: list[ArrayPattern]
+    eligible: list[str]
+    excluded: dict[str, str]
+    truncated: bool
+    comparisons: int
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["matches"] = [e0.to_json() for e0 in self.matches]
+        out["eligible"] = list(self.eligible)
+        out["excluded"] = dict(self.excluded)
+        out["truncated"] = self.truncated
+        out["comparisons"] = self.comparisons
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArraysFound:
+        return cls(
+            matches=[ArrayPattern.from_json(e0) for e0 in data["matches"]],
+            eligible=list(data["eligible"]),
+            excluded=dict(data["excluded"]),
+            truncated=data["truncated"],
+            comparisons=data["comparisons"],
+            revision=data["revision"],
         )
 
 
@@ -90855,10 +90972,13 @@ __all__ = [
     "ArrayItem",
     "ArrayLayout",
     "ArrayOpeningsOperation",
+    "ArrayPattern",
     "ArraysAdopt",
     "ArraysAdoptPlan",
     "ArraysAdopted",
     "ArraysEdit",
+    "ArraysFind",
+    "ArraysFound",
     "AssetCounts",
     "AssetKind",
     "AssetKindName",

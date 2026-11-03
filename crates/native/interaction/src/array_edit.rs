@@ -2,7 +2,8 @@
 //! items are drawn dashed and the prompt offers the array's own properties:
 //!
 //! - a grid: Satır (S), Sütun (T), Sütun aralığı (A), Satır aralığı (R);
-//! - a line: Adet (D); a polar array: Adet (D), Açı (Ç, degrees); a path array: Adet (D), Aralık (A);
+//! - a line: Adet (D), Aralık (A, along its current direction); a polar array: Adet (D), Açı (Ç, degrees);
+//!   a path array: Adet (D), Aralık (A);
 //! - Taban (B): the array's first place follows the mouse until a click (the plan is drawn);
 //! - Değiştir (G) and a block's name: the clicked item inserts that block instead; Sil (L): the clicked item is
 //!   removed; Sıfırla (F): every item as the layout makes it.
@@ -189,6 +190,18 @@ impl ArrayEdit {
                 | ArrayLayout::Path { count, .. },
                 Ask::Count,
             ) => *count = whole()?,
+            (ArrayLayout::Line { count, dx, dy, fit }, Ask::Spacing) => {
+                let old = dx.hypot(*dy);
+                if !length.is_finite() || length <= 0.0 || !old.is_finite() || old <= 1e-9 {
+                    cx.say(Level::Warn, "Aralık sıfırdan büyük olmalı; dizinin yönü korunur.");
+                    return None;
+                }
+                let extent = length * if *fit { count.saturating_sub(1).max(1) as f64 } else { 1.0 };
+                // Normalise before multiplying: a tiny current step must not overflow
+                // the ratio. The common command still validates the resulting places.
+                *dx = (*dx / old) * extent;
+                *dy = (*dy / old) * extent;
+            }
             (ArrayLayout::Path { spacing, .. }, Ask::Spacing) => *spacing = Some(length),
             (ArrayLayout::Polar { fill, .. }, Ask::Fill) => *fill = n,
             _ => return None,
@@ -291,7 +304,9 @@ impl Tool for ArrayEdit {
                 .option_with("Sütun", "T", cols.to_string())
                 .option_with("Sütun aralığı", "A", f.length(dx))
                 .option_with("Satır aralığı", "R", f.length(dy)),
-            ArrayLayout::Line { count, .. } => prompt.option_with("Adet", "D", count.to_string()),
+            ArrayLayout::Line { count, dx, dy, fit } => prompt
+                .option_with("Adet", "D", count.to_string())
+                .option_with("Aralık", "A", f.length(dx.hypot(dy) / if fit { count.saturating_sub(1).max(1) as f64 } else { 1.0 })),
             ArrayLayout::Polar { count, fill, .. } => prompt
                 .option_with("Adet", "D", count.to_string())
                 .option_with("Açı", "Ç", format!("{fill}°")),
@@ -418,7 +433,7 @@ impl Tool for ArrayEdit {
                     ArrayLayout::Line { .. } | ArrayLayout::Polar { .. } | ArrayLayout::Path { .. },
                 ),
             ) => Some(Ask::Count),
-            ("A", Some(ArrayLayout::Path { .. })) => Some(Ask::Spacing),
+            ("A", Some(ArrayLayout::Line { .. } | ArrayLayout::Path { .. })) => Some(Ask::Spacing),
             ("Ç", Some(ArrayLayout::Polar { .. })) => Some(Ask::Fill),
             ("B", _) => Some(Ask::Base),
             ("G", _) if item.is_some() => Some(Ask::Block),

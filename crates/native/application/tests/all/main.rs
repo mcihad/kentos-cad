@@ -13,6 +13,7 @@ mod addresses_compare;
 mod arch_bond_timing;
 mod array_assoc;
 mod arrays_adopt;
+mod arrays_find;
 mod audit_cmd;
 mod gpkg_tiles_files;
 mod gpkg_tiles_timing;

@@ -1049,9 +1049,37 @@ dizi eklememiştir. Yeniden bağlama/Undo/Redo ve menüden sayı/aralık
 değişikliği aynı ikiliyle tekrarlanmıştır. Görüntüler ve ham kabul kayıtları
 depo dışındadır.
 
-**Açık kalan:** otomatik grid/kutupsal/yol aday bulma ve görsel aday/öğe
-incelemesi; metin/öznitelik, iç blok ve diğer kaynak/ilişki genişletmesi.
-Bu API teslimi bunları veya CAD-ADV-07'nin tamamını kapatmaz.
+**Doğrusal aday bulma — [ADR 0874](../docs/adr/0874-read-only-linear-array-patterns.md):**
+`cad.arrays.find` aynı statik blok tanımı, görünüş, ayna, yön ve ölçekteki
+yerleştirmelerden doğrusal öneriler üretir. Kaynak sıranın ortasında olabilir;
+aday ilk dolu uca eşlenir. En az üç dolu yer ve gözlenmiş komşu çift gerekir;
+her ikinci yer doluysa gizli ara yer varsayılmaz. İki UUID aynı yere düşerse
+rastgele biri seçilmez. Eşleşmeyen öğe kendiliğinden korunmuş sayılmaz.
+Öneriler mevcut `cad.arrays.adopt` denetiminden geçer; sorgu yazmaz ve açık
+uygulama için aynı tipte girdi döndürür. Kapsam 2 048 kök, geometri iş sınırı
+iki milyon deneme; kısmi sonuç ve çakışan aday açıkça bildirilir. Python/MCP
+ve durdurulabilir native Job aynı sorguyu kullanır.
+
+**Diziyi düzenle** aracında doğru düzenine eksik olan görünür **Aralık (A)**
+eklendi. Birimli pozitif uzunluk gerçek komşu aralığıdır; mevcut yön ve
+fit anlamı korunur. Gerçek uygulamada yazısız arama, eşleşmeyen öğenin açıkça
+korunması, menüden 2000→3000 mm ve 8→10 adet denenmiştir. Altı özgün UUID,
+iki boş yer, korunmuş öğe ve bağlı ölçünün 3000 mm sonucu korunmuştur.
+Sıfır aralık ret dosyası ile aralık/adet Undo/Redo'nun toplam beş çifti
+birebir dosya eşitliği vermiştir. Grafik aday paneli henüz teslim edilmez.
+
+Son kaynaklarla komut sözleşmelerinde 1 072, native uygulamada 99 birim +
+395 entegrasyon, etkileşimde 71 birim + 882 entegrasyon ve MCP ana kabulünde
+72 test başarılıdır; MCP'nin ek protokol/mimari kabul dosyaları da geçmiştir.
+Python dizi modülünde 12 test ve bağımsız 27 ortak durum başarılıdır.
+Komut geçmişinin beş kontrolü, SDK/manifest/bağımsız durum üretimi denetimi
+ve ilgili paketlerin Clippy denetimi başarılıdır. Son derlemeyle gerçek
+sorgu, bağlama/Undo/Redo ve görünür aralık değişimi tekrar doğrulanmıştır.
+Ekranlar, ikili özetleri ve dosya karşılaştırmaları depo dışındadır.
+
+**Açık kalan:** otomatik grid/kutupsal/yol aday bulma; doğrusal adaylar dahil
+grafik aday/öğe incelemesi; metin/öznitelik, iç blok ve diğer kaynak/ilişki
+genişletmesi. Bu dilimler CAD-ADV-07'nin tamamını kapatmaz.
 
 ### CAD-ADV-08 — Sınır, tarama ve maskeyi hatasını açıklayabilen bir üretim sistemine getir [ ]
 

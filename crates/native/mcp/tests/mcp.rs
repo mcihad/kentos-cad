@@ -10,6 +10,40 @@ use kentos_mcp::{LEGACY, MODERN, Server};
 use serde_json::{Value, json};
 
 #[test]
+fn linear_array_search_is_read_only_and_its_reviewed_proposal_uses_the_shared_adoption_command() {
+    let dir=std::env::temp_dir().join(format!("kentos-mcp-array-find-{}",std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let path=dir.join("source.json");let saved=dir.join("saved.kcad");
+    let fixture:Value=serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.arrays.find.json")).unwrap();
+    std::fs::write(&path,fixture["setup"].to_string()).unwrap();
+    let mut server=Server::new();
+    let drawing=call(&mut server,"drawing.open",json!({"path":path}))["structuredContent"]["drawing"].clone();
+    let records=call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"].clone();
+    let seed=records.as_array().unwrap().iter().find(|r|r["entity"]["id"]==4).unwrap()["uid"].clone();
+    call(&mut server,"drawing.save",json!({"drawing":drawing,"path":saved}));
+    let before=std::fs::read(&saved).unwrap();
+    let found=call(&mut server,"cad.arrays.find",json!({"drawing":drawing,"source":seed}))["structuredContent"].clone();
+    assert_eq!(found["status"],"completed","{found}");
+    let candidate=&found["output"]["matches"][0];
+    assert_eq!(candidate["present"],6);assert_eq!(candidate["missing"],2);
+    assert_eq!(candidate["adoption"]["layout"]["count"],8);
+    assert!(candidate["adoption"]["items"][2].get("uid").is_none());
+    assert!(candidate["adoption"]["items"][6].get("uid").is_none());
+    call(&mut server,"drawing.save",json!({"drawing":drawing,"path":saved}));
+    assert_eq!(std::fs::read(&saved).unwrap(),before);
+    let mut proposed=candidate["adoption"].clone();proposed["drawing"]=drawing.clone();proposed["op"]=json!("plan");
+    let review=call(&mut server,"cad.arrays.adopt",proposed.clone())["structuredContent"].clone();
+    assert_eq!(review["status"],"completed","{review}");
+    proposed["op"]=json!("execute");proposed["expected"]=json!({"plan":review["planId"]});
+    let made=call(&mut server,"cad.arrays.adopt",proposed)["structuredContent"].clone();
+    assert_eq!(made["status"],"completed","{made}");
+    call(&mut server,"drawing.undo",json!({"drawing":drawing}));
+    call(&mut server,"drawing.save",json!({"drawing":drawing,"path":saved}));
+    assert_eq!(std::fs::read(&saved).unwrap(),before);
+    std::fs::remove_dir_all(dir).unwrap();
+}
+
+#[test]
 fn reviewed_array_adoption_keeps_original_inserts_dimensions_two_gaps_and_guarded_undo() {
     let dir = std::env::temp_dir().join(format!("kentos-mcp-adopt-array-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();

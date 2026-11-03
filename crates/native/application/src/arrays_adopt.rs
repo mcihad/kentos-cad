@@ -48,7 +48,7 @@ fn insert<'a>(doc: &'a Document, uid: Uuid, path: &str) -> Result<&'a InsertEnti
 
 /// The first delivery accepts data-free inserts with a common reproducible appearance.
 /// Their definition may contain other geometry: no definition or nested object is rewritten.
-fn plain(i: &InsertEntity) -> bool {
+pub(crate) fn plain(i: &InsertEntity) -> bool {
     i.y_scale.is_none()
         && i.parameters.is_empty()
         && i.attribute_places.is_empty()
@@ -61,11 +61,36 @@ fn plain(i: &InsertEntity) -> bool {
         && i.base.attachments.is_empty()
 }
 
-fn same_appearance(a: &InsertEntity, b: &InsertEntity) -> bool {
+pub(crate) fn same_appearance(a: &InsertEntity, b: &InsertEntity) -> bool {
     a.base.layer_id == b.base.layer_id
         && a.base.color == b.base.color
         && a.base.line_weight == b.base.line_weight
         && a.base.look == b.base.look
+}
+
+pub(crate) fn prototype<'a>(doc: &'a Document, uid: Uuid, path: &str) -> Result<&'a InsertEntity, Stop> {
+    let source = insert(doc, uid, path)?;
+    if !plain(source) {
+        return Err(refused(
+            "Bu kapsam veri, mimari kayıt, farklı Y ölçeği veya kırpma taşıyan yerleştirmeleri desteklemiyor; hiçbir veri atılmadı.",
+            path,
+        ));
+    }
+    let definition = doc
+        .blocks()
+        .iter()
+        .find(|b| b.id == source.block)
+        .ok_or_else(|| refused("Kaynağın blok tanımı çizimde yok.", path))?;
+    if definition.dynamic.is_some()
+        || definition.xref.is_some()
+        || !definition.attributes.is_empty()
+    {
+        return Err(refused(
+            "Dinamik, dış referanslı veya öznitelik tanımlı blok bu kapsamda benimsetilmez.",
+            path,
+        ));
+    }
+    Ok(source)
 }
 
 fn check(
@@ -114,26 +139,7 @@ fn check(
             "items[0]",
         ));
     }
-    if !plain(source) {
-        return Err(refused(
-            "Bu kapsam veri, mimari kayıt, farklı Y ölçeği veya kırpma taşıyan yerleştirmeleri desteklemiyor; hiçbir veri atılmadı.",
-            "source",
-        ));
-    }
-    let definition = doc
-        .blocks()
-        .iter()
-        .find(|b| b.id == source.block)
-        .ok_or_else(|| refused("Kaynağın blok tanımı çizimde yok.", "source"))?;
-    if definition.dynamic.is_some()
-        || definition.xref.is_some()
-        || !definition.attributes.is_empty()
-    {
-        return Err(refused(
-            "Dinamik, dış referanslı veya öznitelik tanımlı blok bu kapsamda benimsetilmez.",
-            "source",
-        ));
-    }
+    prototype(doc, source_uid, "source")?;
     // Index only selected identities, once. Calling array_of_item for every proposed
     // item scans every existing array repeatedly on large production drawings.
     let selected: HashSet<_> = input.items.iter().filter_map(|i| i.uid).collect();

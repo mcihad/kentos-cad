@@ -146,6 +146,8 @@ pub use cad_levels::*;
 pub use cad_symbols::*;
 pub use cad_arrays::*;
 pub use cad_arrays_adopt::*;
+mod cad_arrays_find;
+pub use cad_arrays_find::*;
 pub use cad_attachments::*;
 pub use cad_audit::*;
 pub use cad_drawing_compare::*;

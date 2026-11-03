@@ -42,6 +42,63 @@ def closed_path_drawing():
 
 
 class ArrayTests(unittest.TestCase):
+    def test_linear_find_is_read_only_and_reviewed_outlier_is_explicitly_kept_before_adoption(self):
+        fixture = json.loads((ROOT / "fixtures/commands/v1/cad.arrays.adopt.json").read_text())
+        doc = cad.Document.from_bytes(json.dumps(fixture["setup"]).encode())
+        roots = {r.entity.id: r.uid for r in doc.entities()}
+        before = doc.to_bytes()
+        found = cad.arrays.find(doc, source=roots[4])
+        self.assertEqual(doc.to_bytes(), before)
+        self.assertFalse(found.truncated)
+        self.assertEqual(len(found.matches), 1)
+        candidate = found.matches[0]
+        self.assertEqual((candidate.present, candidate.missing), (5, 3))
+        self.assertTrue(all(not i.kept for i in candidate.adoption.items))
+        self.assertIn(roots[2], found.eligible)
+        self.assertFalse(any(i.uid == roots[2] for i in candidate.adoption.items))
+        self.assertEqual(found.excluded[roots[9]], "not_insert")
+        # A user explicitly reviews and assigns the moved item to place 1.
+        candidate.adoption.items[1] = cad.ArrayItem(uid=roots[2], kept=True)
+        args = dict(source=candidate.adoption.source, layout=candidate.adoption.layout,
+                    items=candidate.adoption.items, tolerance=candidate.adoption.tolerance,
+                    expected_revision=candidate.adoption.expected_revision)
+        review = cad.arrays.adopt.plan(doc, **args)
+        self.assertEqual((review.missing, review.kept), (2, 1))
+        made = cad.arrays.adopt(doc, **args)
+        self.assertEqual(len(made.retained), 6)
+        doc.undo()
+        self.assertEqual(doc.to_bytes(), before)
+
+    def test_linear_find_native_job_has_typed_candidates_and_writes_no_history(self):
+        fixture = json.loads((ROOT / "fixtures/commands/v1/cad.arrays.find.json").read_text())
+        doc = cad.Document.from_bytes(json.dumps(fixture["setup"]).encode())
+        root = next(r.uid for r in doc.entities() if r.entity.id == 1)
+        before = doc.to_bytes()
+        job = doc.start("cad.arrays.find", cad.ArraysFind(source=root))
+        answer = job.result()
+        self.assertEqual(answer.status, "completed")
+        self.assertIsInstance(answer.output, cad.ArraysFound)
+        self.assertIsInstance(answer.output.matches[0].adoption, cad.ArraysAdopt)
+        self.assertEqual((answer.output.matches[0].present, answer.output.matches[0].missing), (6, 2))
+        self.assertEqual(doc.to_bytes(), before)
+        self.assertIsNone(doc.undo())
+
+    def test_linear_find_rejects_stale_review_and_empty_scope_finds_nothing(self):
+        fixture = json.loads((ROOT / "fixtures/commands/v1/cad.arrays.find.json").read_text())
+        doc = cad.Document.from_bytes(json.dumps(fixture["setup"]).encode())
+        root = next(r.uid for r in doc.entities() if r.entity.id == 1)
+        self.assertEqual(cad.arrays.find(doc, source=root, uids=[]).matches, [])
+        proposal = cad.arrays.find(doc, source=root).matches[0].adoption
+        cad.entities.transform(doc, uids=[root], transform=cad.MoveTransform(dx=1., dy=0.))
+        before = doc.to_bytes()
+        with self.assertRaises(cad.RevisionConflict):
+            cad.arrays.find(doc, source=root, expected_revision=proposal.expected_revision)
+        with self.assertRaises(cad.RevisionConflict):
+            cad.arrays.adopt(doc, source=proposal.source, layout=proposal.layout,
+                             items=proposal.items, tolerance=proposal.tolerance,
+                             expected_revision=proposal.expected_revision)
+        self.assertEqual(doc.to_bytes(), before)
+
     def test_reviewed_existing_blocks_adopt_without_replacing_roots_and_keep_bound_dimensions(self):
         fixture = json.loads((ROOT / "fixtures/commands/v1/cad.arrays.adopt.json").read_text())
         doc = cad.Document.from_bytes(json.dumps(fixture["setup"]).encode())

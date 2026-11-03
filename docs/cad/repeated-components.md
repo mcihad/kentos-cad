@@ -114,3 +114,45 @@ kullanılmaz; bu, silme işlemini Undo ile geri almaktan farklıdır.
 `doc.start("cad.arrays.adopt", cad.ArraysAdopt(**args))` durdurulabilir
 iştir. MCP aynı komutta `op=plan` ve plan beklentisini kullanır.
 [Kapsam ve atomiklik](../adr/0873-existing-insert-array-adoption.md).
+
+## Mevcut bloklarda doğrusal örüntü arama
+
+`cad.arrays.find` aynı statik bloğun aynı görünüş, yön, ayna ve ölçekteki
+yerleştirmeleri arasında doğrusal adaylar üretir. En az üç dolu yer ve
+gözlenmiş bir komşu çift gerekir. Kaynak sıranın ortasında olabilir;
+önerinin `source` alanı ilk dolu uca eşlenir. Arama çizimi değiştirmez.
+
+```python
+before = doc.to_bytes()
+found = cad.arrays.find(doc, source=seed_insert_uid)
+assert doc.to_bytes() == before
+for candidate in found.matches:
+    print(candidate.present, candidate.missing, candidate.deviation,
+          candidate.overlaps, candidate.adoption.to_json())
+print(found.excluded)  # UUID → neden; eligible listesinde olup adayda olmayanlar eşleşmemiştir.
+if found.truncated:
+    print("Kısmi sonuç; kapsamı daraltın.")
+# Kullanıcı tek bir adayı incelediğinde:
+proposal = found.matches[reviewed_index].adoption
+args = dict(source=proposal.source, layout=proposal.layout, items=proposal.items,
+            tolerance=proposal.tolerance, expected_revision=proposal.expected_revision)
+review = cad.arrays.adopt.plan(doc, **args)
+# Kabul edilen aynı öneri ayrı bir yazma işlemidir.
+done = cad.arrays.adopt(doc, **args)
+```
+
+Bir öğenin dışarıda kalması, onun hangi eksik yere ait olduğunu ispatlamaz.
+Elle taşınan öğe ancak kullanıcı belirli yere açıkça `ArrayItem(uid=..., kept=True)`
+atayınca korunmuş sayılır. Her ikinci yer doluysa aradaki boşluk kendiliğinden
+varsayılmaz. Aynı yere iki ayrı UUID düşerse rastgele biri seçilmez.
+
+`uids=[]` yalnız kaynağı arar; `uids` verilmezse belge taranır. Toplam kapsam
+2 048 nesnedir; tolerans metreyle varsayılan 0,000001, en çok 0,001'dir.
+`doc.start("cad.arrays.find", cad.ArraysFind(source=seed_insert_uid))`
+durdurulabilir sorgudur. MCP aynı komutu ve `drawing.job.*` yüzeylerini kullanır.
+İlk dilim grid/kutupsal/yol araması veya grafik aday paneli içermez.
+Bağlanan doğru düzenini **Diziyi düzenle → Aralık** ile değiştirebilirsiniz.
+Pozitif birimli uzunluk iki komşu yer arasındaki gerçek uzaklıktır; yön
+korunur. Adet değişimi ayrı seçenektir. Mevcut `fit` düzeninin toplam boyu
+aralıkla birlikte yeniden hesaplanır; yerinde tutulan öğeler taşınmaz.
+[Yöntem, belirsizlik ve iş sınırları](../adr/0874-read-only-linear-array-patterns.md).

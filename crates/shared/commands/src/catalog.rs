@@ -1243,6 +1243,17 @@ pub fn catalog() -> CommandCatalog {
             ],
         },
         CommandDescriptor {
+            id: crate::CAD_ARRAYS_FIND.into(), version: crate::CAD_ARRAYS_FIND_VERSION,
+            title: "Doğrusal blok dizilerini bul".into(),
+            summary: "Kaynak statik blok yerleştirmesini içeren doğrusal örüntüleri yazısız bulur. İlk sürüm aynı blok tanımı, katman, görünüş, ayna, yön ve ölçekli verisiz yerleştirmeler içindir; grid/kutupsal/yol araması içermez. En az üç dolu yer ve gözlenen bir komşu çift gerekir. Her ikinci yer doluysa gizli ara yer varsayılmaz. Aday adoption girdisi cad.arrays.adopt ile yeniden incelenip açıkça uygulanabilir; arama hiçbir nesne, seçim veya dizi kaydı değiştirmez. Eksik yerler boş kalır; eşleşmeyen öğe kendiliğinden kept olmaz. eligible ve UUID→ret nedeni excluded listeleri kapsamı açıklar. Birbiriyle çakışan adaylar overlaps ile belirtilir. uids yoksa belge, boşsa yalnız kaynak aranır; en çok 2048 nesne. Tolerans metre, varsayılan 0.000001, en çok 0.001; limit 1..100. İki milyon karşılaştırma veya aday sınırı kısmi arama truncated üretir. Uzun arama native Job ile durdurulabilir. expectedRevision eskiyse yazısız ret.".into(),
+            aliases:vec![], effect:CommandEffect::Query, hosts:vec![CommandHost::Desktop], headless:true,
+            requires:vec![CommandRequirement::Document], permissions:vec![], undo:CommandUndo::None,
+            cost:CommandCost::Interactive, input:schema::<crate::ArraysFind>(),output:schema::<crate::ArraysFound>(),
+            plan:Some(schema::<crate::ArraysFound>()),capabilities:None,
+            examples:vec![CommandExample {title:"Seçili bloğun doğrusal tekrarlarını incele".into(),
+                input:json!({"source":"01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"}),output:None}],
+        },
+        CommandDescriptor {
             id: crate::CAD_ARRAYS_ADOPT.into(), version: crate::CAD_ARRAYS_ADOPT_VERSION,
             title: "Mevcut blokları diziye bağla".into(),
             summary: "İncelenen mevcut blok yerleştirmelerini verilen grid, doğru, kutupsal veya yol düzenine bağlar. Örüntü tahmin etmez: source sıfır numaralı normal öğe, items her yer için bir kayıt olmalı. Boş kayıt eksik öğe; kept açıkça korunan elle değiştirilmiş öğedir. En az iki normal öğe gereklidir. Yalnız ilişkili dizi kaydı eklenir; geometri, UUID, çizim sırası, blok tanımı ve mevcut bağlar değişmez. Normal öğelerin bloğu, aynası, ölçeği ve yönü düzene uymalıdır; konum toleransı metre (varsayılan 0.000001), açı toleransı 1e-10 rad, ölçek toleransı 1e-12 bağıl. Sapma kendiliğinden düzeltilmez. İlk kapsam ortak görünüşlü, verisiz, tekdüze ölçekli statik blok yerleştirmeleri; dinamik/dış referanslı/öznitelik tanımlı blok, mimari kayıt, kırpma, farklı katman/görünüş veya başka dizinin öğesi açıkça reddedilir. Mevcut cad.arrays.edit sayı/aralık/korunan/silinmiş/reset semantiği kullanılır. İnceleme yazısız, uygulama tek geri alma adımıdır. expectedRevision eskiyse hiçbir şey yazılmaz.".into(),
@@ -11699,6 +11710,9 @@ mod tests {
                     }
                     crate::CAD_ENTITIES_ARRAY => {
                         serde_json::from_value::<crate::EntitiesArray>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_ARRAYS_FIND => {
+                        serde_json::from_value::<crate::ArraysFind>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_ARRAYS_ADOPT => {
                         serde_json::from_value::<crate::ArraysAdopt>(e.input.clone()).map(|_| ())

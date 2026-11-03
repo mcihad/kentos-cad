@@ -54,6 +54,7 @@ use kentos_native_application::drawing_compare;
 use kentos_native_application::blocks_find;
 use kentos_native_application::blocks_convert;
 use kentos_native_application::arrays_adopt;
+use kentos_native_application::arrays_find;
 use kentos_native_application::fields_write;
 use kentos_native_application::gpkg_tiles::{read as gpkg_tiles_read, write as gpkg_tiles_write};
 use kentos_native_application::layers_crs::{
@@ -478,6 +479,11 @@ fn bulge_number<'a>(bulges: &'a mut Option<Vec<f64>>, rest: &str) -> Option<&'a 
 trait Input {
     /// The number at an error path; `None` when the input has no such place.
     fn number(&mut self, path: &str) -> Option<&mut f64>;
+}
+impl Input for kentos_commands::ArraysFind {
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match path { "tolerance" => self.tolerance.as_mut(), _ => None }
+    }
 }
 impl Input for kentos_commands::ArraysAdopt {
     fn number(&mut self, path: &str) -> Option<&mut f64> {
@@ -4274,6 +4280,9 @@ fn run_op(
             run!(entities_lengthen, kentos_commands::EntitiesLengthen)
         }
         kentos_commands::CAD_ENTITIES_DIVIDE => run!(divide, EntitiesDivide),
+        kentos_commands::CAD_ARRAYS_FIND => {
+            run!(arrays_find, kentos_commands::ArraysFind)
+        }
         kentos_commands::CAD_ARRAYS_ADOPT => {
             run!(arrays_adopt, kentos_commands::ArraysAdopt)
         }
