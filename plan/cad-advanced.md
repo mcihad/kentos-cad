@@ -786,8 +786,29 @@ Son sürüm koruması tekrarında 53 Python blok/9 katalog testi ve gerçek
 menüden dışa/içe alma, ret ve minimum pencere kaynak kaydını korudu. [ADR 0863](../docs/adr/0863-block-type-and-instance-parameter-scope.md),
 [kullanım/API](../docs/cad/block-type-values.md).
 
-**Kalan kabul:** İç tanımlardaki öznitelik göçü için açık kapsam/etki ve
-tüm özellikleri aynı çizimde sınayan birleşik blok kabulü açıktır. Web öznitelik penceresinin native eşitleme kapsamıyla
+**İlerleme — 2026-11-03, iç etiket taşıma kapsamı:** Öznitelik penceresi
+çizim kapsamını varsayılan olarak korur; kullanıcı seçerse diğer tanımların
+iç kayıtlarındaki aynı etiket de değeri ve özel konumuyla taşınır. Plan
+gerçekte değişen üst tanımları gösterir. Çakışma ve etkilenen kilitli
+doğrudan/üst kullanım bütün işlemi yazısız reddeder. Python/MCP aynı
+`renameNested` komut girdisini kullanır; kapsamı değişen istek eski planı
+kullanamaz. Eski pencerenin başka oturum veya değişmiş revizyona yazması
+reddedilir. Gerçek GUI'de K-1/K-2/İÇ-1 yeni etikette korundu; 1100 mm bağlı
+ölçü değişmedi. Tek Undo/Redo kaynak kayıtlarla tam aynı. Aynı çizimde
+kitaplıktan yalnız ilk kapı yayın 3'e yükseltildi; ölçüsü 1200 mm ve hesap
+alanı 2.4 oldu; seçilmeyen eski tip, yön/görünüş ve iç kayıt korundu.
+Kaydet–aç ve gerçek statik DXF yeniden açma da sınandı.
+Son pencere düzeni en küçük boyutta sınandı; yazarken tablo yerinde kaldı,
+boş etikette Kaydet pasifti ve klavyeyle kapsam seçildi. Vazgeç dosyayı
+korudu. 364 application, 1622 masaüstü, 65 MCP ve tüm 475 Python testi,
+SDK/katalog kontrolü, Clippy ve derleme geçti.
+[ADR 0864](../docs/adr/0864-explicit-nested-attribute-tag-migration.md),
+[kullanım/API](../docs/cad/block-attribute-scope.md).
+
+**Kalan kabul:** Birleşik testte DXF'in yazım sonrası raporu dinamik davranış
+kaybını doğru bildiriyor; yazım öncesi pencerede bu uyarının eksik olduğu
+görüldü. Bu görünür uyarı doğrulanmadan madde kapanmaz.
+Web öznitelik penceresinin native eşitleme kapsamıyla
 aynı olmadığı kodda görüldü; bu dilim web eşitliğini tamamlanmış saymaz.
 
 ### CAD-ADV-07 — Tekrarları tanı, blok ve ilişkili diziye kontrollü dönüştür [ ]

@@ -48,8 +48,27 @@ fn dynamic_draws(b: &BlockDefinition) -> Option<DynamicDrawing<'_>> {
     ))
 }
 
+fn nested_input(input: &BlocksEdit) -> Result<(), Stop> {
+    if input.rename_nested == Some(true)
+        && (!matches!(
+            input.operation,
+            BlockEditOperation::Attributes | BlockEditOperation::Update | BlockEditOperation::Sync
+        ) || input.sync == Some(false))
+    {
+        return Err(Stop::failed(error(
+            codes::INVALID_PARAMETER_VALUE,
+            "İç içe etiket taşıma yalnız attributes/update/sync ile ve eşitleme açıkken kullanılabilir.".into(),
+            Some("renameNested".into()),
+        )));
+    }
+    Ok(())
+}
+
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &BlocksEdit) -> CommandResult<()> {
+    if let Err(stop) = nested_input(input) {
+        return stop.into();
+    }
     if crate::blocks_library::is_library(input.operation) {
         return crate::blocks_library::validate(cx, input);
     }
@@ -64,6 +83,9 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &BlocksEdit) -> CommandResult<
 
 /// What execute would write now; writes nothing.
 pub fn plan(cx: &ExecutionContext<'_>, input: &BlocksEdit) -> CommandResult<BlocksEditPlan> {
+    if let Err(stop) = nested_input(input) {
+        return stop.into();
+    }
     if crate::blocks_library::is_library(input.operation) {
         return crate::blocks_library::plan(cx, input);
     }
@@ -99,6 +121,9 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: BlocksEdit) -> CommandResul
 /// [`execute`]'s write; `call::recorded` runs it as one step of the
 /// document, all or nothing, and journals it (docs/adr/0253 §1, §3).
 fn write_execute(cx: &mut ExecutionContext<'_>, input: BlocksEdit) -> CommandResult<BlocksEdited> {
+    if let Err(stop) = nested_input(&input) {
+        return stop.into();
+    }
     if crate::blocks_library::is_library(input.operation) {
         return crate::blocks_library::write(cx, &input);
     }
@@ -131,7 +156,7 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: BlocksEdit) -> CommandRes
         }
     } else if let Some(related) = checked.definition_changes {
         let blocks: Vec<_> = checked.changed.into_iter().chain(related.blocks).collect();
-        let written = cx.doc.transact(labels::BLOCK_CHANGE, |doc| {
+        let written = cx.doc.transact(label(input.operation), |doc| {
             doc.merge_blocks(&blocks).map_err(|r| r.to_string())?;
             for (slot, entity) in related.entities {
                 doc.update(slot, entity);
@@ -323,6 +348,7 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
         | BlockEditOperation::Card
         | BlockEditOperation::Dynamic => {}
     }
+    nested_input(input)?;
     checks::revision(doc, input.expected_revision.as_deref())?;
     if input.operation == BlockEditOperation::Purge {
         return Ok(Checked {
@@ -382,7 +408,10 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
         }
         BlockEditOperation::Attributes => {
             next.attributes = input.attributes.clone().unwrap_or_default();
-            rules_with(doc, &next)?;
+            // Explicit nested migration validates the final graph and migrated root places below.
+            if input.rename_nested != Some(true) {
+                rules_with(doc, &next)?;
+            }
             if let Some(r) = &input.renames {
                 crate::blocks_sync::renames_ok(&next, r)?;
             }
@@ -420,7 +449,9 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
             if let Some(a) = &input.attributes {
                 next.attributes = a.clone();
             }
-            rules_with(doc, &next)?;
+            if input.rename_nested != Some(true) {
+                rules_with(doc, &next)?;
+            }
         }
         BlockEditOperation::Remove => {
             if let Some(reason) = doc.block_removal_refused(old.id) {
@@ -440,6 +471,13 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
             checked.sync = Some(crate::blocks_sync::sync(
                 doc, old, old, &renames, &remove, true, false,
             )?);
+            if input.rename_nested == Some(true) {
+                let roots: &[(Slot, Entity)] = checked.sync.as_ref().map_or(&[], |s| s.changes.as_slice());
+                let related = crate::blocks_sync::nested(doc, old, old, &renames, roots)?;
+                if !related.blocks.is_empty() {
+                    checked.definition_changes = Some(related);
+                }
+            }
             return Ok(checked);
         }
         BlockEditOperation::Fields => {
@@ -565,6 +603,14 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
         checked.sync = Some(crate::blocks_sync::sync(
             doc, old, &next, &renames, &[], true, false,
         )?);
+    }
+    if input.rename_nested == Some(true) {
+        let renames = input.renames.clone().unwrap_or_default();
+        let roots: &[(Slot, Entity)] = checked.sync.as_ref().map_or(&[], |s| s.changes.as_slice());
+        let related = crate::blocks_sync::nested(doc, old, &next, &renames, roots)?;
+        if !related.blocks.is_empty() {
+            checked.definition_changes = Some(related);
+        }
     }
     if let Some(scale) = unit_scale {
         checked.definition_changes = Some(unit_rescale::check(doc, old, &next, scale)?);

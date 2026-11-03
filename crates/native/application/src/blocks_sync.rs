@@ -10,8 +10,12 @@
 //! - a field's value is filled again (its template with the insert's values, `info_templates`).
 //!
 //! The definition's tags an insert has no value of are reported (`added`): the insert shows their default. Only the
-//! drawing's inserts are synced; an insert inside another definition keeps its values (a definition is changed by
-//! its own edits).
+//! drawing's inserts are synced by default; an insert inside another definition keeps its values. The explicit
+//! `renameNested` option migrates only the requested tag identities through `renames::nested` (ADR 0864).
+
+#[path = "block_attribute_renames.rs"]
+mod renames;
+pub(crate) use renames::nested;
 
 use std::collections::{BTreeMap, HashSet};
 
@@ -120,63 +124,10 @@ pub(crate) fn sync(
             fitted.push((Slot(i.base.id), i, false));
             continue;
         }
-        // Read every source before writing any target: A→B, B→A and longer chains must not overwrite a value
-        // needed by the next rename. An unrelated existing target is not permission to destroy that value.
-        for (from, to) in renames {
-            let value_conflict = i
-                .base
-                .attrs
-                .get(from)
-                .zip(i.base.attrs.get(to))
-                .is_some_and(|(a, b)| a != b);
-            let place_conflict = i
-                .attribute_places
-                .get(from)
-                .zip(i.attribute_places.get(to))
-                .is_some_and(|(a, b)| a != b);
-            if protect_targets && !renames.contains_key(to) && (value_conflict || place_conflict) {
-                return Err(Stop::failed(error(
-                    codes::DUPLICATE_TAG,
-                    format!(
-                        "“{from}” → “{to}”: {} numaralı yerleştirmede hedef etikette başka bir değer veya özel konum var. Değerin üzerine yazılmadı; farklı bir etiket seçin ya da mevcut değerleri önce düzenleyin.",
-                        i.base.id
-                    ),
-                    Some(format!("renames.{from}")),
-                )));
-            }
-        }
-        let values: Vec<_> = renames
-            .iter()
-            .filter_map(|(from, to)| {
-                i.base
-                    .attrs
-                    .get(from)
-                    .map(|v| (from.clone(), to.clone(), v.clone()))
-            })
-            .collect();
-        let places: Vec<_> = renames
-            .iter()
-            .filter_map(|(from, to)| {
-                i.attribute_places
-                    .get(from)
-                    .map(|p| (from.clone(), to.clone(), *p))
-            })
-            .collect();
-        for (from, _, _) in &values {
-            i.base.attrs.remove(from);
-        }
-        for (from, _, _) in &places {
-            i.attribute_places.remove(from);
-        }
-        for (from, to, v) in values {
-            i.base.attrs.insert(to, v);
-            changed = true;
-            renamed.insert(from);
-        }
-        for (_, to, p) in places {
-            i.attribute_places.insert(to, p);
-            changed = true;
-        }
+        let context = format!("{} numaralı yerleştirmede", i.base.id);
+        let migration = renames::apply(&mut i, renames, protect_targets, &context)?;
+        changed |= migration.changed;
+        renamed.extend(migration.tags);
         for t in &gone {
             if i.base.attrs.remove(t).is_some() {
                 changed = true;

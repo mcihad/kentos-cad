@@ -116,6 +116,13 @@ sync?: boolean,
  */
 renames?: { [key in string]: string }, 
 /**
+ * `attributes`, `update`, `sync`: explicitly carry the rename map through inserts owned by other
+ * definitions too. Default false preserves drawing-only sync. Only tag/value/custom-position identity
+ * migrates; other nested attributes and field caches are not silently synchronized. A conflicting nested
+ * target or affected locked ancestor refuses the entire operation.
+ */
+renameNested?: boolean,
+/**
  * `sync`: tags whose values are taken off the inserts though no attribute has them.
  */
 removeTags?: Array<string>, 

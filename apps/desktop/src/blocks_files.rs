@@ -24,6 +24,7 @@ fn input(operation: BlockEditOperation) -> BlocksEdit {
         dynamic: None,
         sync: None,
         renames: None,
+        rename_nested: None,
         remove_tags: None,
         tag: None,
         at: None,

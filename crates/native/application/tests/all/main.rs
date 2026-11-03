@@ -3,6 +3,7 @@
 //! One binary links once where each file was linked on its own.
 
 mod block_formula_values;
+mod block_nested_attribute_renames;
 mod block_type_values;
 mod block_unit_rescale;
 mod address_spellings;

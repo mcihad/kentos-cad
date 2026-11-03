@@ -51,6 +51,11 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ADR 0864: `cad.blocks.edit.renameNested` ile açık kapsamlı iç etiket
+  taşıma, son tanım grafiğinin birlikte doğrulanması ve öznitelik
+  penceresindeki kapsam/etki önizlemesi. Native/Python/MCP kabulü
+  web yürütücüsü ve web penceresinin tamamlandığı anlamına gelmez.
+
 - ADR 0863: ortak çizim-tipi parametre kapsamı,
   Tip değerleri penceresi ve örnek panelinde salt okunur ortak değerler;
   kentos.blocks sürüm 3 güvenli okuma/yazma kapısı.
