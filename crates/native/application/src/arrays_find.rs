@@ -5,7 +5,8 @@ use crate::{
 };
 use kentos_commands::{
     ARRAY_FIND_SCOPE_MAX, ArrayFindKind, ArrayItem, ArrayLayout, ArrayPattern, ArraysAdopt,
-    ArraysFind, ArraysFound, CommandResult, CommandWarning, Entity, EntityId, InsertEntity, codes,
+    ArraysAdoptPlan, ArraysFind, ArraysFound, CommandResult, CommandWarning, Entity, EntityId,
+    InsertEntity, codes,
 };
 use kentos_domain::{Document, Uuid};
 use std::collections::{BTreeMap, BTreeSet, HashSet};
@@ -164,6 +165,39 @@ impl Budget {
         Ok(true)
     }
 }
+// The slot topology comes from observed adjacent intervals. Refine its displacement from
+// the full observed span, then try the original local interval as a fallback. World-space
+// rounding of one short gap must not get accumulated over every slot. The unchanged adoption
+// validator remains the only acceptance gate, at the caller's original absolute tolerance.
+fn review_layouts(
+    doc: &Document,
+    source: EntityId,
+    items: &[ArrayItem],
+    layouts: [ArrayLayout; 2],
+    tolerance: f64,
+    budget: &mut Budget,
+    stopped: &mut impl FnMut() -> bool,
+) -> Result<Option<(ArraysAdopt, ArraysAdoptPlan)>, Stop> {
+    for layout in layouts {
+        if !budget.tick(stopped)? {
+            return Ok(None);
+        }
+        let adoption = ArraysAdopt {
+            source: source.to_text(),
+            layout,
+            items: items.to_vec(),
+            tolerance: Some(tolerance),
+            expected_revision: Some(doc.revision().to_string()),
+        };
+        match arrays_adopt::inspect(doc, &adoption, &mut *stopped) {
+            CommandResult::Completed { output, .. } => return Ok(Some((adoption, output))),
+            CommandResult::Cancelled => return Err(Stop::Cancelled),
+            _ => {}
+        }
+    }
+    Ok(None)
+}
+
 fn search(
     doc: &Document,
     input: &ArraysFind,
@@ -242,6 +276,7 @@ fn search(
             &mut stopped,
         )?;
     } else {
+        let by_uid: BTreeMap<_, _> = points.iter().map(|p| (p.uid, *p)).collect();
         let mut directions: Vec<(f64, f64)> = Vec::new();
         let mut seen = HashSet::new();
         // All arithmetic is Float64 relative to the seed. A direction only groups points;
@@ -312,7 +347,10 @@ fn search(
                     steps.push(step);
                 }
             }
-            for step in steps {
+            let mut step_cursor = 0;
+            while step_cursor < steps.len() {
+                let step = steps[step_cursor];
+                step_cursor += 1;
                 let mut places = BTreeMap::<i32, EntityId>::new();
                 let mut collision = false;
                 for &(along, point) in &line {
@@ -335,13 +373,35 @@ fn search(
                 if collision || places.len() < 3 || !places.values().any(|u| *u == seed.uid) {
                     continue;
                 }
-                let (Some((&min, &first)), Some((&max, _))) =
+                let (Some((&min, &first)), Some((&max, &last))) =
                     (places.first_key_value(), places.last_key_value())
                 else {
                     continue;
                 };
                 if max - min >= 10000 || !places.keys().any(|k| places.contains_key(&(k + 1))) {
                     continue;
+                }
+                let (Some(start), Some(end)) = (by_uid.get(&first), by_uid.get(&last)) else {
+                    continue;
+                };
+                let span = (max - min) as f64;
+                let refined = ((end.x - start.x) * ux + (end.y - start.y) * uy) / span;
+                if refined.is_finite() && refined > tolerance * 2. && refined > 1e-9 {
+                    let mut known = false;
+                    for old in &steps {
+                        if !budget.tick(&mut stopped)? {
+                            break 'outer;
+                        }
+                        if old.to_bits() == refined.to_bits() {
+                            known = true;
+                            break;
+                        }
+                    }
+                    // Recheck the whole line with the refined pitch. An endpoint that was
+                    // outside the first rounded short-gap estimate may now be a valid member.
+                    if !known {
+                        steps.push(refined);
+                    }
                 }
                 let items: Vec<_> = (min..=max)
                     .map(|k| ArrayItem {
@@ -350,26 +410,38 @@ fn search(
                     })
                     .collect();
                 let key: Vec<_> = items.iter().map(|i| i.uid).collect();
-                if !seen.insert(key) {
+                if seen.contains(&key) {
                     continue;
                 }
-                let adoption = ArraysAdopt {
-                    source: first.to_text(),
-                    layout: ArrayLayout::Line {
-                        count: items.len() as u32,
+                let count = items.len() as u32;
+                let layouts = [
+                    ArrayLayout::Line {
+                        count,
+                        dx: (end.x - start.x) / span,
+                        dy: (end.y - start.y) / span,
+                        fit: false,
+                    },
+                    ArrayLayout::Line {
+                        count,
                         dx: step * ux,
                         dy: step * uy,
                         fit: false,
                     },
-                    items,
-                    tolerance: Some(tolerance),
-                    expected_revision: Some(doc.revision().to_string()),
+                ];
+                let Some((adoption, plan)) = review_layouts(
+                    doc,
+                    first,
+                    &items,
+                    layouts,
+                    tolerance,
+                    &mut budget,
+                    &mut stopped,
+                )?
+                else {
+                    continue;
                 };
-                let plan = match arrays_adopt::inspect(doc, &adoption, &mut stopped) {
-                    CommandResult::Completed { output, .. } => output,
-                    CommandResult::Cancelled => return Err(Stop::Cancelled),
-                    _ => continue,
-                };
+                // Only an accepted proposal suppresses a later proposal with the same members.
+                seen.insert(key);
                 matches.push(ArrayPattern {
                     present: places.len() as u32,
                     missing: plan.missing,

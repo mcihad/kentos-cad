@@ -464,3 +464,114 @@ fn grid_interval_discovery_bounds_are_partial_and_remain_cancellable() {
     assert!(matches!(result, CommandResult::Cancelled));
     assert_eq!(doc.to_snapshot_v2(), before);
 }
+
+#[test]
+fn a_valid_millimetre_line_is_still_found_when_an_earlier_float_spacing_proposal_is_rejected() {
+    for step in [0.003, 0.03] {
+        let doc = drawing(
+            &(0..8)
+                .map(|k| (4_000_000_000. + k as f64 * step, 1_000_000.))
+                .collect::<Vec<_>>(),
+        );
+        let input = request(&doc, 5);
+        let known = kentos_commands::ArraysAdopt {
+            source: doc.uid(Slot(1)).unwrap().to_string(),
+            layout: ArrayLayout::Line {
+                count: 8,
+                dx: step,
+                dy: 0.,
+                fit: false,
+            },
+            items: (1..=8)
+                .map(|k| kentos_commands::ArrayItem {
+                    uid: Some(kentos_commands::EntityId(
+                        doc.uid(Slot(k)).unwrap().into_bytes(),
+                    )),
+                    kept: false,
+                })
+                .collect(),
+            tolerance: Some(1e-6),
+            expected_revision: None,
+        };
+        assert!(
+            matches!(
+                arrays_adopt::inspect(&doc, &known, || false),
+                CommandResult::Completed { .. }
+            ),
+            "the independent exact layout must be valid"
+        );
+        let found = find(&doc, &input);
+        assert!(
+            found.matches.iter().any(|p| p.present == 8),
+            "{step}: {found:?}"
+        );
+    }
+}
+
+#[test]
+fn a_valid_millimetre_grid_survives_rejected_rounded_interval_proposals() {
+    for dy in [0.004, 0.3] {
+        let points = (0..3)
+            .flat_map(|r| {
+                (0..4).map(move |c| {
+                    (
+                        4_000_000_000. + c as f64 * 0.03,
+                        4_000_000_000. + r as f64 * dy,
+                    )
+                })
+            })
+            .collect::<Vec<_>>();
+        let doc = drawing(&points);
+        let known = kentos_commands::ArraysAdopt {
+            source: doc.uid(Slot(1)).unwrap().to_string(),
+            layout: ArrayLayout::Grid {
+                rows: 3,
+                cols: 4,
+                dx: 0.03,
+                dy,
+            },
+            items: (1..=12)
+                .map(|k| kentos_commands::ArrayItem {
+                    uid: Some(kentos_commands::EntityId(
+                        doc.uid(Slot(k)).unwrap().into_bytes(),
+                    )),
+                    kept: false,
+                })
+                .collect(),
+            tolerance: Some(1e-6),
+            expected_revision: None,
+        };
+        assert!(matches!(
+            arrays_adopt::inspect(&doc, &known, || false),
+            CommandResult::Completed { .. }
+        ));
+        let found = find(&doc, &grid_request(&doc, 6));
+        assert!(
+            found.matches.iter().any(|p| p.present == 12),
+            "dy={dy}: {found:?}"
+        );
+    }
+}
+
+#[test]
+fn full_span_refinement_rechecks_the_line_membership_and_recovers_the_eleventh_endpoint() {
+    let doc = drawing(
+        &(0..11)
+            .map(|k| (4_000_000_000. + k as f64 * 0.003, 1_000_000.))
+            .collect::<Vec<_>>(),
+    );
+    let found = find(&doc, &request(&doc, 6));
+    assert_eq!(found.matches.len(), 1, "{found:?}");
+    assert_eq!(
+        (found.matches[0].present, found.matches[0].missing),
+        (11, 0)
+    );
+    assert_eq!(
+        found.matches[0].adoption.source,
+        doc.uid(Slot(1)).unwrap().to_string()
+    );
+    assert!(matches!(
+        arrays_adopt::inspect(&doc, &found.matches[0].adoption, || false),
+        CommandResult::Completed { .. }
+    ));
+}

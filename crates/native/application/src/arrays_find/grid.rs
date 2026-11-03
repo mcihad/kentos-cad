@@ -28,6 +28,7 @@ pub(super) fn find(
             ..*p
         })
         .collect();
+    let by_uid: BTreeMap<_, _> = points.iter().map(|p| (p.uid, *p)).collect();
     let mut xs = BTreeMap::<u64, f64>::new();
     let mut ys = BTreeMap::<u64, f64>::new();
     'pairs: for (k, a) in local.iter().enumerate() {
@@ -137,26 +138,47 @@ pub(super) fn find(
                 }
             }
             let key: Vec<_> = items.iter().map(|i| i.uid).collect();
-            if !seen.insert(key) {
+            if seen.contains(&key) {
                 continue;
             }
-            let adoption = ArraysAdopt {
-                source: first.to_text(),
-                layout: ArrayLayout::Grid {
+            let (mut xmin, mut xmax, mut ymin, mut ymax) = (
+                f64::INFINITY,
+                f64::NEG_INFINITY,
+                f64::INFINITY,
+                f64::NEG_INFINITY,
+            );
+            for uid in places.values() {
+                if !budget.tick(stopped)? {
+                    break 'proposals;
+                }
+                let Some(p) = by_uid.get(uid) else {
+                    continue;
+                };
+                xmin = xmin.min(p.x);
+                xmax = xmax.max(p.x);
+                ymin = ymin.min(p.y);
+                ymax = ymax.max(p.y);
+            }
+            let layouts = [
+                ArrayLayout::Grid {
+                    rows,
+                    cols,
+                    dx: (xmax - xmin) / (c1 - c0) as f64 * f64::from(col_sign),
+                    dy: (ymax - ymin) / (r1 - r0) as f64 * f64::from(row_sign),
+                },
+                ArrayLayout::Grid {
                     rows,
                     cols,
                     dx: dx * f64::from(col_sign),
                     dy: dy * f64::from(row_sign),
                 },
-                items,
-                tolerance: Some(tolerance),
-                expected_revision: Some(doc.revision().to_string()),
+            ];
+            let Some((adoption, plan)) =
+                review_layouts(doc, first, &items, layouts, tolerance, budget, stopped)?
+            else {
+                continue;
             };
-            let plan = match arrays_adopt::inspect(doc, &adoption, &mut *stopped) {
-                CommandResult::Completed { output, .. } => output,
-                CommandResult::Cancelled => return Err(Stop::Cancelled),
-                _ => continue,
-            };
+            seen.insert(key);
             matches.push(ArrayPattern {
                 present: places.len() as u32,
                 missing: plan.missing,

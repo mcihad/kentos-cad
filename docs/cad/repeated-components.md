@@ -212,3 +212,10 @@ milyonluk iş bütçesine ek olarak grid aralık keşfi 500 000 çift veya bir
 eksende 128 aralık adayını aşarsa sonuç **kısmidir**. Uyarıyı tam tarama
 gibi yorumlamayın. Dönük/eğik grid, kutupsal ve yol tanıma bu kapsamda
 bulunmaz. [Karar ve sınırlar](../adr/0876-axis-aligned-grid-pattern-review.md).
+
+Büyük koordinatlarda kısa aralıkların tek komşu farkındaki yuvarlaması bütün
+sıraya çoğaltılmaz: toplam gözlenen açıklık da denenir ve uç üyelik yeniden
+taranır. Aday yine aynı gerçek yerleşim doğrulayıcısından, verdiğiniz mutlak
+toleransla geçer; bloklar taşınmaz. Koordinatın temsil aralığının altındaki
+toleranslarda bütün desenleri bulma garantisi yoktur; tolerans otomatik
+büyütülmez. [Sayısal düzeltme ve ölçülen sınırlar](../adr/0877-full-span-pattern-spacing-validation.md).

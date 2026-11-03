@@ -44,6 +44,53 @@ fn linear_array_search_is_read_only_and_its_reviewed_proposal_uses_the_shared_ad
 }
 
 #[test]
+fn array_search_at_large_coordinates_preserves_every_root_for_agents() {
+    let fixture: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.arrays.find.json"
+    )).unwrap();
+    for (index, case) in fixture["cases"].as_array().unwrap().iter()
+        .filter(|c| c["name"].as_str().unwrap().starts_with("büyük koordinatta"))
+        .enumerate()
+    {
+        let dir = std::env::temp_dir().join(format!("kentos-mcp-precise-array-{}-{index}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("source.json");
+        let saved = dir.join("saved.kcad");
+        std::fs::write(&path, case["setup"].to_string()).unwrap();
+        let mut server = Server::new();
+        let drawing = call(&mut server, "drawing.open", json!({"path":path}))["structuredContent"]["drawing"].clone();
+        let records = call(&mut server, "drawing.entities", json!({"drawing":drawing}))["structuredContent"]["items"].clone();
+        let mut input = case["steps"][0]["input"].clone();
+        let source: u64 = input["source"].as_str().unwrap().strip_prefix("$uidOf:").unwrap().parse().unwrap();
+        input["source"] = records.as_array().unwrap().iter().find(|r|r["entity"]["id"] == source).unwrap()["uid"].clone();
+        input["drawing"] = drawing.clone();
+        call(&mut server, "drawing.save", json!({"drawing":drawing,"path":saved}));
+        let before = std::fs::read(&saved).unwrap();
+        let found = call(&mut server, "cad.arrays.find", input)["structuredContent"].clone();
+        assert_eq!(found["status"], "completed", "{found}");
+        assert_eq!(found["output"]["matches"].as_array().unwrap().len(), 1, "{found}");
+        let candidate = &found["output"]["matches"][0];
+        assert_eq!(candidate["present"].as_u64().unwrap() as usize, records.as_array().unwrap().len());
+        assert_eq!(candidate["missing"], 0);
+        call(&mut server, "drawing.save", json!({"drawing":drawing,"path":saved}));
+        assert_eq!(std::fs::read(&saved).unwrap(), before);
+        let mut proposal = candidate["adoption"].clone();
+        proposal["drawing"] = drawing.clone();
+        proposal["op"] = json!("plan");
+        let plan = call(&mut server, "cad.arrays.adopt", proposal.clone())["structuredContent"].clone();
+        assert_eq!(plan["status"], "completed", "{plan}");
+        proposal["op"] = json!("execute");
+        proposal["expected"] = json!({"plan":plan["planId"]});
+        let applied = call(&mut server, "cad.arrays.adopt", proposal)["structuredContent"].clone();
+        assert_eq!(applied["status"], "completed", "{applied}");
+        call(&mut server, "drawing.undo", json!({"drawing":drawing}));
+        call(&mut server, "drawing.save", json!({"drawing":drawing,"path":saved}));
+        assert_eq!(std::fs::read(&saved).unwrap(), before);
+        std::fs::remove_dir_all(dir).unwrap();
+    }
+}
+
+#[test]
 fn reviewed_array_adoption_keeps_original_inserts_dimensions_two_gaps_and_guarded_undo() {
     let dir = std::env::temp_dir().join(format!("kentos-mcp-adopt-array-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();

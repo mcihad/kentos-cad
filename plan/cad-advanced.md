@@ -1133,6 +1133,18 @@ Son teslim kaynağında dokuz dizi arayüz testi tekrar başarılıdır. Son der
 arayüzden grid arama/inceleme/açık atama/bağlama tekrarlandı; bağımsız okuyucu
 özgün köklerin aynılığını ve incelenen üyeliğin korunduğunu doğruladı.
 
+**Büyük koordinatta kısa aralık düzeltmesi — [ADR 0877](../docs/adr/0877-full-span-pattern-spacing-validation.md):**
+Gözlenen komşu aralıktan kurulan üyelik, toplam açıklıkla yeniden denetlenir;
+ilk tahminde dışarıda kalan uç kök yeniden taranır. Başarısız öneri sonraki
+geçerli öneriyi bastırmaz. Tolerans, kaynak koordinatı ve ölçek değiştirilmez.
+18 native tanıma, 33 ortak native/Python, 13 Python ve dört ilgili MCP testi
+başarılıdır. Gerçek arayüzde 11 blok/3 mm bulundu ve bağlandı; bağımsız
+okuyucuda yalnız dizi metaverisi değişti, Undo/Redo dosyaları birebir eşittir.
+180 bilinen yerleşim taramasında toleransı koordinat ULP'sine eşit/üstünde
+olanlarda tam örüntü eksilmedi; ULP altındaki 52 örnek açık sayısal sınırdır.
+Aynı uç koordinat testinde küçük sembol render'ı düzleşti; ayrı hata olarak
+incelenecek, bu sonuç render kabulü veya 07'nin tamamlanması sayılmaz.
+
 **Açık kalan:** dönük/eğik grid, kutupsal/yol aday bulma; metin/öznitelik,
 iç blok ve diğer kaynak/ilişki genişletmesi. Bu dilimler CAD-ADV-07'nin
 tamamını kapatmaz.
