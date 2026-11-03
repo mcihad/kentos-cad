@@ -24,6 +24,17 @@ Tarih: 2026-11-03. plan/road.md Y12 (ROAD-ALIGN-13; ROAD-JUNC; 3d.md bağlantıs
   Konumlar float32'dir; plan/3d.md SCENE-PREC-04 bu yüzden her yükün FP64 kökenle ve sınırlı yerel konumlarla
   taşınmasını ister. Düğümün `translation`'ı JSON sayısıdır (f64), kök düğüm kökeni tam taşır. Civil 3D ve OpenRoads
   koridoru 3B modele (katı ya da yüzey) çevirip dışa verir; KentOS'un ilk 3B çıktısı arazi ve koridor üst yüzeyidir.
+- **Ortak 3B çekirdek (sahibin isteği, 3 Kasım 2026: “3B sahneyi yüksek performanslı yaz, ileride birçok sahnede ve
+  işte kullanacağız, LOD sistemi de olacak”):** plan/3d.md'nin D1'i FP64 kamera, karo yerel FP32, ters derinlik ve
+  kaynağa dönen seçimi ister; TileDescriptor sınırlar, FP64 köken, geometrik ve kodlama hatası, çocuklar ve inceltme
+  taşır (§8). [3D Tiles 1.1](https://github.com/CesiumGS/3d-tiles/blob/1.1/specification/README.adoc): geometrik hata
+  karonun sadeleştirilmiş gösteriminin metre cinsinden hatasıdır; REPLACE inceltmede çocuklar karonun yerine, ADD'de
+  onunla çizilir; çocuğun içeriği ebeveynin hacmindedir; dönüşüm geometrik hatayı en büyük ölçeğiyle büyütür.
+  CesiumJS'in kaynağı (`Cesium3DTile.getScreenSpaceError`, 3 Kasım 2026'da okundu): perspektifte
+  `hata · yükseklik / (uzaklık · 2·tan(fov/2))`, uzaklık en az 1e-7; ortografikte `hata / piksel boyu`. Ters Z
+  ([Reed, Depth Precision Visualized](https://www.reedbeta.com/blog/depth-precision-visualized/), NVIDIA'nın yeniden
+  yayımı): float32 derinlikle ters Z ve sonsuz uzak düzlem karşılaştırma hatasını en aza indirir. Büyük koordinatta
+  Cesium'un göze göre çizimi ve Unreal'ın LWC'si (3d.md §3): büyük sayı GPU'ya varmadan f64'te çıkarılır.
 - **Sınırlar:** en dik eğim ve tırmanmanın ağırlığı kurumun ve projenin seçimidir; KentOS değer vermez
   (plan/road.md ROAD-DEC-01).
 
@@ -70,6 +81,34 @@ Tarih: 2026-11-03. plan/road.md Y12 (ROAD-ALIGN-13; ROAD-JUNC; 3d.md bağlantıs
    yüzeyi yoksa ret (`invalid_gltf`), seçilmeyen kurulamazsa `export_losses`. Bütün yazılır ya da hiç; çizim değişmez.
    Düşey abartma yalnız görünüştür (SCENE-CAM-14), dosyaya girmez. Masaüstünde Koridor › 3B › glTF ver.
 
+4. **Ortak 3B sahne çekirdeği (`kentos-scene3d`, plan/3d.md D1).** GPU, pencere, dosya bilmez; her 3B görünüşün
+   (yol, bina, nokta bulutu, ikiz) CPU tarafıdır, wasm'a da derlenir.
+   - *Kamera:* göz, hedef ve yukarı f64'te, kaynağın koordinatında (gösterilen uzayda); perspektif (`fov_y`, `near`,
+     uzak düzlem sonsuzda) ya da ortografik (`height`, `depth`). GPU'ya ötelemesiz `P · R` gider (küçük sayılar) ve
+     karo başına `gösterilen(köken) − göz` f64'te hesaplanıp float32 yapılır; vertex gölgelendiricisi karonun yerel
+     float32'sini (z abartmayla çarpılmış) ona ekler: büyük sayı hiç yuvarlanmaz (SCENE-PREC-05, 08). Derinlik ters:
+     perspektifte `z/w = near / derinlik`, ortografikte `1 − derinlik / depth`, `Greater`, temizleme 0 (SCENE-CAM-05,
+     06). Düşey abartma yalnız görünüştür: `datum + k · (z − datum)`; kamera gösterilen uzayda yaşar, karonun hatası
+     `max(1, |k|)` ile büyür (3D Tiles'ın ölçek kuralı).
+   - *Frustum:* yakın düzlem ve dört yan (ortografikte uzak da) `n · (p − göz) + d ≥ 0`; kutu p-köşe sınamasıyla
+     dışarıda, kesişen ya da içeride (muhafazakâr: dışarıda denen dışarıdadır).
+   - *Karo:* anahtar, kaynak koordinatında kutu, metre cinsinden geometrik hata, REPLACE ya da ADD, isteğe bağlı içerik
+     (kimlik, GPU'daki bayt), çocuklar; hiyerarşinin kuralları (tek ebeveyn, döngü yok, kökten ulaşılır, çocuğun hatası
+     ebeveyninkini aşmaz, kutusu içindedir, 1 µm pay).
+   - *Seçim:* görünmeyen atlanır; içeriği olmayan karo hep iner; hatası sınırın altında ya da çocuksuz karo içeriği
+     hazırsa çizilir, değilse istenir; REPLACE yalnız görünen her çocuk şimdi kendi payını örtebiliyorsa iner, yoksa
+     ebeveyn çizilir ve çocuklar istenir (boşluk yok, ebeveyn ve çocuk birlikte çizilmez: SCENE-STREAM-04, 05); ADD
+     karo çocuklarıyla çizilir; istekler hataya göre büyükten küçüğe, sonra anahtara göre (SCENE-STREAM-08).
+   - *Bölme:* büyük üçgen ağları üçgenlerin ağırlık merkezleri üstünde ikili ağaçla, merkezlerin kutusunun en uzun
+     yanında medyandan (anahtar merkez, parça, sıra; alt yarı `n/2` en küçük) karo en çok `max_triangles` ve en çok
+     `max_extent` metre olana dek bölünür (öntanımlı 32 768 ve 1 000 m: 500 m içindeki float32 yarım ULP 0,03 mm).
+     Her yaprak bir içerik: köşeleri bir kez, kendi f64 kökenine (kutusunun ortası) göre float32; üçgenleri parçaya göre
+     aralıklarda (bir parça bir stil); her üçgenin kaynağı (parça, sıra) seçimin kaynağa dönmesi için (SCENE-STREAM-17);
+     kodlama hatası raporda. İç karoların içeriği yok, hatası kutularının köşegeni; yaprağın hatası 0 (kaynağın
+     kendisi). Numaralama derinlik önce, önce alt yarı; büyük ağın üst dört düzeyi iş parçacıklarında kurulur (tarayıcıda
+     sırayla), sonuç aynıdır. Sadeleştirilmiş ebeveyn içerikleri (gerçek LOD) aynı hiyerarşiye sonra eklenir; seçim onlar
+     için şimdiden hazırdır.
+
 ## Aşamalar
 
 Y12.1 (yapıldı, ön güzergâh): `road.routes.find` 26, `.draw` 22 ortak durum (`road_route_cases.py`; arazinin kotları
@@ -90,6 +129,15 @@ Y12.3a (yapıldı, glTF): `file.export.gltf` 21 ortak durum (`road_scene_cases.p
 yok). `--written` KentOS'un yazdığı `yol.glb`'yi kendi GLB okuyucusuyla (başlık, parçalar, doldurma, min ve max,
 üçgenler başvuruyla, yönler) ve trimesh'le okur; Khronos glTF-Validator kuruluysa onu da koşar. Python, MCP
 (`tests/road_routes.rs`), masaüstünde Koridor › 3B › glTF ver.
+
+Y12.3b (yapıldı, sahne çekirdeği): `kentos-scene3d` (§4). Ortak durumlar `fixtures/scene3d/v1/cases.json`
+(`scene3d_cases.py`; kurallar ADR'den, numpy'ın float32'siyle, KentOS kodu olmadan): 8 kamera (matris, frustum
+kararları, piksel ve derinlik, ışın, karonun göze göre kökeni; TM koordinatında ve abartmalı), 23 seçim (dörtlü ağaç,
+eksik çocuk, ADD, içeriksiz kök, ortografik, abartma, dar pencere, göz karoda, ufka bakış, bölünmüş arazi), 8 bölme
+(sınırlar, parçalar, TM'de 2,4 km, aynı merkezli ve bozuk üçgen); float32 konumlar bit bit aynı. Süreler (release, M5):
+4 milyon üçgenlik 2 km × 1 km TM arazisi 175 ms'de 255 karo, 128 içerik (80,5 MB), en büyük float32 farkı 2,4e-7 m;
+bir karenin seçimi 0,004–0,011 ms; 21 845 karolu dörtlü ağaç üstünde uçuşta 0,003 ms. Bağımlılık yönü temiz, wasm32
+derlenir.
 
 ## Sonra
 

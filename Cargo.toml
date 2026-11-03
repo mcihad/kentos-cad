@@ -32,6 +32,8 @@ members = [
     # KentOS Yol's engineering core (plan/road.md, docs/adr/0900): the terrain surface, later the alignments,
     # profiles, sections and earthworks; KentOS Harita's zoning plans may use it too.
     "crates/shared/road",
+    # The 3D scene core (plan/3d.md D1, docs/adr/0910 §3): camera, tiles, LOD selection, chunking; no GPU.
+    "crates/shared/scene3d",
     # The forms core (docs/adr/0401): a form's preflight, rules and a record's validation.
     "crates/shared/forms",
     # Sheet layouts, pafta düzeni (docs/sheet/design.md): one core for the web and the desktop.
@@ -119,6 +121,7 @@ default-members = [
     "crates/shared/raster",
     "crates/shared/expression",
     "crates/shared/road",
+    "crates/shared/scene3d",
     "crates/shared/forms",
     "crates/shared/sheet",
     "crates/shared/style-core",
