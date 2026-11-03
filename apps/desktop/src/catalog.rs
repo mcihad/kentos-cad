@@ -595,6 +595,10 @@ pub const PORTED: &[&str] = &[
     // plan/road.md Y6: Dever and Dever oluştur (superelevation_window.rs).
     "superelevation.editor",
     "superelevation.new",
+    // plan/road.md Y7: Koridor, Koridor oluştur and Şevli plan (corridor_window.rs).
+    "corridor.editor",
+    "corridor.new",
+    "corridor.slopePlan",
     // docs/adr/0773: Bina programı (program_window.rs).
     "arch.program",
     // docs/adr/0313: Çizgi tipleri (line_types_window.rs).

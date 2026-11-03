@@ -208,12 +208,12 @@ impl App {
             return;
         }
         let kept = doc.model.road_superelevations().to_vec();
-        self.superelevation_window = Some(Window {
+        self.superelevation_window = Some(Box::new(Window {
             chosen: (!kept.is_empty()).then_some(0),
             rows: kept.iter().map(Row::of).collect(),
             kept,
             ..Window::default()
-        });
+        }));
         self.dialog = Some(Dialog::Superelevations);
         self.refresh_superelevation();
     }

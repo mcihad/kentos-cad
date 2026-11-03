@@ -257,6 +257,7 @@ mod alignment_window;
 mod profile_window;
 mod section_window;
 mod superelevation_window;
+mod corridor_window;
 #[cfg(test)]
 mod alignment_window_tests;
 #[cfg(test)]

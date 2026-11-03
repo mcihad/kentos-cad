@@ -2653,6 +2653,27 @@
         "road.superelevations.edit"
       ]
     },
+    "corridor.editor": {
+      "level": "semantic",
+      "via": [
+        "road.corridors.edit",
+        "road.corridors.query",
+        "road.corridors.draw"
+      ],
+      "note": "Koridor penceresi koridoru yazdıkça çekirdekle kurar ve planda gösterir; Kaydet ve Aksa yeniden bağla road.corridors.edit ile, Şevli plan çiz road.corridors.draw ile yazar (plan/road.md Y7, ADR 0905)."
+    },
+    "corridor.new": {
+      "level": "semantic",
+      "via": [
+        "road.corridors.edit"
+      ]
+    },
+    "corridor.slopePlan": {
+      "level": "semantic",
+      "via": [
+        "road.corridors.draw"
+      ]
+    },
     "profile.new": {
       "level": "semantic",
       "via": [

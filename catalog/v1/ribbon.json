@@ -567,6 +567,33 @@
     ]
    },
    {
+    "id": "corridor",
+    "label": "Koridor",
+    "panels": [
+     {
+      "label": "Koridor",
+      "icon": "corridorEditor",
+      "items": [
+       {
+        "command": "corridor.editor",
+        "size": "large"
+       },
+       {
+        "command": "corridor.new",
+        "size": "large"
+       },
+       {
+        "command": "corridor.slopePlan",
+        "size": "large"
+       }
+      ]
+     }
+    ],
+    "works": [
+     "road"
+    ]
+   },
+   {
     "id": "plan",
     "label": "Plan",
     "panels": [

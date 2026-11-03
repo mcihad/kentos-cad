@@ -1664,6 +1664,56 @@
    "tests": 0
   },
   {
+   "id": "corridor.editor",
+   "kind": "command",
+   "title": "Koridor…",
+   "level": "semantic",
+   "via": [
+    "road.corridors.edit",
+    "road.corridors.query",
+    "road.corridors.draw"
+   ],
+   "operation": null,
+   "python": "Connection: road.corridors.edit, Connection: road.corridors.query, Connection: road.corridors.draw",
+   "mcp": "road.corridors.edit, road.corridors.query, road.corridors.draw",
+   "note": "Koridor penceresi koridoru yazdıkça çekirdekle kurar ve planda gösterir; Kaydet ve Aksa yeniden bağla road.corridors.edit ile, Şevli plan çiz road.corridors.draw ile yazar (plan/road.md Y7, ADR 0905).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "corridor.new",
+   "kind": "command",
+   "title": "Koridor oluştur…",
+   "level": "semantic",
+   "via": [
+    "road.corridors.edit"
+   ],
+   "operation": null,
+   "python": "Connection: road.corridors.edit",
+   "mcp": "road.corridors.edit",
+   "note": null,
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "corridor.slopePlan",
+   "kind": "command",
+   "title": "Şevli plan…",
+   "level": "semantic",
+   "via": [
+    "road.corridors.draw"
+   ],
+   "operation": null,
+   "python": "Connection: road.corridors.draw",
+   "mcp": "road.corridors.draw",
+   "note": null,
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "crs.points",
    "kind": "command",
    "title": "Nokta listesi içe aktar…",

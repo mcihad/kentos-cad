@@ -58,9 +58,17 @@ Tarih: 2026-11-03. plan/road.md Y7 (ROAD-COR-05…17, ROAD-MOD-06). Durum: tasla
 
 ## Aşamalar
 
-Y7.1 çekirdek (`kentos_road::corridor`: bölgelerin denetimi, km örneklemesi, öznitelik çizgileri, şerit üçgenlemesi,
-çözülmeyen aralıklar) ve bağımsız başvuru; Y7.2 komutlar (`road.corridors.edit`, `.query`, `.draw`), `.kcad`, Python,
-MCP; Y7.3 Koridor penceresi, planda koridor ve şevli plan.
+Y7.1 (yapıldı, `4ad9fad85`): `kentos_road::corridor` (bölgelerin denetimi, km örneklemesi, öznitelik çizgileri, şerit
+üçgenlemesi, çözülmeyen aralıklar ve katlanan şeritler); 26 ortak durum (`road_corridor_cases.py`, aks başvurusu ve
+kesirler). Y7.2 (yapıldı, `b4e6aad8b`): `road.corridors.edit` (set, rebind, remove; tek adım “Koridor”) ve `.query`
+(km'ler nedenleriyle, boşluklar, çözülmeyen aralıklar, katlanan şeritler, öznitelik çizgileri, isteğe bağlı noktalar ve
+üst yüzeyin üçgenleri); koridorun kullandığı tip kesit, boykesit, dever ve aks silinmez; 35 + 22 ortak durum
+(`road_corridor_command_cases.py`: kesitler enkesit başvurusundan); `.kcad` şema 160'ın `corridors`'ı ve bozuk örneği;
+Python, MCP. Y7.3 (yapıldı, `5ece6c106`): `road.corridors.draw` şevli kotlu plan (köşe kotlu öznitelik çizgileri, şev
+taraması, kırmızı kotlar; tek adım “Şevli plan”), 26 ortak durum. Y7.4: Koridor penceresi (`corridor_window.rs`;
+`corridor.editor`, `corridor.new`, `corridor.slopePlan`; şeritte Koridor sekmesi): kaynaklar, örnekleme, bölgeler,
+yazdıkça kurulan plan (üst yüzey, öznitelik çizgileri, çözülmeyen km'ler), uyarılar, Aksa yeniden bağla ve Şevli plan
+çiz. Resimler `.run/gui-evidence/yol-y7-*`.
 
 ## Sonra
 
