@@ -831,7 +831,7 @@ Bu işaret native masaüstü/Python/MCP kapsamının kabulüdür. Web öznitelik
 penceresinin native eşitleme kapsamıyla aynı olmadığı kodda görüldü;
 TODOS'daki web eşitliği görevi bu kapanışla tamamlanmış sayılmaz.
 
-### CAD-ADV-07 — Tekrarları tanı, blok ve ilişkili diziye kontrollü dönüştür [ ]
+### CAD-ADV-07 — Tekrarları tanı, blok ve ilişkili diziye kontrollü dönüştür [~]
 
 **Öncelik:** P1. **Kod:** [C11], [C13], [C03].
 **Dayanak:** BLOCKIFY ve ARRAYDETECT, bulunan adayları kullanıcıya
@@ -857,6 +857,77 @@ inceletip seçilmiş dönüşüm sunuyor. [R11], [R12]
 üzerinde tanıma yap. Birbirine benzeyen farklı bileşen yanlış birleşmesin.
 Seçilmiş adayları dönüştür, sayıyı/aralığı değiştir, bir öğeyi koru/sil/resetle;
 kimlik eşlemesi, bağlı ölçü ve tek Undo doğrulansın.
+
+**İlerleme — 3 Kasım 2026, ilk dilim:**
+[ADR 0866](../docs/adr/0866-repeated-2d-candidate-recognition.md),
+[kullanım/API](../docs/cad/repeated-components.md).
+
+- [x] `cad.blocks.find` ile analitik çizgi/çember/yay koleksiyonunu yazısız
+  tanıma. Kaynakta başka tür varsa bütün kaynak açık ret alır; desteklenmeyen
+  parça atılarak sahte bir tam eşleşme üretilmez. İlk dilim bütün CAD türlerini
+  destekliyor diye sunulmaz.
+- [x] Döndürme, ayna, tekdüze ölçek ve katman/görünüş/öznitelik politikası
+  ayrı seçeneklerdir. Geometriye göre karşılaştırma ayrı uyarı verir.
+  Float64 hesapta kaynak yerel çerçeveye alınır; tolerans mutlak metre,
+  varsayılan 0,001 mm'dir. Proje birimi/ölçeği veya geometri değiştirilmez.
+- [x] Uzamsal indeks, bütün üyelerde bire bir analitik doğrulama ve kaynak
+  sırasındaki UUID eşlemesi. Çakışan adaylar görünürdür; yinelenen geometriler
+  tek kimliğe çökmez. Kaynak 128, kapsam 50 000, sonuç 1 000 ile sınırlıdır;
+  iş/sonuç sınırı kısmi tarama olarak açıklanır.
+- [x] Arka planda arama, Durdur ve panelden çıkışta iptal; geç gelen iş ve
+  değişen belgeye ait sonuçla seçim yapılmaz. Masaüstünde görünür birimli
+  ayarlar, Bloklar panelinde sanallaştırılmış aday listesi, Göster ve açık
+  aday seçimi; Python/MCP aynı native sorguyu kullanır. Python kodu çıktısı
+  ayarı sorguyu da kapsar. Python iş API'sinin başarılı çıktıyı düşüren
+  okuyucusu katalogdaki sonuç tipiyle düzeltildi.
+- [x] Tek parçalı 2B çoklu çizgi: açık/kapalı durum, analitik yaylı kenar ve
+  değişken uç genişlikleri; döngüsel başlangıç ve ters yön eşlemesi.
+  [ADR 0867](../docs/adr/0867-analytic-polyline-repeat-recognition.md).
+  Z/M verisi, mahal ayırıcı rolü, delik ve ek parçalar açık ret alır.
+  Köşe yapısı sadeleştirilmez; bir çizgi 4 096, toplam kapsam 200 000 köşedir.
+- [ ] Kaynak türlerini metin/öznitelik varyantı, iç içe blok ve
+  diğer üretim geometrilerine aynı doğruluk kapısıyla genişletme.
+- [ ] Seçili adayları bloklaştırma; eski UUID→yeni yerleştirme/alt nesne
+  eşlemesi, ilişkileri koruma veya kaybı önceden açıklayıp atomik ret,
+  gerçek GUI/Python/MCP ve tek Undo/Redo kabulü.
+- [ ] Grid/kutupsal/yol örüntüsünü mevcut `AssocArray` modeline benimsetme;
+  iki eksik öğe, elle değişen öğe, koru/sil/reset ve sayı/aralık değişikliğinde
+  bağların ve kimliklerin korunması. Bütün CAD-ADV-07 bu kabulden önce kapanmaz.
+
+**İlk dilimin doğrulaması:** çekirdek 5, native uygulama 366, masaüstü 1 628,
+MCP 67 ve Python 479 test geçti; native ortak komut kabulü 21 durumdur.
+Son yerleşim değişikliğinden sonra masaüstünün 4 odak testi ve Clippy tekrar
+geçti. Gerçek uygulamada varsayılan 20, ayna açık 40, ölçek de açık 41 aday;
+40 adaydan 160 nesnenin seçimi ve Python konsolundaki public sorgu doğrulandı.
+Küçük pencere/büyük yazıda kesilen aday satırı düzeltildi; açık/koyu tema,
+birimli tolerans, sıfırda pasif Bul ve geometriye göre arama uyarısı denendi.
+Arama/seçimden sonra gerçek arayüzden kaydedilen KCAD dosyası kaynak dosyayla
+bayt bayt aynıdır; bağlı ölçü korunur. İptal/geç sonuç otomatik testle
+doğrulandı; bu küçük kabul çiziminde elle Durdur testi yapılmış sayılmaz.
+Ekran görüntüleri ve ayrıntılı kabul kayıtları depo dışında tutulur.
+
+**Yoğun örtüşme kabulü:** 10 000 üst üste çember, ayrı kaynak ve farklı
+yarıçaplı benzerle ankraj taraması iyileştirildi. Aynı veriyle 2 000 001
+karşılaştırma/199 kısmi aday yerine 2 002 karşılaştırma/1 000 kısmi aday;
+kimlikler, geometri/veri denetimi ve sonuç sınırı korunur. Çekirdeğin tüm
+601 testi (6 bilinçli atlanan), 3 native sorgu testi, 21 ortak durum,
+4 masaüstü testi, 59 Python blok testi ve ilgili paketlerin Clippy kontrolü
+geçti. Gerçek küçük pencerede dört haneli sayaç taşması düzeltildi;
+kısmi sonuç başlığı, 0/1 000 aday seçimi ve son kaydın kaynakla bayt
+eşitliği doğrulandı. Kaynak türü genişletme ve dönüşüm işleri açık kalır.
+
+**Çoklu çizgi diliminin doğrulaması:** çekirdeğin 604, native uygulamanın
+369, masaüstünün 1 628, MCP'nin 68 ve Python blok yüzeyinin 61 testi geçti;
+ortak komut kabulü 25 durumdur. Son arayüz değişikliğinden sonra 4 odak testi,
+derleme ve Clippy yeniden geçti. Gerçek uygulamada yaylı, değişken genişlikli,
+ters/döngüsel sıralı çizgilerde 20/40/41 aday; son derlemede 40 adayın seçimi,
+Göster ile kaynak ve bağlı 2 000 mm ölçü doğrulandı. Z verili kaynak,
+geometriye göre aramada da açık gerekçeyle reddedildi; hata metni ve düğmeler
+büyük yazıda okunur. 50 000 çemberlik arama son derlemede gerçek fareyle
+Durdur üzerinden iptal edildi; iki nesnelik seçim korundu. İptal çizimi ve
+çoklu çizgi kabulü arayüzden kaydedilip kendi başlangıç dosyalarıyla bayt bayt
+karşılaştırıldı: ikisi de aynıdır. Ham görüntüler ve kabul kayıtları depo
+dışındadır. Bu kabul bloklaştırma veya ilişkili dizi dönüşümünü kapatmaz.
 
 ### CAD-ADV-08 — Sınır, tarama ve maskeyi hatasını açıklayabilen bir üretim sistemine getir [ ]
 

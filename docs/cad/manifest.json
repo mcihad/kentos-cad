@@ -1045,6 +1045,22 @@
    "tests": 0
   },
   {
+   "id": "block.find",
+   "kind": "command",
+   "title": "Tekrarlanan bileşenleri bul…",
+   "level": "query",
+   "via": [
+    "cad.blocks.find"
+   ],
+   "operation": null,
+   "python": "kentos.cad.blocks.find",
+   "mcp": "cad.blocks.find",
+   "note": "Yazısız ve durdurulabilir eşleşme arama; sonuç seçimi ayrı kullanıcı eylemidir (ADR 0866).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "block.freeze",
    "kind": "command",
    "title": "Sabit bloğa çevir",

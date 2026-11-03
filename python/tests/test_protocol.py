@@ -88,6 +88,7 @@ class Protocol(unittest.TestCase):
         status = job.wait()
         self.assertEqual(status.phase, "done")
         self.assertTrue(status.answer.ok)
+        self.assertIsInstance(status.answer.output, cad.EntitiesTransformed)
         with self.assertRaises(cad.HostError) as e:
             job.cancel()
         self.assertEqual(e.exception.code, "already_committed")

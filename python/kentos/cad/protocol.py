@@ -165,14 +165,20 @@ class JobStatus:
 
     @classmethod
     def from_json(cls, raw: Mapping[str, Any]) -> JobStatus:
+        # A job always executes a catalog command. Decode its payload just like the typed
+        # direct wrapper; passing None here used to discard successful query results.
+        from ._index import COMMANDS  # noqa: PLC0415 - generated wrappers import this module
+
         answer = raw.get("answer")
         command = raw.get("command", "")
+        wrapper = COMMANDS.get(command)
+        output_type = None if wrapper is None else wrapper.output_type
         return cls(
             id=raw["id"],
             command=command,
             phase=raw["phase"],
             progress=raw.get("progress"),
-            answer=None if answer is None else call_outcome(command, answer, None),
+            answer=None if answer is None else call_outcome(command, answer, output_type),
         )
 
 

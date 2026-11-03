@@ -617,6 +617,11 @@
       ],
       "was": "cad.blocks.define"
     },
+    "block.find": {
+      "level": "query",
+      "via": ["cad.blocks.find"],
+      "note": "Yazısız ve durdurulabilir eşleşme arama; sonuç seçimi ayrı kullanıcı eylemidir (ADR 0866)."
+    },
     "block.panel": {
       "level": "host"
     },

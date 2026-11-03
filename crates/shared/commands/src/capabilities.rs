@@ -1415,6 +1415,17 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.blocks.find",
+        refusals: &[&["no_entities", "invalid_uid", "entity_not_found", "invalid_tolerance", "invalid_limit", "recognition_unsupported", "recognition_source_limit", "recognition_scope_limit"], REVISION],
+        warnings: &["recognition_truncated", "recognition_geometry_only"],
+        targets: || vec![CommandTarget {
+            kinds: vec!["line".into(), "polyline".into(), "circle".into(), "arc".into()],
+            refused_with: Some("recognition_unsupported".into()),
+            note: Some("Kaynak öğeler; sıfır uzunluklu çizgi desteklenmez. Çoklu çizgi tek parçalı, deliksiz, Z/M verisi ve mahal ayırıcı rolü olmadan, en çok 4096 köşedir; açık/kapalı durum, analitik yay ve kenar genişliği karşılaştırılır. Kaynak ve kapsam toplam en çok 200000 çoklu çizgi köşesidir. Desteklenmeyen kaynak öğesi atlanmaz.".into()),
+            ..Default::default()
+        }],
+    },
+    Entry {
         id: "cad.blocks.query",
         refusals: &[&[
             "unknown_block",

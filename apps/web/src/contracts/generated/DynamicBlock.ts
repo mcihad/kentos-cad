@@ -7,20 +7,20 @@ import type { ParamValue } from "./ParamValue";
 /**
  * A definition's parameters and actions.
  */
-export type DynamicBlock = { parameters: Array<BlockParameter>,
+export type DynamicBlock = { parameters: Array<BlockParameter>, 
 /**
  * Ordered presentation groups. Unassigned parameters retain their automatic headings;
  * membership never changes the evaluator's parameter/action order or instance values.
  */
-parameterGroups?: Array<BlockParameterGroup>,
+parameterGroups?: Array<BlockParameterGroup>, 
 /**
  * Shared scalar parameter names. Scope belongs to this drawing definition, not a publication ID.
  */
-typeParameters?: Array<string>,
+typeParameters?: Array<string>, 
 /**
  * Common inputs and calculated caches; geometric defaults remain action reference coordinates.
  */
-typeValues?: { [key in string]: ParamValue },
+typeValues?: { [key in string]: ParamValue }, 
 /**
  * Applied in this order to the definition's objects, each on what the ones before left.
  */

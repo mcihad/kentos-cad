@@ -3510,6 +3510,64 @@ fn component_export_plan_discloses_static_and_association_loss_without_writing()
 }
 
 #[test]
+fn repeat_recognition_is_read_only_and_exposes_ordered_member_identity_maps_to_agents() {
+    let dir=std::env::temp_dir().join(format!("kentos-mcp-repeat-query-{}",std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let path=dir.join("source.kcad");
+    let mut server=Server::new();
+    let made=call(&mut server,"drawing.new",json!({"workspace":"cad","drawingUnit":"mm"}))["structuredContent"].clone();
+    let drawing=made["drawing"].clone();let layer=made["summary"]["activeLayer"].clone();
+    let mut uids=Vec::new();
+    for x in [0.0,10.0] {
+        let line=call(&mut server,"cad.line.create",json!({"drawing":drawing,"layerId":layer,"a":{"x":x,"y":0.0},"b":{"x":x+2.0,"y":0.0}}))["structuredContent"].clone();
+        assert_eq!(line["status"],"completed","{line}");uids.push(line["output"]["uid"].clone());
+    }
+    call(&mut server,"drawing.save",json!({"drawing":drawing,"path":path}));
+    let before=std::fs::read(&path).unwrap();
+    let plan=call(&mut server,"cad.blocks.find",json!({"drawing":drawing,"source":[uids[0]],"op":"plan"}))["structuredContent"].clone();
+    assert_eq!(plan["status"],"completed","{plan}");
+    let groups=plan["output"]["matches"].as_array().unwrap();assert_eq!(groups.len(),2);
+    assert_eq!(groups[1]["members"],json!([uids[1]]));assert_eq!(groups[1]["at"]["x"],10.0);
+    let executed=call(&mut server,"cad.blocks.find",json!({"drawing":drawing,"source":[uids[0]]}))["structuredContent"].clone();
+    assert_eq!(executed["status"],"completed","{executed}");assert_eq!(executed["output"],plan["output"]);
+    let empty=call(&mut server,"cad.blocks.find",json!({"drawing":drawing,"source":[uids[0]],"uids":[]}))["structuredContent"].clone();
+    assert_eq!(empty["output"]["matches"],json!([]));
+    call(&mut server,"drawing.save",json!({"drawing":drawing,"path":path}));assert_eq!(std::fs::read(&path).unwrap(),before);
+    std::fs::remove_dir_all(dir).unwrap();
+}
+
+#[test]
+fn curved_tapered_polyline_recognition_uses_the_same_read_only_plan_for_agents() {
+    let dir = std::env::temp_dir().join(format!("kentos-mcp-repeat-path-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join("source.kcad");
+    let mut server = Server::new();
+    let made = call(&mut server, "drawing.new", json!({"workspace":"cad","drawingUnit":"mm"}))["structuredContent"].clone();
+    let drawing = made["drawing"].clone();
+    let layer = made["summary"]["activeLayer"].clone();
+    let mut ids = Vec::new();
+    for (pts, bulges, widths) in [
+        (json!([{"x":0.,"y":0.},{"x":2.,"y":0.},{"x":1.5,"y":1.}]), json!([0.25,0.,-0.1]), json!([[0.1,0.2],[0.2,0.3],[0.3,0.1]])),
+        (json!([{"x":12.,"y":0.},{"x":10.,"y":0.},{"x":11.5,"y":1.}]), json!([-0.25,0.1,0.]), json!([[0.2,0.1],[0.1,0.3],[0.3,0.2]])),
+    ] {
+        let answer = call(&mut server, "cad.polyline.create", json!({"drawing":drawing,"layerId":layer,"pts":pts,"bulges":bulges,"widths":widths,"closed":true}))["structuredContent"].clone();
+        assert_eq!(answer["status"], "completed", "{answer}");
+        ids.push(answer["output"]["uid"].clone());
+    }
+    call(&mut server,"drawing.save",json!({"drawing":drawing,"path":path}));
+    let before = std::fs::read(&path).unwrap();
+    let plan = call(&mut server,"cad.blocks.find",json!({"drawing":drawing,"source":[ids[0]],"op":"plan"}))["structuredContent"].clone();
+    assert_eq!(plan["status"],"completed","{plan}");
+    assert_eq!(plan["output"]["matches"].as_array().unwrap().len(),2);
+    assert_eq!(plan["output"]["matches"][1]["members"],json!([ids[1]]));
+    let answer = call(&mut server,"cad.blocks.find",json!({"drawing":drawing,"source":[ids[0]]}))["structuredContent"].clone();
+    assert_eq!(answer["output"],plan["output"]);
+    call(&mut server,"drawing.save",json!({"drawing":drawing,"path":path}));
+    assert_eq!(std::fs::read(&path).unwrap(),before);
+    std::fs::remove_dir_all(dir).unwrap();
+}
+
+#[test]
 fn a_block_definition_review_is_read_only_and_its_plan_guards_the_same_write() {
     let dir = std::env::temp_dir().join(format!("kentos-mcp-block-review-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();

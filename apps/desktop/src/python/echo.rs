@@ -31,6 +31,15 @@ impl App {
         }
     }
 
+    /// Explicit read-only GUI queries have no document journal row; echo the same public command once.
+    pub(crate) fn echo_query(&mut self, command: &str, input: &serde_json::Value) -> Task<Message> {
+        if !self.settings.bool(SETTING) || self.python.running.is_some() { return Task::none(); }
+        let Some(doc) = &self.document else { return Task::none(); };
+        let names = redacted_names(&doc.model);
+        self.python.repl.echo(python_echo(command, Some(crate::history::text::title_of(command)), &redacted(input, &names), false));
+        super::view::follow()
+    }
+
     /// After every message: the drawing's new commands and a selection made, as code in the console.
     pub(crate) fn follow_python_echo(&mut self) -> Task<Message> {
         let on = self.settings.effective(SETTING) == serde_json::Value::Bool(true);

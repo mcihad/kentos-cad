@@ -26,6 +26,7 @@ COMMANDS: dict[str, Any] = {
     "cad.attachments.inspect": attachments.inspect,
     "cad.blocks.define": blocks.define,
     "cad.blocks.edit": blocks.edit,
+    "cad.blocks.find": blocks.find,
     "cad.blocks.freeze": blocks.freeze,
     "cad.blocks.insert": blocks.insert,
     "cad.blocks.parameters": blocks.parameters,

@@ -2,6 +2,7 @@
 //! file of its own, the ones run alone (by `--test`) beside this folder.
 //! One binary links once where each file was linked on its own.
 
+mod blocks_find;
 mod block_formula_values;
 mod block_nested_attribute_renames;
 mod block_type_values;

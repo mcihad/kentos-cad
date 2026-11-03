@@ -14970,6 +14970,53 @@ class BlockInserted(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class BlockMatch(_Model):
+    """
+    Attributes:
+        members: Target UUID for each source UUID, in `BlocksFound.source` order: the source-to-target identity map.
+        origin: Unit: length.
+        at: Unit: length.
+        rotation: Unit: rad.
+        scale: Unit: 1.
+        bounds: Unit: length.
+        overlaps: Shares objects with another candidate. Selection is harmless; future conversion must resolve overlap.
+    """
+    members: list[str]
+    origin: Vec2
+    at: Vec2
+    rotation: float
+    scale: float
+    mirror: bool
+    bounds: Bounds
+    overlaps: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["members"] = list(self.members)
+        out["origin"] = _vec2_out(self.origin)
+        out["at"] = _vec2_out(self.at)
+        out["rotation"] = float(self.rotation)
+        out["scale"] = float(self.scale)
+        out["mirror"] = self.mirror
+        out["bounds"] = self.bounds.to_json()
+        out["overlaps"] = self.overlaps
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BlockMatch:
+        return cls(
+            members=list(data["members"]),
+            origin=Vec2.from_json(data["origin"]),
+            at=Vec2.from_json(data["at"]),
+            rotation=float(data["rotation"]),
+            scale=float(data["scale"]),
+            mirror=data["mirror"],
+            bounds=Bounds.from_json(data["bounds"]),
+            overlaps=data["overlaps"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class BlockParameterGroup(_Model):
     """A property-panel heading and the exact parameter names it contains, in display order."""
     name: str
@@ -15501,6 +15548,106 @@ class BlocksEdited(_Model):
             library=data.get("library", UNSET),
             skipped=list(data["skipped"]) if "skipped" in data else UNSET,
             sync=UNSET if "sync" not in data else None if data["sync"] is None else AttributeSync.from_json(data["sync"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BlocksFind(_Model):
+    """Finds whole collections equivalent to `source`; writes no document or selection state.
+    Supports analytic line/circle/arc and single-part 2D polyline sources (up to 4096 vertices each).
+    Polylines retain closure, analytic bulges and taper widths; paths with Z/M, holes, extra parts or
+    a room-separator role are refused. Source plus search scope is limited to 200000 polyline vertices.
+    Unsupported members refuse the whole source.
+    Attributes:
+        source: Ordered source object UUIDs, at most 128; repeated UUIDs are taken once.
+        geometry_only: Explicitly ignore layer, appearance and object data in comparisons; absent: false.
+        limit: Result count limit, 1 to 1000; absent: 1000. `truncated` means the scan is incomplete. Unit: count.
+        mirrors: Also recognize reflected collections; absent: false.
+        rotations: Also recognize rotated collections; absent: true.
+        scales: Also recognize uniformly scaled collections; absent: false.
+        tolerance: Absolute model tolerance, metres, above zero to 0.001; absent: 0.000001 (0.001 mm). Unit: length.
+        uids: Search object UUIDs, at most 50 000; absent searches the document, empty searches nothing.
+    """
+    source: list[str]
+    expected_revision: str | None | Unset = UNSET
+    geometry_only: bool | None | Unset = UNSET
+    limit: int | None | Unset = UNSET
+    mirrors: bool | None | Unset = UNSET
+    rotations: bool | None | Unset = UNSET
+    scales: bool | None | Unset = UNSET
+    tolerance: float | None | Unset = UNSET
+    uids: list[str] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["source"] = list(self.source)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.geometry_only is not UNSET:
+            out["geometryOnly"] = self.geometry_only
+        if self.limit is not UNSET:
+            out["limit"] = self.limit
+        if self.mirrors is not UNSET:
+            out["mirrors"] = self.mirrors
+        if self.rotations is not UNSET:
+            out["rotations"] = self.rotations
+        if self.scales is not UNSET:
+            out["scales"] = self.scales
+        if self.tolerance is not UNSET:
+            out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
+        if self.uids is not UNSET:
+            out["uids"] = None if self.uids is None else list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BlocksFind:
+        return cls(
+            source=list(data["source"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            geometry_only=data.get("geometryOnly", UNSET),
+            limit=data.get("limit", UNSET),
+            mirrors=data.get("mirrors", UNSET),
+            rotations=data.get("rotations", UNSET),
+            scales=data.get("scales", UNSET),
+            tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
+            uids=UNSET if "uids" not in data else None if data["uids"] is None else list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BlocksFound(_Model):
+    """
+    Attributes:
+        truncated: Result or work budget reached; never claim that partial results cover the full search.
+        comparisons: Analytic comparisons/transform trials performed, for reproducible performance evidence. Unit: count.
+        related: Root objects linked to any matched member, counted once by kind. No relation is changed. Unit: count.
+    """
+    source: list[str]
+    matches: list[BlockMatch]
+    truncated: bool
+    comparisons: int
+    related: dict[str, int]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["source"] = list(self.source)
+        out["matches"] = [e0.to_json() for e0 in self.matches]
+        out["truncated"] = self.truncated
+        out["comparisons"] = self.comparisons
+        out["related"] = dict(self.related)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BlocksFound:
+        return cls(
+            source=list(data["source"]),
+            matches=[BlockMatch.from_json(e0) for e0 in data["matches"]],
+            truncated=data["truncated"],
+            comparisons=data["comparisons"],
+            related=dict(data["related"]),
+            revision=data["revision"],
         )
 
 
@@ -96108,6 +96255,7 @@ __all__ = [
     "BlockFileMode",
     "BlockFileModeName",
     "BlockInserted",
+    "BlockMatch",
     "BlockParameter",
     "BlockParameterGroup",
     "BlockPublication",
@@ -96123,6 +96271,8 @@ __all__ = [
     "BlocksEdit",
     "BlocksEditPlan",
     "BlocksEdited",
+    "BlocksFind",
+    "BlocksFound",
     "BlocksFreeze",
     "BlocksFrozen",
     "BlocksInsert",

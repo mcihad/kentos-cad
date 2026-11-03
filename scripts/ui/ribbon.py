@@ -292,7 +292,7 @@ CAD = [
     T("insert", "Ekle", [
         P("Blok", "blockInsert", [L("tool.blockInsert"), S("tool.blockDefine"), S("block.panel"), S("block.library"),
             S("block.edit")],
-          overflow=["block.insertFile", "block.attributes", "block.sync", "block.freeze", "block.card", "block.schedule",
+          overflow=["block.find", "block.insertFile", "block.attributes", "block.sync", "block.freeze", "block.card", "block.schedule",
             "block.writeFile", "block.redefineFromFile", "block.import", "block.export", "block.purge"]),
         P("Şablonlar", "templates", [B("templates")], launcher=toCmd("template.panel", "Şablonlar paneli")),
         P("Dış başvuru", "xrefAttach", [L("xref.attach"), S("xref.manager"), S("tool.xclip")]),
