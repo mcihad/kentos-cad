@@ -261,7 +261,7 @@ impl<'a, Message: Clone + 'a> PythonRepl<'a, Message> {
                             iced::widget::text_editor::Edit::Indent
                         }),
                     ))),
-                    _ => Binding::from_key_press(kp),
+                    _ => super::default_key_binding(kp),
                 }
             });
         let action = if running {

@@ -748,6 +748,27 @@ Bu dilim kalıcı tip–örnek kapsamının yerine geçmez.
 [ADR 0860](../docs/adr/0860-polar-formulas-and-complete-reference-refresh.md),
 [formül/API rehberi](../docs/cad/block-parameter-formulas.md).
 
+**İlerleme — 2026-11-03, formül zinciri:** İleri başvurudaki geçerli
+formülün ara varsayılandan yanlış reddi ve döngünün kabulü gerçek GUI'de
+üretildi. Formüller artık gerçek lexer ve motorun Türkçe/harf eşlemesiyle
+bağımlılık sırasına konur; her son sonuç bir kez denetlenir. Döngü
+adlarıyla yazısız reddedilir. Varsayılan değişimi ve blok/proje birim
+uyarlaması aynı girdi eşlemesini kullanır. Gerçek GUI'de korumalı ekleme,
+1.10→1.15 m tek Enter, döngüde veri koruma, çizim odağında Undo/Redo,
+kaydet–aç ve menüden `@genislik` formüllü mm→cm sayı koruma doğrulandı.
+GUI/Python dosyaları tam aynı; 16 dosya bağımsız okuyucudan geçti.
+348 application, 1612 masaüstü, 63 MCP ve 464 Python testi, son kaynakta
+hedefli tekrarlar, tüm hedeflerde Clippy ve derleme geçti.
+[ADR 0861](../docs/adr/0861-block-formula-dependency-order.md).
+
+**İlerleme — 2026-11-03, gerçek testte görülen konsol kısayolu:**
+Konsol odaktayken ⌘O'nun kaynak koda `o` eklemesi giderildi. Betik
+kaydet/farklı kaydet ve yerel Undo/Redo Mac Command tuşunu kabul eder;
+normal/Option/AltGr metni, pano ve çizim odağı ayrımı korunur. Gerçek
+Aç/İptal, kod çalıştırma ve `.py` kayıtları doğrulandı; CAD dosyası
+başlangıçla bayt düzeyinde aynı. 326 UI, 1614 masaüstü testi, Clippy ve
+derleme geçti. [ADR 0862](../docs/adr/0862-python-editor-command-shortcuts.md).
+
 Kalıcı tip–örnek parametre kapsamı ve birleşik blok kabulü açıktır. Web öznitelik penceresinin native eşitleme kapsamıyla
 aynı olmadığı kodda görüldü; bu dilim web eşitliğini tamamlanmış saymaz.
 

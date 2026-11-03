@@ -26,7 +26,7 @@ pub mod syntax;
 pub use completion::{
     CompletionEvent, CompletionItem, CompletionRequest, CompletionState, SymbolKind,
 };
-pub use editor::PythonEditor;
+pub use editor::{PythonEditor, default_key_binding};
 pub use repl::{CodeView, PythonRepl};
 pub use state::{
     EditorState, Entry, EntryKind, ReplEvent, ReplState, Request, RunResult, RunStatus,

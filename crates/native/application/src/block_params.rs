@@ -5,8 +5,8 @@
 //! - each name given: the block's parameter (`unknown_parameter`), not an expression's (`derived_parameter`); a
 //!   lookup's value is one of its rows' labels and sets the row's values; any other value meets its parameter's rule
 //!   (`invalid_parameter_value`);
-//! - then every expression's parameter is computed from the number parameters' values (as `@name`), passes over the
-//!   list as many times as there are such parameters; its result meets its rule (`invalid_parameter_value`);
+//! - then expressions are computed once in dependency order from numeric parameters (`@name`);
+//!   cycles are refused and each final result meets its rule (`invalid_parameter_value`);
 //! - the values equal to their defaults are dropped.
 //!
 //! The checks of the command, in order: an operation's input (`no_entities`, `invalid_uid`, an empty `values` is
@@ -111,45 +111,127 @@ fn computed(source: &str, vars: Vec<Variable>) -> Result<f64, String> {
     }
 }
 
-/// The expression parameters computed over `values` (passes as many as they are); why not, with the parameter.
+/// Stable dependency order, using the expression host's own name comparison.
+/// A reference inside a string is not a dependency; a polar point is not a numeric input.
+fn formula_order(d: &DynamicBlock) -> Result<Vec<usize>, (String, String)> {
+    use kentos_expression::js::text::fold_turkish;
+    use kentos_expression::lexer::{Tok, tokenize};
+    use std::collections::BTreeSet;
+    let mut numeric = HashMap::new();
+    let mut derived = BTreeSet::new();
+    for (i, p) in d.parameters.iter().enumerate() {
+        if matches!(
+            p,
+            BlockParameter::Linear { .. } | BlockParameter::Angle { .. }
+        ) {
+            // Schema::variable uses the first matching numeric name as well.
+            numeric.entry(fold_turkish(p.name())).or_insert(i);
+        }
+        if p.rule().is_some_and(|r| r.expression.is_some()) {
+            derived.insert(i);
+        }
+    }
+    let mut dependencies = vec![BTreeSet::new(); d.parameters.len()];
+    let mut readers = vec![Vec::new(); d.parameters.len()];
+    for &i in &derived {
+        let source = d.parameters[i]
+            .rule()
+            .and_then(|r| r.expression.as_deref())
+            .unwrap_or_default();
+        let tokens = tokenize(source).map_err(|e| {
+            (
+                d.parameters[i].name().to_owned(),
+                format!("ifade okunamadı: {}", e.message),
+            )
+        })?;
+        for token in tokens {
+            if let Tok::At(name) = token.t
+                && let Some(&j) = numeric.get(&fold_turkish(&name))
+                && derived.contains(&j)
+                && dependencies[i].insert(j)
+            {
+                readers[j].push(i);
+            }
+        }
+    }
+    let mut remaining: Vec<_> = dependencies.iter().map(BTreeSet::len).collect();
+    let mut ready: BTreeSet<_> = derived
+        .iter()
+        .copied()
+        .filter(|&i| remaining[i] == 0)
+        .collect();
+    let mut order = Vec::with_capacity(derived.len());
+    while let Some(i) = ready.pop_first() {
+        order.push(i);
+        for &reader in &readers[i] {
+            remaining[reader] -= 1;
+            if remaining[reader] == 0 {
+                ready.insert(reader);
+            }
+        }
+    }
+    if order.len() != derived.len() {
+        // Following an unresolved dependency necessarily reaches a real cycle;
+        // do not blame an acyclic downstream reader in the displayed chain.
+        let mut at = derived.iter().copied().find(|&i| remaining[i] > 0)
+            .ok_or_else(|| (String::new(), "formül bağımlılıkları sıralanamadı".into()))?;
+        let mut path = Vec::new();
+        loop {
+            if let Some(start) = path.iter().position(|&i| i == at) {
+                path.push(at);
+                let chain = path[start..]
+                    .iter()
+                    .map(|&i| format!("“{}”", d.parameters[i].name()))
+                    .collect::<Vec<_>>()
+                    .join(" → ");
+                return Err((
+                    d.parameters[at].name().to_owned(),
+                    format!("döngüsel formül bağımlılığı: {chain}"),
+                ));
+            }
+            path.push(at);
+            at = dependencies[at]
+                .iter()
+                .copied()
+                .find(|&i| remaining[i] > 0)
+                .ok_or_else(|| (d.parameters[at].name().to_owned(), "formül bağımlılığı çözümlenemedi".into()))?;
+        }
+    }
+    Ok(order)
+}
+
+/// Compute each formula from final dependency values, never a previous cache or geometric default of a formula.
 fn derive(
     d: &DynamicBlock,
     values: &mut BTreeMap<String, ParamValue>,
 ) -> Result<(), (String, String)> {
-    let derived: Vec<(&BlockParameter, &str, &kentos_commands::NumberRule)> = d
-        .parameters
-        .iter()
-        .filter_map(|p| {
-            let rule = p.rule()?;
-            Some((p, rule.expression.as_deref()?, rule))
-        })
-        .collect();
-    for _ in 0..derived.len() {
-        for (parameter, source, rule) in &derived {
-            let name = parameter.name();
-            let x = computed(source, variables(d, values)).map_err(|m| (name.to_string(), m))?;
-            if let Some(m) = number_problem(rule, x) {
-                return Err((name.to_string(), format!("ifadenin sonucu {x}: {m}")));
-            }
-            let value = match parameter {
-                BlockParameter::Polar { from, to, .. } => {
-                    let (dx, dy) = (to.x - from.x, to.y - from.y);
-                    let length = dx.hypot(dy);
-                    if x < 0.0 || !length.is_finite() || length == 0.0 {
-                        return Err((name.to_owned(), "kutupsal formülün uzaklığı negatif olamaz; tanımın yönü sonlu ve sıfırdan farklı olmalı".into()));
-                    }
-                    ParamValue::Point(kentos_commands::Vec2 {
-                        x: from.x + (dx / length) * x,
-                        y: from.y + (dy / length) * x,
-                    })
-                }
-                _ => ParamValue::Number(x),
-            };
-            if let Some(why) = value_problem(parameter, &value) {
-                return Err((name.to_owned(), format!("ifadenin sonucu: {why}")));
-            }
-            values.insert(name.to_owned(), value);
+    for i in formula_order(d)? {
+        let parameter = &d.parameters[i];
+        let rule = parameter.rule().ok_or_else(|| (parameter.name().to_owned(), "formülün sayı kuralı bulunamadı".into()))?;
+        let source = rule.expression.as_deref().ok_or_else(|| (parameter.name().to_owned(), "parametrenin formülü bulunamadı".into()))?;
+        let name = parameter.name();
+        let x = computed(source, variables(d, values)).map_err(|m| (name.to_string(), m))?;
+        if let Some(m) = number_problem(rule, x) {
+            return Err((name.to_string(), format!("ifadenin sonucu {x}: {m}")));
         }
+        let value = match parameter {
+            BlockParameter::Polar { from, to, .. } => {
+                let (dx, dy) = (to.x - from.x, to.y - from.y);
+                let length = dx.hypot(dy);
+                if x < 0.0 || !length.is_finite() || length == 0.0 {
+                    return Err((name.to_owned(), "kutupsal formülün uzaklığı negatif olamaz; tanımın yönü sonlu ve sıfırdan farklı olmalı".into()));
+                }
+                ParamValue::Point(kentos_commands::Vec2 {
+                    x: from.x + (dx / length) * x,
+                    y: from.y + (dy / length) * x,
+                })
+            }
+            _ => ParamValue::Number(x),
+        };
+        if let Some(why) = value_problem(parameter, &value) {
+            return Err((name.to_owned(), format!("ifadenin sonucu: {why}")));
+        }
+        values.insert(name.to_owned(), value);
     }
     Ok(())
 }
@@ -365,12 +447,15 @@ pub(crate) fn formula_inputs_changed(old: Option<&DynamicBlock>, next: Option<&D
     fn inputs(d: Option<&DynamicBlock>) -> BTreeMap<String, Option<ParamValue>> {
         use kentos_expression::lexer::{Tok, tokenize};
         let Some(d) = d else { return BTreeMap::new(); };
+        let schema = Schema { variables: variables(d, &BTreeMap::new()), ..Schema::default() };
         let mut out = BTreeMap::new();
         for source in d.parameters.iter().filter_map(|p| p.rule()?.expression.as_deref()) {
             if let Ok(tokens) = tokenize(source) {
                 for token in tokens {
                     if let Tok::At(name) = token.t {
-                        let value = d.parameters.iter().find(|p| p.name() == name).and_then(BlockParameter::default_value);
+                        let value = schema.variable(&name).and_then(|v| match v.value {
+                            Value::Num(n) => Some(ParamValue::Number(n)), _ => None,
+                        });
                         out.insert(name, value);
                     }
                 }

@@ -55,3 +55,20 @@ hesapları ve kök sonuçları birlikte geri getirir.
 
 Bu davranış [ADR 0860](../adr/0860-polar-formulas-and-complete-reference-refresh.md)
 ile tanımlıdır. Yalnız grup adını/sırasını değiştirmek hesapları yenilemez.
+
+## Birbirini kullanan formüller
+
+Parametrelerin listedeki yeri hesap sırası değildir. Örneğin
+`Ara = @Genişlik * 2`, `Nihai = 1 / @Ara` için önce Ara hesaplanır;
+Nihai'nin sınırı Ara'nın geometrik başlangıcı veya eski sonucu üzerinden
+kontrol edilmez. Girdi değişince zincirin tamamı son değerlerle yenilenir.
+Bir parametreyi birkaç kez okumak veya `@genislik` gibi mevcut motorun
+Türkçe/harf eşlemesini kullanmak bu bağımlılığı değiştirmez. Birim
+düzeltmesi de aynı ad eşlemesiyle formülü dönüştürür.
+
+`A = @B + 1` ve `B = @A + 1` döngüdür; plan ve çalıştırma hiçbir şey
+kaydetmeden reddedilir. İleti gerçek zinciri adlarıyla gösterir. Koşullu
+bir ifadenin çalışmayan dalında yazılmış olsa da döngüye izin verilmez;
+tırnak içindeki düz `@ad` metni ise bağımlılık sayılmaz. Bu araç yinelemeli
+bir denklem çözücüsü değildir. Ayrıntı:
+[ADR 0861](../adr/0861-block-formula-dependency-order.md).

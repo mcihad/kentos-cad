@@ -25,6 +25,17 @@ use super::{RunStatus, font, strong_font, syntax};
 
 type KeyBinding<'a, Message> = Box<dyn Fn(KeyPress) -> Option<Binding<Message>> + 'a>;
 
+/// Standard text editing without turning an unhandled command chord into source text.
+/// Returning `None` lets the host route shortcuts such as Open. AltGr and macOS
+/// Option input remain text; recognized copy/paste, selection and motions stay local.
+pub fn default_key_binding<Message>(event: KeyPress) -> Option<Binding<Message>> {
+    let shortcut = event.modifiers.logo() || (event.modifiers.control() && !event.modifiers.alt());
+    match Binding::from_key_press(event) {
+        Some(Binding::Insert(_)) if shortcut => None,
+        binding => binding,
+    }
+}
+
 /// A Python source editor with a synchronized gutter, smoothly moving active
 /// line, optional header and footer, and focus/execution lighting.
 pub struct PythonEditor<'a, Message> {
@@ -142,7 +153,8 @@ impl<'a, Message: Clone + 'a> PythonEditor<'a, Message> {
         self
     }
     /// Replaces the default key map; default Iced bindings can be obtained
-    /// with `Binding::from_key_press`. This preserves host completion APIs.
+    /// with [`default_key_binding`]. This preserves host completion APIs and
+    /// leaves unhandled command chords for the application's shortcut router.
     pub fn key_binding(
         mut self,
         binding: impl Fn(KeyPress) -> Option<Binding<Message>> + 'a,
@@ -253,7 +265,7 @@ impl<'a, Message: Clone + 'a> PythonEditor<'a, Message> {
                         },
                     ))));
                 }
-                Binding::from_key_press(kp)
+                default_key_binding(kp)
             })
             .style(|theme: &Theme, _| {
                 let t = Tokens::of(theme);
@@ -939,5 +951,74 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Body<'a, Mess
             anchor: tree.state.downcast_ref::<BodyState>().anchor + translation,
             events: events.clone(),
         })))
+    }
+}
+
+#[cfg(test)]
+mod shortcut_tests {
+    use super::*;
+    use iced::keyboard::{
+        Modifiers,
+        key::{Code, Physical},
+    };
+
+    fn press(key: &str, code: Code, text: &str, modifiers: Modifiers) -> KeyPress {
+        KeyPress {
+            key: Key::Character(key.into()),
+            modified_key: Key::Character(text.into()),
+            physical_key: Physical::Code(code),
+            modifiers,
+            text: Some(text.into()),
+            status: Status::Focused { is_hovered: false },
+        }
+    }
+    #[test]
+    fn an_unhandled_command_chord_never_appends_its_letter_to_python() {
+        for modifiers in [
+            Modifiers::COMMAND,
+            Modifiers::COMMAND | Modifiers::SHIFT,
+            Modifiers::LOGO,
+        ] {
+            let binding: Option<Binding<()>> =
+                default_key_binding(press("o", Code::KeyO, "o", modifiers));
+            assert!(binding.is_none(), "{modifiers:?}");
+        }
+    }
+    #[test]
+    fn normal_option_and_altgr_typing_remain_source_text() {
+        for (key, code, text, modifiers, expected) in [
+            ("a", Code::KeyA, "a", Modifiers::NONE, 'a'),
+            ("s", Code::KeyS, "ş", Modifiers::NONE, 'ş'),
+            ("q", Code::KeyQ, "@", Modifiers::ALT, '@'),
+            ("q", Code::KeyQ, "@", Modifiers::CTRL | Modifiers::ALT, '@'),
+        ] {
+            let binding: Option<Binding<()>> =
+                default_key_binding(press(key, code, text, modifiers));
+            assert!(matches!(binding, Some(Binding::Insert(c)) if c == expected));
+        }
+    }
+    #[test]
+    fn clipboard_and_select_all_commands_still_belong_to_the_text_editor() {
+        let binding: Option<Binding<()>> =
+            default_key_binding(press("a", Code::KeyA, "a", Modifiers::COMMAND));
+        assert!(matches!(binding, Some(Binding::SelectAll)));
+        let binding: Option<Binding<()>> =
+            default_key_binding(press("c", Code::KeyC, "c", Modifiers::COMMAND));
+        assert!(matches!(binding, Some(Binding::Copy)));
+        let binding: Option<Binding<()>> =
+            default_key_binding(press("v", Code::KeyV, "v", Modifiers::COMMAND));
+        assert!(matches!(binding, Some(Binding::Paste)));
+    }
+    #[test]
+    fn shortcut_filter_preserves_motions_and_ignores_unfocused_fields() {
+        let mut event = press("o", Code::KeyO, "o", Modifiers::NONE);
+        event.key = Key::Named(Named::ArrowLeft);
+        event.modified_key = event.key.clone();
+        event.text = None;
+        let binding: Option<Binding<()>> = default_key_binding(event.clone());
+        assert!(matches!(binding, Some(Binding::Move(_))));
+        event.status = Status::Active;
+        let binding: Option<Binding<()>> = default_key_binding(event);
+        assert!(binding.is_none());
     }
 }

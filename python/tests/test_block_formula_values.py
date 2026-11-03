@@ -60,3 +60,51 @@ class BlockFormulaValues(unittest.TestCase):
         self.assertAlmostEqual(values['Uç']['x'], 11.32)
         self.assertAlmostEqual(values['Uç']['y'], 21.76)
         self.assertEqual(cad.Document.from_bytes(doc.to_bytes()).to_bytes(), doc.to_bytes())
+
+    def chain(self, block, cycle=False):
+        d = block.to_json()['dynamic']
+        d['parameters'].extend([
+            {'kind': 'linear', 'name': 'Nihai', 'from': {'x': 0., 'y': 0.},
+             'to': {'x': .6, 'y': 0.},
+             'rule': {'expression': '@Ara + 1'} if cycle else
+                     {'expression': '1 / @Ara', 'min': .4, 'max': 1.2}},
+            {'kind': 'linear', 'name': 'Ara', 'from': {'x': 0., 'y': 0.},
+             'to': {'x': .1, 'y': 0.},
+             'rule': {'expression': '@Nihai + 1' if cycle else '@genislik * 2'}},
+        ])
+        return cad.DynamicBlock.from_json(d)
+
+    def test_forward_chain_is_guarded_saveable_and_driven_by_instance_input(self):
+        doc, block = self.source()
+        before = doc.to_bytes()
+        args = dict(operation='dynamic', block=block.id, dynamic=self.chain(block))
+        plan = cad.blocks.edit.answer(doc, **args, op='plan')
+        self.assertEqual(plan.status, 'completed')
+        self.assertEqual(doc.to_bytes(), before)
+        cad.blocks.edit(doc, **args, expected=cad.Expected(plan=plan.plan_id))
+        uid = list(doc.entities())[1].uid
+        values = cad.blocks.parameters(doc, operation='get', uids=[uid]).inserts[0].values
+        self.assertEqual(values['Ara'], 2.)
+        self.assertEqual(values['Nihai'], .5)
+        after = doc.to_bytes()
+        cad.blocks.parameters(doc, operation='set', uids=[uid], values={'Genişlik': 1.05})
+        values = cad.blocks.parameters(doc, operation='get', uids=[uid]).inserts[0].values
+        self.assertEqual(values['Ara'], 2.1)
+        self.assertAlmostEqual(values['Nihai'], 1 / 2.1)
+        self.assertEqual(cad.Document.from_bytes(doc.to_bytes()).to_bytes(), doc.to_bytes())
+        doc.undo()
+        self.assertEqual(doc.to_bytes(), after)
+        doc.undo()
+        self.assertEqual(doc.to_bytes(), before)
+
+    def test_circular_chain_explains_its_names_and_does_not_create_a_plan_or_write(self):
+        doc, block = self.source()
+        before = doc.to_bytes()
+        for op in ('validate', 'plan', 'execute'):
+            answer = cad.blocks.edit.answer(doc, operation='dynamic', block=block.id,
+                    dynamic=self.chain(block, cycle=True), op=op)
+            self.assertEqual(answer.status, 'failed')
+            self.assertEqual(answer.error.code, 'invalid_dynamic_block')
+            self.assertIn('“Nihai” → “Ara” → “Nihai”', str(answer.error))
+            self.assertIsNone(answer.plan_id)
+            self.assertEqual(doc.to_bytes(), before)

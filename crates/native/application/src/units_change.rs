@@ -315,18 +315,18 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: UnitsChange) -> CommandRe
 /// Use the real lexer so quoted text, Unicode names and longer parameter names are not rewritten accidentally.
 pub(crate) fn scale_expressions(block: &mut kentos_commands::BlockDefinition, s: Scale) {
     use kentos_commands::BlockParameter as P;
+    use kentos_expression::js::text::fold_turkish;
     use kentos_expression::lexer::{Tok, tokenize};
     let Some(dynamic) = &mut block.dynamic else {
         return;
     };
-    let lengths: Vec<String> = dynamic
-        .parameters
-        .iter()
-        .filter_map(|p| match p {
-            P::Linear { name, .. } => Some(name.clone()),
-            _ => None,
-        })
-        .collect();
+    let mut numeric_lengths = std::collections::HashMap::new();
+    for p in &dynamic.parameters {
+        if matches!(p, P::Linear { .. } | P::Angle { .. }) {
+            // Match the expression host: first numeric variable after Turkish folding.
+            numeric_lengths.entry(fold_turkish(p.name())).or_insert(matches!(p, P::Linear { .. }));
+        }
+    }
     for p in &mut dynamic.parameters {
         let (rule, length) = match p {
             P::Linear { rule, .. } | P::Polar { rule, .. } => (rule, true),
@@ -342,7 +342,7 @@ pub(crate) fn scale_expressions(block: &mut kentos_commands::BlockDefinition, s:
         let mut units: Vec<u16> = source.encode_utf16().collect();
         for token in tokens.iter().rev() {
             if let Tok::At(name) = &token.t
-                && lengths.contains(name)
+                && numeric_lengths.get(&fold_turkish(name)) == Some(&true)
             {
                 let start = token.at - 1;
                 let end = start + 1 + name.encode_utf16().count();
