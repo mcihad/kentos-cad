@@ -292,6 +292,121 @@ pub struct TerrainSurfaceDef {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub built: Option<String>,
+    /// The ground points taken from point clouds into its point layers (docs/adr/0913 §2), each layer's record.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<SurfaceCloudDef>>", optional))]
+    pub clouds: Vec<SurfaceCloudDef>,
+}
+
+/// Which of a pulse's returns a cloud's points are taken from (docs/adr/0913): all, the first, the last (nearest the
+/// ground), or a pulse's only return.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum CloudReturns {
+    #[default]
+    All,
+    First,
+    Last,
+    Single,
+}
+
+/// What a surface's points taken from point clouds are (docs/adr/0913 §2): the layer they were written to, the clouds,
+/// classes, returns and area they were chosen by, the thinning, and what it cost: the ground points read and kept,
+/// their coverage (0–1) and density (per m²) of the area, and the vertical error of the points left out against the
+/// surface made then (absent when none was measured), and how many were outside it.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SurfaceCloudDef {
+    pub layer: String,
+    pub clouds: Vec<String>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub classes: Vec<u8>,
+    #[serde(default)]
+    pub returns: CloudReturns,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub area: Option<String>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub cell: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub z_tolerance: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub near: Option<f64>,
+    #[cfg_attr(feature = "ts", ts(type = "number"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub read: u64,
+    #[cfg_attr(feature = "ts", ts(type = "number"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub kept: u64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub coverage: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub density: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub error_max: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub error_rms: Option<f64>,
+    #[serde(default, skip_serializing_if = "is_zero_u64")]
+    #[cfg_attr(feature = "ts", ts(type = "number", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub outside: u64,
+}
+
+fn is_zero_u64(v: &u64) -> bool {
+    *v == 0
+}
+
+/// The most cloud records a surface keeps, and the most clouds and classes one names.
+pub const MAX_SURFACE_CLOUDS: usize = 64;
+
+/// What is wrong with a surface's cloud records (docs/adr/0913 §2): a record names its layer once and at least one
+/// cloud and class; the thinning's values are positive; the counts agree and the shares are shares.
+fn clouds_problem(list: &[SurfaceCloudDef]) -> Option<String> {
+    if list.len() > MAX_SURFACE_CLOUDS {
+        return Some(format!("en çok {MAX_SURFACE_CLOUDS} bulut kaydı olur"));
+    }
+    let mut layers = std::collections::BTreeSet::new();
+    for (k, c) in list.iter().enumerate() {
+        let at = |what: &str| format!("{}. bulut kaydının {what}", k + 1);
+        if !word_ok(&c.layer) || !layers.insert(c.layer.as_str()) {
+            return Some(at("katmanı bir katmanın kimliği olmalı ve bir kez geçmeli"));
+        }
+        if c.clouds.is_empty() || c.clouds.len() > MAX_SURFACE_CLOUDS || c.clouds.iter().any(|u| !word_ok(u)) {
+            return Some(at("bulutları 1 ile 64 arası nesne kimliği olmalı"));
+        }
+        if c.classes.is_empty() || c.classes.len() > 256 {
+            return Some(at("sınıfları en az bir sınıf olmalı"));
+        }
+        if c.area.as_deref().is_some_and(|a| !word_ok(a)) {
+            return Some(at("alanı bir nesnenin kimliği olmalı"));
+        }
+        let positive = |v: f64| v.is_finite() && v > 0.0;
+        if !positive(c.cell) || c.z_tolerance.is_some_and(|v| !positive(v)) || c.near.is_some_and(|v| !positive(v)) {
+            return Some(at("hücresi, kot toleransı ve kırık hat erimi sıfırdan büyük olmalı"));
+        }
+        if c.kept > c.read
+            || !(0.0..=1.0).contains(&c.coverage)
+            || !(c.density.is_finite() && c.density >= 0.0)
+            || [c.error_max, c.error_rms].iter().flatten().any(|v| !(v.is_finite() && *v >= 0.0))
+        {
+            return Some(at("sayıları tutarlı olmalı (kalan okunandan çok değil, kapsama 0–1)"));
+        }
+    }
+    None
 }
 
 fn is_zero(v: &f64) -> bool {
@@ -1066,6 +1181,9 @@ pub fn road_problem(road: &RoadSettings) -> Option<(String, String)> {
             .is_some_and(|d| d.len() != 64 || !d.bytes().all(|b| matches!(b, b'0'..=b'9' | b'a'..=b'f')))
         {
             return fail(at("built"), "özet 64 küçük onaltılık rakam olmalı");
+        }
+        if let Some(words) = clouds_problem(&s.clouds) {
+            return fail(at("clouds"), &words);
         }
     }
     alignments_problem(&road.alignments)
@@ -2708,6 +2826,7 @@ mod tests {
             tolerance: None,
             max_edge: Some(50.0),
             built: None,
+            clouds: Vec::new(),
         }
     }
 

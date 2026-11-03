@@ -36,7 +36,7 @@ Tarih: 2026-11-03. plan/road.md Y15 (ROAD-PC-04, 09, 10, 11, 12; ROAD-TIN-14). D
    kalanları okuma sırasıyla, nedenleriyle sayılı verir. `coverage` alanın (ya da hücre kutusunun) hücrelerini, dolu
    olanları, payı ve yoğunluğu; `residuals` atılan noktaların yüzeye düşey farkını (en büyük, RMS, sayı, dışarıda
    kalan). Sınıf ve dönüş süzgeci çağıranındır: çekirdek yalnız seçilmiş zemin noktalarını alır.
-2. **Komut (Y15.2).** `road.terrains.fromCloud`: bulutlar (kimlikleriyle), sınıflar, dönüş (hepsi, ilk, son, tek),
+2. **Komut (Y15.2).** `road.terrains.cloud`: bulutlar (kimlikleriyle), sınıflar, dönüş (hepsi, ilk, son, tek),
    isteğe bağlı alan (kapalı çoklu çizgi ya da alan), hücre, kot toleransı ve kırık hat erimi kullanıcınındır; KentOS
    sayı vermez. Köprü tabliyesi (17) ve üst yapı (19) zemin yüzeyine katılmaz (reddedilir, ROAD-PC-10); bitki, bina ve
    gürültü sınıfları uyarılır. Kalan noktalar bir katmana çok noktalı nesneler olarak yazılır (tek geri alma adımı),
@@ -58,3 +58,17 @@ yine kalır, 0,6 m'lik basamakta dik hücrelerin en yükseği de kalır, kırık
 noktaları kalır, alanın ve hücre kutusunun kapsaması ve yoğunluğu, düzlemde atılan noktaların hatası sıfır, kalan
 noktaların atladığı tümseğin hatası yüksekliği, değerlerin retleri. `Surface::height_walking` art arda çok noktanın
 yürüyüşünü sürdürür.
+
+Y15.2 (yapıldı, komut): §2. `road.terrains.cloud` (`crates/native/application/src/road_terrain_cloud.rs`; girdi
+`TerrainsFromCloud`): bulutlar bir kez taranır (`pointcloud_areas::Scan`), sınıf, dönüş ve alan süzgecinden geçen
+noktalar seyreltilir, kalanlar 10 000'lik çok noktalı nesneler olarak katmana yazılır (tek adım “Buluttan arazi”),
+katman yüzeyin nokta kaynağına eklenir ya da yeni yüzey kurulur (yeni yüzey kabul edilmiş yazılır, var olanın `built`'i
+değişmez: kaynağı değiştiği için eskir). Hata, atılan noktaların ikinci taramayla yeni yüzeye düşey farkıdır. Yüzeyin
+tanımına `clouds[]` (`SurfaceCloudDef`; `.kcad` şema 162'de, `road-work.kcad` örneği ve
+`broken/road-surface-cloud-kept-past-read.kcad`). Bir çağrı en çok 2 milyon nokta yazar. Retler
+`invalid_cloud_terrain`, `cloud_class_not_ground` (17, 19), `cloud_ground_empty`; uyarı `cloud_class_above_ground`
+(3–7, 18). 40 ortak durum (`scripts/fixtures/road_cloud_terrain_cases.py`: kendi LAS dosyası
+`fixtures/pointcloud/v1/files/road-ground.las` laspy ile, seyreltme ve kapsama ADR'nin kuralıyla, hata kendi Bowyer–Watson
+üçgenlemesine karşı, üçgen sayısı 2n − 2 − h ile denetlenir; KentOS kodu yok). İlk karşılaştırmada üçgenlemenin süper
+üçgeni küçük kalıp üç dış üçgeni düşürdüğünden başvurunun hatası farklıydı; başvuru düzeldi, KentOS değişmedi. Python
+`kentos.cad.road.terrains.cloud`, MCP.

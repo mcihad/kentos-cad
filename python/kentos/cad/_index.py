@@ -381,6 +381,7 @@ COMMANDS: dict[str, Any] = {
     "road.superelevations.edit": road.superelevations.edit,
     "road.superelevations.query": road.superelevations.query,
     "road.templates.edit": road.templates.edit,
+    "road.terrains.cloud": road.terrains.cloud,
     "road.terrains.contours": road.terrains.contours,
     "road.terrains.create": road.terrains.create,
     "road.terrains.edit": road.terrains.edit,

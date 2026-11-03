@@ -7565,6 +7565,32 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::ROAD_TERRAINS_FROM_CLOUD.into(),
+            version: crate::ROAD_TERRAINS_FROM_CLOUD_VERSION,
+            title: "Buluttan arazi".into(),
+            summary: "Nokta bulutlarından (clouds: bulut nesnelerinin kimlikleri) arazi yüzeyinin noktalarını çıkarır. Yalnız istenen LAS sınıflarının (classes; ASPRS'de 2 zemin) ve dönüşlerin (returns: all, first, last, single) noktaları, area verilmişse kapalı çoklu çizginin ya da alanın içinde kalanlar alınır; bulut bir kez okunur. Noktalar cell metrelik plan ızgarasında seyreltilir: her hücrede merkezine en yakın nokta (eşitlikte ilk okunan), zTolerance ile kotları bundan çok yayılan hücrenin en alçağı ve en yükseği de, near ile yüzeyin kırık hatlarına bu erimdeki her nokta. Kalanlar layerId katmanına kotlarıyla çok noktalı nesneler olarak yazılır (tek geri alma adımı “Buluttan arazi”) ve katman yüzeyin nokta kaynağı olur: surface ile projedeki yüzeye eklenir, name ile yeni yüzey kurulur (breaklines ve boundary ile). Yüzeyin tanımına bulut kaydı yazılır: okunan ve kalan nokta, alanın (ya da hücre kutusunun) kapsaması ve yoğunluğu, atılan noktaların kalan noktaların yüzeyine düşey farkı (en büyük ve karesel ortalama). Değerler kullanıcının: KentOS sınıf, hücre ya da tolerans vermez. Köprü tabliyesi (17) ve üst yapı (19) zemine katılmaz. \
+                      Uyarılar: layer_hidden, cloud_class_above_ground, cloud_source_unreadable. Retler: not_a_road_project, not_a_pointcloud, invalid_cloud_terrain, cloud_class_not_ground, unknown_terrain, katmanın retleri, too_many_cloud_points, cloud_ground_empty, invalid_terrain, terrain_unbuildable, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["buluttanarazi".into(), "bulutyuzey".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::TerrainsFromCloud>(),
+            output: schema::<crate::TerrainsFromCloudWritten>(),
+            plan: Some(schema::<crate::TerrainsFromCloudWritten>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Zemin sınıfından 1 m hücreyle yeni yüzey".into(),
+                input: json!({ "clouds": ["0192b9f0-0000-7000-8000-000000000001"], "classes": [2], "returns": "last",
+                    "cell": 1.0, "zTolerance": 0.25, "layerId": "zemin-noktalari", "name": "Lidar zemini" }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::ROAD_PLATFORMS_EDIT.into(),
             version: crate::ROAD_PLATFORMS_EDIT_VERSION,
             title: "Platformu düzenle".into(),
@@ -13896,6 +13922,7 @@ mod tests {
                         serde_json::from_value::<crate::CulvertsDraw>(e.input.clone()).map(|_| ())
                     }
                     crate::ROAD_PLATFORMS_EDIT => serde_json::from_value::<crate::PlatformsEdit>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_TERRAINS_FROM_CLOUD => serde_json::from_value::<crate::TerrainsFromCloud>(e.input.clone()).map(|_| ()),
                     crate::ROAD_PLATFORMS_QUERY => serde_json::from_value::<crate::PlatformsQuery>(e.input.clone()).map(|_| ()),
                     crate::ROAD_PLATFORMS_DRAW => serde_json::from_value::<crate::PlatformsDraw>(e.input.clone()).map(|_| ()),
                     crate::ROAD_WALLS_EDIT => {
@@ -14689,6 +14716,7 @@ mod tests {
                             serde_json::from_value::<crate::CulvertsDrawn>(output.clone()).map(|_| ())
                         }
                         crate::ROAD_PLATFORMS_EDIT => serde_json::from_value::<crate::PlatformsWritten>(output.clone()).map(|_| ()),
+                        crate::ROAD_TERRAINS_FROM_CLOUD => serde_json::from_value::<crate::TerrainsFromCloudWritten>(output.clone()).map(|_| ()),
                         crate::ROAD_PLATFORMS_QUERY => serde_json::from_value::<crate::PlatformsQueried>(output.clone()).map(|_| ()),
                         crate::ROAD_PLATFORMS_DRAW => serde_json::from_value::<crate::PlatformsDrawn>(output.clone()).map(|_| ()),
                         crate::ROAD_WALLS_EDIT => {

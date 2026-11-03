@@ -815,6 +815,15 @@ codes! {
     RETAINING_WALL_HIGH = "retaining_wall_high", Warning, false, "İstinat duvarının gövdesi istenen en yüksekten yüksek.";
     PLATFORM_OPEN = "platform_open", Warning, false, "Platformun bir şev çizgisi araziyle buluşmuyor; hacim ve günışığı çizgisi yok.";
     PLATFORM_NO_BALANCE = "platform_no_balance", Warning, false, "Verilen aralıkta kazı ile dolgu eşitlenmiyor; denge verilmedi.";
+    /// A terrain from point clouds that is not right: no cloud or class, both or neither of surface and name, a
+    /// thinning value not positive, an area not closed, too many kept points (docs/adr/0913 §2).
+    INVALID_CLOUD_TERRAIN = "invalid_cloud_terrain", Failed, false, "Buluttan arazi isteği geçerli değil; ileti nedenini söyler.";
+    /// A bridge deck (17) or an overhead structure (19) is not merged into the ground (docs/adr/0913 §2, ROAD-PC-10).
+    CLOUD_CLASS_NOT_GROUND = "cloud_class_not_ground", Failed, false, "Köprü tabliyesi ve üst yapı sınıfı zemin yüzeyine katılmaz.";
+    /// No point of the clouds is of the classes and returns asked in the area (docs/adr/0913 §2).
+    CLOUD_GROUND_EMPTY = "cloud_ground_empty", Failed, false, "Bulutlarda istenen sınıf ve dönüşten, alanın içinde nokta yok.";
+    /// A warning: a class asked is above the ground or noise (vegetation, building, noise; docs/adr/0913 §2).
+    CLOUD_CLASS_ABOVE_GROUND = "cloud_class_above_ground", Warning, false, "İstenen bir sınıf zemin değil (bitki, bina ya da gürültü); yüzey onu zemin sayar.";
     /// A warning: the profile lies farther from the drawn line than the tolerance (docs/adr/0908 §13).
     PROFILE_FIT_DEVIATION = "profile_fit_deviation", Warning, false, "Boykesit çizginin köşelerinden toleranstan uzak.";
     /// A warning: the corridor's superelevation schedule does not build; its lanes keep the templates' slopes.

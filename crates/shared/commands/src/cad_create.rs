@@ -135,6 +135,8 @@ pub enum CreateOperation {
     Junctions,
     /// `road.platforms.draw` (plan/road.md Y14): a graded pad's boundary, daylight and slope lines, “Platform çiz”.
     Platforms,
+    /// A terrain's ground points from point clouds (`road.terrains.cloud`, docs/adr/0913).
+    CloudTerrain,
 }
 
 /// One new object: its geometry and what else it carries. The layer is the

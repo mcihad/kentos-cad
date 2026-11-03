@@ -29,7 +29,28 @@
      },
      "boundary": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e17",
      "tolerance": 0.005,
-     "maxEdge": 60.0
+     "maxEdge": 60.0,
+     "clouds": [
+      {
+       "layer": "zemin",
+       "clouds": [
+        "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e18"
+       ],
+       "classes": [
+        2
+       ],
+       "returns": "last",
+       "cell": 1.0,
+       "zTolerance": 0.25,
+       "read": 182400,
+       "kept": 21530,
+       "coverage": 0.982,
+       "density": 11.4,
+       "errorMax": 0.084,
+       "errorRms": 0.012,
+       "outside": 37
+      }
+     ]
     }
    ],
    "alignments": [

@@ -1124,6 +1124,20 @@ CloudRenderName = Literal["rgb", "classification", "elevation", "intensity", "re
 """The names of :class:`CloudRender`, for a plain string."""
 
 
+class CloudReturns(_StrEnum):
+    """Which of a pulse's returns a cloud's points are taken from (docs/adr/0913): all, the first, the last (nearest the
+    ground), or a pulse's only return.
+    """
+    ALL = "all"
+    FIRST = "first"
+    LAST = "last"
+    SINGLE = "single"
+
+
+CloudReturnsName = Literal["all", "first", "last", "single"]
+"""The names of :class:`CloudReturns`, for a plain string."""
+
+
 class ColumnAnchor(_StrEnum):
     """Which of a column's nine points its `at` is (docs/adr/0725 §2), Archicad's reference axis of the column core: on its
     box before its turn, left and right across its width, bottom and top along its depth.
@@ -1296,6 +1310,7 @@ class CreateOperation(_StrEnum):
     - ``routes``: `road.routes.draw` (plan/road.md Y12.1): a preliminary route as a 3D polyline, “Ön güzergâh”.
     - ``junctions``: `road.junctions.draw` (plan/road.md Y12.2): a junction's curb returns in plan, “Kavşak çiz”.
     - ``platforms``: `road.platforms.draw` (plan/road.md Y14): a graded pad's boundary, daylight and slope lines, “Platform çiz”.
+    - ``cloudTerrain``: A terrain's ground points from point clouds (`road.terrains.cloud`, docs/adr/0913).
     """
     PARALLEL = "parallel"
     PERPENDICULAR_IN = "perpendicularIn"
@@ -1344,9 +1359,10 @@ class CreateOperation(_StrEnum):
     ROUTES = "routes"
     JUNCTIONS = "junctions"
     PLATFORMS = "platforms"
+    CLOUD_TERRAIN = "cloudTerrain"
 
 
-CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions", "terrainContours", "landXml", "alignmentLabels", "profileDrawing", "sectionDrawing", "slopePlan", "guardrails", "culverts", "retainingWalls", "routes", "junctions", "platforms"]
+CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions", "terrainContours", "landXml", "alignmentLabels", "profileDrawing", "sectionDrawing", "slopePlan", "guardrails", "culverts", "retainingWalls", "routes", "junctions", "platforms", "cloudTerrain"]
 """The names of :class:`CreateOperation`, for a plain string."""
 
 
@@ -74854,6 +74870,87 @@ class SuperelevationsWritten(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SurfaceCloudDef(_Model):
+    """What a surface's points taken from point clouds are (docs/adr/0913 §2): the layer they were written to, the clouds,
+    classes, returns and area they were chosen by, the thinning, and what it cost: the ground points read and kept,
+    their coverage (0–1) and density (per m²) of the area, and the vertical error of the points left out against the
+    surface made then (absent when none was measured), and how many were outside it.
+    Attributes:
+        classes: Unit: index.
+        cell: Unit: m.
+        read: Unit: count.
+        kept: Unit: count.
+        coverage: Unit: 1.
+        density: Unit: 1.
+        error_max: Unit: m.
+        error_rms: Unit: m.
+        near: Unit: m.
+        outside: Unit: count.
+        z_tolerance: Unit: m.
+    """
+    layer: str
+    clouds: list[str]
+    classes: list[int]
+    cell: float
+    read: int
+    kept: int
+    coverage: float
+    density: float
+    area: str | None | Unset = UNSET
+    error_max: float | None | Unset = UNSET
+    error_rms: float | None | Unset = UNSET
+    near: float | None | Unset = UNSET
+    outside: int | Unset = UNSET
+    returns: CloudReturns | CloudReturnsName = CloudReturns.ALL
+    z_tolerance: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["clouds"] = list(self.clouds)
+        out["classes"] = list(self.classes)
+        out["cell"] = float(self.cell)
+        out["read"] = self.read
+        out["kept"] = self.kept
+        out["coverage"] = float(self.coverage)
+        out["density"] = float(self.density)
+        if self.area is not UNSET:
+            out["area"] = self.area
+        if self.error_max is not UNSET:
+            out["errorMax"] = None if self.error_max is None else float(self.error_max)
+        if self.error_rms is not UNSET:
+            out["errorRms"] = None if self.error_rms is None else float(self.error_rms)
+        if self.near is not UNSET:
+            out["near"] = None if self.near is None else float(self.near)
+        if self.outside is not UNSET:
+            out["outside"] = self.outside
+        out["returns"] = _enum_out(self.returns)
+        if self.z_tolerance is not UNSET:
+            out["zTolerance"] = None if self.z_tolerance is None else float(self.z_tolerance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SurfaceCloudDef:
+        return cls(
+            layer=data["layer"],
+            clouds=list(data["clouds"]),
+            classes=list(data["classes"]),
+            cell=float(data["cell"]),
+            read=data["read"],
+            kept=data["kept"],
+            coverage=float(data["coverage"]),
+            density=float(data["density"]),
+            area=data.get("area", UNSET),
+            error_max=UNSET if "errorMax" not in data else None if data["errorMax"] is None else float(data["errorMax"]),
+            error_rms=UNSET if "errorRms" not in data else None if data["errorRms"] is None else float(data["errorRms"]),
+            near=UNSET if "near" not in data else None if data["near"] is None else float(data["near"]),
+            outside=data.get("outside", UNSET),
+            returns=_enum_in(CloudReturns, data["returns"]) if "returns" in data else CloudReturns.ALL,
+            z_tolerance=UNSET if "zTolerance" not in data else None if data["zTolerance"] is None else float(data["zTolerance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SurfaceSources(_Model):
     """Where a surface's points or breaklines come from: every object of the layers (and of the groups' layers), and the
     objects named by their persistent ids.
@@ -77136,6 +77233,7 @@ class TerrainSurfaceDef(_Model):
         boundary: The outer boundary: a closed polyline's or an area's id; its vertices take the surface's heights.
         breaklines: The breaklines: each line's and polyline's path, every vertex with an elevation.
         built: The digest (64 lower-case hex digits) of the sources it was last made and accepted from; absent: never.
+        clouds: The ground points taken from point clouds into its point layers (docs/adr/0913 §2), each layer's record.
         max_edge: The edge method: an outer triangle whose outer edge is longer than this is left out, m; absent: none. Unit: m.
         points: The points: each point object's places with an elevation.
         tolerance: Two records at one place are one vertex when their heights are this close, m; absent: 0.001. Unit: m.
@@ -77146,6 +77244,7 @@ class TerrainSurfaceDef(_Model):
     boundary: str | None | Unset = UNSET
     breaklines: SurfaceSources | Unset = UNSET
     built: str | None | Unset = UNSET
+    clouds: list[SurfaceCloudDef] | Unset = UNSET
     max_edge: float | None | Unset = UNSET
     points: SurfaceSources | Unset = UNSET
     tolerance: float | None | Unset = UNSET
@@ -77161,6 +77260,8 @@ class TerrainSurfaceDef(_Model):
             out["breaklines"] = self.breaklines.to_json()
         if self.built is not UNSET:
             out["built"] = self.built
+        if self.clouds is not UNSET:
+            out["clouds"] = [e0.to_json() for e0 in self.clouds]
         if self.max_edge is not UNSET:
             out["maxEdge"] = None if self.max_edge is None else float(self.max_edge)
         if self.points is not UNSET:
@@ -77179,6 +77280,7 @@ class TerrainSurfaceDef(_Model):
             boundary=data.get("boundary", UNSET),
             breaklines=SurfaceSources.from_json(data["breaklines"]) if "breaklines" in data else UNSET,
             built=data.get("built", UNSET),
+            clouds=[SurfaceCloudDef.from_json(e0) for e0 in data["clouds"]] if "clouds" in data else UNSET,
             max_edge=UNSET if "maxEdge" not in data else None if data["maxEdge"] is None else float(data["maxEdge"]),
             points=SurfaceSources.from_json(data["points"]) if "points" in data else UNSET,
             tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
@@ -77352,6 +77454,153 @@ class TerrainsEdit(_Model):
             expected_revision=data.get("expectedRevision", UNSET),
             id=data.get("id", UNSET),
             surface=UNSET if "surface" not in data else None if data["surface"] is None else TerrainSurfaceDef.from_json(data["surface"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TerrainsFromCloud(_Model):
+    """Input of `road.terrains.cloud` v1: the clouds (their objects' ids), the LAS classes taken (2 is the ASPRS
+    ground), the returns, an optional area (a closed polyline's or an area's id), the thinning (`cell` m; `zTolerance`
+    m: a steeper cell keeps its lowest and highest; `near` m: every point within it of the surface's breaklines is
+    kept), the layer the points go on, and either `surface` (a project's surface by its id or name: the layer joins its
+    points) or `name` (a new surface of the layer, with `breaklines` and `boundary` if given). Nothing is filled in: the
+    classes, the cell and the tolerances are the user's.
+
+    Refusals, in this order: `not_a_road_project`, `not_a_pointcloud`, `invalid_cloud_terrain` (no cloud or class, both
+    or neither of surface and name, a thinning value not positive, an area not a closed polyline or area, more kept
+    points than [`MOST_CLOUD_TERRAIN_POINTS`]), `cloud_class_not_ground` (a bridge deck, 17, or an overhead structure,
+    19: they are not the ground and are not merged into it), `unknown_terrain`, the layer's, `too_many_cloud_points`,
+    `cloud_ground_empty` (no point is of the classes and returns in the area), `invalid_terrain`, `terrain_unbuildable`,
+    `invalid_revision`,
+    `revision_conflict`.
+    Attributes:
+        classes: Unit: index.
+        cell: Unit: length.
+        boundary: A new surface's boundary: a closed polyline's or an area's id.
+        breaklines: A new surface's breaklines.
+        drawing: The open drawing's file, a relative source's folder (the host gives it).
+        name: A new surface's name.
+        near: Unit: length.
+        surface: A project's surface by its id or name.
+        z_tolerance: Unit: length.
+    """
+    clouds: list[str]
+    classes: list[int]
+    cell: float
+    layer_id: str
+    area: str | None | Unset = UNSET
+    boundary: str | None | Unset = UNSET
+    breaklines: SurfaceSources | Unset = UNSET
+    drawing: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    near: float | None | Unset = UNSET
+    returns: CloudReturns | CloudReturnsName = CloudReturns.ALL
+    surface: str | None | Unset = UNSET
+    z_tolerance: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["clouds"] = list(self.clouds)
+        out["classes"] = list(self.classes)
+        out["cell"] = float(self.cell)
+        out["layerId"] = self.layer_id
+        if self.area is not UNSET:
+            out["area"] = self.area
+        if self.boundary is not UNSET:
+            out["boundary"] = self.boundary
+        if self.breaklines is not UNSET:
+            out["breaklines"] = self.breaklines.to_json()
+        if self.drawing is not UNSET:
+            out["drawing"] = self.drawing
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.near is not UNSET:
+            out["near"] = None if self.near is None else float(self.near)
+        out["returns"] = _enum_out(self.returns)
+        if self.surface is not UNSET:
+            out["surface"] = self.surface
+        if self.z_tolerance is not UNSET:
+            out["zTolerance"] = None if self.z_tolerance is None else float(self.z_tolerance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainsFromCloud:
+        return cls(
+            clouds=list(data["clouds"]),
+            classes=list(data["classes"]),
+            cell=float(data["cell"]),
+            layer_id=data["layerId"],
+            area=data.get("area", UNSET),
+            boundary=data.get("boundary", UNSET),
+            breaklines=SurfaceSources.from_json(data["breaklines"]) if "breaklines" in data else UNSET,
+            drawing=data.get("drawing", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            name=data.get("name", UNSET),
+            near=UNSET if "near" not in data else None if data["near"] is None else float(data["near"]),
+            returns=_enum_in(CloudReturns, data["returns"]) if "returns" in data else CloudReturns.ALL,
+            surface=data.get("surface", UNSET),
+            z_tolerance=UNSET if "zTolerance" not in data else None if data["zTolerance"] is None else float(data["zTolerance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TerrainsFromCloudWritten(_Model):
+    """Output of `road.terrains.cloud` v1: the points read by class (what the clouds held of each class asked), the
+    record written on the surface (read, kept, coverage, density, error), the kept points by why (a cell's, a steep
+    cell's, beside a breakline), the objects written, and the surface made now.
+    Attributes:
+        scanned: The points of the clouds read (every class). Unit: count.
+        by_cell: Unit: count.
+        by_slope: Unit: count.
+        by_line: Unit: count.
+        cells: The area's cells and those holding a ground point. Unit: count.
+        occupied: Unit: count.
+        area: The area's plan area, m². Unit: area.
+    """
+    cloud: SurfaceCloudDef
+    scanned: int
+    by_cell: int
+    by_slope: int
+    by_line: int
+    cells: int
+    occupied: int
+    area: float
+    uids: list[str]
+    surface: TerrainReport
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["cloud"] = self.cloud.to_json()
+        out["scanned"] = self.scanned
+        out["byCell"] = self.by_cell
+        out["bySlope"] = self.by_slope
+        out["byLine"] = self.by_line
+        out["cells"] = self.cells
+        out["occupied"] = self.occupied
+        out["area"] = float(self.area)
+        out["uids"] = list(self.uids)
+        out["surface"] = self.surface.to_json()
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainsFromCloudWritten:
+        return cls(
+            cloud=SurfaceCloudDef.from_json(data["cloud"]),
+            scanned=data["scanned"],
+            by_cell=data["byCell"],
+            by_slope=data["bySlope"],
+            by_line=data["byLine"],
+            cells=data["cells"],
+            occupied=data["occupied"],
+            area=float(data["area"]),
+            uids=list(data["uids"]),
+            surface=TerrainReport.from_json(data["surface"]),
+            revision=data["revision"],
         )
 
 
@@ -101953,6 +102202,8 @@ __all__ = [
     "CloudRegionPart",
     "CloudRender",
     "CloudRenderName",
+    "CloudReturns",
+    "CloudReturnsName",
     "CloudSource",
     "CloudSourceDescribed",
     "CloudStats",
@@ -104447,6 +104698,7 @@ __all__ = [
     "SuperelevationsQueried",
     "SuperelevationsQuery",
     "SuperelevationsWritten",
+    "SurfaceCloudDef",
     "SurfaceSources",
     "SurveyAdjust",
     "SurveyAdjusted",
@@ -104554,6 +104806,8 @@ __all__ = [
     "TerrainsEdit",
     "TerrainsEditOperation",
     "TerrainsEditOperationName",
+    "TerrainsFromCloud",
+    "TerrainsFromCloudWritten",
     "TerrainsQueried",
     "TerrainsQuery",
     "TerrainsWritten",

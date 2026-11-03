@@ -87,6 +87,7 @@ fn reached() -> BTreeMap<String, BTreeSet<String>> {
 
 /// The listed codes no shared case reaches, and why.
 const UNREACHED: &[(&str, &str, &str)] = &[
+    ("road.terrains.cloud","too_many_cloud_points","Bir çağrı en çok 200 milyon nokta okur (POINTCLOUD_MOST_COUNTED); ortak durumun bulutu bu sınırın çok altında, sınır cad.pointclouds.region'ın durumlarında sınanır (ADR 0552)."),
     ("road.project.rebuild","road_drawings_full","Yeniden üretme kaydı yerinde yazar, sayıyı artırmaz; sınır sözleşmenin a_drawing_record_is_judged testinde (ADR 0911 §3)."),
     ("road.alignments.label","road_drawings_full","Proje en çok 1000 yol çizimi tutar; sınır sözleşmenin a_drawing_record_is_judged testinde, kaydı geri alan adım road_drawings birim testinde sınanır (ADR 0911 §1)."),
     ("road.profiles.draw","road_drawings_full","Proje en çok 1000 yol çizimi tutar; sınır sözleşmenin a_drawing_record_is_judged testinde, kaydı geri alan adım road_drawings birim testinde sınanır (ADR 0911 §1)."),

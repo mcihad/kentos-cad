@@ -40425,6 +40425,334 @@
       ]
     },
     {
+      "id": "road.terrains.cloud",
+      "version": 1,
+      "title": "Buluttan arazi",
+      "summary": "Nokta bulutlarından (clouds: bulut nesnelerinin kimlikleri) arazi yüzeyinin noktalarını çıkarır. Yalnız istenen LAS sınıflarının (classes; ASPRS'de 2 zemin) ve dönüşlerin (returns: all, first, last, single) noktaları, area verilmişse kapalı çoklu çizginin ya da alanın içinde kalanlar alınır; bulut bir kez okunur. Noktalar cell metrelik plan ızgarasında seyreltilir: her hücrede merkezine en yakın nokta (eşitlikte ilk okunan), zTolerance ile kotları bundan çok yayılan hücrenin en alçağı ve en yükseği de, near ile yüzeyin kırık hatlarına bu erimdeki her nokta. Kalanlar layerId katmanına kotlarıyla çok noktalı nesneler olarak yazılır (tek geri alma adımı “Buluttan arazi”) ve katman yüzeyin nokta kaynağı olur: surface ile projedeki yüzeye eklenir, name ile yeni yüzey kurulur (breaklines ve boundary ile). Yüzeyin tanımına bulut kaydı yazılır: okunan ve kalan nokta, alanın (ya da hücre kutusunun) kapsaması ve yoğunluğu, atılan noktaların kalan noktaların yüzeyine düşey farkı (en büyük ve karesel ortalama). Değerler kullanıcının: KentOS sınıf, hücre ya da tolerans vermez. Köprü tabliyesi (17) ve üst yapı (19) zemine katılmaz. Uyarılar: layer_hidden, cloud_class_above_ground, cloud_source_unreadable. Retler: not_a_road_project, not_a_pointcloud, invalid_cloud_terrain, cloud_class_not_ground, unknown_terrain, katmanın retleri, too_many_cloud_points, cloud_ground_empty, invalid_terrain, terrain_unbuildable, invalid_revision, revision_conflict.",
+      "aliases": [
+        "buluttanarazi",
+        "bulutyuzey"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.terrains.cloud` v1: the clouds (their objects' ids), the LAS classes taken (2 is the ASPRS\nground), the returns, an optional area (a closed polyline's or an area's id), the thinning (`cell` m; `zTolerance`\nm: a steeper cell keeps its lowest and highest; `near` m: every point within it of the surface's breaklines is\nkept), the layer the points go on, and either `surface` (a project's surface by its id or name: the layer joins its\npoints) or `name` (a new surface of the layer, with `breaklines` and `boundary` if given). Nothing is filled in: the\nclasses, the cell and the tolerances are the user's.\n\nRefusals, in this order: `not_a_road_project`, `not_a_pointcloud`, `invalid_cloud_terrain` (no cloud or class, both\nor neither of surface and name, a thinning value not positive, an area not a closed polyline or area, more kept\npoints than [`MOST_CLOUD_TERRAIN_POINTS`]), `cloud_class_not_ground` (a bridge deck, 17, or an overhead structure,\n19: they are not the ground and are not merged into it), `unknown_terrain`, the layer's, `too_many_cloud_points`,\n`cloud_ground_empty` (no point is of the classes and returns in the area), `invalid_terrain`, `terrain_unbuildable`,\n`invalid_revision`,\n`revision_conflict`.",
+        "properties": {
+          "area": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "boundary": {
+            "description": "A new surface's boundary: a closed polyline's or an area's id.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "breaklines": {
+            "$ref": "#/$defs/SurfaceSources",
+            "description": "A new surface's breaklines."
+          },
+          "cell": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "classes": {
+            "items": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": "array",
+            "x-unit": "index"
+          },
+          "clouds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "drawing": {
+            "description": "The open drawing's file, a relative source's folder (the host gives it).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layerId": {
+            "type": "string"
+          },
+          "name": {
+            "description": "A new surface's name.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "near": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "returns": {
+            "$ref": "#/$defs/CloudReturns",
+            "default": "all"
+          },
+          "surface": {
+            "description": "A project's surface by its id or name.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "zTolerance": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          }
+        },
+        "required": [
+          "clouds",
+          "classes",
+          "cell",
+          "layerId"
+        ],
+        "title": "TerrainsFromCloud",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.terrains.cloud` v1: the points read by class (what the clouds held of each class asked), the\nrecord written on the surface (read, kept, coverage, density, error), the kept points by why (a cell's, a steep\ncell's, beside a breakline), the objects written, and the surface made now.",
+        "properties": {
+          "area": {
+            "description": "The area's plan area, m².",
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "byCell": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "byLine": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "bySlope": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "cells": {
+            "description": "The area's cells and those holding a ground point.",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "cloud": {
+            "$ref": "#/$defs/SurfaceCloudDef"
+          },
+          "occupied": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "scanned": {
+            "description": "The points of the clouds read (every class).",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "surface": {
+            "$ref": "#/$defs/TerrainReport"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "cloud",
+          "scanned",
+          "byCell",
+          "bySlope",
+          "byLine",
+          "cells",
+          "occupied",
+          "area",
+          "uids",
+          "surface",
+          "revision"
+        ],
+        "title": "TerrainsFromCloudWritten",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.terrains.cloud` v1: the points read by class (what the clouds held of each class asked), the\nrecord written on the surface (read, kept, coverage, density, error), the kept points by why (a cell's, a steep\ncell's, beside a breakline), the objects written, and the surface made now.",
+        "properties": {
+          "area": {
+            "description": "The area's plan area, m².",
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "byCell": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "byLine": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "bySlope": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "cells": {
+            "description": "The area's cells and those holding a ground point.",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "cloud": {
+            "$ref": "#/$defs/SurfaceCloudDef"
+          },
+          "occupied": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "scanned": {
+            "description": "The points of the clouds read (every class).",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "surface": {
+            "$ref": "#/$defs/TerrainReport"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "cloud",
+          "scanned",
+          "byCell",
+          "bySlope",
+          "byLine",
+          "cells",
+          "occupied",
+          "area",
+          "uids",
+          "surface",
+          "revision"
+        ],
+        "title": "TerrainsFromCloudWritten",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "entity_not_found",
+          "not_a_pointcloud",
+          "invalid_cloud_terrain",
+          "cloud_class_not_ground",
+          "unknown_terrain",
+          "layer_not_found",
+          "not_a_layer",
+          "layer_locked",
+          "too_many_cloud_points",
+          "cloud_ground_empty",
+          "invalid_terrain",
+          "terrain_unbuildable",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "layer_hidden",
+          "cloud_class_above_ground",
+          "cloud_source_unreadable"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Zemin sınıfından 1 m hücreyle yeni yüzey",
+          "input": {
+            "cell": 1.0,
+            "classes": [
+              2
+            ],
+            "clouds": [
+              "0192b9f0-0000-7000-8000-000000000001"
+            ],
+            "layerId": "zemin-noktalari",
+            "name": "Lidar zemini",
+            "returns": "last",
+            "zTolerance": 0.25
+          }
+        }
+      ]
+    },
+    {
       "id": "road.platforms.edit",
       "version": 1,
       "title": "Platformu düzenle",
@@ -79842,6 +80170,30 @@
       "meaning": "Verilen aralıkta kazı ile dolgu eşitlenmiyor; denge verilmedi."
     },
     {
+      "code": "invalid_cloud_terrain",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Buluttan arazi isteği geçerli değil; ileti nedenini söyler."
+    },
+    {
+      "code": "cloud_class_not_ground",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Köprü tabliyesi ve üst yapı sınıfı zemin yüzeyine katılmaz."
+    },
+    {
+      "code": "cloud_ground_empty",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bulutlarda istenen sınıf ve dönüşten, alanın içinde nokta yok."
+    },
+    {
+      "code": "cloud_class_above_ground",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "İstenen bir sınıf zemin değil (bitki, bina ya da gürültü); yüzey onu zemin sayar."
+    },
+    {
       "code": "profile_fit_deviation",
       "kind": "warning",
       "retryable": false,
@@ -94083,6 +94435,16 @@
         }
       ]
     },
+    "CloudReturns": {
+      "description": "Which of a pulse's returns a cloud's points are taken from (docs/adr/0913): all, the first, the last (nearest the\nground), or a pulse's only return.",
+      "enum": [
+        "all",
+        "first",
+        "last",
+        "single"
+      ],
+      "type": "string"
+    },
     "CloudSource": {
       "description": "One file of a cloud.",
       "properties": {
@@ -97194,6 +97556,11 @@
         {
           "const": "platforms",
           "description": "`road.platforms.draw` (plan/road.md Y14): a graded pad's boundary, daylight and slope lines, “Platform çiz”.",
+          "type": "string"
+        },
+        {
+          "const": "cloudTerrain",
+          "description": "A terrain's ground points from point clouds (`road.terrains.cloud`, docs/adr/0913).",
           "type": "string"
         }
       ]
@@ -153919,6 +154286,117 @@
       ],
       "type": "object"
     },
+    "SurfaceCloudDef": {
+      "additionalProperties": false,
+      "description": "What a surface's points taken from point clouds are (docs/adr/0913 §2): the layer they were written to, the clouds,\nclasses, returns and area they were chosen by, the thinning, and what it cost: the ground points read and kept,\ntheir coverage (0–1) and density (per m²) of the area, and the vertical error of the points left out against the\nsurface made then (absent when none was measured), and how many were outside it.",
+      "properties": {
+        "area": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "cell": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "classes": {
+          "items": {
+            "format": "uint8",
+            "maximum": 255,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": "array",
+          "x-unit": "index"
+        },
+        "clouds": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "coverage": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "density": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "errorMax": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "errorRms": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "kept": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "layer": {
+          "type": "string"
+        },
+        "near": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "outside": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "read": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "returns": {
+          "$ref": "#/$defs/CloudReturns",
+          "default": "all"
+        },
+        "zTolerance": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "layer",
+        "clouds",
+        "classes",
+        "cell",
+        "read",
+        "kept",
+        "coverage",
+        "density"
+      ],
+      "type": "object"
+    },
     "SurfaceSources": {
       "additionalProperties": false,
       "description": "Where a surface's points or breaklines come from: every object of the layers (and of the groups' layers), and the\nobjects named by their persistent ids.",
@@ -157223,6 +157701,13 @@
             "string",
             "null"
           ]
+        },
+        "clouds": {
+          "description": "The ground points taken from point clouds into its point layers (docs/adr/0913 §2), each layer's record.",
+          "items": {
+            "$ref": "#/$defs/SurfaceCloudDef"
+          },
+          "type": "array"
         },
         "id": {
           "description": "Its id, unique in the project; what a profile or a section names.",

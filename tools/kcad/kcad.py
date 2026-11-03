@@ -9406,11 +9406,44 @@ class _Schema:
                 self.fail("bad_value", "boş kaynak yazılmaz")
             return got
 
+        def share(x):
+            f = self.float(x)
+            if not 0.0 <= f <= 1.0:
+                self.fail("bad_value", "0 ile 1 arası olmalı")
+            return f
+
+        def non_negative(x):
+            f = self.float(x)
+            if not f >= 0.0:
+                self.fail("bad_value", "eksi olamaz")
+            return f
+
+        def cloud(x):
+            # The ground points taken from point clouds (plan/road.md Y15, docs/adr/0913 §2).
+            t = self.fields({"layer": (word, True), "clouds": (words, True), "classes": (self.array(self.uint(8)), True),
+                             "returns": (self.enum(("all", "first", "last", "single")), False), "area": (word, False),
+                             "cell": (positive(None), True), "zTolerance": (positive(None), False),
+                             "near": (positive(None), False), "read": (self.uint(64), True),
+                             "kept": (self.uint(64), True), "coverage": (share, True), "density": (non_negative, True),
+                             "errorMax": (non_negative, False), "errorRms": (non_negative, False),
+                             "outside": (self.uint(64), False)})(x)
+            if not t["clouds"] or len(t["clouds"]) > 64 or not t["classes"] or t["kept"] > t["read"]:
+                self.fail("bad_value", "bulut kaydı: en az bir bulut ve sınıf, kalan okunandan çok değil")
+            return t
+
+        def clouds(x):
+            got = self.array(cloud)(x)
+            layers = [c["layer"] for c in got]
+            if not got or len(got) > 64 or len(set(layers)) != len(layers):
+                self.fail("bad_value", "yüzeyin bulut kayıtları 1 ile 64 arası, her katman bir kez")
+            return got
+
         def surface(x):
             t = self.fields({"id": (word, True), "name": (self.text, True), "points": (nonempty_sources, False),
                              "breaklines": (nonempty_sources, False), "boundary": (word, False),
                              "voids": (words, False), "tolerance": (positive(1.0), False),
-                             "maxEdge": (positive(None), False), "built": (digest, False)})(x)
+                             "maxEdge": (positive(None), False), "built": (digest, False),
+                             "clouds": (clouds, False)})(x)
             name = t["name"]
             if not name or name.strip() != name or len(name) > 120:
                 self.fail("bad_value", "yüzeyin adı boş, boşluklu ya da çok uzun")

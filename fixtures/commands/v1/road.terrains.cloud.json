@@ -1,0 +1,2785 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "road.terrains.cloud",
+ "commandVersion": 1,
+ "title": "Buluttan arazi: zemin noktaları, seyreltme, kapsama ve hata",
+ "note": "scripts/fixtures/road_cloud_terrain_cases.py'den; bulutun noktaları laspy'nin, seyreltme, kapsama ve hata ADR 0913'ün kuralıyla, KentOS kodu olmadan.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Buluttan arazi",
+  "settings": {
+   "srid": 5254,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "deg",
+   "plotScale": 1000.0,
+   "workspace": "cad",
+   "cadWork": "road",
+   "drawingFont": "barlow",
+   "road": {
+    "surfaces": [
+     {
+      "id": "t-1",
+      "name": "Mevcut zemin",
+      "points": {
+       "layers": [
+        "arazi"
+       ]
+      }
+     }
+    ]
+   }
+  },
+  "origin": {
+   "x": 0.0,
+   "y": 0.0
+  },
+  "layers": [
+   {
+    "id": "0",
+    "name": "0",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "arazi",
+    "name": "Arazi",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kirik",
+    "name": "Kırık hatlar",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "alan",
+    "name": "Alan",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "bulut",
+    "name": "Bulut",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "zemin",
+    "name": "Zemin noktaları",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "gizli",
+    "name": "Gizli",
+    "type": "layer",
+    "visible": false,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "grup",
+    "name": "Yol",
+    "type": "group",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [
+     {
+      "id": "yol-zemin",
+      "name": "Yol zemini",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ]
+   }
+  ],
+  "activeLayer": "0",
+  "entities": [
+   {
+    "kind": "point",
+    "layerId": "arazi",
+    "attrs": {},
+    "p": {
+     "x": 990.0,
+     "y": 1990.0
+    },
+    "z": 99.47267564329358,
+    "id": 1
+   },
+   {
+    "kind": "point",
+    "layerId": "arazi",
+    "attrs": {},
+    "p": {
+     "x": 1050.0,
+     "y": 1990.0
+    },
+    "z": 100.76399472227766,
+    "id": 2
+   },
+   {
+    "kind": "point",
+    "layerId": "arazi",
+    "attrs": {},
+    "p": {
+     "x": 1050.0,
+     "y": 2040.0
+    },
+    "z": 101.26399472227766,
+    "id": 3
+   },
+   {
+    "kind": "point",
+    "layerId": "arazi",
+    "attrs": {},
+    "p": {
+     "x": 990.0,
+     "y": 2040.0
+    },
+    "z": 99.97267564329358,
+    "id": 4
+   },
+   {
+    "kind": "polyline",
+    "layerId": "kirik",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 1000.0,
+      "y": 2015.0
+     },
+     {
+      "x": 1020.0,
+      "y": 2015.0
+     },
+     {
+      "x": 1040.0,
+      "y": 2015.0
+     }
+    ],
+    "zs": [
+     100.15,
+     100.36079937617303,
+     101.19733956165585
+    ],
+    "id": 5
+   },
+   {
+    "kind": "polygon",
+    "layerId": "alan",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 1004.0,
+      "y": 2003.0
+     },
+     {
+      "x": 1030.0,
+      "y": 2004.0
+     },
+     {
+      "x": 1034.0,
+      "y": 2018.0
+     },
+     {
+      "x": 1018.0,
+      "y": 2027.0
+     },
+     {
+      "x": 1003.0,
+      "y": 2019.0
+     }
+    ],
+    "id": 6
+   },
+   {
+    "kind": "polyline",
+    "layerId": "alan",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 1004.0,
+      "y": 2003.0
+     },
+     {
+      "x": 1030.0,
+      "y": 2004.0
+     },
+     {
+      "x": 1034.0,
+      "y": 2018.0
+     }
+    ],
+    "id": 7
+   },
+   {
+    "kind": "polygon",
+    "layerId": "alan",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 1004.0,
+      "y": 2003.0
+     },
+     {
+      "x": 1030.0,
+      "y": 2004.0
+     },
+     {
+      "x": 1034.0,
+      "y": 2018.0
+     }
+    ],
+    "bulges": [
+     0.0,
+     0.3,
+     0.0
+    ],
+    "id": 8
+   },
+   {
+    "kind": "pointcloud",
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/road-ground.las",
+      "format": "las",
+      "count": 2822,
+      "bounds": [
+       1000.0,
+       2000.154,
+       80.0,
+       1039.742,
+       2029.947,
+       106.05
+      ]
+     }
+    ],
+    "bounds": [
+     1000.0,
+     2000.154,
+     80.0,
+     1039.742,
+     2029.947,
+     106.05
+    ],
+    "count": 2822,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    },
+    "id": 9
+   },
+   {
+    "kind": "pointcloud",
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/yok.las",
+      "format": "las",
+      "count": 10,
+      "bounds": [
+       1000.0,
+       2000.154,
+       80.0,
+       1039.742,
+       2029.947,
+       106.05
+      ]
+     }
+    ],
+    "bounds": [
+     1000.0,
+     2000.154,
+     80.0,
+     1039.742,
+     2029.947,
+     106.05
+    ],
+    "count": 10,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    },
+    "id": 10
+   }
+  ],
+  "uids": [
+   "0192f5b0-7c3e-7d4a-9b1e-000000000001",
+   "0192f5b0-7c3e-7d4a-9b1e-000000000002",
+   "0192f5b0-7c3e-7d4a-9b1e-000000000003",
+   "0192f5b0-7c3e-7d4a-9b1e-000000000004",
+   "0192f5b0-7c3e-7d4a-9b1e-000000000005",
+   "0192f5b0-7c3e-7d4a-9b1e-000000000006",
+   "0192f5b0-7c3e-7d4a-9b1e-000000000007",
+   "0192f5b0-7c3e-7d4a-9b1e-000000000008",
+   "0192f5b0-7c3e-7d4a-9b1e-000000000009",
+   "0192f5b0-7c3e-7d4a-9b1e-000000000010"
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "Zemin sınıfı, 2 m hücre, yeni yüzey",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clouds": [
+       "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+      ],
+      "classes": [
+       2
+      ],
+      "cell": 2.0,
+      "layerId": "zemin",
+      "name": "Lidar zemini"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "cloud": {
+        "layer": "zemin",
+        "clouds": [
+         "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+        ],
+        "classes": [
+         2
+        ],
+        "returns": "all",
+        "cell": 2.0,
+        "read": 2232,
+        "kept": 291,
+        "coverage": 0.97,
+        "density": 1.86,
+        "errorMax": 0.19743967146317232,
+        "errorRms": 0.009014546060853402,
+        "outside": 205
+       },
+       "scanned": 2822,
+       "byCell": 291,
+       "bySlope": 0,
+       "byLine": 0,
+       "cells": 300,
+       "occupied": 291,
+       "area": 1200.0,
+       "uids": [
+        "$any"
+       ],
+       "surface": {
+        "id": "t-2",
+        "name": "Lidar zemini",
+        "state": "current",
+        "digest": "$any",
+        "built": "$any",
+        "figures": "$any"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Yalnız son dönüşler",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clouds": [
+       "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+      ],
+      "classes": [
+       2
+      ],
+      "cell": 2.0,
+      "layerId": "zemin",
+      "name": "Lidar zemini",
+      "returns": "last"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "cloud": {
+        "layer": "zemin",
+        "clouds": [
+         "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+        ],
+        "classes": [
+         2
+        ],
+        "returns": "last",
+        "cell": 2.0,
+        "read": 2232,
+        "kept": 291,
+        "coverage": 0.97,
+        "density": 1.86,
+        "errorMax": 0.19743967146317232,
+        "errorRms": 0.009014546060853402,
+        "outside": 205
+       },
+       "scanned": 2822,
+       "byCell": 291,
+       "bySlope": 0,
+       "byLine": 0,
+       "cells": 300,
+       "occupied": 291,
+       "area": 1200.0,
+       "uids": [
+        "$any"
+       ],
+       "surface": {
+        "id": "t-2",
+        "name": "Lidar zemini",
+        "state": "current",
+        "digest": "$any",
+        "built": "$any",
+        "figures": "$any"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Yalnız ilk dönüşler",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clouds": [
+       "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+      ],
+      "classes": [
+       2
+      ],
+      "cell": 2.0,
+      "layerId": "zemin",
+      "name": "Lidar zemini",
+      "returns": "first"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "cloud": {
+        "layer": "zemin",
+        "clouds": [
+         "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+        ],
+        "classes": [
+         2
+        ],
+        "returns": "first",
+        "cell": 2.0,
+        "read": 1906,
+        "kept": 291,
+        "coverage": 0.97,
+        "density": 1.5883333333333334,
+        "errorMax": 0.09010495769578597,
+        "errorRms": 0.005129237674394547,
+        "outside": 154
+       },
+       "scanned": 2822,
+       "byCell": 291,
+       "bySlope": 0,
+       "byLine": 0,
+       "cells": 300,
+       "occupied": 291,
+       "area": 1200.0,
+       "uids": [
+        "$any"
+       ],
+       "surface": {
+        "id": "t-2",
+        "name": "Lidar zemini",
+        "state": "current",
+        "digest": "$any",
+        "built": "$any",
+        "figures": "$any"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Yalnız tek dönüşlüler",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clouds": [
+       "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+      ],
+      "classes": [
+       2
+      ],
+      "cell": 2.0,
+      "layerId": "zemin",
+      "name": "Lidar zemini",
+      "returns": "single"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "cloud": {
+        "layer": "zemin",
+        "clouds": [
+         "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+        ],
+        "classes": [
+         2
+        ],
+        "returns": "single",
+        "cell": 2.0,
+        "read": 1906,
+        "kept": 291,
+        "coverage": 0.97,
+        "density": 1.5883333333333334,
+        "errorMax": 0.09010495769578597,
+        "errorRms": 0.005129237674394547,
+        "outside": 154
+       },
+       "scanned": 2822,
+       "byCell": 291,
+       "bySlope": 0,
+       "byLine": 0,
+       "cells": 300,
+       "occupied": 291,
+       "area": 1200.0,
+       "uids": [
+        "$any"
+       ],
+       "surface": {
+        "id": "t-2",
+        "name": "Lidar zemini",
+        "state": "current",
+        "digest": "$any",
+        "built": "$any",
+        "figures": "$any"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Alçak bitkiyle, uyarıyla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clouds": [
+       "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+      ],
+      "classes": [
+       3,
+       2,
+       2
+      ],
+      "cell": 2.0,
+      "layerId": "zemin",
+      "name": "Lidar zemini"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "cloud": {
+        "layer": "zemin",
+        "clouds": [
+         "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+        ],
+        "classes": [
+         2,
+         3
+        ],
+        "returns": "all",
+        "cell": 2.0,
+        "read": 2352,
+        "kept": 291,
+        "coverage": 0.97,
+        "density": 1.96,
+        "errorMax": 0.41820313204337367,
+        "errorRms": 0.0807587159387995,
+        "outside": 213
+       },
+       "scanned": 2822,
+       "byCell": 291,
+       "bySlope": 0,
+       "byLine": 0,
+       "cells": 300,
+       "occupied": 291,
+       "area": 1200.0,
+       "uids": [
+        "$any"
+       ],
+       "surface": {
+        "id": "t-2",
+        "name": "Lidar zemini",
+        "state": "current",
+        "digest": "$any",
+        "built": "$any",
+        "figures": "$any"
+       },
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "cloud_class_above_ground",
+        "message": "Sınıf 3 zemin değil (bitki, bina ya da gürültü); yüzey onların noktalarını zemin sayar.",
+        "path": "classes"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Bina ve gürültüyle, uyarıyla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clouds": [
+       "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+      ],
+      "classes": [
+       2,
+       6,
+       7
+      ],
+      "cell": 2.0,
+      "layerId": "zemin",
+      "name": "Lidar zemini"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "cloud": {
+        "layer": "zemin",
+        "clouds": [
+         "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+        ],
+        "classes": [
+         2,
+         6,
+         7
+        ],
+        "returns": "all",
+        "cell": 2.0,
+        "read": 2336,
+        "kept": 300,
+        "coverage": 1.0,
+        "density": 1.9466666666666668,
+        "errorMax": 20.619420670235854,
+        "errorRms": 1.1929327469578883,
+        "outside": 205
+       },
+       "scanned": 2822,
+       "byCell": 300,
+       "bySlope": 0,
+       "byLine": 0,
+       "cells": 300,
+       "occupied": 300,
+       "area": 1200.0,
+       "uids": [
+        "$any"
+       ],
+       "surface": {
+        "id": "t-2",
+        "name": "Lidar zemini",
+        "state": "current",
+        "digest": "$any",
+        "built": "$any",
+        "figures": "$any"
+       },
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "cloud_class_above_ground",
+        "message": "Sınıf 6, 7 zemin değil (bitki, bina ya da gürültü); yüzey onların noktalarını zemin sayar.",
+        "path": "classes"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Alanın içinde",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clouds": [
+       "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+      ],
+      "classes": [
+       2
+      ],
+      "cell": 2.0,
+      "layerId": "zemin",
+      "name": "Lidar zemini",
+      "area": "0192f5b0-7c3e-7d4a-9b1e-000000000006"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "cloud": {
+        "layer": "zemin",
+        "clouds": [
+         "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+        ],
+        "classes": [
+         2
+        ],
+        "returns": "all",
+        "cell": 2.0,
+        "read": 1002,
+        "kept": 158,
+        "coverage": 0.9411764705882353,
+        "density": 1.7924865831842576,
+        "area": "0192f5b0-7c3e-7d4a-9b1e-000000000006",
+        "errorMax": 0.12598253074202148,
+        "errorRms": 0.006028172697874745,
+        "outside": 20
+       },
+       "scanned": 2822,
+       "byCell": 158,
+       "bySlope": 0,
+       "byLine": 0,
+       "cells": 136,
+       "occupied": 128,
+       "area": 559.0,
+       "uids": [
+        "$any"
+       ],
+       "surface": {
+        "id": "t-2",
+        "name": "Lidar zemini",
+        "state": "current",
+        "digest": "$any",
+        "built": "$any",
+        "figures": "$any"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Dik hücrenin en alçağı ve en yükseği",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clouds": [
+       "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+      ],
+      "classes": [
+       2
+      ],
+      "cell": 3.0,
+      "layerId": "zemin",
+      "name": "Lidar zemini",
+      "zTolerance": 0.1
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "cloud": {
+        "layer": "zemin",
+        "clouds": [
+         "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+        ],
+        "classes": [
+         2
+        ],
+        "returns": "all",
+        "cell": 3.0,
+        "read": 2232,
+        "kept": 292,
+        "coverage": 0.987012987012987,
+        "density": 1.6103896103896105,
+        "zTolerance": 0.1,
+        "errorMax": 0.3629683614899477,
+        "errorRms": 0.014485666013192944,
+        "outside": 13
+       },
+       "scanned": 2822,
+       "byCell": 152,
+       "bySlope": 140,
+       "byLine": 0,
+       "cells": 154,
+       "occupied": 152,
+       "area": 1386.0,
+       "uids": [
+        "$any"
+       ],
+       "surface": {
+        "id": "t-2",
+        "name": "Lidar zemini",
+        "state": "current",
+        "digest": "$any",
+        "built": "$any",
+        "figures": "$any"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Kırık hattın eriminde her nokta",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clouds": [
+       "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+      ],
+      "classes": [
+       2
+      ],
+      "cell": 2.0,
+      "layerId": "zemin",
+      "name": "Lidar zemini",
+      "near": 0.5,
+      "breaklines": {
+       "layers": [
+        "kirik"
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "cloud": {
+        "layer": "zemin",
+        "clouds": [
+         "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+        ],
+        "classes": [
+         2
+        ],
+        "returns": "all",
+        "cell": 2.0,
+        "read": 2232,
+        "kept": 334,
+        "coverage": 0.97,
+        "density": 1.86,
+        "near": 0.5,
+        "errorMax": "$any",
+        "errorRms": "$any",
+        "outside": 172
+       },
+       "scanned": 2822,
+       "byCell": 291,
+       "bySlope": 0,
+       "byLine": 43,
+       "cells": 300,
+       "occupied": 291,
+       "area": 1200.0,
+       "uids": [
+        "$any"
+       ],
+       "surface": {
+        "id": "t-2",
+        "name": "Lidar zemini",
+        "state": "current",
+        "digest": "$any",
+        "built": "$any",
+        "figures": "$any"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Kırık hatsız erim hiçbir şey eklemez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clouds": [
+       "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+      ],
+      "classes": [
+       2
+      ],
+      "cell": 2.0,
+      "layerId": "zemin",
+      "name": "Lidar zemini",
+      "near": 0.5
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "cloud": {
+        "layer": "zemin",
+        "clouds": [
+         "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+        ],
+        "classes": [
+         2
+        ],
+        "returns": "all",
+        "cell": 2.0,
+        "read": 2232,
+        "kept": 291,
+        "coverage": 0.97,
+        "density": 1.86,
+        "near": 0.5,
+        "errorMax": 0.19743967146317232,
+        "errorRms": 0.009014546060853402,
+        "outside": 205
+       },
+       "scanned": 2822,
+       "byCell": 291,
+       "bySlope": 0,
+       "byLine": 0,
+       "cells": 300,
+       "occupied": 291,
+       "area": 1200.0,
+       "uids": [
+        "$any"
+       ],
+       "surface": {
+        "id": "t-2",
+        "name": "Lidar zemini",
+        "state": "current",
+        "digest": "$any",
+        "built": "$any",
+        "figures": "$any"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Var olan yüzeye",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clouds": [
+       "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+      ],
+      "classes": [
+       2
+      ],
+      "cell": 2.0,
+      "layerId": "zemin",
+      "surface": "Mevcut zemin"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "cloud": {
+        "layer": "zemin",
+        "clouds": [
+         "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+        ],
+        "classes": [
+         2
+        ],
+        "returns": "all",
+        "cell": 2.0,
+        "read": 2232,
+        "kept": 291,
+        "coverage": 0.97,
+        "density": 1.86,
+        "errorMax": 0.09771152876157885,
+        "errorRms": 0.012825161308942987
+       },
+       "scanned": 2822,
+       "byCell": 291,
+       "bySlope": 0,
+       "byLine": 0,
+       "cells": 300,
+       "occupied": 291,
+       "area": 1200.0,
+       "uids": [
+        "$any"
+       ],
+       "surface": {
+        "id": "t-1",
+        "name": "Mevcut zemin",
+        "state": "new",
+        "digest": "$any",
+        "figures": "$any"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Büyük hücre",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clouds": [
+       "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+      ],
+      "classes": [
+       2
+      ],
+      "cell": 5.0,
+      "layerId": "zemin",
+      "name": "Lidar zemini"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "cloud": {
+        "layer": "zemin",
+        "clouds": [
+         "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+        ],
+        "classes": [
+         2
+        ],
+        "returns": "all",
+        "cell": 5.0,
+        "read": 2232,
+        "kept": 47,
+        "coverage": 0.9791666666666666,
+        "density": 1.86,
+        "errorMax": 0.35607347176153326,
+        "errorRms": 0.020897889275236625,
+        "outside": 585
+       },
+       "scanned": 2822,
+       "byCell": 47,
+       "bySlope": 0,
+       "byLine": 0,
+       "cells": 48,
+       "occupied": 47,
+       "area": 1200.0,
+       "uids": [
+        "$any"
+       ],
+       "surface": {
+        "id": "t-2",
+        "name": "Lidar zemini",
+        "state": "current",
+        "digest": "$any",
+        "built": "$any",
+        "figures": "$any"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Küçük hücre",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clouds": [
+       "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+      ],
+      "classes": [
+       2
+      ],
+      "cell": 0.5,
+      "layerId": "zemin",
+      "name": "Lidar zemini"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "cloud": {
+        "layer": "zemin",
+        "clouds": [
+         "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+        ],
+        "classes": [
+         2
+        ],
+        "returns": "all",
+        "cell": 0.5,
+        "read": 2232,
+        "kept": 2183,
+        "coverage": 0.45479166666666665,
+        "density": 1.86,
+        "errorMax": 0.0015696148828396872,
+        "errorRms": 0.0006883490154150118,
+        "outside": 1
+       },
+       "scanned": 2822,
+       "byCell": 2183,
+       "bySlope": 0,
+       "byLine": 0,
+       "cells": 4800,
+       "occupied": 2183,
+       "area": 1200.0,
+       "uids": [
+        "$any"
+       ],
+       "surface": {
+        "id": "t-2",
+        "name": "Lidar zemini",
+        "state": "current",
+        "digest": "$any",
+        "built": "$any",
+        "figures": "$any"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Planı yazmaz",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "clouds": [
+       "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+      ],
+      "classes": [
+       2
+      ],
+      "cell": 2.0,
+      "layerId": "zemin",
+      "name": "Lidar zemini"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "cloud": {
+        "layer": "zemin",
+        "clouds": [
+         "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+        ],
+        "classes": [
+         2
+        ],
+        "returns": "all",
+        "cell": 2.0,
+        "read": 2232,
+        "kept": 291,
+        "coverage": 0.97,
+        "density": 1.86,
+        "errorMax": 0.19743967146317232,
+        "errorRms": 0.009014546060853402,
+        "outside": 205
+       },
+       "scanned": 2822,
+       "byCell": 291,
+       "bySlope": 0,
+       "byLine": 0,
+       "cells": 300,
+       "occupied": 291,
+       "area": 1200.0,
+       "uids": [
+        "$any"
+       ],
+       "surface": {
+        "id": "t-2",
+        "name": "Lidar zemini",
+        "state": "current",
+        "digest": "$any",
+        "built": "$any",
+        "figures": "$any"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Gizli katmana uyarıyla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clouds": [
+       "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+      ],
+      "classes": [
+       2
+      ],
+      "cell": 2.0,
+      "layerId": "gizli",
+      "name": "Lidar zemini"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "cloud": {
+        "layer": "gizli",
+        "clouds": [
+         "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+        ],
+        "classes": [
+         2
+        ],
+        "returns": "all",
+        "cell": 2.0,
+        "read": 2232,
+        "kept": 291,
+        "coverage": 0.97,
+        "density": 1.86,
+        "errorMax": 0.19743967146317232,
+        "errorRms": 0.009014546060853402,
+        "outside": 205
+       },
+       "scanned": 2822,
+       "byCell": 291,
+       "bySlope": 0,
+       "byLine": 0,
+       "cells": 300,
+       "occupied": 291,
+       "area": 1200.0,
+       "uids": [
+        "$any"
+       ],
+       "surface": {
+        "id": "t-2",
+        "name": "Lidar zemini",
+        "state": "current",
+        "digest": "$any",
+        "built": "$any",
+        "figures": "$any"
+       },
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "layer_hidden",
+        "message": "“Gizli” katmanı gizli; çizilen nesne görünmeyecek.",
+        "path": "layerId"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Köprü tabliyesi zemine katılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clouds": [
+       "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+      ],
+      "classes": [
+       2,
+       17
+      ],
+      "cell": 2.0,
+      "layerId": "zemin",
+      "name": "Lidar zemini"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "cloud_class_not_ground",
+       "message": "Sınıf köprü tabliyesi (17) zemin değil; yer yüzeyiyle birleştirilmez. Sınıflardan çıkarın.",
+       "path": "classes"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Üst yapı zemine katılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clouds": [
+       "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+      ],
+      "classes": [
+       19
+      ],
+      "cell": 2.0,
+      "layerId": "zemin",
+      "name": "Lidar zemini"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "cloud_class_not_ground",
+       "message": "Sınıf üst yapı (19) zemin değil; yer yüzeyiyle birleştirilmez. Sınıflardan çıkarın.",
+       "path": "classes"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Sınıf yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clouds": [
+       "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+      ],
+      "classes": [],
+      "cell": 2.0,
+      "layerId": "zemin",
+      "name": "Lidar zemini"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_cloud_terrain",
+       "message": "En az bir sınıf verin (ASPRS'de 2 zemin).",
+       "path": "classes"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Bulut yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clouds": [],
+      "classes": [
+       2
+      ],
+      "cell": 2.0,
+      "layerId": "zemin",
+      "name": "Lidar zemini"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_cloud_terrain",
+       "message": "En az bir nokta bulutu verin.",
+       "path": "clouds"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Bulut değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clouds": [
+       "0192f5b0-7c3e-7d4a-9b1e-000000000001"
+      ],
+      "classes": [
+       2
+      ],
+      "cell": 2.0,
+      "layerId": "zemin",
+      "name": "Lidar zemini"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_pointcloud",
+       "message": "Verilen nesne bir nokta bulutu değil; bir nokta bulutunun kimliğini verin.",
+       "path": "clouds[0]"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Çizimde olmayan bulut",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clouds": [
+       "0192f5b0-7c3e-7d4a-9b1e-000000000099"
+      ],
+      "classes": [
+       2
+      ],
+      "cell": 2.0,
+      "layerId": "zemin",
+      "name": "Lidar zemini"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entity_not_found",
+       "message": "“0192f5b0-7c3e-7d4a-9b1e-000000000099” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.",
+       "path": "clouds[0]"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Yüzey ve ad birlikte",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clouds": [
+       "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+      ],
+      "classes": [
+       2
+      ],
+      "cell": 2.0,
+      "layerId": "zemin",
+      "name": "Lidar zemini",
+      "surface": "t-1"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_cloud_terrain",
+       "message": "Ya surface (projedeki yüzey) ya da name (yeni yüzey) verin, ikisini birden değil.",
+       "path": "surface"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Ne yüzey ne ad",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clouds": [
+       "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+      ],
+      "classes": [
+       2
+      ],
+      "cell": 2.0,
+      "layerId": "zemin"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_cloud_terrain",
+       "message": "Ya surface (projedeki yüzey) ya da name (yeni yüzey) verin, ikisini birden değil.",
+       "path": "surface"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Var olan yüzeye kırık hat verilmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clouds": [
+       "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+      ],
+      "classes": [
+       2
+      ],
+      "cell": 2.0,
+      "layerId": "zemin",
+      "surface": "t-1",
+      "breaklines": {
+       "layers": [
+        "kirik"
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_cloud_terrain",
+       "message": "breaklines ve boundary yalnız yeni yüzeyde verilir; var olan yüzeyin kendi tanımı kullanılır.",
+       "path": "breaklines"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Projede olmayan yüzey",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clouds": [
+       "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+      ],
+      "classes": [
+       2
+      ],
+      "cell": 2.0,
+      "layerId": "zemin",
+      "surface": "Tasarım"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_terrain",
+       "message": "“Tasarım” kimlikli ya da adlı yüzey projede yok.",
+       "path": "surface"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Hücre sıfır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clouds": [
+       "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+      ],
+      "classes": [
+       2
+      ],
+      "cell": 0.0,
+      "layerId": "zemin",
+      "name": "Lidar zemini"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_cloud_terrain",
+       "message": "Seyreltme: seyreltme hücresi sıfırdan büyük, sonlu bir uzunluk olmalı.",
+       "path": "cell"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Eksi kot toleransı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clouds": [
+       "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+      ],
+      "classes": [
+       2
+      ],
+      "cell": 2.0,
+      "layerId": "zemin",
+      "name": "Lidar zemini",
+      "zTolerance": -0.1
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_cloud_terrain",
+       "message": "Seyreltme: kot toleransı sıfırdan büyük, sonlu olmalı.",
+       "path": "zTolerance"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Sıfır erim",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clouds": [
+       "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+      ],
+      "classes": [
+       2
+      ],
+      "cell": 2.0,
+      "layerId": "zemin",
+      "name": "Lidar zemini",
+      "near": 0.0
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_cloud_terrain",
+       "message": "Seyreltme: kırık hat erimi sıfırdan büyük, sonlu olmalı.",
+       "path": "near"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Açık çizgi alan değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clouds": [
+       "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+      ],
+      "classes": [
+       2
+      ],
+      "cell": 2.0,
+      "layerId": "zemin",
+      "name": "Lidar zemini",
+      "area": "0192f5b0-7c3e-7d4a-9b1e-000000000007"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_cloud_terrain",
+       "message": "Alan kapalı bir çoklu çizgi ya da alan olmalı.",
+       "path": "area"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Yaylı alan alınmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clouds": [
+       "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+      ],
+      "classes": [
+       2
+      ],
+      "cell": 2.0,
+      "layerId": "zemin",
+      "name": "Lidar zemini",
+      "area": "0192f5b0-7c3e-7d4a-9b1e-000000000008"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_cloud_terrain",
+       "message": "Alanın kenarları düz olmalı; yaylı kenar alınmaz.",
+       "path": "area"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Su sınıfının noktası yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clouds": [
+       "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+      ],
+      "classes": [
+       9
+      ],
+      "cell": 2.0,
+      "layerId": "zemin",
+      "name": "Lidar zemini"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "cloud_ground_empty",
+       "message": "Bulutlarda istenen sınıf ve dönüşten, alanın içinde nokta yok; sınıfları, dönüşü ya da alanı denetleyin.",
+       "path": "classes"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Kilitli katman",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clouds": [
+       "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+      ],
+      "classes": [
+       2
+      ],
+      "cell": 2.0,
+      "layerId": "kilitli",
+      "name": "Lidar zemini"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "“Kilitli” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.",
+       "path": "layerId"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Katman grubu",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clouds": [
+       "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+      ],
+      "classes": [
+       2
+      ],
+      "cell": 2.0,
+      "layerId": "grup",
+      "name": "Lidar zemini"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_layer",
+       "message": "“Yol” bir katman grubu; nesne yalnız katmana eklenir. Grubun içinden bir katman seçin.",
+       "path": "layerId"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Yol projesi değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clouds": [
+       "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+      ],
+      "classes": [
+       2
+      ],
+      "cell": 2.0,
+      "layerId": "zemin",
+      "name": "Lidar zemini"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_road_project",
+       "message": "Arazi yüzeyi yalnız yol projesinde (KentOS Yol) olur; bu çizim yol projesi değil."
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Buluttan arazi",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "drawingFont": "barlow"
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "arazi",
+      "name": "Arazi",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kirik",
+      "name": "Kırık hatlar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "alan",
+      "name": "Alan",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "bulut",
+      "name": "Bulut",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "zemin",
+      "name": "Zemin noktaları",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Yol",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "yol-zemin",
+        "name": "Yol zemini",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "point",
+      "layerId": "arazi",
+      "attrs": {},
+      "p": {
+       "x": 990.0,
+       "y": 1990.0
+      },
+      "z": 99.47267564329358,
+      "id": 1
+     },
+     {
+      "kind": "point",
+      "layerId": "arazi",
+      "attrs": {},
+      "p": {
+       "x": 1050.0,
+       "y": 1990.0
+      },
+      "z": 100.76399472227766,
+      "id": 2
+     },
+     {
+      "kind": "point",
+      "layerId": "arazi",
+      "attrs": {},
+      "p": {
+       "x": 1050.0,
+       "y": 2040.0
+      },
+      "z": 101.26399472227766,
+      "id": 3
+     },
+     {
+      "kind": "point",
+      "layerId": "arazi",
+      "attrs": {},
+      "p": {
+       "x": 990.0,
+       "y": 2040.0
+      },
+      "z": 99.97267564329358,
+      "id": 4
+     },
+     {
+      "kind": "polyline",
+      "layerId": "kirik",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1000.0,
+        "y": 2015.0
+       },
+       {
+        "x": 1020.0,
+        "y": 2015.0
+       },
+       {
+        "x": 1040.0,
+        "y": 2015.0
+       }
+      ],
+      "zs": [
+       100.15,
+       100.36079937617303,
+       101.19733956165585
+      ],
+      "id": 5
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alan",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1004.0,
+        "y": 2003.0
+       },
+       {
+        "x": 1030.0,
+        "y": 2004.0
+       },
+       {
+        "x": 1034.0,
+        "y": 2018.0
+       },
+       {
+        "x": 1018.0,
+        "y": 2027.0
+       },
+       {
+        "x": 1003.0,
+        "y": 2019.0
+       }
+      ],
+      "id": 6
+     },
+     {
+      "kind": "polyline",
+      "layerId": "alan",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1004.0,
+        "y": 2003.0
+       },
+       {
+        "x": 1030.0,
+        "y": 2004.0
+       },
+       {
+        "x": 1034.0,
+        "y": 2018.0
+       }
+      ],
+      "id": 7
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alan",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1004.0,
+        "y": 2003.0
+       },
+       {
+        "x": 1030.0,
+        "y": 2004.0
+       },
+       {
+        "x": 1034.0,
+        "y": 2018.0
+       }
+      ],
+      "bulges": [
+       0.0,
+       0.3,
+       0.0
+      ],
+      "id": 8
+     },
+     {
+      "kind": "pointcloud",
+      "layerId": "bulut",
+      "attrs": {},
+      "sources": [
+       {
+        "file": "$fixture:pointcloud/v1/files/road-ground.las",
+        "format": "las",
+        "count": 2822,
+        "bounds": [
+         1000.0,
+         2000.154,
+         80.0,
+         1039.742,
+         2029.947,
+         106.05
+        ]
+       }
+      ],
+      "bounds": [
+       1000.0,
+       2000.154,
+       80.0,
+       1039.742,
+       2029.947,
+       106.05
+      ],
+      "count": 2822,
+      "srid": 5254,
+      "style": {
+       "render": "classification",
+       "size": 2
+      },
+      "id": 9
+     },
+     {
+      "kind": "pointcloud",
+      "layerId": "bulut",
+      "attrs": {},
+      "sources": [
+       {
+        "file": "$fixture:pointcloud/v1/files/yok.las",
+        "format": "las",
+        "count": 10,
+        "bounds": [
+         1000.0,
+         2000.154,
+         80.0,
+         1039.742,
+         2029.947,
+         106.05
+        ]
+       }
+      ],
+      "bounds": [
+       1000.0,
+       2000.154,
+       80.0,
+       1039.742,
+       2029.947,
+       106.05
+      ],
+      "count": 10,
+      "srid": 5254,
+      "style": {
+       "render": "classification",
+       "size": 2
+      },
+      "id": 10
+     }
+    ],
+    "uids": [
+     "0192f5b0-7c3e-7d4a-9b1e-000000000001",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000002",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000003",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000004",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000005",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000006",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000007",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000008",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000009",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000010"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "Kaynağı okunamayan bulut uyarıyla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clouds": [
+       "0192f5b0-7c3e-7d4a-9b1e-000000000009",
+       "0192f5b0-7c3e-7d4a-9b1e-000000000010"
+      ],
+      "classes": [
+       2
+      ],
+      "cell": 2.0,
+      "layerId": "zemin",
+      "name": "Lidar zemini"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "cloud": {
+        "layer": "zemin",
+        "clouds": [
+         "0192f5b0-7c3e-7d4a-9b1e-000000000009",
+         "0192f5b0-7c3e-7d4a-9b1e-000000000010"
+        ],
+        "classes": [
+         2
+        ],
+        "returns": "all",
+        "cell": 2.0,
+        "read": 2232,
+        "kept": 291,
+        "coverage": 0.97,
+        "density": 1.86,
+        "errorMax": 0.19743967146317232,
+        "errorRms": 0.009014546060853402,
+        "outside": 205
+       },
+       "scanned": 2822,
+       "byCell": 291,
+       "bySlope": 0,
+       "byLine": 0,
+       "cells": 300,
+       "occupied": 291,
+       "area": 1200.0,
+       "uids": [
+        "$any"
+       ],
+       "surface": {
+        "id": "t-2",
+        "name": "Lidar zemini",
+        "state": "current",
+        "digest": "$any",
+        "built": "$any",
+        "figures": "$any"
+       },
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "cloud_source_unreadable",
+        "message": "$any",
+        "path": "clouds[1].sources[0]"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Katman yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clouds": [
+       "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+      ],
+      "classes": [
+       2
+      ],
+      "cell": 2.0,
+      "layerId": "yok",
+      "name": "Lidar zemini"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_not_found",
+       "message": "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.",
+       "path": "layerId"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Aynı adda yüzey",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clouds": [
+       "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+      ],
+      "classes": [
+       2
+      ],
+      "cell": 2.0,
+      "layerId": "zemin",
+      "name": "mevcut ZEMIN"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_terrain",
+       "message": "Yüzey kurallarına uymuyor: bu adda başka bir yüzey var.",
+       "path": "name"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Tek hücrenin tek noktası yüzey kurmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clouds": [
+       "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+      ],
+      "classes": [
+       2
+      ],
+      "cell": 100.0,
+      "layerId": "zemin",
+      "name": "Lidar zemini"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "terrain_unbuildable",
+       "message": "Kaynaklardan yüzey kurulamıyor: kotlu yer üçten az ya da hepsi bir doğru üstünde."
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Geçersiz beklenen sürüm",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clouds": [
+       "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+      ],
+      "classes": [
+       2
+      ],
+      "cell": 2.0,
+      "layerId": "zemin",
+      "name": "Lidar zemini",
+      "expectedRevision": "on"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_revision",
+       "message": "Beklenen sürüm “on” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+       "path": "expectedRevision"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Eski sürüme göre hazırlanmış",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clouds": [
+       "0192f5b0-7c3e-7d4a-9b1e-000000000009"
+      ],
+      "classes": [
+       2
+      ],
+      "cell": 2.0,
+      "layerId": "zemin",
+      "name": "Lidar zemini",
+      "expectedRevision": "41"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "revision_conflict",
+       "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+       "path": "expectedRevision",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  }
+ ]
+}

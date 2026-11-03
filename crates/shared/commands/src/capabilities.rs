@@ -1919,6 +1919,25 @@ const ENTRIES: &[Entry] = &[
         warnings: &["layer_hidden", "platform_open"],
         targets: none,
     },
+    // KentOS Yol's terrain from point clouds (plan/road.md Y15, docs/adr/0913).
+    Entry {
+        id: "road.terrains.cloud",
+        refusals: &[
+            &[
+                "not_a_road_project",
+                "entity_not_found",
+                "not_a_pointcloud",
+                "invalid_cloud_terrain",
+                "cloud_class_not_ground",
+                "unknown_terrain",
+            ],
+            LAYER,
+            &["too_many_cloud_points", "cloud_ground_empty", "invalid_terrain", "terrain_unbuildable"],
+            REVISION,
+        ],
+        warnings: &["layer_hidden", "cloud_class_above_ground", "cloud_source_unreadable"],
+        targets: none,
+    },
     // KentOS Yol's pay item quantities (plan/road.md Y11.4, docs/adr/0909 §4).
     Entry {
         id: "road.pay.edit",
