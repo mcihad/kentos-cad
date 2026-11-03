@@ -14580,7 +14580,10 @@ class BlocksEdited(_Model):
 @dataclass(kw_only=True, slots=True)
 class BlocksFind(_Model):
     """Finds whole collections equivalent to `source`; writes no document or selection state.
-    First slice supports analytic line/circle/arc sources only; unsupported members refuse the whole source.
+    Supports analytic line/circle/arc and single-part 2D polyline sources (up to 4096 vertices each).
+    Polylines retain closure, analytic bulges and taper widths; paths with Z/M, holes, extra parts or
+    a room-separator role are refused. Source plus search scope is limited to 200000 polyline vertices.
+    Unsupported members refuse the whole source.
     Attributes:
         source: Ordered source object UUIDs, at most 128; repeated UUIDs are taken once.
         geometry_only: Explicitly ignore layer, appearance and object data in comparisons; absent: false.

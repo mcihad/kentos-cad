@@ -880,7 +880,12 @@ kimlik eşlemesi, bağlı ölçü ve tek Undo doğrulansın.
   aday seçimi; Python/MCP aynı native sorguyu kullanır. Python kodu çıktısı
   ayarı sorguyu da kapsar. Python iş API'sinin başarılı çıktıyı düşüren
   okuyucusu katalogdaki sonuç tipiyle düzeltildi.
-- [ ] Kaynak türlerini çoklu çizgi, metin/öznitelik varyantı, iç içe blok ve
+- [x] Tek parçalı 2B çoklu çizgi: açık/kapalı durum, analitik yaylı kenar ve
+  değişken uç genişlikleri; döngüsel başlangıç ve ters yön eşlemesi.
+  [ADR 0867](../docs/adr/0867-analytic-polyline-repeat-recognition.md).
+  Z/M verisi, mahal ayırıcı rolü, delik ve ek parçalar açık ret alır.
+  Köşe yapısı sadeleştirilmez; bir çizgi 4 096, toplam kapsam 200 000 köşedir.
+- [ ] Kaynak türlerini metin/öznitelik varyantı, iç içe blok ve
   diğer üretim geometrilerine aynı doğruluk kapısıyla genişletme.
 - [ ] Seçili adayları bloklaştırma; eski UUID→yeni yerleştirme/alt nesne
   eşlemesi, ilişkileri koruma veya kaybı önceden açıklayıp atomik ret,
@@ -910,6 +915,19 @@ kimlikler, geometri/veri denetimi ve sonuç sınırı korunur. Çekirdeğin tüm
 geçti. Gerçek küçük pencerede dört haneli sayaç taşması düzeltildi;
 kısmi sonuç başlığı, 0/1 000 aday seçimi ve son kaydın kaynakla bayt
 eşitliği doğrulandı. Kaynak türü genişletme ve dönüşüm işleri açık kalır.
+
+**Çoklu çizgi diliminin doğrulaması:** çekirdeğin 604, native uygulamanın
+369, masaüstünün 1 628, MCP'nin 68 ve Python blok yüzeyinin 61 testi geçti;
+ortak komut kabulü 25 durumdur. Son arayüz değişikliğinden sonra 4 odak testi,
+derleme ve Clippy yeniden geçti. Gerçek uygulamada yaylı, değişken genişlikli,
+ters/döngüsel sıralı çizgilerde 20/40/41 aday; son derlemede 40 adayın seçimi,
+Göster ile kaynak ve bağlı 2 000 mm ölçü doğrulandı. Z verili kaynak,
+geometriye göre aramada da açık gerekçeyle reddedildi; hata metni ve düğmeler
+büyük yazıda okunur. 50 000 çemberlik arama son derlemede gerçek fareyle
+Durdur üzerinden iptal edildi; iki nesnelik seçim korundu. İptal çizimi ve
+çoklu çizgi kabulü arayüzden kaydedilip kendi başlangıç dosyalarıyla bayt bayt
+karşılaştırıldı: ikisi de aynıdır. Ham görüntüler ve kabul kayıtları depo
+dışındadır. Bu kabul bloklaştırma veya ilişkili dizi dönüşümünü kapatmaz.
 
 ### CAD-ADV-08 — Sınır, tarama ve maskeyi hatasını açıklayabilen bir üretim sistemine getir [ ]
 

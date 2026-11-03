@@ -17,6 +17,15 @@ def main():
     entities = [dict(kind="line", id=i, layerId="a", attrs=({"TYPE": "B"} if i == 3 else {}),
                      a=dict(x=x, y=0), b=dict(x=x+2, y=0)) for i, x in enumerate([0, 10, 20], 1)]
     entities.append(dict(kind="point", id=4, layerId="a", attrs={}, p=dict(x=30, y=0)))
+    for ident, x, reverse, closed, elevation in [(5,40,False,True,False),(6,50,True,True,False),
+                                                 (7,60,False,False,False),(8,70,False,True,True)]:
+        pts=[dict(x=x,y=0),dict(x=x+2,y=0),dict(x=x+1.5,y=1)]
+        if reverse:
+            pts=[pts[1],pts[0],pts[2]]
+        entity=dict(kind="polyline",id=ident,layerId="a",attrs={},pts=pts,closed=closed)
+        if elevation:
+            entity['zs']=[0.,0.,1.]
+        entities.append(entity)
     setup = dict(format="kentos.document", version=1, name="Tekrar arama", settings=dict(
         srid=0, lengthDecimals=3, areaDecimals=2, areaUnit="m2", angleUnit="deg", plotScale=50, workspace="cad"),
         origin=dict(x=0, y=0), layers=[dict(id="a", name="A", type="layer", visible=True, locked=False,
@@ -33,7 +42,7 @@ def main():
 
     def case(name, args, result, op="execute"):
         cases.append(dict(name=name, steps=[dict(op=op, input=args, result=result,
-            expect=dict(ids=[1, 2, 3, 4], canUndo=False, dirty=False, revision="same"))]))
+            expect=dict(ids=list(range(1,9)), canUndo=False, dirty=False, revision="same"))]))
 
     for op in ["plan", "execute"]:
         case(f"{op}: tam geometri ve nesne verisi, kaynak değişmez", dict(source=[uid(1)]),
@@ -73,6 +82,16 @@ def main():
     refusal("sıfır sonuç sınırı", dict(source=[uid(1)], limit=0), "invalid_limit", "limit")
     refusal("bozuk revizyon", dict(source=[uid(1)], expectedRevision="bad"), "invalid_revision", "expectedRevision")
     refusal("eski revizyon", dict(source=[uid(1)], expectedRevision="999"), "revision_conflict", "expectedRevision", "conflict", True)
+    for op in ['plan','execute']:
+        result=dict(source=[uid(5)],matches=[dict(members=[uid(i)],origin=dict(x=40,y=0),at=dict(x=x,y=0),
+            rotation=0,scale=1,mirror=False,bounds=dict(minX=x,minY=0,maxX=x+2,maxY=1),overlaps=False)
+            for i,x in [(5,40),(6,50)]],truncated=False,comparisons='$any',related={},revision='$any')
+        case(f'{op}: kapalı çoklu çizginin başlangıcı ve yönü farklı; açık ve Z verili benzerler eş değil',
+            dict(source=[uid(5)]),dict(status='completed',output=result,warnings=[]),op)
+    refusal('Z verili kaynak geometri seçeneğinde de atlanmaz',dict(source=[uid(8)],geometryOnly=True),
+            'recognition_unsupported','source[0]')
+    refusal('karma kaynakta Z verili ikinci üye bütün sorguyu reddettirir',dict(source=[uid(1),uid(8)]),
+            'recognition_unsupported','source[1]')
     target = ROOT / "fixtures/commands/v1/cad.blocks.find.json"
     expected = json.dumps(dict(format="kentos.command-cases", version=1, command="cad.blocks.find",
         commandVersion=1, title="Tekrarlanan bileşenleri bul", note="Written by scripts/fixtures/block_find_cases.py; independent expectations, no KentOS imports.",

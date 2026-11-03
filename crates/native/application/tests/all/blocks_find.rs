@@ -107,3 +107,76 @@ fn dense_coincident_objects_reach_the_result_limit_without_exhausting_the_work_b
     assert_eq!(doc.to_snapshot_v2(), before);
     assert!(!doc.can_undo());
 }
+
+#[test]
+fn aggregate_path_vertex_budget_refuses_before_matching_and_never_edits() {
+    let fixture: Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/commands/v1/cad.blocks.find.json"
+    ))
+    .unwrap();
+    let mut raw = fixture["setup"].clone();
+    raw["entities"].as_array_mut().unwrap().truncate(1);
+    let pts: Vec<_> = (0..4000)
+        .map(|i| serde_json::json!({"x":i as f64,"y":0.0}))
+        .collect();
+    for id in 2..=52 {
+        raw["entities"]
+            .as_array_mut()
+            .unwrap()
+            .push(serde_json::json!({
+                "kind":"polyline","id":id,"layerId":"a","attrs":{},"pts":pts
+            }));
+    }
+    let doc =
+        Document::from_snapshot(DocumentSnapshotV1::from_json(&raw.to_string()).unwrap()).unwrap();
+    let before = doc.to_snapshot_v2();
+    let input = BlocksFind {
+        source: vec![doc.uid(Slot(1)).unwrap().to_string()],
+        ..Default::default()
+    };
+    let CommandResult::Failed { error } = blocks_find::inspect(&doc, &input, || false) else {
+        panic!("scope must refuse")
+    };
+    assert_eq!(error.code, "recognition_scope_limit");
+    assert_eq!(error.path.as_deref(), Some("uids"));
+    assert_eq!(doc.to_snapshot_v2(), before);
+    assert!(!doc.can_undo());
+}
+
+#[test]
+fn unsupported_path_data_has_a_specific_reason_even_in_geometry_only_mode() {
+    let fixture: Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/commands/v1/cad.blocks.find.json"
+    ))
+    .unwrap();
+    for (key, values, reason) in [
+        ("zs", serde_json::json!([0., 0., 1.]), "(Z)"),
+        ("ms", serde_json::json!([0., 1., 2.]), "(M)"),
+        (
+            "pts",
+            Value::Array(vec![serde_json::json!({"x":40.,"y":0.}); 4097]),
+            "4 096",
+        ),
+    ] {
+        let mut raw = fixture["setup"].clone();
+        let mut entity = raw["entities"][4].clone();
+        entity[key] = values;
+        raw["entities"] = serde_json::json!([entity]);
+        let doc = Document::from_snapshot(DocumentSnapshotV1::from_json(&raw.to_string()).unwrap())
+            .unwrap();
+        let before = doc.to_snapshot_v2();
+        let input = BlocksFind {
+            source: vec![doc.entities_with_uids().next().unwrap().0.to_string()],
+            geometry_only: Some(true),
+            ..Default::default()
+        };
+        let CommandResult::Failed { error } = blocks_find::inspect(&doc, &input, || false) else {
+            panic!("source must refuse")
+        };
+        assert_eq!(error.code, "recognition_unsupported");
+        assert!(error.message.contains(reason), "{}", error.message);
+        assert_eq!(error.path.as_deref(), Some("source[0]"));
+        assert_eq!(doc.to_snapshot_v2(), before);
+        assert!(!doc.can_undo());
+    }
+}

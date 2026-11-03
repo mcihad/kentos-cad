@@ -31019,7 +31019,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Finds whole collections equivalent to `source`; writes no document or selection state.\nFirst slice supports analytic line/circle/arc sources only; unsupported members refuse the whole source.",
+        "description": "Finds whole collections equivalent to `source`; writes no document or selection state.\nSupports analytic line/circle/arc and single-part 2D polyline sources (up to 4096 vertices each).\nPolylines retain closure, analytic bulges and taper widths; paths with Z/M, holes, extra parts or\na room-separator role are refused. Source plus search scope is limited to 200000 polyline vertices.\nUnsupported members refuse the whole source.",
         "properties": {
           "expectedRevision": {
             "type": [
@@ -31205,11 +31205,12 @@
           {
             "kinds": [
               "line",
+              "polyline",
               "circle",
               "arc"
             ],
             "refusedWith": "recognition_unsupported",
-            "note": "Kaynak öğeler; sıfır uzunluklu çizgi desteklenmez. Kaynakta desteklenmeyen öğe sessizce atlanmaz."
+            "note": "Kaynak öğeler; sıfır uzunluklu çizgi desteklenmez. Çoklu çizgi tek parçalı, deliksiz, Z/M verisi ve mahal ayırıcı rolü olmadan, en çok 4096 köşedir; açık/kapalı durum, analitik yay ve kenar genişliği karşılaştırılır. Kaynak ve kapsam toplam en çok 200000 çoklu çizgi köşesidir. Desteklenmeyen kaynak öğesi atlanmaz."
           }
         ],
         "refusals": [

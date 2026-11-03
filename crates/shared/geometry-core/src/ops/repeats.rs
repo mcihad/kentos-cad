@@ -1,4 +1,4 @@
-//! Deterministic recognition of rigid/similar 2D line, circle and arc collections (CAD-ADV-07).
+//! Deterministic recognition of rigid/similar analytic 2D collections (CAD-ADV-07).
 //! This only finds candidates; it neither groups objects nor discards their identities/relations.
 //! Every member must match, once. A spatial index narrows comparisons, never decides equality.
 
@@ -13,6 +13,12 @@ use crate::jsmath::{atan2, cos, js_max, sin};
 use crate::ops::transform::transform_shape;
 use crate::store::rtree::PackedTree;
 use crate::vec2::Vec2;
+
+mod path;
+
+/// Bound path preparation as well as the subsequent analytic comparisons.
+pub const VERTEX_LIMIT: usize = 200_000;
+pub const PATH_VERTEX_LIMIT: usize = 4096;
 
 #[derive(Clone, Copy, Debug)]
 pub struct Options {
@@ -63,6 +69,7 @@ pub enum Error {
     InvalidOptions,
     InvalidSource,
     UnsupportedSource(usize),
+    GeometryLimit,
     Cancelled,
 }
 
@@ -74,6 +81,7 @@ pub fn supported(shape: &Shape) -> bool {
         Shape::Arc { c, r, a0, a1 } => {
             finite(*c) && r.is_finite() && *r > 0.0 && a0.is_finite() && a1.is_finite()
         }
+        Shape::Polyline { .. } => path::supported(shape),
         _ => false,
     }
 }
@@ -86,6 +94,7 @@ fn centre(shape: &Shape) -> Option<Vec2> {
     match shape {
         Shape::Line { a, b } => Some(Vec2::new(a.x + (b.x - a.x) / 2.0, a.y + (b.y - a.y) / 2.0)),
         Shape::Circle { c, .. } | Shape::Arc { c, .. } => Some(*c),
+        Shape::Polyline { .. } => path::centre(shape),
         _ => None,
     }
 }
@@ -95,8 +104,11 @@ fn on(c: Vec2, r: f64, angle: f64) -> Vec2 {
 }
 
 /// Strict analytic equality: endpoint direction is immaterial for lines, arc span is not.
-fn equal(a: &Shape, b: &Shape, tolerance: f64) -> bool {
-    match (a, b) {
+fn equal(a: &Shape, b: &Shape, tolerance: f64, check: &mut impl FnMut() -> bool) -> Option<bool> {
+    Some(match (a, b) {
+        (Shape::Polyline { .. }, Shape::Polyline { .. }) => {
+            return path::equal(a, b, tolerance, check);
+        }
         (Shape::Line { a, b }, Shape::Line { a: c, b: d }) => {
             (dist(*a, *c) <= tolerance && dist(*b, *d) <= tolerance)
                 || (dist(*a, *d) <= tolerance && dist(*b, *c) <= tolerance)
@@ -122,7 +134,7 @@ fn equal(a: &Shape, b: &Shape, tolerance: f64) -> bool {
                     .all(|t| dist(on(*c, *r, a0 + sa * t), on(*d, *s, b0 + sb * t)) <= tolerance)
         }
         _ => false,
-    }
+    })
 }
 
 /// Prefer a genuine directed feature. Circle-only collections use their centres (a concentric set needs no turn).
@@ -135,6 +147,11 @@ fn anchor(scene: &[Shape], source: &[usize]) -> (usize, Vec2, Vec2, bool) {
     for &i in source {
         if let Shape::Arc { c, r, a0, .. } = scene[i] {
             return (i, c, on(c, r, a0), false);
+        }
+    }
+    for &i in source {
+        if let Some((a, b)) = path::anchor(&scene[i]) {
+            return (i, a, b, false);
         }
     }
     let i = source[0];
@@ -153,6 +170,7 @@ fn anchor(scene: &[Shape], source: &[usize]) -> (usize, Vec2, Vec2, bool) {
 
 fn pairs(scene: &[Shape], source: &Shape, target: usize, circle_pair: bool) -> Vec<(Vec2, Vec2)> {
     match (source, &scene[target]) {
+        (Shape::Polyline { .. }, Shape::Polyline { .. }) => path::pairs(&scene[target]),
         (Shape::Line { .. }, Shape::Line { a, b }) => vec![(*a, *b), (*b, *a)],
         (Shape::Arc { .. }, Shape::Arc { c, r, a0, a1 }) => {
             vec![(*c, on(*c, *r, *a0)), (*c, on(*c, *r, *a1))]
@@ -227,24 +245,34 @@ pub fn find(
     if stopped() {
         return Err(Error::Cancelled);
     }
-    let entries: Vec<_> = scene
+    if scene
         .iter()
-        .enumerate()
-        .filter(|(_, s)| supported(s))
-        .filter_map(|(i, s)| {
-            centre(s).map(|p| {
-                (
-                    i as u32,
-                    Bounds {
-                        min_x: p.x,
-                        min_y: p.y,
-                        max_x: p.x,
-                        max_y: p.y,
-                    },
-                )
-            })
-        })
-        .collect();
+        .try_fold(0usize, |n, s| n.checked_add(path::vertices(s)))
+        .is_none_or(|n| n > VERTEX_LIMIT)
+    {
+        return Err(Error::GeometryLimit);
+    }
+    let mut entries = Vec::new();
+    let mut eligible = vec![false; scene.len()];
+    for (i, s) in scene.iter().enumerate() {
+        if stopped() {
+            return Err(Error::Cancelled);
+        }
+        if supported(s)
+            && let Some(p) = centre(s).filter(|p| finite(*p))
+        {
+            eligible[i] = true;
+            entries.push((
+                i as u32,
+                Bounds {
+                    min_x: p.x,
+                    min_y: p.y,
+                    max_x: p.x,
+                    max_y: p.y,
+                },
+            ));
+        }
+    }
     let index = PackedTree::build(&entries);
     let (anchor, origin, end, circle_pair) = anchor(scene, source);
     // Localize before similarity transforms: survey coordinates must not set the recognition precision.
@@ -258,6 +286,9 @@ pub fn find(
     for target in 0..scene.len() {
         if stopped() {
             return Err(Error::Cancelled);
+        }
+        if !eligible[target] {
+            continue;
         }
         for (at, toward) in pairs(scene, &scene[anchor], target, circle_pair) {
             for mirror in [false, true] {
@@ -296,6 +327,14 @@ pub fn find(
                 let matrix = placement(at, scale, rotation, mirror);
                 let mut edges = Vec::with_capacity(source.len());
                 for (member, shape) in local.iter().enumerate() {
+                    found.comparisons += path::vertices(shape) as u64;
+                    if found.comparisons > options.budget {
+                        found.truncated = true;
+                        return Ok(found);
+                    }
+                    if stopped() {
+                        return Err(Error::Cancelled);
+                    }
                     let mapped = transform_shape(shape, &matrix);
                     let Some(p) = centre(&mapped).filter(|p| finite(*p)) else {
                         break;
@@ -329,10 +368,25 @@ pub fn find(
                         if stopped() {
                             return Err(Error::Cancelled);
                         }
-                        if compatible(source[member], j as usize)
-                            && equal(&mapped, &scene[j as usize], t)
-                        {
-                            matches.push(j as usize);
+                        if compatible(source[member], j as usize) {
+                            let mut cancelled = false;
+                            let matched = equal(&mapped, &scene[j as usize], t, &mut || {
+                                if stopped() {
+                                    cancelled = true;
+                                    return false;
+                                }
+                                found.comparisons += 1;
+                                found.comparisons <= options.budget
+                            });
+                            match matched {
+                                Some(true) => matches.push(j as usize),
+                                Some(false) => {}
+                                None if cancelled => return Err(Error::Cancelled),
+                                None => {
+                                    found.truncated = true;
+                                    return Ok(found);
+                                }
+                            }
                         }
                     }
                     if matches.is_empty() {

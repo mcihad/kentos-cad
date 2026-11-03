@@ -2,6 +2,9 @@
 
 Tarih: 2026-11-03. CAD-ADV-07'nin ilk dilimi; bütün madde tamamlanmış değildir.
 Kapsam: ortak analitik çekirdek, native komut/masaüstü, Python ve MCP.
+Takip teslimi [ADR 0867](0867-analytic-polyline-repeat-recognition.md)
+tek parçalı 2B çoklu çizgileri de aynı sorguya ekler; aşağıdaki üç ilkel tür
+ilk teslimin tarihsel sınırıdır. Güncel kullanım sınırı kullanım/API belgesindedir.
 
 ## Kaynaklar ve mevcut kod
 

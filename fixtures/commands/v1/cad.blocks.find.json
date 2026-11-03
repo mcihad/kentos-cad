@@ -93,6 +93,95 @@
           "x": 30,
           "y": 0
         }
+      },
+      {
+        "kind": "polyline",
+        "id": 5,
+        "layerId": "a",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 40,
+            "y": 0
+          },
+          {
+            "x": 42,
+            "y": 0
+          },
+          {
+            "x": 41.5,
+            "y": 1
+          }
+        ],
+        "closed": true
+      },
+      {
+        "kind": "polyline",
+        "id": 6,
+        "layerId": "a",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 52,
+            "y": 0
+          },
+          {
+            "x": 50,
+            "y": 0
+          },
+          {
+            "x": 51.5,
+            "y": 1
+          }
+        ],
+        "closed": true
+      },
+      {
+        "kind": "polyline",
+        "id": 7,
+        "layerId": "a",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 60,
+            "y": 0
+          },
+          {
+            "x": 62,
+            "y": 0
+          },
+          {
+            "x": 61.5,
+            "y": 1
+          }
+        ],
+        "closed": false
+      },
+      {
+        "kind": "polyline",
+        "id": 8,
+        "layerId": "a",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 70,
+            "y": 0
+          },
+          {
+            "x": 72,
+            "y": 0
+          },
+          {
+            "x": 71.5,
+            "y": 1
+          }
+        ],
+        "closed": true,
+        "zs": [
+          0.0,
+          0.0,
+          1.0
+        ]
       }
     ],
     "styles": {
@@ -177,7 +266,11 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6,
+              7,
+              8
             ],
             "canUndo": false,
             "dirty": false,
@@ -262,7 +355,11 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6,
+              7,
+              8
             ],
             "canUndo": false,
             "dirty": false,
@@ -348,7 +445,11 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6,
+              7,
+              8
             ],
             "canUndo": false,
             "dirty": false,
@@ -434,7 +535,11 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6,
+              7,
+              8
             ],
             "canUndo": false,
             "dirty": false,
@@ -521,7 +626,11 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6,
+              7,
+              8
             ],
             "canUndo": false,
             "dirty": false,
@@ -607,7 +716,11 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6,
+              7,
+              8
             ],
             "canUndo": false,
             "dirty": false,
@@ -646,7 +759,11 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6,
+              7,
+              8
             ],
             "canUndo": false,
             "dirty": false,
@@ -711,7 +828,11 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6,
+              7,
+              8
             ],
             "canUndo": false,
             "dirty": false,
@@ -826,7 +947,11 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6,
+              7,
+              8
             ],
             "canUndo": false,
             "dirty": false,
@@ -895,7 +1020,11 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6,
+              7,
+              8
             ],
             "canUndo": false,
             "dirty": false,
@@ -925,7 +1054,11 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6,
+              7,
+              8
             ],
             "canUndo": false,
             "dirty": false,
@@ -1085,7 +1218,11 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6,
+              7,
+              8
             ],
             "canUndo": false,
             "dirty": false,
@@ -1117,7 +1254,11 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6,
+              7,
+              8
             ],
             "canUndo": false,
             "dirty": false,
@@ -1149,7 +1290,11 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6,
+              7,
+              8
             ],
             "canUndo": false,
             "dirty": false,
@@ -1184,7 +1329,11 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6,
+              7,
+              8
             ],
             "canUndo": false,
             "dirty": false,
@@ -1216,7 +1365,11 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6,
+              7,
+              8
             ],
             "canUndo": false,
             "dirty": false,
@@ -1249,7 +1402,11 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6,
+              7,
+              8
             ],
             "canUndo": false,
             "dirty": false,
@@ -1282,7 +1439,11 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6,
+              7,
+              8
             ],
             "canUndo": false,
             "dirty": false,
@@ -1315,7 +1476,11 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6,
+              7,
+              8
             ],
             "canUndo": false,
             "dirty": false,
@@ -1348,7 +1513,11 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6,
+              7,
+              8
             ],
             "canUndo": false,
             "dirty": false,
@@ -1382,7 +1551,263 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "plan: kapalı çoklu çizginin başlangıcı ve yönü farklı; açık ve Z verili benzerler eş değil",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "source": [
+              "$uidOf:5"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "source": [
+                "$uidOf:5"
+              ],
+              "matches": [
+                {
+                  "members": [
+                    "$uidOf:5"
+                  ],
+                  "origin": {
+                    "x": 40,
+                    "y": 0
+                  },
+                  "at": {
+                    "x": 40,
+                    "y": 0
+                  },
+                  "rotation": 0,
+                  "scale": 1,
+                  "mirror": false,
+                  "bounds": {
+                    "minX": 40,
+                    "minY": 0,
+                    "maxX": 42,
+                    "maxY": 1
+                  },
+                  "overlaps": false
+                },
+                {
+                  "members": [
+                    "$uidOf:6"
+                  ],
+                  "origin": {
+                    "x": 40,
+                    "y": 0
+                  },
+                  "at": {
+                    "x": 50,
+                    "y": 0
+                  },
+                  "rotation": 0,
+                  "scale": 1,
+                  "mirror": false,
+                  "bounds": {
+                    "minX": 50,
+                    "minY": 0,
+                    "maxX": 52,
+                    "maxY": 1
+                  },
+                  "overlaps": false
+                }
+              ],
+              "truncated": false,
+              "comparisons": "$any",
+              "related": {},
+              "revision": "$any"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "execute: kapalı çoklu çizginin başlangıcı ve yönü farklı; açık ve Z verili benzerler eş değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": [
+              "$uidOf:5"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "source": [
+                "$uidOf:5"
+              ],
+              "matches": [
+                {
+                  "members": [
+                    "$uidOf:5"
+                  ],
+                  "origin": {
+                    "x": 40,
+                    "y": 0
+                  },
+                  "at": {
+                    "x": 40,
+                    "y": 0
+                  },
+                  "rotation": 0,
+                  "scale": 1,
+                  "mirror": false,
+                  "bounds": {
+                    "minX": 40,
+                    "minY": 0,
+                    "maxX": 42,
+                    "maxY": 1
+                  },
+                  "overlaps": false
+                },
+                {
+                  "members": [
+                    "$uidOf:6"
+                  ],
+                  "origin": {
+                    "x": 40,
+                    "y": 0
+                  },
+                  "at": {
+                    "x": 50,
+                    "y": 0
+                  },
+                  "rotation": 0,
+                  "scale": 1,
+                  "mirror": false,
+                  "bounds": {
+                    "minX": 50,
+                    "minY": 0,
+                    "maxX": 52,
+                    "maxY": 1
+                  },
+                  "overlaps": false
+                }
+              ],
+              "truncated": false,
+              "comparisons": "$any",
+              "related": {},
+              "revision": "$any"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Z verili kaynak geometri seçeneğinde de atlanmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": [
+              "$uidOf:8"
+            ],
+            "geometryOnly": true
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "recognition_unsupported",
+              "message": "$any",
+              "path": "source[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "karma kaynakta Z verili ikinci üye bütün sorguyu reddettirir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "source": [
+              "$uidOf:1",
+              "$uidOf:8"
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "recognition_unsupported",
+              "message": "$any",
+              "path": "source[1]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
             ],
             "canUndo": false,
             "dirty": false,

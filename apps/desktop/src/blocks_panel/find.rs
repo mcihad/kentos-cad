@@ -369,7 +369,7 @@ impl App {
             return text("").into();
         };
         let mut body=column![
-            words::text_line(Kind::Info,format!("Kaynak: {} nesne. Tek bir bileşenin çizgi, çember ve yaylarını kullanın. Arama çizimi değiştirmez.",w.source.len())),
+            words::text_line(Kind::Info,format!("Kaynak: {} nesne. Tek bir bileşenin çizgi, 2B çoklu çizgi, çember ve yaylarını kullanın. Arama çizimi değiştirmez.",w.source.len())),
             words::check(w.rotations,"Döndürülmüş eşleri de bul",Some(msg(Event::Rotations))),
             words::check(w.mirrors,"Aynalanmış eşleri de bul",Some(msg(Event::Mirrors))),
             words::check(w.scales,"Farklı boyuttaki ölçekli eşleri de bul",Some(msg(Event::Scales))),
@@ -461,6 +461,15 @@ pub(super) fn panel(app: &App) -> Element<'_, Message> {
     responsive(move |size| panel_at_height(app, size.height)).into()
 }
 
+fn scroll_direction() -> scrollable::Direction {
+    scrollable::Direction::Vertical(
+        scrollable::Scrollbar::new()
+            .width(4)
+            .scroller_width(4)
+            .spacing(4),
+    )
+}
+
 fn panel_at_height(app: &App, height: f32) -> Element<'_, Message> {
     let Some(w) = &app.blocks_panel.find else {
         return text("").into();
@@ -526,21 +535,33 @@ fn panel_at_height(app: &App, height: f32) -> Element<'_, Message> {
     }
     if w.busy {
         return container(
-            top.push(label::body(
-                "Eşleşmeler aranıyor… Çizimi kullanmaya devam edebilirsiniz.",
-            ))
-            .push(words::secondary("Durdur", Some(msg(Event::Stop)))),
+            column![
+                scrollable(top.push(label::body(
+                    "Eşleşmeler aranıyor… Çizimi kullanmaya devam edebilirsiniz."
+                )))
+                .height(Fill)
+                .direction(scroll_direction()),
+                words::secondary("Durdur", Some(msg(Event::Stop)))
+            ]
+            .spacing(8)
+            .height(Fill),
         )
         .padding(8)
         .width(Fill)
+        .height(Fill)
         .into();
     }
     let Some(output) = &w.output else {
-        return container(top.push(label::caption(
-            "Bir bileşen seçip Yeni kaynak ile aramaya başlayın.",
-        )))
+        return container(
+            scrollable(top.push(label::caption(
+                "Bir bileşen seçip Yeni kaynak ile aramaya başlayın.",
+            )))
+            .height(Fill)
+            .direction(scroll_direction()),
+        )
         .padding(8)
         .width(Fill)
+        .height(Fill)
         .into();
     };
     for warning in &w.warnings {
@@ -599,12 +620,7 @@ fn panel_at_height(app: &App, height: f32) -> Element<'_, Message> {
     let head = container(
         scrollable(top)
             .height(iced::Shrink)
-            .direction(scrollable::Direction::Vertical(
-                scrollable::Scrollbar::new()
-                    .width(4)
-                    .scroller_width(4)
-                    .spacing(4),
-            )),
+            .direction(scroll_direction()),
     )
     .max_height((height - typography::scaled(48.0 + 28.0) - 32.0).max(0.0));
     container(

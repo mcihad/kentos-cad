@@ -50,11 +50,61 @@ struct Checked {
     options: Options,
 }
 
+// Shape deliberately omits route/elevation and architectural-role data. Such a path must
+// not silently become an ordinary 2D source, even under geometry-only matching.
+fn recognizable(e: &Entity) -> bool {
+    match e {
+        Entity::Line(_) | Entity::Circle(_) | Entity::Arc(_) => {
+            repeats::supported(&crate::geometry::shape(e))
+        }
+        Entity::Polyline(p)
+            if p.pts.len() <= repeats::PATH_VERTEX_LIMIT
+                && p.zs.as_ref().is_none_or(|v| v.iter().all(Option::is_none))
+                && p.ms.as_ref().is_none_or(|v| v.iter().all(Option::is_none))
+                && p.space_separator.is_none()
+                && p.parts.as_ref().is_none_or(|v| v.is_empty())
+                && p.holes.as_ref().is_none_or(|v| v.is_empty()) =>
+        {
+            repeats::supported(&crate::geometry::shape(e))
+        }
+        _ => false,
+    }
+}
+
+fn unsupported_reason(e: &Entity) -> &'static str {
+    match e {
+        Entity::Polyline(p) if p.zs.as_ref().is_some_and(|v| v.iter().any(Option::is_some)) => {
+            "Kaynak çoklu çizgi yükseklik (Z) verisi içeriyor. Bu arama 2B çizgiler içindir; Z verisi atlanmadı. Yalnız 2B nesneleri kaynak seçin."
+        }
+        Entity::Polyline(p) if p.ms.as_ref().is_some_and(|v| v.iter().any(Option::is_some)) => {
+            "Kaynak çoklu çizgi güzergâh ölçüsü (M) içeriyor. Bu veri sıradan 2B geometri sayılmadı. M verisi olmayan bir bileşeni kaynak seçin."
+        }
+        Entity::Polyline(p) if p.space_separator.is_some() => {
+            "Kaynak çoklu çizgi mahal ayırıcıdır. Mahal bağlantısı yok sayılmadı. Bu arama için sıradan bir 2B bileşen seçin."
+        }
+        Entity::Polyline(p)
+            if p.parts.as_ref().is_some_and(|v| !v.is_empty())
+                || p.holes.as_ref().is_some_and(|v| !v.is_empty()) =>
+        {
+            "Kaynak çoklu çizgi ek parça veya delik içeriyor. Bu arama tek parçalı, deliksiz 2B çoklu çizgileri destekler; hiçbir parça atlanmadı."
+        }
+        Entity::Polyline(p) if p.pts.len() > repeats::PATH_VERTEX_LIMIT => {
+            "Kaynak çoklu çizgi 4 096 köşe sınırını aşıyor. Geometri sadeleştirilmedi. Daha küçük bir bileşeni kaynak seçin."
+        }
+        Entity::Polyline(_) => {
+            "Kaynak çoklu çizginin köşe, yay veya kenar genişliği bilgisi bu aramaya uygun değil. Sıfır uzunluklu geometri atlanmaz; kaynağı kontrol edin."
+        }
+        _ => {
+            "Kaynak öğe bu aramada desteklenmiyor. Çizgi, 2B çoklu çizgi, çember ve yay seçilebilir. Desteklenmeyen veya sıfır uzunluklu öğe atlanmadı."
+        }
+    }
+}
+
 fn check(doc: &Document, input: &BlocksFind) -> Result<Checked, Stop> {
     if input.source.is_empty() {
         return Err(refuse(
             codes::NO_ENTITIES,
-            "Tekrarı aranacak tek bir bileşenin çizgi, çember veya yaylarını seçin.",
+            "Tekrarı aranacak tek bir bileşenin çizgi, çoklu çizgi, çember veya yaylarını seçin.",
             "source",
         ));
     }
@@ -104,20 +154,34 @@ fn check(doc: &Document, input: &BlocksFind) -> Result<Checked, Stop> {
                 &format!("source[{i}]"),
             )
         })?;
-        if !matches!(e, Entity::Line(_) | Entity::Circle(_) | Entity::Arc(_))
-            || !repeats::supported(&crate::geometry::shape(e))
-        {
+        if !recognizable(e) {
             return Err(refuse(
                 codes::RECOGNITION_UNSUPPORTED,
-                "Kaynak yalnız sıfır uzunluklu olmayan çizgi, çember ve yay içerebilir. Diğer türleri seçimden çıkarın; hiçbir öğe sessizce atlanmaz.",
+                unsupported_reason(e),
                 &format!("source[{i}]"),
             ));
         }
     }
-    let search = match &input.uids {
+    let search: HashSet<_> = match &input.uids {
         Some(list) => named(doc, list, "uids")?.into_iter().collect(),
         None => doc.entities_with_uids().map(|(uid, _)| uid).collect(),
     };
+    let originals: HashSet<_> = source.iter().copied().collect();
+    let mut vertices = 0usize;
+    for (uid, e) in doc.entities_with_uids() {
+        if (search.contains(&uid) || originals.contains(&uid))
+            && let Entity::Polyline(p) = e
+        {
+            vertices = vertices.saturating_add(p.pts.len());
+            if vertices > repeats::VERTEX_LIMIT {
+                return Err(refuse(
+                    codes::RECOGNITION_SCOPE_LIMIT,
+                    "Arama ve kaynak en çok toplam 200 000 çoklu çizgi köşesi içerebilir. Kapsamı daraltın.",
+                    "uids",
+                ));
+            }
+        }
+    }
     Ok(Checked {
         source,
         search,
@@ -152,7 +216,7 @@ fn find_in(
         if !checked.search.contains(&uid) && !originals.contains(&uid) {
             continue;
         }
-        if !matches!(e, Entity::Line(_) | Entity::Circle(_) | Entity::Arc(_)) {
+        if !recognizable(e) {
             continue;
         }
         records.push((uid, e));
@@ -180,6 +244,11 @@ fn find_in(
     )
     .map_err(|e| match e {
         repeats::Error::Cancelled => Stop::Cancelled,
+        repeats::Error::GeometryLimit => refuse(
+            codes::RECOGNITION_SCOPE_LIMIT,
+            "Aramadaki toplam çoklu çizgi köşe sınırı aşıldı; kapsamı daraltın.",
+            "uids",
+        ),
         _ => refuse(
             codes::RECOGNITION_UNSUPPORTED,
             "Kaynağın analitik yönü veya boyutu bulunamadı; başka bir bileşen seçin.",

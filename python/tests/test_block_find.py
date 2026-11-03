@@ -44,7 +44,81 @@ def drawing():
     return doc, source
 
 
+def path_drawing():
+    """Independent curved/tapered paths; no product transform/reverse routines."""
+    raw = json.loads((ROOT / "fixtures/commands/v1/cad.blocks.find.json").read_text())["setup"]
+    raw["name"] = "CAD-ADV-07 — Yaylı ve genişlikli çoklu çizgiler"
+    raw["settings"].update(drawingUnit="mm", cadWork="architecture")
+    points = [(0., 0.), (2., 0.), (1.5, 1.)]
+    bulges, widths = [.25, 0., -.1], [(.1, .2), (.2, .3), (.3, .1)]
+    entities = []
+    for i in range(44):
+        angle, scale, mirror, reverse = i*.17, (2. if i == 40 else 1.), i % 2 == 1, i % 3 == 1
+        start = i % 3
+        pts, bs, ws = [], [], []
+        for k in range(3):
+            j = (start-k if reverse else start+k) % 3
+            x, y = points[j]
+            y = -y if mirror else y
+            pts.append(dict(x=(i % 10)*10.+scale*(x*math.cos(angle)-y*math.sin(angle)),
+                            y=(i // 10)*10.+scale*(x*math.sin(angle)+y*math.cos(angle))))
+            edge = (j-1) % 3 if reverse else j
+            bs.append(bulges[edge]*(-1 if mirror else 1)*(-1 if reverse else 1))
+            w = widths[edge][::-1] if reverse else widths[edge]
+            ws.append([v*scale for v in w])
+        if i == 41:
+            ws[0][0] += .01
+        if i == 42:
+            bs[0] += .01
+        if i == 43:
+            bs[-1], ws[-1] = 0., [0., 0.]
+        entities.append(dict(kind="polyline", id=i+1, layerId="a", attrs={}, pts=pts,
+                             bulges=bs, widths=ws, closed=i != 43))
+    entities.append(dict(kind="dimension",id=45,layerId="a",attrs={},a=dict(x=0.,y=0.),
+                         b=dict(x=2.,y=0.),height=.18,offset=-.5))
+    raw["entities"] = entities
+    doc = cad.Document.from_bytes(json.dumps(raw).encode())
+    records = list(doc.entities())
+    source = records[0].uid
+    cad.dimensions.reassociate(doc,uid=records[-1].uid,points=[
+        cad.PointBinding(point="a",to=cad.PlaceOn(uid=source,place=cad.VertexSubPlace(part=0,ring=0,index=0))),
+        cad.PointBinding(point="b",to=cad.PlaceOn(uid=source,place=cad.VertexSubPlace(part=0,ring=0,index=1))),
+    ])
+    return doc, [source]
+
+
 class BlockFind(unittest.TestCase):
+    def test_mixed_source_keeps_path_and_line_identity_order(self):
+        raw = json.loads((ROOT / "fixtures/commands/v1/cad.blocks.find.json").read_text())["setup"]
+        doc = cad.Document.from_bytes(json.dumps(raw).encode())
+        records = list(doc.entities())
+        source = [records[0].uid, records[4].uid]
+        before = doc.to_bytes()
+        found = cad.blocks.find(doc, source=source)
+        self.assertEqual(found.source, source)
+        self.assertEqual([m.members for m in found.matches],
+                         [source, [records[1].uid, records[5].uid]])
+        self.assertEqual(doc.to_bytes(), before)
+
+    def test_curved_tapered_paths_keep_closure_geometry_and_read_only_job_parity(self):
+        doc, source = path_drawing()
+        before = doc.to_bytes()
+        result = cad.blocks.find(doc, source=source, mirrors=True)
+        records = list(doc.entities())
+        self.assertEqual([m.members for m in result.matches], [[r.uid] for r in records[:40]])
+        self.assertFalse(result.truncated)
+        self.assertEqual(result.related, {"dimension":1})
+        self.assertAlmostEqual(cad.dimensions.query(doc).dimensions[0].measured,2.)
+        self.assertEqual(len(cad.blocks.find(doc, source=source).matches), 20)
+        scaled = cad.blocks.find(doc, source=source, mirrors=True, scales=True)
+        self.assertEqual(len(scaled.matches), 41)
+        self.assertAlmostEqual(scaled.matches[-1].scale, 2.)
+        self.assertEqual(cad.blocks.find.plan(doc, source=source, mirrors=True).to_json(), result.to_json())
+        job = doc.start("cad.blocks.find", cad.BlocksFind(source=source, mirrors=True)).result()
+        self.assertEqual(job.status, "completed")
+        self.assertEqual(job.output.to_json(), result.to_json())
+        self.assertEqual(doc.to_bytes(), before)
+
     def test_forty_symbols_identity_maps_false_match_refusal_and_read_only_bound_dimension(self):
         doc, source = drawing()
         before = doc.to_bytes()

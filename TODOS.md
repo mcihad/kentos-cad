@@ -51,11 +51,12 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
-- ADR 0866: tekrarlanan çizgi/çember/yay koleksiyonlarını yazısız ve
+- ADR 0866–0867: tekrarlanan çizgi/2B çoklu çizgi/çember/yay koleksiyonlarını yazısız ve
   durdurulabilir bulma, kaynak sırasındaki UUID eşlemesi ve adayları
   çizimin yanında inceleyip seçme akışı native/Python/MCP kapsamındadır.
   Web yürütücüsü ve arayüzü aynı tolerans, açık ayna/ölçek/özellik politikası,
-  kısmi sonuç, iptal ve eski belge korumasıyla ayrıca eşitlenecek.
+  kısmi sonuç, iptal ve eski belge korumasıyla ayrıca eşitlenecek. Çoklu çizginin
+  yay, genişlik, yön/başlangıç eşlemesi ve köşe bütçesi de aynı kabulü geçecek.
 
 - ADR 0865: DXF/DWG yazılmadan önce dinamik blok davranışının ve ölçü
   bağının statik çıktıda taşınmadığını seçili/tüm kapsamına göre açıklama;
