@@ -48,6 +48,18 @@ Y8.1 (yapıldı): `kentos_road::volume` (`end_areas`, `prismoidal`, `between_sur
 `d = x − 5`: 125 m³ kazı, 125 m³ dolgu; prizma, eğik düzlem, yükseltilmiş merkez, yarı örten zemin, boşluklu zemin, kayık
 iki ağ, saat yönündeki üçgenler, rastgele dört zemin) ve kesit durumları kesirlerle (`road_volume_cases.py`).
 
+Y8.2 (yapıldı): `road.volumes.edit` (set, remove; yeniden bağlanmaz, koridor değiştirilmez; tek adım “Kübaj”) ve
+`.query` (kübaj cetveli: ardışık iki kesit arası satırlar, kazı ve dolgu, aralığın ortasının katsayısı, kabarma ve
+sıkışmayla düzeltilmiş birikimli toplamlar ve kütle ordinatı; ham ve düzeltilmiş toplamlar; yüzey yönteminde plan
+alanları ve örtülmeyen alan; hacmi olmayan aralıklar). Prizmoidalin orta kesiti koridorun kesit kuralıyla kurulur
+(`road_corridors::Sampler`); yüzey yöntemi koridorun üst yüzeyini şerit şerit (`corridor::Built::strips`) bir kez
+kurulan arazi ızgarasıyla (`volume::Ground`) ölçer. Kübajın kullandığı koridor silinmez (`corridor_in_use`). Katsayı
+satırı aralığın ortasını içeren satırdır (son satırın sonu dahil); katsayısız aralıkta düzeltilmiş hacim ham hacimdir
+ve `volume_unfactored` uyarısı verilir. 30 + 22 ortak durum (`road_volume_command_cases.py`: yüzeyler arası hacim
+`road_volume_cases.py`'nin kesirli bindirmesiyle şerit şerit); `.kcad` şema 161'in `volumes`'ı ve bozuk örneği; Python,
+MCP. Yolda bulunan: koridorun şerit üçgenlemesi eşit köşegenlerde (dikdörtgen) yuvarlamaya göre farklı köşegen
+seçiyordu; eşitlik artık 1 nm içinde (`corridor::SAME_DIAGONAL`, ADR 0905 §5) ve iki tarafta aynı.
+
 ## Sonra
 
 Bileşik kesit hacmi (kesitler arası poligonlar), kurp düzeltmesi, malzeme katmanları ve jeoloji, raster yöntemi, GPU ile

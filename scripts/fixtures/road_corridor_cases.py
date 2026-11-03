@@ -124,6 +124,9 @@ def top(cross, t):
     return [place(cross, p[0]) + [p[1]] for p in list(reversed(left)) + right[1:]]
 
 
+SAME_DIAGONAL = 1e-9  # two plan diagonals within this (m) are a tie: a advances
+
+
 def strip(a, b):
     d = lambda p, q: math.hypot(q[0] - p[0], q[1] - p[1])  # noqa: E731
     i = j = 0
@@ -134,7 +137,7 @@ def strip(a, b):
         elif j + 1 == len(b):
             take = True
         else:
-            take = d(a[i + 1], b[j]) <= d(a[i], b[j + 1])
+            take = d(a[i + 1], b[j]) <= d(a[i], b[j + 1]) + SAME_DIAGONAL
         if take:
             out.append([a[i], a[i + 1], b[j]])
             i += 1

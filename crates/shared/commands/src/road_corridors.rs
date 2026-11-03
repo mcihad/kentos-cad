@@ -29,6 +29,7 @@ pub const ROAD_CORRIDORS_DRAW_VERSION: u32 = 1;
 /// `unknown_alignment`, `unknown_road_profile`, `unknown_terrain`, `unknown_superelevation`, `unknown_road_template`,
 /// `invalid_road_corridor` (a new one without its fields, set with nothing to set, the definition by `road_problem`,
 /// regions overlapping, empty or off the alignment, a station written off it, more stations than a corridor samples),
+/// `corridor_in_use` (remove one an earthwork volume uses),
 /// `invalid_revision`, `revision_conflict`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]

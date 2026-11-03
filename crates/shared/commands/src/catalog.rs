@@ -7154,7 +7154,7 @@ pub fn catalog() -> CommandCatalog {
             title: "Koridoru düzenle".into(),
             summary: "Yol projesinin koridorunu (corridor: kimliği ya da adı; yoksa yeni) yazar, aksına yeniden bağlar ya da kaldırır. Koridor bir aksın üstündedir: boykesiti (profile) eksen kotunu, yüzeyi (surface) şevin buluştuğu araziyi verir; isteğe bağlı dever çizelgesi (superelevation) şeritlerin eğimini; left ve right her yanda arama genişliğidir (m). Bölgeler (regions: from, to aksın istasyonu, m; template tip kesit) kesişmez, boşluk bırakabilir. \
                       Km örneklemesi: bölgenin başı ve sonu, aliymanda tangent aralığının katları, kurp ve klotoidde elemanın curve aralığıyla (sag verilirse kirişin yaydan sapması en çok sag olacak adımla) eşit bölünmesi, yatay geometri noktaları; profilePoints ile boykesitin PVI'leri, düşey kurp uçları, tepe ve çukuru; critical ile dever kritik km'leri; stations ile kullanıcının km'leri. Sonuç saklanmaz, her okumada kurulur. \
-                      superelevation \"\" çizelgeyi, sag 0 toleransı kaldırır. Yeni koridorun kimliği verilen ya da ilk boş c-n. Tek geri alma adımı “Koridor”. Retler: not_a_road_project, unknown_corridor, unknown_alignment, unknown_road_profile, unknown_terrain, unknown_superelevation, unknown_road_template, invalid_road_corridor, invalid_revision, revision_conflict."
+                      superelevation \"\" çizelgeyi, sag 0 toleransı kaldırır. Yeni koridorun kimliği verilen ya da ilk boş c-n. Tek geri alma adımı “Koridor”. Retler: not_a_road_project, unknown_corridor, unknown_alignment, unknown_road_profile, unknown_terrain, unknown_superelevation, unknown_road_template, invalid_road_corridor, corridor_in_use (bir kübaj hesabının kullandığı koridor silinmez), invalid_revision, revision_conflict."
                 .into(),
             aliases: vec!["koridor".into()],
             effect: CommandEffect::Document,
@@ -7223,6 +7223,58 @@ pub fn catalog() -> CommandCatalog {
             examples: vec![CommandExample {
                 title: "Bir koridorun öznitelik çizgileri noktalarıyla".into(),
                 input: json!({ "corridor": "Ana koridor", "points": true }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_VOLUMES_EDIT.into(),
+            version: crate::ROAD_VOLUMES_EDIT_VERSION,
+            title: "Kübaj hesabını düzenle".into(),
+            summary: "Yol projesinin kübaj hesabını (volume: kimliği ya da adı; yoksa yeni) yazar ya da kaldırır. Kübaj bir koridorun (corridor) hacmidir; yöntem (method): endArea ardışık iki kesit arasında ortalama alan L·(A₀ + A₁)/2, prismoidal iki kesitin ortasında kurulan kesitle L·(A₀ + 4Aₘ + A₁)/6, surfaces koridorun üst yüzeyiyle arazisi arasındaki hacim (üçgenler planda üst üste konur). Kazı ve dolgu ayrıdır. \
+                      factors km aralıklarına (from, to aksın istasyonu, m) kazının kabarma (cut) ve dolgunun sıkışma (fill) çarpanını verir; artan, birbirine binmeyen satırlar, çarpan 0'dan büyük, en çok 10; KentOS öntanımlı katsayı vermez. Kübaj koridorunu izler, başka koridora bağlanmaz, yeniden bağlanmaz. Sonuç saklanmaz, her okumada hesaplanır. \
+                      Yeni hesabın kimliği verilen ya da ilk boş v-n. Tek geri alma adımı “Kübaj”. Retler: not_a_road_project, unknown_volume, unknown_corridor, invalid_volume, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["kubaj".into(), "kübaj".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::VolumesEdit>(),
+            output: schema::<crate::VolumesWritten>(),
+            plan: Some(schema::<crate::VolumesWritten>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana koridorun ortalama alanla kübajı, km 0 – 300 kabarma 1,25 ve sıkışma 0,90".into(),
+                input: json!({ "operation": "set", "name": "Ana kübaj", "corridor": "Ana koridor", "method": "endArea",
+                    "factors": [ { "from": 0.0, "to": 300.0, "cut": 1.25, "fill": 0.9 } ] }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_VOLUMES_QUERY.into(),
+            version: crate::ROAD_VOLUMES_QUERY_VERSION,
+            title: "Kübajı sorgula".into(),
+            summary: "Yol projesinin kübaj hesaplarını bugün hesaplar ve kübaj cetvelini verir; hiçbir şey yazmaz. Her hesabın satırları ardışık iki kesit arasıdır: km'ler, kazı ve dolgu (m³; kesiti çözülmeyen aralıkta yok), aralığın ortasının katsayıları, kabarma ve sıkışmayla düzeltilmiş kazı ve dolgunun birikimli toplamları ve farkı (kütle ordinatı). Toplamlar ham ve düzeltilmiş; surfaces yönteminde kazı ve dolgu plan alanları ve arazinin örtmediği alan; hacmi olmayan aralıklar; hesaplanamıyorsa nedeni. volume ile yalnız biri. \
+                      Uyarılar: corridor_stale, volume_gap, volume_uncovered, volume_unfactored. Retler: not_a_road_project, unknown_volume, invalid_volume."
+                .into(),
+            aliases: vec!["kubajsor".into(), "kübajsor".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::VolumesQuery>(),
+            output: schema::<crate::VolumesQueried>(),
+            plan: Some(schema::<crate::VolumesQueried>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana kübajın cetveli".into(),
+                input: json!({ "volume": "Ana kübaj" }),
                 output: None,
             }],
         },
@@ -12843,6 +12895,12 @@ mod tests {
                     crate::ROAD_CORRIDORS_DRAW => {
                         serde_json::from_value::<crate::CorridorsDraw>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_VOLUMES_EDIT => {
+                        serde_json::from_value::<crate::VolumesEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_VOLUMES_QUERY => {
+                        serde_json::from_value::<crate::VolumesQuery>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_SUBNETWORKS_FIND => {
                         serde_json::from_value::<crate::SubnetworksFind>(e.input.clone())
                             .map(|_| ())
@@ -13554,6 +13612,12 @@ mod tests {
                         }
                         crate::ROAD_CORRIDORS_DRAW => {
                             serde_json::from_value::<crate::CorridorsDrawn>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_VOLUMES_EDIT => {
+                            serde_json::from_value::<crate::VolumesWritten>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_VOLUMES_QUERY => {
+                            serde_json::from_value::<crate::VolumesQueried>(output.clone()).map(|_| ())
                         }
                         crate::CAD_ADDRESSES_DEFINE => {
                             serde_json::from_value::<crate::AddressesDefined>(output.clone())

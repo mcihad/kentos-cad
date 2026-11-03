@@ -37354,7 +37354,7 @@
       "id": "road.corridors.edit",
       "version": 1,
       "title": "Koridoru düzenle",
-      "summary": "Yol projesinin koridorunu (corridor: kimliği ya da adı; yoksa yeni) yazar, aksına yeniden bağlar ya da kaldırır. Koridor bir aksın üstündedir: boykesiti (profile) eksen kotunu, yüzeyi (surface) şevin buluştuğu araziyi verir; isteğe bağlı dever çizelgesi (superelevation) şeritlerin eğimini; left ve right her yanda arama genişliğidir (m). Bölgeler (regions: from, to aksın istasyonu, m; template tip kesit) kesişmez, boşluk bırakabilir. Km örneklemesi: bölgenin başı ve sonu, aliymanda tangent aralığının katları, kurp ve klotoidde elemanın curve aralığıyla (sag verilirse kirişin yaydan sapması en çok sag olacak adımla) eşit bölünmesi, yatay geometri noktaları; profilePoints ile boykesitin PVI'leri, düşey kurp uçları, tepe ve çukuru; critical ile dever kritik km'leri; stations ile kullanıcının km'leri. Sonuç saklanmaz, her okumada kurulur. superelevation \"\" çizelgeyi, sag 0 toleransı kaldırır. Yeni koridorun kimliği verilen ya da ilk boş c-n. Tek geri alma adımı “Koridor”. Retler: not_a_road_project, unknown_corridor, unknown_alignment, unknown_road_profile, unknown_terrain, unknown_superelevation, unknown_road_template, invalid_road_corridor, invalid_revision, revision_conflict.",
+      "summary": "Yol projesinin koridorunu (corridor: kimliği ya da adı; yoksa yeni) yazar, aksına yeniden bağlar ya da kaldırır. Koridor bir aksın üstündedir: boykesiti (profile) eksen kotunu, yüzeyi (surface) şevin buluştuğu araziyi verir; isteğe bağlı dever çizelgesi (superelevation) şeritlerin eğimini; left ve right her yanda arama genişliğidir (m). Bölgeler (regions: from, to aksın istasyonu, m; template tip kesit) kesişmez, boşluk bırakabilir. Km örneklemesi: bölgenin başı ve sonu, aliymanda tangent aralığının katları, kurp ve klotoidde elemanın curve aralığıyla (sag verilirse kirişin yaydan sapması en çok sag olacak adımla) eşit bölünmesi, yatay geometri noktaları; profilePoints ile boykesitin PVI'leri, düşey kurp uçları, tepe ve çukuru; critical ile dever kritik km'leri; stations ile kullanıcının km'leri. Sonuç saklanmaz, her okumada kurulur. superelevation \"\" çizelgeyi, sag 0 toleransı kaldırır. Yeni koridorun kimliği verilen ya da ilk boş c-n. Tek geri alma adımı “Koridor”. Retler: not_a_road_project, unknown_corridor, unknown_alignment, unknown_road_profile, unknown_terrain, unknown_superelevation, unknown_road_template, invalid_road_corridor, corridor_in_use (bir kübaj hesabının kullandığı koridor silinmez), invalid_revision, revision_conflict.",
       "aliases": [
         "koridor"
       ],
@@ -37371,7 +37371,7 @@
       "cost": "instant",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `road.corridors.edit` v1: the corridor by its id or name (absent: a new one). A new one needs `name`,\n`alignment`, `profile`, `surface`, `left`, `right`, `tangent`, `curve` and `regions`; it holds its alignment's\npresent revision. `superelevation` \"\" takes the schedule away, `sag` 0 the chord tolerance.\n\nRefusals, in this order: `not_a_road_project`, `unknown_corridor` (remove or rebind one not in the project),\n`unknown_alignment`, `unknown_road_profile`, `unknown_terrain`, `unknown_superelevation`, `unknown_road_template`,\n`invalid_road_corridor` (a new one without its fields, set with nothing to set, the definition by `road_problem`,\nregions overlapping, empty or off the alignment, a station written off it, more stations than a corridor samples),\n`invalid_revision`, `revision_conflict`.",
+        "description": "Input of `road.corridors.edit` v1: the corridor by its id or name (absent: a new one). A new one needs `name`,\n`alignment`, `profile`, `surface`, `left`, `right`, `tangent`, `curve` and `regions`; it holds its alignment's\npresent revision. `superelevation` \"\" takes the schedule away, `sag` 0 the chord tolerance.\n\nRefusals, in this order: `not_a_road_project`, `unknown_corridor` (remove or rebind one not in the project),\n`unknown_alignment`, `unknown_road_profile`, `unknown_terrain`, `unknown_superelevation`, `unknown_road_template`,\n`invalid_road_corridor` (a new one without its fields, set with nothing to set, the definition by `road_problem`,\nregions overlapping, empty or off the alignment, a station written off it, more stations than a corridor samples),\n`corridor_in_use` (remove one an earthwork volume uses),\n`invalid_revision`, `revision_conflict`.",
         "properties": {
           "alignment": {
             "type": [
@@ -37572,6 +37572,7 @@
           "unknown_superelevation",
           "unknown_road_template",
           "invalid_road_corridor",
+          "corridor_in_use",
           "invalid_revision",
           "revision_conflict"
         ]
@@ -37929,6 +37930,268 @@
           "input": {
             "corridor": "Ana koridor",
             "points": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "road.volumes.edit",
+      "version": 1,
+      "title": "Kübaj hesabını düzenle",
+      "summary": "Yol projesinin kübaj hesabını (volume: kimliği ya da adı; yoksa yeni) yazar ya da kaldırır. Kübaj bir koridorun (corridor) hacmidir; yöntem (method): endArea ardışık iki kesit arasında ortalama alan L·(A₀ + A₁)/2, prismoidal iki kesitin ortasında kurulan kesitle L·(A₀ + 4Aₘ + A₁)/6, surfaces koridorun üst yüzeyiyle arazisi arasındaki hacim (üçgenler planda üst üste konur). Kazı ve dolgu ayrıdır. factors km aralıklarına (from, to aksın istasyonu, m) kazının kabarma (cut) ve dolgunun sıkışma (fill) çarpanını verir; artan, birbirine binmeyen satırlar, çarpan 0'dan büyük, en çok 10; KentOS öntanımlı katsayı vermez. Kübaj koridorunu izler, başka koridora bağlanmaz, yeniden bağlanmaz. Sonuç saklanmaz, her okumada hesaplanır. Yeni hesabın kimliği verilen ya da ilk boş v-n. Tek geri alma adımı “Kübaj”. Retler: not_a_road_project, unknown_volume, unknown_corridor, invalid_volume, invalid_revision, revision_conflict.",
+      "aliases": [
+        "kubaj",
+        "kübaj"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.volumes.edit` v1: the earthwork volume by its id or name (absent: a new one). A new one needs `name`,\n`corridor` and `method`. A volume is not rebound: it follows its corridor.\n\nRefusals, in this order: `not_a_road_project`, `invalid_volume` (rebind), `unknown_volume` (remove one not in the\nproject), `unknown_corridor`, `invalid_volume` (another corridor, a new one without its fields, set with nothing to\nset, the definition by `road_problem`: factors not positive, over 10 or over overlapping stretches; a corridor that\ndoes not build), `invalid_revision`, `revision_conflict`.",
+        "properties": {
+          "corridor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "factors": {
+            "items": {
+              "$ref": "#/$defs/VolumeFactorDef"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "method": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/VolumeMethod"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "operation": {
+            "$ref": "#/$defs/RoadEditOperation"
+          },
+          "volume": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "operation"
+        ],
+        "title": "VolumesEdit",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.volumes.edit` v1.",
+        "properties": {
+          "revision": {
+            "type": "string"
+          },
+          "volume": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/VolumeReport"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The volume written, computed; absent when removed."
+          },
+          "volumes": {
+            "items": {
+              "$ref": "#/$defs/VolumeListed"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "volumes",
+          "revision"
+        ],
+        "title": "VolumesWritten",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.volumes.edit` v1.",
+        "properties": {
+          "revision": {
+            "type": "string"
+          },
+          "volume": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/VolumeReport"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The volume written, computed; absent when removed."
+          },
+          "volumes": {
+            "items": {
+              "$ref": "#/$defs/VolumeListed"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "volumes",
+          "revision"
+        ],
+        "title": "VolumesWritten",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_volume",
+          "unknown_corridor",
+          "invalid_volume",
+          "invalid_revision",
+          "revision_conflict"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Ana koridorun ortalama alanla kübajı, km 0 – 300 kabarma 1,25 ve sıkışma 0,90",
+          "input": {
+            "corridor": "Ana koridor",
+            "factors": [
+              {
+                "cut": 1.25,
+                "fill": 0.9,
+                "from": 0.0,
+                "to": 300.0
+              }
+            ],
+            "method": "endArea",
+            "name": "Ana kübaj",
+            "operation": "set"
+          }
+        }
+      ]
+    },
+    {
+      "id": "road.volumes.query",
+      "version": 1,
+      "title": "Kübajı sorgula",
+      "summary": "Yol projesinin kübaj hesaplarını bugün hesaplar ve kübaj cetvelini verir; hiçbir şey yazmaz. Her hesabın satırları ardışık iki kesit arasıdır: km'ler, kazı ve dolgu (m³; kesiti çözülmeyen aralıkta yok), aralığın ortasının katsayıları, kabarma ve sıkışmayla düzeltilmiş kazı ve dolgunun birikimli toplamları ve farkı (kütle ordinatı). Toplamlar ham ve düzeltilmiş; surfaces yönteminde kazı ve dolgu plan alanları ve arazinin örtmediği alan; hacmi olmayan aralıklar; hesaplanamıyorsa nedeni. volume ile yalnız biri. Uyarılar: corridor_stale, volume_gap, volume_uncovered, volume_unfactored. Retler: not_a_road_project, unknown_volume, invalid_volume.",
+      "aliases": [
+        "kubajsor",
+        "kübajsor"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.volumes.query` v1: every earthwork volume computed, or one (`volume`: its id or name).\n\nRefusals: `not_a_road_project`, `unknown_volume`, `invalid_volume` (the one asked does not compute). Warnings:\n`corridor_stale`, `volume_gap`, `volume_uncovered`, `volume_unfactored`.",
+        "properties": {
+          "volume": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "title": "VolumesQuery",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.volumes.query` v1.",
+        "properties": {
+          "volumes": {
+            "items": {
+              "$ref": "#/$defs/VolumeReport"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "volumes"
+        ],
+        "title": "VolumesQueried",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.volumes.query` v1.",
+        "properties": {
+          "volumes": {
+            "items": {
+              "$ref": "#/$defs/VolumeReport"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "volumes"
+        ],
+        "title": "VolumesQueried",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_volume",
+          "invalid_volume"
+        ],
+        "warnings": [
+          "corridor_stale",
+          "volume_gap",
+          "volume_uncovered",
+          "volume_unfactored"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Ana kübajın cetveli",
+          "input": {
+            "volume": "Ana kübaj"
           }
         }
       ]
@@ -72187,6 +72450,42 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Koridorun yüzeyi projede yok ya da kurulamıyor; hiçbir kesit çözülmedi."
+    },
+    {
+      "code": "unknown_volume",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu kimlikte ya da adda kübaj hesabı yok."
+    },
+    {
+      "code": "invalid_volume",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kübaj hesabının tanımı geçerli değil ya da koridoru kurulamıyor; ileti nedenini söyler."
+    },
+    {
+      "code": "corridor_in_use",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu koridoru bir kübaj hesabı kullanıyor; önce kübaj hesabını silin."
+    },
+    {
+      "code": "volume_gap",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Kesiti çözülmeyen aralıkların hacmi yok; ileti aralıkları söyler."
+    },
+    {
+      "code": "volume_uncovered",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Tasarım yüzeyinin bir kısmını arazi örtmüyor; o alanın hacmi yok."
+    },
+    {
+      "code": "volume_unfactored",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Katsayı verilmeyen aralıklar dönüştürülmedi; düzeltilmiş hacim ham hacimdir."
     },
     {
       "code": "corridor_superelevation_gone",
@@ -134143,6 +134442,13 @@
             "$ref": "#/$defs/TemplateDef"
           },
           "type": "array"
+        },
+        "volumes": {
+          "description": "The earthwork volumes (docs/adr/0906), each of a corridor, in the order the project tree shows them.",
+          "items": {
+            "$ref": "#/$defs/VolumeDef"
+          },
+          "type": "array"
         }
       },
       "type": "object"
@@ -149657,6 +149963,319 @@
       },
       "required": [
         "name"
+      ],
+      "type": "object"
+    },
+    "VolumeDef": {
+      "additionalProperties": false,
+      "description": "An earthwork volume (docs/adr/0906, Netpro's kübaj hesabı): a corridor's, by a method, with the factors by stations.",
+      "properties": {
+        "corridor": {
+          "type": "string"
+        },
+        "factors": {
+          "items": {
+            "$ref": "#/$defs/VolumeFactorDef"
+          },
+          "type": "array"
+        },
+        "id": {
+          "type": "string"
+        },
+        "method": {
+          "$ref": "#/$defs/VolumeMethod"
+        },
+        "name": {
+          "type": "string"
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "corridor",
+        "method"
+      ],
+      "type": "object"
+    },
+    "VolumeFactorDef": {
+      "additionalProperties": false,
+      "description": "The factors over a stretch of stations (docs/adr/0906 §4): the cut's (bank to the volume it makes, kabarma) and the\nfill's (compacted to the volume it needs, sıkışma), each a multiplier; absent: not converted.",
+      "properties": {
+        "cut": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        },
+        "fill": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        },
+        "from": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "to": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "from",
+        "to"
+      ],
+      "type": "object"
+    },
+    "VolumeListed": {
+      "description": "An earthwork volume in a list.",
+      "properties": {
+        "corridor": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "method": {
+          "$ref": "#/$defs/VolumeMethod"
+        },
+        "name": {
+          "type": "string"
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "corridor",
+        "method",
+        "revision"
+      ],
+      "type": "object"
+    },
+    "VolumeMethod": {
+      "description": "How an earthwork volume is computed (docs/adr/0906 §2–§3).",
+      "oneOf": [
+        {
+          "const": "endArea",
+          "description": "The average end area between consecutive sections.",
+          "type": "string"
+        },
+        {
+          "const": "prismoidal",
+          "description": "The prismoidal formula with a section in the middle of each pair.",
+          "type": "string"
+        },
+        {
+          "const": "surfaces",
+          "description": "Between the corridor's top surface and the terrain, the triangulations laid over each other.",
+          "type": "string"
+        }
+      ]
+    },
+    "VolumeReport": {
+      "description": "An earthwork volume as it is now: its sources, whether its corridor's alignment changed since, its rows (by\nsections), the totals of the cut and fill and their factored volumes, the surfaces' plan areas (between surfaces),\nthe stretches without volume; why it does not compute when it does not.",
+      "properties": {
+        "corridor": {
+          "type": "string"
+        },
+        "cut": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "cutArea": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "area"
+        },
+        "factoredCut": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "factoredFill": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "fill": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "fillArea": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "area"
+        },
+        "gaps": {
+          "items": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "type": "array",
+          "x-unit": "m"
+        },
+        "id": {
+          "type": "string"
+        },
+        "method": {
+          "$ref": "#/$defs/VolumeMethod"
+        },
+        "name": {
+          "type": "string"
+        },
+        "problem": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "rows": {
+          "items": {
+            "$ref": "#/$defs/VolumeRow"
+          },
+          "type": "array"
+        },
+        "stale": {
+          "type": "boolean"
+        },
+        "uncovered": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "area"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "revision",
+        "corridor",
+        "method",
+        "stale",
+        "rows",
+        "cut",
+        "fill",
+        "factoredCut",
+        "factoredFill",
+        "gaps"
+      ],
+      "type": "object"
+    },
+    "VolumeRow": {
+      "description": "A row of an earthwork volume between two consecutive sections: their stations and km, the cut and fill (m³; none\nwhere a section is not solved), the factors over it (none: not converted), the factored cut and fill, and the\nrunning totals of the factored cut, the factored fill and their difference (the mass ordinate) to its end.",
+      "properties": {
+        "cut": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "volume"
+        },
+        "cutFactor": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        },
+        "fill": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "volume"
+        },
+        "fillFactor": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        },
+        "from": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "fromText": {
+          "type": "string"
+        },
+        "mass": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "to": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "toText": {
+          "type": "string"
+        },
+        "totalCut": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "totalFill": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        }
+      },
+      "required": [
+        "from",
+        "to",
+        "fromText",
+        "toText",
+        "totalCut",
+        "totalFill",
+        "mass"
       ],
       "type": "object"
     },

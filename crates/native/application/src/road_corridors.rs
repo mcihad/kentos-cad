@@ -77,6 +77,39 @@ pub(crate) struct Made {
     pub warnings: Vec<CommandWarning>,
     /// Each region's crosses: the sample lines and the sections built there.
     pub regions: Vec<RegionCrosses>,
+    /// What builds a section at any station of the corridor (a volume's middle sections).
+    pub sampler: Sampler,
+}
+
+/// The corridor's sources built once: its alignment, its profile's elevations, its surface, its superelevation
+/// schedule and its swath; a section at any station of it.
+pub(crate) struct Sampler {
+    pub alignment: Built,
+    vertical: kentos_road::profile::vertical::Vertical,
+    pub surface: Option<kentos_road::surface::Surface>,
+    schedule: Option<(kentos_road::superelevation::Schedule, kentos_road::superelevation::Crossfall)>,
+    left: f64,
+    right: f64,
+}
+
+impl Sampler {
+    /// The cross at station `s` with `template`: its sample line and the section, none where the line does not lie on
+    /// the alignment.
+    pub fn cross(&self, template: &tpl::Template, s: f64) -> Option<Cross> {
+        let line = sample_line(&self.alignment.core, s, self.left, self.right)?;
+        let section = match (&self.surface, self.vertical.at(s)) {
+            (Some(surf), Some((z, _, _))) => {
+                let g = ground(surf, &line);
+                let tt = match &self.schedule {
+                    Some((sch, normal)) => superelevated(template, sch, *normal, s),
+                    None => template.clone(),
+                };
+                tpl::build(&tt, z, &g).ok()
+            }
+            _ => None,
+        };
+        Some(Cross { line, section })
+    }
 }
 
 fn warning(code: &str, message: String) -> CommandWarning {
@@ -174,6 +207,15 @@ pub(crate) fn make_with(
             format!("“{}” koridorunun yüzeyi ({}) projede yok ya da kurulamıyor; hiçbir kesit çözülmedi.", def.name, def.surface),
         ));
     }
+    let sampler = Sampler {
+        alignment: built,
+        vertical,
+        surface,
+        schedule: schedule.map(|(s, n, _)| (s, n)),
+        left: def.left,
+        right: def.right,
+    };
+    let built = &sampler.alignment;
     let f = Frequency { tangent: def.tangent, curve: def.curve, sag: def.sag };
     let mut stations_out = Vec::new();
     let mut regions = Vec::new();
@@ -193,19 +235,9 @@ pub(crate) fn make_with(
         for st in &list {
             let s = st.station;
             stations_out.push(CorridorStation { station: s, km_text: km_text(built.km(s), 3), why: why_word(st.why).into(), region: ri as u32 });
-            let Some(line) = sample_line(&built.core, s, def.left, def.right) else { continue };
-            let section = match (&surface, vertical.at(s)) {
-                (Some(surf), Some((z, _, _))) => {
-                    let g = ground(surf, &line);
-                    let tt = match &schedule {
-                        Some((sch, normal, _)) => superelevated(&template, sch, *normal, s),
-                        None => template.clone(),
-                    };
-                    tpl::build(&tt, z, &g).ok()
-                }
-                _ => None,
-            };
-            crosses.push(Cross { line, section });
+            if let Some(cross) = sampler.cross(&template, s) {
+                crosses.push(cross);
+            }
         }
         regions.push(RegionCrosses { template, crosses });
     }
@@ -300,7 +332,7 @@ pub(crate) fn make_with(
         area,
         problem: None,
     };
-    Ok(Made { report, built: made, warnings, regions })
+    Ok(Made { report, built: made, warnings, regions, sampler })
 }
 
 /// The corridor built now with the project's templates.

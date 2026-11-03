@@ -56,7 +56,8 @@ pub struct Volumes {
     pub uncovered: f64,
 }
 
-type Triangle = [[f64; 3]; 3];
+/// A triangle's corners (x, y, z).
+pub type Triangle = [[f64; 3]; 3];
 
 fn area2(a: [f64; 2], b: [f64; 2], c: [f64; 2]) -> f64 {
     (b[0] - a[0]) * (c[1] - a[1]) - (c[0] - a[0]) * (b[1] - a[1])
@@ -183,56 +184,82 @@ impl Grid {
     }
 }
 
-/// The volumes between the design surface and the ground surface, each a set of triangles that do not overlap in plan
-/// (x, y, z each corner), over the design's plan.
-pub fn between_surfaces(design: &[Triangle], ground: &[Triangle]) -> Volumes {
-    let ground: Vec<Triangle> = ground.iter().filter_map(ccw).collect();
-    let mut out = Volumes::default();
-    let grid = (!ground.is_empty()).then(|| Grid::new(&ground));
-    let mut seen: Vec<u32> = vec![u32::MAX; ground.len()];
-    for (di, d) in design.iter().enumerate() {
-        let Some(d) = ccw(d) else { continue };
-        let plan = [[d[0][0], d[0][1]], [d[1][0], d[1][1]], [d[2][0], d[2][1]]];
-        let whole = area2(plan[0], plan[1], plan[2]) / 2.0;
-        let mut covered = 0.0;
-        if let Some(grid) = &grid {
-            let (lo, hi) = grid.span(&d);
-            for cy in lo[1]..=hi[1] {
-                for cx in lo[0]..=hi[0] {
-                    for &gi in &grid.cells[cy * grid.nx + cx] {
-                        if seen[gi as usize] == di as u32 {
-                            continue;
-                        }
-                        seen[gi as usize] = di as u32;
-                        let g = &ground[gi as usize];
-                        let mut poly = plan.to_vec();
-                        for k in 0..3 {
-                            poly = clip(&poly, [g[k][0], g[k][1]], [g[(k + 1) % 3][0], g[(k + 1) % 3][1]]);
-                            if poly.len() < 3 {
-                                break;
+/// The ground surface laid out once: its triangles counterclockwise and a grid over them, so many designs (a corridor's
+/// strips, one by one) are measured against it without building the grid again.
+pub struct Ground {
+    tris: Vec<Triangle>,
+    grid: Option<Grid>,
+    seen: Vec<u32>,
+    stamp: u32,
+}
+
+impl Ground {
+    /// The ground of triangles that do not overlap in plan (x, y, z each corner).
+    pub fn new(ground: &[Triangle]) -> Self {
+        let tris: Vec<Triangle> = ground.iter().filter_map(ccw).collect();
+        let grid = (!tris.is_empty()).then(|| Grid::new(&tris));
+        let seen = vec![0; tris.len()];
+        Self { tris, grid, seen, stamp: 0 }
+    }
+
+    /// The volumes between a design (triangles that do not overlap in plan) and this ground, over the design's plan.
+    pub fn volumes(&mut self, design: &[Triangle]) -> Volumes {
+        let mut out = Volumes::default();
+        for d in design {
+            let Some(d) = ccw(d) else { continue };
+            let plan = [[d[0][0], d[0][1]], [d[1][0], d[1][1]], [d[2][0], d[2][1]]];
+            let whole = area2(plan[0], plan[1], plan[2]) / 2.0;
+            let mut covered = 0.0;
+            if let Some(grid) = &self.grid {
+                if self.stamp == u32::MAX {
+                    self.seen.iter_mut().for_each(|v| *v = 0);
+                    self.stamp = 0;
+                }
+                self.stamp += 1;
+                let (lo, hi) = grid.span(&d);
+                for cy in lo[1]..=hi[1] {
+                    for cx in lo[0]..=hi[0] {
+                        for &gi in &grid.cells[cy * grid.nx + cx] {
+                            if self.seen[gi as usize] == self.stamp {
+                                continue;
                             }
+                            self.seen[gi as usize] = self.stamp;
+                            let g = &self.tris[gi as usize];
+                            let mut poly = plan.to_vec();
+                            for k in 0..3 {
+                                poly = clip(&poly, [g[k][0], g[k][1]], [g[(k + 1) % 3][0], g[(k + 1) % 3][1]]);
+                                if poly.len() < 3 {
+                                    break;
+                                }
+                            }
+                            if poly.len() < 3 {
+                                continue;
+                            }
+                            let with: Vec<([f64; 2], f64)> = poly.iter().map(|p| (*p, plane_z(&d, *p) - plane_z(g, *p))).collect();
+                            let (a, _) = integral(&with);
+                            if a <= 0.0 {
+                                continue;
+                            }
+                            covered += a;
+                            let (fa, fv) = integral(&split(&with, true));
+                            let (ca, cv) = integral(&split(&with, false));
+                            out.fill += fv;
+                            out.fill_area += fa;
+                            out.cut -= cv;
+                            out.cut_area += ca;
                         }
-                        if poly.len() < 3 {
-                            continue;
-                        }
-                        let with: Vec<([f64; 2], f64)> = poly.iter().map(|p| (*p, plane_z(&d, *p) - plane_z(g, *p))).collect();
-                        let (a, _) = integral(&with);
-                        if a <= 0.0 {
-                            continue;
-                        }
-                        covered += a;
-                        let (fa, fv) = integral(&split(&with, true));
-                        let (ca, cv) = integral(&split(&with, false));
-                        out.fill += fv;
-                        out.fill_area += fa;
-                        out.cut -= cv;
-                        out.cut_area += ca;
                     }
                 }
             }
+            out.covered += covered;
+            out.uncovered += (whole - covered).max(0.0);
         }
-        out.covered += covered;
-        out.uncovered += (whole - covered).max(0.0);
+        out
     }
-    out
+}
+
+/// The volumes between the design surface and the ground surface, each a set of triangles that do not overlap in plan
+/// (x, y, z each corner), over the design's plan.
+pub fn between_surfaces(design: &[Triangle], ground: &[Triangle]) -> Volumes {
+    Ground::new(ground).volumes(design)
 }

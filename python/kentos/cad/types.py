@@ -6691,6 +6691,22 @@ ViewMarkFormName = Literal["section", "elevation", "detail"]
 """The names of :class:`ViewMarkForm`, for a plain string."""
 
 
+class VolumeMethod(_StrEnum):
+    """How an earthwork volume is computed (docs/adr/0906 §2–§3).
+
+    - ``endArea``: The average end area between consecutive sections.
+    - ``prismoidal``: The prismoidal formula with a section in the middle of each pair.
+    - ``surfaces``: Between the corridor's top surface and the terrain, the triangulations laid over each other.
+    """
+    END_AREA = "endArea"
+    PRISMOIDAL = "prismoidal"
+    SURFACES = "surfaces"
+
+
+VolumeMethodName = Literal["endArea", "prismoidal", "surfaces"]
+"""The names of :class:`VolumeMethod`, for a plain string."""
+
+
 class WallAnchor(_StrEnum):
     """Which end of an edge stays when its length changes (docs/adr/0728 §3).
 
@@ -19602,6 +19618,7 @@ class CorridorsEdit(_Model):
     `unknown_alignment`, `unknown_road_profile`, `unknown_terrain`, `unknown_superelevation`, `unknown_road_template`,
     `invalid_road_corridor` (a new one without its fields, set with nothing to set, the definition by `road_problem`,
     regions overlapping, empty or off the alignment, a station written off it, more stations than a corridor samples),
+    `corridor_in_use` (remove one an earthwork volume uses),
     `invalid_revision`, `revision_conflict`.
     Attributes:
         curve: Unit: m.
@@ -59631,6 +59648,7 @@ class RoadSettings(_Model):
         superelevations: The superelevation schedules (docs/adr/0904), each on an alignment, in the order the project tree shows them.
         surfaces: The terrain surfaces, in the order the project tree shows them.
         templates: The templates (docs/adr/0903 §3), in the order the project tree shows them.
+        volumes: The earthwork volumes (docs/adr/0906), each of a corridor, in the order the project tree shows them.
     """
     alignments: list[AlignmentDef] | Unset = UNSET
     corridors: list[CorridorDef] | Unset = UNSET
@@ -59639,6 +59657,7 @@ class RoadSettings(_Model):
     superelevations: list[SuperelevationDef] | Unset = UNSET
     surfaces: list[TerrainSurfaceDef] | Unset = UNSET
     templates: list[TemplateDef] | Unset = UNSET
+    volumes: list[VolumeDef] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -59656,6 +59675,8 @@ class RoadSettings(_Model):
             out["surfaces"] = [e0.to_json() for e0 in self.surfaces]
         if self.templates is not UNSET:
             out["templates"] = [e0.to_json() for e0 in self.templates]
+        if self.volumes is not UNSET:
+            out["volumes"] = [e0.to_json() for e0 in self.volumes]
         return out
 
     @classmethod
@@ -59668,6 +59689,7 @@ class RoadSettings(_Model):
             superelevations=[SuperelevationDef.from_json(e0) for e0 in data["superelevations"]] if "superelevations" in data else UNSET,
             surfaces=[TerrainSurfaceDef.from_json(e0) for e0 in data["surfaces"]] if "surfaces" in data else UNSET,
             templates=[TemplateDef.from_json(e0) for e0 in data["templates"]] if "templates" in data else UNSET,
+            volumes=[VolumeDef.from_json(e0) for e0 in data["volumes"]] if "volumes" in data else UNSET,
         )
 
 
@@ -74227,6 +74249,367 @@ class VisibilityState(_Model):
         return cls(
             name=data["name"],
             hidden=list(data["hidden"]) if "hidden" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class VolumeDef(_Model):
+    """An earthwork volume (docs/adr/0906, Netpro's kübaj hesabı): a corridor's, by a method, with the factors by stations.
+    Attributes:
+        revision: Unit: version.
+    """
+    id: str
+    name: str
+    corridor: str
+    method: VolumeMethod | VolumeMethodName
+    factors: list[VolumeFactorDef] | Unset = UNSET
+    revision: int | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["corridor"] = self.corridor
+        out["method"] = _enum_out(self.method)
+        if self.factors is not UNSET:
+            out["factors"] = [e0.to_json() for e0 in self.factors]
+        if self.revision is not UNSET:
+            out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VolumeDef:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            corridor=data["corridor"],
+            method=_enum_in(VolumeMethod, data["method"]),
+            factors=[VolumeFactorDef.from_json(e0) for e0 in data["factors"]] if "factors" in data else UNSET,
+            revision=data.get("revision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class VolumeFactorDef(_Model):
+    """The factors over a stretch of stations (docs/adr/0906 §4): the cut's (bank to the volume it makes, kabarma) and the
+    fill's (compacted to the volume it needs, sıkışma), each a multiplier; absent: not converted.
+    Attributes:
+        from_: Unit: m.
+        to: Unit: m.
+        cut: Unit: 1.
+        fill: Unit: 1.
+    """
+    from_: float
+    to: float
+    cut: float | None | Unset = UNSET
+    fill: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = float(self.from_)
+        out["to"] = float(self.to)
+        if self.cut is not UNSET:
+            out["cut"] = None if self.cut is None else float(self.cut)
+        if self.fill is not UNSET:
+            out["fill"] = None if self.fill is None else float(self.fill)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VolumeFactorDef:
+        return cls(
+            from_=float(data["from"]),
+            to=float(data["to"]),
+            cut=UNSET if "cut" not in data else None if data["cut"] is None else float(data["cut"]),
+            fill=UNSET if "fill" not in data else None if data["fill"] is None else float(data["fill"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class VolumeListed(_Model):
+    """An earthwork volume in a list.
+    Attributes:
+        revision: Unit: version.
+    """
+    id: str
+    name: str
+    corridor: str
+    method: VolumeMethod | VolumeMethodName
+    revision: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["corridor"] = self.corridor
+        out["method"] = _enum_out(self.method)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VolumeListed:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            corridor=data["corridor"],
+            method=_enum_in(VolumeMethod, data["method"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class VolumeReport(_Model):
+    """An earthwork volume as it is now: its sources, whether its corridor's alignment changed since, its rows (by
+    sections), the totals of the cut and fill and their factored volumes, the surfaces' plan areas (between surfaces),
+    the stretches without volume; why it does not compute when it does not.
+    Attributes:
+        revision: Unit: version.
+        cut: Unit: volume.
+        fill: Unit: volume.
+        factored_cut: Unit: volume.
+        factored_fill: Unit: volume.
+        gaps: Unit: m.
+        cut_area: Unit: area.
+        fill_area: Unit: area.
+        uncovered: Unit: area.
+    """
+    id: str
+    name: str
+    revision: int
+    corridor: str
+    method: VolumeMethod | VolumeMethodName
+    stale: bool
+    rows: list[VolumeRow]
+    cut: float
+    fill: float
+    factored_cut: float
+    factored_fill: float
+    gaps: list[list[float]]
+    cut_area: float | None | Unset = UNSET
+    fill_area: float | None | Unset = UNSET
+    problem: str | None | Unset = UNSET
+    uncovered: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["revision"] = self.revision
+        out["corridor"] = self.corridor
+        out["method"] = _enum_out(self.method)
+        out["stale"] = self.stale
+        out["rows"] = [e0.to_json() for e0 in self.rows]
+        out["cut"] = float(self.cut)
+        out["fill"] = float(self.fill)
+        out["factoredCut"] = float(self.factored_cut)
+        out["factoredFill"] = float(self.factored_fill)
+        out["gaps"] = [[float(e1) for e1 in e0] for e0 in self.gaps]
+        if self.cut_area is not UNSET:
+            out["cutArea"] = None if self.cut_area is None else float(self.cut_area)
+        if self.fill_area is not UNSET:
+            out["fillArea"] = None if self.fill_area is None else float(self.fill_area)
+        if self.problem is not UNSET:
+            out["problem"] = self.problem
+        if self.uncovered is not UNSET:
+            out["uncovered"] = None if self.uncovered is None else float(self.uncovered)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VolumeReport:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            revision=data["revision"],
+            corridor=data["corridor"],
+            method=_enum_in(VolumeMethod, data["method"]),
+            stale=data["stale"],
+            rows=[VolumeRow.from_json(e0) for e0 in data["rows"]],
+            cut=float(data["cut"]),
+            fill=float(data["fill"]),
+            factored_cut=float(data["factoredCut"]),
+            factored_fill=float(data["factoredFill"]),
+            gaps=[[float(e1) for e1 in e0] for e0 in data["gaps"]],
+            cut_area=UNSET if "cutArea" not in data else None if data["cutArea"] is None else float(data["cutArea"]),
+            fill_area=UNSET if "fillArea" not in data else None if data["fillArea"] is None else float(data["fillArea"]),
+            problem=data.get("problem", UNSET),
+            uncovered=UNSET if "uncovered" not in data else None if data["uncovered"] is None else float(data["uncovered"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class VolumeRow(_Model):
+    """A row of an earthwork volume between two consecutive sections: their stations and km, the cut and fill (m³; none
+    where a section is not solved), the factors over it (none: not converted), the factored cut and fill, and the
+    running totals of the factored cut, the factored fill and their difference (the mass ordinate) to its end.
+    Attributes:
+        from_: Unit: m.
+        to: Unit: m.
+        total_cut: Unit: volume.
+        total_fill: Unit: volume.
+        mass: Unit: volume.
+        cut: Unit: volume.
+        cut_factor: Unit: 1.
+        fill: Unit: volume.
+        fill_factor: Unit: 1.
+    """
+    from_: float
+    to: float
+    from_text: str
+    to_text: str
+    total_cut: float
+    total_fill: float
+    mass: float
+    cut: float | None | Unset = UNSET
+    cut_factor: float | None | Unset = UNSET
+    fill: float | None | Unset = UNSET
+    fill_factor: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = float(self.from_)
+        out["to"] = float(self.to)
+        out["fromText"] = self.from_text
+        out["toText"] = self.to_text
+        out["totalCut"] = float(self.total_cut)
+        out["totalFill"] = float(self.total_fill)
+        out["mass"] = float(self.mass)
+        if self.cut is not UNSET:
+            out["cut"] = None if self.cut is None else float(self.cut)
+        if self.cut_factor is not UNSET:
+            out["cutFactor"] = None if self.cut_factor is None else float(self.cut_factor)
+        if self.fill is not UNSET:
+            out["fill"] = None if self.fill is None else float(self.fill)
+        if self.fill_factor is not UNSET:
+            out["fillFactor"] = None if self.fill_factor is None else float(self.fill_factor)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VolumeRow:
+        return cls(
+            from_=float(data["from"]),
+            to=float(data["to"]),
+            from_text=data["fromText"],
+            to_text=data["toText"],
+            total_cut=float(data["totalCut"]),
+            total_fill=float(data["totalFill"]),
+            mass=float(data["mass"]),
+            cut=UNSET if "cut" not in data else None if data["cut"] is None else float(data["cut"]),
+            cut_factor=UNSET if "cutFactor" not in data else None if data["cutFactor"] is None else float(data["cutFactor"]),
+            fill=UNSET if "fill" not in data else None if data["fill"] is None else float(data["fill"]),
+            fill_factor=UNSET if "fillFactor" not in data else None if data["fillFactor"] is None else float(data["fillFactor"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class VolumesEdit(_Model):
+    """Input of `road.volumes.edit` v1: the earthwork volume by its id or name (absent: a new one). A new one needs `name`,
+    `corridor` and `method`. A volume is not rebound: it follows its corridor.
+
+    Refusals, in this order: `not_a_road_project`, `invalid_volume` (rebind), `unknown_volume` (remove one not in the
+    project), `unknown_corridor`, `invalid_volume` (another corridor, a new one without its fields, set with nothing to
+    set, the definition by `road_problem`: factors not positive, over 10 or over overlapping stretches; a corridor that
+    does not build), `invalid_revision`, `revision_conflict`.
+    """
+    operation: RoadEditOperation | RoadEditOperationName
+    corridor: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    factors: list[VolumeFactorDef] | None | Unset = UNSET
+    method: VolumeMethod | VolumeMethodName | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    volume: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = _enum_out(self.operation)
+        if self.corridor is not UNSET:
+            out["corridor"] = self.corridor
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.factors is not UNSET:
+            out["factors"] = None if self.factors is None else [e0.to_json() for e0 in self.factors]
+        if self.method is not UNSET:
+            out["method"] = None if self.method is None else _enum_out(self.method)
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.volume is not UNSET:
+            out["volume"] = self.volume
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VolumesEdit:
+        return cls(
+            operation=_enum_in(RoadEditOperation, data["operation"]),
+            corridor=data.get("corridor", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            factors=UNSET if "factors" not in data else None if data["factors"] is None else [VolumeFactorDef.from_json(e0) for e0 in data["factors"]],
+            method=UNSET if "method" not in data else None if data["method"] is None else _enum_in(VolumeMethod, data["method"]),
+            name=data.get("name", UNSET),
+            volume=data.get("volume", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class VolumesQueried(_Model):
+    """Output of `road.volumes.query` v1."""
+    volumes: list[VolumeReport]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["volumes"] = [e0.to_json() for e0 in self.volumes]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VolumesQueried:
+        return cls(
+            volumes=[VolumeReport.from_json(e0) for e0 in data["volumes"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class VolumesQuery(_Model):
+    """Input of `road.volumes.query` v1: every earthwork volume computed, or one (`volume`: its id or name).
+
+    Refusals: `not_a_road_project`, `unknown_volume`, `invalid_volume` (the one asked does not compute). Warnings:
+    `corridor_stale`, `volume_gap`, `volume_uncovered`, `volume_unfactored`.
+    """
+    volume: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.volume is not UNSET:
+            out["volume"] = self.volume
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VolumesQuery:
+        return cls(
+            volume=data.get("volume", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class VolumesWritten(_Model):
+    """Output of `road.volumes.edit` v1.
+    Attributes:
+        volume: The volume written, computed; absent when removed.
+    """
+    volumes: list[VolumeListed]
+    revision: str
+    volume: VolumeReport | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["volumes"] = [e0.to_json() for e0 in self.volumes]
+        out["revision"] = self.revision
+        if self.volume is not UNSET:
+            out["volume"] = None if self.volume is None else self.volume.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VolumesWritten:
+        return cls(
+            volumes=[VolumeListed.from_json(e0) for e0 in data["volumes"]],
+            revision=data["revision"],
+            volume=UNSET if "volume" not in data else None if data["volume"] is None else VolumeReport.from_json(data["volume"]),
         )
 
 
@@ -97694,6 +98077,17 @@ __all__ = [
     "ViewsOp",
     "VisibilityBlockParameter",
     "VisibilityState",
+    "VolumeDef",
+    "VolumeFactorDef",
+    "VolumeListed",
+    "VolumeMethod",
+    "VolumeMethodName",
+    "VolumeReport",
+    "VolumeRow",
+    "VolumesEdit",
+    "VolumesQueried",
+    "VolumesQuery",
+    "VolumesWritten",
     "WallAnchor",
     "WallAnchorName",
     "WallCadElement",

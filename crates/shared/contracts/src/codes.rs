@@ -676,6 +676,18 @@ codes! {
     CORRIDOR_GAP = "corridor_gap", Warning, false, "Koridorun bölgeleri arasında kesitsiz aralık var.";
     /// A warning: the corridor's surface is not in the project or makes no surface; no section is solved.
     CORRIDOR_SURFACE_GONE = "corridor_surface_gone", Warning, false, "Koridorun yüzeyi projede yok ya da kurulamıyor; hiçbir kesit çözülmedi.";
+    /// No earthwork volume of the id or name.
+    UNKNOWN_VOLUME = "unknown_volume", Failed, false, "Bu kimlikte ya da adda kübaj hesabı yok.";
+    /// An earthwork volume's definition, or one its corridor no longer builds (docs/adr/0906).
+    INVALID_VOLUME = "invalid_volume", Failed, false, "Kübaj hesabının tanımı geçerli değil ya da koridoru kurulamıyor; ileti nedenini söyler.";
+    /// A corridor an earthwork volume uses.
+    CORRIDOR_IN_USE = "corridor_in_use", Failed, false, "Bu koridoru bir kübaj hesabı kullanıyor; önce kübaj hesabını silin.";
+    /// A warning: stretches where a section is not solved have no volume (docs/adr/0906 §2).
+    VOLUME_GAP = "volume_gap", Warning, false, "Kesiti çözülmeyen aralıkların hacmi yok; ileti aralıkları söyler.";
+    /// A warning: the design's area the terrain does not cover (docs/adr/0906 §3).
+    VOLUME_UNCOVERED = "volume_uncovered", Warning, false, "Tasarım yüzeyinin bir kısmını arazi örtmüyor; o alanın hacmi yok.";
+    /// A warning: stretches without factors are not converted (docs/adr/0906 §4).
+    VOLUME_UNFACTORED = "volume_unfactored", Warning, false, "Katsayı verilmeyen aralıklar dönüştürülmedi; düzeltilmiş hacim ham hacimdir.";
     /// A warning: the corridor's superelevation schedule does not build; its lanes keep the templates' slopes.
     CORRIDOR_SUPERELEVATION_GONE = "corridor_superelevation_gone", Warning, false, "Koridorun dever çizelgesi kurulamıyor; şeritler tip kesitin eğimiyle verildi.";
     /// A warning: the profile's alignment changed since it was made or rebound.

@@ -37,6 +37,9 @@ pub const MAX_SUPERELEVATION_ROWS: usize = 10_000;
 /// The most corridors a road project holds, regions a corridor holds (docs/adr/0905).
 pub const MAX_CORRIDORS: usize = 256;
 pub const MAX_CORRIDOR_REGIONS: usize = 256;
+/// The most earthwork volumes a road project holds, factor rows one holds (docs/adr/0906).
+pub const MAX_VOLUMES: usize = 256;
+pub const MAX_VOLUME_FACTORS: usize = 1000;
 pub const MAX_SECTION_STATIONS: usize = 10_000;
 /// The widest a sample line reaches on a side, m.
 pub const MAX_SWATH: f64 = 1000.0;
@@ -76,6 +79,10 @@ pub struct RoadSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<CorridorDef>>", optional))]
     pub corridors: Vec<CorridorDef>,
+    /// The earthwork volumes (docs/adr/0906), each of a corridor, in the order the project tree shows them.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<VolumeDef>>", optional))]
+    pub volumes: Vec<VolumeDef>,
 }
 
 impl RoadSettings {
@@ -88,6 +95,7 @@ impl RoadSettings {
             && self.sections.is_empty()
             && self.superelevations.is_empty()
             && self.corridors.is_empty()
+            && self.volumes.is_empty()
     }
 
     /// What is wrong with it, by the field's path and in words; none when it is right.
@@ -657,6 +665,63 @@ pub struct CorridorDef {
     pub regions: Vec<CorridorRegionDef>,
 }
 
+/// How an earthwork volume is computed (docs/adr/0906 §2–§3).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum VolumeMethod {
+    /// The average end area between consecutive sections.
+    EndArea,
+    /// The prismoidal formula with a section in the middle of each pair.
+    Prismoidal,
+    /// Between the corridor's top surface and the terrain, the triangulations laid over each other.
+    Surfaces,
+}
+
+/// The factors over a stretch of stations (docs/adr/0906 §4): the cut's (bank to the volume it makes, kabarma) and the
+/// fill's (compacted to the volume it needs, sıkışma), each a multiplier; absent: not converted.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct VolumeFactorDef {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub from: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub to: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub cut: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub fill: Option<f64>,
+}
+
+/// An earthwork volume (docs/adr/0906, Netpro's kübaj hesabı): a corridor's, by a method, with the factors by stations.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct VolumeDef {
+    pub id: String,
+    pub name: String,
+    pub corridor: String,
+    #[serde(default, skip_serializing_if = "is_zero_u32")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub revision: u32,
+    pub method: VolumeMethod,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<VolumeFactorDef>>", optional))]
+    pub factors: Vec<VolumeFactorDef>,
+}
+
 /// What is wrong with a road project's settings, by the field's path and in words.
 pub fn road_problem(road: &RoadSettings) -> Option<(String, String)> {
     let fail = |path: String, words: &str| Some((path, words.to_string()));
@@ -717,6 +782,7 @@ pub fn road_problem(road: &RoadSettings) -> Option<(String, String)> {
         .or_else(|| sections_problem(road))
         .or_else(|| superelevations_problem(road))
         .or_else(|| corridors_problem(road))
+        .or_else(|| volumes_problem(road))
 }
 
 fn side_problem(s: &TemplateSideDef, at: &str) -> Option<(String, String)> {
@@ -927,6 +993,53 @@ fn superelevations_problem(road: &RoadSettings) -> Option<(String, String)> {
                 if !rows.iter().all(|r| r.station.is_finite() && r.left.is_finite() && r.right.is_finite()) {
                     return fail(at("method.rows"), "satırların km'si ve eğimleri sonlu sayılar olmalı");
                 }
+            }
+        }
+    }
+    None
+}
+
+/// What is wrong with the earthwork volumes: each of a corridor in the project, its factors positive and over
+/// stretches in increasing stations that do not overlap.
+fn volumes_problem(road: &RoadSettings) -> Option<(String, String)> {
+    let fail = |path: String, words: &str| Some((path, words.to_string()));
+    let list = &road.volumes;
+    if list.len() > MAX_VOLUMES {
+        return fail("volumes".into(), &format!("en çok {MAX_VOLUMES} kübaj hesabı olur"));
+    }
+    let mut ids = std::collections::BTreeSet::new();
+    let mut names = std::collections::BTreeSet::new();
+    for (i, v) in list.iter().enumerate() {
+        let at = |field: &str| format!("volumes[{i}].{field}");
+        if !word_ok(&v.id) {
+            return fail(at("id"), "kübaj hesabının kimliği boş olmayan, en çok 64 karakterlik bir sözcük olmalı");
+        }
+        if !ids.insert(v.id.as_str()) {
+            return fail(at("id"), "bu kimlikte başka bir kübaj hesabı var");
+        }
+        let name = v.name.trim();
+        if name.is_empty() || name != v.name || v.name.chars().count() > 120 {
+            return fail(at("name"), "kübaj hesabının adı boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 120 karakter");
+        }
+        if !names.insert(name.to_lowercase()) {
+            return fail(at("name"), "bu adda başka bir kübaj hesabı var");
+        }
+        if road.corridors.iter().all(|c| c.id != v.corridor) {
+            return fail(at("corridor"), "kübaj hesabının koridoru projede yok");
+        }
+        if v.factors.len() > MAX_VOLUME_FACTORS {
+            return fail(at("factors"), &format!("en çok {MAX_VOLUME_FACTORS} katsayı satırı olur"));
+        }
+        for (j, f) in v.factors.iter().enumerate() {
+            let path = at(&format!("factors[{j}]"));
+            if !(f.from.is_finite() && f.to.is_finite() && f.to > f.from) {
+                return fail(path, "katsayı satırının sonu başından sonra olmalı");
+            }
+            if j > 0 && f.from < v.factors[j - 1].to {
+                return fail(path, "katsayı satırları artan km'lerle, birbirine binmeden yazılır");
+            }
+            if [f.cut, f.fill].iter().flatten().any(|k| !(k.is_finite() && *k > 0.0 && *k <= 10.0)) {
+                return fail(path, "katsayı 0'dan büyük, en çok 10 olur");
             }
         }
     }

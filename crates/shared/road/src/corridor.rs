@@ -231,6 +231,9 @@ pub struct Built {
     pub unsolved: Vec<Stretch>,
     /// The stretches (region, from, to) where consecutive sections cross in plan and no surface is made.
     pub folded: Vec<(usize, f64, f64)>,
+    /// The top surface's strips between consecutive solved sections: (region, from, to, the strip's triangles' range
+    /// in `triangles`), so a stretch's volume reads its own triangles (docs/adr/0906).
+    pub strips: Vec<(usize, f64, f64, std::ops::Range<usize>)>,
 }
 
 /// A place at `offset` (right positive) on a sample line.
@@ -298,12 +301,16 @@ fn plan_area(a: [f64; 3], b: [f64; 3], c: [f64; 3]) -> f64 {
     0.5 * ((b[0] - a[0]) * (c[1] - a[1]) - (c[0] - a[0]) * (b[1] - a[1]))
 }
 
+/// Two plan diagonals within this (m) are a tie in [`strip`].
+pub const SAME_DIAGONAL: f64 = 1e-9;
+
 fn plan_distance(a: [f64; 3], b: [f64; 3]) -> f64 {
     (b[0] - a[0]).hypot(b[1] - a[1])
 }
 
 /// The strip of triangles between two lines across the road (the earlier station's `a`, the later's `b`, both left to
-/// right): from their starts on, the shorter plan diagonal each step, `a` advancing on a tie; each triangle
+/// right): from their starts on, the shorter plan diagonal each step, `a` advancing on a tie (diagonals within
+/// [`SAME_DIAGONAL`] of each other: a rectangle's two are equal, and a rounding must not choose); each triangle
 /// counterclockwise when the stations go forward. Indices into `a` then `b` (offset by `a.len()`).
 pub fn strip(a: &[[f64; 3]], b: &[[f64; 3]]) -> Vec<[usize; 3]> {
     let (n, m) = (a.len(), b.len());
@@ -318,7 +325,7 @@ pub fn strip(a: &[[f64; 3]], b: &[[f64; 3]]) -> Vec<[usize; 3]> {
         } else if j + 1 == m {
             true
         } else {
-            plan_distance(a[i + 1], b[j]) <= plan_distance(a[i], b[j + 1])
+            plan_distance(a[i + 1], b[j]) <= plan_distance(a[i], b[j + 1]) + SAME_DIAGONAL
         };
         if take_a {
             out.push([i, i + 1, n + j]);
@@ -416,7 +423,9 @@ pub fn assemble(regions: &[RegionCrosses]) -> Built {
                 }
                 continue;
             }
+            let at = built.triangles.len();
             built.triangles.extend(tris);
+            built.strips.push((ri, w[0].line.station, w[1].line.station, at..built.triangles.len()));
         }
     }
     built

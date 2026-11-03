@@ -46,7 +46,7 @@ Tarih: 2026-11-03. plan/road.md Y7 (ROAD-COR-05…17, ROAD-MOD-06). Durum: tasla
    3B çizgi olur; kod bir km'de yoksa çizgi orada kırılır.
 5. **Üst yüzey (ROAD-COR-11, 13).** Ardışık iki çözülmüş km'nin kesit çizgileri (soldan sağa, açık yanda menteşeye
    kadar) şerit üçgenlemesiyle bağlanır: iki çizgi üstünde baştan ilerlenir, her adımda plandaki kısa köşegen seçilir,
-   eşitlikte öndeki çizgi ilerler. Üçgenler plan alanı sıfır ya da ters dönmüşse (kesitler planda kesişiyor: dar kurpta
+   eşitlikte (1 nm içinde: dikdörtgenin iki köşegeni eşittir, yuvarlama seçmemeli) öndeki çizgi ilerler. Üçgenler plan alanı sıfır ya da ters dönmüşse (kesitler planda kesişiyor: dar kurpta
    geniş şerit) yüzey o aralıkta kurulmaz, `corridor_folded` uyarısı km aralığıyla verilir.
 6. **Şevli kotlu plan (Netpro).** Çizim komutu menteşe ve şev ayağı çizgilerini, platform kenarlarını, şev taramasını
    (menteşeden şev ayağına kısa ve uzun çizgiler, yarmada ve dolguda ayrı katman rengi) ve km'lerde kırmızı kotu yazar;

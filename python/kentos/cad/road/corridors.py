@@ -191,7 +191,8 @@ class _RoadCorridorsEdit(LocalCommand[CorridorsEdit, CorridorsWritten, Corridors
     verilen ya da ilk boş c-n. Tek geri alma adımı “Koridor”. Retler:
     not_a_road_project, unknown_corridor, unknown_alignment, unknown_road_profile,
     unknown_terrain, unknown_superelevation, unknown_road_template,
-    invalid_road_corridor, invalid_revision, revision_conflict.
+    invalid_road_corridor, corridor_in_use (bir kübaj hesabının kullandığı koridor
+    silinmez), invalid_revision, revision_conflict.
     """
     __slots__ = ()
     id = "road.corridors.edit"
@@ -241,7 +242,8 @@ class _RoadCorridorsEdit(LocalCommand[CorridorsEdit, CorridorsWritten, Corridors
         çizelgeyi, sag 0 toleransı kaldırır. Yeni koridorun kimliği verilen ya da ilk boş
         c-n. Tek geri alma adımı “Koridor”. Retler: not_a_road_project, unknown_corridor,
         unknown_alignment, unknown_road_profile, unknown_terrain, unknown_superelevation,
-        unknown_road_template, invalid_road_corridor, invalid_revision, revision_conflict.
+        unknown_road_template, invalid_road_corridor, corridor_in_use (bir kübaj hesabının
+        kullandığı koridor silinmez), invalid_revision, revision_conflict.
 
         Args:
             doc: The drawing it works on.

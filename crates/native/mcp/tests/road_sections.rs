@@ -118,3 +118,28 @@ fn a_corridor_is_asked_made_and_keeps_its_template() {
     let kept = call(&mut server, "road.templates.edit", json!({"drawing":drawing,"template":"tk-2","operation":"remove"}));
     assert!(kept.to_string().contains("road_template_in_use"), "{kept}");
 }
+
+/// An earthwork volume of the file is computed, a new one is written, and the corridor it uses is kept
+/// (plan/road.md Y8, docs/adr/0906).
+#[test]
+fn a_volume_is_asked_written_and_keeps_its_corridor() {
+    let mut server = Server::new();
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/kcad/v2/road-work.kcad");
+    let opened = call(&mut server, "drawing.open", json!({"path":path}));
+    let drawing = opened["structuredContent"]["drawing"].clone();
+    let asked = call(&mut server, "road.volumes.query", json!({"drawing":drawing,"volume":"Ana kübaj"}));
+    assert_eq!(asked["isError"], false, "{asked}");
+    let out = &asked["structuredContent"]["output"]["volumes"][0];
+    assert_eq!(out["method"], "prismoidal", "{out}");
+    assert!(out["rows"].as_array().is_some_and(|r| r.len() > 20), "{out}");
+    let last = out["rows"].as_array().and_then(|r| r.last()).cloned().unwrap_or_default();
+    assert_eq!(last["totalCut"], out["factoredCut"], "{out}");
+    let made = call(
+        &mut server,
+        "road.volumes.edit",
+        json!({"drawing":drawing,"operation":"set","name":"Ortalama alan","corridor":"Ana koridor","method":"endArea"}),
+    );
+    assert_eq!(made["structuredContent"]["output"]["volume"]["id"], "v-3", "{made}");
+    let kept = call(&mut server, "road.corridors.edit", json!({"drawing":drawing,"corridor":"c-1","operation":"remove"}));
+    assert!(kept.to_string().contains("corridor_in_use"), "{kept}");
+}

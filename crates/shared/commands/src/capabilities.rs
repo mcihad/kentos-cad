@@ -1748,6 +1748,7 @@ const ENTRIES: &[Entry] = &[
                 "unknown_superelevation",
                 "unknown_road_template",
                 "invalid_road_corridor",
+                "corridor_in_use",
             ],
             REVISION,
         ],
@@ -1783,6 +1784,19 @@ const ENTRIES: &[Entry] = &[
             "corridor_surface_gone",
             "corridor_superelevation_gone",
         ],
+        targets: none,
+    },
+    // KentOS Yol's earthwork volumes (plan/road.md Y8, docs/adr/0906).
+    Entry {
+        id: "road.volumes.edit",
+        refusals: &[&["not_a_road_project", "unknown_volume", "unknown_corridor", "invalid_volume"], REVISION],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "road.volumes.query",
+        refusals: &[&["not_a_road_project", "unknown_volume", "invalid_volume"]],
+        warnings: &["corridor_stale", "volume_gap", "volume_uncovered", "volume_unfactored"],
         targets: none,
     },
     // Alt ağlar (docs/adr/0557 §2).

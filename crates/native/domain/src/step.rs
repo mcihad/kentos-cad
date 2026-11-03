@@ -760,6 +760,7 @@ fn report_of_ops(ops: &[Op]) -> StepReport {
             | Op::RoadSections { .. }
             | Op::RoadSuperelevations { .. }
             | Op::RoadCorridors { .. }
+            | Op::RoadVolumes { .. }
             | Op::ViewArea { .. }
             | Op::ArchOptions { .. }
             | Op::OptionCombos { .. }

@@ -301,6 +301,34 @@
       }
      ]
     }
+   ],
+   "volumes": [
+    {
+     "id": "v-1",
+     "name": "Ana kübaj",
+     "corridor": "c-1",
+     "revision": 2,
+     "method": "prismoidal",
+     "factors": [
+      {
+       "from": 0.0,
+       "to": 400.0,
+       "cut": 1.25,
+       "fill": 0.9
+      },
+      {
+       "from": 450.0,
+       "to": 900.0,
+       "fill": 0.95
+      }
+     ]
+    },
+    {
+     "id": "v-2",
+     "name": "Yüzey kübajı",
+     "corridor": "c-1",
+     "method": "surfaces"
+    }
    ]
   }
  },

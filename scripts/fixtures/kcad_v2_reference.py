@@ -5589,6 +5589,10 @@ def build():
     cor = load("road-work.json")
     cor["settings"]["road"]["corridors"][0]["alignment"] = "g-2"
     out["broken/road-corridor-on-parallel-axis.kcad"] = container(document(cor))
+    # Schema 161 (plan/road.md Y8, docs/adr/0906): an earthwork volume names a corridor of the project.
+    vol = load("road-work.json")
+    vol["settings"]["road"]["volumes"][0]["corridor"] = "c-yok"
+    out["broken/road-volume-unknown-corridor.kcad"] = container(document(vol))
     # Schema 136 (docs/adr/0758): a layer's indexes, a key over two fields, a plain one and a key taking empty values as
     # the same; schema 135 refuses them, an empty list, a group's, one over a field the layer lacks, empty values the
     # same on a plain index and a default written are refused too.

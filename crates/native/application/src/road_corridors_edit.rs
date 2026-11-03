@@ -61,7 +61,16 @@ fn check(doc: &kentos_domain::Document, input: &CorridorsEdit) -> Result<Checked
     let sag = input.sag.map(|t| (t != 0.0).then_some(t));
     let target = match (input.operation, found) {
         (RoadEditOperation::Remove | RoadEditOperation::Rebind, None) => return Err(Stop::Cancelled),
-        (RoadEditOperation::Remove, Some((at, _))) => {
+        (RoadEditOperation::Remove, Some((at, old))) => {
+            let users: Vec<&str> =
+                doc.road_volumes().iter().filter(|v| v.corridor == old.id).map(|v| v.name.as_str()).collect();
+            if !users.is_empty() {
+                return Err(fail(
+                    codes::CORRIDOR_IN_USE,
+                    format!("“{}” koridorunu şu kübaj hesapları kullanıyor: {}; önce onları silin.", old.name, users.join(", ")),
+                    "corridor",
+                ));
+            }
             list.remove(at);
             None
         }

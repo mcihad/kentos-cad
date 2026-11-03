@@ -9592,11 +9592,35 @@ class _Schema:
                 self.fail("bad_value", "1 ile 256 arası bölge olur")
             return t
 
+        def volume_factor(x):
+            t = self.fields({"from": (finite, True), "to": (finite, True), "cut": (finite, False),
+                             "fill": (finite, False)})(x)
+            if not t["to"] > t["from"]:
+                self.fail("bad_value", "katsayı satırının sonu başından sonra olmalı")
+            if any(not 0 < t[k] <= 10 for k in ("cut", "fill") if k in t):
+                self.fail("bad_value", "katsayı 0'dan büyük, en çok 10 olur")
+            return t
+
+        def volume(x):
+            # Docs/adr/0906 §4: a corridor's earthwork volume by a method, its factors by stations.
+            t = self.fields({"id": (word, True), "name": (self.text, True), "corridor": (word, True),
+                             "revision": (self.uint(32), False),
+                             "method": (self.enum(("endArea", "prismoidal", "surfaces")), True),
+                             "factors": (self.array(volume_factor), False)})(x)
+            name = t["name"]
+            if not name or name.strip() != name or len(name) > 120:
+                self.fail("bad_value", "kübaj hesabının adı boş, boşluklu ya da çok uzun")
+            rows = t.get("factors", [])
+            if len(rows) > 1000 or any(b["from"] < a["to"] for a, b in zip(rows, rows[1:])):
+                self.fail("bad_value", "katsayı satırları artan km'lerle, birbirine binmeden, en çok 1000")
+            return t
+
         r = self.fields({"surfaces": (self.array(surface), False), "alignments": (self.array(alignment), False),
                          "profiles": (self.array(profile), False), "templates": (self.array(template), False),
                          "sections": (self.array(section_set), False),
                          "superelevations": (self.array(superelevation), False),
-                         "corridors": (self.array(corridor), False)})(v)
+                         "corridors": (self.array(corridor), False),
+                         "volumes": (self.array(volume), False)})(v)
         got = r.get("surfaces", [])
         lines = r.get("alignments", [])
         profiles = r.get("profiles", [])
@@ -9604,7 +9628,8 @@ class _Schema:
         sets = r.get("sections", [])
         supers = r.get("superelevations", [])
         corridors = r.get("corridors", [])
-        if not got and not lines and not profiles and not templates and not sets and not supers and not corridors:
+        volumes = r.get("volumes", [])
+        if not (got or lines or profiles or templates or sets or supers or corridors or volumes):
             self.fail("bad_value", "boş yol ayarı yazılmaz")
         if len(got) > 64 or ("surfaces" in r and not got):
             self.fail("bad_value", "yol ayarında 1 ile 64 arası yüzey olur")
@@ -9672,6 +9697,12 @@ class _Schema:
                     self.fail("bad_value", "koridorun dever çizelgesi projede yok ya da koridorun aksında değil")
             if any(all(y["id"] != g["template"] for y in templates) for g in x["regions"]):
                 self.fail("bad_value", "koridor bölgesinin tip kesiti projede yok")
+        if "volumes" in r and not volumes or len(volumes) > 256:
+            self.fail("bad_value", "yol ayarında 1 ile 256 arası kübaj hesabı olur")
+        if len({x["id"] for x in volumes}) != len(volumes) or len({x["name"].lower() for x in volumes}) != len(volumes):
+            self.fail("bad_value", "iki kübaj hesabının kimliği ya da adı aynı")
+        if any(all(y["id"] != x["corridor"] for y in corridors) for x in volumes):
+            self.fail("bad_value", "kübaj hesabının koridoru projede yok")
         return r
 
     def arch_(self, v):

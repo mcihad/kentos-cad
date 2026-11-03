@@ -11,6 +11,7 @@ import type { RoadEditOperation } from "./RoadEditOperation";
  * `unknown_alignment`, `unknown_road_profile`, `unknown_terrain`, `unknown_superelevation`, `unknown_road_template`,
  * `invalid_road_corridor` (a new one without its fields, set with nothing to set, the definition by `road_problem`,
  * regions overlapping, empty or off the alignment, a station written off it, more stations than a corridor samples),
+ * `corridor_in_use` (remove one an earthwork volume uses),
  * `invalid_revision`, `revision_conflict`.
  */
 export type CorridorsEdit = { operation: RoadEditOperation, corridor?: string, name?: string, alignment?: string, profile?: string, surface?: string, superelevation?: string, left?: number, right?: number, tangent?: number, curve?: number, sag?: number, profilePoints?: boolean, critical?: boolean, stations?: Array<number>, regions?: Array<CorridorRegionDef>, expectedRevision?: string, };

@@ -55,20 +55,22 @@ C2 = {"id": "c-2", "name": "Yan koridor", "alignment": "g-2", "alignmentRevision
 START = [C1, C2]
 
 
-def road_of(corridors, supers=SUPERS):
+def road_of(corridors, supers=SUPERS, volumes=()):
     out = scmd.road_of(TEMPLATES, [scmd.S1, scmd.S2], supers=supers)
     out["alignments"].append(copy.deepcopy(G4))
     out["profiles"] = copy.deepcopy(PROFILES)
     if corridors:
         out["corridors"] = copy.deepcopy(corridors)
+    if volumes:
+        out["volumes"] = copy.deepcopy(list(volumes))
     return out
 
 
-def setup(corridors=START, work="road", supers=SUPERS, layers=None):
+def setup(corridors=START, work="road", supers=SUPERS, layers=None, volumes=()):
     base = scmd.setup(work=work, layers=layers)
     base["name"] = "Yol koridoru"
     if work == "road":
-        base["settings"]["road"] = road_of(list(corridors), supers)
+        base["settings"]["road"] = road_of(list(corridors), supers, volumes)
     return base
 
 
@@ -171,7 +173,8 @@ def make(c, points=False, templates=TEMPLATES):
                 def side(sd):
                     return {"points": sd["points"], "hinge": sd["hinge"], "daylight": sd.get("daylight"),
                             "kind": sd["kind"]}
-                sec = {"axis": row["axis"], "left": side(row["left"]), "right": side(row["right"])}
+                sec = {"axis": row["axis"], "left": side(row["left"]), "right": side(row["right"]),
+                       "cut": row["cut"], "fill": row["fill"]}
             crosses.append({"station": s, "at": [float(x), float(y)], "direction": float(th), "section": sec})
         regs.append({"template": template_codes(t), "crosses": crosses})
     built = cref.assemble(regs)
@@ -362,6 +365,11 @@ def edit_cases():
     no("Çok sık örnekleme", {**base, "tangent": 0.02, "regions": [{"from": 0.0, "to": 600.0, "template": "tk-1"}]},
        failed("invalid_road_corridor", f"Bu aralıklarla {cref.MAX_STATIONS}'den çok km çıkar; tangent ya da curve'ü büyütün.",
               "tangent"))
+    used = setup(volumes=[{"id": "v-1", "name": "Ana kübaj", "corridor": "c-1", "revision": 1, "method": "endArea"}])
+    cases.append(case("Kübajın kullandığı koridor silinmez", [step(
+        "execute", {"operation": "remove", "corridor": "c-1"},
+        failed("corridor_in_use", "“Ana koridor” koridorunu şu kübaj hesapları kullanıyor: Ana kübaj; önce onları silin.",
+               "corridor"), {**UNCHANGED, "road": used["settings"]["road"]})], used))
     no("Geçersiz beklenen sürüm", {"operation": "remove", "corridor": "c-2", "expectedRevision": "on"}, BAD_REVISION)
     no("Eski sürüme göre hazırlanmış", {"operation": "remove", "corridor": "c-2", "expectedRevision": "41"}, CONFLICT)
     return file("road.corridors.edit", "Koridoru düzenle", setup(), cases)
