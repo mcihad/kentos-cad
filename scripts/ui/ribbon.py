@@ -252,6 +252,8 @@ CAD = [
     T("terrain", "Arazi", [
         # The terrain surfaces (plan/road.md Y2.4): their window and a new one.
         P("Yüzey", "terrainSurface", [L("terrain.surfaces"), L("terrain.new")]),
+        # The graded pads (plan/road.md Y14, docs/adr/0912): the Platform window.
+        P("Tesviye", "platformEditor", [L("platform.editor")]),
         P("İşlemler", "processing", [L("processing.toolbox"), S("processing.newModel"), S("processing.history")]),
         P("Arazi", "contours", [L("tool.spot"), S("pointcloud.region"), S("pointcloud.profile")],
           overflow=["mesh.query"]),

@@ -2038,6 +2038,7 @@ impl App {
             Asking::Guardrails => self.guardrail_view(),
             Asking::Culverts => self.culvert_view(),
             Asking::RetainingWalls => self.retaining_wall_view(),
+            Asking::Platforms => self.platform_view(),
             Asking::Pay => self.pay_view(),
             Asking::Route => self.route_view(),
             Asking::Junctions => self.junction_view(),

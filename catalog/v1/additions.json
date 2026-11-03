@@ -3450,6 +3450,22 @@
       "status": "implemented"
     },
     {
+      "id": "platform.editor",
+      "title": "Platform…",
+      "short": "Platform",
+      "icon": "platformEditor",
+      "description": "Kapalı bir sınırın içinde düz ya da eğimli platform ve onun arazi yüzeyine inen yarma ve dolgu şevleri: taban noktası ve kotu, eğim ve doğrultusu, yarma ve dolgu şevi, kenar boyunca şev çizgisi aralığı, köşenin yelpazesi ve en uzun şev çizgisi projenin; KentOS sayı vermez. Köşeler yazılır ya da seçili kapalı çoklu çizgiden ya da alandan alınır. Planda sınır, yarma, dolgu ve açık şev çizgileri ve günışığı çizgisi, alanlar, kazı ve dolgu yazıldıkça görünür; Dengele verilen aralıkta kazı ile dolguyu eşitleyen taban kotunu bulur, Uygula yalnız alana yazar. Kaydet tek geri alma adımı, Planda çiz platformu, şev çizgilerini ve günışığını bir katmana çizer.",
+      "aliases": [
+        "PLATFORM",
+        "TESVIYE",
+        "TESVİYE",
+        "GRADING"
+      ],
+      "shortcuts": [],
+      "category": "Arazi",
+      "status": "implemented"
+    },
+    {
       "id": "payItems.editor",
       "title": "Poz metrajı…",
       "short": "Poz metrajı",
@@ -4584,6 +4600,7 @@
     "junctionEditor": "<path d=\"M2 7.5h4.5a1.5 1.5 0 0 0 1.5-1.5V2M12 2v4a1.5 1.5 0 0 0 1.5 1.5H18M18 12.5h-4.5a1.5 1.5 0 0 0-1.5 1.5v4M8 18v-4a1.5 1.5 0 0 0-1.5-1.5H2\" stroke-width=\"1.3\"/><path d=\"M2 10h16M10 2v16\" stroke-width=\".8\" stroke-dasharray=\"1.4 1.4\"/>",
     "routeFinder": "<circle cx=\"4\" cy=\"15\" r=\"1.6\" stroke-width=\"1.2\"/><circle cx=\"16\" cy=\"5\" r=\"1.6\" stroke-width=\"1.2\"/><path d=\"M5.3 13.8 8 11l-.5-3 3-1 1.5 2 3-2.4\" stroke-width=\"1.3\"/><path d=\"M10 13.5h4.5v3H10z\" stroke-width=\"1\" stroke-dasharray=\"1.4 1.2\"/>",
     "payItemsEditor": "<path d=\"M4 3h9l3 3v11H4z\" stroke-width=\"1.3\"/><path d=\"M13 3v3h3\" stroke-width=\"1.1\"/><path d=\"M6.5 9h7M6.5 11.5h7M6.5 14h4\" stroke-width=\"1.1\"/><path d=\"M13.5 14h0\" stroke-width=\"1.6\"/>",
+    "platformEditor": "<path d=\"M6.5 7.5h7v5h-7z\" stroke-width=\"1.4\"/><path d=\"M6.5 7.5L3 4M13.5 7.5L17 4M13.5 12.5L17 16M6.5 12.5L3 16M10 7.5V3.5M10 12.5v4\" stroke-width=\"1\"/><path d=\"M3 4h14v12H3z\" stroke-width=\"1\" stroke-dasharray=\"1.5 1.5\"/>",
     "retainingWallEditor": "<path d=\"M2 6.5h7l2 2\" stroke-width=\"1.4\"/><path d=\"M9 6.5v9.5h3.2L11 6.5\" stroke-width=\"1.3\"/><path d=\"M7 16h7.5v1.5H7z\" stroke-width=\"1.1\"/><path d=\"M12.5 11h5.5\" stroke-width=\"1\" stroke-dasharray=\"1.5 1.5\"/>",
     "culvertEditor": "<path d=\"M2 7.5h16\" stroke-width=\"1.4\"/><path d=\"M2 7.5 1 9.5M18 7.5l1 2\" stroke-width=\"1\"/><circle cx=\"10\" cy=\"13\" r=\"3.2\" stroke-width=\"1.4\"/><path d=\"M2 17.5h16\" stroke-width=\"1\" stroke-dasharray=\"1.5 1.5\"/>",
     "guardrailEditor": "<path d=\"M2 9.5h16M2 12.5h16\" stroke-width=\"1.4\"/><path d=\"M4 7v10M10 7v10M16 7v10\" stroke-width=\"1.2\"/>",

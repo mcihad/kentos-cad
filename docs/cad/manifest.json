@@ -5044,6 +5044,24 @@
    "tests": 0
   },
   {
+   "id": "platform.editor",
+   "kind": "command",
+   "title": "Platform…",
+   "level": "semantic",
+   "via": [
+    "road.platforms.edit",
+    "road.platforms.query",
+    "road.platforms.draw"
+   ],
+   "operation": null,
+   "python": "Connection: road.platforms.edit, Connection: road.platforms.query, Connection: road.platforms.draw",
+   "mcp": "road.platforms.edit, road.platforms.query, road.platforms.draw",
+   "note": "Değerler yazıldıkça road.platforms.edit'in planıyla okuma kopyasında tesviye eder; Dengele road.platforms.query'nin balance'ını yazılan platformla okuma kopyasında sorar; Kaydet ve Sil road.platforms.edit, Planda çiz road.platforms.draw ile yazar (plan/road.md Y14.3, ADR 0912 §3).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "point.editor",
    "kind": "command",
    "title": "Nokta editörü",

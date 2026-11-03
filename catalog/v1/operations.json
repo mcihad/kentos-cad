@@ -2753,6 +2753,15 @@
       ],
       "note": "Ölçüler yazıldıkça road.walls.edit'in planıyla okuma kopyasında önizler; Kaydet ve Sil road.walls.edit, Planda çiz road.walls.draw ile yazar (plan/road.md Y11.3, ADR 0909 §3)."
     },
+    "platform.editor": {
+      "level": "semantic",
+      "via": [
+        "road.platforms.edit",
+        "road.platforms.query",
+        "road.platforms.draw"
+      ],
+      "note": "Değerler yazıldıkça road.platforms.edit'in planıyla okuma kopyasında tesviye eder; Dengele road.platforms.query'nin balance'ını yazılan platformla okuma kopyasında sorar; Kaydet ve Sil road.platforms.edit, Planda çiz road.platforms.draw ile yazar (plan/road.md Y14.3, ADR 0912 §3)."
+    },
     "payItems.editor": {
       "level": "semantic",
       "via": [

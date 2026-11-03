@@ -306,6 +306,8 @@ pub enum Dialog {
     Culverts,
     /// İstinat duvarı (retaining_wall_window.rs, plan/road.md Y11.3); the window is `App::retaining_wall_window`.
     RetainingWalls,
+    /// Platform (platform_window.rs, plan/road.md Y14.3); the window is `App::platform_window`.
+    Platforms,
     /// Poz metrajı (pay_window.rs, plan/road.md Y11.4); the window is `App::pay_window`.
     Pay,
     /// Ön güzergâh (route_window.rs, plan/road.md Y12.1); the window is `App::route_window`.
@@ -691,6 +693,8 @@ pub enum Message {
     Culverts(crate::culvert_window::Event),
     /// An event of İstinat duvarı (retaining_wall_window.rs, plan/road.md Y11.3).
     RetainingWalls(crate::retaining_wall_window::Event),
+    /// An event of Platform (platform_window.rs, plan/road.md Y14.3).
+    Platforms(crate::platform_window::Event),
     /// An event of Poz metrajı (pay_window.rs, plan/road.md Y11.4).
     Pay(crate::pay_window::Event),
     /// An event of Ön güzergâh (route_window.rs, plan/road.md Y12.1).
@@ -1293,6 +1297,8 @@ pub struct App {
     pub(crate) culvert_window: Option<Box<crate::culvert_window::Window>>,
     /// İstinat duvarı (retaining_wall_window.rs, plan/road.md Y11.3).
     pub(crate) retaining_wall_window: Option<Box<crate::retaining_wall_window::Window>>,
+    /// Platform (platform_window.rs, plan/road.md Y14.3).
+    pub(crate) platform_window: Option<Box<crate::platform_window::Window>>,
     /// Poz metrajı (pay_window.rs, plan/road.md Y11.4).
     pub(crate) pay_window: Option<Box<crate::pay_window::Window>>,
     /// Ön güzergâh (route_window.rs, plan/road.md Y12.1).
@@ -1738,6 +1744,7 @@ impl App {
             guardrail_window: None,
             culvert_window: None,
             retaining_wall_window: None,
+            platform_window: None,
             pay_window: None,
             route_window: None,
             junction_window: None,
@@ -2476,6 +2483,7 @@ impl App {
             Message::Guardrails(event) => return self.guardrail_event(event),
             Message::Culverts(event) => return self.culvert_event(event),
             Message::RetainingWalls(event) => return self.retaining_wall_event(event),
+            Message::Platforms(event) => return self.platform_event(event),
             Message::Pay(event) => return self.pay_event(event),
             Message::Route(event) => return self.route_event(event),
             Message::Junctions(event) => return self.junction_event(event),
@@ -3532,6 +3540,7 @@ impl App {
             "guardrail.editor" => self.open_guardrails(),
             "culvert.editor" => self.open_culverts(),
             "retainingWall.editor" => self.open_retaining_walls(),
+            "platform.editor" => self.open_platforms(),
             "payItems.editor" => self.open_pay(),
             "route.finder" => self.open_route(),
             "junction.editor" => self.open_junctions(),

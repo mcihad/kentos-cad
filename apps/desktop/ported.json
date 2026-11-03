@@ -422,6 +422,7 @@
     "guardrail.editor",
     "culvert.editor",
     "retainingWall.editor",
+    "platform.editor",
     "payItems.editor",
     "route.finder",
     "junction.editor",

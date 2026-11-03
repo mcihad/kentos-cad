@@ -454,6 +454,16 @@
       ]
      },
      {
+      "label": "Tesviye",
+      "icon": "platformEditor",
+      "items": [
+       {
+        "command": "platform.editor",
+        "size": "large"
+       }
+      ]
+     },
+     {
       "label": "İşlemler",
       "icon": "processing",
       "items": [

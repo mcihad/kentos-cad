@@ -83,3 +83,16 @@ kenardan sapan) bir doğruda `Surface::section` kesişimi sıfıra yakın paydad
 okuyordu (96,5 yerine 100); yaklaşık paralel kenar artık paralel sayılır (sinüs 1e-12 altı), aynı doğrudaysa yalnız
 uçları yer olur. Boykesit, enkesit ve koridorun durumları bu düzeltmeyle değişmedi. Python `kentos.cad.road.platforms`,
 MCP.
+
+Y14.3 (yapıldı, masaüstü): §3. Arazi sekmesinde Tesviye paneli, `platform.editor` (Platform…,
+`apps/desktop/src/platform_window.rs`): platform listesi, ad, arazi yüzeyi, köşeler “Y,X; Y,X; …” olarak yazılır ya da
+seçili kapalı çoklu çizgiden ya da alandan alınır (taban noktası, yazılmamışsa ilk köşe); taban Y, X ve kotu, eğim,
+doğrultu, yarma ve dolgu şevi, aralık, yelpaze, erim. Yazıldıkça `road.platforms.edit`'in okuma kopyasındaki
+önizlemesi: planda platform, yarma (kırmızı), dolgu (yeşil) ve açık (turuncu nokta) şev çizgileri, günışığı halkası,
+köşe kotları; platform ve taban alanı, kazı, dolgu, fark, çizgilerin yanları. Dengele yazılan platformu okuma kopyasına
+yazıp `road.platforms.query`'nin dengesini sorar (dengeli taban kotu, kalan fark, adım, yakınsadı mı); Uygula yalnız
+taban kotu alanına yazar, Kaydet tek geri alma adımıdır (ROAD-GRADE-08: öneri kullanıcının onayıyla). Planda çiz
+`road.platforms.draw`. Proje ağacında platform satırı bu pencereyi açar. Testler `platform_window_tests.rs` (önizleme,
+dolgu şevi değişince dolgu artar, denge ve uygula, kaydet, çiz ve geri al, yeni platform, seçimden köşeler); resimler
+`.run/gui-evidence/yol-y14-platform-*` (açık geniş, koyu dar). İlk resimde dar pencerede Uygula kesiliyor ve Uygula'dan
+sonra denge sözü kayboluyordu: denge düğmeleri kendi satırında, söz uygulamadan sonra kalır.
