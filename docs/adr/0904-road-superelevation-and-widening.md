@@ -56,7 +56,13 @@ Y6.1 (yapıldı): `kentos_road::superelevation`; 17 ortak durum kesirlerle (`roa
 km'lerde eğim ve genişleme); kesit takımının `superelevation`'ı, kesitte şeritler eğimini ve iç yan genişlemesini alır,
 çizelge kurulamazsa `section_superelevation_gone` ile tip kesitin eğimi; takımın kullandığı çizelge ve çizelgesi olan aks
 silinmez; 33 + 20 ortak durum (`road_superelevation_command_cases.py`), kesit dosyalarına üç durum; `.kcad` şema 160'ın
-`superelevations`'ı, bozuk örnek; Python, MCP.
+`superelevations`'ı, bozuk örnek; Python, MCP. Y6.3 (yapıldı): Dever penceresi (`superelevation_window.rs`;
+`superelevation.editor`, `superelevation.new`, Güzergâh sekmesinde Dever paneli): solda çizelgeler (eskiyen “eski”),
+sağda ad, aks, normal eğimler, yöntem; kurplar ya da km satırları tablosu, Bütün kurplar aksın kurplarını satır yapar;
+diyagram yazdıkça `road_superelevations::preview` ile: sol mavi, sağ kırmızı, kurbun TS–ST aralığı gölgeli, kritik
+km'ler kesikli ve adlarıyla, iç yan genişlemesi ayrı şeritte; kurulamayan çizelgenin nedeni diyagramın altında. Kaydet
+`road.superelevations.edit` ile (önce kaldırılanlar), Aksa yeniden bağla `rebind`; her yazma bir geri alma adımı.
+Enkesit'te takımın Dever seçimi (yalnız takımın aksındaki çizelgeler). Resimler `.run/gui-evidence/yol-y6-*`.
 
 ## Sonra
 

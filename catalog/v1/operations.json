@@ -2639,6 +2639,20 @@
         "road.templates.edit"
       ]
     },
+    "superelevation.editor": {
+      "level": "semantic",
+      "via": [
+        "road.superelevations.edit",
+        "road.superelevations.query"
+      ],
+      "note": "Dever penceresi çizelgeyi yazdıkça çekirdekle kurar ve diyagramı çizer; Kaydet ve Aksa yeniden bağla road.superelevations.edit ile yazar (plan/road.md Y6, ADR 0904)."
+    },
+    "superelevation.new": {
+      "level": "semantic",
+      "via": [
+        "road.superelevations.edit"
+      ]
+    },
     "profile.new": {
       "level": "semantic",
       "via": [

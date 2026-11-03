@@ -256,12 +256,15 @@ mod alignment_layer;
 mod alignment_window;
 mod profile_window;
 mod section_window;
+mod superelevation_window;
 #[cfg(test)]
 mod alignment_window_tests;
 #[cfg(test)]
 mod profile_window_tests;
 #[cfg(test)]
 mod section_window_tests;
+#[cfg(test)]
+mod superelevation_window_tests;
 mod terrain_layer;
 mod terrain_window;
 #[cfg(test)]

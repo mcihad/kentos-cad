@@ -546,6 +546,20 @@
         "size": "large"
        }
       ]
+     },
+     {
+      "label": "Dever",
+      "icon": "superelevationEditor",
+      "items": [
+       {
+        "command": "superelevation.editor",
+        "size": "large"
+       },
+       {
+        "command": "superelevation.new",
+        "size": "large"
+       }
+      ]
      }
     ],
     "works": [

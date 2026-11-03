@@ -592,6 +592,9 @@ pub const PORTED: &[&str] = &[
     "section.editor",
     "section.new",
     "section.template",
+    // plan/road.md Y6: Dever and Dever oluştur (superelevation_window.rs).
+    "superelevation.editor",
+    "superelevation.new",
     // docs/adr/0773: Bina programı (program_window.rs).
     "arch.program",
     // docs/adr/0313: Çizgi tipleri (line_types_window.rs).

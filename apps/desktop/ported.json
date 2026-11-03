@@ -403,6 +403,8 @@
     "section.editor",
     "section.new",
     "section.template",
+    "superelevation.editor",
+    "superelevation.new",
     "arch.program",
     "lineTypes.manage",
     "hatchPatterns.manage",

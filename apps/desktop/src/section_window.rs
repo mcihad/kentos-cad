@@ -327,6 +327,8 @@ pub enum Event {
     Profile(Option<String>),
     Template(Option<String>),
     Surface(Option<String>),
+    /// The superelevation schedule the set's lanes take their slopes from (plan/road.md Y6).
+    Superelevation(Option<String>),
     /// The set's field: 0 left, 1 right, 2 from, 3 to, 4 every, 5 the stations written.
     SetField(usize, String),
     Method(usize),
@@ -610,6 +612,11 @@ impl App {
             Event::Surface(id) => {
                 if let Some(r) = w.set_mut() {
                     r.surface = id;
+                }
+            }
+            Event::Superelevation(id) => {
+                if let Some(r) = w.set_mut() {
+                    r.superelevation = id;
                 }
             }
             Event::SetField(k, t) => {
@@ -1058,6 +1065,15 @@ impl App {
             Event::Template,
         );
         let on_surface = pick(surfaces, r.surface.as_ref(), true, Event::Surface);
+        let schedules = self.document.as_ref().map_or_else(Vec::new, |d| {
+            d.model
+                .road_superelevations()
+                .iter()
+                .filter(|s| s.alignment == r.alignment)
+                .map(|s| (s.id.clone(), s.name.clone()))
+                .collect()
+        });
+        let on_superelevation = pick(schedules, r.superelevation.as_ref(), true, Event::Superelevation);
         let field = |hint: &'a str, value: &'a str, k: usize, width: f32| {
             kentos_ui::widget::text_field(hint, value).on_input(move |t| msg(Event::SetField(k, t))).width(width)
         };
@@ -1080,6 +1096,7 @@ impl App {
         let mut stations = row![
             words::field("Sol (m)", field("25", &r.left, 0, 70.0), None),
             words::field("Sağ (m)", field("25", &r.right, 1, 70.0), None),
+            words::field("Dever", container(on_superelevation).width(150), None),
             words::field("Km", method, None),
         ]
         .spacing(10)

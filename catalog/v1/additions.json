@@ -3161,6 +3161,36 @@
       "status": "implemented"
     },
     {
+      "id": "superelevation.editor",
+      "title": "Dever…",
+      "short": "Dever",
+      "icon": "superelevationEditor",
+      "description": "Yol projesinin dever çizelgeleri: bir aksın normal enine eğimleri (sol ve sağ, dışa düşen eksi) ve her kurbun dever oranı, geçiş boyu, geçişin teğette kalan payı ve iç yan genişlemesi (orta eksen etrafında döndürme) ya da yazılan km satırları. Dever diyagramı yazdıkça çizilir: sol ve sağ eğim km boyunca, kritik km'ler (NC, LC, RC, FS) ve genişleme; çizelge kurulamazsa nedeni hemen söylenir. Kaydet road.superelevations.edit ile yazar; her yazma bir geri alma adımıdır. Oran, geçiş boyu ve genişleme KGM'nin standardından ya da projeden yazılır, KentOS öntanımlı sayı vermez.",
+      "aliases": [
+        "DEVER",
+        "SUPERELEVATION",
+        "ENINEEGIM",
+        "ENİNEEĞİM"
+      ],
+      "shortcuts": [],
+      "category": "Dever",
+      "status": "implemented"
+    },
+    {
+      "id": "superelevation.new",
+      "title": "Dever oluştur…",
+      "short": "Yeni dever",
+      "icon": "superelevationNew",
+      "description": "Yeni bir dever çizelgesi kurar: Dever penceresini ilk aksın üstünde boş bir çizelgeyle açar; Bütün kurplar aksın kurplarını satır olarak ekler. Kaydet road.superelevations.edit ile yazar.",
+      "aliases": [
+        "DEVEROLUSTUR",
+        "DEVEROLUŞTUR"
+      ],
+      "shortcuts": [],
+      "category": "Dever",
+      "status": "implemented"
+    },
+    {
       "id": "profile.new",
       "title": "Boykesit oluştur…",
       "short": "Yeni boykesit",
@@ -4165,6 +4195,8 @@
     "roomElevation": "<rect x=\"2.5\" y=\"4.5\" width=\"15\" height=\"11\" rx=\"0.5\"/><rect x=\"4.5\" y=\"8.5\" width=\"3\" height=\"7\" stroke-width=\"1\"/><rect x=\"10.5\" y=\"7.5\" width=\"5\" height=\"4\" stroke-width=\"1\"/><path d=\"M2.5 17.5h15\" stroke-width=\"0.9\" stroke-dasharray=\"1.6 1.2\"/>",
     "alignmentEditor": "<path d=\"M2 16.5 6.5 12c2.6-2.6 5.6-4 11.5-4\" stroke-width=\"1.5\"/><path d=\"M4.1 13l1.7 1.7M8.4 9.6l1.2 2.1M12.9 7.9l.5 2.3\" stroke-width=\"1\"/><path d=\"M2 16.5 9 4.5 18 8\" stroke-width=\".7\" stroke-dasharray=\"1.5 1.2\"/>",
     "alignmentNew": "<path d=\"M2 16 6 12c2.3-2.3 5-3.6 10-3.6\" stroke-width=\"1.5\"/><path d=\"M3.9 12.6l1.6 1.6M7.9 9.4l1.1 2\" stroke-width=\"1\"/><path d=\"M15.5 12.2v6.3M12.4 15.4h6.3\" stroke-width=\"1.5\"/>",
+    "superelevationEditor": "<path d=\"M2 12h3.5L9 7h5l4 0\" stroke-width=\"1.5\"/><path d=\"M2 12h3.5L9 15h5l4 0\" stroke-width=\"1\"/><path d=\"M2 12h16\" stroke-width=\".6\" stroke-dasharray=\"1.2 1\"/>",
+    "superelevationNew": "<path d=\"M2 11h3L8 7h4\" stroke-width=\"1.5\"/><path d=\"M2 11h3L8 14h4\" stroke-width=\"1\"/><path d=\"M15.5 12.2v6.3M12.4 15.4h6.3\" stroke-width=\"1.5\"/>",
     "sectionEditor": "<path d=\"M2 9.5 18 12.5\" stroke-width=\".8\"/><path d=\"M3 15.5 6.5 11h7l3.5 4.5\" stroke-width=\"1.5\"/><path d=\"M10 3.5v14\" stroke-width=\".7\" stroke-dasharray=\"1.5 1.2\"/>",
     "sectionNew": "<path d=\"M2 8.5 12 10.5\" stroke-width=\".8\"/><path d=\"M2.5 13.5 5.5 10h5l2 2.5\" stroke-width=\"1.5\"/><path d=\"M15.5 12.2v6.3M12.4 15.4h6.3\" stroke-width=\"1.5\"/>",
     "sectionTemplate": "<path d=\"M2 10.5h3.5l1.5-1h6l1.5 1H18\" stroke-width=\"1.5\"/><path d=\"M5.5 10.5 2 15M14.5 10.5 18 15\" stroke-width=\"1\"/><path d=\"M10 4v4\" stroke-width=\".7\" stroke-dasharray=\"1.2 1\"/>",

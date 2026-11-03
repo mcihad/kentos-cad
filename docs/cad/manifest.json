@@ -9011,6 +9011,39 @@
    "tests": 0
   },
   {
+   "id": "superelevation.editor",
+   "kind": "command",
+   "title": "Dever…",
+   "level": "semantic",
+   "via": [
+    "road.superelevations.edit",
+    "road.superelevations.query"
+   ],
+   "operation": null,
+   "python": "Connection: road.superelevations.edit, Connection: road.superelevations.query",
+   "mcp": "road.superelevations.edit, road.superelevations.query",
+   "note": "Dever penceresi çizelgeyi yazdıkça çekirdekle kurar ve diyagramı çizer; Kaydet ve Aksa yeniden bağla road.superelevations.edit ile yazar (plan/road.md Y6, ADR 0904).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "superelevation.new",
+   "kind": "command",
+   "title": "Dever oluştur…",
+   "level": "semantic",
+   "via": [
+    "road.superelevations.edit"
+   ],
+   "operation": null,
+   "python": "Connection: road.superelevations.edit",
+   "mcp": "road.superelevations.edit",
+   "note": null,
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "table.blockSchedule",
    "kind": "command",
    "title": "Blok çizelgesi tablosu",

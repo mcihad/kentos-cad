@@ -263,6 +263,8 @@ CAD = [
         P("Boykesit", "profileEditor", [L("profile.editor"), L("profile.new")]),
         # The cross sections (plan/road.md Y5, docs/adr/0903): the Enkesit window, a new set and a new template.
         P("Enkesit", "sectionEditor", [L("section.editor"), L("section.new"), L("section.template")]),
+        # The superelevation (plan/road.md Y6, docs/adr/0904): the Dever window and a new schedule.
+        P("Dever", "superelevationEditor", [L("superelevation.editor"), L("superelevation.new")]),
     ], works=ROAD),
     T("plan", "Plan", [
         P("Yol", "planRoad", [L("tool.planRoad"), S("tool.roadJunctions"), S("tool.medianClose"), S("tool.centerline")]),
