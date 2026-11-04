@@ -96,8 +96,9 @@ fn a_full_screen_road_window_gives_its_picture_the_room() {
         let (app, mut snapshot) = window(cases, key, run, true, |_| {});
         let full = pictures(&mut snapshot, &app).first().map(|p| p.1.height).expect(key);
         sizes::forget(key);
-        // Boykesit keeps its PVI table under the chart: 542 against 356 at 1920 × 1080.
-        assert!(full > 1.4 * own && full > 500.0, "{key}: full screen {full} against {own}");
+        // Boykesit keeps its PVI table under the chart: 542 against 356 at 1920 × 1080; Kübaj its sheet of 220 px
+        // (the kit's data table, DESIGN.md §7.6): 456 against 204.
+        assert!(full > 1.4 * own && full > 440.0, "{key}: full screen {full} against {own}");
     }
 }
 

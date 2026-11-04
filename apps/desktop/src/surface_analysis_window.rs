@@ -542,25 +542,22 @@ impl App {
                             side = side.push(line("Boşluk".into(), format!("{} üçgen · {:.2} m² · en uzun kenar {:.2} m", g.triangles, g.area, g.longest)));
                         }
                         if let Some(c) = &q.checkpoints {
-                            let head = |t: &'static str, wd: f32| label::caption(t).style(muted).width(wd);
-                            let mut t = Column::new().spacing(2).push(
-                                row![head("Sınıf", 80.0), head("Sayı", 50.0), head("Ort.", 60.0), head("Std.", 60.0), head("RMSE", 60.0), head("Dışı", 40.0)].spacing(6),
+                            use crate::road_dialog::{col, num};
+                            let rows = c
+                                .classes
+                                .iter()
+                                .chain(std::iter::once(&c.all))
+                                .map(|k| {
+                                    let name = if k.class.is_empty() { if std::ptr::eq(k, &c.all) { "Hepsi" } else { "Sınıfsız" } } else { k.class.as_str() };
+                                    let d = |v: f64| format!("{v:.3}").replace('.', ",");
+                                    vec![name.to_owned(), k.count.to_string(), format!("{}{}", if k.mean >= 0.0 { "+" } else { "" }, d(k.mean)), d(k.std), d(k.rmse), k.outside.to_string()]
+                                })
+                                .collect();
+                            let t = crate::road_dialog::table(
+                                vec![col("Sınıf", 80.0), num("Sayı", 44.0), num("Ort.", 56.0), num("Std.", 52.0), num("RMSE", 52.0), num("Dışı", 40.0)],
+                                rows,
+                                "Kontrol noktası yok",
                             );
-                            for k in c.classes.iter().chain(std::iter::once(&c.all)) {
-                                let name = if k.class.is_empty() { if std::ptr::eq(k, &c.all) { "Hepsi" } else { "Sınıfsız" } } else { k.class.as_str() };
-                                let cell = |v: String, wd: f32| label::caption(v).width(wd);
-                                t = t.push(
-                                    row![
-                                        cell(name.to_owned(), 80.0),
-                                        cell(k.count.to_string(), 50.0),
-                                        cell(format!("{:+.3}", k.mean), 60.0),
-                                        cell(format!("{:.3}", k.std), 60.0),
-                                        cell(format!("{:.3}", k.rmse), 60.0),
-                                        cell(k.outside.to_string(), 40.0)
-                                    ]
-                                    .spacing(6),
-                                );
-                            }
                             side = side.push(label::caption("Kontrol noktaları (nokta − yüzey, m)").style(muted)).push(t);
                         }
                     }
@@ -698,31 +695,46 @@ impl App {
 
 /// The ranges' table: bounds, plan and 3D area, share of the whole.
 fn band_table<'a>(b: &TerrainBands, unit: &str, whole: f64) -> Element<'a, Message> {
-    let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
-    let head = |t: &'static str, wd: f32| label::caption(t).style(muted).width(wd);
-    let mut col = Column::new().spacing(2).push(row![head("Aralık", 130.0), head("Alan m²", 80.0), head("3B m²", 80.0), head("Pay", 50.0)].spacing(6));
+    use crate::road_dialog::{col, num};
+    let d = |v: f64| crate::road_dialog::grouped(v, 2);
     let n = b.bands.len();
-    for (k, band) in b.bands.iter().enumerate() {
-        let swatch = iced::widget::canvas(Swatch { k, n }).width(10).height(10);
-        let share = if whole > 0.0 { band.area / whole * 100.0 } else { 0.0 };
-        col = col.push(
-            row![
-                row![swatch, label::caption(format!("{} … {} {unit}", band.from, band.to))].spacing(4).width(130),
-                label::caption(format!("{:.2}", band.area)).width(80),
-                label::caption(format!("{:.2}", band.surface_area)).width(80),
-                label::caption(format!("%{share:.1}")).width(50)
+    let mut rows: Vec<Vec<Element<'a, Message>>> = b
+        .bands
+        .iter()
+        .enumerate()
+        .map(|(k, band)| {
+            let swatch = iced::widget::canvas(Swatch { k, n }).width(10).height(10);
+            let share = if whole > 0.0 { band.area / whole * 100.0 } else { 0.0 };
+            vec![
+                row![swatch, kentos_ui::widget::table::text(format!("{} … {} {unit}", band.from, band.to))]
+                    .spacing(6)
+                    .align_y(iced::alignment::Vertical::Center)
+                    .into(),
+                kentos_ui::widget::table::number(d(band.area)).into(),
+                kentos_ui::widget::table::number(d(band.surface_area)).into(),
+                kentos_ui::widget::table::number(format!("%{}", format!("{share:.1}").replace('.', ","))).into(),
             ]
-            .spacing(6)
-            .align_y(iced::alignment::Vertical::Center),
-        );
-    }
+        })
+        .collect();
+    let plain = |what: &'a str, area: f64| -> Vec<Element<'a, Message>> {
+        vec![
+            kentos_ui::widget::table::text(what).into(),
+            kentos_ui::widget::table::number(d(area)).into(),
+            kentos_ui::widget::table::text("").into(),
+            kentos_ui::widget::table::text("").into(),
+        ]
+    };
     if b.outside_area > 0.0 {
-        col = col.push(row![label::caption("Aralık dışı").width(130), label::caption(format!("{:.2}", b.outside_area))].spacing(6));
+        rows.push(plain("Aralık dışı", b.outside_area));
     }
     if b.flat_area > 0.0 {
-        col = col.push(row![label::caption("Düz (bakısız)").width(130), label::caption(format!("{:.2}", b.flat_area))].spacing(6));
+        rows.push(plain("Düz (bakısız)", b.flat_area));
     }
-    col.into()
+    crate::road_dialog::table_of(
+        vec![col("Aralık", 116.0), num("Alan (m²)", 84.0), num("3B (m²)", 84.0), num("Pay", 48.0)],
+        rows,
+        "Aralık yok",
+    )
 }
 
 struct Swatch {

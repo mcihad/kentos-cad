@@ -41,6 +41,7 @@ use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
 use crate::exchange::words;
+use crate::road_dialog;
 use crate::traces::Control;
 
 /// The window's title, which a trace names it by.
@@ -1009,45 +1010,42 @@ impl App {
         if let Some(why) = &w.ground.why {
             col = col.push(label::caption(why.clone()).style(muted));
         }
-        let head = ["PVI", "Km (m)", "Kot", "Kurp", "L / R", "L çıkış"];
-        let widths = [60.0, 110.0, 100.0, 130.0, 90.0, 90.0];
-        let mut table = Column::new().spacing(3);
-        table = table.push(
-            head.iter().zip(widths).fold(row![].spacing(4), |row, (h, wd)| row.push(label::caption(*h).style(muted).width(wd))),
-        );
-        for (j, p) in r.pvis.iter().enumerate() {
-            let end = j == 0 || j + 1 == r.pvis.len();
-            let pick = Select::new(
-                CURVES.iter().map(|c| Choice::new((*c).to_owned())),
-                Some(p.curve),
-                move |c| msg(Event::Curve(j, c)),
-            );
-            let curve: Element<'_, Message> =
-                if end { label::caption("—").style(muted).width(widths[3]).into() } else { container(pick).width(widths[3]).into() };
-            let size = |k: usize, hint: &'a str| -> Element<'a, Message> {
-                let shown = matches!((p.curve, k), (1 | 3, 0) | (2, _));
-                if shown && !end {
-                    kentos_ui::widget::text_field(hint, &p.sizes[k]).on_input(move |t| msg(Event::Pvi(j, 3 + k, t))).width(widths[4 + k]).into()
-                } else {
-                    space::horizontal().width(widths[4 + k]).into()
+        let pvis = &r.pvis;
+        let table = road_dialog::edit_table(
+            vec![
+                road_dialog::col("PVI", 90.0),
+                road_dialog::Col { title: "Km (m)", width: None, number: true },
+                road_dialog::Col { title: "Kot (m)", width: None, number: true },
+                road_dialog::col("Kurp", 140.0),
+                road_dialog::Col { title: "L / R (m)", width: None, number: true },
+                road_dialog::Col { title: "L çıkış (m)", width: None, number: true },
+            ],
+            pvis.len(),
+            move |j, k| {
+                let p = &pvis[j];
+                let end = j == 0 || j + 1 == pvis.len();
+                let blank = || kentos_ui::widget::table::text("—").into();
+                match k {
+                    0 => road_dialog::edit(&p.id, false, move |t| msg(Event::Pvi(j, 0, t))),
+                    1 => road_dialog::edit(&p.station, true, move |t| msg(Event::Pvi(j, 1, t))),
+                    2 => road_dialog::edit(&p.elevation, true, move |t| msg(Event::Pvi(j, 2, t))),
+                    3 if end => blank(),
+                    3 => road_dialog::pick(CURVES, Some(p.curve), move |c| msg(Event::Curve(j, c))),
+                    _ => {
+                        let size = k - 4;
+                        // L for a parabola and a circle's R, the asymmetric parabola's two lengths.
+                        if !end && matches!((p.curve, size), (1 | 3, 0) | (2, _)) {
+                            road_dialog::edit(&p.sizes[size], true, move |t| msg(Event::Pvi(j, 3 + size, t)))
+                        } else {
+                            blank()
+                        }
+                    }
                 }
-            };
-            let line = row![
-                kentos_ui::widget::text_field("", &p.id).on_input(move |t| msg(Event::Pvi(j, 0, t))).width(widths[0]),
-                kentos_ui::widget::text_field("0", &p.station).on_input(move |t| msg(Event::Pvi(j, 1, t))).width(widths[1]),
-                kentos_ui::widget::text_field("100", &p.elevation).on_input(move |t| msg(Event::Pvi(j, 2, t))).width(widths[2]),
-                curve,
-                size(0, match p.curve { 2 => "L giriş", 3 => "R", _ => "L" }),
-                size(1, "L çıkış"),
-                iced::widget::button(label::caption(if w.pvi == Some(j) { "●" } else { "○" }))
-                    .on_press(msg(Event::PviChoose(j)))
-                    .padding([2, 6])
-                    .style(style::button::row(w.pvi == Some(j))),
-            ]
-            .spacing(4)
-            .align_y(Center);
-            table = table.push(line);
-        }
+            },
+            w.pvi,
+            |j| msg(Event::PviChoose(j)),
+            "PVI yok",
+        );
         col = col.push(words::field("PVI'ler", table, None)).push(
             row![
                 words::secondary(ADD, Some(msg(Event::Add))),

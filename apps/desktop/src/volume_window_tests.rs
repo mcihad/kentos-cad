@@ -393,3 +393,51 @@ fn screens_curve() {
         println!("{}", file.display());
     }
 }
+
+/// The Kübaj window's tables on the kit's data table (DESIGN.md §7.6): the factors and strips typed in a grid, the sheet
+/// scrolling under its head; `.run/gui-evidence/tablolar/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib volume_window_tests::screens_tables -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_tables() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/tablolar");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1440.0, 900.0), "koyu")] {
+        let mut app = app();
+        paved(&mut app);
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let mut shot = |app: &mut App, file: &str| {
+            snapshot.settle(app, App::view, &mut update);
+            let file = out.join(format!("kubaj-{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        };
+        let _ = app.update(Message::RibbonTab("corridor"));
+        let _ = app.update(Message::Run("volume.editor"));
+        send(&mut app, W::Choose(0));
+        for (j, row) in [["0", "120", "1,25", "0,90"], ["120", "600", "1,30", "0,95"]].iter().enumerate() {
+            for (k, v) in row.iter().enumerate() {
+                send(&mut app, W::Factor(j, k, (*v).into()));
+            }
+        }
+        send(&mut app, W::Line(1));
+        send(&mut app, W::AddStrip);
+        for (k, v) in ["0", "600", "0,30"].iter().enumerate() {
+            send(&mut app, W::Strip(0, k, (*v).into()));
+        }
+        send(&mut app, W::Show(true));
+        shot(&mut app, "cetvel");
+        send(&mut app, W::Cancel);
+    }
+}

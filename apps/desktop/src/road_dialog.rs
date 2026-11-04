@@ -301,3 +301,175 @@ pub fn table<'a>(cols: Vec<Col<'a>>, rows: Vec<Vec<String>>, empty: &'a str) -> 
         .empty(empty);
     body.into()
 }
+
+/// A long result table (a sheet: Kübaj cetveli, an alignment's stakeout): the kit's data table whose head stays while
+/// its rows scroll within `height` (12 px body text), the rows built only as they show.
+pub fn sheet<'a>(cols: Vec<Col<'a>>, rows: Vec<Vec<String>>, empty: &'a str, height: f32) -> Element<'a, Message> {
+    use kentos_ui::widget::table;
+    // At most `height`; a few rows take only their own (the head's band and line, the sideways bar's 6 px).
+    let height = typography::scaled(height).min(table::row_height() * (rows.len() + 1) as f32 + 1.0 + 6.0);
+    sheet_in(cols, rows, empty, Length::Fixed(height))
+}
+
+/// A sheet beside a picture that grows (İstinat duvarı's rows by km): it fills the height and is as wide as its
+/// columns, the picture taking the rest of the row.
+pub fn sheet_fill<'a>(cols: Vec<Col<'a>>, rows: Vec<Vec<String>>, empty: &'a str) -> Element<'a, Message> {
+    // As the kit counts it: each column's text width grown with the text, and its cell's pads.
+    let count = cols.len();
+    let natural: f32 = cols
+        .iter()
+        .enumerate()
+        .map(|(i, c)| {
+            let (left, right) = kentos_ui::widget::table::cell_pads(i, count);
+            typography::scaled(c.width.unwrap_or(120.0)) + left + right
+        })
+        .sum();
+    container(sheet_in(cols, rows, empty, Length::Fill)).width(natural.ceil() + 1.0).height(Fill).into()
+}
+
+/// A sheet that fills the room it is given both ways (Aplikasyon's points beside their plan, two thirds of the row).
+pub fn sheet_room<'a>(cols: Vec<Col<'a>>, rows: Vec<Vec<String>>, empty: &'a str) -> Element<'a, Message> {
+    sheet_in(cols, rows, empty, Length::Fill)
+}
+
+fn sheet_in<'a>(cols: Vec<Col<'a>>, rows: Vec<Vec<String>>, empty: &'a str, height: Length) -> Element<'a, Message> {
+    use kentos_ui::widget::table::{self, Table};
+    let columns = move |cols: &[Col<'a>]| {
+        cols.iter()
+            .map(|c| {
+                let column = table::Column::new(c.title).width(c.width.map_or(Length::Fill, Length::Fixed));
+                if c.number { column.align_right() } else { column }
+            })
+            .collect::<Vec<_>>()
+    };
+    if rows.is_empty() {
+        return Table::new(columns(&cols)).empty(empty).into();
+    }
+    // Wider than its room it scrolls sideways (the Kübaj sheet's eleven columns in half a window); narrower, its rows
+    // reach the room's edge. `responsive` gives the room's width, the table is built for it.
+    let numbers: std::rc::Rc<Vec<bool>> = std::rc::Rc::new(cols.iter().map(|c| c.number).collect());
+    let rows = std::rc::Rc::new(rows);
+    iced::widget::responsive(move |room| -> Element<'a, Message> {
+        let (rows, numbers) = (rows.clone(), numbers.clone());
+        Table::new(columns(&cols))
+            .horizontal()
+            .min_width(room.width)
+            .height(Length::Fill)
+            .virtualized(rows.len(), move |i| {
+                table::Row::new(rows[i].iter().zip(numbers.iter().copied()).map(|(t, n)| -> Element<'a, Message> {
+                    if n { table::number(t.clone()).into() } else { table::text(t.clone()).into() }
+                }))
+            })
+            .into()
+    })
+    .height(height)
+    .into()
+}
+
+/// A value typed in its table cell (the kit's `EditCell`: Enter or leaving the cell commits).
+pub fn edit<'a>(value: &str, numeric: bool, on_commit: impl Fn(String) -> Message + 'a) -> Element<'a, Message> {
+    kentos_ui::widget::EditCell::new(value.to_owned(), on_commit).numeric(numeric).into()
+}
+
+/// An edited table (DESIGN.md §7.6): the kit's data table as a grid of writable cells (`cell(row, column)`, mostly
+/// [`edit`]), its first column the row's number; pressing a row chooses it (for Satırı sil), the chosen row marked.
+/// Its rows have the grid's height so the cells meet line to line; past `MOST_EDITED` rows they scroll under the head.
+pub fn edit_table<'a>(
+    cols: Vec<Col<'a>>,
+    count: usize,
+    cell: impl Fn(usize, usize) -> Element<'a, Message> + 'a,
+    chosen: Option<usize>,
+    on_choose: impl Fn(usize) -> Message + 'a,
+    empty: &'a str,
+) -> Element<'a, Message> {
+    edited(cols, count, cell, chosen, Some(Box::new(on_choose)), empty)
+}
+
+/// An edited table whose rows are not chosen (each has its own Sil, say): [`edit_table`] without the choice.
+pub fn grid_table<'a>(
+    cols: Vec<Col<'a>>,
+    count: usize,
+    cell: impl Fn(usize, usize) -> Element<'a, Message> + 'a,
+    empty: &'a str,
+) -> Element<'a, Message> {
+    edited(cols, count, cell, None, None, empty)
+}
+
+type Choose<'a> = Box<dyn Fn(usize) -> Message + 'a>;
+
+fn edited<'a>(
+    cols: Vec<Col<'a>>,
+    count: usize,
+    cell: impl Fn(usize, usize) -> Element<'a, Message> + 'a,
+    chosen: Option<usize>,
+    on_choose: Option<Choose<'a>>,
+    empty: &'a str,
+) -> Element<'a, Message> {
+    use kentos_ui::widget::table::{self, Table};
+    let n = cols.len();
+    let columns = std::iter::once(table::Column::new("#").width(Length::Fixed(32.0)).align_right())
+        .chain(cols.into_iter().map(|c| table::Column::new(c.title).width(c.width.map_or(Length::Fill, Length::Fixed))));
+    if count == 0 {
+        return Table::new(columns).grid().empty(empty).into();
+    }
+    Table::new(columns)
+        .grid()
+        .height(Length::Fixed(table::row_height() * count.min(MOST_EDITED) as f32))
+        .virtualized(count, move |i| {
+            let row = table::Row::new(std::iter::once(table::number((i + 1).to_string()).into()).chain((0..n).map(|k| cell(i, k))))
+                .selected(chosen == Some(i));
+            match &on_choose {
+                Some(choose) => row.on_press(choose(i)),
+                None => row,
+            }
+        })
+        .reveal(chosen)
+        .into()
+}
+
+/// The rows an edited table shows before it scrolls.
+const MOST_EDITED: usize = 8;
+
+/// A choice typed in its table cell (the grid's drop-down cell): the chosen option's words, the options in its menu.
+pub fn pick<'a, S: Into<String>>(
+    options: impl IntoIterator<Item = S>,
+    chosen: Option<usize>,
+    on_pick: impl Fn(usize) -> Message + 'a,
+) -> Element<'a, Message> {
+    let options: Vec<String> = options.into_iter().map(Into::into).collect();
+    let shown = chosen.and_then(|i| options.get(i).cloned()).unwrap_or_else(|| "—".to_owned());
+    kentos_ui::widget::property_grid::choice(shown, None, move || {
+        options.iter().enumerate().fold(kentos_ui::widget::Menu::new(), |menu, (i, o)| menu.item(o.clone(), on_pick(i)))
+    })
+}
+
+/// The cell that removes its row (a row of a list each line of which goes on its own: Pozlar, Kurallar).
+pub fn drop_cell<'a>(on_press: Message) -> Element<'a, Message> {
+    let x = iced::widget::button(kentos_ui::label::caption("×")).style(kentos_ui::style::button::ghost).padding([0, 6]).on_press(on_press);
+    kentos_ui::widget::Cell::padded(container(x).center_x(Fill)).into()
+}
+
+/// A number in Turkish for a table: thousands with points, the fraction after a comma (1.289.851,02).
+pub fn grouped(v: f64, digits: usize) -> String {
+    let text = format!("{:.digits$}", v.abs());
+    let (whole, fraction) = text.split_once('.').unwrap_or((&text, ""));
+    let mut out = String::new();
+    for (i, c) in whole.chars().enumerate() {
+        if i > 0 && (whole.len() - i) % 3 == 0 {
+            out.push('.');
+        }
+        out.push(c);
+    }
+    let sign = if v < 0.0 && text.chars().any(|c| c.is_ascii_digit() && c != '0') { "-" } else { "" };
+    if fraction.is_empty() { format!("{sign}{out}") } else { format!("{sign}{out},{fraction}") }
+}
+
+/// A result table whose cells are not only words (a colour swatch before a range): [`table`] with built cells.
+pub fn table_of<'a>(cols: Vec<Col<'a>>, rows: Vec<Vec<Element<'a, Message>>>, empty: &'a str) -> Element<'a, Message> {
+    use kentos_ui::widget::table::{self, Table};
+    let columns = cols.into_iter().map(|c| {
+        let column = table::Column::new(c.title).width(c.width.map_or(Length::Fill, Length::Fixed));
+        if c.number { column.align_right() } else { column }
+    });
+    Table::new(columns).extend(rows.into_iter().map(table::Row::new)).empty(empty).into()
+}

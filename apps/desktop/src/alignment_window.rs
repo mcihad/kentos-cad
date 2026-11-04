@@ -39,6 +39,7 @@ use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
 use crate::exchange::words;
+use crate::road_dialog;
 use crate::traces::Control;
 
 /// The window's title, which a trace names it by.
@@ -817,7 +818,6 @@ impl App {
     }
 
     fn alignment_editor<'a>(&'a self, w: &'a Window, r: &'a Row) -> Element<'a, Message> {
-        let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
         let name = kentos_ui::widget::text_field("Aksın adı", &r.name).on_input(|t| msg(Event::Name(t)));
         let mut col = Column::new().spacing(10).padding(iced::Padding::default().right(14));
         match &r.parallel {
@@ -845,31 +845,25 @@ impl App {
             None => {
                 let start = kentos_ui::widget::text_field("0", &r.start).on_input(|t| msg(Event::Start(t)));
                 col = col.push(row![words::field("Ad", name, None), words::field("Başlangıç km (m)", start, None)].spacing(12));
-                let head = ["PI", "Y", "X", "R", "L giriş", "L çıkış"];
-                let widths = [60.0, 130.0, 130.0, 80.0, 80.0, 80.0];
-                let mut table = Column::new().spacing(3);
-                table = table.push(
-                    head.iter()
-                        .zip(widths)
-                        .fold(row![].spacing(4), |row, (h, wd)| row.push(label::caption(*h).style(muted).width(wd))),
+                let pis = &r.pis;
+                let fill = |title| road_dialog::Col { title, width: None, number: true };
+                let table = road_dialog::edit_table(
+                    vec![road_dialog::col("PI", 80.0), fill("Y (m)"), fill("X (m)"), fill("R (m)"), fill("L giriş (m)"), fill("L çıkış (m)")],
+                    pis.len(),
+                    move |j, k| {
+                        let p = &pis[j];
+                        let end = j == 0 || j + 1 == pis.len();
+                        match k {
+                            0 => road_dialog::edit(&p.id, false, move |t| msg(Event::Pi(j, 5, t))),
+                            // The ends have no curve: their R and spirals are not typed.
+                            k if end && k >= 3 => kentos_ui::widget::table::text("—").into(),
+                            k => road_dialog::edit(&p.texts[k - 1], true, move |t| msg(Event::Pi(j, k - 1, t))),
+                        }
+                    },
+                    w.pi,
+                    |j| msg(Event::PiChoose(j)),
+                    "PI yok",
                 );
-                for (j, p) in r.pis.iter().enumerate() {
-                    let end = j == 0 || j + 1 == r.pis.len();
-                    let mut line = row![
-                        kentos_ui::widget::text_field("", &p.id).on_input(move |t| msg(Event::Pi(j, 5, t))).width(widths[0])
-                    ]
-                    .spacing(4);
-                    for k in 0..5 {
-                        let field = kentos_ui::widget::text_field(if k < 2 { "" } else { "—" }, &p.texts[k]);
-                        let field = if end && k >= 2 { field } else { field.on_input(move |t| msg(Event::Pi(j, k, t))) };
-                        line = line.push(field.width(widths[k + 1]));
-                    }
-                    let mark = iced::widget::button(label::caption(if w.pi == Some(j) { "●" } else { "○" }))
-                        .on_press(msg(Event::PiChoose(j)))
-                        .padding([2, 6])
-                        .style(style::button::row(w.pi == Some(j)));
-                    table = table.push(line.push(mark).align_y(Center));
-                }
                 col = col.push(words::field("PI'lar", table, None)).push(
                     row![
                         words::secondary(ADD_PI, Some(msg(Event::PiAdd))),
@@ -878,31 +872,32 @@ impl App {
                     ]
                     .spacing(8),
                 );
-                let mut eqs = Column::new().spacing(4);
-                if !r.equations.is_empty() {
-                    eqs = eqs.push(
-                        row![
-                            space::horizontal().width(20),
-                            label::caption("Geri km").style(muted).width(110),
-                            label::caption("İleri km").style(muted).width(110),
-                        ]
-                        .spacing(8),
-                    );
-                }
-                for (j, q) in r.equations.iter().enumerate() {
-                    eqs = eqs.push(
-                        row![
-                            label::caption(format!("{}.", j + 1)).width(20),
-                            kentos_ui::widget::text_field("geri km", &q.back).on_input(move |t| msg(Event::Back(j, t))).width(110),
-                            kentos_ui::widget::text_field("ileri km", &q.ahead).on_input(move |t| msg(Event::Ahead(j, t))).width(110),
-                            words::check(q.increasing, "artan", Some(msg(Event::Increasing(j, !q.increasing)))),
-                            words::ghost("Sil", Some(msg(Event::EquationRemove(j)))),
-                        ]
-                        .spacing(8)
-                        .align_y(Center),
-                    );
-                }
-                eqs = eqs.push(words::secondary("Eşitlik ekle", Some(msg(Event::EquationAdd))));
+                let equations = &r.equations;
+                let eqs = column![
+                    road_dialog::grid_table(
+                        vec![
+                            road_dialog::Col { title: "Geri km", width: None, number: true },
+                            road_dialog::Col { title: "İleri km", width: None, number: true },
+                            road_dialog::col("Yön", 110.0),
+                            road_dialog::col("", 64.0),
+                        ],
+                        equations.len(),
+                        move |j, k| {
+                            let q = &equations[j];
+                            match k {
+                                0 => road_dialog::edit(&q.back, true, move |t| msg(Event::Back(j, t))),
+                                1 => road_dialog::edit(&q.ahead, true, move |t| msg(Event::Ahead(j, t))),
+                                2 => road_dialog::pick(["Artan", "Azalan"], Some(usize::from(!q.increasing)), move |i| {
+                                    msg(Event::Increasing(j, i == 0))
+                                }),
+                                _ => kentos_ui::widget::Cell::padded(words::ghost("Sil", Some(msg(Event::EquationRemove(j))))).into(),
+                            }
+                        },
+                        "Km eşitliği yok",
+                    ),
+                    words::secondary("Eşitlik ekle", Some(msg(Event::EquationAdd))),
+                ]
+                .spacing(6);
                 col = col.push(words::field("Km eşitlikleri", eqs, None));
             }
         }

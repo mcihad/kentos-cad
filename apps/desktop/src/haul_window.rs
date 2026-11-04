@@ -23,7 +23,7 @@
 
 use iced::widget::canvas::{self, Path, Stroke, Text};
 use iced::widget::{Column, column, container, row, scrollable, space};
-use iced::{Center, Color, Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
+use iced::{Center, Color, Element, Fill, Length, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{CommandWarning, HaulCostDef, HaulDef, HaulReport, HaulSiteDef, HaulSiteKind, HaulsEdit, RoadEditOperation};
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, road_hauls, road_hauls_edit};
@@ -34,6 +34,7 @@ use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
 use crate::exchange::words;
+use crate::road_dialog;
 use crate::traces::Control;
 
 /// The window's title, which a trace names it by.
@@ -488,39 +489,32 @@ impl App {
             .spacing(10)
             .align_y(iced::alignment::Vertical::Bottom),
         );
-        let widths = [150.0, 110.0, 80.0, 90.0];
-        let mut table = Column::new().spacing(3);
-        table = table.push(
-            ["Ad", "Tür", "Km (m)", "Hacim (m³)"]
-                .iter()
-                .zip(widths)
-                .fold(row![].spacing(4), |row, (h, wd)| row.push(label::caption(*h).style(muted).width(wd))),
-        );
         let kinds = [(HaulSiteKind::Borrow, "Ödünç"), (HaulSiteKind::Waste, "Döküm")];
-        for (j, (name, kind, station, volume)) in r.sites.iter().enumerate() {
-            let pick = Select::new(
-                kinds.iter().map(|k| Choice::new(k.1.to_owned())),
-                kinds.iter().position(|k| k.0 == *kind),
-                move |i| msg(Event::Kind(j, kinds[i].0)),
-            );
-            table = table.push(
-                row![
-                    kentos_ui::widget::text_field("Ad", name).on_input(move |v| msg(Event::Site(j, 0, v))).width(widths[0]),
-                    container(pick).width(widths[1]),
-                    kentos_ui::widget::text_field("", station).on_input(move |v| msg(Event::Site(j, 2, v))).width(widths[2]),
-                    kentos_ui::widget::text_field("", volume).on_input(move |v| msg(Event::Site(j, 3, v))).width(widths[3]),
-                    iced::widget::button(label::caption(if w.line == Some(j) { "●" } else { "○" }))
-                        .on_press(msg(Event::Line(j)))
-                        .padding([2, 6])
-                        .style(style::button::row(w.line == Some(j))),
-                ]
-                .spacing(4)
-                .align_y(Center),
-            );
-        }
+        let sites = &r.sites;
+        let table = road_dialog::edit_table(
+            vec![
+                road_dialog::Col { title: "Ad", width: None, number: false },
+                road_dialog::col("Tür", 110.0),
+                road_dialog::col("Km (m)", 100.0),
+                road_dialog::col("Hacim (m³)", 110.0),
+            ],
+            sites.len(),
+            move |j, k| {
+                let (name, kind, station, volume) = &sites[j];
+                match k {
+                    0 => road_dialog::edit(name, false, move |v| msg(Event::Site(j, 0, v))),
+                    1 => road_dialog::pick(kinds.map(|k| k.1), kinds.iter().position(|k| k.0 == *kind), move |i| msg(Event::Kind(j, kinds[i].0))),
+                    2 => road_dialog::edit(station, true, move |v| msg(Event::Site(j, 2, v))),
+                    _ => road_dialog::edit(volume, true, move |v| msg(Event::Site(j, 3, v))),
+                }
+            },
+            w.line,
+            |j| msg(Event::Line(j)),
+            "Ödünç ya da döküm alanı yok",
+        );
         col = col.push(
             row![
-                words::field("Ödünç ve döküm alanları", table, None),
+                container(words::field("Ödünç ve döküm alanları", table, None)).width(Length::FillPortion(3)),
                 column![
                     words::secondary(ADD, Some(msg(Event::Add))),
                     words::ghost(REMOVE_ROW, w.line.map(|_| msg(Event::RemoveRow))),
@@ -592,26 +586,45 @@ impl App {
 
 /// The loops as the window lists them.
 fn loops_table(rep: &HaulReport) -> Element<'_, Message> {
-    let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
-    let widths = [84.0, 84.0, 44.0, 90.0, 110.0, 60.0, 90.0, 110.0, 90.0];
-    let head = ["Baş km", "Son km", "Yön", "Dengelenen", "Moment", "Ort.", "Fazla taş.", "Fazla mom.", "Dengesiz"];
-    let header = head.iter().zip(widths).fold(row![].spacing(6), |row, (h, wd)| row.push(label::caption(*h).style(muted).width(wd)));
-    let mut rows = Column::new().spacing(2);
-    for l in &rep.loops {
-        let cells = [
-            l.from_text.clone(),
-            l.to_text.clone(),
-            if l.forward { "ileri" } else { "geri" }.to_owned(),
-            grouped(l.volume, 0),
-            grouped(l.moment, 0),
-            l.average.map_or_else(|| "—".to_owned(), |a| grouped(a, 0)),
-            grouped(l.over_volume, 0),
-            grouped(l.over_moment, 0),
-            grouped(l.unbalanced, 0),
-        ];
-        rows = rows.push(cells.into_iter().zip(widths).fold(row![].spacing(6), |row, (c, wd)| row.push(label::caption(c).width(wd))));
-    }
-    column![label::strong("Döngüler"), header, rows].spacing(4).into()
+    use road_dialog::{col, num};
+    let rows = rep
+        .loops
+        .iter()
+        .map(|l| {
+            vec![
+                l.from_text.clone(),
+                l.to_text.clone(),
+                if l.forward { "ileri" } else { "geri" }.to_owned(),
+                grouped(l.volume, 0),
+                grouped(l.moment, 0),
+                l.average.map_or_else(|| "—".to_owned(), |a| grouped(a, 0)),
+                grouped(l.over_volume, 0),
+                grouped(l.over_moment, 0),
+                grouped(l.unbalanced, 0),
+            ]
+        })
+        .collect();
+    column![
+        label::strong("Döngüler"),
+        road_dialog::sheet(
+            vec![
+                col("Baş km", 88.0),
+                col("Son km", 88.0),
+                col("Yön", 52.0),
+                num("Dengelenen (m³)", 112.0),
+                num("Moment (m³·m)", 112.0),
+                num("Ort. (m)", 72.0),
+                num("Fazla taş. (m³)", 112.0),
+                num("Fazla mom. (m³·m)", 124.0),
+                num("Dengesiz (m³)", 104.0),
+            ],
+            rows,
+            "Döngü yok",
+            180.0,
+        ),
+    ]
+    .spacing(6)
+    .into()
 }
 
 /// The mass haul diagram: the curve, the loops shaded by direction (unbalanced apart), the balance line and points,

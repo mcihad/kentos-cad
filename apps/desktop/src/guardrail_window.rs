@@ -16,7 +16,7 @@
 //! ```
 
 use iced::widget::canvas::{self, Path, Stroke, Text};
-use iced::widget::{Column, container, row, scrollable, space};
+use iced::widget::{container, row, space};
 use iced::{Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{
     CommandWarning, GuardrailReport, GuardrailRuleDef, GuardrailWarrantDef, GuardrailsDraw, GuardrailsEdit,
@@ -374,35 +374,26 @@ impl App {
                     body = body.push(label::caption(wn.message.clone()).style(warn));
                 }
                 let picture = crate::picture::picture(iced::widget::canvas(Strip { report: r, range: w.preview.range }).width(Fill).height(Fill), TITLE);
-                let mut list = Column::new().spacing(2).push(
-                    row![
-                        label::caption("Yan").style(muted).width(40),
-                        label::caption("Km").style(muted).width(170),
-                        label::caption("Boy (m)").style(muted).width(70),
-                        label::caption("Gerekli").style(muted).width(110),
-                        label::caption("Dolgu (m)").style(muted).width(70),
-                        label::caption("Şev 1:").style(muted).width(50),
-                    ]
-                    .spacing(6),
+                use crate::road_dialog::{col, grouped, num};
+                let list = crate::road_dialog::sheet_fill(
+                    vec![col("Yan", 52.0), col("Km", 190.0), num("Boy (m)", 80.0), col("Gerekli", 110.0), num("Dolgu (m)", 84.0), num("Şev 1:", 64.0)],
+                    r.runs
+                        .iter()
+                        .map(|run| {
+                            vec![
+                                if run.side == "right" { "Sağ" } else { "Sol" }.to_owned(),
+                                format!("{} – {}", run.from_text, run.to_text),
+                                grouped(run.length, 1),
+                                format!("{:.0}–{:.0} m", run.warranted[0], run.warranted[1]),
+                                grouped(run.height, 2),
+                                grouped(run.slope, 2),
+                            ]
+                        })
+                        .collect(),
+                    "Kural bu koridorda hiçbir yerde tutmuyor: otokorkuluk yok.",
                 );
-                for run in &r.runs {
-                    list = list.push(
-                        row![
-                            label::caption(if run.side == "right" { "Sağ" } else { "Sol" }).width(40),
-                            label::caption(format!("{} – {}", run.from_text, run.to_text)).width(170),
-                            label::caption(format!("{:.1}", run.length)).width(70),
-                            label::caption(format!("{:.0}–{:.0} m", run.warranted[0], run.warranted[1])).width(110),
-                            label::caption(format!("{:.2}", run.height)).width(70),
-                            label::caption(format!("{:.2}", run.slope)).width(50),
-                        ]
-                        .spacing(6),
-                    );
-                }
-                if r.runs.is_empty() {
-                    list = list.push(label::caption("Kural bu koridorda hiçbir yerde tutmuyor: otokorkuluk yok.").style(muted));
-                }
                 body = body.push_grow(
-                    row![picture, container(scrollable(list).height(Fill)).width(typography::scaled(540.0)).padding([6, 8])]
+                    row![picture, list]
                         .spacing(12)
                         .height(Fill),
                     typography::scaled(200.0),

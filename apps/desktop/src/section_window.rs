@@ -43,6 +43,7 @@ use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
 use crate::exchange::words;
+use crate::road_dialog;
 use crate::traces::Control;
 
 /// The window's title, which a trace names it by.
@@ -1556,9 +1557,6 @@ fn section_template_editor<'a>(w: &'a Window, t: &'a TemplateRow) -> Element<'a,
     let sides = Segmented::new_with([SideChoice::Left, SideChoice::Right], shown, |c| msg(Event::Side(c == SideChoice::Right)), |c| {
         c == SideChoice::Left || !t.mirror
     });
-    let head = |words: [&'a str; 3], widths: [f32; 3]| {
-        words.iter().zip(widths).fold(row![].spacing(4), |r, (h, wd)| r.push(label::caption(*h).style(muted).width(wd)))
-    };
     let pv = &t.pavement;
     let mut form = Form::new()
         .label_width(110.0)
@@ -1580,19 +1578,17 @@ fn section_template_editor<'a>(w: &'a Window, t: &'a TemplateRow) -> Element<'a,
                 .field(EDGE_SLOPE, kentos_ui::widget::text_field("1,5", &pv.h).on_input(|v| msg(Event::PavementSlope(v))))
                 .help("Dolgu şevi verilirse kenar dolgunun yüzü olur.");
         }
-        let lw = [170.0, 90.0, 120.0];
-        let mut table = Column::new().spacing(3).push(head(["Tabaka", "Kalınlık (m)", "Malzeme kodu"], lw));
-        for (j, l) in pv.layers.iter().enumerate() {
-            table = table.push(
-                row![
-                    kentos_ui::widget::text_field("Aşınma", &l[0]).on_input(move |v| msg(Event::Layer(j, 0, v))).width(lw[0]),
-                    kentos_ui::widget::text_field("0,05", &l[1]).on_input(move |v| msg(Event::Layer(j, 1, v))).width(lw[1]),
-                    kentos_ui::widget::text_field("isteğe bağlı", &l[2]).on_input(move |v| msg(Event::Layer(j, 2, v))).width(lw[2]),
-                ]
-                .spacing(4)
-                .align_y(Center),
-            );
-        }
+        let layers = &pv.layers;
+        let table = road_dialog::grid_table(
+            vec![
+                road_dialog::Col { title: "Tabaka", width: None, number: false },
+                road_dialog::col("Kalınlık (m)", 100.0),
+                road_dialog::col("Malzeme kodu", 130.0),
+            ],
+            layers.len(),
+            move |j, k| road_dialog::edit(&layers[j][k], k == 1, move |v| msg(Event::Layer(j, k, v))),
+            "Tabaka yok",
+        );
         let total: f64 = pv.layers.iter().filter_map(|l| number(&l[1]).ok().flatten()).sum();
         form = form.wide(table).wide(
             row![
@@ -1607,20 +1603,24 @@ fn section_template_editor<'a>(w: &'a Window, t: &'a TemplateRow) -> Element<'a,
     }
 
     // Right: the side's components and its end condition.
-    let widths = [140.0, 100.0, 100.0];
-    let mut parts = Column::new().spacing(3).push(head(["Bileşen", "Genişlik (m)", "Enine eğim (%)"], widths));
-    for (j, p) in side.parts.iter().enumerate() {
-        let kind = Select::new(KINDS.iter().map(|k| Choice::new((*k).to_owned())), Some(p.kind), move |k| msg(Event::PartKind(j, k)));
-        parts = parts.push(
-            row![
-                container(kind).width(widths[0]),
-                kentos_ui::widget::text_field("3,5", &p.width).on_input(move |v| msg(Event::Part(j, 0, v))).width(widths[1]),
-                kentos_ui::widget::text_field("-2,5", &p.slope).on_input(move |v| msg(Event::Part(j, 1, v))).width(widths[2]),
-            ]
-            .spacing(4)
-            .align_y(Center),
-        );
-    }
+    let side_parts = &side.parts;
+    let parts = road_dialog::grid_table(
+        vec![
+            road_dialog::Col { title: "Bileşen", width: None, number: false },
+            road_dialog::col("Genişlik (m)", 110.0),
+            road_dialog::col("Enine eğim (%)", 120.0),
+        ],
+        side_parts.len(),
+        move |j, k| {
+            let p = &side_parts[j];
+            match k {
+                0 => road_dialog::pick(KINDS, Some(p.kind), move |c| msg(Event::PartKind(j, c))),
+                1 => road_dialog::edit(&p.width, true, move |v| msg(Event::Part(j, 0, v))),
+                _ => road_dialog::edit(&p.slope, true, move |v| msg(Event::Part(j, 1, v))),
+            }
+        },
+        "Bileşen yok: şerit ya da banket ekleyin",
+    );
     let mut right = Form::new()
         .label_width(110.0)
         .section(if editing_right { "Sağ yanın bileşenleri (eksenden dışa)" } else { "Sol yanın bileşenleri (eksenden dışa)" })

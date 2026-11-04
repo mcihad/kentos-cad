@@ -16,7 +16,7 @@
 //! ```
 
 use iced::widget::canvas::{self, Path, Stroke, Text};
-use iced::widget::{Column, container, row, scrollable, space};
+use iced::widget::{container, row, space};
 use iced::{Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{
     CommandWarning, CulvertFlow, CulvertReport, CulvertShapeDef, CulvertsDraw, CulvertsEdit, RoadEditOperation,
@@ -420,32 +420,21 @@ impl App {
                     body = body.push(label::caption(wn.message.clone()).style(warn));
                 }
                 let picture = crate::picture::picture(iced::widget::canvas(Barrel { report: r, top: w.preview.top }).width(Fill).height(Fill), TITLE);
-                let mut list = Column::new().spacing(2).push(
-                    row![
-                        label::caption("Uç").style(muted).width(90),
-                        label::caption("Öteleme (m)").style(muted).width(80),
-                        label::caption("Y").style(muted).width(100),
-                        label::caption("X").style(muted).width(100),
-                        label::caption("Akış kotu").style(muted).width(80),
-                    ]
-                    .spacing(6),
+                use crate::road_dialog::{col, grouped, num};
+                let list = crate::road_dialog::sheet_fill(
+                    vec![col("Uç", 110.0), num("Öteleme (m)", 96.0), num("Y (m)", 112.0), num("X (m)", 112.0), num("Akış kotu (m)", 104.0)],
+                    r.ends
+                        .iter()
+                        .map(|e| {
+                            let side = if e.side == "left" { "Sol" } else { "Sağ" };
+                            let mark = if e.side == r.inlet { "giriş" } else { "çıkış" };
+                            vec![format!("{side} ({mark})"), grouped(e.offset, 2), grouped(e.x, 3), grouped(e.y, 3), grouped(e.invert, 3)]
+                        })
+                        .collect(),
+                    "Uç yok",
                 );
-                for e in &r.ends {
-                    let side = if e.side == "left" { "Sol" } else { "Sağ" };
-                    let mark = if e.side == r.inlet { "giriş" } else { "çıkış" };
-                    list = list.push(
-                        row![
-                            label::caption(format!("{side} ({mark})")).width(90),
-                            label::caption(format!("{:.2}", e.offset)).width(80),
-                            label::caption(format!("{:.3}", e.x)).width(100),
-                            label::caption(format!("{:.3}", e.y)).width(100),
-                            label::caption(format!("{:.3}", e.invert)).width(80),
-                        ]
-                        .spacing(6),
-                    );
-                }
                 body = body.push_grow(
-                    row![picture, container(scrollable(list).height(Fill)).width(typography::scaled(560.0)).padding([6, 8])]
+                    row![picture, list]
                         .spacing(12)
                         .height(Fill),
                     typography::scaled(180.0),

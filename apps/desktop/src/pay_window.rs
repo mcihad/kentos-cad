@@ -16,20 +16,20 @@
 //! └──────────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
-use iced::widget::{Column, button, container, row, scrollable, space};
+use iced::widget::{Column, container, row, space};
 use iced::{Element, Fill, Task, Theme};
 use kentos_commands::{
     CommandWarning, PayEdit, PayItemDef, PayMeasure, PayQueried, PayRuleDef, RoadEditOperation,
 };
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, road_pay_edit};
-use kentos_ui::theme::{Tokens, typography};
+use kentos_ui::theme::Tokens;
 use kentos_ui::widget::Dialog as Frame;
-use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::{label, style};
+use kentos_ui::label;
 
 use crate::app::{App, Dialog, Message};
 use crate::exchange::words;
+use crate::road_dialog;
 use crate::traces::Control;
 
 /// The window's title, which a trace names it by.
@@ -314,7 +314,6 @@ impl App {
         let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
         let warn = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).warning) };
         let danger = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).danger) };
-        let head = |t: &'static str, wd: f32| label::caption(t).style(muted).width(wd);
         let field = |k: usize, hint: &'static str, width: f32| {
             words::field(
                 FIELDS[k],
@@ -325,55 +324,49 @@ impl App {
         let top = row![field(0, "Listenin adı ve yılı", 360.0), field(1, "2026", 110.0), field(2, "TRY", 90.0)]
             .spacing(10)
             .align_y(iced::alignment::Vertical::Bottom);
-        let drop = |m: Message| button(label::caption("×")).style(style::button::ghost).padding([0, 6]).on_press(m);
-
-        let mut items = Column::new().spacing(4).push(
-            row![head("Numara", 70.0), head("Ad", 160.0), head("Birim", 55.0), head("Birim fiyat", 75.0)].spacing(6),
-        );
-        for (i, it) in w.items.iter().enumerate() {
-            let cell = |k: usize, hint: &'static str, wd: f32| {
-                kentos_ui::widget::text_field(hint, &it[k]).on_input(move |t| msg(Event::Item(i, k, t))).width(wd)
-            };
-            items = items.push(
-                row![cell(0, "A-1", 70.0), cell(1, "Ad", 160.0), cell(2, "m³", 55.0), cell(3, "yok", 75.0), drop(msg(Event::DropItem(i)))]
-                    .spacing(6)
-                    .align_y(iced::alignment::Vertical::Center),
-            );
-        }
-        items = items.push(words::secondary(ADD_ITEM, Some(msg(Event::AddItem)))).padding(iced::Padding::ZERO.right(16));
+        let fill = |title| road_dialog::Col { title, width: None, number: false };
+        let items = &w.items;
+        let items = iced::widget::column![
+            road_dialog::grid_table(
+                vec![road_dialog::col("Numara", 80.0), fill("Ad"), road_dialog::col("Birim", 64.0), road_dialog::col("Birim fiyat", 96.0), road_dialog::col("", 36.0)],
+                items.len(),
+                move |i, k| match k {
+                    4 => road_dialog::drop_cell(msg(Event::DropItem(i))),
+                    k => road_dialog::edit(&items[i][k], k == 3, move |t| msg(Event::Item(i, k, t))),
+                },
+                "Poz yok",
+            ),
+            words::secondary(ADD_ITEM, Some(msg(Event::AddItem))),
+        ]
+        .spacing(6);
 
         let codes: Vec<String> = w.items.iter().map(|i| i[0].trim().to_owned()).filter(|c| !c.is_empty()).collect();
-        let mut rules = Column::new().spacing(4).push(
-            row![head("Ölçü", 180.0), head("Poz", 80.0), head("Çarpan", 55.0), head("Malzeme", 95.0)].spacing(6),
-        );
-        for (i, r) in w.rules.iter().enumerate() {
-            let on_measure = Select::new(
-                MEASURES.iter().map(|m| Choice::new(m.1)),
-                MEASURES.iter().position(|m| m.0 == r.measure),
-                move |k| msg(Event::Measure(i, MEASURES[k].0)),
-            );
-            let list = codes.clone();
-            let at = list.iter().position(|c| *c == r.item);
-            let choices: Vec<_> = list.iter().map(|c| Choice::new(c.clone())).collect();
-            let on_item = Select::new(choices, at, move |k| msg(Event::RuleItem(i, list[k].clone())));
-            rules = rules.push(
-                row![
-                    container(on_measure).width(180),
-                    container(on_item).width(80),
-                    kentos_ui::widget::text_field("1", &r.factor).on_input(move |t| msg(Event::Factor(i, t))).width(55),
-                    kentos_ui::widget::text_field("hepsi", &r.material).on_input(move |t| msg(Event::Material(i, t))).width(95),
-                    drop(msg(Event::DropRule(i))),
-                ]
-                .spacing(6)
-                .align_y(iced::alignment::Vertical::Center),
-            );
-        }
-        rules = rules.push(words::secondary(ADD_RULE, Some(msg(Event::AddRule)))).padding(iced::Padding::ZERO.right(16));
-        let book = row![
-            container(scrollable(items).height(typography::scaled(130.0))).width(Fill).padding([4, 6]).style(style::container::field_box),
-            container(scrollable(rules).height(typography::scaled(130.0))).width(Fill).padding([4, 6]).style(style::container::field_box),
+        let rules = &w.rules;
+        let rules = iced::widget::column![
+            road_dialog::grid_table(
+                vec![fill("Ölçü"), road_dialog::col("Poz", 84.0), road_dialog::col("Çarpan", 64.0), road_dialog::col("Malzeme", 96.0), road_dialog::col("", 36.0)],
+                rules.len(),
+                move |i, k| {
+                    let r = &rules[i];
+                    match k {
+                        0 => road_dialog::pick(MEASURES.map(|m| m.1), MEASURES.iter().position(|m| m.0 == r.measure), move |k| {
+                            msg(Event::Measure(i, MEASURES[k].0))
+                        }),
+                        1 => {
+                            let list = codes.clone();
+                            road_dialog::pick(codes.clone(), codes.iter().position(|c| *c == r.item), move |k| msg(Event::RuleItem(i, list[k].clone())))
+                        }
+                        2 => road_dialog::edit(&r.factor, true, move |t| msg(Event::Factor(i, t))),
+                        3 => road_dialog::edit(&r.material, false, move |t| msg(Event::Material(i, t))),
+                        _ => road_dialog::drop_cell(msg(Event::DropRule(i))),
+                    }
+                },
+                "Kural yok",
+            ),
+            words::secondary(ADD_RULE, Some(msg(Event::AddRule))),
         ]
-        .spacing(12);
+        .spacing(6);
+        let book = row![container(items).width(Fill), container(rules).width(Fill)].spacing(12);
         let mut body = Column::new().spacing(10).push(top).push(
             row![label::caption("Pozlar").style(muted).width(Fill), label::caption("Kurallar").style(muted).width(Fill)].spacing(12),
         );
@@ -382,52 +375,54 @@ impl App {
             (Some(e), _) => body = body.push(label::caption(e.clone()).style(danger)),
             (None, Some(a)) => {
                 let money = a.currency.clone().unwrap_or_default();
-                let mut table = Column::new().spacing(2).push(
-                    row![
-                        head("Numara", 80.0),
-                        head("Ad", 220.0),
-                        head("Birim", 60.0),
-                        head("Miktar", 100.0),
-                        head("Birim fiyat", 100.0),
-                        head("Tutar", 120.0),
-                        head("Kaynaklar", 260.0),
-                    ]
-                    .spacing(6),
-                );
-                for r in &a.rows {
-                    let sources = r
-                        .lines
-                        .iter()
-                        .map(|l| format!("{}{}", l.name, if l.stale { " (eski)" } else { "" }))
-                        .collect::<Vec<_>>()
-                        .join(", ");
-                    table = table.push(
-                        row![
-                            label::caption(r.code.clone()).width(80),
-                            label::caption(r.name.clone()).width(220),
-                            label::caption(r.unit.clone()).width(60),
-                            label::caption(format!("{:.2}", r.quantity)).width(100),
-                            label::caption(r.price.map(|p| format!("{p:.2}")).unwrap_or_else(|| "—".into())).width(100),
-                            label::caption(r.amount.map(|p| format!("{p:.2} {money}")).unwrap_or_else(|| "—".into())).width(120),
-                            label::caption(sources).style(muted).width(260),
+                use road_dialog::{col, grouped, num};
+                let rows = a
+                    .rows
+                    .iter()
+                    .map(|r| {
+                        let sources = r
+                            .lines
+                            .iter()
+                            .map(|l| format!("{}{}", l.name, if l.stale { " (eski)" } else { "" }))
+                            .collect::<Vec<_>>()
+                            .join(", ");
+                        vec![
+                            r.code.clone(),
+                            r.name.clone(),
+                            r.unit.clone(),
+                            grouped(r.quantity, 2),
+                            r.price.map_or_else(|| "—".into(), |p| grouped(p, 2)),
+                            r.amount.map_or_else(|| "—".into(), |p| format!("{} {money}", grouped(p, 2))),
+                            sources,
                         ]
-                        .spacing(6),
-                    );
-                }
+                    })
+                    .collect();
+                let table = road_dialog::sheet(
+                    vec![
+                        col("Numara", 80.0),
+                        col("Ad", 220.0),
+                        col("Birim", 60.0),
+                        num("Miktar", 110.0),
+                        num("Birim fiyat", 110.0),
+                        num("Tutar", 140.0),
+                        road_dialog::Col { title: "Kaynaklar", width: None, number: false },
+                    ],
+                    rows,
+                    "Poz tutarı yok",
+                    240.0,
+                );
                 body = body.push(label::caption(format!(
-                    "{} · sürüm {} · toplam {:.2} {money}{}",
+                    "{} · sürüm {} · toplam {} {money}{}",
                     a.source,
                     a.version,
-                    a.total,
+                    road_dialog::grouped(a.total, 2),
                     if a.unpriced > 0 { format!(" · {} pozun fiyatı yok", a.unpriced) } else { String::new() }
                 )));
                 if !w.preview.warnings.is_empty() {
                     let all = w.preview.warnings.iter().map(|x| x.message.as_str()).collect::<Vec<_>>().join(" ");
                     body = body.push(label::caption(all).style(warn));
                 }
-                body = body.push(
-                    container(scrollable(table).height(typography::scaled(130.0))).width(Fill).padding([6, 8]).style(style::container::field_box),
-                );
+                body = body.push(table);
             }
             _ => {}
         }

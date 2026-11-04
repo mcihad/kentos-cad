@@ -16,7 +16,7 @@
 //! ```
 
 use iced::widget::canvas::{self, Path, Stroke, Text};
-use iced::widget::{Column, container, row, scrollable, space};
+use iced::widget::{container, row, space};
 use iced::{Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{
     CommandWarning, RetainingWallReport, RetainingWallsDraw, RetainingWallsEdit, RoadEditOperation, WallShapeDef, WallSide,
@@ -369,38 +369,37 @@ impl App {
                     body = body.push(label::caption(wn.message.clone()).style(warn));
                 }
                 let picture = crate::picture::picture(iced::widget::canvas(Along { report: r }).width(Fill).height(Fill), TITLE);
-                let head = |t: &'static str, wd: f32| label::caption(t).style(muted).width(wd);
-                let mut list = Column::new().spacing(2).push(
-                    row![
-                        head("Km", 90.0),
-                        head("Tür", 50.0),
-                        head("Yol", 70.0),
-                        head("Zemin", 70.0),
-                        head("Üst", 70.0),
-                        head("Temel", 70.0),
-                        head("H (m)", 55.0),
-                        head("Alan (m²)", 70.0),
-                    ]
-                    .spacing(6),
+                use crate::road_dialog::{col, grouped, num};
+                let list = crate::road_dialog::sheet_fill(
+                    vec![
+                        col("Km", 88.0),
+                        col("Tür", 56.0),
+                        num("Yol (m)", 72.0),
+                        num("Zemin (m)", 80.0),
+                        num("Üst (m)", 72.0),
+                        num("Temel (m)", 80.0),
+                        num("H (m)", 60.0),
+                        num("Alan (m²)", 80.0),
+                    ],
+                    r.rows
+                        .iter()
+                        .map(|x| {
+                            vec![
+                                x.km_text.clone(),
+                                if x.fill { "dolgu" } else { "yarma" }.to_owned(),
+                                grouped(x.road, 2),
+                                grouped(x.ground, 2),
+                                grouped(x.top, 2),
+                                grouped(x.footing, 2),
+                                grouped(x.height, 2),
+                                grouped(x.area, 2),
+                            ]
+                        })
+                        .collect(),
+                    "Duvar satırı yok",
                 );
-                for x in &r.rows {
-                    let cell = |v: f64, wd: f32| label::caption(format!("{v:.2}")).width(wd);
-                    list = list.push(
-                        row![
-                            label::caption(x.km_text.clone()).width(90),
-                            label::caption(if x.fill { "dolgu" } else { "yarma" }).width(50),
-                            cell(x.road, 70.0),
-                            cell(x.ground, 70.0),
-                            cell(x.top, 70.0),
-                            cell(x.footing, 70.0),
-                            cell(x.height, 55.0),
-                            cell(x.area, 70.0),
-                        ]
-                        .spacing(6),
-                    );
-                }
                 body = body.push_grow(
-                    row![picture, container(scrollable(list).height(Fill)).width(typography::scaled(560.0)).padding([6, 8])]
+                    row![picture, list]
                         .spacing(12)
                         .height(Fill),
                     typography::scaled(200.0),

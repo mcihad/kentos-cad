@@ -15,7 +15,7 @@
 //! ```
 
 use iced::widget::canvas::{self, Path, Stroke};
-use iced::widget::{Column, container, row, scrollable, space};
+use iced::widget::{container, row, space};
 use iced::{Element, Fill, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{CommandWarning, ProfileFitted, ProfilesFit};
 use kentos_interaction::Level;
@@ -268,35 +268,26 @@ impl App {
                     None => (Vec::new(), Vec::new()),
                 };
                 let picture = crate::picture::picture(iced::widget::canvas(Plan { source: &w.source, line, pvis }).width(Fill).height(Fill), TITLE);
-                let mut list = Column::new().spacing(2).push(
-                    row![
-                        label::caption("PVI").style(muted).width(50),
-                        label::caption("Km (m)").style(muted).width(90),
-                        label::caption("Kot (m)").style(muted).width(90),
-                        label::caption("Kurp (m)").style(muted).width(120),
-                    ]
-                    .spacing(6),
+                use crate::road_dialog::{col, grouped, num};
+                let list = crate::road_dialog::sheet_fill(
+                    vec![col("PVI", 64.0), num("Km (m)", 100.0), num("Kot (m)", 100.0), num("Kurp (m)", 150.0)],
+                    f.pvis
+                        .iter()
+                        .map(|p| {
+                            let curve = if p.length > 0.0 {
+                                grouped(p.length, 3)
+                            } else if p.length_in > 0.0 {
+                                format!("{} + {}", grouped(p.length_in, 3), grouped(p.length_out, 3))
+                            } else {
+                                "—".into()
+                            };
+                            vec![p.id.clone(), grouped(p.station, 3), grouped(p.elevation, 3), curve]
+                        })
+                        .collect(),
+                    "PVI yok",
                 );
-                for p in &f.pvis {
-                    let curve = if p.length > 0.0 {
-                        format!("{:.3}", p.length)
-                    } else if p.length_in > 0.0 {
-                        format!("{:.3} + {:.3}", p.length_in, p.length_out)
-                    } else {
-                        "—".into()
-                    };
-                    list = list.push(
-                        row![
-                            label::caption(p.id.clone()).width(50),
-                            label::caption(format!("{:.3}", p.station)).width(90),
-                            label::caption(format!("{:.3}", p.elevation)).width(90),
-                            label::caption(curve).width(120),
-                        ]
-                        .spacing(6),
-                    );
-                }
                 body = body.push_grow(
-                    row![picture, container(scrollable(list).height(Fill)).width(typography::scaled(540.0)).padding([6, 8])]
+                    row![picture, list]
                         .spacing(12)
                         .height(Fill),
                     typography::scaled(280.0),

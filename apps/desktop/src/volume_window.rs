@@ -743,50 +743,23 @@ impl App {
             msg(Event::Rule(RULES[i].0))
         });
         let sections = r.method != VolumeMethod::Surfaces;
-        let head = |words: &[&'a str], widths: &[f32]| {
-            words.iter().zip(widths).fold(row![].spacing(4), |row, (h, wd)| row.push(label::caption(*h).style(muted).width(*wd)))
-        };
-        let widths = [70.0, 70.0, 70.0, 70.0];
-        let mut factors = Column::new().spacing(3).push(head(&["Baş (m)", "Son (m)", "Kabarma", "Sıkışma"], &widths));
-        for (j, f) in r.factors.iter().enumerate() {
-            let cell = |k: usize, hint: &'a str| {
-                kentos_ui::widget::text_field(hint, &f[k]).on_input(move |v| msg(Event::Factor(j, k, v))).width(widths[k])
-            };
-            factors = factors.push(
-                row![
-                    cell(0, "0"),
-                    cell(1, ""),
-                    cell(2, ""),
-                    cell(3, ""),
-                    iced::widget::button(label::caption(if w.line == Some(j) { "●" } else { "○" }))
-                        .on_press(msg(Event::Line(j)))
-                        .padding([2, 6])
-                        .style(style::button::row(w.line == Some(j))),
-                ]
-                .spacing(4)
-                .align_y(Center),
-            );
-        }
-        let swidths = [70.0, 70.0, 80.0];
-        let mut strips = Column::new().spacing(3).push(head(&["Baş (m)", "Son (m)", "Kalınlık (m)"], &swidths));
-        for (j, f) in r.strip.iter().enumerate() {
-            let cell = |k: usize, hint: &'a str| {
-                kentos_ui::widget::text_field(hint, &f[k]).on_input(move |v| msg(Event::Strip(j, k, v))).width(swidths[k])
-            };
-            strips = strips.push(
-                row![
-                    cell(0, "0"),
-                    cell(1, ""),
-                    cell(2, ""),
-                    iced::widget::button(label::caption(if w.strip_line == Some(j) { "●" } else { "○" }))
-                        .on_press(msg(Event::StripLine(j)))
-                        .padding([2, 6])
-                        .style(style::button::row(w.strip_line == Some(j))),
-                ]
-                .spacing(4)
-                .align_y(Center),
-            );
-        }
+        let fill = |title| road_dialog::Col { title, width: None, number: true };
+        let factors = road_dialog::edit_table(
+            vec![fill("Baş (m)"), fill("Son (m)"), fill("Kabarma"), fill("Sıkışma")],
+            r.factors.len(),
+            move |j, k| road_dialog::edit(&r.factors[j][k], true, move |v| msg(Event::Factor(j, k, v))),
+            w.line,
+            |j| msg(Event::Line(j)),
+            "Katsayı satırı yok",
+        );
+        let strips = road_dialog::edit_table(
+            vec![fill("Baş (m)"), fill("Son (m)"), fill("Kalınlık (m)")],
+            r.strip.len(),
+            move |j, k| road_dialog::edit(&r.strip[j][k], true, move |v| msg(Event::Strip(j, k, v))),
+            w.strip_line,
+            |j| msg(Event::StripLine(j)),
+            "Sıyırma satırı yok",
+        );
         let bench_field = |k: usize, hint: &'a str| kentos_ui::widget::text_field(hint, &r.bench[k]).on_input(move |v| msg(Event::Bench(k, v)));
         let mut form = Form::new()
             .label_width(110.0)
@@ -898,38 +871,39 @@ fn layers_table(rep: &VolumeReport) -> Element<'_, Message> {
 
 /// The sheet's rows as the window shows them: km, cut and fill, the factors, the running totals and the mass ordinate.
 fn sheet_table(rep: &VolumeReport) -> Element<'_, Message> {
-    let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
+    use road_dialog::{col, num};
     let (strips, benches) = (rep.strip.is_some(), rep.bench.is_some());
-    let mut head: Vec<(&str, f32)> = vec![("Baş km", 84.0), ("Son km", 84.0), ("Kazı", 70.0), ("Dolgu", 70.0)];
+    let mut cols = vec![col("Baş km", 88.0), col("Son km", 88.0), num("Kazı (m³)", 88.0), num("Dolgu (m³)", 88.0)];
     if strips {
-        head.push(("B. toprak", 70.0));
+        cols.push(num("B. toprak (m³)", 108.0));
     }
     if benches {
-        head.push(("Diş", 56.0));
+        cols.push(num("Diş (m³)", 80.0));
     }
-    head.extend([("Kab.", 40.0), ("Sık.", 40.0), ("Σ kazı", 80.0), ("Σ dolgu", 80.0), ("Kütle", 80.0)]);
-    let widths: Vec<f32> = head.iter().map(|h| h.1).collect();
-    let header = head.iter().fold(row![].spacing(6), |row, (h, wd)| row.push(label::caption(*h).style(muted).width(*wd)));
-    let mut rows = Column::new().spacing(2);
+    cols.extend([num("Kabarma", 72.0), num("Sıkışma", 72.0), num("Σ kazı (m³)", 100.0), num("Σ dolgu (m³)", 100.0), num("Kütle (m³)", 100.0)]);
     let opt = |v: Option<f64>, d: usize| v.map_or_else(|| "—".to_owned(), |x| grouped(x, d));
-    for r in &rep.rows {
-        let mut cells = vec![r.from_text.clone(), r.to_text.clone(), opt(r.cut, 1), opt(r.fill, 1)];
-        if strips {
-            cells.push(opt(r.strip, 1));
-        }
-        if benches {
-            cells.push(opt(r.bench, 1));
-        }
-        cells.extend([
-            r.cut_factor.map_or_else(|| "—".into(), |x| trimmed(x).replace('.', ",")),
-            r.fill_factor.map_or_else(|| "—".into(), |x| trimmed(x).replace('.', ",")),
-            grouped(r.total_cut, 1),
-            grouped(r.total_fill, 1),
-            grouped(r.mass, 1),
-        ]);
-        rows = rows.push(cells.into_iter().zip(widths.iter().copied()).fold(row![].spacing(6), |row, (c, wd)| row.push(label::caption(c).width(wd))));
-    }
-    column![header, scrollable(rows).height(typography::scaled(146.0))].spacing(4).padding([6, 8]).into()
+    let rows = rep
+        .rows
+        .iter()
+        .map(|r| {
+            let mut cells = vec![r.from_text.clone(), r.to_text.clone(), opt(r.cut, 1), opt(r.fill, 1)];
+            if strips {
+                cells.push(opt(r.strip, 1));
+            }
+            if benches {
+                cells.push(opt(r.bench, 1));
+            }
+            cells.extend([
+                r.cut_factor.map_or_else(|| "—".into(), |x| trimmed(x).replace('.', ",")),
+                r.fill_factor.map_or_else(|| "—".into(), |x| trimmed(x).replace('.', ",")),
+                grouped(r.total_cut, 1),
+                grouped(r.total_fill, 1),
+                grouped(r.mass, 1),
+            ]);
+            cells
+        })
+        .collect();
+    road_dialog::sheet(cols, rows, "Kesit aralığı yok", 220.0)
 }
 
 /// What a line of the mass diagram reads of a row.

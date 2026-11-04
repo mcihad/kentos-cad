@@ -56,7 +56,7 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
     bölümüdür ve kaydedilmemiş tanımı okur (Dever, Y27.3; oran sınırı 1:n'nin n'i). Yardımcı pencere üst pencerenin
     yerine açılır, “Geri” ile döner, sonucu üstün formuna yazar (Genişletme önerisi, Y28.3). Çizim alanı
     görüntüleyicidir (`widget::picture::Picture`, ADR 0937): yakınlaştır, kaydır, PNG kaydet; büyüyen pencerede
-    `widget::grow::Grows` ile kalan yeri alır; `layout` görüntüleyicinin durumunu değiştirmez (diyalog iki kez yerleştirir). Taşınanlar: Kırmızı kot
+    `widget::grow::Grows` ile kalan yeri alır; `layout` görüntüleyicinin durumunu değiştirmez (diyalog iki kez yerleştirir). Tablolar kitin veri tablosudur (`road_dialog::table`/`sheet`/`sheet_fill`/`edit_table`, ADR 0938); sütun genişliği yazı alanıdır, kit payları ekler. Taşınanlar: Kırmızı kot
     önerisi, Kübaj, tip kesit düzenleyicisi. `Form::wide` eklendi.
   - **KCAD şema 164:** üstyapı ve kural `SCHEMA_WITH_ROAD_PAVEMENT` ile yazılır. Yayımlanmış şemaya (162) alan
     eklemek, eski programın örnek projeye “bozuk” demesine yol açtı. Yeni okuyucu daha yeni şemaya “daha yeni bir

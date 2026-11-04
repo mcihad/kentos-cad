@@ -17,7 +17,7 @@
 //! ```
 
 use iced::widget::canvas::{self, Path, Stroke, Text};
-use iced::widget::{Column, container, row, scrollable, space};
+use iced::widget::{Column, container, row, space};
 use iced::{Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{
     DrainageCatchmentAsk, DrainageDraw, DrainagePondsAsk, DrainageQueried, DrainageQuery, Entity,
@@ -309,19 +309,16 @@ impl App {
                 }
                 if !q.ponds.is_empty() {
                     side = side.push(label::caption(format!("Göletler ({})", q.ponds.len())).style(muted));
-                    let head = |t: &'static str, wd: f32| label::caption(t).style(muted).width(wd);
-                    let mut list = Column::new().spacing(2).push(
-                        row![head("Dip kotu", 70.0), head("Seviye", 70.0), head("Derinlik", 70.0), head("Alan m²", 80.0), head("Hacim m³", 80.0)]
-                            .spacing(6),
-                    );
-                    for p in &q.ponds {
-                        let cell = |v: f64, wd: f32| label::caption(format!("{v:.2}")).width(wd);
-                        list = list.push(
-                            row![cell(p.bottom[2], 70.0), cell(p.level, 70.0), cell(p.depth, 70.0), cell(p.area, 80.0), cell(p.volume, 80.0)]
-                                .spacing(6),
-                        );
-                    }
-                    side = side.push(scrollable(list).height(typography::scaled(140.0)));
+                    use crate::road_dialog::{grouped, num};
+                    side = side.push(crate::road_dialog::sheet(
+                        vec![num("Dip (m)", 56.0), num("Seviye (m)", 66.0), num("Derinlik (m)", 72.0), num("Alan (m²)", 62.0), num("Hacim (m³)", 64.0)],
+                        q.ponds
+                            .iter()
+                            .map(|p| vec![grouped(p.bottom[2], 2), grouped(p.level, 2), grouped(p.depth, 2), grouped(p.area, 2), grouped(p.volume, 2)])
+                            .collect(),
+                        "Gölet yok",
+                        180.0,
+                    ));
                 }
                 if q.catchment.is_none() && q.ponds.is_empty() {
                     side = side.push(label::caption("Gösterilecek havza ya da gölet yok.").style(muted));

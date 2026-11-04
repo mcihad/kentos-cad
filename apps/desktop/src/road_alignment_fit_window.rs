@@ -14,7 +14,7 @@
 //! ```
 
 use iced::widget::canvas::{self, Path, Stroke};
-use iced::widget::{Column, container, row, scrollable, space};
+use iced::widget::{container, row, space};
 use iced::{Element, Fill, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{AlignmentFitMethod, AlignmentFitted, AlignmentsFit, CommandWarning, Entity};
 use kentos_interaction::Level;
@@ -236,28 +236,17 @@ impl App {
                     body = body.push(label::caption(wn.message.clone()).style(warn));
                 }
                 let picture = crate::picture::picture(iced::widget::canvas(Plan { source: &w.source, line: &w.preview.line, fitted: f }).width(Fill).height(Fill), TITLE);
-                let mut list = Column::new().spacing(2).push(
-                    row![
-                        label::caption("PI").style(muted).width(50),
-                        label::caption("Y").style(muted).width(110),
-                        label::caption("X").style(muted).width(110),
-                        label::caption("R").style(muted).width(80),
-                    ]
-                    .spacing(6),
+                use crate::road_dialog::{col, grouped, num};
+                let list = crate::road_dialog::sheet_fill(
+                    vec![col("PI", 64.0), num("Y (m)", 120.0), num("X (m)", 120.0), num("R (m)", 96.0)],
+                    f.pis
+                        .iter()
+                        .map(|p| vec![p.id.clone(), grouped(p.x, 3), grouped(p.y, 3), if p.radius > 0.0 { grouped(p.radius, 3) } else { "—".into() }])
+                        .collect(),
+                    "PI yok",
                 );
-                for p in &f.pis {
-                    list = list.push(
-                        row![
-                            label::caption(p.id.clone()).width(50),
-                            label::caption(format!("{:.3}", p.x)).width(110),
-                            label::caption(format!("{:.3}", p.y)).width(110),
-                            label::caption(if p.radius > 0.0 { format!("{:.3}", p.radius) } else { "—".into() }).width(80),
-                        ]
-                        .spacing(6),
-                    );
-                }
                 body = body.push_grow(
-                    row![picture, container(scrollable(list).height(Fill)).width(typography::scaled(440.0)).padding([6, 8])]
+                    row![picture, list]
                         .spacing(12)
                         .height(Fill),
                     typography::scaled(300.0),

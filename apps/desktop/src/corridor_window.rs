@@ -37,6 +37,7 @@ use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
 use crate::exchange::words;
+use crate::road_dialog;
 use crate::traces::Control;
 
 /// The window's title, which a trace names it by.
@@ -720,37 +721,33 @@ impl App {
         if stale {
             col = col.push(label::caption("Aks değişti: bölgeleri denetleyip aksa yeniden bağlayın.").style(warn));
         }
-        let widths = [90.0, 90.0, 180.0];
-        let mut table = Column::new().spacing(3);
-        table = table.push(
-            ["Baş (m)", "Son (m)", "Tip kesit"]
-                .iter()
-                .zip(widths)
-                .fold(row![].spacing(4), |row, (h, wd)| row.push(label::caption(*h).style(muted).width(wd))),
-        );
         let tids: Vec<String> = templates.iter().map(|t| t.0.clone()).collect();
-        for (j, (a, b, t)) in r.regions.iter().enumerate() {
-            let ids = tids.clone();
-            let template = Select::new(
-                templates.iter().map(|t| Choice::new(t.1.clone())),
-                t.as_ref().and_then(|t| tids.iter().position(|i| i == t)),
-                move |i| msg(Event::Template(j, Some(ids[i].clone()))),
-            )
-            .placeholder("Tip kesit");
-            table = table.push(
-                row![
-                    kentos_ui::widget::text_field("0", a).on_input(move |v| msg(Event::Region(j, 0, v))).width(widths[0]),
-                    kentos_ui::widget::text_field("", b).on_input(move |v| msg(Event::Region(j, 1, v))).width(widths[1]),
-                    container(template).width(widths[2]),
-                    iced::widget::button(label::caption(if w.line == Some(j) { "●" } else { "○" }))
-                        .on_press(msg(Event::Line(j)))
-                        .padding([2, 6])
-                        .style(style::button::row(w.line == Some(j))),
-                ]
-                .spacing(4)
-                .align_y(Center),
-            );
-        }
+        let names: Vec<String> = templates.iter().map(|t| t.1.clone()).collect();
+        let regions = &r.regions;
+        let table = road_dialog::edit_table(
+            vec![
+                road_dialog::Col { title: "Baş (m)", width: None, number: true },
+                road_dialog::Col { title: "Son (m)", width: None, number: true },
+                road_dialog::Col { title: "Tip kesit", width: None, number: false },
+            ],
+            regions.len(),
+            move |j, k| {
+                let (a, b, t) = &regions[j];
+                match k {
+                    0 => road_dialog::edit(a, true, move |v| msg(Event::Region(j, 0, v))),
+                    1 => road_dialog::edit(b, true, move |v| msg(Event::Region(j, 1, v))),
+                    _ => {
+                        let ids = tids.clone();
+                        road_dialog::pick(names.clone(), t.as_ref().and_then(|t| tids.iter().position(|i| i == t)), move |i| {
+                            msg(Event::Template(j, Some(ids[i].clone())))
+                        })
+                    }
+                }
+            },
+            w.line,
+            |j| msg(Event::Line(j)),
+            "Bölge yok",
+        );
         col = col.push(words::field("Bölgeler", table, None)).push(
             row![words::secondary(ADD, Some(msg(Event::Add))), words::ghost(REMOVE_ROW, w.line.map(|_| msg(Event::RemoveRow)))]
                 .spacing(8),

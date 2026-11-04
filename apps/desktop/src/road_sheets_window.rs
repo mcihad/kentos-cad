@@ -14,7 +14,7 @@
 //! ```
 
 use iced::widget::canvas::{self, Path, Stroke, Text};
-use iced::widget::{Column, container, row, scrollable, space};
+use iced::widget::{container, row, space};
 use iced::{Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{CommandWarning, RoadSheetsLaid, RoadSheetsPlan};
 use kentos_interaction::Level;
@@ -286,29 +286,24 @@ impl App {
                     body = body.push(label::caption(wn.message.clone()).style(warn));
                 }
                 let picture = crate::picture::picture(iced::widget::canvas(Plan { laid: l, line: &w.preview.line }).width(Fill).height(Fill), TITLE);
-                let mut list = Column::new().spacing(2);
-                list = list.push(
-                    row![
-                        label::caption("No").style(muted).width(60),
-                        label::caption("Km").style(muted).width(220),
-                        label::caption("Dönüş").style(muted).width(70),
-                        label::caption("").width(80),
-                    ]
-                    .spacing(6),
+                use crate::road_dialog::{col, num};
+                let list = crate::road_dialog::sheet_fill(
+                    vec![col("No", 64.0), col("Km", 230.0), num("Dönüş", 80.0), col("", 90.0)],
+                    l.sheets
+                        .iter()
+                        .map(|s| {
+                            vec![
+                                s.number.clone(),
+                                s.title.clone(),
+                                format!("{}°", format!("{:.1}", s.rotation).replace('.', ",")),
+                                if s.outside { "taşıyor" } else { "" }.to_owned(),
+                            ]
+                        })
+                        .collect(),
+                    "Pafta yok",
                 );
-                for s in &l.sheets {
-                    list = list.push(
-                        row![
-                            label::caption(s.number.clone()).width(60),
-                            label::caption(s.title.clone()).width(220),
-                            label::caption(format!("{:.1}°", s.rotation)).width(70),
-                            if s.outside { label::caption("taşıyor").style(warn) } else { label::caption("") }.width(80),
-                        ]
-                        .spacing(6),
-                    );
-                }
                 body = body.push_grow(
-                    row![picture, container(scrollable(list).height(Fill)).width(typography::scaled(560.0)).padding([6, 8])]
+                    row![picture, list]
                         .spacing(12)
                         .height(Fill),
                     typography::scaled(300.0),

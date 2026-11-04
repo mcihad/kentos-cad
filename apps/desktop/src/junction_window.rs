@@ -651,28 +651,28 @@ impl App {
                 let cleared = w.clearance.as_ref().filter(|_| !w.overlap_mode).and_then(|c| c.as_ref().ok()).map(|c| &c.0);
                 let overlapped = w.overlap.as_ref().and_then(|c| c.as_ref().ok()).map(|c| &c.0);
                 let picture = crate::picture::picture(iced::widget::canvas(Crossing { report: r, edges, cleared, overlapped }).width(Fill).height(Fill), TITLE);
-                let head = |t: &'static str, wd: f32| label::caption(t).style(muted).width(wd);
                 let side = |s: &str| if s == "right" { "sağ" } else { "sol" };
                 let mut list = Column::new().spacing(2).width(Fill);
                 // The curb returns' table makes room for the overlap's reading.
                 let returns = if w.overlap_mode { &[][..] } else { &r.returns[..] };
-                if !w.overlap_mode {
-                    list = list.push(
-                        row![head("Çeyrek", 80.0), head("R (m)", 60.0), head("Uzunluk", 70.0), head("1. kol km", 90.0), head("2. kol km", 90.0)]
-                            .spacing(6),
-                    );
-                }
-                for q in returns {
-                    list = list.push(
-                        row![
-                            label::caption(format!("{}–{}", side(&q.a), side(&q.b))).width(80),
-                            label::caption(format!("{:.2}", q.radius)).width(60),
-                            label::caption(format!("{:.2}", q.length)).width(70),
-                            label::caption(format!("{:.2}", q.on_a.station)).width(90),
-                            label::caption(format!("{:.2}", q.on_b.station)).width(90),
-                        ]
-                        .spacing(6),
-                    );
+                if !returns.is_empty() {
+                    use crate::road_dialog::{col, grouped, num};
+                    list = list.push(crate::road_dialog::table(
+                        vec![col("Çeyrek", 84.0), num("R (m)", 72.0), num("Uzunluk (m)", 96.0), num("1. kol km", 96.0), num("2. kol km", 96.0)],
+                        returns
+                            .iter()
+                            .map(|q| {
+                                vec![
+                                    format!("{}–{}", side(&q.a), side(&q.b)),
+                                    grouped(q.radius, 2),
+                                    grouped(q.length, 2),
+                                    grouped(q.on_a.station, 2),
+                                    grouped(q.on_b.station, 2),
+                                ]
+                            })
+                            .collect(),
+                        "",
+                    ));
                 }
                 if r.returns.is_empty() && !w.overlap_mode {
                     list = list.push(label::caption("Katlı kavşağın dönüş yayı yok.").style(muted));
@@ -707,22 +707,25 @@ impl App {
                     match t {
                         Err(why) => list = list.push(label::caption(why.clone()).style(danger)),
                         Ok((t, warnings)) => {
-                            list = list.push(
-                                row![head("PVI", 80.0), head("Tali km", 70.0), head("Kot", 80.0), head("Fark", 70.0), head("Eğim farkı", 90.0)]
-                                    .spacing(6),
-                            );
-                            for (tie, change) in t.ties.iter().zip(&t.changes) {
-                                list = list.push(
-                                    row![
-                                        label::caption(tie.pvi.clone()).width(80),
-                                        label::caption(format!("{:.2}", tie.station)).width(70),
-                                        label::caption(format!("{:.3}", tie.elevation)).width(80),
-                                        label::caption(format!("{:+.3}", tie.difference)).width(70),
-                                        label::caption(format!("%{change:.2}")).width(90),
-                                    ]
-                                    .spacing(6),
-                                );
-                            }
+                            use crate::road_dialog::{col, grouped, num};
+                            let signed = |v: f64, d: usize| format!("{}{}", if v > 0.0 { "+" } else { "" }, grouped(v, d));
+                            list = list.push(crate::road_dialog::table(
+                                vec![col("PVI", 84.0), num("Tali km", 84.0), num("Kot (m)", 84.0), num("Fark (m)", 84.0), num("Eğim farkı", 96.0)],
+                                t.ties
+                                    .iter()
+                                    .zip(&t.changes)
+                                    .map(|(tie, change)| {
+                                        vec![
+                                            tie.pvi.clone(),
+                                            grouped(tie.station, 2),
+                                            grouped(tie.elevation, 3),
+                                            signed(tie.difference, 3),
+                                            format!("%{}", grouped(*change, 2)),
+                                        ]
+                                    })
+                                    .collect(),
+                                "Bağlanan PVI yok",
+                            ));
                             let grades = t.grades.iter().map(|g| format!("%{g:+.2}")).collect::<Vec<_>>().join(" → ");
                             let gone = if t.removed.is_empty() { "kalkan PVI yok".to_owned() } else { format!("kalkan: {}", t.removed.join(", ")) };
                             list = list.push(label::caption(format!("Eğimler {grades} · {gone}")).style(muted));

@@ -15,7 +15,7 @@
 //! ```
 
 use iced::widget::canvas::{self, Path, Stroke};
-use iced::widget::{Column, column, container, row, scrollable};
+use iced::widget::{container, row};
 use iced::{Element, Fill, Point, Rectangle, Renderer, Task, Theme, mouse};
 use std::path::PathBuf;
 
@@ -402,34 +402,34 @@ impl App {
     }
 }
 
-/// The rows as the window lists them.
+/// The rows as the window lists them: the kit's sheet beside the plan, its rows filling the height.
 fn rows_table(t: &StakeoutQueried) -> Element<'_, Message> {
-    let muted = |th: &Theme| iced::widget::text::Style { color: Some(Tokens::of(th).muted) };
+    use crate::road_dialog::{col, num};
     let ground = t.distances == StakeoutDistances::Ground;
-    let mut head: Vec<(&str, f32)> = vec![("Km", 78.0), ("Bölge", 40.0), ("Kod", 110.0), ("Yan", 44.0), ("Öteleme", 66.0)];
+    let mut cols = vec![col("Km", 88.0), num("Bölge", 56.0), col("Kod", 110.0), col("Yan", 56.0), num("Öteleme (m)", 92.0)];
     if ground {
-        head.push(("Zemin", 66.0));
+        cols.push(num("Zemin (m)", 84.0));
     }
-    head.extend([("Y", 96.0), ("X", 96.0), ("Z", 66.0)]);
-    let widths: Vec<f32> = head.iter().map(|h| h.1).collect();
-    let header = head.iter().fold(row![].spacing(6), |r, (h, wd)| r.push(label::caption(*h).style(muted).width(*wd)));
-    let mut rows = Column::new().spacing(2);
-    for r in t.rows.iter().take(SHOWN) {
-        let side = match r.side {
-            StakeSide::Left => "sol",
-            StakeSide::Axis => "eksen",
-            StakeSide::Right => "sağ",
-        };
-        let mut cells = vec![r.km_text.clone(), (r.region + 1).to_string(), r.code.clone(), side.to_owned(), grouped(r.offset, 3)];
-        if ground {
-            cells.push(r.ground_offset.map_or_else(|| "—".into(), |g| grouped(g, 3)));
-        }
-        cells.extend([grouped(r.x, 3), grouped(r.y, 3), grouped(r.z, 3)]);
-        rows = rows.push(
-            cells.into_iter().zip(widths.iter().copied()).fold(row![].spacing(6), |row, (c, wd)| row.push(label::caption(c).width(wd))),
-        );
-    }
-    column![header, scrollable(rows).height(typography::scaled(278.0))].spacing(4).padding([6, 8]).into()
+    cols.extend([num("Y (m)", 108.0), num("X (m)", 108.0), num("Z (m)", 80.0)]);
+    let rows = t
+        .rows
+        .iter()
+        .take(SHOWN)
+        .map(|r| {
+            let side = match r.side {
+                StakeSide::Left => "sol",
+                StakeSide::Axis => "eksen",
+                StakeSide::Right => "sağ",
+            };
+            let mut cells = vec![r.km_text.clone(), (r.region + 1).to_string(), r.code.clone(), side.to_owned(), grouped(r.offset, 3)];
+            if ground {
+                cells.push(r.ground_offset.map_or_else(|| "—".into(), |g| grouped(g, 3)));
+            }
+            cells.extend([grouped(r.x, 3), grouped(r.y, 3), grouped(r.z, 3)]);
+            cells
+        })
+        .collect();
+    crate::road_dialog::sheet_room(cols, rows, "Nokta yok")
 }
 
 /// The table's points in plan, north up, coloured by side; each station's points joined across.

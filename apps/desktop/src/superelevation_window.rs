@@ -721,7 +721,6 @@ impl App {
 
     /// The chosen schedule as a grouped form: its definition, its curves or rows, and Denetim.
     fn superelevation_form<'a>(&'a self, w: &'a Window, r: &'a Row) -> Form<'a, Message> {
-        let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
         let alignments = self.superelevation_alignments();
         let ids: Vec<String> = alignments.iter().map(|a| a.0.clone()).collect();
         let on_alignment = Select::new(
@@ -736,31 +735,25 @@ impl App {
             PIVOTS.iter().position(|p| *p == r.pivot),
             |i| msg(Event::Pivot(PIVOTS[i])),
         );
-        let (head, widths): (Vec<&str>, Vec<f32>) = if r.method == 0 {
-            (vec!["PI", "Oran (%)", "Geçiş (m)", "Teğet payı", "Genişleme"], vec![54.0, 66.0, 70.0, 74.0, 76.0])
+        let fill = |title| crate::road_dialog::Col { title, width: None, number: true };
+        let curves = r.method == 0;
+        let cols = if curves {
+            vec![crate::road_dialog::col("PI", 64.0), fill("Oran (%)"), fill("Geçiş (m)"), fill("Teğet payı"), fill("Genişleme")]
         } else {
-            (vec!["Km (m)", "Sol (%)", "Sağ (%)"], vec![110.0, 90.0, 90.0])
+            vec![fill("Km (m)"), fill("Sol (%)"), fill("Sağ (%)")]
         };
-        let mut table = Column::new().spacing(3);
-        table = table.push(head.iter().zip(&widths).fold(row![].spacing(4), |row, (h, wd)| row.push(label::caption(*h).style(muted).width(*wd))));
-        let cells: Vec<Vec<&String>> = if r.method == 0 {
-            r.curves.iter().map(|c| c.iter().collect()).collect()
-        } else {
-            r.rows.iter().map(|x| x.iter().collect()).collect()
-        };
-        for (j, line) in cells.into_iter().enumerate() {
-            let mut cells_row = row![].spacing(4).align_y(Center);
-            for (k, v) in line.into_iter().enumerate() {
-                cells_row = cells_row.push(kentos_ui::widget::text_field("", v).on_input(move |t| msg(Event::Cell(j, k, t))).width(widths[k]));
-            }
-            cells_row = cells_row.push(
-                iced::widget::button(label::caption(if w.line == Some(j) { "●" } else { "○" }))
-                    .on_press(msg(Event::Line(j)))
-                    .padding([2, 6])
-                    .style(style::button::row(w.line == Some(j))),
-            );
-            table = table.push(cells_row);
-        }
+        let count = if curves { r.curves.len() } else { r.rows.len() };
+        let table = crate::road_dialog::edit_table(
+            cols,
+            count,
+            move |j, k| {
+                let v = if curves { &r.curves[j][k] } else { &r.rows[j][k] };
+                crate::road_dialog::edit(v, !(curves && k == 0), move |t| msg(Event::Cell(j, k, t)))
+            },
+            w.line,
+            |j| msg(Event::Line(j)),
+            if curves { "Kurp yok" } else { "Km satırı yok" },
+        );
         let templates: Vec<(String, String)> = self
             .document
             .as_ref()
