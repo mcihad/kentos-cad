@@ -7734,6 +7734,22 @@
    "tests": 0
   },
   {
+   "id": "profile.sight",
+   "kind": "command",
+   "title": "Görüş mesafesi…",
+   "level": "semantic",
+   "via": [
+    "road.profiles.sight"
+   ],
+   "operation": null,
+   "python": "Connection: road.profiles.sight",
+   "mcp": "road.profiles.sight",
+   "note": "Önizle road.profiles.sight ile okur; hiçbir şey yazmaz (plan/road.md Y20, ADR 0921 §3).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "profile.window",
    "kind": "command",
    "title": "Veri profili",

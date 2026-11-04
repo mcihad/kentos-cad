@@ -316,6 +316,8 @@ pub enum Dialog {
     Swept,
     /// Yüzey analizi (surface_analysis_window.rs, plan/road.md Y18.5); the window is `App::surface_analysis_window`.
     SurfaceAnalysis,
+    /// Görüş mesafesi (sight_window.rs, plan/road.md Y20); the window is `App::sight_window`.
+    Sight,
     /// Poz metrajı (pay_window.rs, plan/road.md Y11.4); the window is `App::pay_window`.
     Pay,
     /// Ön güzergâh (route_window.rs, plan/road.md Y12.1); the window is `App::route_window`.
@@ -711,6 +713,8 @@ pub enum Message {
     Swept(crate::swept_window::Event),
     /// An event of Yüzey analizi (surface_analysis_window.rs, plan/road.md Y18.5).
     SurfaceAnalysis(crate::surface_analysis_window::Event),
+    /// An event of Görüş mesafesi (sight_window.rs, plan/road.md Y20).
+    Sight(crate::sight_window::Event),
     /// An event of Poz metrajı (pay_window.rs, plan/road.md Y11.4).
     Pay(crate::pay_window::Event),
     /// An event of Ön güzergâh (route_window.rs, plan/road.md Y12.1).
@@ -1323,6 +1327,8 @@ pub struct App {
     pub(crate) swept_window: Option<Box<crate::swept_window::Window>>,
     /// Yüzey analizi (surface_analysis_window.rs, plan/road.md Y18.5).
     pub(crate) surface_analysis_window: Option<Box<crate::surface_analysis_window::Window>>,
+    /// Görüş mesafesi (sight_window.rs, plan/road.md Y20).
+    pub(crate) sight_window: Option<Box<crate::sight_window::Window>>,
     /// Poz metrajı (pay_window.rs, plan/road.md Y11.4).
     pub(crate) pay_window: Option<Box<crate::pay_window::Window>>,
     /// Ön güzergâh (route_window.rs, plan/road.md Y12.1).
@@ -1773,6 +1779,7 @@ impl App {
             drainage_window: None,
             swept_window: None,
             surface_analysis_window: None,
+            sight_window: None,
             pay_window: None,
             route_window: None,
             junction_window: None,
@@ -2516,6 +2523,7 @@ impl App {
             Message::Drainage(event) => return self.drainage_event(event),
             Message::Swept(event) => return self.swept_event(event),
             Message::SurfaceAnalysis(event) => return self.surface_analysis_event(event),
+            Message::Sight(event) => return self.sight_event(event),
             Message::Pay(event) => return self.pay_event(event),
             Message::Route(event) => return self.route_event(event),
             Message::Junctions(event) => return self.junction_event(event),
@@ -3577,6 +3585,7 @@ impl App {
             "drainage.editor" => self.open_drainage(),
             "swept.editor" => self.open_swept(),
             "terrain.analysis" => self.open_surface_analysis(),
+            "profile.sight" => self.open_sight(),
             "payItems.editor" => self.open_pay(),
             "route.finder" => self.open_route(),
             "junction.editor" => self.open_junctions(),

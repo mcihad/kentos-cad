@@ -5941,6 +5941,28 @@ ShpEncodingName = Literal["utf-8", "windows-1254"]
 """The names of :class:`ShpEncoding`, for a plain string."""
 
 
+class SightSide(_StrEnum):
+    """Which way a sight distance is read."""
+    FORWARD = "forward"
+    BACKWARD = "backward"
+    BOTH = "both"
+
+
+SightSideName = Literal["forward", "backward", "both"]
+"""The names of :class:`SightSide`, for a plain string."""
+
+
+class SightUntil(_StrEnum):
+    """Why a sight stops: the profile hides the object, the reach asked was seen, or the profile ends."""
+    HIDDEN = "hidden"
+    REACH = "reach"
+    END = "end"
+
+
+SightUntilName = Literal["hidden", "reach", "end"]
+"""The names of :class:`SightUntil`, for a plain string."""
+
+
 class SinkDimension(_StrEnum):
     """Whether a geometry column holds Z (or M) in the rows of a sink's table.
 
@@ -58818,6 +58840,125 @@ class ProfilesReport(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ProfilesSight(_Model):
+    """Input of `road.profiles.sight` v1 (docs/adr/0921; ROAD-PROFILE-08): a profile's sight distance at every `step`
+    metres from `from` to `to` (internal stations; the profile's ends when absent) and at `to`: an eye `eye` metres over
+    the profile, an object `object` metres over it, looked up to `reach` metres ahead, behind or both (`side`); with
+    `required` the stations where the profile hides the object nearer are gathered into stretches (where the profile or
+    the reach ends first, nothing is said of what lies past it). Each distance is stepped by `step` and bisected to
+    a millimetre. The heights, the reach, the step and the required distance are the user's (the design standard's);
+    KentOS gives none. The profile only: not the terrain, the plan or obstacles. Reads only.
+
+    Refusals, in this order: `not_a_road_project`, `unknown_road_profile`, `invalid_sight` (eye or object not above 0
+    (a point on the profile grazes every line over a crest), reach, step or required not above 0, a range off the profile or backwards, more than 100 000 stations), and
+    the geometry's when the profile no longer builds. Warnings: `sight_short`, `profile_stale`.
+    Attributes:
+        eye: Unit: m.
+        object: Unit: m.
+        reach: Unit: m.
+        step: Unit: m.
+        from_: Unit: m.
+        required: Unit: m.
+        to: Unit: m.
+    """
+    profile: str
+    eye: float
+    object: float
+    reach: float
+    step: float
+    from_: float | None | Unset = UNSET
+    required: float | None | Unset = UNSET
+    side: SightSide | SightSideName | Unset = UNSET
+    to: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["profile"] = self.profile
+        out["eye"] = float(self.eye)
+        out["object"] = float(self.object)
+        out["reach"] = float(self.reach)
+        out["step"] = float(self.step)
+        if self.from_ is not UNSET:
+            out["from"] = None if self.from_ is None else float(self.from_)
+        if self.required is not UNSET:
+            out["required"] = None if self.required is None else float(self.required)
+        if self.side is not UNSET:
+            out["side"] = _enum_out(self.side)
+        if self.to is not UNSET:
+            out["to"] = None if self.to is None else float(self.to)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfilesSight:
+        return cls(
+            profile=data["profile"],
+            eye=float(data["eye"]),
+            object=float(data["object"]),
+            reach=float(data["reach"]),
+            step=float(data["step"]),
+            from_=UNSET if "from" not in data else None if data["from"] is None else float(data["from"]),
+            required=UNSET if "required" not in data else None if data["required"] is None else float(data["required"]),
+            side=_enum_in(SightSide, data["side"]) if "side" in data else UNSET,
+            to=UNSET if "to" not in data else None if data["to"] is None else float(data["to"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProfilesSightRead(_Model):
+    """Output of `road.profiles.sight` v1: the profile's id, the heights, reach and step as asked, the bisection's
+    resolution (m), each station's sight, the shortest each way where the profile hides the object (none where it hides it
+    nowhere), and with `required` the stretches seen shorter.
+    Attributes:
+        eye: Unit: m.
+        object: Unit: m.
+        reach: Unit: m.
+        step: Unit: m.
+        resolution: Unit: m.
+    """
+    profile: str
+    eye: float
+    object: float
+    reach: float
+    step: float
+    resolution: float
+    rows: list[SightRow]
+    short: list[SightShort]
+    least_backward: SightLeast | None | Unset = UNSET
+    least_forward: SightLeast | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["profile"] = self.profile
+        out["eye"] = float(self.eye)
+        out["object"] = float(self.object)
+        out["reach"] = float(self.reach)
+        out["step"] = float(self.step)
+        out["resolution"] = float(self.resolution)
+        out["rows"] = [e0.to_json() for e0 in self.rows]
+        out["short"] = [e0.to_json() for e0 in self.short]
+        if self.least_backward is not UNSET:
+            out["leastBackward"] = None if self.least_backward is None else self.least_backward.to_json()
+        if self.least_forward is not UNSET:
+            out["leastForward"] = None if self.least_forward is None else self.least_forward.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfilesSightRead:
+        return cls(
+            profile=data["profile"],
+            eye=float(data["eye"]),
+            object=float(data["object"]),
+            reach=float(data["reach"]),
+            step=float(data["step"]),
+            resolution=float(data["resolution"]),
+            rows=[SightRow.from_json(e0) for e0 in data["rows"]],
+            short=[SightShort.from_json(e0) for e0 in data["short"]],
+            least_backward=UNSET if "leastBackward" not in data else None if data["leastBackward"] is None else SightLeast.from_json(data["leastBackward"]),
+            least_forward=UNSET if "leastForward" not in data else None if data["leastForward"] is None else SightLeast.from_json(data["leastForward"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ProfilesWritten(_Model):
     """Output of `road.profiles.create` and `.edit` v1.
     Attributes:
@@ -69667,6 +69808,124 @@ class ShpSetExported(_Model):
             layer=data["layer"],
             rows=data["rows"],
             shape=data.get("shape", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SightLeast(_Model):
+    """The shortest sight one way where the profile hides the object: where and how far.
+    Attributes:
+        station: Unit: m.
+        distance: Unit: m.
+    """
+    station: float
+    distance: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["station"] = float(self.station)
+        out["distance"] = float(self.distance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SightLeast:
+        return cls(
+            station=float(data["station"]),
+            distance=float(data["distance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SightReach(_Model):
+    """One direction's sight from a station: the distance seen, why it stops and, when hidden, the station where the
+    profile blocks the line.
+    Attributes:
+        distance: Unit: m.
+        blocked: Unit: m.
+    """
+    distance: float
+    until: SightUntil | SightUntilName
+    blocked: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["distance"] = float(self.distance)
+        out["until"] = _enum_out(self.until)
+        if self.blocked is not UNSET:
+            out["blocked"] = None if self.blocked is None else float(self.blocked)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SightReach:
+        return cls(
+            distance=float(data["distance"]),
+            until=_enum_in(SightUntil, data["until"]),
+            blocked=UNSET if "blocked" not in data else None if data["blocked"] is None else float(data["blocked"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SightRow(_Model):
+    """A station's sight: the profile's elevation there, ahead and behind (none at the profile's end that way, or not
+    asked).
+    Attributes:
+        station: Unit: m.
+        elevation: Unit: m.
+    """
+    station: float
+    elevation: float
+    backward: SightReach | None | Unset = UNSET
+    forward: SightReach | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["station"] = float(self.station)
+        out["elevation"] = float(self.elevation)
+        if self.backward is not UNSET:
+            out["backward"] = None if self.backward is None else self.backward.to_json()
+        if self.forward is not UNSET:
+            out["forward"] = None if self.forward is None else self.forward.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SightRow:
+        return cls(
+            station=float(data["station"]),
+            elevation=float(data["elevation"]),
+            backward=UNSET if "backward" not in data else None if data["backward"] is None else SightReach.from_json(data["backward"]),
+            forward=UNSET if "forward" not in data else None if data["forward"] is None else SightReach.from_json(data["forward"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SightShort(_Model):
+    """A stretch of stations, one after another, where the profile hides the object nearer than required one way: its first and last station and the
+    shortest distance in it.
+    Attributes:
+        from_: Unit: m.
+        to: Unit: m.
+        least: Unit: m.
+    """
+    side: SightSide | SightSideName
+    from_: float
+    to: float
+    least: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["side"] = _enum_out(self.side)
+        out["from"] = float(self.from_)
+        out["to"] = float(self.to)
+        out["least"] = float(self.least)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SightShort:
+        return cls(
+            side=_enum_in(SightSide, data["side"]),
+            from_=float(data["from"]),
+            to=float(data["to"]),
+            least=float(data["least"]),
         )
 
 
@@ -106407,6 +106666,8 @@ __all__ = [
     "ProfilesQuery",
     "ProfilesRemove",
     "ProfilesReport",
+    "ProfilesSight",
+    "ProfilesSightRead",
     "ProfilesWritten",
     "ProgramAssign",
     "ProgramBuilding",
@@ -106902,6 +107163,14 @@ __all__ = [
     "ShpExported",
     "ShpFileWritten",
     "ShpSetExported",
+    "SightLeast",
+    "SightReach",
+    "SightRow",
+    "SightShort",
+    "SightSide",
+    "SightSideName",
+    "SightUntil",
+    "SightUntilName",
     "SimilarCriteria",
     "SimilarSelectRegion",
     "SimilarityCrsPlane",

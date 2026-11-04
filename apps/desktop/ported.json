@@ -427,6 +427,7 @@
     "drainage.editor",
     "swept.editor",
     "terrain.analysis",
+    "profile.sight",
     "payItems.editor",
     "route.finder",
     "junction.editor",

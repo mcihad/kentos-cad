@@ -645,6 +645,11 @@ codes! {
     INVALID_LABEL = "invalid_label", Failed, false, "İşaret aralığı ve yazı yüksekliği 0'dan büyük, km yazılan aralık işaret aralığının tam katı olmalı.";
     /// No profile (vertical alignment) of the id or name (docs/adr/0902).
     UNKNOWN_ROAD_PROFILE = "unknown_road_profile", Failed, false, "Bu kimlikte ya da adda boykesit yok.";
+    /// A sight distance asked that is not right: a height, the reach, the step or the required distance out of range, a
+    /// range off the profile, too many stations (docs/adr/0921 §2).
+    INVALID_SIGHT = "invalid_sight", Failed, false, "Görüş mesafesi sorusu geçerli değil; ileti nedenini söyler.";
+    /// A warning: somewhere the profile is seen shorter than the required sight distance (docs/adr/0921 §2).
+    SIGHT_SHORT = "sight_short", Warning, false, "Boykesitin bir yerinde görüş mesafesi istenenden kısa.";
     /// A profile's definition, or PVIs that make no vertical alignment (docs/adr/0902 §3).
     INVALID_ROAD_PROFILE = "invalid_road_profile", Failed, false, "Boykesitin tanımı ya da PVI'ları geçerli değil; ileti nedenini ve yerini söyler.";
     /// Two vertical curves, or a curve and an end of the profile, pass each other.

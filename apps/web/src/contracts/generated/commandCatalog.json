@@ -36767,6 +36767,272 @@
       ]
     },
     {
+      "id": "road.profiles.sight",
+      "version": 1,
+      "title": "Görüş mesafesi",
+      "summary": "Bir boykesitte görüş mesafesini okur; hiçbir şey yazmaz. from'dan to'ya (iç km, m; yoksa boykesitin uçları) her step metrede ve to'da: profilin eye metre üstündeki gözden, profilin object metre üstündeki nesnenin ileride (forward), geride (backward) ya da ikisinde (side, öntanımlı both) reach metreye kadar ne kadar uzaktan göründüğü. Görüş çizgisi km–kot düzlemindedir; profil çizginin üstüne çıktığı yerde kapanır: her parçada kesin (eğimin uçları, parabolün ve dairenin çizgiyle aynı eğimdeki noktası). Uzaklık step adımlarıyla ilerler, ilk kapanan çizgiden sonra milimetreye ikiye bölünür; iki görünen adım arasında step'ten kısa bir kapanma görülmez (yöntemin örneklemesi, cevapta söylenir). required ile profilin nesneyi istenenden yakında kapattığı ardışık km'ler aralık olarak verilir; boykesitin ya da bakılan uzaklığın bittiği yer kısa sayılmaz (ötesi okunmaz). Yükseklikler, reach, step ve required kullanıcının (tasarım standardının); KentOS değer vermez. Yalnız boykesit: arazi, plan ve engeller değil. Cevap: her km'nin kotu ve iki yönün uzaklığı, neden durduğu (hidden, reach, end) ve kapandığı km; iki yönün profilin kapattığı en kısası; kısa aralıklar. Uyarılar: sight_short, profile_stale. Retler: not_a_road_project, unknown_road_profile, invalid_sight.",
+      "aliases": [
+        "gorusmesafesi",
+        "durmagorus"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.profiles.sight` v1 (docs/adr/0921; ROAD-PROFILE-08): a profile's sight distance at every `step`\nmetres from `from` to `to` (internal stations; the profile's ends when absent) and at `to`: an eye `eye` metres over\nthe profile, an object `object` metres over it, looked up to `reach` metres ahead, behind or both (`side`); with\n`required` the stations where the profile hides the object nearer are gathered into stretches (where the profile or\nthe reach ends first, nothing is said of what lies past it). Each distance is stepped by `step` and bisected to\na millimetre. The heights, the reach, the step and the required distance are the user's (the design standard's);\nKentOS gives none. The profile only: not the terrain, the plan or obstacles. Reads only.\n\nRefusals, in this order: `not_a_road_project`, `unknown_road_profile`, `invalid_sight` (eye or object not above 0\n(a point on the profile grazes every line over a crest), reach, step or required not above 0, a range off the profile or backwards, more than 100 000 stations), and\nthe geometry's when the profile no longer builds. Warnings: `sight_short`, `profile_stale`.",
+        "properties": {
+          "eye": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "from": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "object": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "profile": {
+            "type": "string"
+          },
+          "reach": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "required": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "side": {
+            "$ref": "#/$defs/SightSide"
+          },
+          "step": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "to": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          }
+        },
+        "required": [
+          "profile",
+          "eye",
+          "object",
+          "reach",
+          "step"
+        ],
+        "title": "ProfilesSight",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.profiles.sight` v1: the profile's id, the heights, reach and step as asked, the bisection's\nresolution (m), each station's sight, the shortest each way where the profile hides the object (none where it hides it\nnowhere), and with `required` the stretches seen shorter.",
+        "properties": {
+          "eye": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "leastBackward": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SightLeast"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "leastForward": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SightLeast"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "object": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "profile": {
+            "type": "string"
+          },
+          "reach": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "resolution": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/$defs/SightRow"
+            },
+            "type": "array"
+          },
+          "short": {
+            "items": {
+              "$ref": "#/$defs/SightShort"
+            },
+            "type": "array"
+          },
+          "step": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          }
+        },
+        "required": [
+          "profile",
+          "eye",
+          "object",
+          "reach",
+          "step",
+          "resolution",
+          "rows",
+          "short"
+        ],
+        "title": "ProfilesSightRead",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.profiles.sight` v1: the profile's id, the heights, reach and step as asked, the bisection's\nresolution (m), each station's sight, the shortest each way where the profile hides the object (none where it hides it\nnowhere), and with `required` the stretches seen shorter.",
+        "properties": {
+          "eye": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "leastBackward": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SightLeast"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "leastForward": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SightLeast"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "object": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "profile": {
+            "type": "string"
+          },
+          "reach": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "resolution": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/$defs/SightRow"
+            },
+            "type": "array"
+          },
+          "short": {
+            "items": {
+              "$ref": "#/$defs/SightShort"
+            },
+            "type": "array"
+          },
+          "step": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          }
+        },
+        "required": [
+          "profile",
+          "eye",
+          "object",
+          "reach",
+          "step",
+          "resolution",
+          "rows",
+          "short"
+        ],
+        "title": "ProfilesSightRead",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_road_profile",
+          "invalid_sight"
+        ],
+        "warnings": [
+          "sight_short",
+          "profile_stale"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Göz 1,08 m, nesne 0,60 m, 20 m'de bir, 150 m gereken",
+          "input": {
+            "eye": 1.08,
+            "object": 0.6,
+            "profile": "b-1",
+            "reach": 300.0,
+            "required": 150.0,
+            "step": 20.0
+          }
+        }
+      ]
+    },
+    {
       "id": "road.profiles.draw",
       "version": 1,
       "title": "Boykesit çiz",
@@ -83223,6 +83489,18 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Bu kimlikte ya da adda boykesit yok."
+    },
+    {
+      "code": "invalid_sight",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Görüş mesafesi sorusu geçerli değil; ileti nedenini söyler."
+    },
+    {
+      "code": "sight_short",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Boykesitin bir yerinde görüş mesafesi istenenden kısa."
     },
     {
       "code": "invalid_road_profile",
@@ -152785,6 +153063,140 @@
         "rows"
       ],
       "type": "object"
+    },
+    "SightLeast": {
+      "description": "The shortest sight one way where the profile hides the object: where and how far.",
+      "properties": {
+        "distance": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "station": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "station",
+        "distance"
+      ],
+      "type": "object"
+    },
+    "SightReach": {
+      "description": "One direction's sight from a station: the distance seen, why it stops and, when hidden, the station where the\nprofile blocks the line.",
+      "properties": {
+        "blocked": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "distance": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "until": {
+          "$ref": "#/$defs/SightUntil"
+        }
+      },
+      "required": [
+        "distance",
+        "until"
+      ],
+      "type": "object"
+    },
+    "SightRow": {
+      "description": "A station's sight: the profile's elevation there, ahead and behind (none at the profile's end that way, or not\nasked).",
+      "properties": {
+        "backward": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SightReach"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "elevation": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "forward": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SightReach"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "station": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "station",
+        "elevation"
+      ],
+      "type": "object"
+    },
+    "SightShort": {
+      "description": "A stretch of stations, one after another, where the profile hides the object nearer than required one way: its first and last station and the\nshortest distance in it.",
+      "properties": {
+        "from": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "least": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "side": {
+          "$ref": "#/$defs/SightSide"
+        },
+        "to": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "side",
+        "from",
+        "to",
+        "least"
+      ],
+      "type": "object"
+    },
+    "SightSide": {
+      "description": "Which way a sight distance is read.",
+      "enum": [
+        "forward",
+        "backward",
+        "both"
+      ],
+      "type": "string"
+    },
+    "SightUntil": {
+      "description": "Why a sight stops: the profile hides the object, the reach asked was seen, or the profile ends.",
+      "enum": [
+        "hidden",
+        "reach",
+        "end"
+      ],
+      "type": "string"
     },
     "SimilarCriteria": {
       "description": "What Benzerini seç compares (docs/adr/0187 §4): an object is like an example when it equals it in every\ncriterion that is on; none on: every object.",

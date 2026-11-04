@@ -6980,6 +6980,31 @@ pub fn catalog() -> CommandCatalog {
             ],
         },
         CommandDescriptor {
+            id: crate::ROAD_PROFILES_SIGHT.into(),
+            version: crate::ROAD_PROFILES_SIGHT_VERSION,
+            title: "Görüş mesafesi".into(),
+            summary: "Bir boykesitte görüş mesafesini okur; hiçbir şey yazmaz. from'dan to'ya (iç km, m; yoksa boykesitin uçları) her step metrede ve to'da: profilin eye metre üstündeki gözden, profilin object metre üstündeki nesnenin ileride (forward), geride (backward) ya da ikisinde (side, öntanımlı both) reach metreye kadar ne kadar uzaktan göründüğü. Görüş çizgisi km–kot düzlemindedir; profil çizginin üstüne çıktığı yerde kapanır: her parçada kesin (eğimin uçları, parabolün ve dairenin çizgiyle aynı eğimdeki noktası). Uzaklık step adımlarıyla ilerler, ilk kapanan çizgiden sonra milimetreye ikiye bölünür; iki görünen adım arasında step'ten kısa bir kapanma görülmez (yöntemin örneklemesi, cevapta söylenir). required ile profilin nesneyi istenenden yakında kapattığı ardışık km'ler aralık olarak verilir; boykesitin ya da bakılan uzaklığın bittiği yer kısa sayılmaz (ötesi okunmaz). Yükseklikler, reach, step ve required kullanıcının (tasarım standardının); KentOS değer vermez. Yalnız boykesit: arazi, plan ve engeller değil. Cevap: her km'nin kotu ve iki yönün uzaklığı, neden durduğu (hidden, reach, end) ve kapandığı km; iki yönün profilin kapattığı en kısası; kısa aralıklar. \
+                      Uyarılar: sight_short, profile_stale. Retler: not_a_road_project, unknown_road_profile, invalid_sight."
+                .into(),
+            aliases: vec!["gorusmesafesi".into(), "durmagorus".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ProfilesSight>(),
+            output: schema::<crate::ProfilesSightRead>(),
+            plan: Some(schema::<crate::ProfilesSightRead>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Göz 1,08 m, nesne 0,60 m, 20 m'de bir, 150 m gereken".into(),
+                input: json!({ "profile": "b-1", "eye": 1.08, "object": 0.6, "reach": 300.0, "step": 20.0, "required": 150.0 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::ROAD_PROFILES_DRAW.into(),
             version: crate::ROAD_PROFILES_DRAW_VERSION,
             title: "Boykesit çiz".into(),
@@ -14245,6 +14270,9 @@ mod tests {
                     crate::ROAD_PROFILES_DRAW => {
                         serde_json::from_value::<crate::ProfilesDraw>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_PROFILES_SIGHT => {
+                        serde_json::from_value::<crate::ProfilesSight>(e.input.clone()).map(|_| ())
+                    }
                     crate::ROAD_TEMPLATES_EDIT => {
                         serde_json::from_value::<crate::TemplatesEdit>(e.input.clone()).map(|_| ())
                     }
@@ -15042,6 +15070,10 @@ mod tests {
                         }
                         crate::ROAD_PROFILES_DRAW => {
                             serde_json::from_value::<crate::ProfilesDrawn>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_PROFILES_SIGHT => {
+                            serde_json::from_value::<crate::ProfilesSightRead>(output.clone())
                                 .map(|_| ())
                         }
                         crate::ROAD_TEMPLATES_EDIT => {

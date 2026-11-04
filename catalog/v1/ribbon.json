@@ -596,6 +596,10 @@
        {
         "command": "profile.fromLine",
         "size": "large"
+       },
+       {
+        "command": "profile.sight",
+        "size": "large"
        }
       ]
      },

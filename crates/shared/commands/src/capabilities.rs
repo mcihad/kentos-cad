@@ -1682,6 +1682,12 @@ const ENTRIES: &[Entry] = &[
         warnings: &["profile_stale", "profile_surface_gone"],
         targets: none,
     },
+    Entry {
+        id: "road.profiles.sight",
+        refusals: &[&["not_a_road_project", "unknown_road_profile", "invalid_sight"]],
+        warnings: &["sight_short", "profile_stale"],
+        targets: none,
+    },
     // KentOS Yol's cross sections and templates (plan/road.md Y5, docs/adr/0903).
     Entry {
         id: "road.templates.edit",

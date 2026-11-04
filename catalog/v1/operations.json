@@ -2793,6 +2793,13 @@
       ],
       "note": "Girdi yazıldıkça road.routes.find ile önizler; Planda çiz road.routes.draw ile yazar (plan/road.md Y12.1, ADR 0910 §1)."
     },
+    "profile.sight": {
+      "level": "semantic",
+      "via": [
+        "road.profiles.sight"
+      ],
+      "note": "Önizle road.profiles.sight ile okur; hiçbir şey yazmaz (plan/road.md Y20, ADR 0921 §3)."
+    },
     "terrain.analysis": {
       "level": "semantic",
       "via": [

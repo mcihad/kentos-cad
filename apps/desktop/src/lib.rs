@@ -270,6 +270,7 @@ mod retaining_wall_window;
 mod platform_window;
 mod terrain_cloud_window;
 mod drainage_window;
+mod sight_window;
 mod swept_window;
 mod surface_analysis_window;
 mod pay_window;
@@ -294,6 +295,8 @@ mod platform_window_tests;
 mod terrain_cloud_window_tests;
 #[cfg(test)]
 mod drainage_window_tests;
+#[cfg(test)]
+mod sight_window_tests;
 #[cfg(test)]
 mod swept_window_tests;
 #[cfg(test)]
