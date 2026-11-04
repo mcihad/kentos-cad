@@ -57,6 +57,11 @@ const DIAGRAM: &str = "Kütle diyagramı";
 const SHEET: &str = "Cetvel";
 const LAYERS: &str = "Tabakalar";
 pub(crate) const RULE: &str = "Kural";
+/// The uncertainty's list (docs/adr/0941).
+pub(crate) const BUDGET: &str = "Belirsizlik";
+/// The uncertainty's fields: the heights' σ, their shift, the share accepted.
+pub(crate) const UNCERTAINTY: [&str; 3] = ["Kot σ (m)", "Sistematik kayma (m)", "Kabul payı (%)"];
+
 /// The curve correction's switch (docs/adr/0934 §3).
 pub(crate) const CURVE: &str = "Kesitlerin ağırlık merkeziyle düzelt";
 
@@ -76,6 +81,8 @@ pub enum Shown {
     Diagram,
     Sheet,
     Layers,
+    /// The uncertainty budget (docs/adr/0941).
+    Budget,
 }
 
 impl std::fmt::Display for Shown {
@@ -84,6 +91,7 @@ impl std::fmt::Display for Shown {
             Shown::Diagram => DIAGRAM,
             Shown::Sheet => SHEET,
             Shown::Layers => LAYERS,
+            Shown::Budget => BUDGET,
         })
     }
 }
@@ -238,6 +246,10 @@ pub struct Window {
     pub(crate) sheet: bool,
     /// The list shown: the mass diagram, the sheet or the pavement layers.
     pub(crate) shown: Shown,
+    /// The uncertainty asked (docs/adr/0941): σ, the shift, the share accepted; the window's, not the volume's.
+    pub(crate) uncertainty: [String; 3],
+    /// The budget read on the volume as typed, when σ is written.
+    pub(crate) budget: Option<Result<(kentos_commands::VolumeUncertaintyReport, Vec<CommandWarning>), String>>,
 }
 
 #[derive(Debug, Clone)]
@@ -254,6 +266,8 @@ pub enum Event {
     Curve(bool),
     /// The list under the figures.
     View(Shown),
+    /// The uncertainty's σ (0), shift (1) or share accepted (2) (docs/adr/0941).
+    Uncertainty(usize, String),
     /// A factor row's from (0), to (1), cut (2) or fill (3).
     Factor(usize, usize, String),
     /// A strip row's from (0), to (1) or depth (2).
@@ -306,6 +320,8 @@ impl App {
             format: WorkbookFormat::Xlsx,
             sheet: false,
             shown: Shown::Sheet,
+            uncertainty: Default::default(),
+            budget: None,
         }));
         self.dialog = Some(Dialog::Volumes);
         self.refresh_volume();
@@ -331,9 +347,25 @@ impl App {
             w.preview = Preview::default();
             return;
         };
-        w.preview = match r.def().and_then(|d| road_volumes::preview(&doc.model, &d)) {
+        let def = r.def();
+        w.preview = match def.clone().and_then(|d| road_volumes::preview(&doc.model, &d)) {
             Err(e) => Preview { why: Some(e), ..Preview::default() },
             Ok((report, warnings)) => Preview { report: Some(report), warnings, why: None },
+        };
+        // The budget, when σ is written and the volume computes.
+        w.budget = match (number(&w.uncertainty[0]), &w.preview.report, def) {
+            (Ok(None), _, _) | (_, None, _) | (_, _, Err(_)) => None,
+            (Err(()), _, _) => Some(Err(format!("{} bir sayı olmalı.", UNCERTAINTY[0]))),
+            (Ok(Some(sigma)), Some(_), Ok(def)) => Some((|| {
+                let read = |k: usize| number(&w.uncertainty[k]).map_err(|()| format!("{} bir sayı olmalı.", UNCERTAINTY[k]));
+                let input = kentos_commands::VolumesUncertainty {
+                    volume: def.id.clone(),
+                    sigma,
+                    systematic: read(1)?,
+                    accept: read(2)?,
+                };
+                kentos_native_application::road_volumes_uncertainty::preview(&doc.model, &def, &input)
+            })()),
         };
     }
 
@@ -467,6 +499,11 @@ impl App {
             Event::View(v) => {
                 w.shown = v;
                 w.sheet = v == Shown::Sheet;
+            }
+            Event::Uncertainty(k, t) => {
+                if let Some(f) = w.uncertainty.get_mut(k) {
+                    *f = t;
+                }
             }
             Event::Rule(r) => {
                 if let Some(row) = chosen_row(w) {
@@ -694,12 +731,30 @@ impl App {
                     for wn in &w.preview.warnings {
                         d = d.note(Banner::warning(wn.message.clone()));
                     }
-                    let list: Element<'_, Message> = match w.shown {
-                        Shown::Layers => layers_table(rep),
+                    let budget = w.budget.as_ref().and_then(|b| b.as_ref().ok());
+                    match &w.budget {
+                        Some(Err(e)) => d = d.note(Banner::info(e.clone())),
+                        Some(Ok((b, warnings))) => {
+                            d = d.note(Banner::info(budget_words(b)));
+                            for wn in warnings.iter().filter(|x| x.code.starts_with("volume_uncertainty")) {
+                                d = d.note(Banner::warning(wn.message.clone()));
+                            }
+                        }
+                        None => {}
+                    }
+                    let mut options = vec![Shown::Sheet];
+                    if !rep.layers.is_empty() {
+                        options.push(Shown::Layers);
+                    }
+                    if budget.is_some() {
+                        options.push(Shown::Budget);
+                    }
+                    let now = if options.contains(&w.shown) { w.shown } else { Shown::Sheet };
+                    let list: Element<'_, Message> = match (now, budget) {
+                        (Shown::Layers, _) => layers_table(rep),
+                        (Shown::Budget, Some((b, _))) => budget_table(b),
                         _ => sheet_table(rep),
                     };
-                    let options: Vec<Shown> = if rep.layers.is_empty() { vec![Shown::Sheet] } else { vec![Shown::Sheet, Shown::Layers] };
-                    let now = if w.shown == Shown::Layers && !rep.layers.is_empty() { Shown::Layers } else { Shown::Sheet };
                     d = d.detail(road_dialog::detail_choice(options, now, |v| msg(Event::View(v)), list));
                 }
                 _ => {}
@@ -806,6 +861,17 @@ impl App {
         } else {
             form = form.row(label::caption("Sıyırma ve diş kazısı yalnız kesit yöntemleriyle hesaplanır.").style(muted));
         }
+        let field = |k: usize, hint: &'a str| {
+            kentos_ui::widget::text_field(hint, &w.uncertainty[k]).on_input(move |v| msg(Event::Uncertainty(k, v)))
+        };
+        form = form
+            .section("Belirsizlik")
+            .field(UNCERTAINTY[0], field(0, "yok"))
+            .help("Arazi kotlarının standart sapması: kontrol noktalarının RMSE'si, ölçme aletinin doğruluğu.")
+            .field(UNCERTAINTY[1], field(1, "yok"))
+            .help("Bütün kotların ortak kayması (datum, anten yüksekliği); eksi aşağı.")
+            .field(UNCERTAINTY[2], field(2, "yok"))
+            .help("Her hacmin %95 sınırının hacme oranı bunun altında kalmalı (sözleşmeden). KentOS sayı vermez.");
         form
     }
 
@@ -829,6 +895,10 @@ impl App {
             Control::Press(DIAGRAM) => Some(msg(Event::Show(false))),
             Control::Press(SHEET) => Some(msg(Event::Show(true))),
             Control::Press(LAYERS) => Some(msg(Event::View(Shown::Layers))),
+            Control::Press(BUDGET) => Some(msg(Event::View(Shown::Budget))),
+            Control::Fill(name, text) if UNCERTAINTY.contains(&name) => {
+                Some(msg(Event::Uncertainty(UNCERTAINTY.iter().position(|f| *f == name).unwrap_or(0), text.to_owned())))
+            }
             Control::Press(words) => match w.rows.iter().position(|r| r.name == words) {
                 Some(i) => Some(msg(Event::Choose(i))),
                 None => match METHODS.iter().find(|m| m.1 == words) {
@@ -1002,4 +1072,62 @@ impl canvas::Program<Message> for Mass<'_> {
         }
         vec![frame.into_geometry()]
     }
+}
+
+/// The budget in a sentence (docs/adr/0941): the bounds at 95 %, their shares, the method's and the arithmetic's.
+fn budget_words(b: &kentos_commands::VolumeUncertaintyReport) -> String {
+    let share = |s: &kentos_commands::VolumeSpread| {
+        if s.value.abs() > 0.0 { format!(" (%{})", grouped(100.0 * s.bound / s.value.abs(), 1)) } else { String::new() }
+    };
+    let method = match (b.other_method, b.other_cut, b.other_fill) {
+        (Some(m), Some(c), Some(f)) => {
+            let name = METHODS.iter().find(|x| x.0 == m).map_or("öbür yöntem", |x| x.1);
+            format!(" {name} kazıyı {} m³, dolguyu {} m³ farklı verir.", signed(c - b.cut.value), signed(f - b.fill.value))
+        }
+        _ => String::new(),
+    };
+    format!(
+        "Ölçme belirsizliği (σ {} m, {} nokta, %95): kazı ±{} m³{}, dolgu ±{} m³{}, net ±{} m³.{method} Aritmetiğin payı {:.0e} m³.",
+        grouped(b.sigma, 3),
+        b.points,
+        grouped(b.cut.bound, 1),
+        share(&b.cut),
+        grouped(b.fill.bound, 1),
+        share(&b.fill),
+        grouped(b.net.bound, 1),
+        b.numeric
+    )
+}
+
+/// The budget's table: the cut, the fill and their net with σ, the shift's part, the 95 % bound, its share, accepted.
+fn budget_table(b: &kentos_commands::VolumeUncertaintyReport) -> Element<'_, Message> {
+    use road_dialog::{col, num};
+    let row = |name: &str, s: &kentos_commands::VolumeSpread| {
+        vec![
+            name.to_owned(),
+            grouped(s.value, 1),
+            grouped(s.sigma, 1),
+            signed(s.bias),
+            grouped(s.bound, 1),
+            if s.value.abs() > 0.0 { format!("%{}", grouped(100.0 * s.bound / s.value.abs(), 2)) } else { "—".into() },
+            match s.accepted {
+                Some(true) => "tutar".into(),
+                Some(false) => "aşıyor".into(),
+                None => "—".into(),
+            },
+        ]
+    };
+    road_dialog::table(
+        vec![
+            col("Hacim", 64.0),
+            num("Değer (m³)", 96.0),
+            num("σ (m³)", 72.0),
+            num("Kayma (m³)", 84.0),
+            num("%95 sınır (m³)", 104.0),
+            num("Oran", 64.0),
+            col("Kabul", 64.0),
+        ],
+        vec![row("Kazı", &b.cut), row("Dolgu", &b.fill), row("Net", &b.net)],
+        "",
+    )
 }

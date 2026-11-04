@@ -368,3 +368,119 @@ pub struct VolumesQuery {
 pub struct VolumesQueried {
     pub volumes: Vec<VolumeReport>,
 }
+
+pub const ROAD_VOLUMES_UNCERTAINTY: &str = "road.volumes.uncertainty";
+pub const ROAD_VOLUMES_UNCERTAINTY_VERSION: u32 = 1;
+
+/// Input of `road.volumes.uncertainty` v1 (plan/road.md Y35, docs/adr/0941): an earthwork volume (its id or name), the
+/// standard deviation of the ground's heights (`sigma`, m; the survey's: a checkpoint RMSE, a GNSS or total station
+/// accuracy), an optional shift of all of them (`systematic`, m, signed), and the share of each volume its 95 % bound
+/// may reach to be accepted (`accept`, percent). KentOS gives none of them.
+///
+/// Refusals: `not_a_road_project`, `unknown_volume`, `invalid_volume_uncertainty` (σ not above 0 or over 10 m, a shift
+/// over 10 m, a share not in (0, 100]), and the volume's own (`invalid_volume`: its corridor or surface does not build).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct VolumesUncertainty {
+    pub volume: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub sigma: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub systematic: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    pub accept: Option<f64>,
+}
+
+/// A volume's spread and bound: its value (bank, m³), its standard deviation from the heights' random error, the shift's
+/// effect, and the 95 % bound `|shift| + 1.96·σ`; whether the bound is within the share accepted (none: not asked).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct VolumeSpread {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub value: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub sigma: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub bias: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub bound: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub accepted: Option<bool>,
+}
+
+/// A stretch's own spread (its heights' errors alone; stretches share ground points, so they do not add up).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct StretchSpread {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub from: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub to: f64,
+    pub from_text: String,
+    pub to_text: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub cut_sigma: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub fill_sigma: f64,
+}
+
+/// Output of `road.volumes.uncertainty` v1 (docs/adr/0941): the volume, its method, σ and the shift asked; the cut, the
+/// fill and their net (cut − fill, linear in the heights: its σ exact) with their spreads; the plan areas of cut and
+/// fill and the share of the area within 2σ of the zero line (over half: the cut's and fill's σ only approximate);
+/// the ground points that weigh in; the other method's cut and fill (end area for the prismoidal and the surfaces,
+/// prismoidal for the end area; none where it does not compute) as the method's share; the binary64 summation bound;
+/// and each stretch's own spread.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct VolumeUncertaintyReport {
+    pub volume: String,
+    pub method: VolumeMethod,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub sigma: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub systematic: Option<f64>,
+    pub cut: VolumeSpread,
+    pub fill: VolumeSpread,
+    pub net: VolumeSpread,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub cut_area: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub fill_area: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub near_share: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub points: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub other_method: Option<VolumeMethod>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub other_cut: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub other_fill: Option<f64>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub numeric: f64,
+    pub stretches: Vec<StretchSpread>,
+}

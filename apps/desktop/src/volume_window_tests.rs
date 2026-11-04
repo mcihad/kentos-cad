@@ -443,3 +443,67 @@ fn screens_tables() {
         send(&mut app, W::Cancel);
     }
 }
+
+/// Y35.3 (docs/adr/0941): σ, the shift and the share typed in Kübaj read the budget as `road.volumes.uncertainty`'s
+/// shared case does; Belirsizlik lists it; without σ there is none.
+#[test]
+fn the_window_reads_the_uncertainty_as_the_shared_case_does() {
+    let cases: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/road.volumes.uncertainty.json")).expect("cases");
+    let case = cases["cases"].as_array().unwrap().iter().find(|c| c["name"] == "Kabul %3: tutar").expect("the case");
+    let want = &case["steps"][0]["result"]["output"];
+    let mut app = app();
+    let _ = app.update(Message::Run("volume.editor"));
+    send(&mut app, W::Choose(0));
+    assert!(app.volume_window.as_ref().unwrap().budget.is_none(), "no σ, no budget");
+    for (k, v) in [(0, "0,05"), (1, "0,02"), (2, "3")] {
+        send(&mut app, W::Uncertainty(k, v.into()));
+    }
+    let w = app.volume_window.as_ref().unwrap();
+    let (b, _) = w.budget.clone().expect("asked").expect("reads");
+    let close = |a: f64, v: &serde_json::Value| (a - v.as_f64().unwrap()).abs() <= 1e-6 * v.as_f64().unwrap().abs().max(1.0);
+    assert!(close(b.cut.bound, &want["cut"]["bound"]) && close(b.fill.sigma, &want["fill"]["sigma"]), "{b:?}");
+    assert_eq!(b.fill.accepted, want["fill"]["accepted"].as_bool());
+    send(&mut app, W::View(crate::volume_window::Shown::Budget));
+    assert_eq!(app.volume_window.as_ref().unwrap().shown, crate::volume_window::Shown::Budget);
+    send(&mut app, W::Uncertainty(0, "x".into()));
+    let why = app.volume_window.as_ref().unwrap().budget.clone().unwrap().expect_err("not a number");
+    assert!(why.contains("Kot σ"), "{why}");
+}
+
+/// The budget in Kübaj, light and dark; `.run/gui-evidence/yol-y35/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib volume_window_tests::screens_uncertainty -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_uncertainty() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y35");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1440.0, 900.0), "koyu")] {
+        for (sigma, beta, accept, step) in [("0,05", "0,02", "3", "tutar"), ("2", "", "1", "yakin")] {
+            let mut app = app();
+            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            app.apply_settings();
+            let _ = app.update(Message::RibbonTab("corridor"));
+            let _ = app.update(Message::Run("volume.editor"));
+            send(&mut app, W::Choose(0));
+            for (k, v) in [(0, sigma), (1, beta), (2, accept)] {
+                send(&mut app, W::Uncertainty(k, v.into()));
+            }
+            send(&mut app, W::View(crate::volume_window::Shown::Budget));
+            let mut snapshot = Snapshot::new(size).expect("a renderer");
+            let mut update = |app: &mut App, m: Message| {
+                let _ = app.update(m);
+            };
+            snapshot.settle(&mut app, App::view, &mut update);
+            let file = out.join(format!("y35-{step}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        }
+    }
+}

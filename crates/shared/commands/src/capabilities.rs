@@ -2366,6 +2366,18 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "road.volumes.uncertainty",
+        refusals: &[&["invalid_volume_uncertainty", "not_a_road_project", "unknown_volume", "invalid_volume"]],
+        warnings: &[
+            "volume_uncertainty_near_zero",
+            "volume_uncertainty_over",
+            "corridor_stale",
+            "volume_uncovered",
+            "volume_unfactored",
+        ],
+        targets: none,
+    },
+    Entry {
         id: "road.volumes.approve",
         refusals: &[&["not_a_road_project", "unknown_volume", "volume_not_approved", "invalid_volume"], REVISION],
         warnings: &[],

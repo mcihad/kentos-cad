@@ -7613,6 +7613,31 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::ROAD_VOLUMES_UNCERTAINTY.into(),
+            version: crate::ROAD_VOLUMES_UNCERTAINTY_VERSION,
+            title: "Kübajın belirsizliği".into(),
+            summary: "Bir kübaj hesabının (volume) belirsizlik bütçesini okur; hiçbir şey yazmaz (docs/adr/0941). Arazi kotlarının rastgele hatası sigma (m) ve isteğe bağlı sistematik kayması systematic (m) koridorun üst yüzeyi ile arazi arasında her arazi noktasının hacimdeki ağırlığıyla yayılır: ∂V/∂zⱼ = ∫φⱼ dA (kazıda artı, dolguda eksi), σ_V = σ·√Σwⱼ², kayma β·A. Net hacim (kazı − dolgu) kotlara doğrusal: σ'sı kesin; kazı ve dolgunun ayrı σ'sı alanın yarıdan çoğu sıfır çizgisinin 2σ yakınındaysa yaklaşıktır (nearShare). %95 sınırı |β·A| + 1,96σ; accept (yüzde) verilirse her hacmin sınırı payın içinde mi. Yöntemin payı öbür yöntemin hacmidir (ortalama alana prizmoidal, ötekilere ortalama alan); aritmetiğin payı binary64 toplama sınırı n·u·Σ|v|. Her aralığın kendi σ'sı da verilir (aralıklar arazi noktalarını paylaştığından toplanmaz). sigma, systematic ve accept ölçmenin ve sözleşmenindir, KentOS sayı vermez. \
+                      Uyarılar: volume_uncertainty_near_zero, volume_uncertainty_over ve kübajın kendi uyarıları (corridor_stale, volume_uncovered, volume_unfactored). Retler: invalid_volume_uncertainty, not_a_road_project, unknown_volume, invalid_volume."
+                .into(),
+            aliases: vec!["belirsizlik".into(), "kubajbelirsizligi".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::VolumesUncertainty>(),
+            output: schema::<crate::VolumeUncertaintyReport>(),
+            plan: Some(schema::<crate::VolumeUncertaintyReport>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Kontrol noktalarının RMSE'si 5 cm, GNSS kayması 2 cm, kabul %3".into(),
+                input: json!({ "volume": "Ana kübaj", "sigma": 0.05, "systematic": 0.02, "accept": 3.0 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::ROAD_HAULS_EDIT.into(),
             version: crate::ROAD_HAULS_EDIT_VERSION,
             title: "Brükneri düzenle".into(),
@@ -14615,6 +14640,9 @@ mod tests {
                     crate::ROAD_VOLUMES_APPROVE => {
                         serde_json::from_value::<crate::VolumesApprove>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_VOLUMES_UNCERTAINTY => {
+                        serde_json::from_value::<crate::VolumesUncertainty>(e.input.clone()).map(|_| ())
+                    }
                     crate::ROAD_HAULS_EDIT => serde_json::from_value::<crate::HaulsEdit>(e.input.clone()).map(|_| ()),
                     crate::ROAD_HAULS_QUERY => serde_json::from_value::<crate::HaulsQuery>(e.input.clone()).map(|_| ()),
                     crate::ROAD_HAULS_PLAN => serde_json::from_value::<crate::HaulsPlan>(e.input.clone()).map(|_| ()),
@@ -15456,6 +15484,9 @@ mod tests {
                         }
                         crate::ROAD_VOLUMES_APPROVE => {
                             serde_json::from_value::<crate::VolumesWritten>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_VOLUMES_UNCERTAINTY => {
+                            serde_json::from_value::<crate::VolumeUncertaintyReport>(output.clone()).map(|_| ())
                         }
                         crate::ROAD_HAULS_EDIT => {
                             serde_json::from_value::<crate::HaulsWritten>(output.clone()).map(|_| ())

@@ -76896,6 +76896,44 @@ class StreetSource(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class StretchSpread(_Model):
+    """A stretch's own spread (its heights' errors alone; stretches share ground points, so they do not add up).
+    Attributes:
+        from_: Unit: m.
+        to: Unit: m.
+        cut_sigma: Unit: volume.
+        fill_sigma: Unit: volume.
+    """
+    from_: float
+    to: float
+    from_text: str
+    to_text: str
+    cut_sigma: float
+    fill_sigma: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = float(self.from_)
+        out["to"] = float(self.to)
+        out["fromText"] = self.from_text
+        out["toText"] = self.to_text
+        out["cutSigma"] = float(self.cut_sigma)
+        out["fillSigma"] = float(self.fill_sigma)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StretchSpread:
+        return cls(
+            from_=float(data["from"]),
+            to=float(data["to"]),
+            from_text=data["fromText"],
+            to_text=data["toText"],
+            cut_sigma=float(data["cutSigma"]),
+            fill_sigma=float(data["fillSigma"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class StretchTopology(_Model):
     """Topolojik düzenleme (docs/adr/0160 §3): the shown objects sharing a
     moved vertex go with the stretched ones, in the same step.
@@ -86371,6 +86409,43 @@ class VolumeRowChange(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class VolumeSpread(_Model):
+    """A volume's spread and bound: its value (bank, m³), its standard deviation from the heights' random error, the shift's
+    effect, and the 95 % bound `|shift| + 1.96·σ`; whether the bound is within the share accepted (none: not asked).
+    Attributes:
+        value: Unit: volume.
+        sigma: Unit: volume.
+        bias: Unit: volume.
+        bound: Unit: volume.
+    """
+    value: float
+    sigma: float
+    bias: float
+    bound: float
+    accepted: bool | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["value"] = float(self.value)
+        out["sigma"] = float(self.sigma)
+        out["bias"] = float(self.bias)
+        out["bound"] = float(self.bound)
+        if self.accepted is not UNSET:
+            out["accepted"] = self.accepted
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VolumeSpread:
+        return cls(
+            value=float(data["value"]),
+            sigma=float(data["sigma"]),
+            bias=float(data["bias"]),
+            bound=float(data["bound"]),
+            accepted=data.get("accepted", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class VolumeStripDef(_Model):
     """The topsoil stripped over a stretch of stations (docs/adr/0906 §6): its depth (m) under the earthwork's footprint.
     Attributes:
@@ -86395,6 +86470,88 @@ class VolumeStripDef(_Model):
             from_=float(data["from"]),
             to=float(data["to"]),
             depth=float(data["depth"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class VolumeUncertaintyReport(_Model):
+    """Output of `road.volumes.uncertainty` v1 (docs/adr/0941): the volume, its method, σ and the shift asked; the cut, the
+    fill and their net (cut − fill, linear in the heights: its σ exact) with their spreads; the plan areas of cut and
+    fill and the share of the area within 2σ of the zero line (over half: the cut's and fill's σ only approximate);
+    the ground points that weigh in; the other method's cut and fill (end area for the prismoidal and the surfaces,
+    prismoidal for the end area; none where it does not compute) as the method's share; the binary64 summation bound;
+    and each stretch's own spread.
+    Attributes:
+        sigma: Unit: elevation.
+        cut_area: Unit: area.
+        fill_area: Unit: area.
+        near_share: Unit: 1.
+        points: Unit: count.
+        numeric: Unit: volume.
+        other_cut: Unit: volume.
+        other_fill: Unit: volume.
+        systematic: Unit: elevation.
+    """
+    volume: str
+    method: VolumeMethod | VolumeMethodName
+    sigma: float
+    cut: VolumeSpread
+    fill: VolumeSpread
+    net: VolumeSpread
+    cut_area: float
+    fill_area: float
+    near_share: float
+    points: int
+    numeric: float
+    stretches: list[StretchSpread]
+    other_cut: float | None | Unset = UNSET
+    other_fill: float | None | Unset = UNSET
+    other_method: VolumeMethod | VolumeMethodName | None | Unset = UNSET
+    systematic: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["volume"] = self.volume
+        out["method"] = _enum_out(self.method)
+        out["sigma"] = float(self.sigma)
+        out["cut"] = self.cut.to_json()
+        out["fill"] = self.fill.to_json()
+        out["net"] = self.net.to_json()
+        out["cutArea"] = float(self.cut_area)
+        out["fillArea"] = float(self.fill_area)
+        out["nearShare"] = float(self.near_share)
+        out["points"] = self.points
+        out["numeric"] = float(self.numeric)
+        out["stretches"] = [e0.to_json() for e0 in self.stretches]
+        if self.other_cut is not UNSET:
+            out["otherCut"] = None if self.other_cut is None else float(self.other_cut)
+        if self.other_fill is not UNSET:
+            out["otherFill"] = None if self.other_fill is None else float(self.other_fill)
+        if self.other_method is not UNSET:
+            out["otherMethod"] = None if self.other_method is None else _enum_out(self.other_method)
+        if self.systematic is not UNSET:
+            out["systematic"] = None if self.systematic is None else float(self.systematic)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VolumeUncertaintyReport:
+        return cls(
+            volume=data["volume"],
+            method=_enum_in(VolumeMethod, data["method"]),
+            sigma=float(data["sigma"]),
+            cut=VolumeSpread.from_json(data["cut"]),
+            fill=VolumeSpread.from_json(data["fill"]),
+            net=VolumeSpread.from_json(data["net"]),
+            cut_area=float(data["cutArea"]),
+            fill_area=float(data["fillArea"]),
+            near_share=float(data["nearShare"]),
+            points=data["points"],
+            numeric=float(data["numeric"]),
+            stretches=[StretchSpread.from_json(e0) for e0 in data["stretches"]],
+            other_cut=UNSET if "otherCut" not in data else None if data["otherCut"] is None else float(data["otherCut"]),
+            other_fill=UNSET if "otherFill" not in data else None if data["otherFill"] is None else float(data["otherFill"]),
+            other_method=UNSET if "otherMethod" not in data else None if data["otherMethod"] is None else _enum_in(VolumeMethod, data["otherMethod"]),
+            systematic=UNSET if "systematic" not in data else None if data["systematic"] is None else float(data["systematic"]),
         )
 
 
@@ -86545,6 +86702,45 @@ class VolumesQuery(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> VolumesQuery:
         return cls(
             volume=data.get("volume", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class VolumesUncertainty(_Model):
+    """Input of `road.volumes.uncertainty` v1 (plan/road.md Y35, docs/adr/0941): an earthwork volume (its id or name), the
+    standard deviation of the ground's heights (`sigma`, m; the survey's: a checkpoint RMSE, a GNSS or total station
+    accuracy), an optional shift of all of them (`systematic`, m, signed), and the share of each volume its 95 % bound
+    may reach to be accepted (`accept`, percent). KentOS gives none of them.
+
+    Refusals: `not_a_road_project`, `unknown_volume`, `invalid_volume_uncertainty` (σ not above 0 or over 10 m, a shift
+    over 10 m, a share not in (0, 100]), and the volume's own (`invalid_volume`: its corridor or surface does not build).
+    Attributes:
+        sigma: Unit: elevation.
+        accept: Unit: percent.
+        systematic: Unit: elevation.
+    """
+    volume: str
+    sigma: float
+    accept: float | None | Unset = UNSET
+    systematic: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["volume"] = self.volume
+        out["sigma"] = float(self.sigma)
+        if self.accept is not UNSET:
+            out["accept"] = None if self.accept is None else float(self.accept)
+        if self.systematic is not UNSET:
+            out["systematic"] = None if self.systematic is None else float(self.systematic)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VolumesUncertainty:
+        return cls(
+            volume=data["volume"],
+            sigma=float(data["sigma"]),
+            accept=UNSET if "accept" not in data else None if data["accept"] is None else float(data["accept"]),
+            systematic=UNSET if "systematic" not in data else None if data["systematic"] is None else float(data["systematic"]),
         )
 
 
@@ -110329,6 +110525,7 @@ __all__ = [
     "StraightenTextEdit",
     "StreetSource",
     "StretchBlockAction",
+    "StretchSpread",
     "StretchTopology",
     "StretchWindow",
     "StyleEditOperation",
@@ -110716,11 +110913,14 @@ __all__ = [
     "VolumeRowChange",
     "VolumeRule",
     "VolumeRuleName",
+    "VolumeSpread",
     "VolumeStripDef",
+    "VolumeUncertaintyReport",
     "VolumesApprove",
     "VolumesEdit",
     "VolumesQueried",
     "VolumesQuery",
+    "VolumesUncertainty",
     "VolumesWritten",
     "WallAnchor",
     "WallAnchorName",

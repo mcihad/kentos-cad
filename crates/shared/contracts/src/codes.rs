@@ -737,6 +737,12 @@ codes! {
     UNKNOWN_VOLUME = "unknown_volume", Failed, false, "Bu kimlikte ya da adda kübaj hesabı yok.";
     /// An earthwork volume's definition, or one its corridor no longer builds (docs/adr/0906).
     INVALID_VOLUME = "invalid_volume", Failed, false, "Kübaj hesabının tanımı geçerli değil ya da koridoru kurulamıyor; ileti nedenini söyler.";
+    /// An uncertainty asked that is not right: σ, the shift or the share accepted (docs/adr/0941).
+    INVALID_VOLUME_UNCERTAINTY = "invalid_volume_uncertainty", Failed, false, "Kübaj belirsizliği sorusu geçerli değil; ileti nedenini söyler.";
+    /// A warning: much of the area lies near the zero line; the cut's and fill's σ apart are approximate (docs/adr/0941).
+    VOLUME_UNCERTAINTY_NEAR_ZERO = "volume_uncertainty_near_zero", Warning, false, "Alanın yarıdan çoğu sıfır çizgisine yakın: kazı ve dolgunun σ'sı ayrı ayrı yalnız yaklaşık, netinki kesin.";
+    /// A warning: a volume's 95 % bound is over the share accepted (docs/adr/0941).
+    VOLUME_UNCERTAINTY_OVER = "volume_uncertainty_over", Warning, false, "Kübajın %95 sınırı kabul payını aşıyor.";
     /// A corridor an earthwork volume uses.
     CORRIDOR_IN_USE = "corridor_in_use", Failed, false, "Bu koridoru bir kübaj hesabı kullanıyor; önce kübaj hesabını silin.";
     /// A warning: stretches where a section is not solved have no volume (docs/adr/0906 §2).

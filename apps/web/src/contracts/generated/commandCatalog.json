@@ -41292,6 +41292,306 @@
       ]
     },
     {
+      "id": "road.volumes.uncertainty",
+      "version": 1,
+      "title": "Kübajın belirsizliği",
+      "summary": "Bir kübaj hesabının (volume) belirsizlik bütçesini okur; hiçbir şey yazmaz (docs/adr/0941). Arazi kotlarının rastgele hatası sigma (m) ve isteğe bağlı sistematik kayması systematic (m) koridorun üst yüzeyi ile arazi arasında her arazi noktasının hacimdeki ağırlığıyla yayılır: ∂V/∂zⱼ = ∫φⱼ dA (kazıda artı, dolguda eksi), σ_V = σ·√Σwⱼ², kayma β·A. Net hacim (kazı − dolgu) kotlara doğrusal: σ'sı kesin; kazı ve dolgunun ayrı σ'sı alanın yarıdan çoğu sıfır çizgisinin 2σ yakınındaysa yaklaşıktır (nearShare). %95 sınırı |β·A| + 1,96σ; accept (yüzde) verilirse her hacmin sınırı payın içinde mi. Yöntemin payı öbür yöntemin hacmidir (ortalama alana prizmoidal, ötekilere ortalama alan); aritmetiğin payı binary64 toplama sınırı n·u·Σ|v|. Her aralığın kendi σ'sı da verilir (aralıklar arazi noktalarını paylaştığından toplanmaz). sigma, systematic ve accept ölçmenin ve sözleşmenindir, KentOS sayı vermez. Uyarılar: volume_uncertainty_near_zero, volume_uncertainty_over ve kübajın kendi uyarıları (corridor_stale, volume_uncovered, volume_unfactored). Retler: invalid_volume_uncertainty, not_a_road_project, unknown_volume, invalid_volume.",
+      "aliases": [
+        "belirsizlik",
+        "kubajbelirsizligi"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `road.volumes.uncertainty` v1 (plan/road.md Y35, docs/adr/0941): an earthwork volume (its id or name), the\nstandard deviation of the ground's heights (`sigma`, m; the survey's: a checkpoint RMSE, a GNSS or total station\naccuracy), an optional shift of all of them (`systematic`, m, signed), and the share of each volume its 95 % bound\nmay reach to be accepted (`accept`, percent). KentOS gives none of them.\n\nRefusals: `not_a_road_project`, `unknown_volume`, `invalid_volume_uncertainty` (σ not above 0 or over 10 m, a shift\nover 10 m, a share not in (0, 100]), and the volume's own (`invalid_volume`: its corridor or surface does not build).",
+        "properties": {
+          "accept": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "percent"
+          },
+          "sigma": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "elevation"
+          },
+          "systematic": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "elevation"
+          },
+          "volume": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "volume",
+          "sigma"
+        ],
+        "title": "VolumesUncertainty",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.volumes.uncertainty` v1 (docs/adr/0941): the volume, its method, σ and the shift asked; the cut, the\nfill and their net (cut − fill, linear in the heights: its σ exact) with their spreads; the plan areas of cut and\nfill and the share of the area within 2σ of the zero line (over half: the cut's and fill's σ only approximate);\nthe ground points that weigh in; the other method's cut and fill (end area for the prismoidal and the surfaces,\nprismoidal for the end area; none where it does not compute) as the method's share; the binary64 summation bound;\nand each stretch's own spread.",
+        "properties": {
+          "cut": {
+            "$ref": "#/$defs/VolumeSpread"
+          },
+          "cutArea": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "fill": {
+            "$ref": "#/$defs/VolumeSpread"
+          },
+          "fillArea": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "method": {
+            "$ref": "#/$defs/VolumeMethod"
+          },
+          "nearShare": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "1"
+          },
+          "net": {
+            "$ref": "#/$defs/VolumeSpread"
+          },
+          "numeric": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "volume"
+          },
+          "otherCut": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "volume"
+          },
+          "otherFill": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "volume"
+          },
+          "otherMethod": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/VolumeMethod"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "points": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "sigma": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "elevation"
+          },
+          "stretches": {
+            "items": {
+              "$ref": "#/$defs/StretchSpread"
+            },
+            "type": "array"
+          },
+          "systematic": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "elevation"
+          },
+          "volume": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "volume",
+          "method",
+          "sigma",
+          "cut",
+          "fill",
+          "net",
+          "cutArea",
+          "fillArea",
+          "nearShare",
+          "points",
+          "numeric",
+          "stretches"
+        ],
+        "title": "VolumeUncertaintyReport",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.volumes.uncertainty` v1 (docs/adr/0941): the volume, its method, σ and the shift asked; the cut, the\nfill and their net (cut − fill, linear in the heights: its σ exact) with their spreads; the plan areas of cut and\nfill and the share of the area within 2σ of the zero line (over half: the cut's and fill's σ only approximate);\nthe ground points that weigh in; the other method's cut and fill (end area for the prismoidal and the surfaces,\nprismoidal for the end area; none where it does not compute) as the method's share; the binary64 summation bound;\nand each stretch's own spread.",
+        "properties": {
+          "cut": {
+            "$ref": "#/$defs/VolumeSpread"
+          },
+          "cutArea": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "fill": {
+            "$ref": "#/$defs/VolumeSpread"
+          },
+          "fillArea": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "method": {
+            "$ref": "#/$defs/VolumeMethod"
+          },
+          "nearShare": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "1"
+          },
+          "net": {
+            "$ref": "#/$defs/VolumeSpread"
+          },
+          "numeric": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "volume"
+          },
+          "otherCut": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "volume"
+          },
+          "otherFill": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "volume"
+          },
+          "otherMethod": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/VolumeMethod"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "points": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "sigma": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "elevation"
+          },
+          "stretches": {
+            "items": {
+              "$ref": "#/$defs/StretchSpread"
+            },
+            "type": "array"
+          },
+          "systematic": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "elevation"
+          },
+          "volume": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "volume",
+          "method",
+          "sigma",
+          "cut",
+          "fill",
+          "net",
+          "cutArea",
+          "fillArea",
+          "nearShare",
+          "points",
+          "numeric",
+          "stretches"
+        ],
+        "title": "VolumeUncertaintyReport",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_volume_uncertainty",
+          "not_a_road_project",
+          "unknown_volume",
+          "invalid_volume"
+        ],
+        "warnings": [
+          "volume_uncertainty_near_zero",
+          "volume_uncertainty_over",
+          "corridor_stale",
+          "volume_uncovered",
+          "volume_unfactored"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Kontrol noktalarının RMSE'si 5 cm, GNSS kayması 2 cm, kabul %3",
+          "input": {
+            "accept": 3.0,
+            "sigma": 0.05,
+            "systematic": 0.02,
+            "volume": "Ana kübaj"
+          }
+        }
+      ]
+    },
+    {
       "id": "road.hauls.edit",
       "version": 1,
       "title": "Brükneri düzenle",
@@ -86167,6 +86467,24 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Kübaj hesabının tanımı geçerli değil ya da koridoru kurulamıyor; ileti nedenini söyler."
+    },
+    {
+      "code": "invalid_volume_uncertainty",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kübaj belirsizliği sorusu geçerli değil; ileti nedenini söyler."
+    },
+    {
+      "code": "volume_uncertainty_near_zero",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Alanın yarıdan çoğu sıfır çizgisine yakın: kazı ve dolgunun σ'sı ayrı ayrı yalnız yaklaşık, netinki kesin."
+    },
+    {
+      "code": "volume_uncertainty_over",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Kübajın %95 sınırı kabul payını aşıyor."
     },
     {
       "code": "corridor_in_use",
@@ -161967,6 +162285,46 @@
       ],
       "type": "object"
     },
+    "StretchSpread": {
+      "description": "A stretch's own spread (its heights' errors alone; stretches share ground points, so they do not add up).",
+      "properties": {
+        "cutSigma": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "fillSigma": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "from": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "fromText": {
+          "type": "string"
+        },
+        "to": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "toText": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "from",
+        "to",
+        "fromText",
+        "toText",
+        "cutSigma",
+        "fillSigma"
+      ],
+      "type": "object"
+    },
     "StretchTopology": {
       "description": "Topolojik düzenleme (docs/adr/0160 §3): the shown objects sharing a\nmoved vertex go with the stretched ones, in the same step.",
       "properties": {
@@ -171823,6 +172181,44 @@
           "type": "string"
         }
       ]
+    },
+    "VolumeSpread": {
+      "description": "A volume's spread and bound: its value (bank, m³), its standard deviation from the heights' random error, the shift's\neffect, and the 95 % bound `|shift| + 1.96·σ`; whether the bound is within the share accepted (none: not asked).",
+      "properties": {
+        "accepted": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "bias": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "bound": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "sigma": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "value": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        }
+      },
+      "required": [
+        "value",
+        "sigma",
+        "bias",
+        "bound"
+      ],
+      "type": "object"
     },
     "VolumeStripDef": {
       "additionalProperties": false,

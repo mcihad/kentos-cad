@@ -49,13 +49,19 @@ def weights(design, vertices, triangles, near=None):
             kept.append((tri, list(t)))
         elif a < 0:
             kept.append(([tri[0], tri[2], tri[1]], [t[0], t[2], t[1]]))
+    boxes = [(min(p[0] for p in g), min(p[1] for p in g), max(p[0] for p in g), max(p[1] for p in g)) for g, _ in kept]
     cut, fill = [F(0)] * len(verts), [F(0)] * len(verts)
     areas = {"cut": F(0), "fill": F(0), "near": F(0), "covered": F(0)}
     for t in design:
         d = vref.ccw([tuple(map(F, p)) for p in t])
         if not d:
             continue
-        for g, ids in kept:
+        dx0, dy0 = min(p[0] for p in d), min(p[1] for p in d)
+        dx1, dy1 = max(p[0] for p in d), max(p[1] for p in d)
+        for (g, ids), (gx0, gy0, gx1, gy1) in zip(kept, boxes):
+            # A ground triangle whose box misses the design triangle's meets none of it.
+            if gx1 < dx0 or gx0 > dx1 or gy1 < dy0 or gy0 > dy1:
+                continue
             poly = [(p[0], p[1]) for p in d]
             for k in range(3):
                 poly = vref.clip(poly, g[k], g[(k + 1) % 3])

@@ -1,6 +1,6 @@
 # 0941 — Kübajın belirsizlik bütçesi: ölçme, kayma, yöntem ve aritmetik
 
-Tarih: 2026-11-04. Durum: kabul (Y35.1 çekirdek; Y35.2 komut, Y35.3 pencere). Kapsam ROAD-VOL-14.
+Tarih: 2026-11-04. Durum: kabul (Y35.1 çekirdek, Y35.2 komut, Y35.3 pencere). Kapsam ROAD-VOL-14.
 
 ## Sorun
 
@@ -50,6 +50,53 @@ Hatanın dört kaynağı var:
 
 σ, β ve kabul payı projenindir; KentOS sayı vermez.
 
+### §3 Komut: `road.volumes.uncertainty` (Y35.2)
+
+Komut yalnız okur. Kalıcı alan eklemez: σ ve β ölçmenin bilgisidir, kübajın tanımı değildir. Şema değişmez.
+
+- **Girdi:** kübaj, `sigma` (m), isteğe bağlı `systematic` (m, işaretli) ve `accept` (yüzde).
+- **Ağırlıklar** koridorun üst yüzeyi ile arazi TIN'i arasında okunur. Bu, her yöntemde aynıdır: kesit yöntemleri de
+  aynı yüzeyler arasındaki hacmi tahmin eder.
+- **Hacimler** kübajın kendi değerleridir (yerindeki hacim; kabarma ve sıkışma katsayısı uygulanmamış).
+- **Çıktı:**
+  - Kazı, dolgu ve net için değer, σ, kayma payı, %95 sınırı ve kabul.
+  - Kazı ve dolgu alanları, yakın alan payı, ağırlığı olan nokta sayısı.
+  - Öbür yöntemin kazısı ve dolgusu: ortalama alana karşı prizmoidal, ötekilere karşı ortalama alan.
+  - Aritmetik sınırı.
+  - Her aralığın kendi σ'sı. Aralıklar arazi noktalarını paylaştığı için bunlar toplanmaz.
+- **Uyarılar:**
+  - `volume_uncertainty_near_zero`: yakın alan payı %50'nin üstünde.
+  - `volume_uncertainty_over`: bir sınır kabul payını aşıyor.
+- **Ret:** `invalid_volume_uncertainty`.
+
+Python başvurusu (`road_volume_uncertainty_command_cases.py`) ağırlıkları §1'in kesirli başvurusuyla, koridoru ve
+araziyi kendi kurucularıyla hesaplar. 24 durumun hepsinde Rust ve Python tipli katmanı aynı sonucu verir.
+
+### §4 Pencere: Kübaj → Belirsizlik (Y35.3)
+
+- **Form:** "Belirsizlik" bölümünde Kot σ, Sistematik kayma ve Kabul payı alanları var. Bunlar pencereye aittir; kübajla
+  kaydedilmez.
+- **Hesap:** σ yazılınca bütçe yazılmakta olan kübajla hesaplanır.
+- **Gösterim:**
+  - Bir cümle %95 sınırlarını, oranlarını, öbür yöntemin farkını ve aritmetiğin payını söyler.
+  - Yakın alan ve kabul uyarıları ayrı bantlardır.
+  - Cetvel'in yanında "Belirsizlik" tablosu kazı, dolgu ve neti listeler.
+
+**Örnek proje (Ana kübaj, ortalama alan; σ 5 cm, β 2 cm, 37 arazi noktası):**
+
+| Hacim | Değer | %95 sınırı | Oran |
+|---|---|---|---|
+| Kazı | 25.878 m³ | ±378 m³ | %1,5 |
+| Dolgu | 3.507 m³ | ±183 m³ | %5,2 |
+
+- Prizmoidal formül kazıyı 313 m³ farklı veriyor. Yani **yöntemin payı ölçmeninkiyle aynı büyüklükte**: kesit aralığını
+  sıklaştırmak (Y33), σ'yı küçültmek kadar önemli.
+- %3 kabul payında dolgu aşıyor; az olan hacmin oranı büyük.
+- σ 2 m'de alanın %82'si sıfır çizgisinin yakınında kalıyor; pencere kazı ve dolgunun σ'sının yaklaşık olduğunu
+  söylüyor.
+
+Resimler `.run/gui-evidence/yol-y35/` altındadır.
+
 ## Ortak durumlar ve ölçüm
 
 `scripts/fixtures/road_volume_uncertainty_cases.py` KentOS kodu olmadan çalışır.
@@ -79,8 +126,6 @@ Kabul sınırı bu yüzden %50 seçildi.
 
 ## Açık
 
-- **Komut (Y35.2):** σ ve β ile hacmin bileşenleri, yöntem farkı, aritmetik sınırı, kabul.
-- **Pencere (Y35.3).**
 - **Uzamsal korelasyon:** komşu noktaların hataları ilişkiliyse (aynı istasyondan ölçülmüşlerse) σ büyür. Bunun için
   bir kovaryans modeli gerekir.
 - **Nokta başına ayrı σ:** GNSS ile total station noktaları birlikte kullanıldığında.
