@@ -95,6 +95,23 @@
    "tests": 0
   },
   {
+   "id": "alignment.check",
+   "kind": "command",
+   "title": "Tasarım denetimi…",
+   "level": "semantic",
+   "via": [
+    "road.alignments.check",
+    "road.profiles.check"
+   ],
+   "operation": null,
+   "python": "Connection: road.alignments.check, Connection: road.profiles.check",
+   "mcp": "road.alignments.check, road.profiles.check",
+   "note": "Önizle kipine göre road.alignments.check ya da road.profiles.check ile okur; hiçbir şey yazmaz (plan/road.md Y21, ADR 0922 §3).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "alignment.editor",
    "kind": "command",
    "title": "Güzergâh…",

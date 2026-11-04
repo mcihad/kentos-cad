@@ -36767,6 +36767,322 @@
       ]
     },
     {
+      "id": "road.alignments.check",
+      "version": 1,
+      "title": "Aksı denetle",
+      "summary": "Bir aksı kullanıcının tasarım kurallarıyla denetler; hiçbir şey yazmaz. Kurallar (hepsi isteğe bağlı, verilmeyen denetlenmez; değerler tasarım standardınındır, KentOS sayı vermez): leastRadius (en küçük yarıçap), leastArc (kurbun daire boyu), leastSpiral (klotoid boyu), leastTangent (iki kurp arasındaki aliyman), leastReverse (ters dönen iki kurp arasındaki aliyman; bitişik olan 0), leastBrokenBack (aynı yöne dönen iki kurp arasındaki aliyman; bitişik olan birleşik kurptur, bu değil), mostRadiusRatio (bitişik iki kurbun büyük yarıçapının küçüğüne oranı), kinks (kurpsuz dönen PI). Cevap: ardışık kurp çiftleri (ters mi, bitişik mi, aradaki aliyman ve yeri) ve kırılan kurallar km sırasıyla: kural, PI'ler, km aralığı, bulunan değer, sınır ve sözü. Uyarılar: design_rule_broken. Retler: not_a_road_project, unknown_alignment, invalid_design_check.",
+      "aliases": [
+        "aksdenetle",
+        "tasarimdenetimi"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.alignments.check` v1 (docs/adr/0922 §1): an alignment (its id or name; one of its own PIs, not a\nparallel axis) and the rules: the least radius, a curve's least circular length, a clothoid's least length, the\nleast tangent between two curves, between two curves turning opposite ways (reverse; joined ones are 0) and the same\nway (broken-back; joined ones are compound, not this), the most ratio of two joined curves' radii, and with `kinks` a\nPI where the direction turns with no curve. Reads only.\n\nRefusals, in this order: `not_a_road_project`, `unknown_alignment`, `invalid_design_check` (no rule given, a least\nnot above 0, a ratio under 1, a parallel axis), and the alignment's when it no longer builds. Warnings:\n`design_rule_broken`.",
+        "properties": {
+          "alignment": {
+            "type": "string"
+          },
+          "kinks": {
+            "type": "boolean"
+          },
+          "leastArc": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "leastBrokenBack": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "leastRadius": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "leastReverse": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "leastSpiral": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "leastTangent": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "mostRadiusRatio": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1"
+          }
+        },
+        "required": [
+          "alignment"
+        ],
+        "title": "AlignmentsCheck",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.alignments.check` v1: the alignment's id, its curve pairs and the rules broken, in station order.",
+        "properties": {
+          "alignment": {
+            "type": "string"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/$defs/DesignFinding"
+            },
+            "type": "array"
+          },
+          "pairs": {
+            "items": {
+              "$ref": "#/$defs/CurvePair"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "alignment",
+          "pairs",
+          "findings"
+        ],
+        "title": "AlignmentsChecked",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.alignments.check` v1: the alignment's id, its curve pairs and the rules broken, in station order.",
+        "properties": {
+          "alignment": {
+            "type": "string"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/$defs/DesignFinding"
+            },
+            "type": "array"
+          },
+          "pairs": {
+            "items": {
+              "$ref": "#/$defs/CurvePair"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "alignment",
+          "pairs",
+          "findings"
+        ],
+        "title": "AlignmentsChecked",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_alignment",
+          "invalid_design_check"
+        ],
+        "warnings": [
+          "design_rule_broken"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Ters kurplar arasında en az 60 m aliyman",
+          "input": {
+            "alignment": "g-1",
+            "kinks": true,
+            "leastRadius": 180.0,
+            "leastReverse": 60.0
+          }
+        }
+      ]
+    },
+    {
+      "id": "road.profiles.check",
+      "version": 1,
+      "title": "Boykesiti denetle",
+      "summary": "Bir boykesiti kullanıcının tasarım kurallarıyla denetler; hiçbir şey yazmaz. Kurallar (hepsi isteğe bağlı, verilmeyen denetlenmez; değerler tasarım standardınındır, KentOS sayı vermez): mostGrade ve leastGrade (iki PVI arasındaki en dik ve en yatık eğim, oran, iki yöne), leastCrestK ve leastSagK (tepe ve çukur kurbun en küçük K'si, m/%), leastCurve (düşey kurbun yatay boyu), leastGradeLength (iki kurp arasındaki düz eğim). Cevap: kırılan kurallar km sırasıyla: kural, PVI'ler, km aralığı, bulunan değer, sınır ve sözü. Uyarılar: design_rule_broken, profile_stale. Retler: not_a_road_project, unknown_road_profile, invalid_design_check.",
+      "aliases": [
+        "boykesitdenetle"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.profiles.check` v1 (docs/adr/0922 §2): a profile (its id or name) and the rules: the steepest and\nthe flattest grade between two PVIs (ratios, either way), a crest's and a sag's least K (metres per percent), a\nvertical curve's least length and the least straight grade between two curves. Reads only.\n\nRefusals, in this order: `not_a_road_project`, `unknown_road_profile`, `invalid_design_check` (no rule given, a\nlimit not above 0), and the profile's when it no longer builds. Warnings: `design_rule_broken`, `profile_stale`.",
+        "properties": {
+          "leastCrestK": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m/%"
+          },
+          "leastCurve": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "leastGrade": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1"
+          },
+          "leastGradeLength": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "leastSagK": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m/%"
+          },
+          "mostGrade": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1"
+          },
+          "profile": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "profile"
+        ],
+        "title": "RoadProfilesCheck",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.profiles.check` v1: the profile's id and the rules broken, in station order.",
+        "properties": {
+          "findings": {
+            "items": {
+              "$ref": "#/$defs/DesignFinding"
+            },
+            "type": "array"
+          },
+          "profile": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "profile",
+          "findings"
+        ],
+        "title": "RoadProfilesChecked",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.profiles.check` v1: the profile's id and the rules broken, in station order.",
+        "properties": {
+          "findings": {
+            "items": {
+              "$ref": "#/$defs/DesignFinding"
+            },
+            "type": "array"
+          },
+          "profile": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "profile",
+          "findings"
+        ],
+        "title": "RoadProfilesChecked",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_road_profile",
+          "invalid_design_check"
+        ],
+        "warnings": [
+          "design_rule_broken",
+          "profile_stale"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Eğim en çok %6, tepe K en az 30",
+          "input": {
+            "leastCrestK": 30.0,
+            "mostGrade": 0.06,
+            "profile": "b-1"
+          }
+        }
+      ]
+    },
+    {
       "id": "road.profiles.sight",
       "version": 1,
       "title": "Görüş mesafesi",
@@ -83491,6 +83807,18 @@
       "meaning": "Bu kimlikte ya da adda boykesit yok."
     },
     {
+      "code": "invalid_design_check",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Tasarım denetimi sorusu geçerli değil; ileti nedenini söyler."
+    },
+    {
+      "code": "design_rule_broken",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Aks ya da boykesit verilen tasarım kurallarına uymuyor."
+    },
+    {
       "code": "invalid_sight",
       "kind": "failed",
       "retryable": false,
@@ -103148,6 +103476,49 @@
         }
       ]
     },
+    "CurvePair": {
+      "description": "Two curves one after another: their PIs, whether they turn opposite ways, the tangent between them (ST to TS) and\nwhere, whether they are joined (no tangent).",
+      "properties": {
+        "between": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array"
+        },
+        "from": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "joined": {
+          "type": "boolean"
+        },
+        "reverse": {
+          "type": "boolean"
+        },
+        "tangent": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "to": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "between",
+        "reverse",
+        "joined",
+        "tangent",
+        "from",
+        "to"
+      ],
+      "type": "object"
+    },
     "CustomDatum": {
       "description": "A datum the project defines: its ellipsoid and, when it has one, its\nseven parameters to WGS 84 (without them it stands alone).",
       "properties": {
@@ -104052,6 +104423,55 @@
       },
       "type": "object"
     },
+    "DesignFinding": {
+      "description": "A design rule broken: the rule, the PIs or PVIs, the stations it spans (internal, m), the value found and the limit\n(none for a kink), and what it is in words.",
+      "properties": {
+        "from": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "limit": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "value"
+        },
+        "message": {
+          "type": "string"
+        },
+        "of": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "rule": {
+          "$ref": "#/$defs/DesignRule"
+        },
+        "to": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "value": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "value"
+        }
+      },
+      "required": [
+        "rule",
+        "of",
+        "from",
+        "to",
+        "value",
+        "message"
+      ],
+      "type": "object"
+    },
     "DesignOption": {
       "additionalProperties": false,
       "description": "One alternative of a set: its id, its name and its objects by their persistent ids.",
@@ -104074,6 +104494,26 @@
         "name"
       ],
       "type": "object"
+    },
+    "DesignRule": {
+      "description": "Which design rule a finding breaks.",
+      "enum": [
+        "radius",
+        "arc",
+        "spiral",
+        "tangent",
+        "reverse",
+        "brokenBack",
+        "radiusRatio",
+        "kink",
+        "grade",
+        "leastGrade",
+        "crestK",
+        "sagK",
+        "curve",
+        "gradeLength"
+      ],
+      "type": "string"
     },
     "DetachedTable": {
       "description": "A table whose link was broken.",

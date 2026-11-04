@@ -265,7 +265,7 @@ CAD = [
     # KentOS Yol's horizontal alignments (plan/road.md Y3, docs/adr/0901): the Güzergâh window and a new alignment.
     T("alignment", "Güzergâh", [
         P("Güzergâh", "alignmentEditor", [L("alignment.editor"), L("alignment.new"), L("alignment.fromLine"),
-                                                   L("landxml.importAlignments")]),
+                                                   L("landxml.importAlignments"), L("alignment.check")]),
         # The preliminary route (plan/road.md Y12.1, docs/adr/0910 §1).
         P("Ön güzergâh", "routeFinder", [L("route.finder")]),
         # The junctions (plan/road.md Y12.2, docs/adr/0910 §2).

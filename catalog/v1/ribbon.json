@@ -554,6 +554,10 @@
        {
         "command": "landxml.importAlignments",
         "size": "large"
+       },
+       {
+        "command": "alignment.check",
+        "size": "large"
        }
       ]
      },

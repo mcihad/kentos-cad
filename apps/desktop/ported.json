@@ -428,6 +428,7 @@
     "swept.editor",
     "terrain.analysis",
     "profile.sight",
+    "alignment.check",
     "payItems.editor",
     "route.finder",
     "junction.editor",

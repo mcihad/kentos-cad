@@ -1683,6 +1683,18 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "road.alignments.check",
+        refusals: &[&["not_a_road_project", "unknown_alignment", "invalid_design_check"]],
+        warnings: &["design_rule_broken"],
+        targets: none,
+    },
+    Entry {
+        id: "road.profiles.check",
+        refusals: &[&["not_a_road_project", "unknown_road_profile", "invalid_design_check"]],
+        warnings: &["design_rule_broken", "profile_stale"],
+        targets: none,
+    },
+    Entry {
         id: "road.profiles.sight",
         refusals: &[&["not_a_road_project", "unknown_road_profile", "invalid_sight"]],
         warnings: &["sight_short", "profile_stale"],

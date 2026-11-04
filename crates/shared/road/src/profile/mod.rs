@@ -1,6 +1,7 @@
 //! A road's longitudinal profile (docs/adr/0902, plan/road.md Y4): the terrain along an alignment, and its vertical
 //! alignment. The algorithm's id is `kentos.profile/1`.
 
+pub mod checks;
 pub mod sight;
 pub mod terrain;
 pub mod trace;

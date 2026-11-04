@@ -6980,6 +6980,56 @@ pub fn catalog() -> CommandCatalog {
             ],
         },
         CommandDescriptor {
+            id: crate::ROAD_ALIGNMENTS_CHECK.into(),
+            version: crate::ROAD_ALIGNMENTS_CHECK_VERSION,
+            title: "Aksı denetle".into(),
+            summary: "Bir aksı kullanıcının tasarım kurallarıyla denetler; hiçbir şey yazmaz. Kurallar (hepsi isteğe bağlı, verilmeyen denetlenmez; değerler tasarım standardınındır, KentOS sayı vermez): leastRadius (en küçük yarıçap), leastArc (kurbun daire boyu), leastSpiral (klotoid boyu), leastTangent (iki kurp arasındaki aliyman), leastReverse (ters dönen iki kurp arasındaki aliyman; bitişik olan 0), leastBrokenBack (aynı yöne dönen iki kurp arasındaki aliyman; bitişik olan birleşik kurptur, bu değil), mostRadiusRatio (bitişik iki kurbun büyük yarıçapının küçüğüne oranı), kinks (kurpsuz dönen PI). Cevap: ardışık kurp çiftleri (ters mi, bitişik mi, aradaki aliyman ve yeri) ve kırılan kurallar km sırasıyla: kural, PI'ler, km aralığı, bulunan değer, sınır ve sözü. \
+                      Uyarılar: design_rule_broken. Retler: not_a_road_project, unknown_alignment, invalid_design_check."
+                .into(),
+            aliases: vec!["aksdenetle".into(), "tasarimdenetimi".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::AlignmentsCheck>(),
+            output: schema::<crate::AlignmentsChecked>(),
+            plan: Some(schema::<crate::AlignmentsChecked>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ters kurplar arasında en az 60 m aliyman".into(),
+                input: json!({ "alignment": "g-1", "leastRadius": 180.0, "leastReverse": 60.0, "kinks": true }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_PROFILES_CHECK.into(),
+            version: crate::ROAD_PROFILES_CHECK_VERSION,
+            title: "Boykesiti denetle".into(),
+            summary: "Bir boykesiti kullanıcının tasarım kurallarıyla denetler; hiçbir şey yazmaz. Kurallar (hepsi isteğe bağlı, verilmeyen denetlenmez; değerler tasarım standardınındır, KentOS sayı vermez): mostGrade ve leastGrade (iki PVI arasındaki en dik ve en yatık eğim, oran, iki yöne), leastCrestK ve leastSagK (tepe ve çukur kurbun en küçük K'si, m/%), leastCurve (düşey kurbun yatay boyu), leastGradeLength (iki kurp arasındaki düz eğim). Cevap: kırılan kurallar km sırasıyla: kural, PVI'ler, km aralığı, bulunan değer, sınır ve sözü. \
+                      Uyarılar: design_rule_broken, profile_stale. Retler: not_a_road_project, unknown_road_profile, invalid_design_check."
+                .into(),
+            aliases: vec!["boykesitdenetle".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::RoadProfilesCheck>(),
+            output: schema::<crate::RoadProfilesChecked>(),
+            plan: Some(schema::<crate::RoadProfilesChecked>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Eğim en çok %6, tepe K en az 30".into(),
+                input: json!({ "profile": "b-1", "mostGrade": 0.06, "leastCrestK": 30.0 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::ROAD_PROFILES_SIGHT.into(),
             version: crate::ROAD_PROFILES_SIGHT_VERSION,
             title: "Görüş mesafesi".into(),
@@ -14273,6 +14323,12 @@ mod tests {
                     crate::ROAD_PROFILES_SIGHT => {
                         serde_json::from_value::<crate::ProfilesSight>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_ALIGNMENTS_CHECK => {
+                        serde_json::from_value::<crate::AlignmentsCheck>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_PROFILES_CHECK => {
+                        serde_json::from_value::<crate::RoadProfilesCheck>(e.input.clone()).map(|_| ())
+                    }
                     crate::ROAD_TEMPLATES_EDIT => {
                         serde_json::from_value::<crate::TemplatesEdit>(e.input.clone()).map(|_| ())
                     }
@@ -15074,6 +15130,14 @@ mod tests {
                         }
                         crate::ROAD_PROFILES_SIGHT => {
                             serde_json::from_value::<crate::ProfilesSightRead>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_ALIGNMENTS_CHECK => {
+                            serde_json::from_value::<crate::AlignmentsChecked>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_PROFILES_CHECK => {
+                            serde_json::from_value::<crate::RoadProfilesChecked>(output.clone())
                                 .map(|_| ())
                         }
                         crate::ROAD_TEMPLATES_EDIT => {

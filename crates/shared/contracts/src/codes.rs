@@ -647,6 +647,11 @@ codes! {
     UNKNOWN_ROAD_PROFILE = "unknown_road_profile", Failed, false, "Bu kimlikte ya da adda boykesit yok.";
     /// A sight distance asked that is not right: a height, the reach, the step or the required distance out of range, a
     /// range off the profile, too many stations (docs/adr/0921 §2).
+    /// A design check asked that is not right: no rule, a limit not above 0, a ratio under 1, a parallel axis
+    /// (docs/adr/0922 §3).
+    INVALID_DESIGN_CHECK = "invalid_design_check", Failed, false, "Tasarım denetimi sorusu geçerli değil; ileti nedenini söyler.";
+    /// A warning: an alignment or a profile breaks the design rules given (docs/adr/0922 §3).
+    DESIGN_RULE_BROKEN = "design_rule_broken", Warning, false, "Aks ya da boykesit verilen tasarım kurallarına uymuyor.";
     INVALID_SIGHT = "invalid_sight", Failed, false, "Görüş mesafesi sorusu geçerli değil; ileti nedenini söyler.";
     /// A warning: somewhere the profile is seen shorter than the required sight distance (docs/adr/0921 §2).
     SIGHT_SHORT = "sight_short", Warning, false, "Boykesitin bir yerinde görüş mesafesi istenenden kısa.";

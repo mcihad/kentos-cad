@@ -1,0 +1,5290 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "road.profiles.check",
+ "commandVersion": 1,
+ "title": "Boykesiti denetle: kullanıcının tasarım kurallarıyla",
+ "note": "scripts/fixtures/road_design_check_cases.py'den; aksın kurpları road_alignment_cases.py'nin 40 basamaklı hesabıyla, boykesit road_vertical_cases.py'nin kesirleriyle; KentOS kodu olmadan.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Yol tasarım denetimi",
+  "settings": {
+   "srid": 5254,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "deg",
+   "plotScale": 1000.0,
+   "workspace": "cad",
+   "cadWork": "road",
+   "drawingFont": "barlow",
+   "road": {
+    "alignments": [
+     {
+      "id": "g-1",
+      "name": "Ters",
+      "revision": 1,
+      "pis": [
+       {
+        "id": "a",
+        "x": 0.0,
+        "y": 0.0
+       },
+       {
+        "id": "p1",
+        "x": 300.0,
+        "y": 0.0,
+        "radius": 200.0,
+        "spiralIn": 40.0,
+        "spiralOut": 40.0
+       },
+       {
+        "id": "p2",
+        "x": 450.0,
+        "y": 150.0,
+        "radius": 150.0
+       },
+       {
+        "id": "b",
+        "x": 800.0,
+        "y": 150.0
+       }
+      ]
+     },
+     {
+      "id": "g-2",
+      "name": "Kırık sırt",
+      "revision": 1,
+      "pis": [
+       {
+        "id": "a",
+        "x": 0.0,
+        "y": 0.0
+       },
+       {
+        "id": "p1",
+        "x": 300.0,
+        "y": 0.0,
+        "radius": 300.0
+       },
+       {
+        "id": "p2",
+        "x": 500.0,
+        "y": 100.0,
+        "radius": 300.0
+       },
+       {
+        "id": "b",
+        "x": 700.0,
+        "y": 300.0
+       }
+      ]
+     },
+     {
+      "id": "g-3",
+      "name": "Bitişik",
+      "revision": 1,
+      "pis": [
+       {
+        "id": "a",
+        "x": 0.0,
+        "y": 0.0
+       },
+       {
+        "id": "p1",
+        "x": 200.0,
+        "y": 0.0,
+        "radius": 100.0
+       },
+       {
+        "id": "p2",
+        "x": 302.5126265847084,
+        "y": 102.51262658470837,
+        "radius": 250.0
+       },
+       {
+        "id": "b",
+        "x": 302.5126265847084,
+        "y": 402.51262658470836
+       }
+      ]
+     },
+     {
+      "id": "g-4",
+      "name": "Kırıklı",
+      "revision": 1,
+      "pis": [
+       {
+        "id": "a",
+        "x": 0.0,
+        "y": 0.0
+       },
+       {
+        "id": "p1",
+        "x": 200.0,
+        "y": 0.0
+       },
+       {
+        "id": "b",
+        "x": 400.0,
+        "y": 50.0
+       }
+      ]
+     },
+     {
+      "id": "g-5",
+      "name": "Paralel",
+      "revision": 1,
+      "offsetOf": {
+       "alignment": "g-1",
+       "offset": 3.5
+      }
+     }
+    ],
+    "profiles": [
+     {
+      "id": "b-1",
+      "name": "Proje kotu",
+      "alignment": "g-1",
+      "alignmentRevision": 1,
+      "revision": 1,
+      "pvis": [
+       {
+        "id": "a",
+        "station": 0.0,
+        "elevation": 100.0
+       },
+       {
+        "id": "v1",
+        "station": 150.0,
+        "elevation": 106.0,
+        "length": 80.0
+       },
+       {
+        "id": "v2",
+        "station": 350.0,
+        "elevation": 98.0,
+        "length": 120.0
+       },
+       {
+        "id": "b",
+        "station": 700.0,
+        "elevation": 104.0
+       }
+      ]
+     },
+     {
+      "id": "b-2",
+      "name": "Daire",
+      "alignment": "g-1",
+      "alignmentRevision": 1,
+      "revision": 1,
+      "pvis": [
+       {
+        "id": "a",
+        "station": 0.0,
+        "elevation": 100.0
+       },
+       {
+        "id": "v1",
+        "station": 300.0,
+        "elevation": 112.0,
+        "radius": 2000.0
+       },
+       {
+        "id": "b",
+        "station": 600.0,
+        "elevation": 103.0
+       }
+      ]
+     },
+     {
+      "id": "b-3",
+      "name": "Eski",
+      "alignment": "g-2",
+      "revision": 1,
+      "pvis": [
+       {
+        "id": "a",
+        "station": 0.0,
+        "elevation": 100.0
+       },
+       {
+        "id": "v1",
+        "station": 200.0,
+        "elevation": 104.0,
+        "length": 60.0
+       },
+       {
+        "id": "b",
+        "station": 400.0,
+        "elevation": 100.0
+       }
+      ]
+     }
+    ]
+   }
+  },
+  "origin": {
+   "x": 0.0,
+   "y": 0.0
+  },
+  "layers": [
+   {
+    "id": "0",
+    "name": "0",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "0",
+  "entities": [],
+  "uids": [],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "Eğim en çok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "profile": "b-1",
+      "mostGrade": 0.035
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "profile": "b-1",
+       "findings": [
+        {
+         "rule": "grade",
+         "of": [
+          "a",
+          "v1"
+         ],
+         "from": 0.0,
+         "to": 150.0,
+         "value": 0.04,
+         "limit": 0.035,
+         "message": "a–v1 eğimi %4.000, en çok %3.500."
+        },
+        {
+         "rule": "grade",
+         "of": [
+          "v1",
+          "v2"
+         ],
+         "from": 150.0,
+         "to": 350.0,
+         "value": 0.04,
+         "limit": 0.035,
+         "message": "v1–v2 eğimi %4.000, en çok %3.500."
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "design_rule_broken",
+        "message": "“Proje kotu” boykesitinde 2 yer verilen tasarım kurallarına uymuyor.",
+        "path": "profile"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ters",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 0.0,
+           "radius": 200.0,
+           "spiralIn": 40.0,
+           "spiralOut": 40.0
+          },
+          {
+           "id": "p2",
+           "x": 450.0,
+           "y": 150.0,
+           "radius": 150.0
+          },
+          {
+           "id": "b",
+           "x": 800.0,
+           "y": 150.0
+          }
+         ]
+        },
+        {
+         "id": "g-2",
+         "name": "Kırık sırt",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 0.0,
+           "radius": 300.0
+          },
+          {
+           "id": "p2",
+           "x": 500.0,
+           "y": 100.0,
+           "radius": 300.0
+          },
+          {
+           "id": "b",
+           "x": 700.0,
+           "y": 300.0
+          }
+         ]
+        },
+        {
+         "id": "g-3",
+         "name": "Bitişik",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 200.0,
+           "y": 0.0,
+           "radius": 100.0
+          },
+          {
+           "id": "p2",
+           "x": 302.5126265847084,
+           "y": 102.51262658470837,
+           "radius": 250.0
+          },
+          {
+           "id": "b",
+           "x": 302.5126265847084,
+           "y": 402.51262658470836
+          }
+         ]
+        },
+        {
+         "id": "g-4",
+         "name": "Kırıklı",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 200.0,
+           "y": 0.0
+          },
+          {
+           "id": "b",
+           "x": 400.0,
+           "y": 50.0
+          }
+         ]
+        },
+        {
+         "id": "g-5",
+         "name": "Paralel",
+         "revision": 1,
+         "offsetOf": {
+          "alignment": "g-1",
+          "offset": 3.5
+         }
+        }
+       ],
+       "profiles": [
+        {
+         "id": "b-1",
+         "name": "Proje kotu",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 350.0,
+           "elevation": 98.0,
+           "length": 120.0
+          },
+          {
+           "id": "b",
+           "station": 700.0,
+           "elevation": 104.0
+          }
+         ]
+        },
+        {
+         "id": "b-2",
+         "name": "Daire",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 300.0,
+           "elevation": 112.0,
+           "radius": 2000.0
+          },
+          {
+           "id": "b",
+           "station": 600.0,
+           "elevation": 103.0
+          }
+         ]
+        },
+        {
+         "id": "b-3",
+         "name": "Eski",
+         "alignment": "g-2",
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 104.0,
+           "length": 60.0
+          },
+          {
+           "id": "b",
+           "station": 400.0,
+           "elevation": 100.0
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Eğim en az",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "profile": "b-1",
+      "leastGrade": 0.02
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "profile": "b-1",
+       "findings": [
+        {
+         "rule": "leastGrade",
+         "of": [
+          "v2",
+          "b"
+         ],
+         "from": 350.0,
+         "to": 700.0,
+         "value": 0.017142857142857144,
+         "limit": 0.02,
+         "message": "v2–b eğimi %1.714, en az %2.000."
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "design_rule_broken",
+        "message": "“Proje kotu” boykesitinde 1 yer verilen tasarım kurallarına uymuyor.",
+        "path": "profile"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ters",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 0.0,
+           "radius": 200.0,
+           "spiralIn": 40.0,
+           "spiralOut": 40.0
+          },
+          {
+           "id": "p2",
+           "x": 450.0,
+           "y": 150.0,
+           "radius": 150.0
+          },
+          {
+           "id": "b",
+           "x": 800.0,
+           "y": 150.0
+          }
+         ]
+        },
+        {
+         "id": "g-2",
+         "name": "Kırık sırt",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 0.0,
+           "radius": 300.0
+          },
+          {
+           "id": "p2",
+           "x": 500.0,
+           "y": 100.0,
+           "radius": 300.0
+          },
+          {
+           "id": "b",
+           "x": 700.0,
+           "y": 300.0
+          }
+         ]
+        },
+        {
+         "id": "g-3",
+         "name": "Bitişik",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 200.0,
+           "y": 0.0,
+           "radius": 100.0
+          },
+          {
+           "id": "p2",
+           "x": 302.5126265847084,
+           "y": 102.51262658470837,
+           "radius": 250.0
+          },
+          {
+           "id": "b",
+           "x": 302.5126265847084,
+           "y": 402.51262658470836
+          }
+         ]
+        },
+        {
+         "id": "g-4",
+         "name": "Kırıklı",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 200.0,
+           "y": 0.0
+          },
+          {
+           "id": "b",
+           "x": 400.0,
+           "y": 50.0
+          }
+         ]
+        },
+        {
+         "id": "g-5",
+         "name": "Paralel",
+         "revision": 1,
+         "offsetOf": {
+          "alignment": "g-1",
+          "offset": 3.5
+         }
+        }
+       ],
+       "profiles": [
+        {
+         "id": "b-1",
+         "name": "Proje kotu",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 350.0,
+           "elevation": 98.0,
+           "length": 120.0
+          },
+          {
+           "id": "b",
+           "station": 700.0,
+           "elevation": 104.0
+          }
+         ]
+        },
+        {
+         "id": "b-2",
+         "name": "Daire",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 300.0,
+           "elevation": 112.0,
+           "radius": 2000.0
+          },
+          {
+           "id": "b",
+           "station": 600.0,
+           "elevation": 103.0
+          }
+         ]
+        },
+        {
+         "id": "b-3",
+         "name": "Eski",
+         "alignment": "g-2",
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 104.0,
+           "length": 60.0
+          },
+          {
+           "id": "b",
+           "station": 400.0,
+           "elevation": 100.0
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Tepe ve çukur K",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "profile": "b-1",
+      "leastCrestK": 15.0,
+      "leastSagK": 25.0
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "profile": "b-1",
+       "findings": [
+        {
+         "rule": "crestK",
+         "of": [
+          "v1"
+         ],
+         "from": 110.0,
+         "to": 190.0,
+         "value": 10.0,
+         "limit": 15.0,
+         "message": "v1 tepe kurbunun K'si 10.000, en az 15."
+        },
+        {
+         "rule": "sagK",
+         "of": [
+          "v2"
+         ],
+         "from": 290.0,
+         "to": 410.0,
+         "value": 21.0,
+         "limit": 25.0,
+         "message": "v2 çukur kurbunun K'si 21.000, en az 25."
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "design_rule_broken",
+        "message": "“Proje kotu” boykesitinde 2 yer verilen tasarım kurallarına uymuyor.",
+        "path": "profile"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ters",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 0.0,
+           "radius": 200.0,
+           "spiralIn": 40.0,
+           "spiralOut": 40.0
+          },
+          {
+           "id": "p2",
+           "x": 450.0,
+           "y": 150.0,
+           "radius": 150.0
+          },
+          {
+           "id": "b",
+           "x": 800.0,
+           "y": 150.0
+          }
+         ]
+        },
+        {
+         "id": "g-2",
+         "name": "Kırık sırt",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 0.0,
+           "radius": 300.0
+          },
+          {
+           "id": "p2",
+           "x": 500.0,
+           "y": 100.0,
+           "radius": 300.0
+          },
+          {
+           "id": "b",
+           "x": 700.0,
+           "y": 300.0
+          }
+         ]
+        },
+        {
+         "id": "g-3",
+         "name": "Bitişik",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 200.0,
+           "y": 0.0,
+           "radius": 100.0
+          },
+          {
+           "id": "p2",
+           "x": 302.5126265847084,
+           "y": 102.51262658470837,
+           "radius": 250.0
+          },
+          {
+           "id": "b",
+           "x": 302.5126265847084,
+           "y": 402.51262658470836
+          }
+         ]
+        },
+        {
+         "id": "g-4",
+         "name": "Kırıklı",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 200.0,
+           "y": 0.0
+          },
+          {
+           "id": "b",
+           "x": 400.0,
+           "y": 50.0
+          }
+         ]
+        },
+        {
+         "id": "g-5",
+         "name": "Paralel",
+         "revision": 1,
+         "offsetOf": {
+          "alignment": "g-1",
+          "offset": 3.5
+         }
+        }
+       ],
+       "profiles": [
+        {
+         "id": "b-1",
+         "name": "Proje kotu",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 350.0,
+           "elevation": 98.0,
+           "length": 120.0
+          },
+          {
+           "id": "b",
+           "station": 700.0,
+           "elevation": 104.0
+          }
+         ]
+        },
+        {
+         "id": "b-2",
+         "name": "Daire",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 300.0,
+           "elevation": 112.0,
+           "radius": 2000.0
+          },
+          {
+           "id": "b",
+           "station": 600.0,
+           "elevation": 103.0
+          }
+         ]
+        },
+        {
+         "id": "b-3",
+         "name": "Eski",
+         "alignment": "g-2",
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 104.0,
+           "length": 60.0
+          },
+          {
+           "id": "b",
+           "station": 400.0,
+           "elevation": 100.0
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "K tutar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "profile": "b-1",
+      "leastCrestK": 5.0,
+      "leastSagK": 10.0
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "profile": "b-1",
+       "findings": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ters",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 0.0,
+           "radius": 200.0,
+           "spiralIn": 40.0,
+           "spiralOut": 40.0
+          },
+          {
+           "id": "p2",
+           "x": 450.0,
+           "y": 150.0,
+           "radius": 150.0
+          },
+          {
+           "id": "b",
+           "x": 800.0,
+           "y": 150.0
+          }
+         ]
+        },
+        {
+         "id": "g-2",
+         "name": "Kırık sırt",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 0.0,
+           "radius": 300.0
+          },
+          {
+           "id": "p2",
+           "x": 500.0,
+           "y": 100.0,
+           "radius": 300.0
+          },
+          {
+           "id": "b",
+           "x": 700.0,
+           "y": 300.0
+          }
+         ]
+        },
+        {
+         "id": "g-3",
+         "name": "Bitişik",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 200.0,
+           "y": 0.0,
+           "radius": 100.0
+          },
+          {
+           "id": "p2",
+           "x": 302.5126265847084,
+           "y": 102.51262658470837,
+           "radius": 250.0
+          },
+          {
+           "id": "b",
+           "x": 302.5126265847084,
+           "y": 402.51262658470836
+          }
+         ]
+        },
+        {
+         "id": "g-4",
+         "name": "Kırıklı",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 200.0,
+           "y": 0.0
+          },
+          {
+           "id": "b",
+           "x": 400.0,
+           "y": 50.0
+          }
+         ]
+        },
+        {
+         "id": "g-5",
+         "name": "Paralel",
+         "revision": 1,
+         "offsetOf": {
+          "alignment": "g-1",
+          "offset": 3.5
+         }
+        }
+       ],
+       "profiles": [
+        {
+         "id": "b-1",
+         "name": "Proje kotu",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 350.0,
+           "elevation": 98.0,
+           "length": 120.0
+          },
+          {
+           "id": "b",
+           "station": 700.0,
+           "elevation": 104.0
+          }
+         ]
+        },
+        {
+         "id": "b-2",
+         "name": "Daire",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 300.0,
+           "elevation": 112.0,
+           "radius": 2000.0
+          },
+          {
+           "id": "b",
+           "station": 600.0,
+           "elevation": 103.0
+          }
+         ]
+        },
+        {
+         "id": "b-3",
+         "name": "Eski",
+         "alignment": "g-2",
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 104.0,
+           "length": 60.0
+          },
+          {
+           "id": "b",
+           "station": 400.0,
+           "elevation": 100.0
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Düşey kurp boyu",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "profile": "b-1",
+      "leastCurve": 100.0
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "profile": "b-1",
+       "findings": [
+        {
+         "rule": "curve",
+         "of": [
+          "v1"
+         ],
+         "from": 110.0,
+         "to": 190.0,
+         "value": 80.0,
+         "limit": 100.0,
+         "message": "v1 düşey kurbu 80.000 m, en az 100 m."
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "design_rule_broken",
+        "message": "“Proje kotu” boykesitinde 1 yer verilen tasarım kurallarına uymuyor.",
+        "path": "profile"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ters",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 0.0,
+           "radius": 200.0,
+           "spiralIn": 40.0,
+           "spiralOut": 40.0
+          },
+          {
+           "id": "p2",
+           "x": 450.0,
+           "y": 150.0,
+           "radius": 150.0
+          },
+          {
+           "id": "b",
+           "x": 800.0,
+           "y": 150.0
+          }
+         ]
+        },
+        {
+         "id": "g-2",
+         "name": "Kırık sırt",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 0.0,
+           "radius": 300.0
+          },
+          {
+           "id": "p2",
+           "x": 500.0,
+           "y": 100.0,
+           "radius": 300.0
+          },
+          {
+           "id": "b",
+           "x": 700.0,
+           "y": 300.0
+          }
+         ]
+        },
+        {
+         "id": "g-3",
+         "name": "Bitişik",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 200.0,
+           "y": 0.0,
+           "radius": 100.0
+          },
+          {
+           "id": "p2",
+           "x": 302.5126265847084,
+           "y": 102.51262658470837,
+           "radius": 250.0
+          },
+          {
+           "id": "b",
+           "x": 302.5126265847084,
+           "y": 402.51262658470836
+          }
+         ]
+        },
+        {
+         "id": "g-4",
+         "name": "Kırıklı",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 200.0,
+           "y": 0.0
+          },
+          {
+           "id": "b",
+           "x": 400.0,
+           "y": 50.0
+          }
+         ]
+        },
+        {
+         "id": "g-5",
+         "name": "Paralel",
+         "revision": 1,
+         "offsetOf": {
+          "alignment": "g-1",
+          "offset": 3.5
+         }
+        }
+       ],
+       "profiles": [
+        {
+         "id": "b-1",
+         "name": "Proje kotu",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 350.0,
+           "elevation": 98.0,
+           "length": 120.0
+          },
+          {
+           "id": "b",
+           "station": 700.0,
+           "elevation": 104.0
+          }
+         ]
+        },
+        {
+         "id": "b-2",
+         "name": "Daire",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 300.0,
+           "elevation": 112.0,
+           "radius": 2000.0
+          },
+          {
+           "id": "b",
+           "station": 600.0,
+           "elevation": 103.0
+          }
+         ]
+        },
+        {
+         "id": "b-3",
+         "name": "Eski",
+         "alignment": "g-2",
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 104.0,
+           "length": 60.0
+          },
+          {
+           "id": "b",
+           "station": 400.0,
+           "elevation": 100.0
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Kurplar arası eğim",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "profile": "b-1",
+      "leastGradeLength": 120.0
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "profile": "b-1",
+       "findings": [
+        {
+         "rule": "gradeLength",
+         "of": [
+          "v1",
+          "v2"
+         ],
+         "from": 190.0,
+         "to": 290.0,
+         "value": 100.0,
+         "limit": 120.0,
+         "message": "v1 ile v2 kurpları arasındaki düz eğim 100.000 m, en az 120 m."
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "design_rule_broken",
+        "message": "“Proje kotu” boykesitinde 1 yer verilen tasarım kurallarına uymuyor.",
+        "path": "profile"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ters",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 0.0,
+           "radius": 200.0,
+           "spiralIn": 40.0,
+           "spiralOut": 40.0
+          },
+          {
+           "id": "p2",
+           "x": 450.0,
+           "y": 150.0,
+           "radius": 150.0
+          },
+          {
+           "id": "b",
+           "x": 800.0,
+           "y": 150.0
+          }
+         ]
+        },
+        {
+         "id": "g-2",
+         "name": "Kırık sırt",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 0.0,
+           "radius": 300.0
+          },
+          {
+           "id": "p2",
+           "x": 500.0,
+           "y": 100.0,
+           "radius": 300.0
+          },
+          {
+           "id": "b",
+           "x": 700.0,
+           "y": 300.0
+          }
+         ]
+        },
+        {
+         "id": "g-3",
+         "name": "Bitişik",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 200.0,
+           "y": 0.0,
+           "radius": 100.0
+          },
+          {
+           "id": "p2",
+           "x": 302.5126265847084,
+           "y": 102.51262658470837,
+           "radius": 250.0
+          },
+          {
+           "id": "b",
+           "x": 302.5126265847084,
+           "y": 402.51262658470836
+          }
+         ]
+        },
+        {
+         "id": "g-4",
+         "name": "Kırıklı",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 200.0,
+           "y": 0.0
+          },
+          {
+           "id": "b",
+           "x": 400.0,
+           "y": 50.0
+          }
+         ]
+        },
+        {
+         "id": "g-5",
+         "name": "Paralel",
+         "revision": 1,
+         "offsetOf": {
+          "alignment": "g-1",
+          "offset": 3.5
+         }
+        }
+       ],
+       "profiles": [
+        {
+         "id": "b-1",
+         "name": "Proje kotu",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 350.0,
+           "elevation": 98.0,
+           "length": 120.0
+          },
+          {
+           "id": "b",
+           "station": 700.0,
+           "elevation": 104.0
+          }
+         ]
+        },
+        {
+         "id": "b-2",
+         "name": "Daire",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 300.0,
+           "elevation": 112.0,
+           "radius": 2000.0
+          },
+          {
+           "id": "b",
+           "station": 600.0,
+           "elevation": 103.0
+          }
+         ]
+        },
+        {
+         "id": "b-3",
+         "name": "Eski",
+         "alignment": "g-2",
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 104.0,
+           "length": 60.0
+          },
+          {
+           "id": "b",
+           "station": 400.0,
+           "elevation": 100.0
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Hepsi birden",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "profile": "Proje kotu",
+      "mostGrade": 0.035,
+      "leastGrade": 0.02,
+      "leastCrestK": 15.0,
+      "leastSagK": 25.0,
+      "leastCurve": 100.0,
+      "leastGradeLength": 120.0
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "profile": "b-1",
+       "findings": [
+        {
+         "rule": "grade",
+         "of": [
+          "a",
+          "v1"
+         ],
+         "from": 0.0,
+         "to": 150.0,
+         "value": 0.04,
+         "limit": 0.035,
+         "message": "a–v1 eğimi %4.000, en çok %3.500."
+        },
+        {
+         "rule": "crestK",
+         "of": [
+          "v1"
+         ],
+         "from": 110.0,
+         "to": 190.0,
+         "value": 10.0,
+         "limit": 15.0,
+         "message": "v1 tepe kurbunun K'si 10.000, en az 15."
+        },
+        {
+         "rule": "curve",
+         "of": [
+          "v1"
+         ],
+         "from": 110.0,
+         "to": 190.0,
+         "value": 80.0,
+         "limit": 100.0,
+         "message": "v1 düşey kurbu 80.000 m, en az 100 m."
+        },
+        {
+         "rule": "grade",
+         "of": [
+          "v1",
+          "v2"
+         ],
+         "from": 150.0,
+         "to": 350.0,
+         "value": 0.04,
+         "limit": 0.035,
+         "message": "v1–v2 eğimi %4.000, en çok %3.500."
+        },
+        {
+         "rule": "gradeLength",
+         "of": [
+          "v1",
+          "v2"
+         ],
+         "from": 190.0,
+         "to": 290.0,
+         "value": 100.0,
+         "limit": 120.0,
+         "message": "v1 ile v2 kurpları arasındaki düz eğim 100.000 m, en az 120 m."
+        },
+        {
+         "rule": "sagK",
+         "of": [
+          "v2"
+         ],
+         "from": 290.0,
+         "to": 410.0,
+         "value": 21.0,
+         "limit": 25.0,
+         "message": "v2 çukur kurbunun K'si 21.000, en az 25."
+        },
+        {
+         "rule": "leastGrade",
+         "of": [
+          "v2",
+          "b"
+         ],
+         "from": 350.0,
+         "to": 700.0,
+         "value": 0.017142857142857144,
+         "limit": 0.02,
+         "message": "v2–b eğimi %1.714, en az %2.000."
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "design_rule_broken",
+        "message": "“Proje kotu” boykesitinde 7 yer verilen tasarım kurallarına uymuyor.",
+        "path": "profile"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ters",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 0.0,
+           "radius": 200.0,
+           "spiralIn": 40.0,
+           "spiralOut": 40.0
+          },
+          {
+           "id": "p2",
+           "x": 450.0,
+           "y": 150.0,
+           "radius": 150.0
+          },
+          {
+           "id": "b",
+           "x": 800.0,
+           "y": 150.0
+          }
+         ]
+        },
+        {
+         "id": "g-2",
+         "name": "Kırık sırt",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 0.0,
+           "radius": 300.0
+          },
+          {
+           "id": "p2",
+           "x": 500.0,
+           "y": 100.0,
+           "radius": 300.0
+          },
+          {
+           "id": "b",
+           "x": 700.0,
+           "y": 300.0
+          }
+         ]
+        },
+        {
+         "id": "g-3",
+         "name": "Bitişik",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 200.0,
+           "y": 0.0,
+           "radius": 100.0
+          },
+          {
+           "id": "p2",
+           "x": 302.5126265847084,
+           "y": 102.51262658470837,
+           "radius": 250.0
+          },
+          {
+           "id": "b",
+           "x": 302.5126265847084,
+           "y": 402.51262658470836
+          }
+         ]
+        },
+        {
+         "id": "g-4",
+         "name": "Kırıklı",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 200.0,
+           "y": 0.0
+          },
+          {
+           "id": "b",
+           "x": 400.0,
+           "y": 50.0
+          }
+         ]
+        },
+        {
+         "id": "g-5",
+         "name": "Paralel",
+         "revision": 1,
+         "offsetOf": {
+          "alignment": "g-1",
+          "offset": 3.5
+         }
+        }
+       ],
+       "profiles": [
+        {
+         "id": "b-1",
+         "name": "Proje kotu",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 350.0,
+           "elevation": 98.0,
+           "length": 120.0
+          },
+          {
+           "id": "b",
+           "station": 700.0,
+           "elevation": 104.0
+          }
+         ]
+        },
+        {
+         "id": "b-2",
+         "name": "Daire",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 300.0,
+           "elevation": 112.0,
+           "radius": 2000.0
+          },
+          {
+           "id": "b",
+           "station": 600.0,
+           "elevation": 103.0
+          }
+         ]
+        },
+        {
+         "id": "b-3",
+         "name": "Eski",
+         "alignment": "g-2",
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 104.0,
+           "length": 60.0
+          },
+          {
+           "id": "b",
+           "station": 400.0,
+           "elevation": 100.0
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Daire kurbun K'si",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "profile": "b-2",
+      "leastCrestK": 30.0,
+      "leastCurve": 300.0
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "profile": "b-2",
+       "findings": [
+        {
+         "rule": "crestK",
+         "of": [
+          "v1"
+         ],
+         "from": 230.05767930818254,
+         "to": 369.9667742172677,
+         "value": 19.987013558440736,
+         "limit": 30.0,
+         "message": "v1 tepe kurbunun K'si 19.987, en az 30."
+        },
+        {
+         "rule": "curve",
+         "of": [
+          "v1"
+         ],
+         "from": 230.05767930818254,
+         "to": 369.9667742172677,
+         "value": 139.90909490908516,
+         "limit": 300.0,
+         "message": "v1 düşey kurbu 139.909 m, en az 300 m."
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "design_rule_broken",
+        "message": "“Daire” boykesitinde 2 yer verilen tasarım kurallarına uymuyor.",
+        "path": "profile"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ters",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 0.0,
+           "radius": 200.0,
+           "spiralIn": 40.0,
+           "spiralOut": 40.0
+          },
+          {
+           "id": "p2",
+           "x": 450.0,
+           "y": 150.0,
+           "radius": 150.0
+          },
+          {
+           "id": "b",
+           "x": 800.0,
+           "y": 150.0
+          }
+         ]
+        },
+        {
+         "id": "g-2",
+         "name": "Kırık sırt",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 0.0,
+           "radius": 300.0
+          },
+          {
+           "id": "p2",
+           "x": 500.0,
+           "y": 100.0,
+           "radius": 300.0
+          },
+          {
+           "id": "b",
+           "x": 700.0,
+           "y": 300.0
+          }
+         ]
+        },
+        {
+         "id": "g-3",
+         "name": "Bitişik",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 200.0,
+           "y": 0.0,
+           "radius": 100.0
+          },
+          {
+           "id": "p2",
+           "x": 302.5126265847084,
+           "y": 102.51262658470837,
+           "radius": 250.0
+          },
+          {
+           "id": "b",
+           "x": 302.5126265847084,
+           "y": 402.51262658470836
+          }
+         ]
+        },
+        {
+         "id": "g-4",
+         "name": "Kırıklı",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 200.0,
+           "y": 0.0
+          },
+          {
+           "id": "b",
+           "x": 400.0,
+           "y": 50.0
+          }
+         ]
+        },
+        {
+         "id": "g-5",
+         "name": "Paralel",
+         "revision": 1,
+         "offsetOf": {
+          "alignment": "g-1",
+          "offset": 3.5
+         }
+        }
+       ],
+       "profiles": [
+        {
+         "id": "b-1",
+         "name": "Proje kotu",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 350.0,
+           "elevation": 98.0,
+           "length": 120.0
+          },
+          {
+           "id": "b",
+           "station": 700.0,
+           "elevation": 104.0
+          }
+         ]
+        },
+        {
+         "id": "b-2",
+         "name": "Daire",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 300.0,
+           "elevation": 112.0,
+           "radius": 2000.0
+          },
+          {
+           "id": "b",
+           "station": 600.0,
+           "elevation": 103.0
+          }
+         ]
+        },
+        {
+         "id": "b-3",
+         "name": "Eski",
+         "alignment": "g-2",
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 104.0,
+           "length": 60.0
+          },
+          {
+           "id": "b",
+           "station": 400.0,
+           "elevation": 100.0
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Daire, eğimler",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "profile": "b-2",
+      "mostGrade": 0.035,
+      "leastGrade": 0.035
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "profile": "b-2",
+       "findings": [
+        {
+         "rule": "grade",
+         "of": [
+          "a",
+          "v1"
+         ],
+         "from": 0.0,
+         "to": 300.0,
+         "value": 0.04,
+         "limit": 0.035,
+         "message": "a–v1 eğimi %4.000, en çok %3.500."
+        },
+        {
+         "rule": "leastGrade",
+         "of": [
+          "v1",
+          "b"
+         ],
+         "from": 300.0,
+         "to": 600.0,
+         "value": 0.03,
+         "limit": 0.035,
+         "message": "v1–b eğimi %3.000, en az %3.500."
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "design_rule_broken",
+        "message": "“Daire” boykesitinde 2 yer verilen tasarım kurallarına uymuyor.",
+        "path": "profile"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ters",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 0.0,
+           "radius": 200.0,
+           "spiralIn": 40.0,
+           "spiralOut": 40.0
+          },
+          {
+           "id": "p2",
+           "x": 450.0,
+           "y": 150.0,
+           "radius": 150.0
+          },
+          {
+           "id": "b",
+           "x": 800.0,
+           "y": 150.0
+          }
+         ]
+        },
+        {
+         "id": "g-2",
+         "name": "Kırık sırt",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 0.0,
+           "radius": 300.0
+          },
+          {
+           "id": "p2",
+           "x": 500.0,
+           "y": 100.0,
+           "radius": 300.0
+          },
+          {
+           "id": "b",
+           "x": 700.0,
+           "y": 300.0
+          }
+         ]
+        },
+        {
+         "id": "g-3",
+         "name": "Bitişik",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 200.0,
+           "y": 0.0,
+           "radius": 100.0
+          },
+          {
+           "id": "p2",
+           "x": 302.5126265847084,
+           "y": 102.51262658470837,
+           "radius": 250.0
+          },
+          {
+           "id": "b",
+           "x": 302.5126265847084,
+           "y": 402.51262658470836
+          }
+         ]
+        },
+        {
+         "id": "g-4",
+         "name": "Kırıklı",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 200.0,
+           "y": 0.0
+          },
+          {
+           "id": "b",
+           "x": 400.0,
+           "y": 50.0
+          }
+         ]
+        },
+        {
+         "id": "g-5",
+         "name": "Paralel",
+         "revision": 1,
+         "offsetOf": {
+          "alignment": "g-1",
+          "offset": 3.5
+         }
+        }
+       ],
+       "profiles": [
+        {
+         "id": "b-1",
+         "name": "Proje kotu",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 350.0,
+           "elevation": 98.0,
+           "length": 120.0
+          },
+          {
+           "id": "b",
+           "station": 700.0,
+           "elevation": 104.0
+          }
+         ]
+        },
+        {
+         "id": "b-2",
+         "name": "Daire",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 300.0,
+           "elevation": 112.0,
+           "radius": 2000.0
+          },
+          {
+           "id": "b",
+           "station": 600.0,
+           "elevation": 103.0
+          }
+         ]
+        },
+        {
+         "id": "b-3",
+         "name": "Eski",
+         "alignment": "g-2",
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 104.0,
+           "length": 60.0
+          },
+          {
+           "id": "b",
+           "station": 400.0,
+           "elevation": 100.0
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Eski boykesit",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "profile": "b-3",
+      "leastCrestK": 20.0
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "profile": "b-3",
+       "findings": [
+        {
+         "rule": "crestK",
+         "of": [
+          "v1"
+         ],
+         "from": 170.0,
+         "to": 230.0,
+         "value": 15.0,
+         "limit": 20.0,
+         "message": "v1 tepe kurbunun K'si 15.000, en az 20."
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "profile_stale",
+        "message": "“Eski” boykesitinin aksı değişti (boykesit 0. revizyona göre kurulu, aks şimdi 1.); PVI'ları denetleyip aksa yeniden bağlayın.",
+        "path": "profile"
+       },
+       {
+        "code": "design_rule_broken",
+        "message": "“Eski” boykesitinde 1 yer verilen tasarım kurallarına uymuyor.",
+        "path": "profile"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ters",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 0.0,
+           "radius": 200.0,
+           "spiralIn": 40.0,
+           "spiralOut": 40.0
+          },
+          {
+           "id": "p2",
+           "x": 450.0,
+           "y": 150.0,
+           "radius": 150.0
+          },
+          {
+           "id": "b",
+           "x": 800.0,
+           "y": 150.0
+          }
+         ]
+        },
+        {
+         "id": "g-2",
+         "name": "Kırık sırt",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 0.0,
+           "radius": 300.0
+          },
+          {
+           "id": "p2",
+           "x": 500.0,
+           "y": 100.0,
+           "radius": 300.0
+          },
+          {
+           "id": "b",
+           "x": 700.0,
+           "y": 300.0
+          }
+         ]
+        },
+        {
+         "id": "g-3",
+         "name": "Bitişik",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 200.0,
+           "y": 0.0,
+           "radius": 100.0
+          },
+          {
+           "id": "p2",
+           "x": 302.5126265847084,
+           "y": 102.51262658470837,
+           "radius": 250.0
+          },
+          {
+           "id": "b",
+           "x": 302.5126265847084,
+           "y": 402.51262658470836
+          }
+         ]
+        },
+        {
+         "id": "g-4",
+         "name": "Kırıklı",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 200.0,
+           "y": 0.0
+          },
+          {
+           "id": "b",
+           "x": 400.0,
+           "y": 50.0
+          }
+         ]
+        },
+        {
+         "id": "g-5",
+         "name": "Paralel",
+         "revision": 1,
+         "offsetOf": {
+          "alignment": "g-1",
+          "offset": 3.5
+         }
+        }
+       ],
+       "profiles": [
+        {
+         "id": "b-1",
+         "name": "Proje kotu",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 350.0,
+           "elevation": 98.0,
+           "length": 120.0
+          },
+          {
+           "id": "b",
+           "station": 700.0,
+           "elevation": 104.0
+          }
+         ]
+        },
+        {
+         "id": "b-2",
+         "name": "Daire",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 300.0,
+           "elevation": 112.0,
+           "radius": 2000.0
+          },
+          {
+           "id": "b",
+           "station": 600.0,
+           "elevation": 103.0
+          }
+         ]
+        },
+        {
+         "id": "b-3",
+         "name": "Eski",
+         "alignment": "g-2",
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 104.0,
+           "length": 60.0
+          },
+          {
+           "id": "b",
+           "station": 400.0,
+           "elevation": 100.0
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Eski boykesit, kural tutar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "profile": "b-3",
+      "mostGrade": 0.5
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "profile": "b-3",
+       "findings": []
+      },
+      "warnings": [
+       {
+        "code": "profile_stale",
+        "message": "“Eski” boykesitinin aksı değişti (boykesit 0. revizyona göre kurulu, aks şimdi 1.); PVI'ları denetleyip aksa yeniden bağlayın.",
+        "path": "profile"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ters",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 0.0,
+           "radius": 200.0,
+           "spiralIn": 40.0,
+           "spiralOut": 40.0
+          },
+          {
+           "id": "p2",
+           "x": 450.0,
+           "y": 150.0,
+           "radius": 150.0
+          },
+          {
+           "id": "b",
+           "x": 800.0,
+           "y": 150.0
+          }
+         ]
+        },
+        {
+         "id": "g-2",
+         "name": "Kırık sırt",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 0.0,
+           "radius": 300.0
+          },
+          {
+           "id": "p2",
+           "x": 500.0,
+           "y": 100.0,
+           "radius": 300.0
+          },
+          {
+           "id": "b",
+           "x": 700.0,
+           "y": 300.0
+          }
+         ]
+        },
+        {
+         "id": "g-3",
+         "name": "Bitişik",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 200.0,
+           "y": 0.0,
+           "radius": 100.0
+          },
+          {
+           "id": "p2",
+           "x": 302.5126265847084,
+           "y": 102.51262658470837,
+           "radius": 250.0
+          },
+          {
+           "id": "b",
+           "x": 302.5126265847084,
+           "y": 402.51262658470836
+          }
+         ]
+        },
+        {
+         "id": "g-4",
+         "name": "Kırıklı",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 200.0,
+           "y": 0.0
+          },
+          {
+           "id": "b",
+           "x": 400.0,
+           "y": 50.0
+          }
+         ]
+        },
+        {
+         "id": "g-5",
+         "name": "Paralel",
+         "revision": 1,
+         "offsetOf": {
+          "alignment": "g-1",
+          "offset": 3.5
+         }
+        }
+       ],
+       "profiles": [
+        {
+         "id": "b-1",
+         "name": "Proje kotu",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 350.0,
+           "elevation": 98.0,
+           "length": 120.0
+          },
+          {
+           "id": "b",
+           "station": 700.0,
+           "elevation": 104.0
+          }
+         ]
+        },
+        {
+         "id": "b-2",
+         "name": "Daire",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 300.0,
+           "elevation": 112.0,
+           "radius": 2000.0
+          },
+          {
+           "id": "b",
+           "station": 600.0,
+           "elevation": 103.0
+          }
+         ]
+        },
+        {
+         "id": "b-3",
+         "name": "Eski",
+         "alignment": "g-2",
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 104.0,
+           "length": 60.0
+          },
+          {
+           "id": "b",
+           "station": 400.0,
+           "elevation": 100.0
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Tek kurpta kurplar arası yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "profile": "b-2",
+      "leastGradeLength": 500.0
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "profile": "b-2",
+       "findings": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ters",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 0.0,
+           "radius": 200.0,
+           "spiralIn": 40.0,
+           "spiralOut": 40.0
+          },
+          {
+           "id": "p2",
+           "x": 450.0,
+           "y": 150.0,
+           "radius": 150.0
+          },
+          {
+           "id": "b",
+           "x": 800.0,
+           "y": 150.0
+          }
+         ]
+        },
+        {
+         "id": "g-2",
+         "name": "Kırık sırt",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 0.0,
+           "radius": 300.0
+          },
+          {
+           "id": "p2",
+           "x": 500.0,
+           "y": 100.0,
+           "radius": 300.0
+          },
+          {
+           "id": "b",
+           "x": 700.0,
+           "y": 300.0
+          }
+         ]
+        },
+        {
+         "id": "g-3",
+         "name": "Bitişik",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 200.0,
+           "y": 0.0,
+           "radius": 100.0
+          },
+          {
+           "id": "p2",
+           "x": 302.5126265847084,
+           "y": 102.51262658470837,
+           "radius": 250.0
+          },
+          {
+           "id": "b",
+           "x": 302.5126265847084,
+           "y": 402.51262658470836
+          }
+         ]
+        },
+        {
+         "id": "g-4",
+         "name": "Kırıklı",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 200.0,
+           "y": 0.0
+          },
+          {
+           "id": "b",
+           "x": 400.0,
+           "y": 50.0
+          }
+         ]
+        },
+        {
+         "id": "g-5",
+         "name": "Paralel",
+         "revision": 1,
+         "offsetOf": {
+          "alignment": "g-1",
+          "offset": 3.5
+         }
+        }
+       ],
+       "profiles": [
+        {
+         "id": "b-1",
+         "name": "Proje kotu",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 350.0,
+           "elevation": 98.0,
+           "length": 120.0
+          },
+          {
+           "id": "b",
+           "station": 700.0,
+           "elevation": 104.0
+          }
+         ]
+        },
+        {
+         "id": "b-2",
+         "name": "Daire",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 300.0,
+           "elevation": 112.0,
+           "radius": 2000.0
+          },
+          {
+           "id": "b",
+           "station": 600.0,
+           "elevation": 103.0
+          }
+         ]
+        },
+        {
+         "id": "b-3",
+         "name": "Eski",
+         "alignment": "g-2",
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 104.0,
+           "length": 60.0
+          },
+          {
+           "id": "b",
+           "station": 400.0,
+           "elevation": 100.0
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Kural yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "profile": "b-1"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_design_check",
+       "message": "Denetlenecek bir kural verin: tasarım standardının değerleri kullanıcınındır.",
+       "path": "profile"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ters",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 0.0,
+           "radius": 200.0,
+           "spiralIn": 40.0,
+           "spiralOut": 40.0
+          },
+          {
+           "id": "p2",
+           "x": 450.0,
+           "y": 150.0,
+           "radius": 150.0
+          },
+          {
+           "id": "b",
+           "x": 800.0,
+           "y": 150.0
+          }
+         ]
+        },
+        {
+         "id": "g-2",
+         "name": "Kırık sırt",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 0.0,
+           "radius": 300.0
+          },
+          {
+           "id": "p2",
+           "x": 500.0,
+           "y": 100.0,
+           "radius": 300.0
+          },
+          {
+           "id": "b",
+           "x": 700.0,
+           "y": 300.0
+          }
+         ]
+        },
+        {
+         "id": "g-3",
+         "name": "Bitişik",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 200.0,
+           "y": 0.0,
+           "radius": 100.0
+          },
+          {
+           "id": "p2",
+           "x": 302.5126265847084,
+           "y": 102.51262658470837,
+           "radius": 250.0
+          },
+          {
+           "id": "b",
+           "x": 302.5126265847084,
+           "y": 402.51262658470836
+          }
+         ]
+        },
+        {
+         "id": "g-4",
+         "name": "Kırıklı",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 200.0,
+           "y": 0.0
+          },
+          {
+           "id": "b",
+           "x": 400.0,
+           "y": 50.0
+          }
+         ]
+        },
+        {
+         "id": "g-5",
+         "name": "Paralel",
+         "revision": 1,
+         "offsetOf": {
+          "alignment": "g-1",
+          "offset": 3.5
+         }
+        }
+       ],
+       "profiles": [
+        {
+         "id": "b-1",
+         "name": "Proje kotu",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 350.0,
+           "elevation": 98.0,
+           "length": 120.0
+          },
+          {
+           "id": "b",
+           "station": 700.0,
+           "elevation": 104.0
+          }
+         ]
+        },
+        {
+         "id": "b-2",
+         "name": "Daire",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 300.0,
+           "elevation": 112.0,
+           "radius": 2000.0
+          },
+          {
+           "id": "b",
+           "station": 600.0,
+           "elevation": 103.0
+          }
+         ]
+        },
+        {
+         "id": "b-3",
+         "name": "Eski",
+         "alignment": "g-2",
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 104.0,
+           "length": 60.0
+          },
+          {
+           "id": "b",
+           "station": 400.0,
+           "elevation": 100.0
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Sıfır eğim sınırı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "profile": "b-1",
+      "mostGrade": 0.0
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_design_check",
+       "message": "mostGrade 0'dan büyük olmalı.",
+       "path": "mostGrade"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ters",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 0.0,
+           "radius": 200.0,
+           "spiralIn": 40.0,
+           "spiralOut": 40.0
+          },
+          {
+           "id": "p2",
+           "x": 450.0,
+           "y": 150.0,
+           "radius": 150.0
+          },
+          {
+           "id": "b",
+           "x": 800.0,
+           "y": 150.0
+          }
+         ]
+        },
+        {
+         "id": "g-2",
+         "name": "Kırık sırt",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 0.0,
+           "radius": 300.0
+          },
+          {
+           "id": "p2",
+           "x": 500.0,
+           "y": 100.0,
+           "radius": 300.0
+          },
+          {
+           "id": "b",
+           "x": 700.0,
+           "y": 300.0
+          }
+         ]
+        },
+        {
+         "id": "g-3",
+         "name": "Bitişik",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 200.0,
+           "y": 0.0,
+           "radius": 100.0
+          },
+          {
+           "id": "p2",
+           "x": 302.5126265847084,
+           "y": 102.51262658470837,
+           "radius": 250.0
+          },
+          {
+           "id": "b",
+           "x": 302.5126265847084,
+           "y": 402.51262658470836
+          }
+         ]
+        },
+        {
+         "id": "g-4",
+         "name": "Kırıklı",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 200.0,
+           "y": 0.0
+          },
+          {
+           "id": "b",
+           "x": 400.0,
+           "y": 50.0
+          }
+         ]
+        },
+        {
+         "id": "g-5",
+         "name": "Paralel",
+         "revision": 1,
+         "offsetOf": {
+          "alignment": "g-1",
+          "offset": 3.5
+         }
+        }
+       ],
+       "profiles": [
+        {
+         "id": "b-1",
+         "name": "Proje kotu",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 350.0,
+           "elevation": 98.0,
+           "length": 120.0
+          },
+          {
+           "id": "b",
+           "station": 700.0,
+           "elevation": 104.0
+          }
+         ]
+        },
+        {
+         "id": "b-2",
+         "name": "Daire",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 300.0,
+           "elevation": 112.0,
+           "radius": 2000.0
+          },
+          {
+           "id": "b",
+           "station": 600.0,
+           "elevation": 103.0
+          }
+         ]
+        },
+        {
+         "id": "b-3",
+         "name": "Eski",
+         "alignment": "g-2",
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 104.0,
+           "length": 60.0
+          },
+          {
+           "id": "b",
+           "station": 400.0,
+           "elevation": 100.0
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Eksi K",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "profile": "b-1",
+      "leastCrestK": -1.0
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_design_check",
+       "message": "leastCrestK 0'dan büyük olmalı.",
+       "path": "leastCrestK"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ters",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 0.0,
+           "radius": 200.0,
+           "spiralIn": 40.0,
+           "spiralOut": 40.0
+          },
+          {
+           "id": "p2",
+           "x": 450.0,
+           "y": 150.0,
+           "radius": 150.0
+          },
+          {
+           "id": "b",
+           "x": 800.0,
+           "y": 150.0
+          }
+         ]
+        },
+        {
+         "id": "g-2",
+         "name": "Kırık sırt",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 0.0,
+           "radius": 300.0
+          },
+          {
+           "id": "p2",
+           "x": 500.0,
+           "y": 100.0,
+           "radius": 300.0
+          },
+          {
+           "id": "b",
+           "x": 700.0,
+           "y": 300.0
+          }
+         ]
+        },
+        {
+         "id": "g-3",
+         "name": "Bitişik",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 200.0,
+           "y": 0.0,
+           "radius": 100.0
+          },
+          {
+           "id": "p2",
+           "x": 302.5126265847084,
+           "y": 102.51262658470837,
+           "radius": 250.0
+          },
+          {
+           "id": "b",
+           "x": 302.5126265847084,
+           "y": 402.51262658470836
+          }
+         ]
+        },
+        {
+         "id": "g-4",
+         "name": "Kırıklı",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 200.0,
+           "y": 0.0
+          },
+          {
+           "id": "b",
+           "x": 400.0,
+           "y": 50.0
+          }
+         ]
+        },
+        {
+         "id": "g-5",
+         "name": "Paralel",
+         "revision": 1,
+         "offsetOf": {
+          "alignment": "g-1",
+          "offset": 3.5
+         }
+        }
+       ],
+       "profiles": [
+        {
+         "id": "b-1",
+         "name": "Proje kotu",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 350.0,
+           "elevation": 98.0,
+           "length": 120.0
+          },
+          {
+           "id": "b",
+           "station": 700.0,
+           "elevation": 104.0
+          }
+         ]
+        },
+        {
+         "id": "b-2",
+         "name": "Daire",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 300.0,
+           "elevation": 112.0,
+           "radius": 2000.0
+          },
+          {
+           "id": "b",
+           "station": 600.0,
+           "elevation": 103.0
+          }
+         ]
+        },
+        {
+         "id": "b-3",
+         "name": "Eski",
+         "alignment": "g-2",
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 104.0,
+           "length": 60.0
+          },
+          {
+           "id": "b",
+           "station": 400.0,
+           "elevation": 100.0
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Sıfır kurp boyu",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "profile": "b-1",
+      "leastCurve": 0.0
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_design_check",
+       "message": "leastCurve 0'dan büyük olmalı.",
+       "path": "leastCurve"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ters",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 0.0,
+           "radius": 200.0,
+           "spiralIn": 40.0,
+           "spiralOut": 40.0
+          },
+          {
+           "id": "p2",
+           "x": 450.0,
+           "y": 150.0,
+           "radius": 150.0
+          },
+          {
+           "id": "b",
+           "x": 800.0,
+           "y": 150.0
+          }
+         ]
+        },
+        {
+         "id": "g-2",
+         "name": "Kırık sırt",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 0.0,
+           "radius": 300.0
+          },
+          {
+           "id": "p2",
+           "x": 500.0,
+           "y": 100.0,
+           "radius": 300.0
+          },
+          {
+           "id": "b",
+           "x": 700.0,
+           "y": 300.0
+          }
+         ]
+        },
+        {
+         "id": "g-3",
+         "name": "Bitişik",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 200.0,
+           "y": 0.0,
+           "radius": 100.0
+          },
+          {
+           "id": "p2",
+           "x": 302.5126265847084,
+           "y": 102.51262658470837,
+           "radius": 250.0
+          },
+          {
+           "id": "b",
+           "x": 302.5126265847084,
+           "y": 402.51262658470836
+          }
+         ]
+        },
+        {
+         "id": "g-4",
+         "name": "Kırıklı",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 200.0,
+           "y": 0.0
+          },
+          {
+           "id": "b",
+           "x": 400.0,
+           "y": 50.0
+          }
+         ]
+        },
+        {
+         "id": "g-5",
+         "name": "Paralel",
+         "revision": 1,
+         "offsetOf": {
+          "alignment": "g-1",
+          "offset": 3.5
+         }
+        }
+       ],
+       "profiles": [
+        {
+         "id": "b-1",
+         "name": "Proje kotu",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 350.0,
+           "elevation": 98.0,
+           "length": 120.0
+          },
+          {
+           "id": "b",
+           "station": 700.0,
+           "elevation": 104.0
+          }
+         ]
+        },
+        {
+         "id": "b-2",
+         "name": "Daire",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 300.0,
+           "elevation": 112.0,
+           "radius": 2000.0
+          },
+          {
+           "id": "b",
+           "station": 600.0,
+           "elevation": 103.0
+          }
+         ]
+        },
+        {
+         "id": "b-3",
+         "name": "Eski",
+         "alignment": "g-2",
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 104.0,
+           "length": 60.0
+          },
+          {
+           "id": "b",
+           "station": 400.0,
+           "elevation": 100.0
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Olmayan boykesit",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "profile": "yok",
+      "mostGrade": 0.05
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_road_profile",
+       "message": "“yok” kimlikli ya da adlı boykesit projede yok.",
+       "path": "profile"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ters",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 0.0,
+           "radius": 200.0,
+           "spiralIn": 40.0,
+           "spiralOut": 40.0
+          },
+          {
+           "id": "p2",
+           "x": 450.0,
+           "y": 150.0,
+           "radius": 150.0
+          },
+          {
+           "id": "b",
+           "x": 800.0,
+           "y": 150.0
+          }
+         ]
+        },
+        {
+         "id": "g-2",
+         "name": "Kırık sırt",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 0.0,
+           "radius": 300.0
+          },
+          {
+           "id": "p2",
+           "x": 500.0,
+           "y": 100.0,
+           "radius": 300.0
+          },
+          {
+           "id": "b",
+           "x": 700.0,
+           "y": 300.0
+          }
+         ]
+        },
+        {
+         "id": "g-3",
+         "name": "Bitişik",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 200.0,
+           "y": 0.0,
+           "radius": 100.0
+          },
+          {
+           "id": "p2",
+           "x": 302.5126265847084,
+           "y": 102.51262658470837,
+           "radius": 250.0
+          },
+          {
+           "id": "b",
+           "x": 302.5126265847084,
+           "y": 402.51262658470836
+          }
+         ]
+        },
+        {
+         "id": "g-4",
+         "name": "Kırıklı",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 200.0,
+           "y": 0.0
+          },
+          {
+           "id": "b",
+           "x": 400.0,
+           "y": 50.0
+          }
+         ]
+        },
+        {
+         "id": "g-5",
+         "name": "Paralel",
+         "revision": 1,
+         "offsetOf": {
+          "alignment": "g-1",
+          "offset": 3.5
+         }
+        }
+       ],
+       "profiles": [
+        {
+         "id": "b-1",
+         "name": "Proje kotu",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 350.0,
+           "elevation": 98.0,
+           "length": 120.0
+          },
+          {
+           "id": "b",
+           "station": 700.0,
+           "elevation": 104.0
+          }
+         ]
+        },
+        {
+         "id": "b-2",
+         "name": "Daire",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 300.0,
+           "elevation": 112.0,
+           "radius": 2000.0
+          },
+          {
+           "id": "b",
+           "station": 600.0,
+           "elevation": 103.0
+          }
+         ]
+        },
+        {
+         "id": "b-3",
+         "name": "Eski",
+         "alignment": "g-2",
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 104.0,
+           "length": 60.0
+          },
+          {
+           "id": "b",
+           "station": 400.0,
+           "elevation": 100.0
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Ad büyük küçük harf",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "profile": "PROJE KOTU",
+      "mostGrade": 0.05
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "profile": "b-1",
+       "findings": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ters",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 0.0,
+           "radius": 200.0,
+           "spiralIn": 40.0,
+           "spiralOut": 40.0
+          },
+          {
+           "id": "p2",
+           "x": 450.0,
+           "y": 150.0,
+           "radius": 150.0
+          },
+          {
+           "id": "b",
+           "x": 800.0,
+           "y": 150.0
+          }
+         ]
+        },
+        {
+         "id": "g-2",
+         "name": "Kırık sırt",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 0.0,
+           "radius": 300.0
+          },
+          {
+           "id": "p2",
+           "x": 500.0,
+           "y": 100.0,
+           "radius": 300.0
+          },
+          {
+           "id": "b",
+           "x": 700.0,
+           "y": 300.0
+          }
+         ]
+        },
+        {
+         "id": "g-3",
+         "name": "Bitişik",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 200.0,
+           "y": 0.0,
+           "radius": 100.0
+          },
+          {
+           "id": "p2",
+           "x": 302.5126265847084,
+           "y": 102.51262658470837,
+           "radius": 250.0
+          },
+          {
+           "id": "b",
+           "x": 302.5126265847084,
+           "y": 402.51262658470836
+          }
+         ]
+        },
+        {
+         "id": "g-4",
+         "name": "Kırıklı",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 200.0,
+           "y": 0.0
+          },
+          {
+           "id": "b",
+           "x": 400.0,
+           "y": 50.0
+          }
+         ]
+        },
+        {
+         "id": "g-5",
+         "name": "Paralel",
+         "revision": 1,
+         "offsetOf": {
+          "alignment": "g-1",
+          "offset": 3.5
+         }
+        }
+       ],
+       "profiles": [
+        {
+         "id": "b-1",
+         "name": "Proje kotu",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 350.0,
+           "elevation": 98.0,
+           "length": 120.0
+          },
+          {
+           "id": "b",
+           "station": 700.0,
+           "elevation": 104.0
+          }
+         ]
+        },
+        {
+         "id": "b-2",
+         "name": "Daire",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 300.0,
+           "elevation": 112.0,
+           "radius": 2000.0
+          },
+          {
+           "id": "b",
+           "station": 600.0,
+           "elevation": 103.0
+          }
+         ]
+        },
+        {
+         "id": "b-3",
+         "name": "Eski",
+         "alignment": "g-2",
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 104.0,
+           "length": 60.0
+          },
+          {
+           "id": "b",
+           "station": 400.0,
+           "elevation": 100.0
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Kısa eğim yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "profile": "b-1",
+      "leastGradeLength": 50.0
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "profile": "b-1",
+       "findings": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ters",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 0.0,
+           "radius": 200.0,
+           "spiralIn": 40.0,
+           "spiralOut": 40.0
+          },
+          {
+           "id": "p2",
+           "x": 450.0,
+           "y": 150.0,
+           "radius": 150.0
+          },
+          {
+           "id": "b",
+           "x": 800.0,
+           "y": 150.0
+          }
+         ]
+        },
+        {
+         "id": "g-2",
+         "name": "Kırık sırt",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 0.0,
+           "radius": 300.0
+          },
+          {
+           "id": "p2",
+           "x": 500.0,
+           "y": 100.0,
+           "radius": 300.0
+          },
+          {
+           "id": "b",
+           "x": 700.0,
+           "y": 300.0
+          }
+         ]
+        },
+        {
+         "id": "g-3",
+         "name": "Bitişik",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 200.0,
+           "y": 0.0,
+           "radius": 100.0
+          },
+          {
+           "id": "p2",
+           "x": 302.5126265847084,
+           "y": 102.51262658470837,
+           "radius": 250.0
+          },
+          {
+           "id": "b",
+           "x": 302.5126265847084,
+           "y": 402.51262658470836
+          }
+         ]
+        },
+        {
+         "id": "g-4",
+         "name": "Kırıklı",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 200.0,
+           "y": 0.0
+          },
+          {
+           "id": "b",
+           "x": 400.0,
+           "y": 50.0
+          }
+         ]
+        },
+        {
+         "id": "g-5",
+         "name": "Paralel",
+         "revision": 1,
+         "offsetOf": {
+          "alignment": "g-1",
+          "offset": 3.5
+         }
+        }
+       ],
+       "profiles": [
+        {
+         "id": "b-1",
+         "name": "Proje kotu",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 350.0,
+           "elevation": 98.0,
+           "length": 120.0
+          },
+          {
+           "id": "b",
+           "station": 700.0,
+           "elevation": 104.0
+          }
+         ]
+        },
+        {
+         "id": "b-2",
+         "name": "Daire",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 300.0,
+           "elevation": 112.0,
+           "radius": 2000.0
+          },
+          {
+           "id": "b",
+           "station": 600.0,
+           "elevation": 103.0
+          }
+         ]
+        },
+        {
+         "id": "b-3",
+         "name": "Eski",
+         "alignment": "g-2",
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 104.0,
+           "length": 60.0
+          },
+          {
+           "id": "b",
+           "station": 400.0,
+           "elevation": 100.0
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Yatık eğim yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "profile": "b-2",
+      "leastGrade": 0.01
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "profile": "b-2",
+       "findings": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ters",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 0.0,
+           "radius": 200.0,
+           "spiralIn": 40.0,
+           "spiralOut": 40.0
+          },
+          {
+           "id": "p2",
+           "x": 450.0,
+           "y": 150.0,
+           "radius": 150.0
+          },
+          {
+           "id": "b",
+           "x": 800.0,
+           "y": 150.0
+          }
+         ]
+        },
+        {
+         "id": "g-2",
+         "name": "Kırık sırt",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 0.0,
+           "radius": 300.0
+          },
+          {
+           "id": "p2",
+           "x": 500.0,
+           "y": 100.0,
+           "radius": 300.0
+          },
+          {
+           "id": "b",
+           "x": 700.0,
+           "y": 300.0
+          }
+         ]
+        },
+        {
+         "id": "g-3",
+         "name": "Bitişik",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 200.0,
+           "y": 0.0,
+           "radius": 100.0
+          },
+          {
+           "id": "p2",
+           "x": 302.5126265847084,
+           "y": 102.51262658470837,
+           "radius": 250.0
+          },
+          {
+           "id": "b",
+           "x": 302.5126265847084,
+           "y": 402.51262658470836
+          }
+         ]
+        },
+        {
+         "id": "g-4",
+         "name": "Kırıklı",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "p1",
+           "x": 200.0,
+           "y": 0.0
+          },
+          {
+           "id": "b",
+           "x": 400.0,
+           "y": 50.0
+          }
+         ]
+        },
+        {
+         "id": "g-5",
+         "name": "Paralel",
+         "revision": 1,
+         "offsetOf": {
+          "alignment": "g-1",
+          "offset": 3.5
+         }
+        }
+       ],
+       "profiles": [
+        {
+         "id": "b-1",
+         "name": "Proje kotu",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 350.0,
+           "elevation": 98.0,
+           "length": 120.0
+          },
+          {
+           "id": "b",
+           "station": 700.0,
+           "elevation": 104.0
+          }
+         ]
+        },
+        {
+         "id": "b-2",
+         "name": "Daire",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 300.0,
+           "elevation": 112.0,
+           "radius": 2000.0
+          },
+          {
+           "id": "b",
+           "station": 600.0,
+           "elevation": 103.0
+          }
+         ]
+        },
+        {
+         "id": "b-3",
+         "name": "Eski",
+         "alignment": "g-2",
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 104.0,
+           "length": 60.0
+          },
+          {
+           "id": "b",
+           "station": 400.0,
+           "elevation": 100.0
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Yol projesi değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "profile": "b-1",
+      "mostGrade": 0.05
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_road_project",
+       "message": "Boykesit yalnız yol projesinde (KentOS Yol) olur; bu çizim yol projesi değil."
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": null
+     },
+     "within": 1e-06
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Yol tasarım denetimi",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "drawingFont": "barlow"
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [],
+    "uids": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  }
+ ]
+}

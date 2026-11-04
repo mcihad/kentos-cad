@@ -1455,6 +1455,28 @@ DerivationStatusName = Literal["current", "stale", "edited", "source_gone", "not
 """The names of :class:`DerivationStatus`, for a plain string."""
 
 
+class DesignRule(_StrEnum):
+    """Which design rule a finding breaks."""
+    RADIUS = "radius"
+    ARC = "arc"
+    SPIRAL = "spiral"
+    TANGENT = "tangent"
+    REVERSE = "reverse"
+    BROKEN_BACK = "brokenBack"
+    RADIUS_RATIO = "radiusRatio"
+    KINK = "kink"
+    GRADE = "grade"
+    LEAST_GRADE = "leastGrade"
+    CREST_K = "crestK"
+    SAG_K = "sagK"
+    CURVE = "curve"
+    GRADE_LENGTH = "gradeLength"
+
+
+DesignRuleName = Literal["radius", "arc", "spiral", "tangent", "reverse", "brokenBack", "radiusRatio", "kink", "grade", "leastGrade", "crestK", "sagK", "curve", "gradeLength"]
+"""The names of :class:`DesignRule`, for a plain string."""
+
+
 class DimensionArrow(_StrEnum):
     """A dimension's arrowheads other than the oblique tick, which is no value but
     the field's absence (docs/adr/0183 §3).
@@ -12282,6 +12304,95 @@ class AlignmentStationing(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class AlignmentsCheck(_Model):
+    """Input of `road.alignments.check` v1 (docs/adr/0922 §1): an alignment (its id or name; one of its own PIs, not a
+    parallel axis) and the rules: the least radius, a curve's least circular length, a clothoid's least length, the
+    least tangent between two curves, between two curves turning opposite ways (reverse; joined ones are 0) and the same
+    way (broken-back; joined ones are compound, not this), the most ratio of two joined curves' radii, and with `kinks` a
+    PI where the direction turns with no curve. Reads only.
+
+    Refusals, in this order: `not_a_road_project`, `unknown_alignment`, `invalid_design_check` (no rule given, a least
+    not above 0, a ratio under 1, a parallel axis), and the alignment's when it no longer builds. Warnings:
+    `design_rule_broken`.
+    Attributes:
+        least_arc: Unit: m.
+        least_broken_back: Unit: m.
+        least_radius: Unit: m.
+        least_reverse: Unit: m.
+        least_spiral: Unit: m.
+        least_tangent: Unit: m.
+        most_radius_ratio: Unit: 1.
+    """
+    alignment: str
+    kinks: bool | Unset = UNSET
+    least_arc: float | None | Unset = UNSET
+    least_broken_back: float | None | Unset = UNSET
+    least_radius: float | None | Unset = UNSET
+    least_reverse: float | None | Unset = UNSET
+    least_spiral: float | None | Unset = UNSET
+    least_tangent: float | None | Unset = UNSET
+    most_radius_ratio: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["alignment"] = self.alignment
+        if self.kinks is not UNSET:
+            out["kinks"] = self.kinks
+        if self.least_arc is not UNSET:
+            out["leastArc"] = None if self.least_arc is None else float(self.least_arc)
+        if self.least_broken_back is not UNSET:
+            out["leastBrokenBack"] = None if self.least_broken_back is None else float(self.least_broken_back)
+        if self.least_radius is not UNSET:
+            out["leastRadius"] = None if self.least_radius is None else float(self.least_radius)
+        if self.least_reverse is not UNSET:
+            out["leastReverse"] = None if self.least_reverse is None else float(self.least_reverse)
+        if self.least_spiral is not UNSET:
+            out["leastSpiral"] = None if self.least_spiral is None else float(self.least_spiral)
+        if self.least_tangent is not UNSET:
+            out["leastTangent"] = None if self.least_tangent is None else float(self.least_tangent)
+        if self.most_radius_ratio is not UNSET:
+            out["mostRadiusRatio"] = None if self.most_radius_ratio is None else float(self.most_radius_ratio)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AlignmentsCheck:
+        return cls(
+            alignment=data["alignment"],
+            kinks=data.get("kinks", UNSET),
+            least_arc=UNSET if "leastArc" not in data else None if data["leastArc"] is None else float(data["leastArc"]),
+            least_broken_back=UNSET if "leastBrokenBack" not in data else None if data["leastBrokenBack"] is None else float(data["leastBrokenBack"]),
+            least_radius=UNSET if "leastRadius" not in data else None if data["leastRadius"] is None else float(data["leastRadius"]),
+            least_reverse=UNSET if "leastReverse" not in data else None if data["leastReverse"] is None else float(data["leastReverse"]),
+            least_spiral=UNSET if "leastSpiral" not in data else None if data["leastSpiral"] is None else float(data["leastSpiral"]),
+            least_tangent=UNSET if "leastTangent" not in data else None if data["leastTangent"] is None else float(data["leastTangent"]),
+            most_radius_ratio=UNSET if "mostRadiusRatio" not in data else None if data["mostRadiusRatio"] is None else float(data["mostRadiusRatio"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AlignmentsChecked(_Model):
+    """Output of `road.alignments.check` v1: the alignment's id, its curve pairs and the rules broken, in station order."""
+    alignment: str
+    pairs: list[CurvePair]
+    findings: list[DesignFinding]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["alignment"] = self.alignment
+        out["pairs"] = [e0.to_json() for e0 in self.pairs]
+        out["findings"] = [e0.to_json() for e0 in self.findings]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AlignmentsChecked:
+        return cls(
+            alignment=data["alignment"],
+            pairs=[CurvePair.from_json(e0) for e0 in data["pairs"]],
+            findings=[DesignFinding.from_json(e0) for e0 in data["findings"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class AlignmentsCreate(_Model):
     """Input of `road.alignments.create` v1: a new alignment from its PIs, or a parallel axis (`offsetOf`) of one; its id
     when not given is the first free of `g-1`, `g-2` …
@@ -21715,6 +21826,44 @@ class CulvertsWritten(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class CurvePair(_Model):
+    """Two curves one after another: their PIs, whether they turn opposite ways, the tangent between them (ST to TS) and
+    where, whether they are joined (no tangent).
+    Attributes:
+        tangent: Unit: m.
+        from_: Unit: m.
+        to: Unit: m.
+    """
+    between: list[str]
+    reverse: bool
+    joined: bool
+    tangent: float
+    from_: float
+    to: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["between"] = list(self.between)
+        out["reverse"] = self.reverse
+        out["joined"] = self.joined
+        out["tangent"] = float(self.tangent)
+        out["from"] = float(self.from_)
+        out["to"] = float(self.to)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CurvePair:
+        return cls(
+            between=list(data["between"]),
+            reverse=data["reverse"],
+            joined=data["joined"],
+            tangent=float(data["tangent"]),
+            from_=float(data["from"]),
+            to=float(data["to"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CurvesConstruct(_Model):
     """Input of `cad.curves.construct` v1: the curves the constructions give, in their order. It reads no
     selection, view or snap setting (TODOS.md CMD-07) and writes nothing.
@@ -22584,6 +22733,49 @@ class DerivedEntitiesPlan(_Model):
             added=[Entity.from_json(e0) for e0 in data["added"]] if "added" in data else UNSET,
             removed=list(data["removed"]) if "removed" in data else UNSET,
             updated=[Entity.from_json(e0) for e0 in data["updated"]] if "updated" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DesignFinding(_Model):
+    """A design rule broken: the rule, the PIs or PVIs, the stations it spans (internal, m), the value found and the limit
+    (none for a kink), and what it is in words.
+    Attributes:
+        from_: Unit: m.
+        to: Unit: m.
+        value: Unit: value.
+        limit: Unit: value.
+    """
+    rule: DesignRule | DesignRuleName
+    of: list[str]
+    from_: float
+    to: float
+    value: float
+    message: str
+    limit: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["rule"] = _enum_out(self.rule)
+        out["of"] = list(self.of)
+        out["from"] = float(self.from_)
+        out["to"] = float(self.to)
+        out["value"] = float(self.value)
+        out["message"] = self.message
+        if self.limit is not UNSET:
+            out["limit"] = None if self.limit is None else float(self.limit)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DesignFinding:
+        return cls(
+            rule=_enum_in(DesignRule, data["rule"]),
+            of=list(data["of"]),
+            from_=float(data["from"]),
+            to=float(data["to"]),
+            value=float(data["value"]),
+            message=data["message"],
+            limit=UNSET if "limit" not in data else None if data["limit"] is None else float(data["limit"]),
         )
 
 
@@ -65507,6 +65699,80 @@ class RoadProfileListed(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class RoadProfilesCheck(_Model):
+    """Input of `road.profiles.check` v1 (docs/adr/0922 §2): a profile (its id or name) and the rules: the steepest and
+    the flattest grade between two PVIs (ratios, either way), a crest's and a sag's least K (metres per percent), a
+    vertical curve's least length and the least straight grade between two curves. Reads only.
+
+    Refusals, in this order: `not_a_road_project`, `unknown_road_profile`, `invalid_design_check` (no rule given, a
+    limit not above 0), and the profile's when it no longer builds. Warnings: `design_rule_broken`, `profile_stale`.
+    Attributes:
+        least_crest_k: Unit: m/%.
+        least_curve: Unit: m.
+        least_grade: Unit: 1.
+        least_grade_length: Unit: m.
+        least_sag_k: Unit: m/%.
+        most_grade: Unit: 1.
+    """
+    profile: str
+    least_crest_k: float | None | Unset = UNSET
+    least_curve: float | None | Unset = UNSET
+    least_grade: float | None | Unset = UNSET
+    least_grade_length: float | None | Unset = UNSET
+    least_sag_k: float | None | Unset = UNSET
+    most_grade: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["profile"] = self.profile
+        if self.least_crest_k is not UNSET:
+            out["leastCrestK"] = None if self.least_crest_k is None else float(self.least_crest_k)
+        if self.least_curve is not UNSET:
+            out["leastCurve"] = None if self.least_curve is None else float(self.least_curve)
+        if self.least_grade is not UNSET:
+            out["leastGrade"] = None if self.least_grade is None else float(self.least_grade)
+        if self.least_grade_length is not UNSET:
+            out["leastGradeLength"] = None if self.least_grade_length is None else float(self.least_grade_length)
+        if self.least_sag_k is not UNSET:
+            out["leastSagK"] = None if self.least_sag_k is None else float(self.least_sag_k)
+        if self.most_grade is not UNSET:
+            out["mostGrade"] = None if self.most_grade is None else float(self.most_grade)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoadProfilesCheck:
+        return cls(
+            profile=data["profile"],
+            least_crest_k=UNSET if "leastCrestK" not in data else None if data["leastCrestK"] is None else float(data["leastCrestK"]),
+            least_curve=UNSET if "leastCurve" not in data else None if data["leastCurve"] is None else float(data["leastCurve"]),
+            least_grade=UNSET if "leastGrade" not in data else None if data["leastGrade"] is None else float(data["leastGrade"]),
+            least_grade_length=UNSET if "leastGradeLength" not in data else None if data["leastGradeLength"] is None else float(data["leastGradeLength"]),
+            least_sag_k=UNSET if "leastSagK" not in data else None if data["leastSagK"] is None else float(data["leastSagK"]),
+            most_grade=UNSET if "mostGrade" not in data else None if data["mostGrade"] is None else float(data["mostGrade"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RoadProfilesChecked(_Model):
+    """Output of `road.profiles.check` v1: the profile's id and the rules broken, in station order."""
+    profile: str
+    findings: list[DesignFinding]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["profile"] = self.profile
+        out["findings"] = [e0.to_json() for e0 in self.findings]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoadProfilesChecked:
+        return cls(
+            profile=data["profile"],
+            findings=[DesignFinding.from_json(e0) for e0 in data["findings"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class RoadProjectEdit(_Model):
     """Input of `road.project.edit` v1 (docs/adr/0911 §3): `autoRebuild` turns drawing the stale drawings again by itself, in
     the step of the write that left them stale, on or off; one undo step “Kendiliğinden yeniden üret”.
@@ -104506,6 +104772,8 @@ __all__ = [
     "AlignmentPlace",
     "AlignmentReport",
     "AlignmentStationing",
+    "AlignmentsCheck",
+    "AlignmentsChecked",
     "AlignmentsCreate",
     "AlignmentsEdit",
     "AlignmentsEditOperation",
@@ -105013,6 +105281,7 @@ __all__ = [
     "CulvertsWritten",
     "CurveConstruction",
     "CurveEdit",
+    "CurvePair",
     "CurvesConstruct",
     "CurvesConstructed",
     "CurvesEdit",
@@ -105058,7 +105327,10 @@ __all__ = [
     "DeriveElevationsOperation",
     "DeriveWork",
     "DerivedEntitiesPlan",
+    "DesignFinding",
     "DesignOption",
+    "DesignRule",
+    "DesignRuleName",
     "DetachArchOperation",
     "DetachDimensionSetEdit",
     "DetachMasterPaperOp",
@@ -106975,6 +107247,8 @@ __all__ = [
     "RoadNodeState",
     "RoadNodeStateName",
     "RoadProfileListed",
+    "RoadProfilesCheck",
+    "RoadProfilesChecked",
     "RoadProjectEdit",
     "RoadProjectEdited",
     "RoadProjectQuery",
