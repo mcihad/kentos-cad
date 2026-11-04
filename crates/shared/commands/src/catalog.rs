@@ -7040,6 +7040,31 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::ROAD_PROFILES_LENGTHS.into(),
+            version: crate::ROAD_PROFILES_LENGTHS_VERSION,
+            title: "Düşey kurp boyu öner".into(),
+            summary: "Bir boykesitin her düşey kurbu için verilen ölçütlerin istediği en kısa boyu ve öneriyi verir; hiçbir şey yazmaz. Durma görüş mesafesi v·t + v²/(2(a + g·G)), v = speed/3,6, g 9,80665 (time ve decel; grades ile yaklaşma eğimlerinde, iki yönün uzunu). Tepe (eye, object): S ≤ L için L = A·S²/(200(√h₁ + √h₂)²), S > L için 2S − 200(√h₁ + √h₂)²/A; passing ile geçme görüşü (nesne göz yüksekliğinde). Çukur far (headlight, beam derece): L = A·S²/(200(h + S·tan β)) ya da 2S − 200(h + S·tan β)/A; konfor (accel): A·V²/(1296·a). Bisektris (external): 800·E/A. Eğimler görüşü kendi verirse 0. Değerlerin hepsi standardın ya da kullanıcının; KentOS sayı vermez. Cevap: düz yoldaki durma mesafesi; her kurbun tepe ya da çukur oluşu, A, şimdiki boyu (dairenin aynı K'li parabol boyu R·|A|/100), ölçütlerin boyları, belirleyen ölçüt, gereken ve step'e yukarı yuvarlanmış önerilen boy, kısa olup olmadığı. \
+                      Uyarılar: profile_stale, vertical_curve_short. Retler: invalid_profile_lengths, not_a_road_project, unknown_road_profile."
+                .into(),
+            aliases: vec!["kurpboyu".into(), "dusaykurpboyu".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::RoadProfilesLengths>(),
+            output: schema::<crate::RoadProfileLengths>(),
+            plan: Some(schema::<crate::RoadProfileLengths>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "80 km/sa, AASHTO'nun değerleriyle örnek: 2,5 s, 3,4 m/s², göz 1,08, engel 0,60, far 0,60 ve 1°, 5 m'ye".into(),
+                input: json!({ "profile": "b-1", "speed": 80.0, "time": 2.5, "decel": 3.4, "eye": 1.08, "object": 0.6, "headlight": 0.6, "beam": 1.0, "step": 5.0 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::ROAD_PROFILES_SIGHT.into(),
             version: crate::ROAD_PROFILES_SIGHT_VERSION,
             title: "Görüş mesafesi".into(),
@@ -14476,6 +14501,9 @@ mod tests {
                     crate::ROAD_PROFILES_CHECK => {
                         serde_json::from_value::<crate::RoadProfilesCheck>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_PROFILES_LENGTHS => {
+                        serde_json::from_value::<crate::RoadProfilesLengths>(e.input.clone()).map(|_| ())
+                    }
                     crate::ROAD_TEMPLATES_EDIT => {
                         serde_json::from_value::<crate::TemplatesEdit>(e.input.clone()).map(|_| ())
                     }
@@ -15299,6 +15327,10 @@ mod tests {
                         }
                         crate::ROAD_PROFILES_CHECK => {
                             serde_json::from_value::<crate::RoadProfilesChecked>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_PROFILES_LENGTHS => {
+                            serde_json::from_value::<crate::RoadProfileLengths>(output.clone())
                                 .map(|_| ())
                         }
                         crate::ROAD_TEMPLATES_EDIT => {

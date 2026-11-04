@@ -37312,6 +37312,216 @@
       ]
     },
     {
+      "id": "road.profiles.lengths",
+      "version": 1,
+      "title": "Düşey kurp boyu öner",
+      "summary": "Bir boykesitin her düşey kurbu için verilen ölçütlerin istediği en kısa boyu ve öneriyi verir; hiçbir şey yazmaz. Durma görüş mesafesi v·t + v²/(2(a + g·G)), v = speed/3,6, g 9,80665 (time ve decel; grades ile yaklaşma eğimlerinde, iki yönün uzunu). Tepe (eye, object): S ≤ L için L = A·S²/(200(√h₁ + √h₂)²), S > L için 2S − 200(√h₁ + √h₂)²/A; passing ile geçme görüşü (nesne göz yüksekliğinde). Çukur far (headlight, beam derece): L = A·S²/(200(h + S·tan β)) ya da 2S − 200(h + S·tan β)/A; konfor (accel): A·V²/(1296·a). Bisektris (external): 800·E/A. Eğimler görüşü kendi verirse 0. Değerlerin hepsi standardın ya da kullanıcının; KentOS sayı vermez. Cevap: düz yoldaki durma mesafesi; her kurbun tepe ya da çukur oluşu, A, şimdiki boyu (dairenin aynı K'li parabol boyu R·|A|/100), ölçütlerin boyları, belirleyen ölçüt, gereken ve step'e yukarı yuvarlanmış önerilen boy, kısa olup olmadığı. Uyarılar: profile_stale, vertical_curve_short. Retler: invalid_profile_lengths, not_a_road_project, unknown_road_profile.",
+      "aliases": [
+        "kurpboyu",
+        "dusaykurpboyu"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `road.profiles.lengths` v1 (docs/adr/0935 §2): each vertical curve's least length for a design speed\n(km/h) by the criteria given, every value the standard's or the user's (KentOS fills in none):\n\n- stopping sight (crest from an eye to an object, sag by headlights): the reaction `time` (s) and the `decel`\n  (m/s²), with `grades` the approach grades' (each direction's, the longer distance kept);\n- `eye`, `object` (m): the crest's stopping sight; `passing` (m): a passing sight distance the crest must give,\n  from the eye to an eye-high object;\n- `headlight` (m) and `beam` (degrees): the sag's headlight sight over the stopping distance;\n- `accel` (m/s²): the sag's vertical acceleration; `external` (m): the least bisector, either kind;\n- `step` (m): the suggestion rounded up to it.\n\nRefusals: `invalid_profile_lengths` (no criterion, a value not right, a crest or headlight criterion without the\nstopping sight's time and deceleration), `not_a_road_project`, `unknown_road_profile`. Warnings:\n`vertical_curve_short` (a curve shorter than its least length), `profile_stale`.",
+        "properties": {
+          "accel": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m/s2"
+          },
+          "beam": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "deg"
+          },
+          "decel": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m/s2"
+          },
+          "external": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "eye": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "grades": {
+            "type": "boolean"
+          },
+          "headlight": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "object": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "passing": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "profile": {
+            "type": "string"
+          },
+          "speed": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "km/h"
+          },
+          "step": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "time": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "s"
+          }
+        },
+        "required": [
+          "profile",
+          "speed"
+        ],
+        "title": "RoadProfilesLengths",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.profiles.lengths` v1: the profile, the stopping sight distance on the level (none without its time\nand deceleration) and each curve's lengths in station order.",
+        "properties": {
+          "curves": {
+            "items": {
+              "$ref": "#/$defs/CurveLengths"
+            },
+            "type": "array"
+          },
+          "profile": {
+            "type": "string"
+          },
+          "stopping": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          }
+        },
+        "required": [
+          "profile",
+          "curves"
+        ],
+        "title": "RoadProfileLengths",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.profiles.lengths` v1: the profile, the stopping sight distance on the level (none without its time\nand deceleration) and each curve's lengths in station order.",
+        "properties": {
+          "curves": {
+            "items": {
+              "$ref": "#/$defs/CurveLengths"
+            },
+            "type": "array"
+          },
+          "profile": {
+            "type": "string"
+          },
+          "stopping": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          }
+        },
+        "required": [
+          "profile",
+          "curves"
+        ],
+        "title": "RoadProfileLengths",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_profile_lengths",
+          "not_a_road_project",
+          "unknown_road_profile"
+        ],
+        "warnings": [
+          "profile_stale",
+          "vertical_curve_short"
+        ]
+      },
+      "examples": [
+        {
+          "title": "80 km/sa, AASHTO'nun değerleriyle örnek: 2,5 s, 3,4 m/s², göz 1,08, engel 0,60, far 0,60 ve 1°, 5 m'ye",
+          "input": {
+            "beam": 1.0,
+            "decel": 3.4,
+            "eye": 1.08,
+            "headlight": 0.6,
+            "object": 0.6,
+            "profile": "b-1",
+            "speed": 80.0,
+            "step": 5.0,
+            "time": 2.5
+          }
+        }
+      ]
+    },
+    {
       "id": "road.profiles.sight",
       "version": 1,
       "title": "Görüş mesafesi",
@@ -85903,6 +86113,18 @@
       "meaning": "Boykesitin aksı boykesit kurulduktan sonra değişti; PVI'ları denetleyip aksa yeniden bağlayın."
     },
     {
+      "code": "invalid_profile_lengths",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Düşey kurp boyu sorusu geçerli değil; ileti nedenini söyler."
+    },
+    {
+      "code": "vertical_curve_short",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bir düşey kurp verilen ölçütlerin istediği boydan kısa."
+    },
+    {
       "code": "profile_surface_gone",
       "kind": "warning",
       "retryable": false,
@@ -91212,6 +91434,10 @@
     {
       "unit": "km/h",
       "meaning": "Kilometre bölü saat."
+    },
+    {
+      "unit": "m/s2",
+      "meaning": "Metre bölü saniye kare: ivme ve yavaşlama."
     },
     {
       "unit": "s",
@@ -104629,6 +104855,32 @@
         }
       ]
     },
+    "CurveCriterion": {
+      "description": "A criterion's least length: `stopping` (a crest's stopping sight), `passing`, `headlight`, `comfort`, `bisector`;\nthe sight distance it asks (m, the sight criteria) and the length (m).",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "length": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "sight": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "kind",
+        "length"
+      ],
+      "type": "object"
+    },
     "CurveEdit": {
       "description": "What changes (AutoCAD PEDIT's Close, Open, Decurve, Spline; SPLINEDIT's Close, Open, Fit data, Edit vertex,\nRefine, convert to Polyline).",
       "oneOf": [
@@ -104958,6 +105210,65 @@
         "at",
         "radius",
         "e"
+      ],
+      "type": "object"
+    },
+    "CurveLengths": {
+      "description": "A vertical curve's lengths: its PVI, crest or sag, the grade change A (percent, signed), its length now (a circle's\nas the parabola of the same K, R·|A|/100; none without a curve), each criterion's, the governing one's (its kind and\nlength), the suggestion (rounded up) and whether the curve is shorter than the governing length.",
+      "properties": {
+        "a": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "percent"
+        },
+        "crest": {
+          "type": "boolean"
+        },
+        "criteria": {
+          "items": {
+            "$ref": "#/$defs/CurveCriterion"
+          },
+          "type": "array"
+        },
+        "governing": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "length": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "pvi": {
+          "type": "string"
+        },
+        "required": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "short": {
+          "type": "boolean"
+        },
+        "suggested": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "pvi",
+        "crest",
+        "a",
+        "criteria",
+        "required",
+        "suggested",
+        "short"
       ],
       "type": "object"
     },

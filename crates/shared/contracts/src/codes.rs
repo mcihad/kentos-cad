@@ -922,6 +922,10 @@ codes! {
     CORRIDOR_SUPERELEVATION_GONE = "corridor_superelevation_gone", Warning, false, "Koridorun dever çizelgesi kurulamıyor; şeritler tip kesitin eğimiyle verildi.";
     /// A warning: the profile's alignment changed since it was made or rebound.
     PROFILE_STALE = "profile_stale", Warning, false, "Boykesitin aksı boykesit kurulduktan sonra değişti; PVI'ları denetleyip aksa yeniden bağlayın.";
+    /// A refusal: a vertical curve length question is not valid (docs/adr/0935 §2).
+    INVALID_PROFILE_LENGTHS = "invalid_profile_lengths", Failed, false, "Düşey kurp boyu sorusu geçerli değil; ileti nedenini söyler.";
+    /// A warning: a vertical curve is shorter than its least length by the criteria given (docs/adr/0935 §2).
+    VERTICAL_CURVE_SHORT = "vertical_curve_short", Warning, false, "Bir düşey kurp verilen ölçütlerin istediği boydan kısa.";
     /// A warning: the profile's surface is not in the project or makes no surface; no black elevations.
     PROFILE_SURFACE_GONE = "profile_surface_gone", Warning, false, "Boykesitin yüzeyi projede yok ya da kurulamıyor; siyah kot verilmedi.";
     /// A reversed alignment's equations go.

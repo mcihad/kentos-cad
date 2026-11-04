@@ -189,3 +189,135 @@ pub struct RoadProfilesChecked {
     pub profile: String,
     pub findings: Vec<DesignFinding>,
 }
+
+pub const ROAD_PROFILES_LENGTHS: &str = "road.profiles.lengths";
+pub const ROAD_PROFILES_LENGTHS_VERSION: u32 = 1;
+
+/// Input of `road.profiles.lengths` v1 (docs/adr/0935 §2): each vertical curve's least length for a design speed
+/// (km/h) by the criteria given, every value the standard's or the user's (KentOS fills in none):
+///
+/// - stopping sight (crest from an eye to an object, sag by headlights): the reaction `time` (s) and the `decel`
+///   (m/s²), with `grades` the approach grades' (each direction's, the longer distance kept);
+/// - `eye`, `object` (m): the crest's stopping sight; `passing` (m): a passing sight distance the crest must give,
+///   from the eye to an eye-high object;
+/// - `headlight` (m) and `beam` (degrees): the sag's headlight sight over the stopping distance;
+/// - `accel` (m/s²): the sag's vertical acceleration; `external` (m): the least bisector, either kind;
+/// - `step` (m): the suggestion rounded up to it.
+///
+/// Refusals: `invalid_profile_lengths` (no criterion, a value not right, a crest or headlight criterion without the
+/// stopping sight's time and deceleration), `not_a_road_project`, `unknown_road_profile`. Warnings:
+/// `vertical_curve_short` (a curve shorter than its least length), `profile_stale`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RoadProfilesLengths {
+    pub profile: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "km/h")))]
+    pub speed: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "s")))]
+    pub time: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m/s2")))]
+    pub decel: Option<f64>,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub grades: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub eye: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub object: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub passing: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub headlight: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
+    pub beam: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m/s2")))]
+    pub accel: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub external: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub step: Option<f64>,
+}
+
+/// A criterion's least length: `stopping` (a crest's stopping sight), `passing`, `headlight`, `comfort`, `bisector`;
+/// the sight distance it asks (m, the sight criteria) and the length (m).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CurveCriterion {
+    pub kind: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub sight: Option<f64>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub length: f64,
+}
+
+/// A vertical curve's lengths: its PVI, crest or sag, the grade change A (percent, signed), its length now (a circle's
+/// as the parabola of the same K, R·|A|/100; none without a curve), each criterion's, the governing one's (its kind and
+/// length), the suggestion (rounded up) and whether the curve is shorter than the governing length.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CurveLengths {
+    pub pvi: String,
+    pub crest: bool,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    pub a: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub length: Option<f64>,
+    pub criteria: Vec<CurveCriterion>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub governing: Option<String>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub required: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub suggested: f64,
+    pub short: bool,
+}
+
+/// Output of `road.profiles.lengths` v1: the profile, the stopping sight distance on the level (none without its time
+/// and deceleration) and each curve's lengths in station order.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RoadProfileLengths {
+    pub profile: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub stopping: Option<f64>,
+    pub curves: Vec<CurveLengths>,
+}

@@ -57,6 +57,9 @@ PROFILES = [
      "pvis": [pv("a", 0, 100), pv("v1", 300, 112, radius=2000), pv("b", 600, 103)]},
     {"id": "b-3", "name": "Eski", "alignment": "g-2", "revision": 1,
      "pvis": [pv("a", 0, 100), pv("v1", 200, 104, length=60), pv("b", 400, 100)]},
+    # Docs/adr/0935: a kink without a curve and an asymmetric crest, for the least lengths.
+    {"id": "b-4", "name": "Kırıklı", "alignment": "g-1", "alignmentRevision": 1, "revision": 1,
+     "pvis": [pv("a", 0, 100), pv("v1", 200, 108), pv("v2", 420, 99, lengthIn=40, lengthOut=60), pv("b", 650, 105)]},
 ]
 
 
@@ -333,12 +336,173 @@ def profile_cases():
     return out
 
 
+# ── road.profiles.lengths (docs/adr/0935 §2) ─────────────────────────────────────────────────────────────────────
+G = mp.mpf("9.80665")
+
+
+def l_stop(V, t, a, grade):
+    v = mp.mpf(V) / mp.mpf("3.6")
+    brake = mp.mpf(a) + G * mp.mpf(grade)
+    return None if brake <= 0 else v * t + v * v / (2 * brake)
+
+
+def l_crest(A, S, h1, h2):
+    A = abs(mp.mpf(A))
+    h = (mp.sqrt(h1) + mp.sqrt(h2)) ** 2
+    within = A * S * S / (200 * h)
+    return within if within > S else max(2 * S - 200 * h / A, mp.mpf(0))
+
+
+def l_head(A, S, h, b):
+    A = abs(mp.mpf(A))
+    lift = h + S * mp.tan(mp.radians(b))
+    within = A * S * S / (200 * lift)
+    return within if within > S else max(2 * S - 200 * lift / A, mp.mpf(0))
+
+
+def l_answer(inp):
+    def bad(path, words):
+        return Refused("invalid_profile_lengths", words, path)
+    if not inp.get("speed", 0) > 0:
+        raise bad("speed", "Proje hızı 0'dan büyük olmalı (km/sa).")
+    for k, words in (("time", "Tepki süresi 0'dan büyük olmalı (s)."), ("decel", "Yavaşlama 0'dan büyük olmalı (m/s²)."),
+                     ("eye", "Göz yüksekliği 0'dan büyük olmalı (m)."), ("object", "Engel yüksekliği 0'dan büyük olmalı (m)."),
+                     ("passing", "Geçme görüş mesafesi 0'dan büyük olmalı (m)."),
+                     ("headlight", "Far yüksekliği 0'dan büyük olmalı (m)."), ("accel", "Düşey ivme 0'dan büyük olmalı (m/s²)."),
+                     ("external", "Bisektris 0'dan büyük olmalı (m)."), ("step", "Yuvarlama adımı 0'dan büyük olmalı (m).")):
+        if k in inp and not inp[k] > 0:
+            raise bad(k, words)
+    if "beam" in inp and not 0 <= inp["beam"] < 45:
+        raise bad("beam", "Far ışınının açısı 0 ile 45 derece arası olmalı.")
+    crest_q = "eye" in inp or "object" in inp
+    sag_q = "headlight" in inp or "beam" in inp
+    if crest_q and ("eye" not in inp or "object" not in inp):
+        raise bad("eye", "Tepe görüşü göz ve engel yüksekliğini birlikte ister.")
+    if sag_q and ("headlight" not in inp or "beam" not in inp):
+        raise bad("headlight", "Far görüşü far yüksekliğini ve ışın açısını birlikte ister.")
+    if (crest_q or sag_q) and ("time" not in inp or "decel" not in inp):
+        raise bad("time", "Durma görüşü tepki süresini (time) ve yavaşlamayı (decel) ister.")
+    if "passing" in inp and "eye" not in inp:
+        raise bad("passing", "Geçme görüşü göz yüksekliğini (eye) ister: karşıdan gelen aracın yüksekliği de odur.")
+    if not (crest_q or sag_q or "passing" in inp or "accel" in inp or "external" in inp):
+        raise bad("speed", "Bir ölçüt verin: tepe için göz ve engel, çukur için far, konfor için düşey ivme ya da bisektris.")
+    name = inp["profile"]
+    d = next((p for p in PROFILES if p["id"] == name), None) or next(
+        (p for p in PROFILES if p["name"].lower() == name.lower()), None)
+    if d is None:
+        raise Refused("unknown_road_profile", f"“{name}” kimlikli ya da adlı boykesit projede yok.", "profile")
+    V = inp["speed"]
+
+    def stop(grade):
+        return l_stop(V, inp["time"], inp["decel"], grade) if "time" in inp and "decel" in inp else None
+
+    level = stop(0)
+    curves = []
+    pv_ = d["pvis"]
+    for p0, p, p1 in zip(pv_, pv_[1:], pv_[2:]):
+        g_in = (mp.mpf(p["elevation"]) - p0["elevation"]) / (mp.mpf(p["station"]) - p0["station"])
+        g_out = (mp.mpf(p1["elevation"]) - p["elevation"]) / (mp.mpf(p1["station"]) - p["station"])
+        A = 100 * (g_out - g_in)
+        if A == 0:
+            continue
+        crest = g_out < g_in
+        if "length" in p:
+            length = mp.mpf(p["length"])
+        elif "lengthIn" in p:
+            length = mp.mpf(p["lengthIn"]) + p["lengthOut"]
+        elif "radius" in p:
+            length = mp.mpf(p["radius"]) * abs(A) / 100
+        else:
+            length = None
+        if inp.get("grades"):
+            a1, a2 = stop(g_in), stop(-g_out)
+            S = None if a1 is None or a2 is None else max(a1, a2)
+        else:
+            S = level
+        crit = []
+        if crest:
+            if "eye" in inp and S is not None:
+                crit.append({"kind": "stopping", "sight": S, "length": l_crest(A, S, inp["eye"], inp["object"])})
+            if "passing" in inp:
+                P = mp.mpf(inp["passing"])
+                crit.append({"kind": "passing", "sight": P, "length": l_crest(A, P, inp["eye"], inp["eye"])})
+        else:
+            if "headlight" in inp and S is not None:
+                crit.append({"kind": "headlight", "sight": S, "length": l_head(A, S, inp["headlight"], inp["beam"])})
+            if "accel" in inp:
+                crit.append({"kind": "comfort", "length": abs(A) * V * V / (1296 * mp.mpf(inp["accel"]))})
+        if "external" in inp:
+            crit.append({"kind": "bisector", "length": 800 * mp.mpf(inp["external"]) / abs(A)})
+        gov = max(crit, key=lambda c: c["length"]) if crit else None
+        req = gov["length"] if gov else mp.mpf(0)
+        sug = req if "step" not in inp or req <= 0 else mp.ceil(req / inp["step"] - mp.mpf("1e-9")) * inp["step"]
+        row = {"pvi": p["id"], "crest": bool(crest), "a": float(A),
+               "criteria": [{"kind": c["kind"], **({"sight": float(c["sight"])} if "sight" in c else {}),
+                             "length": float(c["length"])} for c in crit],
+               "required": float(req), "suggested": float(sug),
+               "short": bool((length or 0) < req - mp.mpf("1e-9"))}
+        if length is not None:
+            row["length"] = float(length)
+        if gov and gov["length"] > 0:
+            row["governing"] = gov["kind"]
+        curves.append(row)
+    warns = []
+    rev = next(a["revision"] for a in ALIGNMENTS if a["id"] == d["alignment"])
+    if rev != d.get("alignmentRevision", 0):
+        warns.append({"code": "profile_stale",
+                      "message": f"“{d['name']}” boykesitinin aksı değişti (boykesit {d.get('alignmentRevision', 0)}. "
+                                 f"revizyona göre kurulu, aks şimdi {rev}.); PVI'ları denetleyip aksa yeniden bağlayın.",
+                      "path": "profile"})
+    short = [c["pvi"] for c in curves if c["short"]]
+    if short:
+        warns.append({"code": "vertical_curve_short",
+                      "message": f"“{d['name']}” boykesitinde şu kurplar gereken boydan kısa: {', '.join(short)}.",
+                      "path": "profile"})
+    out = {"profile": d["id"], "curves": curves}
+    if level is not None:
+        out["stopping"] = float(level)
+    return out, warns
+
+
+def lengths_cases():
+    out, q = cases_of(l_answer)
+    aashto = {"time": 2.5, "decel": 3.4, "eye": 1.08, "object": 0.6, "headlight": 0.6, "beam": 1.0}
+    q("80 km/sa, durma görüşü: tepe ve çukur", {"profile": "b-1", "speed": 80.0, **aashto})
+    q("50 km/sa: kurplar yeter", {"profile": "b-1", "speed": 50.0, **aashto})
+    q("100 km/sa, 5 m'ye yuvarla", {"profile": "Proje kotu", "speed": 100.0, **aashto, "step": 5.0})
+    q("Yaklaşma eğimleriyle", {"profile": "b-1", "speed": 90.0, **aashto, "grades": True})
+    q("Geçme görüşü", {"profile": "b-1", "speed": 80.0, "eye": 1.08, "passing": 470.0})
+    q("Çukurda konfor", {"profile": "b-1", "speed": 80.0, "accel": 0.3})
+    q("Bisektris", {"profile": "b-1", "speed": 60.0, "external": 0.5})
+    q("Hepsi birden", {"profile": "b-1", "speed": 80.0, **aashto, "passing": 470.0, "accel": 0.3, "external": 0.5,
+                       "step": 1.0})
+    q("Daire kurbu: aynı K'li parabol boyu", {"profile": "b-2", "speed": 100.0, **aashto})
+    q("Kırık ve asimetrik kurp", {"profile": "b-4", "speed": 70.0, **aashto, "accel": 0.3})
+    q("Eski boykesit", {"profile": "b-3", "speed": 60.0, **aashto})
+    # Refusals.
+    q("Ölçüt yok", {"profile": "b-1", "speed": 80.0})
+    q("Sıfır hız", {"profile": "b-1", "speed": 0.0, "accel": 0.3})
+    q("Engelsiz göz", {"profile": "b-1", "speed": 80.0, "time": 2.5, "decel": 3.4, "eye": 1.08})
+    q("Tepki süresiz tepe", {"profile": "b-1", "speed": 80.0, "eye": 1.08, "object": 0.6})
+    q("Işın açısız far", {"profile": "b-1", "speed": 80.0, "time": 2.5, "decel": 3.4, "headlight": 0.6})
+    q("Gözsüz geçme görüşü", {"profile": "b-1", "speed": 80.0, "passing": 470.0})
+    q("Eksi yavaşlama", {"profile": "b-1", "speed": 80.0, **aashto, "decel": -1.0})
+    q("Dik ışın", {"profile": "b-1", "speed": 80.0, **aashto, "beam": 60.0})
+    q("Olmayan boykesit", {"profile": "yok", "speed": 80.0, "accel": 0.3})
+    q("Yol projesi değil", {"profile": "b-1", "speed": 80.0, "accel": 0.3},
+      failed("not_a_road_project", "Boykesit yalnız yol projesinde (KentOS Yol) olur; bu çizim yol projesi değil."),
+      setup_=setup("map"))
+    return out
+
+
 def main():
     docs = {
         "road.alignments.check.json": ("road.alignments.check", "Aksı denetle: kullanıcının tasarım kurallarıyla",
                                        alignment_cases()),
         "road.profiles.check.json": ("road.profiles.check", "Boykesiti denetle: kullanıcının tasarım kurallarıyla",
                                      profile_cases()),
+        "road.profiles.lengths.json": ("road.profiles.lengths", "Düşey kurp boyu öner: kullanıcının değerleriyle",
+                                       lengths_cases()),
     }
     stale = []
     for name, (command, title, found) in docs.items():

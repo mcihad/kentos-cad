@@ -7772,12 +7772,13 @@
     "road.profiles.create",
     "road.profiles.edit",
     "road.profiles.query",
-    "road.profiles.draw"
+    "road.profiles.draw",
+    "road.profiles.lengths"
    ],
    "operation": null,
-   "python": "Connection: road.profiles.create, Connection: road.profiles.edit, Connection: road.profiles.query, Connection: road.profiles.draw",
-   "mcp": "road.profiles.create, road.profiles.edit, road.profiles.query, road.profiles.draw",
-   "note": "Boykesit penceresi PVI'leri yazdıkça çekirdekle kurar ve arazi boykesitini yüzeyden çizer; Kaydet ve Aksa yeniden bağla road.profiles.create ve .edit ile, Çizime yaz road.profiles.draw ile yazar (plan/road.md Y4, ADR 0902).",
+   "python": "Connection: road.profiles.create, Connection: road.profiles.edit, Connection: road.profiles.query, Connection: road.profiles.draw, Connection: road.profiles.lengths",
+   "mcp": "road.profiles.create, road.profiles.edit, road.profiles.query, road.profiles.draw, road.profiles.lengths",
+   "note": "Boykesit penceresi PVI'leri yazdıkça çekirdekle kurar ve arazi boykesitini yüzeyden çizer; Kaydet ve Aksa yeniden bağla road.profiles.create ve .edit ile, Çizime yaz road.profiles.draw ile yazar (plan/road.md Y4, ADR 0902); kurp boyu önerisini road.profiles.lengths ile okur (Y31, ADR 0935).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0

@@ -1,6 +1,6 @@
 # 0935 — KentOS Yol: düşey kurp boyunun görüşten, konfordan ve bisektristen önerilmesi
 
-Tarih: 2026-11-04. plan/road.md Y31 (ROAD-PROFILE-13). Durum: Y31.1 kabul; Y31.2–Y31.3 bu belgeyle ilerler.
+Tarih: 2026-11-04. plan/road.md Y31 (ROAD-PROFILE-13). Durum: Y31.1–Y31.2 kabul; Y31.3 bu belgeyle ilerler.
 
 ## Dayanak
 
@@ -42,6 +42,40 @@ Tarih: 2026-11-04. plan/road.md Y31 (ROAD-PROFILE-13). Durum: Y31.1 kabul; Y31.2
 kısa görüşü ölçer. Sonuç istenen DGM'ye 5 cm içinde eşittir. Örnekler: 80 km/sa ve A %6 için DGM 128,18 m, L 149,81 m,
 en kısa görüş 128,18 m. 100 km/sa ve A %3 için DGM 182,92 m, L 146,50 m, en kısa görüş 182,92 m. A %1 ve A %4 (50 km/sa)
 için kurp istenmez; eğimler 384,5 m ve 82,3 m görüş verir.
+
+### §2 Komut (`road.profiles.lengths` v1, Y31.2)
+
+Salt okunur sorgudur. Girdi:
+
+- hız;
+- durma görüşü için tepki süresi ve yavaşlama; `grades` ile yaklaşma eğimleri. İki yönün uzunu alınır: ileride gelen
+  eğim, geride giden eğimin tersi.
+- tepe için göz ve engel; `passing` ile geçme görüşü (nesne göz yüksekliğindedir);
+- çukur için far ve ışın açısı, konfor ivmesi;
+- bisektris ve yuvarlama adımı.
+
+Kuralları:
+
+- Değerlerin hiçbiri KentOS'tan gelmez. Hiç ölçüt verilmezse ya da eksik çift verilirse (göz verilip engel
+  verilmezse, tepe ölçütü süre ve yavaşlama olmadan verilirse) `invalid_profile_lengths` ile reddedilir.
+- **PVI'ler üzerinden yürür.** Eğri raporu kurpsuz PVI'yi (kırığı) atlıyordu, oysa öneri en çok kırığa gerekir. Eğimler
+  ardışık PVI'lerden okunur.
+- **Şimdiki boy:** simetrik parabolün boyu, asimetrikte L₁ + L₂, dairede aynı K'li parabol boyu `R·|A|/100`.
+- **Cevap:** düz yoldaki DGM ve her PVI için tepe ya da çukur oluşu, A, şimdiki boy, ölçütlerin boyları, belirleyen
+  ölçüt, gereken boy, öneri ve "kısa mı". Eksik kalan kurp `vertical_curve_short` ile uyarılır.
+
+21 ortak durum vardır (`road_design_check_cases.py`'ye eklendi). Kırıklı ve asimetrik kurplu yeni bir boykesit (b-4)
+eklendi.
+
+**Ölçüm** (ortak çizim, AASHTO'nun örnek değerleri, 80 km/sa, A −%8 tepe ve +%5,71 çukur):
+
+| Ölçüt | DGM | Gereken boy | K |
+|---|---|---|---|
+| Tepe, durma görüşü | 128,18 m | 199,8 m | 25,0 |
+| Çukur, far ışığı | 128,18 m | 165,4 m | 29,0 |
+
+AASHTO'nun tablosunda 80 km/sa için tepe K 26, çukur K 30'dur. Fark tablonun DGM'yi 130 m'ye ve K'yi yukarı
+yuvarlamasından gelir; formül aynıdır. 100 km/sa'te tepe 406,8 m ister, 5 m'ye yuvarlanınca 410 m önerilir.
 
 ## Doğrulama
 

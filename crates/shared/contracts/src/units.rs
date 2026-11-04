@@ -114,6 +114,7 @@ pub const UNITS: &[(&str, &str)] = &[
         "Verinin kendi birimi: rasterin değeri, kuralın eşiği, alanın değeri.",
     ),
     ("km/h", "Kilometre bölü saat."),
+    ("m/s2", "Metre bölü saniye kare: ivme ve yavaşlama."),
     ("s", "Saniye."),
     (
         "day-min",

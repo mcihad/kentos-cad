@@ -1700,6 +1700,12 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "road.profiles.lengths",
+        refusals: &[&["invalid_profile_lengths", "not_a_road_project", "unknown_road_profile"]],
+        warnings: &["profile_stale", "vertical_curve_short"],
+        targets: none,
+    },
+    Entry {
         id: "road.profiles.sight",
         refusals: &[&["not_a_road_project", "unknown_road_profile", "invalid_sight"]],
         warnings: &["sight_short", "profile_stale"],

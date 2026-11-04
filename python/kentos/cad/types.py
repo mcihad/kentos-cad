@@ -80,6 +80,7 @@ UNITS: dict[str, str] = {
     "version": "Sürüm numarası.",
     "value": "Verinin kendi birimi: rasterin değeri, kuralın eşiği, alanın değeri.",
     "km/h": "Kilometre bölü saat.",
+    "m/s2": "Metre bölü saniye kare: ivme ve yavaşlama.",
     "s": "Saniye.",
     "day-min": "Günün dakikası: 0 gece yarısı, 1440 ertesi gece yarısı (07:30 450'dir).",
     "system": "Adı verilen koordinat sisteminin kendi birimi.",
@@ -22059,6 +22060,35 @@ class CulvertsWritten(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class CurveCriterion(_Model):
+    """A criterion's least length: `stopping` (a crest's stopping sight), `passing`, `headlight`, `comfort`, `bisector`;
+    the sight distance it asks (m, the sight criteria) and the length (m).
+    Attributes:
+        length: Unit: m.
+        sight: Unit: m.
+    """
+    kind: str
+    length: float
+    sight: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = self.kind
+        out["length"] = float(self.length)
+        if self.sight is not UNSET:
+            out["sight"] = None if self.sight is None else float(self.sight)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CurveCriterion:
+        return cls(
+            kind=data["kind"],
+            length=float(data["length"]),
+            sight=UNSET if "sight" not in data else None if data["sight"] is None else float(data["sight"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CurveFrictionRow(_Model):
     """A curve's side friction at the speed: where it asks for the most, the radius and the superelevation toward the
     centre there (per one).
@@ -22099,6 +22129,57 @@ class CurveFrictionRow(_Model):
             at=float(data["at"]),
             radius=float(data["radius"]),
             e=float(data["e"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CurveLengths(_Model):
+    """A vertical curve's lengths: its PVI, crest or sag, the grade change A (percent, signed), its length now (a circle's
+    as the parabola of the same K, R·|A|/100; none without a curve), each criterion's, the governing one's (its kind and
+    length), the suggestion (rounded up) and whether the curve is shorter than the governing length.
+    Attributes:
+        a: Unit: percent.
+        required: Unit: m.
+        suggested: Unit: m.
+        length: Unit: m.
+    """
+    pvi: str
+    crest: bool
+    a: float
+    criteria: list[CurveCriterion]
+    required: float
+    suggested: float
+    short: bool
+    governing: str | None | Unset = UNSET
+    length: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["pvi"] = self.pvi
+        out["crest"] = self.crest
+        out["a"] = float(self.a)
+        out["criteria"] = [e0.to_json() for e0 in self.criteria]
+        out["required"] = float(self.required)
+        out["suggested"] = float(self.suggested)
+        out["short"] = self.short
+        if self.governing is not UNSET:
+            out["governing"] = self.governing
+        if self.length is not UNSET:
+            out["length"] = None if self.length is None else float(self.length)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CurveLengths:
+        return cls(
+            pvi=data["pvi"],
+            crest=data["crest"],
+            a=float(data["a"]),
+            criteria=[CurveCriterion.from_json(e0) for e0 in data["criteria"]],
+            required=float(data["required"]),
+            suggested=float(data["suggested"]),
+            short=data["short"],
+            governing=data.get("governing", UNSET),
+            length=UNSET if "length" not in data else None if data["length"] is None else float(data["length"]),
         )
 
 
@@ -66637,6 +66718,34 @@ class RoadNode(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class RoadProfileLengths(_Model):
+    """Output of `road.profiles.lengths` v1: the profile, the stopping sight distance on the level (none without its time
+    and deceleration) and each curve's lengths in station order.
+    Attributes:
+        stopping: Unit: m.
+    """
+    profile: str
+    curves: list[CurveLengths]
+    stopping: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["profile"] = self.profile
+        out["curves"] = [e0.to_json() for e0 in self.curves]
+        if self.stopping is not UNSET:
+            out["stopping"] = None if self.stopping is None else float(self.stopping)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoadProfileLengths:
+        return cls(
+            profile=data["profile"],
+            curves=[CurveLengths.from_json(e0) for e0 in data["curves"]],
+            stopping=UNSET if "stopping" not in data else None if data["stopping"] is None else float(data["stopping"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class RoadProfileListed(_Model):
     """A profile in the project's list.
     Attributes:
@@ -66739,6 +66848,96 @@ class RoadProfilesChecked(_Model):
         return cls(
             profile=data["profile"],
             findings=[DesignFinding.from_json(e0) for e0 in data["findings"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RoadProfilesLengths(_Model):
+    """Input of `road.profiles.lengths` v1 (docs/adr/0935 §2): each vertical curve's least length for a design speed
+    (km/h) by the criteria given, every value the standard's or the user's (KentOS fills in none):
+
+    - stopping sight (crest from an eye to an object, sag by headlights): the reaction `time` (s) and the `decel`
+      (m/s²), with `grades` the approach grades' (each direction's, the longer distance kept);
+    - `eye`, `object` (m): the crest's stopping sight; `passing` (m): a passing sight distance the crest must give,
+      from the eye to an eye-high object;
+    - `headlight` (m) and `beam` (degrees): the sag's headlight sight over the stopping distance;
+    - `accel` (m/s²): the sag's vertical acceleration; `external` (m): the least bisector, either kind;
+    - `step` (m): the suggestion rounded up to it.
+
+    Refusals: `invalid_profile_lengths` (no criterion, a value not right, a crest or headlight criterion without the
+    stopping sight's time and deceleration), `not_a_road_project`, `unknown_road_profile`. Warnings:
+    `vertical_curve_short` (a curve shorter than its least length), `profile_stale`.
+    Attributes:
+        speed: Unit: km/h.
+        accel: Unit: m/s2.
+        beam: Unit: deg.
+        decel: Unit: m/s2.
+        external: Unit: m.
+        eye: Unit: m.
+        headlight: Unit: m.
+        object: Unit: m.
+        passing: Unit: m.
+        step: Unit: m.
+        time: Unit: s.
+    """
+    profile: str
+    speed: float
+    accel: float | None | Unset = UNSET
+    beam: float | None | Unset = UNSET
+    decel: float | None | Unset = UNSET
+    external: float | None | Unset = UNSET
+    eye: float | None | Unset = UNSET
+    grades: bool | Unset = UNSET
+    headlight: float | None | Unset = UNSET
+    object: float | None | Unset = UNSET
+    passing: float | None | Unset = UNSET
+    step: float | None | Unset = UNSET
+    time: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["profile"] = self.profile
+        out["speed"] = float(self.speed)
+        if self.accel is not UNSET:
+            out["accel"] = None if self.accel is None else float(self.accel)
+        if self.beam is not UNSET:
+            out["beam"] = None if self.beam is None else float(self.beam)
+        if self.decel is not UNSET:
+            out["decel"] = None if self.decel is None else float(self.decel)
+        if self.external is not UNSET:
+            out["external"] = None if self.external is None else float(self.external)
+        if self.eye is not UNSET:
+            out["eye"] = None if self.eye is None else float(self.eye)
+        if self.grades is not UNSET:
+            out["grades"] = self.grades
+        if self.headlight is not UNSET:
+            out["headlight"] = None if self.headlight is None else float(self.headlight)
+        if self.object is not UNSET:
+            out["object"] = None if self.object is None else float(self.object)
+        if self.passing is not UNSET:
+            out["passing"] = None if self.passing is None else float(self.passing)
+        if self.step is not UNSET:
+            out["step"] = None if self.step is None else float(self.step)
+        if self.time is not UNSET:
+            out["time"] = None if self.time is None else float(self.time)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoadProfilesLengths:
+        return cls(
+            profile=data["profile"],
+            speed=float(data["speed"]),
+            accel=UNSET if "accel" not in data else None if data["accel"] is None else float(data["accel"]),
+            beam=UNSET if "beam" not in data else None if data["beam"] is None else float(data["beam"]),
+            decel=UNSET if "decel" not in data else None if data["decel"] is None else float(data["decel"]),
+            external=UNSET if "external" not in data else None if data["external"] is None else float(data["external"]),
+            eye=UNSET if "eye" not in data else None if data["eye"] is None else float(data["eye"]),
+            grades=data.get("grades", UNSET),
+            headlight=UNSET if "headlight" not in data else None if data["headlight"] is None else float(data["headlight"]),
+            object=UNSET if "object" not in data else None if data["object"] is None else float(data["object"]),
+            passing=UNSET if "passing" not in data else None if data["passing"] is None else float(data["passing"]),
+            step=UNSET if "step" not in data else None if data["step"] is None else float(data["step"]),
+            time=UNSET if "time" not in data else None if data["time"] is None else float(data["time"]),
         )
 
 
@@ -106922,8 +107121,10 @@ __all__ = [
     "CulvertsQuery",
     "CulvertsWritten",
     "CurveConstruction",
+    "CurveCriterion",
     "CurveEdit",
     "CurveFrictionRow",
+    "CurveLengths",
     "CurvePair",
     "CurvesConstruct",
     "CurvesConstructed",
@@ -108919,9 +109120,11 @@ __all__ = [
     "RoadNodeKindName",
     "RoadNodeState",
     "RoadNodeStateName",
+    "RoadProfileLengths",
     "RoadProfileListed",
     "RoadProfilesCheck",
     "RoadProfilesChecked",
+    "RoadProfilesLengths",
     "RoadProjectEdit",
     "RoadProjectEdited",
     "RoadProjectQuery",
