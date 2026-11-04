@@ -1,0 +1,663 @@
+{
+ "cases": [
+  {
+   "name": "WB-19, R 150 m, 7,2 m, 80 km/sa",
+   "radius": 150,
+   "vehicle": {
+    "track": 2.59,
+    "front": 1.2,
+    "wheelbase": 6.6,
+    "trailer": [
+     -0.8,
+     12.5
+    ]
+   },
+   "road": {
+    "lanes": 2,
+    "tangent": 7.2,
+    "clearance": 0.9,
+    "method": "standard",
+    "speed": 80
+   },
+   "offtracking": 0.665375749627307,
+   "track": 3.255375749627307,
+   "overhang": 0.05758894504469546,
+   "allowance": 0.6531972647421809,
+   "width": 9.02153770904149,
+   "widening": 1.82153770904149
+  },
+  {
+   "name": "WB-19, R 300 m",
+   "radius": 300,
+   "vehicle": {
+    "track": 2.59,
+    "front": 1.2,
+    "wheelbase": 6.6,
+    "trailer": [
+     -0.8,
+     12.5
+    ]
+   },
+   "road": {
+    "lanes": 2,
+    "tangent": 7.2,
+    "clearance": 0.9,
+    "method": "standard",
+    "speed": 90
+   },
+   "offtracking": 0.33213385482920615,
+   "track": 2.922133854829206,
+   "overhang": 0.028798617732694473,
+   "allowance": 0.5196152422706631,
+   "width": 8.19268156966177,
+   "widening": 0.9926815696617696
+  },
+  {
+   "name": "WB-19, R 500 m",
+   "radius": 500,
+   "vehicle": {
+    "track": 2.59,
+    "front": 1.2,
+    "wheelbase": 6.6,
+    "trailer": [
+     -0.8,
+     12.5
+    ]
+   },
+   "road": {
+    "lanes": 2,
+    "tangent": 7.2,
+    "clearance": 0.9,
+    "method": "standard",
+    "speed": 100
+   },
+   "offtracking": 0.19920968449839796,
+   "track": 2.789209684498398,
+   "overhang": 0.017279701411919115,
+   "allowance": 0.4472135954999579,
+   "width": 7.842912665908672,
+   "widening": 0.6429126659086726
+  },
+  {
+   "name": "WB-19, R 1000 m: küçük genişleme",
+   "radius": 1000,
+   "vehicle": {
+    "track": 2.59,
+    "front": 1.2,
+    "wheelbase": 6.6,
+    "trailer": [
+     -0.8,
+     12.5
+    ]
+   },
+   "road": {
+    "lanes": 2,
+    "tangent": 7.2,
+    "clearance": 0.9,
+    "method": "standard",
+    "speed": 110
+   },
+   "offtracking": 0.09958995907997477,
+   "track": 2.689589959079975,
+   "overhang": 0.008639962675522483,
+   "allowance": 0.3478505426185217,
+   "width": 7.535670423453993,
+   "widening": 0.33567042345399334
+  },
+  {
+   "name": "WB-19, R 70 m, 6,0 m, 50 km/sa",
+   "radius": 70,
+   "vehicle": {
+    "track": 2.59,
+    "front": 1.2,
+    "wheelbase": 6.6,
+    "trailer": [
+     -0.8,
+     12.5
+    ]
+   },
+   "road": {
+    "lanes": 2,
+    "tangent": 6.0,
+    "clearance": 0.6,
+    "method": "standard",
+    "speed": 50
+   },
+   "offtracking": 1.4374008660698452,
+   "track": 4.027400866069845,
+   "overhang": 0.12331994422397567,
+   "allowance": 0.5976143046671968,
+   "width": 9.975735981030862,
+   "widening": 3.9757359810308626
+  },
+  {
+   "name": "Mafsal arka dingilin 0,8 m arkasında: öndekiyle aynı (k² sayılır)",
+   "radius": 150,
+   "vehicle": {
+    "track": 2.59,
+    "front": 1.2,
+    "wheelbase": 6.6,
+    "trailer": [
+     0.8,
+     12.5
+    ]
+   },
+   "road": {
+    "lanes": 2,
+    "tangent": 7.2,
+    "clearance": 0.9,
+    "method": "standard",
+    "speed": 80
+   },
+   "offtracking": 0.665375749627307,
+   "track": 3.255375749627307,
+   "overhang": 0.05758894504469546,
+   "allowance": 0.6531972647421809,
+   "width": 9.02153770904149,
+   "widening": 1.82153770904149
+  },
+  {
+   "name": "WB-12, mafsal arka dingilde",
+   "radius": 120,
+   "vehicle": {
+    "track": 2.44,
+    "front": 0.9,
+    "wheelbase": 3.8,
+    "trailer": [
+     0.0,
+     8.2
+    ]
+   },
+   "road": {
+    "lanes": 2,
+    "tangent": 6.6,
+    "clearance": 0.75,
+    "method": "standard",
+    "speed": 60
+   },
+   "offtracking": 0.34081731851917746,
+   "track": 2.7808173185191776,
+   "overhang": 0.03187076772568573,
+   "allowance": 0.5477225575051661,
+   "width": 7.641227962269206,
+   "widening": 1.041227962269207
+  },
+  {
+   "name": "SU-9, R 100 m",
+   "radius": 100,
+   "vehicle": {
+    "track": 2.44,
+    "front": 1.2,
+    "wheelbase": 6.1
+   },
+   "road": {
+    "lanes": 2,
+    "tangent": 6.6,
+    "clearance": 0.75,
+    "method": "standard",
+    "speed": 60
+   },
+   "offtracking": 0.18622339576565244,
+   "track": 2.6262233957656522,
+   "overhang": 0.0803677051598367,
+   "allowance": 0.6,
+   "width": 7.432814496691141,
+   "widening": 0.8328144966911418
+  },
+  {
+   "name": "BUS-12, R 60 m",
+   "radius": 60,
+   "vehicle": {
+    "track": 2.59,
+    "front": 2.1,
+    "wheelbase": 7.6
+   },
+   "road": {
+    "lanes": 2,
+    "tangent": 6.0,
+    "clearance": 0.6,
+    "method": "standard",
+    "speed": 40
+   },
+   "offtracking": 0.48327966025009533,
+   "track": 3.0732796602500954,
+   "overhang": 0.3019900169140355,
+   "allowance": 0.5163977794943223,
+   "width": 8.164947116908548,
+   "widening": 2.1649471169085484
+  },
+  {
+   "name": "Binek, R 50 m",
+   "radius": 50,
+   "vehicle": {
+    "track": 1.83,
+    "front": 0.9,
+    "wheelbase": 3.4
+   },
+   "road": {
+    "lanes": 2,
+    "tangent": 6.0,
+    "clearance": 0.6,
+    "method": "standard",
+    "speed": 40
+   },
+   "offtracking": 0.11573394345668034,
+   "track": 1.9457339434566805,
+   "overhang": 0.06925204154741516,
+   "allowance": 0.565685424949238,
+   "width": 5.726405353410014,
+   "widening": -0.27359464658998606
+  },
+  {
+   "name": "Hızsız: Z yok",
+   "radius": 150,
+   "vehicle": {
+    "track": 2.59,
+    "front": 1.2,
+    "wheelbase": 6.6,
+    "trailer": [
+     -0.8,
+     12.5
+    ]
+   },
+   "road": {
+    "lanes": 2,
+    "tangent": 7.2,
+    "clearance": 0.9,
+    "method": "standard"
+   },
+   "offtracking": 0.665375749627307,
+   "track": 3.255375749627307,
+   "overhang": 0.05758894504469546,
+   "allowance": 0.0,
+   "width": 8.368340444299308,
+   "widening": 1.168340444299309
+  },
+  {
+   "name": "Basit yöntem: N(U + C)",
+   "radius": 150,
+   "vehicle": {
+    "track": 2.59,
+    "front": 1.2,
+    "wheelbase": 6.6,
+    "trailer": [
+     -0.8,
+     12.5
+    ]
+   },
+   "road": {
+    "lanes": 2,
+    "tangent": 7.2,
+    "clearance": 0.9,
+    "method": "simple",
+    "speed": 80
+   },
+   "offtracking": 0.665375749627307,
+   "track": 3.255375749627307,
+   "overhang": 0.0,
+   "allowance": 0.0,
+   "width": 8.310751499254614,
+   "widening": 1.1107514992546135
+  },
+  {
+   "name": "Basit yöntem, tek taşıt",
+   "radius": 100,
+   "vehicle": {
+    "track": 2.44,
+    "front": 1.2,
+    "wheelbase": 6.1
+   },
+   "road": {
+    "lanes": 2,
+    "tangent": 6.6,
+    "clearance": 0.75,
+    "method": "simple",
+    "speed": 80
+   },
+   "offtracking": 0.18622339576565244,
+   "track": 2.6262233957656522,
+   "overhang": 0.0,
+   "allowance": 0.0,
+   "width": 6.7524467915313044,
+   "widening": 0.1524467915313051
+  },
+  {
+   "name": "Tek şerit (rampa): F_A yok",
+   "radius": 80,
+   "vehicle": {
+    "track": 2.59,
+    "front": 1.2,
+    "wheelbase": 6.6,
+    "trailer": [
+     -0.8,
+     12.5
+    ]
+   },
+   "road": {
+    "lanes": 1,
+    "tangent": 4.5,
+    "clearance": 0.9,
+    "method": "standard",
+    "speed": 50
+   },
+   "offtracking": 1.2546509309914862,
+   "track": 3.8446509309914862,
+   "overhang": 0.10792719824923792,
+   "allowance": 0.5590169943749475,
+   "width": 5.303667925366433,
+   "widening": 0.8036679253664335
+  },
+  {
+   "name": "Üç şerit",
+   "radius": 250,
+   "vehicle": {
+    "track": 2.59,
+    "front": 1.2,
+    "wheelbase": 6.6,
+    "trailer": [
+     -0.8,
+     12.5
+    ]
+   },
+   "road": {
+    "lanes": 3,
+    "tangent": 10.8,
+    "clearance": 0.9,
+    "method": "standard",
+    "speed": 90
+   },
+   "offtracking": 0.3986578561725762,
+   "track": 2.9886578561725763,
+   "overhang": 0.03455761154296889,
+   "allowance": 0.5692099788303083,
+   "width": 12.304298770433974,
+   "widening": 1.5042987704339736
+  },
+  {
+   "name": "Dört şerit, 3,5 m'lik",
+   "radius": 400,
+   "vehicle": {
+    "track": 2.59,
+    "front": 1.2,
+    "wheelbase": 6.6,
+    "trailer": [
+     -0.8,
+     12.5
+    ]
+   },
+   "road": {
+    "lanes": 4,
+    "tangent": 14.0,
+    "clearance": 0.9,
+    "method": "standard",
+    "speed": 100
+   },
+   "offtracking": 0.24904002616829238,
+   "track": 2.839040026168292,
+   "overhang": 0.02159941683149067,
+   "allowance": 0.5,
+   "width": 15.520958355167641,
+   "widening": 1.520958355167641
+  },
+  {
+   "name": "Çok büyük yarıçap: sadeleşmeden kesin",
+   "radius": 20000,
+   "vehicle": {
+    "track": 2.59,
+    "front": 1.2,
+    "wheelbase": 6.6,
+    "trailer": [
+     -0.8,
+     12.5
+    ]
+   },
+   "road": {
+    "lanes": 2,
+    "tangent": 7.2,
+    "clearance": 0.9,
+    "method": "standard",
+    "speed": 120
+   },
+   "offtracking": 0.0049792506198234185,
+   "track": 2.5949792506198235,
+   "overhang": 0.00043199999533440005,
+   "allowance": 0.08485281374238571,
+   "width": 7.075243314977366,
+   "widening": -0.12475668502263348
+  },
+  {
+   "name": "Çıkıntısız taşıt",
+   "radius": 150,
+   "vehicle": {
+    "track": 2.59,
+    "front": 0.0,
+    "wheelbase": 6.6,
+    "trailer": [
+     -0.8,
+     12.5
+    ]
+   },
+   "road": {
+    "lanes": 2,
+    "tangent": 7.2,
+    "clearance": 0.9,
+    "method": "standard",
+    "speed": 80
+   },
+   "offtracking": 0.665375749627307,
+   "track": 3.255375749627307,
+   "overhang": 0.0,
+   "allowance": 0.6531972647421809,
+   "width": 8.963948763996795,
+   "widening": 1.7639487639967943
+  },
+  {
+   "name": "Sınıra yakın: R = 15 m, SU-9",
+   "radius": 15,
+   "vehicle": {
+    "track": 2.44,
+    "front": 1.2,
+    "wheelbase": 6.1
+   },
+   "road": {
+    "lanes": 1,
+    "tangent": 4.0,
+    "clearance": 0.6,
+    "method": "standard",
+    "speed": 20
+   },
+   "offtracking": 1.2963508509594421,
+   "track": 3.7363508509594423,
+   "overhang": 0.526751108973184,
+   "allowance": 0.5163977794943223,
+   "width": 4.852748630453764,
+   "widening": 0.8527486304537644
+  },
+  {
+   "name": "Kararlı dönemez: R² ≤ ΣL²",
+   "radius": 12,
+   "vehicle": {
+    "track": 2.59,
+    "front": 1.2,
+    "wheelbase": 6.6,
+    "trailer": [
+     -0.8,
+     12.5
+    ]
+   },
+   "road": {
+    "lanes": 2,
+    "tangent": 7.2,
+    "clearance": 0.9,
+    "method": "standard",
+    "speed": 20
+   },
+   "error": "unturnable"
+  },
+  {
+   "name": "Kararlı dönemez: tek taşıt R = L",
+   "radius": 6.1,
+   "vehicle": {
+    "track": 2.44,
+    "front": 1.2,
+    "wheelbase": 6.1
+   },
+   "road": {
+    "lanes": 2,
+    "tangent": 7.2,
+    "clearance": 0.9,
+    "method": "standard",
+    "speed": 20
+   },
+   "error": "unturnable"
+  },
+  {
+   "name": "Yuvarlama: 0,1 m'ye yukarı",
+   "radius": 150,
+   "vehicle": {
+    "track": 2.59,
+    "front": 1.2,
+    "wheelbase": 6.6,
+    "trailer": [
+     -0.8,
+     12.5
+    ]
+   },
+   "road": {
+    "lanes": 2,
+    "tangent": 7.2,
+    "clearance": 0.9,
+    "method": "standard",
+    "speed": 80
+   },
+   "round": {
+    "step": 0.1
+   },
+   "offtracking": 0.665375749627307,
+   "track": 3.255375749627307,
+   "overhang": 0.05758894504469546,
+   "allowance": 0.6531972647421809,
+   "width": 9.02153770904149,
+   "widening": 1.82153770904149,
+   "rounded": 1.9000000000000001
+  },
+  {
+   "name": "Yuvarlama: 0,25 m'ye, en az 0,6 m",
+   "radius": 300,
+   "vehicle": {
+    "track": 2.59,
+    "front": 1.2,
+    "wheelbase": 6.6,
+    "trailer": [
+     -0.8,
+     12.5
+    ]
+   },
+   "road": {
+    "lanes": 2,
+    "tangent": 7.2,
+    "clearance": 0.9,
+    "method": "standard",
+    "speed": 90
+   },
+   "round": {
+    "step": 0.25,
+    "least": 0.6
+   },
+   "offtracking": 0.33213385482920615,
+   "track": 2.922133854829206,
+   "overhang": 0.028798617732694473,
+   "allowance": 0.5196152422706631,
+   "width": 8.19268156966177,
+   "widening": 0.9926815696617696,
+   "rounded": 1.0
+  },
+  {
+   "name": "En az genişlemenin altında: yazılmaz",
+   "radius": 500,
+   "vehicle": {
+    "track": 2.59,
+    "front": 1.2,
+    "wheelbase": 6.6,
+    "trailer": [
+     -0.8,
+     12.5
+    ]
+   },
+   "road": {
+    "lanes": 2,
+    "tangent": 7.2,
+    "clearance": 0.9,
+    "method": "standard",
+    "speed": 100
+   },
+   "round": {
+    "step": 0.1,
+    "least": 0.7
+   },
+   "offtracking": 0.19920968449839796,
+   "track": 2.789209684498398,
+   "overhang": 0.017279701411919115,
+   "allowance": 0.4472135954999579,
+   "width": 7.842912665908672,
+   "widening": 0.6429126659086726,
+   "rounded": 0.0
+  },
+  {
+   "name": "Eksi genişleme yazılmaz",
+   "radius": 50,
+   "vehicle": {
+    "track": 1.83,
+    "front": 0.9,
+    "wheelbase": 3.4
+   },
+   "road": {
+    "lanes": 2,
+    "tangent": 6.0,
+    "clearance": 0.6,
+    "method": "standard",
+    "speed": 40
+   },
+   "round": {
+    "step": 0.1
+   },
+   "offtracking": 0.11573394345668034,
+   "track": 1.9457339434566805,
+   "overhang": 0.06925204154741516,
+   "allowance": 0.565685424949238,
+   "width": 5.726405353410014,
+   "widening": -0.27359464658998606,
+   "rounded": 0.0
+  },
+  {
+   "name": "Yuvarlamasız, en az 0,3 m",
+   "radius": 150,
+   "vehicle": {
+    "track": 2.59,
+    "front": 1.2,
+    "wheelbase": 6.6,
+    "trailer": [
+     -0.8,
+     12.5
+    ]
+   },
+   "road": {
+    "lanes": 2,
+    "tangent": 7.2,
+    "clearance": 0.9,
+    "method": "standard",
+    "speed": 80
+   },
+   "round": {
+    "least": 0.3
+   },
+   "offtracking": 0.665375749627307,
+   "track": 3.255375749627307,
+   "overhang": 0.05758894504469546,
+   "allowance": 0.6531972647421809,
+   "width": 9.02153770904149,
+   "widening": 1.82153770904149,
+   "rounded": 1.82153770904149
+  }
+ ]
+}

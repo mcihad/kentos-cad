@@ -48,3 +48,4 @@ pub mod swept;
 pub mod surface;
 pub mod volume;
 pub mod wall;
+pub mod widening;

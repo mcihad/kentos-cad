@@ -21,3 +21,4 @@ mod sources;
 mod superelevation;
 mod superelevation_physics;
 mod swept;
+mod widening;
