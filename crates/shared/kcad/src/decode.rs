@@ -650,6 +650,19 @@ pub(crate) fn road_has_pivot(road: &kentos_contracts::RoadSettings) -> bool {
     road.superelevations.iter().any(|s| s.pivot.is_some())
 }
 
+/// Whether road settings carry schema 166's fields: a sample line set's clip, breaks method or a range's curve step
+/// (docs/adr/0933 §3).
+pub(crate) fn road_has_section_breaks(road: &kentos_contracts::RoadSettings) -> bool {
+    road.sections.iter().any(|s| {
+        s.clip
+            || matches!(
+                s.stations,
+                kentos_contracts::SectionStations::Breaks { .. }
+                    | kentos_contracts::SectionStations::Range { curve: Some(_), .. }
+            )
+    })
+}
+
 fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadError> {
     let (mut srid, mut area_unit, mut angle_unit, mut plot_scale) = (None, None, None, None);
     let (mut drawing_unit, mut second_srid) = (None, None);
@@ -1277,6 +1290,13 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 }
                 if !has.road_pivot && road_has_pivot(&v) {
                     return Err(r.fail_at(Code::UnknownField, at, "deverin dönme ekseni şema 165 ister"));
+                }
+                if !has.section_breaks && road_has_section_breaks(&v) {
+                    return Err(r.fail_at(
+                        Code::UnknownField,
+                        at,
+                        "kesit takımının kırpması, arazi kırıkları yöntemi ve kurp aralığı şema 166 ister",
+                    ));
                 }
                 if let Some((field, words)) = v.problem() {
                     return Err(r.fail_at(Code::BadValue, at, &format!("{field}: {words}")));

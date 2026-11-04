@@ -83,13 +83,14 @@ fn check(doc: &kentos_domain::Document, input: &SectionsEdit) -> Result<Checked,
                 || superelevation.is_some()
                 || input.left.is_some()
                 || input.right.is_some()
-                || input.stations.is_some();
+                || input.stations.is_some()
+                || input.clip.is_some();
             match found {
                 Some((at, old)) => {
                     if !given {
                         return Err(fail(
                             codes::INVALID_SECTION_SET,
-                            "Değiştirilecek bir şey yok: name, alignment, profile, template, surface, superelevation, left, right ya da stations verin."
+                            "Değiştirilecek bir şey yok: name, alignment, profile, template, surface, superelevation, left, right, stations ya da clip verin."
                                 .into(),
                             "",
                         ));
@@ -122,6 +123,9 @@ fn check(doc: &kentos_domain::Document, input: &SectionsEdit) -> Result<Checked,
                     }
                     if let Some(st) = &input.stations {
                         d.stations = st.clone();
+                    }
+                    if let Some(c) = input.clip {
+                        d.clip = c;
                     }
                     if d != *old {
                         d.revision = old.revision.saturating_add(1);
@@ -165,6 +169,7 @@ fn check(doc: &kentos_domain::Document, input: &SectionsEdit) -> Result<Checked,
                         left: input.left.unwrap_or_default(),
                         right: input.right.unwrap_or_default(),
                         stations,
+                        clip: input.clip.unwrap_or(false),
                     });
                     Some(id)
                 }

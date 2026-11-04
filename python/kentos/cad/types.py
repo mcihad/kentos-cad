@@ -10140,6 +10140,7 @@ class SectionStations(_Union):
     One of:
 
     - :class:`RangeSectionStations` (``method: range``)
+    - :class:`BreaksSectionStations` (``method: breaks``)
     - :class:`StationsSectionStations` (``method: stations``)
     - :class:`LinesSectionStations` (``method: lines``)
     """
@@ -68581,6 +68582,42 @@ class SchemaItem(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SectionCrossing(_Model):
+    """Two lines of a set meeting within both swaths (docs/adr/0933 §1): their stations, the side (left true) and how far
+    out on each.
+    Attributes:
+        first: Unit: m.
+        second: Unit: m.
+        at_first: Unit: m.
+        at_second: Unit: m.
+    """
+    first: float
+    second: float
+    left: bool
+    at_first: float
+    at_second: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["first"] = float(self.first)
+        out["second"] = float(self.second)
+        out["left"] = self.left
+        out["atFirst"] = float(self.at_first)
+        out["atSecond"] = float(self.at_second)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SectionCrossing:
+        return cls(
+            first=float(data["first"]),
+            second=float(data["second"]),
+            left=data["left"],
+            at_first=float(data["atFirst"]),
+            at_second=float(data["atSecond"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SectionGround(_Model):
     """A place of the terrain along a sample line: offset (right positive), height (none off the surface), whether the
     stretch before it is off the surface.
@@ -68748,6 +68785,8 @@ class SectionSetDef(_Model):
         left: Unit: m.
         right: Unit: m.
         alignment_revision: Unit: version.
+        clip: Lines that meet on a curve's inside are shortened to their meeting, nearest first (docs/adr/0933 §1; schema
+            166); otherwise they are left and said.
         revision: Unit: version.
         superelevation: The superelevation schedule on the same alignment its lanes take their cross slopes from (docs/adr/0904 §3).
     """
@@ -68758,6 +68797,7 @@ class SectionSetDef(_Model):
     right: float
     stations: SectionStations
     alignment_revision: int | Unset = UNSET
+    clip: bool | Unset = UNSET
     profile: str | None | Unset = UNSET
     revision: int | Unset = UNSET
     superelevation: str | None | Unset = UNSET
@@ -68774,6 +68814,8 @@ class SectionSetDef(_Model):
         out["stations"] = self.stations.to_json()
         if self.alignment_revision is not UNSET:
             out["alignmentRevision"] = self.alignment_revision
+        if self.clip is not UNSET:
+            out["clip"] = self.clip
         if self.profile is not UNSET:
             out["profile"] = self.profile
         if self.revision is not UNSET:
@@ -68796,6 +68838,7 @@ class SectionSetDef(_Model):
             right=float(data["right"]),
             stations=SectionStations.from_json(data["stations"]),
             alignment_revision=data.get("alignmentRevision", UNSET),
+            clip=data.get("clip", UNSET),
             profile=data.get("profile", UNSET),
             revision=data.get("revision", UNSET),
             superelevation=data.get("superelevation", UNSET),
@@ -68812,6 +68855,8 @@ class SectionSetReport(_Model):
         revision: Unit: version.
         stale: The alignment changed since it was made or rebound.
         stations: Unit: m.
+        clip: Lines shortened where they meet (docs/adr/0933 §1).
+        crossings: The pairs of lines meeting on their full widths, by the stations' order.
     """
     id: str
     name: str
@@ -68819,6 +68864,8 @@ class SectionSetReport(_Model):
     alignment: str
     stale: bool
     stations: list[float]
+    clip: bool | Unset = UNSET
+    crossings: list[SectionCrossing] | Unset = UNSET
     profile: str | None | Unset = UNSET
     superelevation: str | None | Unset = UNSET
     surface: str | None | Unset = UNSET
@@ -68832,6 +68879,10 @@ class SectionSetReport(_Model):
         out["alignment"] = self.alignment
         out["stale"] = self.stale
         out["stations"] = [float(e0) for e0 in self.stations]
+        if self.clip is not UNSET:
+            out["clip"] = self.clip
+        if self.crossings is not UNSET:
+            out["crossings"] = [e0.to_json() for e0 in self.crossings]
         if self.profile is not UNSET:
             out["profile"] = self.profile
         if self.superelevation is not UNSET:
@@ -68851,6 +68902,8 @@ class SectionSetReport(_Model):
             alignment=data["alignment"],
             stale=data["stale"],
             stations=[float(e0) for e0 in data["stations"]],
+            clip=data.get("clip", UNSET),
+            crossings=[SectionCrossing.from_json(e0) for e0 in data["crossings"]] if "crossings" in data else UNSET,
             profile=data.get("profile", UNSET),
             superelevation=data.get("superelevation", UNSET),
             surface=data.get("surface", UNSET),
@@ -69057,6 +69110,8 @@ class SectionsEdit(_Model):
     not on it, a line that is not a line or polyline or does not cross the alignment, no station at all),
     `invalid_revision`, `revision_conflict`.
     Attributes:
+        clip: Shorten the lines that meet on a curve's inside to their meeting (docs/adr/0933 §1); absent: as it is (a new set
+            does not).
         left: Unit: m.
         right: Unit: m.
         superelevation: The superelevation schedule on the same alignment the lanes take their cross slopes from (docs/adr/0904 §3);
@@ -69064,6 +69119,7 @@ class SectionsEdit(_Model):
     """
     operation: RoadEditOperation | RoadEditOperationName
     alignment: str | None | Unset = UNSET
+    clip: bool | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     left: float | None | Unset = UNSET
     name: str | None | Unset = UNSET
@@ -69080,6 +69136,8 @@ class SectionsEdit(_Model):
         out["operation"] = _enum_out(self.operation)
         if self.alignment is not UNSET:
             out["alignment"] = self.alignment
+        if self.clip is not UNSET:
+            out["clip"] = self.clip
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
         if self.left is not UNSET:
@@ -69107,6 +69165,7 @@ class SectionsEdit(_Model):
         return cls(
             operation=_enum_in(RoadEditOperation, data["operation"]),
             alignment=data.get("alignment", UNSET),
+            clip=data.get("clip", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
             left=UNSET if "left" not in data else None if data["left"] is None else float(data["left"]),
             name=data.get("name", UNSET),
@@ -101745,11 +101804,13 @@ class RangeSectionStations(SectionStations):
         from_: Unit: m.
         to: Unit: m.
         every: Unit: m.
+        curve: On curves and clothoids every round `curve` metres too (docs/adr/0933 §3; schema 166). Unit: m.
     """
     TAG_VALUE: ClassVar[str] = "range"
     from_: float
     to: float
     every: float
+    curve: float | None | Unset = UNSET
     geometry: bool | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -101757,6 +101818,8 @@ class RangeSectionStations(SectionStations):
         out["from"] = float(self.from_)
         out["to"] = float(self.to)
         out["every"] = float(self.every)
+        if self.curve is not UNSET:
+            out["curve"] = None if self.curve is None else float(self.curve)
         if self.geometry is not UNSET:
             out["geometry"] = self.geometry
         return out
@@ -101767,7 +101830,49 @@ class RangeSectionStations(SectionStations):
             from_=float(data["from"]),
             to=float(data["to"]),
             every=float(data["every"]),
+            curve=UNSET if "curve" not in data else None if data["curve"] is None else float(data["curve"]),
             geometry=data.get("geometry", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BreaksSectionStations(SectionStations):
+    """Where the centreline's ground breaks (it crosses a triangle's edge of the set's surface) from `from` to `to`,
+    kept so the ground read linearly between two sections is within `tolerance` metres of the exact profile, with
+    no gap longer than `most` metres where the profile has a break to fill it, and with the curves' points and the
+    profile's PVIs when `geometry` (docs/adr/0933 §3; schema 166).
+    Attributes:
+        from_: Unit: m.
+        to: Unit: m.
+        tolerance: Unit: m.
+        most: Unit: m.
+    """
+    TAG_VALUE: ClassVar[str] = "breaks"
+    from_: float
+    to: float
+    tolerance: float
+    geometry: bool | Unset = UNSET
+    most: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"method": "breaks"}
+        out["from"] = float(self.from_)
+        out["to"] = float(self.to)
+        out["tolerance"] = float(self.tolerance)
+        if self.geometry is not UNSET:
+            out["geometry"] = self.geometry
+        if self.most is not UNSET:
+            out["most"] = None if self.most is None else float(self.most)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BreaksSectionStations:
+        return cls(
+            from_=float(data["from"]),
+            to=float(data["to"]),
+            tolerance=float(data["tolerance"]),
+            geometry=data.get("geometry", UNSET),
+            most=UNSET if "most" not in data else None if data["most"] is None else float(data["most"]),
         )
 
 
@@ -106097,7 +106202,7 @@ _ROAD_WORK: dict[str, type[RoadWork]] = {"plan": PlanRoadWork, "junctions": Junc
 _SCHEDULE_OPERATION: dict[str, type[ScheduleOperation]] = {"cell": CellScheduleOperation, "set": SetScheduleOperation}
 
 
-_SECTION_STATIONS: dict[str, type[SectionStations]] = {"range": RangeSectionStations, "stations": StationsSectionStations, "lines": LinesSectionStations}
+_SECTION_STATIONS: dict[str, type[SectionStations]] = {"range": RangeSectionStations, "breaks": BreaksSectionStations, "stations": StationsSectionStations, "lines": LinesSectionStations}
 
 
 _SELECT_REGION: dict[str, type[SelectRegion]] = {"properties": PropertiesSelectRegion, "window": WindowSelectRegion, "crossing": CrossingSelectRegion, "fence": FenceSelectRegion, "polygon": PolygonSelectRegion, "circle": CircleSelectRegion, "containing": ContainingSelectRegion, "point": PointSelectRegion, "all": AllSelectRegion, "objects": ObjectsSelectRegion, "invert": InvertSelectRegion, "similar": SimilarSelectRegion}
@@ -106521,6 +106626,7 @@ __all__ = [
     "BreakDimensionEdit",
     "BreakLine",
     "BreakLineName",
+    "BreaksSectionStations",
     "BuildingProgram",
     "CadElement",
     "CadImportScale",
@@ -108850,6 +108956,7 @@ __all__ = [
     "SchemaItem",
     "SchemaKind",
     "SchemaKindName",
+    "SectionCrossing",
     "SectionGround",
     "SectionLayer",
     "SectionPavement",

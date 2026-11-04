@@ -327,6 +327,8 @@ pub(super) struct Features {
     pub(super) road_pavement: bool,
     /// Schema 165: a superelevation's axis of rotation (docs/adr/0931 §2).
     pub(super) road_pivot: bool,
+    /// Schema 166: a sample line set's clip, breaks method and curve step (docs/adr/0933 §3).
+    pub(super) section_breaks: bool,
     /// Schema 136 (docs/adr/0758): a layer's indexes.
     pub(super) layer_indexes: bool,
     /// Schema 137 (docs/adr/0770): constraints naming a wall's line or a jamb.
@@ -572,6 +574,7 @@ impl Features {
             road_work: schema >= crate::SCHEMA_WITH_ROAD_WORK,
             road_pavement: schema >= crate::SCHEMA_WITH_ROAD_PAVEMENT,
             road_pivot: schema >= crate::SCHEMA_WITH_ROAD_PIVOT,
+            section_breaks: schema >= crate::SCHEMA_WITH_SECTION_BREAKS,
             layer_indexes: schema >= crate::SCHEMA_WITH_LAYER_INDEXES,
             arch_bonds: schema >= crate::SCHEMA_WITH_ARCH_BONDS,
             arc_edge_bonds: schema >= crate::SCHEMA_WITH_ARC_EDGE_BONDS,

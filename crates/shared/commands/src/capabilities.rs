@@ -1742,7 +1742,14 @@ const ENTRIES: &[Entry] = &[
     Entry {
         id: "road.sections.query",
         refusals: &[&["not_a_road_project", "unknown_section_set", "invalid_section_set", "invalid_places"]],
-        warnings: &["section_set_stale", "section_surface_gone", "section_open", "section_superelevation_gone", "pavement_unbuilt"],
+        warnings: &[
+            "section_set_stale",
+            "section_surface_gone",
+            "section_lines_cross",
+            "section_open",
+            "section_superelevation_gone",
+            "pavement_unbuilt",
+        ],
         targets: none,
     },
     Entry {

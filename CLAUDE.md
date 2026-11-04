@@ -58,7 +58,11 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
     önerisi, Kübaj, tip kesit düzenleyicisi. `Form::wide` eklendi.
   - **KCAD şema 164:** üstyapı ve kural `SCHEMA_WITH_ROAD_PAVEMENT` ile yazılır. Yayımlanmış şemaya (162) alan
     eklemek, eski programın örnek projeye “bozuk” demesine yol açtı. Yeni okuyucu daha yeni şemaya “daha yeni bir
-    sürümle yazılmış” der.
+    sürümle yazılmış” der. Sonrakiler aynı kuralla: 165 deverin dönme ekseni (Y27), 166 kesit takımının `clip`'i,
+    `breaks` yöntemi ve kurp aralığı (Y29, ADR 0933). Yeni bir yol alanı = yeni şema, kapısı `decode.rs`'te.
+  - **Kesit hatlarının yeri (Y29):** arazi kırıklarından seyreltilen kesitler eksen arazisini sabit aralıktan iyi
+    taşır (0,10 m toleransla 67 kesit en çok 0,044 m; her 5 m 174 kesit 0,078 m). İç kurpta buluşan kollar
+    yakından uzağa kırpılır; dairede her çift merkezde buluştuğu için sıra yuvarlamaya bırakılmaz.
   - **Örnek proje:** `samples/yol_ornegi.py` Yol komutlarıyla `samples/yol-ornegi.kcad`'i yazar.
   - **Ölçüm:** 19 çekirdek ve 26 komut durumu bağımsız kesirli referanstan; 17091 ortak durum geçer. Ana dalda kalan iki
     Python hatası düzeltildi ya da ayrıldı: propose'un katalog örneği düzeltildi; pafta font ön denetimi bu makinenin

@@ -163,10 +163,34 @@ pub struct SectionsEdit {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub stations: Option<SectionStations>,
+    /// Shorten the lines that meet on a curve's inside to their meeting (docs/adr/0933 §1); absent: as it is (a new set
+    /// does not).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub clip: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
+}
+
+/// Two lines of a set meeting within both swaths (docs/adr/0933 §1): their stations, the side (left true) and how far
+/// out on each.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SectionCrossing {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub first: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub second: f64,
+    pub left: bool,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub at_first: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub at_second: f64,
 }
 
 /// A sample line set as it is now: its definition's names and its stations (none when they no longer come out: its line
@@ -198,6 +222,14 @@ pub struct SectionSetReport {
     pub stale: bool,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub stations: Vec<f64>,
+    /// Lines shortened where they meet (docs/adr/0933 §1).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub clip: bool,
+    /// The pairs of lines meeting on their full widths, by the stations' order.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<SectionCrossing>>", optional))]
+    pub crossings: Vec<SectionCrossing>,
 }
 
 /// Output of `road.sections.edit` v1.

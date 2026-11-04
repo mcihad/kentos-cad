@@ -3,4 +3,8 @@
 /**
  * How a sample line set's stations are had (docs/adr/0903 §2).
  */
-export type SectionStations = { "method": "range", from: number, to: number, every: number, geometry?: boolean, } | { "method": "stations", stations: Array<number>, } | { "method": "lines", uids: Array<string>, };
+export type SectionStations = { "method": "range", from: number, to: number, every: number, geometry?: boolean, 
+/**
+ * On curves and clothoids every round `curve` metres too (docs/adr/0933 §3; schema 166).
+ */
+curve?: number, } | { "method": "breaks", from: number, to: number, tolerance: number, most?: number, geometry?: boolean, } | { "method": "stations", stations: Array<number>, } | { "method": "lines", uids: Array<string>, };

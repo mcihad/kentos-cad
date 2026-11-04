@@ -84,6 +84,11 @@ fn number(text: &str) -> Result<Option<f64>, ()> {
     t.parse::<f64>().map(Some).map_err(|_| ())
 }
 
+/// An optional number: empty is none.
+fn may(text: &str, what: &str) -> Result<Option<f64>, String> {
+    number(text).map_err(|()| format!("{what} bir sayı olmalı."))
+}
+
 fn need(text: &str, what: &str) -> Result<f64, String> {
     match number(text) {
         Ok(Some(v)) => Ok(v),
@@ -266,14 +271,20 @@ pub struct SetRow {
     superelevation: Option<String>,
     left: String,
     right: String,
-    /// 0 a range, 1 the stations written, 2 lines (kept as they are).
-    method: usize,
+    /// 0 a range, 1 the stations written, 2 lines (kept as they are), 3 the terrain's breaks (docs/adr/0933 §3).
+    pub(crate) method: usize,
     from: String,
     to: String,
     every: String,
     geometry: bool,
     stations: String,
     uids: Vec<String>,
+    /// A range's step on the curves; the breaks' height tolerance and longest gap (docs/adr/0933 §3).
+    pub(crate) curve: String,
+    pub(crate) tolerance: String,
+    pub(crate) most: String,
+    /// Lines meeting on a curve's inside shortened to their meeting (docs/adr/0933 §1).
+    pub(crate) clip: bool,
 }
 
 impl SetRow {
@@ -290,11 +301,18 @@ impl SetRow {
             superelevation: d.superelevation.clone(),
             left: trimmed(d.left),
             right: trimmed(d.right),
+            clip: d.clip,
             ..Self::default()
         };
         match &d.stations {
-            SectionStations::Range { from, to, every, geometry } => {
+            SectionStations::Range { from, to, every, geometry, curve } => {
                 (r.from, r.to, r.every, r.geometry) = (trimmed(*from), trimmed(*to), trimmed(*every), *geometry);
+                r.curve = curve.map(trimmed).unwrap_or_default();
+            }
+            SectionStations::Breaks { from, to, tolerance, most, geometry } => {
+                r.method = 3;
+                (r.from, r.to, r.tolerance, r.geometry) = (trimmed(*from), trimmed(*to), trimmed(*tolerance), *geometry);
+                r.most = most.map(trimmed).unwrap_or_default();
             }
             SectionStations::Stations { stations } => {
                 r.method = 1;
@@ -314,6 +332,14 @@ impl SetRow {
                 from: need(&self.from, "Km aralığının başı")?,
                 to: need(&self.to, "Km aralığının sonu")?,
                 every: need(&self.every, "Km aralığı")?,
+                geometry: self.geometry,
+                curve: may(&self.curve, "Kurpta aralık")?,
+            },
+            3 => SectionStations::Breaks {
+                from: need(&self.from, "Km aralığının başı")?,
+                to: need(&self.to, "Km aralığının sonu")?,
+                tolerance: need(&self.tolerance, "Kot toleransı")?,
+                most: may(&self.most, "En büyük aralık")?,
                 geometry: self.geometry,
             },
             1 => {
@@ -338,6 +364,7 @@ impl SetRow {
             left: need(&self.left, "Sol şerit genişliği")?,
             right: need(&self.right, "Sağ şerit genişliği")?,
             stations,
+            clip: self.clip,
         })
     }
 }
@@ -881,6 +908,7 @@ impl App {
             left: None,
             right: None,
             stations: None,
+            clip: None,
             expected_revision: None,
         };
         if self.section_write(|cx| road_sections_edit::execute(cx, edit)) {
@@ -1050,6 +1078,7 @@ impl App {
             left: None,
             right: None,
             stations: None,
+            clip: None,
             expected_revision: None,
         };
         for k in w.kept_sets.iter().filter(|k| sets.iter().all(|d| d.id != k.id)) {

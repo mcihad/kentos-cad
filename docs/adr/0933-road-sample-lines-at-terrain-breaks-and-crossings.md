@@ -1,6 +1,6 @@
 # 0933 — KentOS Yol: arazi kırıklarında kesit ve kesişen kesit kolları
 
-Tarih: 2026-11-04. plan/road.md Y29 (ROAD-SEC-13). Durum: Y29.1 kabul; Y29.2–Y29.3 bu belgeyle ilerler.
+Tarih: 2026-11-04. plan/road.md Y29 (ROAD-SEC-13). Durum: Y29.1–Y29.2 kabul; Y29.3 bu belgeyle ilerler.
 
 ## Dayanak
 
@@ -68,6 +68,28 @@ en büyük hata ≤ tolerans).
 
 Sınır: ölçüm eksen arazisinindir. Kesit alanı kolun bütün genişliğindeki araziye bağlıdır. Eksenin kırığı yan
 arazinin kırığını garanti etmez. Bu ayrım pencerede ve yardımda söylenir.
+
+### §3 Kayıt ve komutlar (Y29.2, KCAD şema 166)
+
+- **`SectionStations::Breaks { from, to, tolerance, most?, geometry }`:** km'ler, takımın yüzeyindeki eksen kırıklarının
+  seyreltilmişi, uçlar ve `geometry` ile kurp noktaları ve PVI'lerdir. Takımın yüzeyi olmalıdır; tanımda yoksa kural
+  reddeder, kurulamıyorsa km'ler çıkmaz ("yüzeyi kurulabilmeli").
+- **`Range.curve`:** kurpta ve klotoidlerde (TS'den ST'ye) her `curve` metrelik yuvarlak km'de de kesit alınır. Civil
+  3D'nin kurp ve geçiş aralığının karşılığıdır.
+- **`SectionSetDef.clip`:** iç kurpta buluşan kollar §1'deki gibi kırpılır. Kesit satırının uçları kırpılmış koldur,
+  arazi de o kolda okunur.
+- **Rapor:** takım raporu `crossings`'i (tam genişlikte buluşan çiftler: iki km, yan, iki uzaklık) ve `clip`'i verir.
+  İkisi de boşsa yazılmaz, eski cevaplar bayt bayt aynı kalır. Kırpmayan takımın sorgusu `section_lines_cross` uyarısı
+  verir; kırpan takımda uyarı yoktur.
+- **`road.sections.edit`'in `clip`'i:** `null` dokunmaz. "Değiştirilecek bir şey yok" iletisi de `clip`'i sayar.
+- **KCAD şema 166:** `clip`, `breaks` ve `curve`. Yazıcı 166'yı yalnız bunlardan biri varken seçer; 165 ve öncesi
+  bunları `unknown_field` ile reddeder (`fixtures/kcad/v2/road-section-breaks.kcad`,
+  `broken/road-section-breaks-in-schema-165.kcad`).
+
+13 yeni ortak durum vardır (edit 7, query 6). Kırıklar boykesit referansının yürüyerek bulduğu kenar geçişlerinden
+gelir, seyreltme ve kırpma §1'in referansından. Ölçüm (örnek çizim, p1 sola döner, R 150 m, sol kol 180 m, her 20 m):
+23 çift kesişir. Kırpılınca daire kısmında sol kollar tam 150,0 m'de, klotoidlerde 153,7 ile 177,4 m arasında biter,
+düzlükteki kollar 180 m kalır. Kırıklarla 0–600 m aralığında 0,1 m tolerans ve en çok 20 m aralıkla 32 kesit çıkar.
 
 ## Doğrulama
 

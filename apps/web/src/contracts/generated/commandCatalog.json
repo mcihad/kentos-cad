@@ -38410,7 +38410,7 @@
       "id": "road.sections.edit",
       "version": 1,
       "title": "Kesit takımını düzenle",
-      "summary": "Yol projesinin kesit hattı takımını (set: kimliği ya da adı; yoksa yeni) yazar, aksına yeniden bağlar ya da kaldırır. Bir kesit hattı aksın bir km'sinde aksa diktir, sola left, sağa right metre. Km'ler: range (from, to, her every metrelik yuvarlak km, uçlar ve geometry ile kurp noktaları ve boykesitin PVI'leri), stations (yazılan km'ler) ya da lines (çizimdeki çizgi ve çoklu çizgilerin aksı ilk kestiği yer); 1 mm içindekiler bir. Takım bir aksın, isteğe bağlı boykesitinin (profile), tip kesitinin (template) ve yüzeyinin (surface) kesitleridir; adlarla da verilir, boş değer kaldırır. Yeni takımın kimliği verilen ya da ilk boş k-n; name, alignment, left, right ve stations gerekir; aksının bugünkü revizyonunu tutar. rebind: aksın bugünkü revizyonunu alır. Kesitler saklanmaz, road.sections.query ile her seferinde çıkar. Tek geri alma adımı “Kesit takımı”. Retler: not_a_road_project, unknown_section_set, unknown_alignment, unknown_road_profile, unknown_road_template, unknown_terrain, invalid_section_set, invalid_revision, revision_conflict.",
+      "summary": "Yol projesinin kesit hattı takımını (set: kimliği ya da adı; yoksa yeni) yazar, aksına yeniden bağlar ya da kaldırır. Bir kesit hattı aksın bir km'sinde aksa diktir, sola left, sağa right metre. Km'ler: range (from, to, her every metrelik yuvarlak km, uçlar, geometry ile kurp noktaları ve boykesitin PVI'leri, curve ile kurpta ve klotoidde her curve metrede bir), breaks (yüzeyin üçgen kenarlarını aksın kestiği her kırık, iki kesit arasında doğrusal okunan arazi kesin profilden en çok tolerance metre ayrılacak kadarı, en çok most metre aralıkla; takımın yüzeyi olmalı), stations (yazılan km'ler) ya da lines (çizimdeki çizgi ve çoklu çizgilerin aksı ilk kestiği yer); 1 mm içindekiler bir. clip: iç kurpta buluşan kollar yakından uzağa buluşma noktasına kısaltılır. Takım bir aksın, isteğe bağlı boykesitinin (profile), tip kesitinin (template) ve yüzeyinin (surface) kesitleridir; adlarla da verilir, boş değer kaldırır. Yeni takımın kimliği verilen ya da ilk boş k-n; name, alignment, left, right ve stations gerekir; aksının bugünkü revizyonunu tutar. rebind: aksın bugünkü revizyonunu alır. Kesitler saklanmaz, road.sections.query ile her seferinde çıkar. Tek geri alma adımı “Kesit takımı”. Retler: not_a_road_project, unknown_section_set, unknown_alignment, unknown_road_profile, unknown_road_template, unknown_terrain, invalid_section_set, invalid_revision, revision_conflict.",
       "aliases": [
         "kesithatti"
       ],
@@ -38432,6 +38432,13 @@
           "alignment": {
             "type": [
               "string",
+              "null"
+            ]
+          },
+          "clip": {
+            "description": "Shorten the lines that meet on a curve's inside to their meeting (docs/adr/0933 §1); absent: as it is (a new set\ndoes not).",
+            "type": [
+              "boolean",
               "null"
             ]
           },
@@ -38620,7 +38627,7 @@
       "id": "road.sections.query",
       "version": 1,
       "title": "Enkesitleri sorgula",
-      "summary": "Yol projesinin kesit hattı takımlarını ve enkesitlerini bugün kuruldukları gibi verir; hiçbir şey yazmaz. set verilmezse her takımın raporu; verilince yalnız onunki ve kesitleri (stations ile yalnız takımın o km'lerindekiler): kesit hattının uçları, arazi (yüzeyin üçgen kenarlarını kestiği her yer, kesin; yüzeyin dışı gap), boykesitin kırmızı kotunda tip kesitin platformu ve şevleri. Menteşede arazi üstteyse yarma (hendek, yarma şevi yukarı), değilse dolgu (dolgu şevi aşağı); şevin araziyle ilk buluştuğu yer daylight, kesin. Yarma ve dolgu alanı (m²) iki uç arasında proje ile arazi arasındaki alanın kapalı biçimde integrali. Şerit içinde araziyle buluşmayan yan open'dır, kot uydurulmaz. Tip kesitin üstyapısı varsa pavement: tabaka alanları, zeminin altında ve üstünde kalan üstyapı, formasyon ve tabaka tabanları (soldan sağa), formasyondan yarma ve dolgu alanı (Formasyon–Zemin: yolun yarması + zeminin altındaki üstyapı, dolgusu − üstündeki). Raporda km'si artık çıkmayan (çizgisi silinmiş ya da aksı kesmeyen) takımın km listesi boştur; kesitleri sorulunca neden söylenir. Uyarılar: section_set_stale, section_surface_gone, section_open, pavement_unbuilt. Retler: not_a_road_project, unknown_section_set, invalid_section_set, invalid_places ve aks ya da boykesit artık kurulamıyorsa geometrinin retleri.",
+      "summary": "Yol projesinin kesit hattı takımlarını ve enkesitlerini bugün kuruldukları gibi verir; hiçbir şey yazmaz. set verilmezse her takımın raporu; verilince yalnız onunki ve kesitleri (stations ile yalnız takımın o km'lerindekiler): kesit hattının uçları, arazi (yüzeyin üçgen kenarlarını kestiği her yer, kesin; yüzeyin dışı gap), boykesitin kırmızı kotunda tip kesitin platformu ve şevleri. Takım raporu iç kurpta buluşan kol çiftlerini (crossings) verir; kırpmayan takımda section_lines_cross uyarılır, kırpanda kollar buluşmada biter. Menteşede arazi üstteyse yarma (hendek, yarma şevi yukarı), değilse dolgu (dolgu şevi aşağı); şevin araziyle ilk buluştuğu yer daylight, kesin. Yarma ve dolgu alanı (m²) iki uç arasında proje ile arazi arasındaki alanın kapalı biçimde integrali. Şerit içinde araziyle buluşmayan yan open'dır, kot uydurulmaz. Tip kesitin üstyapısı varsa pavement: tabaka alanları, zeminin altında ve üstünde kalan üstyapı, formasyon ve tabaka tabanları (soldan sağa), formasyondan yarma ve dolgu alanı (Formasyon–Zemin: yolun yarması + zeminin altındaki üstyapı, dolgusu − üstündeki). Raporda km'si artık çıkmayan (çizgisi silinmiş ya da aksı kesmeyen) takımın km listesi boştur; kesitleri sorulunca neden söylenir. Uyarılar: section_set_stale, section_surface_gone, section_open, pavement_unbuilt. Retler: not_a_road_project, unknown_section_set, invalid_section_set, invalid_places ve aks ya da boykesit artık kurulamıyorsa geometrinin retleri.",
       "aliases": [
         "enkesitsor"
       ],
@@ -38715,6 +38722,7 @@
         "warnings": [
           "section_set_stale",
           "section_surface_gone",
+          "section_lines_cross",
           "section_open",
           "section_superelevation_gone",
           "pavement_unbuilt"
@@ -85249,6 +85257,12 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Kesit takımının yüzeyi projede yok ya da kurulamıyor; arazi kesiti verilmedi."
+    },
+    {
+      "code": "section_lines_cross",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Kesit takımının kolları kurbun iç yanında kesişiyor; kesitler aynı araziyi iki kez sayar."
     },
     {
       "code": "section_open",
@@ -153392,6 +153406,42 @@
       ],
       "type": "string"
     },
+    "SectionCrossing": {
+      "description": "Two lines of a set meeting within both swaths (docs/adr/0933 §1): their stations, the side (left true) and how far\nout on each.",
+      "properties": {
+        "atFirst": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "atSecond": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "first": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "left": {
+          "type": "boolean"
+        },
+        "second": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "first",
+        "second",
+        "left",
+        "atFirst",
+        "atSecond"
+      ],
+      "type": "object"
+    },
     "SectionGround": {
       "description": "A place of the terrain along a sample line: offset (right positive), height (none off the surface), whether the\nstretch before it is off the surface.",
       "properties": {
@@ -153623,6 +153673,10 @@
           "type": "integer",
           "x-unit": "version"
         },
+        "clip": {
+          "description": "Lines that meet on a curve's inside are shortened to their meeting, nearest first (docs/adr/0933 §1; schema\n166); otherwise they are left and said.",
+          "type": "boolean"
+        },
         "id": {
           "type": "string"
         },
@@ -153689,6 +153743,17 @@
       "properties": {
         "alignment": {
           "type": "string"
+        },
+        "clip": {
+          "description": "Lines shortened where they meet (docs/adr/0933 §1).",
+          "type": "boolean"
+        },
+        "crossings": {
+          "description": "The pairs of lines meeting on their full widths, by the stations' order.",
+          "items": {
+            "$ref": "#/$defs/SectionCrossing"
+          },
+          "type": "array"
         },
         "id": {
           "type": "string"
@@ -153806,6 +153871,15 @@
           "additionalProperties": false,
           "description": "Every round `every` metres of km from `from` to `to` (the alignment's own stations) and both of them, with the\ncurves' points and the profile's PVIs when `geometry`.",
           "properties": {
+            "curve": {
+              "description": "On curves and clothoids every round `curve` metres too (docs/adr/0933 §3; schema 166).",
+              "format": "double",
+              "type": [
+                "number",
+                "null"
+              ],
+              "x-unit": "m"
+            },
             "every": {
               "format": "double",
               "type": "number",
@@ -153834,6 +153908,49 @@
             "from",
             "to",
             "every"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Where the centreline's ground breaks (it crosses a triangle's edge of the set's surface) from `from` to `to`,\nkept so the ground read linearly between two sections is within `tolerance` metres of the exact profile, with\nno gap longer than `most` metres where the profile has a break to fill it, and with the curves' points and the\nprofile's PVIs when `geometry` (docs/adr/0933 §3; schema 166).",
+          "properties": {
+            "from": {
+              "format": "double",
+              "type": "number",
+              "x-unit": "m"
+            },
+            "geometry": {
+              "type": "boolean"
+            },
+            "method": {
+              "const": "breaks",
+              "type": "string"
+            },
+            "most": {
+              "format": "double",
+              "type": [
+                "number",
+                "null"
+              ],
+              "x-unit": "m"
+            },
+            "to": {
+              "format": "double",
+              "type": "number",
+              "x-unit": "m"
+            },
+            "tolerance": {
+              "format": "double",
+              "type": "number",
+              "x-unit": "m"
+            }
+          },
+          "required": [
+            "method",
+            "from",
+            "to",
+            "tolerance"
           ],
           "type": "object"
         },

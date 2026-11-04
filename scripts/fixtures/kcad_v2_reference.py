@@ -2411,6 +2411,10 @@ def document(d):
     if any("pivot" in s for s in road.get("superelevations", [])):
         # A superelevation's axis of rotation (docs/adr/0931 §2).
         schema = max(schema, 165)
+    if any(s.get("clip") or s["stations"]["method"] == "breaks" or "curve" in s["stations"]
+           for s in road.get("sections", [])):
+        # A sample line set's clip, breaks method or curve step (docs/adr/0933 §3).
+        schema = max(schema, 166)
 
     def indexed(nodes):
         return any(n.get("indexes") or indexed(n.get("children", [])) for n in nodes)
@@ -3281,7 +3285,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-166.kcad"] = container(root(cmap(parts), version=uint(166)))
+    files["schema-version-167.kcad"] = container(root(cmap(parts), version=uint(167)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5620,6 +5624,17 @@ def build():
     assert pd.count(b"\x67version\x18\xa5") == 1, "the pivot is schema 165"
     out["road-pivot.kcad"] = container(pd)
     out["broken/road-pivot-in-schema-164.kcad"] = container(pd.replace(b"\x67version\x18\xa5", b"\x67version\x18\xa4"))
+    # Schema 166 (docs/adr/0933 §3): a sample line set at the terrain's breaks, clipped, and a range with a curve
+    # step; schema 165 refuses them as unknown.
+    broke = load("road-work.json")
+    sets = broke["settings"]["road"]["sections"]
+    sets[0]["stations"] = {"method": "breaks", "from": 0.0, "to": 1000.0, "tolerance": 0.1, "most": 20.0, "geometry": True}
+    sets[0]["clip"] = True
+    sets[1]["stations"] = {"method": "range", "from": 0.0, "to": 500.0, "every": 20.0, "curve": 10.0}
+    bd = document(broke)
+    assert bd.count(b"\x67version\x18\xa6") == 1, "the breaks are schema 166"
+    out["road-section-breaks.kcad"] = container(bd)
+    out["broken/road-section-breaks-in-schema-165.kcad"] = container(bd.replace(b"\x67version\x18\xa6", b"\x67version\x18\xa5"))
     # Schema 162 (plan/road.md Y2.2): the terrain surfaces are a road project's only; a map project's are refused.
     mp = load("road-work.json")
     mp["settings"]["cadWork"] = "map"

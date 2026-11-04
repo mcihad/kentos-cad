@@ -780,6 +780,31 @@ pub enum SectionStations {
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
         #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
         geometry: bool,
+        /// On curves and clothoids every round `curve` metres too (docs/adr/0933 §3; schema 166).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+        curve: Option<f64>,
+    },
+    /// Where the centreline's ground breaks (it crosses a triangle's edge of the set's surface) from `from` to `to`,
+    /// kept so the ground read linearly between two sections is within `tolerance` metres of the exact profile, with
+    /// no gap longer than `most` metres where the profile has a break to fill it, and with the curves' points and the
+    /// profile's PVIs when `geometry` (docs/adr/0933 §3; schema 166).
+    #[serde(rename_all = "camelCase")]
+    Breaks {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+        from: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+        to: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+        tolerance: f64,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+        most: Option<f64>,
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+        geometry: bool,
     },
     /// The stations written.
     Stations {
@@ -827,6 +852,11 @@ pub struct SectionSetDef {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub right: f64,
     pub stations: SectionStations,
+    /// Lines that meet on a curve's inside are shortened to their meeting, nearest first (docs/adr/0933 §1; schema
+    /// 166); otherwise they are left and said.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub clip: bool,
 }
 
 /// A curve's superelevation (docs/adr/0904 §2): its PI, the full rate (percent), the runoff length (level crown to full
@@ -1561,12 +1591,29 @@ fn sections_problem(road: &RoadSettings) -> Option<(String, String)> {
             }
         }
         match &s.stations {
-            SectionStations::Range { from, to, every, .. } => {
+            SectionStations::Range { from, to, every, curve, .. } => {
                 if !(from.is_finite() && to.is_finite() && from < to) {
                     return fail(at("stations.from"), "km aralığının başı sonundan küçük olmalı");
                 }
                 if !(every.is_finite() && *every > 0.0) {
                     return fail(at("stations.every"), "km aralığı 0'dan büyük olmalı");
+                }
+                if curve.is_some_and(|c| !(c.is_finite() && c > 0.0)) {
+                    return fail(at("stations.curve"), "kurptaki aralık 0'dan büyük olmalı");
+                }
+            }
+            SectionStations::Breaks { from, to, tolerance, most, .. } => {
+                if !(from.is_finite() && to.is_finite() && from < to) {
+                    return fail(at("stations.from"), "km aralığının başı sonundan küçük olmalı");
+                }
+                if !(tolerance.is_finite() && *tolerance >= 0.0) {
+                    return fail(at("stations.tolerance"), "kot toleransı eksi olmayan bir sayı olmalı");
+                }
+                if most.is_some_and(|m| !(m.is_finite() && m > 0.0)) {
+                    return fail(at("stations.most"), "en büyük aralık 0'dan büyük olmalı");
+                }
+                if s.surface.is_none() {
+                    return fail(at("surface"), "arazi kırıklarında kesit bir yüzey ister");
                 }
             }
             SectionStations::Stations { stations } => {

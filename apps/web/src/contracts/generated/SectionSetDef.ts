@@ -9,4 +9,9 @@ export type SectionSetDef = { id: string, name: string, alignment: string, align
 /**
  * The superelevation schedule on the same alignment its lanes take their cross slopes from (docs/adr/0904 §3).
  */
-superelevation?: string, left: number, right: number, stations: SectionStations, };
+superelevation?: string, left: number, right: number, stations: SectionStations, 
+/**
+ * Lines that meet on a curve's inside are shortened to their meeting, nearest first (docs/adr/0933 §1; schema
+ * 166); otherwise they are left and said.
+ */
+clip?: boolean, };

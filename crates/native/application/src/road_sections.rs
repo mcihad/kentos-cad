@@ -135,7 +135,35 @@ pub(crate) fn stations_of(doc: &Document, def: &SectionSetDef, built: &Built) ->
     let length = built.core.length;
     let off = |path: &str, words: String| fail(codes::INVALID_SECTION_SET, words, path);
     let mut out: Vec<f64> = match &def.stations {
-        SectionStations::Range { from, to, every, geometry } => {
+        SectionStations::Breaks { from, to, tolerance, most, geometry } => {
+            if *from < -1e-9 || *to > length + 1e-9 {
+                return Err(off("stations.from", format!("Km aralığı aksın üstünde olmalı: aks 0 ile {length:.3} m arası.")));
+            }
+            let surface = match surface_of(doc, def) {
+                Some(Ok(s)) => s,
+                _ => return Err(off("surface", "Arazi kırıklarında kesit için kesit takımının yüzeyi kurulabilmeli.".into())),
+            };
+            let breaks = kentos_road::section::stations::ground_breaks(&surface, &built.core, *from, *to);
+            let mut s: Vec<f64> = kentos_road::section::stations::simplify(&breaks, *tolerance, *most)
+                .into_iter()
+                .map(|k| breaks[k].station)
+                .collect();
+            s.extend([*from, *to]);
+            if *geometry {
+                s.extend(built.core.elements.iter().map(|e| e.station).filter(|s| *s > *from && *s < *to));
+                if let Some(p) = def.profile.as_ref().and_then(|p| doc.road_profiles().iter().find(|q| q.id == *p)) {
+                    s.extend(p.pvis.iter().map(|v| v.station).filter(|s| *s > *from && *s < *to));
+                }
+            }
+            if s.len() > kentos_commands::MAX_SECTION_STATIONS {
+                return Err(off(
+                    "stations.tolerance",
+                    format!("Bu toleransla {}'den çok kesit çıkar; toleransı büyütün.", kentos_commands::MAX_SECTION_STATIONS),
+                ));
+            }
+            s
+        }
+        SectionStations::Range { from, to, every, geometry, curve } => {
             if *from < -1e-9 {
                 return Err(off("stations.from", format!("Km aralığı aksın üstünde olmalı: aks 0 ile {length:.3} m arası.")));
             }
@@ -158,6 +186,21 @@ pub(crate) fn stations_of(doc: &Document, def: &SectionSetDef, built: &Built) ->
                 if let Some(p) = def.profile.as_ref().and_then(|p| doc.road_profiles().iter().find(|q| q.id == *p)) {
                     s.extend(p.pvis.iter().map(|v| v.station).filter(|s| *s > *from && *s < *to));
                 }
+            }
+            // On the curves (TS to ST, the clothoids with them) every round `curve` metres too.
+            if let Some(c) = curve {
+                if (to - from) / c > kentos_commands::MAX_SECTION_STATIONS as f64 {
+                    return Err(off(
+                        "stations.curve",
+                        format!("Bu aralıkla {}'den çok kesit çıkar; curve'ü büyütün.", kentos_commands::MAX_SECTION_STATIONS),
+                    ));
+                }
+                let on_curve = |x: f64| built.core.curves.iter().any(|k| x >= k.stations[0] - 1e-9 && x <= k.stations[3] + 1e-9);
+                s.extend(
+                    alignments::tick_stations(built, *c)?
+                        .into_iter()
+                        .filter(|x| *x >= from - 1e-9 && *x <= to + 1e-9 && on_curve(*x)),
+                );
             }
             s
         }
@@ -218,7 +261,19 @@ pub(crate) fn stale(doc: &Document, def: &SectionSetDef) -> bool {
 }
 
 pub(crate) fn report(doc: &Document, def: &SectionSetDef, stations: Vec<f64>) -> SectionSetReport {
+    let crossings = alignment_of(doc, def).map(|b| widths_of(def, &b, &stations).1).unwrap_or_default();
     SectionSetReport {
+        clip: def.clip,
+        crossings: crossings
+            .iter()
+            .map(|c| kentos_commands::SectionCrossing {
+                first: stations[c.first],
+                second: stations[c.second],
+                left: c.left,
+                at_first: c.at_first,
+                at_second: c.at_second,
+            })
+            .collect(),
         id: def.id.clone(),
         name: def.name.clone(),
         revision: def.revision,
@@ -241,6 +296,44 @@ pub(crate) fn reports(doc: &Document, list: &[SectionSetDef]) -> Vec<SectionSetR
             report(doc, d, stations)
         })
         .collect()
+}
+
+/// Each station's swath widths (shortened where lines meet when the set clips, docs/adr/0933 §1) and the pairs meeting
+/// on the full widths.
+pub(crate) fn widths_of(
+    def: &SectionSetDef,
+    built: &Built,
+    stations: &[f64],
+) -> (Vec<(f64, f64)>, Vec<kentos_road::section::stations::Crossing>) {
+    let full = vec![(def.left, def.right); stations.len()];
+    if def.clip {
+        kentos_road::section::stations::clip(&built.core, stations, &full)
+    } else {
+        let found = kentos_road::section::stations::crossings(&built.core, stations, &full);
+        (full, found)
+    }
+}
+
+/// `section_lines_cross` for a set that does not clip: how many pairs meet, the first of them.
+fn crossing_warning(
+    def: &SectionSetDef,
+    stations: &[f64],
+    found: &[kentos_road::section::stations::Crossing],
+) -> Option<CommandWarning> {
+    let c = found.first().filter(|_| !def.clip)?;
+    Some(CommandWarning {
+        code: codes::SECTION_LINES_CROSS.into(),
+        message: format!(
+            "“{}” kesit takımında {} çift kesit kolu kurbun iç yanında kesişiyor (ilki {:.2} ve {:.2} m'de, {} kolda {:.2} m); kesitler aynı araziyi iki kez sayar. Kolları kırpın (clip) ya da genişliği azaltın.",
+            def.name,
+            found.len(),
+            stations[c.first],
+            stations[c.second],
+            if c.left { "sol" } else { "sağ" },
+            c.at_first.min(c.at_second),
+        ),
+        path: Some("set".into()),
+    })
 }
 
 /// The set's surface made now, or the warning `section_surface_gone`; none for a set without one.
@@ -416,8 +509,13 @@ fn sections_with(
     };
     let mut open: Vec<String> = Vec::new();
     let mut rows = Vec::new();
-    for &s in stations {
-        let Some(line) = sample_line(&built.core, s, def.left, def.right) else { continue };
+    let (widths, crossing) = widths_of(def, built, stations);
+    if let Some(w) = crossing_warning(def, stations, &crossing) {
+        warnings.push(w);
+    }
+    for (k, &s) in stations.iter().enumerate() {
+        let (left, right) = widths[k];
+        let Some(line) = sample_line(&built.core, s, left, right) else { continue };
         let km = built.km(s);
         let g = surface.as_ref().map(|surf| ground(surf, &line)).unwrap_or_default();
         let axis = vertical.as_ref().and_then(|v| v.at(s)).map(|r| r.0);

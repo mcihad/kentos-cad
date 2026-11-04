@@ -38,10 +38,8 @@ pub fn ground_breaks(surface: &Surface, al: &Alignment, from: f64, to: f64) -> V
         .filter_map(|p| p.z.map(|z| Break { station: p.station.clamp(from, to), z }))
         .collect();
     for s in [from, to] {
-        if let Some(p) = al.at(s) {
-            if let Some(z) = surface.height(p.x, p.y).z {
-                out.push(Break { station: s, z });
-            }
+        if let Some(z) = al.at(s).and_then(|p| surface.height(p.x, p.y).z) {
+            out.push(Break { station: s, z });
         }
     }
     out.sort_by(|p, q| p.station.total_cmp(&q.station));

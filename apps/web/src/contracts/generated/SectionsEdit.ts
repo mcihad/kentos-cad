@@ -18,4 +18,9 @@ export type SectionsEdit = { operation: RoadEditOperation, set?: string, name?: 
  * The superelevation schedule on the same alignment the lanes take their cross slopes from (docs/adr/0904 §3);
  * its id or name, empty clears.
  */
-superelevation?: string, left?: number, right?: number, stations?: SectionStations, expectedRevision?: string, };
+superelevation?: string, left?: number, right?: number, stations?: SectionStations, 
+/**
+ * Shorten the lines that meet on a curve's inside to their meeting (docs/adr/0933 §1); absent: as it is (a new set
+ * does not).
+ */
+clip?: boolean, expectedRevision?: string, };

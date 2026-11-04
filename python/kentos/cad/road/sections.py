@@ -216,17 +216,21 @@ class _RoadSectionsEdit(LocalCommand[SectionsEdit, SectionsWritten, SectionsWrit
     """``road.sections.edit`` v1. Kesit takımını düzenle: Yol projesinin kesit hattı
     takımını (set: kimliği ya da adı; yoksa yeni) yazar, aksına yeniden bağlar ya da
     kaldırır. Bir kesit hattı aksın bir km'sinde aksa diktir, sola left, sağa right
-    metre. Km'ler: range (from, to, her every metrelik yuvarlak km, uçlar ve geometry
-    ile kurp noktaları ve boykesitin PVI'leri), stations (yazılan km'ler) ya da lines
-    (çizimdeki çizgi ve çoklu çizgilerin aksı ilk kestiği yer); 1 mm içindekiler bir.
-    Takım bir aksın, isteğe bağlı boykesitinin (profile), tip kesitinin (template) ve
-    yüzeyinin (surface) kesitleridir; adlarla da verilir, boş değer kaldırır. Yeni
-    takımın kimliği verilen ya da ilk boş k-n; name, alignment, left, right ve stations
-    gerekir; aksının bugünkü revizyonunu tutar. rebind: aksın bugünkü revizyonunu alır.
-    Kesitler saklanmaz, road.sections.query ile her seferinde çıkar. Tek geri alma adımı
-    “Kesit takımı”. Retler: not_a_road_project, unknown_section_set, unknown_alignment,
-    unknown_road_profile, unknown_road_template, unknown_terrain, invalid_section_set,
-    invalid_revision, revision_conflict.
+    metre. Km'ler: range (from, to, her every metrelik yuvarlak km, uçlar, geometry ile
+    kurp noktaları ve boykesitin PVI'leri, curve ile kurpta ve klotoidde her curve
+    metrede bir), breaks (yüzeyin üçgen kenarlarını aksın kestiği her kırık, iki kesit
+    arasında doğrusal okunan arazi kesin profilden en çok tolerance metre ayrılacak
+    kadarı, en çok most metre aralıkla; takımın yüzeyi olmalı), stations (yazılan
+    km'ler) ya da lines (çizimdeki çizgi ve çoklu çizgilerin aksı ilk kestiği yer); 1 mm
+    içindekiler bir. clip: iç kurpta buluşan kollar yakından uzağa buluşma noktasına
+    kısaltılır. Takım bir aksın, isteğe bağlı boykesitinin (profile), tip kesitinin
+    (template) ve yüzeyinin (surface) kesitleridir; adlarla da verilir, boş değer
+    kaldırır. Yeni takımın kimliği verilen ya da ilk boş k-n; name, alignment, left,
+    right ve stations gerekir; aksının bugünkü revizyonunu tutar. rebind: aksın bugünkü
+    revizyonunu alır. Kesitler saklanmaz, road.sections.query ile her seferinde çıkar.
+    Tek geri alma adımı “Kesit takımı”. Retler: not_a_road_project, unknown_section_set,
+    unknown_alignment, unknown_road_profile, unknown_road_template, unknown_terrain,
+    invalid_section_set, invalid_revision, revision_conflict.
     """
     __slots__ = ()
     id = "road.sections.edit"
@@ -244,6 +248,7 @@ class _RoadSectionsEdit(LocalCommand[SectionsEdit, SectionsWritten, SectionsWrit
         *,
         operation: RoadEditOperation | RoadEditOperationName,
         alignment: str | None | Unset = UNSET,
+        clip: bool | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         left: float | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
@@ -260,9 +265,13 @@ class _RoadSectionsEdit(LocalCommand[SectionsEdit, SectionsWritten, SectionsWrit
         """Kesit takımını düzenle: Yol projesinin kesit hattı takımını (set: kimliği ya da adı;
         yoksa yeni) yazar, aksına yeniden bağlar ya da kaldırır. Bir kesit hattı aksın bir
         km'sinde aksa diktir, sola left, sağa right metre. Km'ler: range (from, to, her
-        every metrelik yuvarlak km, uçlar ve geometry ile kurp noktaları ve boykesitin
-        PVI'leri), stations (yazılan km'ler) ya da lines (çizimdeki çizgi ve çoklu
-        çizgilerin aksı ilk kestiği yer); 1 mm içindekiler bir. Takım bir aksın, isteğe
+        every metrelik yuvarlak km, uçlar, geometry ile kurp noktaları ve boykesitin
+        PVI'leri, curve ile kurpta ve klotoidde her curve metrede bir), breaks (yüzeyin
+        üçgen kenarlarını aksın kestiği her kırık, iki kesit arasında doğrusal okunan arazi
+        kesin profilden en çok tolerance metre ayrılacak kadarı, en çok most metre aralıkla;
+        takımın yüzeyi olmalı), stations (yazılan km'ler) ya da lines (çizimdeki çizgi ve
+        çoklu çizgilerin aksı ilk kestiği yer); 1 mm içindekiler bir. clip: iç kurpta
+        buluşan kollar yakından uzağa buluşma noktasına kısaltılır. Takım bir aksın, isteğe
         bağlı boykesitinin (profile), tip kesitinin (template) ve yüzeyinin (surface)
         kesitleridir; adlarla da verilir, boş değer kaldırır. Yeni takımın kimliği verilen
         ya da ilk boş k-n; name, alignment, left, right ve stations gerekir; aksının bugünkü
@@ -276,6 +285,8 @@ class _RoadSectionsEdit(LocalCommand[SectionsEdit, SectionsWritten, SectionsWrit
             doc: The drawing it works on.
             operation:
             alignment:
+            clip: Shorten the lines that meet on a curve's inside to their meeting (docs/adr/0933 §1); absent: as it is (a new set
+                does not).
             expected_revision:
             left: Unit: m.
             name:
@@ -302,6 +313,7 @@ class _RoadSectionsEdit(LocalCommand[SectionsEdit, SectionsWritten, SectionsWrit
         return self.execute_input(doc, SectionsEdit(
             operation=operation,
             alignment=alignment,
+            clip=clip,
             expected_revision=expected_revision,
             left=left,
             name=name,
@@ -321,6 +333,7 @@ class _RoadSectionsEdit(LocalCommand[SectionsEdit, SectionsWritten, SectionsWrit
         *,
         operation: RoadEditOperation | RoadEditOperationName,
         alignment: str | None | Unset = UNSET,
+        clip: bool | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         left: float | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
@@ -338,6 +351,7 @@ class _RoadSectionsEdit(LocalCommand[SectionsEdit, SectionsWritten, SectionsWrit
         return self.plan_input(doc, SectionsEdit(
             operation=operation,
             alignment=alignment,
+            clip=clip,
             expected_revision=expected_revision,
             left=left,
             name=name,
@@ -357,6 +371,7 @@ class _RoadSectionsEdit(LocalCommand[SectionsEdit, SectionsWritten, SectionsWrit
         *,
         operation: RoadEditOperation | RoadEditOperationName,
         alignment: str | None | Unset = UNSET,
+        clip: bool | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         left: float | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
@@ -374,6 +389,7 @@ class _RoadSectionsEdit(LocalCommand[SectionsEdit, SectionsWritten, SectionsWrit
         return self.validate_input(doc, SectionsEdit(
             operation=operation,
             alignment=alignment,
+            clip=clip,
             expected_revision=expected_revision,
             left=left,
             name=name,
@@ -393,6 +409,7 @@ class _RoadSectionsEdit(LocalCommand[SectionsEdit, SectionsWritten, SectionsWrit
         *,
         operation: RoadEditOperation | RoadEditOperationName,
         alignment: str | None | Unset = UNSET,
+        clip: bool | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         left: float | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
@@ -415,6 +432,7 @@ class _RoadSectionsEdit(LocalCommand[SectionsEdit, SectionsWritten, SectionsWrit
         return self.answer_input(doc, SectionsEdit(
             operation=operation,
             alignment=alignment,
+            clip=clip,
             expected_revision=expected_revision,
             left=left,
             name=name,
@@ -438,19 +456,20 @@ class _RoadSectionsQuery(LocalCommand[SectionsQuery, SectionsQueried, SectionsQu
     verilmezse her takımın raporu; verilince yalnız onunki ve kesitleri (stations ile
     yalnız takımın o km'lerindekiler): kesit hattının uçları, arazi (yüzeyin üçgen
     kenarlarını kestiği her yer, kesin; yüzeyin dışı gap), boykesitin kırmızı kotunda
-    tip kesitin platformu ve şevleri. Menteşede arazi üstteyse yarma (hendek, yarma şevi
-    yukarı), değilse dolgu (dolgu şevi aşağı); şevin araziyle ilk buluştuğu yer
-    daylight, kesin. Yarma ve dolgu alanı (m²) iki uç arasında proje ile arazi
-    arasındaki alanın kapalı biçimde integrali. Şerit içinde araziyle buluşmayan yan
-    open'dır, kot uydurulmaz. Tip kesitin üstyapısı varsa pavement: tabaka alanları,
-    zeminin altında ve üstünde kalan üstyapı, formasyon ve tabaka tabanları (soldan
-    sağa), formasyondan yarma ve dolgu alanı (Formasyon–Zemin: yolun yarması + zeminin
-    altındaki üstyapı, dolgusu − üstündeki). Raporda km'si artık çıkmayan (çizgisi
-    silinmiş ya da aksı kesmeyen) takımın km listesi boştur; kesitleri sorulunca neden
-    söylenir. Uyarılar: section_set_stale, section_surface_gone, section_open,
-    pavement_unbuilt. Retler: not_a_road_project, unknown_section_set,
-    invalid_section_set, invalid_places ve aks ya da boykesit artık kurulamıyorsa
-    geometrinin retleri.
+    tip kesitin platformu ve şevleri. Takım raporu iç kurpta buluşan kol çiftlerini
+    (crossings) verir; kırpmayan takımda section_lines_cross uyarılır, kırpanda kollar
+    buluşmada biter. Menteşede arazi üstteyse yarma (hendek, yarma şevi yukarı), değilse
+    dolgu (dolgu şevi aşağı); şevin araziyle ilk buluştuğu yer daylight, kesin. Yarma ve
+    dolgu alanı (m²) iki uç arasında proje ile arazi arasındaki alanın kapalı biçimde
+    integrali. Şerit içinde araziyle buluşmayan yan open'dır, kot uydurulmaz. Tip
+    kesitin üstyapısı varsa pavement: tabaka alanları, zeminin altında ve üstünde kalan
+    üstyapı, formasyon ve tabaka tabanları (soldan sağa), formasyondan yarma ve dolgu
+    alanı (Formasyon–Zemin: yolun yarması + zeminin altındaki üstyapı, dolgusu −
+    üstündeki). Raporda km'si artık çıkmayan (çizgisi silinmiş ya da aksı kesmeyen)
+    takımın km listesi boştur; kesitleri sorulunca neden söylenir. Uyarılar:
+    section_set_stale, section_surface_gone, section_open, pavement_unbuilt. Retler:
+    not_a_road_project, unknown_section_set, invalid_section_set, invalid_places ve aks
+    ya da boykesit artık kurulamıyorsa geometrinin retleri.
     """
     __slots__ = ()
     id = "road.sections.query"
@@ -476,18 +495,20 @@ class _RoadSectionsQuery(LocalCommand[SectionsQuery, SectionsQueried, SectionsQu
         verilince yalnız onunki ve kesitleri (stations ile yalnız takımın o
         km'lerindekiler): kesit hattının uçları, arazi (yüzeyin üçgen kenarlarını kestiği
         her yer, kesin; yüzeyin dışı gap), boykesitin kırmızı kotunda tip kesitin platformu
-        ve şevleri. Menteşede arazi üstteyse yarma (hendek, yarma şevi yukarı), değilse
-        dolgu (dolgu şevi aşağı); şevin araziyle ilk buluştuğu yer daylight, kesin. Yarma ve
-        dolgu alanı (m²) iki uç arasında proje ile arazi arasındaki alanın kapalı biçimde
-        integrali. Şerit içinde araziyle buluşmayan yan open'dır, kot uydurulmaz. Tip
-        kesitin üstyapısı varsa pavement: tabaka alanları, zeminin altında ve üstünde kalan
-        üstyapı, formasyon ve tabaka tabanları (soldan sağa), formasyondan yarma ve dolgu
-        alanı (Formasyon–Zemin: yolun yarması + zeminin altındaki üstyapı, dolgusu −
-        üstündeki). Raporda km'si artık çıkmayan (çizgisi silinmiş ya da aksı kesmeyen)
-        takımın km listesi boştur; kesitleri sorulunca neden söylenir. Uyarılar:
-        section_set_stale, section_surface_gone, section_open, pavement_unbuilt. Retler:
-        not_a_road_project, unknown_section_set, invalid_section_set, invalid_places ve aks
-        ya da boykesit artık kurulamıyorsa geometrinin retleri.
+        ve şevleri. Takım raporu iç kurpta buluşan kol çiftlerini (crossings) verir;
+        kırpmayan takımda section_lines_cross uyarılır, kırpanda kollar buluşmada biter.
+        Menteşede arazi üstteyse yarma (hendek, yarma şevi yukarı), değilse dolgu (dolgu
+        şevi aşağı); şevin araziyle ilk buluştuğu yer daylight, kesin. Yarma ve dolgu alanı
+        (m²) iki uç arasında proje ile arazi arasındaki alanın kapalı biçimde integrali.
+        Şerit içinde araziyle buluşmayan yan open'dır, kot uydurulmaz. Tip kesitin üstyapısı
+        varsa pavement: tabaka alanları, zeminin altında ve üstünde kalan üstyapı, formasyon
+        ve tabaka tabanları (soldan sağa), formasyondan yarma ve dolgu alanı
+        (Formasyon–Zemin: yolun yarması + zeminin altındaki üstyapı, dolgusu − üstündeki).
+        Raporda km'si artık çıkmayan (çizgisi silinmiş ya da aksı kesmeyen) takımın km
+        listesi boştur; kesitleri sorulunca neden söylenir. Uyarılar: section_set_stale,
+        section_surface_gone, section_open, pavement_unbuilt. Retler: not_a_road_project,
+        unknown_section_set, invalid_section_set, invalid_places ve aks ya da boykesit artık
+        kurulamıyorsa geometrinin retleri.
 
         Args:
             doc: The drawing it works on.

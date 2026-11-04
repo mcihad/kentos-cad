@@ -27,6 +27,7 @@ import road_alignment_cases as aref  # noqa: E402
 import road_pavement_cases as pvref  # noqa: E402
 import road_profile_command_cases as pcmd  # noqa: E402
 import road_section_cases as sref  # noqa: E402
+import road_section_stations_cases as stref  # noqa: E402
 import road_superelevation_cases as supref  # noqa: E402
 import road_template_cases as tref  # noqa: E402
 
@@ -205,7 +206,34 @@ def stations_of(d, profiles=BY_PROFILE):
     L = length(d["alignment"])
     st = d["stations"]
     off = lambda path, words: Refused(failed("invalid_section_set", words, path))  # noqa: E731
-    if st["method"] == "range":
+    if st["method"] == "breaks":
+        # Docs/adr/0933 §3: the centreline's ground breaks (the terrain profile's crossings), simplified on height.
+        lo, hi = st["from"], st["to"]
+        if lo < -1e-9 or hi > L + 1e-9:
+            raise off("stations.from", f"Km aralığı aksın üstünde olmalı: aks 0 ile {L:.3f} m arası.")
+        if d.get("surface") != "t-1":
+            raise off("surface", "Arazi kırıklarında kesit için kesit takımının yüzeyi kurulabilmeli.")
+        prof = [(g["station"], g["z"]) for g in pcmd.ground(d["alignment"])
+                if g["crossing"] and "z" in g and lo - 1e-9 <= g["station"] <= hi + 1e-9]
+        for at in (lo, hi):
+            z = pcmd.black_at(b, at)
+            if z is not None:
+                prof.append((at, z))
+        prof.sort()
+        uniq = []
+        for p_ in prof:
+            if not uniq or p_[0] - uniq[-1][0] > 1e-9:
+                uniq.append(p_)
+        kept = stref.douglas([(F(a), F(z)) for a, z in uniq], st["tolerance"])
+        if st.get("most"):
+            kept = stref.gaps([(F(a), F(z)) for a, z in uniq], kept, st["most"])
+        out = [uniq[k][0] for k in kept] + [lo, hi]
+        if st.get("geometry"):
+            out += [float(e.station) for e in b.els if lo < float(e.station) < hi]
+            p = profiles.get(d.get("profile"))
+            if p:
+                out += [v["station"] for v in p["pvis"] if lo < v["station"] < hi]
+    elif st["method"] == "range":
         lo, hi, every = st["from"], st["to"], st["every"]
         if lo < -1e-9:
             raise off("stations.from", f"Km aralığı aksın üstünde olmalı: aks 0 ile {L:.3f} m arası.")
@@ -217,6 +245,11 @@ def stations_of(d, profiles=BY_PROFILE):
             p = profiles.get(d.get("profile"))
             if p:
                 out += [v["station"] for v in p["pvis"] if lo < v["station"] < hi]
+        if st.get("curve"):
+            # On the curves (TS to ST) every round `curve` metres too.
+            spans = [(float(r["stations"][0]), float(r["stations"][3])) for r in b.reports]
+            out += [x for x in pcmd.ticks(b, st["curve"])
+                    if lo - 1e-9 <= x <= hi + 1e-9 and any(a - 1e-9 <= x <= z + 1e-9 for a, z in spans)]
     elif st["method"] == "stations":
         for i, s in enumerate(st["stations"]):
             if s < -1e-9 or s > L + 1e-9:
@@ -249,6 +282,27 @@ def stale(d):
     return REV[d["alignment"]] != d.get("alignmentRevision", 0)
 
 
+def widths_of(d, st):
+    """Each station's widths (clipped where the set clips) and the pairs meeting on the full widths (docs/adr/0933)."""
+    b = ALIGNED[d["alignment"]]
+    full = [[d["left"], d["right"]]] * len(st)
+    found = stref.meet(b.els, st, full) if len(st) > 1 else []
+    widths = [[float(a), float(z)] for a, z in stref.clip(found, full)] if d.get("clip") else full
+    return widths, found
+
+
+def crossing_warning(d, st, found):
+    if d.get("clip") or not found:
+        return None
+    c = found[0]
+    return {"code": "section_lines_cross",
+            "message": f"“{d['name']}” kesit takımında {len(found)} çift kesit kolu kurbun iç yanında kesişiyor (ilki "
+                       f"{st[c['first']]:.2f} ve {st[c['second']]:.2f} m'de, {'sol' if c['left'] else 'sağ'} kolda "
+                       f"{float(min(c['atFirst'], c['atSecond'])):.2f} m); kesitler aynı araziyi iki kez sayar. Kolları "
+                       f"kırpın (clip) ya da genişliği azaltın.",
+            "path": "set"}
+
+
 def report(d):
     try:
         st = stations_of(d)
@@ -256,6 +310,12 @@ def report(d):
         st = []
     out = {"id": d["id"], "name": d["name"], "revision": d.get("revision", 0), "alignment": d["alignment"],
            "stale": stale(d), "stations": st}
+    if d.get("clip"):
+        out["clip"] = True
+    found = widths_of(d, st)[1] if st else []
+    if found:
+        out["crossings"] = [{"first": st[c["first"]], "second": st[c["second"]], "left": c["left"],
+                             "atFirst": float(c["atFirst"]), "atSecond": float(c["atSecond"])} for c in found]
     for k in ("profile", "template", "surface", "superelevation"):
         if d.get(k):
             out[k] = d[k]
@@ -297,11 +357,15 @@ def sections(d, at, templates):
                                     "şeritler tip kesitin eğimiyle verildi.", "path": "set"})
         sup = None
     rows, open_, unpaved = [], [], []
-    for s in at:
+    widths, found = widths_of(d, at)
+    w = crossing_warning(d, at, found)
+    if w:
+        warnings.append(w)
+    for k, s in enumerate(at):
         e, (x, y) = aref.place_at(b.els, mp.mpf(s))
         th = e.theta(mp.mpf(s) - e.station)
         rx, ry = mp.sin(th), -mp.cos(th)
-        left, right = d["left"], d["right"]
+        left, right = widths[k]
         ends = [[x - rx * left, y - ry * left], [x + rx * right, y + ry * right]]
         km = aref.km_of(b.regions, mp.mpf(s))
         row = {"station": float(s), "km": float(km), "kmText": pcmd.acmd.km_text(km),
@@ -593,6 +657,26 @@ def sections_cases():
     ok("Doğrulama yazmaz", {"operation": "rebind", "set": "k-2"},
        put(1, {**S2, "alignmentRevision": 3, "revision": 4}), "k-2", op="validate")
 
+    # Docs/adr/0933 §3: the terrain's breaks, a range's curve step, the clip.
+    brk = {"method": "breaks", "from": 0.0, "to": 600.0, "tolerance": 0.1, "most": 20.0}
+    ok("Arazi kırıklarında kesit, 0,1 m toleransla",
+       {"operation": "set", "name": "Kırıklar", "alignment": "g-1", "surface": "t-1", "left": 25.0, "right": 25.0,
+        "stations": brk}, start + [new("k-3", "Kırıklar", "g-1", 25.0, 25.0, brk, surface="t-1")], "k-3")
+    crv = {"method": "range", "from": 0.0, "to": 600.0, "every": 50.0, "curve": 10.0}
+    ok("Kurpta her 10 m, düzlükte her 50 m",
+       {"operation": "set", "name": "Kurpta sık", "alignment": "g-1", "left": 25.0, "right": 25.0, "stations": crv},
+       start + [new("k-3", "Kurpta sık", "g-1", 25.0, 25.0, crv)], "k-3")
+    ok("Kesişen kollar kırpılır", {"operation": "set", "set": "k-1", "clip": True},
+       put(0, {**S1, "clip": True, "revision": 2}), "k-1")
+    no("Yüzeysiz arazi kırıkları", {"operation": "set", "name": "x", "alignment": "g-1", "left": 10.0, "right": 10.0,
+                                    "stations": brk}, rule("arazi kırıklarında kesit bir yüzey ister", "surface"))
+    no("Eksi tolerans", {"operation": "set", "set": "k-1", "stations": {**brk, "tolerance": -0.1}},
+       rule("kot toleransı eksi olmayan bir sayı olmalı", "stations.tolerance"))
+    no("Sıfır en büyük aralık", {"operation": "set", "set": "k-1", "stations": {**brk, "most": 0.0}},
+       rule("en büyük aralık 0'dan büyük olmalı", "stations.most"))
+    no("Sıfır kurp aralığı", {"operation": "set", "set": "k-1", "stations": {**crv, "curve": 0.0}},
+       rule("kurptaki aralık 0'dan büyük olmalı", "stations.curve"))
+
     ok("Takıma dever çizelgesi adıyla bağlanır", {"operation": "set", "set": "k-1", "superelevation": "ana AKS deveri"},
        put(0, {**S1, "superelevation": "d-1", "revision": 2}), "k-1")
     L = length("g-1")
@@ -616,7 +700,7 @@ def sections_cases():
               "stations"))
     no("Değiştirilecek bir şey yok", {"operation": "set", "set": "k-1"},
        failed("invalid_section_set", "Değiştirilecek bir şey yok: name, alignment, profile, template, surface, superelevation, "
-                                     "left, right ya da stations verin."))
+                                     "left, right, stations ya da clip verin."))
     no("Paralel aksa bağlanmaz",
        {"operation": "set", "name": "x", "alignment": "g-3", "left": 10.0, "right": 10.0, "stations": rng},
        rule("kesit takımı yalnız PI'larıyla kurulan aksa bağlanır", "alignment"))
@@ -747,6 +831,22 @@ def query_cases():
        [S1, S2, dead])
     no("Takımsız km sorusu", {"stations": [100.0]},
        failed("invalid_places", "Km bir kesit takımında sorulur: takımın kimliğini ya da adını (set) verin.", "set"))
+    # Docs/adr/0933: lines meeting on the curve's inside (p1 turns left, R 150 m), said or clipped; the terrain's
+    # breaks; the curve step.
+    inside = {**S1, "left": 180.0, "right": 20.0, "stations": {"method": "range", "from": 200.0, "to": 420.0, "every": 20.0}}
+    ask("İç kurpta kollar kesişir, uyarılır", inside, {"set": "k-1"}, sets=[inside, S2])
+    clipped = {**inside, "clip": True}
+    ask("Kesişen kollar buluşma noktasında kırpılır", clipped, {"set": "k-1"}, sets=[clipped, S2])
+    breaks = {**S1, "stations": {"method": "breaks", "from": 0.0, "to": 600.0, "tolerance": 0.1, "most": 20.0}}
+    ask("Arazi kırıklarında kesit", breaks, {"set": "k-1"}, sets=[breaks, S2])
+    exact = {**S1, "stations": {"method": "breaks", "from": 100.0, "to": 300.0, "tolerance": 0.0, "geometry": True}}
+    ask("Sıfır toleransla her kırıkta, kurp noktaları ve PVI'lerle", exact, {"set": "k-1"}, sets=[exact, S2])
+    curvy = {**S1, "stations": {"method": "range", "from": 0.0, "to": 600.0, "every": 100.0, "curve": 20.0}}
+    ask("Kurpta sıklaştırma", curvy, {"set": "k-1"}, sets=[curvy, S2])
+    nosurf = {**S1, "surface": "t-2", "stations": {"method": "breaks", "from": 0.0, "to": 600.0, "tolerance": 0.1}}
+    no("Kurulamayan yüzeyde arazi kırıkları", {"set": "k-1"},
+       failed("invalid_section_set", "Arazi kırıklarında kesit için kesit takımının yüzeyi kurulabilmeli.", "surface"),
+       setup(sets=[nosurf, S2]), sets=[nosurf, S2])
     return file("road.sections.query", "Enkesitleri sorgula", setup(), cases)
 
 

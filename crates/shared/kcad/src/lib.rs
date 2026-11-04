@@ -761,11 +761,13 @@ pub const SCHEMA_WITH_TEXT_ENGINE: u32 = 163;
 pub const SCHEMA_WITH_ROAD_PAVEMENT: u32 = 164;
 /// Schema 165 (docs/adr/0931 §2): a superelevation schedule's `pivot`, its axis of rotation.
 pub const SCHEMA_WITH_ROAD_PIVOT: u32 = 165;
+/// Schema 166 (docs/adr/0933 §3): a sample line set's `clip`, its `breaks` station method and a range's `curve` step.
+pub const SCHEMA_WITH_SECTION_BREAKS: u32 = 166;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 163] = [
+pub const SCHEMAS: [u32; 164] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -929,6 +931,7 @@ pub const SCHEMAS: [u32; 163] = [
     SCHEMA_WITH_TEXT_ENGINE,
     SCHEMA_WITH_ROAD_PAVEMENT,
     SCHEMA_WITH_ROAD_PIVOT,
+    SCHEMA_WITH_SECTION_BREAKS,
 ];
 
 /// The file a drawing is saved as.
