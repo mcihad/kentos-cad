@@ -1,5 +1,6 @@
 //! kentos-road's tests, one binary (docs/adr/0170): each file a module.
 
+mod accuracy;
 mod alignments;
 mod alternatives;
 mod analysis;

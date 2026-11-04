@@ -29,6 +29,7 @@
 //!   it is out of date (plan/road.md Y2.2).
 
 pub mod alignment;
+pub mod accuracy;
 pub mod alternatives;
 pub mod cloud_ground;
 pub mod corridor;
