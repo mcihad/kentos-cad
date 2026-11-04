@@ -303,6 +303,11 @@ impl Ground {
     /// Each piece where a design triangle and a ground triangle overlap in plan, with `d = z_design − z_ground` at its
     /// corners (counterclockwise, convex); and the area both cover and the design's area the ground does not.
     pub fn overlay(&mut self, design: &[Triangle], mut visit: impl FnMut(&[([f64; 2], f64)])) -> (f64, f64) {
+        self.overlay_on(design, |_, with| visit(with))
+    }
+
+    /// [`Ground::overlay`] with each piece's ground triangle (its index among the triangles given, those with area).
+    fn overlay_on(&mut self, design: &[Triangle], mut visit: impl FnMut(usize, &[([f64; 2], f64)])) -> (f64, f64) {
         let (mut covered_all, mut uncovered) = (0.0, 0.0);
         for d in design {
             let Some(d) = ccw(d) else { continue };
@@ -340,7 +345,7 @@ impl Ground {
                                 continue;
                             }
                             covered += a;
-                            visit(&with);
+                            visit(gi as usize, &with);
                         }
                     }
                 }
@@ -420,4 +425,92 @@ pub fn difference(comparison: &[Triangle], base: &[Triangle], breaks: &[f64]) ->
 /// (x, y, z each corner), over the design's plan.
 pub fn between_surfaces(design: &[Triangle], ground: &[Triangle]) -> Volumes {
     Ground::new(ground).volumes(design)
+}
+
+/// How each ground corner moves the volumes (docs/adr/0941 §1): with `d = z_design − z_ground` and the ground linear
+/// on each triangle (z = Σ φⱼ·zⱼ, φ its corners' barycentric weights), `∂cut/∂zⱼ = ∫_{d<0} φⱼ dA` and
+/// `∂fill/∂zⱼ = −∫_{d>0} φⱼ dA` (the zero line moves too, but d is 0 there: first order exact). Each piece is convex and
+/// φⱼ linear on it, so `∫ φⱼ = area·φⱼ(centroid)`. Indexed by the ground's corners; also the cut and fill plan areas
+/// (the sums of the weights: Σφ = 1).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Sensitivity {
+    pub cut: Vec<f64>,
+    pub fill: Vec<f64>,
+    pub cut_area: f64,
+    pub fill_area: f64,
+    /// The plan area where `|d| < near`: there an error of the heights moves the zero line and the cut and fill apart
+    /// are not linear in them (their net is).
+    pub near_area: f64,
+    /// The plan area both surfaces cover.
+    pub covered: f64,
+}
+
+/// A convex polygon's plan area and centroid.
+fn area_centroid(poly: &[([f64; 2], f64)]) -> (f64, [f64; 2]) {
+    let (mut area, mut cx, mut cy) = (0.0, 0.0, 0.0);
+    for i in 1..poly.len().saturating_sub(1) {
+        let (a, b, c) = (poly[0].0, poly[i].0, poly[i + 1].0);
+        let s = area2(a, b, c) / 2.0;
+        area += s;
+        cx += s * (a[0] + b[0] + c[0]) / 3.0;
+        cy += s * (a[1] + b[1] + c[1]) / 3.0;
+    }
+    if area > 0.0 { (area, [cx / area, cy / area]) } else { (0.0, [0.0, 0.0]) }
+}
+
+/// The sensitivity of the volumes between `design` and the ground TIN (`vertices`, `triangles` by corner index), and the
+/// area where `|d| < near`.
+pub fn sensitivity(design: &[Triangle], vertices: &[[f64; 3]], triangles: &[[u32; 3]], near: f64) -> Sensitivity {
+    let mut kept: Vec<(Triangle, [u32; 3])> = Vec::with_capacity(triangles.len());
+    for t in triangles {
+        let tri = [vertices[t[0] as usize], vertices[t[1] as usize], vertices[t[2] as usize]];
+        let a = area2([tri[0][0], tri[0][1]], [tri[1][0], tri[1][1]], [tri[2][0], tri[2][1]]);
+        if a > 0.0 {
+            kept.push((tri, *t));
+        } else if a < 0.0 {
+            kept.push(([tri[0], tri[2], tri[1]], [t[0], t[2], t[1]]));
+        }
+    }
+    let plain: Vec<Triangle> = kept.iter().map(|k| k.0).collect();
+    let mut ground = Ground::new(&plain);
+    let mut out = Sensitivity { cut: vec![0.0; vertices.len()], fill: vec![0.0; vertices.len()], ..Sensitivity::default() };
+    let covered = ground.overlay_on(design, |gi, with| {
+        let band = cut_at(with, -near, true);
+        if band.len() >= 3 {
+            let band = cut_at(&band, near, false);
+            if band.len() >= 3 {
+                out.near_area += integral(&band).0;
+            }
+        }
+        let (g, ids) = &kept[gi];
+        let (a, b, c) = ([g[0][0], g[0][1]], [g[1][0], g[1][1]], [g[2][0], g[2][1]]);
+        let whole = area2(a, b, c);
+        let weights = |p: [f64; 2]| {
+            let wa = area2(p, b, c) / whole;
+            let wb = area2(a, p, c) / whole;
+            [wa, wb, 1.0 - wa - wb]
+        };
+        for (above, sign) in [(true, -1.0), (false, 1.0)] {
+            let part = split(with, above);
+            if part.len() < 3 {
+                continue;
+            }
+            let (area, at) = area_centroid(&part);
+            if area <= 0.0 {
+                continue;
+            }
+            let phi = weights(at);
+            let into = if above { &mut out.fill } else { &mut out.cut };
+            for k in 0..3 {
+                into[ids[k] as usize] += sign * area * phi[k];
+            }
+            if above {
+                out.fill_area += area;
+            } else {
+                out.cut_area += area;
+            }
+        }
+    });
+    out.covered = covered.0;
+    out
 }

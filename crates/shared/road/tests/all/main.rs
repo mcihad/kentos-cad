@@ -20,6 +20,7 @@ mod grading;
 mod haul;
 mod haul_fleet;
 mod volume;
+mod volume_uncertainty;
 mod surfaces;
 mod sources;
 mod sampling;
