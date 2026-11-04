@@ -765,11 +765,13 @@ pub const SCHEMA_WITH_ROAD_PIVOT: u32 = 165;
 pub const SCHEMA_WITH_SECTION_BREAKS: u32 = 166;
 /// Schema 167 (docs/adr/0934 §2): an earthwork volume's `curve`, the correction on a curve by the sections' moments.
 pub const SCHEMA_WITH_VOLUME_CURVE: u32 = 167;
+/// Schema 168 (docs/adr/0939): a corridor's `verticalSag` and `refine`, its sampling densified and checked.
+pub const SCHEMA_WITH_CORRIDOR_SAMPLING: u32 = 168;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 165] = [
+pub const SCHEMAS: [u32; 166] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -935,6 +937,7 @@ pub const SCHEMAS: [u32; 165] = [
     SCHEMA_WITH_ROAD_PIVOT,
     SCHEMA_WITH_SECTION_BREAKS,
     SCHEMA_WITH_VOLUME_CURVE,
+    SCHEMA_WITH_CORRIDOR_SAMPLING,
 ];
 
 /// The file a drawing is saved as.

@@ -22,6 +22,7 @@ import mpmath as mp
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import road_alignment_cases as aref  # noqa: E402
 import road_corridor_cases as cref  # noqa: E402
+import road_sampling_cases as sref  # noqa: E402
 import road_profile_command_cases as pcmd  # noqa: E402
 import road_section_command_cases as scmd  # noqa: E402
 import road_superelevation_command_cases as supcmd  # noqa: E402
@@ -105,6 +106,33 @@ def template_codes(t):
     return {"left": one(t["left"]), "right": one(t.get("right") or t["left"])}
 
 
+def vertical_divisions(prof, t):
+    """The profile's vertical curves divided by the chord height t (docs/adr/0939 §1): each parabola (an asymmetric
+    one's two arms) or circle into the fewest equal steps of at most √(8t/k); k a parabola's |r|, a circle's
+    (1 + g²)^(3/2)/R at its steeper end."""
+    out = []
+    pvis = {p["id"]: p for p in prof["pvis"]}
+    for cv in pcmd.report(prof)["curves"]:
+        s0, s1, g1, g2 = cv["start"][0], cv["end"][0], cv["gIn"], cv["gOut"]
+        if cv["kind"] == "circle":
+            k = max((1 + g * g) ** 1.5 for g in (g1, g2)) / cv["radius"]
+            arms = [(s0, s1, k)]
+        elif cv["kind"] == "parabola":
+            arms = [(s0, s1, abs(g2 - g1) / (s1 - s0))]
+        else:
+            sp = pvis[cv["pvi"]]["station"]
+            l1, l2 = sp - s0, s1 - sp
+            r1 = (g2 - g1) * l2 / (l1 * (l1 + l2))
+            arms = [(s0, sp, abs(r1)), (sp, s1, abs(r1 * l1 * l1 / (l2 * l2)))]
+        for a, b, k in arms:
+            if k == 0 or b <= a:
+                continue
+            step = math.sqrt(8 * t / k)
+            n = max(1, math.ceil((b - a) / step - 1e-9))
+            out += [a + (b - a) * i / n for i in range(1, n)]
+    return out
+
+
 def make(c, points=False, templates=TEMPLATES):
     """The corridor's report, its warnings and its triangles by the references; Refused where it does not build."""
     b = pcmd.ALIGNED[c["alignment"]]
@@ -142,13 +170,15 @@ def make(c, points=False, templates=TEMPLATES):
             events += [[cv["start"][0], "profile"], [cv["end"][0], "profile"]]
             if "extreme" in cv:
                 events.append([cv["extreme"][0], "profile"])
+    if c.get("verticalSag"):
+        events += [[s, "vertical"] for s in vertical_divisions(prof, c["verticalSag"])]
     if c.get("critical"):
         events += [[s, "critical"] for s in crit]
     if c["surface"] != "t-1":
         warnings.append(warn("corridor_surface_gone",
                              f"“{c['name']}” koridorunun yüzeyi ({c['surface']}) projede yok ya da kurulamıyor; "
                              "hiçbir kesit çözülmedi."))
-    stations, regs = [], []
+    stations, regs, checks = [], [], []
     for ri, r in enumerate(c["regions"]):
         t = next((x for x in templates if x["id"] == r["template"]), None)
         if t is None:
@@ -159,12 +189,14 @@ def make(c, points=False, templates=TEMPLATES):
             if got["error"]["kind"] == "TooMany":
                 raise bad("tangent", f"Bu aralıklarla {cref.MAX_STATIONS}'den çok km çıkar; tangent ya da curve'ü büyütün.")
             raise bad("tangent", "Aralıklar ve sapma toleransı 0'dan büyük olmalı.")
-        crosses = []
-        for s, why in got["stations"]:
-            stations.append({"station": s, "kmText": km_text(c["alignment"], s), "why": why, "region": ri})
-            fake = {"name": c["name"], "alignment": c["alignment"], "surface": c["surface"], "profile": c["profile"],
-                    "template": r["template"], "superelevation": sup["id"] if sup else None,
-                    "left": c["left"], "right": c["right"]}
+        fake = {"name": c["name"], "alignment": c["alignment"], "surface": c["surface"], "profile": c["profile"],
+                "template": r["template"], "superelevation": sup["id"] if sup else None,
+                "left": c["left"], "right": c["right"]}
+        built_at = {}
+
+        def cross_at(s):
+            if s in built_at:
+                return built_at[s]
             row = scmd.sections(fake, [s], templates)[0][0]
             e, (x, y) = aref.place_at(b.els, mp.mpf(s))
             th = e.theta(mp.mpf(s) - e.station)
@@ -175,8 +207,38 @@ def make(c, points=False, templates=TEMPLATES):
                             "kind": sd["kind"]}
                 sec = {"axis": row["axis"], "left": side(row["left"]), "right": side(row["right"]),
                        "cut": row["cut"], "fill": row["fill"]}
-            crosses.append({"station": s, "at": [float(x), float(y)], "direction": float(th), "section": sec})
-        regs.append({"template": template_codes(t), "crosses": crosses})
+            built_at[s] = {"station": s, "at": [float(x), float(y)], "direction": float(th), "section": sec}
+            return built_at[s]
+
+        codes_of_t = template_codes(t)
+
+        def coded_at(s):
+            # The cross's coded points as its feature lines take them (docs/adr/0939 §2).
+            cr = cross_at(s)
+            sec = cr["section"]
+            if sec is None:
+                return None
+            xy = cref.place(cr, 0)
+            out = [("axis", (xy[0], xy[1], sec["axis"]))]
+            for word in ("left", "right"):
+                for code, o, z in cref.coded(codes_of_t, sec[word], word):
+                    q = cref.place(cr, o)
+                    out.append((code, (q[0], q[1], z)))
+            return out
+
+        here = [(s, why) for s, why in got["stations"]]
+        if c.get("refine"):
+            rf = c["refine"]
+            tol = {"plan": rf.get("plan"), "height": rf.get("height"), "least": rf["least"]}
+            budget = max(0, cref.MAX_STATIONS - (len(stations) + len(here)))
+            done = sref.refine_with(coded_at, [s for s, _ in here], tol, budget)
+            checks.append((ri, done))
+            here = sorted(here + [(s, "refine") for s in done["added"]], key=lambda x: x[0])
+        crosses = []
+        for s, why in here:
+            stations.append({"station": s, "kmText": km_text(c["alignment"], s), "why": why, "region": ri})
+            crosses.append(cross_at(s))
+        regs.append({"template": codes_of_t, "crosses": crosses})
     built = cref.assemble(regs)
     text = lambda s: km_text(c["alignment"], s)  # noqa: E731
     unsolved = [{"region": u["region"], "side": "right" if u["right"] else "left", "why": u["why"], "from": u["from"],
@@ -217,13 +279,65 @@ def make(c, points=False, templates=TEMPLATES):
         words = ", ".join(f"km {text(f[1])} – {text(f[2])}" for f in built["folded"])
         warnings.append(warn("corridor_folded",
                              f"“{c['name']}” koridorunda ardışık kesitler planda kesişiyor: {words}; orada üst yüzey kurulmadı."))
+    sampling = None
+    if c.get("refine"):
+        sampling = sampling_of(checks, text)
+        left = [x for x in sampling["left"] if x["why"] != "change"]
+        if left:
+            def lw(x):
+                why = "km sınırı" if x["why"] == "budget" else "en kısa adımda"
+                return f"km {x['fromText']} – {x['toText']} ({why})"
+            more = f" ve {len(left) - 8} aralık daha" if len(left) > 8 else ""
+            warnings.append(warn("corridor_sampling_left",
+                                 f"“{c['name']}” koridorunda kesitler şu aralıklarda toleransa inmedi: "
+                                 f"{', '.join(lw(x) for x in left[:8])}{more}."))
     report = {"id": c["id"], "name": c["name"], "revision": c.get("revision", 0), "alignment": c["alignment"],
               "profile": c["profile"], "surface": c["surface"], "stale": stale, "stations": stations,
               "gaps": regions["gaps"], "unsolved": unsolved, "folded": [[f[1], f[2]] for f in built["folded"]],
               "features": features, "triangles": len(built["triangles"]), "area": area}
     if c.get("superelevation"):
         report["superelevation"] = c["superelevation"]
+    if sampling is not None:
+        report["sampling"] = sampling
     return report, warnings, built["triangles"], regs
+
+
+def sampling_of(checks, text):
+    """The sampling as it was checked, all regions together (docs/adr/0939 §2): middles measured (each within, or
+    strayed and added), stations added, the largest strays of the first intervals and of the final ones (within, or
+    left at the least step without a change), the changes found and the intervals left."""
+    def worst(items):
+        out = {"plan": 0.0, "height": 0.0}
+        for m in items:
+            at = (m["from"] + m["to"]) / 2
+            if m["plan"] > out["plan"]:
+                out["plan"], out["planAt"] = m["plan"], at
+                if m["planCode"] is not None:
+                    out["planCode"] = m["planCode"]
+                else:
+                    out.pop("planCode", None)
+            if m["height"] > out["height"]:
+                out["height"], out["heightAt"] = m["height"], at
+                if m["heightCode"] is not None:
+                    out["heightCode"] = m["heightCode"]
+                else:
+                    out.pop("heightCode", None)
+        return out
+    before = worst(m for _, d in checks for m in d["before"])
+    after = worst([m for _, d in checks
+                   for m in d["after"] + [x for x in d["left"] if x["why"] == "least" and not x["changed"]]])
+    left, changes = [], 0
+    for ri, d in checks:
+        for x in d["left"]:
+            why = x["why"]
+            if why == "least" and x["changed"]:
+                why, changes = "change", changes + 1
+            left.append({"region": ri, "from": x["from"], "to": x["to"], "fromText": text(x["from"]),
+                         "toText": text(x["to"]), "why": why, "plan": x.get("plan", 0.0),
+                         "height": x.get("height", 0.0)})
+    return {"measured": sum(len(d["after"]) + len(d["added"]) for _, d in checks),
+            "added": sum(len(d["added"]) for _, d in checks), "before": before, "after": after,
+            "changes": changes, "left": left}
 
 
 def report(c):
@@ -307,6 +421,14 @@ def edit_cases():
     ok("Sapma toleransı, profil noktaları ve kullanıcı km'leri",
        {**base, "sag": 0.05, "profilePoints": True, "stations": [133.3], "regions": one},
        START + [new("c-3", sag=0.05, profilePoints=True, stations=[133.3])], "c-3")
+    ok("Düşey kiriş yüksekliği ve örnekleme denetimi (ADR 0939)",
+       {**base, "verticalSag": 0.05, "refine": {"plan": 0.05, "height": 0.05, "least": 0.5}, "regions": one},
+       START + [new("c-3", verticalSag=0.05, refine={"plan": 0.05, "height": 0.05, "least": 0.5})], "c-3")
+    ok("Var olan koridora yalnız kot denetimi", {"operation": "set", "corridor": "c-1", "refine": {"height": 0.02, "least": 1.0}},
+       put(0, {**C1, "refine": {"height": 0.02, "least": 1.0}, "revision": 2}), "c-1")
+    ok("En kısa adım 0: denetim yoksa değişiklik yok", {"operation": "set", "corridor": "c-1", "refine": {"least": 0.0}},
+       START, "c-1")
+    ok("Düşey kiriş yüksekliği 0: değişiklik yok", {"operation": "set", "corridor": "c-1", "verticalSag": 0.0}, START, "c-1")
     ok("Adı değişir", {"operation": "set", "corridor": "c-1", "name": "Koridor A"},
        put(0, {**C1, "name": "Koridor A", "revision": 2}), "c-1")
     ok("Bölgeler değişir", {"operation": "set", "corridor": "Ana koridor",
@@ -341,7 +463,8 @@ def edit_cases():
        failed("unknown_road_template", "“yok” kimlikli ya da adlı tip kesit projede yok.", "regions[0].template"))
     no("Değiştirilecek bir şey yok", {"operation": "set", "corridor": "c-1"},
        failed("invalid_road_corridor", "Değiştirilecek bir şey yok: name, alignment, profile, surface, superelevation, left, "
-                                       "right, tangent, curve, sag, profilePoints, critical, stations ya da regions verin."))
+                                       "right, tangent, curve, sag, verticalSag, refine, profilePoints, critical, stations ya da "
+                                       "regions verin."))
     no("Yeni koridorun bölgesi yok", base,
        failed("invalid_road_corridor", "Yeni koridor için name, alignment, profile, surface, left, right, tangent, curve ve "
                                        "regions verilmeli.", "regions"))
@@ -353,6 +476,12 @@ def edit_cases():
        rulefail("koridor yalnız PI'larıyla kurulan aksa bağlanır", "alignment"))
     no("Aynı ad", {**base, "name": "YAN koridor", "regions": one}, rulefail("bu adda başka bir koridor var", "name"))
     no("Sıfır aralık", {**base, "tangent": 0.0, "regions": one}, rulefail("aralık 0'dan büyük, en çok 1000 m olur", "tangent"))
+    no("Düşey kiriş yüksekliği 10 m'den büyük", {**base, "verticalSag": 20.0, "regions": one},
+       rulefail("düşey kiriş yüksekliği 0'dan büyük, en çok 10 m olur", "verticalSag"))
+    no("Eksi plan sapması", {**base, "refine": {"plan": -0.1, "least": 1.0}, "regions": one},
+       rulefail("sapma toleransı 0'dan büyük, en çok 10 m olur", "refine.plan"))
+    no("En kısa adım 1 cm'den kısa", {**base, "refine": {"height": 0.05, "least": 0.001}, "regions": one},
+       rulefail("en kısa adım 0,01 ile 100 m arası olur", "refine.least"))
     no("Kesişen bölgeler", {**base, "regions": [{"from": 0.0, "to": 200.0, "template": "tk-1"},
                                                  {"from": 150.0, "to": 300.0, "template": "tk-2"}]},
        failed("invalid_road_corridor", "1. ve 2. bölge kesişiyor; bölgeler en çok uç uca gelir.", "regions[1]"))
@@ -438,6 +567,30 @@ def query_cases():
               "profile": "b-4", "surface": "t-1", "left": 40.0, "right": 40.0, "tangent": 10.0, "curve": 2.0,
               "regions": [{"from": 0.0, "to": round(G4_LENGTH - 1.0, 3), "template": "tk-1"}]}
     q("Dar kurpta kesitler kesişir", {"corridor": "c-3"}, START + [folded])
+    # docs/adr/0939: the vertical curves divided by their chord height, the sections between measured and refined.
+    q("Düşey kurplar kiriş yüksekliğiyle bölünür", {"corridor": "c-1"},
+      [with_(C1, verticalSag=0.02, profilePoints=True), C2])
+    q("Denetim: kot sapması 5 cm", {"corridor": "c-1"},
+      [with_(C1, refine={"height": 0.05, "least": 1.0}), C2])
+    q("Denetim: kurpta plan sapması 2 cm", {"corridor": "c-1"},
+      [with_(C1, refine={"plan": 0.02, "least": 1.0}, regions=[{"from": 150.0, "to": 300.0, "template": "tk-1"}]), C2])
+    q("Denetim: plan ve kot birlikte, sık aralıkta", {"corridor": "c-1"},
+      [with_(C1, refine={"plan": 0.05, "height": 0.05, "least": 0.5},
+             regions=[{"from": 100.0, "to": 260.0, "template": "tk-1"}]), C2])
+    q("Toleranssız denetim: yalnız kesit değişimlerinin yeri", {"corridor": "c-1"},
+      [with_(C1, refine={"least": 0.5}), C2])
+    q("En kısa adımda bırakılan aralıklar uyarılır", {"corridor": "c-1"},
+      [with_(C1, refine={"height": 0.001, "least": 5.0}, regions=[{"from": 0.0, "to": 200.0, "template": "tk-1"}]), C2])
+    q("Dar şerit: açık yanların sınırları bulunur", {"corridor": "c-1"},
+      [with_(C1, left=6.0, right=6.0, refine={"least": 1.0}), C2])
+    q("Devere bağlı, kritik km'siz: enine eğim ölçülür", {"corridor": "c-1"},
+      [with_(C1, superelevation="d-1", refine={"height": 0.01, "least": 1.0},
+             regions=[{"from": 100.0, "to": 300.0, "template": "tk-1"}]), C2])
+    q("Düşey bölme ve denetim birlikte", {"corridor": "c-1"},
+      [with_(C1, verticalSag=0.05, refine={"plan": 0.1, "height": 0.1, "least": 1.0}), C2])
+    q("Yan koridorun denetimi", {"corridor": "c-2"}, [C1, with_(C2, refine={"height": 0.05, "least": 1.0})])
+    q("Bütün koridorlar denetimleriyle", {},
+      [with_(C1, refine={"height": 0.1, "least": 2.0}), with_(C2, verticalSag=0.05)])
     q("Plan cevabı verir", {"corridor": "c-2"}, op="plan")
     q("Doğrulama uyarıları verir", {"corridor": "c-2"}, op="validate")
     q("Koridor yok: boş liste", {}, [])

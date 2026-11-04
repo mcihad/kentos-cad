@@ -4,7 +4,8 @@
 //! Nothing built is kept: every read builds again, so a changed source shows at once (ROAD-MOD-06).
 
 use kentos_commands::{
-    CommandWarning, CorridorDef, CorridorFeature, CorridorListed, CorridorReport, CorridorStation, CorridorStretch,
+    CommandWarning, CorridorDef, CorridorFeature, CorridorLeft, CorridorListed, CorridorReport, CorridorSampling,
+    CorridorStation, CorridorStray, CorridorStretch,
 };
 use kentos_domain::Document;
 use kentos_road::alignment::km_text;
@@ -67,6 +68,8 @@ fn why_word(w: Why) -> &'static str {
         Why::User => "user",
         Why::Curve => "curve",
         Why::Interval => "interval",
+        Why::Vertical => "vertical",
+        Why::Refine => "refine",
     }
 }
 
@@ -216,6 +219,11 @@ pub(crate) fn make_with(
             }
         }
     }
+    if let Some(t) = def.vertical_sag {
+        // The vertical curves divided by their chord height (docs/adr/0939 §1).
+        let divisions = kentos_road::sampling::vertical_divisions(&vertical.pieces, t, [f64::NEG_INFINITY, f64::INFINITY]);
+        events.extend(divisions.into_iter().map(|s| Station { station: s, why: Why::Vertical }));
+    }
     if def.critical
         && let Some((_, _, crit)) = &schedule
     {
@@ -243,6 +251,7 @@ pub(crate) fn make_with(
     let f = Frequency { tangent: def.tangent, curve: def.curve, sag: def.sag };
     let mut stations_out = Vec::new();
     let mut regions = Vec::new();
+    let mut checks: Vec<Checked> = Vec::new();
     for (ri, r) in def.regions.iter().enumerate() {
         let t = templates.iter().find(|t| t.id == r.template).ok_or_else(|| {
             fail(codes::UNKNOWN_ROAD_TEMPLATE, format!("“{}” kimlikli tip kesit projede yok.", r.template), &format!("regions[{ri}].template"))
@@ -255,11 +264,25 @@ pub(crate) fn make_with(
             ),
             _ => bad("tangent", "Aralıklar ve sapma toleransı 0'dan büyük olmalı.".into()),
         })?;
-        let mut crosses = Vec::with_capacity(list.len());
-        for st in &list {
+        let mut sampled: Vec<(Station, Option<Cross>)> =
+            list.iter().map(|st| (*st, sampler.cross(&template, st.station))).collect();
+        if let Some(r) = &def.refine {
+            // The sections between measured and the stations refined (docs/adr/0939 §2), within the stations left.
+            let tol = kentos_road::sampling::Tolerance { plan: r.plan, height: r.height, least: r.least };
+            let budget = core::MAX_STATIONS.saturating_sub(stations_out.len() + sampled.len());
+            let given: Vec<(f64, Option<Cross>)> = sampled.iter().map(|(st, c)| (st.station, c.clone())).collect();
+            let refined = kentos_road::sampling::refine(&given, &tol, budget, |s| sampler.cross(&template, s), |c| {
+                c.as_ref().and_then(|c| core::coded_points(&template, c))
+            });
+            checks.push((ri, refined.before.clone(), refined.after.clone(), refined.left.clone(), refined.added.len()));
+            sampled.extend(refined.added.into_iter().map(|(s, c)| (Station { station: s, why: Why::Refine }, c)));
+            sampled.sort_by(|a, b| a.0.station.total_cmp(&b.0.station));
+        }
+        let mut crosses = Vec::with_capacity(sampled.len());
+        for (st, cross) in sampled {
             let s = st.station;
             stations_out.push(CorridorStation { station: s, km_text: km_text(built.km(s), 3), why: why_word(st.why).into(), region: ri as u32 });
-            if let Some(cross) = sampler.cross(&template, s) {
+            if let Some(cross) = cross {
                 crosses.push(cross);
             }
         }
@@ -338,6 +361,25 @@ pub(crate) fn make_with(
             format!("“{}” koridorunda ardışık kesitler planda kesişiyor: {}; orada üst yüzey kurulmadı.", def.name, words.join(", ")),
         ));
     }
+    let sampling = def.refine.as_ref().map(|_| sampling_of(&checks, &text));
+    if let Some(sm) = &sampling {
+        let left: Vec<&CorridorLeft> = sm.left.iter().filter(|l| l.why != "change").collect();
+        if !left.is_empty() {
+            let words: Vec<String> = left
+                .iter()
+                .take(8)
+                .map(|l| {
+                    let why = if l.why == "budget" { "km sınırı" } else { "en kısa adımda" };
+                    format!("km {} – {} ({why})", l.from_text, l.to_text)
+                })
+                .collect();
+            let more = if left.len() > 8 { format!(" ve {} aralık daha", left.len() - 8) } else { String::new() };
+            warnings.push(warning(
+                codes::CORRIDOR_SAMPLING_LEFT,
+                format!("“{}” koridorunda kesitler şu aralıklarda toleransa inmedi: {}{more}.", def.name, words.join(", ")),
+            ));
+        }
+    }
     let report = CorridorReport {
         id: def.id.clone(),
         name: def.name.clone(),
@@ -355,8 +397,83 @@ pub(crate) fn make_with(
         triangles: made.triangles.len() as u32,
         area,
         problem: None,
+        sampling,
     };
     Ok(Made { report, built: made, warnings, regions, sampler })
+}
+
+/// A region's refinement as it was measured: the region, its first intervals, the ones at the end found within, those
+/// left and the stations added.
+type Checked = (
+    usize,
+    Vec<kentos_road::sampling::Measured>,
+    Vec<kentos_road::sampling::Measured>,
+    Vec<(kentos_road::sampling::Measured, kentos_road::sampling::Left)>,
+    usize,
+);
+
+/// The largest strays of these intervals (each measured at its middle).
+fn worst<'a>(list: impl Iterator<Item = &'a kentos_road::sampling::Measured>) -> CorridorStray {
+    let mut out = CorridorStray::default();
+    for m in list {
+        let at = (m.from + m.to) / 2.0;
+        if m.stray.plan > out.plan {
+            out.plan = m.stray.plan;
+            out.plan_at = Some(at);
+            out.plan_code = m.stray.plan_code.clone();
+        }
+        if m.stray.height > out.height {
+            out.height = m.stray.height;
+            out.height_at = Some(at);
+            out.height_code = m.stray.height_code.clone();
+        }
+    }
+    out
+}
+
+/// The corridor's sampling as it was checked, all regions together (docs/adr/0939 §2).
+fn sampling_of(checks: &[Checked], text: &dyn Fn(f64) -> String) -> CorridorSampling {
+    use kentos_road::sampling::Left;
+    // Each middle built is either within (a final interval) or strayed and was added.
+    let measured = checks.iter().map(|c| c.2.len() + c.4).sum::<usize>();
+    let before = worst(checks.iter().flat_map(|c| c.1.iter()));
+    let after = worst(
+        checks
+            .iter()
+            .flat_map(|c| c.2.iter().chain(c.3.iter().filter(|l| l.1 == Left::Least && !l.0.stray.changed).map(|l| &l.0))),
+    );
+    let mut left = Vec::new();
+    let mut changes = 0u32;
+    for (region, _, _, ls, _) in checks {
+        for (m, why) in ls {
+            let why = match why {
+                Left::Budget => "budget",
+                Left::Least if m.stray.changed => {
+                    changes += 1;
+                    "change"
+                }
+                Left::Least => "least",
+            };
+            left.push(CorridorLeft {
+                region: *region as u32,
+                from: m.from,
+                to: m.to,
+                from_text: text(m.from),
+                to_text: text(m.to),
+                why: why.into(),
+                plan: m.stray.plan,
+                height: m.stray.height,
+            });
+        }
+    }
+    CorridorSampling {
+        measured: measured as u32,
+        added: checks.iter().map(|c| c.4).sum::<usize>() as u32,
+        before,
+        after,
+        changes,
+        left,
+    }
 }
 
 /// The corridor built now with the project's templates.
@@ -383,6 +500,7 @@ pub(crate) fn broken(doc: &Document, def: &CorridorDef, why: String) -> Corridor
         triangles: 0,
         area: 0.0,
         problem: Some(why),
+        sampling: None,
     }
 }
 

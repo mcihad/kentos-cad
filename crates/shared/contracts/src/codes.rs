@@ -722,6 +722,9 @@ codes! {
     CORRIDOR_FOLDED = "corridor_folded", Warning, false, "Ardışık kesitler planda kesişiyor (dar kurpta geniş şerit); orada üst yüzey kurulmadı.";
     /// A warning: the corridor's regions leave stretches without sections.
     CORRIDOR_GAP = "corridor_gap", Warning, false, "Koridorun bölgeleri arasında kesitsiz aralık var.";
+    /// A warning: intervals where the section between still strays at the least step, or the stations ran out
+    /// (docs/adr/0939 §2).
+    CORRIDOR_SAMPLING_LEFT = "corridor_sampling_left", Warning, false, "Koridorun bazı aralıklarında aradaki kesit en kısa adımda da toleranstan sapıyor ya da km sınırı doldu; ileti aralıkları söyler.";
     /// A warning: the corridor's surface is not in the project or makes no surface; no section is solved.
     CORRIDOR_SURFACE_GONE = "corridor_surface_gone", Warning, false, "Koridorun yüzeyi projede yok ya da kurulamıyor; hiçbir kesit çözülmedi.";
     /// No earthwork volume of the id or name.

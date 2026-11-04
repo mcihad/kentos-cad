@@ -59,6 +59,8 @@ fn check(doc: &kentos_domain::Document, input: &CorridorsEdit) -> Result<Checked
         }
     };
     let sag = input.sag.map(|t| (t != 0.0).then_some(t));
+    let vertical_sag = input.vertical_sag.map(|t| (t != 0.0).then_some(t));
+    let refine = input.refine.clone().map(|r| (r.least != 0.0).then_some(r));
     let target = match (input.operation, found) {
         (RoadEditOperation::Remove | RoadEditOperation::Rebind, None) => return Err(Stop::Cancelled),
         (RoadEditOperation::Remove, Some((at, old))) => {
@@ -95,6 +97,8 @@ fn check(doc: &kentos_domain::Document, input: &CorridorsEdit) -> Result<Checked
                 || input.tangent.is_some()
                 || input.curve.is_some()
                 || sag.is_some()
+                || vertical_sag.is_some()
+                || refine.is_some()
                 || input.profile_points.is_some()
                 || input.critical.is_some()
                 || input.stations.is_some()
@@ -102,7 +106,7 @@ fn check(doc: &kentos_domain::Document, input: &CorridorsEdit) -> Result<Checked
             if !given {
                 return Err(fail(
                     codes::INVALID_ROAD_CORRIDOR,
-                    "Değiştirilecek bir şey yok: name, alignment, profile, surface, superelevation, left, right, tangent, curve, sag, profilePoints, critical, stations ya da regions verin.".into(),
+                    "Değiştirilecek bir şey yok: name, alignment, profile, surface, superelevation, left, right, tangent, curve, sag, verticalSag, refine, profilePoints, critical, stations ya da regions verin.".into(),
                     "",
                 ));
             }
@@ -137,6 +141,12 @@ fn check(doc: &kentos_domain::Document, input: &CorridorsEdit) -> Result<Checked
             }
             if let Some(v) = sag {
                 d.sag = v;
+            }
+            if let Some(v) = vertical_sag {
+                d.vertical_sag = v;
+            }
+            if let Some(v) = refine.clone() {
+                d.refine = v;
             }
             if let Some(v) = input.profile_points {
                 d.profile_points = v;
@@ -209,6 +219,8 @@ fn check(doc: &kentos_domain::Document, input: &CorridorsEdit) -> Result<Checked
                 critical: input.critical.unwrap_or(false),
                 stations: input.stations.clone().unwrap_or_default(),
                 regions: rs,
+                vertical_sag: vertical_sag.flatten(),
+                refine: refine.clone().flatten(),
             });
             Some(id)
         }

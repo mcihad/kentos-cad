@@ -92,6 +92,11 @@ def within(s, tol):
 # ---- the refinement -----------------------------------------------------------------------------------------------
 
 def refine(family, stations, tol, budget):
+    return refine_with(lambda s: coded(family, s), stations, tol, budget)
+
+
+def refine_with(coded_at, stations, tol, budget):
+    """The refinement over sections given by coded_at(station) (a list of (code, (x, y, z)), None: no section)."""
     least = tol["least"]
     added, before, after, left = [], [], [], []
     built = 0
@@ -107,7 +112,7 @@ def refine(family, stations, tol, budget):
                 continue
             m = a + half
             built += 1
-            st = stray(coded(family, a), coded(family, m), coded(family, b))
+            st = stray(coded_at(a), coded_at(m), coded_at(b))
             ok = within(st, tol)
             measured = {"from": a, "to": b, **st, "within": ok}
             if first:

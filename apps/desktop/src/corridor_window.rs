@@ -26,7 +26,8 @@ use iced::widget::canvas::{self, Path, Stroke, Text};
 use iced::widget::{Column, column, container, row, scrollable, space};
 use iced::{Center, Color, Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{
-    CommandWarning, CorridorDef, CorridorRegionDef, CorridorReport, CorridorsDraw, CorridorsEdit, RoadEditOperation,
+    CommandWarning, CorridorDef, CorridorRefineDef, CorridorRegionDef, CorridorReport, CorridorsDraw, CorridorsEdit,
+    RoadEditOperation,
 };
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, road_corridors, road_corridors_draw, road_corridors_edit};
@@ -86,8 +87,9 @@ pub struct Row {
     profile: Option<String>,
     surface: Option<String>,
     superelevation: Option<String>,
-    /// Left, right, tangent, curve, sag; the stations written ("; " between).
-    fields: [String; 5],
+    /// Left, right, tangent, curve, sag; the vertical chord height; the sampling check's plan and height tolerances
+    /// and least step (docs/adr/0939); the stations written ("; " between).
+    fields: [String; 9],
     stations: String,
     profile_points: bool,
     critical: bool,
@@ -106,7 +108,17 @@ impl Row {
             profile: Some(d.profile.clone()),
             surface: Some(d.surface.clone()),
             superelevation: d.superelevation.clone(),
-            fields: [trimmed(d.left), trimmed(d.right), trimmed(d.tangent), trimmed(d.curve), d.sag.map(trimmed).unwrap_or_default()],
+            fields: [
+                trimmed(d.left),
+                trimmed(d.right),
+                trimmed(d.tangent),
+                trimmed(d.curve),
+                d.sag.map(trimmed).unwrap_or_default(),
+                d.vertical_sag.map(trimmed).unwrap_or_default(),
+                d.refine.as_ref().and_then(|r| r.plan).map(trimmed).unwrap_or_default(),
+                d.refine.as_ref().and_then(|r| r.height).map(trimmed).unwrap_or_default(),
+                d.refine.as_ref().map(|r| trimmed(r.least)).unwrap_or_default(),
+            ],
             stations: d.stations.iter().map(|s| trimmed(*s)).collect::<Vec<_>>().join("; "),
             profile_points: d.profile_points,
             critical: d.critical,
@@ -133,6 +145,16 @@ impl Row {
         if regions.is_empty() {
             return Err("Bölge ekle ile en az bir bölge verin.".into());
         }
+        // The sampling check (docs/adr/0939 §2): asked when its least step is written.
+        let tolerance = |k: usize, what: &str| number(&self.fields[k]).map_err(|_| format!("{what} bir sayı olmalı."));
+        let (plan, height) = (tolerance(6, "Plan sapması")?, tolerance(7, "Kot sapması")?);
+        let refine = match tolerance(8, "En kısa adım")? {
+            Some(least) => Some(CorridorRefineDef { plan, height, least }),
+            None if plan.is_some() || height.is_some() => {
+                return Err("Kesitleri denetlemek için en kısa adımı da yazın.".into());
+            }
+            None => None,
+        };
         Ok(CorridorDef {
             id: self.id.clone(),
             name: self.name.clone(),
@@ -151,6 +173,8 @@ impl Row {
             critical: self.critical,
             stations,
             regions,
+            vertical_sag: number(&self.fields[5]).map_err(|_| "Düşey kiriş yüksekliği bir sayı olmalı.".to_owned())?,
+            refine,
         })
     }
 }
@@ -186,7 +210,7 @@ pub enum Event {
     Profile(Option<String>),
     Surface(Option<String>),
     Superelevation(Option<String>),
-    /// 0 left, 1 right, 2 tangent, 3 curve, 4 sag.
+    /// 0 left, 1 right, 2 tangent, 3 curve, 4 sag, 5 vertical chord height, 6 plan and 7 height tolerance, 8 least step.
     Field(usize, String),
     Stations(String),
     ProfilePoints,
@@ -354,7 +378,7 @@ impl App {
             }
             Event::Field(k, t) => {
                 if let Some(r) = chosen_row(w) {
-                    r.fields[k.min(4)] = t;
+                    r.fields[k.min(8)] = t;
                 }
             }
             Event::Stations(t) => {
@@ -437,6 +461,8 @@ impl App {
             tangent: None,
             curve: None,
             sag: None,
+            vertical_sag: None,
+            refine: None,
             profile_points: None,
             critical: None,
             stations: None,
@@ -543,6 +569,8 @@ impl App {
                 tangent: Some(d.tangent),
                 curve: Some(d.curve),
                 sag: Some(d.sag.unwrap_or(0.0)),
+                vertical_sag: Some(d.vertical_sag.unwrap_or(0.0)),
+                refine: Some(d.refine.clone().unwrap_or(CorridorRefineDef { plan: None, height: None, least: 0.0 })),
                 profile_points: Some(d.profile_points),
                 critical: Some(d.critical),
                 stations: Some(d.stations.clone()),
@@ -700,6 +728,19 @@ impl App {
             .spacing(10)
             .align_y(iced::alignment::Vertical::Bottom),
         );
+        // How the sampling is densified and checked (docs/adr/0939): the vertical curves by their chord height, the
+        // sections between measured against the join of their neighbours.
+        col = col.push(
+            row![
+                words::field("Düşey kiriş (m)", field("", 5, 96.0), None),
+                words::field("Plan sapması (m)", field("", 6, 104.0), None),
+                words::field("Kot sapması (m)", field("", 7, 104.0), None),
+                words::field("En kısa adım (m)", field("", 8, 104.0), None),
+                label::caption("Aradaki kesit ölçülür; toleransı aşan aralık en kısa adıma dek ikiye bölünür.").style(muted),
+            ]
+            .spacing(10)
+            .align_y(iced::alignment::Vertical::Bottom),
+        );
         col = col.push_grow(crate::picture::picture(iced::widget::canvas(Plan { preview: &w.preview }).width(Fill).height(Fill), "Koridor"), typography::scaled(190.0));
         match (&w.preview.why, &w.preview.report) {
             (Some(e), _) => col = col.push(label::caption(e.clone()).style(danger)),
@@ -712,6 +753,9 @@ impl App {
                     comma(rep.area, 0),
                     rep.unsolved.len()
                 )));
+                if let Some(sm) = &rep.sampling {
+                    col = col.push(label::caption(sampling_words(sm)));
+                }
                 for wn in w.preview.warnings.iter().filter(|x| x.code != "corridor_stale") {
                     col = col.push(label::caption(wn.message.clone()).style(warn));
                 }
@@ -867,4 +911,18 @@ impl canvas::Program<Message> for Plan<'_> {
         }
         vec![frame.into_geometry()]
     }
+}
+
+/// The sampling check in words (docs/adr/0939): what was measured and added, the largest strays before and after.
+fn sampling_words(sm: &kentos_commands::CorridorSampling) -> String {
+    let m = |v: f64| format!("{} m", comma(v, 3));
+    let stray = |s: &kentos_commands::CorridorStray| format!("plan {} · kot {}", m(s.plan), m(s.height));
+    let changes = if sm.changes > 0 { format!(" · {} kesit değişimi en kısa adımda bulundu", sm.changes) } else { String::new() };
+    format!(
+        "Denetim: {} ara kesit ölçüldü, {} km eklendi · en büyük sapma önce {} → sonra {}{changes}",
+        sm.measured,
+        sm.added,
+        stray(&sm.before),
+        stray(&sm.after)
+    )
 }

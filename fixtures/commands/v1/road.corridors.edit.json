@@ -4849,6 +4849,4390 @@
    ]
   },
   {
+   "name": "Düşey kiriş yüksekliği ve örnekleme denetimi (ADR 0939)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "set",
+      "name": "Yeni koridor",
+      "alignment": "g-1",
+      "profile": "b-1",
+      "surface": "t-1",
+      "left": 30.0,
+      "right": 30.0,
+      "tangent": 50.0,
+      "curve": 20.0,
+      "verticalSag": 0.05,
+      "refine": {
+       "plan": 0.05,
+       "height": 0.05,
+       "least": 0.5
+      },
+      "regions": [
+       {
+        "from": 100.0,
+        "to": 250.0,
+        "template": "tk-1"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "corridors": [
+        {
+         "id": "c-1",
+         "name": "Ana koridor",
+         "alignment": "g-1",
+         "revision": 1,
+         "stale": false
+        },
+        {
+         "id": "c-2",
+         "name": "Yan koridor",
+         "alignment": "g-2",
+         "revision": 2,
+         "stale": true
+        },
+        {
+         "id": "c-3",
+         "name": "Yeni koridor",
+         "alignment": "g-1",
+         "revision": 1,
+         "stale": false
+        }
+       ],
+       "revision": "$current",
+       "corridor": {
+        "id": "c-3",
+        "name": "Yeni koridor",
+        "revision": 1,
+        "alignment": "g-1",
+        "profile": "b-1",
+        "surface": "t-1",
+        "stale": false,
+        "stations": [
+         {
+          "station": 100.0,
+          "kmText": "1+100.000",
+          "why": "region",
+          "region": 0
+         },
+         {
+          "station": 125.0,
+          "kmText": "1+125.000",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 137.5,
+          "kmText": "1+137.500",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 150.0,
+          "kmText": "1+150.000",
+          "why": "interval",
+          "region": 0
+         },
+         {
+          "station": 152.5,
+          "kmText": "1+152.500",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 153.125,
+          "kmText": "1+153.125",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 153.75,
+          "kmText": "1+153.750",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 155.0,
+          "kmText": "1+155.000",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 160.0,
+          "kmText": "1+160.000",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 165.0,
+          "kmText": "1+165.000",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 167.5,
+          "kmText": "1+167.500",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 170.0,
+          "kmText": "1+170.000",
+          "why": "vertical",
+          "region": 0
+         },
+         {
+          "station": 172.5,
+          "kmText": "1+172.500",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 175.0,
+          "kmText": "1+175.000",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 180.0,
+          "kmText": "1+180.000",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 181.25,
+          "kmText": "1+181.250",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 181.875,
+          "kmText": "1+181.875",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 182.5,
+          "kmText": "1+182.500",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 185.0,
+          "kmText": "1+185.000",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 190.0,
+          "kmText": "1+190.000",
+          "why": "vertical",
+          "region": 0
+         },
+         {
+          "station": 194.712598760949,
+          "kmText": "1+194.713",
+          "why": "geometry",
+          "region": 0
+         },
+         {
+          "station": 204.712598760949,
+          "kmText": "1+204.713",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 214.712598760949,
+          "kmText": "1+214.713",
+          "why": "curve",
+          "region": 0
+         },
+         {
+          "station": 219.712598760949,
+          "kmText": "1+219.713",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 224.712598760949,
+          "kmText": "1+224.713",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 229.712598760949,
+          "kmText": "1+229.713",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 234.712598760949,
+          "kmText": "1+234.713",
+          "why": "geometry",
+          "region": 0
+         },
+         {
+          "station": 238.53444907071173,
+          "kmText": "1+238.534",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 242.3562993804745,
+          "kmText": "1+242.356",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 246.17814969023726,
+          "kmText": "1+246.178",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 250.0,
+          "kmText": "1+250.000",
+          "why": "region",
+          "region": 0
+         }
+        ],
+        "gaps": [],
+        "unsolved": [],
+        "folded": [],
+        "features": [
+         {
+          "code": "axis",
+          "region": 0,
+          "from": 100.0,
+          "to": 250.0,
+          "length": 150.10072588852475
+         },
+         {
+          "code": "left.c1",
+          "region": 0,
+          "from": 100.0,
+          "to": 250.0,
+          "length": 149.27866619560135
+         },
+         {
+          "code": "left.c2",
+          "region": 0,
+          "from": 100.0,
+          "to": 250.0,
+          "length": 149.04380125696176
+         },
+         {
+          "code": "left.daylight",
+          "region": 0,
+          "from": 100.0,
+          "to": 250.0,
+          "length": 151.51052782969572
+         },
+         {
+          "code": "left.ditchBottom",
+          "region": 0,
+          "from": 100.0,
+          "to": 152.5,
+          "length": 52.500640793329325
+         },
+         {
+          "code": "left.ditchBottom",
+          "region": 0,
+          "from": 181.875,
+          "to": 250.0,
+          "length": 66.80656562161647
+         },
+         {
+          "code": "left.ditchToe",
+          "region": 0,
+          "from": 100.0,
+          "to": 152.5,
+          "length": 52.50064079332934
+         },
+         {
+          "code": "left.ditchToe",
+          "region": 0,
+          "from": 181.875,
+          "to": 250.0,
+          "length": 66.92399434492668
+         },
+         {
+          "code": "left.hinge",
+          "region": 0,
+          "from": 100.0,
+          "to": 250.0,
+          "length": 149.04380125696176
+         },
+         {
+          "code": "right.c1",
+          "region": 0,
+          "from": 100.0,
+          "to": 250.0,
+          "length": 150.9228336674199
+         },
+         {
+          "code": "right.c2",
+          "region": 0,
+          "from": 100.0,
+          "to": 250.0,
+          "length": 151.1577300320276
+         },
+         {
+          "code": "right.daylight",
+          "region": 0,
+          "from": 100.0,
+          "to": 250.0,
+          "length": 155.8544723396945
+         },
+         {
+          "code": "right.ditchBottom",
+          "region": 0,
+          "from": 100.0,
+          "to": 153.125,
+          "length": 53.125700585518906
+         },
+         {
+          "code": "right.ditchBottom",
+          "region": 0,
+          "from": 181.875,
+          "to": 250.0,
+          "length": 69.62513513687944
+         },
+         {
+          "code": "right.ditchToe",
+          "region": 0,
+          "from": 100.0,
+          "to": 153.125,
+          "length": 53.12570058551889
+         },
+         {
+          "code": "right.ditchToe",
+          "region": 0,
+          "from": 181.875,
+          "to": 250.0,
+          "length": 69.50768379869591
+         },
+         {
+          "code": "right.hinge",
+          "region": 0,
+          "from": 100.0,
+          "to": 250.0,
+          "length": 151.1577300320276
+         }
+        ],
+        "triangles": 516,
+        "area": 2275.303347207205,
+        "sampling": {
+         "measured": 49,
+         "added": 23,
+         "before": {
+          "plan": 1.6707968128077353,
+          "height": 0.23960792761522498,
+          "planAt": 180.0,
+          "planCode": "right.daylight",
+          "heightAt": 160.0,
+          "heightCode": "left.daylight"
+         },
+         "after": {
+          "plan": 0.04734093470865545,
+          "height": 0.026835897339410053,
+          "planAt": 232.212598760949,
+          "planCode": "right.daylight",
+          "heightAt": 232.212598760949,
+          "heightCode": "right.daylight"
+         },
+         "changes": 2,
+         "left": [
+          {
+           "region": 0,
+           "from": 152.5,
+           "to": 153.75,
+           "fromText": "1+152.500",
+           "toText": "1+153.750",
+           "why": "change",
+           "plan": 0.5519284763621102,
+           "height": 0.021170217461531138
+          },
+          {
+           "region": 0,
+           "from": 181.25,
+           "to": 182.5,
+           "fromText": "1+181.250",
+           "toText": "1+182.500",
+           "why": "change",
+           "plan": 0.5185795483022186,
+           "height": 0.04489776596894046
+          }
+         ]
+        }
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed",
+      "road": {
+       "surfaces": [
+        {
+         "id": "t-1",
+         "name": "Mevcut zemin",
+         "points": {
+          "layers": [
+           "zemin"
+          ]
+         }
+        },
+        {
+         "id": "t-2",
+         "name": "Kurulamaz",
+         "points": {
+          "layers": [
+           "bos"
+          ]
+         }
+        }
+       ],
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ana aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 20.0,
+           "y": 50.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 60.0,
+           "radius": 150.0,
+           "spiralIn": 40.0,
+           "spiralOut": 40.0
+          },
+          {
+           "id": "b",
+           "x": 560.0,
+           "y": 360.0
+          }
+         ],
+         "stationing": {
+          "start": 1000.0
+         }
+        },
+        {
+         "id": "g-2",
+         "name": "Yan aks",
+         "revision": 3,
+         "pis": [
+          {
+           "id": "a",
+           "x": 30.0,
+           "y": 380.0
+          },
+          {
+           "id": "b",
+           "x": 580.0,
+           "y": 20.0
+          }
+         ]
+        },
+        {
+         "id": "g-3",
+         "name": "Sağ kenar",
+         "revision": 1,
+         "offsetOf": {
+          "alignment": "g-1",
+          "offset": 5.0
+         }
+        },
+        {
+         "id": "g-4",
+         "name": "Dar kurp",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 200.0,
+           "y": 180.0
+          },
+          {
+           "id": "p1",
+           "x": 240.0,
+           "y": 180.0,
+           "radius": 4.0
+          },
+          {
+           "id": "b",
+           "x": 240.0,
+           "y": 240.0
+          }
+         ]
+        }
+       ],
+       "profiles": [
+        {
+         "id": "b-1",
+         "name": "Proje kotu",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 102.0
+          },
+          {
+           "id": "v1",
+           "station": 170.0,
+           "elevation": 101.5,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 340.0,
+           "elevation": 111.0,
+           "radius": 1200.0
+          },
+          {
+           "id": "v3",
+           "station": 520.0,
+           "elevation": 106.0,
+           "lengthIn": 50.0,
+           "lengthOut": 35.0
+          },
+          {
+           "id": "b",
+           "station": 669.0,
+           "elevation": 113.0
+          }
+         ],
+         "surface": "t-1"
+        },
+        {
+         "id": "b-2",
+         "name": "Yan kot",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 4,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 300.0,
+           "elevation": 104.0,
+           "length": 120.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "surface": "t-1"
+        },
+        {
+         "id": "b-3",
+         "name": "Kısmi kot",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 100.0,
+           "elevation": 104.0
+          },
+          {
+           "id": "b",
+           "station": 400.0,
+           "elevation": 110.0
+          }
+         ]
+        },
+        {
+         "id": "b-4",
+         "name": "Dar kurbun kotu",
+         "alignment": "g-4",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 106.0
+          },
+          {
+           "id": "b",
+           "station": 97.783,
+           "elevation": 106.0
+          }
+         ]
+        }
+       ],
+       "templates": [
+        {
+         "id": "tk-1",
+         "name": "Tip 1",
+         "revision": 1,
+         "left": {
+          "components": [
+           {
+            "kind": "lane",
+            "width": 3.5,
+            "slope": -2.5
+           },
+           {
+            "kind": "shoulder",
+            "width": 1.0,
+            "slope": -4.0
+           }
+          ],
+          "cut": 1.0,
+          "fill": 1.5,
+          "ditch": {
+           "fore": 2.0,
+           "depth": 0.5,
+           "bottom": 0.5
+          }
+         }
+        },
+        {
+         "id": "tk-2",
+         "name": "Tip 2",
+         "revision": 2,
+         "left": {
+          "components": [
+           {
+            "kind": "lane",
+            "width": 3.0,
+            "slope": -2.0
+           },
+           {
+            "kind": "shoulder",
+            "width": 1.5,
+            "slope": -4.0
+           }
+          ],
+          "cut": 1.5,
+          "fill": 2.0
+         },
+         "right": {
+          "components": [
+           {
+            "kind": "lane",
+            "width": 3.5,
+            "slope": -2.5
+           },
+           {
+            "kind": "lane",
+            "width": 3.5,
+            "slope": -2.5
+           },
+           {
+            "kind": "shoulder",
+            "width": 1.0,
+            "slope": -4.0
+           }
+          ],
+          "cut": 1.0,
+          "fill": 1.5
+         }
+        }
+       ],
+       "sections": [
+        {
+         "id": "k-1",
+         "name": "Enkesitler",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "profile": "b-1",
+         "template": "tk-1",
+         "surface": "t-1",
+         "left": 25.0,
+         "right": 25.0,
+         "stations": {
+          "method": "range",
+          "from": 100.0,
+          "to": 300.0,
+          "every": 50.0,
+          "geometry": true
+         }
+        },
+        {
+         "id": "k-2",
+         "name": "Yan kesitler",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 3,
+         "profile": "b-2",
+         "template": "tk-2",
+         "surface": "t-1",
+         "left": 20.0,
+         "right": 30.0,
+         "stations": {
+          "method": "stations",
+          "stations": [
+           50.0,
+           200.0,
+           400.0
+          ]
+         }
+        }
+       ],
+       "superelevations": [
+        {
+         "id": "d-1",
+         "name": "Ana aks deveri",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "normalLeft": -2.5,
+         "normalRight": -2.5,
+         "method": {
+          "method": "curves",
+          "curves": [
+           {
+            "pi": "p1",
+            "rate": 6.0,
+            "runoff": 40.0,
+            "onTangent": 0.0,
+            "widening": 0.5
+           }
+          ]
+         }
+        },
+        {
+         "id": "d-2",
+         "name": "Yan aks deveri",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 2,
+         "normalLeft": -2.0,
+         "normalRight": -2.0,
+         "method": {
+          "method": "stations",
+          "rows": [
+           {
+            "station": 100.0,
+            "left": -2.0,
+            "right": -2.0
+           },
+           {
+            "station": 200.0,
+            "left": 3.0,
+            "right": -3.0
+           },
+           {
+            "station": 400.0,
+            "left": 3.0,
+            "right": -3.0
+           },
+           {
+            "station": 500.0,
+            "left": -2.0,
+            "right": -2.0
+           }
+          ]
+         }
+        },
+        {
+         "id": "d-3",
+         "name": "Kurulamaz dever",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "normalLeft": -2.5,
+         "normalRight": -2.5,
+         "method": {
+          "method": "curves",
+          "curves": [
+           {
+            "pi": "p9",
+            "rate": 6.0,
+            "runoff": 40.0,
+            "onTangent": 0.0
+           }
+          ]
+         }
+        }
+       ],
+       "corridors": [
+        {
+         "id": "c-1",
+         "name": "Ana koridor",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "profile": "b-1",
+         "surface": "t-1",
+         "left": 30.0,
+         "right": 30.0,
+         "tangent": 25.0,
+         "curve": 10.0,
+         "regions": [
+          {
+           "from": 0.0,
+           "to": 300.0,
+           "template": "tk-1"
+          },
+          {
+           "from": 300.0,
+           "to": 600.0,
+           "template": "tk-2"
+          }
+         ]
+        },
+        {
+         "id": "c-2",
+         "name": "Yan koridor",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 2,
+         "profile": "b-2",
+         "surface": "t-1",
+         "superelevation": "d-2",
+         "left": 25.0,
+         "right": 25.0,
+         "tangent": 50.0,
+         "curve": 20.0,
+         "regions": [
+          {
+           "from": 50.0,
+           "to": 400.0,
+           "template": "tk-2"
+          }
+         ]
+        },
+        {
+         "id": "c-3",
+         "name": "Yeni koridor",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "profile": "b-1",
+         "surface": "t-1",
+         "left": 30.0,
+         "right": 30.0,
+         "tangent": 50.0,
+         "curve": 20.0,
+         "regions": [
+          {
+           "from": 100.0,
+           "to": 250.0,
+           "template": "tk-1"
+          }
+         ],
+         "verticalSag": 0.05,
+         "refine": {
+          "plan": 0.05,
+          "height": 0.05,
+          "least": 0.5
+         }
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Var olan koridora yalnız kot denetimi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "set",
+      "corridor": "c-1",
+      "refine": {
+       "height": 0.02,
+       "least": 1.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "corridors": [
+        {
+         "id": "c-1",
+         "name": "Ana koridor",
+         "alignment": "g-1",
+         "revision": 2,
+         "stale": false
+        },
+        {
+         "id": "c-2",
+         "name": "Yan koridor",
+         "alignment": "g-2",
+         "revision": 2,
+         "stale": true
+        }
+       ],
+       "revision": "$current",
+       "corridor": {
+        "id": "c-1",
+        "name": "Ana koridor",
+        "revision": 2,
+        "alignment": "g-1",
+        "profile": "b-1",
+        "surface": "t-1",
+        "stale": false,
+        "stations": [
+         {
+          "station": 0.0,
+          "kmText": "1+000.000",
+          "why": "region",
+          "region": 0
+         },
+         {
+          "station": 6.25,
+          "kmText": "1+006.250",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 9.375,
+          "kmText": "1+009.375",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 10.9375,
+          "kmText": "1+010.938",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 12.5,
+          "kmText": "1+012.500",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 14.0625,
+          "kmText": "1+014.063",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 15.625,
+          "kmText": "1+015.625",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 17.1875,
+          "kmText": "1+017.188",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 18.75,
+          "kmText": "1+018.750",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 20.3125,
+          "kmText": "1+020.313",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 21.875,
+          "kmText": "1+021.875",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 25.0,
+          "kmText": "1+025.000",
+          "why": "interval",
+          "region": 0
+         },
+         {
+          "station": 37.5,
+          "kmText": "1+037.500",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 50.0,
+          "kmText": "1+050.000",
+          "why": "interval",
+          "region": 0
+         },
+         {
+          "station": 56.25,
+          "kmText": "1+056.250",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 62.5,
+          "kmText": "1+062.500",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 65.625,
+          "kmText": "1+065.625",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 68.75,
+          "kmText": "1+068.750",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 75.0,
+          "kmText": "1+075.000",
+          "why": "interval",
+          "region": 0
+         },
+         {
+          "station": 76.5625,
+          "kmText": "1+076.563",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 78.125,
+          "kmText": "1+078.125",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 81.25,
+          "kmText": "1+081.250",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 82.8125,
+          "kmText": "1+082.813",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 84.375,
+          "kmText": "1+084.375",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 87.5,
+          "kmText": "1+087.500",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 100.0,
+          "kmText": "1+100.000",
+          "why": "interval",
+          "region": 0
+         },
+         {
+          "station": 125.0,
+          "kmText": "1+125.000",
+          "why": "interval",
+          "region": 0
+         },
+         {
+          "station": 137.5,
+          "kmText": "1+137.500",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 150.0,
+          "kmText": "1+150.000",
+          "why": "interval",
+          "region": 0
+         },
+         {
+          "station": 151.5625,
+          "kmText": "1+151.563",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 153.125,
+          "kmText": "1+153.125",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 154.6875,
+          "kmText": "1+154.688",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 156.25,
+          "kmText": "1+156.250",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 162.5,
+          "kmText": "1+162.500",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 165.625,
+          "kmText": "1+165.625",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 167.1875,
+          "kmText": "1+167.188",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 168.75,
+          "kmText": "1+168.750",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 171.875,
+          "kmText": "1+171.875",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 173.4375,
+          "kmText": "1+173.438",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 175.0,
+          "kmText": "1+175.000",
+          "why": "interval",
+          "region": 0
+         },
+         {
+          "station": 179.92814969023726,
+          "kmText": "1+179.928",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 181.16018711279656,
+          "kmText": "1+181.160",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 182.39222453535587,
+          "kmText": "1+182.392",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 184.8562993804745,
+          "kmText": "1+184.856",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 194.712598760949,
+          "kmText": "1+194.713",
+          "why": "geometry",
+          "region": 0
+         },
+         {
+          "station": 204.712598760949,
+          "kmText": "1+204.713",
+          "why": "curve",
+          "region": 0
+         },
+         {
+          "station": 214.712598760949,
+          "kmText": "1+214.713",
+          "why": "curve",
+          "region": 0
+         },
+         {
+          "station": 224.712598760949,
+          "kmText": "1+224.713",
+          "why": "curve",
+          "region": 0
+         },
+         {
+          "station": 229.712598760949,
+          "kmText": "1+229.713",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 232.212598760949,
+          "kmText": "1+232.213",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 233.462598760949,
+          "kmText": "1+233.463",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 234.712598760949,
+          "kmText": "1+234.713",
+          "why": "geometry",
+          "region": 0
+         },
+         {
+          "station": 239.33209750125522,
+          "kmText": "1+239.332",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 241.64184687140835,
+          "kmText": "1+241.642",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 243.95159624156145,
+          "kmText": "1+243.952",
+          "why": "curve",
+          "region": 0
+         },
+         {
+          "station": 253.19059372217393,
+          "kmText": "1+253.191",
+          "why": "curve",
+          "region": 0
+         },
+         {
+          "station": 254.3454684072505,
+          "kmText": "1+254.345",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 255.50034309232706,
+          "kmText": "1+255.500",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 257.81009246248016,
+          "kmText": "1+257.810",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 262.4295912027864,
+          "kmText": "1+262.430",
+          "why": "curve",
+          "region": 0
+         },
+         {
+          "station": 271.66858868339887,
+          "kmText": "1+271.669",
+          "why": "curve",
+          "region": 0
+         },
+         {
+          "station": 272.8234633684754,
+          "kmText": "1+272.823",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 273.97833805355197,
+          "kmText": "1+273.978",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 276.28808742370506,
+          "kmText": "1+276.288",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 278.59783679385816,
+          "kmText": "1+278.598",
+          "why": "refine",
+          "region": 0
+         },
+         {
+          "station": 280.9075861640113,
+          "kmText": "1+280.908",
+          "why": "curve",
+          "region": 0
+         },
+         {
+          "station": 290.1465836446238,
+          "kmText": "1+290.147",
+          "why": "curve",
+          "region": 0
+         },
+         {
+          "station": 299.3855811252363,
+          "kmText": "1+299.386",
+          "why": "curve",
+          "region": 0
+         },
+         {
+          "station": 300.0,
+          "kmText": "1+300.000",
+          "why": "region",
+          "region": 0
+         },
+         {
+          "station": 300.0,
+          "kmText": "1+300.000",
+          "why": "region",
+          "region": 1
+         },
+         {
+          "station": 308.62457860584874,
+          "kmText": "1+308.625",
+          "why": "curve",
+          "region": 1
+         },
+         {
+          "station": 317.8635760864612,
+          "kmText": "1+317.864",
+          "why": "geometry",
+          "region": 1
+         },
+         {
+          "station": 327.8635760864612,
+          "kmText": "1+327.864",
+          "why": "curve",
+          "region": 1
+         },
+         {
+          "station": 337.8635760864612,
+          "kmText": "1+337.864",
+          "why": "curve",
+          "region": 1
+         },
+         {
+          "station": 347.8635760864612,
+          "kmText": "1+347.864",
+          "why": "curve",
+          "region": 1
+         },
+         {
+          "station": 352.8635760864612,
+          "kmText": "1+352.864",
+          "why": "refine",
+          "region": 1
+         },
+         {
+          "station": 357.8635760864612,
+          "kmText": "1+357.864",
+          "why": "geometry",
+          "region": 1
+         },
+         {
+          "station": 366.4317880432306,
+          "kmText": "1+366.432",
+          "why": "refine",
+          "region": 1
+         },
+         {
+          "station": 375.0,
+          "kmText": "1+375.000",
+          "why": "interval",
+          "region": 1
+         },
+         {
+          "station": 387.5,
+          "kmText": "1+387.500",
+          "why": "refine",
+          "region": 1
+         },
+         {
+          "station": 400.0,
+          "kmText": "1+400.000",
+          "why": "interval",
+          "region": 1
+         },
+         {
+          "station": 412.5,
+          "kmText": "1+412.500",
+          "why": "refine",
+          "region": 1
+         },
+         {
+          "station": 418.75,
+          "kmText": "1+418.750",
+          "why": "refine",
+          "region": 1
+         },
+         {
+          "station": 421.875,
+          "kmText": "1+421.875",
+          "why": "refine",
+          "region": 1
+         },
+         {
+          "station": 425.0,
+          "kmText": "1+425.000",
+          "why": "interval",
+          "region": 1
+         },
+         {
+          "station": 431.25,
+          "kmText": "1+431.250",
+          "why": "refine",
+          "region": 1
+         },
+         {
+          "station": 432.8125,
+          "kmText": "1+432.813",
+          "why": "refine",
+          "region": 1
+         },
+         {
+          "station": 434.375,
+          "kmText": "1+434.375",
+          "why": "refine",
+          "region": 1
+         },
+         {
+          "station": 437.5,
+          "kmText": "1+437.500",
+          "why": "refine",
+          "region": 1
+         },
+         {
+          "station": 443.75,
+          "kmText": "1+443.750",
+          "why": "refine",
+          "region": 1
+         },
+         {
+          "station": 450.0,
+          "kmText": "1+450.000",
+          "why": "interval",
+          "region": 1
+         },
+         {
+          "station": 456.25,
+          "kmText": "1+456.250",
+          "why": "refine",
+          "region": 1
+         },
+         {
+          "station": 462.5,
+          "kmText": "1+462.500",
+          "why": "refine",
+          "region": 1
+         },
+         {
+          "station": 465.625,
+          "kmText": "1+465.625",
+          "why": "refine",
+          "region": 1
+         },
+         {
+          "station": 467.1875,
+          "kmText": "1+467.188",
+          "why": "refine",
+          "region": 1
+         },
+         {
+          "station": 468.75,
+          "kmText": "1+468.750",
+          "why": "refine",
+          "region": 1
+         },
+         {
+          "station": 475.0,
+          "kmText": "1+475.000",
+          "why": "interval",
+          "region": 1
+         },
+         {
+          "station": 487.5,
+          "kmText": "1+487.500",
+          "why": "refine",
+          "region": 1
+         },
+         {
+          "station": 490.625,
+          "kmText": "1+490.625",
+          "why": "refine",
+          "region": 1
+         },
+         {
+          "station": 493.75,
+          "kmText": "1+493.750",
+          "why": "refine",
+          "region": 1
+         },
+         {
+          "station": 500.0,
+          "kmText": "1+500.000",
+          "why": "interval",
+          "region": 1
+         },
+         {
+          "station": 506.25,
+          "kmText": "1+506.250",
+          "why": "refine",
+          "region": 1
+         },
+         {
+          "station": 512.5,
+          "kmText": "1+512.500",
+          "why": "refine",
+          "region": 1
+         },
+         {
+          "station": 525.0,
+          "kmText": "1+525.000",
+          "why": "interval",
+          "region": 1
+         },
+         {
+          "station": 531.25,
+          "kmText": "1+531.250",
+          "why": "refine",
+          "region": 1
+         },
+         {
+          "station": 537.5,
+          "kmText": "1+537.500",
+          "why": "refine",
+          "region": 1
+         },
+         {
+          "station": 540.625,
+          "kmText": "1+540.625",
+          "why": "refine",
+          "region": 1
+         },
+         {
+          "station": 543.75,
+          "kmText": "1+543.750",
+          "why": "refine",
+          "region": 1
+         },
+         {
+          "station": 550.0,
+          "kmText": "1+550.000",
+          "why": "interval",
+          "region": 1
+         },
+         {
+          "station": 556.25,
+          "kmText": "1+556.250",
+          "why": "refine",
+          "region": 1
+         },
+         {
+          "station": 557.8125,
+          "kmText": "1+557.813",
+          "why": "refine",
+          "region": 1
+         },
+         {
+          "station": 559.375,
+          "kmText": "1+559.375",
+          "why": "refine",
+          "region": 1
+         },
+         {
+          "station": 562.5,
+          "kmText": "1+562.500",
+          "why": "refine",
+          "region": 1
+         },
+         {
+          "station": 575.0,
+          "kmText": "1+575.000",
+          "why": "interval",
+          "region": 1
+         },
+         {
+          "station": 600.0,
+          "kmText": "1+600.000",
+          "why": "region",
+          "region": 1
+         }
+        ],
+        "gaps": [],
+        "unsolved": [
+         {
+          "region": 0,
+          "side": "left",
+          "why": "open",
+          "from": 0.0,
+          "to": 10.9375,
+          "fromText": "1+000.000",
+          "toText": "1+010.938"
+         },
+         {
+          "region": 0,
+          "side": "right",
+          "why": "open",
+          "from": 0.0,
+          "to": 17.1875,
+          "fromText": "1+000.000",
+          "toText": "1+017.188"
+         }
+        ],
+        "folded": [],
+        "features": [
+         {
+          "code": "axis",
+          "region": 0,
+          "from": 0.0,
+          "to": 300.0,
+          "length": 300.17056202220664
+         },
+         {
+          "code": "left.c1",
+          "region": 0,
+          "from": 0.0,
+          "to": 300.0,
+          "length": 298.1837848676888
+         },
+         {
+          "code": "left.c2",
+          "region": 0,
+          "from": 0.0,
+          "to": 300.0,
+          "length": 297.616159425052
+         },
+         {
+          "code": "left.daylight",
+          "region": 0,
+          "from": 12.5,
+          "to": 300.0,
+          "length": 285.31890974369946
+         },
+         {
+          "code": "left.ditchBottom",
+          "region": 0,
+          "from": 12.5,
+          "to": 151.5625,
+          "length": 139.06343710606356
+         },
+         {
+          "code": "left.ditchBottom",
+          "region": 0,
+          "from": 182.39222453535587,
+          "to": 300.0,
+          "length": 114.36181597156688
+         },
+         {
+          "code": "left.ditchToe",
+          "region": 0,
+          "from": 12.5,
+          "to": 151.5625,
+          "length": 139.0634371060636
+         },
+         {
+          "code": "left.ditchToe",
+          "region": 0,
+          "from": 182.39222453535587,
+          "to": 300.0,
+          "length": 114.64561847596254
+         },
+         {
+          "code": "left.hinge",
+          "region": 0,
+          "from": 0.0,
+          "to": 300.0,
+          "length": 297.616159425052
+         },
+         {
+          "code": "right.c1",
+          "region": 0,
+          "from": 0.0,
+          "to": 300.0,
+          "length": 302.15746940365153
+         },
+         {
+          "code": "right.c2",
+          "region": 0,
+          "from": 0.0,
+          "to": 300.0,
+          "length": 302.72517996329145
+         },
+         {
+          "code": "right.daylight",
+          "region": 0,
+          "from": 15.625,
+          "to": 300.0,
+          "length": 297.68551534083815
+         },
+         {
+          "code": "right.ditchBottom",
+          "region": 0,
+          "from": 18.75,
+          "to": 153.125,
+          "length": 134.37605219767107
+         },
+         {
+          "code": "right.ditchBottom",
+          "region": 0,
+          "from": 182.39222453535587,
+          "to": 300.0,
+          "length": 121.17383695348848
+         },
+         {
+          "code": "right.ditchToe",
+          "region": 0,
+          "from": 18.75,
+          "to": 153.125,
+          "length": 134.37605219767104
+         },
+         {
+          "code": "right.ditchToe",
+          "region": 0,
+          "from": 182.39222453535587,
+          "to": 300.0,
+          "length": 120.88997318622835
+         },
+         {
+          "code": "right.hinge",
+          "region": 0,
+          "from": 0.0,
+          "to": 300.0,
+          "length": 302.72517996329145
+         },
+         {
+          "code": "axis",
+          "region": 1,
+          "from": 300.0,
+          "to": 600.0,
+          "length": 300.1200845540104
+         },
+         {
+          "code": "left.c1",
+          "region": 1,
+          "from": 300.0,
+          "to": 600.0,
+          "length": 299.36329764195665
+         },
+         {
+          "code": "left.c2",
+          "region": 1,
+          "from": 300.0,
+          "to": 600.0,
+          "length": 298.98490995327484
+         },
+         {
+          "code": "left.daylight",
+          "region": 1,
+          "from": 300.0,
+          "to": 600.0,
+          "length": 299.7331789478093
+         },
+         {
+          "code": "left.hinge",
+          "region": 1,
+          "from": 300.0,
+          "to": 600.0,
+          "length": 298.98490995327484
+         },
+         {
+          "code": "right.c1",
+          "region": 1,
+          "from": 300.0,
+          "to": 600.0,
+          "length": 301.00302108438
+         },
+         {
+          "code": "right.c2",
+          "region": 1,
+          "from": 300.0,
+          "to": 600.0,
+          "length": 301.8859762861793
+         },
+         {
+          "code": "right.c3",
+          "region": 1,
+          "from": 300.0,
+          "to": 600.0,
+          "length": 302.1382524638802
+         },
+         {
+          "code": "right.daylight",
+          "region": 1,
+          "from": 300.0,
+          "to": 600.0,
+          "length": 303.5511118011243
+         },
+         {
+          "code": "right.hinge",
+          "region": 1,
+          "from": 300.0,
+          "to": 600.0,
+          "length": 302.1382524638802
+         }
+        ],
+        "triangles": 1832,
+        "area": 11378.68247749973,
+        "sampling": {
+         "measured": 155,
+         "added": 77,
+         "before": {
+          "plan": 0.8035934124130364,
+          "height": 0.5394532719064671,
+          "heightAt": 162.5,
+          "heightCode": "left.daylight",
+          "planAt": 437.5,
+          "planCode": "left.daylight"
+         },
+         "after": {
+          "plan": 0.5139525128721079,
+          "height": 0.0647718306018561,
+          "heightAt": 167.1875,
+          "heightCode": "right.daylight",
+          "planAt": 322.8635760864612,
+          "planCode": "left.daylight"
+         },
+         "changes": 6,
+         "left": [
+          {
+           "region": 0,
+           "from": 9.375,
+           "to": 12.5,
+           "fromText": "1+009.375",
+           "toText": "1+012.500",
+           "why": "change",
+           "plan": 0.0,
+           "height": 0.0
+          },
+          {
+           "region": 0,
+           "from": 12.5,
+           "to": 15.625,
+           "fromText": "1+012.500",
+           "toText": "1+015.625",
+           "why": "change",
+           "plan": 0.0,
+           "height": 0.0
+          },
+          {
+           "region": 0,
+           "from": 15.625,
+           "to": 18.75,
+           "fromText": "1+015.625",
+           "toText": "1+018.750",
+           "why": "change",
+           "plan": 1.300283542792063,
+           "height": 0.6473256905133269
+          },
+          {
+           "region": 0,
+           "from": 18.75,
+           "to": 21.875,
+           "fromText": "1+018.750",
+           "toText": "1+021.875",
+           "why": "least",
+           "plan": 0.05437212246984516,
+           "height": 0.054337007010360594
+          },
+          {
+           "region": 0,
+           "from": 75.0,
+           "to": 78.125,
+           "fromText": "1+075.000",
+           "toText": "1+078.125",
+           "why": "least",
+           "plan": 0.024130870613906993,
+           "height": 0.02407992911990675
+          },
+          {
+           "region": 0,
+           "from": 81.25,
+           "to": 84.375,
+           "fromText": "1+081.250",
+           "toText": "1+084.375",
+           "why": "least",
+           "plan": 0.04485348126966964,
+           "height": 0.04474003848146424
+          },
+          {
+           "region": 0,
+           "from": 150.0,
+           "to": 153.125,
+           "fromText": "1+150.000",
+           "toText": "1+153.125",
+           "why": "change",
+           "plan": 0.7988265802312795,
+           "height": 0.022210252289383448
+          },
+          {
+           "region": 0,
+           "from": 153.125,
+           "to": 156.25,
+           "fromText": "1+153.125",
+           "toText": "1+156.250",
+           "why": "change",
+           "plan": 0.891771037035128,
+           "height": 0.015082806110001457
+          },
+          {
+           "region": 0,
+           "from": 165.625,
+           "to": 168.75,
+           "fromText": "1+165.625",
+           "toText": "1+168.750",
+           "why": "least",
+           "plan": 0.0957473248369228,
+           "height": 0.0647718306018561
+          },
+          {
+           "region": 0,
+           "from": 171.875,
+           "to": 175.0,
+           "fromText": "1+171.875",
+           "toText": "1+175.000",
+           "why": "least",
+           "plan": 0.052299887702014096,
+           "height": 0.03550432566041195
+          },
+          {
+           "region": 0,
+           "from": 179.92814969023726,
+           "to": 182.39222453535587,
+           "fromText": "1+179.928",
+           "toText": "1+182.392",
+           "why": "change",
+           "plan": 0.8514132520247657,
+           "height": 0.050590213151295416
+          },
+          {
+           "region": 0,
+           "from": 232.212598760949,
+           "to": 234.712598760949,
+           "fromText": "1+232.213",
+           "toText": "1+234.713",
+           "why": "least",
+           "plan": 0.032062982124585616,
+           "height": 0.026706877928162953
+          },
+          {
+           "region": 0,
+           "from": 253.19059372217393,
+           "to": 255.50034309232706,
+           "fromText": "1+253.191",
+           "toText": "1+255.500",
+           "why": "least",
+           "plan": 0.027074419200498894,
+           "height": 0.02229709176883432
+          },
+          {
+           "region": 0,
+           "from": 271.66858868339887,
+           "to": 273.97833805355197,
+           "fromText": "1+271.669",
+           "toText": "1+273.978",
+           "why": "least",
+           "plan": 0.03833419518005459,
+           "height": 0.0336050921768134
+          },
+          {
+           "region": 1,
+           "from": 431.25,
+           "to": 434.375,
+           "fromText": "1+431.250",
+           "toText": "1+434.375",
+           "why": "least",
+           "plan": 0.07401005470558505,
+           "height": 0.03702323647934236
+          },
+          {
+           "region": 1,
+           "from": 465.625,
+           "to": 468.75,
+           "fromText": "1+465.625",
+           "toText": "1+468.750",
+           "why": "least",
+           "plan": 0.02685064488268698,
+           "height": 0.026830428676319684
+          },
+          {
+           "region": 1,
+           "from": 556.25,
+           "to": 559.375,
+           "fromText": "1+556.250",
+           "toText": "1+559.375",
+           "why": "least",
+           "plan": 0.020203517379923246,
+           "height": 0.020180062372432417
+          }
+         ]
+        }
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed",
+      "road": {
+       "surfaces": [
+        {
+         "id": "t-1",
+         "name": "Mevcut zemin",
+         "points": {
+          "layers": [
+           "zemin"
+          ]
+         }
+        },
+        {
+         "id": "t-2",
+         "name": "Kurulamaz",
+         "points": {
+          "layers": [
+           "bos"
+          ]
+         }
+        }
+       ],
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ana aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 20.0,
+           "y": 50.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 60.0,
+           "radius": 150.0,
+           "spiralIn": 40.0,
+           "spiralOut": 40.0
+          },
+          {
+           "id": "b",
+           "x": 560.0,
+           "y": 360.0
+          }
+         ],
+         "stationing": {
+          "start": 1000.0
+         }
+        },
+        {
+         "id": "g-2",
+         "name": "Yan aks",
+         "revision": 3,
+         "pis": [
+          {
+           "id": "a",
+           "x": 30.0,
+           "y": 380.0
+          },
+          {
+           "id": "b",
+           "x": 580.0,
+           "y": 20.0
+          }
+         ]
+        },
+        {
+         "id": "g-3",
+         "name": "Sağ kenar",
+         "revision": 1,
+         "offsetOf": {
+          "alignment": "g-1",
+          "offset": 5.0
+         }
+        },
+        {
+         "id": "g-4",
+         "name": "Dar kurp",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 200.0,
+           "y": 180.0
+          },
+          {
+           "id": "p1",
+           "x": 240.0,
+           "y": 180.0,
+           "radius": 4.0
+          },
+          {
+           "id": "b",
+           "x": 240.0,
+           "y": 240.0
+          }
+         ]
+        }
+       ],
+       "profiles": [
+        {
+         "id": "b-1",
+         "name": "Proje kotu",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 102.0
+          },
+          {
+           "id": "v1",
+           "station": 170.0,
+           "elevation": 101.5,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 340.0,
+           "elevation": 111.0,
+           "radius": 1200.0
+          },
+          {
+           "id": "v3",
+           "station": 520.0,
+           "elevation": 106.0,
+           "lengthIn": 50.0,
+           "lengthOut": 35.0
+          },
+          {
+           "id": "b",
+           "station": 669.0,
+           "elevation": 113.0
+          }
+         ],
+         "surface": "t-1"
+        },
+        {
+         "id": "b-2",
+         "name": "Yan kot",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 4,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 300.0,
+           "elevation": 104.0,
+           "length": 120.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "surface": "t-1"
+        },
+        {
+         "id": "b-3",
+         "name": "Kısmi kot",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 100.0,
+           "elevation": 104.0
+          },
+          {
+           "id": "b",
+           "station": 400.0,
+           "elevation": 110.0
+          }
+         ]
+        },
+        {
+         "id": "b-4",
+         "name": "Dar kurbun kotu",
+         "alignment": "g-4",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 106.0
+          },
+          {
+           "id": "b",
+           "station": 97.783,
+           "elevation": 106.0
+          }
+         ]
+        }
+       ],
+       "templates": [
+        {
+         "id": "tk-1",
+         "name": "Tip 1",
+         "revision": 1,
+         "left": {
+          "components": [
+           {
+            "kind": "lane",
+            "width": 3.5,
+            "slope": -2.5
+           },
+           {
+            "kind": "shoulder",
+            "width": 1.0,
+            "slope": -4.0
+           }
+          ],
+          "cut": 1.0,
+          "fill": 1.5,
+          "ditch": {
+           "fore": 2.0,
+           "depth": 0.5,
+           "bottom": 0.5
+          }
+         }
+        },
+        {
+         "id": "tk-2",
+         "name": "Tip 2",
+         "revision": 2,
+         "left": {
+          "components": [
+           {
+            "kind": "lane",
+            "width": 3.0,
+            "slope": -2.0
+           },
+           {
+            "kind": "shoulder",
+            "width": 1.5,
+            "slope": -4.0
+           }
+          ],
+          "cut": 1.5,
+          "fill": 2.0
+         },
+         "right": {
+          "components": [
+           {
+            "kind": "lane",
+            "width": 3.5,
+            "slope": -2.5
+           },
+           {
+            "kind": "lane",
+            "width": 3.5,
+            "slope": -2.5
+           },
+           {
+            "kind": "shoulder",
+            "width": 1.0,
+            "slope": -4.0
+           }
+          ],
+          "cut": 1.0,
+          "fill": 1.5
+         }
+        }
+       ],
+       "sections": [
+        {
+         "id": "k-1",
+         "name": "Enkesitler",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "profile": "b-1",
+         "template": "tk-1",
+         "surface": "t-1",
+         "left": 25.0,
+         "right": 25.0,
+         "stations": {
+          "method": "range",
+          "from": 100.0,
+          "to": 300.0,
+          "every": 50.0,
+          "geometry": true
+         }
+        },
+        {
+         "id": "k-2",
+         "name": "Yan kesitler",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 3,
+         "profile": "b-2",
+         "template": "tk-2",
+         "surface": "t-1",
+         "left": 20.0,
+         "right": 30.0,
+         "stations": {
+          "method": "stations",
+          "stations": [
+           50.0,
+           200.0,
+           400.0
+          ]
+         }
+        }
+       ],
+       "superelevations": [
+        {
+         "id": "d-1",
+         "name": "Ana aks deveri",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "normalLeft": -2.5,
+         "normalRight": -2.5,
+         "method": {
+          "method": "curves",
+          "curves": [
+           {
+            "pi": "p1",
+            "rate": 6.0,
+            "runoff": 40.0,
+            "onTangent": 0.0,
+            "widening": 0.5
+           }
+          ]
+         }
+        },
+        {
+         "id": "d-2",
+         "name": "Yan aks deveri",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 2,
+         "normalLeft": -2.0,
+         "normalRight": -2.0,
+         "method": {
+          "method": "stations",
+          "rows": [
+           {
+            "station": 100.0,
+            "left": -2.0,
+            "right": -2.0
+           },
+           {
+            "station": 200.0,
+            "left": 3.0,
+            "right": -3.0
+           },
+           {
+            "station": 400.0,
+            "left": 3.0,
+            "right": -3.0
+           },
+           {
+            "station": 500.0,
+            "left": -2.0,
+            "right": -2.0
+           }
+          ]
+         }
+        },
+        {
+         "id": "d-3",
+         "name": "Kurulamaz dever",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "normalLeft": -2.5,
+         "normalRight": -2.5,
+         "method": {
+          "method": "curves",
+          "curves": [
+           {
+            "pi": "p9",
+            "rate": 6.0,
+            "runoff": 40.0,
+            "onTangent": 0.0
+           }
+          ]
+         }
+        }
+       ],
+       "corridors": [
+        {
+         "id": "c-1",
+         "name": "Ana koridor",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 2,
+         "profile": "b-1",
+         "surface": "t-1",
+         "left": 30.0,
+         "right": 30.0,
+         "tangent": 25.0,
+         "curve": 10.0,
+         "regions": [
+          {
+           "from": 0.0,
+           "to": 300.0,
+           "template": "tk-1"
+          },
+          {
+           "from": 300.0,
+           "to": 600.0,
+           "template": "tk-2"
+          }
+         ],
+         "refine": {
+          "height": 0.02,
+          "least": 1.0
+         }
+        },
+        {
+         "id": "c-2",
+         "name": "Yan koridor",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 2,
+         "profile": "b-2",
+         "surface": "t-1",
+         "superelevation": "d-2",
+         "left": 25.0,
+         "right": 25.0,
+         "tangent": 50.0,
+         "curve": 20.0,
+         "regions": [
+          {
+           "from": 50.0,
+           "to": 400.0,
+           "template": "tk-2"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "En kısa adım 0: denetim yoksa değişiklik yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "set",
+      "corridor": "c-1",
+      "refine": {
+       "least": 0.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "corridors": [
+        {
+         "id": "c-1",
+         "name": "Ana koridor",
+         "alignment": "g-1",
+         "revision": 1,
+         "stale": false
+        },
+        {
+         "id": "c-2",
+         "name": "Yan koridor",
+         "alignment": "g-2",
+         "revision": 2,
+         "stale": true
+        }
+       ],
+       "revision": "$current",
+       "corridor": {
+        "id": "c-1",
+        "name": "Ana koridor",
+        "revision": 1,
+        "alignment": "g-1",
+        "profile": "b-1",
+        "surface": "t-1",
+        "stale": false,
+        "stations": [
+         {
+          "station": 0.0,
+          "kmText": "1+000.000",
+          "why": "region",
+          "region": 0
+         },
+         {
+          "station": 25.0,
+          "kmText": "1+025.000",
+          "why": "interval",
+          "region": 0
+         },
+         {
+          "station": 50.0,
+          "kmText": "1+050.000",
+          "why": "interval",
+          "region": 0
+         },
+         {
+          "station": 75.0,
+          "kmText": "1+075.000",
+          "why": "interval",
+          "region": 0
+         },
+         {
+          "station": 100.0,
+          "kmText": "1+100.000",
+          "why": "interval",
+          "region": 0
+         },
+         {
+          "station": 125.0,
+          "kmText": "1+125.000",
+          "why": "interval",
+          "region": 0
+         },
+         {
+          "station": 150.0,
+          "kmText": "1+150.000",
+          "why": "interval",
+          "region": 0
+         },
+         {
+          "station": 175.0,
+          "kmText": "1+175.000",
+          "why": "interval",
+          "region": 0
+         },
+         {
+          "station": 194.712598760949,
+          "kmText": "1+194.713",
+          "why": "geometry",
+          "region": 0
+         },
+         {
+          "station": 204.712598760949,
+          "kmText": "1+204.713",
+          "why": "curve",
+          "region": 0
+         },
+         {
+          "station": 214.712598760949,
+          "kmText": "1+214.713",
+          "why": "curve",
+          "region": 0
+         },
+         {
+          "station": 224.712598760949,
+          "kmText": "1+224.713",
+          "why": "curve",
+          "region": 0
+         },
+         {
+          "station": 234.712598760949,
+          "kmText": "1+234.713",
+          "why": "geometry",
+          "region": 0
+         },
+         {
+          "station": 243.95159624156145,
+          "kmText": "1+243.952",
+          "why": "curve",
+          "region": 0
+         },
+         {
+          "station": 253.19059372217393,
+          "kmText": "1+253.191",
+          "why": "curve",
+          "region": 0
+         },
+         {
+          "station": 262.4295912027864,
+          "kmText": "1+262.430",
+          "why": "curve",
+          "region": 0
+         },
+         {
+          "station": 271.66858868339887,
+          "kmText": "1+271.669",
+          "why": "curve",
+          "region": 0
+         },
+         {
+          "station": 280.9075861640113,
+          "kmText": "1+280.908",
+          "why": "curve",
+          "region": 0
+         },
+         {
+          "station": 290.1465836446238,
+          "kmText": "1+290.147",
+          "why": "curve",
+          "region": 0
+         },
+         {
+          "station": 299.3855811252363,
+          "kmText": "1+299.386",
+          "why": "curve",
+          "region": 0
+         },
+         {
+          "station": 300.0,
+          "kmText": "1+300.000",
+          "why": "region",
+          "region": 0
+         },
+         {
+          "station": 300.0,
+          "kmText": "1+300.000",
+          "why": "region",
+          "region": 1
+         },
+         {
+          "station": 308.62457860584874,
+          "kmText": "1+308.625",
+          "why": "curve",
+          "region": 1
+         },
+         {
+          "station": 317.8635760864612,
+          "kmText": "1+317.864",
+          "why": "geometry",
+          "region": 1
+         },
+         {
+          "station": 327.8635760864612,
+          "kmText": "1+327.864",
+          "why": "curve",
+          "region": 1
+         },
+         {
+          "station": 337.8635760864612,
+          "kmText": "1+337.864",
+          "why": "curve",
+          "region": 1
+         },
+         {
+          "station": 347.8635760864612,
+          "kmText": "1+347.864",
+          "why": "curve",
+          "region": 1
+         },
+         {
+          "station": 357.8635760864612,
+          "kmText": "1+357.864",
+          "why": "geometry",
+          "region": 1
+         },
+         {
+          "station": 375.0,
+          "kmText": "1+375.000",
+          "why": "interval",
+          "region": 1
+         },
+         {
+          "station": 400.0,
+          "kmText": "1+400.000",
+          "why": "interval",
+          "region": 1
+         },
+         {
+          "station": 425.0,
+          "kmText": "1+425.000",
+          "why": "interval",
+          "region": 1
+         },
+         {
+          "station": 450.0,
+          "kmText": "1+450.000",
+          "why": "interval",
+          "region": 1
+         },
+         {
+          "station": 475.0,
+          "kmText": "1+475.000",
+          "why": "interval",
+          "region": 1
+         },
+         {
+          "station": 500.0,
+          "kmText": "1+500.000",
+          "why": "interval",
+          "region": 1
+         },
+         {
+          "station": 525.0,
+          "kmText": "1+525.000",
+          "why": "interval",
+          "region": 1
+         },
+         {
+          "station": 550.0,
+          "kmText": "1+550.000",
+          "why": "interval",
+          "region": 1
+         },
+         {
+          "station": 575.0,
+          "kmText": "1+575.000",
+          "why": "interval",
+          "region": 1
+         },
+         {
+          "station": 600.0,
+          "kmText": "1+600.000",
+          "why": "region",
+          "region": 1
+         }
+        ],
+        "gaps": [],
+        "unsolved": [
+         {
+          "region": 0,
+          "side": "left",
+          "why": "open",
+          "from": 0.0,
+          "to": 0.0,
+          "fromText": "1+000.000",
+          "toText": "1+000.000"
+         },
+         {
+          "region": 0,
+          "side": "right",
+          "why": "open",
+          "from": 0.0,
+          "to": 0.0,
+          "fromText": "1+000.000",
+          "toText": "1+000.000"
+         }
+        ],
+        "folded": [],
+        "features": [
+         {
+          "code": "axis",
+          "region": 0,
+          "from": 0.0,
+          "to": 300.0,
+          "length": 300.1647508501845
+         },
+         {
+          "code": "left.c1",
+          "region": 0,
+          "from": 0.0,
+          "to": 300.0,
+          "length": 298.1780896719289
+         },
+         {
+          "code": "left.c2",
+          "region": 0,
+          "from": 0.0,
+          "to": 300.0,
+          "length": 297.61049735248645
+         },
+         {
+          "code": "left.daylight",
+          "region": 0,
+          "from": 25.0,
+          "to": 300.0,
+          "length": 270.5757701440399
+         },
+         {
+          "code": "left.ditchBottom",
+          "region": 0,
+          "from": 25.0,
+          "to": 150.0,
+          "length": 125.00054065627019
+         },
+         {
+          "code": "left.ditchBottom",
+          "region": 0,
+          "from": 194.712598760949,
+          "to": 300.0,
+          "length": 102.02661675541415
+         },
+         {
+          "code": "left.ditchToe",
+          "region": 0,
+          "from": 25.0,
+          "to": 150.0,
+          "length": 125.0005406562702
+         },
+         {
+          "code": "left.ditchToe",
+          "region": 0,
+          "from": 194.712598760949,
+          "to": 300.0,
+          "length": 102.31040270391166
+         },
+         {
+          "code": "left.hinge",
+          "region": 0,
+          "from": 0.0,
+          "to": 300.0,
+          "length": 297.61049735248645
+         },
+         {
+          "code": "right.c1",
+          "region": 0,
+          "from": 0.0,
+          "to": 300.0,
+          "length": 302.151542195661
+         },
+         {
+          "code": "right.c2",
+          "region": 0,
+          "from": 0.0,
+          "to": 300.0,
+          "length": 302.7192195929161
+         },
+         {
+          "code": "right.daylight",
+          "region": 0,
+          "from": 25.0,
+          "to": 300.0,
+          "length": 281.3334881485229
+         },
+         {
+          "code": "right.ditchBottom",
+          "region": 0,
+          "from": 25.0,
+          "to": 150.0,
+          "length": 125.00054065627019
+         },
+         {
+          "code": "right.ditchBottom",
+          "region": 0,
+          "from": 194.712598760949,
+          "to": 300.0,
+          "length": 108.83824001647692
+         },
+         {
+          "code": "right.ditchToe",
+          "region": 0,
+          "from": 25.0,
+          "to": 150.0,
+          "length": 125.00054065627018
+         },
+         {
+          "code": "right.ditchToe",
+          "region": 0,
+          "from": 194.712598760949,
+          "to": 300.0,
+          "length": 108.55439283352227
+         },
+         {
+          "code": "right.hinge",
+          "region": 0,
+          "from": 0.0,
+          "to": 300.0,
+          "length": 302.7192195929161
+         },
+         {
+          "code": "axis",
+          "region": 1,
+          "from": 300.0,
+          "to": 600.0,
+          "length": 300.1183258628905
+         },
+         {
+          "code": "left.c1",
+          "region": 1,
+          "from": 300.0,
+          "to": 600.0,
+          "length": 299.36153887281154
+         },
+         {
+          "code": "left.c2",
+          "region": 1,
+          "from": 300.0,
+          "to": 600.0,
+          "length": 298.98315114463753
+         },
+         {
+          "code": "left.daylight",
+          "region": 1,
+          "from": 300.0,
+          "to": 600.0,
+          "length": 299.54605928243336
+         },
+         {
+          "code": "left.hinge",
+          "region": 1,
+          "from": 300.0,
+          "to": 600.0,
+          "length": 298.98315114463753
+         },
+         {
+          "code": "right.c1",
+          "region": 1,
+          "from": 300.0,
+          "to": 600.0,
+          "length": 301.0012624826926
+         },
+         {
+          "code": "right.c2",
+          "region": 1,
+          "from": 300.0,
+          "to": 600.0,
+          "length": 301.8842177722306
+         },
+         {
+          "code": "right.c3",
+          "region": 1,
+          "from": 300.0,
+          "to": 600.0,
+          "length": 302.1364939746922
+         },
+         {
+          "code": "right.daylight",
+          "region": 1,
+          "from": 300.0,
+          "to": 600.0,
+          "length": 303.4514532981362
+         },
+         {
+          "code": "right.hinge",
+          "region": 1,
+          "from": 300.0,
+          "to": 600.0,
+          "length": 302.1364939746922
+         }
+        ],
+        "triangles": 610,
+        "area": 11426.138289684559
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "surfaces": [
+        {
+         "id": "t-1",
+         "name": "Mevcut zemin",
+         "points": {
+          "layers": [
+           "zemin"
+          ]
+         }
+        },
+        {
+         "id": "t-2",
+         "name": "Kurulamaz",
+         "points": {
+          "layers": [
+           "bos"
+          ]
+         }
+        }
+       ],
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ana aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 20.0,
+           "y": 50.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 60.0,
+           "radius": 150.0,
+           "spiralIn": 40.0,
+           "spiralOut": 40.0
+          },
+          {
+           "id": "b",
+           "x": 560.0,
+           "y": 360.0
+          }
+         ],
+         "stationing": {
+          "start": 1000.0
+         }
+        },
+        {
+         "id": "g-2",
+         "name": "Yan aks",
+         "revision": 3,
+         "pis": [
+          {
+           "id": "a",
+           "x": 30.0,
+           "y": 380.0
+          },
+          {
+           "id": "b",
+           "x": 580.0,
+           "y": 20.0
+          }
+         ]
+        },
+        {
+         "id": "g-3",
+         "name": "Sağ kenar",
+         "revision": 1,
+         "offsetOf": {
+          "alignment": "g-1",
+          "offset": 5.0
+         }
+        },
+        {
+         "id": "g-4",
+         "name": "Dar kurp",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 200.0,
+           "y": 180.0
+          },
+          {
+           "id": "p1",
+           "x": 240.0,
+           "y": 180.0,
+           "radius": 4.0
+          },
+          {
+           "id": "b",
+           "x": 240.0,
+           "y": 240.0
+          }
+         ]
+        }
+       ],
+       "profiles": [
+        {
+         "id": "b-1",
+         "name": "Proje kotu",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 102.0
+          },
+          {
+           "id": "v1",
+           "station": 170.0,
+           "elevation": 101.5,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 340.0,
+           "elevation": 111.0,
+           "radius": 1200.0
+          },
+          {
+           "id": "v3",
+           "station": 520.0,
+           "elevation": 106.0,
+           "lengthIn": 50.0,
+           "lengthOut": 35.0
+          },
+          {
+           "id": "b",
+           "station": 669.0,
+           "elevation": 113.0
+          }
+         ],
+         "surface": "t-1"
+        },
+        {
+         "id": "b-2",
+         "name": "Yan kot",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 4,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 300.0,
+           "elevation": 104.0,
+           "length": 120.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "surface": "t-1"
+        },
+        {
+         "id": "b-3",
+         "name": "Kısmi kot",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 100.0,
+           "elevation": 104.0
+          },
+          {
+           "id": "b",
+           "station": 400.0,
+           "elevation": 110.0
+          }
+         ]
+        },
+        {
+         "id": "b-4",
+         "name": "Dar kurbun kotu",
+         "alignment": "g-4",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 106.0
+          },
+          {
+           "id": "b",
+           "station": 97.783,
+           "elevation": 106.0
+          }
+         ]
+        }
+       ],
+       "templates": [
+        {
+         "id": "tk-1",
+         "name": "Tip 1",
+         "revision": 1,
+         "left": {
+          "components": [
+           {
+            "kind": "lane",
+            "width": 3.5,
+            "slope": -2.5
+           },
+           {
+            "kind": "shoulder",
+            "width": 1.0,
+            "slope": -4.0
+           }
+          ],
+          "cut": 1.0,
+          "fill": 1.5,
+          "ditch": {
+           "fore": 2.0,
+           "depth": 0.5,
+           "bottom": 0.5
+          }
+         }
+        },
+        {
+         "id": "tk-2",
+         "name": "Tip 2",
+         "revision": 2,
+         "left": {
+          "components": [
+           {
+            "kind": "lane",
+            "width": 3.0,
+            "slope": -2.0
+           },
+           {
+            "kind": "shoulder",
+            "width": 1.5,
+            "slope": -4.0
+           }
+          ],
+          "cut": 1.5,
+          "fill": 2.0
+         },
+         "right": {
+          "components": [
+           {
+            "kind": "lane",
+            "width": 3.5,
+            "slope": -2.5
+           },
+           {
+            "kind": "lane",
+            "width": 3.5,
+            "slope": -2.5
+           },
+           {
+            "kind": "shoulder",
+            "width": 1.0,
+            "slope": -4.0
+           }
+          ],
+          "cut": 1.0,
+          "fill": 1.5
+         }
+        }
+       ],
+       "sections": [
+        {
+         "id": "k-1",
+         "name": "Enkesitler",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "profile": "b-1",
+         "template": "tk-1",
+         "surface": "t-1",
+         "left": 25.0,
+         "right": 25.0,
+         "stations": {
+          "method": "range",
+          "from": 100.0,
+          "to": 300.0,
+          "every": 50.0,
+          "geometry": true
+         }
+        },
+        {
+         "id": "k-2",
+         "name": "Yan kesitler",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 3,
+         "profile": "b-2",
+         "template": "tk-2",
+         "surface": "t-1",
+         "left": 20.0,
+         "right": 30.0,
+         "stations": {
+          "method": "stations",
+          "stations": [
+           50.0,
+           200.0,
+           400.0
+          ]
+         }
+        }
+       ],
+       "superelevations": [
+        {
+         "id": "d-1",
+         "name": "Ana aks deveri",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "normalLeft": -2.5,
+         "normalRight": -2.5,
+         "method": {
+          "method": "curves",
+          "curves": [
+           {
+            "pi": "p1",
+            "rate": 6.0,
+            "runoff": 40.0,
+            "onTangent": 0.0,
+            "widening": 0.5
+           }
+          ]
+         }
+        },
+        {
+         "id": "d-2",
+         "name": "Yan aks deveri",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 2,
+         "normalLeft": -2.0,
+         "normalRight": -2.0,
+         "method": {
+          "method": "stations",
+          "rows": [
+           {
+            "station": 100.0,
+            "left": -2.0,
+            "right": -2.0
+           },
+           {
+            "station": 200.0,
+            "left": 3.0,
+            "right": -3.0
+           },
+           {
+            "station": 400.0,
+            "left": 3.0,
+            "right": -3.0
+           },
+           {
+            "station": 500.0,
+            "left": -2.0,
+            "right": -2.0
+           }
+          ]
+         }
+        },
+        {
+         "id": "d-3",
+         "name": "Kurulamaz dever",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "normalLeft": -2.5,
+         "normalRight": -2.5,
+         "method": {
+          "method": "curves",
+          "curves": [
+           {
+            "pi": "p9",
+            "rate": 6.0,
+            "runoff": 40.0,
+            "onTangent": 0.0
+           }
+          ]
+         }
+        }
+       ],
+       "corridors": [
+        {
+         "id": "c-1",
+         "name": "Ana koridor",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "profile": "b-1",
+         "surface": "t-1",
+         "left": 30.0,
+         "right": 30.0,
+         "tangent": 25.0,
+         "curve": 10.0,
+         "regions": [
+          {
+           "from": 0.0,
+           "to": 300.0,
+           "template": "tk-1"
+          },
+          {
+           "from": 300.0,
+           "to": 600.0,
+           "template": "tk-2"
+          }
+         ]
+        },
+        {
+         "id": "c-2",
+         "name": "Yan koridor",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 2,
+         "profile": "b-2",
+         "surface": "t-1",
+         "superelevation": "d-2",
+         "left": 25.0,
+         "right": 25.0,
+         "tangent": 50.0,
+         "curve": 20.0,
+         "regions": [
+          {
+           "from": 50.0,
+           "to": 400.0,
+           "template": "tk-2"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Düşey kiriş yüksekliği 0: değişiklik yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "set",
+      "corridor": "c-1",
+      "verticalSag": 0.0
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "corridors": [
+        {
+         "id": "c-1",
+         "name": "Ana koridor",
+         "alignment": "g-1",
+         "revision": 1,
+         "stale": false
+        },
+        {
+         "id": "c-2",
+         "name": "Yan koridor",
+         "alignment": "g-2",
+         "revision": 2,
+         "stale": true
+        }
+       ],
+       "revision": "$current",
+       "corridor": {
+        "id": "c-1",
+        "name": "Ana koridor",
+        "revision": 1,
+        "alignment": "g-1",
+        "profile": "b-1",
+        "surface": "t-1",
+        "stale": false,
+        "stations": [
+         {
+          "station": 0.0,
+          "kmText": "1+000.000",
+          "why": "region",
+          "region": 0
+         },
+         {
+          "station": 25.0,
+          "kmText": "1+025.000",
+          "why": "interval",
+          "region": 0
+         },
+         {
+          "station": 50.0,
+          "kmText": "1+050.000",
+          "why": "interval",
+          "region": 0
+         },
+         {
+          "station": 75.0,
+          "kmText": "1+075.000",
+          "why": "interval",
+          "region": 0
+         },
+         {
+          "station": 100.0,
+          "kmText": "1+100.000",
+          "why": "interval",
+          "region": 0
+         },
+         {
+          "station": 125.0,
+          "kmText": "1+125.000",
+          "why": "interval",
+          "region": 0
+         },
+         {
+          "station": 150.0,
+          "kmText": "1+150.000",
+          "why": "interval",
+          "region": 0
+         },
+         {
+          "station": 175.0,
+          "kmText": "1+175.000",
+          "why": "interval",
+          "region": 0
+         },
+         {
+          "station": 194.712598760949,
+          "kmText": "1+194.713",
+          "why": "geometry",
+          "region": 0
+         },
+         {
+          "station": 204.712598760949,
+          "kmText": "1+204.713",
+          "why": "curve",
+          "region": 0
+         },
+         {
+          "station": 214.712598760949,
+          "kmText": "1+214.713",
+          "why": "curve",
+          "region": 0
+         },
+         {
+          "station": 224.712598760949,
+          "kmText": "1+224.713",
+          "why": "curve",
+          "region": 0
+         },
+         {
+          "station": 234.712598760949,
+          "kmText": "1+234.713",
+          "why": "geometry",
+          "region": 0
+         },
+         {
+          "station": 243.95159624156145,
+          "kmText": "1+243.952",
+          "why": "curve",
+          "region": 0
+         },
+         {
+          "station": 253.19059372217393,
+          "kmText": "1+253.191",
+          "why": "curve",
+          "region": 0
+         },
+         {
+          "station": 262.4295912027864,
+          "kmText": "1+262.430",
+          "why": "curve",
+          "region": 0
+         },
+         {
+          "station": 271.66858868339887,
+          "kmText": "1+271.669",
+          "why": "curve",
+          "region": 0
+         },
+         {
+          "station": 280.9075861640113,
+          "kmText": "1+280.908",
+          "why": "curve",
+          "region": 0
+         },
+         {
+          "station": 290.1465836446238,
+          "kmText": "1+290.147",
+          "why": "curve",
+          "region": 0
+         },
+         {
+          "station": 299.3855811252363,
+          "kmText": "1+299.386",
+          "why": "curve",
+          "region": 0
+         },
+         {
+          "station": 300.0,
+          "kmText": "1+300.000",
+          "why": "region",
+          "region": 0
+         },
+         {
+          "station": 300.0,
+          "kmText": "1+300.000",
+          "why": "region",
+          "region": 1
+         },
+         {
+          "station": 308.62457860584874,
+          "kmText": "1+308.625",
+          "why": "curve",
+          "region": 1
+         },
+         {
+          "station": 317.8635760864612,
+          "kmText": "1+317.864",
+          "why": "geometry",
+          "region": 1
+         },
+         {
+          "station": 327.8635760864612,
+          "kmText": "1+327.864",
+          "why": "curve",
+          "region": 1
+         },
+         {
+          "station": 337.8635760864612,
+          "kmText": "1+337.864",
+          "why": "curve",
+          "region": 1
+         },
+         {
+          "station": 347.8635760864612,
+          "kmText": "1+347.864",
+          "why": "curve",
+          "region": 1
+         },
+         {
+          "station": 357.8635760864612,
+          "kmText": "1+357.864",
+          "why": "geometry",
+          "region": 1
+         },
+         {
+          "station": 375.0,
+          "kmText": "1+375.000",
+          "why": "interval",
+          "region": 1
+         },
+         {
+          "station": 400.0,
+          "kmText": "1+400.000",
+          "why": "interval",
+          "region": 1
+         },
+         {
+          "station": 425.0,
+          "kmText": "1+425.000",
+          "why": "interval",
+          "region": 1
+         },
+         {
+          "station": 450.0,
+          "kmText": "1+450.000",
+          "why": "interval",
+          "region": 1
+         },
+         {
+          "station": 475.0,
+          "kmText": "1+475.000",
+          "why": "interval",
+          "region": 1
+         },
+         {
+          "station": 500.0,
+          "kmText": "1+500.000",
+          "why": "interval",
+          "region": 1
+         },
+         {
+          "station": 525.0,
+          "kmText": "1+525.000",
+          "why": "interval",
+          "region": 1
+         },
+         {
+          "station": 550.0,
+          "kmText": "1+550.000",
+          "why": "interval",
+          "region": 1
+         },
+         {
+          "station": 575.0,
+          "kmText": "1+575.000",
+          "why": "interval",
+          "region": 1
+         },
+         {
+          "station": 600.0,
+          "kmText": "1+600.000",
+          "why": "region",
+          "region": 1
+         }
+        ],
+        "gaps": [],
+        "unsolved": [
+         {
+          "region": 0,
+          "side": "left",
+          "why": "open",
+          "from": 0.0,
+          "to": 0.0,
+          "fromText": "1+000.000",
+          "toText": "1+000.000"
+         },
+         {
+          "region": 0,
+          "side": "right",
+          "why": "open",
+          "from": 0.0,
+          "to": 0.0,
+          "fromText": "1+000.000",
+          "toText": "1+000.000"
+         }
+        ],
+        "folded": [],
+        "features": [
+         {
+          "code": "axis",
+          "region": 0,
+          "from": 0.0,
+          "to": 300.0,
+          "length": 300.1647508501845
+         },
+         {
+          "code": "left.c1",
+          "region": 0,
+          "from": 0.0,
+          "to": 300.0,
+          "length": 298.1780896719289
+         },
+         {
+          "code": "left.c2",
+          "region": 0,
+          "from": 0.0,
+          "to": 300.0,
+          "length": 297.61049735248645
+         },
+         {
+          "code": "left.daylight",
+          "region": 0,
+          "from": 25.0,
+          "to": 300.0,
+          "length": 270.5757701440399
+         },
+         {
+          "code": "left.ditchBottom",
+          "region": 0,
+          "from": 25.0,
+          "to": 150.0,
+          "length": 125.00054065627019
+         },
+         {
+          "code": "left.ditchBottom",
+          "region": 0,
+          "from": 194.712598760949,
+          "to": 300.0,
+          "length": 102.02661675541415
+         },
+         {
+          "code": "left.ditchToe",
+          "region": 0,
+          "from": 25.0,
+          "to": 150.0,
+          "length": 125.0005406562702
+         },
+         {
+          "code": "left.ditchToe",
+          "region": 0,
+          "from": 194.712598760949,
+          "to": 300.0,
+          "length": 102.31040270391166
+         },
+         {
+          "code": "left.hinge",
+          "region": 0,
+          "from": 0.0,
+          "to": 300.0,
+          "length": 297.61049735248645
+         },
+         {
+          "code": "right.c1",
+          "region": 0,
+          "from": 0.0,
+          "to": 300.0,
+          "length": 302.151542195661
+         },
+         {
+          "code": "right.c2",
+          "region": 0,
+          "from": 0.0,
+          "to": 300.0,
+          "length": 302.7192195929161
+         },
+         {
+          "code": "right.daylight",
+          "region": 0,
+          "from": 25.0,
+          "to": 300.0,
+          "length": 281.3334881485229
+         },
+         {
+          "code": "right.ditchBottom",
+          "region": 0,
+          "from": 25.0,
+          "to": 150.0,
+          "length": 125.00054065627019
+         },
+         {
+          "code": "right.ditchBottom",
+          "region": 0,
+          "from": 194.712598760949,
+          "to": 300.0,
+          "length": 108.83824001647692
+         },
+         {
+          "code": "right.ditchToe",
+          "region": 0,
+          "from": 25.0,
+          "to": 150.0,
+          "length": 125.00054065627018
+         },
+         {
+          "code": "right.ditchToe",
+          "region": 0,
+          "from": 194.712598760949,
+          "to": 300.0,
+          "length": 108.55439283352227
+         },
+         {
+          "code": "right.hinge",
+          "region": 0,
+          "from": 0.0,
+          "to": 300.0,
+          "length": 302.7192195929161
+         },
+         {
+          "code": "axis",
+          "region": 1,
+          "from": 300.0,
+          "to": 600.0,
+          "length": 300.1183258628905
+         },
+         {
+          "code": "left.c1",
+          "region": 1,
+          "from": 300.0,
+          "to": 600.0,
+          "length": 299.36153887281154
+         },
+         {
+          "code": "left.c2",
+          "region": 1,
+          "from": 300.0,
+          "to": 600.0,
+          "length": 298.98315114463753
+         },
+         {
+          "code": "left.daylight",
+          "region": 1,
+          "from": 300.0,
+          "to": 600.0,
+          "length": 299.54605928243336
+         },
+         {
+          "code": "left.hinge",
+          "region": 1,
+          "from": 300.0,
+          "to": 600.0,
+          "length": 298.98315114463753
+         },
+         {
+          "code": "right.c1",
+          "region": 1,
+          "from": 300.0,
+          "to": 600.0,
+          "length": 301.0012624826926
+         },
+         {
+          "code": "right.c2",
+          "region": 1,
+          "from": 300.0,
+          "to": 600.0,
+          "length": 301.8842177722306
+         },
+         {
+          "code": "right.c3",
+          "region": 1,
+          "from": 300.0,
+          "to": 600.0,
+          "length": 302.1364939746922
+         },
+         {
+          "code": "right.daylight",
+          "region": 1,
+          "from": 300.0,
+          "to": 600.0,
+          "length": 303.4514532981362
+         },
+         {
+          "code": "right.hinge",
+          "region": 1,
+          "from": 300.0,
+          "to": 600.0,
+          "length": 302.1364939746922
+         }
+        ],
+        "triangles": 610,
+        "area": 11426.138289684559
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "surfaces": [
+        {
+         "id": "t-1",
+         "name": "Mevcut zemin",
+         "points": {
+          "layers": [
+           "zemin"
+          ]
+         }
+        },
+        {
+         "id": "t-2",
+         "name": "Kurulamaz",
+         "points": {
+          "layers": [
+           "bos"
+          ]
+         }
+        }
+       ],
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ana aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 20.0,
+           "y": 50.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 60.0,
+           "radius": 150.0,
+           "spiralIn": 40.0,
+           "spiralOut": 40.0
+          },
+          {
+           "id": "b",
+           "x": 560.0,
+           "y": 360.0
+          }
+         ],
+         "stationing": {
+          "start": 1000.0
+         }
+        },
+        {
+         "id": "g-2",
+         "name": "Yan aks",
+         "revision": 3,
+         "pis": [
+          {
+           "id": "a",
+           "x": 30.0,
+           "y": 380.0
+          },
+          {
+           "id": "b",
+           "x": 580.0,
+           "y": 20.0
+          }
+         ]
+        },
+        {
+         "id": "g-3",
+         "name": "Sağ kenar",
+         "revision": 1,
+         "offsetOf": {
+          "alignment": "g-1",
+          "offset": 5.0
+         }
+        },
+        {
+         "id": "g-4",
+         "name": "Dar kurp",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 200.0,
+           "y": 180.0
+          },
+          {
+           "id": "p1",
+           "x": 240.0,
+           "y": 180.0,
+           "radius": 4.0
+          },
+          {
+           "id": "b",
+           "x": 240.0,
+           "y": 240.0
+          }
+         ]
+        }
+       ],
+       "profiles": [
+        {
+         "id": "b-1",
+         "name": "Proje kotu",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 102.0
+          },
+          {
+           "id": "v1",
+           "station": 170.0,
+           "elevation": 101.5,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 340.0,
+           "elevation": 111.0,
+           "radius": 1200.0
+          },
+          {
+           "id": "v3",
+           "station": 520.0,
+           "elevation": 106.0,
+           "lengthIn": 50.0,
+           "lengthOut": 35.0
+          },
+          {
+           "id": "b",
+           "station": 669.0,
+           "elevation": 113.0
+          }
+         ],
+         "surface": "t-1"
+        },
+        {
+         "id": "b-2",
+         "name": "Yan kot",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 4,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 300.0,
+           "elevation": 104.0,
+           "length": 120.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "surface": "t-1"
+        },
+        {
+         "id": "b-3",
+         "name": "Kısmi kot",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 100.0,
+           "elevation": 104.0
+          },
+          {
+           "id": "b",
+           "station": 400.0,
+           "elevation": 110.0
+          }
+         ]
+        },
+        {
+         "id": "b-4",
+         "name": "Dar kurbun kotu",
+         "alignment": "g-4",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 106.0
+          },
+          {
+           "id": "b",
+           "station": 97.783,
+           "elevation": 106.0
+          }
+         ]
+        }
+       ],
+       "templates": [
+        {
+         "id": "tk-1",
+         "name": "Tip 1",
+         "revision": 1,
+         "left": {
+          "components": [
+           {
+            "kind": "lane",
+            "width": 3.5,
+            "slope": -2.5
+           },
+           {
+            "kind": "shoulder",
+            "width": 1.0,
+            "slope": -4.0
+           }
+          ],
+          "cut": 1.0,
+          "fill": 1.5,
+          "ditch": {
+           "fore": 2.0,
+           "depth": 0.5,
+           "bottom": 0.5
+          }
+         }
+        },
+        {
+         "id": "tk-2",
+         "name": "Tip 2",
+         "revision": 2,
+         "left": {
+          "components": [
+           {
+            "kind": "lane",
+            "width": 3.0,
+            "slope": -2.0
+           },
+           {
+            "kind": "shoulder",
+            "width": 1.5,
+            "slope": -4.0
+           }
+          ],
+          "cut": 1.5,
+          "fill": 2.0
+         },
+         "right": {
+          "components": [
+           {
+            "kind": "lane",
+            "width": 3.5,
+            "slope": -2.5
+           },
+           {
+            "kind": "lane",
+            "width": 3.5,
+            "slope": -2.5
+           },
+           {
+            "kind": "shoulder",
+            "width": 1.0,
+            "slope": -4.0
+           }
+          ],
+          "cut": 1.0,
+          "fill": 1.5
+         }
+        }
+       ],
+       "sections": [
+        {
+         "id": "k-1",
+         "name": "Enkesitler",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "profile": "b-1",
+         "template": "tk-1",
+         "surface": "t-1",
+         "left": 25.0,
+         "right": 25.0,
+         "stations": {
+          "method": "range",
+          "from": 100.0,
+          "to": 300.0,
+          "every": 50.0,
+          "geometry": true
+         }
+        },
+        {
+         "id": "k-2",
+         "name": "Yan kesitler",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 3,
+         "profile": "b-2",
+         "template": "tk-2",
+         "surface": "t-1",
+         "left": 20.0,
+         "right": 30.0,
+         "stations": {
+          "method": "stations",
+          "stations": [
+           50.0,
+           200.0,
+           400.0
+          ]
+         }
+        }
+       ],
+       "superelevations": [
+        {
+         "id": "d-1",
+         "name": "Ana aks deveri",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "normalLeft": -2.5,
+         "normalRight": -2.5,
+         "method": {
+          "method": "curves",
+          "curves": [
+           {
+            "pi": "p1",
+            "rate": 6.0,
+            "runoff": 40.0,
+            "onTangent": 0.0,
+            "widening": 0.5
+           }
+          ]
+         }
+        },
+        {
+         "id": "d-2",
+         "name": "Yan aks deveri",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 2,
+         "normalLeft": -2.0,
+         "normalRight": -2.0,
+         "method": {
+          "method": "stations",
+          "rows": [
+           {
+            "station": 100.0,
+            "left": -2.0,
+            "right": -2.0
+           },
+           {
+            "station": 200.0,
+            "left": 3.0,
+            "right": -3.0
+           },
+           {
+            "station": 400.0,
+            "left": 3.0,
+            "right": -3.0
+           },
+           {
+            "station": 500.0,
+            "left": -2.0,
+            "right": -2.0
+           }
+          ]
+         }
+        },
+        {
+         "id": "d-3",
+         "name": "Kurulamaz dever",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "normalLeft": -2.5,
+         "normalRight": -2.5,
+         "method": {
+          "method": "curves",
+          "curves": [
+           {
+            "pi": "p9",
+            "rate": 6.0,
+            "runoff": 40.0,
+            "onTangent": 0.0
+           }
+          ]
+         }
+        }
+       ],
+       "corridors": [
+        {
+         "id": "c-1",
+         "name": "Ana koridor",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "profile": "b-1",
+         "surface": "t-1",
+         "left": 30.0,
+         "right": 30.0,
+         "tangent": 25.0,
+         "curve": 10.0,
+         "regions": [
+          {
+           "from": 0.0,
+           "to": 300.0,
+           "template": "tk-1"
+          },
+          {
+           "from": 300.0,
+           "to": 600.0,
+           "template": "tk-2"
+          }
+         ]
+        },
+        {
+         "id": "c-2",
+         "name": "Yan koridor",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 2,
+         "profile": "b-2",
+         "surface": "t-1",
+         "superelevation": "d-2",
+         "left": 25.0,
+         "right": 25.0,
+         "tangent": 50.0,
+         "curve": 20.0,
+         "regions": [
+          {
+           "from": 50.0,
+           "to": 400.0,
+           "template": "tk-2"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
    "name": "Adı değişir",
    "steps": [
     {
@@ -5277,7 +9661,7 @@
           "region": 1,
           "from": 300.0,
           "to": 600.0,
-          "length": 298.9831511446375
+          "length": 298.98315114463753
          },
          {
           "code": "left.daylight",
@@ -5291,7 +9675,7 @@
           "region": 1,
           "from": 300.0,
           "to": 600.0,
-          "length": 298.9831511446375
+          "length": 298.98315114463753
          },
          {
           "code": "right.c1",
@@ -5330,7 +9714,7 @@
          }
         ],
         "triangles": 610,
-        "area": 11426.13828968457
+        "area": 11426.138289684559
        }
       },
       "warnings": []
@@ -7499,7 +11883,7 @@
           "region": 1,
           "from": 300.0,
           "to": 600.0,
-          "length": 298.9831511446375
+          "length": 298.98315114463753
          },
          {
           "code": "left.daylight",
@@ -7513,7 +11897,7 @@
           "region": 1,
           "from": 300.0,
           "to": 600.0,
-          "length": 298.9831511446375
+          "length": 298.98315114463753
          },
          {
           "code": "right.c1",
@@ -7552,7 +11936,7 @@
          }
         ],
         "triangles": 610,
-        "area": 11426.13828968457
+        "area": 11426.138289684559
        }
       },
       "warnings": []
@@ -8438,7 +12822,7 @@
           "region": 1,
           "from": 300.0,
           "to": 600.0,
-          "length": 298.9831511446375
+          "length": 298.98315114463753
          },
          {
           "code": "left.daylight",
@@ -8452,7 +12836,7 @@
           "region": 1,
           "from": 300.0,
           "to": 600.0,
-          "length": 298.9831511446375
+          "length": 298.98315114463753
          },
          {
           "code": "right.c1",
@@ -8491,7 +12875,7 @@
          }
         ],
         "triangles": 610,
-        "area": 11426.13828968457
+        "area": 11426.138289684559
        }
       },
       "warnings": []
@@ -11365,7 +15749,7 @@
           "region": 1,
           "from": 300.0,
           "to": 600.0,
-          "length": 298.9831511446375
+          "length": 298.98315114463753
          },
          {
           "code": "left.daylight",
@@ -11379,7 +15763,7 @@
           "region": 1,
           "from": 300.0,
           "to": 600.0,
-          "length": 298.9831511446375
+          "length": 298.98315114463753
          },
          {
           "code": "right.c1",
@@ -11418,7 +15802,7 @@
          }
         ],
         "triangles": 610,
-        "area": 11426.13828968457
+        "area": 11426.138289684559
        }
       },
       "warnings": []
@@ -16830,7 +21214,7 @@
       "status": "failed",
       "error": {
        "code": "invalid_road_corridor",
-       "message": "Değiştirilecek bir şey yok: name, alignment, profile, surface, superelevation, left, right, tangent, curve, sag, profilePoints, critical, stations ya da regions verin."
+       "message": "Değiştirilecek bir şey yok: name, alignment, profile, surface, superelevation, left, right, tangent, curve, sag, verticalSag, refine, profilePoints, critical, stations ya da regions verin."
       }
      },
      "expect": {
@@ -19723,6 +24107,1464 @@
        "code": "invalid_road_corridor",
        "message": "Koridor kurallarına uymuyor: aralık 0'dan büyük, en çok 1000 m olur.",
        "path": "tangent"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "surfaces": [
+        {
+         "id": "t-1",
+         "name": "Mevcut zemin",
+         "points": {
+          "layers": [
+           "zemin"
+          ]
+         }
+        },
+        {
+         "id": "t-2",
+         "name": "Kurulamaz",
+         "points": {
+          "layers": [
+           "bos"
+          ]
+         }
+        }
+       ],
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ana aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 20.0,
+           "y": 50.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 60.0,
+           "radius": 150.0,
+           "spiralIn": 40.0,
+           "spiralOut": 40.0
+          },
+          {
+           "id": "b",
+           "x": 560.0,
+           "y": 360.0
+          }
+         ],
+         "stationing": {
+          "start": 1000.0
+         }
+        },
+        {
+         "id": "g-2",
+         "name": "Yan aks",
+         "revision": 3,
+         "pis": [
+          {
+           "id": "a",
+           "x": 30.0,
+           "y": 380.0
+          },
+          {
+           "id": "b",
+           "x": 580.0,
+           "y": 20.0
+          }
+         ]
+        },
+        {
+         "id": "g-3",
+         "name": "Sağ kenar",
+         "revision": 1,
+         "offsetOf": {
+          "alignment": "g-1",
+          "offset": 5.0
+         }
+        },
+        {
+         "id": "g-4",
+         "name": "Dar kurp",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 200.0,
+           "y": 180.0
+          },
+          {
+           "id": "p1",
+           "x": 240.0,
+           "y": 180.0,
+           "radius": 4.0
+          },
+          {
+           "id": "b",
+           "x": 240.0,
+           "y": 240.0
+          }
+         ]
+        }
+       ],
+       "profiles": [
+        {
+         "id": "b-1",
+         "name": "Proje kotu",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 102.0
+          },
+          {
+           "id": "v1",
+           "station": 170.0,
+           "elevation": 101.5,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 340.0,
+           "elevation": 111.0,
+           "radius": 1200.0
+          },
+          {
+           "id": "v3",
+           "station": 520.0,
+           "elevation": 106.0,
+           "lengthIn": 50.0,
+           "lengthOut": 35.0
+          },
+          {
+           "id": "b",
+           "station": 669.0,
+           "elevation": 113.0
+          }
+         ],
+         "surface": "t-1"
+        },
+        {
+         "id": "b-2",
+         "name": "Yan kot",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 4,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 300.0,
+           "elevation": 104.0,
+           "length": 120.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "surface": "t-1"
+        },
+        {
+         "id": "b-3",
+         "name": "Kısmi kot",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 100.0,
+           "elevation": 104.0
+          },
+          {
+           "id": "b",
+           "station": 400.0,
+           "elevation": 110.0
+          }
+         ]
+        },
+        {
+         "id": "b-4",
+         "name": "Dar kurbun kotu",
+         "alignment": "g-4",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 106.0
+          },
+          {
+           "id": "b",
+           "station": 97.783,
+           "elevation": 106.0
+          }
+         ]
+        }
+       ],
+       "templates": [
+        {
+         "id": "tk-1",
+         "name": "Tip 1",
+         "revision": 1,
+         "left": {
+          "components": [
+           {
+            "kind": "lane",
+            "width": 3.5,
+            "slope": -2.5
+           },
+           {
+            "kind": "shoulder",
+            "width": 1.0,
+            "slope": -4.0
+           }
+          ],
+          "cut": 1.0,
+          "fill": 1.5,
+          "ditch": {
+           "fore": 2.0,
+           "depth": 0.5,
+           "bottom": 0.5
+          }
+         }
+        },
+        {
+         "id": "tk-2",
+         "name": "Tip 2",
+         "revision": 2,
+         "left": {
+          "components": [
+           {
+            "kind": "lane",
+            "width": 3.0,
+            "slope": -2.0
+           },
+           {
+            "kind": "shoulder",
+            "width": 1.5,
+            "slope": -4.0
+           }
+          ],
+          "cut": 1.5,
+          "fill": 2.0
+         },
+         "right": {
+          "components": [
+           {
+            "kind": "lane",
+            "width": 3.5,
+            "slope": -2.5
+           },
+           {
+            "kind": "lane",
+            "width": 3.5,
+            "slope": -2.5
+           },
+           {
+            "kind": "shoulder",
+            "width": 1.0,
+            "slope": -4.0
+           }
+          ],
+          "cut": 1.0,
+          "fill": 1.5
+         }
+        }
+       ],
+       "sections": [
+        {
+         "id": "k-1",
+         "name": "Enkesitler",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "profile": "b-1",
+         "template": "tk-1",
+         "surface": "t-1",
+         "left": 25.0,
+         "right": 25.0,
+         "stations": {
+          "method": "range",
+          "from": 100.0,
+          "to": 300.0,
+          "every": 50.0,
+          "geometry": true
+         }
+        },
+        {
+         "id": "k-2",
+         "name": "Yan kesitler",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 3,
+         "profile": "b-2",
+         "template": "tk-2",
+         "surface": "t-1",
+         "left": 20.0,
+         "right": 30.0,
+         "stations": {
+          "method": "stations",
+          "stations": [
+           50.0,
+           200.0,
+           400.0
+          ]
+         }
+        }
+       ],
+       "superelevations": [
+        {
+         "id": "d-1",
+         "name": "Ana aks deveri",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "normalLeft": -2.5,
+         "normalRight": -2.5,
+         "method": {
+          "method": "curves",
+          "curves": [
+           {
+            "pi": "p1",
+            "rate": 6.0,
+            "runoff": 40.0,
+            "onTangent": 0.0,
+            "widening": 0.5
+           }
+          ]
+         }
+        },
+        {
+         "id": "d-2",
+         "name": "Yan aks deveri",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 2,
+         "normalLeft": -2.0,
+         "normalRight": -2.0,
+         "method": {
+          "method": "stations",
+          "rows": [
+           {
+            "station": 100.0,
+            "left": -2.0,
+            "right": -2.0
+           },
+           {
+            "station": 200.0,
+            "left": 3.0,
+            "right": -3.0
+           },
+           {
+            "station": 400.0,
+            "left": 3.0,
+            "right": -3.0
+           },
+           {
+            "station": 500.0,
+            "left": -2.0,
+            "right": -2.0
+           }
+          ]
+         }
+        },
+        {
+         "id": "d-3",
+         "name": "Kurulamaz dever",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "normalLeft": -2.5,
+         "normalRight": -2.5,
+         "method": {
+          "method": "curves",
+          "curves": [
+           {
+            "pi": "p9",
+            "rate": 6.0,
+            "runoff": 40.0,
+            "onTangent": 0.0
+           }
+          ]
+         }
+        }
+       ],
+       "corridors": [
+        {
+         "id": "c-1",
+         "name": "Ana koridor",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "profile": "b-1",
+         "surface": "t-1",
+         "left": 30.0,
+         "right": 30.0,
+         "tangent": 25.0,
+         "curve": 10.0,
+         "regions": [
+          {
+           "from": 0.0,
+           "to": 300.0,
+           "template": "tk-1"
+          },
+          {
+           "from": 300.0,
+           "to": 600.0,
+           "template": "tk-2"
+          }
+         ]
+        },
+        {
+         "id": "c-2",
+         "name": "Yan koridor",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 2,
+         "profile": "b-2",
+         "surface": "t-1",
+         "superelevation": "d-2",
+         "left": 25.0,
+         "right": 25.0,
+         "tangent": 50.0,
+         "curve": 20.0,
+         "regions": [
+          {
+           "from": 50.0,
+           "to": 400.0,
+           "template": "tk-2"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Düşey kiriş yüksekliği 10 m'den büyük",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "set",
+      "name": "Yeni koridor",
+      "alignment": "g-1",
+      "profile": "b-1",
+      "surface": "t-1",
+      "left": 30.0,
+      "right": 30.0,
+      "tangent": 50.0,
+      "curve": 20.0,
+      "verticalSag": 20.0,
+      "regions": [
+       {
+        "from": 100.0,
+        "to": 250.0,
+        "template": "tk-1"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_road_corridor",
+       "message": "Koridor kurallarına uymuyor: düşey kiriş yüksekliği 0'dan büyük, en çok 10 m olur.",
+       "path": "verticalSag"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "surfaces": [
+        {
+         "id": "t-1",
+         "name": "Mevcut zemin",
+         "points": {
+          "layers": [
+           "zemin"
+          ]
+         }
+        },
+        {
+         "id": "t-2",
+         "name": "Kurulamaz",
+         "points": {
+          "layers": [
+           "bos"
+          ]
+         }
+        }
+       ],
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ana aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 20.0,
+           "y": 50.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 60.0,
+           "radius": 150.0,
+           "spiralIn": 40.0,
+           "spiralOut": 40.0
+          },
+          {
+           "id": "b",
+           "x": 560.0,
+           "y": 360.0
+          }
+         ],
+         "stationing": {
+          "start": 1000.0
+         }
+        },
+        {
+         "id": "g-2",
+         "name": "Yan aks",
+         "revision": 3,
+         "pis": [
+          {
+           "id": "a",
+           "x": 30.0,
+           "y": 380.0
+          },
+          {
+           "id": "b",
+           "x": 580.0,
+           "y": 20.0
+          }
+         ]
+        },
+        {
+         "id": "g-3",
+         "name": "Sağ kenar",
+         "revision": 1,
+         "offsetOf": {
+          "alignment": "g-1",
+          "offset": 5.0
+         }
+        },
+        {
+         "id": "g-4",
+         "name": "Dar kurp",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 200.0,
+           "y": 180.0
+          },
+          {
+           "id": "p1",
+           "x": 240.0,
+           "y": 180.0,
+           "radius": 4.0
+          },
+          {
+           "id": "b",
+           "x": 240.0,
+           "y": 240.0
+          }
+         ]
+        }
+       ],
+       "profiles": [
+        {
+         "id": "b-1",
+         "name": "Proje kotu",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 102.0
+          },
+          {
+           "id": "v1",
+           "station": 170.0,
+           "elevation": 101.5,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 340.0,
+           "elevation": 111.0,
+           "radius": 1200.0
+          },
+          {
+           "id": "v3",
+           "station": 520.0,
+           "elevation": 106.0,
+           "lengthIn": 50.0,
+           "lengthOut": 35.0
+          },
+          {
+           "id": "b",
+           "station": 669.0,
+           "elevation": 113.0
+          }
+         ],
+         "surface": "t-1"
+        },
+        {
+         "id": "b-2",
+         "name": "Yan kot",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 4,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 300.0,
+           "elevation": 104.0,
+           "length": 120.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "surface": "t-1"
+        },
+        {
+         "id": "b-3",
+         "name": "Kısmi kot",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 100.0,
+           "elevation": 104.0
+          },
+          {
+           "id": "b",
+           "station": 400.0,
+           "elevation": 110.0
+          }
+         ]
+        },
+        {
+         "id": "b-4",
+         "name": "Dar kurbun kotu",
+         "alignment": "g-4",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 106.0
+          },
+          {
+           "id": "b",
+           "station": 97.783,
+           "elevation": 106.0
+          }
+         ]
+        }
+       ],
+       "templates": [
+        {
+         "id": "tk-1",
+         "name": "Tip 1",
+         "revision": 1,
+         "left": {
+          "components": [
+           {
+            "kind": "lane",
+            "width": 3.5,
+            "slope": -2.5
+           },
+           {
+            "kind": "shoulder",
+            "width": 1.0,
+            "slope": -4.0
+           }
+          ],
+          "cut": 1.0,
+          "fill": 1.5,
+          "ditch": {
+           "fore": 2.0,
+           "depth": 0.5,
+           "bottom": 0.5
+          }
+         }
+        },
+        {
+         "id": "tk-2",
+         "name": "Tip 2",
+         "revision": 2,
+         "left": {
+          "components": [
+           {
+            "kind": "lane",
+            "width": 3.0,
+            "slope": -2.0
+           },
+           {
+            "kind": "shoulder",
+            "width": 1.5,
+            "slope": -4.0
+           }
+          ],
+          "cut": 1.5,
+          "fill": 2.0
+         },
+         "right": {
+          "components": [
+           {
+            "kind": "lane",
+            "width": 3.5,
+            "slope": -2.5
+           },
+           {
+            "kind": "lane",
+            "width": 3.5,
+            "slope": -2.5
+           },
+           {
+            "kind": "shoulder",
+            "width": 1.0,
+            "slope": -4.0
+           }
+          ],
+          "cut": 1.0,
+          "fill": 1.5
+         }
+        }
+       ],
+       "sections": [
+        {
+         "id": "k-1",
+         "name": "Enkesitler",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "profile": "b-1",
+         "template": "tk-1",
+         "surface": "t-1",
+         "left": 25.0,
+         "right": 25.0,
+         "stations": {
+          "method": "range",
+          "from": 100.0,
+          "to": 300.0,
+          "every": 50.0,
+          "geometry": true
+         }
+        },
+        {
+         "id": "k-2",
+         "name": "Yan kesitler",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 3,
+         "profile": "b-2",
+         "template": "tk-2",
+         "surface": "t-1",
+         "left": 20.0,
+         "right": 30.0,
+         "stations": {
+          "method": "stations",
+          "stations": [
+           50.0,
+           200.0,
+           400.0
+          ]
+         }
+        }
+       ],
+       "superelevations": [
+        {
+         "id": "d-1",
+         "name": "Ana aks deveri",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "normalLeft": -2.5,
+         "normalRight": -2.5,
+         "method": {
+          "method": "curves",
+          "curves": [
+           {
+            "pi": "p1",
+            "rate": 6.0,
+            "runoff": 40.0,
+            "onTangent": 0.0,
+            "widening": 0.5
+           }
+          ]
+         }
+        },
+        {
+         "id": "d-2",
+         "name": "Yan aks deveri",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 2,
+         "normalLeft": -2.0,
+         "normalRight": -2.0,
+         "method": {
+          "method": "stations",
+          "rows": [
+           {
+            "station": 100.0,
+            "left": -2.0,
+            "right": -2.0
+           },
+           {
+            "station": 200.0,
+            "left": 3.0,
+            "right": -3.0
+           },
+           {
+            "station": 400.0,
+            "left": 3.0,
+            "right": -3.0
+           },
+           {
+            "station": 500.0,
+            "left": -2.0,
+            "right": -2.0
+           }
+          ]
+         }
+        },
+        {
+         "id": "d-3",
+         "name": "Kurulamaz dever",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "normalLeft": -2.5,
+         "normalRight": -2.5,
+         "method": {
+          "method": "curves",
+          "curves": [
+           {
+            "pi": "p9",
+            "rate": 6.0,
+            "runoff": 40.0,
+            "onTangent": 0.0
+           }
+          ]
+         }
+        }
+       ],
+       "corridors": [
+        {
+         "id": "c-1",
+         "name": "Ana koridor",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "profile": "b-1",
+         "surface": "t-1",
+         "left": 30.0,
+         "right": 30.0,
+         "tangent": 25.0,
+         "curve": 10.0,
+         "regions": [
+          {
+           "from": 0.0,
+           "to": 300.0,
+           "template": "tk-1"
+          },
+          {
+           "from": 300.0,
+           "to": 600.0,
+           "template": "tk-2"
+          }
+         ]
+        },
+        {
+         "id": "c-2",
+         "name": "Yan koridor",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 2,
+         "profile": "b-2",
+         "surface": "t-1",
+         "superelevation": "d-2",
+         "left": 25.0,
+         "right": 25.0,
+         "tangent": 50.0,
+         "curve": 20.0,
+         "regions": [
+          {
+           "from": 50.0,
+           "to": 400.0,
+           "template": "tk-2"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Eksi plan sapması",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "set",
+      "name": "Yeni koridor",
+      "alignment": "g-1",
+      "profile": "b-1",
+      "surface": "t-1",
+      "left": 30.0,
+      "right": 30.0,
+      "tangent": 50.0,
+      "curve": 20.0,
+      "refine": {
+       "plan": -0.1,
+       "least": 1.0
+      },
+      "regions": [
+       {
+        "from": 100.0,
+        "to": 250.0,
+        "template": "tk-1"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_road_corridor",
+       "message": "Koridor kurallarına uymuyor: sapma toleransı 0'dan büyük, en çok 10 m olur.",
+       "path": "refine.plan"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "surfaces": [
+        {
+         "id": "t-1",
+         "name": "Mevcut zemin",
+         "points": {
+          "layers": [
+           "zemin"
+          ]
+         }
+        },
+        {
+         "id": "t-2",
+         "name": "Kurulamaz",
+         "points": {
+          "layers": [
+           "bos"
+          ]
+         }
+        }
+       ],
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ana aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 20.0,
+           "y": 50.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 60.0,
+           "radius": 150.0,
+           "spiralIn": 40.0,
+           "spiralOut": 40.0
+          },
+          {
+           "id": "b",
+           "x": 560.0,
+           "y": 360.0
+          }
+         ],
+         "stationing": {
+          "start": 1000.0
+         }
+        },
+        {
+         "id": "g-2",
+         "name": "Yan aks",
+         "revision": 3,
+         "pis": [
+          {
+           "id": "a",
+           "x": 30.0,
+           "y": 380.0
+          },
+          {
+           "id": "b",
+           "x": 580.0,
+           "y": 20.0
+          }
+         ]
+        },
+        {
+         "id": "g-3",
+         "name": "Sağ kenar",
+         "revision": 1,
+         "offsetOf": {
+          "alignment": "g-1",
+          "offset": 5.0
+         }
+        },
+        {
+         "id": "g-4",
+         "name": "Dar kurp",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 200.0,
+           "y": 180.0
+          },
+          {
+           "id": "p1",
+           "x": 240.0,
+           "y": 180.0,
+           "radius": 4.0
+          },
+          {
+           "id": "b",
+           "x": 240.0,
+           "y": 240.0
+          }
+         ]
+        }
+       ],
+       "profiles": [
+        {
+         "id": "b-1",
+         "name": "Proje kotu",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 102.0
+          },
+          {
+           "id": "v1",
+           "station": 170.0,
+           "elevation": 101.5,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 340.0,
+           "elevation": 111.0,
+           "radius": 1200.0
+          },
+          {
+           "id": "v3",
+           "station": 520.0,
+           "elevation": 106.0,
+           "lengthIn": 50.0,
+           "lengthOut": 35.0
+          },
+          {
+           "id": "b",
+           "station": 669.0,
+           "elevation": 113.0
+          }
+         ],
+         "surface": "t-1"
+        },
+        {
+         "id": "b-2",
+         "name": "Yan kot",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 4,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 300.0,
+           "elevation": 104.0,
+           "length": 120.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "surface": "t-1"
+        },
+        {
+         "id": "b-3",
+         "name": "Kısmi kot",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 100.0,
+           "elevation": 104.0
+          },
+          {
+           "id": "b",
+           "station": 400.0,
+           "elevation": 110.0
+          }
+         ]
+        },
+        {
+         "id": "b-4",
+         "name": "Dar kurbun kotu",
+         "alignment": "g-4",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 106.0
+          },
+          {
+           "id": "b",
+           "station": 97.783,
+           "elevation": 106.0
+          }
+         ]
+        }
+       ],
+       "templates": [
+        {
+         "id": "tk-1",
+         "name": "Tip 1",
+         "revision": 1,
+         "left": {
+          "components": [
+           {
+            "kind": "lane",
+            "width": 3.5,
+            "slope": -2.5
+           },
+           {
+            "kind": "shoulder",
+            "width": 1.0,
+            "slope": -4.0
+           }
+          ],
+          "cut": 1.0,
+          "fill": 1.5,
+          "ditch": {
+           "fore": 2.0,
+           "depth": 0.5,
+           "bottom": 0.5
+          }
+         }
+        },
+        {
+         "id": "tk-2",
+         "name": "Tip 2",
+         "revision": 2,
+         "left": {
+          "components": [
+           {
+            "kind": "lane",
+            "width": 3.0,
+            "slope": -2.0
+           },
+           {
+            "kind": "shoulder",
+            "width": 1.5,
+            "slope": -4.0
+           }
+          ],
+          "cut": 1.5,
+          "fill": 2.0
+         },
+         "right": {
+          "components": [
+           {
+            "kind": "lane",
+            "width": 3.5,
+            "slope": -2.5
+           },
+           {
+            "kind": "lane",
+            "width": 3.5,
+            "slope": -2.5
+           },
+           {
+            "kind": "shoulder",
+            "width": 1.0,
+            "slope": -4.0
+           }
+          ],
+          "cut": 1.0,
+          "fill": 1.5
+         }
+        }
+       ],
+       "sections": [
+        {
+         "id": "k-1",
+         "name": "Enkesitler",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "profile": "b-1",
+         "template": "tk-1",
+         "surface": "t-1",
+         "left": 25.0,
+         "right": 25.0,
+         "stations": {
+          "method": "range",
+          "from": 100.0,
+          "to": 300.0,
+          "every": 50.0,
+          "geometry": true
+         }
+        },
+        {
+         "id": "k-2",
+         "name": "Yan kesitler",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 3,
+         "profile": "b-2",
+         "template": "tk-2",
+         "surface": "t-1",
+         "left": 20.0,
+         "right": 30.0,
+         "stations": {
+          "method": "stations",
+          "stations": [
+           50.0,
+           200.0,
+           400.0
+          ]
+         }
+        }
+       ],
+       "superelevations": [
+        {
+         "id": "d-1",
+         "name": "Ana aks deveri",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "normalLeft": -2.5,
+         "normalRight": -2.5,
+         "method": {
+          "method": "curves",
+          "curves": [
+           {
+            "pi": "p1",
+            "rate": 6.0,
+            "runoff": 40.0,
+            "onTangent": 0.0,
+            "widening": 0.5
+           }
+          ]
+         }
+        },
+        {
+         "id": "d-2",
+         "name": "Yan aks deveri",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 2,
+         "normalLeft": -2.0,
+         "normalRight": -2.0,
+         "method": {
+          "method": "stations",
+          "rows": [
+           {
+            "station": 100.0,
+            "left": -2.0,
+            "right": -2.0
+           },
+           {
+            "station": 200.0,
+            "left": 3.0,
+            "right": -3.0
+           },
+           {
+            "station": 400.0,
+            "left": 3.0,
+            "right": -3.0
+           },
+           {
+            "station": 500.0,
+            "left": -2.0,
+            "right": -2.0
+           }
+          ]
+         }
+        },
+        {
+         "id": "d-3",
+         "name": "Kurulamaz dever",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "normalLeft": -2.5,
+         "normalRight": -2.5,
+         "method": {
+          "method": "curves",
+          "curves": [
+           {
+            "pi": "p9",
+            "rate": 6.0,
+            "runoff": 40.0,
+            "onTangent": 0.0
+           }
+          ]
+         }
+        }
+       ],
+       "corridors": [
+        {
+         "id": "c-1",
+         "name": "Ana koridor",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "profile": "b-1",
+         "surface": "t-1",
+         "left": 30.0,
+         "right": 30.0,
+         "tangent": 25.0,
+         "curve": 10.0,
+         "regions": [
+          {
+           "from": 0.0,
+           "to": 300.0,
+           "template": "tk-1"
+          },
+          {
+           "from": 300.0,
+           "to": 600.0,
+           "template": "tk-2"
+          }
+         ]
+        },
+        {
+         "id": "c-2",
+         "name": "Yan koridor",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 2,
+         "profile": "b-2",
+         "surface": "t-1",
+         "superelevation": "d-2",
+         "left": 25.0,
+         "right": 25.0,
+         "tangent": 50.0,
+         "curve": 20.0,
+         "regions": [
+          {
+           "from": 50.0,
+           "to": 400.0,
+           "template": "tk-2"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "En kısa adım 1 cm'den kısa",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "set",
+      "name": "Yeni koridor",
+      "alignment": "g-1",
+      "profile": "b-1",
+      "surface": "t-1",
+      "left": 30.0,
+      "right": 30.0,
+      "tangent": 50.0,
+      "curve": 20.0,
+      "refine": {
+       "height": 0.05,
+       "least": 0.001
+      },
+      "regions": [
+       {
+        "from": 100.0,
+        "to": 250.0,
+        "template": "tk-1"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_road_corridor",
+       "message": "Koridor kurallarına uymuyor: en kısa adım 0,01 ile 100 m arası olur.",
+       "path": "refine.least"
       }
      },
      "expect": {

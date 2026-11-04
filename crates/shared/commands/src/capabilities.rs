@@ -1875,6 +1875,7 @@ const ENTRIES: &[Entry] = &[
             "corridor_gap",
             "corridor_surface_gone",
             "corridor_superelevation_gone",
+            "corridor_sampling_left",
         ],
         targets: none,
     },

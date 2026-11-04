@@ -12,7 +12,7 @@ use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
-use crate::{CorridorRegionDef, RoadEditOperation};
+use crate::{CorridorRefineDef, CorridorRegionDef, RoadEditOperation};
 
 pub const ROAD_CORRIDORS_EDIT: &str = "road.corridors.edit";
 pub const ROAD_CORRIDORS_EDIT_VERSION: u32 = 1;
@@ -23,7 +23,8 @@ pub const ROAD_CORRIDORS_DRAW_VERSION: u32 = 1;
 
 /// Input of `road.corridors.edit` v1: the corridor by its id or name (absent: a new one). A new one needs `name`,
 /// `alignment`, `profile`, `surface`, `left`, `right`, `tangent`, `curve` and `regions`; it holds its alignment's
-/// present revision. `superelevation` "" takes the schedule away, `sag` 0 the chord tolerance.
+/// present revision. `superelevation` "" takes the schedule away, `sag` 0 the chord tolerance, `verticalSag` 0 the
+/// vertical curves' chord height, a `refine` whose `least` is 0 the sampling check (docs/adr/0939).
 ///
 /// Refusals, in this order: `not_a_road_project`, `unknown_corridor` (remove or rebind one not in the project),
 /// `unknown_alignment`, `unknown_road_profile`, `unknown_terrain`, `unknown_superelevation`, `unknown_road_template`,
@@ -91,12 +92,20 @@ pub struct CorridorsEdit {
     pub regions: Option<Vec<CorridorRegionDef>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub vertical_sag: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub refine: Option<CorridorRefineDef>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
 }
 
 /// A station a corridor samples: the alignment's own, its km, and why (`region`, `geometry`, `critical`, `profile`,
-/// `user`, `curve`, `interval`).
+/// `user`, `curve`, `interval`, `vertical`: a vertical curve's division, `refine`: added where the section between
+/// strayed, docs/adr/0939).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -188,6 +197,83 @@ pub struct CorridorReport {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub problem: Option<String>,
+    /// How the sampling was checked, when the corridor asks for it (docs/adr/0939 §2).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub sampling: Option<CorridorSampling>,
+}
+
+/// The largest strays measured (docs/adr/0939 §2): the plan distance and the height a section strayed from the join of
+/// its neighbours (m), each with the station of that section and the feature line's code; none where nothing was
+/// measured.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CorridorStray {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub plan: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub plan_at: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub plan_code: Option<String>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub height: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub height_at: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub height_code: Option<String>,
+}
+
+/// An interval refining left as it is (docs/adr/0939 §2): its region and stations, why (`change`: the section changes
+/// kind within it, found to the least step; `least`: it still strays at the least step; `budget`: not measured, the
+/// stations allowed are used up) and how far its middle strayed.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CorridorLeft {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub region: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub from: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub to: f64,
+    pub from_text: String,
+    pub to_text: String,
+    pub why: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub plan: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub height: f64,
+}
+
+/// A corridor's sampling as it was checked (docs/adr/0939): the middles built and measured, the stations added, the
+/// largest strays of the first intervals (`before`) and of the intervals at the end (`after`: those found within and
+/// those left at the least step without a change of kind), the changes of kind found, and the intervals left.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CorridorSampling {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub measured: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub added: u32,
+    pub before: CorridorStray,
+    pub after: CorridorStray,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub changes: u32,
+    pub left: Vec<CorridorLeft>,
 }
 
 /// A corridor in a list: its id, name, alignment, revision and whether its alignment changed since.

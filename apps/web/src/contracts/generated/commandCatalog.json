@@ -39911,7 +39911,7 @@
       "cost": "instant",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `road.corridors.edit` v1: the corridor by its id or name (absent: a new one). A new one needs `name`,\n`alignment`, `profile`, `surface`, `left`, `right`, `tangent`, `curve` and `regions`; it holds its alignment's\npresent revision. `superelevation` \"\" takes the schedule away, `sag` 0 the chord tolerance.\n\nRefusals, in this order: `not_a_road_project`, `unknown_corridor` (remove or rebind one not in the project),\n`unknown_alignment`, `unknown_road_profile`, `unknown_terrain`, `unknown_superelevation`, `unknown_road_template`,\n`invalid_road_corridor` (a new one without its fields, set with nothing to set, the definition by `road_problem`,\nregions overlapping, empty or off the alignment, a station written off it, more stations than a corridor samples),\n`corridor_in_use` (remove one an earthwork volume uses),\n`invalid_revision`, `revision_conflict`.",
+        "description": "Input of `road.corridors.edit` v1: the corridor by its id or name (absent: a new one). A new one needs `name`,\n`alignment`, `profile`, `surface`, `left`, `right`, `tangent`, `curve` and `regions`; it holds its alignment's\npresent revision. `superelevation` \"\" takes the schedule away, `sag` 0 the chord tolerance, `verticalSag` 0 the\nvertical curves' chord height, a `refine` whose `least` is 0 the sampling check (docs/adr/0939).\n\nRefusals, in this order: `not_a_road_project`, `unknown_corridor` (remove or rebind one not in the project),\n`unknown_alignment`, `unknown_road_profile`, `unknown_terrain`, `unknown_superelevation`, `unknown_road_template`,\n`invalid_road_corridor` (a new one without its fields, set with nothing to set, the definition by `road_problem`,\nregions overlapping, empty or off the alignment, a station written off it, more stations than a corridor samples),\n`corridor_in_use` (remove one an earthwork volume uses),\n`invalid_revision`, `revision_conflict`.",
         "properties": {
           "alignment": {
             "type": [
@@ -39975,6 +39975,16 @@
               "null"
             ]
           },
+          "refine": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/CorridorRefineDef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "regions": {
             "items": {
               "$ref": "#/$defs/CorridorRegionDef"
@@ -40030,6 +40040,14 @@
               "null"
             ],
             "x-unit": "m"
+          },
+          "verticalSag": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "elevation"
           }
         },
         "required": [
@@ -40633,7 +40651,8 @@
           "corridor_folded",
           "corridor_gap",
           "corridor_surface_gone",
-          "corridor_superelevation_gone"
+          "corridor_superelevation_gone",
+          "corridor_sampling_left"
         ]
       },
       "examples": [
@@ -85935,6 +85954,12 @@
       "meaning": "Koridorun bölgeleri arasında kesitsiz aralık var."
     },
     {
+      "code": "corridor_sampling_left",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Koridorun bazı aralıklarında aradaki kesit en kısa adımda da toleranstan sapıyor ya da km sınırı doldu; ileti aralıkları söyler."
+    },
+    {
       "code": "corridor_surface_gone",
       "kind": "warning",
       "retryable": false,
@@ -103317,6 +103342,17 @@
           "description": "The profile's PVIs, its vertical curves' ends and its high and low points are sampled too.",
           "type": "boolean"
         },
+        "refine": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CorridorRefineDef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The sections between stations measured and the stations refined (docs/adr/0939 §2; schema 168)."
+        },
         "regions": {
           "items": {
             "$ref": "#/$defs/CorridorRegionDef"
@@ -103364,6 +103400,15 @@
           "format": "double",
           "type": "number",
           "x-unit": "m"
+        },
+        "verticalSag": {
+          "description": "The chord height the profile's vertical curves are divided by (m; docs/adr/0939 §1; schema 168).",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "elevation"
         }
       },
       "required": [
@@ -103430,6 +103475,57 @@
       ],
       "type": "object"
     },
+    "CorridorLeft": {
+      "description": "An interval refining left as it is (docs/adr/0939 §2): its region and stations, why (`change`: the section changes\nkind within it, found to the least step; `least`: it still strays at the least step; `budget`: not measured, the\nstations allowed are used up) and how far its middle strayed.",
+      "properties": {
+        "from": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "fromText": {
+          "type": "string"
+        },
+        "height": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "elevation"
+        },
+        "plan": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "region": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "to": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "toText": {
+          "type": "string"
+        },
+        "why": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "region",
+        "from",
+        "to",
+        "fromText",
+        "toText",
+        "why",
+        "plan",
+        "height"
+      ],
+      "type": "object"
+    },
     "CorridorListed": {
       "description": "A corridor in a list: its id, name, alignment, revision and whether its alignment changed since.",
       "properties": {
@@ -103458,6 +103554,37 @@
         "alignment",
         "revision",
         "stale"
+      ],
+      "type": "object"
+    },
+    "CorridorRefineDef": {
+      "additionalProperties": false,
+      "description": "How a corridor's sampling is checked (docs/adr/0939 §2): the plan distance and the height a section between two\nstations may stray from their straight join (m; absent: not checked), and the least step an interval is halved to\n(m). A section whose kind changes (cut to fill, a slope that meets nothing, none) halves it in any case.",
+      "properties": {
+        "height": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "elevation"
+        },
+        "least": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "plan": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "least"
       ],
       "type": "object"
     },
@@ -103550,6 +103677,17 @@
           "type": "integer",
           "x-unit": "version"
         },
+        "sampling": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CorridorSampling"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "How the sampling was checked, when the corridor asks for it (docs/adr/0939 §2)."
+        },
         "stale": {
           "type": "boolean"
         },
@@ -103599,8 +103737,52 @@
       ],
       "type": "object"
     },
+    "CorridorSampling": {
+      "description": "A corridor's sampling as it was checked (docs/adr/0939): the middles built and measured, the stations added, the\nlargest strays of the first intervals (`before`) and of the intervals at the end (`after`: those found within and\nthose left at the least step without a change of kind), the changes of kind found, and the intervals left.",
+      "properties": {
+        "added": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "after": {
+          "$ref": "#/$defs/CorridorStray"
+        },
+        "before": {
+          "$ref": "#/$defs/CorridorStray"
+        },
+        "changes": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "left": {
+          "items": {
+            "$ref": "#/$defs/CorridorLeft"
+          },
+          "type": "array"
+        },
+        "measured": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        }
+      },
+      "required": [
+        "measured",
+        "added",
+        "before",
+        "after",
+        "changes",
+        "left"
+      ],
+      "type": "object"
+    },
     "CorridorStation": {
-      "description": "A station a corridor samples: the alignment's own, its km, and why (`region`, `geometry`, `critical`, `profile`,\n`user`, `curve`, `interval`).",
+      "description": "A station a corridor samples: the alignment's own, its km, and why (`region`, `geometry`, `critical`, `profile`,\n`user`, `curve`, `interval`, `vertical`: a vertical curve's division, `refine`: added where the section between\nstrayed, docs/adr/0939).",
       "properties": {
         "kmText": {
           "type": "string"
@@ -103625,6 +103807,54 @@
         "kmText",
         "why",
         "region"
+      ],
+      "type": "object"
+    },
+    "CorridorStray": {
+      "description": "The largest strays measured (docs/adr/0939 §2): the plan distance and the height a section strayed from the join of\nits neighbours (m), each with the station of that section and the feature line's code; none where nothing was\nmeasured.",
+      "properties": {
+        "height": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "elevation"
+        },
+        "heightAt": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "heightCode": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "plan": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "planAt": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "planCode": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "plan",
+        "height"
       ],
       "type": "object"
     },

@@ -1032,6 +1032,36 @@ pub struct CorridorDef {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub stations: Vec<f64>,
     pub regions: Vec<CorridorRegionDef>,
+    /// The chord height the profile's vertical curves are divided by (m; docs/adr/0939 §1; schema 168).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub vertical_sag: Option<f64>,
+    /// The sections between stations measured and the stations refined (docs/adr/0939 §2; schema 168).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub refine: Option<CorridorRefineDef>,
+}
+
+/// How a corridor's sampling is checked (docs/adr/0939 §2): the plan distance and the height a section between two
+/// stations may stray from their straight join (m; absent: not checked), and the least step an interval is halved to
+/// (m). A section whose kind changes (cut to fill, a slope that meets nothing, none) halves it in any case.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CorridorRefineDef {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub plan: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub height: Option<f64>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub least: f64,
 }
 
 /// How an earthwork volume is computed (docs/adr/0906 §2–§3).
@@ -2889,6 +2919,19 @@ fn corridors_problem(road: &RoadSettings) -> Option<(String, String)> {
         }
         if c.stations.len() > MAX_SECTION_STATIONS || !c.stations.iter().all(|s| s.is_finite()) {
             return fail(at("stations"), &format!("en çok {MAX_SECTION_STATIONS} sonlu km yazılır"));
+        }
+        if c.vertical_sag.is_some_and(|t| !(t.is_finite() && t > 0.0 && t <= 10.0)) {
+            return fail(at("verticalSag"), "düşey kiriş yüksekliği 0'dan büyük, en çok 10 m olur");
+        }
+        if let Some(r) = &c.refine {
+            for (field, v) in [("plan", r.plan), ("height", r.height)] {
+                if v.is_some_and(|t| !(t.is_finite() && t > 0.0 && t <= 10.0)) {
+                    return fail(at(&format!("refine.{field}")), "sapma toleransı 0'dan büyük, en çok 10 m olur");
+                }
+            }
+            if !(r.least.is_finite() && r.least >= 0.01 && r.least <= 100.0) {
+                return fail(at("refine.least"), "en kısa adım 0,01 ile 100 m arası olur");
+            }
         }
         if c.regions.is_empty() || c.regions.len() > MAX_CORRIDOR_REGIONS {
             return fail(at("regions"), &format!("1 ile {MAX_CORRIDOR_REGIONS} arası bölge olur"));

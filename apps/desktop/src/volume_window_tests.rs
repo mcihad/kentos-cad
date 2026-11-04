@@ -101,6 +101,8 @@ fn densify(app: &mut App) {
         tangent: Some(20.0),
         curve: None,
         sag: None,
+        vertical_sag: None,
+        refine: None,
         profile_points: None,
         critical: None,
         stations: None,

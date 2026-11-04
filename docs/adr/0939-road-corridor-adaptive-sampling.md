@@ -1,6 +1,6 @@
 # 0939 — Koridorun uyarlanır örneklenmesi: düşey kiriş yüksekliği ve ölçülerek sıklaştırma
 
-Tarih: 2026-11-04. Durum: kabul (Y33.1 çekirdek; Y33.2 komut, Y33.3 pencere). Kapsam ROAD-COR-08, ROAD-COR-09.
+Tarih: 2026-11-04. Durum: kabul (Y33.1 çekirdek, Y33.2 komut ve kayıt; Y33.3 pencere). Kapsam ROAD-COR-08, ROAD-COR-09.
 
 ## Sorun
 
@@ -119,6 +119,51 @@ ROAD-COR-09 dört şey sayar. Bu ölçüm dördünü kodlu noktalar üzerinden o
   kesittir (ADR 0905).
 - **Yüzey:** şev ucunun ve hendeğin kotu araziden gelir; onların kot sapmasında görünür.
 
+### §4 Komut ve kayıt (Y33.2)
+
+- **`CorridorDef`** iki isteğe bağlı alan alır (KCAD şema 168):
+  - `verticalSag`: düşey kurpların kiriş yüksekliği, m.
+  - `refine { plan?, height?, least }`: sapma toleransları ve en kısa adım, m.
+- **Hiçbirine öntanımlı değer konmaz.** Yazılmazsa koridor eskisi gibi örneklenir; eski dosyalar bayt bayt aynı kalır.
+- **`road.corridors.edit` ile kaldırma:** `verticalSag` 0 ya da `refine.least` 0 alanı kaldırır; bu, `sag` 0'ın
+  kuralıyla aynıdır.
+- **Sınırlar:**
+  - toleranslar 0 < t ≤ 10 m;
+  - en kısa adım 0,01–100 m;
+  - kurulan ortaların bütçesi, koridorun km sınırından (20 000) kalanıdır.
+- **Km'lerin gerekçesi:** eklenen km'ler `refine`, düşey bölmeler `vertical` gerekçesiyle gelir. Rapordaki `sampling`
+  şunları taşır:
+  - ölçülen orta sayısı;
+  - eklenen km;
+  - ilk aralıkların (`before`) ve sondakilerin (`after`) en büyük plan ve kot sapması; her biri km'si ve öznitelik
+    çizgisinin koduyla;
+  - en kısa adımda bulunan kesit değişimleri;
+  - bırakılan aralıklar (`change`, `least`, `budget`).
+- **Uyarı `corridor_sampling_left`:** değişmeyen kesitin en kısa adımda da toleransa inmediği ya da km sınırının dolduğu
+  aralıkları söyler. Kesit değişimlerinin yeri uyarı değildir, bulunmuş bilgidir.
+
+Python başvurusu (`road_corridor_command_cases.py`) kesitleri kendi kesit başvurusuyla, araziyi 40 haneyle kurar.
+Yukarıdaki ikiye bölmeyi `road_sampling_cases.refine_with` ile yapar. Düşey bölmeyi boykesit raporunun kurplarından
+çıkarır:
+
+- parabolde `|g₂−g₁|/L`;
+- asimetrikte iki kolun `r₁`, `r₂`'si;
+- çemberde dik ucun `(1+g²)^{3/2}/R`'si.
+
+Yeni ortak durumlar: 11 sorgu ve 7 düzenleme. Rust masaüstü ve Python tipli katman koridorun 102 durumunun hepsinde
+aynı sonucu verir.
+
+**Ölçüm (örnek proje, Ana koridor km 0+100–0+260, Tip 1, 25 m aliyman, 10 m kurp; plan ve kot 0,05 m, en kısa adım 0,5 m):**
+
+| | Plan sapması | Kot sapması |
+|---|---|---|
+| İlk km'ler | 0,679 m | 0,539 m |
+| Denetimden sonra | 0,049 m | 0,039 m |
+
+- 47 ara kesit ölçüldü, 21 km eklendi.
+- Kesitin kodlarının değiştiği 3 yer en kısa adımda bulundu.
+- Yan koridorda (50 m aliyman, kot 0,05 m) en büyük plan sapması 3,351 m'den 0,377 m'ye indi.
+
 ## Ortak durumlar
 
 `fixtures/road/v1/sampling.json`, `scripts/fixtures/road_sampling_cases.py` tarafından KentOS kodu olmadan yazılır.
@@ -141,7 +186,5 @@ Rust (`crates/shared/road/tests/all/sampling.rs`) 1e-9 ile aynısını bulur.
 
 ## Açık
 
-- Komut ve kayıt (Y33.2): `CorridorDef`'in düşey kiriş yüksekliği ve doğrulama toleransları, raporda önce ve sonra en
-  büyük sapma, eklenen km'ler, en kısa adımda bırakılanlar.
 - Pencere (Y33.3).
 - Çember düşey kurbun sınırı için en dik yer, kurbun uçlarından okunur.

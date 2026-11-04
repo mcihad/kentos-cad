@@ -2418,6 +2418,9 @@ def document(d):
     if any(v.get("curve") for v in road.get("volumes", [])):
         # An earthwork volume's curve correction (docs/adr/0934 §2).
         schema = max(schema, 167)
+    if any("verticalSag" in c or "refine" in c for c in road.get("corridors", [])):
+        # A corridor's vertical chord height or sampling check (docs/adr/0939).
+        schema = max(schema, 168)
 
     def indexed(nodes):
         return any(n.get("indexes") or indexed(n.get("children", [])) for n in nodes)
@@ -3288,7 +3291,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-168.kcad"] = container(root(cmap(parts), version=uint(168)))
+    files["schema-version-169.kcad"] = container(root(cmap(parts), version=uint(169)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5644,6 +5647,12 @@ def build():
     assert cd.count(b"\x67version\x18\xa7") == 1, "the curve correction is schema 167"
     out["road-volume-curve.kcad"] = container(cd)
     out["broken/road-volume-curve-in-schema-166.kcad"] = container(cd.replace(b"\x67version\x18\xa7", b"\x67version\x18\xa6"))
+    # Schema 168 (docs/adr/0939): a corridor's vertical chord height and sampling check; schema 167 refuses them.
+    sampled = load("road-corridor-sampling.json")
+    sd = document(sampled)
+    assert sd.count(b"\x67version\x18\xa8") == 1, "the corridor's sampling check is schema 168"
+    out["road-corridor-sampling.kcad"] = container(sd)
+    out["broken/road-corridor-sampling-in-schema-167.kcad"] = container(sd.replace(b"\x67version\x18\xa8", b"\x67version\x18\xa7"))
     # Schema 162 (plan/road.md Y2.2): the terrain surfaces are a road project's only; a map project's are refused.
     mp = load("road-work.json")
     mp["settings"]["cadWork"] = "map"

@@ -20571,9 +20571,11 @@ class CorridorDef(_Model):
         alignment_revision: Unit: version.
         critical: The superelevation schedule's critical stations are sampled too.
         profile_points: The profile's PVIs, its vertical curves' ends and its high and low points are sampled too.
+        refine: The sections between stations measured and the stations refined (docs/adr/0939 §2; schema 168).
         revision: Unit: version.
         sag: Unit: m.
         stations: Stations the user wrote (the alignment's own, m). Unit: m.
+        vertical_sag: The chord height the profile's vertical curves are divided by (m; docs/adr/0939 §1; schema 168). Unit: elevation.
     """
     id: str
     name: str
@@ -20588,10 +20590,12 @@ class CorridorDef(_Model):
     alignment_revision: int | Unset = UNSET
     critical: bool | Unset = UNSET
     profile_points: bool | Unset = UNSET
+    refine: CorridorRefineDef | None | Unset = UNSET
     revision: int | Unset = UNSET
     sag: float | None | Unset = UNSET
     stations: list[float] | Unset = UNSET
     superelevation: str | None | Unset = UNSET
+    vertical_sag: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -20611,6 +20615,8 @@ class CorridorDef(_Model):
             out["critical"] = self.critical
         if self.profile_points is not UNSET:
             out["profilePoints"] = self.profile_points
+        if self.refine is not UNSET:
+            out["refine"] = None if self.refine is None else self.refine.to_json()
         if self.revision is not UNSET:
             out["revision"] = self.revision
         if self.sag is not UNSET:
@@ -20619,6 +20625,8 @@ class CorridorDef(_Model):
             out["stations"] = [float(e0) for e0 in self.stations]
         if self.superelevation is not UNSET:
             out["superelevation"] = self.superelevation
+        if self.vertical_sag is not UNSET:
+            out["verticalSag"] = None if self.vertical_sag is None else float(self.vertical_sag)
         return out
 
     @classmethod
@@ -20637,10 +20645,12 @@ class CorridorDef(_Model):
             alignment_revision=data.get("alignmentRevision", UNSET),
             critical=data.get("critical", UNSET),
             profile_points=data.get("profilePoints", UNSET),
+            refine=UNSET if "refine" not in data else None if data["refine"] is None else CorridorRefineDef.from_json(data["refine"]),
             revision=data.get("revision", UNSET),
             sag=UNSET if "sag" not in data else None if data["sag"] is None else float(data["sag"]),
             stations=[float(e0) for e0 in data["stations"]] if "stations" in data else UNSET,
             superelevation=data.get("superelevation", UNSET),
+            vertical_sag=UNSET if "verticalSag" not in data else None if data["verticalSag"] is None else float(data["verticalSag"]),
         )
 
 
@@ -20687,6 +20697,53 @@ class CorridorFeature(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class CorridorLeft(_Model):
+    """An interval refining left as it is (docs/adr/0939 §2): its region and stations, why (`change`: the section changes
+    kind within it, found to the least step; `least`: it still strays at the least step; `budget`: not measured, the
+    stations allowed are used up) and how far its middle strayed.
+    Attributes:
+        region: Unit: count.
+        from_: Unit: m.
+        to: Unit: m.
+        plan: Unit: m.
+        height: Unit: elevation.
+    """
+    region: int
+    from_: float
+    to: float
+    from_text: str
+    to_text: str
+    why: str
+    plan: float
+    height: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["region"] = self.region
+        out["from"] = float(self.from_)
+        out["to"] = float(self.to)
+        out["fromText"] = self.from_text
+        out["toText"] = self.to_text
+        out["why"] = self.why
+        out["plan"] = float(self.plan)
+        out["height"] = float(self.height)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CorridorLeft:
+        return cls(
+            region=data["region"],
+            from_=float(data["from"]),
+            to=float(data["to"]),
+            from_text=data["fromText"],
+            to_text=data["toText"],
+            why=data["why"],
+            plan=float(data["plan"]),
+            height=float(data["height"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CorridorListed(_Model):
     """A corridor in a list: its id, name, alignment, revision and whether its alignment changed since.
     Attributes:
@@ -20715,6 +20772,38 @@ class CorridorListed(_Model):
             alignment=data["alignment"],
             revision=data["revision"],
             stale=data["stale"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CorridorRefineDef(_Model):
+    """How a corridor's sampling is checked (docs/adr/0939 §2): the plan distance and the height a section between two
+    stations may stray from their straight join (m; absent: not checked), and the least step an interval is halved to
+    (m). A section whose kind changes (cut to fill, a slope that meets nothing, none) halves it in any case.
+    Attributes:
+        least: Unit: m.
+        height: Unit: elevation.
+        plan: Unit: m.
+    """
+    least: float
+    height: float | None | Unset = UNSET
+    plan: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["least"] = float(self.least)
+        if self.height is not UNSET:
+            out["height"] = None if self.height is None else float(self.height)
+        if self.plan is not UNSET:
+            out["plan"] = None if self.plan is None else float(self.plan)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CorridorRefineDef:
+        return cls(
+            least=float(data["least"]),
+            height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+            plan=UNSET if "plan" not in data else None if data["plan"] is None else float(data["plan"]),
         )
 
 
@@ -20756,6 +20845,7 @@ class CorridorReport(_Model):
         folded: Unit: m.
         triangles: Unit: count.
         area: Unit: area.
+        sampling: How the sampling was checked, when the corridor asks for it (docs/adr/0939 §2).
     """
     id: str
     name: str
@@ -20772,6 +20862,7 @@ class CorridorReport(_Model):
     triangles: int
     area: float
     problem: str | None | Unset = UNSET
+    sampling: CorridorSampling | None | Unset = UNSET
     superelevation: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -20792,6 +20883,8 @@ class CorridorReport(_Model):
         out["area"] = float(self.area)
         if self.problem is not UNSET:
             out["problem"] = self.problem
+        if self.sampling is not UNSET:
+            out["sampling"] = None if self.sampling is None else self.sampling.to_json()
         if self.superelevation is not UNSET:
             out["superelevation"] = self.superelevation
         return out
@@ -20814,14 +20907,55 @@ class CorridorReport(_Model):
             triangles=data["triangles"],
             area=float(data["area"]),
             problem=data.get("problem", UNSET),
+            sampling=UNSET if "sampling" not in data else None if data["sampling"] is None else CorridorSampling.from_json(data["sampling"]),
             superelevation=data.get("superelevation", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CorridorSampling(_Model):
+    """A corridor's sampling as it was checked (docs/adr/0939): the middles built and measured, the stations added, the
+    largest strays of the first intervals (`before`) and of the intervals at the end (`after`: those found within and
+    those left at the least step without a change of kind), the changes of kind found, and the intervals left.
+    Attributes:
+        measured: Unit: count.
+        added: Unit: count.
+        changes: Unit: count.
+    """
+    measured: int
+    added: int
+    before: CorridorStray
+    after: CorridorStray
+    changes: int
+    left: list[CorridorLeft]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["measured"] = self.measured
+        out["added"] = self.added
+        out["before"] = self.before.to_json()
+        out["after"] = self.after.to_json()
+        out["changes"] = self.changes
+        out["left"] = [e0.to_json() for e0 in self.left]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CorridorSampling:
+        return cls(
+            measured=data["measured"],
+            added=data["added"],
+            before=CorridorStray.from_json(data["before"]),
+            after=CorridorStray.from_json(data["after"]),
+            changes=data["changes"],
+            left=[CorridorLeft.from_json(e0) for e0 in data["left"]],
         )
 
 
 @dataclass(kw_only=True, slots=True)
 class CorridorStation(_Model):
     """A station a corridor samples: the alignment's own, its km, and why (`region`, `geometry`, `critical`, `profile`,
-    `user`, `curve`, `interval`).
+    `user`, `curve`, `interval`, `vertical`: a vertical curve's division, `refine`: added where the section between
+    strayed, docs/adr/0939).
     Attributes:
         station: Unit: m.
         region: Unit: index.
@@ -20846,6 +20980,50 @@ class CorridorStation(_Model):
             km_text=data["kmText"],
             why=data["why"],
             region=data["region"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CorridorStray(_Model):
+    """The largest strays measured (docs/adr/0939 §2): the plan distance and the height a section strayed from the join of
+    its neighbours (m), each with the station of that section and the feature line's code; none where nothing was
+    measured.
+    Attributes:
+        plan: Unit: m.
+        height: Unit: elevation.
+        height_at: Unit: m.
+        plan_at: Unit: m.
+    """
+    plan: float
+    height: float
+    height_at: float | None | Unset = UNSET
+    height_code: str | None | Unset = UNSET
+    plan_at: float | None | Unset = UNSET
+    plan_code: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["plan"] = float(self.plan)
+        out["height"] = float(self.height)
+        if self.height_at is not UNSET:
+            out["heightAt"] = None if self.height_at is None else float(self.height_at)
+        if self.height_code is not UNSET:
+            out["heightCode"] = self.height_code
+        if self.plan_at is not UNSET:
+            out["planAt"] = None if self.plan_at is None else float(self.plan_at)
+        if self.plan_code is not UNSET:
+            out["planCode"] = self.plan_code
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CorridorStray:
+        return cls(
+            plan=float(data["plan"]),
+            height=float(data["height"]),
+            height_at=UNSET if "heightAt" not in data else None if data["heightAt"] is None else float(data["heightAt"]),
+            height_code=data.get("heightCode", UNSET),
+            plan_at=UNSET if "planAt" not in data else None if data["planAt"] is None else float(data["planAt"]),
+            plan_code=data.get("planCode", UNSET),
         )
 
 
@@ -20978,7 +21156,8 @@ class CorridorsDrawn(_Model):
 class CorridorsEdit(_Model):
     """Input of `road.corridors.edit` v1: the corridor by its id or name (absent: a new one). A new one needs `name`,
     `alignment`, `profile`, `surface`, `left`, `right`, `tangent`, `curve` and `regions`; it holds its alignment's
-    present revision. `superelevation` "" takes the schedule away, `sag` 0 the chord tolerance.
+    present revision. `superelevation` "" takes the schedule away, `sag` 0 the chord tolerance, `verticalSag` 0 the
+    vertical curves' chord height, a `refine` whose `least` is 0 the sampling check (docs/adr/0939).
 
     Refusals, in this order: `not_a_road_project`, `unknown_corridor` (remove or rebind one not in the project),
     `unknown_alignment`, `unknown_road_profile`, `unknown_terrain`, `unknown_superelevation`, `unknown_road_template`,
@@ -20993,6 +21172,7 @@ class CorridorsEdit(_Model):
         sag: Unit: m.
         stations: Unit: m.
         tangent: Unit: m.
+        vertical_sag: Unit: elevation.
     """
     operation: RoadEditOperation | RoadEditOperationName
     alignment: str | None | Unset = UNSET
@@ -21004,6 +21184,7 @@ class CorridorsEdit(_Model):
     name: str | None | Unset = UNSET
     profile: str | None | Unset = UNSET
     profile_points: bool | None | Unset = UNSET
+    refine: CorridorRefineDef | None | Unset = UNSET
     regions: list[CorridorRegionDef] | None | Unset = UNSET
     right: float | None | Unset = UNSET
     sag: float | None | Unset = UNSET
@@ -21011,6 +21192,7 @@ class CorridorsEdit(_Model):
     superelevation: str | None | Unset = UNSET
     surface: str | None | Unset = UNSET
     tangent: float | None | Unset = UNSET
+    vertical_sag: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -21033,6 +21215,8 @@ class CorridorsEdit(_Model):
             out["profile"] = self.profile
         if self.profile_points is not UNSET:
             out["profilePoints"] = self.profile_points
+        if self.refine is not UNSET:
+            out["refine"] = None if self.refine is None else self.refine.to_json()
         if self.regions is not UNSET:
             out["regions"] = None if self.regions is None else [e0.to_json() for e0 in self.regions]
         if self.right is not UNSET:
@@ -21047,6 +21231,8 @@ class CorridorsEdit(_Model):
             out["surface"] = self.surface
         if self.tangent is not UNSET:
             out["tangent"] = None if self.tangent is None else float(self.tangent)
+        if self.vertical_sag is not UNSET:
+            out["verticalSag"] = None if self.vertical_sag is None else float(self.vertical_sag)
         return out
 
     @classmethod
@@ -21062,6 +21248,7 @@ class CorridorsEdit(_Model):
             name=data.get("name", UNSET),
             profile=data.get("profile", UNSET),
             profile_points=data.get("profilePoints", UNSET),
+            refine=UNSET if "refine" not in data else None if data["refine"] is None else CorridorRefineDef.from_json(data["refine"]),
             regions=UNSET if "regions" not in data else None if data["regions"] is None else [CorridorRegionDef.from_json(e0) for e0 in data["regions"]],
             right=UNSET if "right" not in data else None if data["right"] is None else float(data["right"]),
             sag=UNSET if "sag" not in data else None if data["sag"] is None else float(data["sag"]),
@@ -21069,6 +21256,7 @@ class CorridorsEdit(_Model):
             superelevation=data.get("superelevation", UNSET),
             surface=data.get("surface", UNSET),
             tangent=UNSET if "tangent" not in data else None if data["tangent"] is None else float(data["tangent"]),
+            vertical_sag=UNSET if "verticalSag" not in data else None if data["verticalSag"] is None else float(data["verticalSag"]),
         )
 
 
@@ -107444,10 +107632,14 @@ __all__ = [
     "CornersRectangleFrame",
     "CorridorDef",
     "CorridorFeature",
+    "CorridorLeft",
     "CorridorListed",
+    "CorridorRefineDef",
     "CorridorRegionDef",
     "CorridorReport",
+    "CorridorSampling",
     "CorridorStation",
+    "CorridorStray",
     "CorridorStretch",
     "CorridorsDraw",
     "CorridorsDrawn",

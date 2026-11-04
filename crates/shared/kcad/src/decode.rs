@@ -668,6 +668,12 @@ pub(crate) fn road_has_volume_curve(road: &kentos_contracts::RoadSettings) -> bo
     road.volumes.iter().any(|v| v.curve)
 }
 
+/// Whether road settings carry schema 168's fields: a corridor's vertical chord height or sampling check
+/// (docs/adr/0939).
+pub(crate) fn road_has_corridor_sampling(road: &kentos_contracts::RoadSettings) -> bool {
+    road.corridors.iter().any(|c| c.vertical_sag.is_some() || c.refine.is_some())
+}
+
 fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadError> {
     let (mut srid, mut area_unit, mut angle_unit, mut plot_scale) = (None, None, None, None);
     let (mut drawing_unit, mut second_srid) = (None, None);
@@ -1298,6 +1304,13 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 }
                 if !has.volume_curve && road_has_volume_curve(&v) {
                     return Err(r.fail_at(Code::UnknownField, at, "kübajın kurp düzeltmesi şema 167 ister"));
+                }
+                if !has.corridor_sampling && road_has_corridor_sampling(&v) {
+                    return Err(r.fail_at(
+                        Code::UnknownField,
+                        at,
+                        "koridorun düşey kiriş yüksekliği ve örnekleme denetimi şema 168 ister",
+                    ));
                 }
                 if !has.section_breaks && road_has_section_breaks(&v) {
                     return Err(r.fail_at(

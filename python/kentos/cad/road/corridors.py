@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any  # noqa: F401
 from .._runtime import CommandNote, LocalCommand, Outcome, UNSET, Unset, _opt  # noqa: F401
 from ..protocol import Expected  # noqa: F401
 from ..types import (  # noqa: F401
+    CorridorRefineDef,
     CorridorRegionDef,
     CorridorsDraw,
     CorridorsDrawn,
@@ -220,6 +221,7 @@ class _RoadCorridorsEdit(LocalCommand[CorridorsEdit, CorridorsWritten, Corridors
         name: str | None | Unset = UNSET,
         profile: str | None | Unset = UNSET,
         profile_points: bool | None | Unset = UNSET,
+        refine: CorridorRefineDef | None | Unset = UNSET,
         regions: Sequence[CorridorRegionDef] | None | Unset = UNSET,
         right: float | None | Unset = UNSET,
         sag: float | None | Unset = UNSET,
@@ -227,6 +229,7 @@ class _RoadCorridorsEdit(LocalCommand[CorridorsEdit, CorridorsWritten, Corridors
         superelevation: str | None | Unset = UNSET,
         surface: str | None | Unset = UNSET,
         tangent: float | None | Unset = UNSET,
+        vertical_sag: float | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> CorridorsWritten:
@@ -259,6 +262,7 @@ class _RoadCorridorsEdit(LocalCommand[CorridorsEdit, CorridorsWritten, Corridors
             name:
             profile:
             profile_points:
+            refine:
             regions:
             right: Unit: m.
             sag: Unit: m.
@@ -266,6 +270,7 @@ class _RoadCorridorsEdit(LocalCommand[CorridorsEdit, CorridorsWritten, Corridors
             superelevation:
             surface:
             tangent: Unit: m.
+            vertical_sag: Unit: elevation.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -289,6 +294,7 @@ class _RoadCorridorsEdit(LocalCommand[CorridorsEdit, CorridorsWritten, Corridors
             name=name,
             profile=profile,
             profile_points=profile_points,
+            refine=refine,
             regions=_opt(regions, lambda x: list(x)),
             right=right,
             sag=sag,
@@ -296,6 +302,7 @@ class _RoadCorridorsEdit(LocalCommand[CorridorsEdit, CorridorsWritten, Corridors
             superelevation=superelevation,
             surface=surface,
             tangent=tangent,
+            vertical_sag=vertical_sag,
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -313,6 +320,7 @@ class _RoadCorridorsEdit(LocalCommand[CorridorsEdit, CorridorsWritten, Corridors
         name: str | None | Unset = UNSET,
         profile: str | None | Unset = UNSET,
         profile_points: bool | None | Unset = UNSET,
+        refine: CorridorRefineDef | None | Unset = UNSET,
         regions: Sequence[CorridorRegionDef] | None | Unset = UNSET,
         right: float | None | Unset = UNSET,
         sag: float | None | Unset = UNSET,
@@ -320,6 +328,7 @@ class _RoadCorridorsEdit(LocalCommand[CorridorsEdit, CorridorsWritten, Corridors
         superelevation: str | None | Unset = UNSET,
         surface: str | None | Unset = UNSET,
         tangent: float | None | Unset = UNSET,
+        vertical_sag: float | None | Unset = UNSET,
     ) -> CorridorsWritten:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -335,6 +344,7 @@ class _RoadCorridorsEdit(LocalCommand[CorridorsEdit, CorridorsWritten, Corridors
             name=name,
             profile=profile,
             profile_points=profile_points,
+            refine=refine,
             regions=_opt(regions, lambda x: list(x)),
             right=right,
             sag=sag,
@@ -342,6 +352,7 @@ class _RoadCorridorsEdit(LocalCommand[CorridorsEdit, CorridorsWritten, Corridors
             superelevation=superelevation,
             surface=surface,
             tangent=tangent,
+            vertical_sag=vertical_sag,
         ))
 
     def validate(
@@ -359,6 +370,7 @@ class _RoadCorridorsEdit(LocalCommand[CorridorsEdit, CorridorsWritten, Corridors
         name: str | None | Unset = UNSET,
         profile: str | None | Unset = UNSET,
         profile_points: bool | None | Unset = UNSET,
+        refine: CorridorRefineDef | None | Unset = UNSET,
         regions: Sequence[CorridorRegionDef] | None | Unset = UNSET,
         right: float | None | Unset = UNSET,
         sag: float | None | Unset = UNSET,
@@ -366,6 +378,7 @@ class _RoadCorridorsEdit(LocalCommand[CorridorsEdit, CorridorsWritten, Corridors
         superelevation: str | None | Unset = UNSET,
         surface: str | None | Unset = UNSET,
         tangent: float | None | Unset = UNSET,
+        vertical_sag: float | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -381,6 +394,7 @@ class _RoadCorridorsEdit(LocalCommand[CorridorsEdit, CorridorsWritten, Corridors
             name=name,
             profile=profile,
             profile_points=profile_points,
+            refine=refine,
             regions=_opt(regions, lambda x: list(x)),
             right=right,
             sag=sag,
@@ -388,6 +402,7 @@ class _RoadCorridorsEdit(LocalCommand[CorridorsEdit, CorridorsWritten, Corridors
             superelevation=superelevation,
             surface=surface,
             tangent=tangent,
+            vertical_sag=vertical_sag,
         ))
 
     def answer(
@@ -405,6 +420,7 @@ class _RoadCorridorsEdit(LocalCommand[CorridorsEdit, CorridorsWritten, Corridors
         name: str | None | Unset = UNSET,
         profile: str | None | Unset = UNSET,
         profile_points: bool | None | Unset = UNSET,
+        refine: CorridorRefineDef | None | Unset = UNSET,
         regions: Sequence[CorridorRegionDef] | None | Unset = UNSET,
         right: float | None | Unset = UNSET,
         sag: float | None | Unset = UNSET,
@@ -412,6 +428,7 @@ class _RoadCorridorsEdit(LocalCommand[CorridorsEdit, CorridorsWritten, Corridors
         superelevation: str | None | Unset = UNSET,
         surface: str | None | Unset = UNSET,
         tangent: float | None | Unset = UNSET,
+        vertical_sag: float | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -432,6 +449,7 @@ class _RoadCorridorsEdit(LocalCommand[CorridorsEdit, CorridorsWritten, Corridors
             name=name,
             profile=profile,
             profile_points=profile_points,
+            refine=refine,
             regions=_opt(regions, lambda x: list(x)),
             right=right,
             sag=sag,
@@ -439,6 +457,7 @@ class _RoadCorridorsEdit(LocalCommand[CorridorsEdit, CorridorsWritten, Corridors
             superelevation=superelevation,
             surface=surface,
             tangent=tangent,
+            vertical_sag=vertical_sag,
         ), op=op, request_id=request_id, expected=expected)
 
 

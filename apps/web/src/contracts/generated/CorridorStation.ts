@@ -2,6 +2,7 @@
 
 /**
  * A station a corridor samples: the alignment's own, its km, and why (`region`, `geometry`, `critical`, `profile`,
- * `user`, `curve`, `interval`).
+ * `user`, `curve`, `interval`, `vertical`: a vertical curve's division, `refine`: added where the section between
+ * strayed, docs/adr/0939).
  */
 export type CorridorStation = { station: number, kmText: string, why: string, region: number, };
