@@ -167,12 +167,12 @@ pub(crate) fn inspect_captured(doc:&Document,book:&SheetBook,sheet:&str,render:&
                 if matches!(e, Entity::Raster(_) | Entity::PointCloud(_)) {
                     out.push(finding(&m.item,"plot_provider_unsupported",format!("{id} numaralı raster/nokta bulutu bu çıktı hattında çizilemiyor; eksik pafta üretilmeyecek."),"Baskı için desteklenen bir resim altlığı hazırlayın veya bu katmanı viewportta baskıdan çıkarın.",Severity::Error));
                 }
-                if matches!(e, Entity::Dimension(_) | Entity::Text(_))
+                if matches!(e, Entity::Dimension(_) | Entity::Text(_) | Entity::Table(_))
                     && let Some(uid) = doc.uid(kentos_domain::Slot(id))
                 {
                     for f in kentos_native_application::drawing_inspect::annotations::findings(doc, uid, e)
                         .into_iter().filter(|f| matches!(f.code.as_str(), "dimension_override" | "dimension_partial" | "dimension_invalid")
-                            || f.code.starts_with("text_"))
+                            || f.code.starts_with("text_") || f.code.starts_with("table_field_"))
                     {
                         out.push(finding(&m.item, &f.code, format!("{id}: {}", f.message), &f.repair,
                             match f.severity { kentos_commands::InspectionSeverity::Error => Severity::Error, kentos_commands::InspectionSeverity::Warning => Severity::Warning, kentos_commands::InspectionSeverity::Info => Severity::Info }));

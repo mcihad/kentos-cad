@@ -387,3 +387,93 @@ fn unicode_profile_reports_real_fallback_and_unsupported_text_without_rewriting_
         assert_eq!(doc.to_snapshot_v2(),before);
     }
 }
+fn field_table(source: Value) -> kentos_commands::Entity {
+    serde_json::from_value(json!({"kind":"table","id":1,"layerId":"a","attrs":{},
+        "p":{"x":1.,"y":2.},"rotation":30.,"height":0.125,"rows":[0.5],"columns":[3.],
+        "cells":[["Eski"]],"fields":[{"row":0,"col":0,"source":source}]}))
+    .unwrap()
+}
+
+#[test]
+fn standalone_table_field_is_checked_read_only_refreshed_explicitly_and_undoable() {
+    use kentos_commands::{CallOp, Entity};
+    use kentos_domain::Slot;
+    use kentos_native_application::{ExecutionContext, registry};
+    let mut snapshot = field_drawing(1);
+    snapshot.entities[0] = field_table(json!({"kind":"project","value":"name"}));
+    let mut doc = Document::from_snapshot_v2(snapshot).unwrap();
+    let before = doc.to_snapshot_v2();
+    let uid = doc.uid(Slot(1)).unwrap();
+    let found = drawing_inspect::annotations::findings(&doc, uid, doc.get(Slot(1)).unwrap());
+    let stale = found
+        .iter()
+        .find(|f| f.code == "table_field_stale")
+        .unwrap();
+    assert_eq!(stale.uids, [uid.to_string()]);
+    assert!(
+        stale.message.contains("R1C1")
+            && stale.message.contains("Eski")
+            && stale.message.contains("Güncel proje")
+    );
+    assert!((stale.points[0].x - (1. + 1.5 * 30_f64.to_radians().cos() + 0.125)).abs() < 1e-12);
+    assert_eq!(doc.to_snapshot_v2(), before);
+    assert!(!doc.is_dirty());
+    let result = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.tables.edit",
+        CallOp::Execute,
+        json!({"operation":{"kind":"refresh","uids":[uid.to_string()]}}),
+    )
+    .unwrap();
+    assert_eq!(result["status"], "completed", "{result}");
+    let Entity::Table(table) = doc.get(Slot(1)).unwrap() else {
+        panic!()
+    };
+    assert_eq!(table.cells, [vec!["Güncel proje".to_owned()]]);
+    assert!(
+        drawing_inspect::annotations::findings(&doc, uid, doc.get(Slot(1)).unwrap()).is_empty()
+    );
+    assert!(doc.undo().is_some());
+    assert_eq!(doc.to_snapshot_v2(), before);
+    assert!(
+        drawing_inspect::annotations::findings(&doc, uid, doc.get(Slot(1)).unwrap())
+            .iter()
+            .any(|f| f.code == "table_field_stale")
+    );
+}
+
+#[test]
+fn table_field_checks_stale_text_source_graph_and_missing_source_without_mutation() {
+    use kentos_domain::{Slot, Uuid};
+    let mut snapshot = field_drawing(3);
+    let uids = snapshot.uids.clone();
+    snapshot.entities[0] = field_table(json!({"kind":"object","uid":uids[1],"value":"text"}));
+    set_field(
+        &mut snapshot,
+        1,
+        json!({"kind":"object","uid":uids[2],"value":"text"}),
+    );
+    set_field(
+        &mut snapshot,
+        2,
+        json!({"kind":"object","uid":uids[1],"value":"text"}),
+    );
+    let doc = Document::from_snapshot_v2(snapshot.clone()).unwrap();
+    let before = doc.to_snapshot_v2();
+    let uid = doc.uid(Slot(1)).unwrap();
+    let found = drawing_inspect::annotations::findings(&doc, uid, doc.get(Slot(1)).unwrap());
+    for code in ["table_field_source_stale", "table_field_source_broken"] {
+        let f = found.iter().find(|f| f.code == code).unwrap();
+        assert_eq!(f.uids.first(), Some(&uid.to_string()));
+        assert!(f.uids.contains(&Uuid::from_bytes(uids[1].0).to_string()));
+    }
+    assert_eq!(doc.to_snapshot_v2(), before);
+    snapshot.entities[0] = field_table(
+        json!({"kind":"object","uid":"01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4099","value":"text"}),
+    );
+    let doc = Document::from_snapshot_v2(snapshot).unwrap();
+    let uid = doc.uid(Slot(1)).unwrap();
+    let found = drawing_inspect::annotations::findings(&doc, uid, doc.get(Slot(1)).unwrap());
+    assert!(found.iter().any(|f| f.code == "table_field_stale"));
+    assert!(found.iter().any(|f| f.code == "table_field_broken"));
+}

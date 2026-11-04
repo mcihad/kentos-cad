@@ -40,6 +40,7 @@ pub fn findings(doc: &Document, uid: Uuid, e: &Entity) -> Vec<InspectionFinding>
     let mut out = Vec::new();
     match e {
         Entity::Text(t) => out.extend(super::texts::findings(doc, uid, t)),
+        Entity::Table(t) => out.extend(super::texts::table_findings(doc, uid, t)),
         Entity::Dimension(d) => {
             let read = crate::dimensions_query::read(&Format::of(doc.settings()), uid, d);
             let sources: Vec<_> = d

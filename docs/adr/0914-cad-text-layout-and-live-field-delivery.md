@@ -251,6 +251,37 @@ PDF kaynakları: [pdf-writer 0.15.0](https://docs.rs/pdf-writer/0.15.0/pdf_write
 [PDFium RTL ActualText kabul örneği](https://pdfium.googlesource.com/pdfium.git/+/refs/heads/chromium/8077/testing/resources/actual_text_rtl.in).
 Bu kontroller PDF/A veya PDF/UA uygunluk sertifikası değildir.
 
+## Tablo hücrelerindeki canlı alanlar — 4 Kasım 2026
+
+Kayıtlı tablo hücresi, kaynak nesne/proje alanından salt okunur olarak
+hesaplanan güncel değerle karşılaştırılır. Eksik kaynak ayrıca bildirilir;
+bir yazıdan okunan hücrede, o yazının sınırlı kaynak zinciri de denetlenir.
+Hücrenin kendisi kaynak yazının eski önbelleğiyle eşleşse bile kaynak zinciri
+güncel değilse temiz kabul edilmez. Bulgudaki ilk kimlik tablo, devamındaki
+kimlikler gerçek kaynaklardır; işaret hücrenin döndürülmüş merkezine gelir.
+512'den çok alan taşıyan tablo açık `table_field_unverified` verir.
+
+Dosya/çizelge kaynağı olmayan fakat canlı hücre alanları olan tablolar da
+mevcut `cad.tables.edit` / `refresh` üzerinden açıkça yenilenebilir.
+Kaynağı ve alanı olmayan tablo eski `no_source` davranışını korur. Masaüstü
+“Tabloyu güncelle” aynı komutu kullanır; kilitli katman ve tek Undo kuralı
+korunur. Kaynak yazı zincirinin onarımı otomatik yapılmaz; denetimde Kaynağa
+git ile incelenmesi istenir. Güncel olmayan/doğrulanamayan alan ve kaynak
+zinciri, yerel PDF ile CPU baskı önizlemesini engeller.
+
+17 uygulama denetim testi, tablolara ait mevcut komut örnekleri, 10 kitap
+çıktı testi (bir dosya testi ayrıca ignored), altı MCP ve yedi Python testi
+geçti. Python bağlaması yeniden derlendi. Bu değişiklik yeni komut veya
+kalıcı şema getirmez; mevcut sözleşmenin salt okunur denetimini ve açık
+refresh kapsamını tamamlar. Gerçek GUI'de eski hücre → açık yenileme → temiz denetim → tek Undo →
+aynen eski bulgu dönüşü denendi. Undo sonrası Farklı kaydet dosyası bağımsız
+KCAD okuyucusuyla okundu; özgün dosyayla byte düzeyinde aynıydı. Önizleme
+reddinin açıklaması ilk testte modalın arkasında kalıyordu; bu, standart
+KentOS `Banner::error` ile baskı seçeneklerine taşındı. Yenileme sonrası
+uyarı kalktı ve aynı paftanın önizlemesi açıldı. Hata/retry durum testi de
+geçti; ekranlar ve belgeler repo dışında. Tabloların ortak Unicode glyph profiline
+geçişi ve blok içi alanların denetimi ayrıca açıktır.
+
 ## MTEXT aktarımındaki veri kaybı
 
 Sayısal geometri paketinin önceki `kind=10` yazı kaydı `flow` alanını

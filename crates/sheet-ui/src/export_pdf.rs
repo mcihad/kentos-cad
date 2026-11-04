@@ -151,6 +151,9 @@ impl Designer {
         let pm = Message::Pdf;
         let count = self.book.sheets.len();
         let mut body = column![].spacing(10);
+        if let Some(error) = &self.error {
+            body = body.push(kentos_ui::widget::notice::Banner::error(error.as_str()));
+        }
         body = body
             .push(label::caption("Paftalar").style(style::text::muted))
             .push(

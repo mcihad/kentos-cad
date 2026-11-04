@@ -130,7 +130,10 @@ impl App {
                 ),
             );
             }
-            Err(e) => self.warn(format!("Baskı önizlenemedi: {e}")),
+            Err(e) => {
+                self.sheets.print_preview_failed(&e);
+                self.warn(format!("Baskı önizlenemedi: {e}"));
+            },
         }
     }
 

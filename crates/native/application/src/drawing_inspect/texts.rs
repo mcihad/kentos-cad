@@ -153,6 +153,91 @@ pub(super) fn findings(doc: &Document, uid: Uuid, text: &TextEntity) -> Vec<Insp
     out
 }
 
+/// A loaded table's stored field values and their text-source graphs are
+/// checked without recalculating or mutating the table, formulas or schedules.
+pub(super) fn table_findings(
+    doc: &Document,
+    uid: Uuid,
+    table: &kentos_commands::TableEntity,
+) -> Vec<InspectionFinding> {
+    let mut out = Vec::new();
+    if table.fields.len() > SOURCE_LIMIT {
+        out.push(finding(uid, &[], "table_field_unverified", InspectionSeverity::Error,
+            vec![table.p], "Tablonun alan sayısı 512 hücrelik denetim sınırını aşıyor; saklanan değerlerin güncelliği doğrulanamadı.".into(),
+            "Tabloyu daraltın; alan denetimi tamamlanmadan teslim etmeyin."));
+        return out;
+    }
+    let mut inspected_sources = HashSet::new();
+    let (sin, cos) = table.rotation.to_radians().sin_cos();
+    for field in &table.fields {
+        let (r, c) = (field.row as usize, field.col as usize);
+        let Some(cached) = table.cells.get(r).and_then(|row| row.get(c)) else {
+            continue;
+        };
+        let x = table.columns.iter().take(c).sum::<f64>()
+            + table.columns.get(c).copied().unwrap_or(0.) * 0.5;
+        let y = -table.rows.iter().take(r).sum::<f64>()
+            - table.rows.get(r).copied().unwrap_or(0.) * 0.5;
+        let at = kentos_commands::Vec2 {
+            x: table.p.x + cos * x - sin * y,
+            y: table.p.y + sin * x + cos * y,
+        };
+        let source = field.source.object().map(|u| Uuid::from_bytes(u.0));
+        let sources: Vec<_> = source.into_iter().map(|u| u.to_string()).collect();
+        let (now, broken) = match doc.cell_field_value(&field.source, field.format.as_ref()) {
+            Ok(value) => (value, None),
+            Err(error) => (
+                kentos_commands::BROKEN_FIELD.to_owned(),
+                Some(error),
+            ),
+        };
+        if cached != &now || field.broken != broken {
+            out.push(finding(uid,&sources,"table_field_stale",InspectionSeverity::Error,vec![at],
+                format!("R{}C{} · Saklanan: {cached} · Kaynaktan okunan: {now}. Tablo alanı güncel değil.",r+1,c+1),
+                "Tabloyu güncelle ile alanları açıkça yenileyin; sonucu denetleyin. Denetim dosyayı değiştirmez."));
+        }
+        if let Some(error) = broken {
+            out.push(finding(
+                uid,
+                &sources,
+                "table_field_broken",
+                InspectionSeverity::Warning,
+                vec![at],
+                format!(
+                    "R{}C{} alan kaynağı okunamıyor: {}.",
+                    r + 1,
+                    c + 1,
+                    error.words()
+                ),
+                "Kaynağı onarın veya hücre alanını açıkça sabit metne dönüştürün.",
+            ));
+        }
+        if matches!(
+            field.source,
+            FieldSource::Object {
+                value: ObjectValue::Text,
+                ..
+            }
+        ) && let Some(source) = source
+            && inspected_sources.insert(source)
+            && let Some(Entity::Text(text)) = doc.slot_of(source).and_then(|s| doc.get(s))
+        {
+            for mut f in findings(doc, source, text)
+                .into_iter()
+                .filter(|f| f.code.starts_with("text_field_"))
+            {
+                f.code = f.code.replacen("text_field_", "table_field_source_", 1);
+                f.uids.insert(0, uid.to_string());
+                f.points = vec![at];
+                f.message = format!("R{}C{} · Bağlı yazı: {}", r + 1, c + 1, f.message);
+                f.repair="Önce Kaynağa git ile bağlı yazının alan zincirini inceleyip yenileyin; sonra tabloyu güncelleyin.".into();
+                out.push(f);
+            }
+        }
+    }
+    out
+}
+
 /// Iterative DFS: long imported field chains never consume the process stack.
 fn cycle_nodes(graph: &HashMap<Uuid, Vec<Uuid>>) -> HashSet<Uuid> {
     let mut done = HashSet::new();

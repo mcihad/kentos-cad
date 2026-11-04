@@ -348,3 +348,51 @@ fn unicode_profile_preview_matches_pdf_ink_at_two_scales_and_large_coordinates()
     assert_eq!(doc.to_snapshot_v2(), before);
     std::fs::remove_dir_all(out).unwrap();
 }
+#[test]
+fn stale_standalone_table_field_blocks_pdf_until_explicit_refresh_and_undo_restores_it() {
+    use kentos_commands::{CallOp, Entity};
+    use kentos_native_application::{ExecutionContext, registry};
+    let scenario: Value = serde_json::from_str(SCENARIO).unwrap();
+    let mut doc = drawing(&scenario);
+    let layer = doc.layers().active().to_owned();
+    let slot = doc.add(serde_json::from_value(json!({"kind":"table","id":0,"layerId":layer,"attrs":{},
+        "p":{"x":0.,"y":0.5},"rotation":0.,"height":0.125,"rows":[0.5],"columns":[3.],"cells":[["Eski"]]})).unwrap()).unwrap();
+    let uid = doc.uid(slot).unwrap().to_string();
+    let mut snapshot = doc.to_snapshot_v2();
+    let Entity::Table(table) = snapshot.entities.last_mut().unwrap() else {
+        panic!()
+    };
+    table.fields = serde_json::from_value(
+        json!([{"row":0,"col":0,"source":{"kind":"project","value":"name"}}]),
+    )
+    .unwrap();
+    let mut doc = Document::from_snapshot_v2(snapshot).unwrap();
+    let before = doc.to_snapshot_v2();
+    assert_eq!(
+        book_pdf(&doc, &[], "test", "2026-11-04").unwrap_err().code,
+        "table_field_stale"
+    );
+    assert_eq!(
+        kentos_plot::preview::page(&doc, "kat-plani", "test", "2026-11-04", None, 96)
+            .err()
+            .unwrap()
+            .code,
+        "table_field_stale"
+    );
+    assert_eq!(doc.to_snapshot_v2(), before);
+    let result = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.tables.edit",
+        CallOp::Execute,
+        json!({"operation":{"kind":"refresh","uids":[uid]}}),
+    )
+    .unwrap();
+    assert_eq!(result["status"], "completed", "{result}");
+    book_pdf(&doc, &[], "test", "2026-11-04").unwrap();
+    assert!(doc.undo().is_some());
+    assert_eq!(doc.to_snapshot_v2(), before);
+    assert_eq!(
+        book_pdf(&doc, &[], "test", "2026-11-04").unwrap_err().code,
+        "table_field_stale"
+    );
+}

@@ -562,6 +562,7 @@ impl Designer {
 
     /// The export window for a PDF: the sheet in front chosen first, GeoPDF on where it can be.
     fn open_pdf(&mut self, print: bool) {
+        self.error = None;
         if let Some(id) = &self.open
             && self.pdf.chosen.is_empty()
         {
@@ -590,6 +591,7 @@ impl Designer {
 
     fn pdf_update(&mut self, m: crate::message::PdfMessage) -> Vec<Effect> {
         use crate::message::PdfMessage;
+        self.error = None;
         match m {
             PdfMessage::Scope(scope) => self.pdf.scope = scope,
             PdfMessage::Sheet(id, on) => {

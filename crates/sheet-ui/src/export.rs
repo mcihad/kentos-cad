@@ -162,7 +162,12 @@ impl Designer {
             layers: self.pdf.layers,
         }
     }
+    /// Keep a host failure visible in the output window, above its controls.
+    pub fn print_preview_failed(&mut self, why: &str) {
+        self.error = Some(format!("Baskı önizlenemedi: {why}"));
+    }
     pub fn show_print_preview(&mut self, width: u32, height: u32, rgba: Vec<u8>, caption: String) {
+        self.error = None;
         self.dialog = Some(crate::designer::Dialog::PrintPreview {
             image: crate::print_preview::Page::new(width, height, rgba),
             caption,

@@ -109,3 +109,19 @@ class DrawingInspect(unittest.TestCase):
         self.assertEqual(entity['text'],words)
         self.assertEqual(entity['layout']['engine'],'unicode-v1')
         self.assertEqual(reopened.to_bytes(),before)
+
+    def test_standalone_table_field_uses_the_same_typed_refresh_and_undo(self):
+        doc = drawing([dict(kind='table', p=dict(x=0., y=0.), rotation=0., height=.125,
+                            rows=[.5], columns=[3.], cells=[['Eski']],
+                            fields=[dict(row=0, col=0, source=dict(kind='project', value='name'))])])
+        before = doc.to_bytes()
+        row = next(iter(doc.entities()))
+        result = cad.drawing.inspect(doc, checks=['annotations'])
+        stale = next(f for f in result.findings if f.code == 'table_field_stale')
+        self.assertEqual(stale.uids, [row.uid])
+        self.assertIn('R1C1', stale.message)
+        self.assertEqual(doc.to_bytes(), before)
+        cad.tables.edit(doc, operation=cad.RefreshTablesOperation(uids=[row.uid]))
+        self.assertFalse(any(f.code.startswith('table_field_') for f in cad.drawing.inspect(doc, checks=['annotations']).findings))
+        self.assertEqual(doc.undo(), 'Tabloyu güncelle')
+        self.assertEqual(doc.to_bytes(), before)

@@ -649,6 +649,9 @@ fn check(doc: &Document, input: &TablesEdit) -> Result<Checked, Stop> {
                 let mut status = TableRefresh::Updated;
                 let (mut kept, mut replaced) = (0, 0);
                 let next: Option<TableEntity> = match &t.source {
+                    // A standalone table can still contain live cell fields.
+                    // Refresh is the explicit, undoable cache update for those too.
+                    None if !t.fields.is_empty() => Some(t.clone()),
                     None => {
                         return Err(fail(
                             codes::NO_SOURCE,

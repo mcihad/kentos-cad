@@ -121,3 +121,62 @@ fn unicode_profile_creation_and_diagnostics_use_the_same_public_mcp_contract() {
     assert!(fallback["message"].as_str().unwrap().contains("noto-sans-arabic"));
     assert_eq!(tool(&mut server,"drawing.entities",json!({"drawing":drawing})),before);
 }
+#[test]
+fn standalone_table_field_diagnosis_and_refresh_match_through_mcp_and_undo() {
+    let mut raw: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.blocks.find.json"
+    ))
+    .unwrap();
+    let mut setup = raw["setup"].take();
+    setup["entities"] = json!([{"kind":"table","id":1,"layerId":"a","attrs":{},
+        "p":{"x":0.,"y":0.},"rotation":0.,"height":0.125,"rows":[0.5],"columns":[3.],
+        "cells":[["Eski"]],"fields":[{"row":0,"col":0,"source":{"kind":"project","value":"name"}}]}]);
+    let path = std::env::temp_dir().join(format!(
+        "kentos-table-field-mcp-{}.json",
+        std::process::id()
+    ));
+    std::fs::write(&path, serde_json::to_vec(&setup).unwrap()).unwrap();
+    let mut server = Server::new();
+    let opened = tool(&mut server, "drawing.open", json!({"path":path}));
+    let drawing = &opened["drawing"];
+    let before = tool(&mut server, "drawing.entities", json!({"drawing":drawing}));
+    let uid = before["items"][0]["uid"].clone();
+    let found = tool(
+        &mut server,
+        "cad.drawing.inspect",
+        json!({"drawing":drawing,"checks":["annotations"]}),
+    );
+    let stale = found["output"]["findings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|f| f["code"] == "table_field_stale")
+        .unwrap();
+    assert_eq!(stale["uids"], json!([uid]));
+    assert_eq!(
+        tool(&mut server, "drawing.entities", json!({"drawing":drawing})),
+        before
+    );
+    let refreshed = tool(
+        &mut server,
+        "cad.tables.edit",
+        json!({"drawing":drawing,"operation":{"kind":"refresh","uids":[uid]}}),
+    );
+    assert_eq!(refreshed["status"], "completed", "{refreshed}");
+    let found = tool(
+        &mut server,
+        "cad.drawing.inspect",
+        json!({"drawing":drawing,"checks":["annotations"]}),
+    );
+    assert!(
+        !found["output"]["findings"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|f| f["code"].as_str().unwrap().starts_with("table_field_"))
+    );
+    tool(&mut server, "drawing.undo", json!({"drawing":drawing}));
+    let undone = tool(&mut server, "drawing.entities", json!({"drawing":drawing}));
+    assert_eq!(undone["items"], before["items"]);
+    std::fs::remove_file(path).unwrap();
+}

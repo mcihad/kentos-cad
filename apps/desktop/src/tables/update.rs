@@ -60,14 +60,14 @@ pub fn kept_path(file: &Path, base: Option<&Path>) -> String {
 
 impl App {
     /// The tables Tabloyu güncelle rewrites: the selected ones with a
-    /// source; with none selected, every one with a source.
+    /// source or cell fields; with none selected, every such table.
     pub(crate) fn sourced_tables(&self) -> Vec<Slot> {
         let Some(doc) = &self.document else {
             return Vec::new();
         };
         let model = &doc.model;
         let sourced =
-            |s: &Slot| matches!(model.get(*s), Some(Entity::Table(t)) if t.source.is_some());
+            |s: &Slot| matches!(model.get(*s), Some(Entity::Table(t)) if t.source.is_some() || !t.fields.is_empty());
         if !self.selection.ids().is_empty() {
             return kentos_interaction::table::in_order(model, self.selection.ids())
                 .into_iter()
@@ -110,7 +110,7 @@ impl App {
         if all.is_empty() {
             self.say(
                 Level::Info,
-                "Kaynağı olan tablo yok: Tabloyu güncelle çizelgeleri ve dosyaya bağlı tabloları yeniden yazar.",
+                "Güncellenecek tablo yok: canlı hücre alanı, çizelge veya dosya kaynağı olan bir tablo seçin.",
             );
             return Task::none();
         }

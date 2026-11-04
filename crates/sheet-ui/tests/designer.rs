@@ -2346,3 +2346,21 @@ fn yeni_pafta_starts_with_the_programs_own_template() {
         }
     }
 }
+
+#[test]
+fn a_failed_host_preview_stays_visible_until_retry_or_reopening_output_options() {
+    use kentos_sheet_ui::message::PdfMessage;
+    let mut d = designer();
+    d.update(Message::Print);
+    let before = d.book().clone();
+    d.print_preview_failed("R1C1 · Tablo alanı güncel değil.");
+    assert_eq!(d.error(), Some("Baskı önizlenemedi: R1C1 · Tablo alanı güncel değil."));
+    assert_eq!(d.book(), &before);
+    assert_eq!(d.update(Message::Pdf(PdfMessage::Preview)), [Effect::PrintPreview]);
+    assert!(d.error().is_none());
+    d.print_preview_failed("Kaynak okunamıyor.");
+    d.update(Message::CloseDialog);
+    d.update(Message::Print);
+    assert!(d.error().is_none());
+    assert_eq!(d.book(), &before);
+}

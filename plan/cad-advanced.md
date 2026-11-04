@@ -1493,6 +1493,14 @@ silinmesi ön denetimde görülsün; eski dosyanın metni habersiz değişmesin.
 - CPU baskı önizlemesi de ortak konturlara bağlandı. İki paftada üretildi;
   bağımsız Poppler rasteriyle 1:50 sayfanın mürekkep sınırları bir piksel
   içinde eşleşti. Python bağlamasında altı ve MCP'de beş sözleşme testi geçti.
+- Tablo alanlarında kayıtlı/güncel hücre ve bağlı yazı zinciri denetimi eklendi.
+  Dosyaya bağlı olmayan alanlı tablolar da açık yenileme/tek Undo destekler.
+  17 uygulama denetimi, mevcut tablo komut örnekleri, 10 kitap çıktı testi,
+  altı MCP ve yedi Python testi geçti. Gerçek GUI'de yenileme/Undo ve
+  eski değerli baskının reddi doğrulandı; hata artık baskı penceresinde
+  standart uyarı şeridiyle görünür. Undo sonrası kayıt özgün byte'larla aynı.
+  Blok içi alanlar ve tablo Unicode
+  yerleşim geçişi bu kabulle tamamlandı sayılmaz.
 - Ortak shaping, glyph kapsamı, çift yönlü metin ve tam ekran/PDF
   eşdeğerliği tamamlanmadığı için **CAD-ADV-10 açık kalır**.
 
