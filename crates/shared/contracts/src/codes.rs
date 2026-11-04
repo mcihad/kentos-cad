@@ -924,6 +924,11 @@ codes! {
     PROFILE_STALE = "profile_stale", Warning, false, "Boykesitin aksı boykesit kurulduktan sonra değişti; PVI'ları denetleyip aksa yeniden bağlayın.";
     /// A refusal: a vertical curve length question is not valid (docs/adr/0935 §2).
     INVALID_PROFILE_LENGTHS = "invalid_profile_lengths", Failed, false, "Düşey kurp boyu sorusu geçerli değil; ileti nedenini söyler.";
+    /// A refusal: a haul fleet question is not valid: a number out of its range, the road not covering a haul
+    /// (docs/adr/0936 §2).
+    INVALID_HAUL_TRUCKS = "invalid_haul_trucks", Failed, false, "Taşıma filosu sorusu geçerli değil; ileti nedenini söyler.";
+    /// A refusal: the truck cannot climb a grade of the road: its grip less than the grade's resistance (docs/adr/0936).
+    HAUL_TRUCK_STALLS = "haul_truck_stalls", Failed, false, "Kamyon yolun bir eğimini çıkamıyor: tahrik tekerleklerinin tutunması eğimin direncinden az.";
     /// A warning: a vertical curve is shorter than its least length by the criteria given (docs/adr/0935 §2).
     VERTICAL_CURVE_SHORT = "vertical_curve_short", Warning, false, "Bir düşey kurp verilen ölçütlerin istediği boydan kısa.";
     /// A warning: the profile's surface is not in the project or makes no surface; no black elevations.

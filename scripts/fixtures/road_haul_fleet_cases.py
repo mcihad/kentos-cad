@@ -12,6 +12,7 @@ KentOS code, and not KentOS's method:
     uv run --no-project --python 3.11 --with numpy python3 scripts/fixtures/road_haul_fleet_cases.py   (--check)
 """
 
+import bisect
 import json
 import math
 import sys
@@ -38,10 +39,8 @@ def run(path, mass, t, rolling):
         acc += p[1]
 
     def piece(u):
-        for i in range(len(pieces) - 1, -1, -1):
-            if u >= starts[i] - 1e-12:
-                return i
-        return 0
+        # The last piece starting at or before u (bisection: a road sampled every metre has hundreds of pieces).
+        return max(bisect.bisect_right(starts, u + 1e-12) - 1, 0)
 
     def natural(u, v):
         _, _, cos, sin = pieces[piece(min(u, total - 1e-9))]
@@ -90,6 +89,12 @@ def run(path, mass, t, rolling):
         if v1 <= 0 and u1 < total - 1e-6:
             return None
         v1 = min(v1, cap(u), math.sqrt(max(2 * b * (total - u1), 0.0)))
+        if v1 <= 0.0 and v <= 0.0 and u > 0.0:
+            # Stopped short of the end by less than a step resolves (a·DT²/2 past it): the rest at the deceleration b.
+            rest = math.sqrt(2 * max(total - u, 0.0) / b)
+            time += rest
+            idle += rest
+            break
         # The distance with the projected speed: the mean of the two.
         u1 = u + DT * (v + v1) / 2
         if u1 >= total:

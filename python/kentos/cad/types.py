@@ -92,6 +92,17 @@ UNITS: dict[str, str] = {
     "1/m": "Eğrilik: metrede dönüş (radyan bölü metre), 1/yarıçap; sola dönüş artı.",
     "m/%": "Düşey kurbun K değeri: yatay metre bölü yüzde eğim farkı.",
     "1/m2": "Yoğunluk: metrekare başına sayı (nokta bölü m²).",
+    "t": "Ton: kütle (1000 kg).",
+    "kg": "Kilogram: kütle.",
+    "kW": "Kilovat: güç.",
+    "kWh": "Kilovatsaat: iş ve enerji.",
+    "min": "Dakika.",
+    "h": "Saat.",
+    "L": "Litre: yakıt.",
+    "L/kWh": "Litre bölü kilovatsaat: motorun özgül yakıt tüketimi.",
+    "L/h": "Litre bölü saat: rölantide yakıt.",
+    "kg/L": "Kilogram bölü litre: yakıtın litresinin salımı.",
+    "volume/h": "Saatte hacim: üretim.",
 }
 
 
@@ -2615,6 +2626,18 @@ class HaulSiteKind(_StrEnum):
 
 HaulSiteKindName = Literal["borrow", "waste"]
 """The names of :class:`HaulSiteKind`, for a plain string."""
+
+
+class HaulTrack(_StrEnum):
+    """Where the trucks of a haul fleet drive (docs/adr/0936 §2): on the corridor's profile (the road as designed), or on
+    the ground along its alignment (the corridor's surface, as it is before the earthwork).
+    """
+    PROFILE = "profile"
+    GROUND = "ground"
+
+
+HaulTrackName = Literal["profile", "ground"]
+"""The names of :class:`HaulTrack`, for a plain string."""
 
 
 class HeightKind(_StrEnum):
@@ -36677,6 +36700,125 @@ class HaulSiteDef(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class HaulTruckDef(_Model):
+    """A truck of a haul fleet (docs/adr/0936 §1), its numbers the user's: its masses empty and loaded (t), its engine's power
+    (kW) and the share of it reaching the wheels, its top speed and its speed down a grade that pushes it (km/h; none:
+    the top speed), the grip of its driven wheels (the friction coefficient and the share of the weight on them) and the
+    deceleration it stops with (m/s²).
+    Attributes:
+        empty: Unit: t.
+        gross: Unit: t.
+        power: Unit: kW.
+        efficiency: Unit: 1.
+        top: Unit: km/h.
+        traction: Unit: 1.
+        drive: Unit: 1.
+        brake: Unit: m/s2.
+        downhill: Unit: km/h.
+    """
+    empty: float
+    gross: float
+    power: float
+    efficiency: float
+    top: float
+    traction: float
+    drive: float
+    brake: float
+    downhill: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["empty"] = float(self.empty)
+        out["gross"] = float(self.gross)
+        out["power"] = float(self.power)
+        out["efficiency"] = float(self.efficiency)
+        out["top"] = float(self.top)
+        out["traction"] = float(self.traction)
+        out["drive"] = float(self.drive)
+        out["brake"] = float(self.brake)
+        if self.downhill is not UNSET:
+            out["downhill"] = None if self.downhill is None else float(self.downhill)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HaulTruckDef:
+        return cls(
+            empty=float(data["empty"]),
+            gross=float(data["gross"]),
+            power=float(data["power"]),
+            efficiency=float(data["efficiency"]),
+            top=float(data["top"]),
+            traction=float(data["traction"]),
+            drive=float(data["drive"]),
+            brake=float(data["brake"]),
+            downhill=UNSET if "downhill" not in data else None if data["downhill"] is None else float(data["downhill"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class HaulTrucked(_Model):
+    """Output of `road.hauls.trucks` v1: the diagram's id, where the trucks drove, the hauls, the trips, the mean cycle and
+    balance number (by trips; none where nothing moves), the energy at the engines (kWh), the fleet (with `trucks`), the
+    fuel (with `fuel`; the queue's waits with `trucks` too), the carbon (with `co2`), the speeds of `trace`.
+    Attributes:
+        trips: Unit: count.
+        energy: Unit: kWh.
+        balance: Unit: 1.
+        co2: Unit: kg.
+        cycle: Unit: s.
+        fuel: Unit: L.
+    """
+    haul: str
+    track: HaulTrack | HaulTrackName
+    hauls: list[TruckHaul]
+    trips: float
+    energy: float
+    balance: float | None | Unset = UNSET
+    co2: float | None | Unset = UNSET
+    cycle: float | None | Unset = UNSET
+    fleet: TruckFleet | None | Unset = UNSET
+    fuel: float | None | Unset = UNSET
+    trace: TruckTrace | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["haul"] = self.haul
+        out["track"] = _enum_out(self.track)
+        out["hauls"] = [e0.to_json() for e0 in self.hauls]
+        out["trips"] = float(self.trips)
+        out["energy"] = float(self.energy)
+        if self.balance is not UNSET:
+            out["balance"] = None if self.balance is None else float(self.balance)
+        if self.co2 is not UNSET:
+            out["co2"] = None if self.co2 is None else float(self.co2)
+        if self.cycle is not UNSET:
+            out["cycle"] = None if self.cycle is None else float(self.cycle)
+        if self.fleet is not UNSET:
+            out["fleet"] = None if self.fleet is None else self.fleet.to_json()
+        if self.fuel is not UNSET:
+            out["fuel"] = None if self.fuel is None else float(self.fuel)
+        if self.trace is not UNSET:
+            out["trace"] = None if self.trace is None else self.trace.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HaulTrucked:
+        return cls(
+            haul=data["haul"],
+            track=_enum_in(HaulTrack, data["track"]),
+            hauls=[TruckHaul.from_json(e0) for e0 in data["hauls"]],
+            trips=float(data["trips"]),
+            energy=float(data["energy"]),
+            balance=UNSET if "balance" not in data else None if data["balance"] is None else float(data["balance"]),
+            co2=UNSET if "co2" not in data else None if data["co2"] is None else float(data["co2"]),
+            cycle=UNSET if "cycle" not in data else None if data["cycle"] is None else float(data["cycle"]),
+            fleet=UNSET if "fleet" not in data else None if data["fleet"] is None else TruckFleet.from_json(data["fleet"]),
+            fuel=UNSET if "fuel" not in data else None if data["fuel"] is None else float(data["fuel"]),
+            trace=UNSET if "trace" not in data else None if data["trace"] is None else TruckTrace.from_json(data["trace"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class HaulsEdit(_Model):
     """Input of `road.hauls.edit` v1: the diagram by its id or name (absent: a new one). A new one needs `name` and
     `volume`. A diagram follows its volume: it is not rebound to another.
@@ -36809,6 +36951,98 @@ class HaulsQuery(_Model):
         return cls(
             haul=data.get("haul", UNSET),
             points=data.get("points", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class HaulsTrucks(_Model):
+    """Input of `road.hauls.trucks` v1 (docs/adr/0936 §2; ROAD-HAUL-10): a haul fleet on a mass haul diagram's (its id or
+    name) haul plan (`road.hauls.plan`, by `objective`): the plan's flows split into hauls, each driven by the truck on
+    the road (`track`) loaded and back empty, its cycle (loading, the run, dumping, spotting), the trips (the volume over
+    `load`, m³ a truck carries, rounded up) and the loader's balance number; with `trucks` the fleet's production
+    deterministically and as the finite-source queue and the working hours (`hour`: the minutes worked in an hour); with
+    `fuel` (L per kWh at the engine) the fuel, `idle` (L/h) adding the time the engine does not pull, `co2` (kg/L) the
+    carbon; `trace` a haul (its index) whose speeds are given. Every number is the user's; KentOS fills in none. Reads only.
+
+    Refusals, in this order: `not_a_road_project`, `unknown_haul`, `invalid_haul` (as the plan), `invalid_haul_trucks`
+    (a number not positive or out of its range, the profile or the ground not covering a haul), `haul_truck_stalls` (the
+    truck cannot climb a grade: its grip less than the grade's resistance). Warnings: `haul_plan_infeasible`,
+    `corridor_stale`, `volume_gap`.
+    Attributes:
+        rolling: The haul road's rolling resistance (percent of the weight). Unit: percent.
+        load: The volume a truck carries, in the diagram's volume (m³). Unit: volume.
+        loading: Unit: min.
+        dumping: Unit: min.
+        co2: Unit: kg/L.
+        fuel: Unit: L/kWh.
+        hour: The minutes worked in an hour (none: 60). Unit: min.
+        idle: Unit: L/h.
+        objective: The plan's objective, as `road.hauls.plan`'s.
+        spotting: Manoeuvring and waiting at both ends, beyond the loader's queue. Unit: min.
+        trace: Unit: index.
+        trucks: Unit: count.
+    """
+    haul: str
+    track: HaulTrack | HaulTrackName
+    truck: HaulTruckDef
+    rolling: float
+    load: float
+    loading: float
+    dumping: float
+    co2: float | None | Unset = UNSET
+    fuel: float | None | Unset = UNSET
+    hour: float | None | Unset = UNSET
+    idle: float | None | Unset = UNSET
+    objective: HaulObjective | HaulObjectiveName | None | Unset = UNSET
+    spotting: float | None | Unset = UNSET
+    trace: int | None | Unset = UNSET
+    trucks: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["haul"] = self.haul
+        out["track"] = _enum_out(self.track)
+        out["truck"] = self.truck.to_json()
+        out["rolling"] = float(self.rolling)
+        out["load"] = float(self.load)
+        out["loading"] = float(self.loading)
+        out["dumping"] = float(self.dumping)
+        if self.co2 is not UNSET:
+            out["co2"] = None if self.co2 is None else float(self.co2)
+        if self.fuel is not UNSET:
+            out["fuel"] = None if self.fuel is None else float(self.fuel)
+        if self.hour is not UNSET:
+            out["hour"] = None if self.hour is None else float(self.hour)
+        if self.idle is not UNSET:
+            out["idle"] = None if self.idle is None else float(self.idle)
+        if self.objective is not UNSET:
+            out["objective"] = None if self.objective is None else _enum_out(self.objective)
+        if self.spotting is not UNSET:
+            out["spotting"] = None if self.spotting is None else float(self.spotting)
+        if self.trace is not UNSET:
+            out["trace"] = self.trace
+        if self.trucks is not UNSET:
+            out["trucks"] = self.trucks
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HaulsTrucks:
+        return cls(
+            haul=data["haul"],
+            track=_enum_in(HaulTrack, data["track"]),
+            truck=HaulTruckDef.from_json(data["truck"]),
+            rolling=float(data["rolling"]),
+            load=float(data["load"]),
+            loading=float(data["loading"]),
+            dumping=float(data["dumping"]),
+            co2=UNSET if "co2" not in data else None if data["co2"] is None else float(data["co2"]),
+            fuel=UNSET if "fuel" not in data else None if data["fuel"] is None else float(data["fuel"]),
+            hour=UNSET if "hour" not in data else None if data["hour"] is None else float(data["hour"]),
+            idle=UNSET if "idle" not in data else None if data["idle"] is None else float(data["idle"]),
+            objective=UNSET if "objective" not in data else None if data["objective"] is None else _enum_in(HaulObjective, data["objective"]),
+            spotting=UNSET if "spotting" not in data else None if data["spotting"] is None else float(data["spotting"]),
+            trace=data.get("trace", UNSET),
+            trucks=data.get("trucks", UNSET),
         )
 
 
@@ -83935,6 +84169,153 @@ class TrimWindow(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class TruckFleet(_Model):
+    """A fleet of `trucks` at one loader over the hauls in turn: the match factor (of the mean cycle), the production per
+    working hour deterministically and as the finite-source queue (the volume over the hours), the loader busy in the
+    queue, a truck's mean wait at the loader per cycle, and the working hours both ways.
+    Attributes:
+        trucks: Unit: count.
+        match_factor: Unit: 1.
+        steady: Unit: volume/h.
+        queued: Unit: volume/h.
+        busy: Unit: 1.
+        wait: Unit: s.
+        hours_steady: Unit: h.
+        hours_queued: Unit: h.
+    """
+    trucks: int
+    match_factor: float
+    steady: float
+    queued: float
+    busy: float
+    wait: float
+    hours_steady: float
+    hours_queued: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["trucks"] = self.trucks
+        out["matchFactor"] = float(self.match_factor)
+        out["steady"] = float(self.steady)
+        out["queued"] = float(self.queued)
+        out["busy"] = float(self.busy)
+        out["wait"] = float(self.wait)
+        out["hoursSteady"] = float(self.hours_steady)
+        out["hoursQueued"] = float(self.hours_queued)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TruckFleet:
+        return cls(
+            trucks=data["trucks"],
+            match_factor=float(data["matchFactor"]),
+            steady=float(data["steady"]),
+            queued=float(data["queued"]),
+            busy=float(data["busy"]),
+            wait=float(data["wait"]),
+            hours_steady=float(data["hoursSteady"]),
+            hours_queued=float(data["hoursQueued"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TruckHaul(_Model):
+    """A haul of a fleet: its stations and their km, the volume, the horizontal distance, the rise (the height at its end
+    less at its start), the run loaded and back empty, the cycle (with the fixed times), the trips, the balance number
+    (the cycle over the loading: the trucks that keep the loader busy) and the fuel of a trip (with `fuel`).
+    Attributes:
+        from_: Unit: m.
+        to: Unit: m.
+        volume: Unit: volume.
+        distance: Unit: m.
+        rise: Unit: m.
+        loaded: Unit: s.
+        empty: Unit: s.
+        cycle: Unit: s.
+        trips: Unit: count.
+        balance: Unit: 1.
+        fuel: Unit: L.
+    """
+    from_: float
+    to: float
+    from_text: str
+    to_text: str
+    volume: float
+    distance: float
+    rise: float
+    loaded: float
+    empty: float
+    cycle: float
+    trips: float
+    balance: float
+    fuel: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = float(self.from_)
+        out["to"] = float(self.to)
+        out["fromText"] = self.from_text
+        out["toText"] = self.to_text
+        out["volume"] = float(self.volume)
+        out["distance"] = float(self.distance)
+        out["rise"] = float(self.rise)
+        out["loaded"] = float(self.loaded)
+        out["empty"] = float(self.empty)
+        out["cycle"] = float(self.cycle)
+        out["trips"] = float(self.trips)
+        out["balance"] = float(self.balance)
+        if self.fuel is not UNSET:
+            out["fuel"] = None if self.fuel is None else float(self.fuel)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TruckHaul:
+        return cls(
+            from_=float(data["from"]),
+            to=float(data["to"]),
+            from_text=data["fromText"],
+            to_text=data["toText"],
+            volume=float(data["volume"]),
+            distance=float(data["distance"]),
+            rise=float(data["rise"]),
+            loaded=float(data["loaded"]),
+            empty=float(data["empty"]),
+            cycle=float(data["cycle"]),
+            trips=float(data["trips"]),
+            balance=float(data["balance"]),
+            fuel=UNSET if "fuel" not in data else None if data["fuel"] is None else float(data["fuel"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TruckTrace(_Model):
+    """A haul's speeds along the way, loaded and back empty: `[station, km/h]`.
+    Attributes:
+        haul: Unit: index.
+        loaded: `[station (m), speed (km/h)]`. Unit: m.
+        empty: Unit: m.
+    """
+    haul: int
+    loaded: list[list[float]]
+    empty: list[list[float]]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["haul"] = self.haul
+        out["loaded"] = [[float(e1) for e1 in e0] for e0 in self.loaded]
+        out["empty"] = [[float(e1) for e1 in e0] for e0 in self.empty]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TruckTrace:
+        return cls(
+            haul=data["haul"],
+            loaded=[[float(e1) for e1 in e0] for e0 in data["loaded"]],
+            empty=[[float(e1) for e1 in e0] for e0 in data["empty"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class TurnLayer(_Model):
     """A turn layer: its lines are turns; `field`'s number is a turn's delay (seconds), its empty value a forbidden turn;
     without a field every turn of the layer is forbidden.
@@ -107727,10 +108108,15 @@ __all__ = [
     "HaulSiteDef",
     "HaulSiteKind",
     "HaulSiteKindName",
+    "HaulTrack",
+    "HaulTrackName",
+    "HaulTruckDef",
+    "HaulTrucked",
     "HaulsEdit",
     "HaulsPlan",
     "HaulsQueried",
     "HaulsQuery",
+    "HaulsTrucks",
     "HaulsWritten",
     "HeaderTableEdit",
     "HeightKind",
@@ -109798,6 +110184,9 @@ __all__ = [
     "TrimPick",
     "TrimWallsOperation",
     "TrimWindow",
+    "TruckFleet",
+    "TruckHaul",
+    "TruckTrace",
     "TrueNorthDirection",
     "TurnLayer",
     "TurnTextEdit",

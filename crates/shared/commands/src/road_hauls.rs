@@ -380,3 +380,237 @@ pub struct HaulPlanned {
     #[cfg_attr(feature = "ts", ts(optional))]
     pub cost: Option<HaulPlanCost>,
 }
+
+pub const ROAD_HAULS_TRUCKS: &str = "road.hauls.trucks";
+pub const ROAD_HAULS_TRUCKS_VERSION: u32 = 1;
+
+/// Where the trucks of a haul fleet drive (docs/adr/0936 §2): on the corridor's profile (the road as designed), or on
+/// the ground along its alignment (the corridor's surface, as it is before the earthwork).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum HaulTrack {
+    Profile,
+    Ground,
+}
+
+/// A truck of a haul fleet (docs/adr/0936 §1), its numbers the user's: its masses empty and loaded (t), its engine's power
+/// (kW) and the share of it reaching the wheels, its top speed and its speed down a grade that pushes it (km/h; none:
+/// the top speed), the grip of its driven wheels (the friction coefficient and the share of the weight on them) and the
+/// deceleration it stops with (m/s²).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct HaulTruckDef {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "t")))]
+    pub empty: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "t")))]
+    pub gross: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "kW")))]
+    pub power: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub efficiency: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "km/h")))]
+    pub top: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "km/h")))]
+    pub downhill: Option<f64>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub traction: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub drive: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m/s2")))]
+    pub brake: f64,
+}
+
+/// Input of `road.hauls.trucks` v1 (docs/adr/0936 §2; ROAD-HAUL-10): a haul fleet on a mass haul diagram's (its id or
+/// name) haul plan (`road.hauls.plan`, by `objective`): the plan's flows split into hauls, each driven by the truck on
+/// the road (`track`) loaded and back empty, its cycle (loading, the run, dumping, spotting), the trips (the volume over
+/// `load`, m³ a truck carries, rounded up) and the loader's balance number; with `trucks` the fleet's production
+/// deterministically and as the finite-source queue and the working hours (`hour`: the minutes worked in an hour); with
+/// `fuel` (L per kWh at the engine) the fuel, `idle` (L/h) adding the time the engine does not pull, `co2` (kg/L) the
+/// carbon; `trace` a haul (its index) whose speeds are given. Every number is the user's; KentOS fills in none. Reads only.
+///
+/// Refusals, in this order: `not_a_road_project`, `unknown_haul`, `invalid_haul` (as the plan), `invalid_haul_trucks`
+/// (a number not positive or out of its range, the profile or the ground not covering a haul), `haul_truck_stalls` (the
+/// truck cannot climb a grade: its grip less than the grade's resistance). Warnings: `haul_plan_infeasible`,
+/// `corridor_stale`, `volume_gap`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct HaulsTrucks {
+    pub haul: String,
+    /// The plan's objective, as `road.hauls.plan`'s.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub objective: Option<HaulObjective>,
+    pub track: HaulTrack,
+    pub truck: HaulTruckDef,
+    /// The haul road's rolling resistance (percent of the weight).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    pub rolling: f64,
+    /// The volume a truck carries, in the diagram's volume (m³).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub load: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "min")))]
+    pub loading: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "min")))]
+    pub dumping: f64,
+    /// Manoeuvring and waiting at both ends, beyond the loader's queue.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "min")))]
+    pub spotting: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub trucks: Option<u32>,
+    /// The minutes worked in an hour (none: 60).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "min")))]
+    pub hour: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "L/kWh")))]
+    pub fuel: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "L/h")))]
+    pub idle: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "kg/L")))]
+    pub co2: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub trace: Option<u32>,
+}
+
+/// A haul of a fleet: its stations and their km, the volume, the horizontal distance, the rise (the height at its end
+/// less at its start), the run loaded and back empty, the cycle (with the fixed times), the trips, the balance number
+/// (the cycle over the loading: the trucks that keep the loader busy) and the fuel of a trip (with `fuel`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TruckHaul {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub from: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub to: f64,
+    pub from_text: String,
+    pub to_text: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub volume: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub distance: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub rise: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "s")))]
+    pub loaded: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "s")))]
+    pub empty: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "s")))]
+    pub cycle: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub trips: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub balance: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "L")))]
+    pub fuel: Option<f64>,
+}
+
+/// A fleet of `trucks` at one loader over the hauls in turn: the match factor (of the mean cycle), the production per
+/// working hour deterministically and as the finite-source queue (the volume over the hours), the loader busy in the
+/// queue, a truck's mean wait at the loader per cycle, and the working hours both ways.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TruckFleet {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub trucks: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub match_factor: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume/h")))]
+    pub steady: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume/h")))]
+    pub queued: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub busy: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "s")))]
+    pub wait: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "h")))]
+    pub hours_steady: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "h")))]
+    pub hours_queued: f64,
+}
+
+/// A haul's speeds along the way, loaded and back empty: `[station, km/h]`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TruckTrace {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub haul: u32,
+    /// `[station (m), speed (km/h)]`.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub loaded: Vec<[f64; 2]>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub empty: Vec<[f64; 2]>,
+}
+
+/// Output of `road.hauls.trucks` v1: the diagram's id, where the trucks drove, the hauls, the trips, the mean cycle and
+/// balance number (by trips; none where nothing moves), the energy at the engines (kWh), the fleet (with `trucks`), the
+/// fuel (with `fuel`; the queue's waits with `trucks` too), the carbon (with `co2`), the speeds of `trace`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct HaulTrucked {
+    pub haul: String,
+    pub track: HaulTrack,
+    pub hauls: Vec<TruckHaul>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub trips: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "s")))]
+    pub cycle: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub balance: Option<f64>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "kWh")))]
+    pub energy: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub fleet: Option<TruckFleet>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "L")))]
+    pub fuel: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "kg")))]
+    pub co2: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub trace: Option<TruckTrace>,
+}

@@ -112,6 +112,7 @@ fn a_plans_flows_split_into_hauls() {
     assert_eq!(h[1], kentos_road::haul_fleet::Haul { from: 100.0, to: 300.0, volume: 30.0 });
     assert_eq!(h[2], kentos_road::haul_fleet::Haul { from: 500.0, to: 400.0, volume: 20.0 });
     assert_eq!(h.len(), 3);
-    // Nothing flows: no haul.
+    // Nothing flows, or no segment at all (an infeasible plan): no haul.
     assert!(hauls(&[(0.0, 10.0, 0.0)]).is_empty());
+    assert!(hauls(&[]).is_empty());
 }

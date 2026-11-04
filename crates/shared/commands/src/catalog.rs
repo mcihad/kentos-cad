@@ -7629,6 +7629,34 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::ROAD_HAULS_TRUCKS.into(),
+            version: crate::ROAD_HAULS_TRUCKS_VERSION,
+            title: "Taşıma filosu".into(),
+            summary: "Bir Brüknerin taşıma planını kamyonlarla yürütür; hiçbir şey yazmaz. Planın akışları taşımalara bölünür (ilk giren ilk çıkar), her taşımayı kullanıcının kamyonu yolun kendi kotlarında (track: profile koridorun boykesiti, ground arazi) yüklü gider, boş döner: Newton'un ikinci yasasıyla, çekiş tekerleğe varan güç ile tahrik tekerleklerinin tutunmasının küçüğü, direnç yuvarlanma ve eğim, hız en yüksek hızın, inişte iniş hızının ve sonda durduran fren eğrisinin altında. Her taşımanın km'leri, hacmi, uzaklığı, kot farkı, yüklü ve boş süresi, çevrimi (yükleme, boşaltma, manevra dahil), seferi (hacim bölü load, yukarı yuvarlanmış) ve denge sayısı (çevrim bölü yükleme: yükleyiciyi boş bırakmayan kamyon sayısı). trucks verilirse tek yükleyicide filo: uyum katsayısı, üretim belirlenimci ve sonlu kaynaklı kuyrukla (süreler üstel; gerçek ikisinin arasında), yükleyicinin meşguliyeti, kamyonun yükleyicide beklemesi, çalışma saatleri (hour: saatte çalışılan dakika). fuel (motorda L/kWh) yakıtı, idle (L/sa) motorun çekmediği süreyi, co2 (kg/L) karbonu katar; trace bir taşımanın hızlarını verir. Değerlerin hiçbiri KentOS'tan gelmez. \
+                      Uyarılar: haul_plan_infeasible, corridor_stale, volume_gap. Retler: not_a_road_project, unknown_haul, invalid_haul, invalid_haul_trucks, haul_truck_stalls."
+                .into(),
+            aliases: vec!["kamyonfilosu".into(), "tasimafilosu".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::HaulsTrucks>(),
+            output: schema::<crate::HaulTrucked>(),
+            plan: Some(schema::<crate::HaulTrucked>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana Brüknerin planını 6 kamyonla proje kotunda yürüt".into(),
+                input: json!({ "haul": "h-1", "track": "profile",
+                    "truck": { "empty": 15.0, "gross": 40.0, "power": 300.0, "efficiency": 0.8, "top": 50.0, "downhill": 30.0, "traction": 0.6, "drive": 0.7, "brake": 2.0 },
+                    "rolling": 3.0, "load": 15.0, "loading": 2.5, "dumping": 1.0, "spotting": 0.5, "trucks": 6, "hour": 50.0,
+                    "fuel": 0.25, "idle": 5.0, "co2": 2.68 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::ROAD_HAULS_QUERY.into(),
             version: crate::ROAD_HAULS_QUERY_VERSION,
             title: "Brükneri sorgula".into(),
@@ -14552,6 +14580,7 @@ mod tests {
                     crate::ROAD_HAULS_EDIT => serde_json::from_value::<crate::HaulsEdit>(e.input.clone()).map(|_| ()),
                     crate::ROAD_HAULS_QUERY => serde_json::from_value::<crate::HaulsQuery>(e.input.clone()).map(|_| ()),
                     crate::ROAD_HAULS_PLAN => serde_json::from_value::<crate::HaulsPlan>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_HAULS_TRUCKS => serde_json::from_value::<crate::HaulsTrucks>(e.input.clone()).map(|_| ()),
                     crate::ROAD_GUARDRAILS_EDIT => {
                         serde_json::from_value::<crate::GuardrailsEdit>(e.input.clone()).map(|_| ())
                     }
@@ -15394,6 +15423,9 @@ mod tests {
                         }
                         crate::ROAD_HAULS_PLAN => {
                             serde_json::from_value::<crate::HaulPlanned>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_HAULS_TRUCKS => {
+                            serde_json::from_value::<crate::HaulTrucked>(output.clone()).map(|_| ())
                         }
                         crate::ROAD_GUARDRAILS_EDIT => {
                             serde_json::from_value::<crate::GuardrailsWritten>(output.clone()).map(|_| ())

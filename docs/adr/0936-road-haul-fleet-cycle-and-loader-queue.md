@@ -1,6 +1,6 @@
 # 0936 — KentOS Yol: taşıma filosu — çevrim süresi, enerji ve yükleyici kuyruğu
 
-Tarih: 2026-11-04. plan/road.md Y32 (ROAD-HAUL-10). Durum: Y32.1 kabul; Y32.2–Y32.3 bu belgeyle ilerler.
+Tarih: 2026-11-04. plan/road.md Y32 (ROAD-HAUL-10). Durum: Y32.1–Y32.2 kabul; Y32.3 bu belgeyle ilerler.
 
 ## Dayanak
 
@@ -62,6 +62,43 @@ Tarih: 2026-11-04. plan/road.md Y32 (ROAD-HAUL-10). Durum: Y32.1 kabul; Y32.2–
 adım 160,493 s verdi: 77 ms geç (5·10⁻⁴), hata adımın karesiyle küçülüyordu. Hata kalkıştaydı ve tutunmanın güce
 bıraktığı yerdeydi. v² değişimiyle sınırlanan adım 0,47 ms'ye indi; adım sayısı yalnızca 2402'den 3108'e çıktı.
 
+### §2 Komut (`road.hauls.trucks` v1, Y32.2)
+
+- **Girdi:** Brükner ve planın amacı (`road.hauls.plan`'ın), yol (`track`: koridorun boykesiti ya da arazi), kamyon
+  (kütleler t, güç kW, verim, en yüksek ve iniş hızı km/sa, çekiş, tahrik payı, fren m/s²), yuvarlanma direnci (%),
+  kamyonun taşıdığı hacim, yükleme, boşaltma ve manevra süreleri (dk). İsteğe bağlı olanlar: kamyon sayısı, saatte
+  çalışılan dakika, motorun özgül yakıt tüketimi (L/kWh), rölanti (L/sa), CO₂ (kg/L) ve hızı izlenecek taşıma.
+- **Kurallar:**
+  - Değerlerin hiçbiri KentOS'tan gelmez.
+  - Rölanti ve CO₂ yakıtsız verilemez.
+  - Sırası: `not_a_road_project`, `unknown_haul`, `invalid_haul_trucks`, sonra planın retleri.
+  - `haul_truck_stalls` kamyonun çıkamadığı taşımayı adlandırır. Durduğu nokta adıma bağlıdır, taşıma değildir.
+- **Yol:**
+  - Boykesitte her metre, PVI'ler ve kurp uçları okunur. Ölçüm: 5 m'lik kirişlerle tepe kurbunda eğim iniş hızının
+    eşiğini (−c_r) birkaç metre kaydırdı ve 18 s'lik bir dönüş 47 ms saptı.
+  - Arazide arazi boykesitinin noktaları okunur; kurpta doğrusal okuma en çok 1 mm şaşar (ADR 0902).
+  - Kapsanmayan km anılarak reddedilir: arazi kesitsiz ve yüzeysiz yerde kot uydurmaz.
+- **Cevap:**
+  - Taşıma başına: km'ler, hacim, uzaklık, kot farkı, yüklü ve boş süre, çevrim, sefer (hacim/kasa, yukarı) ve denge
+    sayısı (çevrim/yükleme).
+  - Toplamda: sefer, sefere göre ortalama çevrim ve denge sayısı, motor enerjisi (kWh).
+  - Kamyon sayısı verilirse filo: uyum katsayısı, üretim belirlenimci ve kuyrukla, yükleyicinin meşguliyeti,
+    beklemesi, çalışma saatleri. Taşımalar sırayla yapılır; saat her taşımanın sefer/üretim toplamıdır.
+  - Yakıt ve CO₂; kuyruklu beklemenin rölantisi yakıta girer.
+- **Ortak durumlar:** 29 durum. Referans zamanda 1 ms'lik RK4 ile çözer; sonuçlar boylarının 2·10⁻³'ü içinde
+  karşılaştırılır. Saniye, litre ve oran yan yana durduğu için ortak durum dosyasına `relative` kipi eklendi (Rust ve
+  Python düzenekleri). İki referans hatası ortaya çıktı ve düzeltildi:
+  - 5 ms'lik adımda durağan kamyon bitişe 28 µm kala takılıyordu (`a·DT²/2` sonu aşıyordu). Kalan yol artık fren
+    yavaşlamasıyla biter.
+  - Kurpta arazi iki kenar kesişimi arasında doğrusal okunuyordu (8–13 mm). Kotlar artık her metre TIN'den okunur.
+
+**Ölçüm (yan Brükner, ödünç ve döküm alanlı, proje kotu, 15 m³ kasa, 2,5 + 1 + 0,5 dk):**
+
+- 7 taşıma, 1235 sefer, ortalama çevrim 265,1 s, denge sayısı 1,77.
+- Taşımalar kısa (25–150 m) olduğu için yükleyici darboğazdır. 4 kamyonda uyum katsayısı 2,26, yükleyici %99 dolu.
+  Üretim saatte 50 dakikayla 299 m³/sa; yükleyicinin sınırı 15/150 s × 50/60 = 300.
+- Tek kamyonda yükleyici %57 dolu.
+
 ## Doğrulama
 
 24 ortak durum vardır (`scripts/fixtures/road_haul_fleet_cases.py`):
@@ -84,6 +121,9 @@ bıraktığı yerdeydi. v² değişimiyle sınırlanan adım 0,47 ms'ye indi; ad
 Bekçi: `tests/all/haul_fleet.rs`.
 
 ## Açıklar
+
+- İnişin hız sınırına önceden frenleme: sınır parçanın başında uygulanır, kamyon önceden b ile yavaşlamaz (sonda
+  durma b ile yapılır). Sınır hızın altındaki girişte süre biraz kısa çıkar.
 
 - Alanlara yoldan ayrılan erişim yolu: alanlar aksın km'sindedir.
 - Rimpull eğrisi tablosu, vites; motorun gücü sabit alınır.

@@ -144,6 +144,17 @@ pub const UNITS: &[(&str, &str)] = &[
         "Düşey kurbun K değeri: yatay metre bölü yüzde eğim farkı.",
     ),
     ("1/m2", "Yoğunluk: metrekare başına sayı (nokta bölü m²)."),
+    ("t", "Ton: kütle (1000 kg)."),
+    ("kg", "Kilogram: kütle."),
+    ("kW", "Kilovat: güç."),
+    ("kWh", "Kilovatsaat: iş ve enerji."),
+    ("min", "Dakika."),
+    ("h", "Saat."),
+    ("L", "Litre: yakıt."),
+    ("L/kWh", "Litre bölü kilovatsaat: motorun özgül yakıt tüketimi."),
+    ("L/h", "Litre bölü saat: rölantide yakıt."),
+    ("kg/L", "Kilogram bölü litre: yakıtın litresinin salımı."),
+    ("volume/h", "Saatte hacim: üretim."),
 ];
 
 /// Whether `unit` is one of [`UNITS`].

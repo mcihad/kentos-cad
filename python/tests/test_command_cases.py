@@ -299,7 +299,7 @@ class Case:
                 uid = got["output"]["added"][i]
                 assert uid in held, f"{at}: output.added[{i}] {uid} is not an object of the drawing"
                 wanted["added"][i] = uid
-        same(got, self.fill(want, at), f"{at}: result", step.get("within"))
+        same(got, self.fill(want, at), f"{at}: result", step.get("within"), bool(step.get("relative")))
 
     def check(self, expect: dict[str, Any] | None, before: str, at: str, within: float | None = None) -> None:
         if not expect:
@@ -578,26 +578,28 @@ def shape_summary(entity: dict[str, Any]) -> dict[str, Any]:
             "holes": len(holes)}
 
 
-def same(got: Any, want: Any, at: str, within: float | None = None) -> None:
+def same(got: Any, want: Any, at: str, within: float | None = None, relative: bool = False) -> None:
     """Equal as JSON, numbers as numbers (the file's 1 is 1.0); an expected "$any" takes whatever is there (a reader's
     report, docs/adr/0257 §3). With `within`, numbers within it of each other (a transcendental value the reference
-    rounds once, docs/adr/0289 §4)."""
+    rounds once, docs/adr/0289 §4); with `relative` too, within it of the expected number's size, at least 1 (a haul
+    fleet's seconds, litres and ratios, docs/adr/0936 §2)."""
     if want == "$any":
         return
     if isinstance(want, dict):
         assert isinstance(got, dict) and set(got) == set(want), f"{at}: {json.dumps(got)} != {json.dumps(want)}"
         for k in want:
-            same(got[k], want[k], f"{at}.{k}", within)
+            same(got[k], want[k], f"{at}.{k}", within, relative)
     elif isinstance(want, list):
         assert isinstance(got, list) and len(got) == len(want), f"{at}: {json.dumps(got)} != {json.dumps(want)}"
         for i, (a, b) in enumerate(zip(got, want)):
-            same(a, b, f"{at}[{i}]", within)
+            same(a, b, f"{at}[{i}]", within, relative)
     elif isinstance(want, (int, float)) and not isinstance(want, bool):
         assert isinstance(got, (int, float)) and not isinstance(got, bool), f"{at}: {got!r} != {want!r}"
         if within is None:
             assert got == want, f"{at}: {got!r} != {want!r}"
         else:
-            assert abs(got - want) <= within, f"{at}: {got!r} != {want!r} (±{within})"
+            limit = within * max(abs(want), 1.0) if relative else within
+            assert abs(got - want) <= limit, f"{at}: {got!r} != {want!r} (±{limit})"
     else:
         assert got == want, f"{at}: {got!r} != {want!r}"
 

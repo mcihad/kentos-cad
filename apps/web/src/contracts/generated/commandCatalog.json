@@ -41550,6 +41550,368 @@
       ]
     },
     {
+      "id": "road.hauls.trucks",
+      "version": 1,
+      "title": "Taşıma filosu",
+      "summary": "Bir Brüknerin taşıma planını kamyonlarla yürütür; hiçbir şey yazmaz. Planın akışları taşımalara bölünür (ilk giren ilk çıkar), her taşımayı kullanıcının kamyonu yolun kendi kotlarında (track: profile koridorun boykesiti, ground arazi) yüklü gider, boş döner: Newton'un ikinci yasasıyla, çekiş tekerleğe varan güç ile tahrik tekerleklerinin tutunmasının küçüğü, direnç yuvarlanma ve eğim, hız en yüksek hızın, inişte iniş hızının ve sonda durduran fren eğrisinin altında. Her taşımanın km'leri, hacmi, uzaklığı, kot farkı, yüklü ve boş süresi, çevrimi (yükleme, boşaltma, manevra dahil), seferi (hacim bölü load, yukarı yuvarlanmış) ve denge sayısı (çevrim bölü yükleme: yükleyiciyi boş bırakmayan kamyon sayısı). trucks verilirse tek yükleyicide filo: uyum katsayısı, üretim belirlenimci ve sonlu kaynaklı kuyrukla (süreler üstel; gerçek ikisinin arasında), yükleyicinin meşguliyeti, kamyonun yükleyicide beklemesi, çalışma saatleri (hour: saatte çalışılan dakika). fuel (motorda L/kWh) yakıtı, idle (L/sa) motorun çekmediği süreyi, co2 (kg/L) karbonu katar; trace bir taşımanın hızlarını verir. Değerlerin hiçbiri KentOS'tan gelmez. Uyarılar: haul_plan_infeasible, corridor_stale, volume_gap. Retler: not_a_road_project, unknown_haul, invalid_haul, invalid_haul_trucks, haul_truck_stalls.",
+      "aliases": [
+        "kamyonfilosu",
+        "tasimafilosu"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.hauls.trucks` v1 (docs/adr/0936 §2; ROAD-HAUL-10): a haul fleet on a mass haul diagram's (its id or\nname) haul plan (`road.hauls.plan`, by `objective`): the plan's flows split into hauls, each driven by the truck on\nthe road (`track`) loaded and back empty, its cycle (loading, the run, dumping, spotting), the trips (the volume over\n`load`, m³ a truck carries, rounded up) and the loader's balance number; with `trucks` the fleet's production\ndeterministically and as the finite-source queue and the working hours (`hour`: the minutes worked in an hour); with\n`fuel` (L per kWh at the engine) the fuel, `idle` (L/h) adding the time the engine does not pull, `co2` (kg/L) the\ncarbon; `trace` a haul (its index) whose speeds are given. Every number is the user's; KentOS fills in none. Reads only.\n\nRefusals, in this order: `not_a_road_project`, `unknown_haul`, `invalid_haul` (as the plan), `invalid_haul_trucks`\n(a number not positive or out of its range, the profile or the ground not covering a haul), `haul_truck_stalls` (the\ntruck cannot climb a grade: its grip less than the grade's resistance). Warnings: `haul_plan_infeasible`,\n`corridor_stale`, `volume_gap`.",
+        "properties": {
+          "co2": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "kg/L"
+          },
+          "dumping": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "min"
+          },
+          "fuel": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "L/kWh"
+          },
+          "haul": {
+            "type": "string"
+          },
+          "hour": {
+            "description": "The minutes worked in an hour (none: 60).",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "min"
+          },
+          "idle": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "L/h"
+          },
+          "load": {
+            "description": "The volume a truck carries, in the diagram's volume (m³).",
+            "format": "double",
+            "type": "number",
+            "x-unit": "volume"
+          },
+          "loading": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "min"
+          },
+          "objective": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/HaulObjective"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The plan's objective, as `road.hauls.plan`'s."
+          },
+          "rolling": {
+            "description": "The haul road's rolling resistance (percent of the weight).",
+            "format": "double",
+            "type": "number",
+            "x-unit": "percent"
+          },
+          "spotting": {
+            "description": "Manoeuvring and waiting at both ends, beyond the loader's queue.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "min"
+          },
+          "trace": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "index"
+          },
+          "track": {
+            "$ref": "#/$defs/HaulTrack"
+          },
+          "truck": {
+            "$ref": "#/$defs/HaulTruckDef"
+          },
+          "trucks": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "haul",
+          "track",
+          "truck",
+          "rolling",
+          "load",
+          "loading",
+          "dumping"
+        ],
+        "title": "HaulsTrucks",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.hauls.trucks` v1: the diagram's id, where the trucks drove, the hauls, the trips, the mean cycle and\nbalance number (by trips; none where nothing moves), the energy at the engines (kWh), the fleet (with `trucks`), the\nfuel (with `fuel`; the queue's waits with `trucks` too), the carbon (with `co2`), the speeds of `trace`.",
+        "properties": {
+          "balance": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1"
+          },
+          "co2": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "kg"
+          },
+          "cycle": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "s"
+          },
+          "energy": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "kWh"
+          },
+          "fleet": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TruckFleet"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fuel": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "L"
+          },
+          "haul": {
+            "type": "string"
+          },
+          "hauls": {
+            "items": {
+              "$ref": "#/$defs/TruckHaul"
+            },
+            "type": "array"
+          },
+          "trace": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TruckTrace"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "track": {
+            "$ref": "#/$defs/HaulTrack"
+          },
+          "trips": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "haul",
+          "track",
+          "hauls",
+          "trips",
+          "energy"
+        ],
+        "title": "HaulTrucked",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.hauls.trucks` v1: the diagram's id, where the trucks drove, the hauls, the trips, the mean cycle and\nbalance number (by trips; none where nothing moves), the energy at the engines (kWh), the fleet (with `trucks`), the\nfuel (with `fuel`; the queue's waits with `trucks` too), the carbon (with `co2`), the speeds of `trace`.",
+        "properties": {
+          "balance": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1"
+          },
+          "co2": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "kg"
+          },
+          "cycle": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "s"
+          },
+          "energy": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "kWh"
+          },
+          "fleet": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TruckFleet"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fuel": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "L"
+          },
+          "haul": {
+            "type": "string"
+          },
+          "hauls": {
+            "items": {
+              "$ref": "#/$defs/TruckHaul"
+            },
+            "type": "array"
+          },
+          "trace": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TruckTrace"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "track": {
+            "$ref": "#/$defs/HaulTrack"
+          },
+          "trips": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "haul",
+          "track",
+          "hauls",
+          "trips",
+          "energy"
+        ],
+        "title": "HaulTrucked",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_haul",
+          "invalid_haul",
+          "invalid_haul_trucks",
+          "haul_truck_stalls"
+        ],
+        "warnings": [
+          "haul_plan_infeasible",
+          "corridor_stale",
+          "volume_gap"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Ana Brüknerin planını 6 kamyonla proje kotunda yürüt",
+          "input": {
+            "co2": 2.68,
+            "dumping": 1.0,
+            "fuel": 0.25,
+            "haul": "h-1",
+            "hour": 50.0,
+            "idle": 5.0,
+            "load": 15.0,
+            "loading": 2.5,
+            "rolling": 3.0,
+            "spotting": 0.5,
+            "track": "profile",
+            "truck": {
+              "brake": 2.0,
+              "downhill": 30.0,
+              "drive": 0.7,
+              "efficiency": 0.8,
+              "empty": 15.0,
+              "gross": 40.0,
+              "power": 300.0,
+              "top": 50.0,
+              "traction": 0.6
+            },
+            "trucks": 6
+          }
+        }
+      ]
+    },
+    {
       "id": "road.hauls.query",
       "version": 1,
       "title": "Brükneri sorgula",
@@ -86119,6 +86481,18 @@
       "meaning": "Düşey kurp boyu sorusu geçerli değil; ileti nedenini söyler."
     },
     {
+      "code": "invalid_haul_trucks",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Taşıma filosu sorusu geçerli değil; ileti nedenini söyler."
+    },
+    {
+      "code": "haul_truck_stalls",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kamyon yolun bir eğimini çıkamıyor: tahrik tekerleklerinin tutunması eğimin direncinden az."
+    },
+    {
       "code": "vertical_curve_short",
       "kind": "warning",
       "retryable": false,
@@ -91482,6 +91856,50 @@
     {
       "unit": "1/m2",
       "meaning": "Yoğunluk: metrekare başına sayı (nokta bölü m²)."
+    },
+    {
+      "unit": "t",
+      "meaning": "Ton: kütle (1000 kg)."
+    },
+    {
+      "unit": "kg",
+      "meaning": "Kilogram: kütle."
+    },
+    {
+      "unit": "kW",
+      "meaning": "Kilovat: güç."
+    },
+    {
+      "unit": "kWh",
+      "meaning": "Kilovatsaat: iş ve enerji."
+    },
+    {
+      "unit": "min",
+      "meaning": "Dakika."
+    },
+    {
+      "unit": "h",
+      "meaning": "Saat."
+    },
+    {
+      "unit": "L",
+      "meaning": "Litre: yakıt."
+    },
+    {
+      "unit": "L/kWh",
+      "meaning": "Litre bölü kilovatsaat: motorun özgül yakıt tüketimi."
+    },
+    {
+      "unit": "L/h",
+      "meaning": "Litre bölü saat: rölantide yakıt."
+    },
+    {
+      "unit": "kg/L",
+      "meaning": "Kilogram bölü litre: yakıtın litresinin salımı."
+    },
+    {
+      "unit": "volume/h",
+      "meaning": "Saatte hacim: üretim."
     }
   ],
   "effects": [
@@ -119525,6 +119943,78 @@
         "waste"
       ],
       "type": "string"
+    },
+    "HaulTrack": {
+      "description": "Where the trucks of a haul fleet drive (docs/adr/0936 §2): on the corridor's profile (the road as designed), or on\nthe ground along its alignment (the corridor's surface, as it is before the earthwork).",
+      "enum": [
+        "profile",
+        "ground"
+      ],
+      "type": "string"
+    },
+    "HaulTruckDef": {
+      "description": "A truck of a haul fleet (docs/adr/0936 §1), its numbers the user's: its masses empty and loaded (t), its engine's power\n(kW) and the share of it reaching the wheels, its top speed and its speed down a grade that pushes it (km/h; none:\nthe top speed), the grip of its driven wheels (the friction coefficient and the share of the weight on them) and the\ndeceleration it stops with (m/s²).",
+      "properties": {
+        "brake": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m/s2"
+        },
+        "downhill": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "km/h"
+        },
+        "drive": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "efficiency": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "empty": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "t"
+        },
+        "gross": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "t"
+        },
+        "power": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "kW"
+        },
+        "top": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "km/h"
+        },
+        "traction": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        }
+      },
+      "required": [
+        "empty",
+        "gross",
+        "power",
+        "efficiency",
+        "top",
+        "traction",
+        "drive",
+        "brake"
+      ],
+      "type": "object"
     },
     "HeightKind": {
       "description": "What a drawing's elevations are.",
@@ -168440,6 +168930,191 @@
       "required": [
         "min",
         "max"
+      ],
+      "type": "object"
+    },
+    "TruckFleet": {
+      "description": "A fleet of `trucks` at one loader over the hauls in turn: the match factor (of the mean cycle), the production per\nworking hour deterministically and as the finite-source queue (the volume over the hours), the loader busy in the\nqueue, a truck's mean wait at the loader per cycle, and the working hours both ways.",
+      "properties": {
+        "busy": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "hoursQueued": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "h"
+        },
+        "hoursSteady": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "h"
+        },
+        "matchFactor": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "queued": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume/h"
+        },
+        "steady": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume/h"
+        },
+        "trucks": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "wait": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "s"
+        }
+      },
+      "required": [
+        "trucks",
+        "matchFactor",
+        "steady",
+        "queued",
+        "busy",
+        "wait",
+        "hoursSteady",
+        "hoursQueued"
+      ],
+      "type": "object"
+    },
+    "TruckHaul": {
+      "description": "A haul of a fleet: its stations and their km, the volume, the horizontal distance, the rise (the height at its end\nless at its start), the run loaded and back empty, the cycle (with the fixed times), the trips, the balance number\n(the cycle over the loading: the trucks that keep the loader busy) and the fuel of a trip (with `fuel`).",
+      "properties": {
+        "balance": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "cycle": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "s"
+        },
+        "distance": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "empty": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "s"
+        },
+        "from": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "fromText": {
+          "type": "string"
+        },
+        "fuel": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "L"
+        },
+        "loaded": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "s"
+        },
+        "rise": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "to": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "toText": {
+          "type": "string"
+        },
+        "trips": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "count"
+        },
+        "volume": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        }
+      },
+      "required": [
+        "from",
+        "to",
+        "fromText",
+        "toText",
+        "volume",
+        "distance",
+        "rise",
+        "loaded",
+        "empty",
+        "cycle",
+        "trips",
+        "balance"
+      ],
+      "type": "object"
+    },
+    "TruckTrace": {
+      "description": "A haul's speeds along the way, loaded and back empty: `[station, km/h]`.",
+      "properties": {
+        "empty": {
+          "items": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "type": "array",
+          "x-unit": "m"
+        },
+        "haul": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "index"
+        },
+        "loaded": {
+          "description": "`[station (m), speed (km/h)]`.",
+          "items": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "type": "array",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "haul",
+        "loaded",
+        "empty"
       ],
       "type": "object"
     },

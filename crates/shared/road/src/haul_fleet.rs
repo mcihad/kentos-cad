@@ -166,6 +166,10 @@ pub struct Haul {
 pub fn hauls(segments: &[(f64, f64, f64)]) -> Vec<Haul> {
     const TINY: f64 = 1e-9;
     let mut out = Vec::new();
+    if segments.is_empty() {
+        // An infeasible plan has no flows.
+        return out;
+    }
     for forward in [true, false] {
         // The places in the sweep's order and the flow into and out of each along it.
         let n = segments.len();
