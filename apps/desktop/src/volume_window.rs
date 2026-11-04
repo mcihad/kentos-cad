@@ -57,6 +57,8 @@ const DIAGRAM: &str = "Kütle diyagramı";
 const SHEET: &str = "Cetvel";
 const LAYERS: &str = "Tabakalar";
 pub(crate) const RULE: &str = "Kural";
+/// The curve correction's switch (docs/adr/0934 §3).
+pub(crate) const CURVE: &str = "Kesitlerin ağırlık merkeziyle düzelt";
 
 /// The rules a volume offers (docs/adr/0930 §2): none (as before the rule) and Netpro's four.
 const RULES: [(Option<kentos_commands::VolumeRule>, &str); 5] = [
@@ -248,6 +250,8 @@ pub enum Event {
     Method(VolumeMethod),
     /// The volume's rule (docs/adr/0930 §2).
     Rule(Option<kentos_commands::VolumeRule>),
+    /// The curve correction on or off (docs/adr/0934 §3).
+    Curve(bool),
     /// The list under the figures.
     View(Shown),
     /// A factor row's from (0), to (1), cut (2) or fill (3).
@@ -395,6 +399,11 @@ impl App {
             Event::Method(m) => {
                 if let Some(r) = chosen_row(w) {
                     r.method = m;
+                    // The curve correction is the end areas' (docs/adr/0934 §3): another method takes it off, or the
+                    // save would be refused for a switch the window shows disabled.
+                    if m != VolumeMethod::EndArea {
+                        r.curve = false;
+                    }
                 }
             }
             Event::Factor(j, k, t) => {
@@ -462,6 +471,11 @@ impl App {
             Event::Rule(r) => {
                 if let Some(row) = chosen_row(w) {
                     row.rule = r;
+                }
+            }
+            Event::Curve(on) => {
+                if let Some(row) = chosen_row(w) {
+                    row.curve = on;
                 }
             }
             Event::Write => return self.write_volume_sheet(),
@@ -655,6 +669,14 @@ impl App {
                                 format!("{} m³", grouped(rep.layers.iter().map(|l| l.volume).sum(), 1))
                             },
                         );
+                    if let Some(c) = rep.curve.as_ref() {
+                        // The stretches left plain are said by the query's warning, listed below.
+                        d = d.note(Banner::info(format!(
+                            "Kurp düzeltmesi kazıyı {} m³, dolguyu {} m³ değiştirdi (düz ortalama alana göre).",
+                            signed(c.cut),
+                            signed(c.fill)
+                        )));
+                    }
                     if let Some(a) = rep.approval.as_ref() {
                         let note = a.approved.note.as_ref().map_or_else(String::new, |n| format!(" · {n}"));
                         d = d.note(if a.changed {
@@ -774,6 +796,19 @@ impl App {
             .field("Yöntem", on_method)
             .field(RULE, on_rule)
             .help("NETPRO'nun adlarıyla: Yol ya da Formasyon, Zemin ya da Bitkisel Toprak. Formasyon üstyapı ister.")
+            .field(
+                "Kurp",
+                if r.method == VolumeMethod::EndArea {
+                    kentos_ui::widget::Switch::new(r.curve, |on| msg(Event::Curve(on))).label(CURVE)
+                } else {
+                    kentos_ui::widget::Switch::disabled(false).label(CURVE)
+                },
+            )
+            .help(if r.method == VolumeMethod::EndArea {
+                "Kurpta kesitler yelpaze gibi açılır: iç yanın hacmi az, dışınki çok sayılmalı (Pappus). Kesitlerin ağırlık merkezi kullanılır."
+            } else {
+                "Kurp düzeltmesi ortalama alan yöntemindedir; prizmoidal ve yüzeyler yönteminde yoktur."
+            })
             .section("Kabarma ve sıkışma")
             .wide(factors)
             .wide(
@@ -807,6 +842,7 @@ impl App {
         };
         Ok(match control {
             Control::Press(SAVE) => Some(msg(Event::Save)),
+            Control::Press(CURVE) => Some(msg(Event::Curve(!w.rows.get(w.chosen.unwrap_or(usize::MAX)).is_some_and(|r| r.curve)))),
             Control::Press(CANCEL) => Some(msg(Event::Cancel)),
             Control::Press(NEW) => Some(msg(Event::New)),
             Control::Press(REMOVE) => Some(msg(Event::Remove)),

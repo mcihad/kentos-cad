@@ -314,3 +314,82 @@ fn screens_rules() {
         send(&mut app, W::Cancel);
     }
 }
+
+/// Y30.3 (docs/adr/0934 §3): Kurp on the main volume (end areas) changes its volumes by the sections' centroids, says
+/// how much, and Kaydet writes it; on the prismoidal method the switch is off.
+#[test]
+fn the_curve_correction_is_switched_said_and_saved() {
+    let mut app = app();
+    let _ = app.update(Message::Run("volume.editor"));
+    send(&mut app, W::Choose(0));
+    let plain = app.volume_window.as_ref().unwrap().preview.report.clone().expect("computes");
+    assert!(plain.curve.is_none());
+    send(&mut app, W::Curve(true));
+    let curved = app.volume_window.as_ref().unwrap().preview.report.clone().expect("computes");
+    let c = curved.curve.clone().expect("the correction's effect");
+    assert!((curved.cut - plain.cut - c.cut).abs() < 1e-6 && (curved.fill - plain.fill - c.fill).abs() < 1e-6);
+    assert!(c.fill.abs() > 1.0, "the case corridor's curve moves the fill: {c:?}");
+    // Another method takes the correction off (it is the end areas'), back on end areas it is off.
+    send(&mut app, W::Method(kentos_commands::VolumeMethod::Prismoidal));
+    assert!(!app.volume_window.as_ref().unwrap().rows[0].curve);
+    send(&mut app, W::Method(kentos_commands::VolumeMethod::EndArea));
+    send(&mut app, W::Curve(true));
+    send(&mut app, W::Save);
+    assert!(model(&mut app).road_volumes()[0].curve);
+}
+
+/// The Y30.3 pictures, `.run/gui-evidence/yol-y26/y30-3-*`:
+///
+/// ```text
+/// cargo test -p kentos-desktop --lib volume_window_tests::screens_curve -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_curve() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y26");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
+        let mut app = app();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let mut shot = |app: &mut App, file: &str| {
+            snapshot.settle(app, App::view, &mut update);
+            let file = out.join(format!("y30-3-{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        };
+        let _ = app.update(Message::RibbonTab("corridor"));
+        // Each state on a window opened afresh: a switch's slide does not run in a snapshot, and a state changed under
+        // a drawn switch would show it half way.
+        let _ = app.update(Message::Run("volume.editor"));
+        send(&mut app, W::Choose(0));
+        send(&mut app, W::Curve(true));
+        shot(&mut app, "kubaj-kurp");
+        send(&mut app, W::Cancel);
+        // A second app and renderer: the snapshot keeps its widget tree, so a switch drawn on keeps sliding.
+        let mut other = self::app();
+        let _ = other.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        other.apply_settings();
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let _ = other.update(Message::RibbonTab("corridor"));
+        let _ = other.update(Message::Run("volume.editor"));
+        send(&mut other, W::Choose(0));
+        send(&mut other, W::Method(kentos_commands::VolumeMethod::Prismoidal));
+        snapshot.settle(&mut other, App::view, &mut |app: &mut App, message| {
+            let _ = app.update(message);
+        });
+        let file = out.join(format!("y30-3-kubaj-kurp-prizmoidal-{name}.png"));
+        snapshot.render(other.view(), &other.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
+}

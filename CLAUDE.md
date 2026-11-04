@@ -63,6 +63,8 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   - **Kesit hatlarının yeri (Y29):** arazi kırıklarından seyreltilen kesitler eksen arazisini sabit aralıktan iyi
     taşır (0,10 m toleransla 67 kesit en çok 0,044 m; her 5 m 174 kesit 0,078 m). İç kurpta buluşan kollar
     yakından uzağa kırpılır; dairede her çift merkezde buluştuğu için sıra yuvarlamaya bırakılmaz.
+  - **Kurpta kübaj (Y30):** ortalama alan kurpta sistematik sapar, sıklaştırma gidermez (R 60 m deneyde −%3,8 her
+    aralıkta). Etkin alan A + κQ (Pappus) 10 m'de bile +%0,3. Düzeltme yalnız ortalama alanda, isteğe bağlı.
   - **Örnek proje:** `samples/yol_ornegi.py` Yol komutlarıyla `samples/yol-ornegi.kcad`'i yazar.
   - **Ölçüm:** 19 çekirdek ve 26 komut durumu bağımsız kesirli referanstan; 17091 ortak durum geçer. Ana dalda kalan iki
     Python hatası düzeltildi ya da ayrıldı: propose'un katalog örneği düzeltildi; pafta font ön denetimi bu makinenin

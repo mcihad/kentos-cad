@@ -1,6 +1,6 @@
 # 0934 — KentOS Yol: kurpta kübaj düzeltmesi (Pappus)
 
-Tarih: 2026-11-04. plan/road.md Y30 (ROAD-VOL-03). Durum: Y30.1–Y30.2 kabul; Y30.3 bu belgeyle ilerler.
+Tarih: 2026-11-04. plan/road.md Y30 (ROAD-VOL-03). Durum: Y30.1–Y30.3 kabul.
 
 ## Dayanak
 
@@ -70,6 +70,22 @@ kazı 173,80, dolgu 132,49 m³. Daire kısmının (km 140–234,25) KentOS hacim
 +5,6 m³ (%0,04) değiştirir. Yöntemlerin birbirinden farkı (ortalama alan, prizmoidal ve yüzeyler arasında %0,2–0,4)
 bundan büyüktür. ODOT'un "aks iki yana kıvrılıyorsa ya da kesit simetrikse düzeltme gerekmeyebilir" sözü burada
 doğrulanır. Etki, ağırlık merkezinin ötelemesinin yarıçapa oranıdır (κe).
+
+### §3 Kübaj penceresi (Y30.3)
+
+- Tanım bölümünde **Kurp** anahtarı vardır: "Kesitlerin ağırlık merkeziyle düzelt". Yardımı nedenini söyler: kurpta
+  kesitler yelpaze gibi açılır, Pappus. Anahtar ortalama alan yönteminde açılır, öbür yöntemlerde devre dışıdır ve
+  nedenini söyler.
+- **Yöntem değişince düzeltme kapanır.** İlk görüntüde prizmoidale geçince anahtar devre dışı ama açık kalıyordu.
+  Kaydet kural gereği reddedilirdi ve kullanıcı bunu değiştiremezdi.
+- Sonuçta bir not, düzeltmenin kazıyı ve dolguyu düz ortalama alana göre ne kadar değiştirdiğini söyler. Merkezi
+  geçen kesit sorgunun uyarısıyla ayrıca listelenir.
+- Ortak çizimde (R 150 m) etki: kazı +0,5 m³, dolgu +3,5 m³.
+- Not: anlık görüntü düzeneği çizim ağacını korur ve anahtarın kayma animasyonu orada ilerlemez. Durumu, çizilmiş bir
+  anahtarın altında değiştirilen bir görüntü yarı yolda görünür. Görüntü testleri her durumu ayrı bir uygulama
+  örneğiyle çeker.
+
+Bekçi: `volume_window_tests::the_curve_correction_is_switched_said_and_saved`.
 
 ## Doğrulama
 
